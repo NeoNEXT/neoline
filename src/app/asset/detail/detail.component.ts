@@ -86,6 +86,8 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                                 Number(Object.values(rateBalance.result[0])[0]) * this.balance.balance;
                         }
                     });
+                } else {
+                    this.balance.rateBalance = 0;
                 }
             });
         });

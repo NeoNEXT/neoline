@@ -27,6 +27,7 @@ export class PopupAssetComponent implements OnInit {
 
     @Input() asset: Balance;
     @Input() index: number;
+    @Input() public rateCurrency: string;
 
     // tslint:disable-next-line:no-output-on-prefix
     @Output() onDelAsset = new EventEmitter < any > ();
@@ -48,6 +49,9 @@ export class PopupAssetComponent implements OnInit {
                 });
             }
         });
+        if (!this.asset.balance || this.asset.balance === 0) {
+            this.asset.rateBalance = 0;
+        }
     }
 
     public fixed(assetId: string) {

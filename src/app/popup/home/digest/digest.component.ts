@@ -20,6 +20,8 @@ export class PopupHomeDigestComponent implements OnInit, OnChanges {
     @Input() symbol: string;
     @Input() name: string;
     @Input() assetId: string;
+    @Input() rateBalance: number;
+    @Input() rateCurrency: string;
 
     public imageUrl: any = '';
 
@@ -32,7 +34,11 @@ export class PopupHomeDigestComponent implements OnInit, OnChanges {
         this.showTokenName = false;
     }
 
-    ngOnInit(): void {}
+    ngOnInit(): void {
+        if (!this.balance || this.balance === 0) {
+            this.rateBalance = 0;
+        }
+    }
 
     ngOnChanges(changes: SimpleChanges) {
         this.imageUrl = '';

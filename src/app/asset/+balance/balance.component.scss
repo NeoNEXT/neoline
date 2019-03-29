@@ -21,37 +21,52 @@
 }
 
 .info {
-    display: -webkit-box;
-    display: -webkit-flex;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     margin-top: $space;
+    width: 100%;
 
     .info-left {
+        width: 50%;
         display: inline-flex;
         align-items: center;
         margin-right: 5px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+
         .balance {
             color: #333333;
             font-weight: 600;
             font-size: 20px;
+            min-width: 15px;
+            overflow: auto;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .symbol {
             color: #969696;
             font-weight: 500;
             font-size: 14px;
-            margin-left: $space;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
     }
 
     .info-right {
+        width: 50%;
         color: #969696;
         font-weight: 500;
         font-size: 14px;
         display: inline-flex;
         align-items: center;
+        justify-content: flex-end;
+
+        .balance {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 }
 
@@ -76,9 +91,6 @@
             color: #282828;
             font-weight: 600;
             font-size: 16px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;

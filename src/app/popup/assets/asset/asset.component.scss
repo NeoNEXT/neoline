@@ -54,6 +54,7 @@
             display: inline-flex;
             align-items: center;
             justify-content: flex-end;
+
             &:hover {
                 button {
                     visibility: visible;
@@ -92,24 +93,42 @@
     .popup-asset-bottom {
         height: 40px;
         width: 100%;
-        margin-left: 10px;
-        display: flex;
-        align-items: center;
-        position: relative;
 
         .left {
-            position: absolute;
-            left: 0;
+            width: 50%;
+            display: inline-flex;
+            align-items: center;
+            margin-right: 5px;
+            padding-left: 10px;
 
             .amount {
                 font-size: 17px;
                 color: map-get($colors, 333333);
+                overflow: auto;
+                min-width: 15px;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
+
+            .type {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
         }
 
         .right {
-            position: absolute;
-            right: 10px;
+            width: 50%;
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+            overflow: hidden;
+
+            span {
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+            }
         }
 
         .type,
@@ -118,13 +137,6 @@
             color: map-get($colors, 9fa8bd);
         }
     }
-
-    // .popup-asset-slide {
-    //     display: block;
-    //     float: right;
-    //     margin-top: 35.5px;
-    //     margin-right: 15px;
-    // }
 }
 
 hr {

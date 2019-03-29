@@ -21,6 +21,7 @@
         <app-asset
         *ngFor="let asset of displayAssets; let index = index"
         [asset]="asset"
+        [rateCurrency]='rateCurrency'
         [index]="index"
         (onDelAsset)="delAsset($event)"></app-asset>
     </ng-container>

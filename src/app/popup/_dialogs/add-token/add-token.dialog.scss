@@ -48,6 +48,12 @@
         font-size: 12px;
         font-weight: 500;
         padding-left: 10px;
+        overflow: hidden;
+        .amount {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
     }
 }
 

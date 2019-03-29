@@ -20,7 +20,8 @@ import {
     Balance,
     PageData,
     Transaction,
-    NEO
+    NEO,
+    RateObj
 } from '@models/models';
 
 import {
@@ -45,6 +46,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     public isLoading: boolean;
     public needLoadWhenSymbolSwitch: boolean;
     public inTransaction: Array < Transaction > ;
+    public rateObj: RateObj;
 
     public unSubBalance: Unsubscribable;
 
@@ -70,6 +72,9 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
+        this.chrome.getRateObj().subscribe(rateObj => {
+            this.rateObj = rateObj;
+        });
         this.asset.fetchBalance(this.address);
         this.unSubBalance = this.asset.balance().subscribe(() => {
             this.aRouter.params.subscribe((params: any) => {
@@ -77,6 +82,19 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                     this.balance = res;
                     this.assetId = params.id;
                     this.txState.fetch(this.address, 1, params.id, true);
+                    // 获取资产汇率
+                    if (this.balance.balance && this.balance.balance) {
+                        let query = {};
+                        query['symbol'] = this.rateObj.currentCurrency;
+                        query['channel'] = this.rateObj.currentChannel;
+                        query['coins'] = this.balance.symbol;
+                        this.asset.getRate(query).subscribe(rateBalance => {
+                            if (rateBalance.result.length > 0) {
+                                this.balance.rateBalance =
+                                    Number(Object.values(rateBalance.result[0])[0])
+                            }
+                        });
+                    }
                 });
             });
         });

@@ -2,19 +2,16 @@
     <div class="popup-asset-item">
         <div class="popup-asset-top">
             <img class="avatar" [src]="imageUrl" alt="">
-            <span class="name">{{ asset.name }}</span>
-            <div class="operator" *ngIf="!asset.balance && !fixed(asset.asset_id)">
+            <span class="name">{{ asset?.name }}</span>
+            <div class="operator" *ngIf="!asset?.balance && !fixed(asset.asset_id)">
                 <span class="icon"></span>
                 <button  mat-raised-button (click)="delAsset(index)">{{ 'hidden' | translate | async}}</button>
             </div>
         </div>
-        <div class="popup-asset-bottom">
-            <div class="left"><span class="amount">{{ asset.balance || '0'}}</span>&nbsp;<span class="type">{{ asset.symbol }}</span></div>
-            <!-- <div class="right"><span class="amount">$4800.23</span>&nbsp;<span class="type">NEO</span></div> -->
+        <div class="popup-asset-bottom flex">
+            <div class="left flex-1"><span class="amount">{{ asset?.balance || '0'}}</span>&nbsp;<span class="type">{{ asset?.symbol }}</span></div>
+            <div class="right flex-1"><span>{{rateCurrency === 'cny' ? '¥' : '$' }}{{(asset?.rateBalance | number: '1.0-2') || ''}}</span>&nbsp;{{rateCurrency}}</div>
         </div>
     </div>
-    <!-- <mat-slide-toggle *ngIf="!fixed(asset.asset_id)" class="popup-asset-slide" color="primary" [checked]="asset.watching"
-        (toggleChange)="switch(index)">
-    </mat-slide-toggle> -->
 </div>
 <hr />

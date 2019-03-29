@@ -50,6 +50,9 @@ export class BalanceComponent implements OnInit {
                 });
             }
         });
+        if (!this.asset.balance || this.asset.balance === 0) {
+            this.asset.rateBalance = 0;
+        }
     }
     public delAsset() {
         this.isDel = true;

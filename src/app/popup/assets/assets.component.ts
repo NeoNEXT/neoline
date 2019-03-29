@@ -47,6 +47,8 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     public searchValue: string;
     public unSubBalance: Unsubscribable;
     public unSubAll: Unsubscribable;
+    public rateSymbol = '';
+    public rateCurrency: string;
 
     constructor(
         private asset: AssetState,
@@ -63,7 +65,13 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.unSubBalance = this.asset.balance().pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
             this.displayAssets = [];
-            this.displayAssets.push(...res);
+            this.rateSymbol = '';
+            res.map(r => {
+                if (r.balance > 0) {
+                    this.rateSymbol += r.symbol + ',';
+                }
+                this.displayAssets.push(r);
+            });
             //  去重
             const newWatch = [];
             watching.forEach((w) => {
@@ -81,6 +89,32 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
                     return e;
                 });
                 this.allAssets = res;
+            });
+            this.chrome.getRateObj().subscribe(rateObj => {
+                this.rateCurrency = rateObj.currentCurrency;
+                let query = {};
+                query['symbol'] = rateObj.currentCurrency;
+                query['channel'] = rateObj.currentChannel;
+                query['coins'] = this.rateSymbol;
+                if (!this.rateSymbol) {
+                    return;
+                }
+                this.asset.getRate(query).subscribe(rateBalance => {
+                    let k = 0;
+                    for (let i = 0; i < this.displayAssets.length; i++) {
+                        if (k >= rateBalance.length) {
+                            break;
+                        }
+                        for (let j = k; j < rateBalance.result.length; j++) {
+                            if (String(Object.keys(rateBalance.result[j])).toLowerCase() === this.displayAssets[i].symbol.toLowerCase()) {
+                                this.displayAssets[i].rateBalance =
+                                    Number(Object.values(rateBalance.result[j])[0]) * this.displayAssets[i].balance;
+                                k = j + 1;
+                                break;
+                            }
+                        }
+                    }
+                });
             });
         });
         this.asset.fetchAll(1);
