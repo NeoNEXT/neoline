@@ -67,7 +67,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
             this.displayAssets = [];
             this.rateSymbol = '';
             res.map(r => {
-                if (r.balance > 0) {
+                if (r.balance && r.balance > 0) {
                     this.rateSymbol += r.symbol + ',';
                 }
                 this.displayAssets.push(r);
