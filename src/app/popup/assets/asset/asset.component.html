@@ -10,7 +10,7 @@
         </div>
         <div class="popup-asset-bottom flex">
             <div class="left flex-1"><span class="amount">{{ asset?.balance || '0'}}</span>&nbsp;<span class="type">{{ asset?.symbol }}</span></div>
-            <div class="right flex-1"><span>{{rateCurrency === 'cny' ? '¥' : '$' }}{{(asset?.rateBalance || 0) | number: '1.0-2'}}</span>&nbsp;{{rateCurrency | uppercase}}</div>
+            <div class="right flex-1"><span>{{rateCurrency | currencySymbol }}{{(asset?.rateBalance || 0) | number: '1.0-2'}}</span>&nbsp;{{rateCurrency | uppercase}}</div>
         </div>
     </div>
 </div>

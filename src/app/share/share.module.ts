@@ -24,6 +24,7 @@ import { LanguageNamePipe } from './pipes/language-name.pipe';
 import { CopyDirective } from './directives/copy';
 import { AvatarDirective } from './directives/avatar';
 import { TranslatePipe } from './pipes/translate.pipe';
+import { CurrencySymbolPipe } from './pipes/currency-symbol.pipe';
 
 @NgModule({
     declarations: [
@@ -33,8 +34,9 @@ import { TranslatePipe } from './pipes/translate.pipe';
         LimitPageStringPipe,
         LanguageNamePipe,
         TranslatePipe,
+        CurrencySymbolPipe,
         CopyDirective,
-        AvatarDirective
+        AvatarDirective,
     ],
     imports: [CommonModule, MatIconModule, MatButtonModule],
     exports: [
@@ -43,6 +45,7 @@ import { TranslatePipe } from './pipes/translate.pipe';
         LimitStrPipe,
         LanguageNamePipe,
         TranslatePipe,
+        CurrencySymbolPipe,
         CopyDirective,
         AvatarDirective,
         MatButtonModule,
@@ -58,7 +61,7 @@ import { TranslatePipe } from './pipes/translate.pipe';
         MatTooltipModule,
         PagerComponent,
         PopupPagerComponent,
-        ReactiveFormsModule
+        ReactiveFormsModule,
     ],
     providers: [],
     entryComponents: []
