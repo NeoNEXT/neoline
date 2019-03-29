@@ -76,8 +76,13 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         this.loadingMsg = 'Loading';
         this.fromAddress = this.neon.address;
         this.wallet = this.neon.wallet;
-        this.asset.fetchBalance(this.fromAddress);
         this.aRoute.queryParams.subscribe((params: any) => {
+            if (params.network === 'MainNet') {
+                this.global.modifyNet('main');
+            } else {
+                this.global.modifyNet('test');
+            }
+            this.asset.fetchBalance(this.fromAddress);
             this.toAddress = params.to_address || '';
             this.assetId = params.asset_id || '';
             this.amount = params.amount || 0;

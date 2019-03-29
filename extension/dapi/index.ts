@@ -35,7 +35,7 @@ export class Init {
         ACCOUNT_CHANGED: 'account_changed',
         AUTHORIZED: 'authorized',
         AUTHORIZE_REJECTED: 'authorize_rejected',
-        NETWORK_CHANGED: 'netword_changed'
+        NETWORK_CHANGED: 'network_changed'
     };
     private EVENTLIST = {
         READY: {
@@ -67,7 +67,7 @@ export class Init {
             this.getAuthState().then(authState => {
                 if (authState === 'AUTHORIZED' || authState === 'NONE') {
                     if (parameter === undefined || parameter.toAddress === undefined || parameter.fromAddress === undefined ||
-                        parameter.assetID === undefined || parameter.amount === undefined) {
+                        parameter.assetID === undefined || parameter.amount === undefined || parameter.network === undefined) {
                         rejectMain(errors.INVALID_ARGUMENTS);
                     } else {
                         window.postMessage({
@@ -76,6 +76,8 @@ export class Init {
                             fromAddress: parameter.fromAddress,
                             assetID: parameter.assetID,
                             amount: parameter.amount,
+                            network: parameter.network,
+                            symbol: parameter.symbol,
                             hostname: location.hostname,
                             icon: getIcon()
                         }, '*');
@@ -336,7 +338,7 @@ export class Init {
                     });
                     // const callbackFn = (event) => {
                     //     if (event.data.target !== undefined && event.data.target === this.EVENT.READY) {
-                    //         callback(event.data);
+                    //         callback(event.data.data);
                     //     }
                     // };
                     // this.EVENTLIST.READY.callback.push(callback);
@@ -348,7 +350,7 @@ export class Init {
                 {
                     const callbackFn = (event) => {
                         if (event.data.target !== undefined && event.data.target === this.EVENT.ACCOUNT_CHANGED) {
-                            callback(event.data);
+                            callback(event.data.data);
                         }
                     };
                     this.EVENTLIST.ACCOUNT_CHANGED.callback.push(callback);
@@ -361,7 +363,7 @@ export class Init {
                 {
                     const callbackFn = (event) => {
                         if (event.data.target !== undefined && event.data.target === this.EVENT.AUTHORIZED) {
-                            callback(event.data);
+                            callback(event.data.data);
                         }
                     };
                     this.EVENTLIST.AUTHORIZED.callback.push(callback);
@@ -374,7 +376,7 @@ export class Init {
                 {
                     const callbackFn = (event) => {
                         if (event.data.target !== undefined && event.data.target === this.EVENT.AUTHORIZE_REJECTED) {
-                            callback(event.data);
+                            callback(event.data.data);
                         }
                     };
                     this.EVENTLIST.AUTHORIZE_REJECTED.callback.push(callback);
@@ -388,7 +390,7 @@ export class Init {
                 {
                     const callbackFn = (event) => {
                         if (event.data.target !== undefined && event.data.target === this.EVENT.NETWORK_CHANGED) {
-                            callback(event.data);
+                            callback(event.data.data);
                         }
                     };
                     this.EVENTLIST.NETWORK_CHANGED.callback.push(callback);

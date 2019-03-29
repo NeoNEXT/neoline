@@ -514,6 +514,10 @@ export class ChromeService {
             this.crx.setStorage({
                 net
             });
+            this.windowCallback({
+                target: 'network_changed',
+                data: net === 'test' ? 'TestNet' : 'MainNet'
+            });
         } catch (e) {
             console.log('set net failed', e);
         }

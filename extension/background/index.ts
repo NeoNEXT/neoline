@@ -85,11 +85,11 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     } else {
                         getStorage('authorizationWebsites', (res) => {
                             if (res !== undefined && res[request.hostname] !== undefined) {
-                                window.open(`index.html#popup/notification/transfer?to_address=${request.toAddress}&asset_id=${request.assetID}&amount=${request.amount}`, '_blank',
-                                    'height=620, width=386, resizable=no, top=0, left=0');
+                                window.open(`index.html#popup/notification/transfer?to_address=${request.toAddress}&asset_id=${request.assetID}&amount=${request.amount}&symbol=${request.symbol}&network=${request.network}`,
+                                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                             } else {
-                                window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=transfer&to_address=${request.toAddress}&asset_id=${request.assetID}&amount=${request.amount}`, '_blank',
-                                    'height=620, width=386, resizable=no, top=0, left=0');
+                                window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=transfer&to_address=${request.toAddress}&asset_id=${request.assetID}&amount=${request.amount}&symbol=${request.symbol}&network=${request.network}`,
+                                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                             }
                         });
                     }

@@ -106,6 +106,12 @@ export class AppComponent implements OnDestroy {
         } else {
             this.wallet = this.neon.parseWallet(w);
             this.chrome.setWallet(this.wallet.export());
+            this.chrome.windowCallback({
+                data: {
+                    address: this.neon.wallet.accounts[0].address
+                },
+                target: 'account_changed'
+            });
             location.href = `index.html`;
         }
     }

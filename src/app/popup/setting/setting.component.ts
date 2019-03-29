@@ -99,7 +99,9 @@ export class PopupSettingComponent implements OnInit {
             this.router.navigateByUrl('/popup/account');
         } else {
             this.chrome.windowCallback({
-                data: this.neon.wallet,
+                data: {
+                    address: this.neon.wallet.accounts[0].address
+                },
                 target: 'account_changed'
             });
             this.wallet = this.neon.parseWallet(w);
