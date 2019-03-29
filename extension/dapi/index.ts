@@ -207,7 +207,8 @@ export class Init {
 
     public getBalance(parameter: any) {
         return new Promise((resolveMain, rejectMain) => {
-            if (parameter === undefined || parameter.address === undefined || parameter.assetID === undefined) {
+            if (parameter === undefined || parameter.address === undefined || parameter.assetID === undefined ||
+                parameter.network === undefined) {
                 rejectMain(errors.INVALID_ARGUMENTS);
             } else {
                 window.postMessage({

@@ -516,7 +516,9 @@ export class ChromeService {
             });
             this.windowCallback({
                 target: 'network_changed',
-                data: net === 'test' ? 'TestNet' : 'MainNet'
+                data: {
+                    using: net === 'test' ? 'TestNet' : 'MainNet'
+                }
             });
         } catch (e) {
             console.log('set net failed', e);

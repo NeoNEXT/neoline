@@ -1,19 +1,31 @@
-import {Component, OnInit} from '@angular/core';
-import { ChromeService, GlobalService, NeonService } from '@app/core';
-import { Router, RouterEvent, NavigationEnd } from '@angular/router';
+import {
+    Component,
+    OnInit,
+    AfterViewInit
+} from '@angular/core';
+import {
+    ChromeService,
+    GlobalService,
+    NeonService
+} from '@app/core';
+import {
+    Router,
+    RouterEvent,
+    NavigationEnd
+} from '@angular/router';
 
 @Component({
     templateUrl: 'popup.component.html',
     styleUrls: ['popup.component.scss']
 })
 
-export class PopupComponent implements OnInit {
+export class PopupComponent implements OnInit, AfterViewInit {
     public walletIsOpen = false;
     public isThirdParty: boolean = false;
     public address: string;
     public isLogin = false;
     public currentUrl: string = this.router.url;
-    public net: string;
+    public net = 'main';
 
     constructor(
         private chrome: ChromeService,
@@ -48,10 +60,18 @@ export class PopupComponent implements OnInit {
         this.neon.walletIsOpen().subscribe((res: any) => {
             this.global.$wallet.next(res ? 'open' : 'close');
         });
-        this.chrome.getNet().subscribe(net => {
-            this.net = net;
-        });
+        // this.chrome.getNet().subscribe(net => {
+        //     this.net = net;
+        // });
     }
+    ngAfterViewInit(): void {
+        if (this.global.apiDomain.match('main') === null) {
+            this.net = 'test';
+        } else {
+            this.net = 'main';
+        }
+    }
+
     public modifyNet(net: string) {
         if (this.net === net) {
             return;

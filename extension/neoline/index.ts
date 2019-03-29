@@ -2,10 +2,15 @@
  * Inject to third part pages.
  */
 
-import { httpGet, getStorage, httpPost } from '../common/index';
+import {
+    httpGet,
+    getStorage,
+    httpPost
+} from '../common/index';
 
 declare var chrome: any;
-const mainApi = 'http://api.neoline.cn';
+const mainApi = 'https://mainnet.api.neoline.cn';
+const testApi = 'https://testnet.api.neoline.cn';
 
 
 // 注意，此script可以单方面执行第三方页面内的逻辑，但第三方页面并不能直接操作此script，必须使用message方式
@@ -30,72 +35,86 @@ if (dapi != null) {
 
 window.addEventListener('message', (e) => {
     switch (e.data.target) {
-        case 'getWalletInfo': {
-            const manifestData = chrome.runtime.getManifest();
-            window.postMessage({
-                target: 'walletInfoRes',
-                data: manifestData
-            }, '*');
-            return;
-        }
-        case 'getAccount': {
-            getStorage('wallet', (res: any) => {
-                let data: any;
-                if (res !== undefined && res.accounts[0] !== undefined) {
-                    data = {
-                        address: res.accounts[0].address
-                    };
-                }
+        case 'getWalletInfo':
+            {
+                const manifestData = chrome.runtime.getManifest();
                 window.postMessage({
-                    target: 'accountRes',
-                    data
+                    target: 'walletInfoRes',
+                    data: manifestData
                 }, '*');
-            });
-            return;
-        }
-        case 'getBalance': {
-            const parameter = e.data.parameter;
-            httpGet(`${mainApi}/v1/address/assets?address=${parameter.address}&asset_id=${parameter.assetID}`, (res) => {
-                window.postMessage({
-                    target: 'balanceRes',
-                    data: res
-                }, '*');
-            }, null);
-            return;
-        }
-        case 'getAuthState': {
-            getStorage('authorizationWebsites', (res) => {
-                window.postMessage({
-                    target: 'authStateRes',
-                    data: res
-                }, '*');
-            });
-            return;
-        }
-        case 'getNetworks': {
-            window.postMessage({
-                target: 'networksRes',
-                data: 'mainNet'
-            }, '*');
-            return;
-        }
-        case 'invokeTest': {
-            const parameter = e.data.parameter;
-            const parameterArr = [parameter.scripthash, parameter.operation, parameter.args];
-            httpPost(`${mainApi}/v1/transactions/invoketest`, parameterArr, (res) => {
-                window.postMessage({
-                    target: 'invokeTestRes',
-                    data: res
-                }, '*');
-            }, null);
-            return;
+                return;
+            }
+        case 'getAccount':
+            {
+                getStorage('wallet', (res: any) => {
+                    let data: any;
+                    if (res !== undefined && res.accounts[0] !== undefined) {
+                        data = {
+                            address: res.accounts[0].address
+                        };
+                    }
+                    window.postMessage({
+                        target: 'accountRes',
+                        data
+                    }, '*');
+                });
+                return;
+            }
+        case 'getBalance':
+            {
+                const parameter = e.data.parameter;
+                const apiUrl = parameter.network === 'MainNet' ? mainApi : testApi;
+                httpGet(`${apiUrl}/v1/address/assets?address=${parameter.address}&asset_id=${parameter.assetID}`, (res) => {
+                    window.postMessage({
+                        target: 'balanceRes',
+                        data: res
+                    }, '*');
+                }, null);
+                return;
+            }
+        case 'getAuthState':
+            {
+                getStorage('authorizationWebsites', (res) => {
+                    window.postMessage({
+                        target: 'authStateRes',
+                        data: res
+                    }, '*');
+                });
+                return;
+            }
+        case 'getNetworks':
+            {
+                getStorage('net', (res) => {
+                    window.postMessage({
+                        target: 'networksRes',
+                        data: {
+                            using: res || 'MainNet'
+                        }
+                    }, '*');
+                });
+                return;
+            }
+        case 'invokeTest':
+            {
+                const parameter = e.data.parameter;
+                const parameterArr = [parameter.scripthash, parameter.operation, parameter.args];
+                const apiUrl = parameter.network === 'MainNet' ? mainApi : testApi;
+                httpPost(`${apiUrl}/v1/transactions/invoketest`, parameterArr, (res) => {
+                    window.postMessage({
+                        target: 'invokeTestRes',
+                        data: res
+                    }, '*');
+                }, null);
+                return;
 
-        }
-        case 'transfer': case 'authorization': {
-            chrome.runtime.sendMessage(e.data, (response) => {
-                return Promise.resolve('Dummy response to keep the console quiet');
-            });
-        }
+            }
+        case 'transfer':
+        case 'authorization':
+            {
+                chrome.runtime.sendMessage(e.data, (response) => {
+                    return Promise.resolve('Dummy response to keep the console quiet');
+                });
+            }
     }
 }, false);
 
@@ -104,6 +123,3 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     return Promise.resolve('Dummy response to keep the console quiet');
 
 });
-
-
-
