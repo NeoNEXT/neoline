@@ -83,7 +83,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                     this.assetId = params.id;
                     this.txState.fetch(this.address, 1, params.id, true);
                     // 获取资产汇率
-                    if (this.balance.balance && this.balance.balance) {
+                    if (this.balance.balance && this.balance.balance > 0) {
                         let query = {};
                         query['symbol'] = this.rateObj.currentCurrency;
                         query['channel'] = this.rateObj.currentChannel;
@@ -91,7 +91,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                         this.asset.getRate(query).subscribe(rateBalance => {
                             if (rateBalance.result.length > 0) {
                                 this.balance.rateBalance =
-                                    Number(Object.values(rateBalance.result[0])[0])
+                                    Number(Object.values(rateBalance.result[0])[0]) * this.balance.balance;
                             }
                         });
                     }

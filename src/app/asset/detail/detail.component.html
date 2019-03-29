@@ -2,7 +2,7 @@
     <img [src]="imageUrl" class="avatar" alt="">
     <div>
         <p class="balance">{{balance?.balance || '0' }} {{balance?.symbol}}</p>
-        <p class="rate-balance">{{rateObj?.currentCurrency === 'cny' ? '¥' : '$' }}{{(balance?.rateBalance | number: '1.0-2') || ''}} {{rateObj?.currentCurrency | uppercase}}</p>
+        <p class="rate-balance">{{rateObj?.currentCurrency === 'cny' ? '¥' : '$' }}{{(balance?.rateBalance || 0) | number: '1.0-2'}} {{rateObj?.currentCurrency | uppercase}}</p>
     </div>
     <div class="flex-1"></div>
     <div class="flex-1"></div>
