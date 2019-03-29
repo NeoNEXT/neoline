@@ -1,0 +1,55 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+:host {
+    overflow: hidden;
+    display: block;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    margin-top: -205px;
+    margin-left: -150px;
+}
+
+.content {
+    width: 300px;
+    height: 410px;
+    @include bg($img-code-bg);
+    background-size: 100% auto;
+    background-position: bottom;
+    text-align: center;
+    position: relative;
+
+    .code {
+        text-align: center;
+        display: flex;
+        justify-content: center;
+        position: relative;
+        top: 60px;
+    }
+
+    p {
+        position: absolute;
+        bottom: 90px;
+        display: block;
+        width: 100%;
+        text-align: center;
+    }
+}
+
+.popup-qrcode-action {
+    position: absolute;
+    width: 100%;
+    bottom: 5px;
+    display: flex;
+    justify-content: center;
+
+    button {
+        width: 150px;
+        height: 40px;
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        box-shadow: 0px 4px 8px 0px rgba(87, 83, 245, 0.4);
+        border-radius: 20px;
+        color: map-get($neo-line-default, 50);
+    }
+}

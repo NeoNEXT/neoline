@@ -1,0 +1,136 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+:host {
+    display: block;
+    padding: $space;
+    transition: 0.2s;
+}
+
+:host:not(:last-of-type) {
+    border-bottom: 1px solid #e5e5e5;
+}
+
+:host.active {
+    background: #F4F7FC;
+}
+
+:host:hover {
+    cursor: pointer;
+    background: #F4F7FC;
+}
+
+.info {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: $space;
+
+    .info-left {
+        display: inline-flex;
+        align-items: center;
+        margin-right: 5px;
+        .balance {
+            color: #333333;
+            font-weight: 600;
+            font-size: 20px;
+        }
+
+        .symbol {
+            color: #969696;
+            font-weight: 500;
+            font-size: 14px;
+            margin-left: $space;
+        }
+    }
+
+    .info-right {
+        color: #969696;
+        font-weight: 500;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+    }
+}
+
+.asset-top {
+    position: relative;
+    height: 40px;
+
+    .account {
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            display: inline-block;
+            margin-right: 15px;
+            border-radius: 6px;
+        }
+
+        .symbol {
+            color: #282828;
+            font-weight: 600;
+            font-size: 16px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 180px;
+        }
+    }
+
+    .operator {
+        position: absolute;
+        right: 10px;
+        cursor: pointer;
+        height: 40px;
+        width: 60px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+
+        &:hover {
+            button {
+                visibility: visible;
+            }
+        }
+
+        span {
+            @include bg($img-omi);
+            width: 15px;
+            height: 3px;
+            display: inline-block;
+            visibility: visible;
+        }
+
+        button {
+            width: 86px;
+            height: 30px;
+            line-height: 30px;
+            color: map-get($colors, 484e6d);
+            font-size: 13px;
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0px 1px 12px 0px rgba(0, 11, 131, 0.3);
+            border-radius: 2px;
+            text-align: left;
+            position: absolute;
+            top: 25px;
+            right: 0;
+            padding: 0 22px;
+            visibility: hidden;
+        }
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    .account .symbol {
+        max-width: 120px;
+    }
+}

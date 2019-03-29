@@ -1,0 +1,23 @@
+<div class="info flex">
+    <img [src]="imageUrl" class="avatar" alt="">
+    <div>
+        <p class="balance">{{balance?.balance || '0' }} {{balance?.symbol}}</p>
+        <p class="rate-balance">{{rateObj?.currentCurrency === 'cny' ? '¥' : '$' }}{{balance?.balance > 0 ? balance?.rateBalance || '' : '0'}} {{rateObj?.currentCurrency | uppercase}}</p>
+    </div>
+    <div class="flex-1"></div>
+    <div class="flex-1"></div>
+    <button mat-raised-button color="primary" (click)="receive()">{{ 'receive' | translate | async}}</button>
+    <button mat-stroked-button color="primary" (click)="transfer()">{{ 'transfer' | translate | async}}</button>
+</div>
+<div class="title">
+    <span>{{ 'transactions' | translate | async}}</span>
+</div>
+<div class="tx flex-1">
+    <tx-header *ngIf="txPage?.items.length > 0"></tx-header>
+    <tx-item *ngFor="let item of txPage?.items" [time]="item.block_time" [value]="item.value" [txid]="item.txid | limitStr: 20"></tx-item>
+    <div class="nomore" *ngIf="txPage?.items.length == 0">{{ 'noTransaction' | translate | async}}</div>
+</div>
+<div>
+    <!-- <pager [pages]="txPage?.pages" [page]="txPage?.page" [total]="txPage?.total"></pager> -->
+    <pager [pages]="txPage?.pages" [page]="txPage?.page" [total]="txPage?.total" (onPage)="page($event)"></pager>
+</div>

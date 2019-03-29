@@ -1,0 +1,51 @@
+{
+    "name": "neoline",
+    "version": "0.8.0",
+    "scripts": {
+        "ng": "ng",
+        "start": "ng serve",
+        "debug": "ng serve --host 0.0.0.0 --port 4200",
+        "build": "ng build --prod && yarn build:crx",
+        "lint": "ng lint",
+        "http": "http-server dist",
+        "build:crx": "yarn webpack --config extension/webpack.config.js",
+        "webpack": "node --max_old_space_size=4096 node_modules/webpack/bin/webpack.js",
+        "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('Please use Yarn instead of NPM to install dependencies. See: https://yarnpkg.com/lang/en/docs/install/')\""
+    },
+    "private": true,
+    "dependencies": {
+        "@angular/animations": "~7.2.0",
+        "@angular/cdk": "~7.3.1",
+        "@angular/common": "~7.2.0",
+        "@angular/compiler": "~7.2.0",
+        "@angular/core": "~7.2.0",
+        "@angular/forms": "~7.2.0",
+        "@angular/material": "^7.3.1",
+        "@angular/platform-browser": "~7.2.0",
+        "@angular/platform-browser-dynamic": "~7.2.0",
+        "@angular/router": "~7.2.0",
+        "@cityofzion/neon-js": "^4.3.3",
+        "core-js": "^2.5.4",
+        "hammerjs": "^2.0.8",
+        "rxjs": "~6.3.3",
+        "tslib": "^1.9.0",
+        "zone.js": "~0.8.26"
+    },
+    "devDependencies": {
+        "@angular-builders/custom-webpack": "^7.3.1",
+        "@angular-builders/dev-server": "^7.3.1",
+        "@angular-devkit/build-angular": "~0.13.0",
+        "@angular/cli": "~7.3.1",
+        "@angular/compiler-cli": "~7.2.0",
+        "@angular/language-service": "~7.2.0",
+        "@types/node": "~8.9.4",
+        "codelyzer": "~4.5.0",
+        "copy-webpack-plugin": "^5.0.1",
+        "ts-loader": "^5.3.3",
+        "ts-node": "~7.0.0",
+        "tslint": "~5.11.0",
+        "typescript": "~3.2.2",
+        "webpack": "^4.29.6",
+        "webpack-cli": "^3.3.0"
+    }
+}

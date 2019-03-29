@@ -1,0 +1,8 @@
+<P class="title">{{ 'modifyNameTitle' | translate | async}}</P>
+<mat-form-field class="tip">
+    <input [(ngModel)]="name" matInput [placeholder]="'modifyNameInput' | translate | async" />
+</mat-form-field>
+<section class="button-group">
+    <button autofocus mat-button class="cancel" (click)=cancel()>{{ 'cancel' | translate | async}}</button>
+    <button mat-button class="confirm" (click)=updateName()>{{ 'yes' | translate | async }}</button>
+</section>

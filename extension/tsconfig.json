@@ -1,0 +1,14 @@
+{
+    "compileOnSave": true,
+    "include": [
+        "./"
+    ],
+    "compilerOptions": {
+        "sourceMap": false,
+        "declaration": false,
+        "target": "es5",
+        "lib": ["dom", "es2017"],
+        "outDir": "../dist",
+        "rootDir": "."
+    }
+}

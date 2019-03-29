@@ -1,0 +1,80 @@
+<p class="popup-setting-title">{{ 'myAccount' | translate | async}}</p>
+
+<div class="popup-setting-account">
+
+    <div class="popup-setting-account-item" (click)="detail(item)" *ngFor="let item of walletArr; let i = index">
+        <div class="popup-setting-account-select">
+            <div [hidden]="!isActivityWallet(item)"></div>
+        </div>
+        <div class="popup-setting-account-info">
+            <div class="popup-setting-asset-logo">
+                <img [avatar]="item.accounts[0].address" />
+            </div>
+            <div class="popup-setting-asset-info">
+                <div class="popup-setting-asset-title">{{ item.name }}</div>
+                <!-- <div class="popup-setting-asset-value">{{ balance?.balance || '0' }} NEO</div> -->
+            </div>
+            <div class="popup-setting-account-menu">
+                <button mat-icon-button class="menu-btn-box" (click)="$event.stopPropagation()" [matMenuTriggerFor]="menu">
+                    <span class="menu-btn"></span>
+                </button>
+                <mat-menu #menu="matMenu">
+                    <button mat-menu-item (click)="updateName(item)">{{ 'modifyNameTitle' | translate | async }}</button>
+                    <button mat-menu-item (click)="removeWallet(item)">{{ 'remove' | translate | async }}</button>
+                </mat-menu>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="popup-setting-menu">
+
+    <div class="popup-setting-item" (click)="importAccount()">
+        <div class="popup-setting-import-logo"></div>
+        <div>{{ 'importAccount' | translate | async}}</div>
+    </div>
+
+    <div class="popup-setting-item" (click)="createAccount()">
+        <div class="popup-setting-create-logo"></div>
+        <div>{{ 'createAccount' | translate | async}}</div>
+    </div>
+
+</div>
+<hr>
+<div class="popup-setting-menu">
+    <div class="popup-setting-item" (click)="language()">
+        <div class="popup-setting-language-logo"></div>
+        <div>{{ 'language' | translate | async}}</div>
+        <div class="popup-setting-language-current">{{ lang | languageName }}</div>
+    </div>
+</div>
+
+
+<div class="popup-setting-cache">
+    <div></div>
+    <div class="popup-setting-cache-tip">
+        <div>{{ 'clearCache' | translate | async}}</div>
+        <div>{{ 'clearCacheTip' | translate | async}}</div>
+    </div>
+    <div class="popup-setting-cache-btn" (click)="clearCache()">{{ 'clearCacheBtn' | translate | async}}</div>
+</div>
+<hr>
+<div class="popup-setting-menu setting-asset-rate">
+    <div class="current-currency">
+        <span class="title">{{ 'assetRate' | translate | async}}</span>
+        <span class="value">{{ rateObj?.currentCurrency }}</span>
+    </div>
+    <p class="update-time">{{ 'updateTime' | translate | async}}{{rateTime * 1000 | date: 'M月d日 y年 HH:mm'}} 北京时间</p>
+    <div class="current-chennel">
+        <span class="title">{{ 'referSource' | translate | async}}</span>
+        <span class="value">{{ rateObj?.currentChannel }}</span>
+    </div>
+</div>
+<hr>
+<div class="popup-setting-authorization" [routerLink]="['/popup/authorization-list']">
+    <div class="popup-setting-authorization-head">
+        <span class="title">{{ 'authorizationManage' | translate | async}}</span>
+        <span class="view-all">{{ 'viewAll' | translate | async}} ></span>
+    </div>
+    <span class="tip">{{ 'authorizationManageTips' | translate | async }}</span>
+</div>

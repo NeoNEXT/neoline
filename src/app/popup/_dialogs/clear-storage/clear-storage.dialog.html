@@ -1,0 +1,11 @@
+<div >{{ 'clearStorageTips' | translate | async}}</div>
+
+<button
+    class="popup-clear-ok"
+    mat-raised-button
+    [mat-dialog-close]="true">{{ 'yes' | translate | async }}</button>
+
+<button
+    class="popup-clear-no"
+    mat-raised-button
+    [mat-dialog-close]="false">{{ 'cancel' | translate | async}}</button>

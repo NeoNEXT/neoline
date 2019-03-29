@@ -1,0 +1,69 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+:host {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    align-items: flex-end;
+}
+.search-title {
+    color: map-get($colors, 999999);
+    font-size: 14px;
+    font-weight: 500;
+    margin-left: 30px;
+}
+.list {
+    overflow-y: auto;
+    width: 100%;
+}
+.asset {
+    padding: $space 0;
+    margin: 0 $space*2;
+    font-size: 18px;
+    color: #333333;
+    align-items: center;
+    .avatar {
+        width: 58px;
+        height: 58px;
+        display: inline-block;
+        margin-right: 19px;
+        border-radius: 6px;
+    }
+}
+.asset:not(:first-of-type) {
+    border-top: 1px solid #F4F7FC;
+}
+button {
+    border-radius: 50px;
+    width: 125px;
+    cursor: pointer;
+}
+button:not(.watching) {
+    background: #C2C6F5 !important;
+    cursor: default;
+}
+pager {
+    margin: $space $space*2;
+}
+
+.search-input {
+    width: 90%;
+    margin: 20px 5% 0 5%;
+    .search-prefix {
+        width: 19px;
+        height: 19px;
+        @include bg($img-search);
+        margin-right: 19px;
+        display: flex;
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    .asset .avatar {
+        width: 48px;
+        height: 48px;
+    }
+}

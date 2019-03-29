@@ -1,0 +1,72 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+.title {
+    color: map-get($colors, 333333);
+    font-size: 14px;
+    font-weight: 500;
+}
+
+.token {
+    height: 29px;
+    width: 100%;
+    display: flex;
+    margin: 15px 0;
+
+    .name,
+    .value {
+        display: inline-block;
+        width: 50%;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .avatar {
+        display: inline-block;
+        width: 29px;
+        height: 29px;
+        border-radius: 3px;
+        margin-right: 12px;
+        // background: rgba(73, 73, 73, 1);
+    }
+
+    .name .currency-group {
+        width: calc(100% - 41px);
+    }
+
+    .name .currency {
+        color: map-get($colors, 282828);
+        font-size: 13px;
+        font-weight: bold;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    .value {
+        color: map-get($colors, 333333);
+        font-size: 12px;
+        font-weight: 500;
+        padding-left: 10px;
+    }
+}
+
+.button-group {
+    button {
+        width: 107px;
+        height: 35px;
+        border-radius: 4px;
+    }
+
+    button.cancel {
+        box-shadow: 0px 4px 8px 0px rgba(87, 83, 245, 0.4);
+        color: map-get($neo-line-default, 500);
+        margin-right: 32px;
+    }
+
+    button.confirm {
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        box-shadow: 0px 4px 8px 0px rgba(87, 83, 245, 0.4);
+        color: map-get($neo-line-default, 50);
+    }
+}

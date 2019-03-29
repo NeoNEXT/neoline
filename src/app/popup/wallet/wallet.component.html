@@ -1,0 +1,34 @@
+<div class="popup-wallet">
+    <div class="popup-wallet-nav">
+        <div class="back-btn" routerLink="/popup/setting" *ngIf="address != ''"></div>
+        <div class="popup-wallet-nav-item popup-wallet-nav-item-create">
+            <div class="popup-wallet-nav-item-link">
+                <span
+                    routerLink="/popup/wallet/create"
+                    routerLinkActive="active"
+                    (click)="onOperateChange(true)"
+                    [ngClass]="createStatus"> {{ 'create' | translate | async }}</span>
+            </div>
+            <div
+                class="popup-wallet-nav-item-block"
+                [@switchOperateForCreate]="isCreate ? 'create' : 'import'"></div>
+        </div>
+
+        <div class="popup-wallet-nav-item popup-wallet-nav-item-import">
+            <div class="popup-wallet-nav-item-link">
+                <span
+                    routerLink="/popup/wallet/import"
+                    routerLinkActive="active"
+                    (click)="onOperateChange(false)"
+                    [ngClass]="importStatus">{{ 'import' | translate | async }}</span>
+            </div>
+            <div
+                class="popup-wallet-nav-item-block"
+                [@switchOperateForImport]="isCreate ? 'create' : 'import'"></div>
+        </div>
+    </div>
+
+    <div class="popup-wallet-body">
+        <router-outlet></router-outlet>
+    </div>
+</div>

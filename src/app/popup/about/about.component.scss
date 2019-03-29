@@ -1,0 +1,100 @@
+@import 'src/styles/popup-default';
+
+.popup-about-logo1 {
+    width: 109.5px;
+    height: 71.5px;
+    margin: auto;
+    margin-top: 15px;
+    @include bg($img-logo);
+}
+
+.popup-about-logo2 {
+    width: 85px;
+    height: 25px;
+    margin: auto;
+    margin-top: 10px;
+    @include bg($img-about-logo);
+}
+
+.popup-about-version {
+    color: map-get($colors, 9fa8bd);
+    font-size: 13px;
+    text-align: center;
+    margin-top: 5px;
+}
+
+.popup-about {
+    width: 325px;
+    margin: auto;
+    margin-top: 15px;
+
+    .popup-about-privacy-item {
+        overflow: hidden;
+        margin-bottom: 5px;
+
+        div {
+            width: 156px;
+            height: 156px;
+            position: relative;
+
+            p {
+                position: absolute;
+                right: 25px;
+                bottom: 30px;
+                color: #282828;
+                font-size: 16px;
+                font-weight: 500;
+            }
+        }
+
+        div:first-child {
+            float: left;
+            @include bg($img-privacy);
+
+            &:hover {
+                @include bg($img-privacy-hover);
+            }
+        }
+
+        div:last-child {
+            float: right;
+            @include bg($img-item);
+
+            &:hover {
+                @include bg($img-item-hover);
+            }
+        }
+    }
+
+    @mixin site-contact($bgurl, $bgurl-hover) {
+        width: 100%;
+        margin-bottom: 5px;
+        height: 96.5px;
+        @include bg($bgurl);
+        background-size: cover;
+
+        &:hover {
+            @include bg($bgurl-hover);
+        }
+    }
+
+    .popup-about-site {
+        @include site-contact($img-site, $img-site-hover);
+        position: relative;
+    }
+
+    .popup-about-contact {
+        @include site-contact($img-contact, $img-contact-hover);
+        position: relative;
+    }
+
+    .popup-about-contact p,
+    .popup-about-site p {
+        position: absolute;
+        top: 36px;
+        left: 170px;
+        color: #282828;
+        font-size: 16px;
+        font-weight: 500;
+    }
+}

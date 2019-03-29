@@ -1,0 +1,48 @@
+<mat-sidenav-container class="side-nav">
+    <mat-sidenav #sidenav mode="over" [fixedInViewport]="true">
+        <app-sidenav [sidenav]="sidenav" *ngIf="walletIsOpen && !isThirdParty"></app-sidenav>
+    </mat-sidenav>
+
+    <mat-sidenav-content>
+        <div class="mat-toolbar-fixed no-third-party-toolbar" *ngIf="!isThirdParty">
+            <mat-toolbar color="primary">
+                <img class="popup-nav-icon" (click)="sidenav?.toggle()" *ngIf="walletIsOpen && !isLogin" src="/assets/images/nav_icon_white.png" alt="">
+                <span class="popup-nav-menu" (click)="sidenav?.toggle()" *ngIf="walletIsOpen && !isLogin">
+                    <img [avatar]="address" />
+                </span>
+
+                <span class="popup-nav-logo">
+                    <span class="popup-nav-logo-img" [ngClass]="{'popup-nav-logo-img-logout': !walletIsOpen , 'is-login': isLogin}"></span>
+                </span>
+
+                <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
+                    {{ 'mainNet' | translate | async }}
+                    <span class="popup-nav-network-icon"></span>
+                </button>
+                <mat-menu #menu="matMenu">
+                    <button mat-menu-item>{{ 'mainNet' | translate | async }}</button>
+                </mat-menu>
+            </mat-toolbar>
+
+        </div>
+        <div class="mat-toolbar-fixed is-third-party-toolbar" *ngIf="isThirdParty">
+            <mat-toolbar [ngClass]="{ 'nav-box-shadow': currentUrl.indexOf('transfer') < 0 }">
+                <span class="popup-nav-logo">
+                    <span class="popup-nav-logo-img"></span>
+                    <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
+                </span>
+                <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
+                    {{ 'mainNet' | translate | async }}
+                    <span class="popup-nav-network-icon"></span>
+                </button>
+                <mat-menu #menu="matMenu">
+                    <button mat-menu-item>{{ 'mainNet' | translate | async }}</button>
+                </mat-menu>
+            </mat-toolbar>
+        </div>
+
+        <div class="popup">
+            <router-outlet></router-outlet>
+        </div>
+    </mat-sidenav-content>
+</mat-sidenav-container>

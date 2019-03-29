@@ -1,0 +1,25 @@
+<!-- <p class="symbol">{{symbol}}</p> -->
+<div (click)="toDetail()">
+    <div class="asset-top">
+        <div class="account">
+            <img [src]="imageUrl" alt="" class="avatar">
+            <span class="symbol">{{asset?.symbol}}</span>
+        </div>
+        <div class="operator" *ngIf="!asset?.balance && !fixed(asset.asset_id)">
+            <span class="icon"></span>
+            <button mat-raised-button (click)="delAsset()">{{ 'hidden' | translate | async}}</button>
+        </div>
+    </div>
+    <div class="info">
+        <div class="info-left">
+            <span class="balance">{{asset?.balance || '0'}}</span>
+            <span class="symbol">{{asset?.symbol}}</span>
+        </div>
+        <div class="info-right">
+                <!-- <span class="balance">{{asset?.rateBalance || '0'}}</span>
+                <span class="symbol">{{asset?.rateSymbol}}</span> -->
+            <span class="balance">{{rateCurrency === 'cny' ? '¥' : '$' }}{{asset?.balance > 0 ? asset?.rateBalance || '' : '0'}}</span>&nbsp;
+            <span class="symbol">{{rateCurrency | uppercase}}</span>
+        </div>
+    </div>
+</div>

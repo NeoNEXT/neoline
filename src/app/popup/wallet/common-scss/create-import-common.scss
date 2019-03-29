@@ -1,0 +1,67 @@
+@import 'src/styles/popup-default';
+
+.popup-wallet-body-title {
+    font-size: 23px;
+    text-align: center;
+    margin-bottom: 32px;
+    color: map-get($colors, 333333);
+    font-weight: bold;
+}
+
+.popup-wallet-body-tip {
+    font-size: 14px;
+    margin-left: 35px;
+    margin-bottom: 20px;
+    color: map-get($colors, 666666);
+}
+
+.popup-wallet-body-text {
+    margin-left: 35px;
+    font-size: 14.5px;
+    width: 227px;
+    margin-bottom: 10px;
+
+    img {
+        width: 13px;
+        height: 13px;
+        margin-right: 12.5px;
+    }
+
+    button {
+        span {
+            display: inline-block;
+            width: 17px;
+            height: 14px;
+            @include bg($img-show-pwd);
+            margin-top: -3px;
+        }
+
+        span.hide-pwd {
+            @include bg($img-hide-pwd);
+        }
+    }
+}
+.error-wif {
+    position: absolute;
+    margin-top: -25px;
+    font-size: 12px;
+    padding-left: 35px;
+}
+@mixin button-common {
+    width: 240px;
+    height: 40px;
+    border-radius: 20px;
+    margin-left: 30px;
+    box-shadow: 0 2px 4px 0 rgba(87,83,245,0.4);
+    font-weight: 500;
+}
+
+.popup-wallet-body-submit {
+    @include button-common;
+    margin-top: 15px;
+    margin-bottom: 18.5px;
+}
+
+.popup-wallet-body-cancel {
+    @include button-common;
+}

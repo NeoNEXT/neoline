@@ -1,0 +1,17 @@
+<button mat-icon-button class="close" (click)="close()"><mat-icon>{{ 'close' | translate | async}}</mat-icon></button>
+
+<div class="form">
+    <p class="title">{{ 'balance' | translate | async}}</p>
+    <p class="balance">{{balance?.balance || '0'}} {{balance?.symbol}}</p>
+    <p class="title">{{ 'transgerTo' | translate | async}}</p>
+    <input type="text" class="address" placeholder="{{ 'transferToTip' | translate | async}}" [(ngModel)]="toAddress" />
+    <p class="title">{{ 'amount' | translate | async}}</p>
+    <input type="number" class="amount" placeholder="{{ 'transferAmountTip' | translate | async}}" [(ngModel)]="amount" />
+    <div>
+        <button mat-stroked-button color="primary" (click)="close()">{{ 'cancel' | translate | async}}</button>
+        <button mat-raised-button color="primary" (click)="submit()">
+            <span *ngIf="!creating">{{ 'submit' | translate | async}}</span>
+            <mat-spinner *ngIf="creating" class="light" diameter="28" ></mat-spinner>
+        </button>
+    </div>
+</div>

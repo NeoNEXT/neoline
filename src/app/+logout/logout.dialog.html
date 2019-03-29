@@ -1,0 +1,10 @@
+<div class="title">
+    <button mat-icon-button mat-dialog-close><mat-icon>close</mat-icon></button>
+</div>
+<div class="body">
+        {{ 'logoutTip' | translate | async}}
+</div>
+<div class="options">
+    <button mat-raised-button (click)="ok()">Close</button>
+    <button mat-button class="no" mat-dialog-close>Cancel</button>
+</div>

@@ -1,0 +1,43 @@
+<div class="popup-home-top">
+    <div class="popup-home-top-filter">
+        <div
+            class="popup-home-top-filter-items"
+            #symbolFilter>
+            <!-- [routerLink]="['/popup/home', filter.asset_id]" -->
+            <div
+                *ngFor="let filter of balances;let index = index"
+                (click)="changeFilter(index, filter.asset_id)"
+                [ngClass]="filtersClassName(index)"
+                title="{{ filter.name }}">
+                {{ filter.symbol }}
+            </div>
+         </div>
+    </div>
+
+    <div
+        class="popup-home-top-more"
+        [ngClass]="loading ? 'popup-home-top-more-loading' : ''"
+        (click)="toggleMore()"
+        [ngStyle]="{
+            transform: moreOpen ? 'rotate(180deg)' : 'rotate(0deg)'
+        }"
+        *ngIf="symbolFilter.scrollWidth >= 275"></div>
+
+    <div title="{{ loading }} {{ isInit }}" class="popup-home-top-option" [routerLink]="['/popup/assets']"></div>
+</div>
+
+<div
+    class="popup-home-more"
+    [ngStyle]="moreStyle"
+    [ngClass]="moreClassName()"
+    [hidden]="symbolFilter.scrollWidth < 275"
+    #more>
+    <div
+        *ngFor="let filter of balances;let index = index"
+        (click)="changeFilter(index, filter.asset_id, true)"
+        [ngClass]="index === selectedFilterIndex ? 'popup-home-more-active' : ''"
+        title="{{ filter.name }}"
+        [routerLink]="['/popup/home', filter.asset_id]">
+        {{ filter.symbol }}
+    </div>
+</div>

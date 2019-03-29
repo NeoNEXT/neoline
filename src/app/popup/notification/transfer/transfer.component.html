@@ -1,0 +1,57 @@
+<div class="transfer-content">
+    <div class="loading-box" *ngIf="loading">
+        <div>
+            <mat-spinner strokeWidth="10"></mat-spinner>
+        </div>
+        <h3>{{ loadingMsg }}</h3>
+    </div>
+    <div class="transfer-value">
+        <div class="value-info">
+            <span>{{ 'amount' | translate | async}}</span>
+            <button>{{ 'verify' | translate | async}}</button>
+        </div>
+        <div class="value-detail">
+            <!-- <span class="detail-img"></span> -->
+            <div class="detail-value-right">
+                <p class="detail-value">{{ amount }}</p>
+                <p class="detail-currency">{{ balance?.symbol }}</p>
+            </div>
+        </div>
+    </div>
+
+    <p class="transfer-title">{{ 'transferInfo' | translate | async}}</p>
+
+    <div class="transfer-account-group">
+        <div class="transfer-account-item">
+            <div class="account-left">
+                <p class="account-tip">
+                    <span class="tip-info">{{ 'paymentAccount' | translate | async}}</span>
+                    <span class="tip-name">{{ wallet?.name }}</span>
+                </p>
+                <p class="account-address">
+                    <span class="address-tip">{{ 'address' | translate | async}}: &nbsp;</span>
+                    <span class="address-detail">{{ fromAddress }}</span>
+                </p>
+            </div>
+            <!-- <div class="account-right"></div> -->
+        </div>
+        <div class="transfer-account-item">
+            <div class="account-left">
+                <p class="account-tip">
+                    <span class="tip-info">{{ 'receiptAccount' | translate | async}}</span>
+                </p>
+                <p class="account-address">
+                    <span class="address-tip">{{ 'address' | translate | async}}: &nbsp;</span>
+                    <span class="address-detail">{{ toAddress }}</span>
+                </p>
+            </div>
+            <!-- <div class="account-right"></div> -->
+        </div>
+        <div class="submit-group">
+            <div class="button-group">
+                <button mat-button class="cancel" (click)="cancel()">{{ 'cancel' | translate | async}}</button>
+                <button mat-button class="confirm" (click)="submit()">{{ 'yes' | translate | async}}</button>
+            </div>
+        </div>
+    </div>
+</div>

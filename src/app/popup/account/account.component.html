@@ -1,0 +1,25 @@
+<div class="popup-account-header">
+    <div class="popup-account-option">
+        <div (click)="updateName()"></div>
+        <div (click)="qrcode()"></div>
+    </div>
+
+    <div class="popup-account-logo">
+        <img [avatar]="address" />
+    </div>
+</div>
+
+<div class="popup-account-name">{{ walletName }}</div>
+<div class="popup-account-tip">{{ 'address' | translate | async}}</div>
+<div
+    class="popup-account-address">
+    <textarea type="text" id="popup-account-address-copy" [value]="address" readonly></textarea>
+</div>
+
+<div class="popup-account-toolbar">
+    <button mat-button (click)="wif()">{{ 'displayWIF' | translate | async}}</button>
+    <button
+        mat-button
+        copy="popup-account-address-copy"
+        (onCopy)="copied()">{{ 'copyAddress' | translate | async}}</button>
+</div>

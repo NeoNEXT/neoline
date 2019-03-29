@@ -1,0 +1,49 @@
+@import 'src/styles/theme-default';
+
+:host {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    height: 100%;
+}
+.balance {
+    width: 300px;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+    box-shadow: 0 8px 16px #484e6d;
+    height: 100%;
+    z-index: 5;
+}
+.balance .flex-1 {
+    overflow-y: auto;
+}
+.detail {
+    -webkit-box-flex: 1;
+    flex: 1;
+}
+.manage {
+    margin: $space;
+    padding: $space;
+    border: 1px solid #E5E5E5;
+    text-align: center;
+    border-radius: 6px;
+    font-size: 16px;
+    cursor: pointer;
+    transition: 0.2s;
+    color: mat-color($default-app-primary);
+}
+.manage:hover {
+    transform: scale(1.05);
+}
+.manage img {
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+    margin-right: $space/2;
+}
+
+@media screen and (max-width: 1200px) {
+    .balance {
+        width: 240px;
+    }
+}

@@ -1,0 +1,131 @@
+@import 'src/styles/theme-default';
+.nav {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: center;
+}
+.nav .name {
+    color: #FFFFFF;
+    font-size: 16px;
+    margin: 0 $space;
+}
+.nav .avatar {
+    width: 40px;
+    height: 40px;
+}
+.nav .logo {
+    width: 48px;
+    height: 32px;
+    vertical-align: middle;
+    margin-left: 15px;
+}
+.nav .logo-title {
+    margin-left: 15px;
+    width: 136px;
+    height: 40px;
+    vertical-align: middle;
+}
+
+.login {
+    .mat-toolbar {
+        background: white;;
+    }
+    .nav-network {
+        width: 107px;
+        height: 25px;
+        line-height: 25px;
+        border-radius: 12px;
+        font-size: 12px;
+
+        .nav-network-icon {
+            width: 5.5px;
+            height: 3px;
+            display: inline-block;
+            background: url('/assets/images/net_dropdown_black.png') no-repeat center;
+            background-size: 100%;
+        }
+    }
+}
+.login-content {
+    .login-left-bg {
+        float: left;
+    }
+    .login-body {
+        float: left;
+        margin-top: 60px;
+        margin-left: -220px;
+        height: 550px;
+        width: 510px;
+        background: url('/assets/images/login_bg.png') no-repeat center;
+        background-size: 100%;
+        padding-top: 70px;
+        padding-left: 100px;
+        padding-right: 100px;
+        h1 {
+            text-align: center;
+            font-size: 30px;
+        }
+        h3 {
+            margin-top: 40px;
+            font-size:16px;
+            font-weight: 500;
+            color:rgba(102,102,102,1);
+        }
+    }
+    .login-input {
+        width: 291.5px;
+        font-size: 15px;
+        margin-top: 60px;
+        img {
+            width: 15px;
+            height: 15px;
+            margin-right: 5px;
+            margin-bottom: -2px;
+        }
+
+        button {
+            span {
+                display: inline-block;
+                width: 17px;
+                height: 14px;
+                background: url('/assets/images/show_pwd.png') center center/contain no-repeat;
+                margin-top: -3px;
+            }
+            span.hide-pwd {
+                background: url('/assets/images/hide_pwd.png') center center/contain no-repeat;
+            }
+        }
+    }
+    .login-btn {
+        width: 291px;
+        height: 40px;
+        margin: auto;
+        margin-top: 107px;
+        font-size: 15px;
+        font-weight: 500;
+        box-shadow: 0 2px 4px 0 rgba(87,83,245,0.4);
+        border-radius: 40px;
+        display: block;
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    .login-left-bg {
+        width: 80%;
+    }
+    .login-body {
+        margin-left: -40% !important;
+        margin-top: 10px !important;
+    }
+}
+@media screen and (max-width: 960px) {
+    .login-body {
+        margin-left: -60% !important;
+        height: 520px !important;
+    }
+}
+
+
+
+

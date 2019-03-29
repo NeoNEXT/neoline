@@ -1,0 +1,32 @@
+<div class="popup-login-logo">
+    <div class="pupup-login-logo-small"></div>
+    <div class="popup-login-welcome">{{ 'welcomeBack' | translate | async}}</div>
+
+    <div class="popup-login-tip">{{ 'loginTip' | translate | async}}：</div>
+    <form #loginForm="ngForm">
+        <mat-form-field class="popup-login-input">
+            <img matPrefix src="../../../assets/images/lock.png" alt="" />
+            <input matInput [placeholder]="'pwdInput' | translate | async" [minlength]="limit.passwordLimitation[0]" [maxlength]="limit.passwordLimitation[1]"
+                [pattern]="limit.pattern" [minlength]="limit.passwordLimitation[0]" [maxlength]="limit.passwordLimitation[1]"
+                [pattern]="limit.pattern" name="password" #password="ngModel" required [(ngModel)]="wallet.password"
+                [type]="hidePwd ? 'password' : 'text'"
+                (keyup.enter)="(!isInit && !loginForm.invalid && !loading) ? login() : null " />
+            <button mat-button matSuffix mat-icon-button type="button" (click)="togglePwd()">
+                <span [class]="hidePwd ? 'hide-pwd' : '' "></span>
+            </button>
+            <mat-error *ngIf="password.errors?.required">{{ 'passwordRequired' | translate | async}}</mat-error>
+            <mat-error *ngIf="password.errors?.minlength">{{ 'lengthLimit' | translate | async}}: {{
+                limit.passwordLimitation[0] }}-{{ limit.passwordLimitation[1] }} </mat-error>
+
+            <mat-error *ngIf="password.errors?.pattern">
+                {{ 'onlySupport' | translate | async}}: 0-9 A-Z a-z _-+=,.:!
+            </mat-error>
+        </mat-form-field>
+    </form>
+    <button mat-raised-button color="primary" class="popup-login" [disabled]="isInit || loginForm.invalid || loading"
+        (click)="login()">
+        <ng-container *ngIf="!loading">{{ 'login' | translate | async}}</ng-container>
+        <ng-container *ngIf="loading">{{ 'logining' | translate | async}}</ng-container>
+    </button>
+</div>
+<!-- <img src="../../../assets/images/popup_login_bg.png" alt=""> -->

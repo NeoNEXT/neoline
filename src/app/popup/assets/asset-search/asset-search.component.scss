@@ -1,0 +1,59 @@
+@import 'src/styles/popup-default';
+@import 'src/styles/theme-default';
+
+
+.asset-item {
+    width: 100%;
+    height: 49px;
+    margin: 10px 15px;
+
+    display: inline-flex;
+    align-items: center;
+    position: relative;
+
+    .avatar {
+        width: 49px;
+        height: 49px;
+        display: inline-block;
+        // background: rgba(73, 73, 73, 1);
+        border-radius: 6px;
+        margin-right: 12px;
+    }
+
+    span {
+        color: map-get($colors, 333333);
+        font-size: 14px;
+        font-weight: 500;
+        display: inline-block;
+        height: 49px;
+        line-height: 49px;
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+
+    button {
+        width: 62px;
+        height: 30px;
+        line-height: 30px;
+        padding: 0;
+        border-radius: 15px;
+        font-weight: 500;
+        font-size: 14px;
+        color: map-get($neo-line-default, 50);
+        position: absolute;
+        right: 30px;
+    }
+
+    .unadd {
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        box-shadow: 0px 4px 8px 0px rgba(87, 83, 245, 0.4);
+
+    }
+
+    .added {
+        background: rgba(194, 198, 245, 1);
+        color: map-get($neo-line-default, 50);
+    }
+}

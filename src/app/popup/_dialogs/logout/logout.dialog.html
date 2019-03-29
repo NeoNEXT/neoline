@@ -1,0 +1,11 @@
+<div >{{ 'logoutTip' | translate | async}}</div>
+
+<button
+    class="popup-logout-ok"
+    mat-raised-button
+    [mat-dialog-close]="true">{{ 'yes' | translate | async }}</button>
+
+<button
+    class="popup-logout-no"
+    mat-raised-button
+    [mat-dialog-close]="false">{{ 'cancel' | translate | async}}</button>

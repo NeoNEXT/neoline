@@ -1,0 +1,16 @@
+<div class="list flex-1">
+    <mat-form-field class="search-input">
+        <span class="search-prefix" matPrefix></span>
+        <input matInput autofocus (keyup.enter)="searchCurrency()" [(ngModel)]="searchValue" type="text" [placeholder]="'searchAssetsInput' | translate | async">
+    </mat-form-field>
+    <p *ngIf="searchAssets" class="search-title">{{ 'searchResult' | translate | async}}</p>
+    <p *ngIf="!searchAssets" class="search-title">{{ 'searchAllResult' | translate | async}}</p>
+    <div class="asset flex" *ngFor="let asset of searchAssets || allAssets?.items;let i = index">
+        <img [src]="asset?.avatar" class="avatar" alt="">
+        <span class="flex-1">{{asset?.symbol}}</span>
+        <button mat-raised-button color="primary" *ngIf="asset.watching">{{ 'added' | translate | async}}</button>
+        <button mat-raised-button color="primary" *ngIf="!asset.watching" class="watching" (click)="addAsset(i)">{{ 'add' | translate | async}}</button>
+    </div>
+</div>
+<pager *ngIf="!searchAssets" [pages]="allAssets?.pages" [page]="allAssets?.page" [total]="allAssets?.total" (onPage)="page($event)"></pager>
+<pager *ngIf="searchAssets" [pages]="1" [page]="1" [total]="1" (onPage)="page($event)"></pager>

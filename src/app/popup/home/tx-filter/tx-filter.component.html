@@ -1,0 +1,27 @@
+<div class="popup-home-filter">
+    <div class="popup-home-filter-title">
+        <span>{{ 'transferHistory' | translate | async}}</span>
+        <ng-container *ngIf="totalCount > 0">
+        ({{ totalCount }} {{ 'reocords' | translate | async}}, {{ totalPage }} {{ 'pages' | translate | async}})
+        </ng-container>
+    </div>
+    <!-- <div class="popup-home-filter-option">
+        <button mat-button [matMenuTriggerFor]="menu">
+            Any
+            <span></span>
+        </button>
+
+        <mat-menu #menu="matMenu">
+            <button mat-menu-item>Any</button>
+            <button mat-menu-item>Contract</button>
+            <button mat-menu-item>Invocation</button>
+            <button mat-menu-item>Claim</button>
+            <button mat-menu-item>Miner</button>
+            <button mat-menu-item>Register</button>
+        </mat-menu>
+    </div>
+    <div class="popup-home-filter-tip">
+        <div></div>
+        <div>类型</div>
+    </div> -->
+</div>

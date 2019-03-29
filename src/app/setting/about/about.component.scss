@@ -1,0 +1,94 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+.logo {
+    text-align: center;
+    padding: $space*2 0;
+}
+.logo .icon {
+    width: 178px;
+    height: 117px;
+}
+.logo .name {
+    width: 148px;
+    height: 43px;
+    margin-top: $space;
+}
+.logo .version {
+    color: #666666;
+    font-size: 14px;
+    margin-top: $space;
+}
+.blocks {
+    text-align: center;
+}
+.blocks > div {
+    vertical-align: top;
+    display: inline-block;
+    width: 325px;
+    height: 158px;
+    margin: $space;
+    background-size: contain;
+    background-repeat: no-repeat;
+    transition: 0.2s;
+    cursor: pointer;
+}
+.blocks > div.home {
+    background-image: url('/assets/images/about_home.png');
+}
+.blocks > div.contact {
+    background-image: url('/assets/images/about_contact.png');
+}
+.blocks > div.terms {
+    background-image: url('/assets/images/about_terms.png');
+}
+.blocks > div.policy {
+    background-image: url('/assets/images/about_policy.png');
+}
+
+.blocks > div.home:hover {
+    background-image: url('/assets/images/about_home_active.png');
+}
+.blocks > div.contact:hover {
+    background-image: url('/assets/images/about_contact_active.png');
+}
+.blocks > div.terms:hover {
+    background-image: url('/assets/images/about_terms_active.png');
+}
+.blocks > div.policy:hover {
+    background-image: url('/assets/images/about_policy_active.png');
+}
+
+.blocks div {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    p {
+        position: absolute;
+        left: 120px;
+        width: 200px;
+        font-size: 24px;
+        font-weight: 500;
+        color: map-get($colors, 282828);
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    .logo .icon {
+        width: 150px;
+        height: 99px;
+    }
+    .logo .name {
+        width: 120px;
+        height: 35px;
+    }
+    .blocks > div {
+        width: 250px;
+        height: 121px;
+    }
+    .blocks div p {
+        left: 100px;
+        width: 150px;
+        font-size: 18px;
+    }
+}

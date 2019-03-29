@@ -1,0 +1,167 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+.head {
+    width: 100%;
+    padding: 57px 15px 35px 15px;
+
+    .content {
+        width: 345px;
+        height: 147px;
+        background: rgba(244, 247, 252, 1);
+        box-shadow: 0px 3px 13px 0px rgba(81, 91, 227, 0.3);
+        border-radius: 10px;
+        position: relative;
+        padding: 20px 22px 12px 22px;
+
+        .avatar {
+            background: rgba(73, 73, 73, 1);
+            box-shadow: 0px 3px 13px 0px rgba(81, 91, 227, 0.3);
+            border-radius: 6px;
+            width: 49px;
+            height: 49px;
+            position: absolute;
+            top: -33px;
+            left: 50%;
+            margin-left: -24px;
+        }
+
+        .request {
+            color: map-get($colors, 333333);
+            font-size: 20px;
+            font-weight: bold;
+            text-align: center;
+            line-height: 50px;
+            border-bottom: 1px solid map-get($colors, e4e3f9);
+        }
+
+        .account {
+            padding: 0 14px;
+
+            .account-name {
+                float: left;
+                text-align: left;
+
+                .name-detail {
+                    height: 24px;
+                    display: inline-flex;
+                    align-items: center;
+
+                    img {
+                        display: inline-block;
+                        width: 24px;
+                        height: 24px;
+                        background: rgba(73, 73, 73, 1);
+                        border-radius: 12px;
+                    }
+                }
+            }
+
+            .name-tip,
+            .value-tip {
+                width: 55px;
+                height: 17px;
+                line-height: 17px;
+                background: rgba(122, 135, 169, 1);
+                border-radius: 4px;
+                font-size: 12px;
+                font-weight: 500;
+                color: map-get($colors, f4f7fc);
+                text-align: center;
+                margin-top: 15px;
+                margin-bottom: 10px;
+            }
+
+            span.name,
+            span.amount {
+                font-size: 15px;
+                color: map-get($colors, 333333);
+                font-weight: bold;
+            }
+
+            .account-value {
+                float: right;
+                text-align: left;
+
+                .value-detail {
+                    height: 24px;
+                    line-height: 24px;
+                }
+
+                .type {
+                    color:map-get($colors, 9fa8bd);
+                    font-size: 12px;
+                    font-weight: bold;
+                }
+            }
+        }
+
+    }
+}
+
+.loading {
+    background: map-get($colors, f3f2ff);
+    height: 20px;
+    line-height: 20px;
+    width: 100%;
+    color: map-get($colors, 7178dd);
+    font-size: 12px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.message {
+    padding: 0 15px;
+
+    .item {
+        padding: 10px 0;
+        margin-bottom: 10px;
+        font-weight: bold;
+        border-bottom: 1px solid map-get($colors, e5e5e5);
+
+        .item-tip {
+            font-size: 15px;
+            color: map-get($colors, 999999);
+            line-height: 40px;
+            padding: 0 10px;
+        }
+
+        .item-value {
+            font-size: 14px;
+            color: map-get($colors, 333333);
+            padding: 0 10px;
+        }
+    }
+}
+
+.submit-group {
+    height: 40px;
+    position: fixed;
+    bottom: 30px;
+    left: 27px;
+    right: 27px;
+
+    .button-group {
+        width: 100%;
+        position: relative;
+    }
+
+    button {
+        width: 150px;
+        height: 40px;
+        border-radius: 4px;
+    }
+
+    button.cancel {
+        box-shadow: 0px 2px 8px 0px rgba(87, 83, 245, 0.4);
+        color: map-get($neo-line-default, 500);
+    }
+
+    button.confirm {
+        box-shadow: 0px 5px 8px 0px rgba(87, 83, 245, 0.4);
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        color: map-get($neo-line-default, 50);
+        position: absolute;
+        right: 0;
+    }
+}

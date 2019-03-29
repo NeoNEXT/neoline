@@ -1,0 +1,127 @@
+@import 'src/styles/popup-default';
+@import 'src/styles/theme-default';
+
+.popup-authorization-list-head {
+    width: 100%;
+    height: 40px;
+    line-height: 40px;
+    background-color: map-get($neo-line-default, 500);
+    overflow: hidden;
+    position: fixed;
+    top: 64px;
+    .btn-back {
+        float: left;
+        width: 18px;
+        height: 18px;
+        @include bg($img-back);
+        margin-top: 11px;
+        margin-left: 22px;
+        position: relative;
+        z-index: 100;
+
+        &:hover {
+            cursor: pointer;
+        }
+    }
+    .title {
+        position: absolute;
+        width: 100%;
+        text-align: center;
+        color: white;
+        font-size: 16px;
+    }
+}
+
+.popup-authorization-list-content {
+    margin-top: 40px;
+    padding-bottom: 50px;
+    .empty {
+        text-align: center;
+        margin-top: 100px;
+        color: #999999;
+        font-size: 12px;
+    }
+    .authorization-item {
+        display: flex;
+        flex-direction: row;
+        padding: 15px 23px;
+        height: 70px;
+        align-items: center;
+        border-bottom: 1px solid #e5e5e5;
+        .icon {
+            height: 40px;
+            width: 40px;
+        }
+        .info-box {
+            margin-left: 13px;
+            flex-grow: 1;
+            .top {
+                .websit-title {
+                    font-size: 13px;
+                    color: #282828;
+                    white-space: nowrap;
+                    overflow:hidden;
+                    text-overflow:ellipsis;
+                    max-width: 135px;
+                    display: inline-block;
+                    vertical-align: middle;
+                    margin-right: 10px;
+                }
+                .websit-status {
+                    padding: 1px 8px;
+                    padding-left: 16px;
+                    border-radius: 10px;
+                    font-size: 10px;
+                    &.success {
+                        color: #7178DD;
+                        background: #F4F7FC url($img-authorization-success) no-repeat 6px;
+                        background-size: 8px;
+                    }
+                    &.fail {
+                        color: #999999;
+                        background: #F2F2F2 url($img-authorization-fail) no-repeat 6px;
+                        background-size: 8px;
+                    }
+                }
+            }
+            .websit-url {
+                max-width: 200px;
+                color: #999999;
+                font-size: 12px;
+                white-space: nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+            }
+        }
+        .remove-btn {
+            padding: 4px 10px;
+            color: #7A87A9;
+            border: 1px solid rgba(122,135,169,1);
+            border-radius:2px;
+            font-size: 12px;
+        }
+
+    }
+    .clear-all {
+        width: 100%;
+        position: fixed;
+        bottom: 0;
+        height: 50px;
+        line-height: 50px;
+        text-align: center;
+        background: #F3F2FF;
+        color: #7178DD;
+        font-size: 14px;
+        img {
+            width: 12px;
+            height: 12px;
+            vertical-align: middle;
+        }
+        span {
+            vertical-align: middle;
+            margin-left: 8px;
+        }
+    }
+}
+
+

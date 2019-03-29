@@ -1,0 +1,23 @@
+@import 'src/styles/theme-default';
+
+:host {
+    display: block;
+    font-size: 14px;
+    transition: 0.2s;
+}
+:host:hover {
+    background: #F4F7FC;
+    cursor: pointer;
+}
+// :host:nth-of-type(odd) {
+//     background: #F4F7FC;
+// }
+span {
+    padding: $space;
+    overflow: hidden;
+    color: #484E6D;
+    text-align: center;
+}
+span.txid {
+    width: 260px;
+}

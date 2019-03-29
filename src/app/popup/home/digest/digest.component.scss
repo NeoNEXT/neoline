@@ -1,0 +1,51 @@
+@import 'src/styles/popup-default';
+@import 'src/styles/theme-default';
+
+.popup-home-logo {
+    width: 70px;
+    height: 70px;
+    margin: auto;
+    display: block;
+    margin-top: 81.5px;
+    margin-bottom: 14.5px;
+    border-radius: 3px;
+}
+
+.popup-home-asset-value {
+    height: 22px;
+    line-height: 22px;
+    font-size: 18px;
+    font-weight: 500;
+    text-align: center;
+    color: map-get($colors, 333333);
+    margin-bottom: 8.5px;
+
+    span {
+        font-family: AkrobatBold, serif;
+        letter-spacing: 1px;
+
+        &:after {
+            content: ' ';
+        }
+    }
+
+    button {
+        width: 22px;
+        height: 22px;
+        line-height: 26px;
+
+        * {
+            width: 22px;
+            height: 22px;
+            font-size: 13px;
+            line-height: 18px;
+            color: map-get($neo-line-default, 500);
+        }
+    }
+}
+
+.popup-home-asset-dollar {
+    font-size: 13px;
+    text-align: center;
+    color: map-get($colors, 9fa8bd);
+}

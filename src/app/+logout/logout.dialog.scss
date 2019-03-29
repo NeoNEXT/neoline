@@ -1,0 +1,60 @@
+:host {
+    border-radius: 2px;
+    overflow: hidden;
+    display: block;
+    background: #fefefe;
+}
+.mat-dialog-container {
+    padding: 0 !important;
+}
+.title {
+    font-size: 18px;
+    padding: 8px 16px;
+    position: relative;
+}
+.title > button {
+    position: absolute;
+    right: 0;
+    top: 0;
+}
+.body {
+    font-size: 16px;
+    padding: 16px;
+}
+.options {
+    padding: 8px 16px;
+}
+.options button {
+    margin: 5px;
+}
+@media screen and (min-width: 601px) {
+
+}
+
+.title.warn {
+    color: #fefefe;
+    background: #ea4748;
+}
+.body.warn {
+    color: #db6161;
+}
+.options.warn button {
+    background: #ea4748;
+    color: #ffffff;
+}
+
+.title.accent {
+    color: #fefefe;
+    background: #1093df;
+}
+.body.accent {
+    color: #1093df;
+}
+.options.accent button {
+    background: #1093df;
+    color: #ffffff;
+}
+.no {
+    background: none !important;
+    color: #969696 !important;
+}

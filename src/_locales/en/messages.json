@@ -1,0 +1,405 @@
+{
+    "hello": {
+        "message": "Hello"
+    },
+    "closeWallet": {
+        "message": "Close wallet"
+    },
+    "account": {
+        "message": "Wallet"
+    },
+    "assets": {
+        "message": "Assets"
+    },
+    "setting": {
+        "message": "Setting"
+    },
+
+    "homeTitle": {
+        "message": "Home for NEOLine"
+    },
+    "mainNet": {
+        "message": "Main net"
+    },
+    "net": {
+        "message": "NEO net"
+    },
+    "home": {
+        "message": "Home"
+    },
+    "about": {
+        "message": "About"
+    },
+    "expandView": {
+        "message": "Expand View"
+    },
+    "close": {
+        "message": "Close"
+    },
+    "address": {
+        "message": "Address"
+    },
+    "copyAddress": {
+        "message": "Copy address"
+    },
+    "create": {
+        "message": "Create"
+    },
+    "import": {
+        "message": "Import"
+    },
+    "welcomeCreate": {
+        "message": "Welcome to NEOLine. Create"
+    },
+    "welcomeImport": {
+        "message": "Welcome to NEOLine. Import"
+    },
+    "enterWalletName": {
+        "message": "Enter wallet name"
+    },
+    "walletNameIsRequired": {
+        "message": "Wallet name is required"
+    },
+    "lengthLimit": {
+        "message": "Length limit"
+    },
+    "enterPassword": {
+        "message": "Enter password"
+    },
+    "passwordRequired": {
+        "message": "Password is required"
+    },
+    "enterConfirmPassword": {
+        "message": "Enter password again"
+    },
+    "confirmError": {
+        "message": "Two passwords are different"
+    },
+    "creating": {
+        "message": "Creating"
+    },
+    "enterWIF": {
+        "message": "Enter WIF(Private key)"
+    },
+    "WIFRequired": {
+        "message": "WIF is required"
+    },
+    "importing": {
+        "message": "Importing"
+    },
+    "language": {
+        "message": "Language"
+    },
+    "loading": {
+        "message": "loading..."
+    },
+    "empty": {
+        "message": "Empty"
+    },
+    "receive": {
+        "message": "Receive"
+    },
+    "balance": {
+        "message": "Balance"
+    },
+    "transgerTo": {
+        "message": "Transfer to"
+    },
+    "transferToTip": {
+        "message": "Who will receive"
+    },
+    "amount": {
+        "message": "Amount"
+    },
+    "transferAmountTip": {
+        "message": "Amount to transfer out"
+    },
+    "cancel": {
+        "message": "Cancel"
+    },
+    "refuse": {
+        "message": "Refuse"
+    },
+    "submit": {
+        "message": "Submit"
+    },
+    "copy": {
+        "message": "Copy"
+    },
+    "displayWIF": {
+        "message": "Display WIF"
+    },
+    "password": {
+        "message": "Password"
+    },
+    "verifyPassword": {
+        "message": "Verify your password"
+    },
+    "caution": {
+        "message": "Caution"
+    },
+    "transferExportTip": {
+        "message": "Keep your WIF key save please"
+    },
+    "verify": {
+        "message": "Verify"
+    },
+    "done": {
+        "message": "Done"
+    },
+    "transfer": {
+        "message": "Transfer"
+    },
+    "transferHistory": {
+        "message": "History"
+    },
+    "reocords": {
+        "message": "reocords"
+    },
+    "pages": {
+        "message": "pages"
+    },
+    "transferId": {
+        "message": "ID"
+    },
+    "transferVolume": {
+        "message": "Volume"
+    },
+    "size": {
+        "message": "Size"
+    },
+    "time": {
+        "message": "Time"
+    },
+    "newWallet": {
+        "message": "New wallet"
+    },
+    "createTip": {
+        "message": "Welcome to NEOLine, create a new wallet."
+    },
+    "logoutTip": {
+        "message": "Are you sure close wallet?"
+    },
+    "yes": {
+        "message": "Yes"
+    },
+    "transferInfo": {
+        "message": "Transfer information"
+    },
+    "paymentAccount": {
+        "message": "Payment wallet"
+    },
+    "receiptAccount": {
+        "message": "Receipt wallet"
+    },
+    "privacyPolicy": {
+        "message": "Privacy policy"
+    },
+    "termsOfUse": {
+        "message": "Terms of use"
+    },
+    "companyWebsite": {
+        "message": "Company website"
+    },
+    "contractUs": {
+        "message": "Contract us"
+    },
+    "myAccountQRCode": {
+        "message": "My wallet QR code"
+    },
+    "complete": {
+        "message": "Complete"
+    },
+    "addAssetTip": {
+        "message": "Are you sure to add this asset?"
+    },
+    "delAssetTip": {
+        "message": "Do you confirm the deletion?"
+    },
+    "modifyNameTitle": {
+        "message": "Modify wallet name"
+    },
+    "modifyNameInput": {
+        "message": "Please enter a new wallet name(length 1-16)"
+    },
+    "connect": {
+        "message": "Connect"
+    },
+    "thAuthTitle": {
+        "message": "Connection request"
+    },
+    "thAuthTip": {
+        "message": "would like to connect to your wallet"
+    },
+    "thAuthDetail": {
+        "message": "This site is trying to request access to the NEO API so that it can interact with the NEO blockchain. Before approving your visit, be sure to double check that you are linking to the correct site."
+    },
+    "thAuthMore": {
+        "message": "Look more"
+    },
+    "thSignTitle": {
+        "message": "Requesting your signature"
+    },
+    "signing": {
+        "message": "Signing"
+    },
+    "message": {
+        "message": "Message"
+    },
+    "signature": {
+        "message": "Signature"
+    },
+    "thAssetTip": {
+        "message": "Do you want to add these assets?"
+    },
+    "version": {
+        "message": "Version"
+    },
+    "addAsset": {
+        "message": "Add asset"
+    },
+    "searchResult": {
+        "message": "Search result"
+    },
+    "searchAssetsInput": {
+        "message": "Please enter asset, enter to search"
+    },
+    "hidden": {
+        "message": "Hidden"
+    },
+    "add": {
+        "message": "Add"
+    },
+    "added": {
+        "message": "Added"
+    },
+    "myAccount": {
+        "message": "My wallet"
+    },
+    "importAccount": {
+        "message": "Import wallet"
+    },
+    "createAccount": {
+        "message": "Create wallet"
+    },
+    "clearCacheBtn": {
+        "message": "Empty"
+    },
+    "clearCache": {
+        "message": "Clear cache"
+    },
+    "clearCacheTip": {
+        "message": "Press to clear cache"
+    },
+    "welcomeBack": {
+        "message": "Welcome back"
+    },
+    "loginTip": {
+        "message": "Welcome to NEOLine, please login first"
+    },
+    "pwdInput": {
+        "message": "Please enter your password"
+    },
+    "onlySupport": {
+        "message": "Support only for"
+    },
+    "login": {
+        "message": "Login"
+    },
+    "logining": {
+        "message": "Logging in"
+    },
+    "searchAllResult": {
+        "message": "All assets"
+    },
+    "clearStorageTips": {
+        "message": "Confirm clear cache?"
+    },
+    "authorizationManage": {
+        "message": "Authorization Manage"
+    },
+    "authorizationManageTips": {
+        "message": "Clean up authorized sites"
+    },
+    "viewAll": {
+        "message": "View all"
+    },
+    "remove": {
+        "message": "Remove"
+    },
+    "delete": {
+        "message": "Delete"
+    },
+    "authDelAllTip": {
+        "message": "Clear all authorized sites"
+    },
+    "welcomeNEOLine": {
+        "message": "Welcome to NEOLine."
+    },
+    "myAddress": {
+        "message": "My NEO address"
+    },
+    "myQRCode": {
+        "message": "My address QR code"
+    },
+    "setLang": {
+        "message": "Language settings"
+    },
+    "WIFPattern": {
+        "message": "wrong WIF"
+    },
+    "tranSubmit": {
+        "message": "Transaction submitted."
+    },
+    "waitConfirm": {
+        "message": "Please wait for confirmation."
+    },
+    "transaction": {
+        "message": "Transaction"
+    },
+    "transactions": {
+        "message": "Transactions"
+    },
+    "value": {
+        "message": "value"
+    },
+    "noTransaction": {
+        "message": "No transactions"
+    },
+    "wif": {
+        "message": "WIF(Private key)"
+    },
+    "delWalletConfirm": {
+        "message": "Are you sure delete this wallet"
+    },
+    "delAllAuthListConfirm": {
+        "message": "Are you sure delete all authorized sites"
+    },
+    "rejected": {
+        "message": "Rejected"
+    },
+    "rejectedTip": {
+        "message": "This site has been denied authorization, please go to Plug-in Authorization Management Clearance"
+    },
+    "Authorized": {
+        "message": "Authorized"
+    },
+    "assetRate": {
+        "message": "Asset Conversion"
+    },
+    "privacyData": {
+        "message": "Privacy data"
+    },
+    "clearPrivacyDataBtn": {
+        "message": "Clear all Privacy data"
+    },
+    "clearPrivacyDataTip": {
+        "message": "Once the privacy data is cleared, all sites must re-request to view account information."
+    },
+    "referSource": {
+        "message": "Reference source"
+    },
+    "updateTime": {
+        "message": "Update time"
+    }
+}

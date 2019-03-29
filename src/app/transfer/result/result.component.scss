@@ -1,0 +1,41 @@
+@import 'src/styles/theme-default';
+
+:host {
+    z-index: 21;
+    position: fixed;
+    width: 424px;
+    height: auto;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: #FFFFFF;
+    border-radius: 4px;
+    box-shadow: 0 0 8px #969696;
+    padding: $space;
+}
+
+@media screen and (max-width: 1200px) {
+    :host {
+        width: 300px;
+    }
+}
+
+img {
+    width: 50px;
+    height: 50px;
+    display: block;
+    margin: $space auto;
+}
+p {
+    font-size: 18px;
+    color: #333333;
+    text-align: center;
+    margin-top: $space;
+}
+p.tip {
+    font-size: 14px;
+}
+button {
+    display: block;
+    margin: $space auto;
+}

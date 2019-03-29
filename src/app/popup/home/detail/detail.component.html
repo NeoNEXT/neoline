@@ -1,0 +1,47 @@
+<app-filter-bar [initAssetId]="assetId"></app-filter-bar>
+
+<app-digest
+    [balance]="balance?.balance"
+    [symbol]="balance?.symbol"
+    [name]="balance?.name"
+    [assetId]="assetId"></app-digest>
+
+<app-transfer [assetId]="balance?.asset_id"></app-transfer>
+<app-tx-filter [totalCount]="txPage?.total" [totalPage]="txPage?.pages"></app-tx-filter>
+
+<div class="popup-home-txs">
+    <!-- <app-tx-header *ngIf="txPage?.total !== 0"></app-tx-header> -->
+
+    <div
+        class="popup-home-notx"
+        *ngIf="isLoading || needLoadWhenSymbolSwitch">
+        {{ 'loading' | translate | async}}
+    </div>
+
+    <div
+        class="popup-home-notx"
+        *ngIf="!needLoadWhenSymbolSwitch && !isLoading && txPage?.total === 0">
+        {{ 'empty' | translate | async}}
+    </div>
+
+    <ng-container *ngIf="!isLoading && !needLoadWhenSymbolSwitch && txPage?.total > 0">
+        <div class="popup-home-tx-list">
+            <app-tx-item
+                *ngFor="let tx of txPage?.items"
+                [symbol]="balance?.symbol"
+                [id]= "tx?.id || -1"
+                [value]="tx.value"
+                [time]="tx.block_time"
+                [txid]="tx.txid"></app-tx-item>
+            <ng-container *ngIf="txPage.total > 10">
+                <div class="popup-home-tx-page">
+                    <app-popup-pager
+                        [currentPage]="txPage?.page || 1"
+                        [totalPageCount]="txPage?.pages || 0"
+                        [totalItemCount]="txPage?.total || 0"
+                        (onPage)="page($event)"></app-popup-pager>
+                </div>
+            </ng-container>
+        </div>
+    </ng-container>
+</div>

@@ -1,0 +1,53 @@
+{
+    "name": "NEOLine",
+    "description": "NEO thin wallet for chrome extension",
+    "version": "1.0",
+    "manifest_version": 2,
+    "browser_action": {
+        "default_popup": "index.html#popup",
+        "default_icon": "assets/logo.png"
+    },
+    "default_locale": "zh_CN",
+    "commands": {
+        "_execute_browser_action": {
+            "suggested_key": {
+                "default": "Ctrl+Shift+F",
+                "mac": "MacCtrl+Shift+F"
+            },
+            "description": "Opens neoline"
+        }
+    },
+    "content_scripts": [
+        {
+            "matches": ["*://*/*"],
+            "js": [
+                "neoline.js"
+            ]
+        }
+    ],
+    "web_accessible_resources": [
+        "dapi.js"
+    ],
+    "permissions": [
+        "storage",
+        "https://iwallic.forchain.info/",
+        "notifications",
+        "tabs",
+        "webRequest",
+        "webRequestBlocking"
+    ],
+    "background": {
+        "scripts": [
+            "background.js"
+        ],
+        "persistent": true
+    },
+    "externally_connectable": {
+        "matches": [
+            "https://neoline.cn/*"
+          ],
+          "ids": [
+            "*"
+          ]
+    }
+}

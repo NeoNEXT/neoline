@@ -1,0 +1,202 @@
+@import 'src/styles/theme-default';
+
+:host {
+    overflow: auto;
+}
+.nav {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    align-items: center;
+    .nav-account-box {
+        height: 40px;
+        display: inline-block;
+        .name {
+            color: #FFFFFF;
+            font-size: 16px;
+            margin: 0 30px 0 15px;
+            vertical-align: middle;
+        }
+        .avatar {
+            width: 40px;
+            height: 40px;
+            vertical-align: middle;
+        }
+    }
+}
+::ng-deep .nav-account-menu-box {
+    .nav-account-menu-title {
+        font-size: 14px;
+        color: #484E6D;
+        margin-left: 16px;
+    }
+    .nav-account-item-box {
+        height: 50px;
+        line-height: 50px;
+        &:hover {
+            background: #F4F7FC;
+        }
+        .selected-icon {
+            width: 15px;
+            height: 9px;
+            display: inline-block;
+            margin-left: 16px;
+            img {
+                width: 100%;
+            }
+        }
+        .item-info {
+            display: inline-block;
+            margin-left: 10px;
+            .avatar {
+                height: 30px;
+                width: 30px;
+                vertical-align: middle;
+            }
+            .name {
+                width: 70px;
+                white-space: nowrap;
+                overflow:hidden;
+                text-overflow:ellipsis;
+                margin-left: 8px;
+                vertical-align: middle;
+                font-size: 14px;
+                color: #484E6D;
+            }
+        }
+    }
+    .nav-account-menu-item {
+        width: 200px;
+        height: 45px;
+        line-height: 45px;
+        cursor: pointer;
+        &:hover {
+            background: #F4F7FC;
+        }
+        img {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            margin-left: 16px;
+        }
+        span {
+            font-size: 14px;
+            color: #484E6D;
+            margin-left: 20px;
+        }
+    }
+}
+.nav .logo {
+    width: 48px;
+    height: 32px;
+    vertical-align: middle;
+    margin-left: 15px;
+}
+.nav .logo-title {
+    margin-left: 15px;
+    width: 136px;
+    height: 40px;
+    vertical-align: middle;
+}
+.nav-network {
+    width: 107px;
+    height: 25px;
+    line-height: 25px;
+    border-radius: 12px;
+    font-size: 12px;
+    border: 1px solid !important;
+    border-color: white;
+
+    .nav-network-icon {
+        width: 5px;
+        height: 3px;
+        display: inline-block;
+        background: url('/assets/images/net_dropdown_white.png') no-repeat center;
+        background-size: 100%;
+    }
+}
+
+.body {
+    width: 1200px;
+    height: 768px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 15px;
+    z-index: 10;
+    background: #FFFFFF;
+    overflow: hidden;
+}
+@media screen and (max-width: 1200px) {
+    .nav {
+        width: 937px;
+    }
+    .body {
+        width: 937px;
+        height: 600px;
+    }
+}
+@media screen and (max-width: 960px) {
+    .nav {
+        max-width: none;
+    }
+    .body {
+        width: 100%;
+        height: 100%;
+        margin-bottom: 0px;
+    }
+}
+@media screen and (min-width: 961px) {
+    .body.expand {
+        border-radius: 8px;
+        margin-top: -8px;
+        box-shadow: 0px 0px 16px #484e6d;
+    }
+}
+.side-nav {
+    background: #f4f7fc;
+    width: 75px;
+    z-index: 6;
+}
+
+.side-nav {
+    padding-top: 75px;
+}
+.side-nav > div {
+    margin: 0 auto $space auto;
+    height: 60px;
+    width: 60px;
+    border-radius: 4px;
+    color: #969696;
+    font-size: 14px;
+    text-align: center;
+    padding-top: 8px;
+}
+.side-nav > div img {
+    height: 27px;
+    width: 27px;
+}
+.side-nav > div p {
+    color: #969696;
+}
+.side-nav > div.active {
+    background: mat-color($default-app-primary);
+    box-shadow: 0 0 $space #969696;
+}
+.side-nav > div.active p {
+    color: #FFFFFF;
+}
+.side-nav > div:not(.active) img {
+    display: none;
+}
+.side-nav > div:not(.active) img:not(.active) {
+    display: inline-block;
+}
+.side-nav > div.active img.active {
+    display: inline-block;
+}
+.side-nav > div.active img:not(.active) {
+    display: none;
+}
+.side-nav > div:hover {
+    cursor: pointer;
+}

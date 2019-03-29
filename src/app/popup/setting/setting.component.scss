@@ -1,0 +1,264 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+.popup-setting-title {
+    font-size: 16px;
+    margin-left: 25px;
+    margin-top: 14.5px;
+    font-weight: 500;
+}
+
+
+.popup-setting-account {
+    width: 345px;
+    margin: 3px auto auto auto;
+    border-bottom: 1px solid map-get($colors, e5e5e5);
+
+    .popup-setting-account-item {
+        overflow: hidden;
+
+        &:hover {
+            cursor: pointer;
+        }
+
+        .popup-setting-account-select {
+            float: left;
+            width: 62px;
+            height: 62px;
+            div {
+                width: 15px;
+                height: 9.5px;
+                margin: 26.5px auto;
+                @include bg($img-select);
+            }
+
+            div.popup-setting-account-not-select {
+                display: none;
+            }
+        }
+
+        .popup-setting-account-info {
+            float: left;
+            width: 280px;
+            height: 62px;
+            overflow: hidden;
+            border-bottom: 1px solid map-get($colors, e5e5e5);
+
+            .popup-setting-asset-logo {
+                width: 39px;
+                height: 39px;
+                border-radius: 50%;
+                margin-top: 12px;
+                margin-right: 12px;
+                float: left;
+                img {
+                    width: inherit;
+                    height: inherit;
+                }
+            }
+
+            .popup-setting-asset-info {
+                float: left;
+                height: 62px;
+                display: flex;
+                justify-content: center;
+                flex-direction: column;
+
+                .popup-setting-asset-title {
+                    font-size: 14px;
+                    // margin: 11.75px auto 4px auto;
+                }
+
+                .popup-setting-asset-value {
+                    font-size: 12px;
+                    // color: map-get($colors, 7a87a9);
+                }
+            }
+            .popup-setting-account-menu {
+                float: right;
+                height: inherit;
+                .menu-btn-box {
+                    height: inherit;
+                    .menu-btn {
+                        @include bg($img-omi);
+                        width: 15px;
+                        height: 3px;
+                        display: inline-block;
+                        visibility: visible;
+                    }
+                }
+            }
+        }
+
+        &:last-child .popup-setting-account-info {
+            border: none;
+        }
+    }
+}
+
+hr {
+    height: 10px;
+    position: relative;
+    z-index: 2;
+    margin-top: -1px;
+    margin-bottom: -1px;
+    background: rgba(244,247,252,1);
+    border: none;
+}
+
+.popup-setting-menu {
+    width: 345px;
+    margin: auto;
+
+    .popup-setting-item {
+        width: 100%;
+        min-height: 50px;
+        border-bottom: 1px solid map-get($colors, e5e5e5);
+        overflow: hidden;
+
+        &:hover {
+            cursor: pointer;
+        }
+
+        div {
+            float: left;
+        }
+
+        div:first-child {
+            width: 15px;
+            height: 15px;
+            margin-top: 17px;
+            margin-right: 23.5px;
+            margin-left: 13px;
+        }
+
+        div:nth-child(2) {
+            font-size: 14px;
+            height: 50px;
+            line-height: 50px;
+        }
+
+        .popup-setting-language-current {
+            font-size: 14px;
+            height: 50px;
+            line-height: 50px;
+            color: map-get($colors, 999999);
+            float: right;
+        }
+
+        .popup-setting-import-logo {
+            @include bg($img-import-account);
+        }
+
+        .popup-setting-create-logo {
+            @include bg($img-create-account);
+        }
+
+        .popup-setting-language-logo {
+            @include bg($img-language-change);
+        }
+    }
+}
+
+.popup-setting-cache {
+    width: 345px;
+    height: 70px;
+    line-height: 50px;
+    margin: auto;
+    overflow: hidden;
+    font-size: 14px;
+    border-bottom: 1px solid map-get($colors, e5e5e5);
+
+
+    div {
+        float: left;
+    }
+
+    div:first-child:empty {
+        width: 15px;
+        height: 15px;
+        @include bg($img-clear-cache);
+        margin-top: 17px;
+        margin-left: 13px;
+        margin-right: 23.5px;
+    }
+
+    .popup-setting-cache-tip {
+        margin-top: 15px;
+        div {
+            float: none;
+            line-height: normal;
+        }
+
+        div:first-child {
+            margin-bottom: 5px;
+        }
+
+        div:last-child {
+            color: map-get($colors, 999999);
+        }
+    }
+
+    .popup-setting-cache-btn {
+        width: 75px;
+        height: 35px;
+        line-height: 35px;
+        font-size: 14px;
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113,120,221,1));
+        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+        border-radius: 4px;
+        color: map-get($neo-line-default, 50);
+        text-align: center;
+        margin: 18px auto;
+        float: right;
+    }
+}
+
+.popup-setting-authorization {
+    width: 345px;
+    margin: auto;
+    padding: 15px 13px;
+    border-bottom: 1px solid map-get($colors, e5e5e5);
+    cursor: default;
+    .popup-setting-authorization-head {
+        line-height: 22px;
+        .title {
+            font-size: 14px;
+            color: #282828;
+        }
+        .view-all {
+            font-size: 12px;
+            color: #7178DD;
+            float: right;
+            cursor: pointer;
+        }
+    }
+    .tip {
+        font-size: 12px;
+        color: #999999;
+        margin-top: 15px;
+    }
+}
+.setting-asset-rate {
+    padding: 15px 13px;
+    div {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        font-weight: 500;
+        .title {
+            font-size: 14px;
+            color: #282828;
+        }
+        .value {
+            font-size: 13px;
+            color: #999999;           
+        }
+    }
+    .update-time {
+        font-size: 12px;
+        color: #999999;
+        margin-top: 10px;
+        margin-bottom: 20px;
+    }
+}

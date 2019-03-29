@@ -1,0 +1,11 @@
+<img [src]="imageUrl" alt="" class="popup-home-logo" />
+<div class="popup-home-asset-value">
+    <span>{{ balance || 0 }}</span>
+    <ng-container *ngIf="!showTokenName">{{ symbol }}</ng-container>
+    <ng-container *ngIf="showTokenName">{{ name }}</ng-container>
+    <!-- <button mat-icon-button (click)="toggleShowTokenName()">
+        <mat-icon class="popup-home-logo-info" *ngIf="showTokenName">error</mat-icon>
+        <mat-icon class="popup-home-logo-info" *ngIf="!showTokenName">error_outline</mat-icon>
+    </button> -->
+</div>
+<div class="popup-home-asset-dollar" [hidden]="true">$0 USD</div>

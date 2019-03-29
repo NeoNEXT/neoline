@@ -1,0 +1,94 @@
+@import 'src/styles/theme-default';
+
+:host {
+    z-index: 21;
+    position: fixed;
+    width: 424px;
+    height: auto;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    background: #FFFFFF;
+    border-radius: 4px;
+    box-shadow: 0 0 8px #969696;
+    padding: $space;
+    overflow: hidden;
+}
+
+.close {
+    position: absolute;
+    right: -10px;
+    top: -10px;
+    background: #C2C6F5;
+    color: #FFFFFF;
+}
+.close mat-icon {
+    margin-left: -5px;
+    margin-bottom: -5px;
+}
+
+@media screen and (max-width: 1200px) {
+    :host {
+        width: 300px;
+    }
+}
+
+mat-spinner {
+    display: inline-block;
+}
+input.pwd {
+    border: 1px solid #E4E7EC;
+    border-radius: 4px;
+    background: #FFFFFF;
+    padding: $space/2;
+    margin-top: $space;
+    display: block;
+    width: 100%;
+}
+input.pwd::placeholder {
+    color: #999999;
+}
+p {
+    word-break: break-all;
+}
+p.name {
+    text-align: center;
+    font-size: 20px;
+    color: #333333;
+    margin: $space 0;
+}
+p.address {
+    border: 1px solid #E4E7EC;
+    border-radius: 4px;
+    padding: $space/2;
+    font-size: 16px;
+    color: #666666;
+}
+p.title {
+    text-align: center;
+    font-size: 20px;
+    color: #333333;
+    margin: $space 0;
+}
+p.title-pwd {
+    font-size: 16px;
+    color: #333333;
+}
+.btns {
+    margin: $space 0;
+}
+.btns button:not(.confirm) {
+    display: inline-block;
+    width: 45%;
+}
+.btns button.confirm {
+    display: block;
+    width: 100%;
+}
+.tip {
+    padding: $space/2;
+    background: #F3F2FF;
+    color: #9FA8BD;
+    font-size: 14px;
+    margin-top: $space;
+}

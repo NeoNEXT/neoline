@@ -1,0 +1,26 @@
+<div class="nav">
+    <div class="nav-account">
+        <img [avatar]="address" class="avatar" />
+        <span class="name">{{w.name}}</span>
+        <span class="modify-name" (click)="updateName()"></span>
+    </div>
+</div>
+<div class="welcome">
+    <div class="info">
+        <p class="title">{{ 'hello' | translate | async}}, {{w.name}}</p>
+        <p class="content">{{ 'welcomeNEOLine' | translate | async}}</p>
+    </div>
+    <img src="/assets/images/account_welcome.png" alt="" />
+</div>
+<div class="body flex">
+    <div class="address flex-1">
+        <p class="title">{{ 'myAddress' | translate | async}}</p>
+        <textarea rows="1" type="text" id="account-address" [value]="address" readonly="readonly"></textarea>
+        <button mat-stroked-button color="primary" copy="account-address" (onCopy)="copied()">{{ 'copyAddress' | translate | async}}</button>
+        <button mat-raised-button color="primary" (click)="export()">{{ 'displayWIF' | translate | async}}</button>
+    </div>
+    <div class="qrcode flex-1">
+        <div class="title">{{ 'myQRCode' | translate | async}}</div>
+        <div id="qrcode"></div>
+    </div>
+</div>

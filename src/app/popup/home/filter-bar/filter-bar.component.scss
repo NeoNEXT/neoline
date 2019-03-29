@@ -1,0 +1,150 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+@mixin symbol {
+    display: inline-block;
+    width: auto;
+    height: 25px;
+    line-height: 25px;
+    text-align: center;
+    border-radius: 12.5px;
+    font-size: 14px;
+    margin-right: 10px;
+    padding: 0 5px;
+    margin-top: 6px;
+    border: 1px solid map-get($neo-line-default, 50);
+}
+
+@mixin symbolHover {
+    &:hover {
+        cursor: pointer;
+        border-color: map-get($neo-line-default, 200);
+    }
+}
+
+.popup-home-top {
+    width: 100%;
+    height: 39.5px;
+    overflow: hidden;
+    border-bottom: 1px solid map-get($colors, f2f2f2);
+    background-color: map-get($neo-line-default, 50);
+    position: fixed;
+    z-index: map-get($z-indexes, max);
+
+    .popup-home-top-filter {
+        float: left;
+        width: 290px;
+        height: inherit;
+        border-top: 1px solid transparent;
+        padding-left: 15px;
+
+        .popup-home-top-filter-items {
+            width: 100%;
+            height: inherit;
+            word-break: keep-all;
+            white-space: nowrap;
+            overflow: hidden;
+            overflow-x: auto;
+            &::-webkit-scrollbar {
+                display: none;
+            }
+
+            div {
+                @include symbol;
+
+            }
+
+            div.popup-home-top-filter-hover {
+                &:hover {
+                    @include symbolHover;
+                }
+            }
+
+            div.popup-home-top-filter-active {
+                border: 1px solid map-get($neo-line-default, 500);
+            }
+
+            div.popup-home-top-filter-loading {
+                animation: loading 0.3s infinite;
+                animation-direction: alternate;
+            }
+
+            @keyframes loading {
+               0% {
+                   color: map-get($colors, 333333);
+                   border-color: map-get($neo-line-default, 500);
+               } 
+               100% {
+                   color: map-get($colors, eeeeee);
+                   border-color: map-get($neo-line-default, 200);
+               }
+            }
+        }
+    }
+
+    .popup-home-top-more {
+        width: 30px;
+        height: 30px;
+        float: left;
+        margin-top: 4.75px;
+        @include bg($img-down-arrow);
+        background-size: 12.5px 12.5px;
+
+        transition: transform 1s cubic-bezier(0, 0.95, 0.83, 1);
+
+        &:hover {
+            cursor: pointer;
+        }
+    }
+
+    .popup-home-top-more-loading {
+        @include bg($img-loading);
+        background-size: 30px 30px;
+    }
+
+    .popup-home-top-option {
+        margin-top: 7.25px;
+        margin-right: 15px;
+        float: right;
+        width: 30px;
+        height: 25px;
+        @include bg($img-all);
+        background-position-x: right;
+        background-size: 18px 18px;
+        border-left: 1px solid map-get($colors, e5e5e5);
+
+        &:hover {
+            cursor: pointer;
+        }
+    }
+}
+
+.popup-home-more {
+    width: 375px;
+    height: 0px;
+    background-color: map-get($neo-line-default, 50);
+    overflow: hidden;
+    overflow-y: auto;
+    padding: 15px 15px 0 15px;
+    border-bottom: 1px solid map-get($colors, f2f2f2);
+    box-shadow: 0 3px 3px 0 rgba(81, 91, 227, 0.08);
+    position: fixed;
+    transition: top 0.5s cubic-bezier(0, 0.95, 0.83, 1);
+    z-index: map-get($z-indexes, min);
+    max-height: 500px;
+
+    div {
+        @include symbol;
+        @include symbolHover;
+        margin-top: 0;
+        margin-bottom: 15px;
+    }
+
+    div.popup-home-more-active {
+        border-color: map-get($neo-line-default, 500);
+    }
+}
+
+.popup-home-more-display {
+    height: auto;
+}

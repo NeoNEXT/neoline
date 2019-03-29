@@ -1,0 +1,17 @@
+<div class="balance flex-y">
+    <div class="flex-1">
+        <balance *ngFor="let item of displayAssets;let i = index" 
+            [asset]="item"
+            [index]='i'
+            [rateCurrency]='rateCurrency'
+            routerLinkActive="active"
+            (onDelAsset)="delAsset(i)"></balance>
+    </div>
+    <div class="manage" routerLink="/asset/manage">
+        <img src="/assets/images/manage_asset.png" alt="" />
+        {{ 'addAsset' | translate | async}}
+    </div>
+</div>
+<div class="detail">
+    <router-outlet></router-outlet>
+</div>

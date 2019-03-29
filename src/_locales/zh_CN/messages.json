@@ -1,0 +1,405 @@
+{
+    "hello": {
+        "message": "你好"
+    },
+    "closeWallet": {
+        "message": "关闭钱包"
+    },
+    "account": {
+        "message": "钱包"
+    },
+    "assets": {
+        "message": "资产"
+    },
+    "setting": {
+        "message": "设置"
+    },
+
+    "homeTitle": {
+        "message": "NEOLine 首页"
+    },
+    "mainNet": {
+        "message": "主网"
+    },
+    "net": {
+        "message": "NEO 网络"
+    },
+    "home": {
+        "message": "首页"
+    },
+    "about": {
+        "message": "关于"
+    },
+    "expandView": {
+        "message": "网页版"
+    },
+    "close": {
+        "message": "关闭"
+    },
+    "address": {
+        "message": "地址"
+    },
+    "copyAddress": {
+        "message": "复制地址"
+    },
+    "create": {
+        "message": "创建"
+    },
+    "import": {
+        "message": "导入"
+    },
+    "welcomeCreate": {
+        "message": "欢迎来到 NEOLine. 创建"
+    },
+    "welcomeImport": {
+        "message": "欢迎来到 NEOLine. 导入"
+    },
+    "enterWalletName": {
+        "message": "输入钱包名"
+    },
+    "walletNameIsRequired": {
+        "message": "钱包名必填"
+    },
+    "lengthLimit": {
+        "message": "长度限制"
+    },
+    "enterPassword": {
+        "message": "输入密码"
+    },
+    "passwordRequired": {
+        "message": "密码必填"
+    },
+    "enterConfirmPassword": {
+        "message": "再次输入密码"
+    },
+    "confirmError": {
+        "message": "两次密码不一致"
+    },
+    "creating": {
+        "message": "创建中"
+    },
+    "enterWIF": {
+        "message": "输入 WIF(私钥)"
+    },
+    "WIFRequired": {
+        "message": "WIF 必填"
+    },
+    "importing": {
+        "message": "导入中"
+    },
+    "language": {
+        "message": "语言"
+    },
+    "loading": {
+        "message": "加载中..."
+    },
+    "empty": {
+        "message": "暂无数据"
+    },
+    "receive": {
+        "message": "收款"
+    },
+    "balance": {
+        "message": "余额"
+    },
+    "transgerTo": {
+        "message": "转账给"
+    },
+    "transferToTip": {
+        "message": "收款地址"
+    },
+    "amount": {
+        "message": "数量"
+    },
+    "transferAmountTip": {
+        "message": "交易数量"
+    },
+    "cancel": {
+        "message": "取消"
+    },
+    "refuse": {
+        "message": "拒绝"
+    },
+    "submit": {
+        "message": "提交"
+    },
+    "copy": {
+        "message": "复制"
+    },
+    "displayWIF": {
+        "message": "显示私钥"
+    },
+    "password": {
+        "message": "密码"
+    },
+    "verifyPassword": {
+        "message": "验证你的密码"
+    },
+    "caution": {
+        "message": "警告"
+    },
+    "transferExportTip": {
+        "message": "请保存你的 WIF(私钥)"
+    },
+    "verify": {
+        "message": "验证"
+    },
+    "done": {
+        "message": "确认"
+    },
+    "transfer": {
+        "message": "转账"
+    },
+    "transferHistory": {
+        "message": "交易记录"
+    },
+    "reocords": {
+        "message": "记录"
+    },
+    "pages": {
+        "message": "页"
+    },
+    "transferId": {
+        "message": "交易 ID"
+    },
+    "transferVolume": {
+        "message": "交易额"
+    },
+    "size": {
+        "message": "大小"
+    },
+    "time": {
+        "message": "时间"
+    },
+    "newWallet": {
+        "message": "新建钱包"
+    },
+    "createTip": {
+        "message": "欢迎来到 NEOLine, 请创建一个新钱包"
+    },
+    "logoutTip": {
+        "message": "确认关闭钱包吗？"
+    },
+    "yes": {
+        "message": "确认"
+    },
+    "transferInfo": {
+        "message": "交易信息"
+    },
+    "paymentAccount": {
+        "message": "付款钱包"
+    },
+    "receiptAccount": {
+        "message": "收款钱包"
+    },
+    "privacyPolicy": {
+        "message": "隐私政策"
+    },
+    "termsOfUse": {
+        "message": "使用条款"
+    },
+    "companyWebsite": {
+        "message": "访问官网"
+    },
+    "contractUs": {
+        "message": "联系我们"
+    },
+    "myAccountQRCode": {
+        "message": "我的钱包二维码"
+    },
+    "complete": {
+        "message": "完成"
+    },
+    "addAssetTip": {
+        "message": "是否确认添加此资产？"
+    },
+    "delAssetTip": {
+        "message": "是否确认隐藏？"
+    },
+    "modifyNameTitle": {
+        "message": "修改钱包名"
+    },
+    "modifyNameInput": {
+        "message": "请输入新的钱包名(长度1-16字符)"
+    },
+    "connect": {
+        "message": "连接"
+    },
+    "thAuthTitle": {
+        "message": "连接请求"
+    },
+    "thAuthTip": {
+        "message": "想要连接你的钱包"
+    },
+    "thAuthDetail": {
+        "message": "这个站点正在尝试请求访问 NEO API，以便它可以与NEO区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
+    },
+    "thAuthMore": {
+        "message": "查看更多"
+    },
+    "thSignTitle": {
+        "message": "正在请求你的签名"
+    },
+    "signing": {
+        "message": "正在签名"
+    },
+    "message": {
+        "message": "信息"
+    },
+    "signature": {
+        "message": "签名"
+    },
+    "thAssetTip": {
+        "message": "你想添加这个资产吗?"
+    },
+    "version": {
+        "message": "版本"
+    },
+    "addAsset": {
+        "message": "添加资产"
+    },
+    "searchResult": {
+        "message": "搜索结果"
+    },
+    "searchAssetsInput": {
+        "message": "请输入需要搜索的资产 回车发起搜索"
+    },
+    "hidden": {
+        "message": "隐藏"
+    },
+    "add": {
+        "message": "添加"
+    },
+    "added": {
+        "message": "已添加"
+    },
+    "myAccount": {
+        "message": "我的钱包"
+    },
+    "importAccount": {
+        "message": "导入钱包"
+    },
+    "createAccount": {
+        "message": "创建钱包"
+    },
+    "clearCacheBtn": {
+        "message": "一键清空"
+    },
+    "clearCache": {
+        "message": "清空缓存"
+    },
+    "clearCacheTip": {
+        "message": "按下后，会清空缓存数据"
+    },
+    "welcomeBack": {
+        "message": "欢迎回来"
+    },
+    "loginTip": {
+        "message": "欢迎来到 NEOLine，请先登录"
+    },
+    "pwdInput": {
+        "message": "请输入您的密码"
+    },
+    "onlySupport": {
+        "message": "仅支持"
+    },
+    "login": {
+        "message": "登录"
+    },
+    "logining": {
+        "message": "登录中"
+    },
+    "searchAllResult": {
+        "message": "全部资产"
+    },
+    "clearStorageTips": {
+        "message": "确认清除缓存吗"
+    },
+    "authorizationManage": {
+        "message": "授权管理"
+    },
+    "authorizationManageTips": {
+        "message": "可清除已授权网站"
+    },
+    "viewAll": {
+        "message": "查看所有"
+    },
+    "remove": {
+        "message": "清除"
+    },
+    "delete": {
+        "message": "删除"
+    },
+    "authDelAllTip": {
+        "message": "清除所有批准数据"
+    },
+    "welcomeNEOLine": {
+        "message": "欢迎来到 NEOLine."
+    },
+    "myAddress": {
+        "message": "我的 NEO 地址"
+    },
+    "myQRCode": {
+        "message": "我的钱包二维码"
+    },
+    "setLang": {
+        "message": "设置语言"
+    },
+    "WIFPattern": {
+        "message": "WIF 错误"
+    },
+    "tranSubmit": {
+        "message": "交易已提交。"
+    },
+    "waitConfirm": {
+        "message": "请等待交易确认。"
+    },
+    "transaction": {
+        "message": "交易"
+    },
+    "transactions": {
+        "message": "交易"
+    },
+    "value": {
+        "message": "金额"
+    },
+    "noTransaction": {
+        "message": "无交易"
+    },
+    "wif": {
+        "message": "WIF(私钥)"
+    },
+    "delWalletConfirm": {
+        "message": "确认删除该钱包吗？"
+    },
+    "delAllAuthListConfirm": {
+        "message": "确认清空所有授权吗？"
+    },
+    "rejected": {
+        "message": "已拒绝"
+    },
+    "rejectedTip": {
+        "message": "该站点已被拒绝授权，请前往插件授权管理清除"
+    },
+    "Authorized": {
+        "message": "已授权"
+    },
+    "assetRate": {
+        "message": "资产兑换"
+    },
+    "privacyData": {
+        "message": "审批数据"
+    },
+    "clearPrivacyDataBtn": {
+        "message": "清除所有批准数据"
+    },
+    "clearPrivacyDataTip": {
+        "message": "清除隐私数据后，所有网站都必须重新请求查看帐户信息。"
+    },
+    "referSource": {
+        "message": "参考来源"
+    },
+    "updateTime": {
+        "message": "更新时间"
+    }
+}

@@ -1,0 +1,44 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+.popup-home-txs {
+    margin-top: 15px;
+
+    .popup-home-tx-list {
+        width: 100%;
+        overflow-y: auto;
+        border: 1px solid transparent;
+        transition: padding 0.2s;
+
+        &::-webkit-scrollbar {
+            display: none;
+        }
+
+       &:hover {
+            border-top: 1px solid map-get($colors, f2f2f2);
+            padding-top: 10px;
+            padding-bottom: 40px;
+
+            .popup-home-tx-page {
+                bottom: 0px;
+            }
+        }
+
+        .popup-home-tx-page {
+            position: fixed;
+            left: 0px;
+            bottom: -40px;
+            width: 375px;
+            height: auto;
+            transition: bottom 0.2s;
+        }
+    }
+
+    .popup-home-notx {
+        color: map-get($colors, 999999);
+        font-size: 14px;
+        text-align: center;
+        height: 192px;
+        line-height: 192px;
+    }
+}

@@ -1,0 +1,84 @@
+@import 'src/styles/theme-default.scss';
+@import 'src/styles/popup-default';
+
+form {
+    margin-top: $space*3;
+    display: block;
+    width: 360px;
+    height: auto;
+    margin: auto;
+}
+
+mat-form-field {
+    width: 100%;
+}
+
+mat-form-field:not(:first-of-type) {
+    margin-top: $space;
+}
+
+mat-spinner {
+    display: inline-block;
+}
+
+p.title {
+    font-size: 48px;
+    font-weight: 600;
+    color: #333333;
+    text-align: center;
+}
+
+p.tip {
+    font-size: 16px;
+    color: #666666;
+    margin-top: $space*2;
+    margin-bottom: $space*3;
+}
+
+.icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    margin: 0 8px;
+}
+.error-wif {
+    position: absolute;
+    margin-top: -18px;
+    font-size: 12px;
+}
+button {
+    display: block;
+    width: 100%;
+    border-radius: 50px;
+    margin-top: 35px;
+
+    span {
+        display: inline-block;
+        width: 17px;
+        height: 14px;
+        @include bg($img-show-pwd);
+        margin-top: -3px;
+    }
+
+    span.hide-pwd {
+        @include bg($img-hide-pwd);
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    form {
+        margin-top: $space*2;
+    }
+
+    mat-form-field:not(:first-of-type) {
+        margin-top: $space/2;
+    }
+
+    p.title {
+        font-size: 30px;
+    }
+
+    p.tip {
+        margin-bottom: $space;
+    }
+}

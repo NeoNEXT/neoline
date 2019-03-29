@@ -1,0 +1,62 @@
+@import 'src/styles/popup-default';
+
+.popup-home-filter {
+    overflow: hidden;
+    height: 25px;
+
+    .popup-home-filter-title {
+        height: 25px;
+        line-height: 25px;
+        font-size: 13px;
+        font-weight: bold;
+        float: left;
+        margin-left: 15px;
+    }
+
+    .popup-home-filter-tip {
+        margin-right: 9px;
+        overflow: hidden;
+        float: right;
+
+        div {
+            float: left;
+        }
+
+        div:first-child {
+            width: 10px;
+            height: 10px;
+            margin-top: 7.9px;
+            margin-right: 5px;
+            @include bg($img-filter);
+        }
+
+        div:last-child {
+            height: 25px;
+            line-height: 25px;
+            font-size: 12px;
+        }
+    }
+
+    .popup-home-filter-option {
+        width: 97.5px;
+        height: 25px;
+        float: right;
+        margin-right: 15px;
+
+        button {
+            width: 97.5px;
+            height: 25px;
+            line-height: 25px;
+            border: 1px solid map-get($colors, e5e5e5);
+            border-radius: 12.5px;
+            padding: 0;
+
+            span {
+                display: inline-block;
+                width: 5.5px;
+                height: 3px;
+                @include bg($img-dropdown);
+            }
+        }
+    }
+ }

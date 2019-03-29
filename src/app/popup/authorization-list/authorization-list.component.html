@@ -1,0 +1,31 @@
+<div class="popup-authorization-list-head">
+    <div class="btn-back" [routerLink]="['/popup/setting']"></div>
+    <p class="title">{{ 'authorizationManage' | translate | async }}</p>
+</div>
+
+<div class="popup-authorization-list-content">
+    <div class="empty" *ngIf="objectKeys(authorizationList).length == 0">
+        {{ 'empty' | translate | async }}
+    </div>
+    <div class="authorization-item" *ngFor="let key of objectKeys(authorizationList)">
+        <img class="icon" [src]="authorizationList[key].icon" alt="">
+        <div class="info-box">
+            <div class="top">
+                <span class="websit-title">
+                    {{ authorizationList[key].title }}
+                </span>
+                <span class="websit-status"   [ngClass]="{ 'success': authorizationList[key].status, 'fail': !authorizationList[key].status }">{{ authorizationList[key].status ? '已授权' : '已拒绝' }}</span>
+            </div>
+            <p class="websit-url">
+                {{ key }}
+            </p>
+        </div>
+        <div class="remove-btn" (click)="delItem(key)">
+            {{ 'delete' | translate | async }}
+        </div>
+    </div>
+    <div class="clear-all" (click)="delAll()">
+        <img src="/assets/images/auth-list-clear-all.png" alt="">
+        <span>{{ 'authDelAllTip' | translate | async }}</span>
+    </div>
+</div>

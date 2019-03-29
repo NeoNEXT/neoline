@@ -1,0 +1,110 @@
+@import 'src/styles/fonts';
+
+$img-logo: '/assets/images/logo.png';
+$img-all: '/assets/images/all.png';
+$img-back: '/assets/images/back.png';
+$img-omi: '/assets/images/omi.png';
+$img-slide-menu: '/assets/images/slide_menu.png';
+$img-logo-title: '/assets/images/logo_title.png';
+$img-net-dropdown: '/assets/images/net_dropdown.png';
+$img-select: '/assets/images/select.png';
+$img-language-change: '/assets/images/language_change.png';
+$img-clear-cache : '/assets/images/clear_cache.png';
+$img-create-account : '/assets/images/create_account.png';
+$img-import-account : '/assets/images/import_account.png';
+$img-qrcode: '/assets/images/qrcode.png';
+$img-edit: '/assets/images/edit.png';
+$img-dropdown: '/assets/images/dropdown.png';
+$img-filter: '/assets/images/filter.png';
+$img-login-bg: '/assets/images/popup_login_bg.png';
+$img-popup-logo: '/assets/images/popup_logo.png';
+$img-show-pwd: '/assets/images/show_pwd.png';
+$img-hide-pwd: '/assets/images/hide_pwd.png';
+$img-hidden-pwd: '/assets/images/hidden_pwd.png';
+$img-lock: '/assets/images/lock.png';
+$img-down-arrow: '/assets/images/down_arrow.png';
+$img-manage-asset: '/assets/images/manage_asset.png';
+$img-loading: '/assets/images/loading.gif';
+$img-code-bg: '/assets/images/code_bg.png';
+$img-search: '/assets/images/search.png';
+
+$img-about-active: '/assets/images/side-nav/about-active.png';
+$img-about-close: '/assets/images/side-nav/about-close.png';
+$img-blolys-active: '/assets/images/side-nav/blolys-active.png';
+$img-blolys-close: '/assets/images/side-nav/blolys-close.png';
+$img-home-active: '/assets/images/side-nav/home-active.png';
+$img-home-close: '/assets/images/side-nav/home-close.png';
+$img-setting-active: '/assets/images/side-nav/setting-active.png';
+$img-setting-close: '/assets/images/side-nav/setting-close.png';
+$img-web-active: '/assets/images/side-nav/web-active.png';
+$img-web-close: '/assets/images/side-nav/web-close.png';
+$img-logout: '/assets/images/side-nav/logout.png';
+$img-close-side-nav: '/assets/images/side-nav/close-side-nav.png';
+
+$img-about-logo: '/assets/images/about/about-logo.png';
+$img-contact: '/assets/images/about/contact.png';
+$img-item: '/assets/images/about/item.png';
+$img-privacy: '/assets/images/about/privacy.png';
+$img-site: '/assets/images/about/site.png';
+$img-contact-hover: '/assets/images/about/contact-hover.png';
+$img-item-hover: '/assets/images/about/item-hover.png';
+$img-privacy-hover: '/assets/images/about/privacy-hover.png';
+$img-site-hover: '/assets/images/about/site-hover.png';
+
+$img-tp-net-dropdown: '~@images/third-party/net-dropdown.png';
+$img-tp-direction: '~@images/third-party/direction.png';
+$img-tp-nav-bg: '~@images/third-party/nav-bg.png';
+$img-tp-auth-secure: '~@images/third-party/auth-secure.png';
+$img-tp-auth-select: '~@images/third-party/auth-select.png';
+
+$img-authorization-success: '~@images/auth-success.png';
+$img-authorization-fail: '~@images/auth-fail.png';
+$img-authorization-rule-selected: '~@images/auth-rule-selected.png';
+$img-setting-authed: '~@images/setting_authed.png';
+$img-setting-unauth: '~@images/setting_unauth.png';
+$img-setting-delete: '~@images/setting_delete.png';
+$img-setting-rate-dropdown: '~@images/setting_rate_dropdown.png';
+$img-setting-one: '~@images/setting_one.png';
+$img-setting-two: '~@images/setting_two.png';
+$img-setting-three: '~@images/setting_three.png';
+$img-setting-four: '~@images/setting_four.png';
+$img-setting-dropdown: '~@images/setting_dropdown.png';
+
+$z-indexes: (
+    max: 9999999,
+    high: 99999,
+    middle: 999,
+    low: 99,
+    min: 1
+);
+
+$colors: (
+    e5e5e5: #E5E5E5,
+    c2c6f5: #C2C6F5,
+    7a87a9: #7A87A9,
+    999999: #999999,
+    666666: #666666,
+    333333: #333333,
+    9fa8bd: #9FA8BD,
+    484e6d: #484E6D,
+    f2f2f2: #F2F2F2,
+    f4f7fc: #F4F7FC,
+    f3f2ff: #F3F2FF,
+    eeeeee: #EEEEEE,
+    e4e3f9: #E4E3F9,
+    7178dd: #7178DD,
+    e2e2e2: #E2E2E2,
+);
+
+@mixin bg($bgurl) {
+    background: url($bgurl) center center/contain no-repeat;
+}
+
+@mixin balance {
+    font-family: AkrobatBold, serif;
+    letter-spacing: 1px;
+
+    &:after {
+        content: ' ';
+    }
+}
