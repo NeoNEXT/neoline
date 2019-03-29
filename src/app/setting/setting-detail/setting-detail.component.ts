@@ -6,7 +6,8 @@ import {
     MatDialog
 } from '@angular/material';
 import {
-    PopupClearStorageDialogComponent, PopupConfirmDialogComponent
+    PopupClearStorageDialogComponent,
+    PopupConfirmDialogComponent
 } from '@popup/_dialogs';
 import {
     ChromeService,
@@ -19,8 +20,12 @@ import {
 import {
     Router
 } from '@angular/router';
-import { RateObj } from '@models/models';
-import { map } from 'rxjs/operators';
+import {
+    RateObj
+} from '@models/models';
+import {
+    map
+} from 'rxjs/operators';
 @Component({
     templateUrl: './setting-detail.component.html',
     styleUrls: ['./setting-detail.component.scss']

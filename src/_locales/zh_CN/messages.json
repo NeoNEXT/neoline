@@ -21,6 +21,9 @@
     "mainNet": {
         "message": "主网"
     },
+    "testNet": {
+        "message": "测试网"
+    },
     "net": {
         "message": "NEO 网络"
     },

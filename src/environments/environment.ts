@@ -5,8 +5,8 @@
 export const environment = {
     production: false,
     name: 'default',
-    apiBase: 'https://api.neoline.cn'
-    // apiBase: 'http://47.111.5.252'
+    mainApiBase: 'https://mainnet.api.neoline.cn',
+    testApiBase: 'https://testnet.api.neoline.cn'
 };
 
 /*

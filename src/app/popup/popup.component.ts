@@ -13,13 +13,14 @@ export class PopupComponent implements OnInit {
     public address: string;
     public isLogin = false;
     public currentUrl: string = this.router.url;
+    public net: string;
 
     constructor(
         private chrome: ChromeService,
         private global: GlobalService,
         private neon: NeonService,
         private router: Router,
-    ){
+    ) {
         this.walletIsOpen = false;
         this.isLogin = false;
         this.address = this.neon.address;
@@ -47,5 +48,17 @@ export class PopupComponent implements OnInit {
         this.neon.walletIsOpen().subscribe((res: any) => {
             this.global.$wallet.next(res ? 'open' : 'close');
         });
+        this.chrome.getNet().subscribe(net => {
+            this.net = net;
+        });
+    }
+    public modifyNet(net: string) {
+        if (this.net === net) {
+            return;
+        }
+        this.net = net;
+        this.chrome.setNet(net);
+        this.global.modifyNet(net);
+        location.reload();
     }
 }

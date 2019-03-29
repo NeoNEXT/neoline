@@ -23,12 +23,13 @@ import {
 import {
     NotificationService
 } from './notification.service';
+import {
+    ChromeService
+} from './chrome.service';
 
 @Injectable()
 export class GlobalService {
-    public get apiDomain(): string {
-        return environment.apiBase;
-    }
+    public apiDomain: string;
     public $wallet: Subject < string > ;
     public languageJson: any = null;
     public debug = false;
@@ -37,9 +38,21 @@ export class GlobalService {
     constructor(
         private matDialog: MatDialog,
         private snackBar: MatSnackBar,
-        private notification: NotificationService
+        private notification: NotificationService,
+        private chromeSer: ChromeService
     ) {
         this.$wallet = new Subject < string > ();
+        this.chromeSer.getNet().subscribe(net => {
+            this.modifyNet(net);
+        });
+    }
+
+    public modifyNet(net: string) {
+        if (net === 'main') {
+            this.apiDomain = environment.mainApiBase;
+        } else {
+            this.apiDomain = environment.testApiBase;
+        }
     }
     public log(...params: any[]) {
         if (this.debug) {

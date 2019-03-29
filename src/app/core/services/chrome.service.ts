@@ -505,6 +505,42 @@ export class ChromeService {
         }));
     }
 
+    public setNet(net: string) {
+        if (!this.check) {
+            localStorage.setItem('net', JSON.stringify(net));
+            return;
+        }
+        try {
+            this.crx.setStorage({
+                net
+            });
+        } catch (e) {
+            console.log('set net failed', e);
+        }
+    }
+    public getNet(): Observable < string > {
+        if (!this.check) {
+            try {
+                if (localStorage.getItem('net')) {
+                    return of(JSON.parse(localStorage.getItem('net')));
+                } else {
+                    return of('main'); // 默认网络
+                }
+            } catch (e) {
+                return throwError('please get net json to local storage when debug mode on');
+            }
+        }
+        return from(new Promise((resolve, reject) => {
+            try {
+                this.crx.getStorage('net', (res) => {
+                    resolve(res || 'main');
+                });
+            } catch (e) {
+                reject('failed');
+            }
+        }));
+    }
+
 
     public clearStorage() {
         if (!this.check) {

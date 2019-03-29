@@ -21,6 +21,9 @@
     "mainNet": {
         "message": "Main net"
     },
+    "testNet": {
+        "message": "Test net"
+    },
     "net": {
         "message": "NEO net"
     },
