@@ -138,6 +138,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 });
             } else {
                 this.txPage = res;
+                this.txPage.page = 1;
             }
         });
     }
@@ -145,12 +146,20 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     public page(page: number) {
         let maxId = -1;
         let sinceId = -1;
+        let absPage = Math.abs(this.txPage.page - page);
+        if (page === 1) {
+            absPage = 1;
+        }
         if (page > this.txPage.page) {
             maxId = this.txPage.items[this.txPage.items.length - 1].id;
         } else {
-            sinceId = this.txPage.items[0].id;
+            if (page !== 1) {
+                sinceId = this.txPage.items[0].id;
+            }
         }
-        this.txState.fetch(this.address, page, this.assetId, true, maxId, sinceId, Math.abs(this.txPage.page - page)).finally(() => {});
+        this.txState.fetch(this.address, page, this.assetId, true, maxId, sinceId, absPage).finally(() => {
+            this.txPage.page = page;
+        });
     }
 
 
