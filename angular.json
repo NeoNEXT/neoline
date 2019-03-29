@@ -36,12 +36,10 @@
                     },
                     "configurations": {
                         "production": {
-                            "fileReplacements": [
-                                {
-                                    "replace": "src/environments/environment.ts",
-                                    "with": "src/environments/environment.prod.ts"
-                                }
-                            ],
+                            "fileReplacements": [{
+                                "replace": "src/environments/environment.ts",
+                                "with": "src/environments/environment.prod.ts"
+                            }],
                             "baseHref": "/",
                             "optimization": true,
                             "outputHashing": "all",
@@ -53,13 +51,11 @@
                             "vendorChunk": false,
                             "buildOptimizer": true,
                             "outputPath": "dist",
-                            "budgets": [
-                                {
-                                    "type": "initial",
-                                    "maximumWarning": "5mb",
-                                    "maximumError": "10mb"
-                                }
-                            ]
+                            "budgets": [{
+                                "type": "initial",
+                                "maximumWarning": "7mb",
+                                "maximumError": "10mb"
+                            }]
                         }
                     }
                 },

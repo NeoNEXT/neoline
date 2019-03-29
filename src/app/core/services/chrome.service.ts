@@ -201,7 +201,9 @@ export class ChromeService {
             return;
         }
         try {
-            this.crx.setStorage({ lang });
+            this.crx.setStorage({
+                lang
+            });
             this.crx.setPopup(lang);
 
         } catch (e) {
@@ -272,7 +274,9 @@ export class ChromeService {
             return;
         }
         try {
-            this.crx.setStorage({ watch });
+            this.crx.setStorage({
+                watch
+            });
         } catch (e) {
             console.log('set watch failed', e);
         }
@@ -283,7 +287,9 @@ export class ChromeService {
             return;
         }
         try {
-            this.crx.setStorage({ history });
+            this.crx.setStorage({
+                history
+            });
         } catch (e) {
             console.log('set history failed', e);
         }
@@ -399,7 +405,7 @@ export class ChromeService {
         }
     }
 
-    public getAuthorization(): Observable<object> {
+    public getAuthorization(): Observable < object > {
         if (!this.check) {
             try {
                 if (localStorage.getItem('authorizationWebsites') == null) {
@@ -438,8 +444,11 @@ export class ChromeService {
         }
     }
 
-    public getRateObj(): Observable<RateObj> {
-        const tempRate = {'currentChannel': 'bitz', 'currentCurrency': 'cny'};
+    public getRateObj(): Observable < RateObj > {
+        const tempRate = {
+            'currentChannel': 'bitz',
+            'currentCurrency': 'cny'
+        };
         if (!this.check) {
             try {
                 if (localStorage.getItem('rateObj') == null) {

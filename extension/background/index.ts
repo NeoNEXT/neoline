@@ -1,5 +1,19 @@
-export { getStorage, httpGet, httpPost, httpGetImage, setStorage, removeStorage, clearStorage, notification } from '../common';
-import { getStorage, setStorage, notification } from '../common';
+export {
+    getStorage,
+    httpGet,
+    httpPost,
+    httpGetImage,
+    setStorage,
+    removeStorage,
+    clearStorage,
+    notification
+}
+from '../common';
+import {
+    getStorage,
+    setStorage,
+    notification
+} from '../common';
 /**
  * Background methods support.
  * Call window.NEOLineBackground to use.
@@ -52,7 +66,7 @@ chrome.windows.onRemoved.addListener(() => {
     chrome.tabs.query({}, (res) => {
         if (res.length === 0) { // All browsers are closed
             setStorage({
-                sholudLogin: true
+                shouldLogin: true
             });
         }
     });
@@ -60,47 +74,52 @@ chrome.windows.onRemoved.addListener(() => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.target) {
-        case 'transfer': {
-            getStorage('wallet', (wallet) => {
-                if (wallet.accounts[0].address !== request.fromAddress) {
-                    windowCallback({target: 'transferRes', data: 'default'});
-                } else {
-                    getStorage('authorizationWebsites', (res) => {
-                        if (res !== undefined && res[request.hostname] !== undefined) {
-                            window.open(`index.html#popup/notification/transfer?to_address=${request.toAddress}&asset_id=${request.assetId}&amount=${request.amount}`, '_blank',
-                                'height=620, width=386, resizable=no, top=0, left=0');
-                        } else {
-                            window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=transfer&to_address=${request.toAddress}&asset_id=${request.assetId}&amount=${request.amount}`, '_blank',
-                                'height=620, width=386, resizable=no, top=0, left=0');
-                        }
-                    });
-                }
-            });
-            sendResponse('');
-            return true;
-        }
-        case 'authorization': {
-            chrome.tabs.query({
-                active: true,
-                currentWindow: true
-            }, (tabs) => {
-                tabCurr = tabs;
-            });
-            getStorage('authorizationWebsites', (res: any) => {
-                if (res !== undefined && res[request.hostname] !== undefined) {
-                    if (res[request.hostname].status === 'false') {
-                        notification(chrome.i18n.getMessage('rejected'), chrome.i18n.getMessage('rejectedTip'));
-                        return;
+        case 'transfer':
+            {
+                getStorage('wallet', (wallet) => {
+                    if (wallet.accounts[0].address !== request.fromAddress) {
+                        windowCallback({
+                            target: 'transferRes',
+                            data: 'default'
+                        });
+                    } else {
+                        getStorage('authorizationWebsites', (res) => {
+                            if (res !== undefined && res[request.hostname] !== undefined) {
+                                window.open(`index.html#popup/notification/transfer?to_address=${request.toAddress}&asset_id=${request.assetId}&amount=${request.amount}`, '_blank',
+                                    'height=620, width=386, resizable=no, top=0, left=0');
+                            } else {
+                                window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=transfer&to_address=${request.toAddress}&asset_id=${request.assetId}&amount=${request.amount}`, '_blank',
+                                    'height=620, width=386, resizable=no, top=0, left=0');
+                            }
+                        });
                     }
-                    notification(chrome.i18n.getMessage('authorized'));
-                } else {
-                    window.open(`/index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`, '_blank',
-                        'height=620, width=386, resizable=no, top=0, left=0');
-                }
-            });
-            sendResponse('');
-            return true;
-        }
+                });
+                sendResponse('');
+                return true;
+            }
+        case 'authorization':
+            {
+                chrome.tabs.query({
+                    active: true,
+                    currentWindow: true
+                }, (tabs) => {
+                    tabCurr = tabs;
+                });
+                getStorage('authorizationWebsites', (res: any) => {
+                    if (res !== undefined && res[request.hostname] !== undefined) {
+                        if (res[request.hostname].status === 'false') {
+                            notification(chrome.i18n.getMessage('rejected'), chrome.i18n.getMessage('rejectedTip'));
+                            return;
+                        }
+                        notification(chrome.i18n.getMessage('authorized'));
+                    } else {
+                        window.open(`/index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`, '_blank',
+                            'height=620, width=386, resizable=no, top=0, left=0');
+                    }
+                });
+                sendResponse('');
+                return true;
+            }
     }
     sendResponse('');
     return true;
