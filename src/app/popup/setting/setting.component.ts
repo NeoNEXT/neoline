@@ -35,7 +35,9 @@ import {
 import {
     PopupConfirmDialogComponent
 } from '../_dialogs/confirm/confirm.dialog';
-import { map } from 'rxjs/operators';
+import {
+    map
+} from 'rxjs/operators';
 
 @Component({
     templateUrl: 'setting.component.html',
@@ -112,10 +114,59 @@ export class PopupSettingComponent implements OnInit {
             .open(
                 PopupLanguageDialogComponent, {
                     width: '170px',
-                    data: this.walletArr
+                    data: {
+                        currentOption: this.lang,
+                        optionGroup: ['en', 'zh_CN'],
+                        type: 'lang'
+                    }
                 }
             );
     }
+
+    public modifyRateChannel() {
+        const tempDialog = this
+            .dialog
+            .open(
+                PopupLanguageDialogComponent, {
+                    width: '170px',
+                    data: {
+                        currentOption: this.rateObj.currentChannel,
+                        optionGroup: this.rateChannels,
+                        type: 'channel'
+                    }
+                }
+            );
+        tempDialog.afterClosed().subscribe((channel) => {
+            if (!channel) {
+                return;
+            }
+            this.rateObj.currentChannel = channel;
+            this.global.snackBarTip('rateChannelSetSucc');
+        });
+    }
+
+    public modifyRateCurrency() {
+        const tempDialog = this
+            .dialog
+            .open(
+                PopupLanguageDialogComponent, {
+                    width: '170px',
+                    data: {
+                        currentOption: this.rateObj.currentCurrency,
+                        optionGroup: this.rateCurrencys,
+                        type: 'currency'
+                    }
+                }
+            );
+        tempDialog.afterClosed().subscribe((currency) => {
+            if (!currency) {
+                return;
+            }
+            this.rateObj.currentCurrency = currency;
+            this.global.snackBarTip('rateCurrencySetSucc');
+        });
+    }
+
 
     public createAccount() {
         this.router.navigateByUrl('/popup/wallet/create');

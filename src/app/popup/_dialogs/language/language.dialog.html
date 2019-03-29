@@ -1,9 +1,7 @@
-<mat-radio-group [(ngModel)]="lang" (change)="select()" class="popup-language">
-    <mat-radio-button class="popup-language-item" color="primary" value="en">
-        English
-    </mat-radio-button>
-
-    <mat-radio-button class="popup-language-item" color="primary" value="zh_CN">
-        中文简体
+<mat-radio-group [(ngModel)]="targetOption" (change)="select()" class="popup-language">
+    <mat-radio-button class="popup-language-item" color="primary" *ngFor="let item of data.optionGroup" [value]="item">
+        <span *ngIf="data.type === 'lang'">{{item | languageName}}</span>
+        <span *ngIf="data.type === 'currency'">{{item | uppercase}}</span>
+        <span *ngIf="data.type === 'channel'">{{item}}</span>
     </mat-radio-button>
 </mat-radio-group>

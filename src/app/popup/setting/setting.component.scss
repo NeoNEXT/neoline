@@ -245,13 +245,14 @@ hr {
         display: flex;
         justify-content: space-between;
         align-items: center;
+        cursor: pointer;      
         .title {
             font-size: 14px;
             color: #282828;
         }
         .value {
             font-size: 13px;
-            color: #999999;           
+            color: #999999;     
         }
     }
     .update-time {

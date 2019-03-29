@@ -60,12 +60,12 @@
 </div>
 <hr>
 <div class="popup-setting-menu setting-asset-rate">
-    <div class="current-currency">
+    <div class="current-currency" (click)="modifyRateCurrency()">
         <span class="title">{{ 'assetRate' | translate | async}}</span>
-        <span class="value">{{ rateObj?.currentCurrency }}</span>
+        <span class="value">{{ rateObj?.currentCurrency | uppercase}}</span>
     </div>
     <p class="update-time">{{ 'updateTime' | translate | async}}{{rateTime * 1000 | date: 'M月d日 y年 HH:mm'}} 北京时间</p>
-    <div class="current-chennel">
+    <div class="current-chennel" (click)="modifyRateChannel()">
         <span class="title">{{ 'referSource' | translate | async}}</span>
         <span class="value">{{ rateObj?.currentChannel }}</span>
     </div>

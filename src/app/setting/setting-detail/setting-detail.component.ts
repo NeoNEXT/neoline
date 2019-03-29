@@ -90,6 +90,7 @@ export class SettingDetailComponent implements OnInit {
         if (this.rateObj.currentCurrency !== currency) {
             this.rateObj.currentCurrency = currency;
             this.chrome.setRateObj(this.rateObj);
+            this.global.snackBarTip('rateCurrencySetSucc');
         }
     }
 
@@ -97,6 +98,7 @@ export class SettingDetailComponent implements OnInit {
         if (this.rateObj.currentChannel !== channel) {
             this.rateObj.currentChannel = channel;
             this.chrome.setRateObj(this.rateObj);
+            this.global.snackBarTip('rateChannelSetSucc');
         }
     }
 
