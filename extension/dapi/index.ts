@@ -65,7 +65,7 @@ export class Init {
     public transfer(parameter: any = null) {
         return new Promise((resolveMain, rejectMain) => {
             this.getAuthState().then(authState => {
-                if (authState === 'AUTHORIZED') {
+                if (authState === 'AUTHORIZED' || authState === 'NONE') {
                     if (parameter === undefined || parameter.toAddress === undefined || parameter.fromAddress === undefined ||
                         parameter.assetID === undefined || parameter.amount === undefined) {
                         rejectMain(errors.INVALID_ARGUMENTS);
@@ -89,22 +89,26 @@ export class Init {
                         });
                         promise.then(res => {
                             switch (res) {
-                                case 'cancel': {
-                                    rejectMain(errors.CANCELLED);
-                                    break;
-                                }
-                                case 'rpcWrong': {
-                                    rejectMain(errors.RPC_ERROR);
-                                    break;
-                                }
-                                case 'default': {
-                                    rejectMain(errors.DEFAULT);
-                                    break;
-                                }
-                                default: {
-                                    resolveMain(res);
-                                    break;
-                                }
+                                case 'cancel':
+                                    {
+                                        rejectMain(errors.CANCELLED);
+                                        break;
+                                    }
+                                case 'rpcWrong':
+                                    {
+                                        rejectMain(errors.RPC_ERROR);
+                                        break;
+                                    }
+                                case 'default':
+                                    {
+                                        rejectMain(errors.DEFAULT);
+                                        break;
+                                    }
+                                default:
+                                    {
+                                        resolveMain(res);
+                                        break;
+                                    }
                             }
                         });
                     }
@@ -116,11 +120,16 @@ export class Init {
     }
     public authorization() {
         return new Promise((resolveMain, rejectMain) => {
-            window.postMessage({ target: 'authorization', icon: getIcon(), hostname: location.hostname, title: document.title }, '*');
+            window.postMessage({
+                target: 'authorization',
+                icon: getIcon(),
+                hostname: location.hostname,
+                title: document.title
+            }, '*');
             const promise = new Promise((resolve, reject) => {
                 const authorizationFn = (event) => {
                     if (event.data.target !== undefined && (event.data.target === 'authorized' ||
-                    event.data.target === 'authorize_rejected' )) {
+                            event.data.target === 'authorize_rejected')) {
                         resolve(event.data.data);
                         window.removeEventListener('message', authorizationFn);
                     }
@@ -135,7 +144,9 @@ export class Init {
 
     public getWalletInfo() {
         return new Promise((resolveMain, rejectMain) => {
-            window.postMessage({ target: 'getWalletInfo' }, '*');
+            window.postMessage({
+                target: 'getWalletInfo'
+            }, '*');
             const promise = new Promise((resolve, reject) => {
                 const walletInfoFn = (event) => {
                     if (event.data.target !== undefined && event.data.target === 'walletInfoRes') {
@@ -164,7 +175,9 @@ export class Init {
 
     public getAccount() {
         return new Promise((resolveMain, rejectMain) => {
-            window.postMessage({ target: 'getAccount' }, '*');
+            window.postMessage({
+                target: 'getAccount'
+            }, '*');
             this.getAuthState().then(authState => {
                 if (authState === 'AUTHORIZED') {
                     const promise = new Promise((resolve, reject) => {
@@ -195,7 +208,10 @@ export class Init {
             if (parameter === undefined || parameter.address === undefined || parameter.assetID === undefined) {
                 rejectMain(errors.INVALID_ARGUMENTS);
             } else {
-                window.postMessage({ target: 'getBalance', parameter }, '*');
+                window.postMessage({
+                    target: 'getBalance',
+                    parameter
+                }, '*');
                 const promise = new Promise((resolve, reject) => {
                     const getBalanceFn = (event) => {
                         if (event.data.target !== undefined && event.data.target === 'balanceRes') {
@@ -218,7 +234,9 @@ export class Init {
 
     public getAuthState() {
         return new Promise((resolveMain, rejectMain) => {
-            window.postMessage({ target: 'getAuthState' }, '*');
+            window.postMessage({
+                target: 'getAuthState'
+            }, '*');
             const promise = new Promise((resolve, reject) => {
                 const getAuthStateFn = (event) => {
                     if (event.data.target !== undefined && event.data.target === 'authStateRes') {
@@ -244,7 +262,9 @@ export class Init {
 
     public getNetworks() {
         return new Promise((resolveMain, rejectMain) => {
-            window.postMessage({ target: 'getNetworks' }, '*');
+            window.postMessage({
+                target: 'getNetworks'
+            }, '*');
             const promise = new Promise((resolve, reject) => {
                 const getNetworksFn = (event) => {
                     if (event.data.target !== undefined && event.data.target === 'networksRes') {
@@ -255,25 +275,27 @@ export class Init {
                 window.addEventListener('message', getNetworksFn);
             });
             promise.then(res => {
-               resolveMain(res);
+                resolveMain(res);
             });
         });
     }
 
     public getTransaction() {
-        return new Promise((resolve, reject) => {
-        });
+        return new Promise((resolve, reject) => {});
     }
 
     public invokeTest(parameter: any) {
         return new Promise((resolveMain, rejectMain) => {
             if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
-            parameter.operation === undefined || parameter.operation === '' ||
-            parameter.args === undefined || parameter.args === '' ||
-            parameter.network === undefined || parameter.network === '') {
+                parameter.operation === undefined || parameter.operation === '' ||
+                parameter.args === undefined || parameter.args === '' ||
+                parameter.network === undefined || parameter.network === '') {
                 rejectMain(errors.INVALID_ARGUMENTS);
             }
-            window.postMessage({ target: 'invokeTest', parameter }, '*');
+            window.postMessage({
+                target: 'invokeTest',
+                parameter
+            }, '*');
             const promise = new Promise((resolve, reject) => {
                 const invokeTestFn = (event) => {
                     if (event.data.target !== undefined && event.data.target === 'invokeTestRes') {
@@ -299,117 +321,126 @@ export class Init {
     }
 
     public invoke() {
-        return new Promise((resolve, reject) => {
-        });
+        return new Promise((resolve, reject) => {});
     }
 
 
     public addEventListener(type: string, callback: (data: object) => void) {
         switch (type) {
-            case this.EVENT.READY: {
-                this.getWalletInfo().then(res => {
-                    callback(res);
-                }).catch(error => {
-                    callback(error);
-                });
-                // const callbackFn = (event) => {
-                //     if (event.data.target !== undefined && event.data.target === this.EVENT.READY) {
-                //         callback(event.data);
-                //     }
-                // };
-                // this.EVENTLIST.READY.callback.push(callback);
-                // this.EVENTLIST.READY.callbackEvent.push(callbackFn);
-                // window.addEventListener('message', this.EVENTLIST.READY[this.EVENTLIST.READY.callbackEvent.length - 1]);
-                break;
-            }
-            case this.EVENT.ACCOUNT_CHANGED: {
-                const callbackFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === this.EVENT.ACCOUNT_CHANGED) {
-                        callback(event.data);
-                    }
-                };
-                this.EVENTLIST.ACCOUNT_CHANGED.callback.push(callback);
-                this.EVENTLIST.ACCOUNT_CHANGED.callbackEvent.push(callbackFn);
-                window.addEventListener('message', this.EVENTLIST.ACCOUNT_CHANGED.callbackEvent[
-                    this.EVENTLIST.ACCOUNT_CHANGED.callbackEvent.length - 1]);
-                break;
-            }
-            case this.EVENT.AUTHORIZED: {
-                const callbackFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === this.EVENT.AUTHORIZED) {
-                        callback(event.data);
-                    }
-                };
-                this.EVENTLIST.AUTHORIZED.callback.push(callback);
-                this.EVENTLIST.AUTHORIZED.callbackEvent.push(callbackFn);
-                window.addEventListener('message', this.EVENTLIST.AUTHORIZED.callbackEvent[
-                    this.EVENTLIST.AUTHORIZED.callbackEvent.length - 1]);
-                break;
-            }
-            case this.EVENT.AUTHORIZE_REJECTED: {
-                const callbackFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === this.EVENT.AUTHORIZE_REJECTED) {
-                        callback(event.data);
-                    }
-                };
-                this.EVENTLIST.AUTHORIZE_REJECTED.callback.push(callback);
-                this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent.push(callbackFn);
-                window.addEventListener('message',
-                    this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent[
-                        this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent.length - 1]);
-                break;
-            }
-            case this.EVENT.NETWORK_CHANGED: {
-                const callbackFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === this.EVENT.NETWORK_CHANGED) {
-                        callback(event.data);
-                    }
-                };
-                this.EVENTLIST.NETWORK_CHANGED.callback.push(callback);
-                this.EVENTLIST.NETWORK_CHANGED.callbackEvent.push(callbackFn);
-                window.addEventListener('message', this.EVENTLIST.NETWORK_CHANGED.callbackEvent[
-                    this.EVENTLIST.NETWORK_CHANGED.callbackEvent.length - 1]);
-                break;
-            }
+            case this.EVENT.READY:
+                {
+                    this.getWalletInfo().then(res => {
+                        callback(res);
+                    }).catch(error => {
+                        callback(error);
+                    });
+                    // const callbackFn = (event) => {
+                    //     if (event.data.target !== undefined && event.data.target === this.EVENT.READY) {
+                    //         callback(event.data);
+                    //     }
+                    // };
+                    // this.EVENTLIST.READY.callback.push(callback);
+                    // this.EVENTLIST.READY.callbackEvent.push(callbackFn);
+                    // window.addEventListener('message', this.EVENTLIST.READY[this.EVENTLIST.READY.callbackEvent.length - 1]);
+                    break;
+                }
+            case this.EVENT.ACCOUNT_CHANGED:
+                {
+                    const callbackFn = (event) => {
+                        if (event.data.target !== undefined && event.data.target === this.EVENT.ACCOUNT_CHANGED) {
+                            callback(event.data);
+                        }
+                    };
+                    this.EVENTLIST.ACCOUNT_CHANGED.callback.push(callback);
+                    this.EVENTLIST.ACCOUNT_CHANGED.callbackEvent.push(callbackFn);
+                    window.addEventListener('message', this.EVENTLIST.ACCOUNT_CHANGED.callbackEvent[
+                        this.EVENTLIST.ACCOUNT_CHANGED.callbackEvent.length - 1]);
+                    break;
+                }
+            case this.EVENT.AUTHORIZED:
+                {
+                    const callbackFn = (event) => {
+                        if (event.data.target !== undefined && event.data.target === this.EVENT.AUTHORIZED) {
+                            callback(event.data);
+                        }
+                    };
+                    this.EVENTLIST.AUTHORIZED.callback.push(callback);
+                    this.EVENTLIST.AUTHORIZED.callbackEvent.push(callbackFn);
+                    window.addEventListener('message', this.EVENTLIST.AUTHORIZED.callbackEvent[
+                        this.EVENTLIST.AUTHORIZED.callbackEvent.length - 1]);
+                    break;
+                }
+            case this.EVENT.AUTHORIZE_REJECTED:
+                {
+                    const callbackFn = (event) => {
+                        if (event.data.target !== undefined && event.data.target === this.EVENT.AUTHORIZE_REJECTED) {
+                            callback(event.data);
+                        }
+                    };
+                    this.EVENTLIST.AUTHORIZE_REJECTED.callback.push(callback);
+                    this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent.push(callbackFn);
+                    window.addEventListener('message',
+                        this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent[
+                            this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent.length - 1]);
+                    break;
+                }
+            case this.EVENT.NETWORK_CHANGED:
+                {
+                    const callbackFn = (event) => {
+                        if (event.data.target !== undefined && event.data.target === this.EVENT.NETWORK_CHANGED) {
+                            callback(event.data);
+                        }
+                    };
+                    this.EVENTLIST.NETWORK_CHANGED.callback.push(callback);
+                    this.EVENTLIST.NETWORK_CHANGED.callbackEvent.push(callbackFn);
+                    window.addEventListener('message', this.EVENTLIST.NETWORK_CHANGED.callbackEvent[
+                        this.EVENTLIST.NETWORK_CHANGED.callbackEvent.length - 1]);
+                    break;
+                }
         }
     }
     public removeEventListener(type: string, removeFn: any, callback: (data: object) => void) {
         switch (type) {
-            case this.EVENT.READY: {
-                // const index = this.EVENTLIST.READY.callback.findIndex(item => item === fn);
-                // window.removeEventListener('message', this.EVENTLIST.READY.callbackEvent[index]);
-                // this.EVENTLIST.READY.callback.splice(index, 1);
-                // this.EVENTLIST.READY.callbackEvent.splice(index, 1);
-                break;
-            }
-            case this.EVENT.ACCOUNT_CHANGED: {
-                const index = this.EVENTLIST.ACCOUNT_CHANGED.callback.findIndex(item => item === removeFn);
-                window.removeEventListener('message', this.EVENTLIST.ACCOUNT_CHANGED.callbackEvent[index]);
-                this.EVENTLIST.ACCOUNT_CHANGED.callback.splice(index, 1);
-                this.EVENTLIST.ACCOUNT_CHANGED.callbackEvent.splice(index, 1);
-                break;
-            }
-            case this.EVENT.AUTHORIZED: {
-                const index = this.EVENTLIST.AUTHORIZED.callback.findIndex(item => item === removeFn);
-                window.removeEventListener('message', this.EVENTLIST.AUTHORIZED.callbackEvent[index]);
-                this.EVENTLIST.AUTHORIZED.callback.splice(index, 1);
-                this.EVENTLIST.AUTHORIZED.callbackEvent.splice(index, 1);
-                break;
-            }
-            case this.EVENT.AUTHORIZE_REJECTED: {
-                const index = this.EVENTLIST.AUTHORIZE_REJECTED.callback.findIndex(item => item === removeFn);
-                window.removeEventListener('message', this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent[index]);
-                this.EVENTLIST.AUTHORIZE_REJECTED.callback.splice(index, 1);
-                this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent.splice(index, 1);
-                break;
-            }
-            case this.EVENT.NETWORK_CHANGED: {
-                const index = this.EVENTLIST.NETWORK_CHANGED.callback.findIndex(item => item === removeFn);
-                window.removeEventListener('message', this.EVENTLIST.NETWORK_CHANGED.callbackEvent[index]);
-                this.EVENTLIST.NETWORK_CHANGED.callback.splice(index, 1);
-                this.EVENTLIST.NETWORK_CHANGED.callbackEvent.splice(index, 1);
-                break;
-            }
+            case this.EVENT.READY:
+                {
+                    // const index = this.EVENTLIST.READY.callback.findIndex(item => item === fn);
+                    // window.removeEventListener('message', this.EVENTLIST.READY.callbackEvent[index]);
+                    // this.EVENTLIST.READY.callback.splice(index, 1);
+                    // this.EVENTLIST.READY.callbackEvent.splice(index, 1);
+                    break;
+                }
+            case this.EVENT.ACCOUNT_CHANGED:
+                {
+                    const index = this.EVENTLIST.ACCOUNT_CHANGED.callback.findIndex(item => item === removeFn);
+                    window.removeEventListener('message', this.EVENTLIST.ACCOUNT_CHANGED.callbackEvent[index]);
+                    this.EVENTLIST.ACCOUNT_CHANGED.callback.splice(index, 1);
+                    this.EVENTLIST.ACCOUNT_CHANGED.callbackEvent.splice(index, 1);
+                    break;
+                }
+            case this.EVENT.AUTHORIZED:
+                {
+                    const index = this.EVENTLIST.AUTHORIZED.callback.findIndex(item => item === removeFn);
+                    window.removeEventListener('message', this.EVENTLIST.AUTHORIZED.callbackEvent[index]);
+                    this.EVENTLIST.AUTHORIZED.callback.splice(index, 1);
+                    this.EVENTLIST.AUTHORIZED.callbackEvent.splice(index, 1);
+                    break;
+                }
+            case this.EVENT.AUTHORIZE_REJECTED:
+                {
+                    const index = this.EVENTLIST.AUTHORIZE_REJECTED.callback.findIndex(item => item === removeFn);
+                    window.removeEventListener('message', this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent[index]);
+                    this.EVENTLIST.AUTHORIZE_REJECTED.callback.splice(index, 1);
+                    this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent.splice(index, 1);
+                    break;
+                }
+            case this.EVENT.NETWORK_CHANGED:
+                {
+                    const index = this.EVENTLIST.NETWORK_CHANGED.callback.findIndex(item => item === removeFn);
+                    window.removeEventListener('message', this.EVENTLIST.NETWORK_CHANGED.callbackEvent[index]);
+                    this.EVENTLIST.NETWORK_CHANGED.callback.splice(index, 1);
+                    this.EVENTLIST.NETWORK_CHANGED.callbackEvent.splice(index, 1);
+                    break;
+                }
         }
     }
 }

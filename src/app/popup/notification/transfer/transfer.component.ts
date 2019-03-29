@@ -38,7 +38,9 @@ import {
 import {
     of
 } from 'rxjs';
-import { wallet } from '@cityofzion/neon-core';
+import {
+    wallet
+} from '@cityofzion/neon-core';
 
 @Component({
     templateUrl: 'transfer.component.html',
@@ -54,6 +56,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public loading = false;
     public loadingMsg: string;
     public wallet: any;
+
+    public tx: Transaction;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -68,17 +72,37 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     ) {}
 
     ngOnInit(): void {
+        this.loading = true;
+        this.loadingMsg = 'Loading';
         this.fromAddress = this.neon.address;
         this.wallet = this.neon.wallet;
+        this.asset.fetchBalance(this.fromAddress);
         this.aRoute.queryParams.subscribe((params: any) => {
             this.toAddress = params.to_address || '';
             this.assetId = params.asset_id || '';
             this.amount = params.amount || 0;
             this.asset.detail(this.assetId).subscribe((res) => {
+                this.loading = false;
+                this.loadingMsg = '';
                 this.balance = res;
+                this.transfer.create(this.fromAddress, this.toAddress, this.assetId, this.amount).subscribe((tx) => {
+                    this.dialog.open(PwdDialog, {
+                        disableClose: true
+                    }).afterClosed().subscribe((pwd) => {
+                        if (pwd && pwd.length) {
+                            this.global.log('start transfer with pwd');
+                            this.resolveSign(tx, pwd);
+                        } else {
+                            this.creating = false;
+                            this.global.log('cancel pay');
+                        }
+                    });
+                }, (err) => {
+                    this.creating = false;
+                    this.global.snackBarTip('wentWrong', '', false);
+                });
             });
         });
-        this.asset.fetchBalance(this.fromAddress);
     }
 
     ngAfterViewInit(): void {}
@@ -87,12 +111,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         if (this.creating) {
             return;
         }
-        if (!this.toAddress || !this.toAddress.length) {
-            this.global.snackBarTip('checkAddress', '', false);
-            return;
-        }
-        if (wallet.isAddress(this.toAddress) === false) {
-            this.global.snackBarTip('wrongAddress', '', false);
+        if (this.tx === undefined) {
+            alert('Please follow the formal process');
             return;
         }
         if (this.balance.balance === undefined || this.balance.balance <= 0) {
@@ -104,45 +124,37 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             return;
         }
         this.creating = true;
-        this.transfer.create(this.fromAddress, this.toAddress, this.balance.asset_id, this.amount).subscribe((res) => {
-            this.dialog.open(PwdDialog).afterClosed().subscribe((pwd) => {
-                if (pwd && pwd.length) {
-                    this.global.log('start transfer with pwd');
-                    this.resolveSign(res, pwd);
-                } else {
-                    this.creating = false;
-                    this.global.log('cancel pay');
-                }
-            });
-        }, (err) => {
-            this.creating = false;
-            this.global.snackBarTip('wentWrong', '', false);
-        });
+        this.resolveSend(this.tx);
+
     }
 
     public cancel() {
-        this.chrome.windowCallback({data: 'cancel', target: 'transferRes'});
+        this.chrome.windowCallback({
+            data: 'cancel',
+            target: 'transferRes'
+        });
         window.close();
     }
 
     private resolveSign(tx: Transaction, pwd: string) {
         this.loading = true;
-        this.loadingMsg = '验证中';
+        this.loadingMsg = 'Wait';
         this.neon.wallet.accounts[0].decrypt(pwd).then((acc) => {
             tx.sign(acc);
-            this.global.log('signed tx', tx);
-            this.resolveSend(tx);
+            this.tx = tx;
+            this.loading = false;
+            this.loadingMsg = '';
+            this.creating = false;
         }).catch((err) => {
             this.loading = false;
             this.loadingMsg = '';
-            console.log(tx, err);
             this.creating = false;
             this.global.snackBarTip('verifyFailed', err, false);
         });
     }
 
     private resolveSend(tx: Transaction) {
-        this.loadingMsg = '请求中';
+        this.loadingMsg = 'Wait';
         return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
             signature_transaction: tx.serialize(true)
         }).subscribe(res => {
@@ -157,7 +169,10 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                     },
                     this.fromAddress, this.assetId);
             }
-            this.chrome.windowCallback({data: tx.hash, target: 'transferRes'});
+            this.chrome.windowCallback({
+                data: tx.hash,
+                target: 'transferRes'
+            });
             this.router.navigate([{
                 outlets: {
                     transfer: ['transfer', 'result']
@@ -167,7 +182,10 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.loading = false;
             this.loadingMsg = '';
             this.creating = false;
-            this.chrome.windowCallback({data: 'rpcWrond', target: 'transferRes'});
+            this.chrome.windowCallback({
+                data: 'rpcWrond',
+                target: 'transferRes'
+            });
             this.global.snackBarTip('transferFailed', err, false);
         });
     }
