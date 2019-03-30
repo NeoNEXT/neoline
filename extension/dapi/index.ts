@@ -66,14 +66,14 @@ export class Init {
         return new Promise((resolveMain, rejectMain) => {
             this.getAuthState().then(authState => {
                 if (authState === 'AUTHORIZED' || authState === 'NONE') {
-                    if (parameter === undefined || parameter.toAddress === undefined || parameter.fromAddress === undefined ||
+                    if (parameter === undefined || parameter.to === undefined || parameter.from === undefined ||
                         parameter.assetID === undefined || parameter.amount === undefined || parameter.network === undefined) {
                         rejectMain(errors.INVALID_ARGUMENTS);
                     } else {
                         window.postMessage({
                             target: 'transfer',
-                            toAddress: parameter.toAddress,
-                            fromAddress: parameter.fromAddress,
+                            toAddress: parameter.to,
+                            fromAddress: parameter.from,
                             assetID: parameter.assetID,
                             amount: parameter.amount,
                             network: parameter.network,
@@ -131,7 +131,7 @@ export class Init {
             const promise = new Promise((resolve, reject) => {
                 const authorizationFn = (event) => {
                     if (event.data.target !== undefined && (event.data.target === 'authorized' ||
-                            event.data.target === 'authorize_rejected')) {
+                        event.data.target === 'authorize_rejected')) {
                         resolve(event.data.data);
                         window.removeEventListener('message', authorizationFn);
                     }
@@ -284,7 +284,7 @@ export class Init {
     }
 
     public getTransaction() {
-        return new Promise((resolve, reject) => {});
+        return new Promise((resolve, reject) => { });
     }
 
     public invokeTest(parameter: any) {
@@ -324,7 +324,7 @@ export class Init {
     }
 
     public invoke() {
-        return new Promise((resolve, reject) => {});
+        return new Promise((resolve, reject) => { });
     }
 
 
@@ -384,7 +384,7 @@ export class Init {
                     this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent.push(callbackFn);
                     window.addEventListener('message',
                         this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent[
-                            this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent.length - 1]);
+                        this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent.length - 1]);
                     break;
                 }
             case this.EVENT.NETWORK_CHANGED:
