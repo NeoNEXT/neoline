@@ -30,9 +30,9 @@ export function expand() {
 (function init() {
     chrome.webRequest.onBeforeRequest.addListener(
         (details: any) => {
-            if (details.url.indexOf(chrome.runtime.getURL('/index.html/') < 0)) {
+            if (details.url.indexOf(chrome.runtime.getURL('/index.html') < 0)) {
                 return {
-                    redirectUrl: details.url.replace(chrome.runtime.getURL(''), chrome.runtime.getURL('/index.html/'))
+                    redirectUrl: details.url.replace(chrome.runtime.getURL(''), chrome.runtime.getURL('/index.html'))
                 };
             } else {
                 return {
