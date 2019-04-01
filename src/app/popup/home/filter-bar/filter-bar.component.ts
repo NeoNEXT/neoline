@@ -99,6 +99,7 @@ export class PopupHomeFilterBarComponent
     }
 
     public fetchBalance() {
+        this.asset.fetchBalance(this.address);
         this.unSubBalance = this.asset.balance().pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
             this.balances = [];
             this.balances.push(...res);

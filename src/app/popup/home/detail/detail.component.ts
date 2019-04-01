@@ -51,6 +51,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     public unSubBalance: Unsubscribable;
 
     private unSubTxStatus: Unsubscribable;
+    private unSubRate: Unsubscribable;
 
     constructor(
         private asset: AssetState,
@@ -60,7 +61,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
         private txState: TransactionState,
         private filterBar: FilterBarService,
         private chrome: ChromeService,
-        private http: HttpService
+        private http: HttpService,
     ) {
         this.assetId = '';
         this.isLoading = true;
@@ -75,29 +76,30 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
         this.chrome.getRateObj().subscribe(rateObj => {
             this.rateObj = rateObj;
         });
-        this.asset.fetchBalance(this.address);
-        this.unSubBalance = this.asset.balance().subscribe(() => {
-            this.aRouter.params.subscribe((params: any) => {
-                this.asset.detail(params.id).subscribe((res: any) => {
-                    this.balance = res;
-                    this.assetId = params.id;
-                    this.txState.fetch(this.address, 1, params.id, true);
-                    // 获取资产汇率
-                    if (this.balance.balance && this.balance.balance > 0) {
-                        let query = {};
-                        query['symbol'] = this.rateObj.currentCurrency;
-                        query['channel'] = this.rateObj.currentChannel;
-                        query['coins'] = this.balance.symbol;
-                        this.asset.getRate(query).subscribe(rateBalance => {
-                            if (rateBalance.result.length > 0) {
-                                this.balance.rateBalance =
-                                    Number(Object.values(rateBalance.result[0])[0]) * this.balance.balance;
-                            }
-                        });
-                    } else {
-                        this.balance.rateBalance = 0;
-                    }
-                });
+        this.aRouter.params.subscribe((params: any) => {
+            if (this.unSubRate) {
+                this.unSubRate.unsubscribe();
+            }
+            this.asset.detail(params.id).subscribe((res: any) => {
+                res.balance = Number(res.balance);
+                this.balance = res;
+                this.assetId = params.id;
+                this.txState.fetch(this.address, 1, params.id, true);
+                // 获取资产汇率
+                if (this.balance.balance && this.balance.balance > 0) {
+                    let query = {};
+                    query['symbol'] = this.rateObj.currentCurrency;
+                    query['channel'] = this.rateObj.currentChannel;
+                    query['coins'] = this.balance.symbol;
+                    this.unSubRate = this.asset.getRate(query).subscribe(rateBalance => {
+                        if (rateBalance.result.length > 0) {
+                            this.balance.rateBalance =
+                                Number(Object.values(rateBalance.result[0])[0]) * this.balance.balance;
+                        }
+                    });
+                } else {
+                    this.balance.rateBalance = 0;
+                }
             });
         });
         this.unSubTxStatus = this.txState.data().subscribe((res: any) => {

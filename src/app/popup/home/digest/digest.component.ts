@@ -34,11 +34,7 @@ export class PopupHomeDigestComponent implements OnInit, OnChanges {
         this.showTokenName = false;
     }
 
-    ngOnInit(): void {
-        if (!this.balance || this.balance === 0) {
-            this.rateBalance = 0;
-        }
-    }
+    ngOnInit(): void { }
 
     ngOnChanges(changes: SimpleChanges) {
         this.imageUrl = '';
