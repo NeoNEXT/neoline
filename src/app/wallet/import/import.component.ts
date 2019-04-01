@@ -1,10 +1,30 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
-import { FormGroup, FormControl, Validators } from '@angular/forms';
-import { wallet } from '@cityofzion/neon-core';
-import { NeonService, ChromeService, GlobalService } from '@app/core';
-import { Router } from '@angular/router';
-import { WalletImport } from '@/app/popup/_lib/models';
-import { WalletInitConstant } from '@/app/popup/_lib/constant';
+import {
+    Component,
+    OnInit,
+    AfterViewInit
+} from '@angular/core';
+import {
+    FormGroup,
+    FormControl,
+    Validators
+} from '@angular/forms';
+import {
+    wallet
+} from '@cityofzion/neon-core';
+import {
+    NeonService,
+    ChromeService,
+    GlobalService
+} from '@app/core';
+import {
+    Router
+} from '@angular/router';
+import {
+    WalletImport
+} from '@/app/popup/_lib/models';
+import {
+    WalletInitConstant
+} from '@/app/popup/_lib/constant';
 
 @Component({
     templateUrl: 'import.component.html',
@@ -35,8 +55,7 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
         this.hideConfirmPwd = true;
     }
 
-    ngOnInit(): void {
-    }
+    ngOnInit(): void { }
 
     ngAfterViewInit(): void {
         setTimeout(() => {
@@ -56,27 +75,38 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
     }
 
     public submit() {
-        if (wallet.isWIF(this.walletImport.WIF) === false) {
+        if (!wallet.isWIF(this.walletImport.WIF) && !wallet.isPrivateKey(this.walletImport.WIF)) {
             this.isWIF = false;
             return;
         }
         this.loading = true;
-
-        this.neon
-            .importWIF(this.walletImport.WIF, this.walletImport.password, this.walletImport.walletName)
-            .subscribe(
-                (res: any) => {
+        if (wallet.isPrivateKey(this.walletImport.WIF)) {
+            this.neon.importPrivateKey(this.walletImport.WIF, this.walletImport.password, this.walletImport.walletName)
+                .subscribe((res: any) => {
                     this.neon.pushWalletArray(res.export());
                     this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
                     this.chrome.setWallet(res.export());
                     this.global.$wallet.next('open');
                     this.loading = false;
                     this.router.navigateByUrl('/asset');
-                },
-                (err: any) => {
-                    this.global.log('import wallet faild', err);
-                    this.global.snackBarTip('walletImportFailed', '', false);
-                    this.loading = false;
                 });
+        } else {
+            this.neon
+                .importWIF(this.walletImport.WIF, this.walletImport.password, this.walletImport.walletName)
+                .subscribe(
+                    (res: any) => {
+                        this.neon.pushWalletArray(res.export());
+                        this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
+                        this.chrome.setWallet(res.export());
+                        this.global.$wallet.next('open');
+                        this.loading = false;
+                        this.router.navigateByUrl('/asset');
+                    },
+                    (err: any) => {
+                        this.global.log('import wallet faild', err);
+                        this.global.snackBarTip('walletImportFailed', '', false);
+                        this.loading = false;
+                    });
+        }
     }
 }

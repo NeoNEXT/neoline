@@ -45,7 +45,7 @@ export class NeonService {
         if (this._walletArr === []) {
             return true;
         } else {
-            if (this._walletArr.findIndex( item => item.accounts[0].address === w.accounts[0].address) >= 0) {
+            if (this._walletArr.findIndex(item => item.accounts[0].address === w.accounts[0].address) >= 0) {
                 return false;
             } else {
                 return true;
@@ -151,12 +151,14 @@ export class NeonService {
      * @param privKey private key to import
      * @param key encrypt password for new address
      */
-    public importPrivateKey(privKey: string, key: string, name: string = null): Wallet {
+    public importPrivateKey(privKey: string, key: string, name: string = null): Observable<Wallet> {
         const account = new wallet.Account(privKey);
         const w = Neon.create.wallet({ name: name || 'NEOLineUser' } as any);
         w.addAccount(account);
         w.encrypt(0, key);
-        return w;
+        return from(w.accounts[0].encrypt(key)).pipe(map(() => {
+            return w;
+        }));
     }
     /**
      * Create a new wallet include given private key and encrypt by given password.
