@@ -42,10 +42,10 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     public balance: Balance;
     public address: string;
     public assetId: string;
-    public txPage: PageData < Transaction > ;
+    public txPage: PageData<Transaction>;
     public isLoading: boolean;
     public needLoadWhenSymbolSwitch: boolean;
-    public inTransaction: Array < Transaction > ;
+    public inTransaction: Array<Transaction>;
     public rateObj: RateObj;
 
     public unSubBalance: Unsubscribable;
@@ -133,7 +133,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                         this.chrome.setTransaction(inTxData);
                         this.txPage = res;
                         this.txPage.items = this.inTransaction.concat(this.txPage.items);
-                    }, error => {});
+                    }, error => { });
                 });
             } else {
                 this.txPage = res;

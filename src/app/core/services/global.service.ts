@@ -30,7 +30,7 @@ import {
 @Injectable()
 export class GlobalService {
     public apiDomain: string;
-    public $wallet: Subject < string > ;
+    public $wallet: Subject<string>;
     public languageJson: any = null;
     public debug = false;
 
@@ -41,7 +41,7 @@ export class GlobalService {
         private notification: NotificationService,
         private chromeSer: ChromeService
     ) {
-        this.$wallet = new Subject < string > ();
+        this.$wallet = new Subject<string>();
         this.chromeSer.getNet().subscribe(net => {
             this.modifyNet(net);
         });
@@ -62,11 +62,11 @@ export class GlobalService {
     /**
      * Use to listen wallet open/close.
      */
-    public walletListen(): Observable < string > {
+    public walletListen(): Observable<string> {
         return this.$wallet.pipe(publish(), refCount());
     }
 
-    public loader(msg: string, cancelable: boolean = false): MatDialogRef < LoaderDialog > {
+    public loader(msg: string, cancelable: boolean = false): MatDialogRef<LoaderDialog> {
         return this.matDialog.open(LoaderDialog, {
             data: {
                 msg,
@@ -82,7 +82,6 @@ export class GlobalService {
     }
 
     public snackBarTip(msg: string, serverError = '', autoClose = true) {
-        console.log(msg);
         let message = this.notification.content[msg];
         if (serverError !== '') {
             message = message + ': ' + serverError;

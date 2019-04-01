@@ -68,15 +68,15 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
                                 if (history.indexOf('notification') > -1) {
                                     this.router.navigateByUrl(history);
                                 } else {
-                                    this.router.navigateByUrl('/popup/home');
+                                    location.href = `index.html#popup`;
                                 }
                             } else {
-                                this.router.navigateByUrl('/popup/home');
+                                location.href = `index.html#popup`;
                             }
                             this.chrome.setHistory('');
                         }, (err) => {
                             this.chrome.setHistory('');
-                            this.router.navigateByUrl('/popup/home');
+                            location.href = `index.html#popup`;
                         });
                     } else {
                         this.global.snackBarTip('existingWallet');

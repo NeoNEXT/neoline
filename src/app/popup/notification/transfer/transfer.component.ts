@@ -69,7 +69,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         private http: HttpService,
         private global: GlobalService,
         private chrome: ChromeService,
-    ) {}
+    ) { }
 
     ngOnInit(): void {
         this.loading = true;
@@ -89,11 +89,6 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.asset.detail(this.assetId).subscribe((res) => {
                 this.loading = false;
                 this.loadingMsg = '';
-                if (res === undefined) {
-                    this.global.snackBarTip('balanceLack', '', false);
-                    return;
-                }
-                res.balance = Number(res.balance);
                 this.balance = res;
                 this.transfer.create(this.fromAddress, this.toAddress, this.assetId, this.amount).subscribe((tx) => {
                     this.dialog.open(PwdDialog, {
@@ -115,7 +110,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         });
     }
 
-    ngAfterViewInit(): void {}
+    ngAfterViewInit(): void { }
 
     public submit() {
         if (this.creating) {
@@ -173,10 +168,10 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.creating = false;
             if (this.fromAddress !== this.toAddress) {
                 this.chrome.pushTransaction({
-                        txid: tx.hash,
-                        value: -this.amount,
-                        block_time: res.response_time
-                    },
+                    txid: tx.hash,
+                    value: -this.amount,
+                    block_time: res.response_time
+                },
                     this.fromAddress, this.assetId);
             }
             this.chrome.windowCallback({

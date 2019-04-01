@@ -43,7 +43,7 @@ export class WalletCreateComponent implements OnInit, AfterContentInit {
         this.isInit = true;
     }
 
-    ngOnInit(): void {}
+    ngOnInit(): void { }
 
     ngAfterContentInit(): void {
         setTimeout(() => {
@@ -71,12 +71,13 @@ export class WalletCreateComponent implements OnInit, AfterContentInit {
                     this.chrome.setWallet(res.export());
                     this.global.$wallet.next('open');
                     this.loading = false;
-                    this.router.navigateByUrl('/asset');
+                    location.href = `index.html#asset`;
                 },
                 (err: any) => {
                     this.global.log('create wallet faild', err);
                     this.global.snackBarTip('walletCreateFailed', '', false);
                     this.loading = false;
+                    location.href = `index.html#asset`
                 });
     }
 }

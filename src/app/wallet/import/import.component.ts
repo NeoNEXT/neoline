@@ -88,7 +88,7 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
                     this.chrome.setWallet(res.export());
                     this.global.$wallet.next('open');
                     this.loading = false;
-                    this.router.navigateByUrl('/asset');
+                    location.href = `index.html#asset`;
                 });
         } else {
             this.neon
@@ -100,7 +100,7 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
                         this.chrome.setWallet(res.export());
                         this.global.$wallet.next('open');
                         this.loading = false;
-                        this.router.navigateByUrl('/asset');
+                        location.href = `index.html#asset`;
                     },
                     (err: any) => {
                         this.global.log('import wallet faild', err);

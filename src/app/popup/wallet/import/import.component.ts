@@ -131,15 +131,15 @@ export class PopupWalletImportComponent implements OnInit, AfterViewInit {
                     this.router.navigateByUrl(history);
                 } else {
                     this.chrome.setHistory('');
-                    this.router.navigateByUrl('/popup/home');
+                    location.href = `index.html#popup`;
                 }
             } else {
                 this.chrome.setHistory('');
-                this.router.navigateByUrl('/popup/home');
+                location.href = `index.html#popup`;
             }
         }, (err) => {
             this.chrome.setHistory('');
-            this.router.navigateByUrl('/popup/home');
+            location.href = `index.html#popup`;
         });
     }
 }
