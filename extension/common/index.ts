@@ -94,7 +94,7 @@ export function clearStorage() {
 export function notification(title = '', msg = '') {
     chrome.notifications.create(null, {
         type: 'basic',
-        iconUrl: '/assets/images/logo.png',
+        iconUrl: '/assets/images/logo_square.png',
         title,
         message: msg
     });
