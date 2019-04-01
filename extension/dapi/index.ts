@@ -242,7 +242,7 @@ export class Init {
                         if (parameter.assetID !== undefined) {
                             resolveMain((res.result as Array<any>).filter(item => item.asset_id === parameter.assetID));
                         } else {
-                            resolveMain(res.result);
+                            resolveMain((res.result as Array<any>).filter(item => item.balance !== '0'));
                         }
                     }
                 });
