@@ -132,19 +132,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 export function windowCallback(data) {
-    if (tabCurr === null || tabCurr === undefined) {
+    if (tabCurr === null || tabCurr === undefined || tabCurr === []) {
         chrome.tabs.query({
             active: true,
             currentWindow: true
         }, (tabs) => {
             tabCurr = tabs;
+            if (tabCurr.length >= 1) {
+                chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
+                    tabCurr = null;
+                });
+            }
+        });
+    } else {
+        if (tabCurr.length >= 1) {
             chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
                 tabCurr = null;
             });
-        });
-    } else {
-        chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
-            tabCurr = null;
-        });
+        }
     }
 }
