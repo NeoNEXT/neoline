@@ -39,15 +39,6 @@ export class PopupAssetSearchComponent implements OnInit {
     ngOnInit(): void {
         // 获取资产 logo 图片
         const assetId = this.asset.asset_id;
-        this.assetState.getAssetSrc(assetId).subscribe(assetRes => {
-            if (typeof assetRes === 'string') {
-                this.imageUrl = assetRes;
-            } else {
-                this.assetState.setAssetFile(assetRes, assetId).then(src => {
-                    this.imageUrl = src;
-                });
-            }
-        });
     }
 
     public fixed(assetId: string) {

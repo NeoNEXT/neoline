@@ -63,30 +63,34 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        // let address = 'AaYEf4rC9MfjRwF5LnKtpa48Tzqi2zJQ7p';
+        // let address = 'Af1FkesAboWnz7PfvXsEiXiwoH3PPzx7ta';
         this.unSubBalance = this.asset.balance().pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
             this.displayAssets = [];
             this.rateSymbol = '';
-            res.map(r => {
+            res.map((r, index) => {
                 if (r.balance && r.balance > 0) {
                     this.rateSymbol += r.symbol + ',';
                 }
                 this.displayAssets.push(r);
+                this.getAssetSrc(r.asset_id, index, 'display');
             });
             this.rateSymbol = this.rateSymbol.slice(0, -1);
             //  去重
             const newWatch = [];
-            watching.forEach((w) => {
+            watching.forEach((w, index) => {
                 if (res.findIndex((r) => r.asset_id === w.asset_id) < 0) {
                     newWatch.push(w);
+                    this.displayAssets.push(w);
+                    this.getAssetSrc(w.asset_id, res.length + index, 'display');
                 }
             });
             this.watch = newWatch;
-            this.displayAssets.push(...newWatch);
+            // this.displayAssets.push(...newWatch);
             return res;
         })))).subscribe(() => {
             this.unSubAll = this.asset.all().subscribe(res => {
-                res.items = res.items.map((e) => {
+                res.items = res.items.map((e, index) => {
+                    this.getAssetSrc(e.asset_id, index, 'all');
                     e.watching = this.displayAssets.findIndex((w: Balance) => w.asset_id === e.asset_id) >= 0;
                     return e;
                 });
@@ -130,6 +134,30 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
         if (this.unSubBalance) {
             this.unSubBalance.unsubscribe();
         }
+    }
+
+    public getAssetSrc(assetId, index, type = 'all') {
+        this.asset.getAssetSrc(assetId).subscribe(assetRes => {
+            if (typeof assetRes === 'string') {
+                if (type === 'all') {
+                    this.allAssets.items[index].avatar = assetRes;
+                } else if (type === 'display') {
+                    this.displayAssets[index].avatar = assetRes;
+                } else {
+                    this.searchAssets[index].avatar = assetRes;
+                }
+            } else {
+                this.asset.setAssetFile(assetRes, assetId).then(src => {
+                    if (type === 'all') {
+                        this.allAssets.items[index].avatar = src;
+                    } else if (type === 'display') {
+                        this.displayAssets[index].avatar = src;
+                    } else {
+                        this.searchAssets[index].avatar = src;
+                    }
+                });
+            }
+        });
     }
 
     public page(page: number) {
@@ -192,6 +220,9 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
                     return e;
                 });
                 this.searchAssets = res;
+                this.searchAssets.forEach((s, index) => {
+                    this.getAssetSrc(s.asset_id, index, 'search');
+                });
             })
         } else {
             this.searchAssets = false;

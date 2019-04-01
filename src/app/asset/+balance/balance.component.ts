@@ -40,6 +40,7 @@ export class BalanceComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
+        this.asset.balance = Number(this.asset.balance);
         const assetId = this.asset.asset_id;
         this.assetState.getAssetSrc(assetId).subscribe(assetRes => {
             if (typeof assetRes === 'string') {

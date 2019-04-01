@@ -76,6 +76,7 @@ export class TransferCreateomponent implements OnInit {
         this.fromAddress = this.neon.address;
         this.aRoute.params.subscribe((params) => {
             this.asset.detail(params.id).subscribe((res) => {
+                res.balance = Number(res.balance);
                 this.balance = res;
                 this.assetId = this.balance.asset_id;
             });

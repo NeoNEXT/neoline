@@ -38,17 +38,9 @@ export class PopupAssetComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
+        this.asset.balance = Number(this.asset.balance);
         // 获取资产 logo 图片
         const assetId = this.asset.asset_id;
-        this.assetState.getAssetSrc(assetId).subscribe(assetRes => {
-            if (typeof assetRes === 'string') {
-                this.imageUrl = assetRes;
-            } else {
-                this.assetState.setAssetFile(assetRes, assetId).then(src => {
-                    this.imageUrl = src;
-                });
-            }
-        });
         if (!this.asset.balance || this.asset.balance === 0) {
             this.asset.rateBalance = 0;
         }

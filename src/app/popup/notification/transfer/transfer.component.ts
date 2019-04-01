@@ -93,6 +93,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                     this.global.snackBarTip('balanceLack', '', false);
                     return;
                 }
+                res.balance = Number(res.balance);
                 this.balance = res;
                 this.transfer.create(this.fromAddress, this.toAddress, this.assetId, this.amount).subscribe((tx) => {
                     this.dialog.open(PwdDialog, {

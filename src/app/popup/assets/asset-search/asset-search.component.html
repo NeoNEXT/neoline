@@ -1,5 +1,5 @@
 <div class="asset-item">
-    <img class="avatar" [src]="imageUrl" alt="">
+    <img class="avatar" [src]="asset?.avatar" alt="">
     <span class="long">{{asset.name}}</span>
     (<span class="short">{{ asset.symbol }}</span>)
     <button mat-raised-button *ngIf="asset.watching" disabled class="added">{{ 'added' | translate | async}}</button>
