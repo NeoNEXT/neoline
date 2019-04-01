@@ -54,7 +54,7 @@ export class PopupNoticeAuthComponent implements OnInit {
         });
     }
 
-    ngOnInit() {}
+    ngOnInit() { }
     public refuse() {
         this.chrome.getAuthorization().subscribe(res => {
             if (this.ruleCheck) {
@@ -82,13 +82,13 @@ export class PopupNoticeAuthComponent implements OnInit {
                 };
                 this.chrome.setAuthorization(res);
             }
+            this.chrome.windowCallback({
+                data: true,
+                target: 'authorized'
+            });
             if (this.isNext === 'transfer') {
                 this.router.navigateByUrl(`/popup/notification/transfer?to_address=${this.paramsData.to_address}&asset_id=${this.paramsData.asset_id}&amount=${this.paramsData.amount}&symbol=${this.paramsData.symbol}&network=${this.paramsData.network}`);
             } else {
-                this.chrome.windowCallback({
-                    data: true,
-                    target: 'authorized'
-                });
                 window.close();
             }
         });

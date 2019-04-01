@@ -70,6 +70,9 @@ export class Init {
                         parameter.assetID === undefined || parameter.amount === undefined || parameter.network === undefined) {
                         rejectMain(errors.INVALID_ARGUMENTS);
                     } else {
+                        if (sessionStorage.getItem('connect') !== 'true') {
+                            this.authorization(false);
+                        }
                         window.postMessage({
                             target: 'transfer',
                             toAddress: parameter.to,
@@ -79,7 +82,8 @@ export class Init {
                             network: parameter.network,
                             symbol: parameter.symbol,
                             hostname: location.hostname,
-                            icon: getIcon()
+                            icon: getIcon(),
+                            connect: sessionStorage.getItem('connect')
                         }, '*');
                         const promise = new Promise((resolve, reject) => {
                             const transferFn = (event) => {
@@ -120,14 +124,17 @@ export class Init {
             });
         });
     }
-    public authorization() {
+    public authorization(open = true) {
         return new Promise((resolveMain, rejectMain) => {
-            window.postMessage({
-                target: 'authorization',
-                icon: getIcon(),
-                hostname: location.hostname,
-                title: document.title
-            }, '*');
+            if (open) {
+                window.postMessage({
+                    target: 'authorization',
+                    icon: getIcon(),
+                    hostname: location.hostname,
+                    title: document.title,
+                    connect: sessionStorage.getItem('connect')
+                }, '*');
+            }
             const promise = new Promise((resolve, reject) => {
                 const authorizationFn = (event) => {
                     if (event.data.target !== undefined && (event.data.target === 'authorized' ||
@@ -139,6 +146,7 @@ export class Init {
                 window.addEventListener('message', authorizationFn);
             });
             promise.then(res => {
+                sessionStorage.setItem('connect', res.toString());
                 resolveMain(res);
             });
         });
@@ -181,7 +189,7 @@ export class Init {
                 target: 'getAccount'
             }, '*');
             this.getAuthState().then(authState => {
-                if (authState === 'AUTHORIZED') {
+                if (authState === 'AUTHORIZED' || sessionStorage.getItem('connect') === 'true') {
                     window.postMessage({
                         target: 'getAccount',
                     }, '*');
