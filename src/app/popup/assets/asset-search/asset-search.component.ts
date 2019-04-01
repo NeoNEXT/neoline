@@ -27,6 +27,7 @@ export class PopupAssetSearchComponent implements OnInit {
 
     @Input() asset: Balance;
     @Input() index: number;
+    @Input() isSearchAssets: boolean;
 
     // tslint:disable-next-line:no-output-on-prefix
     @Output() onAddAsset = new EventEmitter < any > ();

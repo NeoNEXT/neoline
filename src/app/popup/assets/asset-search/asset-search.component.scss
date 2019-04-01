@@ -25,12 +25,22 @@
         font-size: 14px;
         font-weight: 500;
         display: inline-block;
-        height: 49px;
-        line-height: 49px;
         max-width: 100px;
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+    }
+    .asset-name {
+        display: inline-flex;
+        align-items: center;
+    }
+    .asset-id {
+        color: #9FA8BD;
+        font-size: 12px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 200px;
     }
 
     button {

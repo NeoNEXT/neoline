@@ -33,6 +33,7 @@
             *ngFor="let asset of searchAssets || allAssets?.items;let index = index"
             [asset]="asset"
             [index]="index"
+            [isSearchAssets]="searchAssets ? true : false"
             (onAddAsset)="addAsset($event)"></app-asset-search>
     </ng-container>
 </div>

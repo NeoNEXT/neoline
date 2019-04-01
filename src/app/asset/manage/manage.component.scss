@@ -33,6 +33,14 @@
         border-radius: 6px;
     }
 }
+.asset-id {
+    color: #9FA8BD;
+    font-size: 14px;
+    max-width: 540px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
 .asset:not(:first-of-type) {
     border-top: 1px solid #F4F7FC;
 }
@@ -65,5 +73,9 @@ pager {
     .asset .avatar {
         width: 48px;
         height: 48px;
+    }
+    .asset-id {
+        font-size: 13px;
+        max-width: 340px;
     }
 }
