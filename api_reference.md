@@ -2,6 +2,7 @@
 
 [APIs](#APIs)
 
+* [connect](#connect)
 * [getWalletInfo](#getWalletInfo)
 * [getAccount](#getAccount)
 * [getBalance](#getBalance)
@@ -21,13 +22,13 @@
 
 * [READY](#READY)
 * [ACCOUNT_CHANGED](#ACCOUNT_CHANGED)
-* [AUTHORIZED](#AUTHORIZED)
-* [AUTHORIZE_REJECTED](#AUTHORIZE_REJECTED)
+* [CONNECTED](#CONNECTED)
+* [CONNECTION_REJECTED](#CONNECTION_REJECTED)
 * [NETWORK_CHANGED](#NETWORK_CHANGED)
 
 [Errors](#Errors)
 
-* [AUTHORIZE_REJECTED](#AUTHORIZE_REJECTED)
+* [CONNECTION_REJECTED](#CONNECTION_REJECTED)
 * [RPC_ERROR](#RPC_ERROR)
 * [INVALID_PARAMETER](#INVALID_PARAMETER)
 * [INSUFFICIENT_FUNDS](#INSUFFICIENT_FUNDS)
@@ -53,9 +54,45 @@ neoline.getWalletInfo()
 .catch(err => {...});
 ```
 
+### connect
+
+Send connect request to user. This api must be called before calling other apis that needs user authorization.
+
+#### Input Arguments
+
+None
+
+#### Success Response
+
+true if connected, otherwise false.
+
+#### Error Response
+
+| Parameter | Type | Description |
+| - | - | - |
+| code | string(32) | Type of the error |
+| description | string(256)? | Description of the error |
+| data | Object? | Any related data to this error |
+
+#### Example
+
+```javascript
+neoline.connect()
+.then(result => {
+    console.log("result: " + result); // true or false
+})
+.catch(({
+    code: string,
+    description: string?,
+    data: any
+}) => {
+    console.log("The request failed.");
+});
+```
+
 ### getWalletInfo
 
-Returns the current installed neoline wallet info. This method can be accessed without authorization.
+Returns the current installed neoline wallet info.
 
 #### Input Arguments
 
@@ -168,7 +205,7 @@ neoline.getAccount()
     data: any,
 }) => {
     switch(code) {
-        case 'AUTHORIZE_REJECTED':
+        case 'CONNECTION_REJECTED':
             console.log("The user rejected your request.");
             break;
         default:
@@ -269,7 +306,7 @@ enum members of `AUTHORIZATION_STATES`
 
 * NONE
 * AUTHORIZED
-* AUTHORIZE_REJECTED
+* CONNECTION_REJECTED
 
 #### Error Response
 
@@ -403,7 +440,7 @@ neoline.transfer({
         case 'INVALID_ARGUMENTS':
             console.log("Invalid arguments.");
             break;
-        case 'AUTHORIZE_REJECTED':
+        case 'CONNECTION_REJECTED':
             console.log("The user rejected your request.");
             break;
         case 'RPC_ERROR':
@@ -584,7 +621,7 @@ neoline.invoke()
         case 'INVALID_ARGUMENTS':
             console.log("Invalid arguments.");
             break;
-        case 'AUTHORIZE_REJECTED':
+        case 'CONNECTION_REJECTED':
             console.log("The user rejected your request.");
             break;
         case 'RPC_ERROR':
@@ -698,26 +735,26 @@ neoline.addEventListener(neoline.EVENT.ACCOUNT_CHANGED, account => {
 });
 ```
 
-### AUTHORIZED
+### CONNECTED
 
 This event will be fired once user has approved the connection from dapp. Specially, if the dapp is already listed in neoline authorization center, this event will not be triggered. Relevant apis are: `getAccount`, `transfer`, `invoke`.
 
 #### Example
 
 ```javascript
-neoline.addEventListener(neoline.EVENT.AUTHORIZED, () => {
+neoline.addEventListener(neoline.EVENT.CONNECTED, () => {
     // Business logic
 });
 ```
 
-### AUTHORIZE_REJECTED
+### CONNECTION_REJECTED
 
 This event will be fired if user rejected the connection from dapp. If the dapp being listed in neoline authorization center and marked as rejected, this callback will also be fired. Relevant apis are: `getAccount`, `transfer`, `invoke`.
 
 #### Example
 
 ```javascript
-neoline.addEventListener(neoline.EVENT.AUTHORIZE_REJECTED, () => {
+neoline.addEventListener(neoline.EVENT.CONNECTION_REJECTED, () => {
     // Business logic
 });
 ```
@@ -747,7 +784,7 @@ Errors
 
 | Error Code | Description |
 | - | - |
-| AUTHORIZE_REJECTED | The user rejected your request |
+| CONNECTION_REJECTED | The user rejected your request |
 | RPC_ERROR | RPC server temporary unavailable |
 | INVALID_ARGUMENTS | The given arguments is invalid |
 | INSUFFICIENT_FUNDS | The address has insufficient funds to transfer funds |
