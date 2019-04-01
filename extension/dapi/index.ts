@@ -182,6 +182,9 @@ export class Init {
             }, '*');
             this.getAuthState().then(authState => {
                 if (authState === 'AUTHORIZED') {
+                    window.postMessage({
+                        target: 'getAccount',
+                    }, '*');
                     const promise = new Promise((resolve, reject) => {
                         const getAccountFn = (event) => {
                             if (event.data.target !== undefined && event.data.target === 'accountRes') {
@@ -207,7 +210,7 @@ export class Init {
 
     public getBalance(parameter: any) {
         return new Promise((resolveMain, rejectMain) => {
-            if (parameter === undefined || parameter.address === undefined || parameter.assetID === undefined ||
+            if (parameter === undefined || parameter.address === undefined ||
                 parameter.network === undefined) {
                 rejectMain(errors.INVALID_ARGUMENTS);
             } else {
@@ -228,7 +231,11 @@ export class Init {
                     if (!res.bool_status) {
                         rejectMain(errors.RPC_ERROR);
                     } else {
-                        resolveMain(res.result);
+                        if (parameter.assetID !== undefined) {
+                            resolveMain((res.result as Array<any>).filter(item => item.asset_id === parameter.assetID));
+                        } else {
+                            resolveMain(res.result);
+                        }
                     }
                 });
             }

@@ -64,7 +64,7 @@ window.addEventListener('message', (e) => {
             {
                 const parameter = e.data.parameter;
                 const apiUrl = parameter.network === 'MainNet' ? mainApi : testApi;
-                httpGet(`${apiUrl}/v1/address/assets?address=${parameter.address}&asset_id=${parameter.assetID}`, (res) => {
+                httpGet(`${apiUrl}/v1/address/assets?address=${parameter.address}${parameter.assetID !== undefined ? `&asset_id=${parameter.assetID}` : ''}`, (res) => {
                     window.postMessage({
                         target: 'balanceRes',
                         data: res
