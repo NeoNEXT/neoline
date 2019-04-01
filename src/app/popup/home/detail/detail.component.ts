@@ -42,10 +42,10 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     public balance: Balance;
     public address: string;
     public assetId: string;
-    public txPage: PageData<Transaction>;
+    public txPage: PageData < Transaction > ;
     public isLoading: boolean;
     public needLoadWhenSymbolSwitch: boolean;
-    public inTransaction: Array<Transaction>;
+    public inTransaction: Array < Transaction > ;
     public rateObj: RateObj;
 
     public unSubBalance: Unsubscribable;
@@ -73,34 +73,10 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
+        this.asset.fetchBalance(this.neon.address);
         this.chrome.getRateObj().subscribe(rateObj => {
             this.rateObj = rateObj;
-        });
-        this.aRouter.params.subscribe((params: any) => {
-            if (this.unSubRate) {
-                this.unSubRate.unsubscribe();
-            }
-            this.asset.detail(params.id).subscribe((res: Balance) => {
-                res.balance = Number(res.balance);
-                this.balance = res;
-                this.assetId = params.id;
-                this.txState.fetch(this.address, 1, params.id, true);
-                // 获取资产汇率
-                if (this.balance.balance && this.balance.balance > 0) {
-                    let query = {};
-                    query['symbol'] = this.rateObj.currentCurrency;
-                    query['channel'] = this.rateObj.currentChannel;
-                    query['coins'] = this.balance.symbol;
-                    this.unSubRate = this.asset.getRate(query).subscribe(rateBalance => {
-                        if (rateBalance.result.length > 0) {
-                            this.balance.rateBalance =
-                                Number(Object.values(rateBalance.result[0])[0]) * this.balance.balance;
-                        }
-                    });
-                } else {
-                    this.balance.rateBalance = 0;
-                }
-            });
+            this.initPage();
         });
         this.unSubTxStatus = this.txState.data().subscribe((res: any) => {
             if (this.txPage === undefined || res.page === 1) {
@@ -133,7 +109,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                         this.chrome.setTransaction(inTxData);
                         this.txPage = res;
                         this.txPage.items = this.inTransaction.concat(this.txPage.items);
-                    }, error => { });
+                    }, error => {});
                 });
             } else {
                 this.txPage = res;
@@ -158,6 +134,35 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
         if (this.unSubTxStatus) {
             this.unSubTxStatus.unsubscribe();
         }
+    }
+
+    public initPage() {
+        this.aRouter.params.subscribe((params: any) => {
+            if (this.unSubRate) {
+                this.unSubRate.unsubscribe();
+            }
+            this.asset.detail(params.id).subscribe((res: Balance) => {
+                res.balance = Number(res.balance);
+                this.balance = res;
+                this.assetId = params.id;
+                this.txState.fetch(this.address, 1, params.id, true);
+                // 获取资产汇率
+                if (this.balance.balance && this.balance.balance > 0) {
+                    let query = {};
+                    query['symbol'] = this.rateObj.currentCurrency;
+                    query['channel'] = this.rateObj.currentChannel;
+                    query['coins'] = this.balance.symbol;
+                    this.unSubRate = this.asset.getRate(query).subscribe(rateBalance => {
+                        if (rateBalance.result.length > 0) {
+                            this.balance.rateBalance =
+                                Number(Object.values(rateBalance.result[0])[0]) * this.balance.balance;
+                        }
+                    });
+                } else {
+                    this.balance.rateBalance = 0;
+                }
+            });
+        });
     }
 
     public page(page: number) {

@@ -6,7 +6,8 @@ import {
 import {
     PageData,
     Balance,
-    Asset
+    Asset,
+    RateObj
 } from '@/models/models';
 import {
     AssetState,
@@ -49,6 +50,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     public unSubAll: Unsubscribable;
     public rateSymbol = '';
     public rateCurrency: string;
+    public rateObj: RateObj;
 
     constructor(
         private asset: AssetState,
@@ -64,6 +66,24 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         // let address = 'Af1FkesAboWnz7PfvXsEiXiwoH3PPzx7ta';
+        this.chrome.getRateObj().subscribe(rateObj => {
+            this.rateObj = rateObj;
+            this.initPage();
+        });
+        this.asset.fetchAll(1);
+        this.asset.fetchBalance(this.neon.address);
+    }
+
+    ngOnDestroy(): void {
+        if (this.unSubAll) {
+            this.unSubAll.unsubscribe();
+        }
+        if (this.unSubBalance) {
+            this.unSubBalance.unsubscribe();
+        }
+    }
+
+    public initPage() {
         this.unSubBalance = this.asset.balance().pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
             this.displayAssets = [];
             this.rateSymbol = '';
@@ -96,44 +116,31 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
                 });
                 this.allAssets = res;
             });
-            this.chrome.getRateObj().subscribe(rateObj => {
-                this.rateCurrency = rateObj.currentCurrency;
-                let query = {};
-                query['symbol'] = rateObj.currentCurrency;
-                query['channel'] = rateObj.currentChannel;
-                query['coins'] = this.rateSymbol;
-                if (!this.rateSymbol) {
-                    return;
-                }
-                this.asset.getRate(query).subscribe(rateBalance => {
-                    let k = 0;
-                    for (let i = 0; i < this.displayAssets.length; i++) {
-                        if (k >= rateBalance.length) {
+            this.rateCurrency = this.rateObj.currentCurrency;
+            let query = {};
+            query['symbol'] = this.rateObj.currentCurrency;
+            query['channel'] = this.rateObj.currentChannel;
+            query['coins'] = this.rateSymbol;
+            if (!this.rateSymbol) {
+                return;
+            }
+            this.asset.getRate(query).subscribe(rateBalance => {
+                let k = 0;
+                for (let i = 0; i < this.displayAssets.length; i++) {
+                    if (k >= rateBalance.length) {
+                        break;
+                    }
+                    for (let j = k; j < rateBalance.result.length; j++) {
+                        if (String(Object.keys(rateBalance.result[j])).toLowerCase() === this.displayAssets[i].symbol.toLowerCase()) {
+                            this.displayAssets[i].rateBalance =
+                                Number(Object.values(rateBalance.result[j])[0]) * this.displayAssets[i].balance;
+                            k = j + 1;
                             break;
                         }
-                        for (let j = k; j < rateBalance.result.length; j++) {
-                            if (String(Object.keys(rateBalance.result[j])).toLowerCase() === this.displayAssets[i].symbol.toLowerCase()) {
-                                this.displayAssets[i].rateBalance =
-                                    Number(Object.values(rateBalance.result[j])[0]) * this.displayAssets[i].balance;
-                                k = j + 1;
-                                break;
-                            }
-                        }
                     }
-                });
+                }
             });
         });
-        this.asset.fetchAll(1);
-        this.asset.fetchBalance(this.neon.address);
-    }
-
-    ngOnDestroy(): void {
-        if (this.unSubAll) {
-            this.unSubAll.unsubscribe();
-        }
-        if (this.unSubBalance) {
-            this.unSubBalance.unsubscribe();
-        }
     }
 
     public getAssetSrc(assetId, index, type = 'all') {

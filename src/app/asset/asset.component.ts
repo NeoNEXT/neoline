@@ -18,7 +18,8 @@ import {
 import {
     PageData,
     Balance,
-    Asset
+    Asset,
+    RateObj
 } from '@/models/models';
 import {
     MatDialog
@@ -46,6 +47,7 @@ export class AssetComponent implements OnInit, OnDestroy {
     public unSubBalance: Unsubscribable;
     public rateCurrency: string;
     public rateSymbol = '';
+    public rateObj: RateObj;
 
     constructor(
         private asset: AssetState,
@@ -59,6 +61,20 @@ export class AssetComponent implements OnInit, OnDestroy {
         // 获取余额大于 0 的资产
         this.address = this.neon.address;
         // this.address = 'AJ1mqgPnsrq9W7K94Y8SS1DM2bGUojCFwb';
+        this.chrome.getRateObj().subscribe(rateObj => {
+            this.rateObj = rateObj;
+            this.initPage();
+        });
+        this.asset.fetchBalance(this.address);
+        this.asset.fetchAll(1);
+    }
+    ngOnDestroy(): void {
+        if (this.unSubBalance) {
+            this.unSubBalance.unsubscribe();
+        }
+    }
+
+    public initPage() {
         this.unSubBalance = this.asset.balance().pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
             this.displayAssets = [];
             this.rateSymbol = '';
@@ -80,40 +96,31 @@ export class AssetComponent implements OnInit, OnDestroy {
             this.displayAssets.push(...newWatch);
             return res;
         })))).subscribe(() => {
-            this.chrome.getRateObj().subscribe(rateObj => {
-                this.rateCurrency = rateObj.currentCurrency;
-                let query = {};
-                query['symbol'] = rateObj.currentCurrency;
-                query['channel'] = rateObj.currentChannel;
-                query['coins'] = this.rateSymbol;
-                if (!this.rateSymbol) {
-                    return;
-                }
-                this.asset.getRate(query).subscribe(rateBalance => {
-                    let k = 0;
-                    for (let i = 0; i < this.displayAssets.length; i++) {
-                        if (k >= rateBalance.length) {
+            this.rateCurrency = this.rateObj.currentCurrency;
+            let query = {};
+            query['symbol'] = this.rateObj.currentCurrency;
+            query['channel'] = this.rateObj.currentChannel;
+            query['coins'] = this.rateSymbol;
+            if (!this.rateSymbol) {
+                return;
+            }
+            this.asset.getRate(query).subscribe(rateBalance => {
+                let k = 0;
+                for (let i = 0; i < this.displayAssets.length; i++) {
+                    if (k >= rateBalance.length) {
+                        break;
+                    }
+                    for (let j = k; j < rateBalance.result.length; j++) {
+                        if (String(Object.keys(rateBalance.result[j])).toLowerCase() === this.displayAssets[i].symbol.toLowerCase()) {
+                            this.displayAssets[i].rateBalance =
+                                Number(Object.values(rateBalance.result[j])[0]) * this.displayAssets[i].balance;
+                            k = j + 1;
                             break;
                         }
-                        for (let j = k; j < rateBalance.result.length; j++) {
-                            if (String(Object.keys(rateBalance.result[j])).toLowerCase() === this.displayAssets[i].symbol.toLowerCase()) {
-                                this.displayAssets[i].rateBalance =
-                                    Number(Object.values(rateBalance.result[j])[0]) * this.displayAssets[i].balance;
-                                k = j + 1;
-                                break;
-                            }
-                        }
                     }
-                });
+                }
             });
         });
-        this.asset.fetchBalance(this.address);
-        this.asset.fetchAll(1);
-    }
-    ngOnDestroy(): void {
-        if (this.unSubBalance) {
-            this.unSubBalance.unsubscribe();
-        }
     }
     // 隐藏资产
     public delAsset(index: number) {

@@ -57,7 +57,22 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         });
         this.chrome.getRateObj().subscribe(rateObj => {
             this.rateObj = rateObj;
+            this.initPage();
         });
+        this.getInTransactions();
+    }
+
+    ngOnDestroy(): void {
+        this.txPage = {
+            page: 1,
+            pages: 0,
+            items: [],
+            total: 0,
+            per_page: 10
+        };
+    }
+
+    public initPage() {
         this.aRoute.params.subscribe((params) => {
             this.txPage = undefined;
             this.asset.detail(params.id).subscribe((res: Balance) => {
@@ -93,17 +108,6 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 }
             });
         });
-        this.getInTransactions();
-    }
-
-    ngOnDestroy(): void {
-        this.txPage = {
-            page: 1,
-            pages: 0,
-            items: [],
-            total: 0,
-            per_page: 10
-        };
     }
 
     private getInTransactions() {
