@@ -45,7 +45,6 @@ export class PopupNoticeAuthComponent implements OnInit {
         this.address = this.wallet.accounts[0].address;
         this.accountName = this.wallet.name;
         this.aRouter.queryParams.subscribe((params: any) => {
-            console.log(params);
             this.paramsData = params;
             this.iconSrc = params.icon;
             this.hostname = params.hostname;

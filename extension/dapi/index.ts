@@ -138,7 +138,7 @@ export class Init {
             const promise = new Promise((resolve, reject) => {
                 const connectFn = (event) => {
                     if (event.data.target !== undefined && (event.data.target === 'connected' ||
-                        event.data.target === 'CONNECTION_REJECTED')) {
+                        event.data.target === 'connection_rejected')) {
                         resolve(event.data.data);
                         window.removeEventListener('message', connectFn);
                     }
@@ -364,6 +364,9 @@ export class Init {
                 }
             case this.EVENT.ACCOUNT_CHANGED:
                 {
+                    if (this.EVENTLIST.ACCOUNT_CHANGED.callback.findIndex(item => item === callback) >= 0) {
+                        return;
+                    }
                     const callbackFn = (event) => {
                         if (event.data.target !== undefined && event.data.target === this.EVENT.ACCOUNT_CHANGED) {
                             callback(event.data.data);
@@ -377,6 +380,9 @@ export class Init {
                 }
             case this.EVENT.CONNECTED:
                 {
+                    if (this.EVENTLIST.CONNECTED.callback.findIndex(item => item === callback) >= 0) {
+                        return;
+                    }
                     const callbackFn = (event) => {
                         if (event.data.target !== undefined && event.data.target === this.EVENT.CONNECTED) {
                             callback(event.data.data);
@@ -390,6 +396,9 @@ export class Init {
                 }
             case this.EVENT.CONNECTION_REJECTED:
                 {
+                    if (this.EVENTLIST.CONNECTION_REJECTED.callback.findIndex(item => item === callback) >= 0) {
+                        return;
+                    }
                     const callbackFn = (event) => {
                         if (event.data.target !== undefined && event.data.target === this.EVENT.CONNECTION_REJECTED) {
                             callback(event.data.data);
@@ -404,6 +413,9 @@ export class Init {
                 }
             case this.EVENT.NETWORK_CHANGED:
                 {
+                    if (this.EVENTLIST.NETWORK_CHANGED.callback.findIndex(item => item === callback) >= 0) {
+                        return;
+                    }
                     const callbackFn = (event) => {
                         if (event.data.target !== undefined && event.data.target === this.EVENT.NETWORK_CHANGED) {
                             callback(event.data.data);
