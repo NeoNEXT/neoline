@@ -1,6 +1,6 @@
 const errors = {
-    AUTHORIZE_REJECTED: {
-        code: 'AUTHORIZE_REJECTED',
+    CONNECTION_REJECTED: {
+        code: 'CONNECTION_REJECTED',
         description: 'The user rejected your request'
     },
     RPC_ERROR: {
@@ -33,8 +33,8 @@ export class Init {
     public EVENT = {
         READY: 'ready',
         ACCOUNT_CHANGED: 'account_changed',
-        AUTHORIZED: 'authorized',
-        AUTHORIZE_REJECTED: 'authorize_rejected',
+        CONNECTED: 'connected',
+        CONNECTION_REJECTED: 'connection_rejected',
         NETWORK_CHANGED: 'network_changed'
     };
     private EVENTLIST = {
@@ -46,11 +46,11 @@ export class Init {
             callback: [],
             callbackEvent: []
         },
-        AUTHORIZED: {
+        CONNECTED: {
             callback: [],
             callbackEvent: []
         },
-        AUTHORIZE_REJECTED: {
+        CONNECTION_REJECTED: {
             callback: [],
             callbackEvent: []
         },
@@ -71,7 +71,7 @@ export class Init {
                         rejectMain(errors.INVALID_ARGUMENTS);
                     } else {
                         if (sessionStorage.getItem('connect') !== 'true') {
-                            this.authorization(false);
+                            this.connect(false);
                         }
                         window.postMessage({
                             target: 'transfer',
@@ -119,16 +119,16 @@ export class Init {
                         });
                     }
                 } else {
-                    rejectMain(errors.AUTHORIZE_REJECTED);
+                    rejectMain(errors.CONNECTION_REJECTED);
                 }
             });
         });
     }
-    public authorization(open = true) {
+    public connect(open = true) {
         return new Promise((resolveMain, rejectMain) => {
             if (open) {
                 window.postMessage({
-                    target: 'authorization',
+                    target: 'connect',
                     icon: getIcon(),
                     hostname: location.hostname,
                     title: document.title,
@@ -136,14 +136,14 @@ export class Init {
                 }, '*');
             }
             const promise = new Promise((resolve, reject) => {
-                const authorizationFn = (event) => {
-                    if (event.data.target !== undefined && (event.data.target === 'authorized' ||
-                        event.data.target === 'authorize_rejected')) {
+                const connectFn = (event) => {
+                    if (event.data.target !== undefined && (event.data.target === 'connected' ||
+                        event.data.target === 'CONNECTION_REJECTED')) {
                         resolve(event.data.data);
-                        window.removeEventListener('message', authorizationFn);
+                        window.removeEventListener('message', connectFn);
                     }
                 };
-                window.addEventListener('message', authorizationFn);
+                window.addEventListener('message', connectFn);
             });
             promise.then(res => {
                 sessionStorage.setItem('connect', res.toString());
@@ -210,7 +210,7 @@ export class Init {
                         }
                     });
                 } else {
-                    rejectMain(errors.AUTHORIZE_REJECTED);
+                    rejectMain(errors.CONNECTION_REJECTED);
                 }
             });
         });
@@ -267,7 +267,7 @@ export class Init {
             promise.then(res => {
                 if (res !== undefined && res[location.hostname] !== undefined && res[location.hostname] !== {}) {
                     if (res[location.hostname].status === 'false') {
-                        resolveMain('AUTHORIZE_REJECTED');
+                        resolveMain('CONNECTION_REJECTED');
                     } else {
                         resolveMain('AUTHORIZED');
                     }
@@ -375,31 +375,31 @@ export class Init {
                         this.EVENTLIST.ACCOUNT_CHANGED.callbackEvent.length - 1]);
                     break;
                 }
-            case this.EVENT.AUTHORIZED:
+            case this.EVENT.CONNECTED:
                 {
                     const callbackFn = (event) => {
-                        if (event.data.target !== undefined && event.data.target === this.EVENT.AUTHORIZED) {
+                        if (event.data.target !== undefined && event.data.target === this.EVENT.CONNECTED) {
                             callback(event.data.data);
                         }
                     };
-                    this.EVENTLIST.AUTHORIZED.callback.push(callback);
-                    this.EVENTLIST.AUTHORIZED.callbackEvent.push(callbackFn);
-                    window.addEventListener('message', this.EVENTLIST.AUTHORIZED.callbackEvent[
-                        this.EVENTLIST.AUTHORIZED.callbackEvent.length - 1]);
+                    this.EVENTLIST.CONNECTED.callback.push(callback);
+                    this.EVENTLIST.CONNECTED.callbackEvent.push(callbackFn);
+                    window.addEventListener('message', this.EVENTLIST.CONNECTED.callbackEvent[
+                        this.EVENTLIST.CONNECTED.callbackEvent.length - 1]);
                     break;
                 }
-            case this.EVENT.AUTHORIZE_REJECTED:
+            case this.EVENT.CONNECTION_REJECTED:
                 {
                     const callbackFn = (event) => {
-                        if (event.data.target !== undefined && event.data.target === this.EVENT.AUTHORIZE_REJECTED) {
+                        if (event.data.target !== undefined && event.data.target === this.EVENT.CONNECTION_REJECTED) {
                             callback(event.data.data);
                         }
                     };
-                    this.EVENTLIST.AUTHORIZE_REJECTED.callback.push(callback);
-                    this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent.push(callbackFn);
+                    this.EVENTLIST.CONNECTION_REJECTED.callback.push(callback);
+                    this.EVENTLIST.CONNECTION_REJECTED.callbackEvent.push(callbackFn);
                     window.addEventListener('message',
-                        this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent[
-                        this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent.length - 1]);
+                        this.EVENTLIST.CONNECTION_REJECTED.callbackEvent[
+                        this.EVENTLIST.CONNECTION_REJECTED.callbackEvent.length - 1]);
                     break;
                 }
             case this.EVENT.NETWORK_CHANGED:
@@ -435,20 +435,20 @@ export class Init {
                     this.EVENTLIST.ACCOUNT_CHANGED.callbackEvent.splice(index, 1);
                     break;
                 }
-            case this.EVENT.AUTHORIZED:
+            case this.EVENT.CONNECTED:
                 {
-                    const index = this.EVENTLIST.AUTHORIZED.callback.findIndex(item => item === removeFn);
-                    window.removeEventListener('message', this.EVENTLIST.AUTHORIZED.callbackEvent[index]);
-                    this.EVENTLIST.AUTHORIZED.callback.splice(index, 1);
-                    this.EVENTLIST.AUTHORIZED.callbackEvent.splice(index, 1);
+                    const index = this.EVENTLIST.CONNECTED.callback.findIndex(item => item === removeFn);
+                    window.removeEventListener('message', this.EVENTLIST.CONNECTED.callbackEvent[index]);
+                    this.EVENTLIST.CONNECTED.callback.splice(index, 1);
+                    this.EVENTLIST.CONNECTED.callbackEvent.splice(index, 1);
                     break;
                 }
-            case this.EVENT.AUTHORIZE_REJECTED:
+            case this.EVENT.CONNECTION_REJECTED:
                 {
-                    const index = this.EVENTLIST.AUTHORIZE_REJECTED.callback.findIndex(item => item === removeFn);
-                    window.removeEventListener('message', this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent[index]);
-                    this.EVENTLIST.AUTHORIZE_REJECTED.callback.splice(index, 1);
-                    this.EVENTLIST.AUTHORIZE_REJECTED.callbackEvent.splice(index, 1);
+                    const index = this.EVENTLIST.CONNECTION_REJECTED.callback.findIndex(item => item === removeFn);
+                    window.removeEventListener('message', this.EVENTLIST.CONNECTION_REJECTED.callbackEvent[index]);
+                    this.EVENTLIST.CONNECTION_REJECTED.callback.splice(index, 1);
+                    this.EVENTLIST.CONNECTION_REJECTED.callbackEvent.splice(index, 1);
                     break;
                 }
             case this.EVENT.NETWORK_CHANGED:

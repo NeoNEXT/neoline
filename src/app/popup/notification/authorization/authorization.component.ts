@@ -67,7 +67,7 @@ export class PopupNoticeAuthComponent implements OnInit {
             }
             this.chrome.windowCallback({
                 data: false,
-                target: 'authorize_rejected'
+                target: 'connection_rejected'
             });
             window.close();
         });
@@ -84,7 +84,7 @@ export class PopupNoticeAuthComponent implements OnInit {
             }
             this.chrome.windowCallback({
                 data: true,
-                target: 'authorized'
+                target: 'connected'
             });
             if (this.isNext === 'transfer') {
                 this.router.navigateByUrl(`/popup/notification/transfer?to_address=${this.paramsData.to_address}&asset_id=${this.paramsData.asset_id}&amount=${this.paramsData.amount}&symbol=${this.paramsData.symbol}&network=${this.paramsData.network}`);

@@ -89,7 +89,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                             data: 'default'
                         });
                     } else {
-                        getStorage('authorizationWebsites', (res) => {
+                        getStorage('connectedWebsites', (res) => {
                             if (res !== undefined && res[request.hostname] !== undefined || request.connect === 'true') {
                                 window.open(`index.html#popup/notification/transfer?to_address=${request.toAddress}&asset_id=${request.assetID}&amount=${request.amount}&symbol=${request.symbol}&network=${request.network}`,
                                     '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
@@ -103,7 +103,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendResponse('');
                 return true;
             }
-        case 'authorization':
+        case 'connect':
             {
                 chrome.tabs.query({
                     active: true,
@@ -111,7 +111,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }, (tabs) => {
                     tabCurr = tabs;
                 });
-                getStorage('authorizationWebsites', (res: any) => {
+                getStorage('connectedWebsites', (res: any) => {
                     if ((res !== undefined && res[request.hostname] !== undefined) || request.connect === 'true') {
                         if (res !== undefined && res[request.hostname] !== undefined && res[request.hostname].status === 'false') {
                             notification(chrome.i18n.getMessage('rejected'), chrome.i18n.getMessage('rejectedTip'));

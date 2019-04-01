@@ -393,12 +393,12 @@ export class ChromeService {
 
     public setAuthorization(websits: object) {
         if (!this.check) {
-            localStorage.setItem('authorizationWebsites', JSON.stringify(websits));
+            localStorage.setItem('connectedWebsites', JSON.stringify(websits));
             return;
         }
         try {
             this.crx.setStorage({
-                authorizationWebsites: websits
+                connectedWebsites: websits
             });
         } catch (e) {
             console.log('set account failed', e);
@@ -408,17 +408,17 @@ export class ChromeService {
     public getAuthorization(): Observable < object > {
         if (!this.check) {
             try {
-                if (localStorage.getItem('authorizationWebsites') == null) {
+                if (localStorage.getItem('connectedWebsites') == null) {
                     return of({});
                 }
-                return of(JSON.parse(localStorage.getItem('authorizationWebsites')));
+                return of(JSON.parse(localStorage.getItem('connectedWebsites')));
             } catch (e) {
                 return throwError(('failed'));
             }
         }
         return from(new Promise((resolve, reject) => {
             try {
-                this.crx.getStorage('authorizationWebsites', (res) => {
+                this.crx.getStorage('connectedWebsites', (res) => {
                     if (typeof res === 'undefined') {
                         res = {};
                     }

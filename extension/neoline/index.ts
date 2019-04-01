@@ -74,7 +74,7 @@ window.addEventListener('message', (e) => {
             }
         case 'getAuthState':
             {
-                getStorage('authorizationWebsites', (res) => {
+                getStorage('connectedWebsites', (res) => {
                     window.postMessage({
                         target: 'authStateRes',
                         data: res
@@ -109,7 +109,7 @@ window.addEventListener('message', (e) => {
 
             }
         case 'transfer':
-        case 'authorization':
+        case 'connect':
             {
                 chrome.runtime.sendMessage(e.data, (response) => {
                     return Promise.resolve('Dummy response to keep the console quiet');
