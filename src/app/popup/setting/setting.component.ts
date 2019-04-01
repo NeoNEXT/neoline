@@ -214,9 +214,10 @@ export class PopupSettingComponent implements OnInit {
                     if (res) {
                         this.walletArr = this.neon.walletArr;
                         this.wallet = this.neon.wallet;
-                        this.router.navigate(['popup/home'], {
-                            replaceUrl: true
-                        });
+                        // this.router.navigate(['popup/home'], {
+                        //     replaceUrl: true
+                        // });
+                        location.href = `index.html#popup`;
                     } else {
                         this.walletArr = this.neon.walletArr;
                         this.wallet = this.neon.wallet;
