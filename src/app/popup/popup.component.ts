@@ -25,7 +25,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
     public address: string;
     public isLogin = false;
     public currentUrl: string = this.router.url;
-    public net = 'main';
+    public net: string;
 
     constructor(
         private chrome: ChromeService,
@@ -60,9 +60,11 @@ export class PopupComponent implements OnInit, AfterViewInit {
         this.neon.walletIsOpen().subscribe((res: any) => {
             this.global.$wallet.next(res ? 'open' : 'close');
         });
-        // this.chrome.getNet().subscribe(net => {
-        //     this.net = net;
-        // });
+        if (this.global.apiDomain.match('main') === null) {
+            this.net = 'test';
+        } else {
+            this.net = 'main';
+        }
     }
     ngAfterViewInit(): void {
         if (this.global.apiDomain.match('main') === null) {
