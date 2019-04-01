@@ -70,7 +70,7 @@ export class TransferCreateomponent implements OnInit {
         private http: HttpService,
         private chrome: ChromeService,
         private block: BlockState,
-    ) {}
+    ) { }
 
     ngOnInit(): void {
         this.fromAddress = this.neon.address;
@@ -99,7 +99,7 @@ export class TransferCreateomponent implements OnInit {
             this.global.snackBarTip('balanceLack', '', false);
             return;
         }
-        if (this.balance.balance < this.amount) {
+        if (parseFloat(this.balance.balance.toString()) < parseFloat(this.amount.toString())) {
             this.global.snackBarTip('balanceLack', '', false);
             return;
         }
@@ -149,10 +149,10 @@ export class TransferCreateomponent implements OnInit {
             this.creating = false;
             if (this.fromAddress !== this.toAddress) {
                 this.chrome.pushTransaction({
-                        txid: tx.hash,
-                        value: -this.amount,
-                        block_time: res.response_time
-                    },
+                    txid: tx.hash,
+                    value: -this.amount,
+                    block_time: res.response_time
+                },
                     this.fromAddress, this.assetId);
             }
             // todo transfer done

@@ -1,4 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
+import { GlobalService } from '@/app/core';
 
 @Component({
     selector: 'tx-item',
@@ -9,11 +10,15 @@ export class TxItemComponent implements OnInit {
     @Input() public time: number = 0;
     @Input() public value: string = '';
     @Input() public txid: string = '';
-    constructor() { }
+    constructor(
+        private global: GlobalService
+    ) { }
 
     ngOnInit(): void { }
 
     public txDetail(txid: string) {
-        window.open(`https://blolys.com/#/mainnet/transaction/${ txid }`);
+        if (this.global.apiDomain.match('main') !== null) {
+            window.open(`https://blolys.com/#/mainnet/transaction/${txid}`);
+        }
     }
 }

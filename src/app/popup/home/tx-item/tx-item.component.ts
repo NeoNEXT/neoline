@@ -26,7 +26,9 @@ export class PopupHomeTxItemComponent implements OnInit {
 
     public txDetail(txid: string) {
         // todo
-        window.open(`https://blolys.com/#/mainnet/transaction/${txid}`);
+        if (this.global.apiDomain.match('main') !== null) {
+            window.open(`https://blolys.com/#/mainnet/transaction/${txid}`);
+        }
     }
 
     public copied() {
