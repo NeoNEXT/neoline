@@ -56,9 +56,9 @@ export class AssetComponent implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        // this.address = 'AJ1mqgPnsrq9W7K94Y8SS1DM2bGUojCFwb';
         // 获取余额大于 0 的资产
         this.address = this.neon.address;
+        // this.address = 'AJ1mqgPnsrq9W7K94Y8SS1DM2bGUojCFwb';
         this.unSubBalance = this.asset.balance().pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
             this.displayAssets = [];
             this.rateSymbol = '';
@@ -68,7 +68,7 @@ export class AssetComponent implements OnInit, OnDestroy {
                 }
                 this.displayAssets.push(r);
             });
-            this.rateSymbol.slice(0, -1);
+            this.rateSymbol = this.rateSymbol.slice(0, -1);
             //  去重
             const newWatch = [];
             watching.forEach((w) => {
@@ -97,7 +97,7 @@ export class AssetComponent implements OnInit, OnDestroy {
                         }
                         for (let j = k; j < rateBalance.result.length; j++) {
                             if (String(Object.keys(rateBalance.result[j])).toLowerCase() === this.displayAssets[i].symbol.toLowerCase()) {
-                                this.displayAssets[i].rateBalance = 
+                                this.displayAssets[i].rateBalance =
                                     Number(Object.values(rateBalance.result[j])[0]) * this.displayAssets[i].balance;
                                 k = j + 1;
                                 break;
@@ -107,7 +107,7 @@ export class AssetComponent implements OnInit, OnDestroy {
                 });
             });
         });
-        this.asset.fetchBalance(this.neon.address);
+        this.asset.fetchBalance(this.address);
         this.asset.fetchAll(1);
     }
     ngOnDestroy(): void {

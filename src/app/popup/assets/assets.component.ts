@@ -63,6 +63,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
+        // let address = 'AaYEf4rC9MfjRwF5LnKtpa48Tzqi2zJQ7p';
         this.unSubBalance = this.asset.balance().pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
             this.displayAssets = [];
             this.rateSymbol = '';
@@ -72,6 +73,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
                 }
                 this.displayAssets.push(r);
             });
+            this.rateSymbol = this.rateSymbol.slice(0, -1);
             //  去重
             const newWatch = [];
             watching.forEach((w) => {
