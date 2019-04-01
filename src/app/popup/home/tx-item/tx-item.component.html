@@ -1,7 +1,8 @@
-<div class="popup-home-tx" (click)="txDetail(txid)">
+<div class="popup-home-tx" (click)="$event.stopPropagation();txDetail(txid)">
     <div class="head">
         <span class="time">{{ time * 1000 | date:'yyyy-MM-dd HH:mm' }}</span>
-        <img class="more-info-btn" src="/assets/images/down_arrow.png" alt="" (click)="$event.stopPropagation();moreInfo()">
+        <img class="more-info-btn" src="/assets/images/down_arrow.png" alt=""
+            (click)="$event.stopPropagation();show = !show" [ngClass]="{'active': show}">
     </div>
     <div class="content">
         <img class="tx-type-icon" [src]="value > 0 ? '/assets/images/down.png': '/assets/images/up.png' " alt="">
@@ -17,6 +18,26 @@
             <p class="asset-amount">{{ value }} {{ symbol }}</p>
             <p class="money-amount"></p>
         </div>
+    </div>
+    <div class="info-more-box" [hidden]="!show">
+        <div class="id-box more-item">
+            <span class="title">交易ID</span>
+            <button class="copy-btn" copy="tx-id-copy-{{txid}}" (onCopy)="copied()" (click)="$event.stopPropagation();"
+                alt="">
+                <img src="/assets/images/tx_copy.png" alt="">
+            </button>
+            <img src="/assets/images/tx_web.png" (click)="$event.stopPropagation();txDetail(txid)" alt="">
+            <textarea class="info" type="text" id="tx-id-copy-{{txid}}" [value]="txid" readonly></textarea>
+            <span class="info">{{ txid | limitStr: 20 }}</span>
+        </div>
+        <!-- <div class="type-box more-item">
+            <span class="title">类型</span>
+            <span class="info">123123123</span>
+        </div>
+        <div class="size-box more-item">
+            <span class="title">大小</span>
+            <span class="info">123123123</span>
+        </div> -->
     </div>
     <!-- <div [title]="txid">{{ txid.slice(0, 8) }}...</div>
     <div>{{ value }}</div>

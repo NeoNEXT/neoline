@@ -3,6 +3,7 @@ import {
     OnInit,
     Input
 } from '@angular/core';
+import { GlobalService } from '@/app/core';
 
 @Component({
     selector: 'app-tx-item',
@@ -16,15 +17,24 @@ export class PopupHomeTxItemComponent implements OnInit {
     @Input() time = 0;
     @Input() id = -1;
 
-    constructor() { }
+    public show = false;
+
+    constructor(
+        private global: GlobalService
+    ) { }
     ngOnInit(): void { }
 
     public txDetail(txid: string) {
         // todo
-        window.open(`https://blolys.com/#/mainnet/transaction/${ txid }`);
+        window.open(`https://blolys.com/#/mainnet/transaction/${txid}`);
+    }
+
+    public copied() {
+        this.global.snackBarTip('copied');
     }
 
     public moreInfo() {
 
     }
+
 }
