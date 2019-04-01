@@ -10,6 +10,9 @@ module.exports = {
         crypto: true,
         fs: 'empty'
     },
+    // optimization: {
+    //     minimize: false
+    // },
     resolve: {
         extensions: ['*', '.js', '.ts', '.scss', '.png', '.jpg', '.jpeg', '.svg', '.otf', '.ttf'],
         modules: [

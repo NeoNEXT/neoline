@@ -497,7 +497,11 @@ export class ChromeService {
         return from(new Promise((resolve, reject) => {
             try {
                 this.crx.getStorage('assetFile', (res) => {
-                    resolve(new Map(JSON.parse(res)));
+                    if (res) {
+                        resolve(new Map(JSON.parse(res)));
+                    } else {
+                        resolve(new Map());
+                    }
                 });
             } catch (e) {
                 reject('failed');
