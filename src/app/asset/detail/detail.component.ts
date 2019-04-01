@@ -29,11 +29,11 @@ import {
 export class AssetDetailComponent implements OnInit, OnDestroy {
     private address: string = '';
     public balance: Balance;
-    public txPage: PageData < Transaction > ;
+    public txPage: PageData<Transaction>;
     private assetId: string = '';
     private requesting = false;
     public loading = true;
-    public inTransaction: Array < Transaction > ;
+    public inTransaction: Array<Transaction>;
     public rateObj: RateObj;
 
     imageUrl: any;
@@ -48,7 +48,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         private txState: TransactionState,
         private chrome: ChromeService,
         private http: HttpService,
-    ) {}
+    ) { }
 
     ngOnInit(): void {
         this.address = this.neon.address;
@@ -75,19 +75,21 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                     }
                 });
                 // 获取资产汇率
-                if (this.balance.balance && this.balance.balance > 0) {
+                if (this.balance !== undefined && this.balance.balance && this.balance.balance > 0) {
                     let query = {};
                     query['symbol'] = this.rateObj.currentCurrency;
                     query['channel'] = this.rateObj.currentChannel;
                     query['coins'] = this.balance.symbol;
                     this.asset.getRate(query).subscribe(rateBalance => {
-                        if (rateBalance.result.length > 0) {
+                        if (rateBalance !== undefined && rateBalance.result.length > 0) {
                             this.balance.rateBalance =
                                 Number(Object.values(rateBalance.result[0])[0]) * this.balance.balance;
                         }
                     });
                 } else {
-                    this.balance.rateBalance = 0;
+                    if (this.balance !== undefined) {
+                        this.balance.rateBalance = 0;
+                    }
                 }
             });
         });
@@ -136,7 +138,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                         this.chrome.setTransaction(inTxData);
                         this.txPage = res;
                         this.txPage.items = this.inTransaction.concat(this.txPage.items);
-                    }, error => {});
+                    }, error => { });
                 });
             } else {
                 this.txPage = res;
