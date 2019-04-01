@@ -155,6 +155,17 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.loadingMsg = '';
             this.creating = false;
             this.global.snackBarTip('verifyFailed', err, false);
+            this.dialog.open(PwdDialog, {
+                disableClose: true
+            }).afterClosed().subscribe((pwdText) => {
+                if (pwdText && pwdText.length) {
+                    this.global.log('start transfer with pwd');
+                    this.resolveSign(tx, pwdText);
+                } else {
+                    this.creating = false;
+                    this.global.log('cancel pay');
+                }
+            });
         });
     }
 

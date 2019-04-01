@@ -105,6 +105,11 @@ export class Init {
                                         rejectMain(errors.RPC_ERROR);
                                         break;
                                     }
+                                case 'invalid_arguments':
+                                    {
+                                        rejectMain(errors.INVALID_ARGUMENTS);
+                                        break;
+                                    }
                                 case 'default':
                                     {
                                         rejectMain(errors.DEFAULT);

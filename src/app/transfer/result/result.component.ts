@@ -10,9 +10,13 @@ export class TransferResultComponent implements OnInit {
         private router: Router
     ) { }
 
-    ngOnInit(): void { }
+    ngOnInit(): void {
+    }
 
     public close() {
+        if (this.router.url.match('notification') !== null) {
+            window.close();
+        }
         this.router.navigate([{ outlets: { transfer: null } }]);
     }
 }

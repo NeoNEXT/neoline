@@ -86,7 +86,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     if (wallet.accounts[0].address !== request.fromAddress) {
                         windowCallback({
                             target: 'transferRes',
-                            data: 'default'
+                            data: 'invalid_arguments'
                         });
                     } else {
                         getStorage('connectedWebsites', (res) => {
