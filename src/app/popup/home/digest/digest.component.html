@@ -1,4 +1,5 @@
 <img [src]="imageUrl" alt="" class="popup-home-logo" />
+<p class="asset-name">{{name}}</p>
 <div class="popup-home-asset-value">
     <span>{{ balance || 0 }}</span>
     <ng-container *ngIf="!showTokenName">{{ symbol }}</ng-container>

@@ -6,9 +6,15 @@
     height: 70px;
     margin: auto;
     display: block;
-    margin-top: 81.5px;
-    margin-bottom: 14.5px;
+    margin-top: 61.5px;
+    // margin-bottom: 14.5px;
     border-radius: 3px;
+}
+
+.asset-name {
+    text-align: center;
+    color: #9FA8BD;
+    font-size: 12px;
 }
 
 .popup-home-asset-value {
@@ -18,7 +24,7 @@
     font-weight: 500;
     text-align: center;
     color: map-get($colors, 333333);
-    margin-bottom: 8.5px;
+    margin: 8.5px 0;
 
     span {
         font-family: AkrobatBold, serif;

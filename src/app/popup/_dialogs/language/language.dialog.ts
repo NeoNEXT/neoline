@@ -40,11 +40,6 @@ export class PopupLanguageDialogComponent implements OnInit {
 
     ngOnInit() {
         this.targetOption = this.data.currentOption;
-        if (this.data.type === 'channel' || this.data.type === 'currency') {
-            this.chromeSer.getRateObj().subscribe(rateObj => {
-                this.rateObj = rateObj;
-            });
-        }
     }
 
     public cancel() {
@@ -59,14 +54,19 @@ export class PopupLanguageDialogComponent implements OnInit {
             this.chromeSer.setLang(this.targetOption);
             this.global.snackBarTip('langSetSucc');
             location.href = `index.html#popup/setting`;
-        } else if (this.data.type === 'channel') {
-            this.rateObj.currentChannel = this.targetOption;
-            this.chromeSer.setRateObj(this.rateObj);
-            this.dialogRef.close(this.targetOption);
-        } else if (this.data.type === 'currency') {
-            this.rateObj.currentCurrency = this.targetOption;
-            this.chromeSer.setRateObj(this.rateObj);
-            this.dialogRef.close(this.targetOption);
+        } else if (this.data.type === 'channel' || this.data.type === 'currency') {
+            this.chromeSer.getRateObj().subscribe(rateObj => {
+                this.rateObj = rateObj;
+                if (this.data.type === 'channel') {
+                    this.rateObj.currentChannel = this.targetOption;
+                    this.chromeSer.setRateObj(this.rateObj);
+                    this.dialogRef.close(this.targetOption);
+                } else if (this.data.type === 'currency') {
+                    this.rateObj.currentCurrency = this.targetOption;
+                    this.chromeSer.setRateObj(this.rateObj);
+                    this.dialogRef.close(this.targetOption);
+                }
+            });
         }
     }
 }

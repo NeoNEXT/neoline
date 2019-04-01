@@ -68,7 +68,7 @@ export class PopupSettingComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.asset.detail(NEO).subscribe((res: any) => {
+        this.asset.detail(NEO).subscribe((res: Balance) => {
             this.balance = res;
         });
 
@@ -78,9 +78,8 @@ export class PopupSettingComponent implements OnInit {
             this.global.log('get lang setting failed', err);
             this.lang = '';
         });
-        this.chrome.getRateObj().pipe(map((rateObj: RateObj) => {
+        this.chrome.getRateObj().subscribe((rateObj) => {
             this.rateObj = rateObj;
-        })).subscribe(() => {
             this.setting.getRateChannels().subscribe(res => {
                 const result = res.result;
                 this.rateTime = res.response_time;

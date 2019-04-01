@@ -86,7 +86,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.toAddress = params.to_address || '';
             this.assetId = params.asset_id || '';
             this.amount = params.amount || 0;
-            this.asset.detail(this.assetId).subscribe((res) => {
+            this.asset.detail(this.assetId).subscribe((res: Balance) => {
                 this.loading = false;
                 this.loadingMsg = '';
                 this.balance = res;

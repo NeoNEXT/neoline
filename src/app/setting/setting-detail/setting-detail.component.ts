@@ -58,9 +58,8 @@ export class SettingDetailComponent implements OnInit {
             this.global.log('get lang setting failed', err);
             this.lang = 'zh_CN';
         });
-        this.chrome.getRateObj().pipe(map((rateObj: RateObj) => {
+        this.chrome.getRateObj().subscribe((rateObj) => {
             this.rateObj = rateObj;
-        })).subscribe(() => {
             this.setting.getRateChannels().subscribe(res => {
                 const result = res.result;
                 this.rateTime = res.response_time;

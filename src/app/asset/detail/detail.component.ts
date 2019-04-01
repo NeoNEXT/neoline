@@ -60,7 +60,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         });
         this.aRoute.params.subscribe((params) => {
             this.txPage = undefined;
-            this.asset.detail(params.id).subscribe((res) => {
+            this.asset.detail(params.id).subscribe((res: Balance) => {
                 this.balance = res;
                 this.assetId = params.id;
                 this.transaction.fetch(this.address, 1, params.id, true);

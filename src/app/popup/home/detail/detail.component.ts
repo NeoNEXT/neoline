@@ -80,7 +80,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
             if (this.unSubRate) {
                 this.unSubRate.unsubscribe();
             }
-            this.asset.detail(params.id).subscribe((res: any) => {
+            this.asset.detail(params.id).subscribe((res: Balance) => {
                 res.balance = Number(res.balance);
                 this.balance = res;
                 this.assetId = params.id;
