@@ -117,7 +117,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                             notification(chrome.i18n.getMessage('rejected'), chrome.i18n.getMessage('rejectedTip'));
                             return;
                         }
-                        notification(chrome.i18n.getMessage('authorized'));
+                        notification(`${chrome.i18n.getMessage('from')}: ${request.hostname}`, chrome.i18n.getMessage('connectedTip'));
                     } else {
                         window.open(`/index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`, '_blank',
                             'height=620, width=386, resizable=no, top=0, left=0');

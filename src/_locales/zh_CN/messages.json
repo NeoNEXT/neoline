@@ -384,8 +384,11 @@
     "rejectedTip": {
         "message": "该站点已被拒绝授权，请前往插件授权管理清除"
     },
-    "Authorized": {
-        "message": "已授权"
+    "connectedTip": {
+        "message": "已允许连接到 NEOLine 钱包"
+    },
+    "from": {
+        "message": "来自"
     },
     "assetRate": {
         "message": "资产兑换"

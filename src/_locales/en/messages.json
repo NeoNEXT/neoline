@@ -384,8 +384,11 @@
     "rejectedTip": {
         "message": "This site has been denied authorization, please go to Plug-in Authorization Management Clearance"
     },
-    "Authorized": {
-        "message": "Authorized"
+    "connectedTip": {
+        "message": "Connected to NEOLine wallet allowed"
+    },
+    "from": {
+        "message": "From"
     },
     "assetRate": {
         "message": "Asset Conversion"
