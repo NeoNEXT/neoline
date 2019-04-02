@@ -6,7 +6,7 @@
     <p *ngIf="searchAssets" class="search-title">{{ 'searchResult' | translate | async}}</p>
     <p *ngIf="!searchAssets" class="search-title">{{ 'searchAllResult' | translate | async}}</p>
     <div class="asset flex" *ngFor="let asset of searchAssets || allAssets?.items;let i = index">
-        <img [src]="asset?.avatar" class="avatar" alt="">
+        <img [src]="asset?.avatar || ''" class="avatar" alt="">
         <div class="flex-1">
             <p class="asset-width">{{asset?.symbol}}</p>
             <p *ngIf="searchAssets" class="asset-width asset-id">{{asset?.asset_id}}</p>

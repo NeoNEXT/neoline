@@ -2,7 +2,7 @@
 
 <section class="token">
     <div class="name">
-        <img class="avatar" [src]="imageUrl" alt="">
+        <img class="avatar" [src]="imageUrl || ''" alt="">
         <div class="currency-group">
             <p class="currency">{{asset.name}}</p>
             <p class="currency">({{asset.symbol}})</p>

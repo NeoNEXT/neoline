@@ -1,5 +1,5 @@
 <div class="info flex">
-    <img [src]="imageUrl" class="avatar" alt="">
+    <img [src]="imageUrl || ''" class="avatar" alt="">
     <div>
         <p class="balance">{{balance?.balance || '0' }} {{balance?.symbol}}</p>
         <p class="asset-id">{{ balance?.asset_id }}</p>

@@ -2,7 +2,7 @@
 <div (click)="toDetail()">
     <div class="asset-top">
         <div class="account">
-            <img [src]="imageUrl" alt="" class="avatar">
+            <img [src]="imageUrl || ''" alt="" class="avatar">
             <span class="symbol">{{asset?.symbol}}</span>
         </div>
         <div class="operator" *ngIf="!asset?.balance && !fixed(asset.asset_id)">

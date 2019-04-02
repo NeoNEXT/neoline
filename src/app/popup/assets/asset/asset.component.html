@@ -1,7 +1,7 @@
 <div class="popup-asset">
     <div class="popup-asset-item">
         <div class="popup-asset-top">
-            <img class="avatar" [src]="asset?.avatar" alt="">
+            <img class="avatar" [src]="asset?.avatar || ''" alt="">
             <span class="name">{{ asset?.name }}</span>
             <div class="operator" *ngIf="!asset?.balance && !fixed(asset.asset_id)">
                 <span class="icon"></span>
