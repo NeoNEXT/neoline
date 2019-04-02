@@ -7,29 +7,44 @@
     flex-flow: column;
     height: 100%;
 }
+
 .info {
     align-items: center;
     padding: $space*2;
 }
+
 .info .avatar {
     width: 68px;
     height: 68px;
     display: inline-block;
     margin-right: 30px;
 }
+
 .info .balance {
     font-size: 26px;
     color: #333333;
     font-weight: bold;
 }
+
+.asset-id {
+    color: #9FA8BD;
+    font-size: 10px;
+    max-width: 300px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
 .rate-balance {
     font-size: 18px;
     font-weight: bold;
     color: #9fa8bd;
 }
+
 .info button {
     border-radius: 50px;
 }
+
 .info button:not(:first-of-type) {
     margin-left: $space;
 }
@@ -37,6 +52,7 @@
 .title {
     padding: $space $space*2;
 }
+
 .title span:first {
     font-size: 18px;
 }
@@ -62,6 +78,7 @@ pager {
     .info .balance {
         font-size: 20px;
     }
+
     .info .avatar {
         width: 58px;
         height: 58px;

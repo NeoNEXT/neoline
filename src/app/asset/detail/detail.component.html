@@ -2,6 +2,7 @@
     <img [src]="imageUrl" class="avatar" alt="">
     <div>
         <p class="balance">{{balance?.balance || '0' }} {{balance?.symbol}}</p>
+        <p class="asset-id">{{ balance?.asset_id }}</p>
         <p class="rate-balance" *ngIf="balance?.rateBalance || balance?.rateBalance === 0">
             {{balance?.rateBalance | number: '1.0-2'}} {{rateObj?.currentCurrency | uppercase}}</p>
     </div>
