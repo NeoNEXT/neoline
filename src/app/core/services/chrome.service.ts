@@ -37,6 +37,14 @@ export class ChromeService {
         return !!this.crx;
     }
 
+    public getVersion(): string {
+        if (this.check) {
+            return this.crx.version;
+        } else {
+            return '';
+        }
+    }
+
     /**
      * expand method to open full page from popup
      * currently open to /asset by default

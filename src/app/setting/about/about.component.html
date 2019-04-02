@@ -2,7 +2,7 @@
     <img src="/assets/images/logo.png" alt="" class="icon">
     <br />
     <img src="/assets/images/about_name.png" alt="" class="name">
-    <p class="version">{{ 'version' | translate | async }}: 1.0.0</p>
+    <p class="version" *ngIf="version !== ''">{{ 'version' | translate | async }}: {{ version }}</p>
 </div>
 <div class="blocks">
     <div class="home">
