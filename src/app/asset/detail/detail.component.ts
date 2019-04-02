@@ -99,7 +99,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 if (this.balance !== undefined && this.balance.balance && this.balance.balance > 0) {
                     let query = {};
                     query['symbol'] = this.rateObj.currentCurrency;
-                    query['channel'] = this.rateObj.currentChannel;
+                    // query['channel'] = this.rateObj.currentChannel;
                     query['coins'] = this.balance.symbol;
                     this.asset.getRate(query).subscribe(rateBalance => {
                         if (rateBalance !== undefined && rateBalance.result.length > 0) {

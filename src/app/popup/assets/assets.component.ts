@@ -118,7 +118,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
             this.rateCurrency = this.rateObj.currentCurrency;
             let query = {};
             query['symbol'] = this.rateObj.currentCurrency;
-            query['channel'] = this.rateObj.currentChannel;
+            // query['channel'] = this.rateObj.currentChannel;
             query['coins'] = this.rateSymbol;
             if (!this.rateSymbol) {
                 return;
