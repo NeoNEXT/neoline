@@ -115,8 +115,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     if ((res !== undefined && res[request.hostname] !== undefined) || request.connect === 'true') {
                         if (res !== undefined && res[request.hostname] !== undefined && res[request.hostname].status === 'false') {
                             notification(chrome.i18n.getMessage('rejected'), chrome.i18n.getMessage('rejectedTip'));
+                            windowCallback({
+                                target: 'connection_rejected',
+                                data: false
+                            });
                             return;
                         }
+                        windowCallback({
+                            target: 'connected',
+                            data: true
+                        });
                         notification(`${chrome.i18n.getMessage('from')}: ${request.hostname}`, chrome.i18n.getMessage('connectedTip'));
                     } else {
                         window.open(`/index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`, '_blank',
