@@ -16,7 +16,7 @@
             <span class="symbol">{{asset?.symbol}}</span>
         </div>
         <div class="info-right flex-1" *ngIf="asset?.rateBalance || asset?.rateBalance === 0">
-            <span class="balance">{{rateCurrency | currencySymbol }}{{asset?.rateBalance | number: '1.0-2'}}</span>&nbsp;
+            <span class="balance">{{asset?.rateBalance | number: '1.0-2'}}</span>&nbsp;
             <span class="symbol">{{rateCurrency | uppercase}}</span>
         </div>
     </div>

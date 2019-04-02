@@ -5,12 +5,14 @@
             <span class="name">{{ asset?.name }}</span>
             <div class="operator" *ngIf="!asset?.balance && !fixed(asset.asset_id)">
                 <span class="icon"></span>
-                <button  mat-raised-button (click)="delAsset(index)">{{ 'hidden' | translate | async}}</button>
+                <button mat-raised-button (click)="delAsset(index)">{{ 'hidden' | translate | async}}</button>
             </div>
         </div>
         <div class="popup-asset-bottom flex">
-            <div class="left flex-1"><span class="amount">{{ asset?.balance || '0'}}</span>&nbsp;<span class="type">{{ asset?.symbol }}</span></div>
-            <div class="right flex-1" *ngIf="asset?.rateBalance || asset?.rateBalance === 0"><span>{{rateCurrency | currencySymbol }}{{asset?.rateBalance | number: '1.0-2'}}</span>&nbsp;{{rateCurrency | uppercase}}</div>
+            <div class="left flex-1"><span class="amount">{{ asset?.balance || '0'}}</span>&nbsp;<span
+                    class="type">{{ asset?.symbol }}</span></div>
+            <div class="right flex-1" *ngIf="asset?.rateBalance || asset?.rateBalance === 0">
+                <span>{{asset?.rateBalance | number: '1.0-2'}}</span>&nbsp;{{rateCurrency | uppercase}}</div>
         </div>
     </div>
 </div>

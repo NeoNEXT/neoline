@@ -9,4 +9,5 @@
         <mat-icon class="popup-home-logo-info" *ngIf="!showTokenName">error_outline</mat-icon>
     </button> -->
 </div>
-<div class="popup-home-asset-dollar" *ngIf="rateBalance || rateBalance === 0">{{rateCurrency | currencySymbol }}{{rateBalance | number: '1.0-2'}} {{rateCurrency | uppercase}}</div>
+<div class="popup-home-asset-dollar" *ngIf="rateBalance || rateBalance === 0">{{rateBalance | number: '1.0-2'}}
+    {{rateCurrency | uppercase}}</div>

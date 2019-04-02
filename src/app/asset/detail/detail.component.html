@@ -2,7 +2,8 @@
     <img [src]="imageUrl" class="avatar" alt="">
     <div>
         <p class="balance">{{balance?.balance || '0' }} {{balance?.symbol}}</p>
-        <p class="rate-balance" *ngIf="balance?.rateBalance || balance?.rateBalance === 0">{{rateObj?.currentCurrency | currencySymbol }}{{balance?.rateBalance | number: '1.0-2'}} {{rateObj?.currentCurrency | uppercase}}</p>
+        <p class="rate-balance" *ngIf="balance?.rateBalance || balance?.rateBalance === 0">
+            {{balance?.rateBalance | number: '1.0-2'}} {{rateObj?.currentCurrency | uppercase}}</p>
     </div>
     <div class="flex-1"></div>
     <div class="flex-1"></div>
@@ -14,7 +15,8 @@
 </div>
 <div class="tx flex-1">
     <tx-header *ngIf="txPage?.items.length > 0"></tx-header>
-    <tx-item *ngFor="let item of txPage?.items" [time]="item.block_time" [value]="item.value" [txid]="item.txid"></tx-item>
+    <tx-item *ngFor="let item of txPage?.items" [time]="item.block_time" [value]="item.value" [txid]="item.txid">
+    </tx-item>
     <div class="nomore" *ngIf="txPage?.items.length == 0">{{ 'noTransaction' | translate | async}}</div>
 </div>
 <div>

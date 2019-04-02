@@ -24,7 +24,6 @@ import { LanguageNamePipe } from './pipes/language-name.pipe';
 import { CopyDirective } from './directives/copy';
 import { AvatarDirective } from './directives/avatar';
 import { TranslatePipe } from './pipes/translate.pipe';
-import { CurrencySymbolPipe } from './pipes/currency-symbol.pipe';
 
 @NgModule({
     declarations: [
@@ -34,7 +33,6 @@ import { CurrencySymbolPipe } from './pipes/currency-symbol.pipe';
         LimitPageStringPipe,
         LanguageNamePipe,
         TranslatePipe,
-        CurrencySymbolPipe,
         CopyDirective,
         AvatarDirective,
     ],
@@ -45,7 +43,6 @@ import { CurrencySymbolPipe } from './pipes/currency-symbol.pipe';
         LimitStrPipe,
         LanguageNamePipe,
         TranslatePipe,
-        CurrencySymbolPipe,
         CopyDirective,
         AvatarDirective,
         MatButtonModule,
