@@ -91,6 +91,27 @@ export function clearStorage() {
 }
 
 
+
+export function getLocalStorage(key, callback) {
+    chrome.storage.local.get([key], (result) => {
+        callback(result[key]);
+    });
+}
+
+export function setLocalStorage(value) {
+    chrome.storage.local.set(value, () => {
+        console.log('Set local storage', value);
+    });
+}
+export function removeLocalStorage(key) {
+    chrome.storage.local.remove(key);
+}
+
+export function clearLocalStorage() {
+    chrome.storage.local.clear();
+}
+
+
 export function notification(title = '', msg = '') {
     chrome.notifications.create(null, {
         type: 'basic',

@@ -487,7 +487,7 @@ export class ChromeService {
             return;
         }
         try {
-            this.crx.setStorage({
+            this.crx.setLocalStorage({
                 assetFile: JSON.stringify(Array.from(assetFile.entries()))
             });
         } catch (e) {
@@ -504,7 +504,7 @@ export class ChromeService {
         }
         return from(new Promise((resolve, reject) => {
             try {
-                this.crx.getStorage('assetFile', (res) => {
+                this.crx.getLocalStorage('assetFile', (res) => {
                     if (res) {
                         resolve(new Map(JSON.parse(res)));
                     } else {
@@ -521,7 +521,7 @@ export class ChromeService {
         if (!this.check) {
             localStorage.removeItem('assetFile');
         } else {
-            this.crx.removeStorage('assetFile');
+            this.crx.removeLocalStorage('assetFile');
         }
     }
 
@@ -574,6 +574,7 @@ export class ChromeService {
         }
         try {
             this.crx.clearStorage();
+            this.crx.clearLocalStorage();
         } catch (e) {
             console.log('close wallet failed', e);
         }

@@ -6,9 +6,12 @@ export {
     setStorage,
     removeStorage,
     clearStorage,
-    notification
-}
-    from '../common';
+    notification,
+    setLocalStorage,
+    removeLocalStorage,
+    clearLocalStorage,
+    getLocalStorage
+} from '../common';
 import {
     getStorage,
     setStorage,
