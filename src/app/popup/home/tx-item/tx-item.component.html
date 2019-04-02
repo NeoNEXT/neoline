@@ -5,7 +5,8 @@
             (click)="$event.stopPropagation();show = !show" [ngClass]="{'active': show}">
     </div>
     <div class="content">
-        <img class="tx-type-icon" [src]="value > 0 ? '/assets/images/down.png': '/assets/images/up.png' " alt="">
+        <img class="tx-type-icon" [src]="value > 0 ? '/assets/images/icon_income.png': '/assets/images/icon_pay.png' "
+            alt="">
         <div class="status-box">
             <p class="tx-type">
                 {{ value < 0 ? 'Sent' : 'Received' }}
