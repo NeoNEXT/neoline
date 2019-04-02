@@ -81,11 +81,10 @@ export class SettingDetailComponent implements OnInit {
     public clearCache() {
         this.dialog.open(PopupClearStorageDialogComponent).afterClosed().subscribe((confirm) => {
             if (confirm) {
-                this.chrome.clearStorage();
-                this.neon.clearCache();
+                this.chrome.clearAssetFile();
                 this.asset.clearCache();
                 this.transaction.clearCache();
-                this.router.navigateByUrl('popup/wallet/create');
+                this.global.snackBarTip('clearSuccess');
             }
         });
     }

@@ -517,6 +517,14 @@ export class ChromeService {
         }));
     }
 
+    public clearAssetFile() {
+        if (!this.check) {
+            localStorage.removeItem('assetFile');
+        } else {
+            this.crx.removeStorage('assetFile');
+        }
+    }
+
     public setNet(net: string) {
         if (!this.check) {
             localStorage.setItem('net', JSON.stringify(net));
