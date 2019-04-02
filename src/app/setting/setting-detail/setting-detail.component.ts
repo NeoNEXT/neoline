@@ -49,7 +49,7 @@ export class SettingDetailComponent implements OnInit {
         private dialog: MatDialog,
         private transaction: TransactionState,
         private setting: SettingState,
-    ) {}
+    ) { }
 
     ngOnInit(): void {
         this.chrome.getLang().subscribe((res) => {
@@ -95,14 +95,6 @@ export class SettingDetailComponent implements OnInit {
             this.rateObj.currentCurrency = currency;
             this.chrome.setRateObj(this.rateObj);
             this.global.snackBarTip('rateCurrencySetSucc');
-        }
-    }
-
-    public changeRateChannel(channel: string) {
-        if (this.rateObj.currentChannel !== channel) {
-            this.rateObj.currentChannel = channel;
-            this.chrome.setRateObj(this.rateObj);
-            this.global.snackBarTip('rateChannelSetSucc');
         }
     }
 

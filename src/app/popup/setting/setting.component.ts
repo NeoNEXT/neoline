@@ -44,7 +44,7 @@ import {
     styleUrls: ['setting.component.scss']
 })
 export class PopupSettingComponent implements OnInit {
-    public walletArr: Array < Wallet > ;
+    public walletArr: Array<Wallet>;
     public wallet: Wallet;
     public balance: Balance;
     public lang: string;
@@ -122,28 +122,6 @@ export class PopupSettingComponent implements OnInit {
                     }
                 }
             );
-    }
-
-    public modifyRateChannel() {
-        const tempDialog = this
-            .dialog
-            .open(
-                PopupLanguageDialogComponent, {
-                    width: '170px',
-                    data: {
-                        currentOption: this.rateObj.currentChannel,
-                        optionGroup: this.rateChannels,
-                        type: 'channel'
-                    }
-                }
-            );
-        tempDialog.afterClosed().subscribe((channel) => {
-            if (!channel) {
-                return;
-            }
-            this.rateObj.currentChannel = channel;
-            this.global.snackBarTip('rateChannelSetSucc');
-        });
     }
 
     public modifyRateCurrency() {

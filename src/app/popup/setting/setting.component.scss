@@ -25,6 +25,7 @@
             float: left;
             width: 62px;
             height: 62px;
+
             div {
                 width: 15px;
                 height: 9.5px;
@@ -51,6 +52,7 @@
                 margin-top: 12px;
                 margin-right: 12px;
                 float: left;
+
                 img {
                     width: inherit;
                     height: inherit;
@@ -74,11 +76,14 @@
                     // color: map-get($colors, 7a87a9);
                 }
             }
+
             .popup-setting-account-menu {
                 float: right;
                 height: inherit;
+
                 .menu-btn-box {
                     height: inherit;
+
                     .menu-btn {
                         @include bg($img-omi);
                         width: 15px;
@@ -102,7 +107,7 @@ hr {
     z-index: 2;
     margin-top: -1px;
     margin-bottom: -1px;
-    background: rgba(244,247,252,1);
+    background: rgba(244, 247, 252, 1);
     border: none;
 }
 
@@ -185,6 +190,7 @@ hr {
 
     .popup-setting-cache-tip {
         margin-top: 15px;
+
         div {
             float: none;
             line-height: normal;
@@ -204,7 +210,7 @@ hr {
         height: 35px;
         line-height: 35px;
         font-size: 14px;
-        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113,120,221,1));
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
         box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
         border-radius: 4px;
         color: map-get($neo-line-default, 50);
@@ -220,12 +226,15 @@ hr {
     padding: 15px 13px;
     border-bottom: 1px solid map-get($colors, e5e5e5);
     cursor: default;
+
     .popup-setting-authorization-head {
         line-height: 22px;
+
         .title {
             font-size: 14px;
             color: #282828;
         }
+
         .view-all {
             font-size: 12px;
             color: #7178DD;
@@ -233,32 +242,37 @@ hr {
             cursor: pointer;
         }
     }
+
     .tip {
         font-size: 12px;
         color: #999999;
         margin-top: 15px;
     }
 }
+
 .setting-asset-rate {
     padding: 15px 13px;
+
     div {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        cursor: pointer;      
+        cursor: pointer;
+
         .title {
             font-size: 14px;
             color: #282828;
         }
+
         .value {
             font-size: 13px;
-            color: #999999;     
+            color: #999999;
         }
     }
+
     .update-time {
         font-size: 12px;
         color: #999999;
         margin-top: 10px;
-        margin-bottom: 20px;
     }
 }

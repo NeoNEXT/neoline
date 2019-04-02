@@ -17,7 +17,7 @@
     </div>
 </section>
 <section class="rate">
-    <div class="setting-item asset-item">
+    <div class="setting-item asset-item border-bottom">
         <div class="setting-item-left">
             <p class="title">{{ 'assetRate' | translate | async}}</p>
             <p class="tip">{{ 'updateTime' | translate | async}}{{rateTime * 1000 | date: 'M月d日 y年 HH:mm'}} 北京时间</p>
@@ -30,19 +30,6 @@
             <mat-menu #assetMenu="matMenu">
                 <button (click)="changeRateCurrency(currency)" *ngFor="let currency of rateCurrencys" class="menu-btn"
                     mat-menu-item>{{currency | uppercase}}</button>
-            </mat-menu>
-        </div>
-    </div>
-    <div class="setting-item border-bottom">
-        <div class="title-small setting-item-left title-left">{{ 'referSource' | translate | async}}</div>
-        <div>
-            <button mat-stroked-button class="asset-btn" [matMenuTriggerFor]="sourceMenu">
-                {{rateObj?.currentChannel}}
-                <span class="asset-icon"></span>
-            </button>
-            <mat-menu #sourceMenu="matMenu">
-                <button (click)="changeRateChannel(channel)" mat-menu-item
-                    *ngFor="let channel of rateChannels">{{channel}}</button>
             </mat-menu>
         </div>
     </div>
@@ -60,7 +47,8 @@
                     </span>
                 </p>
             </div>
-            <button class="option-btn" (click)="delAllSite()" mat-button>{{ 'clearPrivacyDataBtn' | translate | async}}</button>
+            <button class="option-btn" (click)="delAllSite()"
+                mat-button>{{ 'clearPrivacyDataBtn' | translate | async}}</button>
         </div>
         <div class="privacy-group" *ngIf="viewPrivacy">
             <div class="empty" *ngIf="objectKeys(authorizationList).length == 0">
