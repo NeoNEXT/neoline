@@ -81,6 +81,13 @@ p.address {
     color: #666666;
 }
 
+p.wif {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    padding: 0 8px;
+}
+
 p.title {
     text-align: center;
     font-size: 15px;

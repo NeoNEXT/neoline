@@ -60,15 +60,6 @@ export class AssetState {
     }
 
     public detail(id: string): Observable < Balance > {
-        // if (this._balance) { // 在有余额的资产里找
-        //     const i = this._balance.findIndex((e) => e.asset_id === id)
-        //     if (i >= 0) {
-        //         return of(this._balance[i]);
-        //     }
-        // }
-        // return this.chrome.getWatch().pipe(switchMap(watching => this.fetchBalance(this._address, true).then(() => {
-        //     return this._balance.find(b => b.asset_id === id) || watching.find(w => w.asset_id === id);
-        // })));
         return this.balance().pipe(switchMap((balance) => this.chrome.getWatch().pipe(map((watching => {
             return balance.find((e) => e.asset_id === id) || watching.find(w => w.asset_id === id);
         })))));
