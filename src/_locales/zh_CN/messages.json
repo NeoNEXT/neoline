@@ -330,6 +330,9 @@
     "remove": {
         "message": "清除"
     },
+    "switch": {
+        "message": "切换"
+    },
     "delete": {
         "message": "删除"
     },

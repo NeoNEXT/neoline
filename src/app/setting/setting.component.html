@@ -1,13 +1,15 @@
 <div class="nav flex-y">
-    <div class="menu" routerLink="/setting/about" routerLinkActive="active">
-        {{ 'about' | translate | async}}
-        <div class="cursor"></div>
-    </div>
+
     <div class="menu" routerLink="/setting/detail" routerLinkActive="active">
-        {{ 'setting' | translate | async }}<span class="setting-dropdown"></span>
+        {{ 'setting' | translate | async }}
+        <!-- <span class="setting-dropdown"></span> -->
         <div class="cursor"></div>
     </div>
-    <div class="setting">
+    <div class="menu" routerLink="/setting/wallet"  routerLinkActive="active">
+        {{ 'account' | translate | async }}
+        <div class="cursor"></div>
+    </div>
+    <!-- <div class="setting">
         <div class="detail-item">
             {{ 'setLang' | translate | async}}
         </div>
@@ -20,6 +22,10 @@
         <div class="detail-item">
             {{ 'privacyData' | translate | async}}
         </div>
+    </div> -->
+    <div class="menu" routerLink="/setting/about" routerLinkActive="active">
+        {{ 'about' | translate | async}}
+        <div class="cursor"></div>
     </div>
 </div>
 <div class="body">

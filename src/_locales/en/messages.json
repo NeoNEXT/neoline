@@ -330,6 +330,9 @@
     "remove": {
         "message": "Remove"
     },
+    "switch": {
+        "message": "Switch"
+    },
     "delete": {
         "message": "Delete"
     },
