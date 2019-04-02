@@ -139,10 +139,10 @@
         "message": "验证你的密码"
     },
     "caution": {
-        "message": "警告"
+        "message": "小心"
     },
     "transferExportTip": {
-        "message": "请保存你的 WIF(私钥)"
+        "message": "请妥善保存您的私钥(WIF)，不要透露给任何人"
     },
     "verify": {
         "message": "验证"

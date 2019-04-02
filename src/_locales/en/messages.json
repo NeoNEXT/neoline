@@ -130,7 +130,7 @@
         "message": "Copy"
     },
     "displayWIF": {
-        "message": "Display WIF"
+        "message": "Show Private Key"
     },
     "password": {
         "message": "Password"
@@ -142,7 +142,7 @@
         "message": "Caution"
     },
     "transferExportTip": {
-        "message": "Keep your WIF key save please"
+        "message": "Please keep your PrivateKey safe, do not show it to anyone"
     },
     "verify": {
         "message": "Verify"

@@ -1,5 +1,5 @@
 <button mat-icon-button class="close" (click)="close()">
-    <mat-icon>{{ 'close' | translate | async}}</mat-icon>
+    <mat-icon>close</mat-icon>
 </button>
 
 <p class="name">{{wallet?.name}}</p>
@@ -7,17 +7,20 @@
 <p class="title">{{ 'displayWIF' | translate | async}}</p>
 <p class="title-pwd" *ngIf="!verified">{{ 'password' | translate | async}}</p>
 <p class="title-pwd" *ngIf="verified">{{ 'wif' | translate | async}}</p>
-<input type="password" placeholder="{{ 'verifyPassword' | translate | async}}" *ngIf="!verified" [(ngModel)]="pwd" class="pwd" />
+<input type="password" placeholder="{{ 'verifyPassword' | translate | async}}" *ngIf="!verified" [(ngModel)]="pwd"
+    class="pwd" />
 <p class="address" *ngIf="verified">{{wif}}</p>
 <p class="tip">
     <span>{{ 'caution' | translate | async}}</span> :<br />
     <span>{{ 'transferExportTip' | translate | async}}</span>
 </p>
 <div class="btns">
-    <button mat-stroked-button color="primary" *ngIf="!verified" (click)="close()">{{ 'cancel' | translate | async}}</button>
+    <button mat-stroked-button color="primary" *ngIf="!verified"
+        (click)="close()">{{ 'cancel' | translate | async}}</button>
     <button mat-raised-button color="primary" *ngIf="!verified" style="margin-left: 10%;" (click)="verify()">
         <span *ngIf="!loading">{{ 'verify' | translate | async}}</span>
         <mat-spinner *ngIf="loading" class="light" diameter="28"></mat-spinner>
     </button>
-    <button mat-raised-button color="primary" *ngIf="verified" class="confirm" (click)="close()">{{ 'done' | translate | async}}</button>
+    <button mat-raised-button color="primary" *ngIf="verified" class="confirm"
+        (click)="close()">{{ 'done' | translate | async}}</button>
 </div>
