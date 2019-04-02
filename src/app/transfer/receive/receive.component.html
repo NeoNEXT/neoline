@@ -1,9 +1,12 @@
 <button mat-icon-button class="close" (click)="close()">
-    <mat-icon>{{ 'close' | translate | async}}</mat-icon>
+    <mat-icon>close</mat-icon>
 </button>
 
 <div id="receive-qrcode"></div>
 
+<p class="address">{{ address }}</p>
+
 <textarea type="text" id="receive-address" [value]="address" readonly="readonly"></textarea>
 
-<button class="copy" copy="receive-address" mat-raised-button color="primary" (onCopy)="copied()">{{ 'copy' | translate | async}}</button>
+<button class="copy" copy="receive-address" mat-raised-button color="primary"
+    (onCopy)="copied()">{{ 'copy' | translate | async}}</button>

@@ -16,15 +16,21 @@
 }
 
 .close {
+    height: 80px;
+    width: 80px;
     position: absolute;
-    right: -10px;
-    top: -10px;
+    right: -40px;
+    top: -40px;
     background: #C2C6F5;
     color: #FFFFFF;
 }
+
 .close mat-icon {
-    margin-left: -5px;
-    margin-bottom: -5px;
+    float: left;
+    width: 15px;
+    height: 15px;
+    margin-left: 12px;
+    margin-top: 24px;
 }
 
 @media screen and (max-width: 1200px) {
@@ -39,10 +45,11 @@
     margin: $space*2 auto;
     display: block;
 }
+
 textarea {
     color: #484E6D;
     text-align: center;
-    font-size: 14px;
+    font-size: 12px;
     padding: $space/2;
     margin: $space 0;
     border: 1px solid #E4E7EC;
@@ -50,7 +57,24 @@ textarea {
     display: block;
     width: 100%;
     border-radius: 4px;
+    position: absolute;
+    opacity: 0;
 }
+
+.address {
+    height: 38px;
+    line-height: 38px;
+    color: #666666;
+    text-align: center;
+    font-size: 12px;
+    border: 1px solid #E4E7EC;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 25px;
+    margin: $space 0;
+}
+
 button.copy {
     display: block;
     width: 100%;
