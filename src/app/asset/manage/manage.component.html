@@ -8,8 +8,8 @@
     <div class="asset flex" *ngFor="let asset of searchAssets || allAssets?.items;let i = index">
         <img [src]="asset?.avatar" class="avatar" alt="">
         <div class="flex-1">
-            <p>{{asset?.symbol}}</p>
-            <p *ngIf="searchAssets" class="asset-id">{{asset?.asset_id}}</p>
+            <p class="asset-width">{{asset?.symbol}}</p>
+            <p *ngIf="searchAssets" class="asset-width asset-id">{{asset?.asset_id}}</p>
         </div>
         <button mat-raised-button color="primary" *ngIf="asset.watching">{{ 'added' | translate | async}}</button>
         <button mat-raised-button color="primary" *ngIf="!asset.watching" class="watching" (click)="addAsset(i)">{{ 'add' | translate | async}}</button>

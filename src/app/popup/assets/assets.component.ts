@@ -109,12 +109,11 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
             return res;
         })))).subscribe(() => {
             this.unSubAll = this.asset.all().subscribe(res => {
-                res.items = res.items.map((e, index) => {
-                    this.getAssetSrc(e.asset_id, index, 'all');
-                    e.watching = this.displayAssets.findIndex((w: Balance) => w.asset_id === e.asset_id) >= 0;
-                    return e;
-                });
                 this.allAssets = res;
+                this.allAssets.items.forEach((e, index) => {
+                    this.getAssetSrc(e.asset_id, index, 'all');
+                    this.allAssets.items[index].watching = this.displayAssets.findIndex((w: Balance) => w.asset_id === e.asset_id) >= 0;
+                });
             });
             this.rateCurrency = this.rateObj.currentCurrency;
             let query = {};
@@ -143,26 +142,38 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
         });
     }
 
-    public getAssetSrc(assetId, index, type = 'all') {
-        this.asset.getAssetSrc(assetId).subscribe(assetRes => {
-            if (typeof assetRes === 'string') {
-                if (type === 'all') {
-                    this.allAssets.items[index].avatar = assetRes;
-                } else if (type === 'display') {
-                    this.displayAssets[index].avatar = assetRes;
-                } else {
-                    this.searchAssets[index].avatar = assetRes;
-                }
-            } else {
+    public getAssetSrc(assetId, index, type) {
+        const imageObj = this.asset.assetFile.get(assetId);
+        let lastModified = '';
+        if (imageObj) {
+            lastModified = imageObj['last-modified'];
+            if (type === 'all') {
+                this.allAssets.items[index].avatar = imageObj['image-src'];
+            } else if (type === 'search') {
+                this.searchAssets[index].avatar = imageObj['image-src'];
+            } else if (type === 'display') {
+                this.displayAssets[index].avatar = imageObj['image-src'];
+            }
+        }
+        this.asset.getAssetSrc(assetId, lastModified).subscribe(assetRes => {
+            if (assetRes && assetRes['status'] === 200) {
                 this.asset.setAssetFile(assetRes, assetId).then(src => {
                     if (type === 'all') {
                         this.allAssets.items[index].avatar = src;
+                    } else if (type === 'search') {
+                        this.searchAssets[index].avatar = src;
                     } else if (type === 'display') {
                         this.displayAssets[index].avatar = src;
-                    } else {
-                        this.searchAssets[index].avatar = src;
                     }
                 });
+            } else if (assetRes && assetRes['status'] === 404) {
+                if (type === 'all') {
+                    this.allAssets.items[index].avatar = '';
+                } else if (type === 'search') {
+                    this.searchAssets[index].avatar = '';
+                } else if (type === 'display') {
+                    this.displayAssets[index].avatar = '';
+                }
             }
         });
     }
@@ -222,12 +233,9 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     public searchCurrency() {
         if (this.searchValue) {
             this.asset.searchAsset(this.searchValue).subscribe(res => {
-                res = res.map((e) => {
-                    e.watching = this.displayAssets.findIndex((w: Balance) => w.asset_id === e.asset_id) >= 0;
-                    return e;
-                });
                 this.searchAssets = res;
                 this.searchAssets.forEach((s, index) => {
+                    this.searchAssets[index].watching = this.displayAssets.findIndex((w: Balance) => w.asset_id === s.asset_id) >= 0;
                     this.getAssetSrc(s.asset_id, index, 'search');
                 });
             })

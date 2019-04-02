@@ -76,19 +76,12 @@ export class AssetManageComponent implements OnInit, OnDestroy {
             return res;
         })))).subscribe(() => {
             this.unSubAll = this.asset.all().subscribe(res => {
-                res.items.forEach(e => {
-                    e.watching = this.displayAssets.findIndex((w: Balance) => w.asset_id === e.asset_id) >= 0;
-                    this.asset.getAssetSrc(e.asset_id).subscribe(assetRes => {
-                        if (typeof assetRes === 'string') {
-                            e.avatar = assetRes;
-                        } else {
-                            this.asset.setAssetFile(assetRes, e.asset_id).then(src => {
-                                e.avatar = src;
-                            });
-                        }
-                    });
-                });
                 this.allAssets = res;
+                this.allAssets.items.forEach((element, index) => {
+                    this.allAssets.items[index].watching =
+                        this.displayAssets.findIndex((w: Balance) => w.asset_id === element.asset_id) >= 0;
+                    this.getAssetSrc(element.asset_id, index, 'all');
+                });
                 if (this.searchAssets && this.global.searchBalance && this.global.searchBalance.asset_id) {
                     let i = this.searchAssets.findIndex(w => w.asset_id === this.global.searchBalance.asset_id);
                     if (i >= 0) {
@@ -110,6 +103,36 @@ export class AssetManageComponent implements OnInit, OnDestroy {
         if (this.unSubBalance) {
             this.unSubBalance.unsubscribe();
         }
+    }
+
+    public getAssetSrc(assetId, index, type) {
+        const imageObj = this.asset.assetFile.get(assetId);
+        let lastModified = '';
+        if (imageObj) {
+            lastModified = imageObj['last-modified'];
+            if (type === 'all') {
+                this.allAssets.items[index].avatar = imageObj['image-src'];
+            } else if (type === 'search') {
+                this.displayAssets[index].avatar = imageObj['image-src'];
+            }
+        }
+        this.asset.getAssetSrc(assetId, lastModified).subscribe(assetRes => {
+            if (assetRes && assetRes['status'] === 200) {
+                this.asset.setAssetFile(assetRes, assetId).then(src => {
+                    if (type === 'all') {
+                        this.allAssets.items[index].avatar = src;
+                    } else if (type === 'search') {
+                        this.displayAssets[index].avatar = src;
+                    }
+                });
+            } else if (assetRes && assetRes['status'] === 404) {
+                if (type === 'all') {
+                    this.allAssets.items[index].avatar = '';
+                } else if (type === 'search') {
+                    this.displayAssets[index].avatar = '';
+                }
+            }
+        });
     }
 
     public addAsset(index: number) {
@@ -154,18 +177,10 @@ export class AssetManageComponent implements OnInit, OnDestroy {
     public searchCurrency() {
         if (this.searchValue) {
             this.asset.searchAsset(this.searchValue).subscribe(res => {
-                res.forEach(e => {
-                    this.asset.getAssetSrc(e.asset_id).subscribe(assetRes => {
-                        if (typeof assetRes === 'string') {
-                            e.avatar = assetRes;
-                        } else {
-                            this.asset.setAssetFile(assetRes, e.asset_id).then(src => {
-                                e.avatar = src;
-                            });
-                        }
-                    });
-                });
                 this.searchAssets = res;
+                this.searchAssets.forEach((element, index) => {
+                    this.getAssetSrc(element.asset_id, index, 'search');
+                });
             });
         } else {
             this.searchAssets = false;

@@ -29,11 +29,11 @@ import {
 export class AssetDetailComponent implements OnInit, OnDestroy {
     private address: string = '';
     public balance: Balance;
-    public txPage: PageData<Transaction>;
+    public txPage: PageData < Transaction > ;
     private assetId: string = '';
     private requesting = false;
     public loading = true;
-    public inTransaction: Array<Transaction>;
+    public inTransaction: Array < Transaction > ;
     public rateObj: RateObj;
 
     imageUrl: any;
@@ -80,13 +80,19 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 this.assetId = params.id;
                 this.transaction.fetch(this.address, 1, params.id, true);
                 // 获取资产头像
-                this.asset.getAssetSrc(this.assetId).subscribe(assetRes => {
-                    if (typeof assetRes === 'string') {
-                        this.imageUrl = assetRes;
-                    } else {
+                const imageObj = this.asset.assetFile.get(this.assetId);
+                let lastModified = '';
+                if (imageObj) {
+                    lastModified = imageObj['last-modified'];
+                    this.imageUrl = imageObj['image-src'];
+                }
+                this.asset.getAssetSrc(this.assetId, lastModified).subscribe(assetRes => {
+                    if (assetRes && assetRes['status'] === 200) {
                         this.asset.setAssetFile(assetRes, this.assetId).then(src => {
                             this.imageUrl = src;
                         });
+                    } else if (assetRes && assetRes['status'] === 404) {
+                        this.imageUrl = '';
                     }
                 });
                 // 获取资产汇率
@@ -142,7 +148,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                         this.chrome.setTransaction(inTxData);
                         this.txPage = res;
                         this.txPage.items = this.inTransaction.concat(this.txPage.items);
-                    }, error => { });
+                    }, error => {});
                 });
             } else {
                 this.txPage = res;

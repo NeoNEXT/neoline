@@ -34,18 +34,23 @@ export class PopupHomeDigestComponent implements OnInit, OnChanges {
         this.showTokenName = false;
     }
 
-    ngOnInit(): void { }
+    ngOnInit(): void {}
 
     ngOnChanges(changes: SimpleChanges) {
-        this.imageUrl = '';
         if (this.assetId) {
-            this.assetState.getAssetSrc(this.assetId).subscribe(assetRes => {
-                if (typeof assetRes === 'string') {
-                    this.imageUrl = assetRes;
-                } else {
+            const imageObj = this.assetState.assetFile.get(this.assetId);
+            let lastModified = '';
+            if (imageObj) {
+                lastModified = imageObj['last-modified'];
+                this.imageUrl = imageObj['image-src'];
+            }
+            this.assetState.getAssetSrc(this.assetId, lastModified).subscribe(assetRes => {
+                if (assetRes && assetRes['status'] === 200) {
                     this.assetState.setAssetFile(assetRes, this.assetId).then(src => {
                         this.imageUrl = src;
                     });
+                } else if (assetRes && assetRes['status'] === 404) {
+                    this.imageUrl = '';
                 }
             });
         }

@@ -3,7 +3,8 @@ import {
     OnInit,
     Input,
     Output,
-    EventEmitter
+    EventEmitter,
+    AfterViewInit
 } from '@angular/core';
 import {
     Balance,
@@ -32,7 +33,6 @@ export class BalanceComponent implements OnInit {
     @Input() public rateCurrency: string;
     @Output() onDelAsset = new EventEmitter < any > ();
 
-
     constructor(
         public global: GlobalService,
         private router: Router,
@@ -42,13 +42,19 @@ export class BalanceComponent implements OnInit {
     ngOnInit(): void {
         this.asset.balance = Number(this.asset.balance);
         const assetId = this.asset.asset_id;
-        this.assetState.getAssetSrc(assetId).subscribe(assetRes => {
-            if (typeof assetRes === 'string') {
-                this.imageUrl = assetRes;
-            } else {
+        const imageObj = this.assetState.assetFile.get(assetId);
+        let lastModified = '';
+        if (imageObj) {
+            lastModified = imageObj['last-modified'];
+            this.imageUrl = imageObj['image-src'];
+        }
+        this.assetState.getAssetSrc(assetId, lastModified).subscribe(assetRes => {
+            if (assetRes && assetRes['status'] === 200) {
                 this.assetState.setAssetFile(assetRes, assetId).then(src => {
                     this.imageUrl = src;
                 });
+            } else if (assetRes && assetRes['status'] === 404) {
+                this.imageUrl = '';
             }
         });
         if (!this.asset.balance || this.asset.balance === 0) {

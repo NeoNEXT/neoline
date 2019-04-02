@@ -114,20 +114,8 @@ export class AssetState {
         return this.http.get(`${this.global.apiDomain}/v1/search?query=${query}`);
     }
 
-    public getAssetSrc(assetId: string): Observable < string > {
-        let lastModified = '';
-        const imageObj = this.assetFile.get(assetId);
-        let imageUrl: string = '';
-        if (imageObj) {
-            lastModified = imageObj['last-modified'];
-            imageUrl = imageObj['image-src'];
-        }
-        return this.http.getImage(`${ this.global.apiDomain }/logo/${ assetId }`, lastModified).pipe(map((res: any) => {
-            if (res && res.status === 200) {
-               return res;
-            }
-            return imageUrl;
-        }));
+    public getAssetSrc(assetId: string, lastModified: string): Observable < string > {
+        return this.http.getImage(`${ this.global.apiDomain }/logo/${ assetId }`, lastModified);
     }
 
     public setAssetFile(res: any, assetId: string): Promise<any> {
