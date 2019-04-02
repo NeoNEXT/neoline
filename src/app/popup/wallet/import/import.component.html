@@ -25,7 +25,7 @@
             name="password" #password="ngModel" required [minlength]="limit.passwordLimitation[0]"
             [maxlength]="limit.passwordLimitation[1]" [pattern]="limit.pattern"
             [type]="hidePwd ? 'password' : 'text'" />
-        <button mat-button matSuffix mat-icon-button type="button" (click)="togglePwd()">
+        <button  tabindex="-1" mat-button matSuffix mat-icon-button type="button" (click)="togglePwd()">
             <span [class]="hidePwd ? 'hide-pwd' : ''"></span>
         </button>
 
@@ -48,7 +48,7 @@
         <input matInput placeholder="{{ 'enterConfirmPassword' | translate | async }}"
             [(ngModel)]="walletImport.confirmPassword" name="confirmPassword" #confirmPassword="ngModel" required
             [type]="hideConfirmPwd ? 'password' : 'text'" />
-        <button mat-button matSuffix mat-icon-button type="button" (click)="toggleConfirmPwd()">
+        <button tabindex="-1" mat-button matSuffix mat-icon-button type="button" (click)="toggleConfirmPwd()">
             <span [class]="hideConfirmPwd ? 'hide-pwd' : ''"></span>
         </button>
     </mat-form-field>
@@ -59,7 +59,7 @@
         <input matInput placeholder="{{ 'enterWIF' | translate | async }}" [(ngModel)]="walletImport.WIF" name="WIF"
             (keyup)="isWIF = true" #WIF="ngModel" required [type]="hideWIF ? 'password' : 'text'"
             (keyup.enter)="(!isInit && !walletForm.invalid && !loading && confirmPassword.value == password.value) ? submit() : null " />
-        <button mat-button matSuffix mat-icon-button type="button" (click)="toggleWIF()">
+        <button  tabindex="-1" mat-button matSuffix mat-icon-button type="button" (click)="toggleWIF()">
             <span [class]="hideWIF ? 'hide-pwd' : ''"></span>
         </button>
         <mat-error *ngIf="WIF.errors?.required">{{ 'WIFRequired' | translate | async }}</mat-error>
