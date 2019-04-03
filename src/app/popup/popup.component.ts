@@ -1,7 +1,8 @@
 import {
     Component,
     OnInit,
-    AfterViewInit
+    AfterViewInit,
+    OnDestroy
 } from '@angular/core';
 import {
     ChromeService,
@@ -13,19 +14,22 @@ import {
     RouterEvent,
     NavigationEnd
 } from '@angular/router';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
     templateUrl: 'popup.component.html',
     styleUrls: ['popup.component.scss']
 })
 
-export class PopupComponent implements OnInit, AfterViewInit {
+export class PopupComponent implements OnInit, AfterViewInit, OnDestroy {
     public walletIsOpen = false;
     public isThirdParty: boolean = false;
     public address: string;
     public isLogin = false;
     public currentUrl: string = this.router.url;
     public net: string;
+
+    public unSubWalletListen: Unsubscribable;
 
     constructor(
         private chrome: ChromeService,
@@ -53,7 +57,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
                 this.currentUrl = res.url;
             }
         });
-        this.global.walletListen().subscribe((res: any) => {
+        this.unSubWalletListen = this.global.walletListen().subscribe((res: any) => {
             this.walletIsOpen = res === 'open' ? true : false;
         });
 
@@ -71,6 +75,12 @@ export class PopupComponent implements OnInit, AfterViewInit {
             this.net = 'test';
         } else {
             this.net = 'main';
+        }
+    }
+
+    ngOnDestroy(): void {
+        if (this.unSubWalletListen) {
+            this.unSubWalletListen.unsubscribe();
         }
     }
 

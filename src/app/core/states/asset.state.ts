@@ -71,38 +71,30 @@ export class AssetState {
             this.$balance.pipe(startWith(this._balance), publish(), refCount()) : this.$balance.pipe(publish(), refCount());
     }
 
-    public fetchBalance(address: string, force: boolean = false) {
-        if (force || !this._balance || this._address != address) {
-            return this.http.get(
-                `${ this.global.apiDomain }/v1/address/assets?address=${ address }`
-            ).toPromise().then((res) => {
-                this._address = address;
-                this._balance = res;
-                defaultAssets.forEach(item => {
-                    if (this._balance.findIndex((e) => e.asset_id === item.asset_id) < 0) {
-                        this._balance.unshift(item);
-                    }
-                });
-                this.$balance.next(res);
+    public fetchBalance(address: string) {
+        return this.http.get(
+            `${ this.global.apiDomain }/v1/address/assets?address=${ address }`
+        ).toPromise().then((res) => {
+            this._address = address;
+            this._balance = res;
+            defaultAssets.forEach(item => {
+                if (this._balance.findIndex((e) => e.asset_id === item.asset_id) < 0) {
+                    this._balance.unshift(item);
+                }
             });
-        } else {
-            return Promise.resolve(this.$balance.next(this._balance));
-        }
+            this.$balance.next(res);
+        });
     }
 
     public all(): Observable < PageData < Asset >> {
         return this._asset ? this.$asset.pipe(startWith(this._asset), publish(), refCount()) : this.$asset.pipe(publish(), refCount());
     }
 
-    public fetchAll(page: number, force: boolean = false) {
-        if (force || !this._asset) {
-            return this.http.get(`${this.global.apiDomain}/v1/asset/getallassets?page_index=${page}`).toPromise().then((res) => {
-                this._asset = res;
-                this.$asset.next(res);
-            });
-        } else {
-            this.$asset.next(this._asset);
-        }
+    public fetchAll(page: number) {
+        return this.http.get(`${this.global.apiDomain}/v1/asset/getallassets?page_index=${page}`).toPromise().then((res) => {
+            this._asset = res;
+            this.$asset.next(res);
+        });
     }
 
     public searchAsset(query: string): Observable < any > {
@@ -113,7 +105,7 @@ export class AssetState {
         return this.http.getImage(`${ this.global.apiDomain }/logo/${ assetId }`, lastModified);
     }
 
-    public setAssetFile(res: any, assetId: string): Promise<any> {
+    public setAssetFile(res: any, assetId: string): Promise < any > {
         const temp = {};
         temp['last-modified'] = res.getResponseHeader('Last-Modified');
         return new Promise((resolve, reject) => {

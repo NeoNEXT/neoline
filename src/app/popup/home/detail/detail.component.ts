@@ -1,7 +1,8 @@
 import {
     Component,
     OnInit,
-    OnDestroy
+    OnDestroy,
+    OnChanges
 } from '@angular/core';
 import {
     ActivatedRoute
@@ -75,7 +76,13 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
         this.asset.fetchBalance(this.neon.address);
         this.chrome.getRateCurrency().subscribe(rateCurrency => {
             this.rateCurrency = rateCurrency;
-            this.initPage();
+            // this.unSubBalance = this.asset.balance().subscribe(() => {
+            //     this.fetchBalance();
+            // });
+            this.aRouter.params.subscribe((params: any) => {
+                this.assetId = params.id;
+                this.fetchBalance();
+            });
         });
         this.unSubTxStatus = this.txState.data().subscribe((res: any) => {
             if (this.txPage === undefined || res.page === 1) {
@@ -135,31 +142,32 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
         }
     }
 
-    public initPage() {
-        this.aRouter.params.subscribe((params: any) => {
-            if (this.unSubRate) {
-                this.unSubRate.unsubscribe();
+    public fetchBalance() {
+        if (!this.assetId) {
+            return;
+        }
+        if (this.unSubRate) {
+            this.unSubRate.unsubscribe();
+        }
+        this.asset.detail(this.assetId).subscribe((res: Balance) => {
+            res.balance = Number(res.balance);
+            this.balance = res;
+            this.assetId = this.assetId;
+            this.txState.fetch(this.address, 1, this.assetId);
+            // 获取资产汇率
+            if (this.balance.balance && this.balance.balance > 0) {
+                let query = {};
+                query['symbol'] = this.rateCurrency;
+                query['coins'] = this.balance.symbol;
+                this.unSubRate = this.asset.getRate(query).subscribe(rateBalance => {
+                    if (rateBalance !== undefined && JSON.stringify(rateBalance.result) !== '{}') {
+                        this.balance.rateBalance =
+                            Number(rateBalance.result[this.balance.symbol]) * this.balance.balance;
+                    }
+                });
+            } else {
+                this.balance.rateBalance = 0;
             }
-            this.asset.detail(params.id).subscribe((res: Balance) => {
-                res.balance = Number(res.balance);
-                this.balance = res;
-                this.assetId = params.id;
-                this.txState.fetch(this.address, 1, params.id, true);
-                // 获取资产汇率
-                if (this.balance.balance && this.balance.balance > 0) {
-                    let query = {};
-                    query['symbol'] = this.rateCurrency;
-                    query['coins'] = this.balance.symbol;
-                    this.unSubRate = this.asset.getRate(query).subscribe(rateBalance => {
-                        if (rateBalance !== undefined && JSON.stringify(rateBalance.result) !== '{}') {
-                            this.balance.rateBalance =
-                                Number(rateBalance.result[this.balance.symbol]) * this.balance.balance;
-                        }
-                    });
-                } else {
-                    this.balance.rateBalance = 0;
-                }
-            });
         });
     }
 
@@ -178,7 +186,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                 sinceId = this.txPage.items[0].id;
             }
         }
-        this.txState.fetch(this.address, page, this.assetId, true, maxId, sinceId, absPage).finally(() => {
+        this.txState.fetch(this.address, page, this.assetId, maxId, sinceId, absPage).finally(() => {
             this.txPage.page = page;
             this.isLoading = false;
             this.filterBar.needLoad.emit(false);

@@ -165,7 +165,7 @@ export class AssetManageComponent implements OnInit, OnDestroy {
             return;
         }
         this.requesting = true;
-        this.asset.fetchAll(page, true).finally(() => {
+        this.asset.fetchAll(page).finally(() => {
             this.requesting = false;
         });
     }

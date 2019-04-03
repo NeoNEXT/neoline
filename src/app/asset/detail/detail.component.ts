@@ -78,7 +78,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 res.balance = Number(res.balance);
                 this.balance = res;
                 this.assetId = params.id;
-                this.transaction.fetch(this.address, 1, params.id, true);
+                this.transaction.fetch(this.address, 1, params.id);
                 // 获取资产头像
                 const imageObj = this.asset.assetFile.get(this.assetId);
                 let lastModified = '';
@@ -170,7 +170,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 sinceId = this.txPage.items[0].id;
             }
         }
-        this.txState.fetch(this.address, page, this.assetId, true, maxId, sinceId, absPage).finally(() => {
+        this.txState.fetch(this.address, page, this.assetId, maxId, sinceId, absPage).finally(() => {
             this.txPage.page = page;
         });
     }

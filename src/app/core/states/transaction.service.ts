@@ -43,8 +43,7 @@ export class TransactionState {
     public data(): Observable < PageData < Transaction >> {
         return this._data ? this.$data.pipe(startWith(this._data), publish(), refCount()) : this.$data.pipe(publish(), refCount());
     }
-    public fetch(address: string, page: number, asset: string, force: boolean = false, max_id: number = -1, since_id: number = -1, abs_page: number = 1) {
-        if (force || !this._data || this._address !== address) {
+    public fetch(address: string, page: number, asset: string, max_id: number = -1, since_id: number = -1, abs_page: number = 1) {
             let url = `${this.global.apiDomain}/v1/transactions/gettransactions?` +
                 `address=${address}&asset_id=${asset}&page_size=10&abs_page=${abs_page}`;
             if (max_id !== -1) {
@@ -60,8 +59,5 @@ export class TransactionState {
                 this._data.page = page;
                 this.$data.next(res);
             });
-        } else {
-            this.$data.next(this._data);
-        }
     }
 }

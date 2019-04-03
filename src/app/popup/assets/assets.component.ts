@@ -178,7 +178,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     public page(page: number) {
         this.isLoading = true;
 
-        this.asset.fetchAll(page, true).finally(() => {
+        this.asset.fetchAll(page).finally(() => {
             this.isLoading = false;
         });
     }

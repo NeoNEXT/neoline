@@ -41,6 +41,8 @@ export class AppComponent implements OnDestroy {
     public walletSub: Unsubscribable;
     public net: string;
 
+    public unSubWalletListen: Unsubscribable;
+
     constructor(
         private router: Router,
         private chrome: ChromeService,
@@ -53,7 +55,7 @@ export class AppComponent implements OnDestroy {
                 this.hideNav = event.url.startsWith('/popup') || event.url.startsWith('/login');
             }
         });
-        this.global.walletListen().subscribe((res) => {
+        this.unSubWalletListen = this.global.walletListen().subscribe((res) => {
             switch (res) {
                 case 'open':
                     this.walletIsOpen = true;
@@ -79,6 +81,9 @@ export class AppComponent implements OnDestroy {
     ngOnDestroy(): void {
         if (this.walletSub) {
             this.walletSub.unsubscribe();
+        }
+        if (this.unSubWalletListen) {
+            this.unSubWalletListen.unsubscribe();
         }
     }
 
