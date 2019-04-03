@@ -66,7 +66,11 @@
                     },
                     "configurations": {
                         "production": {
-                            "browserTarget": "neoline:build:production"
+                            "browserTarget": "neoline:build:production",
+                            "optimization": true,
+                            "sourceMap": false,
+                            "aot": true,
+                            "open": true
                         },
                         "zh-cn": {
                             "browserTarget": "neoline:build:zh-cn"
