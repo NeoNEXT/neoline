@@ -147,12 +147,22 @@ export class PopupSettingComponent implements OnInit {
     }
 
 
-    public createAccount() {
+    public createWallet() {
         this.router.navigateByUrl('/popup/wallet/create');
     }
 
-    public importAccount() {
+    public importWallet() {
         this.router.navigateByUrl('/popup/wallet/import');
+    }
+    public exportWallet() {
+        const sJson = JSON.stringify(this.neon.wallet.export());
+        const element = document.createElement('a');
+        element.setAttribute('href', 'data:text/json;charset=UTF-8,' + encodeURIComponent(sJson));
+        element.setAttribute('download', `${this.neon.wallet.name}.json`);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
     }
 
     public clearCache() {

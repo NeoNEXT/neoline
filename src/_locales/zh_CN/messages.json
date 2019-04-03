@@ -279,10 +279,10 @@
     "myAccount": {
         "message": "我的钱包"
     },
-    "importAccount": {
+    "importWallet": {
         "message": "导入钱包"
     },
-    "createAccount": {
+    "createWallet": {
         "message": "创建钱包"
     },
     "clearCacheBtn": {

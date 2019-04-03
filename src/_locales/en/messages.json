@@ -279,10 +279,10 @@
     "myAccount": {
         "message": "My wallet"
     },
-    "importAccount": {
+    "importWallet": {
         "message": "Import wallet"
     },
-    "createAccount": {
+    "createWallet": {
         "message": "Create wallet"
     },
     "clearCacheBtn": {
