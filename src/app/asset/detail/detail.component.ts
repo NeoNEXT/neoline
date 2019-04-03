@@ -20,6 +20,7 @@ import {
     ActivatedRoute,
     Router
 } from '@angular/router';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
     templateUrl: 'detail.component.html',
@@ -34,6 +35,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     public loading = true;
     public inTransaction: Array < Transaction > ;
     public rateCurrency: string;
+    public unSubTxFetch: Unsubscribable;
 
     imageUrl: any;
 
@@ -69,16 +71,22 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
             total: 0,
             per_page: 10
         };
+        if (this.unSubTxFetch) {
+            this.unSubTxFetch.unsubscribe();
+        }
     }
 
     public initPage() {
         this.aRoute.params.subscribe((params) => {
+            if (this.unSubTxFetch) {
+                this.unSubTxFetch.unsubscribe();
+            }
             this.txPage = undefined;
             this.asset.detail(params.id).subscribe((res: Balance) => {
                 res.balance = Number(res.balance);
                 this.balance = res;
                 this.assetId = params.id;
-                this.transaction.fetch(this.address, 1, params.id);
+                this.unSubTxFetch = this.transaction.fetch(this.address, 1, params.id).subscribe(() => {});
                 // 获取资产头像
                 const imageObj = this.asset.assetFile.get(this.assetId);
                 let lastModified = '';
@@ -170,7 +178,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 sinceId = this.txPage.items[0].id;
             }
         }
-        this.txState.fetch(this.address, page, this.assetId, maxId, sinceId, absPage).finally(() => {
+        this.txState.fetch(this.address, page, this.assetId, maxId, sinceId, absPage).subscribe(() => {
             this.txPage.page = page;
         });
     }

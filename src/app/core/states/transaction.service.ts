@@ -18,7 +18,9 @@ import {
 import {
     startWith,
     publish,
-    refCount
+    refCount,
+    switchMap,
+    map
 } from 'rxjs/operators';
 
 @Injectable()
@@ -41,23 +43,24 @@ export class TransactionState {
         this._data = null;
     }
     public data(): Observable < PageData < Transaction >> {
-        return this._data ? this.$data.pipe(startWith(this._data), publish(), refCount()) : this.$data.pipe(publish(), refCount());
+        return this.$data.pipe(publish(), refCount());
     }
-    public fetch(address: string, page: number, asset: string, max_id: number = -1, since_id: number = -1, abs_page: number = 1) {
-            let url = `${this.global.apiDomain}/v1/transactions/gettransactions?` +
-                `address=${address}&asset_id=${asset}&page_size=10&abs_page=${abs_page}`;
-            if (max_id !== -1) {
-                url += `&max_id=${max_id}`;
-            }
-            if (since_id !== -1) {
-                url += `&since_id=${since_id}`;
+    public fetch(address: string, page: number, asset: string,
+        max_id: number = -1, since_id: number = -1, abs_page: number = 1): Observable < any > {
+        let url = `${this.global.apiDomain}/v1/transactions/gettransactions?` +
+            `address=${address}&asset_id=${asset}&page_size=10&abs_page=${abs_page}`;
+        if (max_id !== -1) {
+            url += `&max_id=${max_id}`;
+        }
+        if (since_id !== -1) {
+            url += `&since_id=${since_id}`;
 
-            }
-            return this.http.get(url).toPromise().then((res) => {
-                this._address = address;
-                this._data = res;
-                this._data.page = page;
-                this.$data.next(res);
-            });
+        }
+        return this.http.get(url).pipe(map(res => {
+            this._address = address;
+            this._data = res;
+            this._data.page = page;
+            this.$data.next(res);
+        }));
     }
 }

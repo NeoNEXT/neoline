@@ -67,8 +67,7 @@ export class AssetState {
     }
 
     public balance(): Observable < Balance[] > {
-        return this._balance ?
-            this.$balance.pipe(startWith(this._balance), publish(), refCount()) : this.$balance.pipe(publish(), refCount());
+        return this.$balance.pipe(publish(), refCount());
     }
 
     public fetchBalance(address: string) {
@@ -87,13 +86,15 @@ export class AssetState {
     }
 
     public all(): Observable < PageData < Asset >> {
-        return this._asset ? this.$asset.pipe(startWith(this._asset), publish(), refCount()) : this.$asset.pipe(publish(), refCount());
+        return this.$asset.pipe(publish(), refCount());
     }
 
     public fetchAll(page: number) {
         return this.http.get(`${this.global.apiDomain}/v1/asset/getallassets?page_index=${page}`).toPromise().then((res) => {
-            this._asset = res;
-            this.$asset.next(res);
+            if (res !== this._asset) {
+                this._asset = res;
+                this.$asset.next(res);
+            }
         });
     }
 
