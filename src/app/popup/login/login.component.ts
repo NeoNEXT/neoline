@@ -66,7 +66,7 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
             this.router.navigateByUrl('/popup/home');
         }).catch((err) => {
             this.loading = false;
-            this.global.snackBarTip('loginFailed', err, false);
+            this.global.snackBarTip('loginFailed');
         });
     }
 
