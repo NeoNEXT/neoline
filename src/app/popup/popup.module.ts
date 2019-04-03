@@ -28,6 +28,7 @@ import { PopupAccountModule} from '@popup/account';
 import { PopupHomeModule } from '@popup/home';
 import { PopupLoginModule } from '@popup/login';
 import { PopupAssetsModule } from '@popup/assets';
+import { PopupNewWalletGuideModule } from './new-wallet-guide';
 
 import { PopupServiceModule } from '@popup/_services';
 import { PopupNotificationModule } from './notification';
@@ -65,7 +66,8 @@ import { PopupAuthorizationListModule } from './authorization-list/authorization
         PopupLoginModule,
         PopupAssetsModule,
         PopupServiceModule,
-        PopupAuthorizationListModule
+        PopupAuthorizationListModule,
+        PopupNewWalletGuideModule
     ],
     exports: [],
     entryComponents: [

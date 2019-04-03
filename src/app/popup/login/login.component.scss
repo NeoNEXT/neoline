@@ -62,7 +62,7 @@
     width: 291px;
     height: 40px;
     margin: auto;
-    margin-top: 107px;
+    margin-top: 50px;
     font-size: 15px;
     font-weight: 500;
     // color: map-get($neo-line-default, 50);
@@ -70,4 +70,20 @@
     box-shadow: 0 2px 4px 0 rgba(87,83,245,0.4);
     border-radius: 40px;
     display: block;
+}
+.popup-login-or {
+    color: #999999;
+    font-size: 13px;
+    font-weight: 400;
+    display: flex;
+    justify-content: center;
+    margin: 15px 0;
+}
+.popup-login-or-link {
+    font-size: 13px;
+    font-weight: 500;
+    color: #7a87a9;
+    display: flex;
+    justify-content: center;
+    cursor: pointer;
 }
