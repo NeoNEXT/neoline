@@ -3,9 +3,8 @@
     "version": "0.9.0",
     "scripts": {
         "ng": "ng",
-        "start": "ng serve",
-        "debug": "ng serve --host 0.0.0.0 --port 4200",
-        "build": "ng build --prod && yarn build:crx",
+        "debug": "ng serve --port 4200 --open true",
+        "build": "ng build --prod --optimization && yarn build:crx",
         "lint": "ng lint",
         "http": "http-server dist",
         "build:crx": "yarn webpack --config extension/webpack.config.js",
