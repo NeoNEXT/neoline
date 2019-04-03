@@ -1,6 +1,6 @@
 <section>
     <p class="title">{{ 'createYour' | translate | async}}</p>
     <p class="title">{{ 'firstDigitalIdentity' | translate | async}}</p>
-    <button mat-button class="create">{{ 'createNewWallet' | translate | async}}</button>
-    <button mat-button class="import">{{ 'importNewWallet' | translate | async}}</button>
+    <button mat-button class="create" routerLink="/popup/wallet/create">{{ 'createNewWallet' | translate | async}}</button>
+    <button mat-button class="import" routerLink="/popup/wallet/import">{{ 'importNewWallet' | translate | async}}</button>
 </section>
