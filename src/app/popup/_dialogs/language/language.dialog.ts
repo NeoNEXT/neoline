@@ -15,7 +15,6 @@ import {
 import {
     Router
 } from '@angular/router';
-import { RateObj } from '@/models/models';
 
 @Component({
     templateUrl: 'language.dialog.html',
@@ -23,7 +22,7 @@ import { RateObj } from '@/models/models';
 })
 export class PopupLanguageDialogComponent implements OnInit {
     public targetOption: string;
-    public rateObj: RateObj;
+    public rateCurrency: string;
 
     constructor(
         private dialogRef: MatDialogRef < PopupLanguageDialogComponent > ,
@@ -33,13 +32,17 @@ export class PopupLanguageDialogComponent implements OnInit {
         @Inject(MAT_DIALOG_DATA) public data: {
             optionGroup: [],
             currentOption: string,
-            type: string    // lang, currency, channel
+            type: string // lang, currency
         }
-    ) {
-    }
+    ) {}
 
     ngOnInit() {
         this.targetOption = this.data.currentOption;
+        if (this.data.type === 'currency') {
+            this.chromeSer.getRateCurrency().subscribe(rateCurrency => {
+                this.rateCurrency = rateCurrency;
+            });
+        }
     }
 
     public cancel() {
@@ -54,19 +57,10 @@ export class PopupLanguageDialogComponent implements OnInit {
             this.chromeSer.setLang(this.targetOption);
             this.global.snackBarTip('langSetSucc');
             location.href = `index.html#popup/setting`;
-        } else if (this.data.type === 'channel' || this.data.type === 'currency') {
-            this.chromeSer.getRateObj().subscribe(rateObj => {
-                this.rateObj = rateObj;
-                if (this.data.type === 'channel') {
-                    this.rateObj.currentChannel = this.targetOption;
-                    this.chromeSer.setRateObj(this.rateObj);
-                    this.dialogRef.close(this.targetOption);
-                } else if (this.data.type === 'currency') {
-                    this.rateObj.currentCurrency = this.targetOption;
-                    this.chromeSer.setRateObj(this.rateObj);
-                    this.dialogRef.close(this.targetOption);
-                }
-            });
+        } else if (this.data.type === 'currency') {
+            this.rateCurrency = this.targetOption;
+            this.chromeSer.setRateCurrency(this.rateCurrency);
+            this.dialogRef.close(this.targetOption);
         }
     }
 }

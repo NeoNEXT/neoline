@@ -19,7 +19,6 @@ import {
     PageData,
     Balance,
     Asset,
-    RateObj
 } from '@/models/models';
 import {
     MatDialog
@@ -45,9 +44,8 @@ export class AssetComponent implements OnInit, OnDestroy {
     public displayAssets: Balance[] = []; // 要显示的资产
     public watch: Balance[]; // 用户添加的资产
     public unSubBalance: Unsubscribable;
-    public rateCurrency: string;
     public rateSymbol = '';
-    public rateObj: RateObj;
+    public rateCurrency: string;
 
     constructor(
         private asset: AssetState,
@@ -61,8 +59,8 @@ export class AssetComponent implements OnInit, OnDestroy {
         // 获取余额大于 0 的资产
         this.address = this.neon.address;
         // this.address = 'AJ1mqgPnsrq9W7K94Y8SS1DM2bGUojCFwb';
-        this.chrome.getRateObj().subscribe(rateObj => {
-            this.rateObj = rateObj;
+        this.chrome.getRateCurrency().subscribe(rateCurrency => {
+            this.rateCurrency = rateCurrency;
             this.initPage();
         });
         this.asset.fetchBalance(this.address);
@@ -85,6 +83,7 @@ export class AssetComponent implements OnInit, OnDestroy {
                 this.displayAssets.push(r);
             });
             this.rateSymbol = this.rateSymbol.slice(0, -1);
+            this.getAssetRate();
             //  去重
             const newWatch = [];
             watching.forEach((w) => {
@@ -95,33 +94,32 @@ export class AssetComponent implements OnInit, OnDestroy {
             this.watch = newWatch;
             this.displayAssets.push(...newWatch);
             return res;
-        })))).subscribe(() => {
-            this.rateCurrency = this.rateObj.currentCurrency;
-            let query = {};
-            query['symbol'] = this.rateObj.currentCurrency;
-            // query['channel'] = this.rateObj.currentChannel;
-            query['coins'] = this.rateSymbol;
-            if (!this.rateSymbol) {
+        })))).subscribe(() => {});
+    }
+
+    // 获取资产汇率
+    public getAssetRate() {
+        if (!this.rateSymbol) {
+            return;
+        }
+        this.rateCurrency = this.rateCurrency;
+        let query = {};
+        query['symbol'] = this.rateCurrency;
+        query['coins'] = this.rateSymbol;
+        this.asset.getRate(query).subscribe(rateBalance => {
+            const tempRateObj = rateBalance.result;
+            if (JSON.stringify(tempRateObj) === '{}') {
                 return;
             }
-            this.asset.getRate(query).subscribe(rateBalance => {
-                let k = 0;
-                for (let i = 0; i < this.displayAssets.length; i++) {
-                    if (k >= rateBalance.length) {
-                        break;
-                    }
-                    for (let j = k; j < rateBalance.result.length; j++) {
-                        if (String(Object.keys(rateBalance.result[j])).toLowerCase() === this.displayAssets[i].symbol.toLowerCase()) {
-                            this.displayAssets[i].rateBalance =
-                                Number(Object.values(rateBalance.result[j])[0]) * this.displayAssets[i].balance;
-                            k = j + 1;
-                            break;
-                        }
-                    }
+            this.displayAssets.map(d => {
+                if (d.symbol.toLowerCase() in tempRateObj) {
+                    d.rateBalance = Number(tempRateObj[d.symbol]) * d.balance;
                 }
+                return d;
             });
         });
     }
+
     // 隐藏资产
     public delAsset(index: number) {
         this.dialog.open(PopupDelTokenDialogComponent).afterClosed().subscribe((confirm) => {

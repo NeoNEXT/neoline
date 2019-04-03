@@ -29,7 +29,6 @@ export class NotificationService {
         wrongAddress: 'Please enter a legal address',
         rejected: 'Rejected',
         rateCurrencySetSucc: 'Asset conversion target revised successfully!',
-        rateChannelSetSucc: 'Reference source modified successfully!'
     };
     CN = {
         close: '关闭',
@@ -56,7 +55,6 @@ export class NotificationService {
         wrongAddress: '请输入合法地址',
         rejected: '已拒绝',
         rateCurrencySetSucc: '资产兑换目标修改成功',
-        rateChannelSetSucc: '参考来源修改成功'
     };
     constructor(
         public chrome: ChromeService

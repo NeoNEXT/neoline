@@ -21,9 +21,6 @@ import {
     Router
 } from '@angular/router';
 import {
-    RateObj
-} from '@models/models';
-import {
     map
 } from 'rxjs/operators';
 @Component({
@@ -33,9 +30,8 @@ import {
 export class SettingDetailComponent implements OnInit {
     public lang = 'zh_CN';
     public viewPrivacy = false;
-    public rateObj: RateObj;
-    public rateChannels = [];
-    public rateCurrencys: [];
+    public rateCurrency: string;
+    public rateCurrencys: Array<string>;
     public rateTime: number;
     public authorizationList: object;
     public objectKeys = Object.keys;
@@ -49,7 +45,9 @@ export class SettingDetailComponent implements OnInit {
         private dialog: MatDialog,
         private transaction: TransactionState,
         private setting: SettingState,
-    ) { }
+    ) {
+        this.rateCurrencys = this.setting.rateCurrencys;
+    }
 
     ngOnInit(): void {
         this.chrome.getLang().subscribe((res) => {
@@ -58,18 +56,8 @@ export class SettingDetailComponent implements OnInit {
             this.global.log('get lang setting failed', err);
             this.lang = 'zh_CN';
         });
-        this.chrome.getRateObj().subscribe((rateObj) => {
-            this.rateObj = rateObj;
-            this.setting.getRateChannels().subscribe(res => {
-                const result = res.result;
-                this.rateTime = res.response_time;
-                Object.keys(result).forEach((key) => {
-                    this.rateChannels.push(key);
-                    if (key === this.rateObj.currentChannel) {
-                        this.rateCurrencys = result[key].symbol;
-                    }
-                });
-            });
+        this.chrome.getRateCurrency().subscribe((rateCurrency) => {
+            this.rateCurrency = rateCurrency;
         });
     }
     public save() {
@@ -90,9 +78,9 @@ export class SettingDetailComponent implements OnInit {
     }
 
     public changeRateCurrency(currency: string) {
-        if (this.rateObj.currentCurrency !== currency) {
-            this.rateObj.currentCurrency = currency;
-            this.chrome.setRateObj(this.rateObj);
+        if (this.rateCurrency !== currency) {
+            this.rateCurrency = currency;
+            this.chrome.setRateCurrency(this.rateCurrency);
             this.global.snackBarTip('rateCurrencySetSucc');
         }
     }

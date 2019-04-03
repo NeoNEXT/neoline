@@ -63,7 +63,7 @@
 <div class="popup-setting-menu setting-asset-rate" (click)="modifyRateCurrency()">
     <div class="current-currency">
         <span class="title">{{ 'assetRate' | translate | async}}</span>
-        <span class="value">{{ rateObj?.currentCurrency | uppercase}}</span>
+        <span class="value">{{ rateCurrency }}</span>
     </div>
     <p class="update-time">{{ 'updateTime' | translate | async}}{{rateTime * 1000 | date: 'M月d日 y年 HH:mm'}} 北京时间</p>
 </div>

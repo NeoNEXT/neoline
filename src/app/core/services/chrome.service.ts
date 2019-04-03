@@ -13,7 +13,6 @@ import {
 import {
     Balance,
     AuthorizationData,
-    RateObj
 } from '@/models/models';
 
 declare var chrome: any;
@@ -438,40 +437,34 @@ export class ChromeService {
         }));
     }
 
-    public setRateObj(rateObj: RateObj) {
+    public setRateCurrency(rateCurrency: string) {
         if (!this.check) {
-            localStorage.setItem('rateObj', JSON.stringify(rateObj));
+            localStorage.setItem('rateCurrency', rateCurrency);
             return;
         }
         try {
             this.crx.setStorage({
-                rateObj: rateObj
+                rateCurrency: rateCurrency
             });
         } catch (e) {
-            console.log('set account failed', e);
+            console.log('set current rate currency failed', e);
         }
     }
 
-    public getRateObj(): Observable < RateObj > {
-        const tempRate = {
-            'currentChannel': 'bitz',
-            'currentCurrency': 'cny'
-        };
+    public getRateCurrency(): Observable < string > {
+        const defaultCurrency = 'CNY';
         if (!this.check) {
             try {
-                if (localStorage.getItem('rateObj') == null) {
-                    return of(tempRate);
-                }
-                return of(JSON.parse(localStorage.getItem('rateObj')));
+                return of(localStorage.getItem('rateCurrency') || defaultCurrency);
             } catch (e) {
                 return throwError(('failed'));
             }
         }
         return from(new Promise((resolve, reject) => {
             try {
-                this.crx.getStorage('rateObj', (res) => {
+                this.crx.getStorage('rateCurrency', (res) => {
                     if (typeof res === 'undefined') {
-                        res = tempRate;
+                        res = defaultCurrency;
                     }
                     resolve(res);
                 });

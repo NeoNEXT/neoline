@@ -15,7 +15,6 @@ import {
     Balance,
     PageData,
     Transaction,
-    RateObj
 } from 'src/models/models';
 import {
     ActivatedRoute,
@@ -34,7 +33,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     private requesting = false;
     public loading = true;
     public inTransaction: Array < Transaction > ;
-    public rateObj: RateObj;
+    public rateCurrency: string;
 
     imageUrl: any;
 
@@ -55,8 +54,8 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         this.transaction.data().subscribe((res) => {
             this.txPage = res;
         });
-        this.chrome.getRateObj().subscribe(rateObj => {
-            this.rateObj = rateObj;
+        this.chrome.getRateCurrency().subscribe(rateCurrency => {
+            this.rateCurrency = rateCurrency;
             this.initPage();
         });
         this.getInTransactions();
@@ -76,6 +75,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         this.aRoute.params.subscribe((params) => {
             this.txPage = undefined;
             this.asset.detail(params.id).subscribe((res: Balance) => {
+                res.balance = Number(res.balance);
                 this.balance = res;
                 this.assetId = params.id;
                 this.transaction.fetch(this.address, 1, params.id, true);
@@ -98,13 +98,12 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 // 获取资产汇率
                 if (this.balance !== undefined && this.balance.balance && this.balance.balance > 0) {
                     let query = {};
-                    query['symbol'] = this.rateObj.currentCurrency;
-                    // query['channel'] = this.rateObj.currentChannel;
+                    query['symbol'] = this.rateCurrency;
                     query['coins'] = this.balance.symbol;
                     this.asset.getRate(query).subscribe(rateBalance => {
-                        if (rateBalance !== undefined && rateBalance.result.length > 0) {
+                        if (rateBalance !== undefined && JSON.stringify(rateBalance.result) !== '{}') {
                             this.balance.rateBalance =
-                                Number(Object.values(rateBalance.result[0])[0]) * this.balance.balance;
+                                Number(rateBalance.result[this.balance.symbol]) * this.balance.balance;
                         }
                     });
                 } else {

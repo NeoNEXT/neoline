@@ -1,7 +1,6 @@
 <mat-radio-group [(ngModel)]="targetOption" (change)="select()" class="popup-language">
     <mat-radio-button class="popup-language-item" color="primary" *ngFor="let item of data.optionGroup" [value]="item">
         <span *ngIf="data.type === 'lang'">{{item | languageName}}</span>
-        <span *ngIf="data.type === 'currency'">{{item | uppercase}}</span>
-        <span *ngIf="data.type === 'channel'">{{item}}</span>
+        <span *ngIf="data.type === 'currency'">{{item}}</span>
     </mat-radio-button>
 </mat-radio-group>

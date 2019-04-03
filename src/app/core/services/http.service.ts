@@ -28,7 +28,7 @@ export class HttpService {
         app_version: '1.2.2',
         network: 'main'
     };
-    private completeResUrl = ['/v1/settings/getratechannels', '/v1/asset/exchange_rate'];
+    private completeResUrl = ['/v1/asset/exchange_rate'];
     constructor(
         private http: HttpClient,
         private chrome: ChromeService,

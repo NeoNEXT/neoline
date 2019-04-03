@@ -45,11 +45,6 @@ export interface AuthorizationData {
     title: string
 }
 
-export interface RateObj {
-    currentCurrency: string,
-    currentChannel: string,
-}
-
 export const NEO = '0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b';
 export const GAS = '0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7';
 export const EDS = '81c089ab996fc89c468a26c0a88d23ae2f34b5c0';

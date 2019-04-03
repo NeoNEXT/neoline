@@ -12,7 +12,6 @@ import {
 import {
     Balance,
     NEO,
-    RateObj
 } from '@models/models';
 
 import {
@@ -48,9 +47,8 @@ export class PopupSettingComponent implements OnInit {
     public wallet: Wallet;
     public balance: Balance;
     public lang: string;
-    public rateObj: RateObj;
-    public rateChannels = [];
-    public rateCurrencys: [];
+    public rateCurrency: string;
+    public rateCurrencys: Array<string>;
     public rateTime: number;
 
     constructor(
@@ -65,6 +63,7 @@ export class PopupSettingComponent implements OnInit {
     ) {
         this.walletArr = this.neon.walletArr;
         this.wallet = this.neon.wallet;
+        this.rateCurrencys = this.setting.rateCurrencys;
     }
 
     ngOnInit(): void {
@@ -78,18 +77,8 @@ export class PopupSettingComponent implements OnInit {
             this.global.log('get lang setting failed', err);
             this.lang = '';
         });
-        this.chrome.getRateObj().subscribe((rateObj) => {
-            this.rateObj = rateObj;
-            this.setting.getRateChannels().subscribe(res => {
-                const result = res.result;
-                this.rateTime = res.response_time;
-                Object.keys(result).forEach((key) => {
-                    this.rateChannels.push(key);
-                    if (key === this.rateObj.currentChannel) {
-                        this.rateCurrencys = result[key].symbol;
-                    }
-                });
-            });
+        this.chrome.getRateCurrency().subscribe((rateCurrency) => {
+            this.rateCurrency = rateCurrency;
         });
     }
 
@@ -131,7 +120,7 @@ export class PopupSettingComponent implements OnInit {
                 PopupLanguageDialogComponent, {
                     width: '170px',
                     data: {
-                        currentOption: this.rateObj.currentCurrency,
+                        currentOption: this.rateCurrency,
                         optionGroup: this.rateCurrencys,
                         type: 'currency'
                     }
@@ -141,7 +130,7 @@ export class PopupSettingComponent implements OnInit {
             if (!currency) {
                 return;
             }
-            this.rateObj.currentCurrency = currency;
+            this.rateCurrency = currency;
             this.global.snackBarTip('rateCurrencySetSucc');
         });
     }

@@ -24,12 +24,12 @@
         </div>
         <div>
             <button mat-stroked-button class="asset-btn" [matMenuTriggerFor]="assetMenu">
-                {{ rateObj?.currentCurrency | uppercase }}
+                {{ rateCurrency }}
                 <span class="asset-icon"></span>
             </button>
             <mat-menu #assetMenu="matMenu">
                 <button (click)="changeRateCurrency(currency)" *ngFor="let currency of rateCurrencys" class="menu-btn"
-                    mat-menu-item>{{currency | uppercase}}</button>
+                    mat-menu-item>{{currency}}</button>
             </mat-menu>
         </div>
     </div>

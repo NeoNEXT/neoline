@@ -21,7 +21,6 @@ import {
     PageData,
     Transaction,
     NEO,
-    RateObj
 } from '@models/models';
 
 import {
@@ -46,7 +45,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     public isLoading: boolean;
     public needLoadWhenSymbolSwitch: boolean;
     public inTransaction: Array < Transaction > ;
-    public rateObj: RateObj;
+    public rateCurrency: string;
 
     public unSubBalance: Unsubscribable;
 
@@ -74,8 +73,8 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.asset.fetchBalance(this.neon.address);
-        this.chrome.getRateObj().subscribe(rateObj => {
-            this.rateObj = rateObj;
+        this.chrome.getRateCurrency().subscribe(rateCurrency => {
+            this.rateCurrency = rateCurrency;
             this.initPage();
         });
         this.unSubTxStatus = this.txState.data().subscribe((res: any) => {
@@ -149,13 +148,12 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                 // 获取资产汇率
                 if (this.balance.balance && this.balance.balance > 0) {
                     let query = {};
-                    query['symbol'] = this.rateObj.currentCurrency;
-                    // query['channel'] = this.rateObj.currentChannel;
+                    query['symbol'] = this.rateCurrency;
                     query['coins'] = this.balance.symbol;
                     this.unSubRate = this.asset.getRate(query).subscribe(rateBalance => {
-                        if (rateBalance.result.length > 0) {
+                        if (rateBalance !== undefined && JSON.stringify(rateBalance.result) !== '{}') {
                             this.balance.rateBalance =
-                                Number(Object.values(rateBalance.result[0])[0]) * this.balance.balance;
+                                Number(rateBalance.result[this.balance.symbol]) * this.balance.balance;
                         }
                     });
                 } else {
