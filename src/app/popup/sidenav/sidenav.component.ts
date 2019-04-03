@@ -32,6 +32,8 @@ export class PopupSidenavComponent implements OnInit {
     public wallet: any;
     public balance: Balance;
     public address: string;
+    public neoSymbol = 'NEO';
+    public neoBalance = 0;
 
     constructor(
         private router: Router,
@@ -47,6 +49,8 @@ export class PopupSidenavComponent implements OnInit {
         this.address = this.neon.address;
         this.asset.detail(NEO).subscribe((res: Balance) => {
             this.balance = res;
+            this.neoBalance = res.balance;
+            this.neoSymbol = res.symbol;
         });
 
         const url = this.router.url;

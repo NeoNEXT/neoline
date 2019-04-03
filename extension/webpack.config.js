@@ -13,7 +13,7 @@ module.exports = [{
         libraryTarget: 'window',
         library: 'NEOLineBackground'
     },
-    devtool: 'source-map',
+    devtool: false,
     resolve: {
         extensions: [".ts", ".js"]
     },
@@ -45,7 +45,7 @@ module.exports = [{
         libraryTarget: 'window',
         library: 'NEOLine'
     },
-    devtool: 'source-map',
+    devtool: false,
     resolve: {
         extensions: [".ts", ".js"]
     },
