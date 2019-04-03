@@ -1,6 +1,6 @@
 <section>
-    <p class="title">Create Your</p>
-    <p class="title">First Digital Identity</p>
-    <button mat-button routerLink="/popup/wallet/create" class="create">创建新账户</button>
-    <button mat-button routerLink="/popup/wallet/import" class="import">导入已有账户</button>
+    <p class="title">{{ 'createYour' | translate | async}}</p>
+    <p class="title">{{ 'firstDigitalIdentity' | translate | async}}</p>
+    <button mat-button class="create">{{ 'createNewWallet' | translate | async}}</button>
+    <button mat-button class="import">{{ 'importNewWallet' | translate | async}}</button>
 </section>

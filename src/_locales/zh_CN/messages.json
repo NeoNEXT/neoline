@@ -393,8 +393,8 @@
     "from": {
         "message": "来自"
     },
-    "assetRate": {
-        "message": "资产兑换"
+    "currencyUnit": {
+        "message": "货币单位"
     },
     "privacyData": {
         "message": "审批数据"
@@ -410,5 +410,20 @@
     },
     "updateTime": {
         "message": "更新时间"
+    },
+    "importNewWallet": {
+        "message": "导入已有钱包"
+    },
+    "createNewWallet": {
+        "message": "创建新钱包"
+    },
+    "or": {
+        "message": "或者"
+    },
+    "firstDigitalIdentity": {
+        "message": "第一个数字身份"
+    },
+    "createYour": {
+        "message": "创建您的"
     }
 }

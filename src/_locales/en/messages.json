@@ -393,8 +393,8 @@
     "from": {
         "message": "From"
     },
-    "assetRate": {
-        "message": "Asset Conversion"
+    "currencyUnit": {
+        "message": "Currency Unit"
     },
     "privacyData": {
         "message": "Privacy data"
@@ -410,5 +410,20 @@
     },
     "updateTime": {
         "message": "Update time"
+    },
+    "importNewWallet": {
+        "message": "Import an existing wallet"
+    },
+    "createNewWallet": {
+        "message": "Create a new wallet"
+    },
+    "or": {
+        "message": "OR"
+    },
+    "firstDigitalIdentity": {
+        "message": "First Digital Identity"
+    },
+    "createYour": {
+        "message": "Create Your"
     }
 }
