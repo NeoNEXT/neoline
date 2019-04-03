@@ -39,6 +39,7 @@ export class AssetState {
     private _asset: PageData < Asset > ;
     private $asset: Subject < PageData < Asset >> = new Subject();
     public assetFile: Map < string, {} > = new Map();
+    public defaultAssetSrc = '/assets/images/default_asset_logo.png';
 
     constructor(
         private http: HttpService,

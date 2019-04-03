@@ -47,7 +47,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         private txState: TransactionState,
         private chrome: ChromeService,
         private http: HttpService,
-    ) { }
+    ) {}
 
     ngOnInit(): void {
         this.address = this.neon.address;
@@ -92,7 +92,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                             this.imageUrl = src;
                         });
                     } else if (assetRes && assetRes['status'] === 404) {
-                        this.imageUrl = '';
+                        this.imageUrl = this.asset.defaultAssetSrc;
                     }
                 });
                 // 获取资产汇率

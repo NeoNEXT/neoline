@@ -127,9 +127,9 @@ export class AssetManageComponent implements OnInit, OnDestroy {
                 });
             } else if (assetRes && assetRes['status'] === 404) {
                 if (type === 'all') {
-                    this.allAssets.items[index].avatar = '';
+                    this.allAssets.items[index].avatar = this.asset.defaultAssetSrc;
                 } else if (type === 'search') {
-                    this.displayAssets[index].avatar = '';
+                    this.displayAssets[index].avatar = this.asset.defaultAssetSrc;
                 }
             }
         });

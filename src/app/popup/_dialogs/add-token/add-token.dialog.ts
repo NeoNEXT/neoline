@@ -43,7 +43,7 @@ export class PopupAddTokenDialogComponent implements OnInit {
                     this.imageUrl = src;
                 });
             } else if (assetRes && assetRes['status'] === 404) {
-                this.imageUrl = '';
+                this.imageUrl = this.assetState.defaultAssetSrc;
             }
         });
     }

@@ -93,21 +93,19 @@
     .popup-asset-bottom {
         height: 40px;
         width: 100%;
+        display: flex;
+        justify-content: space-between;
 
         .left {
-            width: 50%;
             display: inline-flex;
             align-items: center;
             margin-right: 5px;
             padding-left: 10px;
+            overflow: hidden;
 
             .amount {
                 font-size: 17px;
                 color: map-get($colors, 333333);
-                overflow: auto;
-                min-width: 15px;
-                text-overflow: ellipsis;
-                white-space: nowrap;
             }
 
             .type {
@@ -118,17 +116,11 @@
         }
 
         .right {
-            width: 50%;
             display: inline-flex;
             align-items: center;
-            justify-content: flex-end;
             overflow: hidden;
-
-            span {
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
+            text-overflow: ellipsis;
+            white-space: nowrap;
         }
 
         .type,

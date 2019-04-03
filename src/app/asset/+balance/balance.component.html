@@ -10,14 +10,14 @@
             <button mat-raised-button (click)="delAsset()">{{ 'hidden' | translate | async}}</button>
         </div>
     </div>
-    <div class="info flex">
-        <div class="info-left flex-1">
+    <div class="info">
+        <div class="info-left">
             <span class="balance">{{asset?.balance || '0'}}</span>&nbsp;
-            <span class="symbol">{{asset?.symbol}}</span>
+            <!-- <span class="symbol">{{asset?.symbol}}</span> -->
         </div>
-        <div class="info-right flex-1" *ngIf="asset?.rateBalance || asset?.rateBalance === 0">
+        <div class="info-right" *ngIf="asset?.rateBalance || asset?.rateBalance === 0">
             <span class="balance">{{asset?.rateBalance | number: '1.0-2'}}</span>&nbsp;
-            <span class="symbol">{{rateCurrency | uppercase}}</span>
+            <span class="symbol">{{rateCurrency}}</span>
         </div>
     </div>
 </div>
