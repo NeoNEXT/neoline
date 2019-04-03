@@ -1,14 +1,24 @@
-import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import {
+    NgModule
+} from '@angular/core';
+import {
+    CommonModule
+} from '@angular/common';
 
-import { PopupLoginComponent } from '@popup/login/login.component';
-import { PopupNewWalletGuideRoutingModule } from '@popup/new-wallet-guide/new-wallet-guide.route';
+import {
+    PopupNewWalletGuideComponent
+} from '@popup/new-wallet-guide/new-wallet-guide.component';
+import {
+    PopupNewWalletGuideRoutingModule
+} from '@popup/new-wallet-guide/new-wallet-guide.route';
 
-import { ShareModule } from '@app/share';
+import {
+    ShareModule
+} from '@app/share';
 
 @NgModule({
     declarations: [
-        PopupLoginComponent
+        PopupNewWalletGuideComponent
     ],
     imports: [
         CommonModule,
