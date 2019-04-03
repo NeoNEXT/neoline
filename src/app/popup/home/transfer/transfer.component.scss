@@ -13,7 +13,7 @@
     button:first-child {
         background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
         box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
-        border-radius: 17.5px;
+        border-radius: 17px;
         color: map-get($neo-line-default, 50);
         font-weight: 500;
         margin-right: 25px;
@@ -21,7 +21,7 @@
 
     button:last-child {
         box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
-        border-radius: 17.5px;
+        border-radius: 17px;
         color: map-get($neo-line-default, 500);
         font-weight: 500;
     }

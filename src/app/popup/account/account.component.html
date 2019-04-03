@@ -1,8 +1,10 @@
 <div class="popup-account-header">
-    <!-- <div class="back-btn" routerLink="/popup/setting" *ngIf="address != ''"></div> -->
     <div class="popup-account-option">
-        <div (click)="updateName()"></div>
-        <div (click)="qrcode()"></div>
+        <span class="back-btn" routerLink="/popup/setting" *ngIf="address != ''"></span>
+        <div class="option-right">
+            <span (click)="updateName()"></span>
+            <span (click)="qrcode()"></span>
+        </div>
     </div>
 
     <div class="popup-account-logo">

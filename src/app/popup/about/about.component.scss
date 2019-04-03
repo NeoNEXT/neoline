@@ -1,8 +1,8 @@
 @import 'src/styles/popup-default';
 
 .popup-about-logo1 {
-    width: 109.5px;
-    height: 71.5px;
+    width: 109px;
+    height: 71px;
     margin: auto;
     margin-top: 15px;
     @include bg($img-logo);
@@ -69,7 +69,7 @@
     @mixin site-contact($bgurl, $bgurl-hover) {
         width: 100%;
         margin-bottom: 5px;
-        height: 96.5px;
+        height: 96px;
         @include bg($bgurl);
         background-size: cover;
 

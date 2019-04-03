@@ -25,7 +25,7 @@
         div:first-child {
             width: 10px;
             height: 10px;
-            margin-top: 7.9px;
+            margin-top: 8px;
             margin-right: 5px;
             @include bg($img-filter);
         }
@@ -38,22 +38,22 @@
     }
 
     .popup-home-filter-option {
-        width: 97.5px;
+        width: 97px;
         height: 25px;
         float: right;
         margin-right: 15px;
 
         button {
-            width: 97.5px;
+            width: 97px;
             height: 25px;
             line-height: 25px;
             border: 1px solid map-get($colors, e5e5e5);
-            border-radius: 12.5px;
+            border-radius: 12px;
             padding: 0;
 
             span {
                 display: inline-block;
-                width: 5.5px;
+                width: 6px;
                 height: 3px;
                 @include bg($img-dropdown);
             }

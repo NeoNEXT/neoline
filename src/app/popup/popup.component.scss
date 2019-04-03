@@ -21,9 +21,6 @@
             height: 34px;
             border-radius: 50%;
             overflow: hidden;
-            // width: 22.5px;
-            // height: 18px;
-            // @include bg($img-slide-menu);
             &.is-login {
                 display: none;
             }
@@ -40,17 +37,12 @@
         .popup-nav-logo {
             flex: auto;
             .popup-nav-logo-img {
-                // width: 84.5px;
                 height: 25px;
                 display: inline-block;
                 vertical-align: middle;
                 &.is-login {
                     margin-left: 14px;
                 }
-                // margin-left: 106.75px;
-                // @include bg($img-logo-title);
-                // margin-left: 96.75px;
-                // @include bg($img-logo-title);
             }
 
             .popup-nav-logo-img-logout {
@@ -59,14 +51,14 @@
         }
 
         .popup-nav-network {
-            width: 107.5px;
+            width: 107px;
             height: 25px;
             line-height: 25px;
-            border-radius: 12.5px;
+            border-radius: 12px;
             font-size: 12px;
 
             .popup-nav-network-icon {
-                width: 5.5px;
+                width: 5px;
                 height: 3px;
                 display: inline-block;
             }
@@ -100,8 +92,8 @@
     height: auto;
     .popup-nav-logo-img {
         @include bg($img-logo-title);
-        margin-left: 106.75px;
-        width: 84.5px;
+        margin-left: 107px;
+        width: 84px;
     }
 
     .popup-nav-network {
@@ -131,7 +123,7 @@
         .popup-nav-logo-title-img {
             @include bg($img-about-logo);
             margin-left: 0;
-            width: 84.5px;
+            width: 84px;
         }
 
         .popup-nav-network {

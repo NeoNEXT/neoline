@@ -7,7 +7,7 @@
     height: 25px;
     line-height: 25px;
     text-align: center;
-    border-radius: 12.5px;
+    border-radius: 12px;
     font-size: 14px;
     margin-right: 10px;
     padding: 0 5px;
@@ -24,7 +24,7 @@
 
 .popup-home-top {
     width: 100%;
-    height: 39.5px;
+    height: 39px;
     overflow: hidden;
     border-bottom: 1px solid map-get($colors, f2f2f2);
     background-color: map-get($neo-line-default, 50);
@@ -86,9 +86,9 @@
         width: 30px;
         height: 30px;
         float: left;
-        margin-top: 4.75px;
+        margin-top: 5px;
         @include bg($img-down-arrow);
-        background-size: 12.5px 12.5px;
+        background-size: 12px 12px;
 
         transition: transform 1s cubic-bezier(0, 0.95, 0.83, 1);
 
@@ -103,7 +103,7 @@
     }
 
     .popup-home-top-option {
-        margin-top: 7.25px;
+        margin-top: 7px;
         margin-right: 15px;
         float: right;
         width: 30px;
