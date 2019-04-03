@@ -43,7 +43,7 @@ export class TransactionState {
         this._data = null;
     }
     public data(): Observable < PageData < Transaction >> {
-        return this.$data.pipe(publish(), refCount());
+        return this._data ? this.$data.pipe(startWith(this._data), publish(), refCount()) : this.$data.pipe(publish(), refCount());
     }
     public fetch(address: string, page: number, asset: string,
         max_id: number = -1, since_id: number = -1, abs_page: number = 1): Observable < any > {

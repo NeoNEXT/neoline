@@ -67,7 +67,8 @@ export class AssetState {
     }
 
     public balance(): Observable < Balance[] > {
-        return this.$balance.pipe(publish(), refCount());
+        return this._balance ? this.$balance.pipe(startWith(this._balance), publish(), refCount())
+            : this.$balance.pipe(publish(), refCount());
     }
 
     public fetchBalance(address: string) {
@@ -86,7 +87,7 @@ export class AssetState {
     }
 
     public all(): Observable < PageData < Asset >> {
-        return this.$asset.pipe(publish(), refCount());
+        return this._asset ? this.$asset.pipe(startWith(this._asset), publish(), refCount()) : this.$asset.pipe(publish(), refCount());
     }
 
     public fetchAll(page: number) {
