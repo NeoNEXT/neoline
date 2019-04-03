@@ -40,7 +40,7 @@ export class TransferExportComponent implements OnInit {
             return;
         }
         if (!this.pwd || !this.pwd.length) {
-            this.global.snackBarTip('checkInput', '', false);
+            this.global.snackBarTip('checkInput');
             return;
         }
         this.loading = true;
@@ -50,7 +50,7 @@ export class TransferExportComponent implements OnInit {
             this.wif = res.WIF;
         }).catch((err) => {
             this.loading = false;
-            this.global.snackBarTip('verifyFailed', err, false);
+            this.global.snackBarTip('verifyFailed', err);
         });
     }
     public close() {

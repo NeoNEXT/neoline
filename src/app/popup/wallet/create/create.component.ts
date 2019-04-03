@@ -85,7 +85,7 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
                 },
                 (err: any) => {
                     this.global.log('create wallet faild', err);
-                    this.global.snackBarTip('walletCreateFailed', '', false);
+                    this.global.snackBarTip('walletCreateFailed');
                     this.loading = false;
                 });
     }

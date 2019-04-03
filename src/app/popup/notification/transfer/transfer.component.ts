@@ -104,7 +104,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                     });
                 }, (err) => {
                     this.creating = false;
-                    this.global.snackBarTip('wentWrong', '', false);
+                    this.global.snackBarTip('wentWrong');
                 });
             });
         });
@@ -121,11 +121,11 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             return;
         }
         if (this.balance.balance === undefined || this.balance.balance <= 0) {
-            this.global.snackBarTip('balanceLack', '', false);
+            this.global.snackBarTip('balanceLack');
             return;
         }
         if (parseFloat(this.balance.balance.toString()) < parseFloat(this.amount.toString()) || this.amount === 0) {
-            this.global.snackBarTip('balanceLack', '', false);
+            this.global.snackBarTip('balanceLack');
             return;
         }
         this.creating = true;
@@ -154,7 +154,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.loading = false;
             this.loadingMsg = '';
             this.creating = false;
-            this.global.snackBarTip('verifyFailed', err, false);
+            this.global.snackBarTip('verifyFailed', err);
             this.dialog.open(PwdDialog, {
                 disableClose: true
             }).afterClosed().subscribe((pwdText) => {
@@ -202,7 +202,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                 data: 'rpcWrond',
                 target: 'transferRes'
             });
-            this.global.snackBarTip('transferFailed', err, false);
+            this.global.snackBarTip('transferFailed', err);
         });
     }
 

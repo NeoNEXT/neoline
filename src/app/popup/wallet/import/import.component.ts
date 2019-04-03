@@ -117,7 +117,7 @@ export class PopupWalletImportComponent implements OnInit, AfterViewInit {
                     },
                     (err: any) => {
                         this.global.log('import wallet faild', err);
-                        this.global.snackBarTip('walletImportFailed', '', false);
+                        this.global.snackBarTip('walletImportFailed');
                         this.loading = false;
                     });
         }

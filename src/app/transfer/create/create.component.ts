@@ -88,19 +88,19 @@ export class TransferCreateomponent implements OnInit {
             return;
         }
         if (!this.toAddress || !this.toAddress.length) {
-            this.global.snackBarTip('checkInput', '', false);
+            this.global.snackBarTip('checkInput');
             return;
         }
         if (wallet.isAddress(this.toAddress) === false) {
-            this.global.snackBarTip('wrongAddress', '', false);
+            this.global.snackBarTip('wrongAddress');
             return;
         }
         if (this.balance.balance === undefined || this.balance.balance <= 0) {
-            this.global.snackBarTip('balanceLack', '', false);
+            this.global.snackBarTip('balanceLack');
             return;
         }
         if (parseFloat(this.balance.balance.toString()) < parseFloat(this.amount.toString())) {
-            this.global.snackBarTip('balanceLack', '', false);
+            this.global.snackBarTip('balanceLack');
             return;
         }
         this.creating = true;
@@ -116,7 +116,7 @@ export class TransferCreateomponent implements OnInit {
             });
         }, (err) => {
             this.creating = false;
-            this.global.snackBarTip('wentWrong', err, false);
+            this.global.snackBarTip('wentWrong', err);
         });
     }
 
@@ -136,7 +136,7 @@ export class TransferCreateomponent implements OnInit {
         }).catch((err) => {
             console.log(tx, err);
             this.creating = false;
-            this.global.snackBarTip('signFailed', err, false);
+            this.global.snackBarTip('signFailed', err);
         });
     }
     private resolveSend(tx: Transaction) {
@@ -164,7 +164,7 @@ export class TransferCreateomponent implements OnInit {
             }]);
         }, err => {
             this.creating = false;
-            this.global.snackBarTip('transferFailed', err, false);
+            this.global.snackBarTip('transferFailed', err);
         });
     }
 }

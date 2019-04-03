@@ -45,7 +45,7 @@ export class PopupNameDialogComponent implements OnInit {
                 },
                 (err: any) => {
                     this.global.log('update wallet name faild', err);
-                    this.global.snackBarTip('nameModifyFailed', '', false);
+                    this.global.snackBarTip('nameModifyFailed');
                 });
     }
 }
