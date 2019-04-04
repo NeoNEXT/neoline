@@ -16,7 +16,7 @@ const routes: Routes = [
             {
                 path: 'wallet',
                 component: PopupWalletComponent,
-                canActivate: [ PopupWalletGuard ],
+                // canActivate: [ PopupWalletGuard ],
                 children: [
                     { path: '', component: PopupWalletCreateComponent },
                     { path: 'create', component: PopupWalletCreateComponent },
