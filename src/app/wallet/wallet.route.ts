@@ -13,8 +13,9 @@ const routes: Routes = [
         canActivate: [ WalletGuard ],
         children: [
             { path: '', redirectTo: 'create', pathMatch: 'full' },
+            { path: 'import', redirectTo: 'import/PrivateKey', pathMatch: 'full' },
             { path: 'create', component: WalletCreateComponent },
-            { path: 'import', component: WalletImportComponent }
+            { path: 'import/:type', component: WalletImportComponent }
         ],
     }
 ];

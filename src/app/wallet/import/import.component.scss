@@ -21,8 +21,9 @@ mat-spinner {
     display: inline-block;
 }
 p.title {
-    font-size: 48px;
+    font-size: 30px;
     font-weight: 600;
+    margin-top: 30px;
     color: #333333;
     text-align: center;
 }
@@ -60,6 +61,24 @@ button {
         @include bg($img-hide-pwd);
     }
 }
+
+.choose-nep2-btn {
+    margin-bottom: 12px;
+}
+
+.choose-nep2-input {
+    position: absolute;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    /* background: red; */
+    opacity: 0;
+}
+.wallet-name-box {
+    text-align: center;
+    font-size: 14px;
+}
+
 @media screen and (max-width: 1200px) {
     form {
         margin-top: $space*2;

@@ -97,7 +97,7 @@
     </form>
 
     <button class="popup-wallet-body-submit" mat-raised-button color="primary"
-        [disabled]="isInit || walletForm.invalid || loading || isWIF === false || confirmPassword.value != password.value"
+        [disabled]="isInit || walletForm.invalid || loading  || confirmPassword.value != password.value"
         (click)="navIndex==0 ? submit() : submitEncrypted()">
         <ng-container *ngIf="!loading">{{ 'import' | translate | async }}</ng-container>
         <ng-container *ngIf="loading">{{ 'importing' | translate | async }}</ng-container>
@@ -113,7 +113,7 @@
     <p class="popup-wallet-body-tip"> {{ 'welcomeImport' | translate | async }}
     </p>
     <button class="popup-wallet-body-submit" *ngIf="nep2Json == null" mat-raised-button color="primary">
-        选择nep2
+        {{ 'chooseNep2File' | translate | async }}
         <input class="choose-nep2-input" (change)="onFileSelected($event)" type="file">
     </button>
     <div class="wallet-name-box">
@@ -166,7 +166,7 @@
         <ng-container *ngIf="!loading">{{ 'import' | translate | async }}</ng-container>
         <ng-container *ngIf="loading">{{ 'importing' | translate | async }}</ng-container>
     </button>
-    <button class="popup-wallet-body-submit" mat-raised-button color="warn" [disabled]="" (click)="clearNep2()">
-        重置
+    <button class="popup-wallet-body-submit" mat-raised-button color="warn" [disabled]="" (click)="init()">
+        {{ 'reset' | translate | async }}
     </button>
 </div>

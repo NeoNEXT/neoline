@@ -306,6 +306,9 @@
     "reset": {
         "message": "重置"
     },
+    "chooseNep2File": {
+        "message": "选择 Nep2 文件"
+    },
     "welcomeBack": {
         "message": "欢迎回来"
     },

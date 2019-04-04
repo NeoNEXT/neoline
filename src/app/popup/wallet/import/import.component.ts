@@ -56,6 +56,7 @@ export class PopupWalletImportComponent implements OnInit, AfterViewInit {
         private neon: NeonService,
         private router: Router,
     ) {
+        this.isInit = true;
         this.init();
     }
 
@@ -74,7 +75,6 @@ export class PopupWalletImportComponent implements OnInit, AfterViewInit {
         this.hidePwd = true;
         this.hideWIF = true;
         this.hideEncryptedKey = true;
-        this.isInit = true;
         this.hideConfirmPwd = true;
         this.walletImport = new WalletImport();
         this.nep2File = null;
@@ -202,12 +202,6 @@ export class PopupWalletImportComponent implements OnInit, AfterViewInit {
                 console.log('error reading file');
             };
         }
-    }
-
-    public clearNep2() {
-        this.nep2Json = null;
-        this.nep2File = null;
-        this.nep2Name = '';
     }
 
     private jumpRouter() {
