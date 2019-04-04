@@ -6,12 +6,14 @@ import { TransferCreateomponent } from './create/create.component';
 import { TransferResultComponent } from './result/result.component';
 import { TransferReceiveComponent } from './receive/receive.component';
 import { TransferExportComponent } from './export/export.component';
+import { WalletGuard } from '@app/core';
 
 const routes: Routes = [
     {
         path: 'transfer',
         component: TransferComponent,
         outlet: 'transfer',
+        // canActivate: [WalletGuard],
         children: [
             { path: 'create/:id', component: TransferCreateomponent },
             { path: 'result', component: TransferResultComponent },
