@@ -4,12 +4,13 @@ import { NgModule } from '@angular/core';
 import { WalletComponent } from './wallet.component';
 import { WalletImportComponent } from './import/import.component';
 import { WalletCreateComponent } from './create/create.component';
-import { OpenedWalletGuard } from '@app/core';
+import { WalletGuard } from '@app/core';
 
 const routes: Routes = [
     {
         path: 'wallet',
         component: WalletComponent,
+        canActivate: [ WalletGuard ],
         children: [
             { path: '', redirectTo: 'create', pathMatch: 'full' },
             { path: 'create', component: WalletCreateComponent },
