@@ -20,7 +20,7 @@ export class WalletGuard implements CanActivate {
     ): Observable<boolean> | Promise<boolean> | boolean {
         return new Promise(resolve => {
             this.chrome.getWallet().subscribe((res: any) => {
-                if (res === undefined || res === {} || res === null) {
+                if (res === undefined || JSON.stringify(res) === '{}' || res === null) {
                     this.router.navigateByUrl('/wallet');
                 } else {
                     this.chrome.getLogin().subscribe((shoudLogin) => {
@@ -68,7 +68,7 @@ export class PopupWalletGuard implements CanActivate {
     ): Observable<boolean> | Promise<boolean> | boolean {
         return new Promise(resolve => {
             this.chrome.getWallet().subscribe((res: any) => {
-                if (res === undefined || res === {} || res === null) {
+                if (res === undefined || JSON.stringify(res) === '{}' || res === null) {
                     if (route.url[0].path === 'notification') {
                         this.chrome.setHistory(state.url);
                     }
