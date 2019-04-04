@@ -28,7 +28,7 @@ export class WalletGuard implements CanActivate {
                             this.router.navigateByUrl('/login');
                             this.global.log('Wallet should login.');
                         } else {
-                            resolve(res);
+                            resolve(true);
                         }
                     });
                 }
@@ -80,7 +80,7 @@ export class PopupWalletGuard implements CanActivate {
                             this.router.navigateByUrl('/popup/login');
                             this.global.log('Wallet should login.');
                         } else {
-                            resolve(res);
+                            resolve(true);
                         }
                     });
                 }
