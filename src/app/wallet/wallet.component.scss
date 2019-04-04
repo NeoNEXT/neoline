@@ -13,6 +13,9 @@
         vertical-align: middle;
         &.active {
             border-bottom: 3px solid mat-color($default-app-primary);
+            button, mat-menu {
+                display: inline-block;
+            }
         }
         &.active span {
             color: #333333;
@@ -25,6 +28,10 @@
                 width: 6px;
             }
         }
+        button, mat-menu {
+            display: none;
+        }
+
     }
 }
 .nav span {

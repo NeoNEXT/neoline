@@ -6,7 +6,7 @@ import { PopupWalletComponent } from '@popup/wallet/wallet.component';
 import { PopupWalletImportComponent } from '@popup/wallet/import/import.component';
 import { PopupWalletCreateComponent } from '@popup/wallet/create/create.component';
 
-import { PopupWalletGuard } from '@app/core';
+import { OpenedWalletGuard } from '@app/core';
 
 const routes: Routes = [
     {
@@ -16,7 +16,7 @@ const routes: Routes = [
             {
                 path: 'wallet',
                 component: PopupWalletComponent,
-                // canActivate: [ PopupWalletGuard ],
+                canActivate: [ OpenedWalletGuard ],
                 children: [
                     { path: '', component: PopupWalletCreateComponent },
                     { path: 'create', component: PopupWalletCreateComponent },

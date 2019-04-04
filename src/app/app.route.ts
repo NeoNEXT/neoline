@@ -16,6 +16,7 @@ import {
     LoginComponent
 } from './login/login.component';
 import { WalletGuard } from '@app/core';
+import { LoginGuard } from './core/guards/wallet.guard';
 
 const routes: Routes = [
     {
@@ -24,6 +25,7 @@ const routes: Routes = [
         canActivate: [WalletGuard]
     },
     {
+        canActivate: [LoginGuard],
         path: 'login',
         component: LoginComponent
     },

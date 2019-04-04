@@ -19,8 +19,8 @@ export class WalletGuard implements CanActivate {
         state: RouterStateSnapshot
     ): Observable<boolean> | Promise<boolean> | boolean {
         return new Promise(resolve => {
-            this.chrome.getWallet().subscribe((res: any) => {
-                if (res === undefined || JSON.stringify(res) === '{}' || res === null) {
+            this.neon.walletIsOpen().subscribe((res: any) => {
+                if (!res) {
                     this.router.navigateByUrl('/wallet');
                 } else {
                     this.chrome.getLogin().subscribe((shoudLogin) => {
@@ -28,7 +28,34 @@ export class WalletGuard implements CanActivate {
                             this.router.navigateByUrl('/login');
                             this.global.log('Wallet should login.');
                         } else {
+                            resolve(res);
+                        }
+                    });
+                }
+            });
+        });
+    }
+}
+
+@Injectable()
+export class LoginGuard implements CanActivate {
+    constructor(
+        private neon: NeonService,
+        private router: Router,
+        private chrome: ChromeService
+    ) { }
+    canActivate(
+    ): Observable<boolean> | Promise<boolean> | boolean {
+        return new Promise(resolve => {
+            this.neon.walletIsOpen().subscribe((res: any) => {
+                if (!res) {
+                    this.router.navigateByUrl('/popup/wallet/new');
+                } else {
+                    this.chrome.getLogin().subscribe((shoudLogin) => {
+                        if (shoudLogin) {
                             resolve(true);
+                        } else {
+                            resolve(false);
                         }
                     });
                 }
@@ -40,15 +67,29 @@ export class WalletGuard implements CanActivate {
 @Injectable()
 export class OpenedWalletGuard implements CanActivate {
     constructor(
-        private neon: NeonService
+        private neon: NeonService,
+        private chrome: ChromeService,
+        private router: Router,
     ) { }
     canActivate(
         route: ActivatedRouteSnapshot,
         state: RouterStateSnapshot
     ): Observable<boolean> | Promise<boolean> | boolean {
-        return this.neon.walletIsOpen().pipe(map((res) => {
-            return !res;
-        }));
+        return new Promise(resolve => {
+            this.chrome.getWallet().subscribe((res: any) => {
+                if (res === undefined || JSON.stringify(res) === '{}' || res === null) {
+                    resolve(true);
+                } else {
+                    this.chrome.getLogin().subscribe((shoudLogin) => {
+                        if (shoudLogin) {
+                            this.router.navigateByUrl('/popup/login');
+                        } else {
+                            resolve(true);
+                        }
+                    });
+                }
+            });
+        });
     }
 }
 
@@ -67,12 +108,12 @@ export class PopupWalletGuard implements CanActivate {
         state: RouterStateSnapshot,
     ): Observable<boolean> | Promise<boolean> | boolean {
         return new Promise(resolve => {
-            this.chrome.getWallet().subscribe((res: any) => {
-                if (res === undefined || JSON.stringify(res) === '{}' || res === null) {
+            this.neon.walletIsOpen().subscribe((res: any) => {
+                if (!res) {
                     if (route.url[0].path === 'notification') {
                         this.chrome.setHistory(state.url);
                     }
-                    this.router.navigateByUrl('/popup/wallet');
+                    this.router.navigateByUrl('/popup/wallet/new');
                     this.global.log('Wallet has not opened yet.');
                 } else {
                     this.chrome.getLogin().subscribe((shoudLogin) => {
@@ -80,7 +121,7 @@ export class PopupWalletGuard implements CanActivate {
                             this.router.navigateByUrl('/popup/login');
                             this.global.log('Wallet should login.');
                         } else {
-                            resolve(true);
+                            resolve(res);
                         }
                     });
                 }
