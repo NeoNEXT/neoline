@@ -15,6 +15,9 @@
             width: 30px;
             height: 28px;
             padding: 5px 10px;
+            &.active {
+                display: none;
+            }
         }
         .popup-nav-icon {
             height: 18px;
