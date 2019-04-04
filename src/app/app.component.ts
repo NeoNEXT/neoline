@@ -23,25 +23,19 @@ import {
 import {
     PopupLogoutDialogComponent
 } from './popup/_dialogs/logout/logout.dialog';
-import {
-    Unsubscribable
-} from 'rxjs';
 
 @Component({
     selector: 'neo-line',
     templateUrl: './app.component.html',
     styleUrls: ['./app.component.scss']
 })
-export class AppComponent implements OnDestroy {
+export class AppComponent {
     public walletArr: Array < Wallet > ;
     public wallet: Wallet;
     public address: string;
     public hideNav: boolean = true;
     public walletIsOpen: boolean = false;
-    public walletSub: Unsubscribable;
     public net: string;
-
-    public unSubWalletListen: Unsubscribable;
 
     constructor(
         private router: Router,
@@ -55,7 +49,7 @@ export class AppComponent implements OnDestroy {
                 this.hideNav = event.url.startsWith('/popup') || event.url.startsWith('/login');
             }
         });
-        this.unSubWalletListen = this.global.walletListen().subscribe((res) => {
+        this.global.walletListen().subscribe((res) => {
             switch (res) {
                 case 'open':
                     this.walletIsOpen = true;
@@ -68,7 +62,7 @@ export class AppComponent implements OnDestroy {
         this.neon.walletIsOpen().subscribe((res) => {
             this.global.$wallet.next(res ? 'open' : 'close');
         });
-        this.walletSub = this.neon.walletSub().subscribe(() => {
+        this.neon.walletSub().subscribe(() => {
             this.wallet = this.neon.wallet;
             this.walletArr = this.neon.walletArr;
             this.address = this.neon.address;
@@ -76,15 +70,6 @@ export class AppComponent implements OnDestroy {
         this.chrome.getNet().subscribe(net => {
             this.net = net;
         });
-    }
-
-    ngOnDestroy(): void {
-        if (this.walletSub) {
-            this.walletSub.unsubscribe();
-        }
-        if (this.unSubWalletListen) {
-            this.unSubWalletListen.unsubscribe();
-        }
     }
 
     public modifyNet(net: string) {

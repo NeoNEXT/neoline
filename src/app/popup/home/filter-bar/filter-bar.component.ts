@@ -88,7 +88,7 @@ export class PopupHomeFilterBarComponent
     }
 
     public getBalance() {
-        this.asset.fetchBalanceTemp(this.address).pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
+        this.asset.fetchBalance(this.address).pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
             this.balances = [];
             this.balances.push(...res);
             let newWatch = [];

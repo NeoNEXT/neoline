@@ -60,17 +60,17 @@ export class AssetState {
         this.assetFile = new Map();
     }
 
-    public detailTemp(address: string, id: string): Observable<Balance> {
-        return this.fetchBalanceTemp(address).pipe(switchMap(balance => this.chrome.getWatch().pipe(map(watching => {
+    public detail(address: string, id: string): Observable<Balance> {
+        return this.fetchBalance(address).pipe(switchMap(balance => this.chrome.getWatch().pipe(map(watching => {
             return balance.find((e) => e.asset_id === id) || watching.find(w => w.asset_id === id);
         }))));
     }
 
-    public fetchBalanceTemp(address: string): Observable<any> {
+    public fetchBalance(address: string): Observable<any> {
         return this.http.get(`${ this.global.apiDomain }/v1/address/assets?address=${ address }`);
     }
 
-    public fetchAllTemp(page: number): Promise<any> {
+    public fetchAll(page: number): Promise<any> {
         return this.http.get(`${this.global.apiDomain}/v1/asset/getallassets?page_index=${page}`).toPromise();
     }
 

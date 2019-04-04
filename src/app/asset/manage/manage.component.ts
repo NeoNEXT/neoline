@@ -55,7 +55,7 @@ export class AssetManageComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
-        this.asset.fetchBalanceTemp(this.neon.address).pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
+        this.asset.fetchBalance(this.neon.address).pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
             this.displayAssets = [];
             this.displayAssets.push(...res)
             //  去重
@@ -95,7 +95,7 @@ export class AssetManageComponent implements OnInit {
 
     public getAllBalance(page) {
         this.requesting = true;
-        this.asset.fetchAllTemp(page).then(res => {
+        this.asset.fetchAll(page).then(res => {
             this.allAssets = res;
             this.allAssets.items.forEach((element, index) => {
                 this.allAssets.items[index].watching =

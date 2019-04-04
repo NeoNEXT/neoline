@@ -75,7 +75,7 @@ export class TransferCreateomponent implements OnInit {
     ngOnInit(): void {
         this.fromAddress = this.neon.address;
         this.aRoute.params.subscribe((params) => {
-            this.asset.detailTemp(this.neon.address, params.id).subscribe((res: Balance) => {
+            this.asset.detail(this.neon.address, params.id).subscribe((res: Balance) => {
                 res.balance = Number(res.balance);
                 this.balance = res;
                 this.assetId = this.balance.asset_id;

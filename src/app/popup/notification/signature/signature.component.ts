@@ -34,7 +34,7 @@ export class PopupNoticeSignComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.asset.fetchBalanceTemp(this.wallet.accounts[0].address).subscribe((res) => {
+        this.asset.fetchBalance(this.wallet.accounts[0].address).subscribe((res) => {
             const index = res.findIndex((item) => item.asset_id === NEO);
             if (index >= 0) {
                 this.balance = res[index].balance;

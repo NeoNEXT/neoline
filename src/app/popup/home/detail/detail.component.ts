@@ -82,7 +82,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     }
 
     public getBalance() {
-        this.asset.detailTemp(this.address, this.assetId).subscribe((res: Balance) => {
+        this.asset.detail(this.address, this.assetId).subscribe((res: Balance) => {
             res.balance = Number(res.balance);
             this.balance = res;
             // 获取资产汇率
@@ -104,7 +104,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     }
 
     public fetchTx() {
-        this.txState.fetchTemp(this.address, 1, this.assetId).subscribe((res: any) => {
+        this.txState.fetchTx(this.address, 1, this.assetId).subscribe((res: any) => {
             if (this.txPage === undefined || res.page === 1) {
                 this.chrome.getTransaction().subscribe(inTxData => {
                     if (inTxData[this.address] === undefined || inTxData[this.address][this.assetId] === undefined) {
@@ -161,7 +161,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                 sinceId = this.txPage.items[0].id;
             }
         }
-        this.txState.fetchTemp(this.address, page, this.assetId, maxId, sinceId, absPage).subscribe(() => {
+        this.txState.fetchTx(this.address, page, this.assetId, maxId, sinceId, absPage).subscribe(() => {
             this.txPage.page = page;
             this.isLoading = false;
             this.filterBar.needLoad.emit(false);

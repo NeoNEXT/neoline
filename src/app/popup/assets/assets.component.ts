@@ -65,7 +65,7 @@ export class PopupAssetsComponent implements OnInit {
     }
 
     public getBalance() {
-        this.asset.fetchBalanceTemp(this.neon.address).pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
+        this.asset.fetchBalance(this.neon.address).pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
             this.displayAssets = [];
             this.rateSymbol = '';
             res.map((r, index) => {
@@ -96,7 +96,7 @@ export class PopupAssetsComponent implements OnInit {
 
     public getAllBalance(page) {
         this.isLoading = true;
-        this.asset.fetchAllTemp(page).then(res => {
+        this.asset.fetchAll(page).then(res => {
             this.allAssets = res;
             this.allAssets.items.forEach((e, index) => {
                 this.getAssetSrc(e.asset_id, index, 'all');

@@ -49,7 +49,7 @@ export class AssetComponent implements OnInit {
         this.address = this.neon.address;
         this.chrome.getRateCurrency().subscribe(rateCurrency => {
             this.rateCurrency = rateCurrency;
-            this.asset.fetchBalanceTemp(this.neon.address).pipe(map(balanceRes => {
+            this.asset.fetchBalance(this.neon.address).pipe(map(balanceRes => {
                 this.displayAssets = [];
                 this.rateSymbol = '';
                 balanceRes.forEach(r => {

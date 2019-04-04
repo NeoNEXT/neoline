@@ -23,16 +23,14 @@ import {
     NeonService,
     AssetState,
 } from '@app/core';
-import { Unsubscribable } from 'rxjs';
 
 @Component({
     templateUrl: 'account.component.html',
     styleUrls: ['account.component.scss']
 })
-export class PopupAccountComponent implements OnInit, OnDestroy {
+export class PopupAccountComponent implements OnInit {
     public address: string;
     public walletName: string;
-    public walletSub: Unsubscribable;
 
     constructor(
         private router: Router,
@@ -48,15 +46,9 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.address = this.neon.address;
-        this.walletSub = this.neon.walletSub().subscribe(() => {
+        this.neon.walletSub().subscribe(() => {
             this.walletName = this.neon.wallet.name;
         });
-    }
-
-    ngOnDestroy(): void {
-        if (this.walletSub) {
-            this.walletSub.unsubscribe();
-        }
     }
 
     public wif() {
