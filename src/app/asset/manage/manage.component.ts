@@ -20,7 +20,7 @@ import {
 } from '@/app/core';
 import {
     map,
-    switchMap
+    switchMap,
 } from 'rxjs/operators';
 import {
     GlobalService,
@@ -36,7 +36,7 @@ import {
     templateUrl: 'manage.component.html',
     styleUrls: ['manage.component.scss']
 })
-export class AssetManageComponent implements OnInit, OnChanges {
+export class AssetManageComponent implements OnInit {
     private requesting = false;
     public allAssets: PageData < Asset > ; // 所有的资产
     public searchAssets: any = false; // 搜索出来的资产
@@ -45,8 +45,6 @@ export class AssetManageComponent implements OnInit, OnChanges {
     public isLoading: boolean;
     public isSearch: boolean = false;
     public searchValue: string;
-
-    public webDelAssetId = '';
 
     constructor(
         private asset: AssetState,
@@ -73,27 +71,26 @@ export class AssetManageComponent implements OnInit, OnChanges {
         })))).subscribe(() => {
             this.getAllBalance(1);
         });
-    }
-
-    ngOnChanges(changes: import("@angular/core").SimpleChanges): void {
-        if (this.webDelAssetId !== this.asset.webDelAssetId) {
-            this.webDelAssetId = this.asset.webDelAssetId;
+        this.asset.popDelAssetId().subscribe(delId => {
+            if (!delId) {
+                return;
+            }
             if (this.searchAssets) {
                 this.searchAssets.forEach((element, index) => {
-                    if (element.asset_id === this.webDelAssetId) {
+                    if (element.asset_id === delId) {
                         this.searchAssets[index].watching = false;
                         return;
                     }
                 });
             } else {
                 this.allAssets.items.forEach((element, index) => {
-                    if (element.asset_id === this.webDelAssetId) {
+                    if (element.asset_id === delId) {
                         this.allAssets.items[index].watching = false;
                         return;
                     }
                 });
             }
-        }
+        });
     }
 
     public getAllBalance(page) {
@@ -157,6 +154,7 @@ export class AssetManageComponent implements OnInit, OnChanges {
                 this.displayAssets.push(assetItem);
                 this.watch.push(assetItem);
                 this.chrome.setWatch(this.watch);
+                this.asset.pushAddAssetId(assetItem);
                 this.global.snackBarTip('addSucc');
             }
         });

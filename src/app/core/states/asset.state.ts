@@ -11,7 +11,7 @@ import {
     ChromeService
 } from '../services/chrome.service';
 import {
-    Observable,
+    Observable, Subject, from,
 } from 'rxjs';
 import {
     Balance,
@@ -19,13 +19,16 @@ import {
 import {
     map,
     switchMap,
+    refCount,
+    publish,
 } from 'rxjs/operators';
 
 @Injectable()
 export class AssetState {
     public assetFile: Map < string, {} > = new Map();
     public defaultAssetSrc = '/assets/images/default_asset_logo.jpg';
-    public webDelAssetId = '';
+    public $webAddAssetId: Subject <Balance> = new Subject();
+    public $webDelAssetId: Subject <string> = new Subject();
 
     constructor(
         private http: HttpService,
@@ -35,6 +38,22 @@ export class AssetState {
         this.chrome.getAssetFile().subscribe(res => {
             this.assetFile = res;
         });
+    }
+
+    public pushDelAssetId(id) {
+        this.$webDelAssetId.next(id);
+    }
+
+    public popDelAssetId(): Observable<any> {
+        return this.$webDelAssetId.pipe(publish(), refCount());
+    }
+
+    public pushAddAssetId(id) {
+        this.$webAddAssetId.next(id);
+    }
+
+    public popAddAssetId(): Observable<any> {
+        return this.$webAddAssetId.pipe(publish(), refCount());
     }
 
     public clearCache() {
@@ -48,7 +67,6 @@ export class AssetState {
     }
 
     public fetchBalanceTemp(address: string): Observable<any> {
-        console.log('11111')
         return this.http.get(`${ this.global.apiDomain }/v1/address/assets?address=${ address }`);
     }
 

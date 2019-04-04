@@ -11,7 +11,6 @@ import {
 } from '@app/core';
 import {
     map,
-    switchMap
 } from 'rxjs/operators';
 import {
     Balance,
@@ -73,6 +72,12 @@ export class AssetComponent implements OnInit {
                 this.displayAssets.push(...newWatch);
             }));
         });
+        this.asset.popAddAssetId().subscribe(assetItem => {
+            if (!assetItem) {
+                return;
+            }
+            this.displayAssets.push(assetItem);
+        });
     }
 
     // 获取资产汇率
@@ -100,6 +105,7 @@ export class AssetComponent implements OnInit {
 
     // 隐藏资产
     public delAsset(index: number) {
+        const delId = this.displayAssets[index].asset_id;
         this.dialog.open(PopupDelTokenDialogComponent).afterClosed().subscribe((confirm) => {
             if (confirm) {
                 const i = this.watch.findIndex((w) => w.asset_id === this.displayAssets[index].asset_id);
@@ -108,10 +114,10 @@ export class AssetComponent implements OnInit {
                     this.chrome.setWatch(this.watch);
                 }
                 this.global.searchBalance = this.displayAssets[index];
-                this.asset.webDelAssetId = this.displayAssets[index].asset_id;
                 this.displayAssets.splice(index, 1);
                 this.global.snackBarTip('hiddenSucc');
+                this.asset.pushDelAssetId(delId);
             }
-        })
+        });
     }
 }
