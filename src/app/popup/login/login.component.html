@@ -29,7 +29,5 @@
         <ng-container *ngIf="!loading">{{ 'login' | translate | async}}</ng-container>
         <ng-container *ngIf="loading">{{ 'logining' | translate | async}}</ng-container>
     </button>
-    <p class="popup-login-or">—— <span>{{ 'or' | translate | async}}</span> ——</p>
-    <p class="popup-login-or-link" routerLink="/popup/wallet/new">{{ 'createNewWallet' | translate | async}}</p>
 </div>
 <!-- <img src="../../../assets/images/popup_login_bg.png" alt=""> -->

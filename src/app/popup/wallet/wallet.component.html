@@ -1,5 +1,6 @@
 <div class="popup-wallet">
-    <div class="popup-wallet-nav">
+    <div class="back-btn" routerLink="/popup/setting" *ngIf="address != ''"></div>
+    <!-- <div class="popup-wallet-nav">
         <div class="back-btn" routerLink="/popup/setting" *ngIf="address != ''"></div>
         <div class="popup-wallet-nav-item popup-wallet-nav-item-create">
             <div class="popup-wallet-nav-item-link">
@@ -26,9 +27,9 @@
                 class="popup-wallet-nav-item-block"
                 [@switchOperateForImport]="isCreate ? 'create' : 'import'"></div>
         </div>
-    </div>
+    </div> -->
+    <router-outlet></router-outlet>
 
-    <div class="popup-wallet-body">
-        <router-outlet></router-outlet>
-    </div>
+    <!-- <div class="popup-wallet-body">
+    </div> -->
 </div>

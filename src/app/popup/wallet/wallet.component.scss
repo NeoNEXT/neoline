@@ -5,6 +5,8 @@
     width: 100%;
     min-height: 100%;
     padding-bottom: 30px;
+    border: 1px solid;
+    border-color: rgba(0, 0, 0, 0);
     background: linear-gradient(0deg, rgba(113,120,221,1), rgba(81,91,227,1));
 
     .popup-wallet-nav {
@@ -59,11 +61,3 @@
     }
 }
 
-.popup-wallet-body {
-    width: 300px;
-    min-height: 410px;
-    margin: auto;
-    background-color: map-get($neo-line-default, 50);
-    padding-top: 33px;
-    box-shadow: 0 1px 2px 0 rgba(81, 227, 91, 0.35);
-}

@@ -4,6 +4,7 @@ import { NgModule } from '@angular/core';
 
 import { PopupComponent } from '@popup/popup.component';
 import { PopupNewWalletGuideComponent } from '@popup/new-wallet-guide/new-wallet-guide.component';
+import { PopupWalletGuard, OpenedWalletGuard } from '@/app/core';
 
 const routes: Routes = [
     {
@@ -11,6 +12,7 @@ const routes: Routes = [
         component: PopupComponent,
         children: [
             {
+                canActivate: [ OpenedWalletGuard ],
                 path: 'wallet/new',
                 component: PopupNewWalletGuideComponent
             },

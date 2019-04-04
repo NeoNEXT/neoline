@@ -181,15 +181,19 @@ export class NeonService {
      * @param encKey encrypted key to import
      * @param key encrypt password for this encKey
      */
-    public importEncryptKey(encKey: string, key: string): Observable<Wallet> {
+    public importEncryptKey(encKey: string, key: string, name: string): Observable<Wallet> {
         return Observable.create((observer: Observer<Wallet>) => {
-            const w = Neon.create.wallet({ name: 'NEOLineUser' } as any);
+            const w = Neon.create.wallet({ name: name || 'NEOLineUser' } as any);
             w.addAccount(new wallet.Account(encKey));
             wallet.decrypt(encKey, key).then((wif) => {
-                // this method can not check result, so do not rely on it
-                w.decrypt(0, key);
-                observer.next(w);
-                observer.complete();
+                const account = new wallet.Account(wallet.getPrivateKeyFromWIF(wif));
+                const returnRes = Neon.create.wallet({ name: name || 'NEOLineUser' } as any);
+                returnRes.addAccount(account);
+                returnRes.encrypt(0, key);
+                returnRes.accounts[0].encrypt(key).then(res => {
+                    observer.next(returnRes);
+
+                });
             }).catch((err) => {
                 observer.error('import failed');
             });

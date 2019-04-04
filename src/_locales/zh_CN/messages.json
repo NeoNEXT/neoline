@@ -84,8 +84,14 @@
     "enterWIF": {
         "message": "输入 WIF(私钥)"
     },
+    "enterEncryptedKey": {
+        "message": "输入 Encrypted Key"
+    },
     "WIFRequired": {
         "message": "WIF 必填"
+    },
+    "EncryptedKeyRequired": {
+        "message": "Encrypted Key 必填"
     },
     "importing": {
         "message": "导入中"
@@ -294,6 +300,9 @@
     "clearCacheTip": {
         "message": "按下后，会清空缓存数据"
     },
+    "reset": {
+        "message": "重置"
+    },
     "welcomeBack": {
         "message": "欢迎回来"
     },
@@ -353,6 +362,9 @@
     },
     "WIFPattern": {
         "message": "WIF 错误"
+    },
+    "EncryptedKeyPattern": {
+        "message": "Encrypted Key 错误"
     },
     "tranSubmit": {
         "message": "交易已提交。"

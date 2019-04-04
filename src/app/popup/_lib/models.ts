@@ -18,6 +18,7 @@ export class WalletImport {
         public walletName: string = '',
         public password: string = '',
         public confirmPassword: string = '',
-        public WIF: string = ''
+        public WIF: string = '',
+        public EncrpytedKey: string = ''
     ) { }
 }

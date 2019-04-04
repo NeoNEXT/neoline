@@ -84,8 +84,14 @@
     "enterWIF": {
         "message": "Enter WIF(Private key)"
     },
+    "enterEncryptedKey": {
+        "message": "Enter Encrypted Key"
+    },
     "WIFRequired": {
         "message": "WIF is required"
+    },
+    "EncryptedKeyRequired": {
+        "message": "Encrypted Key required"
     },
     "importing": {
         "message": "Importing"
@@ -294,6 +300,9 @@
     "clearCacheTip": {
         "message": "Press to clear cache"
     },
+    "reset": {
+        "message": "Reset"
+    },
     "welcomeBack": {
         "message": "Welcome back"
     },
@@ -353,6 +362,9 @@
     },
     "WIFPattern": {
         "message": "wrong WIF"
+    },
+    "EncryptedKeyPattern": {
+        "message": "wrong Encrypted Key"
     },
     "tranSubmit": {
         "message": "Transaction submitted."

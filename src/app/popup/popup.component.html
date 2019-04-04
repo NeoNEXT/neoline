@@ -2,7 +2,6 @@
     <mat-sidenav #sidenav mode="over" [fixedInViewport]="true">
         <app-sidenav [sidenav]="sidenav" *ngIf="walletIsOpen && !isThirdParty"></app-sidenav>
     </mat-sidenav>
-
     <mat-sidenav-content>
         <div class="mat-toolbar-fixed no-third-party-toolbar" *ngIf="!isThirdParty">
             <mat-toolbar color="primary">
@@ -11,6 +10,7 @@
                 <span class="popup-nav-menu" (click)="sidenav?.toggle()" *ngIf="walletIsOpen && !isLogin">
                     <img [avatar]="address" />
                 </span>
+                <img class="btn-back" src="/assets/images/back.png" routerLink="/popup/wallet/new" *ngIf="!walletIsOpen && isLogin" alt="">
 
                 <span class="popup-nav-logo">
                     <span class="popup-nav-logo-img"

@@ -11,6 +11,11 @@
 
     .mat-toolbar {
         height: 64px;
+        .btn-back {
+            width: 30px;
+            height: 28px;
+            padding: 5px 10px;
+        }
         .popup-nav-icon {
             height: 18px;
             position: absolute;
