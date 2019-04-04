@@ -288,6 +288,9 @@
     "importWallet": {
         "message": "Import wallet"
     },
+    "exportWallet": {
+        "message": "Export wallet"
+    },
     "createWallet": {
         "message": "Create wallet"
     },

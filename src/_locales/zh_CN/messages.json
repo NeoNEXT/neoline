@@ -288,6 +288,9 @@
     "importWallet": {
         "message": "导入钱包"
     },
+    "exportWallet": {
+        "message": "导出钱包"
+    },
     "createWallet": {
         "message": "创建钱包"
     },

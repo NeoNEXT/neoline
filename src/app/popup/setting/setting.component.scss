@@ -151,15 +151,18 @@ hr {
         }
 
         .popup-setting-import-logo {
-            @include bg($img-import-account);
+            @include bg($img-import-wallet);
         }
 
         .popup-setting-create-logo {
-            @include bg($img-create-account);
+            @include bg($img-create-wallet);
         }
 
         .popup-setting-language-logo {
             @include bg($img-language-change);
+        }
+        .popup-setting-export-logo {
+            @include bg($img-export-wallet);
         }
     }
 }
