@@ -3,7 +3,7 @@ import { NgModule } from '@angular/core';
 
 import { PopupComponent } from '@popup/popup.component';
 import { PopupLoginComponent } from '@popup/login/login.component';
-import { LoginGuard } from '@/app/core/guards/wallet.guard';
+import { PopupLoginGuard } from '@/app/core/guards/wallet.guard';
 
 const routes: Routes = [
     {
@@ -11,7 +11,7 @@ const routes: Routes = [
         component: PopupComponent,
         children: [
             {
-                canActivate: [LoginGuard],
+                canActivate: [PopupLoginGuard],
                 path: 'login',
                 component: PopupLoginComponent
             },

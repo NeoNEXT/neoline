@@ -1,7 +1,7 @@
 <div class="body">
     <div class="nav">
         <span routerLink="/wallet/create" routerLinkActive="active">{{ 'create' | translate | async}}</span>
-        <div class="import-box" routerLink="/wallet/import" routerLinkActive="active">
+        <div class="import-box" routerLink="/wallet/import" (click)="importType='PrivateKey'" routerLinkActive="active">
             <span>{{ 'import' | translate | async}}</span>
             <button mat-button class="import-type" (click)="$event.stopPropagation()" [matMenuTriggerFor]="menu">
                 {{ importType }}

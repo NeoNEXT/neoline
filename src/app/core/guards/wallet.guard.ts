@@ -38,7 +38,7 @@ export class WalletGuard implements CanActivate {
 }
 
 @Injectable()
-export class LoginGuard implements CanActivate {
+export class PopupLoginGuard implements CanActivate {
     constructor(
         private neon: NeonService,
         private router: Router,
@@ -65,6 +65,33 @@ export class LoginGuard implements CanActivate {
 }
 
 @Injectable()
+export class LoginGuard implements CanActivate {
+    constructor(
+        private neon: NeonService,
+        private router: Router,
+        private chrome: ChromeService
+    ) { }
+    canActivate(
+    ): Observable<boolean> | Promise<boolean> | boolean {
+        return new Promise(resolve => {
+            this.neon.walletIsOpen().subscribe((res: any) => {
+                if (!res) {
+                    this.router.navigateByUrl('/wallet');
+                } else {
+                    this.chrome.getLogin().subscribe((shoudLogin) => {
+                        if (shoudLogin) {
+                            resolve(true);
+                        } else {
+                            resolve(false);
+                        }
+                    });
+                }
+            });
+        });
+    }
+}
+
+@Injectable()
 export class OpenedWalletGuard implements CanActivate {
     constructor(
         private neon: NeonService,
@@ -76,8 +103,8 @@ export class OpenedWalletGuard implements CanActivate {
         state: RouterStateSnapshot
     ): Observable<boolean> | Promise<boolean> | boolean {
         return new Promise(resolve => {
-            this.chrome.getWallet().subscribe((res: any) => {
-                if (res === undefined || JSON.stringify(res) === '{}' || res === null) {
+            this.neon.walletIsOpen().subscribe((res: any) => {
+                if (!res) {
                     resolve(true);
                 } else {
                     this.chrome.getLogin().subscribe((shoudLogin) => {

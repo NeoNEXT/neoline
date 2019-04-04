@@ -6,7 +6,7 @@ import { ChromeService } from './services/chrome.service';
 import { NotificationService } from './services/notification.service';
 import { HttpClientModule } from '@angular/common/http';
 import { HttpService } from './services/http.service';
-import { WalletGuard, PopupWalletGuard, OpenedWalletGuard, LoginGuard } from './guards/wallet.guard';
+import { WalletGuard, PopupWalletGuard, OpenedWalletGuard, PopupLoginGuard, LoginGuard } from './guards/wallet.guard';
 import { AssetState } from './states/asset.state';
 import { TransactionState } from './states/transaction.service';
 import { BlockState } from './states/block.state';
@@ -25,7 +25,7 @@ import { SettingState } from './states/setting.state';
     exports: [],
     providers: [
         GlobalService, NeonService, ChromeService, HttpService,
-        WalletGuard, PopupWalletGuard, OpenedWalletGuard, LoginGuard,
+        WalletGuard, PopupWalletGuard, OpenedWalletGuard, PopupLoginGuard, LoginGuard,
         AssetState, TransactionState, BlockState, NotificationService,
         SettingState
     ],
