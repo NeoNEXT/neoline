@@ -30,7 +30,7 @@ import { Wallet, Account } from '@cityofzion/neon-core/lib/wallet';
     styleUrls: ['import.component.scss']
 })
 export class PopupWalletImportComponent implements OnInit, AfterViewInit {
-    public navIndex = 2;
+    public navIndex = 0;
 
     public walletImport: WalletImport;
     public limit: any;
