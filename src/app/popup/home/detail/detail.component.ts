@@ -27,12 +27,6 @@ import {
 import {
     FilterBarService
 } from '@popup/_services/filter-bar.service';
-import {
-    switchMap
-} from 'rxjs/operators';
-import {
-    Unsubscribable
-} from 'rxjs';
 
 @Component({
     templateUrl: 'detail.component.html',
@@ -47,11 +41,6 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     public needLoadWhenSymbolSwitch: boolean;
     public inTransaction: Array < Transaction > ;
     public rateCurrency: string;
-
-    private unSubTxStatus: Unsubscribable;
-    private unSubRate: Unsubscribable;
-    public unSubTxFetch: Unsubscribable;
-    public unSubAsset: Unsubscribable;
 
     constructor(
         private asset: AssetState,
@@ -73,39 +62,49 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
-        this.asset.fetchBalance(this.neon.address);
         this.chrome.getRateCurrency().subscribe(rateCurrency => {
             this.rateCurrency = rateCurrency;
             this.aRouter.params.subscribe((params: any) => {
-                if (this.unSubRate) {
-                    this.unSubRate.unsubscribe();
-                }
-                this.unSubAsset = this.asset.detail(params.id).subscribe((res: Balance) => {
-                    res.balance = Number(res.balance);
-                    this.balance = res;
-                    this.assetId = params.id;
-                    // 获取资产汇率
-                    if (this.balance.balance && this.balance.balance > 0) {
-                        let query = {};
-                        query['symbol'] = this.rateCurrency;
-                        query['coins'] = this.balance.symbol;
-                        this.unSubRate = this.asset.getRate(query).subscribe(rateBalance => {
-                            if (rateBalance !== undefined && JSON.stringify(rateBalance.result) !== '{}') {
-                                this.balance.rateBalance =
-                                    Number(rateBalance.result[this.balance.symbol]) * this.balance.balance;
-                            }
-                        });
-                    } else {
-                        this.balance.rateBalance = 0;
-                    }
-                });
-                if (this.unSubTxFetch) {
-                    this.unSubTxFetch.unsubscribe();
-                }
-                this.unSubTxFetch = this.txState.fetch(this.address, 1, params.id).subscribe();
+                this.assetId = params.id;
+                this.getBalance();
             });
         });
-        this.unSubTxStatus = this.txState.data().subscribe((res: any) => {
+    }
+
+    ngOnDestroy(): void {
+        this.txPage = {
+            page: 1,
+            pages: 0,
+            items: [],
+            total: 0,
+            per_page: 10
+        };
+    }
+
+    public getBalance() {
+        this.asset.detailTemp(this.address, this.assetId).subscribe((res: Balance) => {
+            res.balance = Number(res.balance);
+            this.balance = res;
+            // 获取资产汇率
+            if (this.balance.balance && this.balance.balance > 0) {
+                let query = {};
+                query['symbol'] = this.rateCurrency;
+                query['coins'] = this.balance.symbol;
+                this.asset.getRate(query).subscribe(rateBalance => {
+                    if (rateBalance !== undefined && JSON.stringify(rateBalance.result) !== '{}') {
+                        this.balance.rateBalance =
+                            Number(rateBalance.result[this.balance.symbol]) * this.balance.balance;
+                    }
+                });
+            } else {
+                this.balance.rateBalance = 0;
+            }
+            this.fetchTx();
+        });
+    }
+
+    public fetchTx() {
+        this.txState.fetchTemp(this.address, 1, this.assetId).subscribe((res: any) => {
             if (this.txPage === undefined || res.page === 1) {
                 this.chrome.getTransaction().subscribe(inTxData => {
                     if (inTxData[this.address] === undefined || inTxData[this.address][this.assetId] === undefined) {
@@ -147,25 +146,6 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
         });
     }
 
-    ngOnDestroy(): void {
-        this.txPage = {
-            page: 1,
-            pages: 0,
-            items: [],
-            total: 0,
-            per_page: 10
-        };
-        if (this.unSubTxStatus) {
-            this.unSubTxStatus.unsubscribe();
-        }
-        if (this.unSubTxFetch) {
-            this.unSubTxFetch.unsubscribe();
-        }
-        if (this.unSubAsset) {
-            this.unSubAsset.unsubscribe()
-        }
-    }
-
     public page(page: number) {
         this.isLoading = true;
         let maxId = -1;
@@ -181,7 +161,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                 sinceId = this.txPage.items[0].id;
             }
         }
-        this.txState.fetch(this.address, page, this.assetId, maxId, sinceId, absPage).subscribe(() => {
+        this.txState.fetchTemp(this.address, page, this.assetId, maxId, sinceId, absPage).subscribe(() => {
             this.txPage.page = page;
             this.isLoading = false;
             this.filterBar.needLoad.emit(false);

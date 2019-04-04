@@ -27,6 +27,8 @@ export class PopupHomeDigestComponent implements OnInit, OnChanges {
 
     public showTokenName: boolean;
 
+    public oldAssetId = '';
+
     constructor(
         public global: GlobalService,
         private assetState: AssetState,
@@ -37,22 +39,25 @@ export class PopupHomeDigestComponent implements OnInit, OnChanges {
     ngOnInit(): void {}
 
     ngOnChanges(changes: SimpleChanges) {
-        if (this.assetId) {
-            const imageObj = this.assetState.assetFile.get(this.assetId);
-            let lastModified = '';
-            if (imageObj) {
-                lastModified = imageObj['last-modified'];
-                this.imageUrl = imageObj['image-src'];
-            }
-            this.assetState.getAssetSrc(this.assetId, lastModified).subscribe(assetRes => {
-                if (assetRes && assetRes['status'] === 200) {
-                    this.assetState.setAssetFile(assetRes, this.assetId).then(src => {
-                        this.imageUrl = src;
-                    });
-                } else if (assetRes && assetRes['status'] === 404) {
-                    this.imageUrl = this.assetState.defaultAssetSrc;
+        if (this.oldAssetId !== this.assetId) {
+            this.oldAssetId = this.assetId;
+            if (this.assetId) {
+                const imageObj = this.assetState.assetFile.get(this.assetId);
+                let lastModified = '';
+                if (imageObj) {
+                    lastModified = imageObj['last-modified'];
+                    this.imageUrl = imageObj['image-src'];
                 }
-            });
+                this.assetState.getAssetSrc(this.assetId, lastModified).subscribe(assetRes => {
+                    if (assetRes && assetRes['status'] === 200) {
+                        this.assetState.setAssetFile(assetRes, this.assetId).then(src => {
+                            this.imageUrl = src;
+                        });
+                    } else if (assetRes && assetRes['status'] === 404) {
+                        this.imageUrl = this.assetState.defaultAssetSrc;
+                    }
+                });
+            }
         }
     }
 

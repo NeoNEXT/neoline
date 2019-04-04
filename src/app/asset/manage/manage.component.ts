@@ -2,6 +2,7 @@ import {
     Component,
     OnInit,
     OnDestroy,
+    OnChanges,
 } from '@angular/core';
 import {
     PageData,
@@ -30,27 +31,22 @@ import {
 import {
     MatDialog
 } from '@angular/material';
-import {
-    Unsubscribable,
-} from 'rxjs';
 
 @Component({
     templateUrl: 'manage.component.html',
     styleUrls: ['manage.component.scss']
 })
-export class AssetManageComponent implements OnInit, OnDestroy {
-    // public assets: PageData<Asset>;
-    // public watch: Balance[] = [];
+export class AssetManageComponent implements OnInit, OnChanges {
     private requesting = false;
     public allAssets: PageData < Asset > ; // 所有的资产
-    public searchAssets: any = false; // 所有的资产
+    public searchAssets: any = false; // 搜索出来的资产
     public displayAssets: Balance[] = []; // 要显示的资产
     public watch: Balance[]; // 用户添加的资产
     public isLoading: boolean;
     public isSearch: boolean = false;
     public searchValue: string;
-    public unSubBalance: Unsubscribable;
-    public unSubAll: Unsubscribable;
+
+    public webDelAssetId = '';
 
     constructor(
         private asset: AssetState,
@@ -61,7 +57,7 @@ export class AssetManageComponent implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.unSubBalance = this.asset.balance().pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
+        this.asset.fetchBalanceTemp(this.neon.address).pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
             this.displayAssets = [];
             this.displayAssets.push(...res)
             //  去重
@@ -75,34 +71,42 @@ export class AssetManageComponent implements OnInit, OnDestroy {
             this.displayAssets.push(...newWatch);
             return res;
         })))).subscribe(() => {
-            this.unSubAll = this.asset.all().subscribe(res => {
-                this.allAssets = res;
-                this.allAssets.items.forEach((element, index) => {
-                    this.allAssets.items[index].watching =
-                        this.displayAssets.findIndex((w: Balance) => w.asset_id === element.asset_id) >= 0;
-                    this.getAssetSrc(element.asset_id, index, 'all');
-                });
-                if (this.searchAssets && this.global.searchBalance && this.global.searchBalance.asset_id) {
-                    let i = this.searchAssets.findIndex(w => w.asset_id === this.global.searchBalance.asset_id);
-                    if (i >= 0) {
-                        this.searchAssets[i].watching = false;
-                    }
-                    this.global.searchBalance = {};
-                }
-            });
+            this.getAllBalance(1);
         });
-
-        this.asset.fetchAll(1);
-        this.asset.fetchBalance(this.neon.address);
     }
 
-    ngOnDestroy(): void {
-        if (this.unSubAll) {
-            this.unSubAll.unsubscribe();
+    ngOnChanges(changes: import("@angular/core").SimpleChanges): void {
+        if (this.webDelAssetId !== this.asset.webDelAssetId) {
+            this.webDelAssetId = this.asset.webDelAssetId;
+            if (this.searchAssets) {
+                this.searchAssets.forEach((element, index) => {
+                    if (element.asset_id === this.webDelAssetId) {
+                        this.searchAssets[index].watching = false;
+                        return;
+                    }
+                });
+            } else {
+                this.allAssets.items.forEach((element, index) => {
+                    if (element.asset_id === this.webDelAssetId) {
+                        this.allAssets.items[index].watching = false;
+                        return;
+                    }
+                });
+            }
         }
-        if (this.unSubBalance) {
-            this.unSubBalance.unsubscribe();
-        }
+    }
+
+    public getAllBalance(page) {
+        this.requesting = true;
+        this.asset.fetchAllTemp(page).then(res => {
+            this.allAssets = res;
+            this.allAssets.items.forEach((element, index) => {
+                this.allAssets.items[index].watching =
+                    this.displayAssets.findIndex((w: Balance) => w.asset_id === element.asset_id) >= 0;
+                this.getAssetSrc(element.asset_id, index, 'all');
+            });
+            this.requesting = false;
+        });
     }
 
     public getAssetSrc(assetId, index, type) {
@@ -113,7 +117,7 @@ export class AssetManageComponent implements OnInit, OnDestroy {
             if (type === 'all') {
                 this.allAssets.items[index].avatar = imageObj['image-src'];
             } else if (type === 'search') {
-                this.displayAssets[index].avatar = imageObj['image-src'];
+                this.searchAssets[index].avatar = imageObj['image-src'];
             }
         }
         this.asset.getAssetSrc(assetId, lastModified).subscribe(assetRes => {
@@ -122,14 +126,14 @@ export class AssetManageComponent implements OnInit, OnDestroy {
                     if (type === 'all') {
                         this.allAssets.items[index].avatar = src;
                     } else if (type === 'search') {
-                        this.displayAssets[index].avatar = src;
+                        this.searchAssets[index].avatar = src;
                     }
                 });
             } else if (assetRes && assetRes['status'] === 404) {
                 if (type === 'all') {
                     this.allAssets.items[index].avatar = this.asset.defaultAssetSrc;
                 } else if (type === 'search') {
-                    this.displayAssets[index].avatar = this.asset.defaultAssetSrc;
+                    this.searchAssets[index].avatar = this.asset.defaultAssetSrc;
                 }
             }
         });
@@ -142,22 +146,20 @@ export class AssetManageComponent implements OnInit, OnDestroy {
         }).afterClosed().subscribe((confirm) => {
             if (confirm) {
                 if (this.searchAssets !== false) {
-                    // this.displayAssets.push(assetItem);
                     const i = this.allAssets.items.findIndex((a) => a.asset_id === assetItem.asset_id);
                     if (i >= 0) {
                         this.allAssets.items[i].watching = true;
                     }
                     this.searchAssets[index].watching = true;
                 } else {
-                    // this.displayAssets.push(assetItem);
                     this.allAssets.items[index].watching = true;
                 }
+                this.displayAssets.push(assetItem);
                 this.watch.push(assetItem);
                 this.chrome.setWatch(this.watch);
                 this.global.snackBarTip('addSucc');
-                this.asset.fetchBalance(this.neon.address);
             }
-        })
+        });
     }
 
     public page(page: number) {
@@ -165,9 +167,7 @@ export class AssetManageComponent implements OnInit, OnDestroy {
             return;
         }
         this.requesting = true;
-        this.asset.fetchAll(page).finally(() => {
-            this.requesting = false;
-        });
+        this.getAllBalance(page);
     }
 
     public filter(id: string) {
@@ -179,6 +179,7 @@ export class AssetManageComponent implements OnInit, OnDestroy {
             this.asset.searchAsset(this.searchValue).subscribe(res => {
                 this.searchAssets = res;
                 this.searchAssets.forEach((element, index) => {
+                    this.searchAssets[index].watching = this.displayAssets.findIndex((w: Balance) => w.asset_id === element.asset_id) >= 0;
                     this.getAssetSrc(element.asset_id, index, 'search');
                 });
             });

@@ -1,9 +1,7 @@
 import {
     Component,
     OnInit,
-    OnDestroy,
-    Output,
-    EventEmitter
+    OnChanges,
 } from '@angular/core';
 import {
     AssetState,
@@ -16,9 +14,7 @@ import {
     switchMap
 } from 'rxjs/operators';
 import {
-    PageData,
     Balance,
-    Asset,
 } from '@/models/models';
 import {
     MatDialog
@@ -27,23 +23,17 @@ import {
     PopupDelTokenDialogComponent
 } from '@popup/_dialogs';
 import {
-    Unsubscribable
-} from 'rxjs';
-
+    ActivatedRoute
+} from '@angular/router';
 
 @Component({
     templateUrl: 'asset.component.html',
     styleUrls: ['asset.component.scss']
 })
-export class AssetComponent implements OnInit, OnDestroy {
+export class AssetComponent implements OnInit {
     public address: string = '';
-    public balance: Balance[] = [];
-
-    public allAssets: PageData < Asset > ; // 所有的资产
-    public searchAssets: any = false; // 所有的资产
-    public displayAssets: Balance[] = []; // 要显示的资产
+    public displayAssets; // 要显示的资产
     public watch: Balance[]; // 用户添加的资产
-    public unSubBalance: Unsubscribable;
     public rateSymbol = '';
     public rateCurrency: string;
 
@@ -53,48 +43,36 @@ export class AssetComponent implements OnInit, OnDestroy {
         private chrome: ChromeService,
         private global: GlobalService,
         private dialog: MatDialog,
+        private aRoute: ActivatedRoute,
     ) {}
 
     ngOnInit(): void {
-        // 获取余额大于 0 的资产
         this.address = this.neon.address;
-        // this.address = 'AJ1mqgPnsrq9W7K94Y8SS1DM2bGUojCFwb';
         this.chrome.getRateCurrency().subscribe(rateCurrency => {
             this.rateCurrency = rateCurrency;
-            this.initPage();
+            this.asset.fetchBalanceTemp(this.neon.address).pipe(map(balanceRes => {
+                this.displayAssets = [];
+                this.rateSymbol = '';
+                balanceRes.forEach(r => {
+                    if (r.balance && r.balance > 0) {
+                        this.rateSymbol += r.symbol + ',';
+                    }
+                    this.displayAssets.push(r);
+                });
+                this.rateSymbol = this.rateSymbol.slice(0, -1);
+                this.getAssetRate();
+                return balanceRes;
+            })).subscribe((balanceRes) => this.chrome.getWatch().subscribe(watching => {
+                const newWatch = [];
+                watching.forEach((w) => {
+                    if (balanceRes.findIndex((r) => r.asset_id === w.asset_id) < 0) {
+                        newWatch.push(w);
+                    }
+                });
+                this.watch = newWatch;
+                this.displayAssets.push(...newWatch);
+            }));
         });
-        this.asset.fetchBalance(this.address);
-        this.asset.fetchAll(1);
-    }
-    ngOnDestroy(): void {
-        if (this.unSubBalance) {
-            this.unSubBalance.unsubscribe();
-        }
-    }
-
-    public initPage() {
-        this.unSubBalance = this.asset.balance().pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
-            this.displayAssets = [];
-            this.rateSymbol = '';
-            res.map(r => {
-                if (r.balance && r.balance > 0) {
-                    this.rateSymbol += r.symbol + ',';
-                }
-                this.displayAssets.push(r);
-            });
-            this.rateSymbol = this.rateSymbol.slice(0, -1);
-            this.getAssetRate();
-            //  去重
-            const newWatch = [];
-            watching.forEach((w) => {
-                if (res.findIndex((r) => r.asset_id === w.asset_id) < 0) {
-                    newWatch.push(w);
-                }
-            });
-            this.watch = newWatch;
-            this.displayAssets.push(...newWatch);
-            return res;
-        })))).subscribe(() => {});
     }
 
     // 获取资产汇率
@@ -130,9 +108,9 @@ export class AssetComponent implements OnInit, OnDestroy {
                     this.chrome.setWatch(this.watch);
                 }
                 this.global.searchBalance = this.displayAssets[index];
-                // this.displayAssets.splice(index, 1);
+                this.asset.webDelAssetId = this.displayAssets[index].asset_id;
+                this.displayAssets.splice(index, 1);
                 this.global.snackBarTip('hiddenSucc');
-                this.asset.fetchBalance(this.neon.address);
             }
         })
     }

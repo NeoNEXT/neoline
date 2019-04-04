@@ -5,8 +5,8 @@ import {
     Input,
     OnChanges,
     OnInit,
-    ViewChild,
-    OnDestroy} from '@angular/core';
+    ViewChild
+} from '@angular/core';
 import { Router } from '@angular/router';
 
 import { switchMap, map } from 'rxjs/operators';
@@ -15,7 +15,6 @@ import { Balance } from '@models/models';
 import { AssetState, NeonService, GlobalService, ChromeService } from '@app/core';
 
 import { FilterBarService } from '@popup/_services/filter-bar.service';
-import { Unsubscribable } from 'rxjs';
 
 @Component({
     selector: 'app-filter-bar',
@@ -23,7 +22,7 @@ import { Unsubscribable } from 'rxjs';
     styleUrls: ['filter-bar.component.scss']
 })
 export class PopupHomeFilterBarComponent
-    implements OnChanges, OnInit, AfterViewChecked, OnDestroy {
+    implements OnChanges, OnInit, AfterViewChecked {
     @Input() initAssetId: string;
 
     @ViewChild('more') more: ElementRef;
@@ -45,7 +44,6 @@ export class PopupHomeFilterBarComponent
     private moreStyleTop: number;
     private topHeight: number;
     private moreOpen: boolean;
-    public unSubBalance: Unsubscribable;
 
     constructor(
         private asset: AssetState,
@@ -65,7 +63,7 @@ export class PopupHomeFilterBarComponent
 
         this.filterContainerScrollWidth = 275;
         this.selectedFilterIndex = 0;
-        this.topHeight = 103.5;
+        this.topHeight = 103;
         this.moreOpen = false;
         this.filterMargin = 10;
     }
@@ -81,25 +79,16 @@ export class PopupHomeFilterBarComponent
                 this.loading = res;
             }
         });
-
         this.address = this.neon.address;
-        this.fetchBalance();
-    }
-    ngOnDestroy(): void {
-        if (this.unSubBalance) {
-            this.unSubBalance.unsubscribe();
-        }
+        this.getBalance();
     }
 
     ngOnChanges() {
-        this.initSelectedAsset();
-        // if (this.unSubBalance) {
-        //     this.unSubBalance.unsubscribe();
-        // }
+        // this.getBalance();
     }
 
-    public fetchBalance() {
-        this.unSubBalance = this.asset.balance().pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
+    public getBalance() {
+        this.asset.fetchBalanceTemp(this.address).pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
             this.balances = [];
             this.balances.push(...res);
             let newWatch = [];
@@ -109,10 +98,9 @@ export class PopupHomeFilterBarComponent
                 }
             });
             this.watch = newWatch;
-            // this.chrome.setWatch(this.watch);
             this.balances.push(...newWatch);
-            return res;
-        })))).subscribe((res: any) => {
+        })))).subscribe(() => {
+            this.initSelectedAsset();
         });
     }
 

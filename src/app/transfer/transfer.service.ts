@@ -14,14 +14,14 @@ export class TransferService {
     ) {}
     public create(from: string, to: string, asset: string, amount: number): Observable<Transaction> {
         if (this.neon.isAsset(asset)) {
-            return this.fetchBalance(from, asset).pipe(map((balance) => {
+            return this.getBalance(from, asset).pipe(map((balance) => {
                 return this.neon.createTx(from, to, balance, amount);
             }));
         } else {
             return of(this.neon.createTxForNEP5(from, to, asset, amount));
         }
     }
-    private fetchBalance(address: string, asset: string): Observable<UTXO[]> {
+    private getBalance(address: string, asset: string): Observable<UTXO[]> {
         return this.http.get(`${this.global.apiDomain}/v1/transactions/getutxoes?address=${address}&asset_id=${asset}`).pipe(map((res) => {
             return res as UTXO[];
         }));

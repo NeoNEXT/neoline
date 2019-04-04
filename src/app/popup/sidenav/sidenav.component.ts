@@ -47,7 +47,7 @@ export class PopupSidenavComponent implements OnInit {
     ngOnInit(): void {
         this.wallet = this.neon.wallet;
         this.address = this.neon.address;
-        this.asset.detail(NEO).subscribe((res: Balance) => {
+        this.asset.detailTemp(this.address, NEO).subscribe((res: Balance) => {
             this.balance = res;
             this.neoBalance = res.balance;
             this.neoSymbol = res.symbol;

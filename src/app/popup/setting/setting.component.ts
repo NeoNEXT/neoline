@@ -45,7 +45,6 @@ import {
 export class PopupSettingComponent implements OnInit {
     public walletArr: Array<Wallet>;
     public wallet: Wallet;
-    public balance: Balance;
     public lang: string;
     public rateCurrency: string;
     public rateCurrencys: Array<string>;
@@ -67,10 +66,6 @@ export class PopupSettingComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.asset.detail(NEO).subscribe((res: Balance) => {
-            this.balance = res;
-        });
-
         this.chrome.getLang().subscribe((res) => {
             this.lang = res;
         }, (err) => {

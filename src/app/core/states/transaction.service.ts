@@ -25,9 +25,9 @@ import {
 
 @Injectable()
 export class TransactionState {
-    private _address: string;
-    private _data: PageData < Transaction > ;
-    private $data: Subject < PageData < Transaction >> = new Subject();
+    // private _address: string;
+    // private _data: PageData < Transaction > ;
+    // private $data: Subject < PageData < Transaction >> = new Subject();
     constructor(
         private http: HttpService,
         private global: GlobalService
@@ -38,14 +38,33 @@ export class TransactionState {
     //     }));
     // }
     public clearCache() {
-        this._address = undefined;
-        this.$data = new Subject();
-        this._data = null;
+        // this._address = undefined;
+        // this.$data = new Subject();
+        // this._data = null;
     }
-    public data(): Observable < PageData < Transaction >> {
-        return this._data ? this.$data.pipe(startWith(this._data), publish(), refCount()) : this.$data.pipe(publish(), refCount());
-    }
-    public fetch(address: string, page: number, asset: string,
+    // public data(): Observable < PageData < Transaction >> {
+    //     return this._data ? this.$data.pipe(startWith(this._data), publish(), refCount()) : this.$data.pipe(publish(), refCount());
+    // }
+    // public fetch(address: string, page: number, asset: string,
+    //     max_id: number = -1, since_id: number = -1, abs_page: number = 1): Observable < any > {
+    //     let url = `${this.global.apiDomain}/v1/transactions/gettransactions?` +
+    //         `address=${address}&asset_id=${asset}&page_size=10&abs_page=${abs_page}`;
+    //     if (max_id !== -1) {
+    //         url += `&max_id=${max_id}`;
+    //     }
+    //     if (since_id !== -1) {
+    //         url += `&since_id=${since_id}`;
+
+    //     }
+    //     return this.http.get(url).pipe(map(res => {
+    //         this._address = address;
+    //         this._data = res;
+    //         this._data.page = page;
+    //         this.$data.next(res);
+    //     }));
+    // }
+
+    public fetchTemp(address: string, page: number, asset: string,
         max_id: number = -1, since_id: number = -1, abs_page: number = 1): Observable < any > {
         let url = `${this.global.apiDomain}/v1/transactions/gettransactions?` +
             `address=${address}&asset_id=${asset}&page_size=10&abs_page=${abs_page}`;
@@ -56,11 +75,6 @@ export class TransactionState {
             url += `&since_id=${since_id}`;
 
         }
-        return this.http.get(url).pipe(map(res => {
-            this._address = address;
-            this._data = res;
-            this._data.page = page;
-            this.$data.next(res);
-        }));
+        return this.http.get(url);
     }
 }

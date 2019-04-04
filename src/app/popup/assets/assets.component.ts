@@ -28,15 +28,12 @@ import {
     PopupAddTokenDialogComponent,
     PopupDelTokenDialogComponent
 } from '@popup/_dialogs';
-import {
-    Unsubscribable
-} from 'rxjs';
 
 @Component({
     templateUrl: 'assets.component.html',
     styleUrls: ['assets.component.scss']
 })
-export class PopupAssetsComponent implements OnInit, OnDestroy {
+export class PopupAssetsComponent implements OnInit {
     public allAssets: PageData < Asset > ; // 所有的资产
     public searchAssets: any = false; // 所有的资产
     public displayAssets: Balance[] = []; // 要显示的资产
@@ -44,8 +41,6 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     public isLoading: boolean;
     public isSearch: boolean = false;
     public searchValue: string;
-    public unSubBalance: Unsubscribable;
-    public unSubAll: Unsubscribable;
     public rateSymbol = '';
     public rateCurrency: string;
 
@@ -65,23 +60,12 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
         // let address = 'Af1FkesAboWnz7PfvXsEiXiwoH3PPzx7ta';
         this.chrome.getRateCurrency().subscribe(rateCurrency => {
             this.rateCurrency = rateCurrency;
-            this.initPage();
+            this.getBalance();
         });
-        this.asset.fetchAll(1);
-        this.asset.fetchBalance(this.neon.address);
     }
 
-    ngOnDestroy(): void {
-        if (this.unSubAll) {
-            this.unSubAll.unsubscribe();
-        }
-        if (this.unSubBalance) {
-            this.unSubBalance.unsubscribe();
-        }
-    }
-
-    public initPage() {
-        this.unSubBalance = this.asset.balance().pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
+    public getBalance() {
+        this.asset.fetchBalanceTemp(this.neon.address).pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
             this.displayAssets = [];
             this.rateSymbol = '';
             res.map((r, index) => {
@@ -106,13 +90,19 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
             // this.displayAssets.push(...newWatch);
             return res;
         })))).subscribe(() => {
-            this.unSubAll = this.asset.all().subscribe(res => {
-                this.allAssets = res;
-                this.allAssets.items.forEach((e, index) => {
-                    this.getAssetSrc(e.asset_id, index, 'all');
-                    this.allAssets.items[index].watching = this.displayAssets.findIndex((w: Balance) => w.asset_id === e.asset_id) >= 0;
-                });
+            this.getAllBalance(1);
+        });
+    }
+
+    public getAllBalance(page) {
+        this.isLoading = true;
+        this.asset.fetchAllTemp(page).then(res => {
+            this.allAssets = res;
+            this.allAssets.items.forEach((e, index) => {
+                this.getAssetSrc(e.asset_id, index, 'all');
+                this.allAssets.items[index].watching = this.displayAssets.findIndex((w: Balance) => w.asset_id === e.asset_id) >= 0;
             });
+            this.isLoading = false;
         });
     }
 
@@ -177,10 +167,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
 
     public page(page: number) {
         this.isLoading = true;
-
-        this.asset.fetchAll(page).finally(() => {
-            this.isLoading = false;
-        });
+        this.getAllBalance(page);
     }
 
     public addAsset(index: number) {
@@ -195,15 +182,16 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
                         this.allAssets.items[i].watching = true;
                     }
                     this.searchAssets[index].watching = true;
+                    this.displayAssets.push(this.searchAssets[index]);
                 } else {
                     this.allAssets.items[index].watching = true;
+                    this.displayAssets.push(this.allAssets.items[index]);
                 }
                 this.watch.push(assetItem);
                 this.chrome.setWatch(this.watch);
                 this.global.snackBarTip('addSucc');
-                this.asset.fetchBalance(this.neon.address);
             }
-        })
+        });
     }
 
     public delAsset(index: number) {
@@ -220,10 +208,10 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
                         return;
                     }
                 });
+                this.displayAssets.splice(index, 1);
                 this.global.snackBarTip('hiddenSucc');
-                this.asset.fetchBalance(this.neon.address);
             }
-        })
+        });
     }
 
 

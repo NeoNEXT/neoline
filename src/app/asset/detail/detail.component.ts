@@ -20,7 +20,6 @@ import {
     ActivatedRoute,
     Router
 } from '@angular/router';
-import { Unsubscribable } from 'rxjs';
 
 @Component({
     templateUrl: 'detail.component.html',
@@ -35,7 +34,6 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     public loading = true;
     public inTransaction: Array < Transaction > ;
     public rateCurrency: string;
-    public unSubTxFetch: Unsubscribable;
 
     imageUrl: any;
 
@@ -45,7 +43,6 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         public global: GlobalService,
         private router: Router,
         private aRoute: ActivatedRoute,
-        private transaction: TransactionState,
         private txState: TransactionState,
         private chrome: ChromeService,
         private http: HttpService,
@@ -53,14 +50,17 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.address = this.neon.address;
-        this.transaction.data().subscribe((res) => {
-            this.txPage = res;
-        });
         this.chrome.getRateCurrency().subscribe(rateCurrency => {
             this.rateCurrency = rateCurrency;
-            this.initPage();
+            this.aRoute.params.subscribe((params) => {
+                this.assetId = params.id;
+                // 获取交易
+                this.getInTransactions();
+                // this.txPage = undefined;
+                // 获取资产信息
+                this.getBalance();
+            });
         });
-        this.getInTransactions();
     }
 
     ngOnDestroy(): void {
@@ -71,60 +71,49 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
             total: 0,
             per_page: 10
         };
-        if (this.unSubTxFetch) {
-            this.unSubTxFetch.unsubscribe();
-        }
     }
 
-    public initPage() {
-        this.aRoute.params.subscribe((params) => {
-            if (this.unSubTxFetch) {
-                this.unSubTxFetch.unsubscribe();
+    public getBalance() {
+        this.asset.detailTemp(this.address, this.assetId).subscribe((res: Balance) => {
+            res.balance = Number(res.balance);
+            this.balance = res;
+            // 获取资产头像
+            const imageObj = this.asset.assetFile.get(this.assetId);
+            let lastModified = '';
+            if (imageObj) {
+                lastModified = imageObj['last-modified'];
+                this.imageUrl = imageObj['image-src'];
             }
-            this.txPage = undefined;
-            this.asset.detail(params.id).subscribe((res: Balance) => {
-                res.balance = Number(res.balance);
-                this.balance = res;
-                this.assetId = params.id;
-                this.unSubTxFetch = this.transaction.fetch(this.address, 1, params.id).subscribe(() => {});
-                // 获取资产头像
-                const imageObj = this.asset.assetFile.get(this.assetId);
-                let lastModified = '';
-                if (imageObj) {
-                    lastModified = imageObj['last-modified'];
-                    this.imageUrl = imageObj['image-src'];
-                }
-                this.asset.getAssetSrc(this.assetId, lastModified).subscribe(assetRes => {
-                    if (assetRes && assetRes['status'] === 200) {
-                        this.asset.setAssetFile(assetRes, this.assetId).then(src => {
-                            this.imageUrl = src;
-                        });
-                    } else if (assetRes && assetRes['status'] === 404) {
-                        this.imageUrl = this.asset.defaultAssetSrc;
-                    }
-                });
-                // 获取资产汇率
-                if (this.balance !== undefined && this.balance.balance && this.balance.balance > 0) {
-                    let query = {};
-                    query['symbol'] = this.rateCurrency;
-                    query['coins'] = this.balance.symbol;
-                    this.asset.getRate(query).subscribe(rateBalance => {
-                        if (rateBalance !== undefined && JSON.stringify(rateBalance.result) !== '{}') {
-                            this.balance.rateBalance =
-                                Number(rateBalance.result[this.balance.symbol]) * this.balance.balance;
-                        }
+            this.asset.getAssetSrc(this.assetId, lastModified).subscribe(assetRes => {
+                if (assetRes && assetRes['status'] === 200) {
+                    this.asset.setAssetFile(assetRes, this.assetId).then(src => {
+                        this.imageUrl = src;
                     });
-                } else {
-                    if (this.balance !== undefined) {
-                        this.balance.rateBalance = 0;
-                    }
+                } else if (assetRes && assetRes['status'] === 404) {
+                    this.imageUrl = this.asset.defaultAssetSrc;
                 }
             });
+            // 获取资产汇率
+            if (this.balance !== undefined && this.balance.balance && this.balance.balance > 0) {
+                let query = {};
+                query['symbol'] = this.rateCurrency;
+                query['coins'] = this.balance.symbol;
+                this.asset.getRate(query).subscribe(rateBalance => {
+                    if (rateBalance !== undefined && JSON.stringify(rateBalance.result) !== '{}') {
+                        this.balance.rateBalance =
+                            Number(rateBalance.result[this.balance.symbol]) * this.balance.balance;
+                    }
+                });
+            } else {
+                if (this.balance !== undefined) {
+                    this.balance.rateBalance = 0;
+                }
+            }
         });
     }
 
     private getInTransactions() {
-        this.txState.data().subscribe((res: any) => {
+        this.txState.fetchTemp(this.neon.address, 1, this.assetId).subscribe((res: any) => {
             if (this.txPage === undefined || res.page === 1) {
                 this.chrome.getTransaction().subscribe(inTxData => {
                     if (inTxData[this.address] === undefined || inTxData[this.address][this.assetId] === undefined) {
@@ -178,7 +167,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 sinceId = this.txPage.items[0].id;
             }
         }
-        this.txState.fetch(this.address, page, this.assetId, maxId, sinceId, absPage).subscribe(() => {
+        this.txState.fetchTemp(this.address, page, this.assetId, maxId, sinceId, absPage).subscribe(() => {
             this.txPage.page = page;
         });
     }
