@@ -99,12 +99,12 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
             } else {
                 this.balance.rateBalance = 0;
             }
-            this.fetchTx();
+            this.getInTransactions(1);
         });
     }
 
-    public fetchTx() {
-        this.txState.fetchTx(this.address, 1, this.assetId).subscribe((res: any) => {
+    public getInTransactions(page, maxId = -1, sinceId = -1, absPage = 1) {
+        this.txState.fetchTx(this.address, 1, this.assetId, maxId, sinceId, absPage).subscribe((res: any) => {
             if (this.txPage === undefined || res.page === 1) {
                 this.chrome.getTransaction().subscribe(inTxData => {
                     if (inTxData[this.address] === undefined || inTxData[this.address][this.assetId] === undefined) {
@@ -133,14 +133,13 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                             inTxData[this.address][this.assetId] = this.inTransaction;
                         }
                         this.chrome.setTransaction(inTxData);
-                        this.txPage = res;
+                        // this.txPage = res;
                         this.txPage.items = this.inTransaction.concat(this.txPage.items);
                     }, error => {});
                 });
-            } else {
-                this.txPage = res;
-                this.txPage.page = 1;
             }
+            this.txPage = res;
+            this.txPage.page = page;
             this.isLoading = false;
             this.filterBar.needLoad.emit(false);
         });
@@ -161,10 +160,6 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                 sinceId = this.txPage.items[0].id;
             }
         }
-        this.txState.fetchTx(this.address, page, this.assetId, maxId, sinceId, absPage).subscribe(() => {
-            this.txPage.page = page;
-            this.isLoading = false;
-            this.filterBar.needLoad.emit(false);
-        });
+        this.getInTransactions(page, maxId, sinceId, absPage);
     }
 }

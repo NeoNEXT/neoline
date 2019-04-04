@@ -55,8 +55,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
             this.aRoute.params.subscribe((params) => {
                 this.assetId = params.id;
                 // 获取交易
-                this.getInTransactions();
-                // this.txPage = undefined;
+                this.getInTransactions(1);
                 // 获取资产信息
                 this.getBalance();
             });
@@ -112,8 +111,8 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         });
     }
 
-    private getInTransactions() {
-        this.txState.fetchTx(this.neon.address, 1, this.assetId).subscribe((res: any) => {
+    private getInTransactions(page, maxId = -1, sinceId = -1, absPage = 1) {
+        this.txState.fetchTx(this.neon.address, page, this.assetId, maxId, sinceId, absPage).subscribe((res: any) => {
             if (this.txPage === undefined || res.page === 1) {
                 this.chrome.getTransaction().subscribe(inTxData => {
                     if (inTxData[this.address] === undefined || inTxData[this.address][this.assetId] === undefined) {
@@ -142,14 +141,14 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                             inTxData[this.address][this.assetId] = this.inTransaction;
                         }
                         this.chrome.setTransaction(inTxData);
-                        this.txPage = res;
+                        // this.txPage = res;
                         this.txPage.items = this.inTransaction.concat(this.txPage.items);
+                        // this.txPage.page = 1;
                     }, error => {});
                 });
-            } else {
-                this.txPage = res;
-                this.txPage.page = 1;
             }
+            this.txPage = res;
+            this.txPage.page = page;
         });
     }
 
@@ -167,9 +166,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 sinceId = this.txPage.items[0].id;
             }
         }
-        this.txState.fetchTx(this.address, page, this.assetId, maxId, sinceId, absPage).subscribe(() => {
-            this.txPage.page = page;
-        });
+        this.getInTransactions(page, maxId, sinceId, absPage);
     }
 
 
