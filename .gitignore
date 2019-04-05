@@ -5,6 +5,8 @@
 /tmp
 /out-tsc
 *.crx
+neoline*.zip
+dist.zip
 
 # dependencies
 /node_modules
