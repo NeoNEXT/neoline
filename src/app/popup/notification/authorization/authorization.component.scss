@@ -3,7 +3,7 @@
 
 .content {
     font-weight: bold;
-    padding: 0 15px;
+    padding: 20px 15px 0  15px;
     text-align: center;
     width: 100%;
     position: relative;
@@ -74,10 +74,15 @@
             .left {
                 left: 67px;
                 margin-left: -88px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                padding-left: 15px;
             }
             .right {
                 right: 67px;
                 margin-right: -88px;
+                padding-right: 15px;
             }
         }
 
