@@ -97,16 +97,12 @@ window.addEventListener('message', (e) => {
         case 'invokeTest':
             {
                 const parameter = e.data.parameter;
-                const parameterArr = [parameter.scripthash, parameter.operation, parameter.args];
-                const apiUrl = parameter.network === 'MainNet' ? mainApi : testApi;
-                httpPost(`${apiUrl}/v1/transactions/invoketest`, parameterArr, (res) => {
-                    window.postMessage({
-                        target: 'invokeTestRes',
-                        data: res
-                    }, '*');
-                }, null);
+                e.data.url =  parameter.network === 'MainNet' ? mainApi : testApi;
+                e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
+                chrome.runtime.sendMessage(e.data, (response) => {
+                    return Promise.resolve('Dummy response to keep the console quiet');
+                });
                 return;
-
             }
         case 'transfer':
         case 'connect':

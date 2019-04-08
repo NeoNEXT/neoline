@@ -117,7 +117,7 @@ export class Init {
                                     }
                                 default:
                                     {
-                                        resolveMain(res);
+                                        resolveMain({txID: res});
                                         break;
                                     }
                             }
@@ -322,7 +322,7 @@ export class Init {
             const promise = new Promise((resolve, reject) => {
                 const invokeTestFn = (event) => {
                     if (event.data.target !== undefined && event.data.target === 'invokeTestRes') {
-                        resolve(event.data.data);
+                        resolve(event.data);
                         window.removeEventListener('message', invokeTestFn);
                     }
                 };
@@ -331,10 +331,10 @@ export class Init {
             promise.then((res: any) => {
                 if (res.bool_status) {
                     resolveMain({
-                        script: res.script,
-                        state: res.state,
-                        gas_consumed: res.gas_consumed,
-                        stack: res.stack
+                        script: res.result.script,
+                        state: res.result.state,
+                        gasConsumed: res.result.gas_consumed,
+                        stack: JSON.stringify(res.result.stack)
                     });
                 } else {
                     rejectMain(errors.NETWORK_ERROR);

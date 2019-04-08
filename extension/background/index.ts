@@ -15,7 +15,8 @@ export {
 import {
     getStorage,
     setStorage,
-    notification
+    notification,
+    httpPost
 } from '../common';
 /**
  * Background methods support.
@@ -139,6 +140,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendResponse('');
                 return true;
             }
+        case 'invokeTest': {
+            httpPost(`${request.url}/v1/transactions/invoketest`, {params:  request.parameter}, (res) => {
+                res.target = 'invokeTestRes';
+                windowCallback(res);
+            }, null);
+            sendResponse('');
+            return;
+        }
     }
     sendResponse('');
     return true;
