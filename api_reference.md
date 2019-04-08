@@ -28,12 +28,12 @@
 
 [Errors](#Errors)
 
-* [CONNECTION_REJECTED](#CONNECTION_REJECTED)
-* [RPC_ERROR](#RPC_ERROR)
-* [INVALID_PARAMETER](#INVALID_PARAMETER)
-* [INSUFFICIENT_FUNDS](#INSUFFICIENT_FUNDS)
-* [CANCELLED](#CANCELLED)
-* [NETWORK_NOT_EXIST](#NETWORK_NOT_EXIST)
+* [CONNECTION_REJECTED](#Errors)
+* [RPC_ERROR](#Errors)
+* [INVALID_PARAMETER](#Errors)
+* [INSUFFICIENT_FUNDS](#Errors)
+* [CANCELLED](#Errors)
+* [NETWORK_NOT_EXIST](#Errors)
 
 Enum 'network' is of string type used in api request or response, indicating the target request network or the result from which network it gets. The value must be submitted in upper camel case.
 
@@ -81,11 +81,7 @@ neoline.connect()
 .then(result => {
     console.log("result: " + result); // true or false
 })
-.catch(({
-    code: string,
-    description: string?,
-    data: any
-}) => {
+.catch(err => {
     console.log("The request failed.");
 });
 ```
@@ -107,15 +103,15 @@ None
 | website | string(64) | The website of neoline |
 | logo | string(128) | The logo of neoline |
 | compatibility | string(16)[] | A list of NEPs that neoline supports |
-| `extra` | Object | Other attributes |
+| [extra](#Member-of-extra) | Object | Other attributes |
 
-Struct of `extra`
+#### member of `extra`
 
 | Parameter | Type | Description |
 | - | - | - |
-| currency | `CURRENCY` | Which currency is used in wallet |
+| currency | [CURRENCY](#enum-members-of-CURRENCY) | Which currency is used in wallet |
 
-enum members of `CURRENCY`
+#### enum members of `CURRENCY`
 
 * CNY
 * USD
@@ -154,11 +150,7 @@ neoline.getWalletInfo()
     console.log("Wallet compatibility: " + compatibility);
     console.log("Wallet currency: " + currency);
 })
-.catch(({
-    code: string,
-    description: string?,
-    data: any
-}) => {
+.catch(err => {
     console.log("The request failed.");
 });
 ```
@@ -199,12 +191,8 @@ neoline.getAccount()
     console.log("Active account alias: " + alias)
     console.log("Active account address: " + address);
 })
-.catch(({
-    code: string,
-    description: string?,
-    data: any,
-}) => {
-    switch(code) {
+.catch(err => {
+    switch(err.code) {
         case 'CONNECTION_REJECTED':
             console.log("The user rejected your request.");
             break;
@@ -233,16 +221,16 @@ The request argument is an object including all arguments.
 
 | Parameter | Type | Description |
 | - | - | - |
-| balances | `BalanceResponse`[] | List of all assets with tokens |
+| balances | [BalanceResponse](#struct-of-`BalanceResponse`)[] | List of all assets with tokens |
 
-Struct of `BalanceResponse`
+#### struct of `BalanceResponse`
 
 | Parameter | Type | Description |
 | - | - | - |
 | assetID | string(34, 66) | The assetID of the asset or token |
 | symbol | string(32) | The symbol of the asset or token |
-| decimal | int | The decimal of the asset or token |
-| amount | string(32) | Value of the balance represented as a String |
+| decimal | integer | The decimal of the asset or token |
+| amount | string | Value of the balance represented as a String |
 
 #### Error Response
 
@@ -258,7 +246,7 @@ Struct of `BalanceResponse`
 neoline.getBalance({
     address: "AQVh2pG732YvtNaxEGkQUei3YA4cvo7d2i",
     assetID: "0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b",
-    network: "MainNet",
+    network: "MainNet"
 })
 .then(balances => {
     console.log("balances: ");
@@ -267,12 +255,8 @@ neoline.getBalance({
         console.log(balance);
     });
 })
-.catch(({
-    code: string,
-    description: string?,
-    data: any
-}) => {
-    switch(code) {
+.catch(err => {
+    switch(err.code) {
         case 'INVALID_ARGUMENTS':
             console.log("Invalid arguments.");
             break;
@@ -300,9 +284,9 @@ None
 
 | Parameter | Type | Description |
 | - | - | - |
-| state | `AUTHORIZATION_STATES` | The current authorization state of caller |
+| state | [AUTHORIZATION_STATES](#enum-members-of-`AUTHORIZATION_STATES`) | The current authorization state of caller |
 
-enum members of `AUTHORIZATION_STATES`
+#### enum members of `AUTHORIZATION_STATES`
 
 * NONE
 * AUTHORIZED
@@ -323,11 +307,7 @@ neoline.getAuthState()
 .then(state => {
     console.log("Auth state: " + state);
 })
-.catch(({
-    code: string,
-    description: string?,
-    data: any
-}) => {
+.catch(err => {
     console.log("The request failed.");
 });
 ```
@@ -344,10 +324,10 @@ None
 
 | Parameter | Type | Description |
 | - | - | - |
-| using | `NEO_NETWORK` | The network neoline currently connected |
-| networks | `NEO_NETWORK`[] | A list of networks neoline supports |
+| using | [NEO_NETWORK](# NEO_NETWORK) | The network neoline currently connected |
+| networks | [NEO_NETWORK](#enum-members-of-`NEO_NETWORK`) | A list of networks neoline supports |
 
-`NEO_NETWORK`
+#### enum members of `NEO_NETWORK`
 
 * MainNet
 * TestNet
@@ -374,11 +354,7 @@ neoline.getNetworks()
     console.log("Current using network: " + using);
     console.log("Supported networks: " + networks);
 })
-.catch(({
-    code: string,
-    description: string?,
-    data: any
-}) => {
+.catch(err => {
     console.log("The request failed.");
 });
 ```
@@ -422,7 +398,7 @@ neoline.transfer({
     "symbol": "NEO",
     "amount": "1",
     "remark": "Sent by NEOLINE",
-    "network": "MainNet",
+    "network": "MainNet"
 })
 .then(response => {
     const {
@@ -431,12 +407,8 @@ neoline.transfer({
 
     console.log("Transaction ID: " + txID);
 })
-.catch(({
-    code: string,
-    description: string?,
-    data: any
-}) => {
-    switch(code) {
+.catch(err => {
+    switch(err.code) {
         case 'INVALID_ARGUMENTS':
             console.log("Invalid arguments.");
             break;
@@ -468,7 +440,86 @@ neoline.transfer({
 
 ### getTransaction
 
-to be implemented.
+(TO BE IMPLEMENTED)
+
+Returns detail of a transaction in given network, including asset transfers and nep5 token transfers.
+
+#### Input Arguments
+
+| Parameter | Type | Description |
+| - | - | - |
+| txID | string(66) | Transaction ID |
+
+#### Success Response
+
+| Parameter | Type | Description |
+| - | - | - |
+| txID | string(66) | Transaction ID |
+| vin | [VIN](#struct-of-`VIN`)[] | Used UTXOs |
+| vout | [VOUT](#struct-of-`VOUT`)[] | Created UTXOs |
+| tokenTXs | [TOKEN_TX](#struct-of-`TOKEN_TX`)[] | Token transfers |
+| sysFee | string | System fee |
+| netFee | string | Net fee |
+| gas | string | Gas used |
+| blockIndex | integer | The block index of this transaction |
+| blockTime | integer | The block time of this transaction |
+
+#### struct of `VIN`
+
+| Parameter | Type | Description |
+| - | - | - |
+| txid | string(66) | Transaction ID |
+| n | integer | The index of transaction vout(UTXO) |
+| assetID | string(66) | The asset id of this transaction |
+| value | string | The transferred value |
+| address | string(34) | The address from where the utxo is being received |
+
+#### struct of `VOUT`
+
+| Parameter | Type | Description |
+| - | - | - |
+| n | integer | The index of transaction vout(UTXO) |
+| assetID | string(66) | The asset id of this transaction |
+| value | string | The transferred value |
+| address | string(34) | The address from where the utxo is being received |
+
+#### struct of `TOKEN_TX`
+
+| Parameter | Type | Description |
+| - | - | - |
+| assetID | string(40) | The asset id of this transaction |
+| from | string(34) | The address from where the transaction is being sent |
+| to | string(34) | Destination address where asset is sent to |
+| amount | string | Amount transferred in this transaction |
+
+#### Error Response
+
+| Parameter | Type | Description |
+| - | - | - |
+| code | string(32) | Type of the error |
+| description | string(256)? | Description of the error |
+| data | Object? | Any related data to this error |
+
+#### Example
+
+```javascript
+neoline.getTransaction({
+    "txID": "0xfb5bd72b2d6792d75dc2f1084ffa9e9f70ca85543c717a6b13d9959b452a57d6"
+})
+.then(tx => {
+    console.log("Transaction detail: " + tx)
+})
+.catch(err => {
+    switch(err.code) {
+        case 'CONNECTION_REJECTED':
+            console.log("The user rejected your request.");
+            break;
+        default:
+            console.log("The request failed.");
+    }
+});
+```
+
 
 ### invokeTest
 
@@ -480,17 +531,17 @@ Returns the simulation result after calling a smart contract at scripthash with 
 | - | - | - |
 | scriptHash | string(40) | The smart contract scripthash |
 | operation | string(64) | The operation name defined in smart contract |
-| args | `Argument`[]? | The arguments to be passed into the smart contract operation |
+| args | [Argument](#struct-of-`Argument`)[]? | The arguments to be passed into the smart contract operation |
 | network | string(32) | One of the networks the GetNetworks() returnd, indicates which network the api should query from.
 
-Struct of `Argument`
+#### struct of `Argument`
 
 | Parameter | Type | Description |
 | - | - | - |
-| `type` | string(16) | The type of the argument |
+| [type](#enum-members-of-`type`) | string(16) | The type of the argument |
 | value | text | String representation of the argument value |
 
-enum members of `type`
+#### enum members of `type`
 
 * String
 * Boolean
@@ -506,11 +557,11 @@ enum members of `type`
 | Parameter | Type | Description |
 | - | - | - |
 | script | text | A script runnable by the VM. This is the same script that is carried in InvocationTransaction |
-| state | string(32) | State of the execution from NEO VM. See `NEO_VM_STATE` for detail. |
-| gas_consumed | string(16) | Estimated amount of GAS to be used to execute the invocation. (Currently Up to 10 free per transaction) |
+| state | string(32) | State of the execution from NEO VM. See [NEO_VM_STATE](#enum-members-of-`NEO_VM_STATE`) for detail. |
+| gasConsumed | string(16) | Estimated amount of GAS to be used to execute the invocation. (Currently Up to 10 free per transaction) |
 | stack | Argument[] | A list of returned values from smart contract |
 
-enum members of `NEO_VM_STATE`
+#### enum members of `NEO_VM_STATE`
 
 * NONE
 * HALT
@@ -535,29 +586,25 @@ neoline.invokeTest({
         {
             "type": "Hash160",
             "value": "91b83e96f2a7c4fdf0c1688441ec61986c7cae26"
-        },
+        }
     ],
-    network: "MainNet",
+    network: "MainNet"
 })
 .then(response => {
     const {
         script,
         state,
-        gas_consumed,
+        gasConsumed,
         stack,
     } = response;
 
     console.log("Script: " + script);
     console.log("State: " + state);
-    console.log("GAS consumed: " + gas_consumed);
+    console.log("GAS consumed: " + gasConsumed);
     console.log("Stack: " + stack);
 })
-.catch(({
-    code: string,
-    description: string?,
-    data: any
-}) => {
-    switch(code) {
+.catch(err => {
+    switch(err.code) {
         case 'INVALID_ARGUMENTS':
             console.log("Invalid arguments.");
             break;
@@ -576,6 +623,8 @@ To see if the smart contract call succeeded, you should check if state enum `FAU
 
 ### invoke
 
+(TO BE IMPLEMENTED)
+
 Invoke the specific smart contract method with given arguments. It is highly recommended to be fully tested in invokeTest() before calling this api. The request will be executed and broadcasted on the target network.
 
 #### Input Arguments
@@ -584,7 +633,7 @@ Invoke the specific smart contract method with given arguments. It is highly rec
 | - | - | - |
 | scriptHash | string(40) | The smart contract scripthash |
 | operation | string(64) | The operation name defined in smart contract |
-| args | `Argument`[]? | The arguments to be passed into the smart contract operation |
+| args | [Argument](#struct-of-`Argument`)[]? | The arguments to be passed into the smart contract operation |
 | network | string(32) | One of the networks the GetNetworks() returnd, indicates which network the api should query from.
 
 #### Success Response
@@ -604,20 +653,26 @@ Invoke the specific smart contract method with given arguments. It is highly rec
 #### Example
 
 ```javascript
-neoline.invoke()
-.then(response => {
+neoline.invoke(
+    {
+    scriptHash: "af7c7328eee5a275a3bcaee2bf0cf662b5e739be",
+    operation: "balanceOf",
+    args: [
+        {
+            "type": "Hash160",
+            "value": "91b83e96f2a7c4fdf0c1688441ec61986c7cae26"
+        }
+    ],
+    network: "MainNet"
+}).then(response => {
     const {
         txID
     } = response;
 
     console.log("Transaction ID: " + txID);
 })
-.catch(({
-    code: string,
-    description: string?,
-    data: any
-}) => {
-    switch(code) {
+.catch(err => {
+    switch(err.code) {
         case 'INVALID_ARGUMENTS':
             console.log("Invalid arguments.");
             break;
@@ -655,7 +710,7 @@ Method removeEventListener() removes from the EventTarget an event listener prev
 
 #### Annotates
 
-If you pass anonymous function(listener) to `addEventListener`, then you are not able to remove it. This is convenient when you are not plan to remove a listener.
+If you pass anonymous function(listener) to [addEventListener](#addEventListener), then you are not able to remove it. This is convenient when you are not plan to remove a listener.
 
 ```javascript
 // Use anonymous function
@@ -737,7 +792,7 @@ neoline.addEventListener(neoline.EVENT.ACCOUNT_CHANGED, account => {
 
 ### CONNECTED
 
-This event will be fired once user has approved the connection from dapp. Specially, if the dapp is already listed in neoline authorization center, this event will not be triggered. Relevant apis are: `getAccount`, `transfer`, `invoke`.
+This event will be fired once user has approved the connection from dapp. Specially, if the dapp is already listed in neoline authorization center, this event will not be triggered. Relevant apis are: [getAccount](#getAccount), [transfer](#transfer), [invoke](#invoke).
 
 #### Example
 
@@ -749,7 +804,7 @@ neoline.addEventListener(neoline.EVENT.CONNECTED, () => {
 
 ### CONNECTION_REJECTED
 
-This event will be fired if user rejected the connection from dapp. If the dapp being listed in neoline authorization center and marked as rejected, this callback will also be fired. Relevant apis are: `getAccount`, `transfer`, `invoke`.
+This event will be fired if user rejected the connection from dapp. If the dapp being listed in neoline authorization center and marked as rejected, this callback will also be fired. Relevant apis are: [getAccount](#getAccount), [transfer](#transfer), [invoke](#invoke).
 
 #### Example
 
