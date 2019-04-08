@@ -38,17 +38,20 @@
 
         </mat-error>
     </mat-form-field>
-    <mat-form-field>
-        <img class="icon" matPrefix src="/assets/images/lock.png" />
-        <input matInput placeholder="{{ 'enterConfirmPassword' | translate | async }}"
-            [(ngModel)]="walletImport.confirmPassword" name="confirmPassword" #confirmPassword="ngModel" required
-            [type]="hideConfirmPwd ? 'password' : 'text'" />
-        <button tabindex="-1" mat-button matSuffix mat-icon-button type="button" (click)="toggleConfirmPwd()">
-            <span [class]="hideConfirmPwd ? 'hide-pwd' : ''"></span>
-        </button>
-    </mat-form-field>
-    <mat-error class="error-wif" *ngIf="confirmPassword.value != password.value && confirmPassword.value != ''">
-        {{ 'confirmError' | translate | async }}</mat-error>
+    <div class="confirm-box"  *ngIf="importType == 'PrivateKey' ">
+        <mat-form-field>
+            <img class="icon" matPrefix src="/assets/images/lock.png" />
+            <input matInput placeholder="{{ 'enterConfirmPassword' | translate | async }}"
+                [(ngModel)]="walletImport.confirmPassword" name="confirmPassword" #confirmPassword="ngModel" required
+                [type]="hideConfirmPwd ? 'password' : 'text'" />
+            <button tabindex="-1" mat-button matSuffix mat-icon-button type="button" (click)="toggleConfirmPwd()">
+                <span [class]="hideConfirmPwd ? 'hide-pwd' : ''"></span>
+            </button>
+        </mat-form-field>
+        <mat-error class="error-wif" *ngIf="confirmPassword.value != password.value && confirmPassword.value != ''">
+            {{ 'confirmError' | translate | async }}</mat-error>
+    </div>
+
     <div *ngIf="importType == 'PrivateKey'">
         <mat-form-field>
             <img class="icon" matPrefix src="/assets/images/wallet_pwd.png" alt="" />
@@ -82,14 +85,9 @@
         <mat-error class="error-wif" *ngIf="isEncryptedKey === false">{{ 'EncryptedKeyPattern' | translate | async }}
         </mat-error>
     </div>
-    <!-- <button mat-raised-button color="primary" (click)="import()" [disabled]="!form.valid">
-        <span *ngIf="!loading">{{ 'import' | translate | async}}</span>
-        <mat-spinner *ngIf="loading" class="light" diameter="28"></mat-spinner>
-    </button>
-    <button mat-stroked-button color="primary" (click)="!loading && form.reset()">{{ 'cancel' | translate | async}}</button> -->
 
     <button class="popup-wallet-body-submit" mat-raised-button color="primary"
-        [disabled]="isInit || walletForm.invalid || loading || confirmPassword.value != password.value"
+        [disabled]="isInit || walletForm.invalid || loading || (importType == 'PrivateKey' && confirmPassword.value != password.value) "
         (click)="importType == 'PrivateKey' ? submit() : submitEncrypted()">
         <ng-container *ngIf="!loading">{{ 'import' | translate | async }}</ng-container>
         <ng-container *ngIf="loading">{{ 'importing' | translate | async }}</ng-container>
@@ -131,22 +129,10 @@
 
             </mat-error>
         </mat-form-field>
-        <mat-form-field class="popup-wallet-body-text" focused="true">
-            <img class="icon" matPrefix src="/assets/images/lock.png" />
-            <input matInput placeholder="{{ 'enterConfirmPassword' | translate | async }}"
-                [(ngModel)]="walletImport.confirmPassword" name="confirmPassword" #confirmPassword="ngModel" required
-                [type]="hideConfirmPwd ? 'password' : 'text'"
-                (keyup.enter)="(!isInit && !nep2Form.invalid && !loading && confirmPassword.value == password.value && nep2Json != null) ? submitEncrypted() : null " />
-            <button tabindex="-1" mat-button matSuffix mat-icon-button type="button" (click)="toggleConfirmPwd()">
-                <span [class]="hideConfirmPwd ? 'hide-pwd' : ''"></span>
-            </button>
-        </mat-form-field>
-        <mat-error class="error-wif" *ngIf="confirmPassword.value != password.value && confirmPassword.value != ''">
-            {{ 'confirmError' | translate | async }}</mat-error>
 
 
     <button class="popup-wallet-body-submit" mat-raised-button color="primary"
-        [disabled]="nep2Json == null || nep2Form.invalid || loading || confirmPassword.value != password.value"
+        [disabled]="nep2Json == null || nep2Form.invalid || loading"
         (click)="submitEncrypted()" required>
         <ng-container *ngIf="!loading">{{ 'import' | translate | async }}</ng-container>
         <ng-container *ngIf="loading">{{ 'importing' | translate | async }}</ng-container>
