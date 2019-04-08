@@ -5,7 +5,7 @@
     "manifest_version": 2,
     "browser_action": {
         "default_popup": "index.html#popup",
-        "default_icon": "assets/logo.png"
+        "default_icon": "assets/logo128.png"
     },
     "default_locale": "zh_CN",
     "commands": {
@@ -17,6 +17,13 @@
             "description": "Opens neoline"
         }
     },
+    "icons":
+    {
+        "16": "assets/logo16.png",
+        "48": "assets/logo48.png",
+        "128": "assets/logo128.png"
+    },
+
     "content_scripts": [{
         "matches": ["*://*/*"],
         "js": [
