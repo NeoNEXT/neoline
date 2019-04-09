@@ -43,11 +43,11 @@ import {
     styleUrls: ['setting.component.scss']
 })
 export class PopupSettingComponent implements OnInit {
-    public walletArr: Array<Wallet>;
+    public walletArr: Array < Wallet > ;
     public wallet: Wallet;
     public lang: string;
     public rateCurrency: string;
-    public rateCurrencys: Array<string>;
+    public rateCurrencys: Array < string > ;
     public rateTime: number;
 
     constructor(
@@ -63,6 +63,7 @@ export class PopupSettingComponent implements OnInit {
         this.walletArr = this.neon.walletArr;
         this.wallet = this.neon.wallet;
         this.rateCurrencys = this.setting.rateCurrencys;
+        this.rateCurrency = this.asset.rateCurrency;
     }
 
     ngOnInit(): void {
@@ -72,8 +73,15 @@ export class PopupSettingComponent implements OnInit {
             this.global.log('get lang setting failed', err);
             this.lang = '';
         });
-        this.chrome.getRateCurrency().subscribe((rateCurrency) => {
-            this.rateCurrency = rateCurrency;
+        let query = {};
+        query['symbol'] = this.rateCurrency;
+        query['coins'] = 'neo';
+        this.asset.getRate(query).subscribe(rateBalance => {
+            const tempRateObj = rateBalance.result;
+            if (JSON.stringify(tempRateObj) === '{}') {
+                return;
+            }
+            this.rateTime = tempRateObj['updated_at'];
         });
     }
 

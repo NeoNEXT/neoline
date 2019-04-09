@@ -47,31 +47,29 @@ export class AssetComponent implements OnInit {
 
     ngOnInit(): void {
         this.address = this.neon.address;
-        this.chrome.getRateCurrency().subscribe(rateCurrency => {
-            this.rateCurrency = rateCurrency;
-            this.asset.fetchBalance(this.neon.address).pipe(map(balanceRes => {
-                this.displayAssets = [];
-                this.rateSymbol = '';
-                balanceRes.forEach(r => {
-                    if (r.balance && r.balance > 0) {
-                        this.rateSymbol += r.symbol + ',';
-                    }
-                    this.displayAssets.push(r);
-                });
-                this.rateSymbol = this.rateSymbol.slice(0, -1);
-                this.getAssetRate();
-                return balanceRes;
-            })).subscribe((balanceRes) => this.chrome.getWatch().subscribe(watching => {
-                const newWatch = [];
-                watching.forEach((w) => {
-                    if (balanceRes.findIndex((r) => r.asset_id === w.asset_id) < 0) {
-                        newWatch.push(w);
-                    }
-                });
-                this.watch = newWatch;
-                this.displayAssets.push(...newWatch);
-            }));
-        });
+        this.rateCurrency = this.asset.rateCurrency;
+        this.asset.fetchBalance(this.neon.address).pipe(map(balanceRes => {
+            this.displayAssets = [];
+            this.rateSymbol = '';
+            balanceRes.forEach(r => {
+                if (r.balance && r.balance > 0) {
+                    this.rateSymbol += r.symbol + ',';
+                }
+                this.displayAssets.push(r);
+            });
+            this.rateSymbol = this.rateSymbol.slice(0, -1);
+            this.getAssetRate();
+            return balanceRes;
+        })).subscribe((balanceRes) => this.chrome.getWatch().subscribe(watching => {
+            const newWatch = [];
+            watching.forEach((w) => {
+                if (balanceRes.findIndex((r) => r.asset_id === w.asset_id) < 0) {
+                    newWatch.push(w);
+                }
+            });
+            this.watch = newWatch;
+            this.displayAssets.push(...newWatch);
+        }));
         this.asset.popAddAssetId().subscribe(assetItem => {
             if (!assetItem) {
                 return;
@@ -82,21 +80,10 @@ export class AssetComponent implements OnInit {
 
     // 获取资产汇率
     public getAssetRate() {
-        if (!this.rateSymbol) {
-            return;
-        }
-        this.rateCurrency = this.rateCurrency;
-        let query = {};
-        query['symbol'] = this.rateCurrency;
-        query['coins'] = this.rateSymbol;
-        this.asset.getRate(query).subscribe(rateBalance => {
-            const tempRateObj = rateBalance.result;
-            if (JSON.stringify(tempRateObj) === '{}') {
-                return;
-            }
+        this.asset.getAssetRate(this.rateSymbol).subscribe(rateBalance => {
             this.displayAssets.map(d => {
-                if (d.symbol.toLowerCase() in tempRateObj) {
-                    d.rateBalance = Number(tempRateObj[d.symbol.toLowerCase()]) * d.balance;
+                if (d.symbol.toLowerCase() in rateBalance) {
+                    d.rateBalance = rateBalance[d.symbol.toLowerCase()] * d.balance;
                 }
                 return d;
             });

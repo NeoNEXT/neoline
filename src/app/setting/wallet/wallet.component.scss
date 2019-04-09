@@ -27,9 +27,6 @@
         overflow: hidden;
         display: flex;
         flex-direction: row;
-        &:hover {
-            cursor: pointer;
-        }
 
         .wallet-select {
             width: 80px;
@@ -76,6 +73,7 @@
                 .wallet-name {
                     font-size: 16px;
                     border: none;
+                    cursor: pointer;
                 }
                 .wallet-name:focus {
                     border-bottom: 1px solid #e5e5e5;

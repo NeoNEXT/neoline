@@ -50,15 +50,13 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.address = this.neon.address;
-        this.chrome.getRateCurrency().subscribe(rateCurrency => {
-            this.rateCurrency = rateCurrency;
-            this.aRoute.params.subscribe((params) => {
-                this.assetId = params.id;
-                // 获取交易
-                this.getInTransactions(1);
-                // 获取资产信息
-                this.getBalance();
-            });
+        this.rateCurrency = this.asset.rateCurrency;
+        this.aRoute.params.subscribe((params) => {
+            this.assetId = params.id;
+            // 获取交易
+            this.getInTransactions(1);
+            // 获取资产信息
+            this.getBalance();
         });
     }
 
@@ -94,13 +92,9 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
             });
             // 获取资产汇率
             if (this.balance !== undefined && this.balance.balance && this.balance.balance > 0) {
-                let query = {};
-                query['symbol'] = this.rateCurrency;
-                query['coins'] = this.balance.symbol;
-                this.asset.getRate(query).subscribe(rateBalance => {
-                    if (rateBalance !== undefined && JSON.stringify(rateBalance.result) !== '{}') {
-                        this.balance.rateBalance =
-                            Number(rateBalance.result[this.balance.symbol.toLowerCase()]) * this.balance.balance;
+                this.asset.getAssetRate(this.balance.symbol).subscribe(rateBalance => {
+                    if (this.balance.symbol.toLowerCase() in rateBalance) {
+                        this.balance.rateBalance = rateBalance[this.balance.symbol.toLowerCase()] * this.balance.balance;
                     }
                 });
             } else {

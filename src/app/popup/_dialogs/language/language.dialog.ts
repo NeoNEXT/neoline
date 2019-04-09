@@ -11,6 +11,7 @@ import {
 import {
     ChromeService,
     GlobalService,
+    AssetState
 } from '@app/core';
 import {
     Router
@@ -29,6 +30,7 @@ export class PopupLanguageDialogComponent implements OnInit {
         private chromeSer: ChromeService,
         private global: GlobalService,
         private router: Router,
+        private AssetSer: AssetState,
         @Inject(MAT_DIALOG_DATA) public data: {
             optionGroup: [],
             currentOption: string,
@@ -37,12 +39,8 @@ export class PopupLanguageDialogComponent implements OnInit {
     ) {}
 
     ngOnInit() {
+        this.rateCurrency = this.AssetSer.rateCurrency;
         this.targetOption = this.data.currentOption;
-        if (this.data.type === 'currency') {
-            this.chromeSer.getRateCurrency().subscribe(rateCurrency => {
-                this.rateCurrency = rateCurrency;
-            });
-        }
     }
 
     public cancel() {
@@ -59,6 +57,7 @@ export class PopupLanguageDialogComponent implements OnInit {
             location.href = `index.html#popup/setting`;
         } else if (this.data.type === 'currency') {
             this.rateCurrency = this.targetOption;
+            this.AssetSer.rateCurrency = this.rateCurrency;
             this.chromeSer.setRateCurrency(this.rateCurrency);
             this.dialogRef.close(this.targetOption);
         }

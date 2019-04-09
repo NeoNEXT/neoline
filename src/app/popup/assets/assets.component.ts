@@ -54,14 +54,12 @@ export class PopupAssetsComponent implements OnInit {
         this.watch = [];
         this.displayAssets = [];
         this.isLoading = false;
+        this.rateCurrency = this.asset.rateCurrency;
     }
 
     ngOnInit(): void {
         // let address = 'Af1FkesAboWnz7PfvXsEiXiwoH3PPzx7ta';
-        this.chrome.getRateCurrency().subscribe(rateCurrency => {
-            this.rateCurrency = rateCurrency;
-            this.getBalance();
-        });
+        this.getBalance();
     }
 
     public getBalance() {
@@ -108,21 +106,10 @@ export class PopupAssetsComponent implements OnInit {
 
     // 获取资产汇率
     public getAssetRate() {
-        if (!this.rateSymbol) {
-            return;
-        }
-        this.rateCurrency = this.rateCurrency;
-        let query = {};
-        query['symbol'] = this.rateCurrency;
-        query['coins'] = this.rateSymbol;
-        this.asset.getRate(query).subscribe(rateBalance => {
-            const tempRateObj = rateBalance.result;
-            if (JSON.stringify(tempRateObj) === '{}') {
-                return;
-            }
+        this.asset.getAssetRate(this.rateSymbol).subscribe(rateBalance => {
             this.displayAssets.map(d => {
-                if (d.symbol.toLowerCase() in tempRateObj) {
-                    d.rateBalance = Number(tempRateObj[d.symbol.toLowerCase()]) * d.balance;
+                if (d.symbol.toLowerCase() in rateBalance) {
+                    d.rateBalance = rateBalance[d.symbol.toLowerCase()] * d.balance;
                 }
                 return d;
             });

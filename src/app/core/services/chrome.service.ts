@@ -510,6 +510,42 @@ export class ChromeService {
         }));
     }
 
+    public setAssetRate(assetRate: Map < string, {} > ) {
+        if (!this.check) {
+            localStorage.setItem('assetRate', JSON.stringify(Array.from(assetRate.entries())));
+            return;
+        }
+        try {
+            this.crx.setStorage({
+                assetRate: JSON.stringify(Array.from(assetRate.entries()))
+            });
+        } catch (e) {
+            console.log('set assetRate failed', e);
+        }
+    }
+    public getAssetRate(): Observable < Map < string, {} >> {
+        if (!this.check) {
+            try {
+                return of(new Map(JSON.parse(localStorage.getItem('assetRate'))));
+            } catch (e) {
+                return throwError('please get history json to local storage when debug mode on');
+            }
+        }
+        return from(new Promise((resolve, reject) => {
+            try {
+                this.crx.getStorage('assetRate', (res) => {
+                    if (res) {
+                        resolve(new Map(JSON.parse(res)));
+                    } else {
+                        resolve(new Map());
+                    }
+                });
+            } catch (e) {
+                reject('failed');
+            }
+        }));
+    }
+
     public clearAssetFile() {
         if (!this.check) {
             localStorage.removeItem('assetFile');

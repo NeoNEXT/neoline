@@ -59,15 +59,13 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
         this.filterBar.needLoad.subscribe((value: boolean) => {
             this.needLoadWhenSymbolSwitch = value;
         });
+        this.rateCurrency = this.asset.rateCurrency;
     }
 
     ngOnInit(): void {
-        this.chrome.getRateCurrency().subscribe(rateCurrency => {
-            this.rateCurrency = rateCurrency;
-            this.aRouter.params.subscribe((params: any) => {
-                this.assetId = params.id;
-                this.getBalance();
-            });
+        this.aRouter.params.subscribe((params: any) => {
+            this.assetId = params.id;
+            this.getBalance();
         });
     }
 
@@ -87,13 +85,9 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
             this.balance = res;
             // 获取资产汇率
             if (this.balance.balance && this.balance.balance > 0) {
-                let query = {};
-                query['symbol'] = this.rateCurrency;
-                query['coins'] = this.balance.symbol;
-                this.asset.getRate(query).subscribe(rateBalance => {
-                    if (rateBalance !== undefined && JSON.stringify(rateBalance.result) !== '{}') {
-                        this.balance.rateBalance =
-                            Number(rateBalance.result[this.balance.symbol.toLowerCase()]) * this.balance.balance;
+                this.asset.getAssetRate(this.balance.symbol).subscribe(rateBalance => {
+                    if (this.balance.symbol.toLowerCase() in rateBalance) {
+                        this.balance.rateBalance = rateBalance[this.balance.symbol.toLowerCase()] * this.balance.balance;
                     }
                 });
             } else {

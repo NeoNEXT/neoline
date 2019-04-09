@@ -31,7 +31,7 @@ export class SettingDetailComponent implements OnInit {
     public lang = 'zh_CN';
     public viewPrivacy = false;
     public rateCurrency: string;
-    public rateCurrencys: Array<string>;
+    public rateCurrencys: Array < string > ;
     public rateTime: number;
     public authorizationList: object;
     public objectKeys = Object.keys;
@@ -47,6 +47,7 @@ export class SettingDetailComponent implements OnInit {
         private setting: SettingState,
     ) {
         this.rateCurrencys = this.setting.rateCurrencys;
+        this.rateCurrency = this.asset.rateCurrency;
     }
 
     ngOnInit(): void {
@@ -56,8 +57,15 @@ export class SettingDetailComponent implements OnInit {
             this.global.log('get lang setting failed', err);
             this.lang = 'zh_CN';
         });
-        this.chrome.getRateCurrency().subscribe((rateCurrency) => {
-            this.rateCurrency = rateCurrency;
+        let query = {};
+        query['symbol'] = this.rateCurrency;
+        query['coins'] = 'neo';
+        this.asset.getRate(query).subscribe(rateBalance => {
+            const tempRateObj = rateBalance.result;
+            if (JSON.stringify(tempRateObj) === '{}') {
+                return;
+            }
+            this.rateTime = tempRateObj['updated_at'];
         });
     }
     public save() {
@@ -80,6 +88,7 @@ export class SettingDetailComponent implements OnInit {
     public changeRateCurrency(currency: string) {
         if (this.rateCurrency !== currency) {
             this.rateCurrency = currency;
+            this.asset.rateCurrency = this.rateCurrency;
             this.chrome.setRateCurrency(this.rateCurrency);
             this.global.snackBarTip('rateCurrencySetSucc');
         }
