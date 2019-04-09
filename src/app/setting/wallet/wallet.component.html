@@ -1,10 +1,11 @@
-
 <div class="my-wallet-box">
     <div class="head">
         <p class="title">{{ 'myAccount' | translate | async}}</p>
         <div class="btn-box">
-            <button class="option-btn" routerLink="/wallet/import"  mat-raised-button color="primary"  mat-button>{{ 'importWallet' | translate | async}}</button>
-            <button class="option-btn" routerLink="/wallet/create" mat-raised-button>{{ 'createWallet' | translate | async}}</button>
+            <button class="option-btn" routerLink="/wallet/import" mat-raised-button color="primary"
+                mat-button>{{ 'importWallet' | translate | async}}</button>
+            <button class="option-btn" routerLink="/wallet/create"
+                mat-raised-button>{{ 'createWallet' | translate | async}}</button>
         </div>
     </div>
 
@@ -17,15 +18,16 @@
                 <img [avatar]="item.accounts[0].address" />
             </div>
             <div class="wallet-info">
-                <div class="wallet-name">{{ item.name }}</div>
+                <input class="wallet-name" [(ngModel)]="walletArr[i].name" (focus)="focusName(i)" (keyup.enter)="updateName(i, $event)" (blur)="updateName(i, $event)">
                 <div class="wallet-address">{{ item.accounts[0].address }}</div>
             </div>
             <div class="btn-box">
-                <button class="option-btn" mat-stroked-button color="primary" (click)="chooseAccount(item)" mat-button>{{ 'switch' | translate | async  }}</button>
-                <button class="option-btn" mat-stroked-button color="warn"  mat-button (click)="removeWallet(item)">{{ 'remove' | translate | async }}</button>
+                <button class="option-btn" mat-stroked-button color="primary" *ngIf="!isActivityWallet(item)"
+                    (click)="chooseAccount(item)" mat-button>{{ 'switch' | translate | async  }}</button>
+                <button class="option-btn" mat-stroked-button color="warn" mat-button
+                    (click)="removeWallet(item)">{{ 'remove' | translate | async }}</button>
             </div>
         </div>
     </div>
 
 </div>
-

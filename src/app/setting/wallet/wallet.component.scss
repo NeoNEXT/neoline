@@ -75,6 +75,10 @@
                 display: flex;
                 .wallet-name {
                     font-size: 16px;
+                    border: none;
+                }
+                .wallet-name:focus {
+                    border-bottom: 1px solid #e5e5e5;
                 }
                 .wallet-address {
                     color: #9FA8BD;

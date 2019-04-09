@@ -11,6 +11,7 @@ import { PopupConfirmDialogComponent } from '@/app/popup/_dialogs';
 export class SettingWalletComponent implements OnInit {
     public walletArr: Array<Wallet>;
     public wallet: Wallet;
+    private oldName = '';
     constructor(
         private neon: NeonService,
         private chrome: ChromeService,
@@ -64,5 +65,25 @@ export class SettingWalletComponent implements OnInit {
                 });
             }
         });
+    }
+
+    public focusName(index: number) {
+        this.oldName = this.walletArr[index].name;
+    }
+
+    public updateName(index: number, event: any) {
+        if (this.walletArr[index].name === '') {
+            this.walletArr[index].name = this.oldName;
+            return;
+        }
+        if (this.oldName !== '' && this.oldName !== this.walletArr[index].name) {
+            this.chrome.setWalletArray(this.neon.getWalletArrayJSON(this.walletArr));
+            this.oldName = '';
+            if (this.isActivityWallet(this.walletArr[index])) {
+                this.wallet.name = this.walletArr[index].name;
+                this.chrome.setWallet(this.wallet.export());
+            }
+        }
+        event.target.blur();
     }
 }

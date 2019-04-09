@@ -33,11 +33,17 @@ export class NeonService {
         this._walletArr.push(this.parseWallet(w));
     }
 
-    public getWalletArrayJSON(): Array<WalletJSON> {
+    public getWalletArrayJSON(walletArr: Array<Wallet> = null): Array<WalletJSON> {
         const res = [];
-        this._walletArr.forEach(item => {
-            res.push(item.export());
-        });
+        if (walletArr === null) {
+            this._walletArr.forEach(item => {
+                res.push(item.export());
+            });
+        } else {
+            walletArr.forEach(item => {
+                res.push(item.export());
+            });
+        }
         return res;
     }
 
