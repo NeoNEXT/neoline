@@ -26,9 +26,6 @@
     }
     .info-content {
         flex-grow: 1;
-        justify-content: center;
-        flex-direction: column;
-        display: flex;
         .asset-id {
             color: #9FA8BD;
             font-size: 10px;
@@ -39,7 +36,6 @@
     }
 
     .btn-box {
-        flex-direction: row;
         align-items: center;
         display: flex;
     }
