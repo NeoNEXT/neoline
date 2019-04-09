@@ -16,7 +16,7 @@ export class NotificationService {
         checkAddress: 'Please check your address',
         wentWrong: 'Something went wrong',
         verifyFailed: 'Verify Failed',
-        langSetSucc: 'Switched language!',
+        langSetSucc: 'language switched!',
         checkInput: 'Please check your input',
         signFailed: 'Signature failed',
         transferFailed: 'Transfer failed',

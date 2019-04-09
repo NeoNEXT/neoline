@@ -14,18 +14,11 @@
     "setting": {
         "message": "设置"
     },
-
-    "homeTitle": {
-        "message": "NEOLine 首页"
-    },
     "mainNet": {
         "message": "主网"
     },
     "testNet": {
         "message": "测试网"
-    },
-    "net": {
-        "message": "NEO 网络"
     },
     "home": {
         "message": "首页"
@@ -241,7 +234,7 @@
         "message": "想要连接你的钱包"
     },
     "thAuthDetail": {
-        "message": "这个站点正在尝试请求访问 NEO API，以便它可以与NEO区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
+        "message": "这个站点正在请求访问 NEO API，以便它可以与 NEO 区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
     },
     "thAuthMore": {
         "message": "查看更多"
@@ -295,13 +288,13 @@
         "message": "创建钱包"
     },
     "clearCacheBtn": {
-        "message": "一键清空"
+        "message": "清空"
     },
     "clearCache": {
-        "message": "清空缓存"
+        "message": "本地缓存"
     },
     "clearCacheTip": {
-        "message": "按下后，会清空缓存数据"
+        "message": "清空所有本地缓存数据"
     },
     "reset": {
         "message": "重置"
@@ -355,7 +348,7 @@
         "message": "清除所有批准数据"
     },
     "welcomeNEOLine": {
-        "message": "欢迎来到 NEOLine."
+        "message": "欢迎来到 NEOLine"
     },
     "myAddress": {
         "message": "我的 NEO 地址"
@@ -403,7 +396,7 @@
         "message": "已拒绝"
     },
     "rejectedTip": {
-        "message": "该站点已被拒绝授权，请前往插件授权管理清除"
+        "message": "该站点已被拒绝连接到您的 NEOLine 钱包。若要再次授权，请前往授权管理删除对应记录。"
     },
     "connectedTip": {
         "message": "已允许连接到 NEOLine 钱包"
@@ -415,13 +408,13 @@
         "message": "货币单位"
     },
     "privacyData": {
-        "message": "审批数据"
+        "message": "已授权站点"
     },
     "clearPrivacyDataBtn": {
-        "message": "清除所有批准数据"
+        "message": "清除所有已授权站点"
     },
     "clearPrivacyDataTip": {
-        "message": "清除隐私数据后，所有网站都必须重新请求查看帐户信息。"
+        "message": "清除已授权站点后，所有网站都必须重新申请连接钱包以便获取账户信息或发起转账请求。"
     },
     "referSource": {
         "message": "参考来源"

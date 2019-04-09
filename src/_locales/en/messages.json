@@ -6,26 +6,19 @@
         "message": "Close wallet"
     },
     "account": {
-        "message": "Wallet"
+        "message": "Wallets"
     },
     "assets": {
         "message": "Assets"
     },
     "setting": {
-        "message": "Setting"
-    },
-
-    "homeTitle": {
-        "message": "Home for NEOLine"
+        "message": "Settings"
     },
     "mainNet": {
-        "message": "Main net"
+        "message": "MainNet"
     },
     "testNet": {
-        "message": "Test net"
-    },
-    "net": {
-        "message": "NEO net"
+        "message": "TestNet"
     },
     "home": {
         "message": "Home"
@@ -202,13 +195,13 @@
         "message": "Receipt wallet"
     },
     "privacyPolicy": {
-        "message": "Privacy policy"
+        "message": "Privacy Policy"
     },
     "termsOfUse": {
-        "message": "Terms of use"
+        "message": "Terms of Use"
     },
     "companyWebsite": {
-        "message": "Company website"
+        "message": "Official Website"
     },
     "contractUs": {
         "message": "Contract us"
@@ -283,7 +276,7 @@
         "message": "Added"
     },
     "myAccount": {
-        "message": "My wallet"
+        "message": "My accounts"
     },
     "importWallet": {
         "message": "Import wallet"
@@ -295,13 +288,13 @@
         "message": "Create wallet"
     },
     "clearCacheBtn": {
-        "message": "Empty"
+        "message": "clear"
     },
     "clearCache": {
-        "message": "Clear cache"
+        "message": "Local Cache"
     },
     "clearCacheTip": {
-        "message": "Press to clear cache"
+        "message": "Clear all local cache"
     },
     "reset": {
         "message": "Reset"
@@ -334,7 +327,7 @@
         "message": "Confirm clear cache?"
     },
     "authorizationManage": {
-        "message": "Authorization Manage"
+        "message": "Authorization Management"
     },
     "authorizationManageTips": {
         "message": "Clean up authorized sites"
@@ -355,16 +348,16 @@
         "message": "Clear all authorized sites"
     },
     "welcomeNEOLine": {
-        "message": "Welcome to NEOLine."
+        "message": "Welcome to NEOLine"
     },
     "myAddress": {
-        "message": "My NEO address"
+        "message": "NEO address:"
     },
     "myQRCode": {
-        "message": "My address QR code"
+        "message": "Address QR code:"
     },
     "setLang": {
-        "message": "Language settings"
+        "message": "Languages"
     },
     "WIFPattern": {
         "message": "wrong WIF"
@@ -403,7 +396,7 @@
         "message": "Rejected"
     },
     "rejectedTip": {
-        "message": "This site has been denied authorization, please go to Plug-in Authorization Management Clearance"
+        "message": "This site has been rejected to connect to your NEOLine wallet. Please go to Authorization Management and delete the corresponding record if you allow it to connect"
     },
     "connectedTip": {
         "message": "Connected to NEOLine wallet allowed"
@@ -415,13 +408,13 @@
         "message": "Currency Unit"
     },
     "privacyData": {
-        "message": "Privacy data"
+        "message": "Authorized Sites"
     },
     "clearPrivacyDataBtn": {
-        "message": "Clear all Privacy data"
+        "message": "clear all authorized sites"
     },
     "clearPrivacyDataTip": {
-        "message": "Once the privacy data is cleared, all sites must re-request to view account information."
+        "message": "Once these authorized sites cleared, all sites must re-request to view account information or request transfers."
     },
     "referSource": {
         "message": "Reference source"
