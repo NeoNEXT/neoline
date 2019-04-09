@@ -1,15 +1,16 @@
-<div class="info flex">
+<div class="info">
     <img [src]="imageUrl || ''" class="avatar" alt="">
-    <div>
+    <div class="info-content">
         <p class="balance">{{balance?.balance || '0' }} {{balance?.symbol}}</p>
         <p class="asset-id">{{ balance?.asset_id }}</p>
         <p class="rate-balance" *ngIf="balance?.rateBalance || balance?.rateBalance === 0">
             {{balance?.rateBalance | number: '1.0-2'}} {{rateCurrency}}</p>
     </div>
-    <div class="flex-1"></div>
-    <div class="flex-1"></div>
-    <button mat-raised-button color="primary" (click)="receive()">{{ 'receive' | translate | async}}</button>
-    <button mat-stroked-button color="primary" (click)="transfer()">{{ 'transfer' | translate | async}}</button>
+    <div class="btn-box">
+            <button mat-raised-button color="primary" (click)="receive()">{{ 'receive' | translate | async}}</button>
+            <button mat-stroked-button color="primary" (click)="transfer()">{{ 'transfer' | translate | async}}</button>
+    </div>
+
 </div>
 <div class="title">
     <span>{{ 'transactions' | translate | async}}</span>
