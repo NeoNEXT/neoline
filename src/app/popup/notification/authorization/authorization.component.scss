@@ -69,20 +69,18 @@
                 font-size: 14px;
                 color: map-get($colors, 333333);
                 position: absolute;
-                width: 176px;
+                width: 134px;
             }
             .left {
                 left: 67px;
-                margin-left: -88px;
+                margin-left: -67px;
                 overflow: hidden;
                 text-overflow: ellipsis;
                 white-space: nowrap;
-                padding-left: 15px;
             }
             .right {
                 right: 67px;
-                margin-right: -88px;
-                padding-right: 15px;
+                margin-right: -67px;
             }
         }
 
