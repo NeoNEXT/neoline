@@ -96,7 +96,7 @@ export class AssetComponent implements OnInit {
             }
             this.displayAssets.map(d => {
                 if (d.symbol.toLowerCase() in tempRateObj) {
-                    d.rateBalance = Number(tempRateObj[d.symbol]) * d.balance;
+                    d.rateBalance = Number(tempRateObj[d.symbol.toLowerCase()]) * d.balance;
                 }
                 return d;
             });

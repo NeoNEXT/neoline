@@ -100,7 +100,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 this.asset.getRate(query).subscribe(rateBalance => {
                     if (rateBalance !== undefined && JSON.stringify(rateBalance.result) !== '{}') {
                         this.balance.rateBalance =
-                            Number(rateBalance.result[this.balance.symbol]) * this.balance.balance;
+                            Number(rateBalance.result[this.balance.symbol.toLowerCase()]) * this.balance.balance;
                     }
                 });
             } else {
