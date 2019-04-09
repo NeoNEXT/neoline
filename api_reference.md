@@ -215,7 +215,7 @@ The request argument is an object including all arguments.
 | address | string(34) | The address whose balance wants to be listed|
 | assetID | string(34, 66)? | Optional. the ID of an asset of a token. Will return the balance of the given assetID if set. This argument has higher priority than argument 'symbol', which means symbol will be omitted if assetID is set no matter the given assetID exists or not.
 | symbol | string(32)? | Optional. The name of an asset or a token. Will return the balance of the given symbol if set. This argument will be used only when the argument 'assetID' leaves empty.
-| network | string(32) | One of the networks the GetNetworks() returnd, indicates which network the api should query from.
+| network | string(32) | One of the networks GetNetworks() returnd, indicates which network the api should query from.
 
 #### Success Response
 
@@ -373,7 +373,7 @@ This api allows caller to request neoline user to approve a payment(transfer) re
 | symbol | string(32)? | Optional. The name of an asset or a token. This argument will be used only when the argument 'assetID' leaves empty.
 | amount | string(32) | Amount transferred in this transaction |
 | remark | string(64)? | Assign custom remarks in this transaction |
-| network | string(32) | One of the networks the GetNetworks() returnd, indicates which network the api should query from.
+| network | string(32) | One of the networks GetNetworks() returnd, indicates which network the api should query from.
 
 #### Success Response
 
@@ -449,6 +449,7 @@ Returns detail of a transaction in given network, including asset transfers and 
 | Parameter | Type | Description |
 | - | - | - |
 | txID | string(66) | Transaction ID |
+| network | string(32) | One of the networks GetNetworks() returnd, indicates which network the api should query from.
 
 #### Success Response
 
@@ -532,7 +533,7 @@ Returns the simulation result after calling a smart contract at scripthash with 
 | scriptHash | string(40) | The smart contract scripthash |
 | operation | string(64) | The operation name defined in smart contract |
 | args | [Argument](#struct-of-`Argument`)[]? | The arguments to be passed into the smart contract operation |
-| network | string(32) | One of the networks the GetNetworks() returnd, indicates which network the api should query from.
+| network | string(32) | One of the networks GetNetworks() returnd, indicates which network the api should query from.
 
 #### struct of `Argument`
 
@@ -634,7 +635,7 @@ Invoke the specific smart contract method with given arguments. It is highly rec
 | scriptHash | string(40) | The smart contract scripthash |
 | operation | string(64) | The operation name defined in smart contract |
 | args | [Argument](#struct-of-`Argument`)[]? | The arguments to be passed into the smart contract operation |
-| network | string(32) | One of the networks the GetNetworks() returnd, indicates which network the api should query from.
+| network | string(32) | One of the networks GetNetworks() returnd, indicates which network the api should query from.
 
 #### Success Response
 
