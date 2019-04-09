@@ -104,6 +104,17 @@ window.addEventListener('message', (e) => {
                 });
                 return;
             }
+        case 'getTransaction':
+        {
+            const parameter = e.data.parameter;
+            const apiUrl = parameter.network === 'MainNet' ? mainApi : testApi;
+            httpGet(`${apiUrl}/v1/transactions/gettransaction/${parameter.txID}`, (res) => {
+                window.postMessage({
+                    target: 'getTransactionRes',
+                    data: res
+                }, '*');
+            }, null);
+        }
         case 'transfer':
         case 'connect':
             {

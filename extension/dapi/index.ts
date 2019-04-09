@@ -303,8 +303,32 @@ export class Init {
         });
     }
 
-    public getTransaction() {
-        return new Promise((resolve, reject) => { });
+    public getTransaction(parameter: any) {
+        return new Promise((resolveMain, rejectMain) => {
+            if (parameter.txID === undefined || parameter.network === undefined) {
+                rejectMain(errors.INVALID_ARGUMENTS);
+            }
+            window.postMessage({
+                target: 'getTransaction',
+                parameter
+            }, '*');
+            const promise = new Promise((resolve, reject) => {
+                const getTransactionFn = (event) => {
+                    if (event.data.target !== undefined && event.data.target === 'getTransactionRes') {
+                        resolve(event.data.data);
+                        window.removeEventListener('message', getTransactionFn);
+                    }
+                };
+                window.addEventListener('message', getTransactionFn);
+            });
+            promise.then((res: any) => {
+                if (res.bool_status) {
+                    resolveMain(res.result);
+                } else {
+                    rejectMain(errors.NETWORK_ERROR);
+                }
+            });
+        });
     }
 
     public invokeTest(parameter: any) {
@@ -334,7 +358,7 @@ export class Init {
                         script: res.result.script,
                         state: res.result.state,
                         gasConsumed: res.result.gas_consumed,
-                        stack: JSON.stringify(res.result.stack)
+                        stack: res.result.stack
                     });
                 } else {
                     rejectMain(errors.NETWORK_ERROR);
