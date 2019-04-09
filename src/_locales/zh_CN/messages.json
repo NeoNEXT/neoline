@@ -222,7 +222,7 @@
         "message": "修改钱包名"
     },
     "modifyNameInput": {
-        "message": "请输入新的钱包名(长度1-16字符)"
+        "message": "请输入新的钱包名(长度1-32字符)"
     },
     "connect": {
         "message": "连接"

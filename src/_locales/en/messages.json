@@ -222,7 +222,7 @@
         "message": "Modify wallet name"
     },
     "modifyNameInput": {
-        "message": "Please enter a new wallet name(length 1-16)"
+        "message": "Please enter a new wallet name(length 1-32)"
     },
     "connect": {
         "message": "Connect"

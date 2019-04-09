@@ -102,6 +102,9 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
     }
 
     public submit() {
+        if (this.walletImport.walletName.trim() === '') {
+            return;
+        }
         if (!wallet.isWIF(this.walletImport.WIF) && !wallet.isPrivateKey(this.walletImport.WIF)) {
             this.isWIF = false;
             return;
@@ -142,6 +145,9 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
     }
 
     public submitEncrypted() {
+        if (this.walletImport.walletName.trim() === '') {
+            return;
+        }
         if (!wallet.isNEP2(this.walletImport.EncrpytedKey)) {
             this.isEncryptedKey = false;
             return;

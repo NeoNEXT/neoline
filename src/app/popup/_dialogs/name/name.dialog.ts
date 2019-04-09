@@ -11,6 +11,9 @@ import {
     NeonService,
     GlobalService,
 } from '@app/core';
+import {
+    WalletInitConstant
+} from '@popup/_lib/constant';
 
 @Component({
     templateUrl: './name.dialog.html',
@@ -18,6 +21,7 @@ import {
 })
 export class PopupNameDialogComponent implements OnInit {
     public name = '';
+    public limit = WalletInitConstant;
 
     constructor(
         private dialogRef: MatDialogRef < PopupNameDialogComponent > ,
@@ -34,6 +38,9 @@ export class PopupNameDialogComponent implements OnInit {
     }
 
     public updateName() {
+        if (this.name.trim() === '') {
+            return;
+        }
         this.neon.updateWalletName(this.name, this.chooseWallet)
             .subscribe(
                 (res: any) => {
