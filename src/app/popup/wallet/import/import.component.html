@@ -49,12 +49,12 @@
 
             </mat-error>
         </mat-form-field>
-        <div class="confirm-box" *ngIf="navIndex == 0">
+        <div *ngIf="navIndex == 0">
             <mat-form-field class="popup-wallet-body-text" focused="true">
                 <img matPrefix src="/assets/images/lock.png" />
                 <input matInput placeholder="{{ 'enterConfirmPassword' | translate | async }}"
-                    [(ngModel)]="walletImport.confirmPassword" name="confirmPassword" #confirmPassword="ngModel" required
-                    [type]="hideConfirmPwd ? 'password' : 'text'" />
+                    [(ngModel)]="walletImport.confirmPassword" name="confirmPassword" #confirmPassword="ngModel"
+                    required [type]="hideConfirmPwd ? 'password' : 'text'" />
                 <button tabindex="-1" mat-button matSuffix mat-icon-button type="button" (click)="toggleConfirmPwd()">
                     <span [class]="hideConfirmPwd ? 'hide-pwd' : ''"></span>
                 </button>
@@ -73,11 +73,11 @@
             </mat-form-field>
             <mat-error class="error-wif" *ngIf="isWIF === false">{{ 'WIFPattern' | translate | async }}</mat-error>
             <button class="popup-wallet-body-submit" mat-raised-button color="primary" *ngIf="navIndex == 0"
-            [disabled]="isInit || walletForm.invalid || loading  || confirmPassword?.value != password.value "
-            (click)="navIndex==0 ? submit() : submitEncrypted()">
-            <ng-container *ngIf="!loading">{{ 'import' | translate | async }}</ng-container>
-            <ng-container *ngIf="loading">{{ 'importing' | translate | async }}</ng-container>
-        </button>
+                [disabled]="isInit || walletForm.invalid || loading  || confirmPassword?.value != password.value "
+                (click)="navIndex==0 ? submit() : submitEncrypted()">
+                <ng-container *ngIf="!loading">{{ 'import' | translate | async }}</ng-container>
+                <ng-container *ngIf="loading">{{ 'importing' | translate | async }}</ng-container>
+            </button>
         </div>
 
         <!-- Encrypted Key -->
@@ -99,18 +99,15 @@
                 {{ 'EncryptedKeyPattern' | translate | async }}
             </mat-error>
             <button class="popup-wallet-body-submit" mat-raised-button color="primary"
-            [disabled]="isInit || walletForm.invalid || loading "
-            (click)="navIndex==0 ? submit() : submitEncrypted()">
-            <ng-container *ngIf="!loading">{{ 'import' | translate | async }}</ng-container>
-            <ng-container *ngIf="loading">{{ 'importing' | translate | async }}</ng-container>
-        </button>
+                [disabled]="isInit || walletForm.invalid || loading "
+                (click)="navIndex==0 ? submit() : submitEncrypted()">
+                <ng-container *ngIf="!loading">{{ 'import' | translate | async }}</ng-container>
+                <ng-container *ngIf="loading">{{ 'importing' | translate | async }}</ng-container>
+            </button>
 
         </div>
 
     </form>
-
-
-
 </div>
 
 <!-- NEP2 File -->
@@ -158,8 +155,7 @@
 
 
     <button class="popup-wallet-body-submit" mat-raised-button color="primary"
-        [disabled]="nep2Json == null || nep2Form.invalid || loading"
-        (click)="submitEncrypted()" required>
+        [disabled]="nep2Json == null || nep2Form.invalid || loading" (click)="submitEncrypted()" required>
         <ng-container *ngIf="!loading">{{ 'import' | translate | async }}</ng-container>
         <ng-container *ngIf="loading">{{ 'importing' | translate | async }}</ng-container>
     </button>
