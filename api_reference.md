@@ -440,8 +440,6 @@ neoline.transfer({
 
 ### getTransaction
 
-(TO BE IMPLEMENTED)
-
 Returns detail of a transaction in given network, including asset transfers and nep5 token transfers.
 
 #### Input Arguments
@@ -505,10 +503,11 @@ Returns detail of a transaction in given network, including asset transfers and 
 
 ```javascript
 neoline.getTransaction({
-    "txID": "0xfb5bd72b2d6792d75dc2f1084ffa9e9f70ca85543c717a6b13d9959b452a57d6"
+    "txID": "0x3631f66024ca6f5b033d7e0809eb993443374830025af904fb51b0334f127cda",
+    "network": "MainNet"
 })
 .then(tx => {
-    console.log("Transaction detail: " + tx)
+    console.log("Transaction detail:\n", tx)
 })
 .catch(err => {
     switch(err.code) {
@@ -516,7 +515,7 @@ neoline.getTransaction({
             console.log("The user rejected your request.");
             break;
         default:
-            console.log("The request failed.");
+            console.log("The request failed: ", err);
     }
 });
 ```
