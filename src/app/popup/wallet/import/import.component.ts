@@ -110,21 +110,15 @@ export class PopupWalletImportComponent implements OnInit, AfterViewInit {
         if (wallet.isPrivateKey(this.walletImport.WIF)) {
             this.neon.importPrivateKey(this.walletImport.WIF, this.walletImport.password, this.walletImport.walletName)
                 .subscribe((res: any) => {
-                    this.neon.pushWalletArray(res.export());
-                    this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
-                    this.chrome.setWallet(res.export());
-                    this.global.$wallet.next('open');
                     this.loading = false;
                     if (this.neon.verifyWallet(res)) {
                         this.neon.pushWalletArray(res.export());
                         this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
                         this.chrome.setWallet(res.export());
                         this.global.$wallet.next('open');
-                        this.loading = false;
                         this.jumpRouter();
                     } else {
                         this.global.snackBarTip('existingWallet');
-                        this.loading = false;
                     }
                 });
         } else {
@@ -132,16 +126,15 @@ export class PopupWalletImportComponent implements OnInit, AfterViewInit {
                 .importWIF(this.walletImport.WIF, this.walletImport.password, this.walletImport.walletName)
                 .subscribe(
                     (res: any) => {
+                        this.loading = false;
                         if (this.neon.verifyWallet(res)) {
                             this.neon.pushWalletArray(res.export());
                             this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
                             this.chrome.setWallet(res.export());
                             this.global.$wallet.next('open');
-                            this.loading = false;
                             this.jumpRouter();
                         } else {
                             this.global.snackBarTip('existingWallet');
-                            this.loading = false;
                         }
                     },
                     (err: any) => {
@@ -166,17 +159,14 @@ export class PopupWalletImportComponent implements OnInit, AfterViewInit {
                     this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
                     this.chrome.setWallet(res.export());
                     this.global.$wallet.next('open');
-                    this.loading = false;
                     this.jumpRouter();
                 } else {
                     this.global.snackBarTip('existingWallet');
-                    this.loading = false;
                 }
             }, (err: any) => {
                 this.loading = false;
                 this.global.log('import wallet faild', err);
                 this.global.snackBarTip('walletImportFailed', '');
-                this.loading = false;
             });
     }
 

@@ -66,6 +66,7 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
     ngOnInit(): void {
         this.aRouter.params.subscribe((params: any) => {
             this.importType = params.type;
+            this.init();
         });
     }
 
@@ -121,12 +122,16 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
                 .importWIF(this.walletImport.WIF, this.walletImport.password, this.walletImport.walletName)
                 .subscribe(
                     (res: any) => {
-                        this.neon.pushWalletArray(res.export());
-                        this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
-                        this.chrome.setWallet(res.export());
-                        this.global.$wallet.next('open');
                         this.loading = false;
-                        location.href = `index.html#asset`;
+                        if (this.neon.verifyWallet(res)) {
+                            this.neon.pushWalletArray(res.export());
+                            this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
+                            this.chrome.setWallet(res.export());
+                            this.global.$wallet.next('open');
+                            this.jumpRouter();
+                        } else {
+                            this.global.snackBarTip('existingWallet');
+                        }
                     },
                     (err: any) => {
                         this.global.log('import wallet faild', err);
@@ -150,11 +155,9 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
                     this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
                     this.chrome.setWallet(res.export());
                     this.global.$wallet.next('open');
-                    this.loading = false;
                     this.jumpRouter();
                 } else {
                     this.global.snackBarTip('existingWallet');
-                    this.loading = false;
                 }
             }, (err: any) => {
                 this.loading = false;
