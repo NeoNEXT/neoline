@@ -94,7 +94,7 @@ window.addEventListener('message', (e) => {
                 });
                 return;
             }
-        case 'invokeTest':
+        case 'invokeRead':
             {
                 const parameter = e.data.parameter;
                 e.data.url =  parameter.network === 'MainNet' ? mainApi : testApi;

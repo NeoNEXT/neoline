@@ -140,15 +140,21 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendResponse('');
                 return true;
             }
-        case 'invokeTest': {
-            httpPost(`${request.url}/v1/transactions/invoketest`, {params:  request.parameter}, (res) => {
-                res.target = 'invokeTestRes';
+        case 'invokeRead': {
+            httpPost(`${request.url}/v1/transactions/invokeread`, {params:  request.parameter}, (res) => {
+                res.target = 'invokeReadRes';
                 windowCallback(res);
             }, null);
             sendResponse('');
             return;
         }
         case 'invoke': {
+            chrome.tabs.query({
+                active: true,
+                currentWindow: true
+            }, (tabs) => {
+                tabCurr = tabs;
+            });
             window.open(`index.html#popup/notification/invoke?script_hash=${request.parameter.scriptHash}&operation=${request.parameter.operation}&args=${JSON.stringify(request.parameter.args)}&network=${request.parameter.network}`,
             '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
             sendResponse('');

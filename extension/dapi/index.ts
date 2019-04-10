@@ -331,7 +331,7 @@ export class Init {
         });
     }
 
-    public invokeTest(parameter: any) {
+    public invokeRead(parameter: any) {
         return new Promise((resolveMain, rejectMain) => {
             if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
                 parameter.operation === undefined || parameter.operation === '' ||
@@ -340,17 +340,17 @@ export class Init {
                 rejectMain(errors.INVALID_ARGUMENTS);
             }
             window.postMessage({
-                target: 'invokeTest',
+                target: 'invokeRead',
                 parameter
             }, '*');
             const promise = new Promise((resolve, reject) => {
-                const invokeTestFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === 'invokeTestRes') {
+                const invokeReadFn = (event) => {
+                    if (event.data.target !== undefined && event.data.target === 'invokeReadRes') {
                         resolve(event.data);
-                        window.removeEventListener('message', invokeTestFn);
+                        window.removeEventListener('message', invokeReadFn);
                     }
                 };
-                window.addEventListener('message', invokeTestFn);
+                window.addEventListener('message', invokeReadFn);
             });
             promise.then((res: any) => {
                 if (res.bool_status) {
@@ -382,24 +382,35 @@ export class Init {
             const promise = new Promise((resolve, reject) => {
                 const invokeFn = (event) => {
                     if (event.data.target !== undefined && event.data.target === 'invokeRes') {
-                        resolve(event.data);
+                        resolve(event.data.data);
                         window.removeEventListener('message', invokeFn);
                     }
                 };
                 window.addEventListener('message', invokeFn);
             });
             promise.then((res: any) => {
-                resolveMain(res);
-                // if (res.bool_status) {
-                //     resolveMain({
-                //         script: res.result.script,
-                //         state: res.result.state,
-                //         gasConsumed: res.result.gas_consumed,
-                //         stack: res.result.stack
-                //     });
-                // } else {
-                //     rejectMain(errors.NETWORK_ERROR);
-                // }
+                switch (res) {
+                    case 'rpcWrong':
+                        {
+                            rejectMain(errors.RPC_ERROR);
+                            break;
+                        }
+                    case 'invalid_arguments':
+                        {
+                            rejectMain(errors.INVALID_ARGUMENTS);
+                            break;
+                        }
+                    case 'default':
+                        {
+                            rejectMain(errors.DEFAULT);
+                            break;
+                        }
+                    default:
+                        {
+                            resolveMain({txID: res});
+                            break;
+                        }
+                }
             });
         });
     }
