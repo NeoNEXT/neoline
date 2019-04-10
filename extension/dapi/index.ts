@@ -367,8 +367,41 @@ export class Init {
         });
     }
 
-    public invoke() {
-        return new Promise((resolve, reject) => { });
+    public invoke(parameter: any) {
+        return new Promise((resolveMain, rejectMain) => {
+            if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
+                parameter.operation === undefined || parameter.operation === '' ||
+                parameter.args === undefined || parameter.args === '' ||
+                parameter.network === undefined || parameter.network === '') {
+                rejectMain(errors.INVALID_ARGUMENTS);
+            }
+            window.postMessage({
+                target: 'invoke',
+                parameter
+            }, '*');
+            const promise = new Promise((resolve, reject) => {
+                const invokeFn = (event) => {
+                    if (event.data.target !== undefined && event.data.target === 'invokeRes') {
+                        resolve(event.data);
+                        window.removeEventListener('message', invokeFn);
+                    }
+                };
+                window.addEventListener('message', invokeFn);
+            });
+            promise.then((res: any) => {
+                resolveMain(res);
+                // if (res.bool_status) {
+                //     resolveMain({
+                //         script: res.result.script,
+                //         state: res.result.state,
+                //         gasConsumed: res.result.gas_consumed,
+                //         stack: res.result.stack
+                //     });
+                // } else {
+                //     rejectMain(errors.NETWORK_ERROR);
+                // }
+            });
+        });
     }
 
 

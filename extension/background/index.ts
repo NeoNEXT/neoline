@@ -148,6 +148,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             sendResponse('');
             return;
         }
+        case 'invoke': {
+            window.open(`index.html#popup/notification/invoke?script_hash=${request.parameter.scriptHash}&operation=${request.parameter.operation}&args=${JSON.stringify(request.parameter.args)}&network=${request.parameter.network}`,
+            '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+            sendResponse('');
+            return;
+        }
     }
     sendResponse('');
     return true;

@@ -10,6 +10,7 @@ import { PopupNoticeTransferComponent } from './transfer/transfer.component';
 import { PopupNoticeSignComponent } from './signature/signature.component';
 import { PopupNoticeTokenComponent } from './token/token.component';
 import { PopupNoticeAuthComponent } from './authorization/authorization.component';
+import { PopupNoticeInvokeComponent } from './invoke/invoke.component';
 
 @NgModule({
     declarations: [
@@ -17,7 +18,8 @@ import { PopupNoticeAuthComponent } from './authorization/authorization.componen
         PopupNoticeTransferComponent,
         PopupNoticeSignComponent,
         PopupNoticeTokenComponent,
-        PopupNoticeAuthComponent
+        PopupNoticeAuthComponent,
+        PopupNoticeInvokeComponent
     ],
     imports: [
         CommonModule,

@@ -104,6 +104,15 @@ window.addEventListener('message', (e) => {
                 });
                 return;
             }
+        case 'invoke':
+            {
+                const parameter = e.data.parameter;
+                e.data.url =  parameter.network === 'MainNet' ? mainApi : testApi;
+                chrome.runtime.sendMessage(e.data, (response) => {
+                    return Promise.resolve('Dummy response to keep the console quiet');
+                });
+                return;
+            }
         case 'getTransaction':
         {
             const parameter = e.data.parameter;
@@ -114,6 +123,7 @@ window.addEventListener('message', (e) => {
                     data: res
                 }, '*');
             }, null);
+            return;
         }
         case 'transfer':
         case 'connect':
