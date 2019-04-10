@@ -155,8 +155,17 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }, (tabs) => {
                 tabCurr = tabs;
             });
-            window.open(`index.html#popup/notification/invoke?script_hash=${request.parameter.scriptHash}&operation=${request.parameter.operation}&args=${JSON.stringify(request.parameter.args)}&network=${request.parameter.network}`,
-            '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+            const params = request.parameter;
+            getStorage('connectedWebsites', (res) => {
+                if (res !== undefined && res[request.hostname] !== undefined || request.connect === 'true') {
+                    window.open(`index.html#popup/notification/invoke?script_hash=${params.scriptHash}&operation=${params.operation}&args=${JSON.stringify(params.args)}&network=${params.network}`,
+                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                } else {
+                    window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=invoke&script_hash=${params.scriptHash}&operation=${params.operation}&args=${JSON.stringify(params.args)}&network=${params.network}`,
+                        '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                }
+            });
+
             sendResponse('');
             return;
         }
@@ -174,14 +183,14 @@ export function windowCallback(data) {
             tabCurr = tabs;
             if (tabCurr.length >= 1) {
                 chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
-                    tabCurr = null;
+                    // tabCurr = null;
                 });
             }
         });
     } else {
         if (tabCurr.length >= 1) {
             chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
-                tabCurr = null;
+                // tabCurr = null;
             });
         }
     }

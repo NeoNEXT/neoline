@@ -377,7 +377,10 @@ export class Init {
             }
             window.postMessage({
                 target: 'invoke',
-                parameter
+                parameter,
+                hostname: location.hostname,
+                icon: getIcon(),
+                connect: sessionStorage.getItem('connect')
             }, '*');
             const promise = new Promise((resolve, reject) => {
                 const invokeFn = (event) => {

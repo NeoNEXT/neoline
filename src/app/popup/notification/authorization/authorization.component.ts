@@ -85,10 +85,19 @@ export class PopupNoticeAuthComponent implements OnInit {
                 data: true,
                 target: 'connected'
             });
-            if (this.isNext === 'transfer') {
-                this.router.navigateByUrl(`/popup/notification/transfer?to_address=${this.paramsData.to_address}&asset_id=${this.paramsData.asset_id}&amount=${this.paramsData.amount}&symbol=${this.paramsData.symbol}&network=${this.paramsData.network}`);
-            } else {
-                window.close();
+            switch (this.isNext) {
+                case 'transfer': {
+                    this.router.navigateByUrl(`/popup/notification/transfer?to_address=${this.paramsData.to_address}&asset_id=${this.paramsData.asset_id}&amount=${this.paramsData.amount}&symbol=${this.paramsData.symbol}&network=${this.paramsData.network}`);
+                    break;
+                }
+                case 'invoke': {
+                    this.router.navigateByUrl(`/popup/notification/invoke?script_hash=${this.paramsData.script_hash}&operation=${this.paramsData.operation}&args=${this.paramsData.args}&network=${this.paramsData.network}`);
+                    break;
+                }
+                default: {
+                    window.close();
+                    break;
+                }
             }
         });
     }

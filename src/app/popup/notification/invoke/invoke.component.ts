@@ -52,8 +52,6 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     disableClose: true
                 }).afterClosed().subscribe((pwd) => {
                     if (pwd && pwd.length) {
-                        this.loading = true;
-                        this.loadingMsg = 'Wait';
                         this.global.log('start transfer with pwd');
                         this.resolveSign(this.createTxForNEP5(), pwd);
                     } else {
@@ -61,16 +59,14 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     }
                 });
             } else {
-                this.chrome.windowCallback({
-                    data: 'invalid_arguments',
-                    target: 'invokeRes'
-                });
                 return;
             }
         });
     }
 
     private resolveSign(transaction: Transaction, pwd: string) {
+        this.loading = true;
+        this.loadingMsg = 'Wait';
         if (transaction === null) {
             return ;
         }
@@ -125,6 +121,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
         const fromScript = wallet.getScriptHashFromAddress(this.neon.address);
         const newTx = new tx.InvocationTransaction();
         if (this.scriptHash.length !== 42  && this.scriptHash.length !== 40 ) {
+            alert(2);
             this.chrome.windowCallback({
                 data: 'invalid_arguments',
                 target: 'invokeRes'
