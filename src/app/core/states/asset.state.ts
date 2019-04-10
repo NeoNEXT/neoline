@@ -116,7 +116,7 @@ export class AssetState {
 
     public getAssetRate(coins: string): Observable < any > {
         if (!coins) {
-            return;
+            return of({});
         }
         coins = coins.toLowerCase();
         const coinsAry = coins.split(',');

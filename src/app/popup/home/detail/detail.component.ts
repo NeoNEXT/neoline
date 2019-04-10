@@ -81,6 +81,11 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
 
     public getBalance() {
         this.asset.detail(this.address, this.assetId).subscribe((res: Balance) => {
+            if (!res) {
+                this.assetId = NEO;
+                this.getBalance();
+                return;
+            }
             res.balance = Number(res.balance);
             this.balance = res;
             // 获取资产汇率
