@@ -41,6 +41,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     public needLoadWhenSymbolSwitch: boolean;
     public inTransaction: Array < Transaction > ;
     public rateCurrency: string;
+    public net: string;
 
     constructor(
         private asset: AssetState,
@@ -63,8 +64,12 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     }
 
     ngOnInit(): void {
+        this.net = this.global.net;
         this.aRouter.params.subscribe((params: any) => {
             this.getBalance(params.id);
+        });
+        this.txState.popTransferStatus().subscribe(time => {
+            this.getInTransactions(1);
         });
     }
 
@@ -105,10 +110,10 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
         this.txState.fetchTx(this.address, 1, this.assetId, maxId, sinceId, absPage).subscribe((res: any) => {
             if (this.txPage === undefined || res.page === 1) {
                 this.chrome.getTransaction().subscribe(inTxData => {
-                    if (inTxData[this.address] === undefined || inTxData[this.address][this.assetId] === undefined) {
+                    if (inTxData[this.net] === undefined || inTxData[this.net][this.address] === undefined || inTxData[this.net][this.address][this.assetId] === undefined) {
                         this.inTransaction = [];
                     } else {
-                        this.inTransaction = inTxData[this.address][this.assetId];
+                        this.inTransaction = inTxData[this.net][this.address][this.assetId];
                     }
                     const txIdArray = [];
                     this.inTransaction.forEach(item => {
@@ -124,14 +129,16 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                                 this.inTransaction.splice(tempIndex, 1);
                             }
                         });
-                        if (inTxData[this.address] === undefined || inTxData[this.address][this.assetId] === undefined) {
-                            inTxData[this.address] = {};
-                            inTxData[this.address][this.assetId] = [];
+                        if (inTxData[this.net] === undefined) {
+                            inTxData[this.net] = {};
+                        } else if (inTxData[this.net][this.address] === undefined) {
+                            inTxData[this.net][this.address] = {};
+                        } else if (inTxData[this.net][this.address][this.assetId] === undefined) {
+                            inTxData[this.net][this.address][this.assetId] = [];
                         } else {
-                            inTxData[this.address][this.assetId] = this.inTransaction;
+                            inTxData[this.net][this.address][this.assetId] = this.inTransaction;
                         }
                         this.chrome.setTransaction(inTxData);
-                        // this.txPage = res;
                         this.txPage.items = this.inTransaction.concat(this.txPage.items);
                     }, error => {});
                 });

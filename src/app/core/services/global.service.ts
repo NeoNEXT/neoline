@@ -33,6 +33,7 @@ export class GlobalService {
     public $wallet: Subject < string > ;
     public languageJson: any = null;
     public debug = false;
+    public net: string;
 
     public searchBalance: any; // web 版删除某资产时搜索结果中同步删除某资产
     constructor(
@@ -43,11 +44,13 @@ export class GlobalService {
     ) {
         this.$wallet = new Subject < string > ();
         this.chromeSer.getNet().subscribe(net => {
+            this.net = net;
             this.modifyNet(net);
         });
     }
 
     public modifyNet(net: string) {
+        this.net = net;
         if (net === 'main') {
             this.apiDomain = environment.mainApiBase;
         } else {

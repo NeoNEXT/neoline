@@ -15,7 +15,8 @@ import {
     GlobalService,
     HttpService,
     BlockState,
-    ChromeService
+    ChromeService,
+    TransactionState
 } from '@/app/core';
 import {
     MatSnackBar,
@@ -70,6 +71,7 @@ export class TransferCreateomponent implements OnInit {
         private http: HttpService,
         private chrome: ChromeService,
         private block: BlockState,
+        private transactionSer: TransactionState
     ) { }
 
     ngOnInit(): void {
@@ -156,6 +158,7 @@ export class TransferCreateomponent implements OnInit {
                     this.fromAddress, this.assetId);
             }
             // todo transfer done
+            this.transactionSer.pushTransferStatus(new Date().getTime());
             this.global.log('transfer done', res);
             this.router.navigate([{
                 outlets: {
