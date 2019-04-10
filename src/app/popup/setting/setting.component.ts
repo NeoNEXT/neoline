@@ -97,7 +97,7 @@ export class PopupSettingComponent implements OnInit {
             });
             this.wallet = this.neon.parseWallet(w);
             this.chrome.setWallet(this.wallet.export());
-            location.reload();
+            location.href = `index.html#popup`;
         }
     }
 
