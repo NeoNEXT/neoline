@@ -11,7 +11,7 @@ import { PopupConfirmDialogComponent } from '../_dialogs';
 })
 export class PopupAuthorizationListComponent implements OnInit {
     public objectKeys = Object.keys;
-    public authorizationList: object;
+    public authorizationList = {};
     constructor(
         private chrome: ChromeService,
         private dialog: MatDialog

@@ -436,5 +436,8 @@
     },
     "createYour": {
         "message": "创建您的"
+    },
+    "beijingTime": {
+        "message": "北京时间"
     }
 }

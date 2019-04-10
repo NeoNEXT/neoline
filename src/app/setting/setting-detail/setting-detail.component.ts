@@ -33,7 +33,7 @@ export class SettingDetailComponent implements OnInit {
     public rateCurrency: string;
     public rateCurrencys: Array < string > ;
     public rateTime: number;
-    public authorizationList: object;
+    public authorizationList = {};
     public objectKeys = Object.keys;
 
     constructor(

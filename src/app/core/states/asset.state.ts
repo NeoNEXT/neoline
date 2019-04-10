@@ -40,10 +40,6 @@ export class AssetState {
         private global: GlobalService,
         private chrome: ChromeService,
     ) {
-        this.initAssetState();
-    }
-
-    public initAssetState() {
         this.chrome.getAssetFile().subscribe(res => {
             this.assetFile = res;
         });

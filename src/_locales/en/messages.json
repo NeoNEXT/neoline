@@ -387,10 +387,10 @@
         "message": "WIF(Private key)"
     },
     "delWalletConfirm": {
-        "message": "Are you sure delete this wallet"
+        "message": "Are you sure delete this wallet?"
     },
     "delAllAuthListConfirm": {
-        "message": "Are you sure delete all authorized sites"
+        "message": "Are you sure delete all authorized sites?"
     },
     "rejected": {
         "message": "Rejected"
@@ -436,5 +436,8 @@
     },
     "createYour": {
         "message": "Create Your"
+    },
+    "beijingTime": {
+        "message": "China Standard Time"
     }
 }

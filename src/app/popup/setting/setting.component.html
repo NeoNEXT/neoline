@@ -69,7 +69,7 @@
         <span class="title">{{ 'currencyUnit' | translate | async}}</span>
         <span class="value">{{ rateCurrency }}</span>
     </div>
-    <p class="update-time" *ngIf="rateTime">{{ 'updateTime' | translate | async}}{{rateTime * 1000 | date: 'M月d日 y年 HH:mm'}} 北京时间</p>
+    <p class="update-time" *ngIf="rateTime">{{ 'updateTime' | translate | async}} {{rateTime * 1000 | date: 'M月d日 y年 HH:mm'}} {{'beijingTime' | translate | async}}</p>
 </div>
 <hr>
 <div class="popup-setting-authorization" [routerLink]="['/popup/authorization-list']">

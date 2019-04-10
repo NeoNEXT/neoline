@@ -81,7 +81,6 @@ export class AppComponent {
         this.net = net;
         this.chrome.setNet(net);
         this.global.modifyNet(net);
-        this.assetSer.initAssetState();
         location.reload();
     }
 
