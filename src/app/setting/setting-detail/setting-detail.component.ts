@@ -79,7 +79,6 @@ export class SettingDetailComponent implements OnInit {
             if (confirm) {
                 this.chrome.clearAssetFile();
                 this.asset.clearCache();
-                this.transaction.clearCache();
                 this.global.snackBarTip('clearSuccess');
             }
         });
@@ -88,7 +87,7 @@ export class SettingDetailComponent implements OnInit {
     public changeRateCurrency(currency: string) {
         if (this.rateCurrency !== currency) {
             this.rateCurrency = currency;
-            this.asset.rateCurrency = this.rateCurrency;
+            this.asset.changeRateCurrency(this.rateCurrency);
             this.chrome.setRateCurrency(this.rateCurrency);
             this.global.snackBarTip('rateCurrencySetSucc');
         }

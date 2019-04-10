@@ -10,6 +10,7 @@ import {
     ChromeService,
     GlobalService,
     NeonService,
+    AssetState
 } from './core';
 import {
     MatDialog
@@ -43,6 +44,7 @@ export class AppComponent {
         private global: GlobalService,
         private neon: NeonService,
         private dialog: MatDialog,
+        private assetSer: AssetState
     ) {
         this.router.events.subscribe((event) => {
             if (event instanceof NavigationEnd) {
@@ -79,6 +81,7 @@ export class AppComponent {
         this.net = net;
         this.chrome.setNet(net);
         this.global.modifyNet(net);
+        this.assetSer.initAssetState();
         location.reload();
     }
 

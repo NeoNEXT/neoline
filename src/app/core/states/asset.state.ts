@@ -40,15 +40,30 @@ export class AssetState {
         private global: GlobalService,
         private chrome: ChromeService,
     ) {
+        this.initAssetState();
+    }
+
+    public initAssetState() {
         this.chrome.getAssetFile().subscribe(res => {
             this.assetFile = res;
         });
         this.chrome.getRateCurrency().subscribe(res => {
             this.rateCurrency = res;
+            this.changeRateCurrency(res);
         });
-        this.chrome.getAssetRate().subscribe(res => {
-            this.assetRate = res;
-        });
+    }
+
+    public changeRateCurrency(currency) {
+        this.rateCurrency = currency;
+        if (currency === 'CNY') {
+            this.chrome.getAssetCNYRate().subscribe(res => {
+                this.assetRate = res;
+            });
+        } else {
+            this.chrome.getAssetUSDRate().subscribe(res => {
+                this.assetRate = res;
+            });
+        }
     }
 
     public pushDelAssetId(id) {
@@ -126,7 +141,7 @@ export class AssetState {
             const tempAssetRate = this.assetRate.get(element);
             if (tempAssetRate) {
                 rateRes[element] = tempAssetRate['rate'];
-                if (new Date().getTime() / 1000 - tempAssetRate['last-modified'] > 180) {
+                if (new Date().getTime() / 1000 - tempAssetRate['last-modified'] > 1200) {
                     targetCoins += element + ',';
                 }
             } else {
@@ -155,7 +170,11 @@ export class AssetState {
                 }
                 this.assetRate.set(coin, tempRate);
             });
-            this.chrome.setAssetRate(this.assetRate);
+            if (this.rateCurrency === 'CNY') {
+                this.chrome.setAssetCNYRate(this.assetRate);
+            } else {
+                this.chrome.setAssetUSDRate(this.assetRate);
+            }
             return rateRes;
         }));
     }

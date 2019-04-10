@@ -7,7 +7,8 @@ import {
 import {
     ChromeService,
     GlobalService,
-    NeonService
+    NeonService,
+    AssetState
 } from '@app/core';
 import {
     Router,
@@ -33,6 +34,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
         private global: GlobalService,
         private neon: NeonService,
         private router: Router,
+        private assetSer: AssetState
     ) {
         this.walletIsOpen = false;
         this.isLogin = false;
@@ -82,6 +84,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
         this.net = net;
         this.chrome.setNet(net);
         this.global.modifyNet(net);
+        this.assetSer.initAssetState();
         location.reload();
     }
 }

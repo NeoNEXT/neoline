@@ -64,8 +64,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.aRouter.params.subscribe((params: any) => {
-            this.assetId = params.id;
-            this.getBalance();
+            this.getBalance(params.id);
         });
     }
 
@@ -79,13 +78,13 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
         };
     }
 
-    public getBalance() {
-        this.asset.detail(this.address, this.assetId).subscribe((res: Balance) => {
+    public getBalance(id) {
+        this.asset.detail(this.address, id).subscribe((res: Balance) => {
             if (!res) {
-                this.assetId = NEO;
-                this.getBalance();
+                this.getBalance(NEO);
                 return;
             }
+            this.assetId = id;
             res.balance = Number(res.balance);
             this.balance = res;
             // 获取资产汇率

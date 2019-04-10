@@ -162,7 +162,6 @@ export class PopupSettingComponent implements OnInit {
             if (confirm) {
                 this.chrome.clearAssetFile();
                 this.asset.clearCache();
-                this.transaction.clearCache();
                 this.global.snackBarTip('clearSuccess');
             }
         });

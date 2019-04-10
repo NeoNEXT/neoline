@@ -53,11 +53,8 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         this.address = this.neon.address;
         this.rateCurrency = this.asset.rateCurrency;
         this.aRoute.params.subscribe((params) => {
-            this.assetId = params.id;
-            // 获取交易
-            this.getInTransactions(1);
             // 获取资产信息
-            this.getBalance();
+            this.getBalance(params.id);
         });
     }
 
@@ -71,13 +68,15 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         };
     }
 
-    public getBalance() {
-        this.asset.detail(this.address, this.assetId).subscribe((res: Balance) => {
+    public getBalance(id) {
+        this.asset.detail(this.address, id).subscribe((res: Balance) => {
             if (!res) {
-                this.assetId = NEO;
-                this.getBalance();
+                this.getBalance(NEO);
                 return;
             }
+            this.assetId = id;
+            // 获取交易
+            this.getInTransactions(1);
             res.balance = Number(res.balance);
             this.balance = res;
             // 获取资产头像

@@ -510,30 +510,66 @@ export class ChromeService {
         }));
     }
 
-    public setAssetRate(assetRate: Map < string, {} > ) {
+    public setAssetCNYRate(assetCNYRate: Map < string, {} > ) {
         if (!this.check) {
-            localStorage.setItem('assetRate', JSON.stringify(Array.from(assetRate.entries())));
+            localStorage.setItem('assetCNYRate', JSON.stringify(Array.from(assetCNYRate.entries())));
             return;
         }
         try {
             this.crx.setStorage({
-                assetRate: JSON.stringify(Array.from(assetRate.entries()))
+                assetCNYRate: JSON.stringify(Array.from(assetCNYRate.entries()))
             });
         } catch (e) {
-            console.log('set assetRate failed', e);
+            console.log('set assetCNYRate failed', e);
         }
     }
-    public getAssetRate(): Observable < Map < string, {} >> {
+    public getAssetCNYRate(): Observable < Map < string, {} >> {
         if (!this.check) {
             try {
-                return of(new Map(JSON.parse(localStorage.getItem('assetRate'))));
+                return of(new Map(JSON.parse(localStorage.getItem('assetCNYRate'))));
             } catch (e) {
                 return throwError('please get history json to local storage when debug mode on');
             }
         }
         return from(new Promise((resolve, reject) => {
             try {
-                this.crx.getStorage('assetRate', (res) => {
+                this.crx.getStorage('assetCNYRate', (res) => {
+                    if (res) {
+                        resolve(new Map(JSON.parse(res)));
+                    } else {
+                        resolve(new Map());
+                    }
+                });
+            } catch (e) {
+                reject('failed');
+            }
+        }));
+    }
+
+    public setAssetUSDRate(assetUSDRate: Map < string, {} > ) {
+        if (!this.check) {
+            localStorage.setItem('assetUSDRate', JSON.stringify(Array.from(assetUSDRate.entries())));
+            return;
+        }
+        try {
+            this.crx.setStorage({
+                assetUSDRate: JSON.stringify(Array.from(assetUSDRate.entries()))
+            });
+        } catch (e) {
+            console.log('set assetUSDRate failed', e);
+        }
+    }
+    public getAssetUSDRate(): Observable < Map < string, {} >> {
+        if (!this.check) {
+            try {
+                return of(new Map(JSON.parse(localStorage.getItem('assetUSDRate'))));
+            } catch (e) {
+                return throwError('please get history json to local storage when debug mode on');
+            }
+        }
+        return from(new Promise((resolve, reject) => {
+            try {
+                this.crx.getStorage('assetUSDRate', (res) => {
                     if (res) {
                         resolve(new Map(JSON.parse(res)));
                     } else {
@@ -549,8 +585,12 @@ export class ChromeService {
     public clearAssetFile() {
         if (!this.check) {
             localStorage.removeItem('assetFile');
+            localStorage.removeItem('assetCNYRate');
+            localStorage.removeItem('assetUSDRate');
         } else {
             this.crx.removeLocalStorage('assetFile');
+            this.crx.removeStorage('assetCNYRate');
+            this.crx.removeStorage('assetUSDRate');
         }
     }
 
