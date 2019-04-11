@@ -17,7 +17,7 @@
 </div>
 <div class="tx flex-1">
     <tx-header *ngIf="txPage?.items.length > 0"></tx-header>
-    <tx-item *ngFor="let item of txPage?.items" [time]="item.block_time" [value]="item.value" [txid]="item.txid">
+    <tx-item *ngFor="let item of txPage?.items" [id]="item?.id || -1 " [time]="item.block_time" [value]="item.value" [txid]="item.txid">
     </tx-item>
     <div class="nomore" *ngIf="txPage?.items.length == 0">{{ 'noTransaction' | translate | async}}</div>
 </div>

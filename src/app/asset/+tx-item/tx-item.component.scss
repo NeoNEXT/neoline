@@ -12,13 +12,41 @@
 // :host:nth-of-type(odd) {
 //     background: #F4F7FC;
 // }
-span {
+span.flex-1, .txid {
     padding: $space;
     overflow: hidden;
     color: #484E6D;
     text-align: center;
-    text-overflow: ellipsis
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-overflow: ellipsis;
 }
-span.txid {
-    width: 400px;
+.status {
+    width: 50px;
+    display: inline-block;
+    margin-right: 10px;
+    padding: 2px 4px;
+    &.wait {
+        background: #F9F6F2;
+        color: #F79165
+    }
+}
+.txid-value {
+    width: 350px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.txid {
+    width: 440px; 
+    display: inline-flex;  
+}
+
+@media screen and (max-width: 1200px) {
+    .txid {
+        width: 300px;
+    }
+    .txid-value {
+        width: 210px;
+    }
 }

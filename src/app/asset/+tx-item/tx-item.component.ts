@@ -10,6 +10,7 @@ export class TxItemComponent implements OnInit {
     @Input() public time: number = 0;
     @Input() public value: string = '';
     @Input() public txid: string = '';
+    @Input() public id: number;
     constructor(
         private global: GlobalService
     ) { }
