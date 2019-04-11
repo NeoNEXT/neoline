@@ -184,10 +184,13 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
                     || !wallet.isNEP2((this.nep2Json.accounts[0] as any).key || this.nep2Json.name === undefined)) {
                     this.global.snackBarTip('nep2Wrong');
                     this.nep2Json = null;
+                    this.nep2Name = '';
+                    this.walletImport.walletName = '';
                     return;
                 }
                 if (this.nep2Json.name !== undefined) {
                     this.nep2Name = this.nep2Json.name;
+                    this.walletImport.walletName = this.nep2Json.name;
                 }
                 this.walletImport.EncrpytedKey = (this.nep2Json.accounts[0] as any).key;
             };

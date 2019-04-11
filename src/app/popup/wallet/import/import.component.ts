@@ -184,13 +184,16 @@ export class PopupWalletImportComponent implements OnInit, AfterViewInit {
             reader.onload = (evt: any) => {
                 this.nep2Json = JSON.parse(evt.target.result);
                 if (this.nep2Json.accounts === undefined || this.nep2Json.accounts[0] === undefined
-                    || !wallet.isNEP2((this.nep2Json.accounts[0] as any).key || this.nep2Json.name === undefined)) {
+                    || !wallet.isNEP2((this.nep2Json.accounts[0] as any).key || this.nep2Json.name === undefined
+                    || this.nep2Json.name === '')) {
                     this.global.snackBarTip('nep2Wrong');
                     this.nep2Json = null;
-                    return;
+                    this.nep2Name = '';
+                    this.walletImport.walletName = '';
                 }
                 if (this.nep2Json.name !== undefined) {
                     this.nep2Name = this.nep2Json.name;
+                    this.walletImport.walletName = this.nep2Json.name;
                 }
                 this.walletImport.EncrpytedKey = (this.nep2Json.accounts[0] as any).key;
             };
