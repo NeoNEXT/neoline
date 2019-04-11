@@ -177,6 +177,16 @@
             color: map-get($neo-line-default, 50);
             position: absolute;
             right: 0;
+            &:disabled {
+                background: rgba(0, 0, 0, 0.12);
+                color: rgba(0, 0, 0, 0.26);
+                box-shadow:none;
+            }
         }
     }
+}
+
+mat-form-field {
+    margin-top: 12px;
+    width: 100%;
 }

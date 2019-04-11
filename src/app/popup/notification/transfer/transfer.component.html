@@ -47,10 +47,17 @@
             </div>
             <!-- <div class="account-right"></div> -->
         </div>
+        <form #pass="ngForm">
+            <mat-form-field >
+                <input matInput placeholder="{{ 'enterPassword' | translate | async }}" [(ngModel)]="pwd" name="password"
+                #password="ngModel" required/>
+                <mat-error *ngIf="password.errors?.required">{{ 'passwordRequired' | translate | async }}</mat-error>
+            </mat-form-field>
+        </form>
         <div class="submit-group">
             <div class="button-group">
                 <button mat-button class="cancel" (click)="cancel()">{{ 'cancel' | translate | async}}</button>
-                <button mat-button class="confirm" (click)="submit()">{{ 'yes' | translate | async}}</button>
+                <button  [disabled]="pass.invalid || loading"  mat-button class="confirm" (click)="submit()">{{ 'yes' | translate | async}}</button>
             </div>
         </div>
     </div>

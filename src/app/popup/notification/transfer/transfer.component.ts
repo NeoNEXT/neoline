@@ -30,18 +30,6 @@ import {
 import {
     PwdDialog
 } from '@/app/transfer/+pwd/pwd.dialog';
-import {
-    catchError,
-    switchMap,
-    map
-} from 'rxjs/operators';
-import {
-    of
-} from 'rxjs';
-import {
-    wallet
-} from '@cityofzion/neon-core';
-
 @Component({
     templateUrl: 'transfer.component.html',
     styleUrls: ['transfer.component.scss']
@@ -56,8 +44,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public loading = false;
     public loadingMsg: string;
     public wallet: any;
-
-    public tx: Transaction;
+    public pwd = '';
+    public hidePwd = true;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -72,8 +60,6 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     ) { }
 
     ngOnInit(): void {
-        this.loading = true;
-        this.loadingMsg = 'Loading';
         this.fromAddress = this.neon.address;
         this.wallet = this.neon.wallet;
         this.aRoute.queryParams.subscribe((params: any) => {
@@ -86,25 +72,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.assetId = params.asset_id || '';
             this.amount = params.amount || 0;
             this.asset.detail(this.neon.address, this.assetId).subscribe((res: Balance) => {
-                this.loading = false;
-                this.loadingMsg = '';
                 this.balance = res;
-                this.transfer.create(this.fromAddress, this.toAddress, this.assetId, this.amount).subscribe((tx) => {
-                    this.dialog.open(PwdDialog, {
-                        disableClose: true
-                    }).afterClosed().subscribe((pwd) => {
-                        if (pwd && pwd.length) {
-                            this.global.log('start transfer with pwd');
-                            this.resolveSign(tx, pwd);
-                        } else {
-                            this.creating = false;
-                            this.global.log('cancel pay');
-                        }
-                    });
-                }, (err) => {
-                    this.creating = false;
-                    this.global.snackBarTip('wentWrong');
-                });
             });
         });
     }
@@ -112,11 +80,9 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     ngAfterViewInit(): void { }
 
     public submit() {
+        this.loading = true;
+        this.loadingMsg = 'Loading';
         if (this.creating) {
-            return;
-        }
-        if (this.tx === undefined) {
-            alert('Please follow the formal process');
             return;
         }
         if (this.balance.balance === undefined || this.balance.balance <= 0) {
@@ -128,7 +94,23 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             return;
         }
         this.creating = true;
-        this.resolveSend(this.tx);
+        this.asset.detail(this.neon.address, this.assetId).subscribe((res: Balance) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.balance = res;
+            this.transfer.create(this.fromAddress, this.toAddress, this.assetId, this.amount).subscribe((tx) => {
+                if (this.pwd && this.pwd.length) {
+                    this.global.log('start transfer with pwd');
+                    this.resolveSign(tx, this.pwd);
+                } else {
+                    this.creating = false;
+                    this.global.log('cancel pay');
+                }
+            }, (err) => {
+                this.creating = false;
+                this.global.snackBarTip('wentWrong');
+            });
+        });
 
     }
 
@@ -145,26 +127,15 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         this.loadingMsg = 'Wait';
         this.neon.wallet.accounts[0].decrypt(pwd).then((acc) => {
             tx.sign(acc);
-            this.tx = tx;
             this.loading = false;
             this.loadingMsg = '';
             this.creating = false;
+            this.resolveSend(tx);
         }).catch((err) => {
             this.loading = false;
             this.loadingMsg = '';
             this.creating = false;
             this.global.snackBarTip('verifyFailed', err);
-            this.dialog.open(PwdDialog, {
-                disableClose: true
-            }).afterClosed().subscribe((pwdText) => {
-                if (pwdText && pwdText.length) {
-                    this.global.log('start transfer with pwd');
-                    this.resolveSign(tx, pwdText);
-                } else {
-                    this.creating = false;
-                    this.global.log('cancel pay');
-                }
-            });
         });
     }
 
