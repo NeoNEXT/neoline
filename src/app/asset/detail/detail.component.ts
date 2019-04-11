@@ -21,6 +21,7 @@ import {
     ActivatedRoute,
     Router
 } from '@angular/router';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
     templateUrl: 'detail.component.html',
@@ -38,6 +39,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     public net: string;
 
     imageUrl: any;
+    public unSubTxStatus: Unsubscribable;
 
     constructor(
         private asset: AssetState,
@@ -58,7 +60,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
             // 获取资产信息
             this.getBalance(params.id);
         });
-        this.txState.popTransferStatus().subscribe(time => {
+        this.unSubTxStatus = this.txState.popTransferStatus().subscribe(time => {
             this.getInTransactions(1);
         });
     }
@@ -71,6 +73,9 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
             total: 0,
             per_page: 10
         };
+        if (this.unSubTxStatus) {
+            this.unSubTxStatus.unsubscribe();
+        }
     }
 
     public getBalance(id) {

@@ -13,7 +13,7 @@
                 <span class="amount">{{ asset?.balance || '0'}}</span>&nbsp;
                 <span class="type">{{ asset?.symbol }}</span>
             </div>
-            <div class="right" *ngIf="asset?.rateBalance || asset?.rateBalance === 0">
+            <div class="right" *ngIf="asset?.rateBalance && asset?.rateBalance != 0">
                 <span>{{asset?.rateBalance | number: '1.0-2'}}</span>&nbsp;{{rateCurrency}}
             </div>
         </div>

@@ -12,7 +12,7 @@
                 {{ value < 0 ? 'Sent' : 'Received' }}
             </p>
             <p class="status" [ngClass]="{'wait': id === -1}">
-                {{ id === -1 ? '交易中': '确认' }}
+                {{ id === -1 ? '确认中': '已确认' }}
             </p>
         </div>
         <div class="amount-box">
