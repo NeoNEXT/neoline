@@ -1,5 +1,5 @@
 <div class="info flex" (click)="txDetail(txid)">
-    <span class="txid">{{txid | limitStr: 20}}</span>
+    <span class="txid">{{txid}}</span>
     <span class="flex-1">{{value}}</span>
     <span class="flex-1">{{ time * 1000 | date:'yyyy-MM-dd HH:mm' }}</span>
 </div>

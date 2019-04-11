@@ -17,7 +17,8 @@ span {
     overflow: hidden;
     color: #484E6D;
     text-align: center;
+    text-overflow: ellipsis
 }
 span.txid {
-    width: 260px;
+    width: 400px;
 }
