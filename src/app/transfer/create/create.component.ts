@@ -7,7 +7,7 @@ import {
     ActivatedRoute
 } from '@angular/router';
 import {
-    Balance
+    Balance, NEO
 } from '@/models/models';
 import {
     AssetState,
@@ -31,21 +31,6 @@ import {
 import {
     Transaction
 } from '@cityofzion/neon-core/lib/tx';
-import {
-    concatAll,
-    combineAll,
-    catchError,
-    map,
-    switchMap
-} from 'rxjs/operators';
-import {
-    merge,
-    forkJoin,
-    of
-} from 'rxjs';
-import {
-    u
-} from '@cityofzion/neon-core';
 import { wallet } from '@cityofzion/neon-core';
 
 @Component({
@@ -58,6 +43,7 @@ export class TransferCreateomponent implements OnInit {
     public fromAddress: string;
     public toAddress: string;
     public creating: boolean = false;
+    public NEO = NEO;
 
     private assetId: string;
     constructor(

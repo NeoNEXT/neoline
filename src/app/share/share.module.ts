@@ -24,6 +24,7 @@ import { LanguageNamePipe } from './pipes/language-name.pipe';
 import { CopyDirective } from './directives/copy';
 import { AvatarDirective } from './directives/avatar';
 import { TranslatePipe } from './pipes/translate.pipe';
+import { NumberDirective } from './directives/number';
 
 @NgModule({
     declarations: [
@@ -34,6 +35,7 @@ import { TranslatePipe } from './pipes/translate.pipe';
         LanguageNamePipe,
         TranslatePipe,
         CopyDirective,
+        NumberDirective,
         AvatarDirective,
     ],
     imports: [CommonModule, MatIconModule, MatButtonModule],
@@ -43,6 +45,7 @@ import { TranslatePipe } from './pipes/translate.pipe';
         LimitStrPipe,
         LanguageNamePipe,
         TranslatePipe,
+        NumberDirective,
         CopyDirective,
         AvatarDirective,
         MatButtonModule,
