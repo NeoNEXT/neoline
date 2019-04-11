@@ -45,7 +45,7 @@ export class TransferCreateomponent implements OnInit {
     public creating: boolean = false;
     public NEO = NEO;
 
-    private assetId: string;
+    public assetId: string;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
