@@ -51,9 +51,6 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
 
 
     public submit(): void {
-        if (this.wallet.walletName.trim() === '') {
-            return;
-        }
         this.loading = true;
 
         this.neon
