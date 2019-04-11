@@ -27,6 +27,8 @@ declare var chrome;
 let currLang = 'en';
 let tabCurr: any;
 
+let timeInter = null;
+
 export const version = chrome.runtime.getManifest().version;
 
 export function expand() {
@@ -66,6 +68,24 @@ export function setPopup(lang) {
     }
 }
 
+getStorage('time', (time) => {
+    if (time !== undefined) {
+        if ( (new Date()).getTime() - time >= 2000) {
+            setStorage({
+                shouldLogin: true
+            });
+        }
+    }
+})
+
+if (timeInter === null) {
+    timeInter = setInterval(() => {
+        setStorage({
+            time:  (new Date()).getTime()
+        });
+    }, 2000);
+}
+
 
 
 chrome.windows.onRemoved.addListener(() => {
@@ -77,6 +97,7 @@ chrome.windows.onRemoved.addListener(() => {
         }
     });
 });
+
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.target) {
