@@ -68,24 +68,22 @@ export function setPopup(lang) {
     }
 }
 
-getStorage('time', (time) => {
-    if (time !== undefined) {
-        if ( (new Date()).getTime() - time >= 2000) {
+getStorage('startTime', (time) => {
+    if (time === undefined) {
+        setStorage({
+            startTime: chrome.csi().startE
+        });
+    } else {
+        if (time !== chrome.csi().startE) {
             setStorage({
                 shouldLogin: true
             });
+            setStorage({
+                startTime: chrome.csi().startE
+            });
         }
     }
-})
-
-if (timeInter === null) {
-    timeInter = setInterval(() => {
-        setStorage({
-            time:  (new Date()).getTime()
-        });
-    }, 2000);
-}
-
+});
 
 
 chrome.windows.onRemoved.addListener(() => {
