@@ -2,6 +2,7 @@ import {
     Component,
     OnInit,
     OnChanges,
+    OnDestroy,
 } from '@angular/core';
 import {
     AssetState,
@@ -24,17 +25,20 @@ import {
 import {
     ActivatedRoute
 } from '@angular/router';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
     templateUrl: 'asset.component.html',
     styleUrls: ['asset.component.scss']
 })
-export class AssetComponent implements OnInit {
+export class AssetComponent implements OnInit, OnDestroy {
     public address: string = '';
     public displayAssets; // 要显示的资产
     public watch: Balance[]; // 用户添加的资产
     public rateSymbol = '';
     public rateCurrency: string;
+
+    public unSubAddAsset: Unsubscribable;
 
     constructor(
         private asset: AssetState,
@@ -70,12 +74,18 @@ export class AssetComponent implements OnInit {
             this.watch = newWatch;
             this.displayAssets.push(...newWatch);
         }));
-        this.asset.popAddAssetId().subscribe(assetItem => {
+        this.unSubAddAsset = this.asset.popAddAssetId().subscribe(assetItem => {
             if (!assetItem) {
                 return;
             }
             this.displayAssets.push(assetItem);
         });
+    }
+
+    ngOnDestroy(): void {
+        if (this.unSubAddAsset) {
+            this.unSubAddAsset.unsubscribe();
+        }
     }
 
     // 获取资产汇率

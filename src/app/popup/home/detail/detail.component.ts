@@ -27,6 +27,7 @@ import {
 import {
     FilterBarService
 } from '@popup/_services/filter-bar.service';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
     templateUrl: 'detail.component.html',
@@ -42,6 +43,8 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     public inTransaction: Array < Transaction > ;
     public rateCurrency: string;
     public net: string;
+
+    public unSubTxStatus: Unsubscribable;
 
     constructor(
         private asset: AssetState,
@@ -68,7 +71,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
         this.aRouter.params.subscribe((params: any) => {
             this.getBalance(params.id);
         });
-        this.txState.popTransferStatus().subscribe(time => {
+        this.unSubTxStatus = this.txState.popTransferStatus().subscribe(time => {
             this.getInTransactions(1);
         });
     }
@@ -81,6 +84,9 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
             total: 0,
             per_page: 10
         };
+        if (this.unSubTxStatus) {
+            this.unSubTxStatus.unsubscribe();
+        }
     }
 
     public getBalance(id) {

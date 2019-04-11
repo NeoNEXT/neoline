@@ -31,12 +31,13 @@ import {
 import {
     MatDialog
 } from '@angular/material';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
     templateUrl: 'manage.component.html',
     styleUrls: ['manage.component.scss']
 })
-export class AssetManageComponent implements OnInit {
+export class AssetManageComponent implements OnInit, OnDestroy {
     private requesting = false;
     public allAssets: PageData < Asset > ; // 所有的资产
     public searchAssets: any = false; // 搜索出来的资产
@@ -45,6 +46,7 @@ export class AssetManageComponent implements OnInit {
     public isLoading: boolean;
     public isSearch: boolean = false;
     public searchValue: string;
+    public unSubDelAsset: Unsubscribable;
 
     constructor(
         private asset: AssetState,
@@ -71,7 +73,7 @@ export class AssetManageComponent implements OnInit {
         })))).subscribe(() => {
             this.getAllBalance(1);
         });
-        this.asset.popDelAssetId().subscribe(delId => {
+        this.unSubDelAsset = this.asset.popDelAssetId().subscribe(delId => {
             if (!delId) {
                 return;
             }
@@ -91,6 +93,12 @@ export class AssetManageComponent implements OnInit {
                 });
             }
         });
+    }
+
+    ngOnDestroy(): void {
+        if (this.unSubDelAsset) {
+            this.unSubDelAsset.unsubscribe();
+        }
     }
 
     public getAllBalance(page) {
