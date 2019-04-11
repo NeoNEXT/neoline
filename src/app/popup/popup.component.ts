@@ -70,11 +70,13 @@ export class PopupComponent implements OnInit, AfterViewInit {
         }
     }
     ngAfterViewInit(): void {
-        if (this.global.apiDomain.match('main') === null) {
-            this.net = 'test';
-        } else {
-            this.net = 'main';
-        }
+        setTimeout(() => {
+            if (this.global.apiDomain.match('main') === null) {
+                this.net = 'test';
+            } else {
+                this.net = 'main';
+            }
+        }, 0);
     }
 
     public modifyNet(net: string) {

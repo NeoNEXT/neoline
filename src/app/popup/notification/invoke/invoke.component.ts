@@ -3,7 +3,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService } from '@/app/core';
 import { Transaction } from '@cityofzion/neon-core/lib/tx';
 import { wallet, tx, sc, u } from '@cityofzion/neon-core';
-import Neon from '@cityofzion/neon-js';
 import { MatDialog } from '@angular/material';
 import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
 import { HttpClient } from '@angular/common/http';
@@ -48,16 +47,18 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     newJson = newJson.replace(/'/g, '"');
                     this.args = JSON.parse(newJson);
                 }
-                this.dialog.open(PwdDialog, {
-                    disableClose: true
-                }).afterClosed().subscribe((pwd) => {
-                    if (pwd && pwd.length) {
-                        this.global.log('start transfer with pwd');
-                        this.resolveSign(this.createTxForNEP5(), pwd);
-                    } else {
-                        this.global.log('cancel pay');
-                    }
-                });
+                setTimeout(() => {
+                    this.dialog.open(PwdDialog, {
+                        disableClose: true
+                    }).afterClosed().subscribe((pwd) => {
+                        if (pwd && pwd.length) {
+                            this.global.log('start transfer with pwd');
+                            this.resolveSign(this.createTxForNEP5(), pwd);
+                        } else {
+                            this.global.log('cancel pay');
+                        }
+                    });
+                }, 0);
             } else {
                 return;
             }
@@ -121,7 +122,6 @@ export class PopupNoticeInvokeComponent implements OnInit {
         const fromScript = wallet.getScriptHashFromAddress(this.neon.address);
         const newTx = new tx.InvocationTransaction();
         if (this.scriptHash.length !== 42  && this.scriptHash.length !== 40 ) {
-            alert(2);
             this.chrome.windowCallback({
                 data: 'invalid_arguments',
                 target: 'invokeRes'
