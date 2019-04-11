@@ -202,6 +202,18 @@ export class ChromeService {
             }
         }));
     }
+    public setLogin(status: string) {
+        if (!this.check) {
+            localStorage.setItem('shouldLogin', status);
+        }
+        return from(new Promise((resolve, reject) => {
+            try {
+                this.crx.setStorage({ shouldLogin: status });
+            } catch (e) {
+                reject('failed');
+            }
+        }));
+    }
     public setLang(lang: string) {
         if (!this.check) {
             localStorage.setItem('lang', lang);

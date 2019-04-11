@@ -21,6 +21,7 @@ export class WalletGuard implements CanActivate {
         return new Promise(resolve => {
             this.neon.walletIsOpen().subscribe((res: any) => {
                 if (!res) {
+                    this.chrome.setLogin('false');
                     this.router.navigateByUrl('/wallet');
                 } else {
                     this.chrome.getLogin().subscribe((shoudLogin) => {
@@ -49,6 +50,7 @@ export class PopupLoginGuard implements CanActivate {
         return new Promise(resolve => {
             this.neon.walletIsOpen().subscribe((res: any) => {
                 if (!res) {
+                    this.chrome.setLogin('false');
                     this.router.navigateByUrl('/popup/wallet/new');
                 } else {
                     this.chrome.getLogin().subscribe((shoudLogin) => {
@@ -76,6 +78,7 @@ export class LoginGuard implements CanActivate {
         return new Promise(resolve => {
             this.neon.walletIsOpen().subscribe((res: any) => {
                 if (!res) {
+                    this.chrome.setLogin('false');
                     this.router.navigateByUrl('/wallet');
                 } else {
                     this.chrome.getLogin().subscribe((shoudLogin) => {
@@ -105,6 +108,7 @@ export class OpenedWalletGuard implements CanActivate {
         return new Promise(resolve => {
             this.neon.walletIsOpen().subscribe((res: any) => {
                 if (!res) {
+                    this.chrome.setLogin('false');
                     resolve(true);
                 } else {
                     this.chrome.getLogin().subscribe((shoudLogin) => {
@@ -140,6 +144,7 @@ export class PopupWalletGuard implements CanActivate {
                     if (route.url[0].path === 'notification') {
                         this.chrome.setHistory(state.url);
                     }
+                    this.chrome.setLogin('false');
                     this.router.navigateByUrl('/popup/wallet/new');
                     this.global.log('Wallet has not opened yet.');
                 } else {
