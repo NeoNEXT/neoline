@@ -78,19 +78,19 @@ export class AssetManageComponent implements OnInit, OnDestroy {
                 return;
             }
             if (this.searchAssets) {
-                this.searchAssets.forEach((element, index) => {
-                    if (element.asset_id === delId) {
+                for (const [item, index] of this.searchAssets) {
+                    if (item.asset_id === delId) {
                         this.searchAssets[index].watching = false;
                         return;
                     }
-                });
+                }
             } else {
-                this.allAssets.items.forEach((element, index) => {
-                    if (element.asset_id === delId) {
+                for (const index in this.allAssets.items) {
+                    if (this.allAssets.items[index].asset_id === delId) {
                         this.allAssets.items[index].watching = false;
                         return;
                     }
-                });
+                }
             }
         });
     }

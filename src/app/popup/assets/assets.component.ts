@@ -189,12 +189,12 @@ export class PopupAssetsComponent implements OnInit {
                     this.watch.splice(i, 1);
                     this.chrome.setWatch(this.watch);
                 }
-                this.allAssets.items.forEach((item, i) => {
-                    if (item.asset_id === this.displayAssets[index].asset_id) {
-                        this.allAssets.items[i].watching = false;
+                for (const allIndex in this.allAssets.items) {
+                    if (this.allAssets.items[allIndex].asset_id === this.displayAssets[index].asset_id) {
+                        this.allAssets.items[allIndex].watching = false;
                         return;
                     }
-                });
+                }
                 this.displayAssets.splice(index, 1);
                 this.global.snackBarTip('hiddenSucc');
             }
