@@ -27,8 +27,6 @@ declare var chrome;
 let currLang = 'en';
 let tabCurr: any;
 
-let timeInter = null;
-
 export const version = chrome.runtime.getManifest().version;
 
 export function expand() {

@@ -91,7 +91,7 @@ export class NeonService {
             this.$wallet.next(this._wallet);
         });
         this.chrome.getWIFArray().subscribe((res) => {
-            if (res.length > 0) {
+            if (res !== undefined && res !== null && res.length > 0) {
                 this._WIFArr = res;
             }
         });
