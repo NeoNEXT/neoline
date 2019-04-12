@@ -66,6 +66,9 @@ export class WalletCreateComponent implements OnInit, AfterContentInit {
             .createWallet(this.wallet.password, this.wallet.walletName)
             .subscribe(
                 (res: any) => {
+                    this.neon.pushWIFArray(res.accounts[0].wif);
+                    this.chrome.setWIFArray(this.neon.WIFArr);
+
                     this.neon.pushWalletArray(res.export());
                     this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
                     this.chrome.setWallet(res.export());

@@ -6,6 +6,16 @@ export interface PageData<T> {
     items: T[]
 }
 
+export interface claimItem {
+    claim: string,
+    end: number,
+    start: number,
+    sys_fee: number,
+    txid: string,
+    value: number,
+    n: number
+}
+
 export interface Balance {
     asset_id: string,
     balance: number,

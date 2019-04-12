@@ -3,7 +3,7 @@ import {
 } from '@angular/core';
 import {
     Observable,
-    of ,
+    of,
     throwError,
     from
 } from 'rxjs';
@@ -49,7 +49,7 @@ export class ChromeService {
      * currently open to /asset by default
      * 从弹出式页面打开到完整页面
      */
-    public expand(): Promise < any > {
+    public expand(): Promise<any> {
         return new Promise((res, rej) => {
             if (!this.check) {
                 rej('crx not exists');
@@ -67,7 +67,7 @@ export class ChromeService {
      * Get saved account from storage.
      * 从存储中获取当前钱包
      */
-    public getWallet(): Observable < WalletJSON > {
+    public getWallet(): Observable<WalletJSON> {
         if (!this.check) {
             try {
                 return of(JSON.parse(localStorage.getItem('wallet')));
@@ -85,7 +85,7 @@ export class ChromeService {
             }
         }));
     }
-    public getWalletArray(): Observable < Array < WalletJSON >> {
+    public getWalletArray(): Observable<Array<WalletJSON>> {
         if (!this.check) {
             try {
                 return of(JSON.parse(localStorage.getItem('walletArr')));
@@ -103,6 +103,25 @@ export class ChromeService {
             }
         }));
     }
+    public getWIFArray(): Observable<Array<string>> {
+        if (!this.check) {
+            try {
+                return of(JSON.parse(localStorage.getItem('WIFArr')));
+            } catch (e) {
+                return throwError('please set wif json to local storage when debug mode on');
+            }
+        }
+        return from(new Promise((resolve, reject) => {
+            try {
+                this.crx.getStorage('WIFArr', (res) => {
+                    resolve(res);
+                });
+            } catch (e) {
+                reject('failed');
+            }
+        }));
+    }
+
     /**
      * Set wallet as active account, and add to history list.
      * 保存当前钱包，并记录到历史
@@ -124,7 +143,7 @@ export class ChromeService {
      * Set wallets, and add to history list.
      * 保存钱包数组，并记录到历史
      */
-    public setWalletArray(w: Array < WalletJSON > ) {
+    public setWalletArray(w: Array<WalletJSON>) {
         if (!this.check) {
             localStorage.setItem('walletArr', JSON.stringify(w));
             return;
@@ -132,6 +151,24 @@ export class ChromeService {
         try {
             this.crx.setStorage({
                 walletArr: w
+            });
+        } catch (e) {
+            console.log('set account failed', e);
+        }
+    }
+
+    /**
+     * Set wallets, and add to history list.
+     * 保存wif数组，并记录到历史
+     */
+    public setWIFArray(WIFArr: Array<string>) {
+        if (!this.check) {
+            localStorage.setItem('WIFArr', JSON.stringify(WIFArr));
+            return;
+        }
+        try {
+            this.crx.setStorage({
+                WIFArr
             });
         } catch (e) {
             console.log('set account failed', e);
@@ -179,7 +216,7 @@ export class ChromeService {
             console.log('verify login', e);
         }
     }
-    public getLogin(): Observable < boolean > {
+    public getLogin(): Observable<boolean> {
         if (!this.check) {
             return from(new Promise(resolve => {
                 resolve(localStorage.getItem('shouldLogin') === 'true');
@@ -205,14 +242,15 @@ export class ChromeService {
     public setLogin(status: string) {
         if (!this.check) {
             localStorage.setItem('shouldLogin', status);
+        } else {
+            return from(new Promise((resolve, reject) => {
+                try {
+                    this.crx.setStorage({ shouldLogin: status });
+                } catch (e) {
+                    reject('failed');
+                }
+            }));
         }
-        return from(new Promise((resolve, reject) => {
-            try {
-                this.crx.setStorage({ shouldLogin: status });
-            } catch (e) {
-                reject('failed');
-            }
-        }));
     }
     public setLang(lang: string) {
         if (!this.check) {
@@ -229,7 +267,7 @@ export class ChromeService {
             console.log('set lang failed', e);
         }
     }
-    public getLang(): Observable < string > {
+    public getLang(): Observable<string> {
         if (!this.check) {
             try {
                 let lang = localStorage.getItem('lang') || '';
@@ -262,7 +300,7 @@ export class ChromeService {
             }
         }));
     }
-    public getWatch(): Observable < Balance[] > {
+    public getWatch(): Observable<Balance[]> {
         if (!this.check) {
             try {
                 let rs = JSON.parse(localStorage.getItem('watch')) || [];
@@ -313,7 +351,7 @@ export class ChromeService {
             console.log('set history failed', e);
         }
     }
-    public getHistory(): Observable < string > {
+    public getHistory(): Observable<string> {
         if (!this.check) {
             try {
                 return of(JSON.parse(localStorage.getItem('history')));
@@ -393,7 +431,7 @@ export class ChromeService {
         }
     }
 
-    public getTransaction(): Observable < object > {
+    public getTransaction(): Observable<object> {
         if (!this.check) {
             try {
                 if (localStorage.getItem('transaction') == null) {
@@ -432,7 +470,7 @@ export class ChromeService {
         }
     }
 
-    public getAuthorization(): Observable < object > {
+    public getAuthorization(): Observable<object> {
         if (!this.check) {
             try {
                 if (localStorage.getItem('connectedWebsites') == null) {
@@ -464,14 +502,14 @@ export class ChromeService {
         }
         try {
             this.crx.setStorage({
-                rateCurrency: rateCurrency
+                rateCurrency
             });
         } catch (e) {
             console.log('set current rate currency failed', e);
         }
     }
 
-    public getRateCurrency(): Observable < string > {
+    public getRateCurrency(): Observable<string> {
         const defaultCurrency = 'CNY';
         if (!this.check) {
             try {
@@ -494,7 +532,7 @@ export class ChromeService {
         }));
     }
 
-    public setAssetFile(assetFile: Map < string, {} > ) {
+    public setAssetFile(assetFile: Map<string, {}>) {
         if (!this.check) {
             localStorage.setItem('assetFile', JSON.stringify(Array.from(assetFile.entries())));
             return;
@@ -507,7 +545,7 @@ export class ChromeService {
             console.log('set assetFile failed', e);
         }
     }
-    public getAssetFile(): Observable < Map < string, {} >> {
+    public getAssetFile(): Observable<Map<string, {}>> {
         if (!this.check) {
             try {
                 return of(new Map(JSON.parse(localStorage.getItem('assetFile'))));
@@ -530,7 +568,7 @@ export class ChromeService {
         }));
     }
 
-    public setAssetCNYRate(assetCNYRate: Map < string, {} > ) {
+    public setAssetCNYRate(assetCNYRate: Map<string, {}>) {
         if (!this.check) {
             localStorage.setItem('assetCNYRate', JSON.stringify(Array.from(assetCNYRate.entries())));
             return;
@@ -543,7 +581,7 @@ export class ChromeService {
             console.log('set assetCNYRate failed', e);
         }
     }
-    public getAssetCNYRate(): Observable < Map < string, {} >> {
+    public getAssetCNYRate(): Observable<Map<string, {}>> {
         if (!this.check) {
             try {
                 return of(new Map(JSON.parse(localStorage.getItem('assetCNYRate'))));
@@ -566,7 +604,7 @@ export class ChromeService {
         }));
     }
 
-    public setAssetUSDRate(assetUSDRate: Map < string, {} > ) {
+    public setAssetUSDRate(assetUSDRate: Map<string, {}>) {
         if (!this.check) {
             localStorage.setItem('assetUSDRate', JSON.stringify(Array.from(assetUSDRate.entries())));
             return;
@@ -579,7 +617,7 @@ export class ChromeService {
             console.log('set assetUSDRate failed', e);
         }
     }
-    public getAssetUSDRate(): Observable < Map < string, {} >> {
+    public getAssetUSDRate(): Observable<Map<string, {}>> {
         if (!this.check) {
             try {
                 return of(new Map(JSON.parse(localStorage.getItem('assetUSDRate'))));
@@ -633,7 +671,7 @@ export class ChromeService {
             console.log('set net failed', e);
         }
     }
-    public getNet(): Observable < string > {
+    public getNet(): Observable<string> {
         if (!this.check) {
             try {
                 if (localStorage.getItem('net')) {

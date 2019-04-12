@@ -6,7 +6,7 @@ import { map, catchError, startWith, publish, refCount } from 'rxjs/operators';
 import { ChromeService } from './chrome.service';
 import { GlobalService } from './global.service';
 import { Transaction, TransactionInput } from '@cityofzion/neon-core/lib/tx';
-import { UTXO } from '@/models/models';
+import { UTXO, claimItem } from '@/models/models';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { sc, u } from '@cityofzion/neon-core';
 
@@ -14,6 +14,7 @@ import { sc, u } from '@cityofzion/neon-core';
 export class NeonService {
     private _wallet: Wallet;
     private _walletArr: Array<Wallet> = [];
+    private _WIFArr: Array<string> = [];
 
     private $wallet: Subject<Wallet> = new Subject();
 
@@ -29,8 +30,15 @@ export class NeonService {
         return this._walletArr || null;
     }
 
+    public get WIFArr(): Array<string> {
+        return this._WIFArr || [];
+    }
+
     public pushWalletArray(w: WalletJSON) {
         this._walletArr.push(this.parseWallet(w));
+    }
+    public pushWIFArray(WIF: string) {
+        this._WIFArr.push(WIF);
     }
 
     public getWalletArrayJSON(walletArr: Array<Wallet> = null): Array<WalletJSON> {
@@ -82,6 +90,11 @@ export class NeonService {
             this._wallet = this.parseWallet(res);
             this.$wallet.next(this._wallet);
         });
+        this.chrome.getWIFArray().subscribe((res) => {
+            if (res.length > 0) {
+                this._WIFArr = res;
+            }
+        });
         return this.chrome.getWalletArray().pipe(map((res) => {
             if (res.length > 0) {
                 const tempArray = [];
@@ -109,7 +122,9 @@ export class NeonService {
         const account = new wallet.Account(privateKey);
         const w = Neon.create.wallet({ name: name || 'NEOLineUser' } as any);
         w.addAccount(account);
+        const wif = w.accounts[0].WIF;
         return from(w.accounts[0].encrypt(key)).pipe(map(() => {
+            (w.accounts[0] as any).wif = wif;
             return w;
         }));
     }
@@ -135,18 +150,30 @@ export class NeonService {
             if (this.walletArr.length === 1) {
                 this.chrome.closeWallet();
                 this._walletArr.splice(index, 1);
+                if (this._WIFArr.length > index) {
+                    this._WIFArr.splice(index, 1);
+                }
                 this.chrome.setWalletArray(this.getWalletArrayJSON());
+                this.chrome.setWIFArray(this._WIFArr);
             } else {
                 this._walletArr.splice(index, 1);
+                if (this._WIFArr.length > index) {
+                    this._WIFArr.splice(index, 1);
+                }
                 this._wallet = this._walletArr[0];
                 this.chrome.setWallet(this._wallet.export());
                 this.chrome.setWalletArray(this.getWalletArrayJSON());
+                this.chrome.setWIFArray(this._WIFArr);
             }
             return of(true);
 
         } else {
+            if (this._WIFArr.length > index) {
+                this._WIFArr.splice(index, 1);
+            }
             this._walletArr.splice(index, 1);
             this.chrome.setWalletArray(this.getWalletArrayJSON());
+            this.chrome.setWIFArray(this._WIFArr);
             return of(false);
         }
     }
@@ -161,8 +188,10 @@ export class NeonService {
         const account = new wallet.Account(privKey);
         const w = Neon.create.wallet({ name: name || 'NEOLineUser' } as any);
         w.addAccount(account);
+        const wif = w.accounts[0].WIF;
         w.encrypt(0, key);
         return from(w.accounts[0].encrypt(key)).pipe(map(() => {
+            (w.accounts[0] as any).wif = wif;
             return w;
         }));
     }
@@ -178,6 +207,7 @@ export class NeonService {
         w.addAccount(account);
         w.encrypt(0, key);
         return from(w.accounts[0].encrypt(key)).pipe(map(() => {
+            (w.accounts[0] as any).wif = wif;
             return w;
         }));
     }
@@ -197,6 +227,7 @@ export class NeonService {
                 returnRes.addAccount(account);
                 returnRes.encrypt(0, key);
                 returnRes.accounts[0].encrypt(key).then(res => {
+                    (returnRes.accounts[0] as any).wif = wif;
                     observer.next(returnRes);
 
                 });
@@ -275,6 +306,24 @@ export class NeonService {
         let uniqTag = `from NEOLine at ${new Date().getTime()}`;
         newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
         return newTx;
+    }
+    public claimGAS(claims: Array<claimItem>, value: number): Observable<Transaction> {
+        return new Observable(observer => {
+            const claimArr = [];
+            claims.forEach(item => {
+                claimArr.push({
+                    prevHash: item.txid.length === 66 ? item.txid.slice(2) : item.txid,
+                    prevIndex: item.n,
+                });
+            });
+            const newTx = new tx.ClaimTransaction({
+                claims: claimArr
+            });
+            newTx.addIntent('GAS', value , this.address );
+            newTx.sign(this.WIFArr[this._walletArr.findIndex(item => item.accounts[0].address === this._wallet.accounts[0].address)]);
+            observer.next(newTx);
+            observer.complete();
+        });
     }
     public isAsset(assetId: string): boolean {
         return assetId.startsWith('0x') ? assetId.length == 66 : assetId.length == 64;

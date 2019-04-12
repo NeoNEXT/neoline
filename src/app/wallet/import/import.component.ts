@@ -110,12 +110,7 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
         if (wallet.isPrivateKey(this.walletImport.WIF)) {
             this.neon.importPrivateKey(this.walletImport.WIF, this.walletImport.password, this.walletImport.walletName)
                 .subscribe((res: any) => {
-                    this.neon.pushWalletArray(res.export());
-                    this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
-                    this.chrome.setWallet(res.export());
-                    this.global.$wallet.next('open');
-                    this.loading = false;
-                    location.href = `index.html#asset`;
+                    this.updateLocalWallet(res);
                 });
         } else {
             this.neon
@@ -124,11 +119,7 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
                     (res: any) => {
                         this.loading = false;
                         if (this.neon.verifyWallet(res)) {
-                            this.neon.pushWalletArray(res.export());
-                            this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
-                            this.chrome.setWallet(res.export());
-                            this.global.$wallet.next('open');
-                            this.jumpRouter();
+                            this.updateLocalWallet(res);
                         } else {
                             this.global.snackBarTip('existingWallet');
                         }
@@ -151,11 +142,7 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
             .subscribe((res: any) => {
                 this.loading = false;
                 if (this.neon.verifyWallet(res)) {
-                    this.neon.pushWalletArray(res.export());
-                    this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
-                    this.chrome.setWallet(res.export());
-                    this.global.$wallet.next('open');
-                    this.jumpRouter();
+                    this.updateLocalWallet(res);
                 } else {
                     this.global.snackBarTip('existingWallet');
                 }
@@ -192,6 +179,17 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
                 console.log('error reading file');
             };
         }
+    }
+
+    private updateLocalWallet(data: any) {
+        this.neon.pushWIFArray(data.accounts[0].wif);
+        this.chrome.setWIFArray(this.neon.WIFArr);
+
+        this.neon.pushWalletArray(data.export());
+        this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
+        this.chrome.setWallet(data.export());
+        this.global.$wallet.next('open');
+        this.jumpRouter();
     }
 
     private jumpRouter() {

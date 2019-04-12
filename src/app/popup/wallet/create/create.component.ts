@@ -58,6 +58,9 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
             .subscribe(
                 (res: any) => {
                     if (this.neon.verifyWallet(res)) {
+                        this.neon.pushWIFArray(res.accounts[0].wif);
+                        this.chrome.setWIFArray(this.neon.WIFArr);
+
                         this.neon.pushWalletArray(res.export());
                         this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
                         this.chrome.setWallet(res.export());

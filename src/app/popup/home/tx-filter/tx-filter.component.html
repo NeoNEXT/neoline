@@ -1,3 +1,15 @@
+<div class="get-claim-box" *ngIf="assetId==NEO">
+    <img [src]="imageUrl" alt="">
+    <div class="info-box">
+        <p class="info-gas">{{ claimNumber }} GAS</p>
+        <p class="info-status">{{ claimStatus }}</p>
+    </div>
+    <button mat-button color="primary" (click)="claim()" [disabled]="loading || !init " >
+        <ng-container *ngIf="!loading && claimStatus != 'Success'">{{ claimStatus != 'Confirmed' ? 'Sync Now' : 'Claim' }}</ng-container>
+        <ng-container *ngIf="claimStatus == 'Success' && !loading"><img src="/assets/images/select.png" alt=""></ng-container>
+        <mat-spinner *ngIf="loading" strokeWidth="2" diameter="20"></mat-spinner>
+    </button>
+</div>
 <div class="popup-home-filter">
     <div class="popup-home-filter-title">
         <span>{{ 'transferHistory' | translate | async}}</span>

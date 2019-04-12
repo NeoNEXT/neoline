@@ -93,6 +93,10 @@ export class AssetState {
         return this.http.get(`${ this.global.apiDomain }/v1/address/assets?address=${ address }`);
     }
 
+    public fetchClaim(address: string): Observable < any > {
+        return  this.http.get(`${ this.global.apiDomain }/v1/transactions/claim/${ address }`);
+    }
+
     public fetchAll(page: number): Promise < any > {
         return this.http.get(`${this.global.apiDomain}/v1/asset/getallassets?page_index=${page}`).toPromise();
     }
