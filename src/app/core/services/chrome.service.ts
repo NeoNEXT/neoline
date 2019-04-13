@@ -196,7 +196,7 @@ export class ChromeService {
             return;
         }
         try {
-            this.crx.setStorage({
+            this.crx.setLocalStorage({
                 shouldLogin: true
             });
         } catch (e) {
@@ -209,7 +209,7 @@ export class ChromeService {
             return;
         }
         try {
-            this.crx.setStorage({
+            this.crx.setLocalStorage({
                 shouldLogin: false
             });
         } catch (e) {
@@ -224,7 +224,7 @@ export class ChromeService {
         }
         return from(new Promise((resolve, reject) => {
             try {
-                this.crx.getStorage('shouldLogin', (res) => {
+                this.crx.getLocalStorage('shouldLogin', (res) => {
                     switch (res) {
                         case true:
                         case false:
@@ -245,7 +245,7 @@ export class ChromeService {
         } else {
             return from(new Promise((resolve, reject) => {
                 try {
-                    this.crx.setStorage({ shouldLogin: status });
+                    this.crx.setLocalStorage({ shouldLogin: status });
                 } catch (e) {
                     reject('failed');
                 }

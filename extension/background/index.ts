@@ -16,7 +16,9 @@ import {
     getStorage,
     setStorage,
     notification,
-    httpPost
+    httpPost,
+    setLocalStorage,
+    getLocalStorage
 } from '../common';
 /**
  * Background methods support.
@@ -66,17 +68,20 @@ export function setPopup(lang) {
     }
 }
 
-getStorage('startTime', (time) => {
+getLocalStorage('startTime', (time) => {
     if (time === undefined) {
-        setStorage({
+        setLocalStorage({
             startTime: chrome.csi().startE
+        });
+        setLocalStorage({
+            shouldLogin: true
         });
     } else {
         if (time !== chrome.csi().startE) {
-            setStorage({
+            setLocalStorage({
                 shouldLogin: true
             });
-            setStorage({
+            setLocalStorage({
                 startTime: chrome.csi().startE
             });
         }
@@ -87,7 +92,7 @@ getStorage('startTime', (time) => {
 chrome.windows.onRemoved.addListener(() => {
     chrome.tabs.query({}, (res) => {
         if (res.length === 0) { // All browsers are closed
-            setStorage({
+            setLocalStorage({
                 shouldLogin: true
             });
         }
