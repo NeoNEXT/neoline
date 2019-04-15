@@ -37,6 +37,7 @@ export class AppComponent {
     public hideNav: boolean = true;
     public walletIsOpen: boolean = false;
     public net: string;
+    public hideNav404: boolean = false;
 
     constructor(
         private router: Router,
@@ -46,6 +47,9 @@ export class AppComponent {
         private dialog: MatDialog,
         private assetSer: AssetState
     ) {
+        this.global.$404.subscribe(() => {
+            this.hideNav404 = true;
+        });
         this.router.events.subscribe((event) => {
             if (event instanceof NavigationEnd) {
                 this.hideNav = event.url.startsWith('/popup') || event.url.startsWith('/login');

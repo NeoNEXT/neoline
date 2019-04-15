@@ -1,4 +1,4 @@
-<mat-toolbar color="primary" *ngIf="!hideNav">
+<mat-toolbar color="primary" *ngIf="!hideNav && !hideNav404">
     <div class="nav flex">
         <div class="flex-1">
             <img class="logo" src="/assets/images/logo.png" />
@@ -47,8 +47,8 @@
         <!-- <button mat-stroked-button *ngIf="walletIsOpen" (click)="close()" >{{ 'closeWallet' | translate | async }}</button> -->
     </div>
 </mat-toolbar>
-<div class="body flex" [ngClass]="{'expand': !hideNav}">
-    <div class="side-nav" *ngIf="!hideNav && walletIsOpen">
+<div class="body flex" [ngClass]="{'expand': !hideNav && !hideNav404}">
+    <div class="side-nav" *ngIf="!hideNav && walletIsOpen && !hideNav404">
         <div routerLink="/account" routerLinkActive="active">
             <img src="/assets/images/sidenav_account.png" alt="" />
             <img class="active" src="/assets/images/sidenav_account_active.png" alt="" />

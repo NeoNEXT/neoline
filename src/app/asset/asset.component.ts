@@ -110,7 +110,6 @@ export class AssetComponent implements OnInit, OnDestroy {
                     this.watch.splice(i, 1);
                     this.chrome.setWatch(this.watch);
                 }
-                this.global.searchBalance = this.displayAssets[index];
                 this.displayAssets.splice(index, 1);
                 this.global.snackBarTip('hiddenSucc');
                 this.asset.pushDelAssetId(delId);

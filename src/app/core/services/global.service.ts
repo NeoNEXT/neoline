@@ -34,8 +34,9 @@ export class GlobalService {
     public languageJson: any = null;
     public debug = false;
     public net: string;
+    private source404 = new Subject<string>();
+    public $404 = this.source404.asObservable();
 
-    public searchBalance: any; // web 版删除某资产时搜索结果中同步删除某资产
     constructor(
         private matDialog: MatDialog,
         private snackBar: MatSnackBar,
@@ -47,6 +48,10 @@ export class GlobalService {
             this.net = net;
             this.modifyNet(net);
         });
+    }
+
+    public push404(error: string) {
+        this.source404.next(error);
     }
 
     public modifyNet(net: string) {
