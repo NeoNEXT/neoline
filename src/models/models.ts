@@ -23,7 +23,8 @@ export interface Balance {
     symbol: string,
     watching: boolean,
     avatar: string,
-    rateBalance: number
+    rateBalance: number,
+    decimals: number
 }
 export interface Asset extends Balance {
     watching: boolean

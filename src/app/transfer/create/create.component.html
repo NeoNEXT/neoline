@@ -8,9 +8,7 @@
     <p class="title">{{ 'transgerTo' | translate | async}}</p>
     <input type="text" class="address" placeholder="{{ 'transferToTip' | translate | async}}" [(ngModel)]="toAddress" />
     <p class="title">{{ 'amount' | translate | async}}</p>
-    <input type="number" *ngIf="assetId==NEO" numbersOnly [scale]=2 class="amount" placeholder="{{ 'transferAmountTip' | translate | async}}"
-        [(ngModel)]="amount" />
-    <input type="number" *ngIf="assetId!=NEO" class="amount" placeholder="{{ 'transferAmountTip' | translate | async}}"
+    <input type="text" numbersOnly [scale]="balance?.decimals" class="amount" placeholder="{{ 'transferAmountTip' | translate | async}}"
         [(ngModel)]="amount" />
     <div>
         <button mat-stroked-button color="primary" (click)="close()">{{ 'cancel' | translate | async}}</button>
