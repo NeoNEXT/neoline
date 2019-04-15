@@ -32,7 +32,7 @@
                 *ngFor="let tx of txPage?.items"
                 [symbol]="balance?.symbol"
                 [id]= "tx?.id || -1"
-                [value]="tx.value"
+                [value]="tx.value == 0 && tx.net_fee != 0 ? -tx.net_fee: tx.value "
                 [time]="tx.block_time"
                 [txid]="tx.txid"></app-tx-item>
             <ng-container *ngIf="txPage.total > 10">
