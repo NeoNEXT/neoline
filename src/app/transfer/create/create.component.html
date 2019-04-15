@@ -10,6 +10,11 @@
     <p class="title">{{ 'amount' | translate | async}}</p>
     <input type="text" numbersOnly [scale]="balance?.decimals" class="amount" placeholder="{{ 'transferAmountTip' | translate | async}}"
         [(ngModel)]="amount" />
+    <div *ngIf="assetId == GAS || assetId == NEO">
+        <p class="title">{{ 'networkFee' | translate | async }}</p>
+        <input type="text" numbersOnly [scale]="8" class="amount" placeholder="{{ 'networkFeeTip' | translate | async }}"
+            [(ngModel)]="fee" />
+    </div>
     <div>
         <button mat-stroked-button color="primary" (click)="close()">{{ 'cancel' | translate | async}}</button>
         <button mat-raised-button color="primary" (click)="submit()">

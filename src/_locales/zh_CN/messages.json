@@ -439,5 +439,26 @@
     },
     "beijingTime": {
         "message": "北京时间"
+    },
+    "networkFee": {
+        "message": "网络费用( GAS )"
+    },
+    "networkFeeTip": {
+        "message": "选填"
+    },
+    "claim": {
+        "message": "认领"
+    },
+    "syncNow": {
+        "message": "同步"
+    },
+    "confirmed": {
+        "message": "已确认"
+    },
+    "success": {
+        "message": "成功"
+    },
+    "estimated": {
+        "message": "预估"
     }
 }

@@ -7,7 +7,7 @@ import {
     ActivatedRoute
 } from '@angular/router';
 import {
-    Balance, NEO
+    Balance, NEO, GAS
 } from '@/models/models';
 import {
     AssetState,
@@ -40,10 +40,12 @@ import { wallet } from '@cityofzion/neon-core';
 export class TransferCreateomponent implements OnInit {
     public balance: Balance;
     public amount: number;
+    public fee: number;
     public fromAddress: string;
     public toAddress: string;
     public creating: boolean = false;
     public NEO = NEO;
+    public GAS = GAS;
 
     public assetId: string;
     constructor(
@@ -92,7 +94,7 @@ export class TransferCreateomponent implements OnInit {
             return;
         }
         this.creating = true;
-        this.transfer.create(this.fromAddress, this.toAddress, this.balance.asset_id, this.amount).subscribe((res) => {
+        this.transfer.create(this.fromAddress, this.toAddress, this.balance.asset_id, this.amount, this.fee).subscribe((res) => {
             this.dialog.open(PwdDialog).afterClosed().subscribe((pwd) => {
                 if (pwd && pwd.length) {
                     this.global.log('start transfer with pwd');

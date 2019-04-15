@@ -439,5 +439,26 @@
     },
     "beijingTime": {
         "message": "China Standard Time"
+    },
+    "networkFee": {
+        "message": "Network Fee( GAS )"
+    },
+    "networkFeeTip": {
+        "message": "Optional"
+    },
+    "claim": {
+        "message": "Claim"
+    },
+    "syncNow": {
+        "message": "Sync Now"
+    },
+    "confirmed": {
+        "message": "Confirmed"
+    },
+    "success": {
+        "message": "Success"
+    },
+    "estimated": {
+        "message": "Estimated"
     }
 }

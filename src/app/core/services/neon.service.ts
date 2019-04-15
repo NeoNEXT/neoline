@@ -6,7 +6,7 @@ import { map, catchError, startWith, publish, refCount } from 'rxjs/operators';
 import { ChromeService } from './chrome.service';
 import { GlobalService } from './global.service';
 import { Transaction, TransactionInput } from '@cityofzion/neon-core/lib/tx';
-import { UTXO, claimItem } from '@/models/models';
+import { UTXO, claimItem, GAS } from '@/models/models';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { sc, u } from '@cityofzion/neon-core';
 
@@ -254,35 +254,36 @@ export class NeonService {
         return wallet.generatePrivateKey();
     }
 
-    public createTx(from: string, to: string, balances: UTXO[], amount: number): Transaction {
+    public createTx(from: string, to: string, balances: UTXO[], amount: number, fee: number = 0): Transaction {
+
         const fromScript = wallet.getScriptHashFromAddress(from);
         const toScript = wallet.getScriptHashFromAddress(to);
-        if (fromScript.length != 40 || toScript.length != 40) {
-            throw 'target address error';
+        if (fromScript.length !== 40 || toScript.length !== 40) {
+            throw new Error('target address error');
         }
-        if (balances.length == 0) {
-            throw 'no balance';
+        if (balances.length === 0) {
+            throw new Error('no balance');
         }
         let assetId = balances[0].asset_id;
-        if (assetId.startsWith('0x') && assetId.length == 66) {
+        if (assetId.startsWith('0x') && assetId.length === 66) {
             assetId = assetId.substring(2);
         }
         const newTx = new tx.ContractTransaction();
-        newTx.addOutput({ assetId: assetId, value: new Fixed8(amount), scriptHash: toScript });
-        var curr = 0.0
-        for (var item of balances) {
+        newTx.addOutput({ assetId, value: new Fixed8(amount), scriptHash: toScript });
+        let curr = 0.0;
+        for (let item of balances) {
             curr += parseFloat(item.value) || 0;
-            newTx.inputs.push(new TransactionInput({ prevIndex: item.n, prevHash: item.txid.startsWith('0x') && item.txid.length == 66 ? item.txid.substring(2) : item.txid }))
-            if (curr >= amount) {
-                break
+            newTx.inputs.push(new TransactionInput({ prevIndex: item.n, prevHash: item.txid.startsWith('0x') && item.txid.length == 66 ? item.txid.substring(2) : item.txid }));
+            if (curr >= amount + fee) {
+                break;
             }
         }
-        const payback = curr - amount
+        const payback = ( assetId === GAS || assetId === GAS.substring(2) ) ? curr - amount - fee : curr - amount;
         if (payback < 0) {
-            throw 'no enough balance to pay';
+            throw new Error('no enough balance to pay');
         }
         if (payback > 0) {
-            newTx.addOutput({ assetId: assetId, value: new Fixed8(payback), scriptHash: fromScript });
+            newTx.addOutput({ assetId, value: new Fixed8(payback), scriptHash: fromScript });
         }
         return newTx;
     }
@@ -290,7 +291,7 @@ export class NeonService {
         const fromScript = wallet.getScriptHashFromAddress(from);
         const toScript = wallet.getScriptHashFromAddress(to);
         if (fromScript.length != 40 || toScript.length != 40) {
-            throw 'target address error';
+            throw new Error('target address error');
         }
         const newTx = new tx.InvocationTransaction();
         newTx.script = sc.createScript({
@@ -303,7 +304,7 @@ export class NeonService {
             ]
         }) + 'f1';
         newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
-        let uniqTag = `from NEOLine at ${new Date().getTime()}`;
+        const uniqTag = `from NEOLine at ${new Date().getTime()}`;
         newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
         return newTx;
     }

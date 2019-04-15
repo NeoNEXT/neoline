@@ -20,9 +20,9 @@ export class PopupHomeTxFilterComponent implements OnInit, OnChanges {
     @Input() assetId = '';
 
     private status = {
-        confirmed: 'Confirmed',
-        estimated: 'Estimated',
-        success: 'Success'
+        confirmed: 'confirmed',
+        estimated: 'estimated',
+        success: 'success'
     };
 
     public NEO = NEO;
@@ -30,7 +30,7 @@ export class PopupHomeTxFilterComponent implements OnInit, OnChanges {
 
     public imageUrl = '';
     public claimNumber = 0;
-    public claimStatus = 'Confirmed';
+    public claimStatus = 'confirmed';
     public loading = false;
     private claimsData = null;
     private intervalClaim = null;
@@ -54,7 +54,9 @@ export class PopupHomeTxFilterComponent implements OnInit, OnChanges {
                     lastModified = imageObj['last-modified'];
                     this.imageUrl = imageObj['image-src'];
                 }
+                this.loading = true;
                 this.assetState.getAssetSrc(this.assetId, lastModified).subscribe(assetRes => {
+                    this.loading = false;
                     if (assetRes && assetRes['status'] === 200) {
                         this.assetState.setAssetFile(assetRes, this.assetId).then(src => {
                             this.imageUrl = src;
