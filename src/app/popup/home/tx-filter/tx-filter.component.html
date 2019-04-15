@@ -5,7 +5,7 @@
         <p class="info-status">{{ claimStatus | translate | async }}</p>
     </div>
     <button mat-button color="primary" (click)="claim()" [disabled]="loading || !init " >
-        <ng-container *ngIf="!loading && claimStatus != 'Success'">{{ claimStatus != 'confirmed' ? ('syncNow' | translate | async) : ('claim' | translate | async) }}</ng-container>
+        <ng-container *ngIf="!loading && claimStatus != 'success'">{{ claimStatus != 'confirmed' ? ('syncNow' | translate | async) : ('claim' | translate | async) }}</ng-container>
         <ng-container *ngIf="claimStatus == 'success' && !loading"><img src="/assets/images/select.png" alt=""></ng-container>
         <mat-spinner *ngIf="loading" strokeWidth="2" diameter="20"></mat-spinner>
     </button>
