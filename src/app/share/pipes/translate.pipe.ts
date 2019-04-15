@@ -28,18 +28,20 @@ export class TranslatePipe implements PipeTransform {
         }));
     }
     public transform(value: string): Promise<string> {
-        if (this.global.languageJson == null) {
-            try {
-                return new Promise( resolve => {
-                    this.fetchLocale().subscribe((res) => {
-                        this.global.languageJson = res;
-                        resolve(res[value].message);
-                    });
-                });
-            } catch (e) {
-            }
-        } else {
-            return Promise.resolve(this.global.languageJson[value].message);
-        }
+        return new Promise( resolve => {
+            setTimeout(() => {
+                if (this.global.languageJson == null) {
+                    try {
+                        this.fetchLocale().subscribe((res) => {
+                            this.global.languageJson = res;
+                            resolve(res[value].message);
+                        });
+                    } catch (e) {
+                    }
+                } else {
+                    return resolve(this.global.languageJson[value].message);
+                }
+            }, 0);
+        });
     }
 }

@@ -24,6 +24,7 @@ import {
 import {
     PopupLogoutDialogComponent
 } from './popup/_dialogs/logout/logout.dialog';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
     selector: 'neo-line',
@@ -45,8 +46,14 @@ export class AppComponent {
         private global: GlobalService,
         private neon: NeonService,
         private dialog: MatDialog,
-        private assetSer: AssetState
+        private assetSer: AssetState,
+        private http: HttpClient
     ) {
+        this.chrome.getLang().subscribe(res => {
+            this.http.get(`/_locales/${res}/messages.json`).subscribe(temp => {
+                this.global.languageJson = temp;
+            });
+        });
         this.global.$404.subscribe(() => {
             this.hideNav404 = true;
         });
