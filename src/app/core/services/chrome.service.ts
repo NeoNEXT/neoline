@@ -77,7 +77,7 @@ export class ChromeService {
         }
         return from(new Promise((resolve, reject) => {
             try {
-                this.crx.getStorage('wallet', (res) => {
+                this.crx.getLocalStorage('wallet', (res) => {
                     resolve(res);
                 });
             } catch (e) {
@@ -95,7 +95,7 @@ export class ChromeService {
         }
         return from(new Promise((resolve, reject) => {
             try {
-                this.crx.getStorage('walletArr', (res) => {
+                this.crx.getLocalStorage('walletArr', (res) => {
                     resolve(res);
                 });
             } catch (e) {
@@ -113,7 +113,7 @@ export class ChromeService {
         }
         return from(new Promise((resolve, reject) => {
             try {
-                this.crx.getStorage('WIFArr', (res) => {
+                this.crx.getLocalStorage('WIFArr', (res) => {
                     resolve(res);
                 });
             } catch (e) {
@@ -132,7 +132,7 @@ export class ChromeService {
             return;
         }
         try {
-            this.crx.setStorage({
+            this.crx.setLocalStorage({
                 wallet: w
             });
         } catch (e) {
@@ -149,7 +149,7 @@ export class ChromeService {
             return;
         }
         try {
-            this.crx.setStorage({
+            this.crx.setLocalStorage({
                 walletArr: w
             });
         } catch (e) {
@@ -167,7 +167,7 @@ export class ChromeService {
             return;
         }
         try {
-            this.crx.setStorage({
+            this.crx.setLocalStorage({
                 WIFArr
             });
         } catch (e) {
@@ -185,7 +185,7 @@ export class ChromeService {
             return;
         }
         try {
-            this.crx.removeStorage('wallet');
+            this.crx.removeLocalStorage('wallet');
         } catch (e) {
             console.log('close wallet failed', e);
         }
