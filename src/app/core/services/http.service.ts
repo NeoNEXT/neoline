@@ -24,10 +24,7 @@ import { XSRF_HEADER_NAME } from '@angular/common/http/src/xsrf';
 
 @Injectable()
 export class HttpService {
-    private headers = {
-        app_version: '1.2.2',
-        network: 'main'
-    };
+
     private completeResUrl = ['/v1/asset/exchange_rate'];
     constructor(
         private http: HttpClient,
@@ -36,7 +33,7 @@ export class HttpService {
     ) {}
 
     public getImage(url: string, lastModified = ''): Observable<any> {
-        const tempHeader = Object.assign({}, this.headers);
+        const tempHeader = {};
         if (lastModified) {
             tempHeader['If-Modified-Since'] = lastModified;
         }
@@ -84,12 +81,10 @@ export class HttpService {
                     } else {
                         reject(res && res.msg || res);
                     }
-                }, this.headers);
+                });
             }));
         }
-        return this.http.get(url, {
-            headers: new HttpHeaders(this.headers)
-        }).pipe(map((res: any) => {
+        return this.http.get(url).pipe(map((res: any) => {
             if (res && res.bool_status) {
                 if (this.completeResUrl.indexOf(tempUrl) >= 0) {
                     return res;
@@ -110,12 +105,10 @@ export class HttpService {
                     } else {
                         reject(res && res.msg || res);
                     }
-                }, this.headers);
+                });
             }));
         }
-        return this.http.post(url, data, {
-            headers: new HttpHeaders(this.headers)
-        }).pipe(map((res: any) => {
+        return this.http.post(url, data).pipe(map((res: any) => {
             if (res && res.bool_status) {
                 return res.data || res;
             } else {

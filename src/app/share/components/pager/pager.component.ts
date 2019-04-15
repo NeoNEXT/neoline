@@ -42,7 +42,7 @@ export class PagerComponent implements OnInit, OnChanges {
         }
     }
     public jump(value: number) {
-        if (value != this.page) {
+        if (value !== this.page) {
             this.onPage.emit(value);
         }
     }
@@ -50,17 +50,21 @@ export class PagerComponent implements OnInit, OnChanges {
         if (this.page - 1 >= 1) {
             this.onPage.emit(this.page - 1);
         }
+        this.groupBase = Math.ceil((this.page - 1) / 5);
+        this.resolveList();
     }
     public next() {
         if (this.page + 1 <= this.pages) {
             this.onPage.emit(this.page + 1);
         }
+        this.groupBase = Math.ceil((this.page + 1) / 5);
+        this.resolveList();
     }
 
     private resolveList() {
         this.list = [];
         for (let i = 1; i <= 5; i++) {
-            let p = (this.groupBase - 1)*5 + i;
+            const p = (this.groupBase - 1) * 5 + i;
             if (p >= 1 && p <= this.pages) {
                 this.list.push(p);
             }
