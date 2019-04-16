@@ -29,6 +29,7 @@ export class PopupHomeTxFilterComponent implements OnInit, OnChanges {
     public init = false;
 
     public imageUrl = '';
+    public showClaim = false;
     public claimNumber = 0;
     public claimStatus = 'confirmed';
     public loading = false;
@@ -144,9 +145,13 @@ export class PopupHomeTxFilterComponent implements OnInit, OnChanges {
             this.claimsData = res.claims;
             if (res.unspent_claim > 0) {
                 this.claimNumber = res.unspent_claim;
-            } else {
+                this.showClaim = true;
+            } else if (res.uncollect_claim > 0) {
                 this.claimNumber = res.uncollect_claim;
                 this.claimStatus = this.status.estimated;
+                this.showClaim = true;
+            } else {
+                this.showClaim = false;
             }
             this.init = true;
             this.loading = false;
