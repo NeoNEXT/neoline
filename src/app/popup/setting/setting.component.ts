@@ -89,14 +89,14 @@ export class PopupSettingComponent implements OnInit {
         if (this.isActivityWallet(w)) {
             this.router.navigateByUrl('/popup/account');
         } else {
+            this.wallet = this.neon.parseWallet(w);
+            this.chrome.setWallet(this.wallet.export());
             this.chrome.windowCallback({
                 data: {
-                    address: this.neon.wallet.accounts[0].address
+                    address: this.wallet.accounts[0].address
                 },
                 target: 'account_changed'
             });
-            this.wallet = this.neon.parseWallet(w);
-            this.chrome.setWallet(this.wallet.export());
             location.href = `index.html#popup`;
         }
     }

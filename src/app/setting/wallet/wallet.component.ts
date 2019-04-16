@@ -40,7 +40,7 @@ export class SettingWalletComponent implements OnInit {
             this.chrome.setWallet(this.wallet.export());
             this.chrome.windowCallback({
                 data: {
-                    address: this.neon.wallet.accounts[0].address
+                    address: this.wallet.accounts[0].address
                 },
                 target: 'account_changed'
             });
