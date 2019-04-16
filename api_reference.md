@@ -371,8 +371,9 @@ This api allows caller to request neoline user to approve a payment(transfer) re
 | to | string(34) | Destination address where asset is sent to |
 | assetID | string(34, 66)? | Optional. the ID of an asset of a token. This argument has higher priority than argument 'symbol', which means symbol will be omitted if assetID is set no matter the given assetID exists or not.
 | symbol | string(32)? | Optional. The name of an asset or a token. This argument will be used only when the argument 'assetID' leaves empty.
-| amount | string(32) | Amount transferred in this transaction |
+| amount | string | Amount transferred in this transaction |
 | remark | string(64)? | Assign custom remarks in this transaction |
+| fee | string? | This transaction will be given a higher priority when packing into a new block if extra fee is attached |
 | network | string(32) | One of the networks GetNetworks() returnd, indicates which network the api should query from.
 
 #### Success Response
@@ -398,6 +399,7 @@ neoline.transfer({
     "symbol": "NEO",
     "amount": "1",
     "remark": "Sent by NEOLINE",
+    "fee": "0.001",
     "network": "MainNet"
 })
 .then(response => {
@@ -622,8 +624,6 @@ neoline.invokeTest({
 To see if the smart contract call succeeded, you should check if state enum `FAULT` is being contained. The most common state form for succeed is `"HALT, BREAK"`.
 
 ### invoke
-
-(TO BE IMPLEMENTED)
 
 Invoke the specific smart contract method with given arguments. It is highly recommended to be fully tested in invokeTest() before calling this api. The request will be executed and broadcasted on the target network.
 
