@@ -27,7 +27,7 @@ import {
 import {
     FilterBarService
 } from '@popup/_services/filter-bar.service';
-import { Unsubscribable } from 'rxjs';
+import { Unsubscribable, forkJoin } from 'rxjs';
 
 @Component({
     templateUrl: 'detail.component.html',
@@ -113,47 +113,56 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     }
 
     public getInTransactions(page, maxId = -1, sinceId = -1, absPage = 1) {
-        this.txState.fetchTx(this.address, 1, this.assetId, maxId, sinceId, absPage).subscribe((res: any) => {
-            if (this.txPage === undefined || res.page === 1) {
-                this.chrome.getTransaction().subscribe(inTxData => {
-                    if (inTxData[this.net] === undefined || inTxData[this.net][this.address] === undefined || inTxData[this.net][this.address][this.assetId] === undefined) {
-                        this.inTransaction = [];
-                    } else {
-                        this.inTransaction = inTxData[this.net][this.address][this.assetId];
-                    }
-                    const txIdArray = [];
-                    this.inTransaction.forEach(item => {
-                        txIdArray.push(item.txid);
-                    });
-                    this.http.post(`${this.global.apiDomain}/v1/transactions/confirms`, {
-                        txids: txIdArray
-                    }).subscribe(txConfirm => {
-                        txConfirm = txConfirm.result;
-                        txConfirm.forEach(item => {
-                            const tempIndex = this.inTransaction.findIndex(e => e.txid === item);
-                            if (tempIndex >= 0) {
-                                this.inTransaction.splice(tempIndex, 1);
-                            }
-                        });
-                        if (inTxData[this.net] === undefined) {
-                            inTxData[this.net] = {};
-                        } else if (inTxData[this.net][this.address] === undefined) {
-                            inTxData[this.net][this.address] = {};
-                        } else if (inTxData[this.net][this.address][this.assetId] === undefined) {
-                            inTxData[this.net][this.address][this.assetId] = [];
-                        } else {
-                            inTxData[this.net][this.address][this.assetId] = this.inTransaction;
-                        }
-                        this.chrome.setTransaction(inTxData);
-                        this.txPage.items = this.inTransaction.concat(this.txPage.items);
-                    }, error => {});
+        const httpReq1 = this.txState.fetchTx(this.neon.address, page, this.assetId, maxId, sinceId, absPage);
+        if (page === 1) {
+            this.chrome.getTransaction().subscribe(inTxData => {
+                if (inTxData[this.net] === undefined || inTxData[this.net][this.address] === undefined || inTxData[this.net][this.address][this.assetId] === undefined) {
+                    this.inTransaction = [];
+                } else {
+                    this.inTransaction = inTxData[this.net][this.address][this.assetId];
+                }
+                const txIdArray = [];
+                this.inTransaction.forEach(item => {
+                    txIdArray.push(item.txid);
                 });
-            }
-            this.txPage = res;
-            this.txPage.page = page;
-            this.isLoading = false;
-            this.filterBar.needLoad.emit(false);
-        });
+                const httpReq2 = this.http.post(`${this.global.apiDomain}/v1/transactions/confirms`, {
+                    txids: txIdArray
+                });
+                forkJoin(httpReq1, httpReq2).subscribe(result => {
+                    let txPage = result[0];
+                    let txConfirm = result[1];
+                    txConfirm = txConfirm.result;
+                    txConfirm.forEach(item => {
+                        const tempIndex = this.inTransaction.findIndex(e => e.txid === item);
+                        if (tempIndex >= 0) {
+                            this.inTransaction.splice(tempIndex, 1);
+                        }
+                    });
+                    if (inTxData[this.net] === undefined) {
+                        inTxData[this.net] = {};
+                    } else if (inTxData[this.net][this.address] === undefined) {
+                        inTxData[this.net][this.address] = {};
+                    } else if (inTxData[this.net][this.address][this.assetId] === undefined) {
+                        inTxData[this.net][this.address][this.assetId] = [];
+                    } else {
+                        inTxData[this.net][this.address][this.assetId] = this.inTransaction;
+                    }
+                    this.chrome.setTransaction(inTxData);
+                    txPage.items = this.inTransaction.concat(txPage.items);
+                    this.txPage = txPage;
+                    this.txPage.page = page;
+                    this.isLoading = false;
+                    this.filterBar.needLoad.emit(false);
+                });
+            });
+        } else {
+            httpReq1.subscribe(res => {
+                this.txPage = res;
+                this.txPage.page = page;
+                this.isLoading = false;
+                this.filterBar.needLoad.emit(false);
+            });
+        }
     }
 
     public page(page: number) {
