@@ -69,7 +69,7 @@
         <div class="submit-group">
             <div class="button-group">
                 <button mat-button class="cancel" (click)="cancel()">{{ 'cancel' | translate | async}}</button>
-                <button  [disabled]="pass.invalid || loading"  mat-button class="confirm" (click)="submit()">{{ 'yes' | translate | async}}</button>
+                <button  [disabled]="pass.invalid || loading || !init"  mat-button class="confirm" (click)="submit()">{{ 'yes' | translate | async}}</button>
             </div>
         </div>
     </div>

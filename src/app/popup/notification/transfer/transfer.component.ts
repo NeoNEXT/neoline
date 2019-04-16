@@ -38,8 +38,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public loadingMsg: string;
     public wallet: any;
     public pwd = '';
-    public hidePwd = true;
     public fee: number;
+    public init = false;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -55,6 +55,9 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         this.fromAddress = this.neon.address;
         this.wallet = this.neon.wallet;
         this.aRoute.queryParams.subscribe((params: any) => {
+            if (JSON.stringify(params) === '{}') {
+                return;
+            }
             if (params.network === 'MainNet') {
                 this.global.modifyNet('main');
             } else {
@@ -64,9 +67,24 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.assetId = params.asset_id || '';
             this.amount = params.amount || 0;
             this.fee = params.fee || 0;
-            this.asset.detail(this.neon.address, this.assetId).subscribe((res: Balance) => {
-                this.balance = res;
-            });
+            if (this.assetId !== undefined && this.assetId !== '') {
+                this.asset.detail(this.neon.address, this.assetId).subscribe((res: Balance) => {
+                    this.init = true;
+                    this.balance = res;
+                });
+            } else {
+                this.asset.fetchBalance(this.neon.address).subscribe(res => {
+                    const filterAsset = res.filter(item => item.symbol === params.symbol );
+                    if (filterAsset.length > 0) {
+                        this.init = true;
+                        this.assetId = filterAsset[0].asset_id;
+                        this.balance = filterAsset[0];
+                    } else {
+                        this.global.snackBarTip('balanceLack');
+                        return;
+                    }
+                });
+            }
         });
     }
 

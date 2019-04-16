@@ -67,7 +67,8 @@ export class Init {
             this.getAuthState().then(authState => {
                 if (authState === 'AUTHORIZED' || authState === 'NONE') {
                     if (parameter === undefined || parameter.to === undefined || parameter.from === undefined ||
-                        parameter.assetID === undefined || parameter.amount === undefined || parameter.network === undefined) {
+                        (parameter.assetID === undefined && parameter.symbol === undefined) ||
+                        parameter.amount === undefined || parameter.network === undefined) {
                         rejectMain(errors.INVALID_ARGUMENTS);
                     } else {
                         if (sessionStorage.getItem('connect') !== 'true') {
