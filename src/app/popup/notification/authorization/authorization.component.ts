@@ -53,7 +53,14 @@ export class PopupNoticeAuthComponent implements OnInit {
         });
     }
 
-    ngOnInit() { }
+    ngOnInit() {
+        window.onbeforeunload = () => {
+            this.chrome.windowCallback({
+                data: false,
+                target: 'connection_rejected'
+            });
+        };
+     }
     public refuse() {
         this.chrome.getAuthorization().subscribe(res => {
             if (this.ruleCheck) {

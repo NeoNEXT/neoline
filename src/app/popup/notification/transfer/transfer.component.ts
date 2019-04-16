@@ -58,6 +58,12 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             if (JSON.stringify(params) === '{}') {
                 return;
             }
+            window.onbeforeunload = () => {
+                this.chrome.windowCallback({
+                    data: 'cancel',
+                    target: 'transferRes'
+                });
+            };
             if (params.network === 'MainNet') {
                 this.global.modifyNet('main');
             } else {
