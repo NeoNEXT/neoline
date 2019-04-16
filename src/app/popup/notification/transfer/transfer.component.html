@@ -47,9 +47,21 @@
             </div>
             <!-- <div class="account-right"></div> -->
         </div>
+        <div class="transfer-account-item" *ngIf="fee != 0 && fee != undefined">
+            <div class="account-left">
+                <p class="account-tip">
+                    <span class="tip-info">{{ 'networkFee' | translate | async}}</span>
+                </p>
+                <p class="account-address">
+                    <span class="address-tip">GAS: &nbsp;</span>
+                    <span class="address-detail">{{ fee }}</span>
+                </p>
+            </div>
+            <!-- <div class="account-right"></div> -->
+        </div>
         <form #pass="ngForm">
             <mat-form-field >
-                <input matInput placeholder="{{ 'enterPassword' | translate | async }}" [(ngModel)]="pwd" name="password"
+                <input type="password" matInput placeholder="{{ 'enterPassword' | translate | async }}" [(ngModel)]="pwd" name="password"
                 #password="ngModel" required/>
                 <mat-error *ngIf="password.errors?.required">{{ 'passwordRequired' | translate | async }}</mat-error>
             </mat-form-field>

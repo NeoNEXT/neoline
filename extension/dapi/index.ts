@@ -81,6 +81,7 @@ export class Init {
                             amount: parameter.amount,
                             network: parameter.network,
                             symbol: parameter.symbol,
+                            fee: parameter.fee,
                             hostname: location.hostname,
                             icon: getIcon(),
                             connect: sessionStorage.getItem('connect')

@@ -5,7 +5,8 @@
 import {
     httpGet,
     getStorage,
-    httpPost
+    httpPost,
+    getLocalStorage
 } from '../common/index';
 
 declare var chrome: any;
@@ -46,7 +47,7 @@ window.addEventListener('message', (e) => {
             }
         case 'getAccount':
             {
-                getStorage('wallet', (res: any) => {
+                getLocalStorage('wallet', (res: any) => {
                     let data: any;
                     if (res !== undefined && res.accounts[0] !== undefined) {
                         data = {

@@ -87,7 +87,7 @@ export class PopupNoticeAuthComponent implements OnInit {
             });
             switch (this.isNext) {
                 case 'transfer': {
-                    this.router.navigateByUrl(`/popup/notification/transfer?to_address=${this.paramsData.to_address}&asset_id=${this.paramsData.asset_id}&amount=${this.paramsData.amount}&symbol=${this.paramsData.symbol}&network=${this.paramsData.network}`);
+                    this.router.navigateByUrl(`/popup/notification/transfer?to_address=${this.paramsData.to_address}&asset_id=${this.paramsData.asset_id}&amount=${this.paramsData.amount}&symbol=${this.paramsData.symbol}&network=${this.paramsData.network}${this.paramsData.fee !== undefined ? `&fee=${this.paramsData.fee}` : ''}`);
                     break;
                 }
                 case 'invoke': {

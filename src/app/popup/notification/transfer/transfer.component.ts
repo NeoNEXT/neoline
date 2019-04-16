@@ -8,12 +8,8 @@ import {
     Router
 } from '@angular/router';
 import {
-    MatDialog
-} from '@angular/material';
-import {
     AssetState,
     NeonService,
-    BlockState,
     HttpService,
     GlobalService,
     ChromeService,
@@ -27,9 +23,6 @@ import {
 import {
     TransferService
 } from '@/app/transfer/transfer.service';
-import {
-    PwdDialog
-} from '@/app/transfer/+pwd/pwd.dialog';
 @Component({
     templateUrl: 'transfer.component.html',
     styleUrls: ['transfer.component.scss']
@@ -46,14 +39,13 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public wallet: any;
     public pwd = '';
     public hidePwd = true;
+    public fee: number;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
         private asset: AssetState,
         private transfer: TransferService,
         private neon: NeonService,
-        private dialog: MatDialog,
-        private block: BlockState,
         private http: HttpService,
         private global: GlobalService,
         private chrome: ChromeService,
@@ -71,6 +63,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.toAddress = params.to_address || '';
             this.assetId = params.asset_id || '';
             this.amount = params.amount || 0;
+            this.fee = params.fee || 0;
             this.asset.detail(this.neon.address, this.assetId).subscribe((res: Balance) => {
                 this.balance = res;
             });
@@ -98,7 +91,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.loading = false;
             this.loadingMsg = '';
             this.balance = res;
-            this.transfer.create(this.fromAddress, this.toAddress, this.assetId, this.amount).subscribe((tx) => {
+            this.transfer.create(this.fromAddress, this.toAddress, this.assetId, this.amount, this.fee).subscribe((tx) => {
                 if (this.pwd && this.pwd.length) {
                     this.global.log('start transfer with pwd');
                     this.resolveSign(tx, this.pwd);
@@ -169,7 +162,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.loadingMsg = '';
             this.creating = false;
             this.chrome.windowCallback({
-                data: 'rpcWrond',
+                data: 'rpcWrong',
                 target: 'transferRes'
             });
             this.global.snackBarTip('transferFailed', err);

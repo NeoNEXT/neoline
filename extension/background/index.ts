@@ -110,8 +110,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }, (tabs) => {
                     tabCurr = tabs;
                 });
-                getStorage('wallet', (wallet) => {
-                    if (wallet.accounts[0].address !== request.fromAddress) {
+                getLocalStorage('wallet', (wallet) => {
+                    if (wallet !== undefined && wallet.accounts[0].address !== request.fromAddress) {
                         windowCallback({
                             target: 'transferRes',
                             data: 'invalid_arguments'
@@ -119,10 +119,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     } else {
                         getStorage('connectedWebsites', (res) => {
                             if (res !== undefined && res[request.hostname] !== undefined || request.connect === 'true') {
-                                window.open(`index.html#popup/notification/transfer?to_address=${request.toAddress}&asset_id=${request.assetID}&amount=${request.amount}&symbol=${request.symbol}&network=${request.network}`,
+                                window.open(`index.html#popup/notification/transfer?to_address=${request.toAddress}&asset_id=${request.assetID}&amount=${request.amount}&symbol=${request.symbol}&network=${request.network}${request.fee !== undefined ? `&fee=${request.fee}` : ''}`,
                                     '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                             } else {
-                                window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=transfer&to_address=${request.toAddress}&asset_id=${request.assetID}&amount=${request.amount}&symbol=${request.symbol}&network=${request.network}`,
+                                window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=transfer&to_address=${request.toAddress}&asset_id=${request.assetID}&amount=${request.amount}&symbol=${request.symbol}&network=${request.network}${request.fee !== undefined ? `&fee=${request.fee}` : ''}`,
                                     '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                             }
                         });

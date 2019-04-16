@@ -111,7 +111,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
-                data: 'rpcWrond',
+                data: 'rpcWrong',
                 target: 'invokeRes'
             });
             this.global.snackBarTip('transferFailed', err);
