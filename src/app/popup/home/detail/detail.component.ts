@@ -142,9 +142,6 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     }
 
     public getInTransactions(page, maxId = -1, sinceId = -1, absPage = 1) {
-        this.asset.fetchBalance(this.neon.address).subscribe(res => {
-            this.asset.pushBalance(res);
-        });
         const httpReq1 = this.txState.fetchTx(this.neon.address, page, this.assetId, maxId, sinceId, absPage);
         if (page === 1) {
             this.chrome.getTransaction().subscribe(inTxData => {
@@ -185,6 +182,10 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                     this.txPage.page = page;
                     this.isLoading = false;
                     this.filterBar.needLoad.emit(false);
+                    // 重新获取地址余额，更新整个页面的余额
+                    this.asset.fetchBalance(this.neon.address).subscribe(res => {
+                        this.asset.pushBalance(res);
+                    });
                 });
             });
         } else {

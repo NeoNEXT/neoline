@@ -155,9 +155,6 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     }
 
     private getInTransactions(page, maxId = -1, sinceId = -1, absPage = 1) {
-        this.asset.fetchBalance(this.neon.address).subscribe(res => {
-            this.asset.pushBalance(res);
-        });
         const httpReq1 = this.txState.fetchTx(this.neon.address, page, this.assetId, maxId, sinceId, absPage);
         if (page === 1) {
             this.chrome.getTransaction().subscribe(inTxData => {
@@ -196,6 +193,10 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                     txPage.items = this.inTransaction.concat(txPage.items);
                     this.txPage = txPage;
                     this.txPage.page = page;
+                    // 重新获取地址余额，更新整个页面的余额
+                    this.asset.fetchBalance(this.neon.address).subscribe(res => {
+                        this.asset.pushBalance(res);
+                    });
                 });
             });
         } else {
