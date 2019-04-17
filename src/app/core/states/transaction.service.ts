@@ -25,20 +25,10 @@ import {
 
 @Injectable()
 export class TransactionState {
-    public $transferStatus: Subject < string > = new Subject();
-
     constructor(
         private http: HttpService,
         private global: GlobalService
     ) {}
-
-    public pushTransferStatus(time) {
-        this.$transferStatus.next(time);
-    }
-
-    public popTransferStatus(): Observable < any > {
-        return this.$transferStatus.pipe(publish(), refCount());
-    }
 
     public fetchTx(address: string, page: number, asset: string,
         max_id: number = -1, since_id: number = -1, abs_page: number = 1): Observable < any > {

@@ -5,7 +5,8 @@ import {
     Observable,
     of,
     throwError,
-    from
+    from,
+    Subject
 } from 'rxjs';
 import {
     WalletJSON
@@ -19,6 +20,9 @@ declare var chrome: any;
 
 @Injectable()
 export class ChromeService {
+    public txSource = new Subject();
+    public txSub$ = this.txSource.asObservable();
+
     private crx: any = null;
     constructor() {
         try {
@@ -26,6 +30,10 @@ export class ChromeService {
         } catch (e) {
             this.crx = null;
         }
+    }
+
+    public pushTxSource() {
+        this.txSource.next('new');
     }
 
     /**
@@ -371,9 +379,9 @@ export class ChromeService {
     }
 
     public pushTransaction(transaction: any, address: string, assetId: string) {
+        transaction.txid = '0x' + transaction.txid;
         this.getNet().subscribe(net => {
             if (!this.check) {
-                transaction.txid = '0x' + transaction.txid;
                 this.getTransaction().subscribe(res => {
                     if (res == null) {
                         res = {};
@@ -410,6 +418,7 @@ export class ChromeService {
                     this.crx.setStorage({
                         transaction: res
                     });
+                    this.pushTxSource();
                 });
             } catch (e) {
                 console.log('push transaction failed', e);

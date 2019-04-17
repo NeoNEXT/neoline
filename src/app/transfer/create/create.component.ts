@@ -146,7 +146,6 @@ export class TransferCreateomponent implements OnInit {
                     this.fromAddress, this.assetId);
             }
             // todo transfer done
-            this.transactionSer.pushTransferStatus(new Date().getTime());
             this.global.log('transfer done', res);
             this.router.navigate([{
                 outlets: {

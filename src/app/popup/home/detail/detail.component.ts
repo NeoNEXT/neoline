@@ -79,7 +79,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
         this.unSubBalance = this.asset.balanceSub$.subscribe(balanceArr => {
             this.listenBalance(balanceArr);
         });
-        this.unSubTxStatus = this.txState.popTransferStatus().subscribe(time => {
+        this.unSubTxStatus = this.chrome.txSub$.subscribe(time => {
             this.getInTransactions(1);
         });
     }
