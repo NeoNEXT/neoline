@@ -5,16 +5,32 @@ import {
     Input,
     OnChanges,
     OnInit,
-    ViewChild
+    ViewChild,
+    OnDestroy
 } from '@angular/core';
-import { Router } from '@angular/router';
+import {
+    Router
+} from '@angular/router';
 
-import { switchMap, map } from 'rxjs/operators';
+import {
+    switchMap,
+    map
+} from 'rxjs/operators';
 
-import { Balance } from '@models/models';
-import { AssetState, NeonService, GlobalService, ChromeService } from '@app/core';
+import {
+    Balance
+} from '@models/models';
+import {
+    AssetState,
+    NeonService,
+    GlobalService,
+    ChromeService
+} from '@app/core';
 
-import { FilterBarService } from '@popup/_services/filter-bar.service';
+import {
+    FilterBarService
+} from '@popup/_services/filter-bar.service';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
     selector: 'app-filter-bar',
@@ -22,7 +38,7 @@ import { FilterBarService } from '@popup/_services/filter-bar.service';
     styleUrls: ['filter-bar.component.scss']
 })
 export class PopupHomeFilterBarComponent
-    implements OnChanges, OnInit, AfterViewChecked {
+implements OnChanges, OnInit, AfterViewChecked, OnDestroy {
     @Input() initAssetId: string;
 
     @ViewChild('more') more: ElementRef;
@@ -44,6 +60,7 @@ export class PopupHomeFilterBarComponent
     private moreStyleTop: number;
     private topHeight: number;
     private moreOpen: boolean;
+    public unSubBalance: Unsubscribable;
 
     constructor(
         private asset: AssetState,
@@ -80,26 +97,36 @@ export class PopupHomeFilterBarComponent
             }
         });
         this.address = this.neon.address;
-        this.getBalance();
+        this.unSubBalance = this.asset.balanceSub$.subscribe(balanceArr => {
+            this.handlerBalance(balanceArr);
+        });
+        this.asset.fetchBalance(this.neon.address).subscribe(balanceArr => {
+            this.handlerBalance(balanceArr);
+        });
+    }
+
+    ngOnDestroy(): void {
+        if (this.unSubBalance) {
+            this.unSubBalance.unsubscribe();
+        }
     }
 
     ngOnChanges() {
         // this.getBalance();
     }
 
-    public getBalance() {
-        this.asset.fetchBalance(this.address).pipe(switchMap((res) => this.chrome.getWatch().pipe(map((watching) => {
-            this.balances = [];
-            this.balances.push(...res);
-            let newWatch = [];
+    public handlerBalance(balanceRes: Balance[]) {
+        this.balances = [];
+        this.balances.push(...balanceRes);
+        this.chrome.getWatch().subscribe(watching => {
+            const newWatch = [];
             watching.forEach((w) => {
-                if (res.findIndex((r) => r.asset_id === w.asset_id) < 0) {
+                if (balanceRes.findIndex((r) => r.asset_id === w.asset_id) < 0) {
                     newWatch.push(w);
                 }
             });
             this.watch = newWatch;
             this.balances.push(...newWatch);
-        })))).subscribe(() => {
             this.initSelectedAsset();
         });
     }
@@ -174,26 +201,26 @@ export class PopupHomeFilterBarComponent
     }
 
     public filtersClassName(index: number) {
-        const activeClassName = index === this.selectedFilterIndex
-            ? 'popup-home-top-filter-active'
-            : '';
+        const activeClassName = index === this.selectedFilterIndex ?
+            'popup-home-top-filter-active' :
+            '';
 
-        const loadingClassName = this.loading && this.loadingIndex === index
-            ? 'popup-home-top-filter-loading'
-            : '';
+        const loadingClassName = this.loading && this.loadingIndex === index ?
+            'popup-home-top-filter-loading' :
+            '';
 
-        const hoverClassName = !this.loading
-            ? 'popup-home-top-filter-hover'
-            : '';
+        const hoverClassName = !this.loading ?
+            'popup-home-top-filter-hover' :
+            '';
 
         return `${ activeClassName } ${ loadingClassName } ${ hoverClassName }`;
     }
 
     public moreClassName() {
         if (this.isInit) {
-            return !this.loading && this.isInit
-                ? 'popup-home-more-display'
-                : '';
+            return !this.loading && this.isInit ?
+                'popup-home-more-display' :
+                '';
         } else {
             return 'popup-home-more-display';
         }

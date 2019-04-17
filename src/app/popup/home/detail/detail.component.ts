@@ -45,6 +45,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     public net: string;
 
     public unSubTxStatus: Unsubscribable;
+    public unSubBalance: Unsubscribable;
 
     constructor(
         private asset: AssetState,
@@ -69,7 +70,14 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.net = this.global.net;
         this.aRouter.params.subscribe((params: any) => {
-            this.getBalance(params.id);
+            this.assetId = params.id;
+            // 获取资产信息
+            this.asset.fetchBalance(this.address).subscribe(balanceArr => {
+                this.handlerBalance(balanceArr);
+            });
+        });
+        this.unSubBalance = this.asset.balanceSub$.subscribe(balanceArr => {
+            this.listenBalance(balanceArr);
         });
         this.unSubTxStatus = this.txState.popTransferStatus().subscribe(time => {
             this.getInTransactions(1);
@@ -87,32 +95,56 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
         if (this.unSubTxStatus) {
             this.unSubTxStatus.unsubscribe();
         }
+        if (this.unSubBalance) {
+            this.unSubBalance.unsubscribe();
+        }
     }
 
-    public getBalance(id) {
-        this.asset.detail(this.address, id).subscribe((res: Balance) => {
-            if (!res) {
-                this.getBalance(NEO);
-                return;
-            }
-            this.assetId = id;
-            res.balance = Number(res.balance);
-            this.balance = res;
-            // 获取资产汇率
-            if (this.balance.balance && this.balance.balance > 0) {
-                this.asset.getAssetRate(this.balance.symbol).subscribe(rateBalance => {
-                    if (this.balance.symbol.toLowerCase() in rateBalance) {
-                        this.balance.rateBalance = rateBalance[this.balance.symbol.toLowerCase()] * this.balance.balance;
-                    }
-                });
-            } else {
-                this.balance.rateBalance = 0;
-            }
+    public handlerBalance(balanceRes: Balance[]) {
+        this.chrome.getWatch().subscribe(watching => {
+            this.findBalance(balanceRes, watching);
+            // 获取交易
             this.getInTransactions(1);
+            // 获取资产汇率
+            this.getAssetRate();
         });
     }
 
+    // 监听 balance 发生变化
+    public listenBalance(balanceRes: Balance[]) {
+        this.chrome.getWatch().subscribe(watching => {
+            this.findBalance(balanceRes, watching);
+            // 获取资产汇率
+            this.getAssetRate();
+        });
+    }
+
+    public findBalance(balanceRes, watching) {
+        let balance = balanceRes.find(b => b.asset_id === this.assetId) || watching.find(w => w.asset_id === this.assetId);
+        if (!balance) {
+            this.assetId = NEO;
+            balance = balanceRes.find(b => b.asset_id === this.assetId) || watching.find(w => w.asset_id === this.assetId);
+        }
+        balance.balance = Number(balance.balance);
+        this.balance = balance;
+    }
+
+    public getAssetRate() {
+        if (this.balance.balance && this.balance.balance > 0) {
+            this.asset.getAssetRate(this.balance.symbol).subscribe(rateBalance => {
+                if (this.balance.symbol.toLowerCase() in rateBalance) {
+                    this.balance.rateBalance = rateBalance[this.balance.symbol.toLowerCase()] * this.balance.balance;
+                }
+            });
+        } else {
+            this.balance.rateBalance = 0;
+        }
+    }
+
     public getInTransactions(page, maxId = -1, sinceId = -1, absPage = 1) {
+        this.asset.fetchBalance(this.neon.address).subscribe(res => {
+            this.asset.pushBalance(res);
+        });
         const httpReq1 = this.txState.fetchTx(this.neon.address, page, this.assetId, maxId, sinceId, absPage);
         if (page === 1) {
             this.chrome.getTransaction().subscribe(inTxData => {

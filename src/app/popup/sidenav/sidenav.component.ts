@@ -1,12 +1,20 @@
 import {
     Component,
     Input,
-    OnInit
+    OnInit,
+    OnDestroy
 } from '@angular/core';
-import { MatDialog } from '@angular/material';
-import { Router } from '@angular/router';
+import {
+    MatDialog
+} from '@angular/material';
+import {
+    Router
+} from '@angular/router';
 
-import { NEO, Balance } from '@models/models';
+import {
+    NEO,
+    Balance
+} from '@models/models';
 
 import {
     ChromeService,
@@ -15,16 +23,23 @@ import {
     AssetState
 } from '@app/core';
 
-import { Sidenav } from '@popup/_lib/enums';
-import { PopupLogoutDialogComponent } from '@popup/_dialogs';
-import { runInThisContext } from 'vm';
+import {
+    Sidenav
+} from '@popup/_lib/enums';
+import {
+    PopupLogoutDialogComponent
+} from '@popup/_dialogs';
+import {
+    runInThisContext
+} from 'vm';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
     selector: 'app-sidenav',
     templateUrl: 'sidenav.component.html',
     styleUrls: ['sidenav.component.scss']
 })
-export class PopupSidenavComponent implements OnInit {
+export class PopupSidenavComponent implements OnInit, OnDestroy {
     @Input() sidenav: any;
 
     public SIDENAV = Sidenav;
@@ -34,6 +49,7 @@ export class PopupSidenavComponent implements OnInit {
     public address: string;
     public neoSymbol = 'NEO';
     public neoBalance = 0;
+    public unSubBalance: Unsubscribable;
 
     constructor(
         private router: Router,
@@ -42,15 +58,16 @@ export class PopupSidenavComponent implements OnInit {
         private neon: NeonService,
         private asset: AssetState,
         private dialog: MatDialog
-    ) { }
+    ) {}
 
     ngOnInit(): void {
         this.wallet = this.neon.wallet;
         this.address = this.neon.address;
-        this.asset.detail(this.address, NEO).subscribe((res: Balance) => {
-            this.balance = res;
-            this.neoBalance = res.balance;
-            this.neoSymbol = res.symbol;
+        this.asset.fetchBalance(this.address).subscribe(balanceArr => {
+            this.handlerBalance(balanceArr);
+        });
+        this.unSubBalance = this.asset.balanceSub$.subscribe(balanceArr => {
+            this.handlerBalance(balanceArr);
         });
 
         const url = this.router.url;
@@ -63,6 +80,18 @@ export class PopupSidenavComponent implements OnInit {
         } else {
             this.currentMenu = Sidenav.HOME;
         }
+    }
+
+    ngOnDestroy(): void {
+        if (this.unSubBalance) {
+            this.unSubBalance.unsubscribe();
+        }
+    }
+
+    public handlerBalance(balanceRes: Balance[]) {
+        const balance = balanceRes.find(b => b.asset_id === NEO);
+        this.neoBalance = balance.balance;
+        this.neoSymbol = balance.symbol;
     }
 
     public onSidenavChange(sidenav: Sidenav) {

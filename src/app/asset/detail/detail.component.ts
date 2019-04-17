@@ -21,7 +21,10 @@ import {
     ActivatedRoute,
     Router
 } from '@angular/router';
-import { Unsubscribable, forkJoin } from 'rxjs';
+import {
+    Unsubscribable,
+    forkJoin
+} from 'rxjs';
 
 @Component({
     templateUrl: 'detail.component.html',
@@ -40,6 +43,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
 
     imageUrl: any;
     public unSubTxStatus: Unsubscribable;
+    public unSubBalance: Unsubscribable;
 
     constructor(
         private asset: AssetState,
@@ -57,8 +61,14 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         this.rateCurrency = this.asset.rateCurrency;
         this.net = this.global.net;
         this.aRoute.params.subscribe((params) => {
+            this.assetId = params.id;
             // 获取资产信息
-            this.getBalance(params.id);
+            this.asset.fetchBalance(this.address).subscribe(balanceArr => {
+                this.handlerBalance(balanceArr);
+            });
+        });
+        this.unSubBalance = this.asset.balanceSub$.subscribe(balanceArr => {
+            this.listenBalance(balanceArr);
         });
         this.unSubTxStatus = this.txState.popTransferStatus().subscribe(time => {
             this.getInTransactions(1);
@@ -76,51 +86,78 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         if (this.unSubTxStatus) {
             this.unSubTxStatus.unsubscribe();
         }
+        if (this.unSubBalance) {
+            this.unSubBalance.unsubscribe();
+        }
     }
 
-    public getBalance(id) {
-        this.asset.detail(this.address, id).subscribe((res: Balance) => {
-            if (!res) {
-                this.getBalance(NEO);
-                return;
-            }
-            this.assetId = id;
+    public handlerBalance(balanceRes: Balance[]) {
+        this.chrome.getWatch().subscribe(watching => {
+            this.findBalance(balanceRes, watching);
             // 获取交易
             this.getInTransactions(1);
-            res.balance = Number(res.balance);
-            this.balance = res;
             // 获取资产头像
-            const imageObj = this.asset.assetFile.get(this.assetId);
-            let lastModified = '';
-            if (imageObj) {
-                lastModified = imageObj['last-modified'];
-                this.imageUrl = imageObj['image-src'];
-            }
-            this.asset.getAssetSrc(this.assetId, lastModified).subscribe(assetRes => {
-                if (assetRes && assetRes['status'] === 200) {
-                    this.asset.setAssetFile(assetRes, this.assetId).then(src => {
-                        this.imageUrl = src;
-                    });
-                } else if (assetRes && assetRes['status'] === 404) {
-                    this.imageUrl = this.asset.defaultAssetSrc;
+            this.getAssetSrc();
+            // 获取资产汇率
+            this.getAssetRate();
+        });
+    }
+
+    // 监听 balance 发生变化
+    public listenBalance(balanceRes: Balance[]) {
+        this.chrome.getWatch().subscribe(watching => {
+            this.findBalance(balanceRes, watching);
+            // 获取资产汇率
+            this.getAssetRate();
+        });
+    }
+
+    public findBalance(balanceRes, watching) {
+        let balance = balanceRes.find(b => b.asset_id === this.assetId) || watching.find(w => w.asset_id === this.assetId);
+        if (!balance) {
+            this.assetId = NEO;
+            balance = balanceRes.find(b => b.asset_id === this.assetId) || watching.find(w => w.asset_id === this.assetId);
+        }
+        balance.balance = Number(balance.balance);
+        this.balance = balance;
+    }
+
+    public getAssetRate() {
+        if (this.balance !== undefined && this.balance.balance && this.balance.balance > 0) {
+            this.asset.getAssetRate(this.balance.symbol).subscribe(rateBalance => {
+                if (this.balance.symbol.toLowerCase() in rateBalance) {
+                    this.balance.rateBalance = rateBalance[this.balance.symbol.toLowerCase()] * this.balance.balance;
                 }
             });
-            // 获取资产汇率
-            if (this.balance !== undefined && this.balance.balance && this.balance.balance > 0) {
-                this.asset.getAssetRate(this.balance.symbol).subscribe(rateBalance => {
-                    if (this.balance.symbol.toLowerCase() in rateBalance) {
-                        this.balance.rateBalance = rateBalance[this.balance.symbol.toLowerCase()] * this.balance.balance;
-                    }
+        } else {
+            if (this.balance !== undefined) {
+                this.balance.rateBalance = 0;
+            }
+        }
+    }
+
+    public getAssetSrc() {
+        const imageObj = this.asset.assetFile.get(this.assetId);
+        let lastModified = '';
+        if (imageObj) {
+            lastModified = imageObj['last-modified'];
+            this.imageUrl = imageObj['image-src'];
+        }
+        this.asset.getAssetSrc(this.assetId, lastModified).subscribe(assetRes => {
+            if (assetRes && assetRes['status'] === 200) {
+                this.asset.setAssetFile(assetRes, this.assetId).then(src => {
+                    this.imageUrl = src;
                 });
-            } else {
-                if (this.balance !== undefined) {
-                    this.balance.rateBalance = 0;
-                }
+            } else if (assetRes && assetRes['status'] === 404) {
+                this.imageUrl = this.asset.defaultAssetSrc;
             }
         });
     }
 
     private getInTransactions(page, maxId = -1, sinceId = -1, absPage = 1) {
+        this.asset.fetchBalance(this.neon.address).subscribe(res => {
+            this.asset.pushBalance(res);
+        });
         const httpReq1 = this.txState.fetchTx(this.neon.address, page, this.assetId, maxId, sinceId, absPage);
         if (page === 1) {
             this.chrome.getTransaction().subscribe(inTxData => {

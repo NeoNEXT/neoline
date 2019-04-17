@@ -35,6 +35,9 @@ export class AssetState {
     public assetRate: Map < string, {} > = new Map();
     public rateCurrency: string;
 
+    public balanceSource = new Subject<Balance[]>();
+    public balanceSub$ = this.balanceSource.asObservable();
+
     constructor(
         private http: HttpService,
         private global: GlobalService,
@@ -49,6 +52,9 @@ export class AssetState {
         });
     }
 
+    public pushBalance(balance: Balance[]) {
+        this.balanceSource.next(balance);
+    }
     public changeRateCurrency(currency) {
         this.rateCurrency = currency;
         if (currency === 'CNY') {
@@ -90,7 +96,10 @@ export class AssetState {
     }
 
     public fetchBalance(address: string): Observable < any > {
-        return this.http.get(`${ this.global.apiDomain }/v1/address/assets?address=${ address }`);
+        return this.http.get(`${ this.global.apiDomain }/v1/address/assets?address=${ address }`).pipe(map(res => {
+            this.pushBalance(res);
+            return res;
+        }));
     }
 
     public fetchClaim(address: string): Observable < any > {

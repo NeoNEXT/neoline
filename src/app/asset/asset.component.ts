@@ -25,7 +25,9 @@ import {
 import {
     ActivatedRoute
 } from '@angular/router';
-import { Unsubscribable } from 'rxjs';
+import {
+    Unsubscribable
+} from 'rxjs';
 
 @Component({
     templateUrl: 'asset.component.html',
@@ -39,6 +41,7 @@ export class AssetComponent implements OnInit, OnDestroy {
     public rateCurrency: string;
 
     public unSubAddAsset: Unsubscribable;
+    public unSubBalance: Unsubscribable;
 
     constructor(
         private asset: AssetState,
@@ -52,28 +55,12 @@ export class AssetComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.address = this.neon.address;
         this.rateCurrency = this.asset.rateCurrency;
-        this.asset.fetchBalance(this.neon.address).pipe(map(balanceRes => {
-            this.displayAssets = [];
-            this.rateSymbol = '';
-            balanceRes.forEach(r => {
-                if (r.balance && r.balance > 0) {
-                    this.rateSymbol += r.symbol + ',';
-                }
-                this.displayAssets.push(r);
-            });
-            this.rateSymbol = this.rateSymbol.slice(0, -1);
-            this.getAssetRate();
-            return balanceRes;
-        })).subscribe((balanceRes) => this.chrome.getWatch().subscribe(watching => {
-            const newWatch = [];
-            watching.forEach((w) => {
-                if (balanceRes.findIndex((r) => r.asset_id === w.asset_id) < 0) {
-                    newWatch.push(w);
-                }
-            });
-            this.watch = newWatch;
-            this.displayAssets.push(...newWatch);
-        }));
+        this.unSubBalance = this.asset.balanceSub$.subscribe(balanceArr => {
+            this.handlerBalance(balanceArr);
+        });
+        this.asset.fetchBalance(this.neon.address).subscribe(balanceArr => {
+            this.handlerBalance(balanceArr);
+        });
         this.unSubAddAsset = this.asset.popAddAssetId().subscribe(assetItem => {
             if (!assetItem) {
                 return;
@@ -86,6 +73,32 @@ export class AssetComponent implements OnInit, OnDestroy {
         if (this.unSubAddAsset) {
             this.unSubAddAsset.unsubscribe();
         }
+        if (this.unSubBalance) {
+            this.unSubBalance.unsubscribe();
+        }
+    }
+
+    public handlerBalance(balanceRes: Balance[]) {
+        this.displayAssets = [];
+        this.rateSymbol = '';
+        balanceRes.forEach(r => {
+            if (r.balance && r.balance > 0) {
+                this.rateSymbol += r.symbol + ',';
+            }
+            this.displayAssets.push(r);
+        });
+        this.rateSymbol = this.rateSymbol.slice(0, -1);
+        this.getAssetRate();
+        this.chrome.getWatch().subscribe(watching => {
+            const newWatch = [];
+            watching.forEach((w) => {
+                if (balanceRes.findIndex((r) => r.asset_id === w.asset_id) < 0) {
+                    newWatch.push(w);
+                }
+            });
+            this.watch = newWatch;
+            this.displayAssets.push(...newWatch);
+        });
     }
 
     // 获取资产汇率
