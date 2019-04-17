@@ -28,6 +28,8 @@ export class PopupHomeTxItemComponent implements OnInit {
         // todo
         if (this.global.apiDomain.match('main') !== null) {
             window.open(`https://blolys.com/#/mainnet/transaction/${txid}`);
+        } else {
+            window.open(`https://blolys.com/#/testnet/transaction/${txid}`);
         }
     }
 

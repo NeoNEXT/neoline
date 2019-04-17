@@ -20,6 +20,8 @@ export class TxItemComponent implements OnInit {
     public txDetail(txid: string) {
         if (this.global.apiDomain.match('main') !== null) {
             window.open(`https://blolys.com/#/mainnet/transaction/${txid}`);
+        } else {
+            window.open(`https://blolys.com/#/testnet/transaction/${txid}`);
         }
     }
 }
