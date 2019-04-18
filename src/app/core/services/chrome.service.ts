@@ -372,51 +372,6 @@ export class ChromeService {
         }));
     }
 
-    public pushTransaction(transaction: any, address: string, assetId: string, net: string) {
-        transaction.txid = '0x' + transaction.txid;
-        if (!this.check) {
-            this.getTransaction().subscribe(res => {
-                if (res == null) {
-                    res = {};
-                }
-                if (res[net] === undefined) {
-                    res[net] = {};
-                }
-                if (res[net][address] === undefined) {
-                    res[net][address] = {};
-                }
-                if (res[net][address][assetId] === undefined) {
-                    res[net][address][assetId] = [];
-                }
-                res[net][address][assetId].unshift(transaction);
-                localStorage.setItem('transaction', JSON.stringify(res));
-            });
-            return;
-        }
-        try {
-            this.getTransaction().subscribe(res => {
-                if (res === null || res === undefined) {
-                    res = {};
-                }
-                if (res[net] === undefined) {
-                    res[net] = {};
-                }
-                if (res[net][address] === undefined) {
-                    res[net][address] = {};
-                }
-                if (res[net][address][assetId] === undefined) {
-                    res[net][address][assetId] = [];
-                }
-                res[net][address][assetId].unshift(transaction);
-                this.crx.setStorage({
-                    transaction: res
-                });
-            });
-        } catch (e) {
-            console.log('push transaction failed', e);
-        }
-    }
-
     public setTransaction(transaction: object) {
         if (!this.check) {
             localStorage.setItem('transaction', JSON.stringify(transaction));

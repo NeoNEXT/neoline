@@ -170,13 +170,12 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.loadingMsg = '';
             this.creating = false;
             if (this.fromAddress !== this.toAddress) {
-                this.chrome.pushTransaction({
-                    txid: tx.hash,
+                const txTarget = {
+                    txid: '0x' + tx.hash,
                     value: -this.amount,
                     block_time: res.response_time
-                },
-                    this.fromAddress, this.assetId, this.net);
-                this.txState.pushTxSource();
+                };
+                this.pushTransaction(txTarget);
             }
             this.chrome.windowCallback({
                 data: tx.hash,
@@ -196,6 +195,29 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                 target: 'transferRes'
             });
             this.global.snackBarTip('transferFailed', err);
+        });
+    }
+
+    public pushTransaction(transaction: object) {
+        const net = this.net;
+        const address = this.fromAddress;
+        const assetId = this.assetId;
+        this.chrome.getTransaction().subscribe(res => {
+            if (res === null || res === undefined) {
+                res = {};
+            }
+            if (res[net] === undefined) {
+                res[net] = {};
+            }
+            if (res[net][address] === undefined) {
+                res[net][address] = {};
+            }
+            if (res[net][address][assetId] === undefined) {
+                res[net][address][assetId] = [];
+            }
+            res[net][address][assetId].unshift(transaction);
+            this.chrome.setTransaction(res);
+            this.txState.pushTxSource();
         });
     }
 

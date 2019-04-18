@@ -60,7 +60,7 @@ export class TransferCreateomponent implements OnInit {
         private http: HttpService,
         private chrome: ChromeService,
         private block: BlockState,
-        private transactionSer: TransactionState
+        private txState: TransactionState
     ) { }
 
     ngOnInit(): void {
@@ -140,13 +140,12 @@ export class TransferCreateomponent implements OnInit {
         }).subscribe(res => {
             this.creating = false;
             if (this.fromAddress !== this.toAddress) {
-                this.chrome.pushTransaction({
-                    txid: tx.hash,
+                const txTarget = {
+                    txid: '0x' + tx.hash,
                     value: -this.amount,
                     block_time: res.response_time
-                },
-                    this.fromAddress, this.assetId, this.net);
-                this.transactionSer.pushTxSource();
+                };
+                this.pushTransaction(txTarget);
             }
             // todo transfer done
             this.global.log('transfer done', res);
@@ -158,6 +157,29 @@ export class TransferCreateomponent implements OnInit {
         }, err => {
             this.creating = false;
             this.global.snackBarTip('transferFailed', err);
+        });
+    }
+
+    public pushTransaction(transaction: object) {
+        const net = this.net;
+        const address = this.fromAddress;
+        const assetId = this.assetId;
+        this.chrome.getTransaction().subscribe(res => {
+            if (res === null || res === undefined) {
+                res = {};
+            }
+            if (res[net] === undefined) {
+                res[net] = {};
+            }
+            if (res[net][address] === undefined) {
+                res[net][address] = {};
+            }
+            if (res[net][address][assetId] === undefined) {
+                res[net][address][assetId] = [];
+            }
+            res[net][address][assetId].unshift(transaction);
+            this.chrome.setTransaction(res);
+            this.txState.pushTxSource();
         });
     }
 }
