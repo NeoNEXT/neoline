@@ -54,10 +54,11 @@ export class AppComponent {
                 this.global.languageJson = temp;
             });
         });
-        this.global.$404.subscribe(() => {
-            this.hideNav404 = true;
-        });
         this.router.events.subscribe((event) => {
+            this.hideNav404 = false;
+            this.global.$404.subscribe(() => {
+                this.hideNav404 = true;
+            });
             if (event instanceof NavigationEnd) {
                 this.hideNav = event.url.startsWith('/popup') || event.url.startsWith('/login');
             }
