@@ -48,6 +48,7 @@ export class TransferCreateomponent implements OnInit {
     public GAS = GAS;
 
     public assetId: string;
+    public net: string;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -63,6 +64,7 @@ export class TransferCreateomponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
+        this.net = this.global.net;
         this.fromAddress = this.neon.address;
         this.aRoute.params.subscribe((params) => {
             this.asset.detail(this.neon.address, params.id).subscribe((res: Balance) => {
@@ -143,7 +145,8 @@ export class TransferCreateomponent implements OnInit {
                     value: -this.amount,
                     block_time: res.response_time
                 },
-                    this.fromAddress, this.assetId);
+                    this.fromAddress, this.assetId, this.net);
+                this.transactionSer.pushTxSource();
             }
             // todo transfer done
             this.global.log('transfer done', res);

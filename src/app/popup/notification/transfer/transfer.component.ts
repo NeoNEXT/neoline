@@ -13,6 +13,7 @@ import {
     HttpService,
     GlobalService,
     ChromeService,
+    TransactionState
 } from '@/app/core';
 import {
     Balance
@@ -40,6 +41,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public pwd = '';
     public fee: number;
     public init = false;
+
+    public net: string;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -49,9 +52,11 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         private http: HttpService,
         private global: GlobalService,
         private chrome: ChromeService,
+        private txState: TransactionState
     ) { }
 
     ngOnInit(): void {
+        this.net = this.global.net;
         this.fromAddress = this.neon.address;
         this.wallet = this.neon.wallet;
         this.aRoute.queryParams.subscribe((params: any) => {
@@ -170,7 +175,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                     value: -this.amount,
                     block_time: res.response_time
                 },
-                    this.fromAddress, this.assetId);
+                    this.fromAddress, this.assetId, this.net);
+                this.txState.pushTxSource();
             }
             this.chrome.windowCallback({
                 data: tx.hash,

@@ -25,10 +25,17 @@ import {
 
 @Injectable()
 export class TransactionState {
+    public txSource = new Subject();
+    public txSub$ = this.txSource.asObservable();
+
     constructor(
         private http: HttpService,
         private global: GlobalService
     ) {}
+
+    public pushTxSource() {
+        this.txSource.next('new');
+    }
 
     public fetchTx(address: string, page: number, asset: string,
         max_id: number = -1, since_id: number = -1, abs_page: number = 1): Observable < any > {
