@@ -6,7 +6,7 @@ import { map, catchError, startWith, publish, refCount } from 'rxjs/operators';
 import { ChromeService } from './chrome.service';
 import { GlobalService } from './global.service';
 import { Transaction, TransactionInput } from '@cityofzion/neon-core/lib/tx';
-import { UTXO, claimItem, GAS } from '@/models/models';
+import { UTXO, ClaimItem, GAS } from '@/models/models';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { sc, u } from '@cityofzion/neon-core';
 
@@ -308,7 +308,7 @@ export class NeonService {
         newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
         return newTx;
     }
-    public claimGAS(claims: Array<claimItem>, value: number): Observable<Transaction> {
+    public claimGAS(claims: Array<ClaimItem>, value: number): Observable<Transaction> {
         return new Observable(observer => {
             const claimArr = [];
             claims.forEach(item => {
