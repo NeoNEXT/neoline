@@ -81,6 +81,10 @@ mat-spinner {
     margin-left: 14%;
 }
 
+.fee-box {
+    margin-bottom: $space;
+}
+
 @media screen and (max-width: 1200px) {
     :host {
         width: 300px;

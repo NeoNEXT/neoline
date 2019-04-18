@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import {MatCheckboxModule} from '@angular/material/checkbox';
 import {
     MatSnackBarModule,
     MatProgressSpinnerModule,
@@ -49,6 +50,7 @@ import { NumberDirective } from './directives/number';
         CopyDirective,
         AvatarDirective,
         MatButtonModule,
+        MatCheckboxModule,
         MatDialogModule,
         MatIconModule,
         MatInputModule,

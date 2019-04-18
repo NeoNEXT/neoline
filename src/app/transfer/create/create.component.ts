@@ -40,12 +40,11 @@ import { wallet } from '@cityofzion/neon-core';
 export class TransferCreateomponent implements OnInit {
     public balance: Balance;
     public amount: number;
-    public fee: number;
+    public fee: number = 0.0011;
     public fromAddress: string;
     public toAddress: string;
     public creating: boolean = false;
-    public NEO = NEO;
-    public GAS = GAS;
+    public checkFee: boolean = false;
 
     public assetId: string;
     public net: string;
@@ -96,7 +95,8 @@ export class TransferCreateomponent implements OnInit {
             return;
         }
         this.creating = true;
-        this.transfer.create(this.fromAddress, this.toAddress, this.balance.asset_id, this.amount, this.fee).subscribe((res) => {
+        this.transfer.create(this.fromAddress, this.toAddress, this.balance.asset_id, this.amount,
+            this.checkFee ? this.fee : 0).subscribe((res) => {
             this.dialog.open(PwdDialog).afterClosed().subscribe((pwd) => {
                 if (pwd && pwd.length) {
                     this.global.log('start transfer with pwd');

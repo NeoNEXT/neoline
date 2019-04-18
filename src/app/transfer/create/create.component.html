@@ -10,9 +10,10 @@
     <p class="title">{{ 'amount' | translate | async}}</p>
     <input type="text" numbersOnly [scale]="balance?.decimals" class="amount" placeholder="{{ 'transferAmountTip' | translate | async}}"
         [(ngModel)]="amount" />
-    <div *ngIf="assetId == GAS || assetId == NEO">
-        <p class="title">{{ 'networkFee' | translate | async }}</p>
-        <input type="text" numbersOnly [scale]="8" class="amount" placeholder="{{ 'networkFeeTip' | translate | async }}"
+    <div class="fee-box">
+        <mat-checkbox class="title"  color="primary" [(ngModel)]="checkFee">{{ 'priorityFee' | translate | async }}</mat-checkbox>
+        <!-- <p class="title">{{ 'priorityFee' | translate | async }}</p> -->
+        <input type="text" *ngIf="checkFee" numbersOnly [scale]="8" class="amount" placeholder="{{ 'priorityFeeTip' | translate | async }}"
             [(ngModel)]="fee" />
     </div>
     <div>

@@ -440,10 +440,10 @@
     "beijingTime": {
         "message": "China Standard Time"
     },
-    "networkFee": {
-        "message": "Network Fee( GAS )"
+    "priorityFee": {
+        "message": "Priority Fee( GAS )"
     },
-    "networkFeeTip": {
+    "priorityFeeTip": {
         "message": "Optional"
     },
     "claim": {

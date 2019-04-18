@@ -440,10 +440,10 @@
     "beijingTime": {
         "message": "北京时间"
     },
-    "networkFee": {
-        "message": "网络费用( GAS )"
+    "priorityFee": {
+        "message": "优先处理费( GAS )"
     },
-    "networkFeeTip": {
+    "priorityFeeTip": {
         "message": "选填"
     },
     "claim": {
