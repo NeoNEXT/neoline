@@ -48,7 +48,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     private address: string = '';
     public balance: Balance;
     public txPage: PageData < Transaction > ;
-    private assetId: string = '';
+    public assetId: string = '';
     private requesting = false;
     public loading = true;
     public inTransaction: Array < Transaction > ;
