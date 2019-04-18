@@ -30,9 +30,12 @@ dapi.onload = () => {
         type: 'dapi_LOADED'
     }, '*');
 };
-if (dapi != null) {
-    window.document.body.appendChild(dapi);
-}
+
+window.onload = () => {
+    if (dapi != null) {
+        window.document.body.appendChild(dapi);
+    }
+};
 
 window.addEventListener('message', (e) => {
     switch (e.data.target) {
