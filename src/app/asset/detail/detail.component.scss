@@ -8,6 +8,44 @@
     height: 100%;
 }
 
+.get-claim-box {
+    display: flex;
+    padding-left: 30px;
+    width: 50%;
+    margin-bottom: 12px;
+    align-items: center;
+    img {
+        width: 40px;
+        height: 40px;
+        margin-right: 12px;
+    }
+    .info-box {
+        flex-grow: 1;
+        font-size: 12px;
+        .info-status {
+            color: rgba(0, 0, 0, 0.3);
+        }
+    }
+    button {
+        height: 35px;
+        border-radius: 17px;
+        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+        border-radius: 17px;
+        color: map-get($neo-line-default, 500);
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 12px;
+        mat-spinner {
+            margin: auto;
+        }
+        img {
+            width: 15px;
+            height: 15px;
+            margin: auto;
+        }
+    }
+}
+
 .info {
     padding: $space*2;
     display: flex;

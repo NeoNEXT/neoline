@@ -10,8 +10,19 @@
             <button mat-raised-button color="primary" (click)="receive()">{{ 'receive' | translate | async}}</button>
             <button mat-stroked-button color="primary" (click)="transfer()">{{ 'transfer' | translate | async}}</button>
     </div>
-
 </div>
+<div class="get-claim-box" *ngIf="assetId==NEO && showClaim">
+        <img [src]="imageUrl" alt="">
+        <div class="info-box">
+            <p class="info-gas">{{ claimNumber }} GAS</p>
+            <p class="info-status">{{ claimStatus | translate | async }}</p>
+        </div>
+        <button mat-button color="primary" (click)="claim()" [disabled]="loading || !init || !showClaim " >
+            <ng-container *ngIf="!loading && claimStatus != 'success'">{{ claimStatus != 'confirmed' ? ('syncNow' | translate | async) : ('claim' | translate | async) }}</ng-container>
+            <ng-container *ngIf="claimStatus == 'success' && !loading"><img src="/assets/images/select.png" alt=""></ng-container>
+            <mat-spinner *ngIf="loading" strokeWidth="2" diameter="20"></mat-spinner>
+        </button>
+    </div>
 <div class="title">
     <span>{{ 'transactions' | translate | async}}</span>
 </div>

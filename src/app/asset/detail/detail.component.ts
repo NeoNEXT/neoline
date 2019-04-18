@@ -25,12 +25,26 @@ import {
     Unsubscribable,
     forkJoin
 } from 'rxjs';
+import { TransferService } from '@/app/transfer/transfer.service';
 
 @Component({
     templateUrl: 'detail.component.html',
     styleUrls: ['detail.component.scss']
 })
 export class AssetDetailComponent implements OnInit, OnDestroy {
+    private status = {
+        confirmed: 'confirmed',
+        estimated: 'estimated',
+        success: 'success'
+    };
+    public NEO = NEO;
+    public claimNumber = 0;
+    public claimStatus = 'confirmed';
+    private claimsData = null;
+    private intervalClaim = null;
+    public showClaim = true;
+    public init = false;
+
     private address: string = '';
     public balance: Balance;
     public txPage: PageData < Transaction > ;
@@ -54,6 +68,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         private txState: TransactionState,
         private chrome: ChromeService,
         private http: HttpService,
+        private transferSer: TransferService
     ) {}
 
     ngOnInit(): void {
@@ -62,6 +77,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         this.net = this.global.net;
         this.aRoute.params.subscribe((params) => {
             this.assetId = params.id;
+            this.initClaim();
             // 获取资产信息
             this.asset.fetchBalance(this.address).subscribe(balanceArr => {
                 this.handlerBalance(balanceArr);
@@ -238,5 +254,92 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 transfer: ['transfer', 'create', this.balance.asset_id]
             }
         }]);
+    }
+
+    public claim() {
+        this.loading = true;
+        if (this.claimStatus === this.status.success) {
+            this.initClaim();
+            return;
+        }
+        if (this.claimStatus === this.status.estimated) {
+            this.syncNow();
+            return;
+        }
+        this.neon.claimGAS(this.claimsData, this.claimNumber).subscribe(tx => {
+            return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
+                signature_transaction: tx.serialize(true)
+            }).subscribe(res => {
+                if (this.intervalClaim === null) {
+                    this.initInterval();
+                }
+            }, err => {
+                this.loading = false;
+                if (this.intervalClaim === null) {
+                    this.initInterval();
+                }
+            });
+        });
+    }
+
+    private initInterval() {
+        this.intervalClaim = setInterval(() => {
+            this.asset.fetchClaim(this.neon.address).subscribe((claimRes: any) => {
+                if (Number(claimRes.unspent_claim) === 0) {
+                    this.loading = false;
+                    this.claimNumber = claimRes.uncollect_claim;
+                    clearInterval(this.intervalClaim);
+                    this.intervalClaim = null;
+                    this.claimStatus = this.status.success;
+                }
+            });
+        }, 10000);
+    }
+
+    private syncNow() {
+        this.transferSer.create(this.neon.address, this.neon.address, NEO, 1).subscribe((res) => {
+            res.sign(this.neon.WIFArr[this.neon.walletArr.findIndex(item =>
+                item.accounts[0].address === this.neon.wallet.accounts[0].address)]);
+            this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
+                signature_transaction: res.serialize(true)
+            }).subscribe(txRes => {
+                if (this.intervalClaim === null) {
+                    this.intervalClaim = setInterval(() => {
+                        this.asset.fetchClaim(this.neon.address).subscribe((claimRes: any) => {
+                            if (Number(claimRes.unspent_claim) !== 0) {
+                                this.loading = false;
+                                this.claimsData = claimRes.claims;
+                                this.claimNumber = claimRes.unspent_claim;
+                                clearInterval(this.intervalClaim);
+                                this.claimStatus = this.status.confirmed;
+                                this.intervalClaim = null;
+                            }
+                        });
+                    }, 10000);
+                }
+            }, txErr => {
+                this.loading = false;
+            });
+        }, (err) => {
+            this.global.snackBarTip('wentWrong', err);
+        });
+    }
+
+    private initClaim() {
+        this.asset.fetchClaim(this.neon.address).subscribe((res: any) => {
+            this.claimsData = res.claims;
+            if (res.unspent_claim > 0) {
+                this.claimNumber = res.unspent_claim;
+                this.showClaim = true;
+            } else if (res.uncollect_claim > 0) {
+                this.claimNumber = res.uncollect_claim;
+                this.claimStatus = this.status.estimated;
+                this.showClaim = true;
+            } else {
+                this.showClaim = false;
+            }
+            this.init = true;
+            this.loading = false;
+        });
     }
 }
