@@ -32,7 +32,7 @@ dapi.onload = () => {
 };
 
 window.onload = () => {
-    if (dapi != null) {
+    if (window.document.body != null) {
         window.document.body.appendChild(dapi);
     }
 };
