@@ -460,5 +460,11 @@
     },
     "estimated": {
         "message": "Estimated"
+    },
+    "connectChooseAllow": {
+        "message": "Allow and no longer remind"
+    },
+    "connectChooseNotAllow": {
+        "message": "No longer allowed"
     }
 }

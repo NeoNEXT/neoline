@@ -21,8 +21,8 @@
     <div class="choose-auth-rule">
         <span class="select-radio" [ngClass]="{'selected': ruleCheck }" (click)="ruleCheck = !ruleCheck"></span>
         <select class="auth-rule-select" [(ngModel)]="ruleSelected">
-            <option value="true">下次通过此站点转账时不再提醒</option>
-            <option value="false">不再允许此站点想我发出转账申请</option>
+            <option value="true">{{ 'connectChooseAllow' | translate | async }}</option>
+            <option value="false">{{ 'connectChooseNotAllow' | translate | async }}</option>
         </select>
     </div>
     <div class="secure">
