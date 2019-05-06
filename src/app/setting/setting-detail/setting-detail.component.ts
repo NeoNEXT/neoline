@@ -95,11 +95,9 @@ export class SettingDetailComponent implements OnInit {
 
     public openPrivacy() {
         this.viewPrivacy = !this.viewPrivacy;
-        if (this.authorizationList === undefined) {
-            this.chrome.getAuthorization().subscribe(res => {
-                this.authorizationList = res;
-            });
-        }
+        this.chrome.getAuthorization().subscribe(res => {
+            this.authorizationList = res;
+        });
     }
 
     public delSite(hostname: string) {
