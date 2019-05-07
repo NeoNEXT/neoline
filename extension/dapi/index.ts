@@ -28,6 +28,13 @@ const errors = {
         description: 'The request failed.'
     }
 };
+enum EVENT {
+    READY = 'ready',
+    ACCOUNT_CHANGED = 'account_changed',
+    CONNECTED = 'connected',
+    CONNECTION_REJECTED = 'connection_rejected',
+    NETWORK_CHANGED = 'network_changed'
+};
 export class Init {
     public version = '1.0';
     public EVENT = {
@@ -161,31 +168,8 @@ export class Init {
 
     public getWalletInfo() {
         return new Promise((resolveMain, rejectMain) => {
-            window.postMessage({
-                target: 'getWalletInfo'
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const walletInfoFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === 'walletInfoRes') {
-                        resolve(event.data.data);
-                        window.removeEventListener('message', walletInfoFn);
-                    }
-                };
-                window.addEventListener('message', walletInfoFn);
-            });
-            promise.then((res: any) => {
-                if (res === undefined || res === null) {
-                    rejectMain(errors.DEFAULT);
-                } else {
-                    resolveMain({
-                        name: res.name,
-                        version: res.version,
-                        websit: '',
-                        logo: res.browser_action.default_icon,
-                        compatibility: '',
-                        extra: ''
-                    });
-                }
+            getWalletInfo().then(res => {
+                resolveMain(res);
             });
         });
     }
@@ -553,7 +537,64 @@ export class Init {
     }
 }
 
+if (window.dispatchEvent) {
+    getWalletInfo().then(res => {
+        window.dispatchEvent(
+            new CustomEvent(EVENT.READY,{
+                detail: res,
+            })
+        );
+    }).catch(error => {
+        window.dispatchEvent(
+            new CustomEvent(EVENT.READY,{
+                detail: error,
+            })
+        );
+    });
+}
 
+window.addEventListener('message', e => {
+    const response = e.data;
+    if (response.target) {
+        window.dispatchEvent(new CustomEvent(
+            response.target,
+            {
+                detail: response.data
+            }
+        ));
+    }
+});
+
+function getWalletInfo() {
+    return new Promise((resolveMain, rejectMain) => {
+        window.postMessage({
+            target: 'getWalletInfo'
+        }, '*');
+        const promise = new Promise((resolve, reject) => {
+            const walletInfoFn = (event) => {
+                if (event.data.target !== undefined && event.data.target === 'walletInfoRes') {
+                    resolve(event.data.data);
+                    window.removeEventListener('message', walletInfoFn);
+                }
+            };
+            window.addEventListener('message', walletInfoFn);
+        });
+        promise.then((res: any) => {
+            if (res === undefined || res === null) {
+                rejectMain(errors.DEFAULT);
+            } else {
+                resolveMain({
+                    name: res.name,
+                    version: res.version,
+                    websit: '',
+                    logo: res.browser_action.default_icon,
+                    compatibility: '',
+                    extra: ''
+                });
+            }
+        });
+    });
+}
 
 function getIcon() {
     let favicon;
