@@ -34,6 +34,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public fromAddress: string;
     public toAddress: string;
     public assetId: string;
+    public symbol: string;
     public amount: number;
     public loading = false;
     public loadingMsg: string;
@@ -77,6 +78,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.toAddress = params.to_address || '';
             this.assetId = params.asset_id || '';
             this.amount = params.amount || 0;
+            this.symbol = params.symbol || '';
             this.fee = params.fee || 0;
             if (this.assetId !== undefined && this.assetId !== '') {
                 this.asset.detail(this.neon.address, this.assetId).subscribe((res: Balance) => {
