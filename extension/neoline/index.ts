@@ -54,7 +54,8 @@ window.addEventListener('message', (e) => {
                     let data: any;
                     if (res !== undefined && res.accounts[0] !== undefined) {
                         data = {
-                            address: res.accounts[0].address
+                            address: res.accounts[0].address,
+                            alias: res.name
                         };
                     }
                     window.postMessage({
