@@ -598,6 +598,6 @@ function getWalletInfo() {
 
 function getIcon() {
     let favicon;
-    favicon = `http://${location.hostname}/favicon.ico`;
+    favicon = `${location.protocol}//${location.hostname}/favicon.ico`;
     return favicon;
 }
