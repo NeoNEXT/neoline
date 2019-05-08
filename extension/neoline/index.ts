@@ -145,12 +145,12 @@ window.addEventListener('message', (e) => {
                 httpGet(`${apiUrl}/v1/address/assets?address=${parameter.fromAddress}&asset_id=${assetID}&symbol=${symbol}`, (res) => {
                     let enough = true; // 有足够的钱
                     let hasAsset = false;  // 该地址有这个资产
-                    for (let asset of res.result) {
-                        if (asset['asset_id'] === assetID || String(asset['symbol']).toLowerCase() === symbol.toLowerCase()) {
+                    for (const asset of res.result) {
+                        if (asset.asset_id === assetID || String(asset.symbol).toLowerCase() === symbol.toLowerCase()) {
                             hasAsset = true;
-                            e.data.symbol = asset['symbol'];
-                            e.data.assetID = asset['asset_id'];
-                            if (asset['balance'] < parameter.amount) {
+                            e.data.symbol = asset.symbol;
+                            e.data.assetID = asset.asset_id;
+                            if (asset.balance < parameter.amount) {
                                 enough = false;
                             }
                             break;
