@@ -41,11 +41,17 @@ window.addEventListener('message', (e) => {
     switch (e.data.target) {
         case 'getWalletInfo':
             {
-                const manifestData = chrome.runtime.getManifest();
-                window.postMessage({
-                    target: 'walletInfoRes',
-                    data: manifestData
-                }, '*');
+                getStorage('rateCurrency', (res) => {
+                    if (res === undefined) {
+                        res = 'CNY';
+                    }
+                    const manifestData = chrome.runtime.getManifest();
+                    manifestData.extra = { currency: res };
+                    window.postMessage({
+                        target: 'walletInfoRes',
+                        data: manifestData
+                    }, '*');
+                });
                 return;
             }
         case 'getAccount':

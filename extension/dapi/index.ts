@@ -589,7 +589,7 @@ function getWalletInfo() {
                     websit: '',
                     logo: res.browser_action.default_icon,
                     compatibility: '',
-                    extra: ''
+                    extra: res.extra
                 });
             }
         });

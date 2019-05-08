@@ -34,6 +34,9 @@ module.exports = [{
     ]
 }, {
     mode: "production",
+    // optimization: {
+    //     minimize: false
+    // },
     entry: {
         "neoline": "./extension/neoline/index.ts",
         "dapi": "./extension/dapi/index.ts",
