@@ -29,20 +29,20 @@ const errors = {
     }
 };
 enum EVENT {
-    READY = 'ready',
-    ACCOUNT_CHANGED = 'account_changed',
-    CONNECTED = 'connected',
-    CONNECTION_REJECTED = 'connection_rejected',
-    NETWORK_CHANGED = 'network_changed'
+    READY = 'neoline.ready',
+    ACCOUNT_CHANGED = 'neoline.account_changed',
+    CONNECTED = 'neoline.connected',
+    CONNECTION_REJECTED = 'neoline.connection_rejected',
+    NETWORK_CHANGED = 'neoline.network_changed'
 };
 export class Init {
     public version = '1.0';
     public EVENT = {
-        READY: 'ready',
-        ACCOUNT_CHANGED: 'account_changed',
-        CONNECTED: 'connected',
-        CONNECTION_REJECTED: 'connection_rejected',
-        NETWORK_CHANGED: 'network_changed'
+        READY: 'neoline.ready',
+        ACCOUNT_CHANGED: 'neoline.account_changed',
+        CONNECTED: 'neoline.connected',
+        CONNECTION_REJECTED: 'neoline.connection_rejected',
+        NETWORK_CHANGED: 'neoline.network_changed'
     };
     private EVENTLIST = {
         READY: {
