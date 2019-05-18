@@ -36,6 +36,14 @@ export function expand() {
 }
 
 (function init() {
+    if (navigator.language === 'zh-CN') {
+        getStorage('lang', res => {
+            if (res === undefined) {
+                currLang = 'zh_CN';
+                setStorage({lang: currLang});
+            }
+        });
+    }
     chrome.webRequest.onBeforeRequest.addListener(
         (details: any) => {
             if (details.url.indexOf(chrome.runtime.getURL('/index.html') < 0)) {

@@ -55,7 +55,7 @@ export class SettingDetailComponent implements OnInit {
             this.lang = res;
         }, (err) => {
             this.global.log('get lang setting failed', err);
-            this.lang = 'zh_CN';
+            this.lang = 'en';
         });
         let query = {};
         query['symbol'] = this.rateCurrency;

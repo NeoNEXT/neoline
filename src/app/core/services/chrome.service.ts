@@ -278,7 +278,7 @@ export class ChromeService {
                     case 'en':
                         break;
                     default:
-                        lang = 'zh_CN';
+                        lang = 'en';
                 }
                 return of(lang);
             } catch (e) {
@@ -293,7 +293,7 @@ export class ChromeService {
                         case 'en':
                             break;
                         default:
-                            res = 'zh_CN';
+                            res = 'en';
                     }
                     resolve(res);
                 });
