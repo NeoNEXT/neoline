@@ -13,7 +13,7 @@ export class TransferService {
         private http: HttpService,
         private global: GlobalService,
     ) {}
-    public create(from: string, to: string, asset: string, amount: number, fee: number = 0): Observable<Transaction> {
+    public create(from: string, to: string, asset: string, amount: number, fee: number = 0, decimals: number = 0): Observable<Transaction> {
         if (this.neon.isAsset(asset)) {
             return new Observable(observer => {
                 this.getBalance(from, asset).subscribe((balance) => {
@@ -31,7 +31,7 @@ export class TransferService {
             });
         } else {
             return new Observable(observer => {
-                const newTx = this.neon.createTxForNEP5(from, to, asset, amount);
+                const newTx = this.neon.createTxForNEP5(from, to, asset, amount, decimals);
                 if (fee > 0 && asset !== GAS) {
                     this.addFee(from, newTx, fee).subscribe(res => {
                         observer.next(res);

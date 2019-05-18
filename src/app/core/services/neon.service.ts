@@ -269,6 +269,7 @@ export class NeonService {
             assetId = assetId.substring(2);
         }
         const newTx = new tx.ContractTransaction();
+
         newTx.addOutput({ assetId, value: new Fixed8(amount), scriptHash: toScript });
         let curr = 0.0;
         for (let item of balances) {
@@ -287,7 +288,7 @@ export class NeonService {
         }
         return newTx;
     }
-    public createTxForNEP5(from: string, to: string, scriptHash: string, amount: number): Transaction {
+    public createTxForNEP5(from: string, to: string, scriptHash: string, amount: number, decimals: number): Transaction {
         const fromScript = wallet.getScriptHashFromAddress(from);
         const toScript = wallet.getScriptHashFromAddress(to);
         if (fromScript.length != 40 || toScript.length != 40) {
@@ -300,9 +301,10 @@ export class NeonService {
             args: [
                 u.reverseHex(fromScript),
                 u.reverseHex(toScript),
-                sc.ContractParam.byteArray(new u.Fixed8(amount), 'fixed8'),
+                amount * Math.pow(10, decimals)
             ]
         }) + 'f1';
+        console.log(newTx);
         newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
         const uniqTag = `from NEOLine at ${new Date().getTime()}`;
         newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));

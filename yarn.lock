@@ -225,25 +225,25 @@
   dependencies:
     tslib "^1.9.0"
 
-"@cityofzion/neon-api@^4.3.3":
-  version "4.3.3"
-  resolved "https://registry.yarnpkg.com/@cityofzion/neon-api/-/neon-api-4.3.3.tgz#c474f3837472778a89f08013aae3c8397f8e5dae"
-  integrity sha512-ZcqoogYUP4S81eY8+wE9LX+QFEAOfauM2JZzp5uqht16xjR/IG3kMsW19KMuFyxGJKxZ1NgKOXTfpH1ppXIDQA==
+"@cityofzion/neon-api@^4.5.2":
+  version "4.5.2"
+  resolved "https://registry.yarnpkg.com/@cityofzion/neon-api/-/neon-api-4.5.2.tgz#8541afb787f64d3988bdc8a29f8c4d57845a453c"
+  integrity sha512-SDoceftXbj2YBSQyzvRSQaZIbN1Ad0+3uf5ZxEJxRJzqhTnAm9yxuIhrv32eDRvCWhOHq7OqMfLiEAe9GeyVbQ==
   dependencies:
-    "@cityofzion/neon-core" "^4.3.2"
+    "@cityofzion/neon-core" "^4.5.2"
     axios "0.18.0"
 
-"@cityofzion/neon-core@^4.3.2":
-  version "4.3.2"
-  resolved "https://registry.yarnpkg.com/@cityofzion/neon-core/-/neon-core-4.3.2.tgz#8e685dd4f94ea3c47b65ce3259262b24232d97f8"
-  integrity sha512-ERJEc6/p+8d8ZfJiAP2Sao+GTR9Qxp3qp24L3+Bdmk69AdJo4T0SoP934Od2S3MKRB9POF3GNzuP2vCY+VYcew==
+"@cityofzion/neon-core@^4.5.2":
+  version "4.5.2"
+  resolved "https://registry.yarnpkg.com/@cityofzion/neon-core/-/neon-core-4.5.2.tgz#b487b88b149caa6ff1f07addbd4b4b18ad6642a6"
+  integrity sha512-smdpq5pwX8JNw4jxK348YJJMdr2naK59CcPakNcTbUjEL3dXMKNNV17/s3uMuHiAP5J1OjQ/dkJWCoVhtgPRyA==
   dependencies:
-    "@types/bn.js" "4.11.3"
+    "@types/bn.js" "4.11.5"
     "@types/bs58" "4.0.0"
     "@types/crypto-js" "3.1.43"
-    "@types/elliptic" "6.4.1"
-    "@types/loglevel" "1.5.3"
-    "@types/node" "10.12.18"
+    "@types/elliptic" "6.4.6"
+    "@types/loglevel" "1.5.4"
+    "@types/node" "11.13.4"
     axios "0.18.0"
     bignumber.js "7.2.1"
     bn.js "4.11.8"
@@ -257,21 +257,21 @@
     secure-random "1.1.1"
     wif "2.0.6"
 
-"@cityofzion/neon-js@^4.3.3":
-  version "4.3.3"
-  resolved "https://registry.yarnpkg.com/@cityofzion/neon-js/-/neon-js-4.3.3.tgz#805b910babd12e9c4b958cea25a35bd03597f5e2"
-  integrity sha512-0CCUmC2cP3NZvBqeCN5bDjqF6Z03G6GK4VUu/RPSvlaV8oUkuFsCF4uxacorXhpsmLhQGtS4xBZPGq3cyDuQ8A==
+"@cityofzion/neon-js@^4.5.2":
+  version "4.5.2"
+  resolved "https://registry.yarnpkg.com/@cityofzion/neon-js/-/neon-js-4.5.2.tgz#d1b27e78d00b129139d733e93da2b66143d21fc4"
+  integrity sha512-GBkWpHUJ3yzkEVDxF7+y2Tu0t6L1i4VSavorrxT3rTFvcs3d5kswgihfsvZZRzj2/f69vbOmJ4oTvok9V02VlQ==
   dependencies:
-    "@cityofzion/neon-api" "^4.3.3"
-    "@cityofzion/neon-core" "^4.3.2"
-    "@cityofzion/neon-nep5" "^4.3.2"
+    "@cityofzion/neon-api" "^4.5.2"
+    "@cityofzion/neon-core" "^4.5.2"
+    "@cityofzion/neon-nep5" "^4.5.2"
 
-"@cityofzion/neon-nep5@^4.3.2":
-  version "4.3.2"
-  resolved "https://registry.yarnpkg.com/@cityofzion/neon-nep5/-/neon-nep5-4.3.2.tgz#10035efa7cdd20fd7c17168e2c4b0d0541d15101"
-  integrity sha512-EWjlW3xIDI3FifmGNnYTr6c0LkScYb4XpuzS+UzpFvlpnvyWlXUrIKQ42g+ongsKxuvXAifeCEC2Qfwp81XA+A==
+"@cityofzion/neon-nep5@^4.5.2":
+  version "4.5.2"
+  resolved "https://registry.yarnpkg.com/@cityofzion/neon-nep5/-/neon-nep5-4.5.2.tgz#5008b3826c475da082dd6d040f422333179d4445"
+  integrity sha512-pvuZRGVQDHiK8SpBwWd2rH6d2yoDs+lUZbEZ/lOB/yilksPJu/dvw6gAzAXfs/9l9ZH8tfkomoFfCn6+rxp8Yw==
   dependencies:
-    "@cityofzion/neon-core" "^4.3.2"
+    "@cityofzion/neon-core" "^4.5.2"
 
 "@ngtools/webpack@7.3.1":
   version "7.3.1"
@@ -321,10 +321,10 @@
   dependencies:
     "@types/node" "*"
 
-"@types/bn.js@4.11.3":
-  version "4.11.3"
-  resolved "https://registry.yarnpkg.com/@types/bn.js/-/bn.js-4.11.3.tgz#0f09e53e98659b007d7019261ddab9178135df38"
-  integrity sha512-auZ3vEo3UW8tZc9NhF0MTnutKlf+YhsfC3+dwskFcil/EoqqZF60pGuJ2v2Ae1OJTUp3DJnjOJMqrpkmKB904w==
+"@types/bn.js@4.11.5":
+  version "4.11.5"
+  resolved "https://registry.yarnpkg.com/@types/bn.js/-/bn.js-4.11.5.tgz#40e36197433f78f807524ec623afcf0169ac81dc"
+  integrity sha512-AEAZcIZga0JgVMHNtl1CprA/hXX7/wPt79AgR4XqaDt7jyj3QWYw6LPoOiznPtugDmlubUnAahMs2PFxGcQrng==
   dependencies:
     "@types/node" "*"
 
@@ -340,27 +340,27 @@
   resolved "https://registry.yarnpkg.com/@types/crypto-js/-/crypto-js-3.1.43.tgz#b859347d6289ba13e347c335a4c9efa63337a748"
   integrity sha512-EHe/YKctU3IYNBsDmSOPX/7jLHPRlx8WaiDKSY9JCTnJ8XJeM4c0ZJvx+9Gxmr2s2ihI92R+3U/gNL1sq5oRuQ==
 
-"@types/elliptic@6.4.1":
-  version "6.4.1"
-  resolved "https://registry.yarnpkg.com/@types/elliptic/-/elliptic-6.4.1.tgz#7f922c6caa7f6f1022a33e3c39276c71e20348b1"
-  integrity sha512-RooUsMo8g+m4SfU8m4AOf88EvcIikO7PVIlE2ujmK4R0KO0bRSGuYPR5dLvVy+e9a24dFXnPYYX6zwIFYTdPDg==
+"@types/elliptic@6.4.6":
+  version "6.4.6"
+  resolved "https://registry.yarnpkg.com/@types/elliptic/-/elliptic-6.4.6.tgz#16fe24b8a47d98377eb97e683fa47c5831bcb4a4"
+  integrity sha512-rAQEVgU0P+VWWTjUw3yGlVeDezyObfjfWq1d1noDOKB1VldM1u6Uvz4Va6eGkWUSDRFfDCOQmiRvqHRO8EvZGg==
   dependencies:
     "@types/bn.js" "*"
 
-"@types/loglevel@1.5.3":
-  version "1.5.3"
-  resolved "https://registry.yarnpkg.com/@types/loglevel/-/loglevel-1.5.3.tgz#adfce55383edc5998a2170ad581b3e23d6adb5b8"
-  integrity sha512-TzzIZihV+y9kxSg5xJMkyIkaoGkXi50isZTtGHObNHRqAAwjGNjSCNPI7AUAv0tZUKTq9f2cdkCUd/2JVZUTrA==
+"@types/loglevel@1.5.4":
+  version "1.5.4"
+  resolved "https://registry.yarnpkg.com/@types/loglevel/-/loglevel-1.5.4.tgz#6e296bf20d9f6b0a3274cfb01a918f1d634e4c32"
+  integrity sha512-8dx4ckP0vndJeN+iKZwdGiapLqFjVQ3JLOt92uqK0C63acs5NcPLbUOpfXCJkKVRjZLBQjw8NIGNBSsnatFnFQ==
 
 "@types/node@*":
   version "10.12.24"
   resolved "https://registry.yarnpkg.com/@types/node/-/node-10.12.24.tgz#b13564af612a22a20b5d95ca40f1bffb3af315cf"
   integrity sha512-GWWbvt+z9G5otRBW8rssOFgRY87J9N/qbhqfjMZ+gUuL6zoL+Hm6gP/8qQBG4jjimqdaNLCehcVapZ/Fs2WjCQ==
 
-"@types/node@10.12.18":
-  version "10.12.18"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-10.12.18.tgz#1d3ca764718915584fcd9f6344621b7672665c67"
-  integrity sha512-fh+pAqt4xRzPfqA6eh3Z2y6fyZavRIumvjhaCL753+TVkGKGhpPeyrJG2JftD0T9q4GF00KjefsQ+PQNDdWQaQ==
+"@types/node@11.13.4":
+  version "11.13.4"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-11.13.4.tgz#f83ec3c3e05b174b7241fadeb6688267fe5b22ca"
+  integrity sha512-+rabAZZ3Yn7tF/XPGHupKIL5EcAbrLxnTr/hgQICxbeuAfWtT0UZSfULE+ndusckBItcv4o6ZeOJplQikVcLvQ==
 
 "@types/node@~8.9.4":
   version "8.9.5"

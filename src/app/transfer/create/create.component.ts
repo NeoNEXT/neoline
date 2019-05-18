@@ -96,7 +96,7 @@ export class TransferCreateomponent implements OnInit {
         }
         this.creating = true;
         this.transfer.create(this.fromAddress, this.toAddress, this.balance.asset_id, this.amount,
-            this.checkFee ? this.fee : 0).subscribe((res) => {
+            this.checkFee ? this.fee : 0, this.balance.decimals).subscribe((res) => {
             this.dialog.open(PwdDialog).afterClosed().subscribe((pwd) => {
                 if (pwd && pwd.length) {
                     this.global.log('start transfer with pwd');
