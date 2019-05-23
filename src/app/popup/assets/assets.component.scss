@@ -1,10 +1,6 @@
-@import 'src/styles/popup-default';
-@import 'src/styles/theme-default';
-
 .popup-assets-top {
     width: 100%;
     height: 40px;
-    background-color: map-get($neo-line-default, 500);
     overflow: hidden;
     position: fixed;
     top: 64px;
@@ -13,7 +9,6 @@
         float: left;
         width: 10px;
         height: 18px;
-        @include bg($img-back);
         margin-top: 6px;
         margin-left: 22px;
 
@@ -31,7 +26,6 @@
         border-radius: 15px;
         font-size: 14px;
         margin-right: 15px;
-        color: map-get($neo-line-default, 500);
         font-weight: 500;
         text-align: center;
 
@@ -39,7 +33,6 @@
             width: 12px;
             height: 12px;
             display: inline-block;
-            @include bg($img-manage-asset);
         }
     }
 
@@ -54,13 +47,11 @@
         font-size: 12px;
         margin-right: 15px;
         padding: 0 20px;
-        background: map-get($neo-line-default, 50);
         font-weight: 500;
         text-align: left;
         border: none;
         span {
             display: inline-block;
-            @include bg($img-search);
             width: 12px;
             height: 12px;
             margin-right: 8px;
@@ -69,9 +60,6 @@
             width: 240px;
             border: none;
             font-size: 12px;
-        }
-        ::-webkit-input-placeholder { 
-            color: map-get($colors, 9fa8bd);
         }
     }
 }
@@ -90,12 +78,10 @@
         line-height: 456px;
         text-align: center;
         font-size: 15px;
-        color: map-get($colors, f2f2f2);
     }
 
     .search-title {
         margin: 15px 0;
-        color: map-get($colors, 999999);
         font-size: 12px;
         font-weight: 500;
         margin-left: 15px;

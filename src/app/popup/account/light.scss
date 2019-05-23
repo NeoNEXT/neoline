@@ -1,0 +1,47 @@
+@import 'src/styles/popup-default';
+@import 'src/styles/theme-default';
+
+.popup-account-header {
+    background: linear-gradient(0deg, rgba(113, 120, 221, 1), rgba(81, 91, 227, 1));
+    border-top: 1px solid rgba(81, 91, 227, 1);
+
+    .popup-account-option {
+        .back-btn {
+            @include bg($img-back);
+        }
+
+        .option-right {
+            span:first-child {
+                @include bg($img-edit);
+            }
+
+            span:last-child {
+                @include bg($img-qrcode);
+            }
+        }
+    }
+
+    .popup-account-logo {
+        background-color: white;
+    }
+}
+
+.popup-account-address {
+    border: 1px solid map-get($colors, e5e5e5);
+}
+
+.popup-account-toolbar {
+    button {
+        color: map-get($neo-line-default, 50);
+    }
+
+    button:first-child {
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+    }
+
+    button:last-child {
+        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+        color: map-get($neo-line-default, 500);
+    }
+}

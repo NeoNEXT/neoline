@@ -26,7 +26,7 @@ import {
 
 @Component({
     templateUrl: 'account.component.html',
-    styleUrls: ['account.component.scss']
+    styleUrls: ['account.component.scss', './dark.scss', './light.scss']
 })
 export class PopupAccountComponent implements OnInit {
     public address: string;

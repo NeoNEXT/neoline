@@ -19,7 +19,7 @@ import {
 @Component({
     selector: 'app-asset',
     templateUrl: 'asset.component.html',
-    styleUrls: ['asset.component.scss']
+    styleUrls: ['asset.component.scss', './light.scss', './dark.scss']
 })
 export class PopupAssetComponent implements OnInit {
     @Input() asset: Balance;

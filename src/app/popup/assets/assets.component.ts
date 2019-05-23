@@ -31,7 +31,7 @@ import {
 
 @Component({
     templateUrl: 'assets.component.html',
-    styleUrls: ['assets.component.scss']
+    styleUrls: ['assets.component.scss', './dark.scss', './light.scss']
 })
 export class PopupAssetsComponent implements OnInit {
     public allAssets: PageData < Asset > ; // 所有的资产

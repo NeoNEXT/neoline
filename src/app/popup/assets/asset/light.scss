@@ -1,0 +1,40 @@
+@import 'src/styles/popup-default';
+
+.popup-asset {
+    &:hover {
+        background-color: map-get($colors, f4f7fc);
+    }
+
+    .popup-asset-top {
+        .operator {
+            span {
+                @include bg($img-omi);
+            }
+
+            button {
+                color: map-get($colors, 484e6d);
+                background: rgba(255, 255, 255, 1);
+                box-shadow: 0px 1px 12px 0px rgba(0, 11, 131, 0.3);
+            }
+
+        }
+
+    }
+
+    .popup-asset-bottom {
+        .left {
+            .amount {
+                color: map-get($colors, 333333);
+            }
+        }
+
+        .type,
+        .right {
+            color: map-get($colors, 9fa8bd);
+        }
+    }
+}
+
+hr {
+    border-color: map-get($colors, f2f2f2);
+}

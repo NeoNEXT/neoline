@@ -1,0 +1,52 @@
+@import 'src/styles/popup-default';
+@import 'src/styles/theme-default';
+
+.popup-authorization-list-head {
+    background-color: map-get($neo-line-default, 500);
+    .btn-back {
+        @include bg($img-back);
+    }
+    .title {
+        color: white;
+    }
+}
+
+.popup-authorization-list-content {
+    .empty {
+        color: #999999;
+    }
+    .authorization-item {
+        border-bottom: 1px solid #e5e5e5;
+        .info-box {
+            .top {
+                .websit-title {
+                    color: #282828;
+                }
+                .websit-status {
+                    &.success {
+                        color: #7178DD;
+                        background: #F4F7FC url($img-authorization-success) no-repeat 6px;
+                    }
+                    &.fail {
+                        color: #999999;
+                        background: #F2F2F2 url($img-authorization-fail) no-repeat 6px;
+                    }
+                }
+            }
+            .websit-url {
+                color: #999999;
+            }
+        }
+        .remove-btn {
+            color: #7A87A9;
+            border: 1px solid rgba(122,135,169,1);
+        }
+
+    }
+    .clear-all {
+        background: #F3F2FF;
+        color: #7178DD;
+    }
+}
+
+

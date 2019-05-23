@@ -1,0 +1,60 @@
+@import 'src/styles/popup-default';
+
+.popup-about-logo1 {
+    @include bg($img-logo);
+}
+
+.popup-about-logo2 {
+    @include bg($img-about-logo);
+}
+
+.popup-about-version {
+    color: map-get($colors, 9fa8bd);
+}
+
+.popup-about {
+    .popup-about-privacy-item {
+        div {
+            p {
+                color: #282828;
+            }
+        }
+
+        div:first-child {
+            @include bg($img-privacy);
+
+            &:hover {
+                @include bg($img-privacy-hover);
+            }
+        }
+
+        div:last-child {
+            @include bg($img-item);
+
+            &:hover {
+                @include bg($img-item-hover);
+            }
+        }
+    }
+
+    @mixin site-contact($bgurl, $bgurl-hover) {
+        @include bg($bgurl);
+
+        &:hover {
+            @include bg($bgurl-hover);
+        }
+    }
+
+    .popup-about-site {
+        position: relative;
+    }
+
+    .popup-about-contact {
+        @include site-contact($img-contact, $img-contact-hover);
+    }
+
+    .popup-about-contact p,
+    .popup-about-site p {
+        color: #282828;
+    }
+}

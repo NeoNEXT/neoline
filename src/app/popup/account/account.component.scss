@@ -1,11 +1,6 @@
-@import 'src/styles/popup-default';
-@import 'src/styles/theme-default';
-
 .popup-account-header {
     width: 100%;
     height: 113px;
-    background: linear-gradient(0deg, rgba(113, 120, 221, 1), rgba(81, 91, 227, 1));
-    border-top: 1px solid rgba(81, 91, 227, 1);
 
     .popup-account-option {
         overflow: hidden;
@@ -17,7 +12,6 @@
         .back-btn {
             width: 10px;
             height: 18px;
-            @include bg($img-back);
             cursor: pointer;
         }
 
@@ -31,11 +25,6 @@
 
             span:first-child {
                 margin-right: 22px;
-                @include bg($img-edit);
-            }
-
-            span:last-child {
-                @include bg($img-qrcode);
             }
         }
     }
@@ -44,7 +33,6 @@
         width: 84px;
         height: 84px;
         border-radius: 50%;
-        background-color: white;
         margin: auto;
         margin-top: 27px;
 
@@ -74,7 +62,6 @@
     width: 325px;
     height: auto;
     padding: 14px 21px;
-    border: 1px solid map-get($colors, e5e5e5);
     margin: auto;
     margin-bottom: 50px;
 
@@ -98,21 +85,16 @@
         height: 40px;
         line-height: 40px;
         text-align: center;
-        color: map-get($neo-line-default, 50);
         font-size: 15px;
         font-weight: 500;
     }
 
     button:first-child {
-        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
-        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
         border-radius: 20px;
     }
 
     button:last-child {
-        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
         border-radius: 20px;
-        color: map-get($neo-line-default, 500);
         margin-top: 15px;
     }
 }
