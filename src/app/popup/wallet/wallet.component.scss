@@ -6,18 +6,16 @@
     min-height: 100%;
     padding-bottom: 30px;
     border: 1px solid;
-    border-color: rgba(0, 0, 0, 0);
-    background: linear-gradient(0deg, rgba(113,120,221,1), rgba(81,91,227,1));
 
     .popup-wallet-nav {
         width: 100%;
         height: 74px;
         overflow: hidden;
+
         .back-btn {
             float: left;
             width: 10px;
             height: 18px;
-            @include bg($img-back);
             margin-top: 27px;
             margin-left: 22px;
 
@@ -35,25 +33,16 @@
                 text-align: center;
                 margin-bottom: 6px;
                 font-size: 3.1vw;
-                color: map-get($neo-line-default, 50);
-
-                span.hibernate {
-                    color: map-get($colors, c2c6f5);
-                }
             }
 
             .popup-wallet-nav-item-block {
                 height: 4px;
-                background-color: map-get($neo-line-default, 50);
             }
-
         }
-
         .popup-wallet-nav-item-create {
             float: left;
             margin-left: 100px;
         }
-
         .popup-wallet-nav-item-import {
             float: right;
             margin-right: 100px;
@@ -61,3 +50,25 @@
     }
 }
 
+// .light-theme {
+    .popup-wallet {
+        border-color: rgba(0, 0, 0, 0);
+        background: linear-gradient(0deg, rgba(113, 120, 221, 1), rgba(81, 91, 227, 1));
+        .popup-wallet-nav {
+            .back-btn {
+                @include bg($img-back);
+            }
+            .popup-wallet-nav-item {
+                .popup-wallet-nav-item-link {
+                    color: map-get($neo-line-default, 50);
+                    span.hibernate {
+                        color: map-get($colors, c2c6f5);
+                    }
+                }
+                .popup-wallet-nav-item-block {
+                    background-color: map-get($neo-line-default, 50);
+                }
+            }
+        }
+    }
+// }

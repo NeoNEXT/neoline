@@ -4,32 +4,26 @@
     width: 300px;
     min-height: 410px;
     margin: auto;
-    background-color: white;
     padding-top: 33px;
-    box-shadow: 0 1px 2px 0 rgba(81, 227, 91, 0.35);
     margin-top: 20px;
 }
 
 .import-nav-box {
     display: flex;
     justify-content: center;
-    border-top: 1px solid #e5e5e5;
-    border-bottom: 1px solid #e5e5e5;
     span {
         cursor: pointer;
         height: 38px;
         line-height: 38px;
         flex-grow: 1;
-        color: #e5e5e5;
         text-align: center;
         font-size: 12px;
-        &.active {
-            color: white;
-            font-size: 14px
 
+        &.active {
+            font-size: 14px
         }
+
         &:hover {
-            color: white;
             font-size: 14px
         }
     }
@@ -44,16 +38,38 @@
         /* background: red; */
         opacity: 0;
     }
+
     .wallet-name-box {
         text-align: center;
         font-size: 14px;
     }
 }
 
-
-
 textarea {
-    border: 1px solid red;
     width: 100%;
     outline: none;
 }
+
+// .light-theme {
+    .content-item-box {
+        background-color: white;
+        box-shadow: 0 1px 2px 0 rgba(81, 227, 91, 0.35);
+    }
+    .import-nav-box {
+        border-top: 1px solid #e5e5e5;
+        border-bottom: 1px solid #e5e5e5;
+
+        span {
+            color: #e5e5e5;
+            &.active {
+                color: white;
+            }
+            &:hover {
+                color: white;
+            }
+        }
+    }
+    textarea {
+        border: 1px solid red;
+    }
+// }

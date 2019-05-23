@@ -3,7 +3,7 @@ import { NeonService, GlobalService, ChromeService } from '../core';
 
 @Component({
     templateUrl: 'home.component.html',
-    styleUrls: ['home.component.scss']
+    styles: [''],
 })
 export class HomeComponent implements OnInit {
     constructor(

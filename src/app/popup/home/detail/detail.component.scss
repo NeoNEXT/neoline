@@ -7,15 +7,13 @@
     .popup-home-tx-list {
         width: 100%;
         overflow-y: auto;
-        border: 1px solid transparent;
         transition: padding 0.2s;
 
         &::-webkit-scrollbar {
             display: none;
         }
 
-       &:hover {
-            border-top: 1px solid map-get($colors, f2f2f2);
+        &:hover {
             padding-top: 10px;
             padding-bottom: 40px;
 
@@ -35,10 +33,23 @@
     }
 
     .popup-home-notx {
-        color: map-get($colors, 999999);
         font-size: 14px;
         text-align: center;
         height: 192px;
         line-height: 192px;
     }
 }
+
+// .light-theme {
+    .popup-home-txs {
+        .popup-home-tx-list {
+            border: 1px solid transparent;
+            &:hover {
+                border-top: 1px solid map-get($colors, f2f2f2);
+            }
+        }
+        .popup-home-notx {
+            color: map-get($colors, 999999);
+        }
+    }
+// }

@@ -8,9 +8,7 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    background: #FFFFFF;
     border-radius: 4px;
-    box-shadow: 0 0 8px #969696;
     padding: $space;
 }
 
@@ -26,16 +24,29 @@ img {
     display: block;
     margin: $space auto;
 }
+
 p {
     font-size: 18px;
-    color: #333333;
     text-align: center;
     margin-top: $space;
 }
+
 p.tip {
     font-size: 14px;
 }
+
 button {
     display: block;
     margin: $space auto;
 }
+
+
+// .light-theme {
+    :host {
+        background: #FFFFFF;
+        box-shadow: 0 0 8px #969696;
+    }
+    p {
+        color: #333333;
+    }
+// }
