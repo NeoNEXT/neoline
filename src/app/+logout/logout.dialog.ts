@@ -3,7 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material';
 
 @Component({
     templateUrl: './logout.dialog.html',
-    styleUrls: ['./logout.dialog.scss']
+    styleUrls: ['./logout.dialog.scss', './dark.scss', './light.scss']
 })
 export class LogoutDialog implements OnInit {
     constructor(

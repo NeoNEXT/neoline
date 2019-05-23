@@ -22,7 +22,7 @@ declare var QRCode: any;
 
 @Component({
     templateUrl: 'account.component.html',
-    styleUrls: ['account.component.scss']
+    styleUrls: ['account.component.scss', './light.scss', './dark.scss']
 })
 export class AccountComponent implements OnInit {
     public w: Wallet;

@@ -5,7 +5,6 @@
 .nav {
     height: 240px;
     position: relative;
-    background: mat-color(mat-palette($neo-line-default, A400));
 }
 .nav .nav-account {
     position: absolute;
@@ -17,25 +16,21 @@
 .nav .avatar {
     width: 118px;
     height: 118px;
-    background: #E4E7EC;
     border-radius: 118px;
 }
 .nav .name {
     margin-left: 22px;
     font-size: 20px;
-    color: #FFFFFF;
 }
 .nav .modify-name {
     width: 23px;
     height: 23px;
     margin-left: 17px;
     cursor: pointer;
-    @include bg($img-edit);
 }
 .welcome {
     position: relative;
     margin: 60px;
-    background: #F4F7FC;
     border-radius: 8px;
 }
 .welcome img {
@@ -50,12 +45,10 @@
 }
 .welcome .info p.title {
     font-size: 24px;
-    color: #484E6D;
 }
 .welcome .info p.content {
     font-size: 14px;
     margin-top: $space;
-    color: #9FA8BD;
 }
 
 .body {
@@ -66,18 +59,15 @@
 }
 .address .title {
     font-size: 18px;
-    color: #333333;
 }
 #account-address {
     padding: $space;
-    border: 1px solid #E5E5E5;
     border-radius: 4px;
     margin: $space*2 0;
     font-size: 14px;
     display: block;
     width: 100%;
     resize: none;
-    color: #484E6D;
 }
 .address button {
     border-radius: 50px;
@@ -87,12 +77,10 @@
 }
 .qrcode .title {
     font-size: 18px;
-    color: #333333;
 }
 #qrcode {
     display: block;
     margin: $space auto;
-    background: #E4E7EC;
     width: 178px;
     height: 178px;
 }

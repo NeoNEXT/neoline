@@ -29,7 +29,7 @@ import { HttpClient } from '@angular/common/http';
 @Component({
     selector: 'neo-line',
     templateUrl: './app.component.html',
-    styleUrls: ['./app.component.scss']
+    styleUrls: ['./app.component.scss', './light.scss', './dark.scss']
 })
 export class AppComponent {
     public walletArr: Array < Wallet > ;

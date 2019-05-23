@@ -13,7 +13,6 @@
         display: inline-block;
         cursor: pointer;
         .name {
-            color: #FFFFFF;
             font-size: 16px;
             margin: 0 30px 0 15px;
             vertical-align: middle;
@@ -28,15 +27,11 @@
 ::ng-deep .nav-account-menu-box {
     .nav-account-menu-title {
         font-size: 14px;
-        color: #484E6D;
         margin-left: 16px;
     }
     .nav-account-item-box {
         height: 50px;
         line-height: 50px;
-        &:hover {
-            background: #F4F7FC;
-        }
         .selected-icon {
             width: 15px;
             height: 9px;
@@ -62,7 +57,6 @@
                 margin-left: 8px;
                 vertical-align: middle;
                 font-size: 14px;
-                color: #484E6D;
             }
         }
     }
@@ -73,9 +67,6 @@
         align-items: center;
         // line-height: 45px;
         cursor: pointer;
-        &:hover {
-            background: #F4F7FC;
-        }
         img {
             display: inline-block;
             width: 18px;
@@ -84,7 +75,6 @@
         }
         span {
             font-size: 14px;
-            color: #484E6D;
             margin-left: 20px;
         }
     }
@@ -108,13 +98,11 @@
     border-radius: 12px;
     font-size: 12px;
     border: 1px solid !important;
-    border-color: white;
 
     .nav-network-icon {
         width: 5px;
         height: 3px;
         display: inline-block;
-        background: url('/assets/images/net_dropdown_white.png') no-repeat center;
         background-size: 100%;
     }
 }
@@ -126,7 +114,6 @@
     margin-right: auto;
     margin-bottom: 15px;
     z-index: 10;
-    background: #FFFFFF;
     overflow: hidden;
 }
 @media screen and (max-width: 1200px) {
@@ -152,11 +139,9 @@
     .body.expand {
         border-radius: 8px;
         margin-top: -8px;
-        box-shadow: 0px 0px 16px #484e6d;
     }
 }
 .side-nav {
-    background: #f4f7fc;
     width: 75px;
     z-index: 6;
 }
@@ -169,7 +154,6 @@
     height: 60px;
     width: 60px;
     border-radius: 4px;
-    color: #969696;
     font-size: 14px;
     text-align: center;
     padding-top: 8px;
@@ -177,16 +161,6 @@
 .side-nav > div img {
     height: 27px;
     width: 27px;
-}
-.side-nav > div p {
-    color: #969696;
-}
-.side-nav > div.active {
-    background: mat-color($default-app-primary);
-    box-shadow: 0 0 $space #969696;
-}
-.side-nav > div.active p {
-    color: #FFFFFF;
 }
 .side-nav > div:not(.active) img {
     display: none;
