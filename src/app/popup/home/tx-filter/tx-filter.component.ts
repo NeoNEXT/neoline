@@ -12,7 +12,7 @@ import { TransferService } from '@/app/transfer/transfer.service';
 @Component({
     selector: 'app-tx-filter',
     templateUrl: 'tx-filter.component.html',
-    styleUrls: ['tx-filter.component.scss']
+    styleUrls: ['tx-filter.component.scss', './dark.scss', './light.scss']
 })
 export class PopupHomeTxFilterComponent implements OnInit, OnChanges {
     @Input() totalCount = 0;

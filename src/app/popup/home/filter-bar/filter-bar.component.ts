@@ -35,7 +35,7 @@ import { Unsubscribable } from 'rxjs';
 @Component({
     selector: 'app-filter-bar',
     templateUrl: 'filter-bar.component.html',
-    styleUrls: ['filter-bar.component.scss']
+    styleUrls: ['filter-bar.component.scss', './light.scss', './dark.scss']
 })
 export class PopupHomeFilterBarComponent
 implements OnChanges, OnInit, AfterViewChecked, OnDestroy {

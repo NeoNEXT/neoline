@@ -1,0 +1,73 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+@mixin symbolTheme {
+    border: 1px solid map-get($neo-line-default, 50);
+}
+
+@mixin symbolHoverTheme {
+    &:hover {
+        border-color: map-get($neo-line-default, 200);
+    }
+}
+
+.popup-home-top {
+    border-bottom: 1px solid map-get($colors, f2f2f2);
+    background-color: map-get($neo-line-default, 50);
+    .popup-home-top-filter {
+        border-top: 1px solid transparent;
+
+        .popup-home-top-filter-items {
+            div {
+                @include symbolTheme;
+            }
+
+            div.popup-home-top-filter-hover {
+                @include symbolHoverTheme;
+            }
+
+            div.popup-home-top-filter-active {
+                border: 1px solid map-get($neo-line-default, 500);
+            }
+
+            @keyframes loading {
+               0% {
+                   color: map-get($colors, 333333);
+                   border-color: map-get($neo-line-default, 500);
+               }
+               100% {
+                   color: map-get($colors, eeeeee);
+                   border-color: map-get($neo-line-default, 200);
+               }
+            }
+        }
+    }
+
+    .popup-home-top-more {
+        @include bg($img-down-arrow);
+    }
+
+    .popup-home-top-more-loading {
+        @include bg($img-loading);
+    }
+
+    .popup-home-top-option {
+        @include bg($img-all);
+        border-left: 1px solid map-get($colors, e5e5e5);
+    }
+}
+
+.popup-home-more {
+    background-color: map-get($neo-line-default, 50);
+    border-bottom: 1px solid map-get($colors, f2f2f2);
+    box-shadow: 0 3px 3px 0 rgba(81, 91, 227, 0.08);
+
+    div {
+        @include symbolTheme;
+        @include symbolHoverTheme;
+    }
+
+    div.popup-home-more-active {
+        border-color: map-get($neo-line-default, 500);
+    }
+}

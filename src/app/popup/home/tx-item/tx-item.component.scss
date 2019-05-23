@@ -7,7 +7,6 @@
     padding-left: $space;
     padding-right: $space;
     padding-bottom: $space;
-    border-bottom: 1px solid #e5e5e5;
     margin-bottom: 10px;
 
     .head {
@@ -16,7 +15,6 @@
 
         .time {
             font-size: 12px;
-            color: #999999;
         }
 
         .more-info-btn {
@@ -48,24 +46,12 @@
 
             .tx-type {
                 font-size: 14px;
-                color: #333333;
             }
 
             .status {
                 font-size: 10px;
-                background: #F2F9F2;
-                color: #6AD982;
                 padding: 2px 12px;
 
-                &.wait {
-                    background: #F9F6F2;
-                    color: #F79165
-                }
-
-                &.fail {
-                    background: #F7F7F7;
-                    color: #999999
-                }
             }
         }
 
@@ -76,23 +62,17 @@
 
             .asset-amount {
                 font-size: 15px;
-                color: #333333;
 
-                &.activity {
-                    color: #7178DD
-                }
             }
 
             .money-amount {
                 font-size: 12px;
-                color: #9FA8BD;
             }
         }
     }
 
     .info-more-box {
         .more-item {
-            background: #F4F7FC;
             border-radius: 4px;
             height: 38px;
             line-height: 38px;
@@ -101,7 +81,6 @@
             padding-right: 20px;
 
             .title {
-                color: #666666;
                 font-size: 12px;
             }
 
@@ -124,7 +103,6 @@
             }
 
             .info {
-                color: #333333;
                 font-size: 12px;
                 float: right;
             }
@@ -147,7 +125,6 @@
 
 
     &:hover {
-        background: lightgray;
         cursor: pointer;
     }
 }
