@@ -1,0 +1,22 @@
+@import 'src/styles/popup-default';
+
+.search-title {
+    color: map-get($colors, 999999);
+}
+.asset {
+    color: #333333;
+}
+.asset-id {
+    color: #9FA8BD;
+}
+.asset:not(:first-of-type) {
+    border-top: 1px solid #F4F7FC;
+}
+button:not(.watching) {
+    background: #C2C6F5 !important;
+}
+.search-input {
+    .search-prefix {
+        @include bg($img-search);
+    }
+}

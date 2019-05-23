@@ -29,7 +29,7 @@ import { TransferService } from '@/app/transfer/transfer.service';
 
 @Component({
     templateUrl: 'detail.component.html',
-    styleUrls: ['detail.component.scss']
+    styleUrls: ['detail.component.scss', './dark.scss', './light.scss']
 })
 export class AssetDetailComponent implements OnInit, OnDestroy {
     private status = {

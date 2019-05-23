@@ -1,0 +1,12 @@
+:host:hover {
+    background: #F4F7FC;
+}
+span.flex-1, .txid {
+    color: #484E6D;
+}
+.status {
+    &.wait {
+        background: #F9F6F2;
+        color: #F79165
+    }
+}

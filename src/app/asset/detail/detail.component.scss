@@ -22,16 +22,11 @@
     .info-box {
         flex-grow: 1;
         font-size: 12px;
-        .info-status {
-            color: rgba(0, 0, 0, 0.3);
-        }
     }
     button {
         height: 35px;
         border-radius: 17px;
-        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
         border-radius: 17px;
-        color: map-get($neo-line-default, 500);
         font-weight: 500;
         cursor: pointer;
         font-size: 12px;
@@ -59,13 +54,11 @@
 
     .balance {
         font-size: 26px;
-        color: #333333;
         font-weight: bold;
     }
     .info-content {
         flex-grow: 1;
         .asset-id {
-            color: #9FA8BD;
             font-size: 10px;
             white-space: nowrap;
             overflow: hidden;
@@ -91,7 +84,6 @@
 .rate-balance {
     font-size: 18px;
     font-weight: bold;
-    color: #9fa8bd;
 }
 
 .title {
@@ -112,9 +104,7 @@ pager {
 }
 
 .nomore {
-    color: #999999;
     font-size: 12px;
-    border-top: 1px solid #F4F7FC;
     padding: $space;
     text-align: center;
 }

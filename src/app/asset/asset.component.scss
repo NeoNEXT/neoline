@@ -10,7 +10,6 @@
     width: 300px;
     border-top-right-radius: 8px;
     border-bottom-right-radius: 8px;
-    box-shadow: 0 8px 16px #484e6d;
     height: 100%;
     z-index: 5;
 }
@@ -24,13 +23,11 @@
 .manage {
     margin: $space;
     padding: $space;
-    border: 1px solid #E5E5E5;
     text-align: center;
     border-radius: 6px;
     font-size: 16px;
     cursor: pointer;
     transition: 0.2s;
-    color: mat-color($default-app-primary);
 }
 .manage:hover {
     transform: scale(1.05);

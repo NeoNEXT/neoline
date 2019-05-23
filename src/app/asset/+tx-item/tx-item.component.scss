@@ -6,7 +6,6 @@
     transition: 0.2s;
 }
 :host:hover {
-    background: #F4F7FC;
     cursor: pointer;
 }
 // :host:nth-of-type(odd) {
@@ -15,7 +14,6 @@
 span.flex-1, .txid {
     padding: $space;
     overflow: hidden;
-    color: #484E6D;
     text-align: center;
     display: inline-flex;
     align-items: center;
@@ -27,10 +25,6 @@ span.flex-1, .txid {
     display: inline-block;
     margin-right: 10px;
     padding: 2px 4px;
-    &.wait {
-        background: #F9F6F2;
-        color: #F79165
-    }
 }
 .txid-value {
     width: 350px;
@@ -38,8 +32,8 @@ span.flex-1, .txid {
     text-overflow: ellipsis;
 }
 .txid {
-    width: 440px; 
-    display: inline-flex;  
+    width: 440px;
+    display: inline-flex;
 }
 
 @media screen and (max-width: 1200px) {

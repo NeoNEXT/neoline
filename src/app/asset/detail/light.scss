@@ -1,0 +1,33 @@
+@import 'src/styles/theme-default';
+
+.get-claim-box {
+    .info-box {
+        .info-status {
+            color: rgba(0, 0, 0, 0.3);
+        }
+    }
+    button {
+        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+        color: map-get($neo-line-default, 500);
+    }
+}
+
+.info {
+    .balance {
+        color: #333333;
+    }
+    .info-content {
+        .asset-id {
+            color: #9FA8BD;
+        }
+    }
+}
+
+.rate-balance {
+    color: #9fa8bd;
+}
+
+.nomore {
+    color: #999999;
+    border-top: 1px solid #F4F7FC;
+}

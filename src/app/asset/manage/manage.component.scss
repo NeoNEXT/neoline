@@ -10,7 +10,6 @@
     align-items: flex-end;
 }
 .search-title {
-    color: map-get($colors, 999999);
     font-size: 14px;
     font-weight: 500;
     margin-left: 30px;
@@ -23,7 +22,6 @@
     padding: $space 0;
     margin: 0 $space*2;
     font-size: 18px;
-    color: #333333;
     align-items: center;
     .avatar {
         width: 58px;
@@ -40,11 +38,7 @@
     white-space: nowrap;
 }
 .asset-id {
-    color: #9FA8BD;
     font-size: 14px;
-}
-.asset:not(:first-of-type) {
-    border-top: 1px solid #F4F7FC;
 }
 button {
     border-radius: 50px;
@@ -52,7 +46,6 @@ button {
     cursor: pointer;
 }
 button:not(.watching) {
-    background: #C2C6F5 !important;
     cursor: default;
 }
 pager {
@@ -65,7 +58,6 @@ pager {
     .search-prefix {
         width: 19px;
         height: 19px;
-        @include bg($img-search);
         margin-right: 19px;
         display: flex;
     }
