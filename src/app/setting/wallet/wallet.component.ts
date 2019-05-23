@@ -6,7 +6,7 @@ import { PopupConfirmDialogComponent } from '@/app/popup/_dialogs';
 
 @Component({
     templateUrl: 'wallet.component.html',
-    styleUrls: ['wallet.component.scss']
+    styleUrls: ['wallet.component.scss', './light.scss', './dark.scss']
 })
 export class SettingWalletComponent implements OnInit {
     public walletArr: Array<Wallet>;

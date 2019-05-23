@@ -25,7 +25,7 @@ import {
 } from 'rxjs/operators';
 @Component({
     templateUrl: './setting-detail.component.html',
-    styleUrls: ['./setting-detail.component.scss']
+    styleUrls: ['./setting-detail.component.scss', './dark.scss', './light.scss']
 })
 export class SettingDetailComponent implements OnInit {
     public lang = 'zh_CN';

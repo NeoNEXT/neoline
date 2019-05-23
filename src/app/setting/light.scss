@@ -1,0 +1,30 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+.nav {
+    box-shadow: 0 8px 16px #484e6d;
+}
+.menu {
+    color: #282828;
+}
+.menu:hover, .nav .menu.active {
+    background: #F4F7FC;
+}
+.menu.disabled {
+    color: #666666;
+}
+.menu .cursor {
+    background: mat-color($default-app-primary);
+}
+
+.menu {
+    .setting-dropdown {
+        @include bg($img-dropdown);
+    }
+}
+.setting {
+    .detail-item {
+        color: #666666;
+        color: map-get($colors, 666666);
+    }
+}

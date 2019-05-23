@@ -1,0 +1,122 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+section {
+    .title {
+        color: #333333;
+    }
+    .title-small {
+        color: #333333;
+    }
+    .tip {
+        color: map-get($colors, 999999);
+    }
+    .option-btn {
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        box-shadow: 0px 4px 8px 0px rgba(87, 83, 245, 0.4);
+        color: map-get($neo-line-default, 50);
+    }
+}
+
+section.lang {
+    @include bg($img-setting-one);
+}
+
+section.cache {
+    @include bg($img-setting-two);
+}
+
+section.rate {
+    @include bg($img-setting-three);
+}
+
+section.privacy {
+    @include bg($img-setting-four);
+}
+
+.border-bottom {
+    border-bottom: 1px solid #E4E7EC;
+}
+
+.lang {
+    mat-radio-button {
+        color: #333333;
+    }
+}
+
+.rate {
+    .asset-btn {
+        border: 1px solid #e5e5e5 !important;
+        color: #484e6d !important;
+        .asset-icon {
+            @include bg($img-setting-rate-dropdown);
+        }
+    }
+}
+
+.privacy {
+    .view-all {
+        color: #7178dd;
+    }
+
+    .view-all-icon {
+        @include bg($img-setting-dropdown);
+    }
+
+    .privacy-group {
+        .privacy-item {
+            .avatar {
+                background: rgba(73, 73, 73, 1);
+            }
+
+            .info {
+                .name {
+                    color: #282828;
+                }
+                .address {
+                    color: #999999;
+                }
+            }
+
+            .approval {
+                color: #7178dd;
+                background: #F4F7FC;
+
+                span {
+                    @include bg($img-setting-authed);
+                }
+            }
+
+            .refuse {
+                color: #999999;
+                background: #f2f2f2;
+
+                span {
+                    @include bg($img-setting-unauth);
+                }
+            }
+
+            .delete {
+                color: #f96c6c;
+
+                span {
+                    @include bg($img-setting-delete);
+                }
+            }
+        }
+
+        .privacy-item:not(:last-child) {
+            border-bottom: 1px solid #E4E7EC;
+        }
+
+        .empty {
+            color: map-get($colors, 999999);
+        }
+    }
+}
+
+.mat-menu-item {
+    &:hover {
+        background: #f0efff;
+    }
+}

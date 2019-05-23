@@ -11,13 +11,11 @@
     width: 300px;
     border-top-right-radius: 8px;
     border-bottom-right-radius: 8px;
-    box-shadow: 0 8px 16px #484e6d;
     height: 100%;
     z-index: 5;
 }
 .menu {
     padding: 0 $space*2;
-    color: #282828;
     font-size: 14px;
     cursor: pointer;
     transition: 0.2s;
@@ -25,15 +23,10 @@
     position: relative;
     line-height: 60px;
 }
-.menu:hover, .nav .menu.active {
-    background: #F4F7FC;
-}
 .menu.disabled {
     cursor: not-allowed;
-    color: #666666;
 }
 .menu .cursor {
-    background: mat-color($default-app-primary);
     width: 4px;
     height: 40px;
     position: absolute;
@@ -54,7 +47,6 @@
         width: 8px;
         height: 4px;
         display: inline-block;
-        @include bg($img-dropdown);
         position: absolute;
         top: 50%;
         margin-top: -2px;
@@ -72,11 +64,9 @@
     .detail-item {
         height: 50px;
         line-height: 50px;
-        color: #666666;
         font-size: 14px;
         font-weight: 500;
         padding-left: 48px;
-        color: map-get($colors, 666666);
     }
 }
 

@@ -6,7 +6,6 @@
     align-items: center;
 }
 .nav .name {
-    color: #FFFFFF;
     font-size: 16px;
     margin: 0 $space;
 }
@@ -28,9 +27,6 @@
 }
 
 .login {
-    .mat-toolbar {
-        background: white;;
-    }
     .nav-network {
         width: 107px;
         height: 25px;
@@ -42,7 +38,6 @@
             width: 5px;
             height: 3px;
             display: inline-block;
-            background: url('/assets/images/net_dropdown_black.png') no-repeat center;
             background-size: 100%;
         }
     }
@@ -57,7 +52,6 @@
         margin-left: -220px;
         height: 550px;
         width: 510px;
-        background: url('/assets/images/login_bg.png') no-repeat center;
         background-size: 100%;
         padding-top: 70px;
         padding-left: 100px;
@@ -70,7 +64,6 @@
             margin-top: 40px;
             font-size:16px;
             font-weight: 500;
-            color:rgba(102,102,102,1);
         }
     }
     .login-input {
@@ -89,11 +82,7 @@
                 display: inline-block;
                 width: 17px;
                 height: 14px;
-                background: url('/assets/images/show_pwd.png') center center/contain no-repeat;
                 margin-top: -3px;
-            }
-            span.hide-pwd {
-                background: url('/assets/images/hide_pwd.png') center center/contain no-repeat;
             }
         }
     }
@@ -104,7 +93,6 @@
         margin-top: 107px;
         font-size: 15px;
         font-weight: 500;
-        box-shadow: 0 2px 4px 0 rgba(87,83,245,0.4);
         border-radius: 40px;
         display: block;
     }
