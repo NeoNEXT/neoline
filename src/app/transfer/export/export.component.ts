@@ -15,7 +15,7 @@ import {
 
 @Component({
     templateUrl: 'export.component.html',
-    styleUrls: ['export.component.scss']
+    styleUrls: ['export.component.scss', './dark.scss', './light.scss']
 })
 export class TransferExportComponent implements OnInit {
     public wallet: Wallet;

@@ -14,7 +14,7 @@ declare var QRCode: any;
 
 @Component({
     templateUrl: 'receive.component.html',
-    styleUrls: ['receive.component.scss']
+    styleUrls: ['receive.component.scss', './light.scss', './dark.scss']
 })
 export class TransferReceiveComponent implements OnInit {
     public address: string;

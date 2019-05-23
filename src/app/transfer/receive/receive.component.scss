@@ -8,9 +8,7 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    background: #FFFFFF;
     border-radius: 4px;
-    box-shadow: 0 0 8px #969696;
     padding: $space;
     overflow: hidden;
 }
@@ -21,8 +19,6 @@
     position: absolute;
     right: -40px;
     top: -40px;
-    background: #C2C6F5;
-    color: #FFFFFF;
 }
 
 .close mat-icon {
@@ -47,12 +43,10 @@
 }
 
 textarea {
-    color: #484E6D;
     text-align: center;
     font-size: 12px;
     padding: $space/2;
     margin: $space 0;
-    border: 1px solid #E4E7EC;
     resize: none;
     display: block;
     width: 100%;
@@ -64,10 +58,8 @@ textarea {
 .address {
     height: 38px;
     line-height: 38px;
-    color: #666666;
     text-align: center;
     font-size: 12px;
-    border: 1px solid #E4E7EC;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;

@@ -20,7 +20,7 @@ import {
 
 @Component({
     templateUrl: 'create.component.html',
-    styleUrls: ['create.component.scss']
+    styleUrls: ['create.component.scss', './light.scss', './dark.scss']
 })
 export class WalletCreateComponent implements OnInit, AfterContentInit {
     public loading = false;

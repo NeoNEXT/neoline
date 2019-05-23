@@ -1,0 +1,40 @@
+:host {
+    background: #FFFFFF;
+    box-shadow: 0 0 8px #969696;
+}
+
+.close {
+    background: #C2C6F5;
+    color: #FFFFFF;
+}
+
+input.pwd {
+    border: 1px solid #E4E7EC;
+    background: #FFFFFF;
+}
+
+input.pwd::placeholder {
+    color: #999999;
+}
+
+p.name {
+    color: #333333;
+}
+
+p.address {
+    border: 1px solid #E4E7EC;
+    color: #666666;
+}
+
+p.title {
+    color: #333333;
+}
+
+p.title-pwd {
+    color: #333333;
+}
+
+.tip {
+    background: #F3F2FF;
+    color: #9FA8BD;
+}

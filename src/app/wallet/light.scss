@@ -1,0 +1,28 @@
+@import 'src/styles/theme-default';
+
+.nav {
+    border-bottom: 1px solid #e5e5e5;
+    .import-box {
+        &.active {
+            border-bottom: 3px solid mat-color($default-app-primary);
+        }
+        &.active span {
+            color: #333333;
+        }
+        .import-type {
+            color: #999999;
+        }
+    }
+}
+.nav span {
+    color: #999999;
+}
+.nav span.active {
+    color: #333333;
+    border-bottom: 3px solid mat-color($default-app-primary);
+}
+@media screen and (min-width: 961px) {
+    :host {
+        background-image: url('/assets/images/bg_wallet.png');
+    }
+}

@@ -24,12 +24,10 @@ p.title {
     font-size: 30px;
     font-weight: 600;
     margin-top: 30px;
-    color: #333333;
     text-align: center;
 }
 p.tip {
     font-size: 16px;
-    color: #666666;
     margin-top: $space*2;
     margin-bottom: $space*3;
 }
@@ -53,12 +51,7 @@ button {
         display: inline-block;
         width: 17px;
         height: 14px;
-        @include bg($img-show-pwd);
         margin-top: -3px;
-    }
-
-    span.hide-pwd {
-        @include bg($img-hide-pwd);
     }
 }
 

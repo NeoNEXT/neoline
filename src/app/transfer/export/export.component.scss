@@ -8,9 +8,7 @@
     left: 50%;
     top: 50%;
     transform: translate(-50%, -50%);
-    background: #FFFFFF;
     border-radius: 4px;
-    box-shadow: 0 0 8px #969696;
     padding: $space;
     overflow: hidden;
 }
@@ -21,8 +19,6 @@
     position: absolute;
     right: -40px;
     top: -40px;
-    background: #C2C6F5;
-    color: #FFFFFF;
 }
 
 .close mat-icon {
@@ -46,17 +42,11 @@ mat-spinner {
 input.pwd {
     height: 38px;
     line-height: 38px;
-    border: 1px solid #E4E7EC;
     border-radius: 4px;
-    background: #FFFFFF;
     padding-left: 10px;
     margin-top: $space;
     display: block;
     width: 100%;
-}
-
-input.pwd::placeholder {
-    color: #999999;
 }
 
 p {
@@ -67,7 +57,6 @@ p.name {
     text-align: center;
     font-size: 14px;
     font-weight: bold;
-    color: #333333;
     margin: $space 0;
 }
 
@@ -75,10 +64,8 @@ p.address {
     height: 38px;
     line-height: 38px;
     text-align: center;
-    border: 1px solid #E4E7EC;
     border-radius: 4px;
     font-size: 12px;
-    color: #666666;
 }
 
 p.wif {
@@ -91,7 +78,6 @@ p.wif {
 p.title {
     text-align: center;
     font-size: 15px;
-    color: #333333;
     margin: $space 0;
     font-weight: bold;
 }
@@ -99,7 +85,6 @@ p.title {
 p.title-pwd {
     margin-left: 10px;
     font-size: 13px;
-    color: #333333;
 }
 
 .btns {
@@ -118,8 +103,6 @@ p.title-pwd {
 
 .tip {
     padding: 10px 25px 10px 12px;
-    background: #F3F2FF;
-    color: #9FA8BD;
     font-size: 12px;
     margin-top: $space;
     line-height: 18px;

@@ -1,0 +1,17 @@
+@import 'src/styles/popup-default';
+
+p.title {
+    color: #333333;
+}
+p.tip {
+    color: #666666;
+}
+button {
+    span {
+        @include bg($img-show-pwd);
+    }
+
+    span.hide-pwd {
+        @include bg($img-hide-pwd);
+    }
+}
