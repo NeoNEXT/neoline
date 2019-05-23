@@ -1,5 +1,7 @@
 @import 'src/app/popup/home/common-scss/common.scss';
 @import 'src/styles/theme-default';
+@import './light';
+@import './dark';
 
 .popup-home-tx {
     overflow: hidden;

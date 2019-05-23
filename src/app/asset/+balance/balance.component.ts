@@ -22,7 +22,7 @@ import {
 @Component({
     selector: 'balance',
     templateUrl: './balance.component.html',
-    styleUrls: ['./balance.component.scss', './dark.scss', './light.scss']
+    styleUrls: ['./balance.component.scss']
 })
 export class BalanceComponent implements OnInit {
     imageUrl = '';

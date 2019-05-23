@@ -40,7 +40,7 @@ import {
 
 @Component({
     templateUrl: 'setting.component.html',
-    styleUrls: ['setting.component.scss', './light.scss', './dark.scss']
+    styleUrls: ['setting.component.scss']
 })
 export class PopupSettingComponent implements OnInit {
     public walletArr: Array < Wallet > ;

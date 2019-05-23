@@ -1,4 +1,6 @@
 @import 'src/styles/theme-default';
+@import './light';
+@import './dark';
 
 :host {
     display: -webkit-box;

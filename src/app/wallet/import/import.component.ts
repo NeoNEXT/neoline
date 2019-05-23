@@ -30,7 +30,7 @@ import { Wallet } from '@cityofzion/neon-core/lib/wallet';
 
 @Component({
     templateUrl: 'import.component.html',
-    styleUrls: ['import.component.scss', './dark.scss', './light.scss']
+    styleUrls: ['import.component.scss']
 })
 export class WalletImportComponent implements OnInit, AfterViewInit {
     public walletImport: WalletImport;

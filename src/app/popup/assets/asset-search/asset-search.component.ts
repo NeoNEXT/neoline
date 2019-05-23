@@ -19,7 +19,7 @@ import {
 @Component({
     selector: 'app-asset-search',
     templateUrl: './asset-search.component.html',
-    styleUrls: ['./asset-search.component.scss', './dark.scss', './light.scss']
+    styleUrls: ['./asset-search.component.scss']
 })
 export class PopupAssetSearchComponent implements OnInit {
     @Input() asset: Balance;

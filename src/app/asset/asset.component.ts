@@ -31,7 +31,7 @@ import {
 
 @Component({
     templateUrl: 'asset.component.html',
-    styleUrls: ['asset.component.scss', './light.scss', './dark.scss']
+    styleUrls: ['asset.component.scss']
 })
 export class AssetComponent implements OnInit, OnDestroy {
     public address: string = '';

@@ -4,7 +4,7 @@ import { GlobalService } from '@/app/core';
 @Component({
     selector: 'tx-item',
     templateUrl: 'tx-item.component.html',
-    styleUrls: ['tx-item.component.scss', './light.scss', './dark.scss']
+    styleUrls: ['tx-item.component.scss']
 })
 export class TxItemComponent implements OnInit {
     @Input() public time: number = 0;

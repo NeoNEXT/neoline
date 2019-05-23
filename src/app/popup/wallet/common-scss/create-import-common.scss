@@ -51,6 +51,14 @@
 }
 
 .popup-wallet-body-submit {
+    @include button-common;
+}
+
+.popup-wallet-body-cancel {
+    @include button-common;
+}
+
+.popup-wallet-body-submit {
     margin-top: 15px;
     margin-bottom: 18px;
 }
@@ -75,16 +83,16 @@
             }
         }
     }
-    @mixin button-common {
+    @mixin button-common-theme {
         box-shadow: 0 2px 4px 0 rgba(87, 83, 245, 0.4);
     }
 
     .popup-wallet-body-submit {
-        @include button-common;
+        @include button-common-theme;
     }
 
     .popup-wallet-body-cancel {
-        @include button-common;
+        @include button-common-theme;
     }
 
 // }

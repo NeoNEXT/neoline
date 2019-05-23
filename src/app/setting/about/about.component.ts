@@ -3,7 +3,7 @@ import { ChromeService } from '@/app/core';
 
 @Component({
     templateUrl: 'about.component.html',
-    styleUrls: ['about.component.scss', './light.scss', './dark.scss']
+    styleUrls: ['about.component.scss']
 })
 export class SettingAboutComponent implements OnInit {
     public version = '';

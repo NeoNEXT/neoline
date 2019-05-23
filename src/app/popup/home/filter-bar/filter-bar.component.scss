@@ -1,4 +1,6 @@
 @import 'src/styles/popup-default';
+@import './light';
+@import './dark';
 
 @mixin symbol {
     display: inline-block;

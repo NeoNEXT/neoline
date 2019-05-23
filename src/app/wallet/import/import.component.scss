@@ -1,5 +1,7 @@
 @import 'src/styles/theme-default.scss';
 @import 'src/styles/popup-default';
+@import './light';
+@import './dark';
 
 form {
     margin-top: $space*3;

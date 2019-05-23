@@ -8,7 +8,7 @@ import { WalletInitConstant } from '../popup/_lib/constant';
 @Component({
     selector: 'app-login',
     templateUrl: './login.component.html',
-    styleUrls: ['./login.component.scss', './dark.scss', './light.scss']
+    styleUrls: ['./login.component.scss']
 })
 export class LoginComponent implements OnInit, AfterContentInit {
     public wallet: WalletCreation;

@@ -3,7 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 
 @Component({
     templateUrl: 'wallet.component.html',
-    styleUrls: ['wallet.component.scss', './dark.scss', './light.scss']
+    styleUrls: ['wallet.component.scss']
 })
 export class WalletComponent implements OnInit {
     constructor(

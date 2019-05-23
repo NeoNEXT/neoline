@@ -20,7 +20,7 @@ import {
 
 @Component({
     templateUrl: './authorization.component.html',
-    styleUrls: ['./authorization.component.scss', './light.scss', './dark.scss']
+    styleUrls: ['./authorization.component.scss']
 })
 export class PopupNoticeAuthComponent implements OnInit {
     public iconSrc = '';

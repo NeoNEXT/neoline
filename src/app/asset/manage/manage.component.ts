@@ -35,7 +35,7 @@ import { Unsubscribable } from 'rxjs';
 
 @Component({
     templateUrl: 'manage.component.html',
-    styleUrls: ['manage.component.scss', './dark.scss', './light.scss']
+    styleUrls: ['manage.component.scss']
 })
 export class AssetManageComponent implements OnInit, OnDestroy {
     private requesting = false;

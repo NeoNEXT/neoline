@@ -8,7 +8,7 @@ import { GlobalService } from '@/app/core';
 @Component({
     selector: 'app-tx-item',
     templateUrl: 'tx-item.component.html',
-    styleUrls: ['tx-item.component.scss', './dark.scss', './light.scss']
+    styleUrls: ['tx-item.component.scss']
 })
 export class PopupHomeTxItemComponent implements OnInit {
     @Input() symbol = '';

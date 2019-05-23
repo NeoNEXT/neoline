@@ -7,7 +7,7 @@ import { PopupConfirmDialogComponent } from '../_dialogs';
 @Component({
     selector: 'app-authorization-list',
     templateUrl: './authorization-list.component.html',
-    styleUrls: ['./authorization-list.component.scss', './light.scss', './dark.scss']
+    styleUrls: ['./authorization-list.component.scss']
 })
 export class PopupAuthorizationListComponent implements OnInit {
     public objectKeys = Object.keys;

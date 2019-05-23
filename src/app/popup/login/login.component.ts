@@ -26,7 +26,7 @@ import {
 
 @Component({
     templateUrl: 'login.component.html',
-    styleUrls: ['login.component.scss', './light.scss', './dark.scss']
+    styleUrls: ['login.component.scss']
 })
 export class PopupLoginComponent implements OnInit, AfterContentInit {
     public wallet: WalletCreation;

@@ -1,3 +1,6 @@
+@import './light';
+@import './dark';
+
 .popup-about-logo1 {
     width: 109px;
     height: 71px;
@@ -50,7 +53,7 @@
         }
     }
 
-    @mixin site-contact($bgurl, $bgurl-hover) {
+    @mixin site-contact {
         width: 100%;
         margin-bottom: 5px;
         height: 96px;
@@ -59,10 +62,12 @@
 
     .popup-about-site {
         position: relative;
+        @include site-contact;
     }
 
     .popup-about-contact {
         position: relative;
+        @include site-contact;
     }
 
     .popup-about-contact p,

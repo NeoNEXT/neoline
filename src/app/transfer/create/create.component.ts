@@ -35,7 +35,7 @@ import { wallet } from '@cityofzion/neon-core';
 
 @Component({
     templateUrl: 'create.component.html',
-    styleUrls: ['create.component.scss', './light.scss', './dark.scss']
+    styleUrls: ['create.component.scss']
 })
 export class TransferCreateomponent implements OnInit {
     public balance: Balance;
