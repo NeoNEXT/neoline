@@ -1,0 +1,91 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+.content {
+    .avatar {
+        .dashed-hori-line {
+            border-bottom: 1px dashed map-get($colors, c2c6f5);
+        }
+
+        .dashed-vert-line {
+            border-right: 1px dashed map-get($colors, c2c6f5);
+        }
+
+        .avatar-group {
+            img.avatar {
+                background: rgba(73, 73, 73, 1);
+            }
+
+            img.middle {
+                @include bg($img-tp-auth-select);
+            }
+        }
+
+        .name-group {
+            span {
+                color: map-get($colors, 333333);
+            }
+        }
+
+        .address {
+            color: map-get($colors, 999999);
+        }
+
+        .dot {
+            background: rgba(122, 135, 169, 1);
+        }
+    }
+    .detail-en {
+        color: map-get($colors, 484e6d);
+    }
+    .detail-cn {
+        color: map-get($colors, 484e6d);
+    }
+    a.more {
+        color: map-get($neo-line-default, 500);
+    }
+    .choose-auth-rule {
+        .select-radio {
+            background:rgba(229,229,229,1);
+            border: 1px solid rgba(153,153,153,1);
+            &.selected {
+                border: none;
+                @include bg($img-authorization-rule-selected);
+            }
+        }
+        .auth-rule-select {
+            border: 1px solid #E5E5E5;
+            color: #666666;
+        }
+    }
+    .secure {
+        border-top: 1px solid map-get($colors, e5e5e5);
+        img {
+            @include bg($img-tp-auth-secure);
+        }
+    }
+}
+
+.submit-group {
+
+    button.refuse {
+        box-shadow: 0px 2px 8px 0px rgba(87, 83, 245, 0.4);
+        color: map-get($neo-line-default, 500);
+        &:disabled {
+            background: #F2F2F2;
+            box-shadow:  none;
+            color: #999999;
+        }
+    }
+
+    button.confirm {
+        box-shadow: 0px 5px 8px 0px rgba(87, 83, 245, 0.4);
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        color: map-get($neo-line-default, 50);
+        &:disabled {
+            background: #C2C6F5;
+            box-shadow:  none;
+            color: #FFFFFF;
+        }
+    }
+}

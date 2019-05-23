@@ -37,7 +37,7 @@ import { Unsubscribable } from 'rxjs';
 @Component({
     selector: 'app-sidenav',
     templateUrl: 'sidenav.component.html',
-    styleUrls: ['sidenav.component.scss']
+    styleUrls: ['sidenav.component.scss', './dark.scss', './light.scss']
 })
 export class PopupSidenavComponent implements OnInit, OnDestroy {
     @Input() sidenav: any;

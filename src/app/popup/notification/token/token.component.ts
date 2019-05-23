@@ -5,7 +5,7 @@ import {
 
 @Component({
     templateUrl: './token.component.html',
-    styleUrls: ['./token.component.scss']
+    styleUrls: ['./token.component.scss', './light.scss', './dark.scss']
 })
 export class PopupNoticeTokenComponent implements OnInit {
 

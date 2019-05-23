@@ -1,12 +1,4 @@
-@import 'src/styles/theme-default';
-@import 'src/styles/popup-default';
-
-.transfer-content {
-    background-color: #f7f7f7;
-}
-
 .loading-box {
-    background: rgba(0, 0, 0, 0.1);
     position: fixed;
     height: 100%;
     width: 100%;
@@ -33,7 +25,6 @@
     width: 100%;
     height: 118px;
     padding-top: 25px;
-    background-image: url('/assets/images/third-party/nav-bg.png');
     background-position: -30px -30px;
     background-size: 500px 148px;
     background-repeat: no-repeat;
@@ -48,7 +39,6 @@
         height: 39px;
 
         span {
-            color: map-get($colors, 333333);
             font-size: 18px;
             margin-right: 7px;
         }
@@ -58,9 +48,7 @@
             padding: 0 3px;
             height: 20px;
             line-height: 20px;
-            color: map-get($colors, 7178dd);
             font-size: 12px;
-            border: 1px solid map-get($colors, c2c6f5);
             border-radius: 4px;
             background: none;
         }
@@ -77,17 +65,14 @@
             height: 39px;
             border-radius: 6px;
             margin-right: 12px;
-            background-color: map-get($colors, e2e2e2);
         }
 
         .detail-value-right {
             .detail-value {
-                color: map-get($neo-line-default, 500);
                 font-size: 28px;
             }
 
             .detail-currency {
-                color: map-get($colors, 9fa8bd);
                 font-size: 12px;
                 text-align: right;
             }
@@ -97,7 +82,6 @@
 
 .transfer-title {
     padding: 0 27px;
-    color: map-get($colors, 999999);
     font-size: 13px;
     height: 30px;
 }
@@ -106,7 +90,6 @@
     width: 100%;
     height: 100%;
     padding: 0 27px;
-    background-color: map-get($neo-line-default, 50);
 
     .transfer-account-item {
         height: 74px;
@@ -114,26 +97,22 @@
         display: inline-flex;
         align-items: center;
         position: relative;
-        border-bottom: 1px solid map-get($colors, e5e5e5);
 
         .account-left {
             display: inline-block;
 
             .tip-info {
                 font-size: 15px;
-                color: map-get($colors, 333333);
                 margin-right: 21px;
             }
 
             .tip-name {
                 font-size: 14px;
-                color: map-get($colors, 484e6d);
             }
 
             .account-address {
                 margin-top: 12px;
                 font-size: 12px;
-                color: map-get($colors, 9fa8bd);
             }
         }
 
@@ -144,7 +123,6 @@
             width: 34px;
             height: 34px;
             border-radius: 34px;
-            background-color: map-get($colors, 333333);
         }
     }
 
@@ -166,22 +144,9 @@
             border-radius: 4px;
         }
 
-        button.cancel {
-            box-shadow: 0px 2px 8px 0px rgba(87, 83, 245, 0.4);
-            color: map-get($neo-line-default, 500);
-        }
-
         button.confirm {
-            box-shadow: 0px 5px 8px 0px rgba(87, 83, 245, 0.4);
-            background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
-            color: map-get($neo-line-default, 50);
             position: absolute;
             right: 0;
-            &:disabled {
-                background: rgba(0, 0, 0, 0.12);
-                color: rgba(0, 0, 0, 0.26);
-                box-shadow:none;
-            }
         }
     }
 }

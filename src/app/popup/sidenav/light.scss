@@ -1,0 +1,85 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+.side-nav-body {
+
+    .side-nav-body-header {
+        background-color: map-get($neo-line-default, 500);
+
+        .side-nav-body-header-top {
+            div:first-child {
+                background-color: white;
+            }
+
+            div:last-child {
+                @include bg($img-close-side-nav);
+            }
+        }
+
+        .side-nav-body-header-bottom {
+            color: map-get($neo-line-default, 50);
+
+        }
+    }
+
+    .side-nav-body-menu {
+        .side-nav-body-menu-item {
+
+            &:hover {
+                color: map-get($neo-line-default, 500);
+            }
+
+
+            div.side-nav-body-menu-status-active {
+                background-color: map-get($neo-line-default, 500);
+            }
+
+            div.side-nav-body-menu-text-active {
+                color: map-get($neo-line-default, 500);
+            }
+
+            .side-nav-body-menu-home-active {
+                @include bg($img-home-active);
+            }
+            .side-nav-body-menu-home-close {
+                @include bg($img-home-close);
+            }
+
+            .side-nav-body-menu-setting-active {
+                @include bg($img-setting-active);
+            }
+            .side-nav-body-menu-setting-close {
+                @include bg($img-setting-close);
+            }
+
+            .side-nav-body-menu-about-active {
+                @include bg($img-about-active);
+            }
+            .side-nav-body-menu-about-close {
+                @include bg($img-about-close);
+            }
+
+            .side-nav-body-menu-web-active {
+                @include bg($img-web-active);
+            }
+            .side-nav-body-menu-web-close {
+                @include bg($img-web-close);
+            }
+
+            .side-nav-body-menu-blolys-active {
+                @include bg($img-blolys-active);
+            }
+            .side-nav-body-menu-blolys-close {
+                @include bg($img-blolys-close);
+            }
+        }
+    }
+
+    .side-nav-body-logout {
+        div {
+            div:first-child {
+                @include bg($img-logout);
+            }
+        }
+    }
+}

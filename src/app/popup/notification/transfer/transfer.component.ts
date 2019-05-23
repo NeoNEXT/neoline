@@ -26,7 +26,7 @@ import {
 } from '@/app/transfer/transfer.service';
 @Component({
     templateUrl: 'transfer.component.html',
-    styleUrls: ['transfer.component.scss']
+    styleUrls: ['transfer.component.scss', './dark.scss', './light.scss']
 })
 export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public balance: Balance;

@@ -1,4 +1,3 @@
-@import 'src/styles/theme-default';
 @import 'src/styles/popup-default';
 
 .mat-toolbar-fixed {
@@ -84,11 +83,9 @@
     z-index: map-get($z-indexes, max);
     overflow-y: auto;
     overflow-x: hidden;
-    background-color: map-get($neo-line-default, 50);
 }
 
 .side-nav {
-    background-color: map-get($neo-line-default, 50);
     position: absolute;
     top: 0;
     bottom: 0;
@@ -99,52 +96,23 @@
 .no-third-party-toolbar {
     height: auto;
     .popup-nav-logo-img {
-        @include bg($img-logo-title);
         margin-left: 107px;
         width: 84px;
-    }
-
-    .popup-nav-network {
-        border-color: map-get($neo-line-default, 50);
-    }
-
-    .popup-nav-network {
-        border-color: map-get($neo-line-default, 50);
-
-        .popup-nav-network-icon {
-            @include bg($img-net-dropdown);
-        }
     }
 }
 
 .is-third-party-toolbar {
     .mat-toolbar {
-        background-color: map-get($neo-line-default, 50);
-
         .popup-nav-logo-img {
-            @include bg($img-logo);
             margin-left: 0;
             width: 30px;
             margin-right: 10px;
         }
 
         .popup-nav-logo-title-img {
-            @include bg($img-about-logo);
             margin-left: 0;
             width: 84px;
         }
 
-        .popup-nav-network {
-            border-color: map-get($colors, e5e5e5);
-            color: map-get($colors, 666666);
-
-            .popup-nav-network-icon {
-                @include bg($img-tp-net-dropdown);
-            }
-        }
     }
-}
-
-.nav-box-shadow {
-    box-shadow: 0px 1px 12px 0px rgba(0, 11, 131, 0.3);
 }

@@ -1,0 +1,57 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+.content {
+
+    .title {
+        border-bottom: 1px solid map-get($colors, e5e5e5);
+
+        p {
+            color: map-get($neo-line-default, 500);
+        }
+    }
+
+    .token {
+        .tip {
+            color: map-get($colors, 666666);
+        }
+
+        .token-name {
+            .detail {
+                img {
+                    background: rgba(73, 73, 73, 1);
+                }
+
+                span {
+                    color: map-get($colors, 333333);
+                }
+            }
+        }
+
+        .token-value {
+
+            .detail {
+                span.amount {
+                    color: map-get($colors, 333333);
+                }
+
+                span.type {
+                    color: map-get($colors, 9fa8bd);
+                }
+            }
+        }
+    }
+}
+
+.submit-group {
+    button.cancel {
+        box-shadow: 0px 2px 8px 0px rgba(87, 83, 245, 0.4);
+        color: map-get($neo-line-default, 500);
+    }
+
+    button.confirm {
+        box-shadow: 0px 5px 8px 0px rgba(87, 83, 245, 0.4);
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        color: map-get($neo-line-default, 50);
+    }
+}

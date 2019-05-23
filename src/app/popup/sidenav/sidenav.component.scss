@@ -1,13 +1,9 @@
-@import 'src/styles/theme-default';
-@import 'src/styles/popup-default';
-
 .side-nav-body {
     width: 230px;
 
     .side-nav-body-header {
         width: 100%;
         height: 140px;
-        background-color: map-get($neo-line-default, 500);
 
         .side-nav-body-header-top {
             width: 100%;
@@ -20,7 +16,6 @@
                 border-radius: 50%;
                 overflow: hidden;
                 float: left;
-                background-color: white;
                 margin-top: 20px;
                 margin-left: 15px;
 
@@ -29,15 +24,13 @@
                     height: 100%;
                 }
             }
-            
+
             div:last-child {
                 width: 19px;
                 height: 15px;
                 float: right;
                 margin-top: 20px;
                 margin-right: 17px;
-                @include bg($img-close-side-nav);
-
                 &:hover {
                     cursor: pointer;
                 }
@@ -48,7 +41,6 @@
             width: 100%;
             padding-top: 8px;
             padding-left: 14px;
-            color: map-get($neo-line-default, 50);
 
             p:first-child {
                 font-size: 15px;
@@ -72,7 +64,6 @@
 
             &:hover {
                 cursor: pointer;
-                color: map-get($neo-line-default, 500);
             }
 
             div {
@@ -85,10 +76,6 @@
                 width: 4px;
             }
 
-            div.side-nav-body-menu-status-active {
-                background-color: map-get($neo-line-default, 500);
-            }
-
             div:nth-child(2) {
                 width: 21px;
                 font-weight: 500;
@@ -99,43 +86,7 @@
             }
 
             div.side-nav-body-menu-text-active {
-                color: map-get($neo-line-default, 500);
                 font-weight: 600;
-            }
-
-            .side-nav-body-menu-home-active {
-                @include bg($img-home-active);
-            }
-            .side-nav-body-menu-home-close {
-                @include bg($img-home-close);
-            }
-
-            .side-nav-body-menu-setting-active {
-                @include bg($img-setting-active);
-            }
-            .side-nav-body-menu-setting-close {
-                @include bg($img-setting-close);
-            }
-
-            .side-nav-body-menu-about-active {
-                @include bg($img-about-active);
-            }
-            .side-nav-body-menu-about-close {
-                @include bg($img-about-close);
-            }
-
-            .side-nav-body-menu-web-active {
-                @include bg($img-web-active);
-            }
-            .side-nav-body-menu-web-close {
-                @include bg($img-web-close);
-            }
-
-            .side-nav-body-menu-blolys-active {
-                @include bg($img-blolys-active);
-            }
-            .side-nav-body-menu-blolys-close {
-                @include bg($img-blolys-close);
             }
         }
     }
@@ -159,7 +110,6 @@
 
             div:first-child {
                 width: 21px;
-                @include bg($img-logout);
                 margin-right: 15px;
                 margin-left: 65px;
             }

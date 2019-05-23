@@ -1,0 +1,84 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+.head {
+    .content {
+        background: rgba(244, 247, 252, 1);
+        box-shadow: 0px 3px 13px 0px rgba(81, 91, 227, 0.3);
+
+        .avatar {
+            background: rgba(73, 73, 73, 1);
+            box-shadow: 0px 3px 13px 0px rgba(81, 91, 227, 0.3);
+        }
+
+        .request {
+            color: map-get($colors, 333333);
+            border-bottom: 1px solid map-get($colors, e4e3f9);
+        }
+
+        .account {
+
+            .account-name {
+
+                .name-detail {
+
+                    img {
+                        background: rgba(73, 73, 73, 1);
+                    }
+                }
+            }
+
+            .name-tip,
+            .value-tip {
+                background: rgba(122, 135, 169, 1);
+                color: map-get($colors, f4f7fc);
+            }
+
+            span.name,
+            span.amount {
+                color: map-get($colors, 333333);
+            }
+
+            .account-value {
+
+                .type {
+                    color:map-get($colors, 9fa8bd);
+                }
+            }
+        }
+
+    }
+}
+
+.loading {
+    background: map-get($colors, f3f2ff);
+    color: map-get($colors, 7178dd);
+}
+
+.message {
+
+    .item {
+        border-bottom: 1px solid map-get($colors, e5e5e5);
+
+        .item-tip {
+            color: map-get($colors, 999999);
+        }
+
+        .item-value {
+            color: map-get($colors, 333333);
+        }
+    }
+}
+
+.submit-group {
+    button.cancel {
+        box-shadow: 0px 2px 8px 0px rgba(87, 83, 245, 0.4);
+        color: map-get($neo-line-default, 500);
+    }
+
+    button.confirm {
+        box-shadow: 0px 5px 8px 0px rgba(87, 83, 245, 0.4);
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        color: map-get($neo-line-default, 50);
+    }
+}

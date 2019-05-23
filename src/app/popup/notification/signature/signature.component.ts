@@ -10,7 +10,7 @@ import { NEO } from '@/models/models';
 
 @Component({
     templateUrl: './signature.component.html',
-    styleUrls: ['./signature.component.scss']
+    styleUrls: ['./signature.component.scss', './dark.scss', './light.scss']
 })
 export class PopupNoticeSignComponent implements OnInit {
     public iconSrc = '';
