@@ -347,6 +347,13 @@
   dependencies:
     "@types/bn.js" "*"
 
+"@types/elliptic@^6.4.8":
+  version "6.4.8"
+  resolved "https://registry.yarnpkg.com/@types/elliptic/-/elliptic-6.4.8.tgz#9875bb1ccdfeaf786a2713375f7934f73da57adb"
+  integrity sha512-1BaK+iQLH0c33RGRhE8gMbmMF1q4YUCzB4DbP7vz/Ohex0iP2NfOlJlZMDGkqu45IoMirUJe6KZfEdFtYPk1Kg==
+  dependencies:
+    "@types/bn.js" "*"
+
 "@types/loglevel@1.5.4":
   version "1.5.4"
   resolved "https://registry.yarnpkg.com/@types/loglevel/-/loglevel-1.5.4.tgz#6e296bf20d9f6b0a3274cfb01a918f1d634e4c32"
@@ -380,6 +387,13 @@
     "@types/node" "*"
     "@types/source-list-map" "*"
     source-map "^0.6.1"
+
+"@types/wif@^2.0.1":
+  version "2.0.1"
+  resolved "https://registry.yarnpkg.com/@types/wif/-/wif-2.0.1.tgz#bcab48b201403cb759cd7659aff4610cfd4888f4"
+  integrity sha512-FQKvE4EncC8C4qxW9y0psAOs2XVkxSAGIofB8tqNDPSeOsR4OueEf9TED3PHf8xlOquI+m++AXTWjJIS07FNHw==
+  dependencies:
+    "@types/node" "*"
 
 "@webassemblyjs/ast@1.7.11":
   version "1.7.11"

@@ -8,6 +8,8 @@ import {
     httpPost,
     getLocalStorage
 } from '../common/index';
+import { returnTarget, postTarget, Account, AccountPublicKey } from '../common/data_module';
+import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey } from '../common/utils';
 
 declare var chrome: any;
 const mainApi = 'https://mainnet.api.neoline.cn';
@@ -39,93 +41,106 @@ window.onload = () => {
 
 window.addEventListener('message', (e) => {
     switch (e.data.target) {
-        case 'getWalletInfo':
-            {
-                getStorage('rateCurrency', (res) => {
-                    if (res === undefined) {
-                        res = 'CNY';
+        case postTarget.Provider: {
+            getStorage('rateCurrency', (res) => {
+                if (res === undefined) {
+                    res = 'CNY';
+                }
+                const manifestData = chrome.runtime.getManifest();
+                manifestData.extra = { currency: res };
+                window.postMessage({
+                    target: returnTarget.Provider,
+                    data: manifestData
+                }, '*');
+            });
+            return;
+        }
+        case postTarget.Networks: {
+            getStorage('net', (res) => {
+                window.postMessage({
+                    target: returnTarget.Networks,
+                    data: {
+                        networks: ['MainNet', 'TestNet'],
+                        defaultNetwork: res || 'MainNet'
                     }
-                    const manifestData = chrome.runtime.getManifest();
-                    manifestData.extra = { currency: res };
-                    window.postMessage({
-                        target: 'walletInfoRes',
-                        data: manifestData
-                    }, '*');
-                });
-                return;
-            }
-        case 'getAccount':
-            {
-                getLocalStorage('wallet', (res: any) => {
-                    let data: any;
-                    if (res !== undefined && res.accounts[0] !== undefined) {
-                        data = {
-                            address: res.accounts[0].address,
-                            alias: res.name
-                        };
-                    }
-                    window.postMessage({
-                        target: 'accountRes',
-                        data
-                    }, '*');
-                });
-                return;
-            }
-        case 'getBalance':
-            {
-                const parameter = e.data.parameter;
-                const apiUrl = parameter.network === 'MainNet' ? mainApi : testApi;
-                httpGet(`${apiUrl}/v1/address/assets?address=${parameter.address}${parameter.assetID !== undefined ? `&asset_id=${parameter.assetID}` : ''}`, (res) => {
-                    window.postMessage({
-                        target: 'balanceRes',
-                        data: res
-                    }, '*');
-                }, null);
-                return;
-            }
-        case 'getAuthState':
-            {
-                getStorage('connectedWebsites', (res) => {
-                    window.postMessage({
-                        target: 'authStateRes',
-                        data: res
-                    }, '*');
-                });
-                return;
-            }
-        case 'getNetworks':
-            {
-                getStorage('net', (res) => {
-                    window.postMessage({
-                        target: 'networksRes',
-                        data: {
-                            using: res || 'MainNet'
+                }, '*');
+            });
+            return;
+        }
+        case postTarget.Account: {
+            getLocalStorage('wallet', (res: any) => {
+                const data: Account = {address: '', label: ''};
+                if (res !== undefined && res.accounts[0] !== undefined) {
+                    data.address = res.accounts[0].address;
+                    data.label = res.name;
+                }
+                window.postMessage({
+                    target: returnTarget.Account,
+                    data
+                }, '*');
+            });
+            return;
+        }
+        case postTarget.AccountPublicKey: {
+            getLocalStorage('walletArr', (walletArr: Array<any>) => {
+                getLocalStorage('wallet', (currWallet: any) => {
+                    getLocalStorage('WIFArr', (WIFArr: Array<any>) => {
+                        const data: AccountPublicKey = {address: '', publicKey: ''};
+                        if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
+                            const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
+                                item.accounts[0].address === currWallet.accounts[0].address)]
+                            );
+                            data.address = currWallet.accounts[0].address;
+                            data.publicKey = getPublicKeyFromPrivateKey(privateKey);
                         }
-                    }, '*');
+                        window.postMessage({
+                            target: returnTarget.AccountPublicKey,
+                            data
+                        }, '*');
+                    });
                 });
-                return;
-            }
-        case 'invokeRead':
-            {
-                const parameter = e.data.parameter;
-                e.data.url =  parameter.network === 'MainNet' ? mainApi : testApi;
-                e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
-                chrome.runtime.sendMessage(e.data, (response) => {
-                    return Promise.resolve('Dummy response to keep the console quiet');
-                });
-                return;
-            }
-        case 'invoke':
-            {
-                const parameter = e.data.parameter;
-                e.data.url =  parameter.network === 'MainNet' ? mainApi : testApi;
-                chrome.runtime.sendMessage(e.data, (response) => {
-                    return Promise.resolve('Dummy response to keep the console quiet');
-                });
-                return;
-            }
-        case 'getTransaction':
-        {
+            } );
+
+            return;
+        }
+        case 'getBalance': {
+            const parameter = e.data.parameter;
+            const apiUrl = parameter.network === 'MainNet' ? mainApi : testApi;
+            httpGet(`${apiUrl}/v1/address/assets?address=${parameter.address}${parameter.assetID !== undefined ? `&asset_id=${parameter.assetID}` : ''}`, (res) => {
+                window.postMessage({
+                    target: 'balanceRes',
+                    data: res
+                }, '*');
+            }, null);
+            return;
+        }
+        case 'getAuthState': {
+            getStorage('connectedWebsites', (res) => {
+                window.postMessage({
+                    target: 'authStateRes',
+                    data: res
+                }, '*');
+            });
+            return;
+        }
+        case 'invokeRead': {
+            const parameter = e.data.parameter;
+            e.data.url = parameter.network === 'MainNet' ? mainApi : testApi;
+            e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
+            chrome.runtime.sendMessage(e.data, (response) => {
+                return Promise.resolve('Dummy response to keep the console quiet');
+            });
+            return;
+        }
+        case 'invoke': {
+            const parameter = e.data.parameter;
+            e.data.url = parameter.network === 'MainNet' ? mainApi : testApi;
+            chrome.runtime.sendMessage(e.data, (response) => {
+                return Promise.resolve('Dummy response to keep the console quiet');
+            });
+            return;
+        }
+        case 'getTransaction': {
             const parameter = e.data.parameter;
             const apiUrl = parameter.network === 'MainNet' ? mainApi : testApi;
             httpGet(`${apiUrl}/v1/transactions/gettransaction/${parameter.txID}`, (res) => {
@@ -136,46 +151,44 @@ window.addEventListener('message', (e) => {
             }, null);
             return;
         }
-        case 'transfer':
-            {
-                const parameter = e.data;
-                const apiUrl = parameter.network === 'MainNet' ? mainApi : testApi;
-                const assetID = parameter.assetID === undefined ? '' : parameter.assetID;
-                const symbol = parameter.symbol === undefined ? '' : parameter.symbol;
-                httpGet(`${apiUrl}/v1/address/assets?address=${parameter.fromAddress}&asset_id=${assetID}&symbol=${symbol}`, (res) => {
-                    let enough = true; // 有足够的钱
-                    let hasAsset = false;  // 该地址有这个资产
-                    for (const asset of res.result) {
-                        if (asset.asset_id === assetID || String(asset.symbol).toLowerCase() === symbol.toLowerCase()) {
-                            hasAsset = true;
-                            e.data.symbol = asset.symbol;
-                            e.data.assetID = asset.asset_id;
-                            if (asset.balance < parameter.amount) {
-                                enough = false;
-                            }
-                            break;
+        case 'transfer': {
+            const parameter = e.data;
+            const apiUrl = parameter.network === 'MainNet' ? mainApi : testApi;
+            const assetID = parameter.assetID === undefined ? '' : parameter.assetID;
+            const symbol = parameter.symbol === undefined ? '' : parameter.symbol;
+            httpGet(`${apiUrl}/v1/address/assets?address=${parameter.fromAddress}&asset_id=${assetID}&symbol=${symbol}`, (res) => {
+                let enough = true; // 有足够的钱
+                let hasAsset = false;  // 该地址有这个资产
+                for (const asset of res.result) {
+                    if (asset.asset_id === assetID || String(asset.symbol).toLowerCase() === symbol.toLowerCase()) {
+                        hasAsset = true;
+                        e.data.symbol = asset.symbol;
+                        e.data.assetID = asset.asset_id;
+                        if (asset.balance < parameter.amount) {
+                            enough = false;
                         }
+                        break;
                     }
-                    if (enough && hasAsset) {
-                        chrome.runtime.sendMessage(e.data, (response) => {
-                            return Promise.resolve('Dummy response to keep the console quiet');
-                        });
-                    } else {
-                        window.postMessage({
-                            target: 'transferRes',
-                            data: 'invalid_arguments'
-                        }, '*');
-                        return;
-                    }
-                }, null);
-                return;
-            }
-        case 'connect':
-            {
-                chrome.runtime.sendMessage(e.data, (response) => {
-                    return Promise.resolve('Dummy response to keep the console quiet');
-                });
-            }
+                }
+                if (enough && hasAsset) {
+                    chrome.runtime.sendMessage(e.data, (response) => {
+                        return Promise.resolve('Dummy response to keep the console quiet');
+                    });
+                } else {
+                    window.postMessage({
+                        target: 'transferRes',
+                        data: 'invalid_arguments'
+                    }, '*');
+                    return;
+                }
+            }, null);
+            return;
+        }
+        case 'connect': {
+            chrome.runtime.sendMessage(e.data, (response) => {
+                return Promise.resolve('Dummy response to keep the console quiet');
+            });
+        }
     }
 }, false);
 
@@ -183,5 +196,4 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     window.postMessage(request, '*');
     sendResponse('');
     return Promise.resolve('Dummy response to keep the console quiet');
-
 });

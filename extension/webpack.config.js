@@ -17,7 +17,6 @@ module.exports = [{
     resolve: {
         extensions: [".ts", ".js"]
     },
-    target: "node",
     module: {
         rules: [
             {
@@ -40,7 +39,8 @@ module.exports = [{
     entry: {
         "neoline": "./extension/neoline/index.ts",
         "dapi": "./extension/dapi/index.ts",
-        "common": "./extension/common/index.ts"
+        "common": "./extension/common/index.ts",
+        "data_module": "./extension/common/data_module.ts"
     },
     output: {
         filename: "[name].js",
@@ -52,7 +52,6 @@ module.exports = [{
     resolve: {
         extensions: [".ts", ".js"]
     },
-    target: "node",
     module: {
         rules: [
             {

@@ -1,3 +1,5 @@
+import { Provider, EVENT, returnTarget, postTarget, Networks, Account, AccountPublicKey } from '../common/data_module';
+
 const errors = {
     CONNECTION_REJECTED: {
         code: 'CONNECTION_REJECTED',
@@ -28,15 +30,8 @@ const errors = {
         description: 'The request failed.'
     }
 };
-enum EVENT {
-    READY = 'neoline.ready',
-    ACCOUNT_CHANGED = 'neoline.account_changed',
-    CONNECTED = 'neoline.connected',
-    CONNECTION_REJECTED = 'neoline.connection_rejected',
-    NETWORK_CHANGED = 'neoline.network_changed'
-};
+
 export class Init {
-    public version = '1.0';
     public EVENT = {
         READY: 'neoline.ready',
         ACCOUNT_CHANGED: 'neoline.account_changed',
@@ -66,9 +61,93 @@ export class Init {
             callbackEvent: []
         },
     };
-    public ping() {
-        console.log('pong!');
+
+    public getProvider(): Promise<Provider> {
+        return new Promise((resolveMain, rejectMain) => {
+            getProvider().then(res => {
+                resolveMain(res);
+            });
+        });
     }
+
+    public getNetworks(): Promise<Networks> {
+        return new Promise((resolveMain, rejectMain) => {
+            window.postMessage({
+                target: postTarget.Networks
+            }, '*');
+            const promise = new Promise((resolve, reject) => {
+                const getNetworksFn = (event) => {
+                    if (event.data.target !== undefined && event.data.target === returnTarget.Networks) {
+                        resolve(event.data.data);
+                        window.removeEventListener('message', getNetworksFn);
+                    }
+                };
+                window.addEventListener('message', getNetworksFn);
+            });
+            promise.then((res: Networks) => {
+                resolveMain(res);
+            });
+        });
+    }
+
+    public getAccount(): Promise<Account> {
+        return new Promise((resolveMain, rejectMain) => {
+            window.postMessage({
+                target: postTarget.Account
+            }, '*');
+            this.getAuthState().then(authState => {
+                if (authState === 'AUTHORIZED' || sessionStorage.getItem('connect') === 'true') {
+                    window.postMessage({
+                        target: postTarget.Account,
+                    }, '*');
+                    const promise = new Promise((resolve, reject) => {
+                        const getAccountFn = (event) => {
+                            if (event.data.target !== undefined && event.data.target === returnTarget.Account) {
+                                resolve(event.data.data);
+                                window.removeEventListener('message', getAccountFn);
+                            }
+                        };
+                        window.addEventListener('message', getAccountFn);
+                    });
+                    promise.then((res: Account) => {
+                        resolveMain(res);
+                    });
+                } else {
+                    rejectMain(errors.CONNECTION_REJECTED);
+                }
+            });
+        });
+    }
+
+    public getPublicKey(): Promise<AccountPublicKey> {
+        return new Promise((resolveMain, rejectMain) => {
+            window.postMessage({
+                target: postTarget.Account
+            }, '*');
+            this.getAuthState().then(authState => {
+                if (authState === 'AUTHORIZED' || sessionStorage.getItem('connect') === 'true') {
+                    window.postMessage({
+                        target: postTarget.AccountPublicKey,
+                    }, '*');
+                    const promise = new Promise((resolve, reject) => {
+                        const getAccountPublicFn = (event) => {
+                            if (event.data.target !== undefined && event.data.target === returnTarget.AccountPublicKey) {
+                                resolve(event.data.data);
+                                window.removeEventListener('message', getAccountPublicFn);
+                            }
+                        };
+                        window.addEventListener('message', getAccountPublicFn);
+                    });
+                    promise.then((res: AccountPublicKey) => {
+                        resolveMain(res);
+                    });
+                } else {
+                    rejectMain(errors.CONNECTION_REJECTED);
+                }
+            });
+        });
+    }
+
     public transfer(parameter: any = null) {
         return new Promise((resolveMain, rejectMain) => {
             this.getAuthState().then(authState => {
@@ -166,47 +245,6 @@ export class Init {
         });
     }
 
-    public getWalletInfo() {
-        return new Promise((resolveMain, rejectMain) => {
-            getWalletInfo().then(res => {
-                resolveMain(res);
-            });
-        });
-    }
-
-    public getAccount() {
-        return new Promise((resolveMain, rejectMain) => {
-            window.postMessage({
-                target: 'getAccount'
-            }, '*');
-            this.getAuthState().then(authState => {
-                if (authState === 'AUTHORIZED' || sessionStorage.getItem('connect') === 'true') {
-                    window.postMessage({
-                        target: 'getAccount',
-                    }, '*');
-                    const promise = new Promise((resolve, reject) => {
-                        const getAccountFn = (event) => {
-                            if (event.data.target !== undefined && event.data.target === 'accountRes') {
-                                resolve(event.data.data);
-                                window.removeEventListener('message', getAccountFn);
-                            }
-                        };
-                        window.addEventListener('message', getAccountFn);
-                    });
-                    promise.then(res => {
-                        if (res === undefined || res === null) {
-                            resolveMain({});
-                        } else {
-                            resolveMain(res);
-                        }
-                    });
-                } else {
-                    rejectMain(errors.CONNECTION_REJECTED);
-                }
-            });
-        });
-    }
-
     public getBalance(parameter: any) {
         return new Promise((resolveMain, rejectMain) => {
             if (parameter === undefined || parameter.address === undefined ||
@@ -265,26 +303,6 @@ export class Init {
                 } else {
                     resolveMain('NONE');
                 }
-            });
-        });
-    }
-
-    public getNetworks() {
-        return new Promise((resolveMain, rejectMain) => {
-            window.postMessage({
-                target: 'getNetworks'
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const getNetworksFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === 'networksRes') {
-                        resolve(event.data.data);
-                        window.removeEventListener('message', getNetworksFn);
-                    }
-                };
-                window.addEventListener('message', getNetworksFn);
-            });
-            promise.then(res => {
-                resolveMain(res);
             });
         });
     }
@@ -409,7 +427,7 @@ export class Init {
         switch (type) {
             case this.EVENT.READY:
                 {
-                    this.getWalletInfo().then(res => {
+                    this.getProvider().then(res => {
                         callback(res);
                     }).catch(error => {
                         callback(error);
@@ -538,15 +556,15 @@ export class Init {
 }
 
 if (window.dispatchEvent) {
-    getWalletInfo().then(res => {
+    getProvider().then(res => {
         window.dispatchEvent(
-            new CustomEvent(EVENT.READY,{
+            new CustomEvent(EVENT.READY, {
                 detail: res,
             })
         );
     }).catch(error => {
         window.dispatchEvent(
-            new CustomEvent(EVENT.READY,{
+            new CustomEvent(EVENT.READY, {
                 detail: error,
             })
         );
@@ -565,14 +583,14 @@ window.addEventListener('message', e => {
     }
 });
 
-function getWalletInfo() {
+function getProvider(): Promise<Provider> {
     return new Promise((resolveMain, rejectMain) => {
         window.postMessage({
-            target: 'getWalletInfo'
+            target: postTarget.Provider
         }, '*');
         const promise = new Promise((resolve, reject) => {
             const walletInfoFn = (event) => {
-                if (event.data.target !== undefined && event.data.target === 'walletInfoRes') {
+                if (event.data.target !== undefined && event.data.target === returnTarget.Provider) {
                     resolve(event.data.data);
                     window.removeEventListener('message', walletInfoFn);
                 }
@@ -583,14 +601,18 @@ function getWalletInfo() {
             if (res === undefined || res === null) {
                 rejectMain(errors.DEFAULT);
             } else {
-                resolveMain({
-                    name: res.name,
-                    version: res.version,
-                    websit: '',
-                    logo: res.browser_action.default_icon,
-                    compatibility: '',
-                    extra: res.extra
-                });
+                const returnResult: Provider = {
+                    name: '',
+                    version: '',
+                    website: '',
+                    compatibility: [],
+                    extra: {}
+                };
+                returnResult.name = res.name;
+                returnResult.version = res.version;
+                returnResult.website = 'https://neoline.cn/';
+                returnResult.extra = res.extra;
+                resolveMain(returnResult);
             }
         });
     });
