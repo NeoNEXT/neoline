@@ -1,4 +1,8 @@
-import { Provider, EVENT, returnTarget, postTarget, Networks, Account, AccountPublicKey } from '../common/data_module';
+import {
+    Provider, EVENT, returnTarget, requestTarget, Networks, Account,
+    AccountPublicKey, BalanceResults, BalanceRequest, GetBalanceArgs, InvokeReadArgs,
+    TransactionInputArgs, TransactionDetails
+} from '../common/data_module';
 
 const errors = {
     CONNECTION_REJECTED: {
@@ -73,7 +77,7 @@ export class Init {
     public getNetworks(): Promise<Networks> {
         return new Promise((resolveMain, rejectMain) => {
             window.postMessage({
-                target: postTarget.Networks
+                target: requestTarget.Networks
             }, '*');
             const promise = new Promise((resolve, reject) => {
                 const getNetworksFn = (event) => {
@@ -93,12 +97,12 @@ export class Init {
     public getAccount(): Promise<Account> {
         return new Promise((resolveMain, rejectMain) => {
             window.postMessage({
-                target: postTarget.Account
+                target: requestTarget.Account
             }, '*');
             this.getAuthState().then(authState => {
                 if (authState === 'AUTHORIZED' || sessionStorage.getItem('connect') === 'true') {
                     window.postMessage({
-                        target: postTarget.Account,
+                        target: requestTarget.Account,
                     }, '*');
                     const promise = new Promise((resolve, reject) => {
                         const getAccountFn = (event) => {
@@ -122,12 +126,12 @@ export class Init {
     public getPublicKey(): Promise<AccountPublicKey> {
         return new Promise((resolveMain, rejectMain) => {
             window.postMessage({
-                target: postTarget.Account
+                target: requestTarget.Account
             }, '*');
             this.getAuthState().then(authState => {
                 if (authState === 'AUTHORIZED' || sessionStorage.getItem('connect') === 'true') {
                     window.postMessage({
-                        target: postTarget.AccountPublicKey,
+                        target: requestTarget.AccountPublicKey,
                     }, '*');
                     const promise = new Promise((resolve, reject) => {
                         const getAccountPublicFn = (event) => {
@@ -143,6 +147,149 @@ export class Init {
                     });
                 } else {
                     rejectMain(errors.CONNECTION_REJECTED);
+                }
+            });
+        });
+    }
+
+    public getBalance(parameter: GetBalanceArgs): Promise<BalanceResults> {
+        return new Promise((resolveMain, rejectMain) => {
+            if (parameter === undefined || parameter.params === undefined) {
+                rejectMain(errors.INVALID_ARGUMENTS);
+            } else {
+                window.postMessage({
+                    target: requestTarget.Balance,
+                    parameter
+                }, '*');
+                const promise = new Promise((resolve, reject) => {
+                    const getBalanceFn = (event) => {
+                        if (event.data.target !== undefined && event.data.target === returnTarget.Balance) {
+                            resolve(event.data.data);
+                            window.removeEventListener('message', getBalanceFn);
+                        }
+                    };
+                    window.addEventListener('message', getBalanceFn);
+                });
+                promise.then((res: any) => {
+                    if (!res.bool_status) {
+                        rejectMain(errors.RPC_ERROR);
+                    } else {
+                        resolveMain(res.result);
+                    }
+                });
+            }
+        });
+    }
+
+    public invokeRead(parameter: InvokeReadArgs): Promise<object> {
+        return new Promise((resolveMain, rejectMain) => {
+            if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
+                parameter.operation === undefined || parameter.operation === '' ||
+                parameter.args === undefined || parameter.args.length === 0) {
+                rejectMain(errors.INVALID_ARGUMENTS);
+            }
+            window.postMessage({
+                target: requestTarget.InvokeRead,
+                parameter
+            }, '*');
+            const promise = new Promise((resolve, reject) => {
+                const invokeReadFn = (event) => {
+                    if (event.data.target !== undefined && event.data.target === returnTarget.InvokeRead) {
+                        resolve(event.data);
+                        window.removeEventListener('message', invokeReadFn);
+                    }
+                };
+                window.addEventListener('message', invokeReadFn);
+            });
+            promise.then((res: any) => {
+                if (res.bool_status) {
+                    resolveMain({
+                        script: res.result.script,
+                        state: res.result.state,
+                        gas_consumed: res.result.gas_consumed,
+                        stack: res.result.stack
+                    });
+                } else {
+                    rejectMain(errors.NETWORK_ERROR);
+                }
+            });
+        });
+    }
+
+    public getTransaction(parameter: TransactionInputArgs): Promise<TransactionDetails> {
+        return new Promise((resolveMain, rejectMain) => {
+            if (parameter.txid === undefined) {
+                rejectMain(errors.INVALID_ARGUMENTS);
+            }
+            window.postMessage({
+                target: requestTarget.Transaction,
+                parameter
+            }, '*');
+            const promise = new Promise((resolve, reject) => {
+                const getTransactionFn = (event) => {
+                    if (event.data.target !== undefined && event.data.target === returnTarget.Transaction) {
+                        resolve(event.data.data);
+                        window.removeEventListener('message', getTransactionFn);
+                    }
+                };
+                window.addEventListener('message', getTransactionFn);
+            });
+            promise.then((res: any) => {
+                if (res.bool_status) {
+                    resolveMain(res.result);
+                } else {
+                    rejectMain(errors.NETWORK_ERROR);
+                }
+            });
+        });
+    }
+
+    public invoke(parameter: any) {
+        return new Promise((resolveMain, rejectMain) => {
+            if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
+                parameter.operation === undefined || parameter.operation === '' ||
+                parameter.args === undefined || parameter.args === '' ||
+                parameter.network === undefined || parameter.network === '') {
+                rejectMain(errors.INVALID_ARGUMENTS);
+            }
+            window.postMessage({
+                target: 'invoke',
+                parameter,
+                hostname: location.hostname,
+                icon: getIcon(),
+                connect: sessionStorage.getItem('connect')
+            }, '*');
+            const promise = new Promise((resolve, reject) => {
+                const invokeFn = (event) => {
+                    if (event.data.target !== undefined && event.data.target === 'invokeRes') {
+                        resolve(event.data.data);
+                        window.removeEventListener('message', invokeFn);
+                    }
+                };
+                window.addEventListener('message', invokeFn);
+            });
+            promise.then((res: any) => {
+                switch (res) {
+                    case 'rpcWrong':
+                        {
+                            rejectMain(errors.RPC_ERROR);
+                            break;
+                        }
+                    case 'invalid_arguments':
+                        {
+                            rejectMain(errors.INVALID_ARGUMENTS);
+                            break;
+                        }
+                    case 'default':
+                        {
+                            rejectMain(errors.DEFAULT);
+                            break;
+                        }
+                    default:
+                        {
+                            resolveMain({ txID: res });
+                            break;
+                        }
                 }
             });
         });
@@ -205,7 +352,7 @@ export class Init {
                                     }
                                 default:
                                     {
-                                        resolveMain({txID: res});
+                                        resolveMain({ txID: res });
                                         break;
                                     }
                             }
@@ -245,40 +392,6 @@ export class Init {
         });
     }
 
-    public getBalance(parameter: any) {
-        return new Promise((resolveMain, rejectMain) => {
-            if (parameter === undefined || parameter.address === undefined ||
-                parameter.network === undefined) {
-                rejectMain(errors.INVALID_ARGUMENTS);
-            } else {
-                window.postMessage({
-                    target: 'getBalance',
-                    parameter
-                }, '*');
-                const promise = new Promise((resolve, reject) => {
-                    const getBalanceFn = (event) => {
-                        if (event.data.target !== undefined && event.data.target === 'balanceRes') {
-                            resolve(event.data.data);
-                            window.removeEventListener('message', getBalanceFn);
-                        }
-                    };
-                    window.addEventListener('message', getBalanceFn);
-                });
-                promise.then((res: any) => {
-                    if (!res.bool_status) {
-                        rejectMain(errors.RPC_ERROR);
-                    } else {
-                        if (parameter.assetID !== undefined) {
-                            resolveMain((res.result as Array<any>).filter(item => item.asset_id === parameter.assetID));
-                        } else {
-                            resolveMain((res.result as Array<any>).filter(item => item.balance !== '0'));
-                        }
-                    }
-                });
-            }
-        });
-    }
-
     public getAuthState() {
         return new Promise((resolveMain, rejectMain) => {
             window.postMessage({
@@ -302,121 +415,6 @@ export class Init {
                     }
                 } else {
                     resolveMain('NONE');
-                }
-            });
-        });
-    }
-
-    public getTransaction(parameter: any) {
-        return new Promise((resolveMain, rejectMain) => {
-            if (parameter.txID === undefined || parameter.network === undefined) {
-                rejectMain(errors.INVALID_ARGUMENTS);
-            }
-            window.postMessage({
-                target: 'getTransaction',
-                parameter
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const getTransactionFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === 'getTransactionRes') {
-                        resolve(event.data.data);
-                        window.removeEventListener('message', getTransactionFn);
-                    }
-                };
-                window.addEventListener('message', getTransactionFn);
-            });
-            promise.then((res: any) => {
-                if (res.bool_status) {
-                    resolveMain(res.result);
-                } else {
-                    rejectMain(errors.NETWORK_ERROR);
-                }
-            });
-        });
-    }
-
-    public invokeRead(parameter: any) {
-        return new Promise((resolveMain, rejectMain) => {
-            if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
-                parameter.operation === undefined || parameter.operation === '' ||
-                parameter.args === undefined || parameter.args === '' ||
-                parameter.network === undefined || parameter.network === '') {
-                rejectMain(errors.INVALID_ARGUMENTS);
-            }
-            window.postMessage({
-                target: 'invokeRead',
-                parameter
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const invokeReadFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === 'invokeReadRes') {
-                        resolve(event.data);
-                        window.removeEventListener('message', invokeReadFn);
-                    }
-                };
-                window.addEventListener('message', invokeReadFn);
-            });
-            promise.then((res: any) => {
-                if (res.bool_status) {
-                    resolveMain({
-                        script: res.result.script,
-                        state: res.result.state,
-                        gasConsumed: res.result.gas_consumed,
-                        stack: res.result.stack
-                    });
-                } else {
-                    rejectMain(errors.NETWORK_ERROR);
-                }
-            });
-        });
-    }
-
-    public invoke(parameter: any) {
-        return new Promise((resolveMain, rejectMain) => {
-            if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
-                parameter.operation === undefined || parameter.operation === '' ||
-                parameter.args === undefined || parameter.args === '' ||
-                parameter.network === undefined || parameter.network === '') {
-                rejectMain(errors.INVALID_ARGUMENTS);
-            }
-            window.postMessage({
-                target: 'invoke',
-                parameter,
-                hostname: location.hostname,
-                icon: getIcon(),
-                connect: sessionStorage.getItem('connect')
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const invokeFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === 'invokeRes') {
-                        resolve(event.data.data);
-                        window.removeEventListener('message', invokeFn);
-                    }
-                };
-                window.addEventListener('message', invokeFn);
-            });
-            promise.then((res: any) => {
-                switch (res) {
-                    case 'rpcWrong':
-                        {
-                            rejectMain(errors.RPC_ERROR);
-                            break;
-                        }
-                    case 'invalid_arguments':
-                        {
-                            rejectMain(errors.INVALID_ARGUMENTS);
-                            break;
-                        }
-                    case 'default':
-                        {
-                            rejectMain(errors.DEFAULT);
-                            break;
-                        }
-                    default:
-                        {
-                            resolveMain({txID: res});
-                            break;
-                        }
                 }
             });
         });
@@ -586,7 +584,7 @@ window.addEventListener('message', e => {
 function getProvider(): Promise<Provider> {
     return new Promise((resolveMain, rejectMain) => {
         window.postMessage({
-            target: postTarget.Provider
+            target: requestTarget.Provider
         }, '*');
         const promise = new Promise((resolve, reject) => {
             const walletInfoFn = (event) => {

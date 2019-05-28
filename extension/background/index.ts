@@ -20,6 +20,7 @@ import {
     setLocalStorage,
     getLocalStorage
 } from '../common';
+import { requestTarget, returnTarget, GetBalanceArgs, BalanceRequest } from '../common/data_module';
 /**
  * Background methods support.
  * Call window.NEOLineBackground to use.
@@ -40,7 +41,7 @@ export function expand() {
         getStorage('lang', res => {
             if (res === undefined) {
                 currLang = 'zh_CN';
-                setStorage({lang: currLang});
+                setStorage({ lang: currLang });
             }
         });
     }
@@ -170,9 +171,39 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendResponse('');
                 return true;
             }
-        case 'invokeRead': {
-            httpPost(`${request.url}/v1/transactions/invokeread`, {params:  request.parameter}, (res) => {
-                res.target = 'invokeReadRes';
+        case requestTarget.Balance: {
+            const parameter = request.parameter as GetBalanceArgs;
+            const postData = [];
+            if (!(parameter.params as BalanceRequest[]).length) {
+                const tempParams = parameter.params as BalanceRequest;
+                const pushData = {
+                    address: tempParams.address,
+                    assets: tempParams.assets || [],
+                    fetchUTXO: tempParams.fetchUTXO || false
+                };
+                postData.push(pushData);
+            } else {
+                (parameter.params as BalanceRequest[]).forEach(item => {
+                    const pushData = {
+                        address: item.address,
+                        assets: item.assets || [],
+                        fetchUTXO: item.fetchUTXO || false
+                    };
+                    postData.push(pushData);
+                });
+            }
+            httpPost(`${parameter.network}/v1/getbalances`, { params: postData }, (returnData) => {
+                windowCallback({
+                    target: returnTarget.Balance,
+                    data: returnData
+                });
+            }, null);
+            sendResponse('');
+            return;
+        }
+        case requestTarget.InvokeRead: {
+            httpPost(`${request.network}/v1/transactions/invokeread`, { params: request.parameter }, (res) => {
+                res.target = returnTarget.InvokeRead;
                 windowCallback(res);
             }, null);
             sendResponse('');
@@ -189,7 +220,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             getStorage('connectedWebsites', (res) => {
                 if (res !== undefined && res[request.hostname] !== undefined || request.connect === 'true') {
                     window.open(`index.html#popup/notification/invoke?script_hash=${params.scriptHash}&operation=${params.operation}&args=${JSON.stringify(params.args)}&network=${params.network}`,
-                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                        '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                 } else {
                     window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=invoke&script_hash=${params.scriptHash}&operation=${params.operation}&args=${JSON.stringify(params.args)}&network=${params.network}`,
                         '_blank', 'height=620, width=386, resizable=no, top=0, left=0');

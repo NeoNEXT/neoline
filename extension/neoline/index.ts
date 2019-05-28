@@ -8,7 +8,7 @@ import {
     httpPost,
     getLocalStorage
 } from '../common/index';
-import { returnTarget, postTarget, Account, AccountPublicKey } from '../common/data_module';
+import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS } from '../common/data_module';
 import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey } from '../common/utils';
 
 declare var chrome: any;
@@ -41,7 +41,7 @@ window.onload = () => {
 
 window.addEventListener('message', (e) => {
     switch (e.data.target) {
-        case postTarget.Provider: {
+        case requestTarget.Provider: {
             getStorage('rateCurrency', (res) => {
                 if (res === undefined) {
                     res = 'CNY';
@@ -55,7 +55,7 @@ window.addEventListener('message', (e) => {
             });
             return;
         }
-        case postTarget.Networks: {
+        case requestTarget.Networks: {
             getStorage('net', (res) => {
                 window.postMessage({
                     target: returnTarget.Networks,
@@ -67,9 +67,9 @@ window.addEventListener('message', (e) => {
             });
             return;
         }
-        case postTarget.Account: {
+        case requestTarget.Account: {
             getLocalStorage('wallet', (res: any) => {
-                const data: Account = {address: '', label: ''};
+                const data: Account = { address: '', label: '' };
                 if (res !== undefined && res.accounts[0] !== undefined) {
                     data.address = res.accounts[0].address;
                     data.label = res.name;
@@ -81,11 +81,11 @@ window.addEventListener('message', (e) => {
             });
             return;
         }
-        case postTarget.AccountPublicKey: {
+        case requestTarget.AccountPublicKey: {
             getLocalStorage('walletArr', (walletArr: Array<any>) => {
                 getLocalStorage('wallet', (currWallet: any) => {
                     getLocalStorage('WIFArr', (WIFArr: Array<any>) => {
-                        const data: AccountPublicKey = {address: '', publicKey: ''};
+                        const data: AccountPublicKey = { address: '', publicKey: '' };
                         if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
                             const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
                                 item.accounts[0].address === currWallet.accounts[0].address)]
@@ -99,39 +99,63 @@ window.addEventListener('message', (e) => {
                         }, '*');
                     });
                 });
-            } );
+            });
 
             return;
         }
-        case 'getBalance': {
-            const parameter = e.data.parameter;
-            const apiUrl = parameter.network === 'MainNet' ? mainApi : testApi;
-            httpGet(`${apiUrl}/v1/address/assets?address=${parameter.address}${parameter.assetID !== undefined ? `&asset_id=${parameter.assetID}` : ''}`, (res) => {
-                window.postMessage({
-                    target: 'balanceRes',
-                    data: res
-                }, '*');
-            }, null);
-            return;
-        }
-        case 'getAuthState': {
-            getStorage('connectedWebsites', (res) => {
-                window.postMessage({
-                    target: 'authStateRes',
-                    data: res
-                }, '*');
+        case requestTarget.Balance: {
+            getStorage('net', async (res) => {
+                let apiUrl = e.data.parameter.network;
+                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                    apiUrl = res || 'MainNet';
+                }
+                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
+                e.data.parameter.network = apiUrl;
+                chrome.runtime.sendMessage(e.data, (response) => {
+                    return Promise.resolve('Dummy response to keep the console quiet');
+                });
             });
             return;
         }
-        case 'invokeRead': {
-            const parameter = e.data.parameter;
-            e.data.url = parameter.network === 'MainNet' ? mainApi : testApi;
-            e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
-            chrome.runtime.sendMessage(e.data, (response) => {
-                return Promise.resolve('Dummy response to keep the console quiet');
+
+        case requestTarget.InvokeRead: {
+            getStorage('net', async (res) => {
+                let apiUrl = e.data.parameter.network;
+                const parameter = e.data.parameter;
+                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                    apiUrl = res || 'MainNet';
+                }
+                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
+                e.data.network = apiUrl;
+                e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
+
+                chrome.runtime.sendMessage(e.data, (response) => {
+                    return Promise.resolve('Dummy response to keep the console quiet');
+                });
             });
             return;
         }
+
+        case requestTarget.Transaction: {
+            getStorage('net', async (res) => {
+                let apiUrl = e.data.parameter.network;
+                const parameter = e.data.parameter;
+                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                    apiUrl = res || 'MainNet';
+                }
+                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
+                e.data.network = apiUrl;
+                e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
+                httpGet(`${apiUrl}/v1/transactions/gettransaction/${parameter.txid}`, (returnRes) => {
+                    window.postMessage({
+                        target: returnTarget.Transaction,
+                        data: returnRes
+                    }, '*');
+                }, null);
+            });
+            return;
+        }
+
         case 'invoke': {
             const parameter = e.data.parameter;
             e.data.url = parameter.network === 'MainNet' ? mainApi : testApi;
@@ -140,15 +164,14 @@ window.addEventListener('message', (e) => {
             });
             return;
         }
-        case 'getTransaction': {
-            const parameter = e.data.parameter;
-            const apiUrl = parameter.network === 'MainNet' ? mainApi : testApi;
-            httpGet(`${apiUrl}/v1/transactions/gettransaction/${parameter.txID}`, (res) => {
+
+        case 'getAuthState': {
+            getStorage('connectedWebsites', (res) => {
                 window.postMessage({
-                    target: 'getTransactionRes',
+                    target: 'authStateRes',
                     data: res
                 }, '*');
-            }, null);
+            });
             return;
         }
         case 'transfer': {
@@ -191,6 +214,14 @@ window.addEventListener('message', (e) => {
         }
     }
 }, false);
+
+function getUTXOS(apiUrl, address, asset): Promise<any> {
+    return new Promise(resolive => {
+        httpGet(`${apiUrl}/v1/transactions/getutxoes?address=${address}&asset_id=${asset}`, (res) => {
+            resolive(res);
+        }, null);
+    });
+}
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     window.postMessage(request, '*');
