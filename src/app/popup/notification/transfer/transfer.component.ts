@@ -42,6 +42,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public pwd = '';
     public fee: number;
     public init = false;
+    private broadcastOverride = false;
 
     public net: string;
     constructor(
@@ -64,10 +65,11 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             if (JSON.stringify(params) === '{}') {
                 return;
             }
+            this.broadcastOverride = params.broadcastOverride || false;
             window.onbeforeunload = () => {
                 this.chrome.windowCallback({
                     data: 'cancel',
-                    target: 'transferRes'
+                    target: 'neoline.return_send'
                 });
             };
             if (params.network === 'MainNet') {
@@ -75,22 +77,23 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             } else {
                 this.global.modifyNet('test');
             }
-            this.toAddress = params.to_address || '';
-            this.assetId = params.asset_id || '';
+            this.toAddress = params.toAddress || '';
+            this.assetId = params.asset || '';
             this.amount = params.amount || 0;
             this.symbol = params.symbol || '';
             this.fee = params.fee || 0;
             if (this.assetId !== undefined && this.assetId !== '') {
                 this.asset.detail(this.neon.address, this.assetId).subscribe((res: Balance) => {
                     this.init = true;
+                    this.symbol = res.symbol;
                     this.balance = res;
                 });
             } else {
                 this.asset.fetchBalance(this.neon.address).subscribe(res => {
-                    const filterAsset = res.filter(item => item.symbol === params.symbol );
+                    const filterAsset = res.filter(item => item.asset_id === params.asset );
                     if (filterAsset.length > 0) {
                         this.init = true;
-                        this.assetId = filterAsset[0].asset_id;
+                        this.symbol = filterAsset[0].symbol;
                         this.balance = filterAsset[0];
                     } else {
                         this.global.snackBarTip('balanceLack');
@@ -141,7 +144,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public cancel() {
         this.chrome.windowCallback({
             data: 'cancel',
-            target: 'transferRes'
+            target: 'neoline.return_send'
         });
         window.close();
     }
@@ -154,7 +157,19 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.loading = false;
             this.loadingMsg = '';
             this.creating = false;
-            this.resolveSend(tx);
+            if (this.broadcastOverride) {
+                this.loading = false;
+                this.loadingMsg = '';
+                this.chrome.windowCallback({
+                    data: {
+                        txid: tx.hash,
+                        signedTx: tx.serialize(true)
+                    },
+                    target: 'neoline.return_send'
+                });
+            } else {
+                this.resolveSend(tx);
+            }
         }).catch((err) => {
             this.loading = false;
             this.loadingMsg = '';
@@ -180,8 +195,11 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                 this.pushTransaction(txTarget);
             }
             this.chrome.windowCallback({
-                data: tx.hash,
-                target: 'transferRes'
+                data: {
+                    txid: tx.hash,
+                    nodeURL: `${this.global.apiDomain}`
+                },
+                target: 'neoline.return_send'
             });
             this.router.navigate([{
                 outlets: {
@@ -194,7 +212,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.creating = false;
             this.chrome.windowCallback({
                 data: 'rpcWrong',
-                target: 'transferRes'
+                target: 'neoline.return_send'
             });
             this.global.snackBarTip('transferFailed', err);
         });

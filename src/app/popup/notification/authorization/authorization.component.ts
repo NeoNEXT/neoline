@@ -5,7 +5,8 @@ import {
 import {
     ChromeService,
     NeonService,
-    NotificationService
+    NotificationService,
+    GlobalService
 } from '@/app/core';
 import {
     ActivatedRoute,
@@ -39,7 +40,8 @@ export class PopupNoticeAuthComponent implements OnInit {
         private aRouter: ActivatedRoute,
         private neon: NeonService,
         private router: Router,
-        private notificationI18n: NotificationService
+        private notificationI18n: NotificationService,
+        private global: GlobalService
     ) {
         this.wallet = this.neon.wallet;
         this.address = this.wallet.accounts[0].address;
@@ -50,6 +52,13 @@ export class PopupNoticeAuthComponent implements OnInit {
             this.hostname = params.hostname;
             this.title = params.title;
             this.isNext = params.next;
+            if (params.network) {
+                if (params.network === 'MainNet') {
+                    this.global.modifyNet('main');
+                } else {
+                    this.global.modifyNet('test');
+                }
+            }
         });
     }
 
@@ -92,18 +101,18 @@ export class PopupNoticeAuthComponent implements OnInit {
                 data: true,
                 target: 'connected'
             });
+            let queryString = '';
+            for (const key in this.paramsData) {
+                if (this.paramsData.hasOwnProperty(key)) {
+                    queryString +=  `${key}=${this.paramsData[key]}&`;
+                }
+            }
             switch (this.isNext) {
                 case 'transfer': {
-                    this.router.navigateByUrl(`/popup/notification/transfer?to_address=${this.paramsData.to_address}&asset_id=${this.paramsData.asset_id}&amount=${this.paramsData.amount}&symbol=${this.paramsData.symbol}&network=${this.paramsData.network}${this.paramsData.fee !== undefined ? `&fee=${this.paramsData.fee}` : ''}`);
+                    this.router.navigateByUrl(`/popup/notification/transfer?${queryString}`);
                     break;
                 }
                 case 'invoke': {
-                    let queryString = '';
-                    for (const key in this.paramsData) {
-                        if (this.paramsData.hasOwnProperty(key)) {
-                            queryString +=  `${key}=${this.paramsData[key]}&`;
-                        }
-                    }
                     this.router.navigateByUrl(`/popup/notification/invoke?${queryString}`);
                     break;
                 }

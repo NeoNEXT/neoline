@@ -8,7 +8,7 @@ import {
     httpPost,
     getLocalStorage
 } from '../common/index';
-import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS } from '../common/data_module';
+import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS, SendArgs } from '../common/data_module';
 import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey } from '../common/utils';
 
 declare var chrome: any;
@@ -179,37 +179,44 @@ window.addEventListener('message', (e) => {
             });
             return;
         }
-        case 'transfer': {
-            const parameter = e.data;
-            const apiUrl = parameter.network === 'MainNet' ? mainApi : testApi;
-            const assetID = parameter.assetID === undefined ? '' : parameter.assetID;
-            const symbol = parameter.symbol === undefined ? '' : parameter.symbol;
-            httpGet(`${apiUrl}/v1/address/assets?address=${parameter.fromAddress}&asset_id=${assetID}&symbol=${symbol}`, (res) => {
-                let enough = true; // 有足够的钱
-                let hasAsset = false;  // 该地址有这个资产
-                for (const asset of res.result) {
-                    if (asset.asset_id === assetID || String(asset.symbol).toLowerCase() === symbol.toLowerCase()) {
-                        hasAsset = true;
-                        e.data.symbol = asset.symbol;
-                        e.data.assetID = asset.asset_id;
-                        if (asset.balance < parameter.amount) {
-                            enough = false;
+        case requestTarget.send: {
+            const parameter = e.data.parameter as SendArgs;
+            const assetID = parameter.asset.length < 10 ? '' : parameter.asset;
+            const symbol =  parameter.asset.length >= 10 ? '' : parameter.asset;
+            getStorage('net', async (res) => {
+                let apiUrl = parameter.network;
+                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                    apiUrl = res || 'MainNet';
+                }
+                e.data.parameter.network = apiUrl;
+                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
+                httpGet(`${apiUrl}/v1/address/assets?address=${parameter.fromAddress}${assetID !== '' ? `&asset_id=${assetID}` : ''}${symbol !== '' ? `&symbol=${symbol}` : ''}`, (resBalance) => {
+                    let enough = true; // 有足够的钱
+                    let hasAsset = false;  // 该地址有这个资产
+                    for (const asset of resBalance.result) {
+                        if (asset.asset_id === assetID || String(asset.symbol).toLowerCase() === symbol.toLowerCase()) {
+                            hasAsset = true;
+                            e.data.parameter.asset = asset.asset_id;
+                            if (asset.balance < parameter.amount) {
+                                enough = false;
+                            }
+                            break;
                         }
-                        break;
                     }
-                }
-                if (enough && hasAsset) {
-                    chrome.runtime.sendMessage(e.data, (response) => {
-                        return Promise.resolve('Dummy response to keep the console quiet');
-                    });
-                } else {
-                    window.postMessage({
-                        target: 'transferRes',
-                        data: 'invalid_arguments'
-                    }, '*');
-                    return;
-                }
-            }, null);
+                    if (enough && hasAsset) {
+                        chrome.runtime.sendMessage(e.data, (response) => {
+                            return Promise.resolve('Dummy response to keep the console quiet');
+                        });
+                    } else {
+                        window.postMessage({
+                            target: returnTarget.send,
+                            data: 'invalid_arguments'
+                        }, '*');
+                        return;
+                    }
+                }, null);
+            });
+
             return;
         }
         case 'connect': {

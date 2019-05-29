@@ -111,8 +111,16 @@ chrome.windows.onRemoved.addListener(() => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.target) {
-        case 'transfer':
+        case requestTarget.send:
             {
+                const params = request.parameter;
+                let queryString = '';
+                for (const key in params) {
+                    if (params.hasOwnProperty(key)) {
+                        const value = params[key];
+                        queryString +=  `${key}=${value}&`;
+                    }
+                }
                 chrome.tabs.query({
                     active: true,
                     currentWindow: true
@@ -120,18 +128,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     tabCurr = tabs;
                 });
                 getLocalStorage('wallet', (wallet) => {
-                    if (wallet !== undefined && wallet.accounts[0].address !== request.fromAddress) {
+                    if (wallet !== undefined && wallet.accounts[0].address !== params.fromAddress) {
                         windowCallback({
-                            target: 'transferRes',
+                            target: returnTarget.send,
                             data: 'invalid_arguments'
                         });
                     } else {
                         getStorage('connectedWebsites', (res) => {
                             if (res !== undefined && res[request.hostname] !== undefined || request.connect === 'true') {
-                                window.open(`index.html#popup/notification/transfer?to_address=${request.toAddress}&asset_id=${request.assetID}&amount=${request.amount}&symbol=${request.symbol}&network=${request.network}${request.fee !== undefined ? `&fee=${request.fee}` : ''}`,
+                                window.open(`index.html#popup/notification/transfer?${queryString}`,
                                     '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                             } else {
-                                window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=transfer&to_address=${request.toAddress}&asset_id=${request.assetID}&amount=${request.amount}&symbol=${request.symbol}&network=${request.network}${request.fee !== undefined ? `&fee=${request.fee}` : ''}`,
+                                window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=transfer&${queryString}`,
                                     '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                             }
                         });

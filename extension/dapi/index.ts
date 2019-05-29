@@ -1,7 +1,7 @@
 import {
     Provider, EVENT, returnTarget, requestTarget, Networks, Account,
     AccountPublicKey, BalanceResults, BalanceRequest, GetBalanceArgs, InvokeReadArgs,
-    TransactionInputArgs, TransactionDetails
+    TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs
 } from '../common/data_module';
 
 const errors = {
@@ -244,11 +244,11 @@ export class Init {
         });
     }
 
-    public invoke(parameter: any) {
+    public invoke(parameter: InvokeArgs) {
         return new Promise((resolveMain, rejectMain) => {
             if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
                 parameter.operation === undefined || parameter.operation === '' ||
-                parameter.args === undefined || parameter.args === '') {
+                parameter.args === undefined) {
                 rejectMain(errors.INVALID_ARGUMENTS);
             }
             window.postMessage({
@@ -294,12 +294,12 @@ export class Init {
         });
     }
 
-    public transfer(parameter: any = null) {
+    public send(parameter: SendArgs) {
         return new Promise((resolveMain, rejectMain) => {
             this.getAuthState().then(authState => {
                 if (authState === 'AUTHORIZED' || authState === 'NONE') {
-                    if (parameter === undefined || parameter.to === undefined || parameter.from === undefined ||
-                        (parameter.assetID === undefined && parameter.symbol === undefined) ||
+                    if (parameter === undefined || parameter.toAddress === undefined || parameter.fromAddress === undefined ||
+                        (parameter.asset === undefined) ||
                         parameter.amount === undefined || parameter.network === undefined) {
                         rejectMain(errors.INVALID_ARGUMENTS);
                     } else {
@@ -307,21 +307,15 @@ export class Init {
                             this.connect(false);
                         }
                         window.postMessage({
-                            target: 'transfer',
-                            toAddress: parameter.to,
-                            fromAddress: parameter.from,
-                            assetID: parameter.assetID,
-                            amount: parameter.amount,
-                            network: parameter.network,
-                            symbol: parameter.symbol,
-                            fee: parameter.fee,
+                            target: requestTarget.send,
+                            parameter,
                             hostname: location.hostname,
                             icon: getIcon(),
                             connect: sessionStorage.getItem('connect')
                         }, '*');
                         const promise = new Promise((resolve, reject) => {
                             const transferFn = (event) => {
-                                if (event.data.target === 'transferRes') {
+                                if (event.data.target === returnTarget.send) {
                                     resolve(event.data.data);
                                 }
                             };
@@ -351,7 +345,7 @@ export class Init {
                                     }
                                 default:
                                     {
-                                        resolveMain({ txID: res });
+                                        resolveMain(res);
                                         break;
                                     }
                             }

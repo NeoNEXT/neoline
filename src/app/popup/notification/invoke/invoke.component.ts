@@ -105,7 +105,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 this.chrome.windowCallback({
                     data: {
                         txid: transaction.hash,
-                        signedTX: this.tx
+                        signedTX: this.tx.serialize(true)
                     },
                     target: 'neoline.return_invoke'
                 });
@@ -145,7 +145,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 this.chrome.windowCallback({
                     data: {
                         txid: transaction.hash,
-                        nodeURL: `${this.global.apiDomain}/v1/transactions/transfer`
+                        nodeURL: `${this.global.apiDomain}`
                     },
                     target: 'neoline.return_invoke'
                 });

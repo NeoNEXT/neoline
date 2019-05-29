@@ -17,7 +17,8 @@ export enum requestTarget {
     Balance = 'neoline.request_balance',
     InvokeRead = 'neoline.request_invoke_read',
     Transaction = 'neoline.request_transaction',
-    Invoke = 'neoline.request_invoke'
+    Invoke = 'neoline.request_invoke',
+    send = 'neoline.request_send'
 }
 
 export enum returnTarget {
@@ -28,7 +29,8 @@ export enum returnTarget {
     Balance = 'neoline.return_balance',
     InvokeRead = 'neoline.return_invoke_read',
     Transaction = 'neoline.return_transaction',
-    Invoke = 'neoline.return_invoke'
+    Invoke = 'neoline.return_invoke',
+    send = 'neoline.return_send'
 }
 
 export enum errorDescription {
@@ -168,6 +170,18 @@ interface TxHashAttribute extends Argument {
     txAttrUsage: 'Hash1' | 'Hash2' | 'Hash3' | 'Hash4' | 'Hash5' | 'Hash6' | 'Hash7' | 'Hash8' |
     'Hash9' | 'Hash10' | 'Hash11' | 'Hash12' | 'Hash13' | 'Hash14' | 'Hash15';
 }
+
+export interface SendArgs {
+    fromAddress: string; // Address of the connected account to send the assets from
+    toAddress: string; // Address of the receiver of the assets to be sent
+    asset: string; // Asset script hash to be sent. Accepts asset symbol only for "MainNet"
+    amount: string; // The parsed amount of the asset to be sent
+    remark?: string; // (Optional) Description of the transaction to be made
+    fee?: string; // (Optional) The parsed amount of network fee (in GAS) to include with transaction
+    network?: string; //  Network to submit this request to. If omitted, will default to network the wallet is currently set to.
+    broadcastOverride?: boolean;
+    // In the case that the dApp would like to be responsible for broadcasting the signed transaction rather than the wallet provider
+  }
 
 
 export interface Error {
