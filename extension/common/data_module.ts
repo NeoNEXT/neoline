@@ -1,5 +1,6 @@
 export const NEO = '0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b';
 export const GAS = '0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7';
+type ArgumentDataType = 'String' | 'Boolean' | 'Hash160' | 'Hash256' | 'Integer' | 'ByteArray' | 'Array' | 'Address';
 export enum EVENT {
     READY = 'neoline.ready',
     ACCOUNT_CHANGED = 'neoline.account_changed',
@@ -15,8 +16,8 @@ export enum requestTarget {
     AccountPublicKey = 'neoline.request_public_key',
     Balance = 'neoline.request_balance',
     InvokeRead = 'neoline.request_invoke_read',
-    Transaction = 'neoline.request_transaction'
-
+    Transaction = 'neoline.request_transaction',
+    Invoke = 'neoline.request_invoke'
 }
 
 export enum returnTarget {
@@ -26,8 +27,8 @@ export enum returnTarget {
     AccountPublicKey = 'neoline.return_public_key',
     Balance = 'neoline.return_balance',
     InvokeRead = 'neoline.return_invoke_read',
-    Transaction = 'neoline.return_transaction'
-
+    Transaction = 'neoline.return_transaction',
+    Invoke = 'neoline.return_invoke'
 }
 
 export enum errorDescription {
@@ -42,6 +43,7 @@ export interface Provider {
     compatibility: string[];
     extra: object;
 }
+
 
 export interface Networks {
     networks: string[]; // Array of network names the wallet provider has available for the dapp developer to connect to.
@@ -92,9 +94,6 @@ export interface Argument {
     type: ArgumentDataType;
     value: any;
 }
-
-type ArgumentDataType = 'String' | 'Boolean' | 'Hash160' | 'Hash256' | 'Integer' | 'ByteArray' | 'Array' | 'Address';
-
 export interface TransactionInputArgs {
     txid: string;
     network?: string;
@@ -117,16 +116,59 @@ export interface TransactionDetails {
     confirmations: number;
     blocktime: number;
 }
-
 interface TransactionAttribute {
     usage: string;
     data: string;
 }
-
 interface TransactionScript {
     invocation: string;
     verification: string;
 }
+
+export interface InvokeArgs {
+    scriptHash: string; // script hash of the smart contract to invoke
+    operation: string; // operation on the smart contract to call
+    args: Argument[]; // any input arguments for the operation
+    fee?: string; // (Optional) The parsed amount of network fee (in GAS) to include with transaction
+    network?: string; // Network to submit this request to. If omitted, will default to network the wallet is currently set to.
+    attachedAssets?: AttachedAssets;
+    broadcastOverride?: boolean;
+    // In the case that the dApp would like to be responsible for broadcasting the signed transaction rather than the wallet provider
+    assetIntentOverrides?: AssetIntentOverrides;
+    // A hard override of all transaction utxo inputs and outputs.
+    // IMPORTANT: If provided, fee and attachedAssets will be ignored.
+
+    triggerContractVerification?: boolean; // Adds the instruction to invoke the contract verification trigger
+    txHashAttributes?: TxHashAttribute[]; // Adds transaction attributes for the "Hash<x>" usage block
+}
+interface AttachedAssets {
+    NEO?: string;
+    GAS?: string;
+}
+// KEY: Asset symbol (only NEO or GAS)
+// VALUE: Parsed amount to attach
+
+interface AssetIntentOverrides {
+    inputs: AssetInput[];
+    outputs: AssetOutput[];
+}
+
+interface AssetInput {
+    txid: string;
+    index: number;
+}
+
+interface AssetOutput {
+    asset: string;
+    address: number;
+    value: string;
+}
+
+interface TxHashAttribute extends Argument {
+    txAttrUsage: 'Hash1' | 'Hash2' | 'Hash3' | 'Hash4' | 'Hash5' | 'Hash6' | 'Hash7' | 'Hash8' |
+    'Hash9' | 'Hash10' | 'Hash11' | 'Hash12' | 'Hash13' | 'Hash14' | 'Hash15';
+}
+
 
 export interface Error {
     type: string; // `NO_PROVIDER`|`CONNECTION_DENIED`

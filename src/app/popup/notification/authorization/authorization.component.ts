@@ -98,7 +98,13 @@ export class PopupNoticeAuthComponent implements OnInit {
                     break;
                 }
                 case 'invoke': {
-                    this.router.navigateByUrl(`/popup/notification/invoke?script_hash=${this.paramsData.script_hash}&operation=${this.paramsData.operation}&args=${this.paramsData.args}&network=${this.paramsData.network}`);
+                    let queryString = '';
+                    for (const key in this.paramsData) {
+                        if (this.paramsData.hasOwnProperty(key)) {
+                            queryString +=  `${key}=${this.paramsData[key]}&`;
+                        }
+                    }
+                    this.router.navigateByUrl(`/popup/notification/invoke?${queryString}`);
                     break;
                 }
                 default: {

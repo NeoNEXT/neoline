@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService } from '@/app/core';
-import { Transaction, TransactionInput } from '@cityofzion/neon-core/lib/tx';
+import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzion/neon-core/lib/tx';
 import { wallet, tx, sc, u } from '@cityofzion/neon-core';
 import { MatDialog } from '@angular/material';
 import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
 import { HttpClient } from '@angular/common/http';
-import { NEO, UTXO } from '@/models/models';
+import { NEO, UTXO, GAS } from '@/models/models';
 import { Observable } from 'rxjs';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
@@ -16,11 +16,15 @@ import { map } from 'rxjs/operators';
     styleUrls: ['invoke.component.scss']
 })
 export class PopupNoticeInvokeComponent implements OnInit {
-
+    private pramsData: any;
     public scriptHash = '';
     public operation = '';
     public args = null;
     public tx: Transaction;
+    public attachedAssets = null;
+    public fee = null;
+    public broadcastOverride = null;
+    public assetIntentOverrides = null;
     public loading = false;
     public loadingMsg: string;
 
@@ -36,6 +40,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
 
     ngOnInit(): void {
         this.aRoute.queryParams.subscribe((params: any) => {
+            this.pramsData = params;
             if (params.network !== undefined) {
                 if (params.network === 'MainNet') {
                     this.global.modifyNet('main');
@@ -43,14 +48,26 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     this.global.modifyNet('test');
                 }
             }
-            if (params.script_hash !== undefined && params.operation !== undefined && params.args !== undefined) {
-                this.scriptHash = params.script_hash;
+            if (params.scriptHash !== undefined && params.operation !== undefined && params.args !== undefined) {
+                this.scriptHash = params.scriptHash;
                 this.operation = params.operation;
-                if (params.args !== undefined) {
-                    let newJson = params.args.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
+                let newJson = params.args.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
+                newJson = newJson.replace(/'/g, '"');
+                this.args = JSON.parse(newJson);
+                this.fee = parseFloat(params.fee) || 0;
+                if (this.pramsData.attachedAssets) {
+                    newJson = this.pramsData.attachedAssets.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
                     newJson = newJson.replace(/'/g, '"');
-                    this.args = JSON.parse(newJson);
+                    this.attachedAssets = JSON.parse(newJson);
                 }
+                if (this.assetIntentOverrides) {
+                    newJson = this.pramsData.assetIntentOverrides.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
+                    newJson = newJson.replace(/'/g, '"');
+                    this.assetIntentOverrides = JSON.parse(newJson);
+                    this.fee = 0;
+                    this.attachedAssets = null;
+                }
+                this.broadcastOverride = this.pramsData.broadcastOverride || false;
                 setTimeout(() => {
                     this.dialog.open(PwdDialog, {
                         disableClose: true
@@ -59,7 +76,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
                             this.global.log('start transfer with pwd');
                             this.createTxForNEP5().then(res => {
                                 this.resolveSign(res, pwd);
-                            })
+                            }).catch(err => {
+                                console.log(err);
+                            });
                         } else {
                             this.global.log('cancel pay');
                         }
@@ -75,12 +94,24 @@ export class PopupNoticeInvokeComponent implements OnInit {
         this.loading = true;
         this.loadingMsg = 'Wait';
         if (transaction === null) {
-            return ;
+            return;
         }
         this.neon.wallet.accounts[0].decrypt(pwd).then((acc) => {
             transaction.sign(acc);
             this.tx = transaction;
-            this.resolveSend(this.tx);
+            if (this.broadcastOverride === true) {
+                this.loading = false;
+                this.loadingMsg = '';
+                this.chrome.windowCallback({
+                    data: {
+                        txid: transaction.hash,
+                        signedTX: this.tx
+                    },
+                    target: 'neoline.return_invoke'
+                });
+            } else {
+                this.resolveSend(this.tx);
+            }
         }).catch((err) => {
             this.loading = false;
             this.loadingMsg = '';
@@ -107,13 +138,16 @@ export class PopupNoticeInvokeComponent implements OnInit {
             if (!res.bool_status) {
                 this.chrome.windowCallback({
                     data: 'rpcWrong',
-                    target: 'invokeRes'
+                    target: 'neoline.return_invoke'
                 });
                 this.global.snackBarTip('transferFailed');
             } else {
                 this.chrome.windowCallback({
-                    data: transaction.hash,
-                    target: 'invokeRes'
+                    data: {
+                        txid: transaction.hash,
+                        nodeURL: `${this.global.apiDomain}/v1/transactions/transfer`
+                    },
+                    target: 'neoline.return_invoke'
                 });
                 this.router.navigate([{
                     outlets: {
@@ -126,21 +160,21 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.loadingMsg = '';
             this.chrome.windowCallback({
                 data: 'rpcWrong',
-                target: 'invokeRes'
+                target: 'neoline.return_invoke'
             });
             this.global.snackBarTip('transferFailed', err);
         });
     }
 
     private createTxForNEP5(): Promise<Transaction> {
-        return new Promise(resolve => {
+        return new Promise(async resolve => {
             const fromScript = wallet.getScriptHashFromAddress(this.neon.address);
             const toScript = this.scriptHash.startsWith('0x') && this.scriptHash.length === 42 ? this.scriptHash.substring(2) : this.scriptHash;
-            const newTx = new tx.InvocationTransaction();
-            if (this.scriptHash.length !== 42  && this.scriptHash.length !== 40 ) {
+            let newTx = new tx.InvocationTransaction();
+            if (this.scriptHash.length !== 42 && this.scriptHash.length !== 40) {
                 this.chrome.windowCallback({
                     data: 'invalid_arguments',
-                    target: 'invokeRes'
+                    target: 'neoline.return_invoke'
                 });
                 this.loading = false;
                 this.loadingMsg = '';
@@ -151,36 +185,43 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 operation: this.operation,
                 args: this.args
             }) + 'f1';
-            // this.getBalance(this.neon.address, NEO).subscribe((balances: any) => {
-            //     balances = balances.result;
-            //     if (fromScript.length !== 40 || toScript.length !== 40) {
-            //         throw new Error('target address error');
-            //     }
-            //     if (balances.length === 0) {
-            //         throw new Error('no balance');
-            //     }
-            //     let assetId = balances[0].asset_id;
-            //     if (assetId.startsWith('0x') && assetId.length === 66) {
-            //         assetId = assetId.substring(2);
-            //     }
-            //     newTx.addOutput({ assetId, value: new Fixed8(1), scriptHash: toScript });
-            //     let curr = 0.0;
-            //     for (const item of balances) {
-            //         curr += parseFloat(item.value) || 0;
-            //         newTx.inputs.push(new TransactionInput({
-            //             prevIndex: item.n, prevHash: item.txid.startsWith('0x') && item.txid.length == 66 ? item.txid.substring(2) : item.txid }));
-            //         if (curr >= 1) {
-            //             break;
-            //         }
-            //     }
-            //     const payback = curr - 1;
-            //     if (payback < 0) {
-            //         throw new Error('no enough balance to pay');
-            //     }
-            //     if (payback > 0) {
-            //         newTx.addOutput({ assetId, value: new Fixed8(payback), scriptHash: fromScript });
-            //     }
-            // });
+            if (this.assetIntentOverrides == null) {
+                if (this.attachedAssets !== null) {
+                    if (this.attachedAssets.NEO) {
+                        try {
+                            newTx = await this.addAttachedAssets(NEO, this.attachedAssets.NEO, fromScript, toScript, newTx);
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+                    if (this.attachedAssets.GAS) {
+                        try {
+                            newTx = await this.addAttachedAssets(GAS, this.attachedAssets.GAS, fromScript, toScript, newTx, this.fee);
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    } else {
+                        if (this.fee > 0) {
+                            try {
+                                newTx = await this.addFee(fromScript, newTx, this.fee);
+                            } catch (error) {
+                                console.log(error);
+                            }
+                        }
+                    }
+                } else {
+                    if (this.fee > 0) {
+                        try {
+                            newTx = await this.addFee(fromScript, newTx, this.fee);
+                        } catch (error) {
+                            console.log(error);
+                        }
+                    }
+                }
+            } else {
+                newTx.outputs = this.assetIntentOverrides.outlets;
+                newTx.inputs = this.assetIntentOverrides.inputs;
+            }
             newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
             const uniqTag = `from NEOLine at ${new Date().getTime()}`;
             newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
@@ -192,6 +233,76 @@ export class PopupNoticeInvokeComponent implements OnInit {
         return this.http.get(`${this.global.apiDomain}/v1/transactions/getutxoes?address=${address}&asset_id=${asset}`).pipe(map((res) => {
             return res as UTXO[];
         }));
+    }
+
+    private addAttachedAssets(assetid: string, amount: number, fromScript: string,
+        toScript: string, newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
+        return new Promise((resolve, reject) => {
+            this.getBalance(this.neon.address, assetid).subscribe((balances: any) => {
+                balances = balances.result;
+                if (fromScript.length !== 40 || toScript.length !== 40) {
+                    reject('target address error');
+                }
+                if (balances.length === 0) {
+                    reject('no balance');
+                }
+                let assetId = balances[0].asset_id;
+                if (assetId.startsWith('0x') && assetId.length === 66) {
+                    assetId = assetId.substring(2);
+                }
+                newTx.addOutput({ assetId, value: new Fixed8(amount), scriptHash: toScript });
+                let curr = 0.0;
+                for (const item of balances) {
+                    curr += parseFloat(item.value) || 0;
+                    newTx.inputs.push(new TransactionInput({
+                        prevIndex: item.n, prevHash: item.txid.startsWith('0x') && item.txid.length == 66 ? item.txid.substring(2) : item.txid
+                    }));
+                    if (curr >= amount + fee) {
+                        break;
+                    }
+                }
+                const payback = (assetId === GAS || assetId === GAS.substring(2)) ? curr - amount - fee : curr - amount;
+                if (payback < 0) {
+                    reject('no enough balance to pay');
+                }
+                if (payback > 0) {
+                    newTx.addOutput({ assetId, value: new Fixed8(payback), scriptHash: fromScript });
+                }
+                resolve(newTx);
+            });
+        });
+    }
+
+    public addFee(from: string, newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
+        return new Promise((resolve, reject) => {
+            this.getBalance(from, GAS).subscribe(res => {
+                let curr = 0.0;
+                for (const item of res) {
+                    curr += parseFloat(item.value) || 0;
+                    newTx.inputs.push(new TransactionInput({
+                        prevIndex: item.n,
+                        prevHash: item.txid.startsWith('0x') && item.txid.length === 66 ?
+                            item.txid.substring(2) : item.txid
+                    }));
+                    if (curr >= fee) {
+                        break;
+                    }
+                }
+                const payback = curr - fee;
+                if (payback < 0) {
+                    reject('no enough GAS to fee');
+                }
+                if (payback > 0) {
+                    const fromScript = wallet.getScriptHashFromAddress(from);
+                    let gasAssetId = res[0].asset_id;
+                    if (gasAssetId.startsWith('0x') && gasAssetId.length === 66) {
+                        gasAssetId = gasAssetId.substring(2);
+                    }
+                    newTx.addOutput({ assetId: gasAssetId, value: curr - fee, scriptHash: fromScript });
+                }
+                resolve(newTx);
+            });
+        });
     }
 
 }

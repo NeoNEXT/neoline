@@ -209,7 +209,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             sendResponse('');
             return;
         }
-        case 'invoke': {
+        case requestTarget.Invoke: {
             chrome.tabs.query({
                 active: true,
                 currentWindow: true
@@ -218,11 +218,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             });
             const params = request.parameter;
             getStorage('connectedWebsites', (res) => {
+                let queryString = '';
+                for (const key in params) {
+                    if (params.hasOwnProperty(key)) {
+                        const value = key === 'args' || key === 'assetIntentOverrides' || key === 'attachedAssets' ||
+                                    key === 'assetIntentOverrides' || key === 'txHashAttributes' ?
+                                    JSON.stringify(params[key]) : params[key];
+                        queryString +=  `${key}=${value}&`;
+                    }
+                }
                 if (res !== undefined && res[request.hostname] !== undefined || request.connect === 'true') {
-                    window.open(`index.html#popup/notification/invoke?script_hash=${params.scriptHash}&operation=${params.operation}&args=${JSON.stringify(params.args)}&network=${params.network}`,
+                    window.open(`index.html#popup/notification/invoke?${queryString}`,
                         '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                 } else {
-                    window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=invoke&script_hash=${params.scriptHash}&operation=${params.operation}&args=${JSON.stringify(params.args)}&network=${params.network}`,
+                    window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=invoke&${queryString}`,
                         '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                 }
             });

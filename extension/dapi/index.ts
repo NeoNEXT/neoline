@@ -248,12 +248,11 @@ export class Init {
         return new Promise((resolveMain, rejectMain) => {
             if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
                 parameter.operation === undefined || parameter.operation === '' ||
-                parameter.args === undefined || parameter.args === '' ||
-                parameter.network === undefined || parameter.network === '') {
+                parameter.args === undefined || parameter.args === '') {
                 rejectMain(errors.INVALID_ARGUMENTS);
             }
             window.postMessage({
-                target: 'invoke',
+                target: requestTarget.Invoke,
                 parameter,
                 hostname: location.hostname,
                 icon: getIcon(),
@@ -261,7 +260,7 @@ export class Init {
             }, '*');
             const promise = new Promise((resolve, reject) => {
                 const invokeFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === 'invokeRes') {
+                    if (event.data.target !== undefined && event.data.target === returnTarget.Invoke) {
                         resolve(event.data.data);
                         window.removeEventListener('message', invokeFn);
                     }
@@ -287,7 +286,7 @@ export class Init {
                         }
                     default:
                         {
-                            resolveMain({ txID: res });
+                            resolveMain(res);
                             break;
                         }
                 }

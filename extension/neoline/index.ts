@@ -156,11 +156,16 @@ window.addEventListener('message', (e) => {
             return;
         }
 
-        case 'invoke': {
-            const parameter = e.data.parameter;
-            e.data.url = parameter.network === 'MainNet' ? mainApi : testApi;
-            chrome.runtime.sendMessage(e.data, (response) => {
-                return Promise.resolve('Dummy response to keep the console quiet');
+        case requestTarget.Invoke: {
+            getStorage('net', async (res) => {
+                let apiUrl = e.data.parameter.network;
+                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                    apiUrl = res || 'MainNet';
+                }
+                e.data.parameter.network = apiUrl;
+                chrome.runtime.sendMessage(e.data, (response) => {
+                    return Promise.resolve('Dummy response to keep the console quiet');
+                });
             });
             return;
         }
@@ -214,14 +219,6 @@ window.addEventListener('message', (e) => {
         }
     }
 }, false);
-
-function getUTXOS(apiUrl, address, asset): Promise<any> {
-    return new Promise(resolive => {
-        httpGet(`${apiUrl}/v1/transactions/getutxoes?address=${address}&asset_id=${asset}`, (res) => {
-            resolive(res);
-        }, null);
-    });
-}
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     window.postMessage(request, '*');
