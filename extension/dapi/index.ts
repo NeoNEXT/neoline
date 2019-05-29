@@ -1,7 +1,7 @@
 import {
     Provider, EVENT, returnTarget, requestTarget, Networks, Account,
     AccountPublicKey, BalanceResults, BalanceRequest, GetBalanceArgs, InvokeReadArgs,
-    TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs
+    TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput
 } from '../common/data_module';
 
 const errors = {
@@ -294,7 +294,7 @@ export class Init {
         });
     }
 
-    public send(parameter: SendArgs) {
+    public send(parameter: SendArgs): Promise<SendOutput> {
         return new Promise((resolveMain, rejectMain) => {
             this.getAuthState().then(authState => {
                 if (authState === 'AUTHORIZED' || authState === 'NONE') {
@@ -345,7 +345,7 @@ export class Init {
                                     }
                                 default:
                                     {
-                                        resolveMain(res);
+                                        resolveMain(res as SendOutput);
                                         break;
                                     }
                             }
@@ -357,6 +357,63 @@ export class Init {
             });
         });
     }
+
+    public getBlock(parameter: GetBlockInputArgs) {
+        return new Promise((resolveMain, rejectMain) => {
+            if (parameter.blockHeight === undefined) {
+                rejectMain(errors.INVALID_ARGUMENTS);
+            }
+            window.postMessage({
+                target: requestTarget.Block,
+                parameter
+            }, '*');
+            const promise = new Promise((resolve, reject) => {
+                const getBlockFn = (event) => {
+                    if (event.data.target !== undefined && event.data.target === returnTarget.Block) {
+                        resolve(event.data.data);
+                        window.removeEventListener('message', getBlockFn);
+                    }
+                };
+                window.addEventListener('message', getBlockFn);
+            });
+            promise.then((res: any) => {
+                if (res.bool_status) {
+                    resolveMain(res.result);
+                } else {
+                    rejectMain(errors.NETWORK_ERROR);
+                }
+            });
+        });
+    }
+
+    public getApplicationLog(parameter: TransactionInputArgs) {
+        return new Promise((resolveMain, rejectMain) => {
+            if (parameter.txid === undefined) {
+                rejectMain(errors.INVALID_ARGUMENTS);
+            }
+            window.postMessage({
+                target: requestTarget.ApplicationLog,
+                parameter
+            }, '*');
+            const promise = new Promise((resolve, reject) => {
+                const getApplicationLogFn = (event) => {
+                    if (event.data.target !== undefined && event.data.target === returnTarget.ApplicationLog) {
+                        resolve(event.data.data);
+                        window.removeEventListener('message', getApplicationLogFn);
+                    }
+                };
+                window.addEventListener('message', getApplicationLogFn);
+            });
+            promise.then((res: any) => {
+                if (res.bool_status) {
+                    resolveMain(res.result);
+                } else {
+                    rejectMain(errors.NETWORK_ERROR);
+                }
+            });
+        });
+    }
+
     public connect(open = true) {
         return new Promise((resolveMain, rejectMain) => {
             if (open) {

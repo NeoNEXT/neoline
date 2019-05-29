@@ -17,6 +17,8 @@ export enum requestTarget {
     Balance = 'neoline.request_balance',
     InvokeRead = 'neoline.request_invoke_read',
     Transaction = 'neoline.request_transaction',
+    Block = 'neoline.request_block',
+    ApplicationLog = 'neoline.request_application_log',
     Invoke = 'neoline.request_invoke',
     send = 'neoline.request_send'
 }
@@ -29,6 +31,8 @@ export enum returnTarget {
     Balance = 'neoline.return_balance',
     InvokeRead = 'neoline.return_invoke_read',
     Transaction = 'neoline.return_transaction',
+    Block = 'neoline.return_block',
+    ApplicationLog = 'neoline.return_application_log',
     Invoke = 'neoline.return_invoke',
     send = 'neoline.return_send'
 }
@@ -181,7 +185,18 @@ export interface SendArgs {
     network?: string; //  Network to submit this request to. If omitted, will default to network the wallet is currently set to.
     broadcastOverride?: boolean;
     // In the case that the dApp would like to be responsible for broadcasting the signed transaction rather than the wallet provider
-  }
+}
+
+export interface SendOutput {
+    txid: string; // The transaction ID of the send invocation
+    nodeUrl?: string; // The node which the transaction was broadcast to. Returned if transaction is broadcast by wallet provider
+    signedTx?: string; // The serialized signed transaction. Only returned if the broadcastOverride input argument was set to True
+}
+
+export interface GetBlockInputArgs {
+    blockHeight: number;
+    network?: string;
+}
 
 
 export interface Error {

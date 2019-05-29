@@ -8,7 +8,7 @@ import {
     httpPost,
     getLocalStorage
 } from '../common/index';
-import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS, SendArgs } from '../common/data_module';
+import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS, SendArgs, GetBlockInputArgs, TransactionInputArgs } from '../common/data_module';
 import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey } from '../common/utils';
 
 declare var chrome: any;
@@ -149,6 +149,42 @@ window.addEventListener('message', (e) => {
                 httpGet(`${apiUrl}/v1/transactions/gettransaction/${parameter.txid}`, (returnRes) => {
                     window.postMessage({
                         target: returnTarget.Transaction,
+                        data: returnRes
+                    }, '*');
+                }, null);
+            });
+            return;
+        }
+
+        case requestTarget.Block: {
+            getStorage('net', async (res) => {
+                let apiUrl = e.data.parameter.network;
+                const parameter = e.data.parameter as GetBlockInputArgs;
+                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                    apiUrl = res || 'MainNet';
+                }
+                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
+                httpGet(`${apiUrl}/v1/getblock?block_index=${parameter.blockHeight}`, (returnRes) => {
+                    window.postMessage({
+                        target: returnTarget.Block,
+                        data: returnRes
+                    }, '*');
+                }, null);
+            });
+            return;
+        }
+
+        case requestTarget.ApplicationLog: {
+            getStorage('net', async (res) => {
+                let apiUrl = e.data.parameter.network;
+                const parameter = e.data.parameter as TransactionInputArgs;
+                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                    apiUrl = res || 'MainNet';
+                }
+                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
+                httpGet(`${apiUrl}/v1/getapplicationlog?txid=${parameter.txid}`, (returnRes) => {
+                    window.postMessage({
+                        target: returnTarget.ApplicationLog,
                         data: returnRes
                     }, '*');
                 }, null);
