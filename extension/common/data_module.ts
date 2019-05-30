@@ -22,7 +22,7 @@ export const ERRORS =  {
         type: 'CANCELED',
         description: 'The user cancels, or refuses the dapps request'
     },
-    NETWORK_ERROR: {
+    INSUFFICIENT_FUNDS: {
         type: 'INSUFFICIENT_FUNDS',
         description: 'The user does not have a sufficient balance to perform the requested action'
     },
@@ -35,7 +35,7 @@ export enum EVENT {
     READY = 'neoline.ready',
     ACCOUNT_CHANGED = 'neoline.account_changed',
     CONNECTED = 'neoline.connected',
-    CONNECTION_REJECTED = 'neoline.connection_rejected',
+    DISCONNECTED = 'neoline.disconnected',
     NETWORK_CHANGED = 'neoline.network_changed'
 }
 

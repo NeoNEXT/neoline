@@ -8,7 +8,7 @@ import {
     httpPost,
     getLocalStorage
 } from '../common/index';
-import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS, SendArgs, GetBlockInputArgs, TransactionInputArgs } from '../common/data_module';
+import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS, SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS } from '../common/data_module';
 import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey } from '../common/utils';
 
 declare var chrome: any;
@@ -246,7 +246,7 @@ window.addEventListener('message', (e) => {
                     } else {
                         window.postMessage({
                             target: returnTarget.Send,
-                            data: 'invalid_arguments'
+                            data: ERRORS.INSUFFICIENT_FUNDS
                         }, '*');
                         return;
                     }

@@ -70,23 +70,37 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 }
                 this.broadcastOverride = this.pramsData.broadcastOverride || false;
                 setTimeout(() => {
-                    this.dialog.open(PwdDialog, {
-                        disableClose: true
-                    }).afterClosed().subscribe((pwd) => {
-                        if (pwd && pwd.length) {
-                            this.global.log('start transfer with pwd');
-                            this.createTxForNEP5().then(res => {
-                                this.resolveSign(res, pwd);
-                            }).catch(err => {
-                                console.log(err);
-                            });
-                        } else {
-                            this.global.log('cancel pay');
-                        }
-                    });
+                    this.pwdDialog();
                 }, 0);
             } else {
                 return;
+            }
+        });
+        window.onbeforeunload = () => {
+            this.chrome.windowCallback({
+                data: ERRORS.CANCELLED,
+                target: returnTarget.Invoke
+            });
+        };
+    }
+
+    private pwdDialog() {
+        this.dialog.open(PwdDialog, {
+            disableClose: true
+        }).afterClosed().subscribe((pwd) => {
+            if (pwd && pwd.length) {
+                this.global.log('start transfer with pwd');
+                this.createTxForNEP5().then(res => {
+                    this.resolveSign(res, pwd);
+                }).catch(err => {
+                    this.chrome.windowCallback({
+                        data: ERRORS.MALFORMED_INPUT,
+                        target: returnTarget.Invoke
+                    });
+                    window.close();
+                });
+            } else {
+                this.global.log('cancel pay');
             }
         });
     }
@@ -98,7 +112,11 @@ export class PopupNoticeInvokeComponent implements OnInit {
             return;
         }
         this.neon.wallet.accounts[0].decrypt(pwd).then((acc) => {
-            transaction.sign(acc);
+            try {
+                transaction.sign(acc);
+            } catch (error) {
+                console.log(error);
+            }
             this.tx = transaction;
             if (this.broadcastOverride === true) {
                 this.loading = false;
@@ -168,7 +186,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
     }
 
     private createTxForNEP5(): Promise<Transaction> {
-        return new Promise(async resolve => {
+        return new Promise(async (resolve, reject) => {
             const fromScript = wallet.getScriptHashFromAddress(this.neon.address);
             const toScript = this.scriptHash.startsWith('0x') && this.scriptHash.length === 42 ? this.scriptHash.substring(2) : this.scriptHash;
             let newTx = new tx.InvocationTransaction();
@@ -179,20 +197,29 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 });
                 this.loading = false;
                 this.loadingMsg = '';
+                window.close();
                 return null;
             }
-            newTx.script = sc.createScript({
-                scriptHash: this.scriptHash.startsWith('0x') && this.scriptHash.length === 42 ? this.scriptHash.substring(2) : this.scriptHash,
-                operation: this.operation,
-                args: this.args
-            }) + 'f1';
+            try {
+                newTx.script = sc.createScript({
+                    scriptHash: this.scriptHash.startsWith('0x') && this.scriptHash.length === 42 ? this.scriptHash.substring(2) : this.scriptHash,
+                    operation: this.operation,
+                    args: this.args
+                }) + 'f1';
+            } catch (error) {
+                reject(error);
+            }
             if (this.assetIntentOverrides == null) {
                 if (this.attachedAssets !== null) {
                     if (this.attachedAssets.NEO) {
                         try {
                             newTx = await this.addAttachedAssets(NEO, this.attachedAssets.NEO, fromScript, toScript, newTx);
                         } catch (error) {
-                            console.log(error);
+                            this.chrome.windowCallback({
+                                data: ERRORS.MALFORMED_INPUT,
+                                target: returnTarget.Invoke
+                            });
+                            window.close();
                         }
                     }
                     if (this.attachedAssets.GAS) {

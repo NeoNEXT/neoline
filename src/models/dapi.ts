@@ -35,7 +35,7 @@ export enum EVENT {
     READY = 'neoline.ready',
     ACCOUNT_CHANGED = 'neoline.account_changed',
     CONNECTED = 'neoline.connected',
-    CONNECTION_REJECTED = 'neoline.connection_rejected',
+    DISCONNECTED = 'neoline.disconnected',
     NETWORK_CHANGED = 'neoline.network_changed'
 }
 

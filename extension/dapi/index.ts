@@ -4,13 +4,7 @@ import {
     TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput, ERRORS
 } from '../common/data_module';
 export class Init {
-    public EVENT = {
-        READY: 'neoline.ready',
-        ACCOUNT_CHANGED: 'neoline.account_changed',
-        CONNECTED: 'neoline.connected',
-        DISCONNECTED: 'neoline.disconnected',
-        NETWORK_CHANGED: 'neoline.network_changed'
-    };
+    public EVENT = EVENT;
     private EVENTLIST = {
         READY: {
             callback: [],
@@ -266,27 +260,10 @@ export class Init {
                         window.addEventListener('message', invokeFn);
                     });
                     promise.then((res: any) => {
-                        switch (res) {
-                            case ERRORS.RPC_ERROR.type:
-                                {
-                                    rejectMain(ERRORS.RPC_ERROR);
-                                    break;
-                                }
-                            case ERRORS.MALFORMED_INPUT.type:
-                                {
-                                    rejectMain(ERRORS.MALFORMED_INPUT);
-                                    break;
-                                }
-                            case ERRORS.DEFAULT.type:
-                                {
-                                    rejectMain(ERRORS.DEFAULT);
-                                    break;
-                                }
-                            default:
-                                {
-                                    resolveMain(res);
-                                    break;
-                                }
+                        if (res.type) {
+                            rejectMain(res);
+                        } else {
+                            resolveMain(res);
                         }
                     });
                 } else {
@@ -338,33 +315,11 @@ export class Init {
                         };
                         window.addEventListener('message', transferFn);
                     });
-                    promise.then(res => {
-                        switch (res) {
-                            case ERRORS.CANCELLED.type:
-                                {
-                                    rejectMain(ERRORS.CANCELLED);
-                                    break;
-                                }
-                            case ERRORS.RPC_ERROR.type:
-                                {
-                                    rejectMain(ERRORS.RPC_ERROR);
-                                    break;
-                                }
-                            case ERRORS.MALFORMED_INPUT.type:
-                                {
-                                    rejectMain(ERRORS.MALFORMED_INPUT);
-                                    break;
-                                }
-                            case ERRORS.DEFAULT.type:
-                                {
-                                    rejectMain(ERRORS.DEFAULT);
-                                    break;
-                                }
-                            default:
-                                {
-                                    resolveMain(res as SendOutput);
-                                    break;
-                                }
+                    promise.then((res: any) => {
+                        if (res.type !== undefined) {
+                            rejectMain(ERRORS.CANCELLED);
+                        } else {
+                            resolveMain(res as SendOutput);
                         }
                     });
                 } else {

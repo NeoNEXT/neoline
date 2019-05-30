@@ -620,7 +620,8 @@ export class ChromeService {
             this.windowCallback({
                 target: EVENT.NETWORK_CHANGED,
                 data: {
-                    using: net === 'test' ? 'TestNet' : 'MainNet'
+                    networks: ['MainNet', 'TestNet'],
+                    defaultNetwork: net === 'test' ? 'TestNet' : 'MainNet'
                 }
             });
         } catch (e) {
