@@ -10,6 +10,7 @@ import { NEO, UTXO, GAS } from '@/models/models';
 import { Observable } from 'rxjs';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
+import { returnTarget, ERRORS } from '@/models/dapi';
 
 @Component({
     templateUrl: 'invoke.component.html',
@@ -107,7 +108,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         txid: transaction.hash,
                         signedTX: this.tx.serialize(true)
                     },
-                    target: 'neoline.return_invoke'
+                    target: returnTarget.Invoke
                 });
             } else {
                 this.resolveSend(this.tx);
@@ -137,8 +138,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.loadingMsg = '';
             if (!res.bool_status) {
                 this.chrome.windowCallback({
-                    data: 'rpcWrong',
-                    target: 'neoline.return_invoke'
+                    data: ERRORS.RPC_ERROR,
+                    target: returnTarget.Invoke
                 });
                 this.global.snackBarTip('transferFailed');
             } else {
@@ -147,7 +148,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         txid: transaction.hash,
                         nodeURL: `${this.global.apiDomain}`
                     },
-                    target: 'neoline.return_invoke'
+                    target: returnTarget.Invoke
                 });
                 this.router.navigate([{
                     outlets: {
@@ -159,8 +160,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
-                data: 'rpcWrong',
-                target: 'neoline.return_invoke'
+                data: ERRORS.RPC_ERROR,
+                target: returnTarget.Invoke
             });
             this.global.snackBarTip('transferFailed', err);
         });
@@ -173,8 +174,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
             let newTx = new tx.InvocationTransaction();
             if (this.scriptHash.length !== 42 && this.scriptHash.length !== 40) {
                 this.chrome.windowCallback({
-                    data: 'invalid_arguments',
-                    target: 'neoline.return_invoke'
+                    data: ERRORS.MALFORMED_INPUT,
+                    target: returnTarget.Invoke
                 });
                 this.loading = false;
                 this.loadingMsg = '';

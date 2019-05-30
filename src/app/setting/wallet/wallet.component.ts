@@ -3,6 +3,7 @@ import { Wallet } from '@cityofzion/neon-core/lib/wallet';
 import { NeonService, ChromeService } from '@/app/core';
 import { MatDialog } from '@angular/material';
 import { PopupConfirmDialogComponent } from '@/app/popup/_dialogs';
+import { EVENT } from '@/models/dapi';
 
 @Component({
     templateUrl: 'wallet.component.html',
@@ -40,9 +41,10 @@ export class SettingWalletComponent implements OnInit {
             this.chrome.setWallet(this.wallet.export());
             this.chrome.windowCallback({
                 data: {
-                    address: this.wallet.accounts[0].address
+                    address: this.wallet.accounts[0].address,
+                    label: this.wallet.name
                 },
-                target: 'account_changed'
+                target: EVENT.ACCOUNT_CHANGED
             });
             location.href = `index.html`;
         }

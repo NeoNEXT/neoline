@@ -15,6 +15,7 @@ import {
     Balance,
     AuthorizationData,
 } from '@/models/models';
+import { EVENT } from '@/models/dapi';
 
 declare var chrome: any;
 
@@ -617,7 +618,7 @@ export class ChromeService {
                 net
             });
             this.windowCallback({
-                target: 'network_changed',
+                target: EVENT.NETWORK_CHANGED,
                 data: {
                     using: net === 'test' ? 'TestNet' : 'MainNet'
                 }

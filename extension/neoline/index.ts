@@ -206,16 +206,16 @@ window.addEventListener('message', (e) => {
             return;
         }
 
-        case 'getAuthState': {
+        case requestTarget.AuthState: {
             getStorage('connectedWebsites', (res) => {
                 window.postMessage({
-                    target: 'authStateRes',
+                    target: returnTarget.AuthState,
                     data: res
                 }, '*');
             });
             return;
         }
-        case requestTarget.send: {
+        case requestTarget.Send: {
             const parameter = e.data.parameter as SendArgs;
             const assetID = parameter.asset.length < 10 ? '' : parameter.asset;
             const symbol =  parameter.asset.length >= 10 ? '' : parameter.asset;
@@ -245,7 +245,7 @@ window.addEventListener('message', (e) => {
                         });
                     } else {
                         window.postMessage({
-                            target: returnTarget.send,
+                            target: returnTarget.Send,
                             data: 'invalid_arguments'
                         }, '*');
                         return;
@@ -255,7 +255,7 @@ window.addEventListener('message', (e) => {
 
             return;
         }
-        case 'connect': {
+        case requestTarget.Connect: {
             chrome.runtime.sendMessage(e.data, (response) => {
                 return Promise.resolve('Dummy response to keep the console quiet');
             });

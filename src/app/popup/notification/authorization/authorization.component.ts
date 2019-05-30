@@ -1,6 +1,7 @@
 import {
     Component,
-    OnInit
+    OnInit,
+    OnDestroy
 } from '@angular/core';
 import {
     ChromeService,
@@ -18,6 +19,7 @@ import {
 import {
     wallet
 } from '@cityofzion/neon-core';
+import { ERRORS, returnTarget, EVENT } from '@/models/dapi';
 
 @Component({
     templateUrl: './authorization.component.html',
@@ -30,7 +32,6 @@ export class PopupNoticeAuthComponent implements OnInit {
     public wallet: Wallet;
     public address = '';
     public accountName = '';
-    private isNext = '';
     private paramsData: any;
 
     public ruleCheck = false;
@@ -51,7 +52,6 @@ export class PopupNoticeAuthComponent implements OnInit {
             this.iconSrc = params.icon;
             this.hostname = params.hostname;
             this.title = params.title;
-            this.isNext = params.next;
             if (params.network) {
                 if (params.network === 'MainNet') {
                     this.global.modifyNet('main');
@@ -65,11 +65,11 @@ export class PopupNoticeAuthComponent implements OnInit {
     ngOnInit() {
         window.onbeforeunload = () => {
             this.chrome.windowCallback({
-                data: false,
-                target: 'connection_rejected'
+                data: ERRORS.CANCELLED,
+                target: returnTarget.Connect
             });
         };
-     }
+    }
     public refuse() {
         this.chrome.getAuthorization().subscribe(res => {
             if (this.ruleCheck) {
@@ -82,7 +82,7 @@ export class PopupNoticeAuthComponent implements OnInit {
             }
             this.chrome.windowCallback({
                 data: false,
-                target: 'connection_rejected'
+                target: returnTarget.Connect
             });
             window.close();
         });
@@ -99,28 +99,19 @@ export class PopupNoticeAuthComponent implements OnInit {
             }
             this.chrome.windowCallback({
                 data: true,
-                target: 'connected'
+                target: returnTarget.Connect
+            });
+            this.chrome.windowCallback({
+                data: true,
+                target: EVENT.CONNECTED
             });
             let queryString = '';
             for (const key in this.paramsData) {
                 if (this.paramsData.hasOwnProperty(key)) {
-                    queryString +=  `${key}=${this.paramsData[key]}&`;
+                    queryString += `${key}=${this.paramsData[key]}&`;
                 }
             }
-            switch (this.isNext) {
-                case 'transfer': {
-                    this.router.navigateByUrl(`/popup/notification/transfer?${queryString}`);
-                    break;
-                }
-                case 'invoke': {
-                    this.router.navigateByUrl(`/popup/notification/invoke?${queryString}`);
-                    break;
-                }
-                default: {
-                    window.close();
-                    break;
-                }
-            }
+            window.close();
         });
     }
 }

@@ -1,46 +1,14 @@
 import {
     Provider, EVENT, returnTarget, requestTarget, Networks, Account,
     AccountPublicKey, BalanceResults, BalanceRequest, GetBalanceArgs, InvokeReadArgs,
-    TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput
+    TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput, ERRORS
 } from '../common/data_module';
-
-const errors = {
-    CONNECTION_REJECTED: {
-        code: 'CONNECTION_REJECTED',
-        description: 'The user rejected your request'
-    },
-    RPC_ERROR: {
-        code: 'RPC_ERROR',
-        description: 'RPC server temporary unavailable'
-    },
-    INVALID_ARGUMENTS: {
-        code: 'INVALID_ARGUMENTS',
-        description: 'The given arguments is invalid'
-    },
-    INSUFFICIENT_FUNDS: {
-        code: 'INSUFFICIENT_FUNDS',
-        description: 'The address has insufficient funds to transfer funds'
-    },
-    CANCELLED: {
-        code: 'CANCELLED',
-        description: 'The user has cancelled this request'
-    },
-    NETWORK_ERROR: {
-        code: 'NETWORK_ERROR',
-        description: 'Network currently unavailable, please check the internet connection'
-    },
-    DEFAULT: {
-        code: 'FAIL',
-        description: 'The request failed.'
-    }
-};
-
 export class Init {
     public EVENT = {
         READY: 'neoline.ready',
         ACCOUNT_CHANGED: 'neoline.account_changed',
         CONNECTED: 'neoline.connected',
-        CONNECTION_REJECTED: 'neoline.connection_rejected',
+        DISCONNECTED: 'neoline.disconnected',
         NETWORK_CHANGED: 'neoline.network_changed'
     };
     private EVENTLIST = {
@@ -56,7 +24,7 @@ export class Init {
             callback: [],
             callbackEvent: []
         },
-        CONNECTION_REJECTED: {
+        DISCONNECTED: {
             callback: [],
             callbackEvent: []
         },
@@ -95,12 +63,21 @@ export class Init {
     }
 
     public getAccount(): Promise<Account> {
-        return new Promise((resolveMain, rejectMain) => {
-            window.postMessage({
-                target: requestTarget.Account
-            }, '*');
-            this.getAuthState().then(authState => {
-                if (authState === 'AUTHORIZED' || sessionStorage.getItem('connect') === 'true') {
+        return new Promise(async (resolveMain, rejectMain) => {
+            let authState: any;
+            try {
+                authState = await getAuthState() || 'NONE';
+            } catch (error) {
+                console.log(error);
+            }
+            if (authState === true || authState === 'NONE') {
+                let connectResult;
+                if (sessionStorage.getItem('connect') !== 'true' && authState === 'NONE') {
+                    connectResult = await connect();
+                } else {
+                    connectResult = true;
+                }
+                if (connectResult === true) {
                     window.postMessage({
                         target: requestTarget.Account,
                     }, '*');
@@ -117,9 +94,16 @@ export class Init {
                         resolveMain(res);
                     });
                 } else {
-                    rejectMain(errors.CONNECTION_REJECTED);
+                    if (connectResult instanceof Object) {
+                        rejectMain(ERRORS.CANCELLED);
+                    } else {
+                        rejectMain(ERRORS.CONNECTION_DENIED);
+                    }
                 }
-            });
+            } else {
+                rejectMain(ERRORS.CONNECTION_DENIED);
+
+            }
         });
     }
 
@@ -128,8 +112,8 @@ export class Init {
             window.postMessage({
                 target: requestTarget.Account
             }, '*');
-            this.getAuthState().then(authState => {
-                if (authState === 'AUTHORIZED' || sessionStorage.getItem('connect') === 'true') {
+            getAuthState().then(authState => {
+                if (authState === true || sessionStorage.getItem('connect') === 'true') {
                     window.postMessage({
                         target: requestTarget.AccountPublicKey,
                     }, '*');
@@ -146,7 +130,7 @@ export class Init {
                         resolveMain(res);
                     });
                 } else {
-                    rejectMain(errors.CONNECTION_REJECTED);
+                    rejectMain(ERRORS.CONNECTION_DENIED);
                 }
             });
         });
@@ -155,7 +139,7 @@ export class Init {
     public getBalance(parameter: GetBalanceArgs): Promise<BalanceResults> {
         return new Promise((resolveMain, rejectMain) => {
             if (parameter === undefined || parameter.params === undefined) {
-                rejectMain(errors.INVALID_ARGUMENTS);
+                rejectMain(ERRORS.MALFORMED_INPUT);
             } else {
                 window.postMessage({
                     target: requestTarget.Balance,
@@ -172,7 +156,7 @@ export class Init {
                 });
                 promise.then((res: any) => {
                     if (!res.bool_status) {
-                        rejectMain(errors.RPC_ERROR);
+                        rejectMain(ERRORS.RPC_ERROR);
                     } else {
                         resolveMain(res.result);
                     }
@@ -186,7 +170,7 @@ export class Init {
             if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
                 parameter.operation === undefined || parameter.operation === '' ||
                 parameter.args === undefined || parameter.args.length === 0) {
-                rejectMain(errors.INVALID_ARGUMENTS);
+                rejectMain(ERRORS.MALFORMED_INPUT);
             }
             window.postMessage({
                 target: requestTarget.InvokeRead,
@@ -210,7 +194,7 @@ export class Init {
                         stack: res.result.stack
                     });
                 } else {
-                    rejectMain(errors.NETWORK_ERROR);
+                    rejectMain(ERRORS.RPC_ERROR);
                 }
             });
         });
@@ -219,7 +203,7 @@ export class Init {
     public getTransaction(parameter: TransactionInputArgs): Promise<TransactionDetails> {
         return new Promise((resolveMain, rejectMain) => {
             if (parameter.txid === undefined) {
-                rejectMain(errors.INVALID_ARGUMENTS);
+                rejectMain(ERRORS.MALFORMED_INPUT);
             }
             window.postMessage({
                 target: requestTarget.Transaction,
@@ -238,130 +222,168 @@ export class Init {
                 if (res.bool_status) {
                     resolveMain(res.result);
                 } else {
-                    rejectMain(errors.NETWORK_ERROR);
+                    rejectMain(ERRORS.RPC_ERROR);
                 }
             });
         });
     }
 
     public invoke(parameter: InvokeArgs) {
-        return new Promise((resolveMain, rejectMain) => {
+        return new Promise(async (resolveMain, rejectMain) => {
             if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
                 parameter.operation === undefined || parameter.operation === '' ||
                 parameter.args === undefined) {
-                rejectMain(errors.INVALID_ARGUMENTS);
+                rejectMain(ERRORS.MALFORMED_INPUT);
             }
-            window.postMessage({
-                target: requestTarget.Invoke,
-                parameter,
-                hostname: location.hostname,
-                icon: getIcon(),
-                connect: sessionStorage.getItem('connect')
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const invokeFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === returnTarget.Invoke) {
-                        resolve(event.data.data);
-                        window.removeEventListener('message', invokeFn);
-                    }
-                };
-                window.addEventListener('message', invokeFn);
-            });
-            promise.then((res: any) => {
-                switch (res) {
-                    case 'rpcWrong':
-                        {
-                            rejectMain(errors.RPC_ERROR);
-                            break;
-                        }
-                    case 'invalid_arguments':
-                        {
-                            rejectMain(errors.INVALID_ARGUMENTS);
-                            break;
-                        }
-                    case 'default':
-                        {
-                            rejectMain(errors.DEFAULT);
-                            break;
-                        }
-                    default:
-                        {
-                            resolveMain(res);
-                            break;
-                        }
+            let authState: any;
+            try {
+                authState = await getAuthState() || 'NONE';
+            } catch (error) {
+                console.log(error);
+            }
+            if (authState === true || authState === 'NONE') {
+                let connectResult;
+                if (sessionStorage.getItem('connect') !== 'true' && authState === 'NONE') {
+                    connectResult = await connect();
+                } else {
+                    connectResult = true;
                 }
-            });
+                if (connectResult === true) {
+                    window.postMessage({
+                        target: requestTarget.Invoke,
+                        parameter,
+                        hostname: location.hostname,
+                        icon: getIcon(),
+                        connect: sessionStorage.getItem('connect')
+                    }, '*');
+                    const promise = new Promise((resolve, reject) => {
+                        const invokeFn = (event) => {
+                            if (event.data.target !== undefined && event.data.target === returnTarget.Invoke) {
+                                resolve(event.data.data);
+                                window.removeEventListener('message', invokeFn);
+                            }
+                        };
+                        window.addEventListener('message', invokeFn);
+                    });
+                    promise.then((res: any) => {
+                        switch (res) {
+                            case ERRORS.RPC_ERROR.type:
+                                {
+                                    rejectMain(ERRORS.RPC_ERROR);
+                                    break;
+                                }
+                            case ERRORS.MALFORMED_INPUT.type:
+                                {
+                                    rejectMain(ERRORS.MALFORMED_INPUT);
+                                    break;
+                                }
+                            case ERRORS.DEFAULT.type:
+                                {
+                                    rejectMain(ERRORS.DEFAULT);
+                                    break;
+                                }
+                            default:
+                                {
+                                    resolveMain(res);
+                                    break;
+                                }
+                        }
+                    });
+                } else {
+                    if (connectResult instanceof Object) {
+                        rejectMain(ERRORS.CANCELLED);
+                    } else {
+                        rejectMain(ERRORS.CONNECTION_DENIED);
+                    }
+                }
+            } else {
+                rejectMain(ERRORS.CONNECTION_DENIED);
+            }
         });
     }
 
     public send(parameter: SendArgs): Promise<SendOutput> {
-        return new Promise((resolveMain, rejectMain) => {
-            this.getAuthState().then(authState => {
-                if (authState === 'AUTHORIZED' || authState === 'NONE') {
-                    if (parameter === undefined || parameter.toAddress === undefined || parameter.fromAddress === undefined ||
-                        (parameter.asset === undefined) ||
-                        parameter.amount === undefined || parameter.network === undefined) {
-                        rejectMain(errors.INVALID_ARGUMENTS);
-                    } else {
-                        if (sessionStorage.getItem('connect') !== 'true') {
-                            this.connect(false);
-                        }
-                        window.postMessage({
-                            target: requestTarget.send,
-                            parameter,
-                            hostname: location.hostname,
-                            icon: getIcon(),
-                            connect: sessionStorage.getItem('connect')
-                        }, '*');
-                        const promise = new Promise((resolve, reject) => {
-                            const transferFn = (event) => {
-                                if (event.data.target === returnTarget.send) {
-                                    resolve(event.data.data);
-                                }
-                            };
-                            window.addEventListener('message', transferFn);
-                        });
-                        promise.then(res => {
-                            switch (res) {
-                                case 'cancel':
-                                    {
-                                        rejectMain(errors.CANCELLED);
-                                        break;
-                                    }
-                                case 'rpcWrong':
-                                    {
-                                        rejectMain(errors.RPC_ERROR);
-                                        break;
-                                    }
-                                case 'invalid_arguments':
-                                    {
-                                        rejectMain(errors.INVALID_ARGUMENTS);
-                                        break;
-                                    }
-                                case 'default':
-                                    {
-                                        rejectMain(errors.DEFAULT);
-                                        break;
-                                    }
-                                default:
-                                    {
-                                        resolveMain(res as SendOutput);
-                                        break;
-                                    }
-                            }
-                        });
-                    }
+        return new Promise(async (resolveMain, rejectMain) => {
+            if (parameter === undefined || parameter.toAddress === undefined || parameter.fromAddress === undefined ||
+                (parameter.asset === undefined) ||
+                parameter.amount === undefined || parameter.network === undefined) {
+                rejectMain(ERRORS.MALFORMED_INPUT);
+            }
+            let authState: any;
+            try {
+                authState = await getAuthState() || 'NONE';
+            } catch (error) {
+                console.log(error);
+            }
+            if (authState === true || authState === 'NONE') {
+                let connectResult;
+                if (sessionStorage.getItem('connect') !== 'true' && authState === 'NONE') {
+                    connectResult = await connect();
                 } else {
-                    rejectMain(errors.CONNECTION_REJECTED);
+                    connectResult = true;
                 }
-            });
+                if (connectResult === true) {
+                    window.postMessage({
+                        target: requestTarget.Send,
+                        parameter,
+                        hostname: location.hostname,
+                        icon: getIcon(),
+                        connect: sessionStorage.getItem('connect')
+                    }, '*');
+                    const promise = new Promise((resolve, reject) => {
+                        const transferFn = (event) => {
+                            if (event.data.target === returnTarget.Send) {
+                                resolve(event.data.data);
+                            }
+                        };
+                        window.addEventListener('message', transferFn);
+                    });
+                    promise.then(res => {
+                        switch (res) {
+                            case ERRORS.CANCELLED.type:
+                                {
+                                    rejectMain(ERRORS.CANCELLED);
+                                    break;
+                                }
+                            case ERRORS.RPC_ERROR.type:
+                                {
+                                    rejectMain(ERRORS.RPC_ERROR);
+                                    break;
+                                }
+                            case ERRORS.MALFORMED_INPUT.type:
+                                {
+                                    rejectMain(ERRORS.MALFORMED_INPUT);
+                                    break;
+                                }
+                            case ERRORS.DEFAULT.type:
+                                {
+                                    rejectMain(ERRORS.DEFAULT);
+                                    break;
+                                }
+                            default:
+                                {
+                                    resolveMain(res as SendOutput);
+                                    break;
+                                }
+                        }
+                    });
+                } else {
+                    if (connectResult instanceof Object ) {
+                        rejectMain(connectResult);
+                    } else {
+                        rejectMain(ERRORS.CONNECTION_DENIED);
+                    }
+                }
+            } else {
+                rejectMain(ERRORS.CONNECTION_DENIED);
+            }
         });
     }
 
     public getBlock(parameter: GetBlockInputArgs) {
         return new Promise((resolveMain, rejectMain) => {
             if (parameter.blockHeight === undefined) {
-                rejectMain(errors.INVALID_ARGUMENTS);
+                rejectMain(ERRORS.MALFORMED_INPUT);
             }
             window.postMessage({
                 target: requestTarget.Block,
@@ -380,7 +402,7 @@ export class Init {
                 if (res.bool_status) {
                     resolveMain(res.result);
                 } else {
-                    rejectMain(errors.NETWORK_ERROR);
+                    rejectMain(ERRORS.RPC_ERROR);
                 }
             });
         });
@@ -389,7 +411,7 @@ export class Init {
     public getApplicationLog(parameter: TransactionInputArgs) {
         return new Promise((resolveMain, rejectMain) => {
             if (parameter.txid === undefined) {
-                rejectMain(errors.INVALID_ARGUMENTS);
+                rejectMain(ERRORS.MALFORMED_INPUT);
             }
             window.postMessage({
                 target: requestTarget.ApplicationLog,
@@ -408,63 +430,7 @@ export class Init {
                 if (res.bool_status) {
                     resolveMain(res.result);
                 } else {
-                    rejectMain(errors.NETWORK_ERROR);
-                }
-            });
-        });
-    }
-
-    public connect(open = true) {
-        return new Promise((resolveMain, rejectMain) => {
-            if (open) {
-                window.postMessage({
-                    target: 'connect',
-                    icon: getIcon(),
-                    hostname: location.hostname,
-                    title: document.title,
-                    connect: sessionStorage.getItem('connect')
-                }, '*');
-            }
-            const promise = new Promise((resolve, reject) => {
-                const connectFn = (event) => {
-                    if (event.data.target !== undefined && (event.data.target === 'connected' ||
-                        event.data.target === 'connection_rejected')) {
-                        resolve(event.data.data);
-                        window.removeEventListener('message', connectFn);
-                    }
-                };
-                window.addEventListener('message', connectFn);
-            });
-            promise.then(res => {
-                sessionStorage.setItem('connect', res.toString());
-                resolveMain(res);
-            });
-        });
-    }
-
-    public getAuthState() {
-        return new Promise((resolveMain, rejectMain) => {
-            window.postMessage({
-                target: 'getAuthState'
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const getAuthStateFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === 'authStateRes') {
-                        resolve(event.data.data);
-                        window.removeEventListener('message', getAuthStateFn);
-                    }
-                };
-                window.addEventListener('message', getAuthStateFn);
-            });
-            promise.then(res => {
-                if (res !== undefined && res[location.hostname] !== undefined && res[location.hostname] !== {}) {
-                    if (res[location.hostname].status === 'false') {
-                        resolveMain('CONNECTION_REJECTED');
-                    } else {
-                        resolveMain('AUTHORIZED');
-                    }
-                } else {
-                    resolveMain('NONE');
+                    rejectMain(ERRORS.RPC_ERROR);
                 }
             });
         });
@@ -522,21 +488,21 @@ export class Init {
                         this.EVENTLIST.CONNECTED.callbackEvent.length - 1]);
                     break;
                 }
-            case this.EVENT.CONNECTION_REJECTED:
+            case this.EVENT.DISCONNECTED:
                 {
-                    if (this.EVENTLIST.CONNECTION_REJECTED.callback.findIndex(item => item === callback) >= 0) {
+                    if (this.EVENTLIST.DISCONNECTED.callback.findIndex(item => item === callback) >= 0) {
                         return;
                     }
                     const callbackFn = (event) => {
-                        if (event.data.target !== undefined && event.data.target === this.EVENT.CONNECTION_REJECTED) {
+                        if (event.data.target !== undefined && event.data.target === this.EVENT.DISCONNECTED) {
                             callback(event.data.data);
                         }
                     };
-                    this.EVENTLIST.CONNECTION_REJECTED.callback.push(callback);
-                    this.EVENTLIST.CONNECTION_REJECTED.callbackEvent.push(callbackFn);
+                    this.EVENTLIST.DISCONNECTED.callback.push(callback);
+                    this.EVENTLIST.DISCONNECTED.callbackEvent.push(callbackFn);
                     window.addEventListener('message',
-                        this.EVENTLIST.CONNECTION_REJECTED.callbackEvent[
-                        this.EVENTLIST.CONNECTION_REJECTED.callbackEvent.length - 1]);
+                        this.EVENTLIST.DISCONNECTED.callbackEvent[
+                        this.EVENTLIST.DISCONNECTED.callbackEvent.length - 1]);
                     break;
                 }
             case this.EVENT.NETWORK_CHANGED:
@@ -583,12 +549,12 @@ export class Init {
                     this.EVENTLIST.CONNECTED.callbackEvent.splice(index, 1);
                     break;
                 }
-            case this.EVENT.CONNECTION_REJECTED:
+            case this.EVENT.DISCONNECTED:
                 {
-                    const index = this.EVENTLIST.CONNECTION_REJECTED.callback.findIndex(item => item === removeFn);
-                    window.removeEventListener('message', this.EVENTLIST.CONNECTION_REJECTED.callbackEvent[index]);
-                    this.EVENTLIST.CONNECTION_REJECTED.callback.splice(index, 1);
-                    this.EVENTLIST.CONNECTION_REJECTED.callbackEvent.splice(index, 1);
+                    const index = this.EVENTLIST.DISCONNECTED.callback.findIndex(item => item === removeFn);
+                    window.removeEventListener('message', this.EVENTLIST.DISCONNECTED.callbackEvent[index]);
+                    this.EVENTLIST.DISCONNECTED.callback.splice(index, 1);
+                    this.EVENTLIST.DISCONNECTED.callbackEvent.splice(index, 1);
                     break;
                 }
             case this.EVENT.NETWORK_CHANGED:
@@ -631,6 +597,63 @@ window.addEventListener('message', e => {
     }
 });
 
+function connect(open = true): Promise<any> {
+    return new Promise((resolveMain, rejectMain) => {
+        if (open) {
+            window.postMessage({
+                target: requestTarget.Connect,
+                icon: getIcon(),
+                hostname: location.hostname,
+                title: document.title,
+                connect: sessionStorage.getItem('connect')
+            }, '*');
+        }
+        const promise = new Promise((resolve, reject) => {
+            const connectFn = (event) => {
+                if (event.data.target !== undefined && (event.data.target === returnTarget.Connect)) {
+                    resolve(event.data.data);
+                    window.removeEventListener('message', connectFn);
+                }
+            };
+            window.addEventListener('message', connectFn);
+        });
+        promise.then(res => {
+            if (res === true || res === false) {
+                sessionStorage.setItem('connect', res.toString());
+            }
+            resolveMain(res);
+        });
+    });
+}
+
+function getAuthState(): Promise<any> {
+    return new Promise((resolveMain, rejectMain) => {
+        window.postMessage({
+            target: requestTarget.AuthState
+        }, '*');
+        const promise = new Promise((resolve, reject) => {
+            const getAuthStateFn = (event) => {
+                if (event.data.target !== undefined && event.data.target === returnTarget.AuthState) {
+                    resolve(event.data.data);
+                    window.removeEventListener('message', getAuthStateFn);
+                }
+            };
+            window.addEventListener('message', getAuthStateFn);
+        });
+        promise.then(res => {
+            if (res !== undefined && res[location.hostname] !== undefined && res[location.hostname] !== {}) {
+                if (res[location.hostname].status === 'false') {
+                    resolveMain(false);
+                } else {
+                    resolveMain(true);
+                }
+            } else {
+                resolveMain('NONE');
+            }
+        });
+    });
+}
+
 function getProvider(): Promise<Provider> {
     return new Promise((resolveMain, rejectMain) => {
         window.postMessage({
@@ -647,7 +670,7 @@ function getProvider(): Promise<Provider> {
         });
         promise.then((res: any) => {
             if (res === undefined || res === null) {
-                rejectMain(errors.DEFAULT);
+                rejectMain(ERRORS.DEFAULT);
             } else {
                 const returnResult: Provider = {
                     name: '',

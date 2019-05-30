@@ -37,6 +37,7 @@ import {
 import {
     map
 } from 'rxjs/operators';
+import { EVENT } from '@/models/dapi';
 
 @Component({
     templateUrl: 'setting.component.html',
@@ -93,9 +94,10 @@ export class PopupSettingComponent implements OnInit {
             this.chrome.setWallet(this.wallet.export());
             this.chrome.windowCallback({
                 data: {
-                    address: this.wallet.accounts[0].address
+                    address: this.wallet.accounts[0].address,
+                    label: this.wallet.name
                 },
-                target: 'account_changed'
+                target: EVENT.ACCOUNT_CHANGED
             });
             location.href = `index.html#popup`;
         }

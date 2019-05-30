@@ -24,6 +24,7 @@ import {
 import {
     TransferService
 } from '@/app/transfer/transfer.service';
+import { returnTarget, ERRORS } from '@/models/dapi';
 @Component({
     templateUrl: 'transfer.component.html',
     styleUrls: ['transfer.component.scss']
@@ -69,8 +70,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.broadcastOverride = params.broadcastOverride || false;
             window.onbeforeunload = () => {
                 this.chrome.windowCallback({
-                    data: 'cancel',
-                    target: 'neoline.return_send'
+                    data: ERRORS.CANCELLED,
+                    target: returnTarget.Send
                 });
             };
             if (params.network === 'MainNet') {
@@ -145,8 +146,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
 
     public cancel() {
         this.chrome.windowCallback({
-            data: 'cancel',
-            target: 'neoline.return_send'
+            data: ERRORS.CANCELLED,
+            target: returnTarget.Send
         });
         window.close();
     }
@@ -170,7 +171,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                         txid: tx.hash,
                         signedTx: tx.serialize(true)
                     },
-                    target: 'neoline.return_send'
+                    target: returnTarget.Send
                 });
             } else {
                 this.resolveSend(tx);
@@ -204,7 +205,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                     txid: tx.hash,
                     nodeURL: `${this.global.apiDomain}`
                 },
-                target: 'neoline.return_send'
+                target: returnTarget.Send
             });
             this.router.navigate([{
                 outlets: {
@@ -216,8 +217,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.loadingMsg = '';
             this.creating = false;
             this.chrome.windowCallback({
-                data: 'rpcWrong',
-                target: 'neoline.return_send'
+                data: ERRORS.RPC_ERROR,
+                target: returnTarget.Send
             });
             console.log(err);
             this.global.snackBarTip('transferFailed', err);

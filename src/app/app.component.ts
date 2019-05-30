@@ -25,6 +25,7 @@ import {
     PopupLogoutDialogComponent
 } from './popup/_dialogs/logout/logout.dialog';
 import { HttpClient } from '@angular/common/http';
+import { EVENT } from '@/models/dapi';
 
 @Component({
     selector: 'neo-line',
@@ -112,9 +113,10 @@ export class AppComponent {
             this.chrome.setWallet(this.wallet.export());
             this.chrome.windowCallback({
                 data: {
-                    address: this.wallet.accounts[0].address
+                    address: this.wallet.accounts[0].address,
+                    label: this.wallet.name
                 },
-                target: 'account_changed'
+                target: EVENT.ACCOUNT_CHANGED
             });
             location.href = `index.html`;
         }

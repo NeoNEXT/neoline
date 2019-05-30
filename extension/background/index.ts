@@ -20,7 +20,7 @@ import {
     setLocalStorage,
     getLocalStorage
 } from '../common';
-import { requestTarget, returnTarget, GetBalanceArgs, BalanceRequest } from '../common/data_module';
+import { requestTarget, returnTarget, GetBalanceArgs, BalanceRequest, ERRORS } from '../common/data_module';
 /**
  * Background methods support.
  * Call window.NEOLineBackground to use.
@@ -111,7 +111,7 @@ chrome.windows.onRemoved.addListener(() => {
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     switch (request.target) {
-        case requestTarget.send:
+        case requestTarget.Send:
             {
                 const params = request.parameter;
                 let queryString = '';
@@ -130,25 +130,18 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 getLocalStorage('wallet', (wallet) => {
                     if (wallet !== undefined && wallet.accounts[0].address !== params.fromAddress) {
                         windowCallback({
-                            target: returnTarget.send,
-                            data: 'invalid_arguments'
+                            target: returnTarget.Send,
+                            data: ERRORS.MALFORMED_INPUT
                         });
                     } else {
-                        getStorage('connectedWebsites', (res) => {
-                            if (res !== undefined && res[request.hostname] !== undefined || request.connect === 'true') {
-                                window.open(`index.html#popup/notification/transfer?${queryString}`,
-                                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
-                            } else {
-                                window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=transfer&${queryString}`,
-                                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
-                            }
-                        });
+                        window.open(`index.html#popup/notification/transfer?${queryString}`,
+                        '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                     }
                 });
                 sendResponse('');
                 return true;
             }
-        case 'connect':
+        case requestTarget.Connect:
             {
                 chrome.tabs.query({
                     active: true,
@@ -161,13 +154,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         if (res !== undefined && res[request.hostname] !== undefined && res[request.hostname].status === 'false') {
                             notification(chrome.i18n.getMessage('rejected'), chrome.i18n.getMessage('rejectedTip'));
                             windowCallback({
-                                target: 'connection_rejected',
+                                target: returnTarget.Connect,
                                 data: false
                             });
                             return;
                         }
                         windowCallback({
-                            target: 'connected',
+                            target: returnTarget.Connect,
                             data: true
                         });
                         notification(`${chrome.i18n.getMessage('from')}: ${request.hostname}`, chrome.i18n.getMessage('connectedTip'));
@@ -235,13 +228,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         queryString +=  `${key}=${value}&`;
                     }
                 }
-                if (res !== undefined && res[request.hostname] !== undefined || request.connect === 'true') {
-                    window.open(`index.html#popup/notification/invoke?${queryString}`,
+                window.open(`index.html#popup/notification/invoke?${queryString}`,
                         '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
-                } else {
-                    window.open(`index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&next=invoke&${queryString}`,
-                        '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
-                }
             });
 
             sendResponse('');
