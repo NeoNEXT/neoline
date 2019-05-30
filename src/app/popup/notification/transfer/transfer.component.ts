@@ -36,6 +36,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public assetId: string;
     public symbol: string;
     public amount: number;
+    public remark: string = '';
     public loading = false;
     public loadingMsg: string;
     public wallet: any;
@@ -82,6 +83,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.amount = params.amount || 0;
             this.symbol = params.symbol || '';
             this.fee = params.fee || 0;
+            this.remark = params.remark || '';
             if (this.assetId !== undefined && this.assetId !== '') {
                 this.asset.detail(this.neon.address, this.assetId).subscribe((res: Balance) => {
                     this.init = true;
@@ -153,6 +155,9 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         this.loading = true;
         this.loadingMsg = 'Wait';
         this.neon.wallet.accounts[0].decrypt(pwd).then((acc) => {
+            if (this.remark !== '') {
+                tx.addRemark(this.remark);
+            }
             tx.sign(acc);
             this.loading = false;
             this.loadingMsg = '';
@@ -214,6 +219,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                 data: 'rpcWrong',
                 target: 'neoline.return_send'
             });
+            console.log(err);
             this.global.snackBarTip('transferFailed', err);
         });
     }
