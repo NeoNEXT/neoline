@@ -55,6 +55,15 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 let newJson = params.args.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
                 newJson = newJson.replace(/'/g, '"');
                 this.args = JSON.parse(newJson);
+                this.args.forEach((item, index) => {
+                    if (item.type === 'Address') {
+                        const param2 = sc.ContractParam.byteArray(
+                            item.value,
+                            item.key
+                        );
+                        this.args[index] = sc.ContractParam.array(param2).value;
+                    }
+                });
                 this.fee = parseFloat(params.fee) || 0;
                 if (this.pramsData.attachedAssets) {
                     newJson = this.pramsData.attachedAssets.replace(/([a-zA-Z0-9]+?):/g, '"$1":');

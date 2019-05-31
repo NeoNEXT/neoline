@@ -21,6 +21,7 @@ import {
     getLocalStorage
 } from '../common';
 import { requestTarget, returnTarget, GetBalanceArgs, BalanceRequest, ERRORS } from '../common/data_module';
+import { reverseHex, getScriptHashFromAddress } from '../common/utils';
 /**
  * Background methods support.
  * Call window.NEOLineBackground to use.
@@ -203,6 +204,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             return;
         }
         case requestTarget.InvokeRead: {
+            const args = request.parameter[2];
+            args.forEach((item, index) => {
+                if (item.type === 'Address') {
+                    args[index] = {
+                        type: 5,
+                        value: reverseHex(getScriptHashFromAddress(item.value))
+                    };
+                }
+            });
+            request.parameter[3] = args;
             httpPost(`${request.network}/v1/transactions/invokeread`, { params: request.parameter }, (res) => {
                 res.target = returnTarget.InvokeRead;
                 windowCallback(res);
