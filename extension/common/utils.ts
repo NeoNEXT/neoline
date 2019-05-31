@@ -34,15 +34,11 @@ export function getPublicKeyFromPrivateKey(privateKey, encode = true) {
     if (encode) {
         const tail = parseInt(unencodedPubKey.substr(64 * 2, 2), 16);
         if (tail % 2 === 1) {
-            console.log( '03' + unencodedPubKey.substr(2, 64));
             return '03' + unencodedPubKey.substr(2, 64);
         } else {
-            console.log('02' + unencodedPubKey.substr(2, 64));
-
             return '02' + unencodedPubKey.substr(2, 64);
         }
     } else {
-        console.log(unencodedPubKey);
         return unencodedPubKey;
     }
 }

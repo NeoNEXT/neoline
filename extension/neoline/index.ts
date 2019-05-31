@@ -118,6 +118,22 @@ window.addEventListener('message', (e) => {
             return;
         }
 
+        case requestTarget.Storage: {
+            getStorage('net', async (res) => {
+                let apiUrl = e.data.parameter.network;
+                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                    apiUrl = res || 'MainNet';
+                }
+                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
+                httpGet(`${apiUrl}/v1/getstorage?script_hash=${e.data.parameter.scriptHash}&key=${e.data.parameter.key}`, (returnRes) => {
+                    window.postMessage({
+                        target: returnTarget.Storage,
+                        data: returnRes
+                    }, '*');
+                }, null);
+            });
+            return;
+        }
         case requestTarget.InvokeRead: {
             getStorage('net', async (res) => {
                 let apiUrl = e.data.parameter.network;

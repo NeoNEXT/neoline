@@ -1,7 +1,7 @@
 import {
     Provider, EVENT, returnTarget, requestTarget, Networks, Account,
     AccountPublicKey, BalanceResults, BalanceRequest, GetBalanceArgs, InvokeReadArgs,
-    TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput, ERRORS
+    TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput, ERRORS, GetStorageArgs, StorageResponse
 } from '../common/data_module';
 export class Init {
     public EVENT = EVENT;
@@ -158,6 +158,36 @@ export class Init {
             }
         });
     }
+
+    public getStorage(parameter: GetStorageArgs): Promise<StorageResponse> {
+        return new Promise((resolveMain, rejectMain) => {
+            if (parameter === undefined || parameter.scriptHash === undefined || parameter.key === undefined) {
+                rejectMain(ERRORS.MALFORMED_INPUT);
+            } else {
+                window.postMessage({
+                    target: requestTarget.Storage,
+                    parameter
+                }, '*');
+                const promise = new Promise((resolve, reject) => {
+                    const getStorageFn = (event) => {
+                        if (event.data.target !== undefined && event.data.target === returnTarget.Storage) {
+                            resolve(event.data.data);
+                            window.removeEventListener('message', getStorageFn);
+                        }
+                    };
+                    window.addEventListener('message', getStorageFn);
+                });
+                promise.then((res: any) => {
+                    if (!res.bool_status) {
+                        rejectMain(ERRORS.RPC_ERROR);
+                    } else {
+                        resolveMain(res.result || null);
+                    }
+                });
+            }
+        });
+    }
+
 
     public invokeRead(parameter: InvokeReadArgs): Promise<object> {
         return new Promise((resolveMain, rejectMain) => {
