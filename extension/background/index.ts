@@ -213,7 +213,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     };
                 }
             });
-            request.parameter[3] = args;
+            request.parameter[2] = args;
             httpPost(`${request.network}/v1/transactions/invokeread`, { params: request.parameter }, (res) => {
                 res.target = returnTarget.InvokeRead;
                 windowCallback(res);
