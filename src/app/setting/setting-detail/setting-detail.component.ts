@@ -33,8 +33,7 @@ export class SettingDetailComponent implements OnInit {
     public rateCurrency: string;
     public rateCurrencys: Array < string > ;
     public rateTime: number;
-    public authorizationList = {};
-    public objectKeys = Object.keys;
+    public authorizationList = [];
 
     constructor(
         private router: Router,
@@ -96,13 +95,21 @@ export class SettingDetailComponent implements OnInit {
     public openPrivacy() {
         this.viewPrivacy = !this.viewPrivacy;
         this.chrome.getAuthorization().subscribe(res => {
-            this.authorizationList = res;
+            if (res[this.neon.wallet.accounts[0].address] === undefined) {
+                res[this.neon.wallet.accounts[0].address] = [];
+            }
+            this.chrome.setAuthorization(res);
+            this.authorizationList = res[this.neon.wallet.accounts[0].address];
         });
     }
 
     public delSite(hostname: string) {
-        delete this.authorizationList[hostname];
-        this.chrome.setAuthorization(this.authorizationList);
+        const index = this.authorizationList.findIndex(item => item.hostname === hostname);
+        this.authorizationList.splice(index, 1);
+        this.chrome.getAuthorization().subscribe(res => {
+            res[this.neon.wallet.accounts[0].address] = this.authorizationList;
+            this.chrome.setAuthorization(res);
+        });
     }
 
     public delAllSite() {
@@ -110,8 +117,11 @@ export class SettingDetailComponent implements OnInit {
             data: 'delAllAuthListConfirm'
         }).afterClosed().subscribe((confirm) => {
             if (confirm) {
-                this.authorizationList = {};
-                this.chrome.setAuthorization(this.authorizationList);
+                this.authorizationList = [];
+                this.chrome.getAuthorization().subscribe(res => {
+                    res[this.neon.wallet.accounts[0].address] = [];
+                    this.chrome.setAuthorization(res);
+                });
             }
         });
     }

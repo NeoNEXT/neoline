@@ -9,6 +9,7 @@ import { Transaction, TransactionInput } from '@cityofzion/neon-core/lib/tx';
 import { UTXO, ClaimItem, GAS } from '@/models/models';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { sc, u } from '@cityofzion/neon-core';
+import { EVENT } from '@/models/dapi';
 
 @Injectable()
 export class NeonService {
@@ -155,6 +156,10 @@ export class NeonService {
                 }
                 this.chrome.setWalletArray(this.getWalletArrayJSON());
                 this.chrome.setWIFArray(this._WIFArr);
+                this.chrome.windowCallback({
+                    data: true,
+                    target: EVENT.DISCONNECTED
+                });
             } else {
                 this._walletArr.splice(index, 1);
                 if (this._WIFArr.length > index) {

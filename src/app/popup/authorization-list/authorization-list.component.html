@@ -4,23 +4,23 @@
 </div>
 
 <div class="popup-authorization-list-content">
-    <div class="empty" *ngIf="objectKeys(authorizationList).length == 0">
+    <div class="empty" *ngIf="authorizationList.length == 0">
         {{ 'empty' | translate | async }}
     </div>
-    <div class="authorization-item" *ngFor="let key of objectKeys(authorizationList)">
-        <img class="icon" [src]="authorizationList[key].icon" alt="">
+    <div class="authorization-item" *ngFor="let item of authorizationList">
+        <img class="icon" [src]="item.icon" alt="">
         <div class="info-box">
             <div class="top">
                 <span class="websit-title">
-                    {{ authorizationList[key].title }}
+                    {{ item.title }}
                 </span>
-                <span class="websit-status"   [ngClass]="{ 'success': authorizationList[key].status, 'fail': !authorizationList[key].status }">{{ authorizationList[key].status ? '已授权' : '已拒绝' }}</span>
+                <span class="websit-status"   [ngClass]="{ 'success': item.status, 'fail': !item.status }">{{ item.status ? '已授权' : '已拒绝' }}</span>
             </div>
             <p class="websit-url">
-                {{ key }}
+                {{ item.hostname }}
             </p>
         </div>
-        <div class="remove-btn" (click)="delItem(key)">
+        <div class="remove-btn" (click)="delItem(item.hostname)">
             {{ 'delete' | translate | async }}
         </div>
     </div>

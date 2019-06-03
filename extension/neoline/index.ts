@@ -271,10 +271,13 @@ window.addEventListener('message', async (e) => {
 
 
         case requestTarget.AuthState: {
-            getStorage('connectedWebsites', (res) => {
+            getStorage('connectedWebsites', async (res) => {
+                const walletArr = await getLocalStorage('walletArr', () => { });
+                const currWallet = await getLocalStorage('wallet', () => { });
+                res = res || {};
                 window.postMessage({
                     target: returnTarget.AuthState,
-                    data: res
+                    data: currWallet ?  res[currWallet.accounts[0].address] || [] : []
                 }, '*');
             });
             return;

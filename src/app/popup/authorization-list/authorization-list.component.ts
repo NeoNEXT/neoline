@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthorizationData } from '@/models/models';
-import { ChromeService } from '@/app/core';
+import { ChromeService, NeonService } from '@/app/core';
 import { MatDialog } from '@angular/material';
 import { PopupConfirmDialogComponent } from '../_dialogs';
 
@@ -10,22 +10,30 @@ import { PopupConfirmDialogComponent } from '../_dialogs';
     styleUrls: ['./authorization-list.component.scss']
 })
 export class PopupAuthorizationListComponent implements OnInit {
-    public objectKeys = Object.keys;
-    public authorizationList = {};
+    public authorizationList = [];
     constructor(
         private chrome: ChromeService,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private neon: NeonService
     ) { }
 
     ngOnInit() {
         this.chrome.getAuthorization().subscribe(res => {
-            this.authorizationList = res;
+            if (res[this.neon.wallet.accounts[0].address] === undefined) {
+                res[this.neon.wallet.accounts[0].address] = [];
+            }
+            this.chrome.setAuthorization(res);
+            this.authorizationList = res[this.neon.wallet.accounts[0].address];
         });
     }
 
     public delItem(hostname: string) {
-        delete this.authorizationList[hostname];
-        this.chrome.setAuthorization(this.authorizationList);
+        const index = this.authorizationList.findIndex(item => item.hostname === hostname);
+        this.authorizationList.splice(index, 1);
+        this.chrome.getAuthorization().subscribe(res => {
+            res[this.neon.wallet.accounts[0].address] = this.authorizationList;
+            this.chrome.setAuthorization(res);
+        });
     }
 
     public delAll() {
@@ -33,8 +41,11 @@ export class PopupAuthorizationListComponent implements OnInit {
             data: 'delAllAuthListConfirm'
         }).afterClosed().subscribe((confirm) => {
             if (confirm) {
-                this.authorizationList = {};
-                this.chrome.setAuthorization(this.authorizationList);
+                this.authorizationList = [];
+                this.chrome.getAuthorization().subscribe(res => {
+                    res[this.neon.wallet.accounts[0].address] = [];
+                    this.chrome.setAuthorization(res);
+                });
             }
         });
     }

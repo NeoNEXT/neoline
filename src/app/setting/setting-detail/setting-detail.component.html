@@ -51,21 +51,21 @@
                 mat-button>{{ 'clearPrivacyDataBtn' | translate | async}}</button>
         </div>
         <div class="privacy-group" *ngIf="viewPrivacy">
-            <div class="empty" *ngIf="objectKeys(authorizationList).length == 0">
+            <div class="empty" *ngIf="authorizationList.length == 0">
                 {{ 'empty' | translate | async }}
             </div>
-            <div class="privacy-item setting-item" *ngFor="let key of objectKeys(authorizationList)">
+            <div class="privacy-item setting-item" *ngFor="let item of authorizationList">
                 <div class="setting-item-left">
-                    <img class="avatar" [src]="authorizationList[key].icon" alt="">
+                    <img class="avatar" [src]="item.icon" alt="">
                     <div class="info">
-                        <p class="name">{{ authorizationList[key].title }}</p>
-                        <p class="address">{{ key }}</p>
+                        <p class="name">{{ item.title }}</p>
+                        <p class="address">{{ item.hostname }}</p>
                     </div>
                 </div>
                 <div class="privacy-data-right">
-                    <div class="status" [ngClass]="authorizationList[key].status ? 'approval' : 'refuse'">
+                    <div class="status" [ngClass]="item.status ? 'approval' : 'refuse'">
                         <span></span>
-                        {{ authorizationList[key].status ? '已授权' : '已拒绝' }}
+                        {{ item.status ? '已授权' : '已拒绝' }}
                     </div>
                     <div class="delete" (click)="delSite(key)">
                         <span></span>

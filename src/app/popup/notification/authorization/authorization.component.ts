@@ -73,11 +73,15 @@ export class PopupNoticeAuthComponent implements OnInit {
     public refuse() {
         this.chrome.getAuthorization().subscribe(res => {
             if (this.ruleCheck) {
-                res[this.hostname] = {
+                if (res[this.neon.wallet.accounts[0].address] === undefined) {
+                    res[this.neon.wallet.accounts[0].address] = [];
+                }
+                res[this.neon.wallet.accounts[0].address].push({
+                    hostname: this.hostname,
                     icon: this.iconSrc,
                     title: this.title,
                     status: this.ruleSelected
-                };
+                });
                 this.chrome.setAuthorization(res);
             }
             this.chrome.windowCallback({
@@ -90,11 +94,15 @@ export class PopupNoticeAuthComponent implements OnInit {
     public connect() {
         this.chrome.getAuthorization().subscribe(res => {
             if (this.ruleCheck) {
-                res[this.hostname] = {
+                if (res[this.neon.wallet.accounts[0].address] === undefined) {
+                    res[this.neon.wallet.accounts[0].address] = [];
+                }
+                res[this.neon.wallet.accounts[0].address].push({
+                    hostname: this.hostname,
                     icon: this.iconSrc,
                     title: this.title,
                     status: this.ruleSelected
-                };
+                });
                 this.chrome.setAuthorization(res);
             }
             this.chrome.windowCallback({
@@ -105,12 +113,6 @@ export class PopupNoticeAuthComponent implements OnInit {
                 data: true,
                 target: EVENT.CONNECTED
             });
-            let queryString = '';
-            for (const key in this.paramsData) {
-                if (this.paramsData.hasOwnProperty(key)) {
-                    queryString += `${key}=${this.paramsData[key]}&`;
-                }
-            }
             window.close();
         });
     }

@@ -712,9 +712,17 @@ function connect(open = true): Promise<any> {
             };
             window.addEventListener('message', callbackFn);
         });
-        promise.then(res => {
+        promise.then(async res => {
             if (res === true || res === false) {
-                sessionStorage.setItem('connect', res.toString());
+                let authState: any;
+                try {
+                    authState = await getAuthState() || 'NONE';
+                    if (authState === 'NONE') {
+                        sessionStorage.setItem('connect', res.toString());
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
             }
             resolveMain(res);
         });
@@ -735,13 +743,10 @@ function getAuthState(): Promise<any> {
             };
             window.addEventListener('message', callbackFn);
         });
-        promise.then(res => {
-            if (res !== undefined && res[location.hostname] !== undefined && res[location.hostname] !== {}) {
-                if (res[location.hostname].status === 'false') {
-                    resolveMain(false);
-                } else {
-                    resolveMain(true);
-                }
+        promise.then((res: any) => {
+            const index = res.findIndex(item => item.hostname === location.hostname);
+            if (index >= 0) {
+                resolveMain(res[index].status === true || res[index].status === 'true' ? true : false );
             } else {
                 resolveMain('NONE');
             }
