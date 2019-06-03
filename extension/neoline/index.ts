@@ -8,8 +8,8 @@ import {
     httpPost,
     getLocalStorage
 } from '../common/index';
-import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS, SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS } from '../common/data_module';
-import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey } from '../common/utils';
+import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS, SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS, VerifyMessageArgs } from '../common/data_module';
+import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, sign, str2hexstring } from '../common/utils';
 
 declare var chrome: any;
 const mainApi = 'https://mainnet.api.neoline.cn';
@@ -39,7 +39,7 @@ window.onload = () => {
     }
 };
 
-window.addEventListener('message', (e) => {
+window.addEventListener('message', async (e) => {
     switch (e.data.target) {
         case requestTarget.Provider: {
             getStorage('rateCurrency', (res) => {
@@ -82,25 +82,21 @@ window.addEventListener('message', (e) => {
             return;
         }
         case requestTarget.AccountPublicKey: {
-            getLocalStorage('walletArr', (walletArr: Array<any>) => {
-                getLocalStorage('wallet', (currWallet: any) => {
-                    getLocalStorage('WIFArr', (WIFArr: Array<any>) => {
-                        const data: AccountPublicKey = { address: '', publicKey: '' };
-                        if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                            const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
-                                item.accounts[0].address === currWallet.accounts[0].address)]
-                            );
-                            data.address = currWallet.accounts[0].address;
-                            data.publicKey = getPublicKeyFromPrivateKey(privateKey);
-                        }
-                        window.postMessage({
-                            target: returnTarget.AccountPublicKey,
-                            data
-                        }, '*');
-                    });
-                });
-            });
-
+            const walletArr = await getLocalStorage('walletArr', () => { });
+            const currWallet = await getLocalStorage('wallet', () => { });
+            const WIFArr = await getLocalStorage('WIFArr', () => { });
+            const data: AccountPublicKey = { address: '', publicKey: '' };
+            if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
+                const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
+                    item.accounts[0].address === currWallet.accounts[0].address)]
+                );
+                data.address = currWallet.accounts[0].address;
+                data.publicKey = getPublicKeyFromPrivateKey(privateKey);
+            }
+            window.postMessage({
+                target: returnTarget.AccountPublicKey,
+                data
+            }, '*');
             return;
         }
         case requestTarget.Balance: {
@@ -134,6 +130,7 @@ window.addEventListener('message', (e) => {
             });
             return;
         }
+
         case requestTarget.InvokeRead: {
             getStorage('net', async (res) => {
                 let apiUrl = e.data.parameter.network;
@@ -149,6 +146,32 @@ window.addEventListener('message', (e) => {
                     return Promise.resolve('Dummy response to keep the console quiet');
                 });
             });
+            return;
+        }
+
+        case requestTarget.VerifyMessage: {
+            const parameter = e.data.parameter as VerifyMessageArgs;
+            const walletArr = await getLocalStorage('walletArr', () => { });
+            const currWallet = await getLocalStorage('wallet', () => { });
+            const WIFArr = await getLocalStorage('WIFArr', () => { });
+            if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
+                const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
+                    item.accounts[0].address === currWallet.accounts[0].address)]
+                );
+                if (parameter.publicKey !== getPublicKeyFromPrivateKey(privateKey)) {
+                    window.postMessage({
+                        target: returnTarget.VerifyMessage,
+                        data: ERRORS.MALFORMED_INPUT
+                    }, '*');
+                } else {
+                    window.postMessage({
+                        target: returnTarget.VerifyMessage,
+                        data: {
+                            result: sign(str2hexstring(parameter.message), privateKey) === parameter.data ? true : false
+                        }
+                    }, '*');
+                }
+            }
             return;
         }
 
@@ -234,7 +257,7 @@ window.addEventListener('message', (e) => {
         case requestTarget.Send: {
             const parameter = e.data.parameter as SendArgs;
             const assetID = parameter.asset.length < 10 ? '' : parameter.asset;
-            const symbol =  parameter.asset.length >= 10 ? '' : parameter.asset;
+            const symbol = parameter.asset.length >= 10 ? '' : parameter.asset;
             getStorage('net', async (res) => {
                 let apiUrl = parameter.network;
                 if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
@@ -284,3 +307,5 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     sendResponse('');
     return Promise.resolve('Dummy response to keep the console quiet');
 });
+
+

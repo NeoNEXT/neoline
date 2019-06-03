@@ -92,9 +92,12 @@ export function clearStorage() {
 
 
 
-export function getLocalStorage(key, callback) {
-    chrome.storage.local.get([key], (result) => {
-        callback(result[key]);
+export function getLocalStorage(key, callback): Promise<any> {
+    return new Promise(resolve => {
+        chrome.storage.local.get([key], (result) => {
+            callback(result[key]);
+            resolve(result[key]);
+        });
     });
 }
 

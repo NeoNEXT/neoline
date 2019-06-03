@@ -54,6 +54,7 @@ export enum requestTarget {
     Balance = 'neoline.request_balance',
     Storage = 'neoline.request_storage',
     InvokeRead = 'neoline.request_invoke_read',
+    VerifyMessage = 'neoline.request_verify_message',
     Transaction = 'neoline.request_transaction',
     Block = 'neoline.request_block',
     ApplicationLog = 'neoline.request_application_log',
@@ -72,6 +73,7 @@ export enum returnTarget {
     Balance = 'neoline.return_balance',
     Storage = 'neoline.return_storage',
     InvokeRead = 'neoline.return_invoke_read',
+    VerifyMessage = 'neoline.return_verify_message',
     Transaction = 'neoline.return_transaction',
     Block = 'neoline.return_block',
     ApplicationLog = 'neoline.return_application_log',
@@ -79,11 +81,6 @@ export enum returnTarget {
     Send = 'neoline.return_send',
     Connect = 'neoline.return_connect',
     AuthState = 'neoline.return_auth_state'
-}
-
-export enum errorDescription {
-    NO_PROVIDER = 'No provider available.',
-    CONNECTION_DENIED = 'The user rejected the request to connect with your dApp'
 }
 
 export interface Provider {
@@ -154,6 +151,17 @@ export interface Argument {
     type: ArgumentDataType;
     value: any;
 }
+
+export interface VerifyMessageArgs {
+    message: string; // Salt prefix + original message
+    data: string; // Signed message
+    publicKey: string; // Public key of account that signed message
+}
+
+export interface Response {
+    result: boolean;
+}
+
 export interface TransactionInputArgs {
     txid: string;
     network?: string;

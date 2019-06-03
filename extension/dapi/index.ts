@@ -1,7 +1,7 @@
 import {
     Provider, EVENT, returnTarget, requestTarget, Networks, Account,
     AccountPublicKey, BalanceResults, BalanceRequest, GetBalanceArgs, InvokeReadArgs,
-    TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput, ERRORS, GetStorageArgs, StorageResponse
+    TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput, ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response
 } from '../common/data_module';
 export class Init {
     public EVENT = EVENT;
@@ -42,13 +42,13 @@ export class Init {
                 target: requestTarget.Networks
             }, '*');
             const promise = new Promise((resolve, reject) => {
-                const getNetworksFn = (event) => {
+                const callbackFn = (event) => {
                     if (event.data.target !== undefined && event.data.target === returnTarget.Networks) {
                         resolve(event.data.data);
-                        window.removeEventListener('message', getNetworksFn);
+                        window.removeEventListener('message', callbackFn);
                     }
                 };
-                window.addEventListener('message', getNetworksFn);
+                window.addEventListener('message', callbackFn);
             });
             promise.then((res: Networks) => {
                 resolveMain(res);
@@ -76,13 +76,13 @@ export class Init {
                         target: requestTarget.Account,
                     }, '*');
                     const promise = new Promise((resolve, reject) => {
-                        const getAccountFn = (event) => {
+                        const callbackFn = (event) => {
                             if (event.data.target !== undefined && event.data.target === returnTarget.Account) {
                                 resolve(event.data.data);
-                                window.removeEventListener('message', getAccountFn);
+                                window.removeEventListener('message', callbackFn);
                             }
                         };
-                        window.addEventListener('message', getAccountFn);
+                        window.addEventListener('message', callbackFn);
                     });
                     promise.then((res: Account) => {
                         resolveMain(res);
@@ -112,13 +112,13 @@ export class Init {
                         target: requestTarget.AccountPublicKey,
                     }, '*');
                     const promise = new Promise((resolve, reject) => {
-                        const getAccountPublicFn = (event) => {
+                        const callbackFn = (event) => {
                             if (event.data.target !== undefined && event.data.target === returnTarget.AccountPublicKey) {
                                 resolve(event.data.data);
-                                window.removeEventListener('message', getAccountPublicFn);
+                                window.removeEventListener('message', callbackFn);
                             }
                         };
-                        window.addEventListener('message', getAccountPublicFn);
+                        window.addEventListener('message', callbackFn);
                     });
                     promise.then((res: AccountPublicKey) => {
                         resolveMain(res);
@@ -140,13 +140,13 @@ export class Init {
                     parameter
                 }, '*');
                 const promise = new Promise((resolve, reject) => {
-                    const getBalanceFn = (event) => {
+                    const callbackFn = (event) => {
                         if (event.data.target !== undefined && event.data.target === returnTarget.Balance) {
                             resolve(event.data.data);
-                            window.removeEventListener('message', getBalanceFn);
+                            window.removeEventListener('message', callbackFn);
                         }
                     };
-                    window.addEventListener('message', getBalanceFn);
+                    window.addEventListener('message', callbackFn);
                 });
                 promise.then((res: any) => {
                     if (!res.bool_status) {
@@ -169,13 +169,13 @@ export class Init {
                     parameter
                 }, '*');
                 const promise = new Promise((resolve, reject) => {
-                    const getStorageFn = (event) => {
+                    const callbackFn = (event) => {
                         if (event.data.target !== undefined && event.data.target === returnTarget.Storage) {
                             resolve(event.data.data);
-                            window.removeEventListener('message', getStorageFn);
+                            window.removeEventListener('message', callbackFn);
                         }
                     };
-                    window.addEventListener('message', getStorageFn);
+                    window.addEventListener('message', callbackFn);
                 });
                 promise.then((res: any) => {
                     if (!res.bool_status) {
@@ -201,13 +201,13 @@ export class Init {
                 parameter
             }, '*');
             const promise = new Promise((resolve, reject) => {
-                const invokeReadFn = (event) => {
+                const callbackFn = (event) => {
                     if (event.data.target !== undefined && event.data.target === returnTarget.InvokeRead) {
                         resolve(event.data);
-                        window.removeEventListener('message', invokeReadFn);
+                        window.removeEventListener('message', callbackFn);
                     }
                 };
-                window.addEventListener('message', invokeReadFn);
+                window.addEventListener('message', callbackFn);
             });
             promise.then((res: any) => {
                 if (res.bool_status) {
@@ -224,6 +224,34 @@ export class Init {
         });
     }
 
+    public verifyMessage(parameter: VerifyMessageArgs): Promise<Response> {
+        return new Promise((resolveMain, rejectMain) => {
+            if (parameter.message === undefined || parameter.data === undefined || parameter.publicKey === undefined) {
+                rejectMain(ERRORS.MALFORMED_INPUT);
+            }
+            window.postMessage({
+                target: requestTarget.VerifyMessage,
+                parameter
+            }, '*');
+            const promise = new Promise((resolve, reject) => {
+                const callbackFn = (event) => {
+                    if (event.data.target !== undefined && event.data.target === returnTarget.VerifyMessage) {
+                        resolve(event.data.data);
+                        window.removeEventListener('message', callbackFn);
+                    }
+                };
+                window.addEventListener('message', callbackFn);
+            });
+            promise.then((res: any) => {
+                if (res.type) {
+                    rejectMain(res);
+                } else {
+                    resolveMain(res);
+                }
+            });
+        });
+    }
+
     public getTransaction(parameter: TransactionInputArgs): Promise<TransactionDetails> {
         return new Promise((resolveMain, rejectMain) => {
             if (parameter.txid === undefined) {
@@ -234,13 +262,13 @@ export class Init {
                 parameter
             }, '*');
             const promise = new Promise((resolve, reject) => {
-                const getTransactionFn = (event) => {
+                const callbackFn = (event) => {
                     if (event.data.target !== undefined && event.data.target === returnTarget.Transaction) {
                         resolve(event.data.data);
-                        window.removeEventListener('message', getTransactionFn);
+                        window.removeEventListener('message', callbackFn);
                     }
                 };
-                window.addEventListener('message', getTransactionFn);
+                window.addEventListener('message', callbackFn);
             });
             promise.then((res: any) => {
                 if (res.bool_status) {
@@ -281,13 +309,13 @@ export class Init {
                         connect: sessionStorage.getItem('connect')
                     }, '*');
                     const promise = new Promise((resolve, reject) => {
-                        const invokeFn = (event) => {
+                        const callbackFn = (event) => {
                             if (event.data.target !== undefined && event.data.target === returnTarget.Invoke) {
                                 resolve(event.data.data);
-                                window.removeEventListener('message', invokeFn);
+                                window.removeEventListener('message', callbackFn);
                             }
                         };
-                        window.addEventListener('message', invokeFn);
+                        window.addEventListener('message', callbackFn);
                     });
                     promise.then((res: any) => {
                         if (res.type) {
@@ -338,16 +366,16 @@ export class Init {
                         connect: sessionStorage.getItem('connect')
                     }, '*');
                     const promise = new Promise((resolve, reject) => {
-                        const transferFn = (event) => {
+                        const callbackFn = (event) => {
                             if (event.data.target === returnTarget.Send) {
                                 resolve(event.data.data);
                             }
                         };
-                        window.addEventListener('message', transferFn);
+                        window.addEventListener('message', callbackFn);
                     });
                     promise.then((res: any) => {
-                        if (res.type !== undefined) {
-                            rejectMain(ERRORS.CANCELLED);
+                        if (res.type) {
+                            rejectMain(res);
                         } else {
                             resolveMain(res as SendOutput);
                         }
@@ -375,13 +403,13 @@ export class Init {
                 parameter
             }, '*');
             const promise = new Promise((resolve, reject) => {
-                const getBlockFn = (event) => {
+                const callbackFn = (event) => {
                     if (event.data.target !== undefined && event.data.target === returnTarget.Block) {
                         resolve(event.data.data);
-                        window.removeEventListener('message', getBlockFn);
+                        window.removeEventListener('message', callbackFn);
                     }
                 };
-                window.addEventListener('message', getBlockFn);
+                window.addEventListener('message', callbackFn);
             });
             promise.then((res: any) => {
                 if (res.bool_status) {
@@ -403,13 +431,13 @@ export class Init {
                 parameter
             }, '*');
             const promise = new Promise((resolve, reject) => {
-                const getApplicationLogFn = (event) => {
+                const callbackFn = (event) => {
                     if (event.data.target !== undefined && event.data.target === returnTarget.ApplicationLog) {
                         resolve(event.data.data);
-                        window.removeEventListener('message', getApplicationLogFn);
+                        window.removeEventListener('message', callbackFn);
                     }
                 };
-                window.addEventListener('message', getApplicationLogFn);
+                window.addEventListener('message', callbackFn);
             });
             promise.then((res: any) => {
                 if (res.bool_status) {
@@ -594,13 +622,13 @@ function connect(open = true): Promise<any> {
             }, '*');
         }
         const promise = new Promise((resolve, reject) => {
-            const connectFn = (event) => {
+            const callbackFn = (event) => {
                 if (event.data.target !== undefined && (event.data.target === returnTarget.Connect)) {
                     resolve(event.data.data);
-                    window.removeEventListener('message', connectFn);
+                    window.removeEventListener('message', callbackFn);
                 }
             };
-            window.addEventListener('message', connectFn);
+            window.addEventListener('message', callbackFn);
         });
         promise.then(res => {
             if (res === true || res === false) {
@@ -617,13 +645,13 @@ function getAuthState(): Promise<any> {
             target: requestTarget.AuthState
         }, '*');
         const promise = new Promise((resolve, reject) => {
-            const getAuthStateFn = (event) => {
+            const callbackFn = (event) => {
                 if (event.data.target !== undefined && event.data.target === returnTarget.AuthState) {
                     resolve(event.data.data);
-                    window.removeEventListener('message', getAuthStateFn);
+                    window.removeEventListener('message', callbackFn);
                 }
             };
-            window.addEventListener('message', getAuthStateFn);
+            window.addEventListener('message', callbackFn);
         });
         promise.then(res => {
             if (res !== undefined && res[location.hostname] !== undefined && res[location.hostname] !== {}) {
@@ -645,13 +673,13 @@ function getProvider(): Promise<Provider> {
             target: requestTarget.Provider
         }, '*');
         const promise = new Promise((resolve, reject) => {
-            const walletInfoFn = (event) => {
+            const callbackFn = (event) => {
                 if (event.data.target !== undefined && event.data.target === returnTarget.Provider) {
                     resolve(event.data.data);
-                    window.removeEventListener('message', walletInfoFn);
+                    window.removeEventListener('message', callbackFn);
                 }
             };
-            window.addEventListener('message', walletInfoFn);
+            window.addEventListener('message', callbackFn);
         });
         promise.then((res: any) => {
             if (res === undefined || res === null) {
