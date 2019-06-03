@@ -10,6 +10,7 @@ import { PopupNoticeTokenComponent } from './token/token.component';
 import { PopupNoticeAuthComponent } from './authorization/authorization.component';
 import { PopupWalletGuard } from '@/app/core';
 import { PopupNoticeInvokeComponent } from './invoke/invoke.component';
+import { PopupNoticeDeployComponent } from './deploy/deploy.component';
 
 const routes: Routes = [
     {
@@ -27,6 +28,8 @@ const routes: Routes = [
                     { path: 'token', component: PopupNoticeTokenComponent},
                     { path: 'authorization', component: PopupNoticeAuthComponent},
                     { path: 'invoke', component: PopupNoticeInvokeComponent},
+                    { path: 'deploy', component: PopupNoticeDeployComponent},
+
                 ]
             },
         ]

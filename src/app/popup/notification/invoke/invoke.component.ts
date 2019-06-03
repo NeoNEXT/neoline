@@ -222,7 +222,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 if (this.attachedAssets !== null) {
                     if (this.attachedAssets.NEO) {
                         try {
-                            newTx = await this.addAttachedAssets(NEO, this.attachedAssets.NEO, fromScript, toScript, newTx);
+                            newTx = await this.addAttachedAssets(NEO, this.attachedAssets.NEO,
+                                this.neon.wallet.accounts[0].address, toScript, newTx);
                         } catch (error) {
                             this.chrome.windowCallback({
                                 data: ERRORS.MALFORMED_INPUT,
@@ -240,7 +241,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     } else {
                         if (this.fee > 0) {
                             try {
-                                newTx = await this.addFee(fromScript, newTx, this.fee);
+                                newTx = await this.addFee(this.neon.wallet.accounts[0].address, newTx, this.fee);
                             } catch (error) {
                                 console.log(error);
                             }
@@ -249,7 +250,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 } else {
                     if (this.fee > 0) {
                         try {
-                            newTx = await this.addFee(fromScript, newTx, this.fee);
+                            newTx = await this.addFee(this.neon.wallet.accounts[0].address, newTx, this.fee);
                         } catch (error) {
                             console.log(error);
                         }
@@ -268,7 +269,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
 
     private getBalance(address: string, asset: string): Observable<UTXO[]> {
         return this.http.get(`${this.global.apiDomain}/v1/transactions/getutxoes?address=${address}&asset_id=${asset}`).pipe(map((res) => {
-            return res as UTXO[];
+            return (res as any).result as UTXO[];
         }));
     }
 
@@ -328,6 +329,11 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 const payback = curr - fee;
                 if (payback < 0) {
                     reject('no enough GAS to fee');
+                    this.chrome.windowCallback({
+                        data: ERRORS.INSUFFICIENT_FUNDS,
+                        target: returnTarget.Deploy
+                    });
+                    window.close();
                 }
                 if (payback > 0) {
                     const fromScript = wallet.getScriptHashFromAddress(from);

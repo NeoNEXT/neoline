@@ -1,7 +1,7 @@
 import {
     Provider, EVENT, returnTarget, requestTarget, Networks, Account,
     AccountPublicKey, BalanceResults, BalanceRequest, GetBalanceArgs, InvokeReadArgs,
-    TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput, ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response
+    TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput, ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response, DeployArgs, DeployOutput
 } from '../common/data_module';
 export class Init {
     public EVENT = EVENT;
@@ -337,7 +337,7 @@ export class Init {
         });
     }
 
-    public signMessage(parameter: {message: string}): Promise<Response> {
+    public signMessage(parameter: {message: string}): Promise<any> {
         return new Promise((resolveMain, rejectMain) => {
             if (parameter.message === undefined) {
                 rejectMain(ERRORS.MALFORMED_INPUT);
@@ -362,6 +362,60 @@ export class Init {
                     resolveMain(res);
                 }
             });
+        });
+    }
+
+    public deploy(parameter: DeployArgs): Promise<DeployOutput> {
+        return new Promise(async (resolveMain, rejectMain) => {
+            if (parameter.author === undefined || parameter.code === undefined || parameter.description === undefined ||
+                parameter.email === undefined || parameter.name === undefined || parameter.parameterList === undefined ||
+                parameter.returnType === undefined || parameter.version === undefined || parameter.networkFee === undefined) {
+                rejectMain(ERRORS.MALFORMED_INPUT);
+            }
+            let authState: any;
+            try {
+                authState = await getAuthState() || 'NONE';
+            } catch (error) {
+                console.log(error);
+            }
+            if (authState === true || authState === 'NONE') {
+                let connectResult;
+                if (sessionStorage.getItem('connect') !== 'true' && authState === 'NONE') {
+                    connectResult = await connect();
+                } else {
+                    connectResult = true;
+                }
+                if (connectResult === true) {
+                    window.postMessage({
+                        target: requestTarget.Deploy,
+                        parameter
+                    }, '*');
+                    const promise = new Promise((resolve, reject) => {
+                        const callbackFn = (event) => {
+                            if (event.data.target !== undefined && event.data.target === returnTarget.Deploy) {
+                                resolve(event.data.data);
+                                window.removeEventListener('message', callbackFn);
+                            }
+                        };
+                        window.addEventListener('message', callbackFn);
+                    });
+                    promise.then((res: any) => {
+                        if (res.type) {
+                            rejectMain(res);
+                        } else {
+                            resolveMain(res);
+                        }
+                    });
+                } else {
+                    if (connectResult instanceof Object) {
+                        rejectMain(ERRORS.CANCELLED);
+                    } else {
+                        rejectMain(ERRORS.CONNECTION_DENIED);
+                    }
+                }
+            } else {
+                rejectMain(ERRORS.CONNECTION_DENIED);
+            }
         });
     }
 

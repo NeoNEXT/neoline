@@ -1,0 +1,44 @@
+<div class="loading-box" *ngIf="loading">
+    <div>
+        <mat-spinner strokeWidth="10"></mat-spinner>
+    </div>
+    <h3>{{ loadingMsg }}</h3>
+</div>
+<div class="deploy-body">
+    <div class="script-hash-box">
+        <p>name: </p>
+        <p class="content">{{ pramsData.name }}</p>
+    </div>
+    <div class="operation-box">
+        <p>version: </p>
+        <p class="content">{{ pramsData.version }}</p>
+    </div>
+    <div class="args-box">
+        <p>author: </p>
+        <p class="content">{{ pramsData.author }}</p>
+    </div>
+    <div class="args-box">
+        <p>description: </p>
+        <p class="content">{{ pramsData.description }}</p>
+    </div>
+    <div class="args-box">
+        <p>needsStorage: </p>
+        <p class="content">{{ pramsData.needsStorage }}</p>
+    </div>
+    <div class="args-box">
+        <p>returnType: </p>
+        <p class="content">{{ pramsData.returnType }}</p>
+    </div>
+    <div class="args-box">
+        <p>parameterList: </p>
+        <p class="content">{{ pramsData.parameterList }}</p>
+    </div>
+    <div class="args-box">
+        <p>code: </p>
+        <p class="content">{{ pramsData.code }}</p>
+    </div>
+    <div class="args-box">
+        <p>networkFee: </p>
+        <p class="content">{{ pramsData.networkFee }}</p>
+    </div>
+</div>

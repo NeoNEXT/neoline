@@ -1,34 +1,41 @@
 export const NEO = '0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b';
 export const GAS = '0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7';
 type ArgumentDataType = 'String' | 'Boolean' | 'Hash160' | 'Hash256' | 'Integer' | 'ByteArray' | 'Array' | 'Address';
-export const ERRORS =  {
+export const ERRORS = {
     NO_PROVIDER: {
         type: 'NO_PROVIDER',
-        description: 'Could not find an instance of the dAPI in the webpage'
+        description: 'Could not find an instance of the dAPI in the webpage',
+        data: null
     },
     CONNECTION_DENIED: {
         type: 'CONNECTION_DENIED',
-        description: 'The dAPI provider refused to process this request'
+        description: 'The dAPI provider refused to process this request',
+        data: null
     },
     RPC_ERROR: {
         type: 'RPC_ERROR',
-        description: 'An RPC error occured when submitting the request'
+        description: 'An RPC error occured when submitting the request',
+        data: null
     },
     MALFORMED_INPUT: {
         type: 'MALFORMED_INPUT',
-        description: 'An input such as the address is not a valid NEO address'
+        description: 'An input such as the address is not a valid NEO address',
+        data: null
     },
     CANCELLED: {
         type: 'CANCELED',
-        description: 'The user cancels, or refuses the dapps request'
+        description: 'The user cancels, or refuses the dapps request',
+        data: null
     },
-    NETWORK_ERROR: {
+    INSUFFICIENT_FUNDS: {
         type: 'INSUFFICIENT_FUNDS',
-        description: 'The user does not have a sufficient balance to perform the requested action'
+        description: 'The user does not have a sufficient balance to perform the requested action',
+        data: null
     },
     DEFAULT: {
         type: 'FAIL',
-        description: 'The request failed.'
+        description: 'The request failed.',
+        data: null
     }
 };
 export enum EVENT {
@@ -45,11 +52,15 @@ export enum requestTarget {
     Account = 'neoline.request_account',
     AccountPublicKey = 'neoline.request_public_key',
     Balance = 'neoline.request_balance',
+    Storage = 'neoline.request_storage',
     InvokeRead = 'neoline.request_invoke_read',
+    VerifyMessage = 'neoline.request_verify_message',
     Transaction = 'neoline.request_transaction',
     Block = 'neoline.request_block',
     ApplicationLog = 'neoline.request_application_log',
     Invoke = 'neoline.request_invoke',
+    SignMessage = 'neoline.request_sign_message',
+    Deploy = 'neoline.request_deploy',
     Send = 'neoline.request_send',
     Connect = 'neoline.request_connect',
     AuthState = 'neoline.request_auth_state'
@@ -62,19 +73,18 @@ export enum returnTarget {
     Account = 'neoline.return_account',
     AccountPublicKey = 'neoline.return_public_key',
     Balance = 'neoline.return_balance',
+    Storage = 'neoline.return_storage',
     InvokeRead = 'neoline.return_invoke_read',
+    VerifyMessage = 'neoline.return_verify_message',
     Transaction = 'neoline.return_transaction',
     Block = 'neoline.return_block',
     ApplicationLog = 'neoline.return_application_log',
     Invoke = 'neoline.return_invoke',
+    SignMessage = 'neoline.return_sign_message',
+    Deploy = 'neoline.return_deploy',
     Send = 'neoline.return_send',
     Connect = 'neoline.return_connect',
     AuthState = 'neoline.return_auth_state'
-}
-
-export enum errorDescription {
-    NO_PROVIDER = 'No provider available.',
-    CONNECTION_DENIED = 'The user rejected the request to connect with your dApp'
 }
 
 export interface Provider {
@@ -124,6 +134,16 @@ export interface Balance {
     amount: string;
 }
 
+export interface GetStorageArgs {
+    scriptHash: string; // script hash of the smart contract to invoke a read on
+    key: string; // key of the storage value to retrieve from the contract
+    network?: string; // Network to submit this request to. If omitted, will default to network the wallet is currently set to.
+}
+
+export interface StorageResponse {
+    result: string; // The raw value that's stored in the contract
+}
+
 export interface InvokeReadArgs {
     scriptHash: string; // script hash of the smart contract to invoke a read on
     operation: string; // operation on the smart contract to call
@@ -135,6 +155,17 @@ export interface Argument {
     type: ArgumentDataType;
     value: any;
 }
+
+export interface VerifyMessageArgs {
+    message: string; // Salt prefix + original message
+    data: string; // Signed message
+    publicKey: string; // Public key of account that signed message
+}
+
+export interface Response {
+    result: boolean;
+}
+
 export interface TransactionInputArgs {
     txid: string;
     network?: string;
@@ -231,6 +262,30 @@ export interface SendOutput {
 export interface GetBlockInputArgs {
     blockHeight: number;
     network?: string;
+}
+
+export interface DeployArgs {
+    name: string;
+    version: string;
+    author: string;
+    email: string;
+    description: string;
+    needsStorage?: boolean;
+    dynamicInvoke?: boolean;
+    isPayable?: boolean;
+    parameterList: string;
+    returnType: string;
+    code: string;
+    script?: string;
+    network?: string;  // Network to submit this request to. If omitted, will default to network the wallet is currently set to.
+    netowrkFee: number;
+    broadcastOverride?: boolean;
+    // In the case that the dApp would like to be responsible for broadcasting the signed transaction rather than the wallet provider
+}
+export interface DeployOutput {
+    txid: string;
+    nodeUrl?: string; // The node which the transaction was broadcast to. Returned if transaction is broadcast by wallet provider
+    signedTx?: string; // The serialized signed transaction. Only returned if the broadcastOverride input argument was set to True
 }
 
 

@@ -236,10 +236,34 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         const value = key === 'args' || key === 'assetIntentOverrides' || key === 'attachedAssets' ||
                                     key === 'assetIntentOverrides' || key === 'txHashAttributes' ?
                                     JSON.stringify(params[key]) : params[key];
-                        queryString +=  `${key}=${value}&`;
+                        queryString += `${key}=${value}&`;
                     }
                 }
                 window.open(`index.html#popup/notification/invoke?${queryString}`,
+                        '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+            });
+            sendResponse('');
+            return;
+        }
+
+        case requestTarget.Deploy: {
+            chrome.tabs.query({
+                active: true,
+                currentWindow: true
+            }, (tabs) => {
+                tabCurr = tabs;
+            });
+            const params = request.parameter;
+            getStorage('connectedWebsites', (res) => {
+                let queryString = '';
+                for (const key in params) {
+                    if (params.hasOwnProperty(key)) {
+                        const value = params[key];
+                        queryString += `${key}=${value}&`;
+                    }
+                }
+                console.log(`index.html#popup/notification/deploy?${queryString}`);
+                window.open(`index.html#popup/notification/deploy?${queryString}`,
                         '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
             });
 

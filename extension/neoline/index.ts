@@ -10,6 +10,8 @@ import {
 } from '../common/index';
 import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS, SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS, VerifyMessageArgs } from '../common/data_module';
 import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, sign, str2hexstring, verify } from '../common/utils';
+import { generateDeployScript } from '@cityofzion/neon-core/lib/sc';
+
 
 declare var chrome: any;
 const mainApi = 'https://mainnet.api.neoline.cn';
@@ -253,6 +255,20 @@ window.addEventListener('message', async (e) => {
             return;
         }
 
+        case requestTarget.Deploy: {
+            getStorage('net', async (res) => {
+                let apiUrl = e.data.parameter.network;
+                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                    apiUrl = res || 'MainNet';
+                }
+                e.data.parameter.network = apiUrl;
+                chrome.runtime.sendMessage(e.data, (response) => {
+                    return Promise.resolve('Dummy response to keep the console quiet');
+                });
+            });
+            return;
+        }
+
 
         case requestTarget.AuthState: {
             getStorage('connectedWebsites', (res) => {
@@ -263,6 +279,7 @@ window.addEventListener('message', async (e) => {
             });
             return;
         }
+
         case requestTarget.Send: {
             const parameter = e.data.parameter as SendArgs;
             const assetID = parameter.asset.length < 10 ? '' : parameter.asset;
