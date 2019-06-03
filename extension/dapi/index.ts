@@ -337,6 +337,34 @@ export class Init {
         });
     }
 
+    public signMessage(parameter: {message: string}): Promise<Response> {
+        return new Promise((resolveMain, rejectMain) => {
+            if (parameter.message === undefined) {
+                rejectMain(ERRORS.MALFORMED_INPUT);
+            }
+            window.postMessage({
+                target: requestTarget.SignMessage,
+                parameter
+            }, '*');
+            const promise = new Promise((resolve, reject) => {
+                const callbackFn = (event) => {
+                    if (event.data.target !== undefined && event.data.target === returnTarget.SignMessage) {
+                        resolve(event.data.data);
+                        window.removeEventListener('message', callbackFn);
+                    }
+                };
+                window.addEventListener('message', callbackFn);
+            });
+            promise.then((res: any) => {
+                if (res.type) {
+                    rejectMain(res);
+                } else {
+                    resolveMain(res);
+                }
+            });
+        });
+    }
+
     public send(parameter: SendArgs): Promise<SendOutput> {
         return new Promise(async (resolveMain, rejectMain) => {
             if (parameter === undefined || parameter.toAddress === undefined || parameter.fromAddress === undefined ||

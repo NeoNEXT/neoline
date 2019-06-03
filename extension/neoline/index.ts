@@ -9,7 +9,7 @@ import {
     getLocalStorage
 } from '../common/index';
 import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS, SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS, VerifyMessageArgs } from '../common/data_module';
-import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, sign, str2hexstring } from '../common/utils';
+import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, sign, str2hexstring, verify } from '../common/utils';
 
 declare var chrome: any;
 const mainApi = 'https://mainnet.api.neoline.cn';
@@ -151,27 +151,12 @@ window.addEventListener('message', async (e) => {
 
         case requestTarget.VerifyMessage: {
             const parameter = e.data.parameter as VerifyMessageArgs;
-            const walletArr = await getLocalStorage('walletArr', () => { });
-            const currWallet = await getLocalStorage('wallet', () => { });
-            const WIFArr = await getLocalStorage('WIFArr', () => { });
-            if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
-                    item.accounts[0].address === currWallet.accounts[0].address)]
-                );
-                if (parameter.publicKey !== getPublicKeyFromPrivateKey(privateKey)) {
-                    window.postMessage({
-                        target: returnTarget.VerifyMessage,
-                        data: ERRORS.MALFORMED_INPUT
-                    }, '*');
-                } else {
-                    window.postMessage({
-                        target: returnTarget.VerifyMessage,
-                        data: {
-                            result: sign(str2hexstring(parameter.message), privateKey) === parameter.data ? true : false
-                        }
-                    }, '*');
+            window.postMessage({
+                target: returnTarget.VerifyMessage,
+                data: {
+                    result: verify(str2hexstring(parameter.message), parameter.data, parameter.publicKey)
                 }
-            }
+            }, '*');
             return;
         }
 
@@ -244,6 +229,30 @@ window.addEventListener('message', async (e) => {
             });
             return;
         }
+
+        case requestTarget.SignMessage: {
+            const parameter = e.data.parameter;
+            const walletArr = await getLocalStorage('walletArr', () => { });
+            const currWallet = await getLocalStorage('wallet', () => { });
+            const WIFArr = await getLocalStorage('WIFArr', () => { });
+            if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
+                const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
+                    item.accounts[0].address === currWallet.accounts[0].address)]
+                );
+                const publicKey = getPublicKeyFromPrivateKey(privateKey);
+                window.postMessage({
+                    target: returnTarget.SignMessage,
+                    data: {
+                        publicKey,
+                        data: sign(str2hexstring(parameter.message), privateKey),
+                        salt: '',
+                        message: parameter.message
+                    }
+                }, '*');
+            }
+            return;
+        }
+
 
         case requestTarget.AuthState: {
             getStorage('connectedWebsites', (res) => {

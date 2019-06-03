@@ -59,6 +59,7 @@ export enum requestTarget {
     Block = 'neoline.request_block',
     ApplicationLog = 'neoline.request_application_log',
     Invoke = 'neoline.request_invoke',
+    SignMessage = 'neoline.request_sign_message',
     Send = 'neoline.request_send',
     Connect = 'neoline.request_connect',
     AuthState = 'neoline.request_auth_state'
@@ -78,6 +79,7 @@ export enum returnTarget {
     Block = 'neoline.return_block',
     ApplicationLog = 'neoline.return_application_log',
     Invoke = 'neoline.return_invoke',
+    SignMessage = 'neoline.return_sign_message',
     Send = 'neoline.return_send',
     Connect = 'neoline.return_connect',
     AuthState = 'neoline.return_auth_state'
