@@ -8,14 +8,12 @@ import {
     httpPost,
     getLocalStorage
 } from '../common/index';
-import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS, SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS, VerifyMessageArgs } from '../common/data_module';
+import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS, SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS, VerifyMessageArgs, mainApi, testApi } from '../common/data_module';
 import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, sign, str2hexstring, verify } from '../common/utils';
 import { generateDeployScript } from '@cityofzion/neon-core/lib/sc';
 
 
 declare var chrome: any;
-const mainApi = 'https://mainnet.api.neoline.cn';
-const testApi = 'https://testnet.api.neoline.cn';
 
 
 // 注意，此script可以单方面执行第三方页面内的逻辑，但第三方页面并不能直接操作此script，必须使用message方式

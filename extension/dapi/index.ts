@@ -26,6 +26,14 @@ export class Init {
             callback: [],
             callbackEvent: []
         },
+        BLOCK_HEIGHT_CHANGED: {
+            callback: [],
+            callbackEvent: []
+        },
+        TRANSACTION_CONFIRMED: {
+            callback: [],
+            callbackEvent: []
+        },
     };
 
     public getProvider(): Promise<Provider> {
@@ -337,7 +345,7 @@ export class Init {
         });
     }
 
-    public signMessage(parameter: {message: string}): Promise<any> {
+    public signMessage(parameter: { message: string }): Promise<any> {
         return new Promise((resolveMain, rejectMain) => {
             if (parameter.message === undefined) {
                 rejectMain(ERRORS.MALFORMED_INPUT);
@@ -463,7 +471,7 @@ export class Init {
                         }
                     });
                 } else {
-                    if (connectResult instanceof Object ) {
+                    if (connectResult instanceof Object) {
                         rejectMain(connectResult);
                     } else {
                         rejectMain(ERRORS.CONNECTION_DENIED);
@@ -616,6 +624,38 @@ export class Init {
                         this.EVENTLIST.NETWORK_CHANGED.callbackEvent.length - 1]);
                     break;
                 }
+            case this.EVENT.BLOCK_HEIGHT_CHANGED:
+                {
+                    if (this.EVENTLIST.BLOCK_HEIGHT_CHANGED.callback.findIndex(item => item === callback) >= 0) {
+                        return;
+                    }
+                    const callbackFn = (event) => {
+                        if (event.data.target !== undefined && event.data.target === this.EVENT.BLOCK_HEIGHT_CHANGED) {
+                            callback(event.data.data);
+                        }
+                    };
+                    this.EVENTLIST.BLOCK_HEIGHT_CHANGED.callback.push(callback);
+                    this.EVENTLIST.BLOCK_HEIGHT_CHANGED.callbackEvent.push(callbackFn);
+                    window.addEventListener('message', this.EVENTLIST.BLOCK_HEIGHT_CHANGED.callbackEvent[
+                        this.EVENTLIST.BLOCK_HEIGHT_CHANGED.callbackEvent.length - 1]);
+                    break;
+                }
+            case this.EVENT.TRANSACTION_CONFIRMED:
+                {
+                    if (this.EVENTLIST.TRANSACTION_CONFIRMED.callback.findIndex(item => item === callback) >= 0) {
+                        return;
+                    }
+                    const callbackFn = (event) => {
+                        if (event.data.target !== undefined && event.data.target === this.EVENT.TRANSACTION_CONFIRMED) {
+                            callback(event.data.data);
+                        }
+                    };
+                    this.EVENTLIST.TRANSACTION_CONFIRMED.callback.push(callback);
+                    this.EVENTLIST.TRANSACTION_CONFIRMED.callbackEvent.push(callbackFn);
+                    window.addEventListener('message', this.EVENTLIST.TRANSACTION_CONFIRMED.callbackEvent[
+                        this.EVENTLIST.TRANSACTION_CONFIRMED.callbackEvent.length - 1]);
+                    break;
+                }
         }
     }
     public removeEventListener(type: string, removeFn: any, callback: (data: object) => void) {
@@ -658,6 +698,22 @@ export class Init {
                     window.removeEventListener('message', this.EVENTLIST.NETWORK_CHANGED.callbackEvent[index]);
                     this.EVENTLIST.NETWORK_CHANGED.callback.splice(index, 1);
                     this.EVENTLIST.NETWORK_CHANGED.callbackEvent.splice(index, 1);
+                    break;
+                }
+            case this.EVENT.BLOCK_HEIGHT_CHANGED:
+                {
+                    const index = this.EVENTLIST.BLOCK_HEIGHT_CHANGED.callback.findIndex(item => item === removeFn);
+                    window.removeEventListener('message', this.EVENTLIST.BLOCK_HEIGHT_CHANGED.callbackEvent[index]);
+                    this.EVENTLIST.BLOCK_HEIGHT_CHANGED.callback.splice(index, 1);
+                    this.EVENTLIST.BLOCK_HEIGHT_CHANGED.callbackEvent.splice(index, 1);
+                    break;
+                }
+            case this.EVENT.TRANSACTION_CONFIRMED:
+                {
+                    const index = this.EVENTLIST.TRANSACTION_CONFIRMED.callback.findIndex(item => item === removeFn);
+                    window.removeEventListener('message', this.EVENTLIST.TRANSACTION_CONFIRMED.callbackEvent[index]);
+                    this.EVENTLIST.TRANSACTION_CONFIRMED.callback.splice(index, 1);
+                    this.EVENTLIST.TRANSACTION_CONFIRMED.callbackEvent.splice(index, 1);
                     break;
                 }
         }
@@ -746,7 +802,7 @@ function getAuthState(): Promise<any> {
         promise.then((res: any) => {
             const index = res.findIndex(item => item.hostname === location.hostname);
             if (index >= 0) {
-                resolveMain(res[index].status === true || res[index].status === 'true' ? true : false );
+                resolveMain(res[index].status === true || res[index].status === 'true' ? true : false);
             } else {
                 resolveMain('NONE');
             }

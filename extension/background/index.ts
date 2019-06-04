@@ -17,10 +17,11 @@ import {
     setStorage,
     notification,
     httpPost,
+    httpGet,
     setLocalStorage,
     getLocalStorage
 } from '../common';
-import { requestTarget, returnTarget, GetBalanceArgs, BalanceRequest, ERRORS } from '../common/data_module';
+import { requestTarget, returnTarget, GetBalanceArgs, BalanceRequest, ERRORS, mainApi, testApi, EVENT } from '../common/data_module';
 import { reverseHex, getScriptHashFromAddress } from '../common/utils';
 /**
  * Background methods support.
@@ -38,6 +39,39 @@ export function expand() {
 }
 
 (function init() {
+    setInterval(() => {
+        getStorage('net', async (res) => {
+            const network = res || 'MainNet';
+            const apiUrl = network === 'MainNet' ? mainApi : testApi;
+            httpGet(`${apiUrl}/v1/getblockheight`, async (blockHeightData) => {
+                const oldHeight = await getLocalStorage(`${network}BlockHeight`, () => {}) || 0;
+                if (blockHeightData.bool_status && blockHeightData.result > oldHeight ) {
+                    const setData = {};
+                    setData[`${network}BlockHeight`] = blockHeightData.result;
+                    setLocalStorage(setData);
+                    httpGet(`${apiUrl}/v1/getblock?block_index=${blockHeightData.result}`, (blockDetail) => {
+                        if (blockDetail.bool_status) {
+                            const txStrArr = [];
+                            blockDetail.result.tx.forEach(item => {
+                                txStrArr.push(item.txid);
+                            });
+                            windowCallback({
+                                data: {
+                                    network,
+                                    blockHeight: blockHeightData.result,
+                                    blockTime: blockDetail.result.time,
+                                    blockHash: blockDetail.result.hash,
+                                    tx: txStrArr,
+                                },
+                                target: EVENT.BLOCK_HEIGHT_CHANGED
+                            });
+                        }
+
+                    }, '*');
+                }
+            }, '*');
+        });
+    }, 20000);
     if (navigator.language === 'zh-CN') {
         getStorage('lang', res => {
             if (res === undefined) {
@@ -119,7 +153,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
                         const value = params[key];
-                        queryString +=  `${key}=${value}&`;
+                        queryString += `${key}=${value}&`;
                     }
                 }
                 chrome.tabs.query({
@@ -136,7 +170,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         });
                     } else {
                         window.open(`index.html#popup/notification/transfer?${queryString}`,
-                        '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                            '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                     }
                 });
                 sendResponse('');
@@ -234,13 +268,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
                         const value = key === 'args' || key === 'assetIntentOverrides' || key === 'attachedAssets' ||
-                                    key === 'assetIntentOverrides' || key === 'txHashAttributes' ?
-                                    JSON.stringify(params[key]) : params[key];
+                            key === 'assetIntentOverrides' || key === 'txHashAttributes' ?
+                            JSON.stringify(params[key]) : params[key];
                         queryString += `${key}=${value}&`;
                     }
                 }
                 window.open(`index.html#popup/notification/invoke?${queryString}`,
-                        '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
             });
             sendResponse('');
             return;
@@ -264,7 +298,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
                 console.log(`index.html#popup/notification/deploy?${queryString}`);
                 window.open(`index.html#popup/notification/deploy?${queryString}`,
-                        '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
             });
 
             sendResponse('');
