@@ -64,17 +64,17 @@ export class PopupComponent implements OnInit, AfterViewInit {
             this.global.$wallet.next(res ? 'open' : 'close');
         });
         if (this.global.apiDomain.match('main') === null) {
-            this.net = 'test';
+            this.net = 'TestNet';
         } else {
-            this.net = 'main';
+            this.net = 'MainNet';
         }
     }
     ngAfterViewInit(): void {
         setTimeout(() => {
             if (this.global.apiDomain.match('main') === null) {
-                this.net = 'test';
+                this.net = 'TestNet';
             } else {
-                this.net = 'main';
+                this.net = 'MainNet';
             }
         }, 0);
     }

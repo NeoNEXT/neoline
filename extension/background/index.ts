@@ -70,6 +70,33 @@ export function expand() {
                     }, '*');
                 }
             }, '*');
+            const txArr = await getLocalStorage(`${network}TxArr`, (temp) => {}) || [];
+            httpPost(`${apiUrl}/v1/transactions/confirms`, {txids: txArr}, (txConfirmData) => {
+                if (txConfirmData.bool_status) {
+                    const txConfirms = txConfirmData.result;
+                    txConfirms.forEach(item => {
+                        const tempIndex = txArr.findIndex(e => e === item);
+                        if (tempIndex >= 0) {
+                            txArr.splice(tempIndex, 1);
+                        }
+                        httpGet(`${apiUrl}/v1/transactions/gettransaction/${item}`, (txDetail) => {
+                            if (txDetail.bool_status) {
+                                windowCallback({
+                                    data: {
+                                        txid: txDetail.result.txID,
+                                        blockHeight: txDetail.result.blockIndex,
+                                        blockTime: txDetail.result.blockTime,
+                                    },
+                                    target: EVENT.TRANSACTION_CONFIRMED
+                                });
+                            }
+                        }, '*');
+                    });
+                }
+                const setData = {};
+                setData[`${network}TxArr`] = txArr;
+                setLocalStorage(setData);
+            }, null);
         });
     }, 20000);
     if (navigator.language === 'zh-CN') {

@@ -56,7 +56,7 @@ export class GlobalService {
 
     public modifyNet(net: string) {
         this.net = net;
-        if (net === 'main') {
+        if (net === 'MainNet') {
             this.apiDomain = environment.mainApiBase;
         } else {
             this.apiDomain = environment.testApiBase;

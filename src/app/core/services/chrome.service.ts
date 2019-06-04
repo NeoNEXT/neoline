@@ -621,7 +621,7 @@ export class ChromeService {
                 target: EVENT.NETWORK_CHANGED,
                 data: {
                     networks: ['MainNet', 'TestNet'],
-                    defaultNetwork: net === 'test' ? 'TestNet' : 'MainNet'
+                    defaultNetwork: net === 'TestNet' ? 'TestNet' : 'MainNet'
                 }
             });
         } catch (e) {
@@ -634,7 +634,7 @@ export class ChromeService {
                 if (localStorage.getItem('net')) {
                     return of(JSON.parse(localStorage.getItem('net')));
                 } else {
-                    return of('main'); // 默认网络
+                    return of('MainNet'); // 默认网络
                 }
             } catch (e) {
                 return throwError('please get net json to local storage when debug mode on');
@@ -643,7 +643,7 @@ export class ChromeService {
         return from(new Promise((resolve, reject) => {
             try {
                 this.crx.getStorage('net', (res) => {
-                    resolve(res || 'main');
+                    resolve(res || 'MainNet');
                 });
             } catch (e) {
                 reject('failed');
@@ -662,6 +662,16 @@ export class ChromeService {
         } catch (e) {
             console.log('close wallet failed', e);
         }
+    }
+
+    public getLocalStorage(key): Promise<any> {
+        return this.crx.getLocalStorage(key, (res) => {
+            return res;
+        });
+    }
+
+    public setLocalStorage(data) {
+        this.crx.setLocalStorage(data);
     }
 
     public windowCallback(data: any) {

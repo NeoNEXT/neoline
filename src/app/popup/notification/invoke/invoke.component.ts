@@ -44,9 +44,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.pramsData = params;
             if (params.network !== undefined) {
                 if (params.network === 'MainNet') {
-                    this.global.modifyNet('main');
+                    this.global.modifyNet('MainNet');
                 } else {
-                    this.global.modifyNet('test');
+                    this.global.modifyNet('TestNet');
                 }
             }
             if (params.scriptHash !== undefined && params.operation !== undefined && params.args !== undefined) {
@@ -160,7 +160,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
     private resolveSend(transaction: Transaction) {
         return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
             signature_transaction: transaction.serialize(true)
-        }).subscribe((res: any) => {
+        }).subscribe(async (res: any) => {
             this.loading = false;
             this.loadingMsg = '';
             if (!res.bool_status) {
@@ -177,6 +177,10 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     },
                     target: returnTarget.Invoke
                 });
+                const setData = {};
+                setData[`${this.pramsData.network}TxArr`] =  await this.chrome.getLocalStorage(`${this.pramsData.network}TxArr`) || [];
+                setData[`${this.pramsData.network}TxArr`].push('0x' + transaction.hash);
+                this.chrome.setLocalStorage(setData);
                 this.router.navigate([{
                     outlets: {
                         transfer: ['transfer', 'result']

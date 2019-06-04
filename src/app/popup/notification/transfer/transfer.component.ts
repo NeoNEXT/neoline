@@ -38,6 +38,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public symbol: string;
     public amount: number;
     public remark: string = '';
+    private network: string = '';
     public loading = false;
     public loadingMsg: string;
     public wallet: any;
@@ -75,10 +76,11 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                 });
             };
             if (params.network === 'MainNet') {
-                this.global.modifyNet('main');
+                this.global.modifyNet('MainNet');
             } else {
-                this.global.modifyNet('test');
+                this.global.modifyNet('TestNet');
             }
+            this.network = params.network || 'MainNet';
             this.toAddress = params.toAddress || '';
             this.assetId = params.asset || '';
             this.amount = params.amount || 0;
@@ -188,7 +190,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         this.loadingMsg = 'Wait';
         return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
             signature_transaction: tx.serialize(true)
-        }).subscribe(res => {
+        }).subscribe(async res => {
             this.loading = false;
             this.loadingMsg = '';
             this.creating = false;
@@ -207,6 +209,10 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                 },
                 target: returnTarget.Send
             });
+            const setData = {};
+            setData[`${this.network}TxArr`] =  await this.chrome.getLocalStorage(`${this.network}TxArr`) || [];
+            setData[`${this.network}TxArr`].push('0x' + tx.hash);
+            this.chrome.setLocalStorage(setData);
             this.router.navigate([{
                 outlets: {
                     transfer: ['transfer', 'result']

@@ -53,7 +53,7 @@
                             "outputPath": "dist",
                             "budgets": [{
                                 "type": "initial",
-                                "maximumWarning": "7mb",
+                                "maximumWarning": "8mb",
                                 "maximumError": "10mb"
                             }]
                         }

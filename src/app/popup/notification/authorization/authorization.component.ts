@@ -54,9 +54,9 @@ export class PopupNoticeAuthComponent implements OnInit {
             this.title = params.title;
             if (params.network) {
                 if (params.network === 'MainNet') {
-                    this.global.modifyNet('main');
+                    this.global.modifyNet('MainNet');
                 } else {
-                    this.global.modifyNet('test');
+                    this.global.modifyNet('TestNet');
                 }
             }
         });

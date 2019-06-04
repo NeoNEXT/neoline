@@ -18,12 +18,12 @@
                 </span>
 
                 <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
-                    {{ (net === 'main' ? 'mainNet' : 'testNet') | translate | async }}
+                    {{ (net === 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}
                     <span class="popup-nav-network-icon"></span>
                 </button>
                 <mat-menu #menu="matMenu">
-                    <button mat-menu-item (click)="modifyNet('main')">{{ 'mainNet' | translate | async }}</button>
-                    <button mat-menu-item (click)="modifyNet('test')">{{ 'testNet' | translate | async }}</button>
+                    <button mat-menu-item (click)="modifyNet('MainNet')">{{ 'mainNet' | translate | async }}</button>
+                    <button mat-menu-item (click)="modifyNet('TestNet')">{{ 'testNet' | translate | async }}</button>
                 </mat-menu>
             </mat-toolbar>
 
@@ -35,11 +35,11 @@
                     <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
                 </span>
                 <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
-                    {{ (net == 'main' ? 'mainNet' : 'testNet') | translate | async }}
+                    {{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}
                     <span class="popup-nav-network-icon"></span>
                 </button>
                 <mat-menu #menu="matMenu">
-                    <button mat-menu-item>{{ (net == 'main' ? 'mainNet' : 'testNet') | translate | async }}</button>
+                    <button mat-menu-item>{{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}</button>
                     <!-- <button mat-menu-item (click)="modifyNetThird('test')">{{ 'testNet' | translate | async }}</button> -->
                 </mat-menu>
             </mat-toolbar>

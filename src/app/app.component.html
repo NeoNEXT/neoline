@@ -37,12 +37,12 @@
         </mat-menu>
 
         <button mat-stroked-button class="nav-network" [matMenuTriggerFor]="menu">
-            {{ (net === 'main' ? 'mainNet' : 'testNet') | translate | async }}
+            {{ (net === 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}
             <span class="nav-network-icon"></span>
         </button>
         <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="modifyNet('main')">{{ 'mainNet' | translate | async }}</button>
-            <button mat-menu-item (click)="modifyNet('test')">{{ 'testNet' | translate | async }}</button>
+            <button mat-menu-item (click)="modifyNet('MainNet')">{{ 'mainNet' | translate | async }}</button>
+            <button mat-menu-item (click)="modifyNet('TestNet')">{{ 'testNet' | translate | async }}</button>
         </mat-menu>
         <!-- <button mat-stroked-button *ngIf="walletIsOpen" (click)="close()" >{{ 'closeWallet' | translate | async }}</button> -->
     </div>
