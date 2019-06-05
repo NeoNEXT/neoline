@@ -323,7 +323,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         queryString += `${key}=${value}&`;
                     }
                 }
-                console.log(`index.html#popup/notification/deploy?${queryString}`);
                 window.open(`index.html#popup/notification/deploy?${queryString}`,
                     '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
             });

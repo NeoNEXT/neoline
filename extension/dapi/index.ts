@@ -3,6 +3,7 @@ import {
     AccountPublicKey, BalanceResults, BalanceRequest, GetBalanceArgs, InvokeReadArgs,
     TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput, ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response, DeployArgs, DeployOutput
 } from '../common/data_module';
+import { hexstring2str } from '@cityofzion/neon-core/lib/u';
 export class Init {
     public EVENT = EVENT;
     private EVENTLIST = {
@@ -189,7 +190,7 @@ export class Init {
                     if (!res.bool_status) {
                         rejectMain(ERRORS.RPC_ERROR);
                     } else {
-                        resolveMain(res.result || null);
+                        resolveMain({result: hexstring2str(res.result)} || null);
                     }
                 });
             }

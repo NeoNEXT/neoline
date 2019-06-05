@@ -47,7 +47,7 @@ window.addEventListener('message', async (e) => {
                     res = 'CNY';
                 }
                 const manifestData = chrome.runtime.getManifest();
-                manifestData.extra = { currency: res };
+                manifestData.extra = { currency: res, theme: '' };
                 window.postMessage({
                     target: returnTarget.Provider,
                     data: manifestData
@@ -121,7 +121,7 @@ window.addEventListener('message', async (e) => {
                     apiUrl = res || 'MainNet';
                 }
                 apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
-                httpGet(`${apiUrl}/v1/getstorage?script_hash=${e.data.parameter.scriptHash}&key=${e.data.parameter.key}`, (returnRes) => {
+                httpGet(`${apiUrl}/v1/getstorage?script_hash=${e.data.parameter.scriptHash}&key=${str2hexstring(e.data.parameter.key)}`, (returnRes) => {
                     window.postMessage({
                         target: returnTarget.Storage,
                         data: returnRes
