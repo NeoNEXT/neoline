@@ -3,6 +3,7 @@ import {
     AccountPublicKey, BalanceResults, BalanceRequest, GetBalanceArgs, InvokeReadArgs,
     TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput, ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response, DeployArgs, DeployOutput
 } from '../common/data_module';
+export { EVENT, ERRORS } from '../common/data_module';
 import { hexstring2str } from '@cityofzion/neon-core/lib/u';
 export class Init {
     public EVENT = EVENT;
