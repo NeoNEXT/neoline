@@ -226,8 +226,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 if (this.attachedAssets !== null) {
                     if (this.attachedAssets.NEO) {
                         try {
-                            newTx = await this.addAttachedAssets(NEO, this.attachedAssets.NEO,
-                                this.neon.wallet.accounts[0].address, toScript, newTx);
+                            newTx = await this.addAttachedAssets(NEO, this.attachedAssets.NEO, fromScript, toScript, newTx);
                         } catch (error) {
                             this.chrome.windowCallback({
                                 data: ERRORS.MALFORMED_INPUT,
@@ -278,13 +277,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
     }
 
     private addAttachedAssets(assetid: string, amount: number, fromScript: string,
-        toScript: string, newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
+                              toScript: string, newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
         return new Promise((resolve, reject) => {
             this.getBalance(this.neon.address, assetid).subscribe((balances: any) => {
-                balances = balances.result;
-                if (fromScript.length !== 40 || toScript.length !== 40) {
-                    reject('target address error');
-                }
                 if (balances.length === 0) {
                     reject('no balance');
                 }

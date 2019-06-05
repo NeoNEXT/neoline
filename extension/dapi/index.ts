@@ -97,11 +97,7 @@ export class Init {
                         resolveMain(res);
                     });
                 } else {
-                    if (connectResult instanceof Object) {
-                        rejectMain(ERRORS.CANCELLED);
-                    } else {
-                        rejectMain(ERRORS.CONNECTION_DENIED);
-                    }
+                    rejectMain(ERRORS.CONNECTION_DENIED);
                 }
             } else {
                 rejectMain(ERRORS.CONNECTION_DENIED);
@@ -334,11 +330,7 @@ export class Init {
                         }
                     });
                 } else {
-                    if (connectResult instanceof Object) {
-                        rejectMain(ERRORS.CANCELLED);
-                    } else {
-                        rejectMain(ERRORS.CONNECTION_DENIED);
-                    }
+                    rejectMain(ERRORS.CONNECTION_DENIED);
                 }
             } else {
                 rejectMain(ERRORS.CONNECTION_DENIED);
@@ -416,11 +408,7 @@ export class Init {
                         }
                     });
                 } else {
-                    if (connectResult instanceof Object) {
-                        rejectMain(ERRORS.CANCELLED);
-                    } else {
-                        rejectMain(ERRORS.CONNECTION_DENIED);
-                    }
+                    rejectMain(ERRORS.CONNECTION_DENIED);
                 }
             } else {
                 rejectMain(ERRORS.CONNECTION_DENIED);
@@ -472,11 +460,7 @@ export class Init {
                         }
                     });
                 } else {
-                    if (connectResult instanceof Object) {
-                        rejectMain(connectResult);
-                    } else {
-                        rejectMain(ERRORS.CONNECTION_DENIED);
-                    }
+                    rejectMain(ERRORS.CONNECTION_DENIED);
                 }
             } else {
                 rejectMain(ERRORS.CONNECTION_DENIED);
