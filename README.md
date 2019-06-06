@@ -2,6 +2,14 @@
 
 NEOLine is a thin wallet chrome extension, it provides dapis for developers who want to interact easily with NEO blockchain.
 
+## Install
+
+https://github.com/NeoNextClub/neoline/blob/master/install/en_US.md
+
+## DAPI Reference
+
+https://neoline.cn/dapi
+
 ## Development
 
 1. Ensure you have [angular-cli](https://angular.io/cli) installed.
