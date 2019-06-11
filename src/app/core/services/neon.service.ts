@@ -157,7 +157,10 @@ export class NeonService {
                 this.chrome.setWalletArray(this.getWalletArrayJSON());
                 this.chrome.setWIFArray(this._WIFArr);
                 this.chrome.windowCallback({
-                    data: true,
+                    data: {
+                        address: this.wallet.accounts[0].address || '',
+                        label: this.wallet.name || ''
+                    },
                     target: EVENT.DISCONNECTED
                 });
             } else {

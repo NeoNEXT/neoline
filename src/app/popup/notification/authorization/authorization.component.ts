@@ -110,7 +110,10 @@ export class PopupNoticeAuthComponent implements OnInit {
                 target: returnTarget.Connect
             });
             this.chrome.windowCallback({
-                data: true,
+                data: {
+                    address: this.neon.address || '',
+                    label: this.neon.wallet.name || ''
+                },
                 target: EVENT.CONNECTED
             });
             window.close();
