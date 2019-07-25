@@ -97,7 +97,7 @@ export class PopupSettingComponent implements OnInit {
                     address: this.wallet.accounts[0].address,
                     label: this.wallet.name
                 },
-                target: EVENT.ACCOUNT_CHANGED
+                return: EVENT.ACCOUNT_CHANGED
             });
             location.href = `index.html#popup`;
         }

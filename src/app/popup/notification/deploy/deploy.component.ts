@@ -6,7 +6,7 @@ import { wallet, tx, sc, u } from '@cityofzion/neon-core';
 import { MatDialog } from '@angular/material';
 import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
 import { HttpClient } from '@angular/common/http';
-import { returnTarget, ERRORS, DeployArgs, GAS } from '@/models/dapi';
+import { ERRORS, DeployArgs, GAS, requestTarget } from '@/models/dapi';
 import { generateDeployScript } from '@cityofzion/neon-core/lib/sc';
 import { Observable } from 'rxjs';
 import { UTXO } from '@/models/models';
@@ -23,6 +23,7 @@ export class PopupNoticeDeployComponent implements OnInit {
     public broadcastOverride = null;
     public loading = false;
     public loadingMsg: string;
+    private messageID = 0;
 
     constructor(
         private aRoute: ActivatedRoute,
@@ -37,6 +38,7 @@ export class PopupNoticeDeployComponent implements OnInit {
     ngOnInit(): void {
         this.aRoute.queryParams.subscribe((params: any) => {
             this.pramsData = params;
+            this.messageID = params.messageID;
             if (params.network !== undefined) {
                 if (params.network === 'MainNet') {
                     this.global.modifyNet('MainNet');
@@ -53,8 +55,9 @@ export class PopupNoticeDeployComponent implements OnInit {
         });
         window.onbeforeunload = () => {
             this.chrome.windowCallback({
-                data: ERRORS.CANCELLED,
-                target: returnTarget.Deploy
+                error: ERRORS.CANCELLED,
+                return: requestTarget.Deploy,
+                ID: this.messageID
             });
         };
     }
@@ -69,8 +72,9 @@ export class PopupNoticeDeployComponent implements OnInit {
                     this.resolveSign(res, pwd);
                 }).catch(err => {
                     this.chrome.windowCallback({
-                        data: ERRORS.MALFORMED_INPUT,
-                        target: returnTarget.Deploy
+                        error: ERRORS.MALFORMED_INPUT,
+                        return: requestTarget.Deploy,
+                        ID: this.messageID
                     });
                     window.close();
                 });
@@ -101,7 +105,8 @@ export class PopupNoticeDeployComponent implements OnInit {
                         txid: transaction.hash,
                         signedTX: this.tx.serialize(true)
                     },
-                    target: returnTarget.Deploy
+                    return: requestTarget.Deploy,
+                    ID: this.messageID
                 });
             } else {
                 this.resolveSend(this.tx);
@@ -131,8 +136,9 @@ export class PopupNoticeDeployComponent implements OnInit {
             this.loadingMsg = '';
             if (!res.bool_status) {
                 this.chrome.windowCallback({
-                    data: ERRORS.RPC_ERROR,
-                    target: returnTarget.Deploy
+                    error: ERRORS.RPC_ERROR,
+                    return: requestTarget.Deploy,
+                    ID: this.messageID
                 });
                 this.global.snackBarTip('transferFailed');
             } else {
@@ -141,7 +147,8 @@ export class PopupNoticeDeployComponent implements OnInit {
                         txid: transaction.hash,
                         nodeURL: `${this.global.apiDomain}`
                     },
-                    target: returnTarget.Deploy
+                    return: requestTarget.Deploy,
+                    ID: this.messageID
                 });
                 const setData = {};
                 setData[`${this.pramsData.network}TxArr`] =  await this.chrome.getLocalStorage(`${this.pramsData.network}TxArr`) || [];
@@ -157,8 +164,9 @@ export class PopupNoticeDeployComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
-                data: ERRORS.RPC_ERROR,
-                target: returnTarget.Deploy
+                error: ERRORS.RPC_ERROR,
+                return: requestTarget.Deploy,
+                ID: this.messageID
             });
             this.global.snackBarTip('transferFailed', err);
         });
@@ -186,8 +194,9 @@ export class PopupNoticeDeployComponent implements OnInit {
             } catch (error) {
                 console.log(error);
                 this.chrome.windowCallback({
-                    data: ERRORS.INSUFFICIENT_FUNDS,
-                    target: returnTarget.Deploy
+                    error: ERRORS.INSUFFICIENT_FUNDS,
+                    return: requestTarget.Deploy,
+                    ID: this.messageID
                 });
                 window.close();
             }

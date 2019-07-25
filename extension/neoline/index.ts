@@ -5,12 +5,11 @@
 import {
     httpGet,
     getStorage,
-    httpPost,
     getLocalStorage
 } from '../common/index';
-import { returnTarget, requestTarget, Account, AccountPublicKey, BalanceRequest, GetBalanceArgs, NEO, GAS, SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS, VerifyMessageArgs, mainApi, testApi } from '../common/data_module';
-import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, sign, str2hexstring, verify } from '../common/utils';
-import { generateDeployScript } from '@cityofzion/neon-core/lib/sc';
+import { requestTarget, Account, AccountPublicKey,
+    SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS, VerifyMessageArgs, mainApi, testApi } from '../common/data_module';
+import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, sign, str2hexstring, verify, hexstring2str } from '../common/utils';
 
 
 declare var chrome: any;
@@ -49,7 +48,7 @@ window.addEventListener('message', async (e) => {
                 const manifestData = chrome.runtime.getManifest();
                 manifestData.extra = { currency: res, theme: '' };
                 window.postMessage({
-                    target: returnTarget.Provider,
+                    return: requestTarget.Provider,
                     data: manifestData
                 }, '*');
             });
@@ -58,11 +57,12 @@ window.addEventListener('message', async (e) => {
         case requestTarget.Networks: {
             getStorage('net', (res) => {
                 window.postMessage({
-                    target: returnTarget.Networks,
+                    return: requestTarget.Networks,
                     data: {
                         networks: ['MainNet', 'TestNet'],
                         defaultNetwork: res || 'MainNet'
-                    }
+                    },
+                    ID: e.data.ID
                 }, '*');
             });
             return;
@@ -75,8 +75,9 @@ window.addEventListener('message', async (e) => {
                     data.label = res.name;
                 }
                 window.postMessage({
-                    target: returnTarget.Account,
-                    data
+                    return: requestTarget.Account,
+                    data,
+                    ID: e.data.ID
                 }, '*');
             });
             return;
@@ -94,8 +95,9 @@ window.addEventListener('message', async (e) => {
                 data.publicKey = getPublicKeyFromPrivateKey(privateKey);
             }
             window.postMessage({
-                target: returnTarget.AccountPublicKey,
-                data
+                return: requestTarget.AccountPublicKey,
+                data,
+                ID: e.data.ID
             }, '*');
             return;
         }
@@ -123,8 +125,10 @@ window.addEventListener('message', async (e) => {
                 apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
                 httpGet(`${apiUrl}/v1/getstorage?script_hash=${e.data.parameter.scriptHash}&key=${str2hexstring(e.data.parameter.key)}`, (returnRes) => {
                     window.postMessage({
-                        target: returnTarget.Storage,
-                        data: returnRes
+                        return: requestTarget.Storage,
+                        data: !returnRes.bool_status ? null : ({result: hexstring2str(returnRes.result)} || null),
+                        ID: e.data.ID,
+                        error: returnRes.bool_status ? null : ERRORS.RPC_ERROR
                     }, '*');
                 }, null);
             });
@@ -141,7 +145,6 @@ window.addEventListener('message', async (e) => {
                 apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
                 e.data.network = apiUrl;
                 e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
-
                 chrome.runtime.sendMessage(e.data, (response) => {
                     return Promise.resolve('Dummy response to keep the console quiet');
                 });
@@ -152,7 +155,7 @@ window.addEventListener('message', async (e) => {
         case requestTarget.VerifyMessage: {
             const parameter = e.data.parameter as VerifyMessageArgs;
             window.postMessage({
-                target: returnTarget.VerifyMessage,
+                return: requestTarget.VerifyMessage,
                 data: {
                     result: verify(str2hexstring(parameter.message), parameter.data, parameter.publicKey)
                 }
@@ -172,8 +175,10 @@ window.addEventListener('message', async (e) => {
                 e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
                 httpGet(`${apiUrl}/v1/transactions/gettransaction/${parameter.txid}`, (returnRes) => {
                     window.postMessage({
-                        target: returnTarget.Transaction,
-                        data: returnRes
+                        return: requestTarget.Transaction,
+                        data: !returnRes.bool_status ? null : returnRes.result,
+                        ID: e.data.ID,
+                        error: returnRes.bool_status ? null : ERRORS.RPC_ERROR
                     }, '*');
                 }, null);
             });
@@ -190,8 +195,10 @@ window.addEventListener('message', async (e) => {
                 apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
                 httpGet(`${apiUrl}/v1/getblock?block_index=${parameter.blockHeight}`, (returnRes) => {
                     window.postMessage({
-                        target: returnTarget.Block,
-                        data: returnRes
+                        return: requestTarget.Block,
+                        data: !returnRes.bool_status ? null : returnRes.result,
+                        ID: e.data.ID,
+                        error: returnRes.bool_status ? null : ERRORS.RPC_ERROR
                     }, '*');
                 }, null);
             });
@@ -208,8 +215,10 @@ window.addEventListener('message', async (e) => {
                 apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
                 httpGet(`${apiUrl}/v1/getapplicationlog?txid=${parameter.txid}`, (returnRes) => {
                     window.postMessage({
-                        target: returnTarget.ApplicationLog,
-                        data: returnRes
+                        return: requestTarget.ApplicationLog,
+                        data: !returnRes.bool_status ? null : returnRes.result,
+                        ID: e.data.ID,
+                        error: returnRes.bool_status ? null : ERRORS.RPC_ERROR
                     }, '*');
                 }, null);
             });
@@ -241,13 +250,14 @@ window.addEventListener('message', async (e) => {
                 );
                 const publicKey = getPublicKeyFromPrivateKey(privateKey);
                 window.postMessage({
-                    target: returnTarget.SignMessage,
+                    return: requestTarget.SignMessage,
                     data: {
                         publicKey,
                         data: sign(str2hexstring(parameter.message), privateKey),
                         salt: '',
                         message: parameter.message
-                    }
+                    },
+                    ID: e.data.ID
                 }, '*');
             }
             return;
@@ -274,7 +284,7 @@ window.addEventListener('message', async (e) => {
                 const currWallet = await getLocalStorage('wallet', () => { });
                 res = res || {};
                 window.postMessage({
-                    target: returnTarget.AuthState,
+                    return: requestTarget.AuthState,
                     data: currWallet ?  res[currWallet.accounts[0].address] || [] : []
                 }, '*');
             });
@@ -311,8 +321,9 @@ window.addEventListener('message', async (e) => {
                         });
                     } else {
                         window.postMessage({
-                            target: returnTarget.Send,
-                            data: ERRORS.INSUFFICIENT_FUNDS
+                            return: requestTarget.Send,
+                            error: ERRORS.INSUFFICIENT_FUNDS,
+                            ID: e.data.ID
                         }, '*');
                         return;
                     }

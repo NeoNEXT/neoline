@@ -1,10 +1,39 @@
 import {
-    Provider, EVENT, returnTarget, requestTarget, Networks, Account,
-    AccountPublicKey, BalanceResults, BalanceRequest, GetBalanceArgs, InvokeReadArgs,
-    TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput, ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response, DeployArgs, DeployOutput
+    Provider, EVENT, requestTarget, Networks, Account,
+    AccountPublicKey, BalanceResults, GetBalanceArgs, InvokeReadArgs,
+    TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput,
+    ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response, DeployArgs, DeployOutput
 } from '../common/data_module';
 export { EVENT, ERRORS } from '../common/data_module';
-import { hexstring2str } from '@cityofzion/neon-core/lib/u';
+import { getMessageID } from '../common/utils';
+
+function sendMessage<K>(target: requestTarget, parameter?: any): Promise<K> {
+    const ID = getMessageID();
+    return new Promise((resolveMain, rejectMain) => {
+        const request = parameter ? {target, parameter, ID} : { target, ID};
+        window.postMessage(request, '*');
+        const promise = new Promise((resolve, reject) => {
+            const callbackFn = (event) => {
+                const returnData = event.data;
+                // console.log(returnData);
+                if (returnData.return !== undefined && returnData.return === target && returnData.ID === ID) {
+                    if (returnData.error !== undefined && returnData.error != null) {
+                        reject(returnData.error);
+                    } else {
+                        resolve(returnData.data);
+                    }
+                    window.removeEventListener('message', callbackFn);
+                }
+            };
+            window.addEventListener('message', callbackFn);
+        });
+        promise.then((res: any) => {
+            resolveMain(res);
+        }).catch(error => {
+            rejectMain(error);
+        });
+    });
+}
 export class Init {
     public EVENT = EVENT;
     private EVENTLIST = {
@@ -39,7 +68,7 @@ export class Init {
     };
 
     public getProvider(): Promise<Provider> {
-        return new Promise((resolveMain, rejectMain) => {
+        return new Promise((resolveMain, _) => {
             getProvider().then(res => {
                 resolveMain(res);
             });
@@ -47,252 +76,129 @@ export class Init {
     }
 
     public getNetworks(): Promise<Networks> {
-        return new Promise((resolveMain, rejectMain) => {
-            window.postMessage({
-                target: requestTarget.Networks
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const callbackFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === returnTarget.Networks) {
-                        resolve(event.data.data);
-                        window.removeEventListener('message', callbackFn);
-                    }
-                };
-                window.addEventListener('message', callbackFn);
-            });
-            promise.then((res: Networks) => {
-                resolveMain(res);
-            });
-        });
+        return sendMessage(requestTarget.Networks);
     }
 
-    public getAccount(): Promise<Account> {
-        return new Promise(async (resolveMain, rejectMain) => {
-            let authState: any;
-            try {
-                authState = await getAuthState() || 'NONE';
-            } catch (error) {
-                console.log(error);
-            }
-            if (authState === true || authState === 'NONE') {
-                let connectResult;
-                if (sessionStorage.getItem('connect') !== 'true' && authState === 'NONE') {
-                    connectResult = await connect();
-                } else {
-                    connectResult = true;
-                }
-                if (connectResult === true) {
-                    window.postMessage({
-                        target: requestTarget.Account,
-                    }, '*');
-                    const promise = new Promise((resolve, reject) => {
-                        const callbackFn = (event) => {
-                            if (event.data.target !== undefined && event.data.target === returnTarget.Account) {
-                                resolve(event.data.data);
-                                window.removeEventListener('message', callbackFn);
-                            }
-                        };
-                        window.addEventListener('message', callbackFn);
-                    });
-                    promise.then((res: Account) => {
-                        resolveMain(res);
-                    });
-                } else {
-                    rejectMain(ERRORS.CONNECTION_DENIED);
-                }
+    public async getAccount(): Promise<Account> {
+        let authState: any;
+        try {
+            authState = await getAuthState() || 'NONE';
+        } catch (error) {
+            console.log(error);
+        }
+        if (authState === true || authState === 'NONE') {
+            let connectResult;
+            if (sessionStorage.getItem('connect') !== 'true' && authState === 'NONE') {
+                connectResult = await connect();
             } else {
-                rejectMain(ERRORS.CONNECTION_DENIED);
-
+                connectResult = true;
             }
-        });
+            if (connectResult === true) {
+                return sendMessage(requestTarget.Account);
+            } else {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.CONNECTION_DENIED);
+                });
+            }
+        } else {
+            return new Promise((_, reject) => {
+                reject(ERRORS.CONNECTION_DENIED);
+            });
+        }
     }
 
-    public getPublicKey(): Promise<AccountPublicKey> {
-        return new Promise((resolveMain, rejectMain) => {
-            window.postMessage({
-                target: requestTarget.Account
-            }, '*');
-            getAuthState().then(authState => {
-                if (authState === true || sessionStorage.getItem('connect') === 'true') {
-                    window.postMessage({
-                        target: requestTarget.AccountPublicKey,
-                    }, '*');
-                    const promise = new Promise((resolve, reject) => {
-                        const callbackFn = (event) => {
-                            if (event.data.target !== undefined && event.data.target === returnTarget.AccountPublicKey) {
-                                resolve(event.data.data);
-                                window.removeEventListener('message', callbackFn);
-                            }
-                        };
-                        window.addEventListener('message', callbackFn);
-                    });
-                    promise.then((res: AccountPublicKey) => {
-                        resolveMain(res);
-                    });
-                } else {
-                    rejectMain(ERRORS.CONNECTION_DENIED);
-                }
+    public async getPublicKey(): Promise<AccountPublicKey> {
+        window.postMessage({
+            target: requestTarget.Account
+        }, '*');
+        let authState: any;
+        try {
+            authState = await getAuthState() || 'NONE';
+        } catch (error) {
+            console.log(error);
+        }
+        if (authState === true || authState === 'NONE') {
+            let connectResult;
+            if (sessionStorage.getItem('connect') !== 'true' && authState === 'NONE') {
+                connectResult = await connect();
+            } else {
+                connectResult = true;
+            }
+            if (connectResult === true) {
+                return sendMessage(requestTarget.AccountPublicKey);
+            } else {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.CONNECTION_DENIED);
+                });
+            }
+        } else {
+            return new Promise((_, reject) => {
+                reject(ERRORS.CONNECTION_DENIED);
             });
-        });
+        }
     }
 
     public getBalance(parameter: GetBalanceArgs): Promise<BalanceResults> {
-        return new Promise((resolveMain, rejectMain) => {
-            if (parameter === undefined || parameter.params === undefined) {
-                rejectMain(ERRORS.MALFORMED_INPUT);
-            } else {
-                window.postMessage({
-                    target: requestTarget.Balance,
-                    parameter
-                }, '*');
-                const promise = new Promise((resolve, reject) => {
-                    const callbackFn = (event) => {
-                        if (event.data.target !== undefined && event.data.target === returnTarget.Balance) {
-                            resolve(event.data.data);
-                            window.removeEventListener('message', callbackFn);
-                        }
-                    };
-                    window.addEventListener('message', callbackFn);
-                });
-                promise.then((res: any) => {
-                    if (!res.bool_status) {
-                        rejectMain(ERRORS.RPC_ERROR);
-                    } else {
-                        resolveMain(res.result);
-                    }
-                });
-            }
-        });
+        if (parameter === undefined || parameter.params === undefined) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
+            });
+        } else {
+            return sendMessage(requestTarget.Balance, parameter);
+        }
     }
 
     public getStorage(parameter: GetStorageArgs): Promise<StorageResponse> {
-        return new Promise((resolveMain, rejectMain) => {
-            if (parameter === undefined || parameter.scriptHash === undefined || parameter.key === undefined) {
-                rejectMain(ERRORS.MALFORMED_INPUT);
-            } else {
-                window.postMessage({
-                    target: requestTarget.Storage,
-                    parameter
-                }, '*');
-                const promise = new Promise((resolve, reject) => {
-                    const callbackFn = (event) => {
-                        if (event.data.target !== undefined && event.data.target === returnTarget.Storage) {
-                            resolve(event.data.data);
-                            window.removeEventListener('message', callbackFn);
-                        }
-                    };
-                    window.addEventListener('message', callbackFn);
-                });
-                promise.then((res: any) => {
-                    if (!res.bool_status) {
-                        rejectMain(ERRORS.RPC_ERROR);
-                    } else {
-                        resolveMain({result: hexstring2str(res.result)} || null);
-                    }
-                });
-            }
-        });
+        if (parameter === undefined || parameter.scriptHash === undefined || parameter.key === undefined) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
+            });
+        } else {
+            return sendMessage(requestTarget.Storage, parameter);
+        }
     }
 
 
     public invokeRead(parameter: InvokeReadArgs): Promise<object> {
-        return new Promise((resolveMain, rejectMain) => {
-            if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
+        if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
                 parameter.operation === undefined || parameter.operation === '' ||
                 parameter.args === undefined || parameter.args.length === 0) {
-                rejectMain(ERRORS.MALFORMED_INPUT);
-            }
-            window.postMessage({
-                target: requestTarget.InvokeRead,
-                parameter
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const callbackFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === returnTarget.InvokeRead) {
-                        resolve(event.data);
-                        window.removeEventListener('message', callbackFn);
-                    }
-                };
-                window.addEventListener('message', callbackFn);
-            });
-            promise.then((res: any) => {
-                if (res.bool_status) {
-                    resolveMain({
-                        script: res.result.script,
-                        state: res.result.state,
-                        gas_consumed: res.result.gas_consumed,
-                        stack: res.result.stack
+                    return new Promise((_, reject) => {
+                        reject(ERRORS.MALFORMED_INPUT);
                     });
-                } else {
-                    rejectMain(ERRORS.RPC_ERROR);
-                }
-            });
-        });
+        } else {
+            return sendMessage(requestTarget.InvokeRead, parameter);
+        }
     }
 
     public verifyMessage(parameter: VerifyMessageArgs): Promise<Response> {
-        return new Promise((resolveMain, rejectMain) => {
-            if (parameter.message === undefined || parameter.data === undefined || parameter.publicKey === undefined) {
-                rejectMain(ERRORS.MALFORMED_INPUT);
-            }
-            window.postMessage({
-                target: requestTarget.VerifyMessage,
-                parameter
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const callbackFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === returnTarget.VerifyMessage) {
-                        resolve(event.data.data);
-                        window.removeEventListener('message', callbackFn);
-                    }
-                };
-                window.addEventListener('message', callbackFn);
+        if (parameter.message === undefined || parameter.data === undefined || parameter.publicKey === undefined) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
             });
-            promise.then((res: any) => {
-                if (res.type) {
-                    rejectMain(res);
-                } else {
-                    resolveMain(res);
-                }
-            });
-        });
+        } else {
+            return sendMessage(requestTarget.VerifyMessage, parameter);
+        }
     }
 
     public getTransaction(parameter: TransactionInputArgs): Promise<TransactionDetails> {
-        return new Promise((resolveMain, rejectMain) => {
-            if (parameter.txid === undefined) {
-                rejectMain(ERRORS.MALFORMED_INPUT);
-            }
-            window.postMessage({
-                target: requestTarget.Transaction,
-                parameter
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const callbackFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === returnTarget.Transaction) {
-                        resolve(event.data.data);
-                        window.removeEventListener('message', callbackFn);
-                    }
-                };
-                window.addEventListener('message', callbackFn);
+        if (parameter.txid === undefined) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
             });
-            promise.then((res: any) => {
-                if (res.bool_status) {
-                    resolveMain(res.result);
-                } else {
-                    rejectMain(ERRORS.RPC_ERROR);
-                }
-            });
-        });
+        } else {
+            return sendMessage(requestTarget.Transaction, parameter);
+        }
     }
 
-    public invoke(parameter: InvokeArgs) {
-        return new Promise(async (resolveMain, rejectMain) => {
-            if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
-                parameter.operation === undefined || parameter.operation === '' ||
-                parameter.args === undefined) {
-                rejectMain(ERRORS.MALFORMED_INPUT);
-            }
+    public async invoke(parameter: InvokeArgs) {
+        if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
+            parameter.operation === undefined || parameter.operation === '' ||
+            parameter.args === undefined) {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.MALFORMED_INPUT);
+                });
+        } else {
             let authState: any;
             try {
                 authState = await getAuthState() || 'NONE';
@@ -307,73 +213,38 @@ export class Init {
                     connectResult = true;
                 }
                 if (connectResult === true) {
-                    window.postMessage({
-                        target: requestTarget.Invoke,
-                        parameter,
-                        hostname: location.hostname,
-                        icon: getIcon(),
-                        connect: sessionStorage.getItem('connect')
-                    }, '*');
-                    const promise = new Promise((resolve, reject) => {
-                        const callbackFn = (event) => {
-                            if (event.data.target !== undefined && event.data.target === returnTarget.Invoke) {
-                                resolve(event.data.data);
-                                window.removeEventListener('message', callbackFn);
-                            }
-                        };
-                        window.addEventListener('message', callbackFn);
-                    });
-                    promise.then((res: any) => {
-                        if (res.type) {
-                            rejectMain(res);
-                        } else {
-                            resolveMain(res);
-                        }
-                    });
+                    return sendMessage(requestTarget.Invoke, parameter);
                 } else {
-                    rejectMain(ERRORS.CONNECTION_DENIED);
+                    return new Promise((_, reject) => {
+                        reject(ERRORS.CONNECTION_DENIED);
+                    });
                 }
             } else {
-                rejectMain(ERRORS.CONNECTION_DENIED);
+                return new Promise((_, reject) => {
+                    reject(ERRORS.CONNECTION_DENIED);
+                });
             }
-        });
+        }
     }
 
     public signMessage(parameter: { message: string }): Promise<any> {
-        return new Promise((resolveMain, rejectMain) => {
-            if (parameter.message === undefined) {
-                rejectMain(ERRORS.MALFORMED_INPUT);
-            }
-            window.postMessage({
-                target: requestTarget.SignMessage,
-                parameter
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const callbackFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === returnTarget.SignMessage) {
-                        resolve(event.data.data);
-                        window.removeEventListener('message', callbackFn);
-                    }
-                };
-                window.addEventListener('message', callbackFn);
+        if (parameter.message === undefined) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
             });
-            promise.then((res: any) => {
-                if (res.type) {
-                    rejectMain(res);
-                } else {
-                    resolveMain(res);
-                }
-            });
-        });
+        } else {
+            return sendMessage(requestTarget.SignMessage, parameter);
+        }
     }
 
-    public deploy(parameter: DeployArgs): Promise<DeployOutput> {
-        return new Promise(async (resolveMain, rejectMain) => {
-            if (parameter.author === undefined || parameter.code === undefined || parameter.description === undefined ||
-                parameter.email === undefined || parameter.name === undefined || parameter.parameterList === undefined ||
-                parameter.returnType === undefined || parameter.version === undefined || parameter.networkFee === undefined) {
-                rejectMain(ERRORS.MALFORMED_INPUT);
-            }
+    public async deploy(parameter: DeployArgs): Promise<DeployOutput> {
+        if (parameter.author === undefined || parameter.code === undefined || parameter.description === undefined ||
+            parameter.email === undefined || parameter.name === undefined || parameter.parameterList === undefined ||
+            parameter.returnType === undefined || parameter.version === undefined || parameter.networkFee === undefined) {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.MALFORMED_INPUT);
+                });
+        } else {
             let authState: any;
             try {
                 authState = await getAuthState() || 'NONE';
@@ -388,42 +259,28 @@ export class Init {
                     connectResult = true;
                 }
                 if (connectResult === true) {
-                    window.postMessage({
-                        target: requestTarget.Deploy,
-                        parameter
-                    }, '*');
-                    const promise = new Promise((resolve, reject) => {
-                        const callbackFn = (event) => {
-                            if (event.data.target !== undefined && event.data.target === returnTarget.Deploy) {
-                                resolve(event.data.data);
-                                window.removeEventListener('message', callbackFn);
-                            }
-                        };
-                        window.addEventListener('message', callbackFn);
-                    });
-                    promise.then((res: any) => {
-                        if (res.type) {
-                            rejectMain(res);
-                        } else {
-                            resolveMain(res);
-                        }
-                    });
+                    return sendMessage(requestTarget.Deploy, parameter);
                 } else {
-                    rejectMain(ERRORS.CONNECTION_DENIED);
+                    return new Promise((_, reject) => {
+                        reject(ERRORS.CONNECTION_DENIED);
+                    });
                 }
             } else {
-                rejectMain(ERRORS.CONNECTION_DENIED);
+                return new Promise((_, reject) => {
+                    reject(ERRORS.CONNECTION_DENIED);
+                });
             }
-        });
+        }
     }
 
-    public send(parameter: SendArgs): Promise<SendOutput> {
-        return new Promise(async (resolveMain, rejectMain) => {
-            if (parameter === undefined || parameter.toAddress === undefined || parameter.fromAddress === undefined ||
-                (parameter.asset === undefined) ||
-                parameter.amount === undefined || parameter.network === undefined) {
-                rejectMain(ERRORS.MALFORMED_INPUT);
-            }
+    public async send(parameter: SendArgs): Promise<SendOutput> {
+        if (parameter === undefined || parameter.toAddress === undefined || parameter.fromAddress === undefined ||
+            (parameter.asset === undefined) ||
+            parameter.amount === undefined || parameter.network === undefined) {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.CONNECTION_DENIED);
+            });
+        } else {
             let authState: any;
             try {
                 authState = await getAuthState() || 'NONE';
@@ -438,91 +295,40 @@ export class Init {
                     connectResult = true;
                 }
                 if (connectResult === true) {
-                    window.postMessage({
-                        target: requestTarget.Send,
-                        parameter,
-                        hostname: location.hostname,
-                        icon: getIcon(),
-                        connect: sessionStorage.getItem('connect')
-                    }, '*');
-                    const promise = new Promise((resolve, reject) => {
-                        const callbackFn = (event) => {
-                            if (event.data.target === returnTarget.Send) {
-                                resolve(event.data.data);
-                            }
-                        };
-                        window.addEventListener('message', callbackFn);
-                    });
-                    promise.then((res: any) => {
-                        if (res.type) {
-                            rejectMain(res);
-                        } else {
-                            resolveMain(res as SendOutput);
-                        }
-                    });
+                    return sendMessage(requestTarget.Send, parameter);
                 } else {
-                    rejectMain(ERRORS.CONNECTION_DENIED);
+                    return new Promise((_, reject) => {
+                        reject(ERRORS.CONNECTION_DENIED);
+                    });
                 }
             } else {
-                rejectMain(ERRORS.CONNECTION_DENIED);
+                return new Promise((_, reject) => {
+                    reject(ERRORS.CONNECTION_DENIED);
+                });
             }
-        });
+        }
     }
 
     public getBlock(parameter: GetBlockInputArgs) {
-        return new Promise((resolveMain, rejectMain) => {
-            if (parameter.blockHeight === undefined) {
-                rejectMain(ERRORS.MALFORMED_INPUT);
-            }
-            window.postMessage({
-                target: requestTarget.Block,
-                parameter
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const callbackFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === returnTarget.Block) {
-                        resolve(event.data.data);
-                        window.removeEventListener('message', callbackFn);
-                    }
-                };
-                window.addEventListener('message', callbackFn);
+        if (parameter.blockHeight === undefined) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.CONNECTION_DENIED);
             });
-            promise.then((res: any) => {
-                if (res.bool_status) {
-                    resolveMain(res.result);
-                } else {
-                    rejectMain(ERRORS.RPC_ERROR);
-                }
-            });
-        });
+        } else {
+            return sendMessage(requestTarget.Block, parameter);
+
+        }
     }
 
     public getApplicationLog(parameter: TransactionInputArgs) {
-        return new Promise((resolveMain, rejectMain) => {
-            if (parameter.txid === undefined) {
-                rejectMain(ERRORS.MALFORMED_INPUT);
-            }
-            window.postMessage({
-                target: requestTarget.ApplicationLog,
-                parameter
-            }, '*');
-            const promise = new Promise((resolve, reject) => {
-                const callbackFn = (event) => {
-                    if (event.data.target !== undefined && event.data.target === returnTarget.ApplicationLog) {
-                        resolve(event.data.data);
-                        window.removeEventListener('message', callbackFn);
-                    }
-                };
-                window.addEventListener('message', callbackFn);
+        if (parameter.txid === undefined) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.CONNECTION_DENIED);
             });
-            promise.then((res: any) => {
-                if (res.bool_status) {
-                    resolveMain(res.result);
-                } else {
-                    rejectMain(ERRORS.RPC_ERROR);
-                }
-            });
-        });
+        } else {
+            return sendMessage(requestTarget.ApplicationLog, parameter);
+
+        }
     }
 
 
@@ -536,7 +342,7 @@ export class Init {
                         callback(error);
                     });
                     // const callbackFn = (event) => {
-                    //     if (event.data.target !== undefined && event.data.target === this.EVENT.READY) {
+                    //     if (event.data.return !== undefined && event.data.return === this.EVENT.READY) {
                     //         callback(event.data.data);
                     //     }
                     // };
@@ -551,7 +357,7 @@ export class Init {
                         return;
                     }
                     const callbackFn = (event) => {
-                        if (event.data.target !== undefined && event.data.target === this.EVENT.ACCOUNT_CHANGED) {
+                        if (event.data.return !== undefined && event.data.return === this.EVENT.ACCOUNT_CHANGED) {
                             callback(event.data.data);
                         }
                     };
@@ -567,7 +373,7 @@ export class Init {
                         return;
                     }
                     const callbackFn = (event) => {
-                        if (event.data.target !== undefined && event.data.target === this.EVENT.CONNECTED) {
+                        if (event.data.return !== undefined && event.data.return === this.EVENT.CONNECTED) {
                             callback(event.data.data);
                         }
                     };
@@ -583,7 +389,7 @@ export class Init {
                         return;
                     }
                     const callbackFn = (event) => {
-                        if (event.data.target !== undefined && event.data.target === this.EVENT.DISCONNECTED) {
+                        if (event.data.return !== undefined && event.data.return === this.EVENT.DISCONNECTED) {
                             callback(event.data.data);
                         }
                     };
@@ -600,7 +406,7 @@ export class Init {
                         return;
                     }
                     const callbackFn = (event) => {
-                        if (event.data.target !== undefined && event.data.target === this.EVENT.NETWORK_CHANGED) {
+                        if (event.data.return !== undefined && event.data.return === this.EVENT.NETWORK_CHANGED) {
                             callback(event.data.data);
                         }
                     };
@@ -616,7 +422,7 @@ export class Init {
                         return;
                     }
                     const callbackFn = (event) => {
-                        if (event.data.target !== undefined && event.data.target === this.EVENT.BLOCK_HEIGHT_CHANGED) {
+                        if (event.data.return !== undefined && event.data.return === this.EVENT.BLOCK_HEIGHT_CHANGED) {
                             callback(event.data.data);
                         }
                     };
@@ -632,7 +438,7 @@ export class Init {
                         return;
                     }
                     const callbackFn = (event) => {
-                        if (event.data.target !== undefined && event.data.target === this.EVENT.TRANSACTION_CONFIRMED) {
+                        if (event.data.return !== undefined && event.data.return === this.EVENT.TRANSACTION_CONFIRMED) {
                             callback(event.data.data);
                         }
                     };
@@ -644,7 +450,7 @@ export class Init {
                 }
         }
     }
-    public removeEventListener(type: string, removeFn: any, callback: (data: object) => void) {
+    public removeEventListener(type: string, removeFn: any) {
         switch (type) {
             case this.EVENT.READY:
                 {
@@ -735,7 +541,7 @@ window.addEventListener('message', e => {
 });
 
 function connect(open = true): Promise<any> {
-    return new Promise((resolveMain, rejectMain) => {
+    return new Promise((resolveMain) => {
         if (open) {
             window.postMessage({
                 target: requestTarget.Connect,
@@ -745,9 +551,9 @@ function connect(open = true): Promise<any> {
                 connect: sessionStorage.getItem('connect')
             }, '*');
         }
-        const promise = new Promise((resolve, reject) => {
+        const promise = new Promise((resolve) => {
             const callbackFn = (event) => {
-                if (event.data.target !== undefined && (event.data.target === returnTarget.Connect)) {
+                if (event.data.return !== undefined && (event.data.return === requestTarget.Connect)) {
                     resolve(event.data.data);
                     window.removeEventListener('message', callbackFn);
                 }
@@ -772,13 +578,13 @@ function connect(open = true): Promise<any> {
 }
 
 function getAuthState(): Promise<any> {
-    return new Promise((resolveMain, rejectMain) => {
+    return new Promise((resolveMain) => {
         window.postMessage({
             target: requestTarget.AuthState
         }, '*');
-        const promise = new Promise((resolve, reject) => {
+        const promise = new Promise((resolve) => {
             const callbackFn = (event) => {
-                if (event.data.target !== undefined && event.data.target === returnTarget.AuthState) {
+                if (event.data.return !== undefined && event.data.return === requestTarget.AuthState) {
                     resolve(event.data.data);
                     window.removeEventListener('message', callbackFn);
                 }
@@ -801,9 +607,9 @@ function getProvider(): Promise<Provider> {
         window.postMessage({
             target: requestTarget.Provider
         }, '*');
-        const promise = new Promise((resolve, reject) => {
+        const promise = new Promise((resolve) => {
             const callbackFn = (event) => {
-                if (event.data.target !== undefined && event.data.target === returnTarget.Provider) {
+                if (event.data.return !== undefined && event.data.return === requestTarget.Provider) {
                     resolve(event.data.data);
                     window.removeEventListener('message', callbackFn);
                 }

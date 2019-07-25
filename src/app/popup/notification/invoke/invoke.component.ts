@@ -10,7 +10,7 @@ import { NEO, UTXO, GAS } from '@/models/models';
 import { Observable } from 'rxjs';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
-import { returnTarget, ERRORS } from '@/models/dapi';
+import { ERRORS, requestTarget } from '@/models/dapi';
 
 @Component({
     templateUrl: 'invoke.component.html',
@@ -28,6 +28,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
     public assetIntentOverrides = null;
     public loading = false;
     public loadingMsg: string;
+    private messageID = 0;
 
     constructor(
         private aRoute: ActivatedRoute,
@@ -42,6 +43,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
     ngOnInit(): void {
         this.aRoute.queryParams.subscribe((params: any) => {
             this.pramsData = params;
+            this.messageID = params.messageID;
             if (params.network !== undefined) {
                 if (params.network === 'MainNet') {
                     this.global.modifyNet('MainNet');
@@ -87,8 +89,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
         });
         window.onbeforeunload = () => {
             this.chrome.windowCallback({
-                data: ERRORS.CANCELLED,
-                target: returnTarget.Invoke
+                error: ERRORS.CANCELLED,
+                return: requestTarget.Invoke,
+                ID: this.messageID
             });
         };
     }
@@ -103,8 +106,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     this.resolveSign(res, pwd);
                 }).catch(err => {
                     this.chrome.windowCallback({
-                        data: ERRORS.MALFORMED_INPUT,
-                        target: returnTarget.Invoke
+                        error: ERRORS.MALFORMED_INPUT,
+                        return: requestTarget.Invoke,
+                        ID: this.messageID
                     });
                     window.close();
                 });
@@ -135,7 +139,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         txid: transaction.hash,
                         signedTX: this.tx.serialize(true)
                     },
-                    target: returnTarget.Invoke
+                    return: requestTarget.Invoke,
+                    ID: this.messageID
                 });
             } else {
                 this.resolveSend(this.tx);
@@ -165,8 +170,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.loadingMsg = '';
             if (!res.bool_status) {
                 this.chrome.windowCallback({
-                    data: ERRORS.RPC_ERROR,
-                    target: returnTarget.Invoke
+                    error: ERRORS.RPC_ERROR,
+                    return: requestTarget.Invoke,
+                    ID: this.messageID
                 });
                 this.global.snackBarTip('transferFailed');
             } else {
@@ -175,7 +181,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         txid: transaction.hash,
                         nodeURL: `${this.global.apiDomain}`
                     },
-                    target: returnTarget.Invoke
+                    return: requestTarget.Invoke,
+                    ID: this.messageID
                 });
                 const setData = {};
                 setData[`${this.pramsData.network}TxArr`] =  await this.chrome.getLocalStorage(`${this.pramsData.network}TxArr`) || [];
@@ -191,8 +198,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
-                data: ERRORS.RPC_ERROR,
-                target: returnTarget.Invoke
+                error: ERRORS.RPC_ERROR,
+                return: requestTarget.Invoke,
+                ID: this.messageID
             });
             this.global.snackBarTip('transferFailed', err);
         });
@@ -205,8 +213,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
             let newTx = new tx.InvocationTransaction();
             if (this.scriptHash.length !== 42 && this.scriptHash.length !== 40) {
                 this.chrome.windowCallback({
-                    data: ERRORS.MALFORMED_INPUT,
-                    target: returnTarget.Invoke
+                    error: ERRORS.MALFORMED_INPUT,
+                    return: requestTarget.Invoke,
+                    ID: this.messageID
                 });
                 this.loading = false;
                 this.loadingMsg = '';
@@ -229,8 +238,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
                             newTx = await this.addAttachedAssets(NEO, this.attachedAssets.NEO, fromScript, toScript, newTx);
                         } catch (error) {
                             this.chrome.windowCallback({
-                                data: ERRORS.MALFORMED_INPUT,
-                                target: returnTarget.Invoke
+                                error: ERRORS.MALFORMED_INPUT,
+                                return: requestTarget.Invoke,
+                                ID: this.messageID
                             });
                             window.close();
                         }
@@ -329,8 +339,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 if (payback < 0) {
                     reject('no enough GAS to fee');
                     this.chrome.windowCallback({
-                        data: ERRORS.INSUFFICIENT_FUNDS,
-                        target: returnTarget.Deploy
+                        error: ERRORS.INSUFFICIENT_FUNDS,
+                        return: requestTarget.Deploy,
+                        ID: this.messageID
                     });
                     window.close();
                 }

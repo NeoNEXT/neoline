@@ -116,7 +116,7 @@ export class AppComponent {
                     address: this.wallet.accounts[0].address,
                     label: this.wallet.name
                 },
-                target: EVENT.ACCOUNT_CHANGED
+                return: EVENT.ACCOUNT_CHANGED
             });
             location.href = `index.html`;
         }

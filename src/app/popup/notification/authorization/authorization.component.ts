@@ -19,7 +19,7 @@ import {
 import {
     wallet
 } from '@cityofzion/neon-core';
-import { ERRORS, returnTarget, EVENT } from '@/models/dapi';
+import { ERRORS, EVENT , requestTarget } from '@/models/dapi';
 
 @Component({
     templateUrl: './authorization.component.html',
@@ -66,7 +66,7 @@ export class PopupNoticeAuthComponent implements OnInit {
         window.onbeforeunload = () => {
             this.chrome.windowCallback({
                 data: ERRORS.CANCELLED,
-                target: returnTarget.Connect
+                return: requestTarget.Connect
             });
         };
     }
@@ -86,7 +86,7 @@ export class PopupNoticeAuthComponent implements OnInit {
             }
             this.chrome.windowCallback({
                 data: false,
-                target: returnTarget.Connect
+                return: requestTarget.Connect
             });
             window.close();
         });
@@ -107,14 +107,14 @@ export class PopupNoticeAuthComponent implements OnInit {
             }
             this.chrome.windowCallback({
                 data: true,
-                target: returnTarget.Connect
+                return: requestTarget.Connect
             });
             this.chrome.windowCallback({
                 data: {
                     address: this.neon.address || '',
                     label: this.neon.wallet.name || ''
                 },
-                target: EVENT.CONNECTED
+                return: EVENT.CONNECTED
             });
             window.close();
         });

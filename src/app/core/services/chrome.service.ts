@@ -618,7 +618,7 @@ export class ChromeService {
                 net
             });
             this.windowCallback({
-                target: EVENT.NETWORK_CHANGED,
+                return: EVENT.NETWORK_CHANGED,
                 data: {
                     networks: ['MainNet', 'TestNet'],
                     defaultNetwork: net === 'TestNet' ? 'TestNet' : 'MainNet'

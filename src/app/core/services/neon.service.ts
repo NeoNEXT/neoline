@@ -161,7 +161,7 @@ export class NeonService {
                         address: this.wallet.accounts[0].address || '',
                         label: this.wallet.name || ''
                     },
-                    target: EVENT.DISCONNECTED
+                    return: EVENT.DISCONNECTED
                 });
             } else {
                 this._walletArr.splice(index, 1);

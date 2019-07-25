@@ -10,6 +10,13 @@ const curve = new ec('p256');
 
 const hexRegex = /^([0-9A-Fa-f]{2})*$/;
 
+export const getMessageID = () => {
+    const rand = Math.floor(Math.random() * 999999);
+    const myDate = new Date();
+    const messageId = myDate.getTime() + '' + rand;
+    return messageId;
+}
+
 export function getPrivateKeyFromWIF(wif) {
     return ab2hexstring(WIF.decode(wif, 128).privateKey);
 }
@@ -163,6 +170,18 @@ export function hexstring2ab(str) {
     return result;
 }
 
+export function hexstring2str(hexstring) {
+    return ab2str(hexstring2ab(hexstring));
+}
+
+/**
+ * @param buf ArrayBuffer
+ * @returns ASCII string
+ */
+export function ab2str(buf) {
+    return String.fromCharCode.apply(null, Array.from(new Uint8Array(buf)));
+}
+
 /**
  * Encodes a public key.
  * @param unencodedKey unencoded public key
@@ -225,8 +244,7 @@ export function isPublicKey(key, encoded) {
             return true;
         }
         return false;
-    }
-    catch (e) {
+    } catch (e) {
         return false;
     }
 }

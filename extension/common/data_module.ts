@@ -51,44 +51,24 @@ export enum EVENT {
 }
 
 export enum requestTarget {
-    Provider = 'neoline.request_provider',
-    Networks = 'neoline.request_networks',
-    Account = 'neoline.request_account',
-    AccountPublicKey = 'neoline.request_public_key',
-    Balance = 'neoline.request_balance',
-    Storage = 'neoline.request_storage',
-    InvokeRead = 'neoline.request_invoke_read',
-    VerifyMessage = 'neoline.request_verify_message',
-    Transaction = 'neoline.request_transaction',
-    Block = 'neoline.request_block',
-    ApplicationLog = 'neoline.request_application_log',
-    Invoke = 'neoline.request_invoke',
-    SignMessage = 'neoline.request_sign_message',
-    Deploy = 'neoline.request_deploy',
-    Send = 'neoline.request_send',
-    Connect = 'neoline.request_connect',
-    AuthState = 'neoline.request_auth_state'
+    Provider = 'neoline.target_provider',
+    Networks = 'neoline.target_networks',
+    Account = 'neoline.target_account',
+    AccountPublicKey = 'neoline.target_public_key',
+    Balance = 'neoline.target_balance',
+    Storage = 'neoline.target_storage',
+    InvokeRead = 'neoline.target_invoke_read',
+    VerifyMessage = 'neoline.target_verify_message',
+    Transaction = 'neoline.target_transaction',
+    Block = 'neoline.target_block',
+    ApplicationLog = 'neoline.target_application_log',
+    Invoke = 'neoline.target_invoke',
+    SignMessage = 'neoline.target_sign_message',
+    Deploy = 'neoline.target_deploy',
+    Send = 'neoline.target_send',
+    Connect = 'neoline.target_connect',
+    AuthState = 'neoline.target_auth_state'
 
-}
-
-export enum returnTarget {
-    Provider = 'neoline.return_provider',
-    Networks = 'neoline.return_networks',
-    Account = 'neoline.return_account',
-    AccountPublicKey = 'neoline.return_public_key',
-    Balance = 'neoline.return_balance',
-    Storage = 'neoline.return_storage',
-    InvokeRead = 'neoline.return_invoke_read',
-    VerifyMessage = 'neoline.return_verify_message',
-    Transaction = 'neoline.return_transaction',
-    Block = 'neoline.return_block',
-    ApplicationLog = 'neoline.return_application_log',
-    Invoke = 'neoline.return_invoke',
-    SignMessage = 'neoline.return_sign_message',
-    Deploy = 'neoline.return_deploy',
-    Send = 'neoline.return_send',
-    Connect = 'neoline.return_connect',
-    AuthState = 'neoline.return_auth_state'
 }
 
 export interface Provider {

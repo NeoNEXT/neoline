@@ -24,7 +24,7 @@ import {
 import {
     TransferService
 } from '@/app/transfer/transfer.service';
-import { returnTarget, ERRORS } from '@/models/dapi';
+import { ERRORS, requestTarget } from '@/models/dapi';
 @Component({
     templateUrl: 'transfer.component.html',
     styleUrls: ['transfer.component.scss']
@@ -46,6 +46,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public fee: number;
     public init = false;
     private broadcastOverride = false;
+    private messageID = 0;
 
     public net: string;
     constructor(
@@ -65,14 +66,16 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         this.fromAddress = this.neon.address;
         this.wallet = this.neon.wallet;
         this.aRoute.queryParams.subscribe((params: any) => {
+            this.messageID = params.messageID;
             if (JSON.stringify(params) === '{}') {
                 return;
             }
             this.broadcastOverride = params.broadcastOverride || false;
             window.onbeforeunload = () => {
                 this.chrome.windowCallback({
-                    data: ERRORS.CANCELLED,
-                    target: returnTarget.Send
+                    error: ERRORS.CANCELLED,
+                    return: requestTarget.Send,
+                    ID: this.messageID
                 });
             };
             if (params.network === 'MainNet') {
@@ -148,8 +151,9 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
 
     public cancel() {
         this.chrome.windowCallback({
-            data: ERRORS.CANCELLED,
-            target: returnTarget.Send
+            error: ERRORS.CANCELLED,
+            return: requestTarget.Send,
+            ID: this.messageID
         });
         window.close();
     }
@@ -173,7 +177,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                         txid: tx.hash,
                         signedTx: tx.serialize(true)
                     },
-                    target: returnTarget.Send
+                    return: requestTarget.Send,
+                    ID: this.messageID
                 });
             } else {
                 this.resolveSend(tx);
@@ -207,7 +212,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                     txid: tx.hash,
                     nodeURL: `${this.global.apiDomain}`
                 },
-                target: returnTarget.Send
+                return: requestTarget.Send,
+                ID: this.messageID
             });
             const setData = {};
             setData[`${this.network}TxArr`] =  await this.chrome.getLocalStorage(`${this.network}TxArr`) || [];
@@ -223,8 +229,9 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.loadingMsg = '';
             this.creating = false;
             this.chrome.windowCallback({
-                data: ERRORS.RPC_ERROR,
-                target: returnTarget.Send
+                error: ERRORS.RPC_ERROR,
+                return: requestTarget.Send,
+                ID: this.messageID
             });
             console.log(err);
             this.global.snackBarTip('transferFailed', err);

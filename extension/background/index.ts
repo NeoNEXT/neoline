@@ -21,7 +21,7 @@ import {
     setLocalStorage,
     getLocalStorage
 } from '../common';
-import { requestTarget, returnTarget, GetBalanceArgs, BalanceRequest, ERRORS, mainApi, testApi, EVENT } from '../common/data_module';
+import { requestTarget, GetBalanceArgs, BalanceRequest, ERRORS, mainApi, testApi, EVENT } from '../common/data_module';
 import { reverseHex, getScriptHashFromAddress } from '../common/utils';
 /**
  * Background methods support.
@@ -63,7 +63,7 @@ export function expand() {
                                     blockHash: blockDetail.result.hash,
                                     tx: txStrArr,
                                 },
-                                target: EVENT.BLOCK_HEIGHT_CHANGED
+                                return: EVENT.BLOCK_HEIGHT_CHANGED
                             });
                         }
 
@@ -87,7 +87,7 @@ export function expand() {
                                         blockHeight: txDetail.result.blockIndex,
                                         blockTime: txDetail.result.blockTime,
                                     },
-                                    target: EVENT.TRANSACTION_CONFIRMED
+                                    return: EVENT.TRANSACTION_CONFIRMED
                                 });
                             }
                         }, '*');
@@ -192,11 +192,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 getLocalStorage('wallet', (wallet) => {
                     if (wallet !== undefined && wallet.accounts[0].address !== params.fromAddress) {
                         windowCallback({
-                            target: returnTarget.Send,
-                            data: ERRORS.MALFORMED_INPUT
+                            return: requestTarget.Send,
+                            error: ERRORS.MALFORMED_INPUT,
+                            ID: request.ID
                         });
                     } else {
-                        window.open(`index.html#popup/notification/transfer?${queryString}`,
+                        window.open(`index.html#popup/notification/transfer?${queryString}messageID=${request.ID}`,
                             '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                     }
                 });
@@ -216,13 +217,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         if (res !== undefined && res[request.hostname] !== undefined && res[request.hostname].status === 'false') {
                             notification(chrome.i18n.getMessage('rejected'), chrome.i18n.getMessage('rejectedTip'));
                             windowCallback({
-                                target: returnTarget.Connect,
+                                return: requestTarget.Connect,
                                 data: false
                             });
                             return;
                         }
                         windowCallback({
-                            target: returnTarget.Connect,
+                            return: requestTarget.Connect,
                             data: true
                         });
                         notification(`${chrome.i18n.getMessage('from')}: ${request.hostname}`, chrome.i18n.getMessage('connectedTip'));
@@ -257,8 +258,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
             httpPost(`${parameter.network}/v1/getbalances`, { params: postData }, (returnData) => {
                 windowCallback({
-                    target: returnTarget.Balance,
-                    data: returnData
+                    return: requestTarget.Balance,
+                    data: returnData.result,
+                    ID: request.ID,
+                    error: returnData.bool_status ? null : ERRORS.RPC_ERROR
                 });
             }, null);
             sendResponse('');
@@ -275,9 +278,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
             });
             request.parameter[2] = args;
+            const returnRes = {data: {}, ID: request.ID, return: requestTarget.InvokeRead, error: null};
             httpPost(`${request.network}/v1/transactions/invokeread`, { params: request.parameter }, (res) => {
-                res.target = returnTarget.InvokeRead;
-                windowCallback(res);
+                res.return = requestTarget.InvokeRead;
+                if (res.bool_status) {
+                    returnRes.data = {
+                        script: res.result.script,
+                        state: res.result.state,
+                        gas_consumed: res.result.gas_consumed,
+                        stack: res.result.stack
+                    };
+                } else {
+                    returnRes.error = ERRORS.RPC_ERROR;
+                }
+                windowCallback(returnRes);
             }, null);
             sendResponse('');
             return;
@@ -300,7 +314,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         queryString += `${key}=${value}&`;
                     }
                 }
-                window.open(`index.html#popup/notification/invoke?${queryString}`,
+                window.open(`index.html#popup/notification/invoke?${queryString}messageID=${request.ID}`,
                     '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
             });
             sendResponse('');
@@ -323,7 +337,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         queryString += `${key}=${value}&`;
                     }
                 }
-                window.open(`index.html#popup/notification/deploy?${queryString}`,
+                window.open(`index.html#popup/notification/deploy?${queryString}messageID=${request.ID}`,
                     '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
             });
 
