@@ -8,7 +8,9 @@ module.exports = {
     node: {
         path: true,
         crypto: true,
-        fs: 'empty'
+        fs: 'empty',
+        stream: true,
+        Buffer: true
     },
     // optimization: {
     //     minimize: false
