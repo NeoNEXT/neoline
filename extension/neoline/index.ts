@@ -10,6 +10,8 @@ import {
 import { requestTarget, Account, AccountPublicKey,
     SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS, VerifyMessageArgs, mainApi, testApi } from '../common/data_module';
 import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, sign, str2hexstring, verify, hexstring2str } from '../common/utils';
+import randomBytes = require('randomBytes');
+
 
 
 declare var chrome: any;
@@ -154,12 +156,27 @@ window.addEventListener('message', async (e) => {
 
         case requestTarget.VerifyMessage: {
             const parameter = e.data.parameter as VerifyMessageArgs;
-            window.postMessage({
-                return: requestTarget.VerifyMessage,
-                data: {
-                    result: verify(str2hexstring(parameter.message), parameter.data, parameter.publicKey)
-                }
-            }, '*');
+            const walletArr = await getLocalStorage('walletArr', () => { });
+            const currWallet = await getLocalStorage('wallet', () => { });
+            const WIFArr = await getLocalStorage('WIFArr', () => { });
+            if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
+                const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
+                    item.accounts[0].address === currWallet.accounts[0].address)]
+                );
+                const publicKey = getPublicKeyFromPrivateKey(privateKey);
+                const parameterHexString = str2hexstring(parameter.message);
+                const lengthHex = (parameterHexString.length / 2).toString(16).padStart(2, '0');
+                const concatenatedString = lengthHex + parameterHexString;
+                const serializedTransaction = '010001f0' + concatenatedString + '0000';
+                window.postMessage({
+                    return: requestTarget.VerifyMessage,
+                    data: {
+                        result: sign(serializedTransaction, privateKey) === parameter.data &&
+                        publicKey === parameter.publicKey ? true : false
+                    },
+                    ID: e.data.ID
+                }, '*');
+            }
             return;
         }
 
@@ -248,13 +265,18 @@ window.addEventListener('message', async (e) => {
                 const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
                     item.accounts[0].address === currWallet.accounts[0].address)]
                 );
+                const randomSalt = randomBytes(16).toString('hex');
                 const publicKey = getPublicKeyFromPrivateKey(privateKey);
+                const parameterHexString = str2hexstring(randomSalt + parameter.message);
+                const lengthHex = (parameterHexString.length / 2).toString(16).padStart(2, '0');
+                const concatenatedString = lengthHex + parameterHexString;
+                const serializedTransaction = '010001f0' + concatenatedString + '0000';
                 window.postMessage({
                     return: requestTarget.SignMessage,
                     data: {
                         publicKey,
-                        data: sign(str2hexstring(parameter.message), privateKey),
-                        salt: '',
+                        data: sign(serializedTransaction, privateKey),
+                        salt: randomSalt,
                         message: parameter.message
                     },
                     ID: e.data.ID
