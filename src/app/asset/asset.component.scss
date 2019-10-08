@@ -1,6 +1,4 @@
 @import 'src/styles/theme-default';
-@import './light';
-@import './dark';
 
 :host {
     display: -webkit-box;
@@ -14,6 +12,7 @@
     border-bottom-right-radius: 8px;
     height: 100%;
     z-index: 5;
+    box-shadow: 0 8px 16px #484e6d;
 }
 .balance .flex-1 {
     overflow-y: auto;
@@ -30,6 +29,8 @@
     font-size: 16px;
     cursor: pointer;
     transition: 0.2s;
+    border: 1px solid #E5E5E5;
+    color: mat-color($default-app-primary);
 }
 .manage:hover {
     transform: scale(1.05);

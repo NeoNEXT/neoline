@@ -52,8 +52,14 @@
         <div>{{ 'language' | translate | async}}</div>
         <div class="popup-setting-language-current">{{ lang | languageName }}</div>
     </div>
+    <div class="popup-setting-item">
+        <div class="popup-setting-theme-logo"></div>
+        <div>{{ 'darkMode' | translate | async}}</div>
+        <div class="popup-setting-language-current">
+            <mat-slide-toggle color="primary" (change)="changeTheme($event)" [checked]="isDark"></mat-slide-toggle>
+        </div>
+    </div>
 </div>
-
 
 <div class="popup-setting-cache">
     <div></div>

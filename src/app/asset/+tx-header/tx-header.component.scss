@@ -1,17 +1,17 @@
 @import 'src/styles/theme-default';
-@import './light';
-@import './dark';
 
 :host {
     display: -webkit-box;
     display: -webkit-flex;
     display: flex;
     font-size: 14px;
+    background: #F4F7FC;
 }
 span {
     padding: $space;
     overflow: hidden;
     text-align: center;
+    color: #484E6D;
 }
 span.txid {
     width: 440px;

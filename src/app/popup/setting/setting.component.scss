@@ -1,5 +1,5 @@
-@import './light';
-@import './dark';
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
 
 .popup-setting-title {
     font-size: 16px;
@@ -12,6 +12,7 @@
 .popup-setting-account {
     width: 345px;
     margin: 3px auto auto auto;
+    border-bottom: 1px solid map-get($colors, e5e5e5);
 
     .popup-setting-account-item {
         overflow: hidden;
@@ -29,6 +30,7 @@
                 width: 15px;
                 height: 9px;
                 margin: 26px auto;
+                @include bg($img-select);
             }
 
             div.popup-setting-account-not-select {
@@ -41,6 +43,7 @@
             width: 280px;
             height: 62px;
             overflow: hidden;
+            border-bottom: 1px solid map-get($colors, e5e5e5);
 
             .popup-setting-asset-logo {
                 width: 39px;
@@ -85,6 +88,7 @@
                         height: 3px;
                         display: inline-block;
                         visibility: visible;
+                        @include bg($img-omi);
                     }
                 }
             }
@@ -103,6 +107,7 @@ hr {
     margin-top: -1px;
     margin-bottom: -1px;
     border: none;
+    background: rgba(244, 247, 252, 1);
 }
 
 .popup-setting-menu {
@@ -113,6 +118,7 @@ hr {
         width: 100%;
         min-height: 50px;
         overflow: hidden;
+        border-bottom: 1px solid map-get($colors, e5e5e5);
 
         &:hover {
             cursor: pointer;
@@ -141,6 +147,21 @@ hr {
             height: 50px;
             line-height: 50px;
             float: right;
+            color: map-get($colors, 999999);
+        }
+        .popup-setting-import-logo {
+            @include bg($img-import-wallet);
+        }
+
+        .popup-setting-create-logo {
+            @include bg($img-create-wallet);
+        }
+
+        .popup-setting-language-logo {
+            @include bg($img-language-change);
+        }
+        .popup-setting-export-logo {
+            @include bg($img-export-wallet);
         }
     }
 }
@@ -152,6 +173,7 @@ hr {
     margin: auto;
     overflow: hidden;
     font-size: 14px;
+    border-bottom: 1px solid map-get($colors, e5e5e5);
 
     div {
         float: left;
@@ -163,6 +185,7 @@ hr {
         margin-top: 17px;
         margin-left: 13px;
         margin-right: 23px;
+        @include bg($img-clear-cache);
     }
 
     .popup-setting-cache-tip {
@@ -177,6 +200,9 @@ hr {
             margin-bottom: 5px;
         }
 
+        div:last-child {
+            color: map-get($colors, 999999);
+        }
     }
 
     .popup-setting-cache-btn {
@@ -188,6 +214,9 @@ hr {
         text-align: center;
         margin: 18px auto;
         float: right;
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+        color: map-get($neo-line-default, 50);
     }
 }
 
@@ -196,24 +225,28 @@ hr {
     margin: auto;
     padding: 15px 13px;
     cursor: default;
+    border-bottom: 1px solid map-get($colors, e5e5e5);
 
     .popup-setting-authorization-head {
         line-height: 22px;
 
         .title {
             font-size: 14px;
+            color: #282828;
         }
 
         .view-all {
             font-size: 12px;
             float: right;
             cursor: pointer;
+            color: #7178DD;
         }
     }
 
     .tip {
         font-size: 12px;
         margin-top: 15px;
+        color: #999999;
     }
 }
 
@@ -228,15 +261,18 @@ hr {
 
         .title {
             font-size: 14px;
+            color: #282828;
         }
 
         .value {
             font-size: 13px;
+            color: #999999;
         }
     }
 
     .update-time {
         font-size: 12px;
         margin-top: 10px;
+        color: #999999;
     }
 }

@@ -1,7 +1,5 @@
 @import 'src/styles/theme-default.scss';
 @import 'src/styles/popup-default';
-@import './light';
-@import './dark';
 
 form {
     margin-top: $space*3;
@@ -27,12 +25,14 @@ p.title {
     font-size: 48px;
     font-weight: 600;
     text-align: center;
+    color: #333333;
 }
 
 p.tip {
     font-size: 16px;
     margin-top: $space*2;
     margin-bottom: $space*3;
+    color: #666666;
 }
 
 .icon {
@@ -57,6 +57,11 @@ button {
         width: 17px;
         height: 14px;
         margin-top: -3px;
+        @include bg($img-show-pwd);
+    }
+
+    span.hide-pwd {
+        @include bg($img-hide-pwd);
     }
 }
 

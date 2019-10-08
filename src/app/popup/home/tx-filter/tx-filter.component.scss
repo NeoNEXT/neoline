@@ -1,5 +1,5 @@
-@import './light';
-@import './dark';
+@import 'src/styles/popup-default';
+@import 'src/styles/theme-default';
 
 .get-claim-box {
     display: flex;
@@ -15,6 +15,9 @@
     .info-box {
         flex-grow: 1;
         font-size: 12px;
+        .info-status {
+            color: rgba(0, 0, 0, 0.3);
+        }
     }
     button {
         height: 35px;
@@ -23,6 +26,9 @@
         font-weight: 500;
         cursor: pointer;
         font-size: 12px;
+        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+        color: map-get($neo-line-default, 500);
+
         mat-spinner {
             margin: auto;
         }
@@ -61,6 +67,7 @@
             height: 10px;
             margin-top: 8px;
             margin-right: 5px;
+            @include bg($img-filter);
         }
 
         div:last-child {
@@ -82,11 +89,13 @@
             line-height: 25px;
             border-radius: 12px;
             padding: 0;
+            border: 1px solid map-get($colors, e5e5e5);
 
             span {
                 display: inline-block;
                 width: 6px;
                 height: 3px;
+                @include bg($img-dropdown);
             }
         }
     }

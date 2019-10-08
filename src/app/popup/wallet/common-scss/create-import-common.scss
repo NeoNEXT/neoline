@@ -5,12 +5,14 @@
     text-align: center;
     margin-bottom: 32px;
     font-weight: bold;
+    color: map-get($colors, 333333);
 }
 
 .popup-wallet-body-tip {
     font-size: 14px;
     margin-left: 35px;
     margin-bottom: 20px;
+    color: map-get($colors, 666666);
 }
 
 .popup-wallet-body-text {
@@ -31,6 +33,12 @@
             width: 17px;
             height: 14px;
             margin-top: -3px;
+            @include bg($img-show-pwd);
+        }
+
+        span.hide-pwd {
+            @include bg($img-hide-pwd);
+
         }
     }
 }
@@ -51,48 +59,14 @@
 }
 
 .popup-wallet-body-submit {
+    margin-top: 15px;
+    margin-bottom: 18px;
     @include button-common;
+    box-shadow: 0 2px 4px 0 rgba(87, 83, 245, 0.4);
+
 }
 
 .popup-wallet-body-cancel {
     @include button-common;
+    box-shadow: 0 2px 4px 0 rgba(87, 83, 245, 0.4);
 }
-
-.popup-wallet-body-submit {
-    margin-top: 15px;
-    margin-bottom: 18px;
-}
-
-// .light-theme {
-    .popup-wallet-body-title {
-        color: map-get($colors, 333333);
-    }
-
-    .popup-wallet-body-tip {
-        color: map-get($colors, 666666);
-    }
-
-    .popup-wallet-body-text {
-        button {
-            span {
-                @include bg($img-show-pwd);
-            }
-
-            span.hide-pwd {
-                @include bg($img-hide-pwd);
-            }
-        }
-    }
-    @mixin button-common-theme {
-        box-shadow: 0 2px 4px 0 rgba(87, 83, 245, 0.4);
-    }
-
-    .popup-wallet-body-submit {
-        @include button-common-theme;
-    }
-
-    .popup-wallet-body-cancel {
-        @include button-common-theme;
-    }
-
-// }

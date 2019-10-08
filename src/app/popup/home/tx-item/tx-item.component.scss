@@ -1,7 +1,5 @@
 @import 'src/app/popup/home/common-scss/common.scss';
 @import 'src/styles/theme-default';
-@import './light';
-@import './dark';
 
 .popup-home-tx {
     overflow: hidden;
@@ -10,6 +8,7 @@
     padding-right: $space;
     padding-bottom: $space;
     margin-bottom: 10px;
+    border-bottom: 1px solid #e5e5e5;
 
     .head {
         height: 18px;
@@ -17,6 +16,7 @@
 
         .time {
             font-size: 12px;
+            color: #999999;
         }
 
         .more-info-btn {
@@ -48,12 +48,24 @@
 
             .tx-type {
                 font-size: 14px;
+                color: #333333;
             }
 
             .status {
                 font-size: 10px;
                 padding: 2px 12px;
+                background: #F2F9F2;
+                color: #6AD982;
 
+                &.wait {
+                    background: #F9F6F2;
+                    color: #F79165
+                }
+
+                &.fail {
+                    background: #F7F7F7;
+                    color: #999999
+                }
             }
         }
 
@@ -64,11 +76,16 @@
 
             .asset-amount {
                 font-size: 15px;
+                color: #333333;
 
+                &.activity {
+                    color: #7178DD
+                }
             }
 
             .money-amount {
                 font-size: 12px;
+                color: #9FA8BD;
             }
         }
     }
@@ -81,9 +98,11 @@
             margin-top: 8px;
             padding-left: 20px;
             padding-right: 20px;
+            background: #F4F7FC;
 
             .title {
                 font-size: 12px;
+                color: #666666;
             }
 
             img {
@@ -107,6 +126,7 @@
             .info {
                 font-size: 12px;
                 float: right;
+                color: #333333;
             }
 
             textarea {
@@ -128,5 +148,6 @@
 
     &:hover {
         cursor: pointer;
+        background: lightgray;
     }
 }

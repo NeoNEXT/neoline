@@ -1,5 +1,4 @@
-@import './light';
-@import './dark';
+@import 'src/styles/popup-default';
 
 .popup-asset {
     overflow: hidden;
@@ -7,6 +6,7 @@
     font-weight: bold;
 
     &:hover {
+        background-color: map-get($colors, f4f7fc);
         .popup-asset-top .right {
             visibility: visible;
         }
@@ -65,6 +65,7 @@
                 height: 3px;
                 display: inline-block;
                 visibility: visible;
+                @include bg($img-omi);
             }
 
             button {
@@ -79,10 +80,11 @@
                 right: 0;
                 padding: 0 22px;
                 visibility: hidden;
+                color: map-get($colors, 484e6d);
+                background: rgba(255, 255, 255, 1);
+                box-shadow: 0px 1px 12px 0px rgba(0, 11, 131, 0.3);
             }
-
         }
-
     }
 
     .popup-asset-bottom {
@@ -100,6 +102,7 @@
 
             .amount {
                 font-size: 17px;
+                color: map-get($colors, 333333);
             }
 
             .type {
@@ -120,6 +123,7 @@
         .type,
         .right {
             font-size: 12px;
+            color: map-get($colors, 9fa8bd);
         }
     }
 }
@@ -128,4 +132,5 @@ hr {
     border-width: 1px;
     width: 345px;
     margin: auto;
+    border-color: map-get($colors, f2f2f2);
 }

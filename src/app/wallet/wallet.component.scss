@@ -1,6 +1,4 @@
 @import 'src/styles/theme-default';
-@import './light';
-@import './dark';
 
 :host {
     display: block;
@@ -9,17 +7,25 @@
 }
 .nav {
     padding-top: $space*2;
+    border-bottom: 1px solid #e5e5e5;
+
     .import-box {
         display: inline-block;
         vertical-align: middle;
         &.active {
+            border-bottom: 3px solid mat-color($default-app-primary);
             button, mat-menu {
                 display: inline-block;
             }
         }
+        &.active span {
+            color: #333333;
+        }
         .import-type {
             font-size: 12px;
             padding: 0;
+            color: #999999;
+
             img {
                 width: 6px;
             }
@@ -36,6 +42,11 @@
     font-weight: 600;
     margin: 0 $space*2;
     padding: $space 0;
+    color: #999999;
+}
+.nav span.active {
+    color: #333333;
+    border-bottom: 3px solid mat-color($default-app-primary);
 }
 @media screen and (max-width: 1200px) {
     .nav {
@@ -49,6 +60,7 @@
 }
 @media screen and (min-width: 961px) {
     :host {
+        background-image: url('/assets/images/bg_wallet.png');
         background-size: contain;
         background-repeat: no-repeat;
     }

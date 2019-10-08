@@ -1,7 +1,5 @@
 @import 'src/styles/theme-default';
 @import 'src/styles/popup-default';
-@import './light';
-@import './dark';
 
 .my-wallet-box {
     padding: 47px 20px 0 40px;
@@ -15,6 +13,7 @@
             font-size: 20px;
             font-weight: bold;
             margin-bottom: 16px;
+            color: #333333;
         }
         .btn-box {
             display: inline-block;
@@ -37,6 +36,7 @@
                 width: 20px;
                 height: 15px;
                 margin: 35px auto;
+                @include bg($img-select);
             }
 
             div.wallet-not-select {
@@ -48,6 +48,7 @@
             height: 80px;
             overflow: hidden;
             display: flex;
+            border-bottom: 1px solid map-get($colors, e5e5e5);
 
             .wallet-logo {
                 width: 50px;
@@ -74,11 +75,17 @@
                     border: none;
                     cursor: pointer;
                 }
+
+                .wallet-name:focus {
+                    border-bottom: 1px solid #e5e5e5;
+                }
+
                 .wallet-address {
                     font-size: 12px;
                     white-space: nowrap;
                     overflow:hidden;
                     text-overflow:ellipsis;
+                    color: #9FA8BD;
                 }
             }
             .btn-box {

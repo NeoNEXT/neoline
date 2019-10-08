@@ -1,6 +1,5 @@
 @import 'src/styles/popup-default';
-@import './light';
-@import './dark';
+@import 'src/styles/theme-default';
 
 .mat-toolbar-fixed {
     width: 100%;
@@ -85,6 +84,7 @@
     z-index: map-get($z-indexes, max);
     overflow-y: auto;
     overflow-x: hidden;
+    background-color: map-get($neo-line-default, 50);
 }
 
 .side-nav {
@@ -93,6 +93,7 @@
     bottom: 0;
     left: 0;
     right: 0;
+    background-color: map-get($neo-line-default, 50);
 }
 
 .no-third-party-toolbar {
@@ -100,21 +101,50 @@
     .popup-nav-logo-img {
         margin-left: 107px;
         width: 84px;
+        @include bg($img-logo-title);
+    }
+    .popup-nav-network {
+        border-color: map-get($neo-line-default, 50);
+    }
+
+    .popup-nav-network {
+        border-color: map-get($neo-line-default, 50);
+
+        .popup-nav-network-icon {
+            @include bg($img-net-dropdown);
+        }
     }
 }
 
 .is-third-party-toolbar {
     .mat-toolbar {
+        background-color: map-get($neo-line-default, 50);
+
         .popup-nav-logo-img {
             margin-left: 0;
             width: 30px;
             margin-right: 10px;
+            @include bg($img-logo);
         }
 
         .popup-nav-logo-title-img {
             margin-left: 0;
             width: 84px;
+            @include bg($img-about-logo);
+        }
+
+        .popup-nav-network {
+            border-color: map-get($colors, e5e5e5);
+            color: map-get($colors, 666666);
+
+            .popup-nav-network-icon {
+                @include bg($img-tp-net-dropdown);
+            }
         }
 
     }
+}
+
+.nav-box-shadow {
+    box-shadow: 0px 1px 12px 0px rgba(0, 11, 131, 0.3);
 }

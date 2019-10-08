@@ -10,6 +10,8 @@
     transform: translate(-50%, -50%);
     border-radius: 4px;
     padding: $space;
+    background: #FFFFFF;
+    box-shadow: 0 0 8px #969696;
 }
 
 @media screen and (max-width: 1200px) {
@@ -29,6 +31,7 @@ p {
     font-size: 18px;
     text-align: center;
     margin-top: $space;
+    color: #333333;
 }
 
 p.tip {
@@ -39,14 +42,3 @@ button {
     display: block;
     margin: $space auto;
 }
-
-
-// .light-theme {
-    :host {
-        background: #FFFFFF;
-        box-shadow: 0 0 8px #969696;
-    }
-    p {
-        color: #333333;
-    }
-// }

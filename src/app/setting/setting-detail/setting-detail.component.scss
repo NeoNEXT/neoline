@@ -1,7 +1,5 @@
 @import 'src/styles/theme-default';
 @import 'src/styles/popup-default';
-@import './light';
-@import './dark';
 
 :host {
     display: flex;
@@ -18,16 +16,19 @@ section {
         font-size: 20px;
         font-weight: bold;
         margin-bottom: 16px;
+        color: #333333;
     }
 
     .title-small {
         font-size: 16px;
         font-weight: bold;
+        color: #333333;
     }
 
     .tip {
         font-size: 14px;
         font-weight: 500;
+        color: map-get($colors, 999999);
     }
 
     .option-btn {
@@ -38,25 +39,32 @@ section {
         border-radius: 4px;
         font-size: 16px;
         font-weight: 500;
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        box-shadow: 0px 4px 8px 0px rgba(87, 83, 245, 0.4);
+        color: map-get($neo-line-default, 50);
     }
 }
 
 section.lang {
+    @include bg($img-setting-one);
     background-position: 33px 35px;
     background-size: 15px 36px;
 }
 
 section.cache {
+    @include bg($img-setting-two);
     background-position: 26px 35px;
     background-size: 23px 36px;
 }
 
 section.rate {
+    @include bg($img-setting-three);
     background-position: 25px 35px;
     background-size: 26px 36px;
 }
 
 section.privacy {
+    @include bg($img-setting-four);
     background-position: 25px 35px;
     background-size: 25px 36px;
 }
@@ -74,6 +82,7 @@ section.privacy {
 
 .border-bottom {
     padding-bottom: 30px;
+    border-bottom: 1px solid #E4E7EC;
 }
 
 .lang {
@@ -83,6 +92,7 @@ section.privacy {
 
     mat-radio-button {
         font-size: 16px;
+        color: #333333;
     }
 }
 
@@ -105,6 +115,8 @@ section.privacy {
         font-weight: 500;
         position: relative;
         padding-right: 30px;
+        border: 1px solid #e5e5e5 !important;
+        color: #484e6d !important;
 
         .asset-icon {
             position: absolute;
@@ -114,6 +126,7 @@ section.privacy {
             width: 12px;
             height: 12px;
             display: inline-block;
+            @include bg($img-setting-rate-dropdown);
         }
     }
 }
@@ -124,6 +137,7 @@ section.privacy {
         cursor: pointer;
         display: inline-flex;
         align-items: center;
+        color: #7178dd;
     }
 
     .view-all-icon {
@@ -132,6 +146,7 @@ section.privacy {
         margin-left: 6px;
         display: inline-block;
         transition: .4s;
+        @include bg($img-setting-dropdown);
     }
 
     .view-down {
@@ -166,6 +181,7 @@ section.privacy {
                 height: 40px;
                 margin-right: 15px;
                 border-radius: 50%;
+                background: rgba(73, 73, 73, 1);
             }
 
             .info {
@@ -174,8 +190,30 @@ section.privacy {
 
                 .name {
                     margin-bottom: 8px;
+                    color: #282828;
+                }
+                .address {
+                    color: #999999;
                 }
 
+            }
+
+            .approval {
+                color: #7178dd;
+                background: #F4F7FC;
+
+                span {
+                    @include bg($img-setting-authed);
+                }
+            }
+
+            .refuse {
+                color: #999999;
+                background: #f2f2f2;
+
+                span {
+                    @include bg($img-setting-unauth);
+                }
             }
 
             .status {
@@ -203,12 +241,14 @@ section.privacy {
                 font-size: 16px;
                 display: inline-flex;
                 align-items: center;
+                color: #f96c6c;
 
                 span {
                     display: inline-block;
                     width: 14px;
                     height: 14px;
                     margin-right: 6px;
+                    @include bg($img-setting-delete);
                 }
             }
         }
@@ -216,15 +256,20 @@ section.privacy {
 
         .privacy-item:last-child {
             padding-bottom: 0;
+            border-bottom: 1px solid #E4E7EC;
         }
 
         .empty {
             font-size: 14px;
             font-weight: 500;
+            color: map-get($colors, 999999);
         }
     }
 }
 
 .mat-menu-item {
     text-align: center;
+    &:hover {
+        background: #f0efff;
+    }
 }

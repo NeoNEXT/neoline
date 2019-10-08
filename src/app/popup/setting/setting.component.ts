@@ -50,6 +50,7 @@ export class PopupSettingComponent implements OnInit {
     public rateCurrency: string;
     public rateCurrencys: Array < string > ;
     public rateTime: number;
+    public isDark;
 
     constructor(
         private router: Router,
@@ -65,6 +66,7 @@ export class PopupSettingComponent implements OnInit {
         this.wallet = this.neon.wallet;
         this.rateCurrencys = this.setting.rateCurrencys;
         this.rateCurrency = this.asset.rateCurrency;
+        this.isDark = this.setting.theme === 'dark-theme' ? true : false;
     }
 
     ngOnInit(): void {
@@ -204,5 +206,13 @@ export class PopupSettingComponent implements OnInit {
                 });
             }
         });
+    }
+
+    changeTheme($event) {
+        if ($event.checked === true) {
+            this.setting.changeTheme('dark-theme');
+        } else {
+            this.setting.changeTheme('light-theme');
+        }
     }
 }

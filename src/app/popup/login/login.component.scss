@@ -1,15 +1,18 @@
-@import './light';
-@import './dark';
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
 
 .popup-login-logo {
     width: 100%;
+    @include bg($img-login-bg);
     background-position-y: top;
     overflow: visible;
+    border-top: 1px solid map-get($neo-line-default, 500);
 
     .pupup-login-logo-small {
         width: 129px;
         height: 92px;
         margin: 35px auto 50px auto;
+        @include bg($img-popup-logo);
     }
 }
 
@@ -46,6 +49,10 @@
             width: 17px;
             height: 14px;
             margin-top: -3px;
+            @include bg($img-show-pwd);
+        }
+        span.hide-pwd {
+            @include bg($img-hide-pwd);
         }
     }
 }
@@ -61,6 +68,7 @@
     // background: map-get($neo-line-default, 500);
     border-radius: 40px;
     display: block;
+    box-shadow: 0 2px 4px 0 rgba(87,83,245,0.4);
 }
 .popup-login-or {
     font-size: 13px;
@@ -68,6 +76,7 @@
     display: flex;
     justify-content: center;
     margin: 15px 0;
+    color: #999999;
 }
 .popup-login-or-link {
     font-size: 13px;
@@ -75,4 +84,5 @@
     display: flex;
     justify-content: center;
     cursor: pointer;
+    color: #7a87a9;
 }

@@ -1,6 +1,4 @@
 @import 'src/styles/theme-default';
-@import './light';
-@import './dark';
 
 :host {
     z-index: 21;
@@ -13,6 +11,8 @@
     border-radius: 4px;
     min-height: 250px;
     overflow: hidden;
+    background: #FFFFFF;
+    box-shadow: 0 0 8px #969696;
 }
 
 mat-spinner {
@@ -25,6 +25,8 @@ mat-spinner {
     position: absolute;
     right: -40px;
     top: -40px;
+    background: #C2C6F5;
+    color: #FFFFFF;
 }
 
 .close mat-icon {
@@ -41,6 +43,7 @@ mat-spinner {
 
 .form .title {
     font-size: 16px;
+    color: #333333;
 }
 
 .form .balance {
@@ -49,6 +52,8 @@ mat-spinner {
     text-align: center;
     font-size: 20px;
     margin: $space 0;
+    background: #F3F2FF;
+    color: #333333;
 }
 
 .form input {
@@ -58,6 +63,13 @@ mat-spinner {
     width: 100%;
     border-radius: 4px;
     font-size: 14px;
+    background: #FFFFFF;
+    border: 1px solid #E5E5E5;
+    color: #333333;
+}
+
+.form input::placeholder {
+    color: #999999;
 }
 
 .form button {

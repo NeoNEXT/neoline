@@ -466,6 +466,8 @@
     },
     "connectChooseNotAllow": {
         "message": "不再允许此站点想我发出转账申请"
+    },
+    "darkMode": {
+        "message": "暗夜模式"
     }
-
 }

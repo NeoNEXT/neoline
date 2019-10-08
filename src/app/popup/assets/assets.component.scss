@@ -1,5 +1,5 @@
-@import './light';
-@import './dark';
+@import 'src/styles/popup-default';
+@import 'src/styles/theme-default';
 
 .popup-assets-top {
     width: 100%;
@@ -7,6 +7,7 @@
     overflow: hidden;
     position: fixed;
     top: 64px;
+    background-color: map-get($neo-line-default, 500);
 
     div {
         float: left;
@@ -14,6 +15,7 @@
         height: 18px;
         margin-top: 6px;
         margin-left: 22px;
+        @include bg($img-back);
 
         &:hover {
             cursor: pointer;
@@ -31,11 +33,13 @@
         margin-right: 15px;
         font-weight: 500;
         text-align: center;
+        color: map-get($neo-line-default, 500);
 
         span {
             width: 12px;
             height: 12px;
             display: inline-block;
+            @include bg($img-manage-asset);
         }
     }
 
@@ -53,12 +57,19 @@
         font-weight: 500;
         text-align: left;
         border: none;
+        background: map-get($neo-line-default, 50);
+        ::-webkit-input-placeholder {
+            color: map-get($colors, 9fa8bd);
+        }
+
         span {
             display: inline-block;
             width: 12px;
             height: 12px;
             margin-right: 8px;
+            @include bg($img-search);
         }
+
         input {
             width: 240px;
             border: none;
@@ -81,6 +92,7 @@
         line-height: 456px;
         text-align: center;
         font-size: 15px;
+        color: map-get($colors, f2f2f2);
     }
 
     .search-title {
@@ -88,6 +100,7 @@
         font-size: 12px;
         font-weight: 500;
         margin-left: 15px;
+        color: map-get($colors, 999999);
     }
 }
 

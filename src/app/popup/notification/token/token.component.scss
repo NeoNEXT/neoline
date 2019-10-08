@@ -1,5 +1,5 @@
-@import './light';
-@import './dark';
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
 
 .content {
     width: 100%;
@@ -8,10 +8,8 @@
     .title {
         width: 100%;
         padding: 0 10px;
-    }
-
-    .title {
         margin-top: 30px;
+        border-bottom: 1px solid map-get($colors, e5e5e5);
 
         p {
             word-wrap: break-word;
@@ -19,6 +17,7 @@
             line-height: 40px;
             margin-bottom: 20px;
             font-size: 26px;
+            color: map-get($neo-line-default, 500);
         }
 
         // p.english {
@@ -45,6 +44,7 @@
         .tip {
             font-size: 14px;
             line-height: 50px;
+            color: map-get($colors, 666666);
         }
 
         .token-name {
@@ -61,10 +61,12 @@
                     height: 39px;
                     border-radius: 6px;
                     margin-right: 10px;
+                    background: rgba(73, 73, 73, 1);
                 }
 
                 span {
                     font-size: 15px;
+                    color: map-get($colors, 333333);
                 }
             }
         }
@@ -79,10 +81,12 @@
 
                 span.amount {
                     font-size: 17px;
+                    color: map-get($colors, 333333);
                 }
 
                 span.type {
                     font-size: 12px;
+                    color: map-get($colors, 9fa8bd);
                 }
             }
         }
@@ -106,9 +110,16 @@
         height: 40px;
         border-radius: 4px;
     }
+    button.cancel {
+        box-shadow: 0px 2px 8px 0px rgba(87, 83, 245, 0.4);
+        color: map-get($neo-line-default, 500);
+    }
 
     button.confirm {
         position: absolute;
         right: 0;
+        box-shadow: 0px 5px 8px 0px rgba(87, 83, 245, 0.4);
+        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        color: map-get($neo-line-default, 50);
     }
 }

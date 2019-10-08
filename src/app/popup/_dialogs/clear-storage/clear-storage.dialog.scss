@@ -14,25 +14,16 @@ button {
     font-size: 15px;
     font-weight: 500;
     border-radius: 20px;
+    color: map-get($neo-line-default, 500);
 }
 
 .popup-clear-ok {
     margin-bottom: 15px;
+    background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+    box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+    color: map-get($neo-line-default, 50);
 }
 
-// .light-theme {
-    button {
-        color: map-get($neo-line-default, 500);
-    }
-
-    .popup-clear-ok {
-        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
-        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
-        color: map-get($neo-line-default, 50);
-    }
-
-    .popup-clear-no {
-        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
-    }
-
-// }
+.popup-clear-no {
+    box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+}

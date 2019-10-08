@@ -1,6 +1,4 @@
 @import 'src/styles/theme-default';
-@import './light';
-@import './dark';
 
 :host {
     display: block;
@@ -9,6 +7,7 @@
 }
 :host:hover {
     cursor: pointer;
+    background: #F4F7FC;
 }
 // :host:nth-of-type(odd) {
 //     background: #F4F7FC;
@@ -21,12 +20,17 @@ span.flex-1, .txid {
     align-items: center;
     justify-content: center;
     text-overflow: ellipsis;
+    color: #484E6D;
 }
 .status {
     width: 50px;
     display: inline-block;
     margin-right: 10px;
     padding: 2px 4px;
+    &.wait {
+        background: #F9F6F2;
+        color: #F79165
+    }
 }
 .txid-value {
     width: 350px;

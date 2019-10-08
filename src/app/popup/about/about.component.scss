@@ -1,11 +1,11 @@
-@import './light';
-@import './dark';
+@import 'src/styles/popup-default';
 
 .popup-about-logo1 {
     width: 109px;
     height: 71px;
     margin: auto;
     margin-top: 15px;
+    @include bg($img-logo);
 }
 
 .popup-about-logo2 {
@@ -13,12 +13,14 @@
     height: 25px;
     margin: auto;
     margin-top: 10px;
+    @include bg($img-about-logo);
 }
 
 .popup-about-version {
     font-size: 13px;
     text-align: center;
     margin-top: 5px;
+    color: map-get($colors, 9fa8bd);
 }
 
 .popup-about {
@@ -41,15 +43,26 @@
                 bottom: 30px;
                 font-size: 16px;
                 font-weight: 500;
+                color: #282828;
             }
         }
 
         div:first-child {
             float: left;
+            @include bg($img-privacy);
+
+            &:hover {
+                @include bg($img-privacy-hover);
+            }
         }
 
         div:last-child {
             float: right;
+            @include bg($img-item);
+
+            &:hover {
+                @include bg($img-item-hover);
+            }
         }
     }
 
@@ -60,14 +73,24 @@
         background-size: cover;
     }
 
+    @mixin site-contact-theme($bgurl, $bgurl-hover) {
+        @include bg($bgurl);
+
+        &:hover {
+            @include bg($bgurl-hover);
+        }
+    }
+
     .popup-about-site {
         position: relative;
         @include site-contact;
+        @include site-contact-theme($img-site, $img-site-hover)
     }
 
     .popup-about-contact {
         position: relative;
         @include site-contact;
+        @include site-contact-theme($img-contact, $img-contact-hover);
     }
 
     .popup-about-contact p,
@@ -77,5 +100,6 @@
         left: 170px;
         font-size: 16px;
         font-weight: 500;
+        color: #282828;
     }
 }

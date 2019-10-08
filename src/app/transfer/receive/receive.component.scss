@@ -1,6 +1,4 @@
 @import 'src/styles/theme-default';
-@import './light';
-@import './dark';
 
 :host {
     z-index: 21;
@@ -13,6 +11,8 @@
     border-radius: 4px;
     padding: $space;
     overflow: hidden;
+    background: #FFFFFF;
+    box-shadow: 0 0 8px #969696;
 }
 
 .close {
@@ -21,6 +21,8 @@
     position: absolute;
     right: -40px;
     top: -40px;
+    background: #C2C6F5;
+    color: #FFFFFF;
 }
 
 .close mat-icon {
@@ -55,6 +57,8 @@ textarea {
     border-radius: 4px;
     position: absolute;
     opacity: 0;
+    color: #484E6D;
+    border: 1px solid #E4E7EC;
 }
 
 .address {
@@ -67,6 +71,8 @@ textarea {
     text-overflow: ellipsis;
     padding: 0 25px;
     margin: $space 0;
+    color: #666666;
+    border: 1px solid #E4E7EC;
 }
 
 button.copy {

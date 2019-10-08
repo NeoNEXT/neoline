@@ -1,12 +1,12 @@
 @import 'src/styles/theme-default';
 @import 'src/styles/popup-default';
-@import './dark';
-@import './light';
 
 .nav {
     height: 240px;
     position: relative;
+    background: mat-color(mat-palette($neo-line-default, A400));
 }
+
 .nav .nav-account {
     position: absolute;
     bottom: -$space;
@@ -14,26 +14,36 @@
     display: inline-flex;
     align-items: center;
 }
+
 .nav .avatar {
     width: 118px;
     height: 118px;
     border-radius: 118px;
+    background: #E4E7EC;
 }
+
 .nav .name {
     margin-left: 22px;
     font-size: 20px;
+    color: #FFFFFF;
+
 }
+
 .nav .modify-name {
     width: 23px;
     height: 23px;
     margin-left: 17px;
     cursor: pointer;
+    @include bg($img-edit);
 }
+
 .welcome {
     position: relative;
     margin: 60px;
     border-radius: 8px;
+    background: #F4F7FC;
 }
+
 .welcome img {
     width: 209px;
     height: 136px;
@@ -41,26 +51,35 @@
     bottom: 0;
     right: $space*2;
 }
+
 .welcome .info {
     padding: $space*2 230px $space*2 $space*2;
 }
+
 .welcome .info p.title {
     font-size: 24px;
+    color: #484E6D;
 }
+
 .welcome .info p.content {
     font-size: 14px;
     margin-top: $space;
+    color: #9FA8BD;
 }
 
 .body {
     align-items: center;
 }
+
 .address {
     padding: 0 60px;
 }
+
 .address .title {
     font-size: 18px;
+    color: #333333;
 }
+
 #account-address {
     padding: $space;
     border-radius: 4px;
@@ -69,39 +88,51 @@
     display: block;
     width: 100%;
     resize: none;
+    border: 1px solid #E5E5E5;
+    color: #484E6D;
 }
+
 .address button {
     border-radius: 50px;
 }
+
 .address button:not(:first-of-type) {
     margin-left: $space;
 }
+
 .qrcode .title {
     font-size: 18px;
+    color: #333333;
 }
+
 #qrcode {
     display: block;
     margin: $space auto;
     width: 178px;
     height: 178px;
+    background: #E4E7EC;
 }
 
 @media screen and (max-width: 1200px) {
     .nav {
         height: 150px;
     }
+
     .nav .avatar {
         width: 78px;
         height: 78px;
         border-radius: 78px;
         left: 40px;
     }
+
     .nav .name {
         left: 133px;
     }
+
     .welcome {
         margin: 40px;
     }
+
     .address {
         padding: 0 40px;
     }

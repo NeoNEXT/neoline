@@ -1,7 +1,5 @@
 @import 'src/styles/theme-default';
 @import 'src/styles/popup-default';
-@import './light';
-@import './dark';
 
 .logo {
     text-align: center;
@@ -19,9 +17,35 @@
 .logo .version {
     font-size: 14px;
     margin-top: $space;
+    color: #666666;
 }
 .blocks {
     text-align: center;
+}
+.blocks > div.home {
+    background-image: url('/assets/images/about_home.png');
+}
+.blocks > div.contact {
+    background-image: url('/assets/images/about_contact.png');
+}
+.blocks > div.terms {
+    background-image: url('/assets/images/about_terms.png');
+}
+.blocks > div.policy {
+    background-image: url('/assets/images/about_policy.png');
+}
+
+.blocks > div.home:hover {
+    background-image: url('/assets/images/about_home_active.png');
+}
+.blocks > div.contact:hover {
+    background-image: url('/assets/images/about_contact_active.png');
+}
+.blocks > div.terms:hover {
+    background-image: url('/assets/images/about_terms_active.png');
+}
+.blocks > div.policy:hover {
+    background-image: url('/assets/images/about_policy_active.png');
 }
 .blocks > div {
     vertical-align: top;
@@ -45,6 +69,7 @@
         width: 200px;
         font-size: 24px;
         font-weight: 500;
+        color: map-get($colors, 282828);
     }
 }
 

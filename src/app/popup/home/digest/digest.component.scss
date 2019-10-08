@@ -13,6 +13,7 @@
 .asset-name {
     text-align: center;
     font-size: 12px;
+    color: #9FA8BD;
 }
 
 .popup-home-asset-value {
@@ -22,6 +23,7 @@
     font-weight: 500;
     text-align: center;
     margin: 8px 0;
+    color: map-get($colors, 333333);
 
     span {
         font-family: AkrobatBold, serif;
@@ -42,6 +44,7 @@
             height: 22px;
             font-size: 13px;
             line-height: 18px;
+            color: map-get($neo-line-default, 500);
         }
     }
 }
@@ -50,21 +53,5 @@
     font-size: 13px;
     height: 18px;
     text-align: center;
+    color: map-get($colors, 9fa8bd);
 }
-
-// .light-theme {
-    .asset-name {
-        color: #9FA8BD;
-    }
-    .popup-home-asset-value {
-        color: map-get($colors, 333333);
-        button {
-            * {
-                color: map-get($neo-line-default, 500);
-            }
-        }
-    }
-    .popup-home-asset-dollar {
-        color: map-get($colors, 9fa8bd);
-    }
-// }

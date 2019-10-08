@@ -1,7 +1,5 @@
 @import 'src/styles/theme-default';
 @import 'src/styles/popup-default';
-@import './light';
-@import './dark';
 
 :host {
     display: -webkit-box;
@@ -15,6 +13,7 @@
     font-size: 14px;
     font-weight: 500;
     margin-left: 30px;
+    color: map-get($colors, 999999);
 }
 .list {
     overflow-y: auto;
@@ -25,6 +24,10 @@
     margin: 0 $space*2;
     font-size: 18px;
     align-items: center;
+    color: #333333;
+    &:not(:first-of-type) {
+        border-top: 1px solid #F4F7FC;
+    }
     .avatar {
         width: 58px;
         height: 58px;
@@ -41,6 +44,7 @@
 }
 .asset-id {
     font-size: 14px;
+    color: #9FA8BD;
 }
 button {
     border-radius: 50px;
@@ -49,6 +53,7 @@ button {
 }
 button:not(.watching) {
     cursor: default;
+    background: #C2C6F5 !important;
 }
 pager {
     margin: $space $space*2;
@@ -62,6 +67,7 @@ pager {
         height: 19px;
         margin-right: 19px;
         display: flex;
+        @include bg($img-search);
     }
 }
 

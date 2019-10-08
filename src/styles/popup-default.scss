@@ -109,3 +109,40 @@ $colors: (
         content: ' ';
     }
 }
+
+
+@mixin font-color($light-color, $dark-color) {
+    :host-context([data-theme-style="dark-theme"]) & {
+        color: $dark-color;
+    }
+    :host-context([data-theme-style="light-theme"]) & {
+        color: $light-color;
+    }
+}
+
+@mixin background-color($light-color, $dark-color) {
+    :host-context([data-theme-style="dark-theme"]) & {
+        background-color: $dark-color;
+    }
+    :host-context([data-theme-style="light-theme"]) & {
+        background-color: $light-color;
+    }
+}
+
+@mixin border-color($light-color, $dark-color) {
+    :host-context([data-theme-style="dark-theme"]) & {
+        border-color: $dark-color;
+    }
+    :host-context([data-theme-style="light-theme"]) & {
+        border-color: $light-color;
+    }
+}
+
+@mixin box-shadow($light-color, $dark-color) {
+    :host-context([data-theme-style="dark-theme"]) & {
+        box-shadow: $dark-color;
+    }
+    :host-context([data-theme-style="light-theme"]) & {
+        box-shadow: $light-color;
+    }
+}

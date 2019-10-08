@@ -1,6 +1,4 @@
 @import 'src/styles/theme-default';
-@import './light';
-@import './dark';
 
 :host {
     z-index: 21;
@@ -13,6 +11,8 @@
     border-radius: 4px;
     padding: $space;
     overflow: hidden;
+    background: #FFFFFF;
+    box-shadow: 0 0 8px #969696;
 }
 
 .close {
@@ -21,6 +21,8 @@
     position: absolute;
     right: -40px;
     top: -40px;
+    background: #C2C6F5;
+    color: #FFFFFF;
 }
 
 .close mat-icon {
@@ -49,6 +51,12 @@ input.pwd {
     margin-top: $space;
     display: block;
     width: 100%;
+    border: 1px solid #E4E7EC;
+    background: #FFFFFF;
+}
+
+input.pwd::placeholder {
+    color: #999999;
 }
 
 p {
@@ -60,6 +68,7 @@ p.name {
     font-size: 14px;
     font-weight: bold;
     margin: $space 0;
+    color: #333333;
 }
 
 p.address {
@@ -68,6 +77,8 @@ p.address {
     text-align: center;
     border-radius: 4px;
     font-size: 12px;
+    border: 1px solid #E4E7EC;
+    color: #666666;
 }
 
 p.wif {
@@ -82,11 +93,13 @@ p.title {
     font-size: 15px;
     margin: $space 0;
     font-weight: bold;
+    color: #333333;
 }
 
 p.title-pwd {
     margin-left: 10px;
     font-size: 13px;
+    color: #333333;
 }
 
 .btns {
@@ -108,4 +121,6 @@ p.title-pwd {
     font-size: 12px;
     margin-top: $space;
     line-height: 18px;
+    background: #F3F2FF;
+    color: #9FA8BD;
 }

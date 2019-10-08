@@ -5,11 +5,13 @@ section {
     flex-direction: column;
     align-items: center;
     padding-top: 70px;
+    background: linear-gradient(0deg, rgba(113, 120, 221, 1), rgba(81, 91, 227, 1));
 }
 
 .title {
     font-weight: 500;
     font-size: 25px;
+    color: #fff;
 }
 
 button {
@@ -23,23 +25,13 @@ button {
 
 .create {
     margin: 50px 0 25px 0;
+    background: rgba(255, 255, 255, 1);
+    box-shadow: 0px 4px 8px 0px rgba(87, 83, 245, 0.4);
+    color: #515be3;
 }
 
-// .light-theme {
-    section {
-        background: linear-gradient(0deg, rgba(113, 120, 221, 1), rgba(81, 91, 227, 1));
-    }
-    .title {
-        color: #fff;
-    }
-    .create {
-        background: rgba(255, 255, 255, 1);
-        box-shadow: 0px 4px 8px 0px rgba(87, 83, 245, 0.4);
-        color: #515be3;
-    }
-    .import {
-        background: rgba(81, 91, 227, 1);
-        box-shadow: 0px 4px 8px 0px rgba(87, 83, 245, 0.4);
-        color: #fff;
-    }
-// }
+.import {
+    background: rgba(81, 91, 227, 1);
+    box-shadow: 0px 4px 8px 0px rgba(87, 83, 245, 0.4);
+    color: #fff;
+}

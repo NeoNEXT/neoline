@@ -1,10 +1,8 @@
-@import './light';
-@import './dark';
-
 :host {
     border-radius: 2px;
     overflow: hidden;
     display: block;
+    background: #fefefe;
 }
 .mat-dialog-container {
     padding: 0 !important;
@@ -13,6 +11,14 @@
     font-size: 18px;
     padding: 8px 16px;
     position: relative;
+    &.warn {
+        color: #fefefe;
+        background: #ea4748;
+    }
+    &.accent {
+        color: #fefefe;
+        background: #1093df;
+    }
 }
 .title > button {
     position: absolute;
@@ -22,12 +28,30 @@
 .body {
     font-size: 16px;
     padding: 16px;
+    &.warn {
+        color: #db6161;
+    }
+    &.accent {
+        color: #1093df;
+    }
 }
 .options {
     padding: 8px 16px;
+    &.warn button {
+        background: #ea4748;
+        color: #ffffff;
+    }
+    &.accent button {
+        background: #1093df;
+        color: #ffffff;
+    }
 }
 .options button {
     margin: 5px;
+}
+.no {
+    background: none !important;
+    color: #969696 !important;
 }
 @media screen and (min-width: 601px) {
 

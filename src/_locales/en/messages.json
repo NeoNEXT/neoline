@@ -466,5 +466,8 @@
     },
     "connectChooseNotAllow": {
         "message": "No longer allowed"
+    },
+    "darkMode": {
+        "message": "Dark Mode"
     }
 }

@@ -1,5 +1,5 @@
-@import './light';
-@import './dark';
+@import 'src/styles/popup-default';
+@import 'src/styles/theme-default';
 
 .popup-authorization-list-head {
     width: 100%;
@@ -8,6 +8,8 @@
     overflow: hidden;
     position: fixed;
     top: 64px;
+    background-color: map-get($neo-line-default, 500);
+
     .btn-back {
         float: left;
         width: 18px;
@@ -16,6 +18,7 @@
         margin-left: 22px;
         position: relative;
         z-index: 100;
+        @include bg($img-back);
 
         &:hover {
             cursor: pointer;
@@ -26,6 +29,7 @@
         width: 100%;
         text-align: center;
         font-size: 16px;
+        color: white;
     }
 }
 
@@ -36,6 +40,7 @@
         text-align: center;
         margin-top: 100px;
         font-size: 12px;
+        color: #999999;
     }
     .authorization-item {
         display: flex;
@@ -43,6 +48,7 @@
         padding: 15px 23px;
         height: 70px;
         align-items: center;
+        border-bottom: 1px solid #e5e5e5;
         .icon {
             height: 40px;
             width: 40px;
@@ -60,6 +66,7 @@
                     display: inline-block;
                     vertical-align: middle;
                     margin-right: 10px;
+                    color: #282828;
                 }
                 .websit-status {
                     padding: 1px 8px;
@@ -67,9 +74,13 @@
                     border-radius: 10px;
                     font-size: 10px;
                     &.success {
+                        color: #7178DD;
+                        background: #F4F7FC url($img-authorization-success) no-repeat 6px;
                         background-size: 8px;
                     }
                     &.fail {
+                        color: #999999;
+                        background: #F2F2F2 url($img-authorization-fail) no-repeat 6px;
                         background-size: 8px;
                     }
                 }
@@ -80,12 +91,15 @@
                 white-space: nowrap;
                 overflow:hidden;
                 text-overflow:ellipsis;
+                color: #999999;
             }
         }
         .remove-btn {
             padding: 4px 10px;
             border-radius:2px;
             font-size: 12px;
+            color: #7A87A9;
+            border: 1px solid rgba(122,135,169,1);
         }
 
     }
@@ -97,6 +111,8 @@
         line-height: 50px;
         text-align: center;
         font-size: 14px;
+        background: #F3F2FF;
+        color: #7178DD;
         img {
             width: 12px;
             height: 12px;

@@ -1,7 +1,5 @@
 @import 'src/styles/theme-default';
 @import 'src/styles/popup-default';
-@import './light';
-@import './dark';
 
 :host {
     display: -webkit-box;
@@ -15,6 +13,7 @@
     border-bottom-right-radius: 8px;
     height: 100%;
     z-index: 5;
+    box-shadow: 0 8px 16px #484e6d;
 }
 .menu {
     padding: 0 $space*2;
@@ -24,9 +23,16 @@
     height: 60px;
     position: relative;
     line-height: 60px;
+    color: #282828;
 }
+
+.menu:hover, .nav .menu.active {
+    background: #F4F7FC;
+}
+
 .menu.disabled {
     cursor: not-allowed;
+    color: #666666;
 }
 .menu .cursor {
     width: 4px;
@@ -35,6 +41,7 @@
     right: 0;
     top: 10px;
     display: none;
+    background: mat-color($default-app-primary);
 }
 .menu.active .cursor {
     display: block;
@@ -54,6 +61,7 @@
         margin-top: -2px;
         margin-left: 9px;
         transition: transform .4s;
+        @include bg($img-dropdown);
     }
 }
 .setting-dropdown.down-setting {
@@ -69,6 +77,7 @@
         font-size: 14px;
         font-weight: 500;
         padding-left: 48px;
+        color: map-get($colors, 666666);
     }
 }
 

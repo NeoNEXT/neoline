@@ -1,6 +1,5 @@
 @import 'src/styles/popup-default';
-@import './light';
-@import './dark';
+@import 'src/styles/theme-default';
 
 @mixin symbol {
     display: inline-block;
@@ -15,18 +14,31 @@
     margin-top: 6px;
 }
 
+@mixin symbolTheme {
+    border: 1px solid map-get($neo-line-default, 50);
+}
+
+@mixin symbolHoverTheme {
+    &:hover {
+        border-color: map-get($neo-line-default, 200);
+    }
+}
+
 .popup-home-top {
     width: 100%;
     height: 39px;
     overflow: hidden;
     position: fixed;
     z-index: map-get($z-indexes, max);
+    border-bottom: 1px solid map-get($colors, f2f2f2);
+    background-color: map-get($neo-line-default, 50);
 
     .popup-home-top-filter {
         float: left;
         width: 290px;
         height: inherit;
         padding-left: 15px;
+        border-top: 1px solid transparent;
 
         .popup-home-top-filter-items {
             width: 100%;
@@ -41,16 +53,32 @@
 
             div {
                 @include symbol;
-
+                @include symbolTheme;
             }
 
             div.popup-home-top-filter-hover {
                 cursor: pointer;
+                @include symbolHoverTheme;
             }
             div.popup-home-top-filter-loading {
                 animation: loading 0.3s infinite;
                 animation-direction: alternate;
             }
+
+            div.popup-home-top-filter-active {
+                border: 1px solid map-get($neo-line-default, 500);
+            }
+
+            @keyframes loading {
+                0% {
+                    color: map-get($colors, 333333);
+                    border-color: map-get($neo-line-default, 500);
+                }
+                100% {
+                    color: map-get($colors, eeeeee);
+                    border-color: map-get($neo-line-default, 200);
+                }
+             }
         }
     }
 
@@ -59,8 +87,8 @@
         height: 30px;
         float: left;
         margin-top: 5px;
+        @include bg($img-down-arrow);
         background-size: 12px 12px;
-
         transition: transform 1s cubic-bezier(0, 0.95, 0.83, 1);
 
         &:hover {
@@ -69,6 +97,7 @@
     }
 
     .popup-home-top-more-loading {
+        @include bg($img-loading);
         background-size: 30px 30px;
     }
 
@@ -78,8 +107,10 @@
         float: right;
         width: 30px;
         height: 25px;
+        @include bg($img-all);
         background-position-x: right;
         background-size: 18px 18px;
+        border-left: 1px solid map-get($colors, e5e5e5);
 
         &:hover {
             cursor: pointer;
@@ -97,12 +128,20 @@
     transition: top 0.5s cubic-bezier(0, 0.95, 0.83, 1);
     z-index: map-get($z-indexes, min);
     max-height: 500px;
+    background-color: map-get($neo-line-default, 50);
+    border-bottom: 1px solid map-get($colors, f2f2f2);
+    box-shadow: 0 3px 3px 0 rgba(81, 91, 227, 0.08);
 
     div {
         cursor: pointer;
         @include symbol;
         margin-top: 0;
         margin-bottom: 15px;
+        @include symbolTheme;
+        @include symbolHoverTheme;
+    }
+    div.popup-home-more-active {
+        border-color: map-get($neo-line-default, 500);
     }
 }
 

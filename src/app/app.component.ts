@@ -85,6 +85,10 @@ export class AppComponent {
         this.chrome.getNet().subscribe(net => {
             this.net = net;
         });
+        if (localStorage.getItem('theme')) {
+            const body = document.getElementsByTagName('body')[0];
+            body.setAttribute('data-theme-style', localStorage.getItem('theme'));
+        }
     }
 
     public modifyNet(net: string) {
