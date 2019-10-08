@@ -110,6 +110,19 @@ $colors: (
     }
 }
 
+$theme-color-dark: #515be3;
+$title-dark: #fff;
+$font-color-light-dark: #9FA8BD;
+$font-color-middle-dark: #9494A1;
+$font-color-weight-dark: #797A8D;
+$font-color-outstanding-dark: #F96C6C;
+$bg-outstanding-dark: #7178dd;
+$bg-main-dark: #39394e;
+$bg-auxiliary-dark: #2c2c42;
+$bg-base-dark: #232338;
+$line-light-dark: #e5e5e5;
+$line-middle-dark: #494959;
+$line-weight-dark: #45455d;
 
 @mixin font-color($light-color, $dark-color) {
     :host-context([data-theme-style="dark-theme"]) & {
@@ -138,11 +151,11 @@ $colors: (
     }
 }
 
-@mixin box-shadow($light-color, $dark-color) {
+@mixin box-shadow($light-content, $dark-content) {
     :host-context([data-theme-style="dark-theme"]) & {
-        box-shadow: $dark-color;
+        box-shadow: $dark-content;
     }
     :host-context([data-theme-style="light-theme"]) & {
-        box-shadow: $light-color;
+        box-shadow: $light-content;
     }
 }

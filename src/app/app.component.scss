@@ -4,21 +4,25 @@
 :host {
     overflow: auto;
 }
+
 .nav {
     width: 100%;
     max-width: 1200px;
     margin: 0 auto;
     align-items: center;
+
     .nav-account-box {
         height: 40px;
         display: inline-block;
         cursor: pointer;
+
         .name {
             font-size: 16px;
             margin: 0 30px 0 15px;
             vertical-align: middle;
             color: #fff;
         }
+
         .avatar {
             width: 40px;
             height: 40px;
@@ -26,40 +30,48 @@
         }
     }
 }
+
 ::ng-deep .nav-account-menu-box {
     .nav-account-menu-title {
         font-size: 14px;
         margin-left: 16px;
         color: #484E6D;
     }
+
     .nav-account-item-box {
         height: 50px;
         line-height: 50px;
+
         &:hover {
             background-color: #F4F7FC;
         }
+
         .selected-icon {
             width: 15px;
             height: 9px;
             display: inline-block;
             margin-left: 16px;
+
             img {
                 width: 100%;
             }
         }
+
         .item-info {
             display: inline-block;
             margin-left: 10px;
+
             .avatar {
                 height: 30px;
                 width: 30px;
                 vertical-align: middle;
             }
+
             .name {
                 width: 70px;
                 white-space: nowrap;
-                overflow:hidden;
-                text-overflow:ellipsis;
+                overflow: hidden;
+                text-overflow: ellipsis;
                 margin-left: 8px;
                 vertical-align: middle;
                 font-size: 14px;
@@ -67,6 +79,7 @@
             }
         }
     }
+
     .nav-account-menu-item {
         width: 200px;
         height: 45px;
@@ -74,15 +87,18 @@
         align-items: center;
         // line-height: 45px;
         cursor: pointer;
+
         &:hover {
             background-color: #F4F7FC;
         }
+
         img {
             display: inline-block;
             width: 18px;
             height: 18px;
             margin-left: 16px;
         }
+
         span {
             font-size: 14px;
             margin-left: 20px;
@@ -90,18 +106,21 @@
         }
     }
 }
+
 .nav .logo {
     width: 48px;
     height: 32px;
     vertical-align: middle;
     margin-left: 15px;
 }
+
 .nav .logo-title {
     margin-left: 15px;
     width: 136px;
     height: 40px;
     vertical-align: middle;
 }
+
 .nav-network {
     width: 107px;
     height: 25px;
@@ -130,42 +149,49 @@
     overflow: hidden;
     background-color: #fff;
 }
+
 @media screen and (max-width: 1200px) {
     .nav {
         width: 937px;
     }
+
     .body {
         width: 937px;
         height: 600px;
     }
 }
+
 @media screen and (max-width: 960px) {
     .nav {
         max-width: none;
     }
+
     .body {
         width: 100%;
         height: 100%;
         margin-bottom: 0px;
     }
 }
+
 @media screen and (min-width: 961px) {
     .body.expand {
         border-radius: 8px;
         margin-top: -8px;
-        box-shadow: 0px 0px 16px #484e6d;
+        @include box-shadow(0px 0px 16px #484e6d, 0px 1px 12px 0px rgba(35, 35, 56, 0.3));
     }
 }
+
 .side-nav {
     width: 75px;
     z-index: 6;
-    background-color: #f4f7fc;
+    @include background-color(#f4f7fc, $bg-auxiliary-dark);
 }
 
 .side-nav {
     padding-top: 75px;
 }
-.side-nav > div {
+
+.side-nav>div {
     margin: 0 auto $space auto;
     height: 60px;
     width: 60px;
@@ -173,34 +199,39 @@
     font-size: 14px;
     text-align: center;
     padding-top: 8px;
-    color: #969696;
+    @include font-color(#969696, $font-color-light-dark);
+
     &.active {
         background: mat-color($default-app-primary);
-        box-shadow: 0 0 $space #969696;
+        @include box-shadow(0 0 $space #969696, 0px 1px 12px 0px rgba(0,11,131,0.3));
+
         p {
             color: #fff;
         }
     }
-    p {
-        color: #969696;
-    }
 }
-.side-nav > div img {
+
+.side-nav>div img {
     height: 27px;
     width: 27px;
 }
-.side-nav > div:not(.active) img {
+
+.side-nav>div:not(.active) img {
     display: none;
 }
-.side-nav > div:not(.active) img:not(.active) {
+
+.side-nav>div:not(.active) img:not(.active) {
     display: inline-block;
 }
-.side-nav > div.active img.active {
+
+.side-nav>div.active img.active {
     display: inline-block;
 }
-.side-nav > div.active img:not(.active) {
+
+.side-nav>div.active img:not(.active) {
     display: none;
 }
-.side-nav > div:hover {
+
+.side-nav>div:hover {
     cursor: pointer;
 }
