@@ -1,6 +1,6 @@
 <div class="info flex" (click)="txDetail(txid)">
     <div class="txid">
-        <span class="status" [ngClass]="{'wait': id === -1}">{{ id === -1 ? '确认中': '' }}</span><span class="txid-value">{{txid}}</span>
+        <span class="status" [ngClass]="{'wait': id === -1}">{{ id === -1 ? ('confirming' | translate | async): ''}}</span><span class="txid-value">{{txid}}</span>
     </div>
     <span class="flex-1">{{value}}</span>
     <span class="flex-1">{{ time * 1000 | date:'yyyy-MM-dd HH:mm' }}</span>

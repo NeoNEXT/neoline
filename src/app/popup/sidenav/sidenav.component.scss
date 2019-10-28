@@ -72,7 +72,7 @@
 
             &:hover {
                 cursor: pointer;
-                background-color: map-get($neo-line-default, 500);
+                color: map-get($neo-line-default, 500);
             }
 
             div {

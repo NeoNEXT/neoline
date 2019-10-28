@@ -151,6 +151,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                     this.inTransaction = inTxData[this.net][this.address][this.assetId];
                 }
                 const txIdArray = [];
+                this.inTransaction = this.inTransaction.filter(item => (new Date().getTime()) / 1000 -  item.block_time <= 120);
                 this.inTransaction.forEach(item => {
                     txIdArray.push(item.txid);
                 });

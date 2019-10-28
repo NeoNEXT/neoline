@@ -374,6 +374,9 @@
     "transaction": {
         "message": "交易"
     },
+    "confirming": {
+        "message": "确认中"
+    },
     "transactions": {
         "message": "交易"
     },

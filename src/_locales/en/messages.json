@@ -374,6 +374,9 @@
     "transaction": {
         "message": "Transaction"
     },
+    "confirming": {
+        "message": "confirming"
+    },
     "transactions": {
         "message": "Transactions"
     },
