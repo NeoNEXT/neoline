@@ -7,10 +7,11 @@ import { MatDialog } from '@angular/material';
 import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
 import { HttpClient } from '@angular/common/http';
 import { ERRORS, DeployArgs, GAS, requestTarget } from '@/models/dapi';
-import { generateDeployScript } from '@cityofzion/neon-core/lib/sc';
+import { generateDeployScript, ScriptBuilder, OpCode } from '@cityofzion/neon-core/lib/sc';
 import { Observable } from 'rxjs';
 import { UTXO } from '@/models/models';
 import { map } from 'rxjs/operators';
+import { str2hexstring, hexstring2ab, num2fixed8, Fixed8, str2ab, num2hexstring } from '@cityofzion/neon-core/lib/u';
 
 @Component({
     templateUrl: 'deploy.component.html',
@@ -174,25 +175,31 @@ export class PopupNoticeDeployComponent implements OnInit {
 
     private createTxForNEP5(): Promise<Transaction> {
         return new Promise(async (resolve, reject) => {
+            const amount = (this.pramsData.dynamicInvoke === 'true'  ? 500 : 0) + (this.pramsData.needsStorage === 'true' ? 400 : 0) + 90;
             const fromAddress = this.neon.wallet.accounts[0].address;
             let newTx = new tx.InvocationTransaction();
-            const temp = {};
-            for (const key in this.pramsData) {
-                if (this.pramsData.hasOwnProperty(key)) {
-                    temp[key] = this.pramsData[key];
-                }
-            }
-            temp['script'] = this.pramsData.code;
-            temp['needsStorage'] = this.pramsData.needsStorage === 'true' ? true : false;
+            // tslint:disable-next-line: no-bitwise
+            const num = (this.pramsData.needsStorage === 'true' ? 1 : 0) | (this.pramsData.dynamicInvoke === 'true' ? 2 : 0) |
+                        (this.pramsData.isPayable === 'true' ? 4 : 0);
+            const sb = new ScriptBuilder();
+            sb.emitPush(str2hexstring(this.pramsData.description))
+                .emitPush(str2hexstring(this.pramsData.email))
+                .emitPush(str2hexstring(this.pramsData.author))
+                .emitPush(str2hexstring(this.pramsData.version))
+                .emitPush(str2hexstring(this.pramsData.name))
+                .emitPush(num)
+                .emitPush(this.pramsData.returnType || 'ff00')
+                .emitPush(this.pramsData.parameterList)
+                .emitPush(this.pramsData.code)
+                .emitSysCall('Neo.Contract.Create');
             try {
-                newTx.script = generateDeployScript(temp as any).str;
+                newTx.script = sb.str;
             } catch (error) {
                 reject(error);
             }
             try {
-                newTx = await this.addFee(fromAddress, newTx, parseFloat(this.pramsData.networkFee));
+                newTx = await this.addFee(fromAddress, newTx, amount);
             } catch (error) {
-                console.log(error);
                 this.chrome.windowCallback({
                     error: ERRORS.INSUFFICIENT_FUNDS,
                     return: requestTarget.Deploy,
@@ -202,6 +209,7 @@ export class PopupNoticeDeployComponent implements OnInit {
             }
             const uniqTag = `from NEOLine at ${new Date().getTime()}`;
             newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
+            newTx.gas = new Fixed8(amount);
             resolve(newTx);
         });
     }
