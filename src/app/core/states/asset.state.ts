@@ -133,9 +133,8 @@ export class AssetState {
             };
         });
     }
-    public getRate(query): Observable < any > {
-        const target = this.global.formatQuery(query);
-        return this.http.get(`${this.global.apiDomain}/v1/asset/exchange_rate${target}`);
+    public getRate(): Observable < any > {
+        return this.http.get(`${this.global.apiDomain}/v1_0_1/asset/exchange_rate`);
     }
 
     public getAssetRate(coins: string): Observable < any > {
@@ -161,17 +160,13 @@ export class AssetState {
         if (targetCoins === '') {
             return of(rateRes);
         }
-        let query = {};
-        query['symbol'] = this.rateCurrency;
-        query['coins'] = targetCoins;
-        const target = this.global.formatQuery(query);
-        return this.http.get(`${this.global.apiDomain}/v1/asset/exchange_rate${target}`).pipe(map(rateBalance => {
+        return this.http.get(`${this.global.apiDomain}/v1_0_1/asset/exchange_rate`).pipe(map(rateBalance => {
             const targetCoinsAry = targetCoins.split(',');
             targetCoinsAry.forEach(coin => {
                 let tempRate = {};
                 tempRate['last-modified'] = rateBalance['response_time'];
                 if (coin in rateBalance.result) {
-                    tempRate['rate'] = Number(rateBalance.result[coin]);
+                    tempRate['rate'] = Number(rateBalance.result[coin][this.rateCurrency.toString().toLowerCase()]);
                     rateRes[coin] = tempRate['rate'];
                 } else {
                     tempRate['rate'] = undefined;

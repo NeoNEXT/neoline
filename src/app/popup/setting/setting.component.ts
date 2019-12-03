@@ -76,15 +76,12 @@ export class PopupSettingComponent implements OnInit {
             this.global.log('get lang setting failed', err);
             this.lang = '';
         });
-        let query = {};
-        query['symbol'] = this.rateCurrency;
-        query['coins'] = 'neo';
-        this.asset.getRate(query).subscribe(rateBalance => {
+        this.asset.getRate().subscribe(rateBalance => {
             const tempRateObj = rateBalance.result;
             if (JSON.stringify(tempRateObj) === '{}') {
                 return;
             }
-            this.rateTime = tempRateObj['updated_at'];
+            this.rateTime = tempRateObj.response_time;
         });
     }
 

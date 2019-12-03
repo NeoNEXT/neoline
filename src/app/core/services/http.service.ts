@@ -25,7 +25,7 @@ import { XSRF_HEADER_NAME } from '@angular/common/http/src/xsrf';
 @Injectable()
 export class HttpService {
 
-    private completeResUrl = ['/v1/asset/exchange_rate'];
+    private completeResUrl = ['/v1_0_1/asset/exchange_rate'];
     constructor(
         private http: HttpClient,
         private chrome: ChromeService,
