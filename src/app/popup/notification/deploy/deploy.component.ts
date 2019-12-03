@@ -198,7 +198,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                 reject(error);
             }
             try {
-                newTx = await this.addFee(fromAddress, newTx, amount);
+                newTx = await this.addFee(fromAddress, newTx, amount + parseFloat(this.pramsData.networkFee));
             } catch (error) {
                 this.chrome.windowCallback({
                     error: ERRORS.INSUFFICIENT_FUNDS,
@@ -225,7 +225,7 @@ export class PopupNoticeDeployComponent implements OnInit {
             this.getBalance(from, GAS).subscribe(res => {
                 let curr = 0.0;
                 for (const item of res) {
-                    curr += parseFloat(item.value) || 0;
+                    curr = this.global.mathAdd(curr, parseFloat(item.value) || 0);
                     newTx.inputs.push(new TransactionInput({
                         prevIndex: item.n,
                         prevHash: item.txid.startsWith('0x') && item.txid.length === 66 ?
@@ -235,9 +235,10 @@ export class PopupNoticeDeployComponent implements OnInit {
                         break;
                     }
                 }
-                const payback = curr - fee;
+                const payback = this.global.mathSub(curr, fee);
                 if (payback < 0) {
                     reject('no enough GAS to fee');
+                    return;
                 }
                 if (payback > 0) {
                     const fromScript = wallet.getScriptHashFromAddress(from);
@@ -245,7 +246,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                     if (gasAssetId.startsWith('0x') && gasAssetId.length === 66) {
                         gasAssetId = gasAssetId.substring(2);
                     }
-                    newTx.addOutput({ assetId: gasAssetId, value: curr - fee, scriptHash: fromScript });
+                    newTx.addOutput({ assetId: gasAssetId, value: this.global.mathSub(curr, fee), scriptHash: fromScript });
                 }
                 resolve(newTx);
             });

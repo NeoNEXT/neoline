@@ -50,7 +50,7 @@ export class TransferService {
             this.getBalance(from, GAS).subscribe(res => {
                 let curr = 0.0;
                 for (const item of res) {
-                    curr += parseFloat(item.value) || 0;
+                    curr = this.global.mathAdd(curr, parseFloat(item.value) || 0);
                     newTx.inputs.push(new TransactionInput({
                         prevIndex: item.n,
                         prevHash: item.txid.startsWith('0x') && item.txid.length === 66 ?
@@ -59,7 +59,7 @@ export class TransferService {
                         break;
                     }
                 }
-                const payback = curr - fee;
+                const payback = this.global.mathSub(curr, fee);
                 if (payback < 0) {
                     observer.error('no enough GAS to fee');
                 }
@@ -69,7 +69,7 @@ export class TransferService {
                     if (gasAssetId.startsWith('0x') && gasAssetId.length === 66) {
                         gasAssetId = gasAssetId.substring(2);
                     }
-                    newTx.addOutput({ assetId: gasAssetId, value: curr - fee, scriptHash: fromScript });
+                    newTx.addOutput({ assetId: gasAssetId, value: this.global.mathSub(curr, fee), scriptHash: fromScript });
                 }
                 observer.next(newTx);
                 observer.complete();

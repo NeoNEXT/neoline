@@ -280,14 +280,18 @@ export class NeonService {
 
         newTx.addOutput({ assetId, value: new Fixed8(amount), scriptHash: toScript });
         let curr = 0.0;
-        for (let item of balances) {
+        for (const item of balances) {
             curr += parseFloat(item.value) || 0;
-            newTx.inputs.push(new TransactionInput({ prevIndex: item.n, prevHash: item.txid.startsWith('0x') && item.txid.length == 66 ? item.txid.substring(2) : item.txid }));
+            newTx.inputs.push(new TransactionInput({
+                prevIndex: item.n, prevHash: item.txid.startsWith('0x') &&
+                    item.txid.length === 66 ? item.txid.substring(2) : item.txid
+            }));
             if (curr >= amount + fee) {
                 break;
             }
         }
-        const payback = ( assetId === GAS || assetId === GAS.substring(2) ) ? curr - amount - fee : curr - amount;
+        const payback = (assetId === GAS || assetId === GAS.substring(2)) ?
+            this.global.mathSub(this.global.mathSub(curr, amount), fee) : this.global.mathSub(curr, amount);
         if (payback < 0) {
             throw new Error('no enough balance to pay');
         }
@@ -299,12 +303,12 @@ export class NeonService {
     public createTxForNEP5(from: string, to: string, scriptHash: string, amount: number, decimals: number): Transaction {
         const fromScript = wallet.getScriptHashFromAddress(from);
         const toScript = wallet.getScriptHashFromAddress(to);
-        if (fromScript.length != 40 || toScript.length != 40) {
+        if (fromScript.length !== 40 || toScript.length !== 40) {
             throw new Error('target address error');
         }
         const newTx = new tx.InvocationTransaction();
         newTx.script = sc.createScript({
-            scriptHash: scriptHash.startsWith('0x') && scriptHash.length == 42 ? scriptHash.substring(2) : scriptHash,
+            scriptHash: scriptHash.startsWith('0x') && scriptHash.length === 42 ? scriptHash.substring(2) : scriptHash,
             operation: 'transfer',
             args: [
                 u.reverseHex(fromScript),
@@ -329,14 +333,14 @@ export class NeonService {
             const newTx = new tx.ClaimTransaction({
                 claims: claimArr
             });
-            newTx.addIntent('GAS', value , this.address );
+            newTx.addIntent('GAS', value, this.address);
             newTx.sign(this.WIFArr[this._walletArr.findIndex(item => item.accounts[0].address === this._wallet.accounts[0].address)]);
             observer.next(newTx);
             observer.complete();
         });
     }
     public isAsset(assetId: string): boolean {
-        return assetId.startsWith('0x') ? assetId.length == 66 : assetId.length == 64;
+        return assetId.startsWith('0x') ? assetId.length === 66 : assetId.length === 64;
     }
 
     /**

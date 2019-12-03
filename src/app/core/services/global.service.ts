@@ -26,6 +26,7 @@ import {
 import {
     ChromeService
 } from './chrome.service';
+import { evaluate, add, subtract, multiply, divide, bignumber } from 'mathjs';
 
 @Injectable()
 export class GlobalService {
@@ -115,5 +116,18 @@ export class GlobalService {
             target = '?' + target;
         }
         return target;
+    }
+
+    public mathAdd(a: number, b: number): number {
+        return parseFloat(add(bignumber(a), bignumber(b)).toString());
+    }
+    public mathSub(a: number, b: number): number {
+        return parseFloat(subtract(bignumber(a), bignumber(b)).toString());
+    }
+    public mathmul(a: number, b: number): number {
+        return parseFloat(multiply(bignumber(a), bignumber(b)).toString());
+    }
+    public mathDiv(a: number, b: number): number {
+        return parseFloat(divide(bignumber(a), bignumber(b)).toString());
     }
 }

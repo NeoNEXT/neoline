@@ -185,7 +185,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     ID: this.messageID
                 });
                 const setData = {};
-                setData[`${this.pramsData.network}TxArr`] =  await this.chrome.getLocalStorage(`${this.pramsData.network}TxArr`) || [];
+                setData[`${this.pramsData.network}TxArr`] = await this.chrome.getLocalStorage(`${this.pramsData.network}TxArr`) || [];
                 setData[`${this.pramsData.network}TxArr`].push('0x' + transaction.hash);
                 this.chrome.setLocalStorage(setData);
                 this.router.navigate([{
@@ -287,7 +287,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
     }
 
     private addAttachedAssets(assetid: string, amount: number, fromScript: string,
-                              toScript: string, newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
+        toScript: string, newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
         return new Promise((resolve, reject) => {
             this.getBalance(this.neon.address, assetid).subscribe((balances: any) => {
                 if (balances.length === 0) {
@@ -308,7 +308,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         break;
                     }
                 }
-                const payback = (assetId === GAS || assetId === GAS.substring(2)) ? curr - amount - fee : curr - amount;
+                const payback = (assetId === GAS || assetId === GAS.substring(2)) ?
+                    this.global.mathSub(this.global.mathSub(curr, amount), fee) : this.global.mathSub(curr, amount);
                 if (payback < 0) {
                     reject('no enough balance to pay');
                 }
@@ -325,7 +326,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.getBalance(from, GAS).subscribe(res => {
                 let curr = 0.0;
                 for (const item of res) {
-                    curr += parseFloat(item.value) || 0;
+                    curr = this.global.mathAdd(curr, parseFloat(item.value) || 0);
                     newTx.inputs.push(new TransactionInput({
                         prevIndex: item.n,
                         prevHash: item.txid.startsWith('0x') && item.txid.length === 66 ?
@@ -335,7 +336,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         break;
                     }
                 }
-                const payback = curr - fee;
+                const payback = this.global.mathSub(curr, fee);
                 if (payback < 0) {
                     reject('no enough GAS to fee');
                     this.chrome.windowCallback({
@@ -351,7 +352,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     if (gasAssetId.startsWith('0x') && gasAssetId.length === 66) {
                         gasAssetId = gasAssetId.substring(2);
                     }
-                    newTx.addOutput({ assetId: gasAssetId, value: curr - fee, scriptHash: fromScript });
+                    newTx.addOutput({ assetId: gasAssetId, value: this.global.mathSub(curr, fee), scriptHash: fromScript });
                 }
                 resolve(newTx);
             });

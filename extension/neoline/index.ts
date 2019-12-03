@@ -363,9 +363,11 @@ window.addEventListener('message', async (e) => {
 }, false);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    window.postMessage(request, '*');
-    sendResponse('');
-    return Promise.resolve('Dummy response to keep the console quiet');
+    if (request != null) {
+        window.postMessage(request, '*');
+        sendResponse('');
+        return Promise.resolve('Dummy response to keep the console quiet');
+    }
 });
 
 
