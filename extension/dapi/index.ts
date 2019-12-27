@@ -512,6 +512,10 @@ export class Init {
     }
 }
 
+export const NEO: any = new Init();
+
+
+
 if (window.dispatchEvent) {
     getProvider().then(res => {
         window.dispatchEvent(
@@ -533,6 +537,14 @@ window.addEventListener('message', e => {
     if (response.target) {
         window.dispatchEvent(new CustomEvent(
             response.target,
+            {
+                detail: response.data
+            }
+        ));
+    }
+    if (response.return) {
+        window.dispatchEvent(new CustomEvent(
+            response.return,
             {
                 detail: response.data
             }

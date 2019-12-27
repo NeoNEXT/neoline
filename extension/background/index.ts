@@ -205,6 +205,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 return true;
             }
         case requestTarget.Connect:
+        case requestTarget.AuthState:
             {
                 chrome.tabs.query({
                     active: true,

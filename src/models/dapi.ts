@@ -39,11 +39,11 @@ export const ERRORS = {
     }
 };
 export enum EVENT {
-    READY = 'neoline.ready',
-    ACCOUNT_CHANGED = 'neoline.account_changed',
-    CONNECTED = 'neoline.connected',
-    DISCONNECTED = 'neoline.disconnected',
-    NETWORK_CHANGED = 'neoline.network_changed'
+    READY = 'NEOLine.NEO.EVENT.READY',
+    ACCOUNT_CHANGED = 'NEOLine.NEO.EVENT.ACCOUNT_CHANGED',
+    CONNECTED = 'NEOLine.NEO.EVENT.CONNECTED',
+    DISCONNECTED = 'NEOLine.NEO.EVENT.DISCONNECTED',
+    NETWORK_CHANGED = 'NEOLine.NEO.EVENT.NETWORK_CHANGED'
 }
 
 export enum requestTarget {
