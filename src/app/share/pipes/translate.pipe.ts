@@ -1,5 +1,4 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { MatTabGroupBase } from '@angular/material';
 import { Observable, from } from 'rxjs';
 import { ChromeService } from '@/app/core/services/chrome.service';
 import { GlobalService } from '@/app/core';

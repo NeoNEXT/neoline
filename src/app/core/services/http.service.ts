@@ -20,7 +20,6 @@ import {
     GlobalService
 } from './global.service';
 import { resolve } from 'url';
-import { XSRF_HEADER_NAME } from '@angular/common/http/src/xsrf';
 
 @Injectable()
 export class HttpService {

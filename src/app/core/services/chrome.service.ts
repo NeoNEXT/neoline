@@ -78,7 +78,7 @@ export class ChromeService {
                 return throwError('please set wallet json to local storage when debug mode on');
             }
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<WalletJSON>((resolve, reject) => {
             try {
                 this.crx.getLocalStorage('wallet', (res) => {
                     resolve(res);
@@ -96,7 +96,7 @@ export class ChromeService {
                 return throwError('please set wallet json to local storage when debug mode on');
             }
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<Array<WalletJSON>>((resolve, reject) => {
             try {
                 this.crx.getLocalStorage('walletArr', (res) => {
                     resolve(res);
@@ -114,7 +114,7 @@ export class ChromeService {
                 return throwError('please set wif json to local storage when debug mode on');
             }
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<Array<string>>((resolve, reject) => {
             try {
                 this.crx.getLocalStorage('WIFArr', (res) => {
                     resolve(res);
@@ -221,11 +221,11 @@ export class ChromeService {
     }
     public getLogin(): Observable<boolean> {
         if (!this.check) {
-            return from(new Promise(resolve => {
+            return from(new Promise<boolean>(resolve => {
                 resolve(localStorage.getItem('shouldLogin') === 'true');
             }));
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<boolean>((resolve, reject) => {
             try {
                 this.crx.getLocalStorage('shouldLogin', (res) => {
                     switch (res) {
@@ -286,7 +286,7 @@ export class ChromeService {
                 return throwError('please get lang to local storage when debug mode on');
             }
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<string>((resolve, reject) => {
             try {
                 this.crx.getStorage('lang', (res) => {
                     switch (res) {
@@ -315,7 +315,7 @@ export class ChromeService {
                 return throwError('please set watch to local storage when debug mode on');
             }
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<Balance[]>((resolve, reject) => {
             try {
                 this.crx.getStorage('watch', (res) => {
                     if (!Array.isArray(res)) {
@@ -362,7 +362,7 @@ export class ChromeService {
                 return throwError('please get history json to local storage when debug mode on');
             }
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<string>((resolve, reject) => {
             try {
                 this.crx.getStorage('history', (res) => {
                     resolve(res || '');
@@ -398,7 +398,7 @@ export class ChromeService {
                 return throwError('please get transaction json to local storage when debug mode on');
             }
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<object>((resolve, reject) => {
             try {
                 this.crx.getStorage('transaction', (res) => {
                     if (typeof res === 'undefined') {
@@ -437,7 +437,7 @@ export class ChromeService {
                 return throwError(('failed'));
             }
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<object>((resolve, reject) => {
             try {
                 this.crx.getStorage('connectedWebsites', (res) => {
                     if (typeof res === 'undefined') {
@@ -474,7 +474,7 @@ export class ChromeService {
                 return throwError(('failed'));
             }
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<string>((resolve, reject) => {
             try {
                 this.crx.getStorage('rateCurrency', (res) => {
                     if (typeof res === 'undefined') {
@@ -509,7 +509,7 @@ export class ChromeService {
                 return throwError('please get history json to local storage when debug mode on');
             }
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<Map<string, {}>>((resolve, reject) => {
             try {
                 this.crx.getLocalStorage('assetFile', (res) => {
                     if (res) {
@@ -545,7 +545,7 @@ export class ChromeService {
                 return throwError('please get history json to local storage when debug mode on');
             }
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<Map<string, {}>>((resolve, reject) => {
             try {
                 this.crx.getStorage('assetCNYRate', (res) => {
                     if (res) {
@@ -581,7 +581,7 @@ export class ChromeService {
                 return throwError('please get history json to local storage when debug mode on');
             }
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<Map<string, {}>>((resolve, reject) => {
             try {
                 this.crx.getStorage('assetUSDRate', (res) => {
                     if (res) {
@@ -640,7 +640,7 @@ export class ChromeService {
                 return throwError('please get net json to local storage when debug mode on');
             }
         }
-        return from(new Promise((resolve, reject) => {
+        return from(new Promise<string>((resolve, reject) => {
             try {
                 this.crx.getStorage('net', (res) => {
                     resolve(res || 'MainNet');
@@ -686,7 +686,7 @@ export class ChromeService {
         }
     }
 
-    public httpGet(url: string, callback: (any) => void, headers: object = null) {
+    public httpGet(url: string, callback: (arg0: any) => void, headers: object = null) {
         try {
             this.crx.httpGet(url, callback, headers);
         } catch (e) {
@@ -694,7 +694,7 @@ export class ChromeService {
         }
     }
 
-    public httpGetImage(url: string, callback: (any) => void, headers: object = null) {
+    public httpGetImage(url: string, callback: (arg0: any) => void, headers: object = null) {
         try {
             this.crx.httpGetImage(url, callback, headers);
         } catch (e) {
@@ -702,7 +702,7 @@ export class ChromeService {
         }
     }
 
-    public httpPost(url: string, data: any, callback: (any) => void, headers: object = null) {
+    public httpPost(url: string, data: any, callback: (arg0: any) => void, headers: object = null) {
         try {
             this.crx.httpPost(url, data, callback, headers);
         } catch (e) {
