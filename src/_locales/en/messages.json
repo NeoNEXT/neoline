@@ -299,8 +299,8 @@
     "reset": {
         "message": "Reset"
     },
-    "chooseNep2File": {
-        "message": "Choose Nep2 File"
+    "chooseNep6File": {
+        "message": "Choose Nep6 File"
     },
     "welcomeBack": {
         "message": "Welcome back"

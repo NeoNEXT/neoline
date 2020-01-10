@@ -70,7 +70,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             if (JSON.stringify(params) === '{}') {
                 return;
             }
-            this.broadcastOverride = params.broadcastOverride || false;
+            this.broadcastOverride = (params.broadcastOverride === 'true' || params.broadcastOverride === true) ;
             window.onbeforeunload = () => {
                 this.chrome.windowCallback({
                     error: ERRORS.CANCELLED,

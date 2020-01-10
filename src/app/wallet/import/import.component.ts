@@ -46,9 +46,9 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
     public isEncryptedKey = true;
 
     public encryptedKey: string;
-    public nep2File: any;
-    public nep2Json: Wallet = null;
-    public nep2Name = '';
+    public nep6File: any;
+    public nep6Json: Wallet = null;
+    public nep6Name = '';
 
     public importType = 'PrivateKey';
 
@@ -85,9 +85,9 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
         this.hideEncryptedKey = true;
         this.hideConfirmPwd = true;
         this.walletImport = new WalletImport();
-        this.nep2File = null;
-        this.nep2Json = null;
-        this.nep2Name = '';
+        this.nep6File = null;
+        this.nep6Json = null;
+        this.nep6Name = '';
     }
 
     public togglePwd(): void {
@@ -155,25 +155,25 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
     }
 
     public onFileSelected(event: any) {
-        this.nep2File = event.target.files[0];
-        if (this.nep2File) {
+        this.nep6File = event.target.files[0];
+        if (this.nep6File) {
             const reader = new FileReader();
-            reader.readAsText(this.nep2File, 'UTF-8');
+            reader.readAsText(this.nep6File, 'UTF-8');
             reader.onload = (evt: any) => {
-                this.nep2Json = JSON.parse(evt.target.result);
-                if (this.nep2Json.accounts === undefined || this.nep2Json.accounts[0] === undefined
-                    || !wallet.isNEP2((this.nep2Json.accounts[0] as any).key || this.nep2Json.name === undefined)) {
-                    this.global.snackBarTip('nep2Wrong');
-                    this.nep2Json = null;
-                    this.nep2Name = '';
+                this.nep6Json = JSON.parse(evt.target.result);
+                if (this.nep6Json.accounts === undefined || this.nep6Json.accounts[0] === undefined
+                    || !wallet.isNEP2((this.nep6Json.accounts[0] as any).key || this.nep6Json.name === undefined)) {
+                    this.global.snackBarTip('nep6Wrong');
+                    this.nep6Json = null;
+                    this.nep6Name = '';
                     this.walletImport.walletName = '';
                     return;
                 }
-                if (this.nep2Json.name !== undefined) {
-                    this.nep2Name = this.nep2Json.name;
-                    this.walletImport.walletName = this.nep2Json.name;
+                if (this.nep6Json.name !== undefined) {
+                    this.nep6Name = this.nep6Json.name;
+                    this.walletImport.walletName = this.nep6Json.name;
                 }
-                this.walletImport.EncrpytedKey = (this.nep2Json.accounts[0] as any).key;
+                this.walletImport.EncrpytedKey = (this.nep6Json.accounts[0] as any).key;
             };
             reader.onerror = (evt) => {
                 console.log('error reading file');

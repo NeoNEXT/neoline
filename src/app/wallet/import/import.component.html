@@ -132,15 +132,15 @@
     </button>
 </form>
 
-<form #nep2Form="ngForm" *ngIf="importType == 'NEP2File' ">
+<form #nep6Form="ngForm" *ngIf="importType == 'NEP6File' ">
     <p class="title">{{ 'importWallet' | translate | async}}</p>
     <p class="tip">{{ 'welcomeImport' | translate | async}}:</p>
-    <button class="popup-wallet-body-submit choose-nep2-btn" *ngIf="nep2Json == null" mat-raised-button color="primary">
-        {{ 'chooseNep2File' | translate | async }}
-        <input class="choose-nep2-input" (change)="onFileSelected($event)" type="file">
+    <button class="popup-wallet-body-submit choose-nep6-btn" *ngIf="nep6Json == null" mat-raised-button color="primary">
+        {{ 'chooseNep6File' | translate | async }}
+        <input class="choose-nep6-input" (change)="onFileSelected($event)" type="file">
     </button>
     <div class="wallet-name-box">
-        <span>{{ nep2Name }}</span>
+        <span>{{ nep6Name }}</span>
     </div>
     <mat-form-field class="popup-wallet-body-text">
         <img class="icon" matPrefix src="../../../../assets/images/lock.png" alt="" />
@@ -170,7 +170,7 @@
 
 
     <button class="popup-wallet-body-submit" mat-raised-button color="primary"
-        [disabled]="nep2Json == null || nep2Form.invalid || loading" (click)="submitEncrypted()" required>
+        [disabled]="nep6Json == null || nep6Form.invalid || loading" (click)="submitEncrypted()" required>
         <ng-container *ngIf="!loading">{{ 'import' | translate | async }}</ng-container>
         <ng-container *ngIf="loading">{{ 'importing' | translate | async }}</ng-container>
     </button>

@@ -114,8 +114,8 @@ export class NeonService {
         }));
     }
     /**
-     * Create a new wallet include one NEP2 account.
-     * 创建包含单个NEP2的新钱包
+     * Create a new wallet include one NEP6 account.
+     * 创建包含单个NEP6的新钱包
      * @param key encrypt password for new address
      */
     public createWallet(key: string, name: string = null): Observable<any> {
