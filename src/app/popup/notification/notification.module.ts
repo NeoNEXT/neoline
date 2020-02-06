@@ -12,6 +12,7 @@ import { PopupNoticeTokenComponent } from './token/token.component';
 import { PopupNoticeAuthComponent } from './authorization/authorization.component';
 import { PopupNoticeInvokeComponent } from './invoke/invoke.component';
 import { PopupNoticeDeployComponent } from './deploy/deploy.component';
+import { PopupNoticeInvokeMultiComponent } from './invoke-multi/invoke-multi.component';
 
 @NgModule({
     declarations: [
@@ -21,6 +22,7 @@ import { PopupNoticeDeployComponent } from './deploy/deploy.component';
         PopupNoticeTokenComponent,
         PopupNoticeAuthComponent,
         PopupNoticeInvokeComponent,
+        PopupNoticeInvokeMultiComponent,
         PopupNoticeDeployComponent
     ],
     imports: [

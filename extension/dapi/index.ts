@@ -227,6 +227,42 @@ export class Init {
         }
     }
 
+    public async invokeMulti(parameter: InvokeArgs) {
+        if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
+            parameter.operation === undefined || parameter.operation === '' ||
+            parameter.args === undefined) {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.MALFORMED_INPUT);
+                });
+        } else {
+            let authState: any;
+            try {
+                authState = await getAuthState() || 'NONE';
+            } catch (error) {
+                console.log(error);
+            }
+            if (authState === true || authState === 'NONE') {
+                let connectResult;
+                if (sessionStorage.getItem('connect') !== 'true' && authState === 'NONE') {
+                    connectResult = await connect();
+                } else {
+                    connectResult = true;
+                }
+                if (connectResult === true) {
+                    return sendMessage(requestTarget.InvokeMulti, parameter);
+                } else {
+                    return new Promise((_, reject) => {
+                        reject(ERRORS.CONNECTION_DENIED);
+                    });
+                }
+            } else {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.CONNECTION_DENIED);
+                });
+            }
+        }
+    }
+
     public signMessage(parameter: { message: string }): Promise<any> {
         if (parameter.message === undefined) {
             return new Promise((_, reject) => {

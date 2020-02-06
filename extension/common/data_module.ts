@@ -63,6 +63,7 @@ export enum requestTarget {
     Block = 'neoline.target_block',
     ApplicationLog = 'neoline.target_application_log',
     Invoke = 'neoline.target_invoke',
+    InvokeMulti = 'neoline.target_invoke_multi',
     SignMessage = 'neoline.target_sign_message',
     Deploy = 'neoline.target_deploy',
     Send = 'neoline.target_send',

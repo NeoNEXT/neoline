@@ -256,6 +256,20 @@ window.addEventListener('message', async (e) => {
             return;
         }
 
+        case requestTarget.InvokeMulti: {
+            getStorage('net', async (res) => {
+                let apiUrl = e.data.parameter.network;
+                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                    apiUrl = res || 'MainNet';
+                }
+                e.data.parameter.network = apiUrl;
+                chrome.runtime.sendMessage(e.data, (response) => {
+                    return Promise.resolve('Dummy response to keep the console quiet');
+                });
+            });
+            return;
+        }
+
         case requestTarget.SignMessage: {
             const parameter = e.data.parameter;
             const walletArr = await getLocalStorage('walletArr', () => { });

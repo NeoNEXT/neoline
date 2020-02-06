@@ -1,0 +1,37 @@
+<div class="loading-box" *ngIf="loading">
+    <div>
+        <mat-spinner strokeWidth="10"></mat-spinner>
+    </div>
+    <h3>{{ loadingMsg }}</h3>
+</div>
+<div class="invoke-body">
+
+    <div class="script-hash-box">
+        <p>scriptHash: </p>
+        <p class="content">{{ scriptHash }}</p>
+    </div>
+    <div class="operation-box">
+        <p>operation: </p>
+        <p class="content">{{ operation }}</p>
+    </div>
+    <div class="args-box">
+        <p>args: </p>
+        <p class="content">{{ args | json }}</p>
+    </div>
+    <div class="args-box">
+        <p>args: </p>
+        <p class="content">{{ attachedAssets | json }}</p>
+    </div>
+    <div class="args-box">
+        <p>fee: </p>
+        <p class="content">{{ fee }}</p>
+    </div>
+    <div class="args-box">
+        <p>broadcastOverride: </p>
+        <p class="content">{{ broadcastOverride }}</p>
+    </div>
+    <div class="args-box">
+        <p>attachedAssets: </p>
+        <p class="content">{{ attachedAssets | json }}</p>
+    </div>
+</div>
