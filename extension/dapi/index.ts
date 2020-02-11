@@ -2,7 +2,7 @@ import {
     Provider, EVENT, requestTarget, Networks, Account,
     AccountPublicKey, BalanceResults, GetBalanceArgs, InvokeReadArgs,
     TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput,
-    ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response, DeployArgs, DeployOutput
+    ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response, DeployArgs, DeployOutput, InvokeMultiArgs
 } from '../common/data_module';
 export { EVENT, ERRORS } from '../common/data_module';
 import { getMessageID } from '../common/utils';
@@ -10,7 +10,7 @@ import { getMessageID } from '../common/utils';
 function sendMessage<K>(target: requestTarget, parameter?: any): Promise<K> {
     const ID = getMessageID();
     return new Promise((resolveMain, rejectMain) => {
-        const request = parameter ? {target, parameter, ID} : { target, ID};
+        const request = parameter ? { target, parameter, ID } : { target, ID };
         window.postMessage(request, '*');
         const promise = new Promise((resolve, reject) => {
             const callbackFn = (event) => {
@@ -161,11 +161,11 @@ export class Init {
 
     public invokeRead(parameter: InvokeReadArgs): Promise<object> {
         if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
-                parameter.operation === undefined || parameter.operation === '' ||
-                parameter.args === undefined || parameter.args.length === 0) {
-                    return new Promise((_, reject) => {
-                        reject(ERRORS.MALFORMED_INPUT);
-                    });
+            parameter.operation === undefined || parameter.operation === '' ||
+            parameter.args === undefined || parameter.args.length === 0) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
+            });
         } else {
             return sendMessage(requestTarget.InvokeRead, parameter);
         }
@@ -195,9 +195,9 @@ export class Init {
         if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
             parameter.operation === undefined || parameter.operation === '' ||
             parameter.args === undefined) {
-                return new Promise((_, reject) => {
-                    reject(ERRORS.MALFORMED_INPUT);
-                });
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
+            });
         } else {
             let authState: any;
             try {
@@ -227,14 +227,27 @@ export class Init {
         }
     }
 
-    public async invokeMulti(parameter: InvokeArgs) {
-        if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
-            parameter.operation === undefined || parameter.operation === '' ||
-            parameter.args === undefined) {
+    public async invokeMulti(parameter: InvokeMultiArgs) {
+        if (parameter.invokeArgs === undefined) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
+            });
+        } else {
+            if (parameter.invokeArgs instanceof Array && parameter.invokeArgs.length > 0) {
+                parameter.invokeArgs.forEach(item => {
+                    if (item.scriptHash === undefined || item.scriptHash === '' ||
+                        item.operation === undefined || item.operation === '' ||
+                        item.args === undefined) {
+                        return new Promise((_, reject) => {
+                            reject(ERRORS.MALFORMED_INPUT);
+                        });
+                    }
+                });
+            } else {
                 return new Promise((_, reject) => {
                     reject(ERRORS.MALFORMED_INPUT);
                 });
-        } else {
+            }
             let authState: any;
             try {
                 authState = await getAuthState() || 'NONE';
@@ -277,9 +290,9 @@ export class Init {
         if (parameter.author === undefined || parameter.code === undefined || parameter.description === undefined ||
             parameter.email === undefined || parameter.name === undefined || parameter.parameterList === undefined ||
             parameter.returnType === undefined || parameter.version === undefined || parameter.networkFee === undefined) {
-                return new Promise((_, reject) => {
-                    reject(ERRORS.MALFORMED_INPUT);
-                });
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
+            });
         } else {
             let authState: any;
             try {
@@ -313,8 +326,8 @@ export class Init {
         if (parameter === undefined || parameter.toAddress === undefined || parameter.fromAddress === undefined ||
             (parameter.asset === undefined) ||
             parameter.amount === undefined || parameter.network === undefined) {
-                return new Promise((_, reject) => {
-                    reject(ERRORS.CONNECTION_DENIED);
+            return new Promise((_, reject) => {
+                reject(ERRORS.CONNECTION_DENIED);
             });
         } else {
             let authState: any;

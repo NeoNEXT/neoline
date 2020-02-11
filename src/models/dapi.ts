@@ -194,6 +194,23 @@ export interface InvokeArgs {
     triggerContractVerification?: boolean; // Adds the instruction to invoke the contract verification trigger
     txHashAttributes?: TxHashAttribute[]; // Adds transaction attributes for the "Hash<x>" usage block
 }
+
+export interface InvokeMultiArgs {
+    fee?: string;
+    network?: string;
+    assetIntentOverrides?: AssetIntentOverrides;
+    broadcastOverride?: boolean;
+    txHashAttributes?: TxHashAttribute[];
+    invokeArgs: Invoke[];
+}
+
+export interface Invoke {
+    scriptHash: string;
+    operation: string;
+    args?: Argument[];
+    attachedAssets?: AttachedAssets;
+    triggerContractVerification?: boolean;
+}
 interface AttachedAssets {
     NEO?: string;
     GAS?: string;

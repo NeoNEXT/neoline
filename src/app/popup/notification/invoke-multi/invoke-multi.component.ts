@@ -10,7 +10,7 @@ import { NEO, UTXO, GAS } from '@/models/models';
 import { Observable } from 'rxjs';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
-import { ERRORS, requestTarget } from '@/models/dapi';
+import { ERRORS, requestTarget, Invoke } from '@/models/dapi';
 
 @Component({
     templateUrl: 'invoke-multi.component.html',
@@ -18,11 +18,8 @@ import { ERRORS, requestTarget } from '@/models/dapi';
 })
 export class PopupNoticeInvokeMultiComponent implements OnInit {
     private pramsData: any;
-    public scriptHash = '';
-    public operation = '';
-    public args = null;
     public tx: Transaction;
-    public attachedAssets = null;
+    public invokeArgs: Invoke[] = [];
     public fee = null;
     public broadcastOverride = null;
     public assetIntentOverrides = null;
@@ -41,10 +38,10 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        alert(1);
         this.aRoute.queryParams.subscribe((params: any) => {
             this.pramsData = params;
             this.messageID = params.messageID;
+            console.log(this.pramsData);
             if (params.network !== undefined) {
                 if (params.network === 'MainNet') {
                     this.global.modifyNet('MainNet');
@@ -52,41 +49,41 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     this.global.modifyNet('TestNet');
                 }
             }
-            if (params.scriptHash !== undefined && params.operation !== undefined && params.args !== undefined) {
-                this.scriptHash = params.scriptHash;
-                this.operation = params.operation;
-                let newJson = params.args.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
-                newJson = newJson.replace(/'/g, '"');
-                this.args = JSON.parse(newJson);
-                this.args.forEach((item, index) => {
-                    if (item.type === 'Address') {
+            let newJson = this.pramsData.invokeArgs.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
+            newJson = newJson.replace(/'/g, '"');
+            const tempInvokeArgs = JSON.parse(newJson);
+            tempInvokeArgs.forEach((item, index) => {
+                item.args.forEach((arg, argIndex) => {
+                    if (arg.type === 'Address') {
                         const param2 = sc.ContractParam.byteArray(
-                            item.value,
-                            item.key
+                            arg.value,
+                            arg.key
                         );
-                        this.args[index] = sc.ContractParam.array(param2).value;
+                        tempInvokeArgs[index].args[argIndex] = sc.ContractParam.array(param2).value;
                     }
                 });
-                this.fee = parseFloat(params.fee) || 0;
-                if (this.pramsData.attachedAssets) {
-                    newJson = this.pramsData.attachedAssets.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
-                    newJson = newJson.replace(/'/g, '"');
-                    this.attachedAssets = JSON.parse(newJson);
-                }
-                if (this.assetIntentOverrides) {
-                    newJson = this.pramsData.assetIntentOverrides.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
-                    newJson = newJson.replace(/'/g, '"');
-                    this.assetIntentOverrides = JSON.parse(newJson);
-                    this.fee = 0;
-                    this.attachedAssets = null;
-                }
-                this.broadcastOverride = this.pramsData.broadcastOverride || false;
-                setTimeout(() => {
-                    this.pwdDialog();
-                }, 0);
-            } else {
-                return;
+                this.invokeArgs.push({
+                    scriptHash: item.scriptHash,
+                    operation: item.operation,
+                    args: tempInvokeArgs[index].args,
+                    triggerContractVerification: false,
+                    attachedAssets: item.attachedAssets
+                });
+            });
+            this.fee = parseFloat(params.fee) || 0;
+            if (this.assetIntentOverrides) {
+                newJson = this.pramsData.assetIntentOverrides.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
+                newJson = newJson.replace(/'/g, '"');
+                this.assetIntentOverrides = JSON.parse(newJson);
+                this.fee = 0;
+                this.invokeArgs.forEach(item => {
+                    item.attachedAssets = null;
+                });
             }
+            this.broadcastOverride = this.pramsData.broadcastOverride || false;
+            setTimeout(() => {
+                this.pwdDialog();
+            }, 0);
         });
         window.onbeforeunload = () => {
             this.chrome.windowCallback({
@@ -167,6 +164,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
             signature_transaction: transaction.serialize(true)
         }).subscribe(async (res: any) => {
+            console.log(transaction.hash);
             this.loading = false;
             this.loadingMsg = '';
             if (!res.bool_status) {
@@ -210,70 +208,91 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     private createTxForNEP5(): Promise<Transaction> {
         return new Promise(async (resolve, reject) => {
             const fromScript = wallet.getScriptHashFromAddress(this.neon.address);
-            const toScript = this.scriptHash.startsWith('0x') && this.scriptHash.length === 42 ? this.scriptHash.substring(2) : this.scriptHash;
             let newTx = new tx.InvocationTransaction();
-            if (this.scriptHash.length !== 42 && this.scriptHash.length !== 40) {
-                this.chrome.windowCallback({
-                    error: ERRORS.MALFORMED_INPUT,
-                    return: requestTarget.InvokeMulti,
-                    ID: this.messageID
-                });
-                this.loading = false;
-                this.loadingMsg = '';
-                window.close();
-                return null;
-            }
-            try {
-                newTx.script = sc.createScript({
-                    scriptHash: this.scriptHash.startsWith('0x') && this.scriptHash.length === 42 ? this.scriptHash.substring(2) : this.scriptHash,
-                    operation: this.operation,
-                    args: this.args
-                }) + 'f1';
-            } catch (error) {
-                reject(error);
-            }
-            if (this.assetIntentOverrides == null) {
-                if (this.attachedAssets !== null) {
-                    if (this.attachedAssets.NEO) {
-                        try {
-                            newTx = await this.addAttachedAssets(NEO, this.attachedAssets.NEO, fromScript, toScript, newTx);
-                        } catch (error) {
-                            this.chrome.windowCallback({
-                                error: ERRORS.MALFORMED_INPUT,
-                                return: requestTarget.InvokeMulti,
-                                ID: this.messageID
-                            });
-                            window.close();
-                        }
+            let script = '';
+            let NEOAmount = 0;
+            let GASAmount = 0;
+            this.invokeArgs.forEach(item => {
+                console.log(item);
+                if (this.assetIntentOverrides == null) {
+                    if (item.attachedAssets !== null && item.attachedAssets !== undefined) {
+                        NEOAmount += Number(item.attachedAssets.NEO || '0');
+                        GASAmount += Number(item.attachedAssets.GAS || '0');
                     }
-                    if (this.attachedAssets.GAS) {
-                        try {
-                            newTx = await this.addAttachedAssets(GAS, this.attachedAssets.GAS, fromScript, toScript, newTx, this.fee);
-                        } catch (error) {
-                            console.log(error);
-                        }
-                    } else {
-                        if (this.fee > 0) {
+                }
+                if (item.scriptHash.length !== 42 && item.scriptHash.length !== 40) {
+                    this.chrome.windowCallback({
+                        error: ERRORS.MALFORMED_INPUT,
+                        return: requestTarget.InvokeMulti,
+                        ID: this.messageID
+                    });
+                    this.loading = false;
+                    this.loadingMsg = '';
+                    window.close();
+                    return null;
+                }
+                try {
+                    script += sc.createScript({
+                        scriptHash: item.scriptHash.startsWith('0x') && item.scriptHash.length === 42 ? item.scriptHash.substring(2) : item.scriptHash,
+                        operation: item.operation,
+                        args: item.args
+                    });
+                } catch (error) {
+                    reject(error);
+                }
+            });
+            newTx.script = script + 'f1';
+            if (this.assetIntentOverrides == null) {
+                this.invokeArgs.forEach(async item => {
+                    const toScript = item.scriptHash.startsWith('0x') &&
+                        item.scriptHash.length === 42 ? item.scriptHash.substring(2) : item.scriptHash;
+                    if (item.attachedAssets !== null) {
+                        if (item.attachedAssets.NEO) {
                             try {
-                                newTx = await this.addFee(this.neon.wallet.accounts[0].address, newTx, this.fee);
+                                newTx.addOutput({ assetId: NEO.substring(2),
+                                    value: new Fixed8(Number(item.attachedAssets.NEO)), scriptHash: toScript });
                             } catch (error) {
+                                this.chrome.windowCallback({
+                                    error: ERRORS.MALFORMED_INPUT,
+                                    return: requestTarget.InvokeMulti,
+                                    ID: this.messageID
+                                });
+                                window.close();
+                            }
+                        }
+                        if (item.attachedAssets.GAS) {
+                            try {
+                                newTx.addOutput({ assetId: GAS.substring(2),
+                                    value: new Fixed8(Number(item.attachedAssets.GAS)), scriptHash: toScript });
+                            } catch (error) {
+                                this.chrome.windowCallback({
+                                    error: ERRORS.MALFORMED_INPUT,
+                                    return: requestTarget.InvokeMulti,
+                                    ID: this.messageID
+                                });
                                 console.log(error);
+                                window.close();
                             }
                         }
                     }
-                } else {
-                    if (this.fee > 0) {
-                        try {
-                            newTx = await this.addFee(this.neon.wallet.accounts[0].address, newTx, this.fee);
-                        } catch (error) {
-                            console.log(error);
-                        }
+                });
+                if (NEOAmount > 0) {
+                    newTx = await this.addInputs(NEO, NEOAmount, fromScript, newTx);
+                }
+                if (GASAmount > 0) {
+                    newTx = await this.addInputs(GAS, GASAmount, fromScript, newTx, this.fee);
+                }
+                if (this.fee > 0 && GASAmount === 0) {
+                    try {
+                        newTx = await this.addFee(this.neon.wallet.accounts[0].address, newTx, this.fee);
+                    } catch (error) {
                     }
                 }
             } else {
                 newTx.outputs = this.assetIntentOverrides.outlets;
                 newTx.inputs = this.assetIntentOverrides.inputs;
             }
+            console.log(newTx);
             newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
             const uniqTag = `from NEOLine at ${new Date().getTime()}`;
             newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
@@ -287,8 +306,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         }));
     }
 
-    private addAttachedAssets(assetid: string, amount: number, fromScript: string,
-        toScript: string, newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
+    private addInputs(assetid: string, amount: number, fromScript: string,
+        newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
         return new Promise((resolve, reject) => {
             this.getBalance(this.neon.address, assetid).subscribe((balances: any) => {
                 if (balances.length === 0) {
@@ -298,7 +317,6 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 if (assetId.startsWith('0x') && assetId.length === 66) {
                     assetId = assetId.substring(2);
                 }
-                newTx.addOutput({ assetId, value: new Fixed8(amount), scriptHash: toScript });
                 let curr = 0.0;
                 for (const item of balances) {
                     curr += parseFloat(item.value) || 0;

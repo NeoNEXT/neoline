@@ -333,7 +333,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 let queryString = '';
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
-                        const value = key === 'args' || key === 'assetIntentOverrides' || key === 'attachedAssets' ||
+                        const value = key === 'invokeArgs' || key === 'assetIntentOverrides' || key === 'attachedAssets' ||
                             key === 'assetIntentOverrides' || key === 'txHashAttributes' ?
                             JSON.stringify(params[key]) : params[key];
                         queryString += `${key}=${value}&`;
