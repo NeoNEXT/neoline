@@ -27,9 +27,9 @@ export class PopupHomeTxItemComponent implements OnInit {
     public txDetail(txid: string) {
         // todo
         if (this.global.apiDomain.match('main') !== null) {
-            window.open(`https://blolys.com/#/mainnet/transaction/${txid}`);
+            window.open(`https://neotube.io/transaction/${txid}`);
         } else {
-            window.open(`https://blolys.com/#/testnet/transaction/${txid}`);
+            window.open(`https://testnet.neotube.io/transaction/${txid}`);
         }
     }
 

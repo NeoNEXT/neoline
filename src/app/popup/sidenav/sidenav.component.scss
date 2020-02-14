@@ -72,7 +72,7 @@
 
             &:hover {
                 cursor: pointer;
-                color: map-get($neo-line-default, 500);
+                // color: map-get($neo-line-default, 500);
             }
 
             div {
@@ -131,11 +131,11 @@
                 @include bg($img-web-close);
             }
 
-            .side-nav-body-menu-blolys-active {
-                @include bg($img-blolys-active);
+            .side-nav-body-menu-neotube-active {
+                @include bg($img-neotube-active);
             }
-            .side-nav-body-menu-blolys-close {
-                @include bg($img-blolys-close);
+            .side-nav-body-menu-neotube-close {
+                @include bg($img-neotube-close);
             }
         }
     }
