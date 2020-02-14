@@ -272,10 +272,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const args = request.parameter[2];
             args.forEach((item, index) => {
                 if (item.type === 'Address') {
-                    args[index] = {
-                        type: 5,
-                        value: reverseHex(getScriptHashFromAddress(item.value))
-                    };
+                    args[index] = reverseHex(getScriptHashFromAddress(item.value))
                 }
             });
             request.parameter[2] = args;

@@ -3,6 +3,8 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService } from '@/app/core';
 import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzion/neon-core/lib/tx';
 import { wallet, tx, sc, u } from '@cityofzion/neon-core';
+import { nep5 } from '@cityofzion/neon-js';
+
 import { MatDialog } from '@angular/material';
 import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
 import { HttpClient } from '@angular/common/http';
@@ -55,11 +57,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             tempInvokeArgs.forEach((item, index) => {
                 item.args.forEach((arg, argIndex) => {
                     if (arg.type === 'Address') {
-                        const param2 = sc.ContractParam.byteArray(
-                            arg.value,
-                            arg.key
-                        );
-                        tempInvokeArgs[index].args[argIndex] = sc.ContractParam.array(param2).value;
+                        const param2 = u.reverseHex(wallet.getScriptHashFromAddress(arg.value));
+                        tempInvokeArgs[index].args[argIndex] = param2;
                     }
                 });
                 this.invokeArgs.push({
@@ -103,6 +102,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.createTxForNEP5().then(res => {
                     this.resolveSign(res, pwd);
                 }).catch(err => {
+                    console.log(err);
                     this.chrome.windowCallback({
                         error: ERRORS.MALFORMED_INPUT,
                         return: requestTarget.InvokeMulti,
@@ -164,7 +164,6 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
             signature_transaction: transaction.serialize(true)
         }).subscribe(async (res: any) => {
-            console.log(transaction.hash);
             this.loading = false;
             this.loadingMsg = '';
             if (!res.bool_status) {
@@ -213,7 +212,6 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             let NEOAmount = 0;
             let GASAmount = 0;
             this.invokeArgs.forEach(item => {
-                console.log(item);
                 if (this.assetIntentOverrides == null) {
                     if (item.attachedAssets !== null && item.attachedAssets !== undefined) {
                         NEOAmount += Number(item.attachedAssets.NEO || '0');
@@ -238,6 +236,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                         args: item.args
                     });
                 } catch (error) {
+                    console.log(error);
                     reject(error);
                 }
             });
@@ -246,7 +245,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.invokeArgs.forEach(async item => {
                     const toScript = item.scriptHash.startsWith('0x') &&
                         item.scriptHash.length === 42 ? item.scriptHash.substring(2) : item.scriptHash;
-                    if (item.attachedAssets !== null) {
+                    if (item.attachedAssets) {
                         if (item.attachedAssets.NEO) {
                             try {
                                 newTx.addOutput({ assetId: NEO.substring(2),
@@ -292,7 +291,6 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 newTx.outputs = this.assetIntentOverrides.outlets;
                 newTx.inputs = this.assetIntentOverrides.inputs;
             }
-            console.log(newTx);
             newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
             const uniqTag = `from NEOLine at ${new Date().getTime()}`;
             newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));

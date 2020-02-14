@@ -59,11 +59,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 this.args = JSON.parse(newJson);
                 this.args.forEach((item, index) => {
                     if (item.type === 'Address') {
-                        const param2 = sc.ContractParam.byteArray(
-                            item.value,
-                            item.key
-                        );
-                        this.args[index] = sc.ContractParam.array(param2).value;
+                        const param2 = u.reverseHex(wallet.getScriptHashFromAddress(item.value));
+                        this.args[index] = param2;
                     }
                 });
                 this.fee = parseFloat(params.fee) || 0;
