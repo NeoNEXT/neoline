@@ -203,8 +203,8 @@
     "companyWebsite": {
         "message": "Official Website"
     },
-    "contractUs": {
-        "message": "Contract Us"
+    "contactUs": {
+        "message": "Contact Us"
     },
     "myAccountQRCode": {
         "message": "My wallet QR code"
