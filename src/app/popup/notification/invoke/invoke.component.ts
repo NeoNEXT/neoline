@@ -297,7 +297,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 newTx.addOutput({ assetId, value: new Fixed8(amount), scriptHash: toScript });
                 let curr = 0.0;
                 for (const item of balances) {
-                    curr += parseFloat(item.value) || 0;
+                    curr = this.global.mathAdd(curr, parseFloat(item.value) || 0);
                     newTx.inputs.push(new TransactionInput({
                         prevIndex: item.n, prevHash: item.txid.startsWith('0x') && item.txid.length == 66 ? item.txid.substring(2) : item.txid
                     }));
