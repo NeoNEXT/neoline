@@ -298,6 +298,8 @@ export class NeonService {
         if (payback > 0) {
             newTx.addOutput({ assetId, value: new Fixed8(payback), scriptHash: fromScript });
         }
+        const uniqTag = `from NEOLine at ${new Date().getTime()}`;
+        newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
         return newTx;
     }
     public createTxForNEP5(from: string, to: string, scriptHash: string, amount: number, decimals: number): Transaction {
