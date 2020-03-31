@@ -31,9 +31,11 @@
         "@types/elliptic": "^6.4.9",
         "@types/mathjs": "^6.0.2",
         "@types/wif": "^2.0.1",
+        "acorn": "^7.1.1",
         "core-js": "^3.6.1",
         "hammerjs": "^2.0.8",
         "mathjs": "^6.2.5",
+        "minimist": "^1.2.5",
         "tslib": "^1.10.0",
         "zone.js": "~0.10.2"
     },
@@ -53,5 +55,9 @@
         "typescript": "~3.5.0",
         "webpack": "^4.41.5",
         "webpack-cli": "^3.3.10"
+    },
+    "resolutions": {
+        "minimist": "^1.2.5",
+        "acorn": "^7.1.1"
     }
 }
