@@ -34,6 +34,7 @@
         "acorn": "^7.1.1",
         "core-js": "^3.6.1",
         "hammerjs": "^2.0.8",
+        "kind-of": "^6.0.3",
         "mathjs": "^6.2.5",
         "minimist": "^1.2.5",
         "tslib": "^1.10.0",
@@ -58,6 +59,7 @@
     },
     "resolutions": {
         "minimist": "^1.2.5",
-        "acorn": "^7.1.1"
+        "acorn": "^7.1.1",
+        "kind-of": "^6.0.3"
     }
 }
