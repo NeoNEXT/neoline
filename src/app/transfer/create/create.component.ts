@@ -19,9 +19,8 @@ import {
     TransactionState
 } from '@/app/core';
 import {
-    MatSnackBar,
     MatDialog
-} from '@angular/material';
+} from '@angular/material/dialog';
 import {
     TransferService
 } from '../transfer.service';
@@ -121,6 +120,7 @@ export class TransferCreateomponent implements OnInit {
     }
 
     private resolveSign(tx: Transaction, pwd: string) {
+        console.log(this.neon.wallet.accounts);
         this.neon.wallet.accounts[0].decrypt(pwd).then((acc) => {
             tx.sign(acc);
             this.global.log('signed tx', tx);

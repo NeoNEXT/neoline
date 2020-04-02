@@ -1,13 +1,12 @@
 import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
-import {
-    MatMenuModule,
-    MatSidenavModule,
-    MatListModule,
-    MatSnackBarModule,
-    MatDialogModule
-} from '@angular/material';
+
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatListModule } from '@angular/material/list';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatDialogModule } from '@angular/material/dialog';
 
 import { PopupRoutingModule } from '@popup/popup.route';
 import { PopupComponent } from '@popup/popup.component';

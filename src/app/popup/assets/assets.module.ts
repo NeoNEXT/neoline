@@ -1,6 +1,6 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { MatMenuModule } from '@angular/material';
+import { MatMenuModule } from '@angular/material/menu';
 
 import { PopupAssetComponent } from '@popup/assets/asset/asset.component';
 import { PopupAssetsComponent } from '@popup/assets/assets.component';

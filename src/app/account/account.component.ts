@@ -13,7 +13,7 @@ import {
 } from '@angular/router';
 import {
     MatDialog,
-} from '@angular/material';
+} from '@angular/material/dialog';
 import {
     PopupNameDialogComponent
 } from '@popup/_dialogs';

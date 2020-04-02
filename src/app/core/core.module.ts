@@ -11,7 +11,8 @@ import { AssetState } from './states/asset.state';
 import { TransactionState } from './states/transaction.service';
 import { BlockState } from './states/block.state';
 import { LoaderDialog } from './dialogs/loader/loader.dialog';
-import { MatProgressSpinnerModule, MatDialogModule } from '@angular/material';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SettingState } from './states/setting.state';
 
 @NgModule({

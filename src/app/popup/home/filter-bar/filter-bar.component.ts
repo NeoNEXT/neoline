@@ -41,8 +41,8 @@ export class PopupHomeFilterBarComponent
 implements OnChanges, OnInit, AfterViewChecked, OnDestroy {
     @Input() initAssetId: string;
 
-    @ViewChild('more', null) more: ElementRef;
-    @ViewChild('symbolFilter', null) symbolFilter: ElementRef;
+    @ViewChild('more') more: ElementRef;
+    @ViewChild('symbolFilter') symbolFilter: ElementRef;
 
     public address: string;
     public balances: Balance[];

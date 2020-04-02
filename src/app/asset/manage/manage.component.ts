@@ -30,7 +30,7 @@ import {
 } from '@popup/_dialogs';
 import {
     MatDialog
-} from '@angular/material';
+} from '@angular/material/dialog';
 import { Unsubscribable } from 'rxjs';
 
 @Component({

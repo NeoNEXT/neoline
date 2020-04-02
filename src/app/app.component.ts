@@ -14,7 +14,7 @@ import {
 } from './core';
 import {
     MatDialog
-} from '@angular/material';
+} from '@angular/material/dialog';
 import {
     LogoutDialog
 } from './+logout/logout.dialog';

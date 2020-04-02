@@ -18,7 +18,7 @@ import {
 } from '@/models/models';
 import {
     MatDialog
-} from '@angular/material';
+} from '@angular/material/dialog';
 import {
     PopupDelTokenDialogComponent
 } from '@popup/_dialogs';

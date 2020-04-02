@@ -21,7 +21,7 @@ import {
 } from 'rxjs/operators';
 import {
     MatDialog
-} from '@angular/material';
+} from '@angular/material/dialog';
 
 
 import {

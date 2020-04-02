@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AuthorizationData } from '@/models/models';
 import { ChromeService, NeonService } from '@/app/core';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '../_dialogs';
 
 @Component({

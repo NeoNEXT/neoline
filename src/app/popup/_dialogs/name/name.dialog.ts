@@ -5,7 +5,7 @@ import {
 } from '@angular/core';
 import {
     MatDialogRef, MAT_DIALOG_DATA
-} from '@angular/material';
+} from '@angular/material/dialog';
 import {
     ChromeService,
     NeonService,

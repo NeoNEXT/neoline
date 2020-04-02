@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Wallet } from '@cityofzion/neon-core/lib/wallet';
 import { NeonService, ChromeService } from '@/app/core';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '@/app/popup/_dialogs';
 import { EVENT } from '@/models/dapi';
 

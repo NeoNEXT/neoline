@@ -5,15 +5,29 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import {MatCheckboxModule} from '@angular/material/checkbox';
 import {
-    MatSnackBarModule,
-    MatProgressSpinnerModule,
-    MatIconModule,
-    MatDialogModule,
-    MatRadioModule,
-    MatMenuModule,
-    MatSlideToggleModule,
+    MatSnackBarModule
+} from '@angular/material/snack-bar';
+import {
+    MatProgressSpinnerModule
+} from '@angular/material/progress-spinner';
+import {
+    MatIconModule
+} from '@angular/material/icon';
+import {
+    MatDialogModule
+} from '@angular/material/dialog';
+import {
+    MatRadioModule
+} from '@angular/material/radio';
+import {
+    MatMenuModule
+} from '@angular/material/menu';
+import {
+    MatSlideToggleModule
+} from '@angular/material/slide-toggle';
+import {
     MatTooltipModule
-} from '@angular/material';
+} from '@angular/material/tooltip';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { PagerComponent } from './components/pager/pager.component';

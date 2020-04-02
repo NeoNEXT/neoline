@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService } from '@/app/core';
 import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzion/neon-core/lib/tx';
 import { wallet, tx, sc, u } from '@cityofzion/neon-core';
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
 import { HttpClient } from '@angular/common/http';
 import { ERRORS, DeployArgs, GAS, requestTarget } from '@/models/dapi';

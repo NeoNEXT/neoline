@@ -11,9 +11,12 @@ import {
 } from 'rxjs/operators';
 import {
     MatDialog,
-    MatDialogRef,
+    MatDialogRef
+} from '@angular/material/dialog';
+
+import {
     MatSnackBar
-} from '@angular/material';
+} from '@angular/material/snack-bar';
 import {
     LoaderDialog
 } from '../dialogs/loader/loader.dialog';

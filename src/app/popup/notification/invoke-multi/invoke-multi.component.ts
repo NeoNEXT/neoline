@@ -5,7 +5,7 @@ import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzio
 import { wallet, tx, sc, u } from '@cityofzion/neon-core';
 import { nep5 } from '@cityofzion/neon-js';
 
-import { MatDialog } from '@angular/material';
+import { MatDialog } from '@angular/material/dialog';
 import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
 import { HttpClient } from '@angular/common/http';
 import { NEO, UTXO, GAS } from '@/models/models';
