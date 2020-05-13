@@ -133,4 +133,16 @@ export class GlobalService {
     public mathDiv(a: number, b: number): number {
         return parseFloat(divide(bignumber(a), bignumber(b)).toString());
     }
+    public getUseAgent() {
+        const defaultAgent = navigator.userAgent;
+        const agentArr = defaultAgent.split(' ');
+        let res = '';
+        agentArr.forEach(item => {
+            if(item.match('Chrome') !== null) {
+                res += item;
+            }
+        })
+        res += ` AppVersion/${this.chromeSer.getVersion() ? this.chromeSer.getVersion() : 'debug'}`;
+        return res;
+    }
 }

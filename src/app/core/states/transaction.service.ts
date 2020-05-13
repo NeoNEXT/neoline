@@ -39,7 +39,7 @@ export class TransactionState {
 
     public fetchTx(address: string, page: number, asset: string,
         max_id: number = -1, since_id: number = -1, abs_page: number = 1): Observable < any > {
-        let url = `${this.global.apiDomain}/v1/transactions/getassettransactions?` +
+        let url = `${this.global.apiDomain}/v1/transactions/gettransactions?` +
             `address=${address}&asset_id=${asset}&page_size=10&abs_page=${abs_page}`;
         if (max_id !== -1) {
             url += `&max_id=${max_id}`;

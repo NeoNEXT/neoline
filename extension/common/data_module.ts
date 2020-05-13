@@ -1,7 +1,7 @@
 export const NEO = '0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b';
 export const GAS = '0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7';
-export const mainApi = 'https://mainnet.api.neoline.cn';
-export const testApi = 'https://testnet.api.neoline.cn';
+export const mainApi = 'https://mobi.api.neoline.cn';
+export const testApi = 'https://tmobi.api.neoline.cn';
 type ArgumentDataType = 'String' | 'Boolean' | 'Hash160' | 'Hash256' | 'Integer' | 'ByteArray' | 'Array' | 'Address';
 export const ERRORS = {
     NO_PROVIDER: {

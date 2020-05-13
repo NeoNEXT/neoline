@@ -134,7 +134,7 @@ export class AssetState {
         });
     }
     public getRate(): Observable < any > {
-        return this.http.get(`${this.global.apiDomain}/v1_0_1/asset/exchange_rate`);
+        return this.http.get(`${this.global.apiDomain}/v1/asset/exchange_rate`);
     }
 
     public getAssetRate(coins: string): Observable < any > {
@@ -160,7 +160,7 @@ export class AssetState {
         if (targetCoins === '') {
             return of(rateRes);
         }
-        return this.http.get(`${this.global.apiDomain}/v1_0_1/asset/exchange_rate`).pipe(map(rateBalance => {
+        return this.http.get(`${this.global.apiDomain}/v1/asset/exchange_rate`).pipe(map(rateBalance => {
             const targetCoinsAry = targetCoins.split(',');
             targetCoinsAry.forEach(coin => {
                 let tempRate = {};

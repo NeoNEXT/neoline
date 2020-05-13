@@ -24,12 +24,12 @@ import { resolve } from 'url';
 @Injectable()
 export class HttpService {
 
-    private completeResUrl = ['/v1_0_1/asset/exchange_rate'];
+    private completeResUrl = ['/v1/asset/exchange_rate'];
     constructor(
         private http: HttpClient,
         private chrome: ChromeService,
         private global: GlobalService
-    ) {}
+    ) { }
 
     public getImage(url: string, lastModified = ''): Observable<any> {
         const tempHeader = {};
@@ -43,6 +43,7 @@ export class HttpService {
                 }, tempHeader);
             }));
         }
+        tempHeader['X-Request-Agent'] = this.global.getUseAgent();
         return from(new Promise((resolve, reject) => {
             const xhr = new XMLHttpRequest();
             xhr.responseType = 'blob';
@@ -63,7 +64,9 @@ export class HttpService {
         }));
     }
 
-    public get(url: string): Observable < any > {
+    public get(url: string): Observable<any> {
+        const tempHeader = {};
+        tempHeader['X-Request-Agent'] = this.global.getUseAgent();
         let tempUrl = url.slice(this.global.apiDomain.length);
         if (url.indexOf('?') >= 0) {
             tempUrl = url.slice(this.global.apiDomain.length, url.indexOf('?'));
@@ -83,7 +86,9 @@ export class HttpService {
                 });
             }));
         }
-        return this.http.get(url).pipe(map((res: any) => {
+        return this.http.get(url, {
+            headers: tempHeader
+        }).pipe(map((res: any) => {
             if (res && res.bool_status) {
                 if (this.completeResUrl.indexOf(tempUrl) >= 0) {
                     return res;
@@ -95,7 +100,9 @@ export class HttpService {
             }
         }));
     }
-    public post(url: string, data: any): Observable < any > {
+    public post(url: string, data: any): Observable<any> {
+        const tempHeader = {};
+        tempHeader['X-Request-Agent'] = this.global.getUseAgent();
         if (this.chrome.check) {
             return from(new Promise((resolve, reject) => {
                 this.chrome.httpPost(url, data, (res) => {
@@ -107,7 +114,9 @@ export class HttpService {
                 });
             }));
         }
-        return this.http.post(url, data).pipe(map((res: any) => {
+        return this.http.post(url, data, {
+            headers: tempHeader
+        }).pipe(map((res: any) => {
             if (res && res.bool_status) {
                 return res.data || res;
             } else {

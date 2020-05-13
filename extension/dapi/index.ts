@@ -690,7 +690,7 @@ function getProvider(): Promise<Provider> {
                 };
                 returnResult.name = res.name;
                 returnResult.version = res.version;
-                returnResult.website = 'https://neoline.cn/';
+                returnResult.website = 'https://neoline.io/';
                 returnResult.extra = res.extra;
                 resolveMain(returnResult);
             }

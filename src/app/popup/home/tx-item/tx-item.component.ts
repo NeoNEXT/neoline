@@ -26,7 +26,7 @@ export class PopupHomeTxItemComponent implements OnInit {
 
     public txDetail(txid: string) {
         // todo
-        if (this.global.apiDomain.match('main') !== null) {
+        if (this.global.apiDomain.match('tmobi') === null) {
             window.open(`https://neotube.io/transaction/${txid}`);
         } else {
             window.open(`https://testnet.neotube.io/transaction/${txid}`);
