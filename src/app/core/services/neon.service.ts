@@ -121,7 +121,7 @@ export class NeonService {
     public createWallet(key: string, name: string = null): Observable<any> {
         const privateKey = this.generatePrivateKey();
         const account = new wallet.Account(privateKey);
-        const w = Neon.create.wallet({ name: name || 'NEOLineUser' } as any);
+        const w = Neon.create.wallet({ name: name || 'NeoLineUser' } as any);
         w.addAccount(account);
         const wif = w.accounts[0].WIF;
         return from(w.accounts[0].encrypt(key)).pipe(map(() => {
@@ -194,7 +194,7 @@ export class NeonService {
      */
     public importPrivateKey(privKey: string, key: string, name: string = null): Observable<Wallet> {
         const account = new wallet.Account(privKey);
-        const w = Neon.create.wallet({ name: name || 'NEOLineUser' } as any);
+        const w = Neon.create.wallet({ name: name || 'NeoLineUser' } as any);
         w.addAccount(account);
         const wif = w.accounts[0].WIF;
         w.encrypt(0, key);
@@ -211,7 +211,7 @@ export class NeonService {
      */
     public importWIF(wif: string, key: string, name: string = null): Observable<Wallet> {
         const account = new wallet.Account(wallet.getPrivateKeyFromWIF(wif));
-        const w = Neon.create.wallet({ name: name || 'NEOLineUser' } as any);
+        const w = Neon.create.wallet({ name: name || 'NeoLineUser' } as any);
         w.addAccount(account);
         w.encrypt(0, key);
         return from(w.accounts[0].encrypt(key)).pipe(map(() => {
@@ -227,11 +227,11 @@ export class NeonService {
      */
     public importEncryptKey(encKey: string, key: string, name: string): Observable<Wallet> {
         return Observable.create((observer: Observer<Wallet>) => {
-            const w = Neon.create.wallet({ name: name || 'NEOLineUser' } as any);
+            const w = Neon.create.wallet({ name: name || 'NeoLineUser' } as any);
             w.addAccount(new wallet.Account(encKey));
             wallet.decrypt(encKey, key).then((wif) => {
                 const account = new wallet.Account(wallet.getPrivateKeyFromWIF(wif));
-                const returnRes = Neon.create.wallet({ name: name || 'NEOLineUser' } as any);
+                const returnRes = Neon.create.wallet({ name: name || 'NeoLineUser' } as any);
                 returnRes.addAccount(account);
                 returnRes.encrypt(0, key);
                 returnRes.accounts[0].encrypt(key).then(res => {
@@ -298,7 +298,7 @@ export class NeonService {
         if (payback > 0) {
             newTx.addOutput({ assetId, value: new Fixed8(payback), scriptHash: fromScript });
         }
-        const uniqTag = `from NEOLine at ${new Date().getTime()}`;
+        const uniqTag = `from NeoLine at ${new Date().getTime()}`;
         newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
         return newTx;
     }
@@ -319,7 +319,7 @@ export class NeonService {
             ]
         }) + 'f1';
         newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
-        const uniqTag = `from NEOLine at ${new Date().getTime()}`;
+        const uniqTag = `from NeoLine at ${new Date().getTime()}`;
         newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
         return newTx;
     }

@@ -1,6 +1,6 @@
-# 安装 NEOLine zip 包
+# 安装 NeoLine zip 包
 
-1. 到 https://github.com/NeoNextClub/neoline/releases 下载 NEOLine 最新版 zip 包，解压得到 neoline 文件夹。
+1. 到 https://github.com/NeoNextClub/neoline/releases 下载 NeoLine 最新版 zip 包，解压得到 neoline 文件夹。
 
 ![](https://github.com/NeoNextClub/neoline/blob/master/install/images/release_zip.png)
 

@@ -45,10 +45,10 @@
         "message": "Import"
     },
     "welcomeCreate": {
-        "message": "Welcome to NEOLine. Create"
+        "message": "Welcome to NeoLine. Create"
     },
     "welcomeImport": {
-        "message": "Welcome to NEOLine. Import"
+        "message": "Welcome to NeoLine. Import"
     },
     "enterWalletName": {
         "message": "Enter wallet name"
@@ -177,7 +177,7 @@
         "message": "New wallet"
     },
     "createTip": {
-        "message": "Welcome to NEOLine, create a new wallet."
+        "message": "Welcome to NeoLine, create a new wallet."
     },
     "logoutTip": {
         "message": "Are you sure close wallet?"
@@ -306,7 +306,7 @@
         "message": "Welcome back"
     },
     "loginTip": {
-        "message": "Welcome to NEOLine, please login first"
+        "message": "Welcome to NeoLine, please login first"
     },
     "pwdInput": {
         "message": "Please enter your password"
@@ -347,8 +347,8 @@
     "authDelAllTip": {
         "message": "Clear all authorized sites"
     },
-    "welcomeNEOLine": {
-        "message": "Welcome to NEOLine"
+    "welcomeNeoLine": {
+        "message": "Welcome to NeoLine"
     },
     "myAddress": {
         "message": "NEO address:"
@@ -399,10 +399,10 @@
         "message": "Rejected"
     },
     "rejectedTip": {
-        "message": "This site has been rejected to connect to your NEOLine wallet. Please go to Authorization Management and delete the corresponding record if you allow it to connect"
+        "message": "This site has been rejected to connect to your NeoLine wallet. Please go to Authorization Management and delete the corresponding record if you allow it to connect"
     },
     "connectedTip": {
-        "message": "Connected to NEOLine wallet allowed"
+        "message": "Connected to NeoLine wallet allowed"
     },
     "from": {
         "message": "From"

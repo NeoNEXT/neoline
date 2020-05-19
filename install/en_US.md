@@ -1,4 +1,4 @@
-# How to install NEOLine zip package
+# How to install NeoLine zip package
 
 1. Download the latest zip release from https://github.com/NeoNextClub/neoline/releases. Unzip neoline-xxx.zip and remember the unzipped neoline directory path.
 

@@ -207,7 +207,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                 });
                 window.close();
             }
-            const uniqTag = `from NEOLine at ${new Date().getTime()}`;
+            const uniqTag = `from NeoLine at ${new Date().getTime()}`;
             newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
             newTx.gas = new Fixed8(amount);
             resolve(newTx);

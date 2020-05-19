@@ -292,7 +292,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 newTx.inputs = this.assetIntentOverrides.inputs;
             }
             newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
-            const uniqTag = `from NEOLine at ${new Date().getTime()}`;
+            const uniqTag = `from NeoLine at ${new Date().getTime()}`;
             newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
             resolve(newTx);
         });

@@ -1,6 +1,6 @@
-# NEOLine Chrome Extension
+# NeoLine Chrome Extension
 
-NEOLine is a thin wallet chrome extension, it provides dapis for developers who want to interact easily with NEO blockchain.
+NeoLine is a thin wallet chrome extension, it provides dapis for developers who want to interact easily with NEO blockchain.
 
 ## Install
 

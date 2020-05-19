@@ -25,7 +25,7 @@ import { requestTarget, GetBalanceArgs, BalanceRequest, ERRORS, mainApi, testApi
 import { reverseHex, getScriptHashFromAddress } from '../common/utils';
 /**
  * Background methods support.
- * Call window.NEOLineBackground to use.
+ * Call window.NeoLineBackground to use.
  */
 declare var chrome;
 

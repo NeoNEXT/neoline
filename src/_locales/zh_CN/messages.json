@@ -45,10 +45,10 @@
         "message": "导入"
     },
     "welcomeCreate": {
-        "message": "欢迎来到 NEOLine. 创建"
+        "message": "欢迎来到 NeoLine. 创建"
     },
     "welcomeImport": {
-        "message": "欢迎来到 NEOLine. 导入"
+        "message": "欢迎来到 NeoLine. 导入"
     },
     "enterWalletName": {
         "message": "输入钱包名"
@@ -177,7 +177,7 @@
         "message": "新建钱包"
     },
     "createTip": {
-        "message": "欢迎来到 NEOLine, 请创建一个新钱包"
+        "message": "欢迎来到 NeoLine, 请创建一个新钱包"
     },
     "logoutTip": {
         "message": "确认关闭钱包吗？"
@@ -306,7 +306,7 @@
         "message": "欢迎回来"
     },
     "loginTip": {
-        "message": "欢迎来到 NEOLine，请先登录"
+        "message": "欢迎来到 NeoLine，请先登录"
     },
     "pwdInput": {
         "message": "请输入您的密码"
@@ -347,8 +347,8 @@
     "authDelAllTip": {
         "message": "清除所有批准数据"
     },
-    "welcomeNEOLine": {
-        "message": "欢迎来到 NEOLine"
+    "welcomeNeoLine": {
+        "message": "欢迎来到 NeoLine"
     },
     "myAddress": {
         "message": "我的 NEO 地址"
@@ -399,10 +399,10 @@
         "message": "已拒绝"
     },
     "rejectedTip": {
-        "message": "该站点已被拒绝连接到您的 NEOLine 钱包。若要再次授权，请前往授权管理删除对应记录。"
+        "message": "该站点已被拒绝连接到您的 NeoLine 钱包。若要再次授权，请前往授权管理删除对应记录。"
     },
     "connectedTip": {
-        "message": "已允许连接到 NEOLine 钱包"
+        "message": "已允许连接到 NeoLine 钱包"
     },
     "from": {
         "message": "来自"
