@@ -107,7 +107,7 @@ export class AssetState {
     }
 
     public fetchAll(page: number): Promise < any > {
-        return this.http.get(`${this.global.apiDomain}/v1/asset/getallassets?page_index=${page}`).toPromise();
+        return this.http.get(`${this.global.apiDomain}/v1/asset/getpluginsassets?page_index=${page}`).toPromise();
     }
 
     public searchAsset(query: string): Observable < any > {
