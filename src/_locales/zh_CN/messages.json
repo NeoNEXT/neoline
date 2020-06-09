@@ -162,7 +162,7 @@
         "message": "页"
     },
     "transferId": {
-        "message": "交易 ID"
+        "message": "交易ID"
     },
     "transferVolume": {
         "message": "交易额"

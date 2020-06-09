@@ -22,7 +22,7 @@
     </div>
     <div class="info-more-box" [hidden]="!show">
         <div class="id-box more-item">
-            <span class="title">交易ID</span>
+            <span class="title">{{'transferId' | translate | async}}</span>
             <button class="copy-btn" copy="tx-id-copy-{{txid}}" (onCopy)="copied()" (click)="$event.stopPropagation();"
                 alt="">
                 <img src="/assets/images/tx_copy.png" alt="">
