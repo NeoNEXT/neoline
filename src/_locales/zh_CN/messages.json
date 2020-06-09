@@ -275,6 +275,9 @@
     "added": {
         "message": "已添加"
     },
+    "myAccounts": {
+        "message": "我的钱包"
+    },
     "myAccount": {
         "message": "我的钱包"
     },

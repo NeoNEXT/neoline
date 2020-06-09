@@ -8,7 +8,7 @@
             <span class="name" *ngIf="walletIsOpen && wallet">{{ 'hello' | translate | async }}, {{wallet?.name}}</span>
         </div>
         <mat-menu #account="matMenu" class="nav-account-menu-box">
-            <p class="nav-account-menu-title">{{ 'myAccount' | translate | async }}</p>
+            <p class="nav-account-menu-title">{{ 'myAccounts' | translate | async }}</p>
             <div class="nav-account-item-box" *ngFor="let item of walletArr" (click)="chooseAccount(item)">
                 <div class="selected-icon">
                     <img [hidden]="!isActivityWallet(item)" src="/assets/images/select.png" />

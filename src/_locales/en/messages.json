@@ -275,8 +275,11 @@
     "added": {
         "message": "Added"
     },
-    "myAccount": {
+    "myAccounts": {
         "message": "My accounts"
+    },
+    "myAccount": {
+        "message": "My account"
     },
     "importWallet": {
         "message": "Import wallet"
