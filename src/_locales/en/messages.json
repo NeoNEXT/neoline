@@ -481,5 +481,8 @@
     },
     "authorized": {
         "message": "Authorized"
+    },
+    "systemSettings": {
+        "message": "System settings"
     }
 }
