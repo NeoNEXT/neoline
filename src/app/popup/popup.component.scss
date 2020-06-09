@@ -100,7 +100,7 @@
     .popup-nav-logo-img {
         margin-left: 107px;
         width: 84px;
-        @include bg($img-logo-title);
+        @include bg($img-login-logo);
     }
     .popup-nav-network {
         border-color: map-get($neo-line-default, 50);
