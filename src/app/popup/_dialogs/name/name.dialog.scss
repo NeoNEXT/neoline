@@ -18,24 +18,13 @@
 }
 
 .button-group {
+    min-width: 300px;
     button {
         width: 107px;
-        height: 35px;
-        border-radius: 4px;
     }
-
-    button.cancel {
-        margin-right: 32px;
-        box-shadow: 0px 4px 8px 0px rgba(87, 83, 245, 0.4);
-        color: map-get($neo-line-default, 500);
+    button:not(:first-of-type) {
+        margin-left: $space-xl;
     }
-
-    button.confirm {
-        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
-        box-shadow: 0px 4px 8px 0px rgba(87, 83, 245, 0.4);
-        color: map-get($neo-line-default, 50);
-    }
-
 }
 
 :host ::ng-deep .mat-form-field-appearance-legacy .mat-form-field-label {

@@ -1,94 +1,76 @@
 @import 'src/styles/theme-default';
 @import 'src/styles/popup-default';
 
+:host {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow-y: auto;
+}
 .logo {
-    text-align: center;
-    padding: $space*2 0;
-}
-.logo .icon {
-    width: 178px;
-    height: 117px;
-}
-.logo .name {
-    width: 148px;
-    height: 43px;
-    margin-top: $space;
-}
-.logo .version {
-    font-size: 14px;
-    margin-top: $space;
-    color: #666666;
+    margin-bottom: $space-lg;
+    border-radius: 8px;
+    position: relative;
+    img.bg {
+        width: 100%;
+    }
+    img.name {
+        position: absolute;
+        height: 30px;
+        top: 40px;
+        left: 50px;
+    }
+    .version {
+        position: absolute;
+        top: 100px;
+        left: 50px;
+        font-size: 14px;
+        margin-top: $space-xl;
+        font-weight: 400;
+        color: rgba(127, 137, 147, 1);
+    }
 }
 .blocks {
     text-align: center;
-}
-.blocks > div.home {
-    background-image: url('/assets/images/about_home.png');
-}
-.blocks > div.contact {
-    background-image: url('/assets/images/about_contact.png');
-}
-.blocks > div.terms {
-    background-image: url('/assets/images/about_terms.png');
-}
-.blocks > div.policy {
-    background-image: url('/assets/images/about_policy.png');
-}
-
-.blocks > div.home:hover {
-    background-image: url('/assets/images/about_home_active.png');
-}
-.blocks > div.contact:hover {
-    background-image: url('/assets/images/about_contact_active.png');
-}
-.blocks > div.terms:hover {
-    background-image: url('/assets/images/about_terms_active.png');
-}
-.blocks > div.policy:hover {
-    background-image: url('/assets/images/about_policy_active.png');
-}
-.blocks > div {
-    vertical-align: top;
-    display: inline-block;
-    width: 325px;
-    height: 158px;
-    margin: $space;
-    background-size: contain;
-    background-repeat: no-repeat;
-    transition: 0.2s;
-    cursor: pointer;
-}
-
-.blocks div {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    p {
-        position: absolute;
-        left: 120px;
-        width: 200px;
-        font-size: 24px;
-        font-weight: 500;
-        color: map-get($colors, 282828);
+    .block-item {
+        display: inline-block;
+        width: 374px;
+        height: 142px;
+        line-height: 142px;
+        padding-left: 100px;
+        background-size: contain;
+        background-repeat: no-repeat;
+        border-radius: 10px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 400;
+        color: rgba(67, 69, 67, 1);
+        &.home,
+        &.terms {
+            margin-right: 14px;
+            margin-bottom: 14px;
+        }
+        &:hover {
+            box-shadow: 0px 30px 50px 0px rgba(6, 204, 171, 0.1);
+        }
+    }
+    .home {
+        background-image: url('/assets/images/about_home.png');
+    }
+    .contact {
+        background-image: url('/assets/images/about_contact.png');
+    }
+    .terms {
+        background-image: url('/assets/images/about_terms.png');
+    }
+    .policy {
+        background-image: url('/assets/images/about_policy.png');
     }
 }
 
 @media screen and (max-width: 1200px) {
-    .logo .icon {
-        width: 150px;
-        height: 99px;
-    }
-    .logo .name {
-        width: 120px;
-        height: 35px;
-    }
-    .blocks > div {
-        width: 250px;
-        height: 121px;
-    }
-    .blocks div p {
-        left: 100px;
-        width: 150px;
-        font-size: 18px;
+    .blocks .block-item, .blocks .block-item.home, .blocks .block-item.terms {
+        margin: 0;
+        margin-bottom: 14px;
     }
 }

@@ -34,7 +34,8 @@ export interface Transaction {
     id: number;
     size: number;
     txid: string;
-    value: string;
+    value: any;
+    net_fee?: any;
 }
 
 export interface UTXO {

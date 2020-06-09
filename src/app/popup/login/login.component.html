@@ -1,8 +1,13 @@
 <div class="popup-login-logo">
-    <div class="pupup-login-logo-small"></div>
-    <div class="popup-login-welcome">{{ 'welcomeBack' | translate | async}}</div>
+    <div class="popup-login-welcome">
+        {{ 'welcomeBack' | translate | async}}
+        <img src="/assets/images/popup_logo.png" class="bg-logo" alt="">
+    </div>
+    <div class="popup-login-tip">
+        <img src="/assets/images/popup_login_bg.png" class="bg" alt="">
+        <div class="tip-content">{{ 'loginTip' | translate | async}}：</div>
+    </div>
 
-    <div class="popup-login-tip">{{ 'loginTip' | translate | async}}：</div>
     <form #loginForm="ngForm">
         <mat-form-field class="popup-login-input">
             <img matPrefix src="../../../assets/images/lock.png" alt="" />

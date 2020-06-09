@@ -56,10 +56,10 @@ implements OnChanges, OnInit, AfterViewChecked, OnDestroy {
 
     private filterContainerScrollWidth: number;
     private filterMargin: number;
-    private selectedFilterIndex: number;
+    selectedFilterIndex: number;
     private moreStyleTop: number;
     private topHeight: number;
-    private moreOpen: boolean;
+    moreOpen: boolean;
     public unSubBalance: Unsubscribable;
 
     constructor(

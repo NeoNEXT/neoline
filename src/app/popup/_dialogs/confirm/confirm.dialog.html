@@ -1,6 +1,8 @@
 <p class="title">{{ msg | translate | async }}</p>
 
 <section class="button-group">
-    <button [mat-dialog-close]="false" autofocus mat-button class="cancel" (click)=cancel()>{{ 'cancel' | translate | async}}</button>
-    <button [mat-dialog-close]="true" mat-button class="confirm" (click)=enter()>{{ 'yes' | translate | async }}</button>
+    <button [mat-dialog-close]="false" autofocus mat-stroked-button color="primary"
+        (click)=cancel()>{{ 'cancel' | translate | async}}</button>
+    <button [mat-dialog-close]="true" mat-raised-button color="primary"
+        (click)=enter()>{{ 'yes' | translate | async }}</button>
 </section>

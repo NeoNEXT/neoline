@@ -1,7 +1,7 @@
 @import 'src/styles/theme-default';
 
 .popup-page {
-    background-color: RGBA(81, 91, 227, 0.95);
+    background: map-get($neo-line-default, 500);
     height: 40px;
     width: 375px;
     text-align: center;

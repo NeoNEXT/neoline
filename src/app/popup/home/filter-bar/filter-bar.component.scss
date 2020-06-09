@@ -130,7 +130,7 @@
     max-height: 500px;
     background-color: map-get($neo-line-default, 50);
     border-bottom: 1px solid map-get($colors, f2f2f2);
-    box-shadow: 0 3px 3px 0 rgba(81, 91, 227, 0.08);
+    box-shadow: 0 3px 3px 0 map-get($neo-line-default, 200);
 
     div {
         cursor: pointer;

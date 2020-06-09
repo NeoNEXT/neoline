@@ -1,31 +1,29 @@
-<div class="login">
-    <mat-toolbar>
-        <div class="nav flex">
-            <div class="flex-1">
-                <img class="logo" src="/assets/images/logo.png" />
-                <img class="logo-title" src="/assets/images/about/about-logo.png" />
-            </div>
+<div class="login flex">
+    <div class="login-bg">
+        <img class="logo" src="/assets/images/login_logo.png" />
+    </div>
+    <img src="/assets/images/login_bg.png" class="bg" alt="">
+    <div class="login-body flex-1">
+        <div class="nav">
             <button mat-stroked-button class="nav-network" [matMenuTriggerFor]="menu">
-                {{ 'mainNet' | translate | async }}
                 <span class="nav-network-icon"></span>
+                {{ 'mainNet' | translate | async }}
             </button>
             <mat-menu #menu="matMenu">
                 <button mat-menu-item>{{ 'mainNet' | translate | async }}</button>
             </mat-menu>
         </div>
-    </mat-toolbar>
-
-    <div class="login-content">
-        <img src="/assets/images/logo_bg.png" class="login-left-bg" alt="">
-        <div class="login-body">
+        <div class="login-content">
             <h1>{{ 'login' | translate | async}}</h1>
             <h3>{{ 'loginTip' | translate | async}}：</h3>
             <form #loginForm="ngForm">
                 <mat-form-field class="login-input">
                     <img matPrefix src="../../../assets/images/lock.png" alt="" />
-                    <input matInput [placeholder]="'pwdInput' | translate | async" [minlength]="limit.passwordLimitation[0]" [maxlength]="limit.passwordLimitation[1]"
-                        [pattern]="limit.pattern" [minlength]="limit.passwordLimitation[0]" [maxlength]="limit.passwordLimitation[1]"
-                        [pattern]="limit.pattern" name="password" #password="ngModel" required [(ngModel)]="wallet.password"
+                    <input matInput [placeholder]="'pwdInput' | translate | async"
+                        [minlength]="limit.passwordLimitation[0]" [maxlength]="limit.passwordLimitation[1]"
+                        [pattern]="limit.pattern" [minlength]="limit.passwordLimitation[0]"
+                        [maxlength]="limit.passwordLimitation[1]" [pattern]="limit.pattern" name="password"
+                        #password="ngModel" required [(ngModel)]="wallet.password"
                         [type]="hidePwd ? 'password' : 'text'"
                         (keyup.enter)="(!isInit && !loginForm.invalid && !loading) ? login() : null " />
                     <button mat-button matSuffix mat-icon-button type="button" (click)="togglePwd()">
@@ -40,9 +38,9 @@
                     </mat-error>
                 </mat-form-field>
             </form>
-            <button mat-raised-button color="primary" class="login-btn" [disabled]="isInit || loginForm.invalid || loading"
-                (click)="login()">
-                <ng-container *ngIf="!loading">{{ 'login' | translate | async}}</ng-container>
+            <button mat-raised-button color="primary" class="login-btn"
+                [disabled]="isInit || loginForm.invalid || loading" (click)="login()">
+                <img *ngIf="!loading" src="/assets/images/login_arrow.png" alt="">
                 <ng-container *ngIf="loading">{{ 'logining' | translate | async}}</ng-container>
             </button>
         </div>

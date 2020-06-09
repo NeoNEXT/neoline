@@ -354,7 +354,7 @@
         "message": "NEO address:"
     },
     "myQRCode": {
-        "message": "Address QR code:"
+        "message": "Address QR code"
     },
     "setLang": {
         "message": "Languages"
@@ -472,5 +472,8 @@
     },
     "darkMode": {
         "message": "Dark Mode"
+    },
+    "myTokens": {
+        "message": "my Tokens"
     }
 }

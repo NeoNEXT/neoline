@@ -8,7 +8,6 @@
     font-weight: 500;
 }
 
-
 .popup-setting-account {
     width: 345px;
     margin: 3px auto auto auto;
@@ -27,9 +26,9 @@
             height: 62px;
 
             div {
-                width: 15px;
-                height: 9px;
-                margin: 26px auto;
+                width: 18px;
+                height: 18px;
+                margin: 22px auto;
                 @include bg($img-select);
             }
 
@@ -72,7 +71,6 @@
 
                 .popup-setting-asset-value {
                     font-size: 12px;
-                    // color: map-get($colors, 7a87a9);
                 }
             }
 
@@ -85,7 +83,7 @@
 
                     .menu-btn {
                         width: 15px;
-                        height: 3px;
+                        height: 15px;
                         display: inline-block;
                         visibility: visible;
                         @include bg($img-omi);
@@ -129,8 +127,8 @@ hr {
         }
 
         div:first-child {
-            width: 15px;
-            height: 15px;
+            width: 18px;
+            height: 18px;
             margin-top: 17px;
             margin-right: 23px;
             margin-left: 13px;
@@ -180,8 +178,8 @@ hr {
     }
 
     div:first-child:empty {
-        width: 15px;
-        height: 15px;
+        width: 18px;
+        height: 18px;
         margin-top: 17px;
         margin-left: 13px;
         margin-right: 23px;
@@ -214,8 +212,8 @@ hr {
         text-align: center;
         margin: 18px auto;
         float: right;
-        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
-        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+        background: linear-gradient(90deg, rgba(140, 216, 210, 1), rgba(6, 204, 171, 1));
+        box-shadow: 0 4px 8px 0 map-get($neo-line-default, 200);
         color: map-get($neo-line-default, 50);
     }
 }
@@ -239,7 +237,7 @@ hr {
             font-size: 12px;
             float: right;
             cursor: pointer;
-            color: #7178DD;
+            color: map-get($colors, 71dbc4);
         }
     }
 

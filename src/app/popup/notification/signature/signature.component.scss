@@ -11,8 +11,7 @@
         border-radius: 10px;
         position: relative;
         padding: 20px 22px 12px 22px;
-        background: rgba(244, 247, 252, 1);
-        box-shadow: 0px 3px 13px 0px rgba(81, 91, 227, 0.3);
+        box-shadow: 0px 3px 13px 0px map-get($neo-line-default, 300);
 
         .avatar {
             border-radius: 6px;
@@ -23,7 +22,7 @@
             left: 50%;
             margin-left: -24px;
             background: rgba(73, 73, 73, 1);
-            box-shadow: 0px 3px 13px 0px rgba(81, 91, 227, 0.3);
+            box-shadow: 0px 3px 13px 0px map-get($neo-line-default, 300);
         }
 
         .request {
@@ -69,7 +68,7 @@
                 margin-top: 15px;
                 margin-bottom: 10px;
                 background: rgba(122, 135, 169, 1);
-                color: map-get($colors, f4f7fc);
+                color: map-get($colors, f7f8f9);
             }
 
             span.name,
@@ -91,11 +90,10 @@
                 .type {
                     font-size: 12px;
                     font-weight: bold;
-                    color:map-get($colors, 9fa8bd);
+                    color: map-get($colors, 9fa8bd);
                 }
             }
         }
-
     }
 }
 
@@ -106,8 +104,8 @@
     font-size: 12px;
     font-weight: bold;
     text-align: center;
-    background: map-get($colors, f3f2ff);
-    color: map-get($colors, 7178dd);
+    background: #f7fbf9;
+    color: #71dbc4;
 }
 
 .message {
@@ -153,15 +151,15 @@
     }
 
     button.cancel {
-        box-shadow: 0px 2px 8px 0px rgba(87, 83, 245, 0.4);
+        box-shadow: 0px 2px 8px 0px map-get($neo-line-default, 300);
         color: map-get($neo-line-default, 500);
     }
 
     button.confirm {
         position: absolute;
         right: 0;
-        box-shadow: 0px 5px 8px 0px rgba(87, 83, 245, 0.4);
-        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        box-shadow: 0px 5px 8px 0px map-get($neo-line-default, 300);
+        background: linear-gradient(0deg, rgba(6, 204, 171, 1), rgba(140, 216, 210, 1));
         color: map-get($neo-line-default, 50);
     }
 }

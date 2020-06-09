@@ -76,7 +76,7 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
         });
     }
 
-    private init() {
+    init() {
         this.walletImport = new WalletImport();
         this.limit = WalletInitConstant;
         this.loading = false;

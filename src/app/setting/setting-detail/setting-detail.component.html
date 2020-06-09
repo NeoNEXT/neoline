@@ -13,7 +13,7 @@
             <p class="title">{{ 'clearCache' | translate | async}}</p>
             <p class="tip">{{ 'clearCacheTip' | translate | async}}</p>
         </div>
-        <button class="option-btn" (click)="clearCache()" mat-button>{{ 'clearCacheBtn' | translate | async}}</button>
+        <button class="option-btn" color="primary" mat-raised-button (click)="clearCache()">{{ 'clearCacheBtn' | translate | async}}</button>
     </div>
 </section>
 <section class="rate">
@@ -47,8 +47,8 @@
                     </span>
                 </p>
             </div>
-            <button class="option-btn" (click)="delAllSite()"
-                mat-button>{{ 'clearPrivacyDataBtn' | translate | async}}</button>
+            <button class="option-btn" color="primary" (click)="delAllSite()"
+                mat-raised-button>{{ 'clearPrivacyDataBtn' | translate | async}}</button>
         </div>
         <div class="privacy-group" *ngIf="viewPrivacy">
             <div class="empty" *ngIf="authorizationList.length == 0">
@@ -67,7 +67,7 @@
                         <span></span>
                         {{ item.status ? '已授权' : '已拒绝' }}
                     </div>
-                    <div class="delete" (click)="delSite(key)">
+                    <div class="delete" (click)="delSite(item.key)">
                         <span></span>
                         {{ 'delete' | translate | async }}
                     </div>

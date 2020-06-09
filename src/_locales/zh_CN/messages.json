@@ -472,5 +472,8 @@
     },
     "darkMode": {
         "message": "暗夜模式"
+    },
+    "myTokens": {
+        "message": "我的Tokens"
     }
 }

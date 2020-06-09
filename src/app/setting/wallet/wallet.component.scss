@@ -1,6 +1,12 @@
 @import 'src/styles/theme-default';
 @import 'src/styles/popup-default';
 
+:host {
+    display: block;
+    height: 100%;
+    background: #fff;
+}
+
 .my-wallet-box {
     padding: 47px 20px 0 40px;
     overflow: auto;
@@ -33,8 +39,8 @@
             height: 80px;
 
             div {
-                width: 20px;
-                height: 15px;
+                width: 18px;
+                height: 18px;
                 margin: 35px auto;
                 @include bg($img-select);
             }

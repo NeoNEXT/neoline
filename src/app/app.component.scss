@@ -5,10 +5,14 @@
     overflow: auto;
 }
 
+.mat-toolbar {
+    background: #fdfdfd;
+}
 .nav {
     width: 100%;
-    max-width: 1200px;
+    max-width: 1100px;
     margin: 0 auto;
+    transform: translateX(40px);
     align-items: center;
 
     .nav-account-box {
@@ -20,7 +24,7 @@
             font-size: 16px;
             margin: 0 30px 0 15px;
             vertical-align: middle;
-            color: #fff;
+            color: #303433;
         }
 
         .avatar {
@@ -35,7 +39,7 @@
     .nav-account-menu-title {
         font-size: 14px;
         margin-left: 16px;
-        color: #484E6D;
+        color: #484e6d;
     }
 
     .nav-account-item-box {
@@ -43,7 +47,7 @@
         line-height: 50px;
 
         &:hover {
-            background-color: #F4F7FC;
+            background-color: #f7fbf9;
         }
 
         .selected-icon {
@@ -75,7 +79,7 @@
                 margin-left: 8px;
                 vertical-align: middle;
                 font-size: 14px;
-                color: #484E6D;
+                color: #484e6d;
             }
         }
     }
@@ -89,7 +93,7 @@
         cursor: pointer;
 
         &:hover {
-            background-color: #F4F7FC;
+            background-color: #f7fbf9;
         }
 
         img {
@@ -102,52 +106,53 @@
         span {
             font-size: 14px;
             margin-left: 20px;
-            color: #484E6D;
+            color: #484e6d;
         }
     }
 }
 
-.nav .logo {
-    width: 48px;
-    height: 32px;
-    vertical-align: middle;
-    margin-left: 15px;
-}
-
 .nav .logo-title {
-    margin-left: 15px;
-    width: 136px;
-    height: 40px;
+    margin-left: 6px;
+    width: 122px;
     vertical-align: middle;
 }
 
 .nav-network {
-    width: 107px;
-    height: 25px;
-    line-height: 25px;
-    border-radius: 12px;
-    font-size: 12px;
+    width: 140px;
+    height: 36px;
+    border: 0px solid rgba(206, 209, 218, 1);
+    border-radius: 18px;
+    font-size: 14px;
+    color: #afb6be;
     border: 1px solid !important;
-    border-color: white;
 
     .nav-network-icon {
-        width: 5px;
-        height: 3px;
         display: inline-block;
+        width: 13px;
+        height: 14px;
         background: url('/assets/images/net_dropdown_white.png') no-repeat center;
         background-size: 100%;
+        margin-right: 9px;
+        margin-bottom: 4px;
     }
 }
 
 .body {
-    width: 1200px;
-    height: 768px;
+    width: 1100px;
+    height: calc(100% - 112px);
     margin-left: auto;
     margin-right: auto;
+    margin-top: 24px;
     margin-bottom: 15px;
+    transform: translateX(40px);
     z-index: 10;
-    overflow: hidden;
-    background-color: #fff;
+    &.expand {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        transform: none;
+        background-color: #fff;
+    }
 }
 
 @media screen and (max-width: 1200px) {
@@ -157,7 +162,6 @@
 
     .body {
         width: 937px;
-        height: 600px;
     }
 }
 
@@ -165,33 +169,20 @@
     .nav {
         max-width: none;
     }
-
-    .body {
-        width: 100%;
-        height: 100%;
-        margin-bottom: 0px;
-    }
-}
-
-@media screen and (min-width: 961px) {
-    .body.expand {
-        border-radius: 8px;
-        margin-top: -8px;
-        @include box-shadow(0px 0px 16px #484e6d, 0px 1px 12px 0px rgba(35, 35, 56, 0.3));
-    }
 }
 
 .side-nav {
-    width: 75px;
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
+    width: 80px;
     z-index: 6;
-    @include background-color(#f4f7fc, $bg-auxiliary-dark);
+    padding-top: 200px;
+    background-color: #fff;
 }
 
-.side-nav {
-    padding-top: 75px;
-}
-
-.side-nav>div {
+.side-nav > div {
     margin: 0 auto $space auto;
     height: 60px;
     width: 60px;
@@ -203,7 +194,7 @@
 
     &.active {
         background: mat-color($default-app-primary);
-        @include box-shadow(0 0 $space #969696, 0px 1px 12px 0px rgba(0,11,131,0.3));
+        @include box-shadow(0 0 $space #969696, 0px 1px 12px 0px rgba(0, 11, 131, 0.3));
 
         p {
             color: #fff;
@@ -211,27 +202,27 @@
     }
 }
 
-.side-nav>div img {
+.side-nav > div img {
     height: 27px;
     width: 27px;
 }
 
-.side-nav>div:not(.active) img {
+.side-nav > div:not(.active) img {
     display: none;
 }
 
-.side-nav>div:not(.active) img:not(.active) {
+.side-nav > div:not(.active) img:not(.active) {
     display: inline-block;
 }
 
-.side-nav>div.active img.active {
+.side-nav > div.active img.active {
     display: inline-block;
 }
 
-.side-nav>div.active img:not(.active) {
+.side-nav > div.active img:not(.active) {
     display: none;
 }
 
-.side-nav>div:hover {
+.side-nav > div:hover {
     cursor: pointer;
 }

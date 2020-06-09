@@ -3,31 +3,48 @@
 
 .popup-login-logo {
     width: 100%;
-    @include bg($img-login-bg);
-    background-position-y: top;
     overflow: visible;
     border-top: 1px solid map-get($neo-line-default, 500);
-
-    .pupup-login-logo-small {
-        width: 129px;
-        height: 92px;
-        margin: 35px auto 50px auto;
-        @include bg($img-popup-logo);
+    .popup-login-welcome {
+        height: 159px;
+        padding: 36px 42px;
+        background: map-get($neo-line-default, 500);
+        font-size: 30px;
+        font-weight: bold;
+        color: #fff;
+        position: relative;
+        img.bg-logo {
+            position: absolute;
+            bottom: -38px;
+            right: 27px;
+            width: 110px;
+            z-index: 9999;
+        }
     }
-}
-
-.popup-login-welcome {
-    font-size: 25px;
-    font-weight: bold;
-    text-align: center;
-    margin-top: -25px;
-}
-
-.popup-login-tip {
-    font-size: 14px;
-    font-weight: 500;
-    margin-left: 52px;
-    margin-top: 30px;
+    .popup-login-tip {
+        background: map-get($neo-line-default, 500);
+        position: relative;
+        &::before {
+            content: '';
+            position: absolute;
+            height: 60%;
+            width: 100%;
+            bottom: 0;
+            border-radius: 20px 20px 0 0;
+            background-color: #fff;
+        }
+        img.bg {
+            width: 100%;
+        }
+        .tip-content {
+            position: absolute;
+            bottom: 6px;
+            left: 42px;
+            font-size: 14px;
+            color: #434543;
+            font-weight: 400;
+        }
+    }
 }
 
 .popup-login-input {
@@ -68,7 +85,7 @@
     // background: map-get($neo-line-default, 500);
     border-radius: 40px;
     display: block;
-    box-shadow: 0 2px 4px 0 rgba(87,83,245,0.4);
+    box-shadow: 0 2px 4px 0 map-get($neo-line-default, 200);
 }
 .popup-login-or {
     font-size: 13px;

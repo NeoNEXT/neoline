@@ -1,4 +1,5 @@
 @import 'src/styles/popup-default';
+@import 'src/styles/theme-default';
 
 .popup-wallet-body-title {
     font-size: 23px;
@@ -38,7 +39,6 @@
 
         span.hide-pwd {
             @include bg($img-hide-pwd);
-
         }
     }
 }
@@ -62,11 +62,10 @@
     margin-top: 15px;
     margin-bottom: 18px;
     @include button-common;
-    box-shadow: 0 2px 4px 0 rgba(87, 83, 245, 0.4);
-
+    box-shadow: 0 2px 4px 0 map-get($neo-line-default, 300);
 }
 
 .popup-wallet-body-cancel {
     @include button-common;
-    box-shadow: 0 2px 4px 0 rgba(87, 83, 245, 0.4);
+    box-shadow: 0 2px 4px 0 map-get($neo-line-default, 300);
 }

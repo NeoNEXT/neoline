@@ -38,6 +38,7 @@ html, body {
     height: 100%;
 }
 body {
+    background: #f8f8f8;
     margin: 0;
     font-family: Roboto, "Helvetica Neue", sans-serif;
     &[data-theme-style="dark-theme"] {

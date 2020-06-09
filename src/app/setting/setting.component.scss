@@ -7,82 +7,57 @@
     display: flex;
     height: 100%;
 }
-.nav {
-    width: 300px;
-    border-top-right-radius: 8px;
-    border-bottom-right-radius: 8px;
+
+.content-left {
+    width: 320px;
     height: 100%;
-    z-index: 5;
-    box-shadow: 0 8px 16px #484e6d;
-}
-.menu {
-    padding: 0 $space*2;
-    font-size: 14px;
-    cursor: pointer;
-    transition: 0.2s;
-    height: 60px;
-    position: relative;
-    line-height: 60px;
-    color: #282828;
-}
-
-.menu:hover, .nav .menu.active {
-    background: #F4F7FC;
-}
-
-.menu.disabled {
-    cursor: not-allowed;
-    color: #666666;
-}
-.menu .cursor {
-    width: 4px;
-    height: 40px;
-    position: absolute;
-    right: 0;
-    top: 10px;
-    display: none;
-    background: mat-color($default-app-primary);
-}
-.menu.active .cursor {
-    display: block;
-}
-.body {
-    -webkit-box-flex: 1;
-    flex: 1;
-}
-
-.menu {
-    .setting-dropdown {
-        width: 8px;
-        height: 4px;
-        display: inline-block;
-        position: absolute;
-        top: 50%;
-        margin-top: -2px;
-        margin-left: 9px;
-        transition: transform .4s;
-        @include bg($img-dropdown);
-    }
-}
-.setting-dropdown.down-setting {
-    transform: rotate(0deg);
-}
-.setting-dropdown.up-setting {
-    transform: rotate(180deg);
-}
-.setting {
-    .detail-item {
-        height: 50px;
-        line-height: 50px;
-        font-size: 14px;
+    margin-right: $space;
+    & > .title {
+        font-size: 20px;
         font-weight: 500;
-        padding-left: 48px;
-        color: map-get($colors, 666666);
+        color: rgba(48, 52, 51, 1);
+        margin-bottom: $space-lg;
+        margin-left: $space-sm;
+    }
+    .nav {
+        background-color: #fff;
+        border-radius: 10px;
+        .menu {
+            padding: 0 $space * 2;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            height: 60px;
+            position: relative;
+            line-height: 60px;
+            color: #282828;
+            &:hover,
+            &.active {
+                background: #f7fbf9;
+            }
+
+            &.disabled {
+                cursor: not-allowed;
+                color: #666666;
+            }
+            .cursor {
+                width: 4px;
+                height: 40px;
+                position: absolute;
+                right: 0;
+                top: 10px;
+                display: none;
+                background: mat-color($default-app-primary);
+            }
+            &.active .cursor {
+                display: block;
+            }
+        }
     }
 }
 
 @media screen and (max-width: 1200px) {
-    .nav {
+    .content-left {
         width: 240px;
     }
 }

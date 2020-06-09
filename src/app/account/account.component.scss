@@ -1,139 +1,113 @@
 @import 'src/styles/theme-default';
 @import 'src/styles/popup-default';
 
-.nav {
-    height: 240px;
-    position: relative;
-    background: mat-color(mat-palette($neo-line-default, A400));
+.content {
+    height: 100%;
 }
-
-.nav .nav-account {
-    position: absolute;
-    bottom: -$space;
-    left: 60px;
-    display: inline-flex;
-    align-items: center;
-}
-
-.nav .avatar {
-    width: 118px;
-    height: 118px;
-    border-radius: 118px;
-    background: #E4E7EC;
-}
-
-.nav .name {
-    margin-left: 22px;
-    font-size: 20px;
-    color: #FFFFFF;
-
-}
-
-.nav .modify-name {
-    width: 23px;
-    height: 23px;
-    margin-left: 17px;
-    cursor: pointer;
-    @include bg($img-edit);
-}
-
-.welcome {
-    position: relative;
-    margin: 60px;
-    border-radius: 8px;
-    background: #F4F7FC;
-}
-
-.welcome img {
-    width: 209px;
-    height: 136px;
-    position: absolute;
-    bottom: 0;
-    right: $space*2;
-}
-
-.welcome .info {
-    padding: $space*2 230px $space*2 $space*2;
-}
-
-.welcome .info p.title {
-    font-size: 24px;
-    color: #484E6D;
-}
-
-.welcome .info p.content {
-    font-size: 14px;
-    margin-top: $space;
-    color: #9FA8BD;
-}
-
-.body {
-    align-items: center;
-}
-
-.address {
-    padding: 0 60px;
-}
-
-.address .title {
-    font-size: 18px;
-    color: #333333;
-}
-
-#account-address {
-    padding: $space;
-    border-radius: 4px;
-    margin: $space*2 0;
-    font-size: 14px;
-    display: block;
-    width: 100%;
-    resize: none;
-    border: 1px solid #E5E5E5;
-    color: #484E6D;
-}
-
-.address button {
-    border-radius: 50px;
-}
-
-.address button:not(:first-of-type) {
-    margin-left: $space;
-}
-
-.qrcode .title {
-    font-size: 18px;
-    color: #333333;
-}
-
-#qrcode {
-    display: block;
-    margin: $space auto;
-    width: 178px;
-    height: 178px;
-    background: #E4E7EC;
-}
-
-@media screen and (max-width: 1200px) {
-    .nav {
-        height: 150px;
+.content-left {
+    width: 320px;
+    margin-right: $space;
+    & > .title {
+        font-size: 20px;
+        font-weight: 500;
+        color: rgba(48, 52, 51, 1);
+        margin-bottom: $space-lg;
+        margin-left: $space-sm;
     }
-
-    .nav .avatar {
-        width: 78px;
-        height: 78px;
-        border-radius: 78px;
-        left: 40px;
+    .account {
+        width: 100%;
+        height: 350px;
+        background: rgba(255, 255, 255, 1);
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        img {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            margin-bottom: $space-lg;
+        }
+        .name {
+            font-size: 20px;
+            font-weight: bold;
+            color: rgba(48, 52, 51, 1);
+            margin-bottom: $space;
+        }
+        .modify-name {
+            border-radius: 23px;
+        }
     }
-
-    .nav .name {
-        left: 133px;
-    }
-
+}
+.content-right {
+    height: 100%;
+    overflow-y: auto;
     .welcome {
-        margin: 40px;
+        line-height: 1;
+        background: mat-color(mat-palette($neo-line-default, 500));
+        border-radius: 10px;
+        padding: $space-xl;
+        margin-bottom: $space;
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            color: mat-color(mat-palette($neo-line-default, 50));
+            margin-bottom: $space;
+            display: flex;
+            img {
+                margin-right: $space-sm;
+            }
+        }
+        .desc {
+            font-size: 14px;
+            font-weight: bold;
+            color: rgba(239, 239, 239, 1);
+        }
     }
-
     .address {
-        padding: 0 40px;
+        background: mat-color(mat-palette($neo-line-default, 50));
+        border-radius: 10px;
+        padding: $space-xl;
+        & > .title {
+            font-size: 16px;
+            font-weight: 500;
+            color: rgba(67, 69, 67, 1);
+            margin-bottom: $space-lg;
+            margin-left: $space-sm;
+        }
+        #account-address {
+            padding: $space;
+            margin: $space-lg 0;
+            font-size: 14px;
+            display: block;
+            width: 100%;
+            resize: none;
+            color: #484e6d;
+            border: 1px solid rgba(242, 242, 242, 1);
+            border-radius: 5px;
+        }
+        .btn-group {
+            border-bottom: 1px solid #f2f2f2;
+            padding-bottom: $space-xl;
+            button:not(:first-of-type) {
+                margin-left: $space;
+            }
+        }
+        .qrcode-group {
+            text-align: center;
+            padding-top: 100px;
+            #qrcode {
+                width: 160px;
+                height: 160px;
+                margin: 0 auto;
+            }
+            .qrcode-title {
+                margin-top: $space-lg;
+                font-size: 14px;
+                font-weight: 400;
+                color: rgba(127, 137, 147, 1);
+            }
+        }
     }
 }

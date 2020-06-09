@@ -60,8 +60,8 @@
                 .websit-title {
                     font-size: 13px;
                     white-space: nowrap;
-                    overflow:hidden;
-                    text-overflow:ellipsis;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
                     max-width: 135px;
                     display: inline-block;
                     vertical-align: middle;
@@ -74,13 +74,13 @@
                     border-radius: 10px;
                     font-size: 10px;
                     &.success {
-                        color: #7178DD;
-                        background: #F4F7FC url($img-authorization-success) no-repeat 6px;
+                        color: #71dbc4;
+                        background: #f7fbf9 url($img-authorization-success) no-repeat 6px;
                         background-size: 8px;
                     }
                     &.fail {
                         color: #999999;
-                        background: #F2F2F2 url($img-authorization-fail) no-repeat 6px;
+                        background: #f2f2f2 url($img-authorization-fail) no-repeat 6px;
                         background-size: 8px;
                     }
                 }
@@ -89,19 +89,18 @@
                 max-width: 200px;
                 font-size: 12px;
                 white-space: nowrap;
-                overflow:hidden;
-                text-overflow:ellipsis;
+                overflow: hidden;
+                text-overflow: ellipsis;
                 color: #999999;
             }
         }
         .remove-btn {
             padding: 4px 10px;
-            border-radius:2px;
+            border-radius: 2px;
             font-size: 12px;
-            color: #7A87A9;
-            border: 1px solid rgba(122,135,169,1);
+            color: #7a87a9;
+            border: 1px solid rgba(122, 135, 169, 1);
         }
-
     }
     .clear-all {
         width: 100%;
@@ -111,8 +110,8 @@
         line-height: 50px;
         text-align: center;
         font-size: 14px;
-        background: #F3F2FF;
-        color: #7178DD;
+        background: #fbf7f8;
+        color: #71dbc4;
         img {
             width: 12px;
             height: 12px;
@@ -124,5 +123,3 @@
         }
     }
 }
-
-

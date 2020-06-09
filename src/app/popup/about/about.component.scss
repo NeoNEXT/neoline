@@ -1,19 +1,11 @@
 @import 'src/styles/popup-default';
 
-.popup-about-logo1 {
-    width: 109px;
-    height: 71px;
-    margin: auto;
+.popup-about-logo {
+    text-align: center;
     margin-top: 15px;
-    @include bg($img-logo);
-}
-
-.popup-about-logo2 {
-    width: 85px;
-    height: 25px;
-    margin: auto;
-    margin-top: 10px;
-    @include bg($img-about-logo);
+    img {
+        height: 30px;
+    }
 }
 
 .popup-about-version {
@@ -30,12 +22,14 @@
 
     .popup-about-privacy-item {
         overflow: hidden;
-        margin-bottom: 5px;
-
+        margin-bottom: 10px;
         div {
             width: 156px;
             height: 156px;
             position: relative;
+            &:hover {
+                transform: scale(1.1);
+            }
 
             p {
                 position: absolute;
@@ -43,54 +37,41 @@
                 bottom: 30px;
                 font-size: 16px;
                 font-weight: 500;
-                color: #282828;
+                color: #fff;
             }
         }
 
         div:first-child {
             float: left;
             @include bg($img-privacy);
-
-            &:hover {
-                @include bg($img-privacy-hover);
-            }
         }
 
         div:last-child {
             float: right;
             @include bg($img-item);
-
-            &:hover {
-                @include bg($img-item-hover);
-            }
         }
     }
 
     @mixin site-contact {
         width: 100%;
-        margin-bottom: 5px;
+        margin-bottom: 10px;
         height: 96px;
         background-size: cover;
-    }
-
-    @mixin site-contact-theme($bgurl, $bgurl-hover) {
-        @include bg($bgurl);
-
         &:hover {
-            @include bg($bgurl-hover);
+            transform: scale(1.1);
         }
     }
 
     .popup-about-site {
         position: relative;
         @include site-contact;
-        @include site-contact-theme($img-site, $img-site-hover)
+        @include bg($img-site);
     }
 
     .popup-about-contact {
         position: relative;
         @include site-contact;
-        @include site-contact-theme($img-contact, $img-contact-hover);
+        @include bg($img-contact);
     }
 
     .popup-about-contact p,
@@ -100,6 +81,6 @@
         left: 170px;
         font-size: 16px;
         font-weight: 500;
-        color: #282828;
+        color: #fff;
     }
 }

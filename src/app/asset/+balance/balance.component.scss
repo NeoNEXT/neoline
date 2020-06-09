@@ -9,12 +9,12 @@
         border-bottom: 1px solid #e5e5e5;
     }
     &.active {
-        background: #F4F7FC;
+        background: #f7fbf9;
     }
 }
 :host:hover {
     cursor: pointer;
-    background: #F4F7FC;
+    background: #f7fbf9;
 }
 
 .info {
@@ -103,7 +103,7 @@
 
         span {
             width: 15px;
-            height: 3px;
+            height: 15px;
             display: inline-block;
             visibility: visible;
             @include bg($img-omi);

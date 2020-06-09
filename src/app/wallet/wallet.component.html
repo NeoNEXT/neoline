@@ -1,19 +1,25 @@
-<div class="body">
-    <div class="nav">
-        <span routerLink="/wallet/create" routerLinkActive="active">{{ 'create' | translate | async}}</span>
-        <div class="import-box" routerLink="/wallet/import" (click)="importType='PrivateKey'" routerLinkActive="active">
-            <span>{{ 'import' | translate | async}}</span>
-            <button mat-button class="import-type" (click)="$event.stopPropagation()" [matMenuTriggerFor]="menu">
-                {{ importType }}
-                <img src="/assets/images/net_dropdown_black.png" alt="">
-            </button>
-            <mat-menu #menu="matMenu">
-                <button mat-menu-item (click)="importTypeChoose('PrivateKey')">Private Key</button>
-                <button mat-menu-item (click)="importTypeChoose('EncryptedKey')">Encrypted Key</button>
-                <button mat-menu-item (click)="importTypeChoose('NEP6File')">NEP6 File</button>
-            </mat-menu>
-
-        </div>
+<div class="body flex">
+    <div class="bg-group">
+        <img src="/assets/images/bg_wallet.png" class="bg" alt="">
+        <img src="/assets/images/bg_wallet2.png" class="bg2" alt="">
     </div>
-    <router-outlet></router-outlet>
+    <div class="content flex-1">
+        <div class="nav">
+            <span routerLink="/wallet/create" routerLinkActive="active">{{ 'create' | translate | async}}</span>
+            <div class="import-box" routerLink="/wallet/import" (click)="importType='PrivateKey'"
+                routerLinkActive="active">
+                <span>{{ 'import' | translate | async}}</span>
+                <button mat-button class="import-type" (click)="$event.stopPropagation()" [matMenuTriggerFor]="menu">
+                    {{ importType }}
+                    <img src="/assets/images/net_dropdown_black.png" alt="">
+                </button>
+                <mat-menu #menu="matMenu">
+                    <button mat-menu-item (click)="importTypeChoose('PrivateKey')">Private Key</button>
+                    <button mat-menu-item (click)="importTypeChoose('EncryptedKey')">Encrypted Key</button>
+                    <button mat-menu-item (click)="importTypeChoose('NEP6File')">NEP6 File</button>
+                </mat-menu>
+            </div>
+        </div>
+        <router-outlet></router-outlet>
+    </div>
 </div>

@@ -3,7 +3,7 @@
 
 .content {
     font-weight: bold;
-    padding: 20px 15px 0  15px;
+    padding: 20px 15px 0 15px;
     text-align: center;
     width: 100%;
     position: relative;
@@ -22,7 +22,7 @@
             top: 0;
             left: 50%;
             margin-left: -73px;
-            border-bottom: 1px dashed map-get($colors, c2c6f5);
+            border-bottom: 1px dashed map-get($colors, 8dd9d2);
         }
 
         .dashed-vert-line {
@@ -31,7 +31,7 @@
             position: absolute;
             bottom: 0;
             left: 50%;
-            border-right: 1px dashed map-get($colors, c2c6f5);
+            border-right: 1px dashed map-get($colors, 8dd9d2);
         }
 
         .avatar-group {
@@ -133,10 +133,10 @@
             height: 12px;
             width: 12px;
             display: inline-block;
-            border-radius:50%;
+            border-radius: 50%;
             vertical-align: middle;
-            background:rgba(229,229,229,1);
-            border: 1px solid rgba(153,153,153,1);
+            background: rgba(229, 229, 229, 1);
+            border: 1px solid rgba(153, 153, 153, 1);
             &.selected {
                 border: none;
                 @include bg($img-authorization-rule-selected);
@@ -146,7 +146,7 @@
             padding: 5px 10px;
             font-size: 10px;
             margin-left: 5px;
-            border: 1px solid #E5E5E5;
+            border: 1px solid #e5e5e5;
             color: #666666;
         }
     }
@@ -182,11 +182,11 @@
     }
 
     button.refuse {
-        box-shadow: 0px 2px 8px 0px rgba(87, 83, 245, 0.4);
+        box-shadow: 0px 2px 8px 0px map-get($neo-line-default, 300);
         color: map-get($neo-line-default, 500);
         &:disabled {
-            background: #F2F2F2;
-            box-shadow:  none;
+            background: #f2f2f2;
+            box-shadow: none;
             color: #999999;
         }
     }
@@ -194,13 +194,13 @@
     button.confirm {
         position: absolute;
         right: 0;
-        box-shadow: 0px 5px 8px 0px rgba(87, 83, 245, 0.4);
-        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
+        box-shadow: 0px 5px 8px 0px map-get($neo-line-default, 300);
+        background: linear-gradient(0deg, rgba(6, 204, 171, 1), rgba(140, 216, 210, 1));
         color: map-get($neo-line-default, 50);
         &:disabled {
-            background: #C2C6F5;
-            box-shadow:  none;
-            color: #FFFFFF;
+            background: #8dd9d2;
+            box-shadow: none;
+            color: #ffffff;
         }
     }
 }

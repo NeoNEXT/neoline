@@ -192,7 +192,7 @@ export class PopupAssetsComponent implements OnInit {
                 for (const allIndex in this.allAssets.items) {
                     if (this.allAssets.items[allIndex].asset_id === this.displayAssets[index].asset_id) {
                         this.allAssets.items[allIndex].watching = false;
-                        return;
+                        break;
                     }
                 }
                 this.displayAssets.splice(index, 1);

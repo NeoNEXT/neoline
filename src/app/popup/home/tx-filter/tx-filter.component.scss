@@ -26,7 +26,7 @@
         font-weight: 500;
         cursor: pointer;
         font-size: 12px;
-        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+        box-shadow: 0 4px 8px 0 map-get($neo-line-default, 300);
         color: map-get($neo-line-default, 500);
 
         mat-spinner {
@@ -76,27 +76,4 @@
             font-size: 12px;
         }
     }
-
-    .popup-home-filter-option {
-        width: 97px;
-        height: 25px;
-        float: right;
-        margin-right: 15px;
-
-        button {
-            width: 97px;
-            height: 25px;
-            line-height: 25px;
-            border-radius: 12px;
-            padding: 0;
-            border: 1px solid map-get($colors, e5e5e5);
-
-            span {
-                display: inline-block;
-                width: 6px;
-                height: 3px;
-                @include bg($img-dropdown);
-            }
-        }
-    }
- }
+}

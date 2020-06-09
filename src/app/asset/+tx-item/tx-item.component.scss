@@ -7,12 +7,13 @@
 }
 :host:hover {
     cursor: pointer;
-    background: #F4F7FC;
+    background: #f7fbf9;
 }
 // :host:nth-of-type(odd) {
-//     background: #F4F7FC;
+//     background: #F7FBF9;
 // }
-span.flex-1, .txid {
+span.flex-1,
+.txid {
     padding: $space;
     overflow: hidden;
     text-align: center;
@@ -20,7 +21,7 @@ span.flex-1, .txid {
     align-items: center;
     justify-content: center;
     text-overflow: ellipsis;
-    color: #484E6D;
+    color: #484e6d;
 }
 .status {
     min-width: 50px;
@@ -28,8 +29,8 @@ span.flex-1, .txid {
     margin-right: 10px;
     padding: 2px 4px;
     &.wait {
-        background: #F9F6F2;
-        color: #F79165
+        background: #f9f6f2;
+        color: #f79165;
     }
 }
 .txid-value {

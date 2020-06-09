@@ -33,7 +33,7 @@
         font-weight: 500;
         cursor: pointer;
         font-size: 12px;
-        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+        box-shadow: 0 4px 8px 0 map-get($neo-line-default, 300);
         color: map-get($neo-line-default, 500);
         mat-spinner {
             margin: auto;
@@ -47,7 +47,7 @@
 }
 
 .info {
-    padding: $space*2;
+    padding: $space * 2;
     display: flex;
     overflow: hidden;
     .avatar {
@@ -69,7 +69,7 @@
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            color: #9FA8BD;
+            color: #9fa8bd;
         }
     }
 
@@ -85,7 +85,6 @@
     button:not(:first-of-type) {
         margin-left: $space;
     }
-
 }
 
 .rate-balance {
@@ -95,7 +94,7 @@
 }
 
 .title {
-    padding: $space $space*2;
+    padding: $space $space * 2;
 }
 
 .title span:first {
@@ -108,7 +107,7 @@
 
 pager {
     float: right;
-    margin: $space*2;
+    margin: $space * 2;
 }
 
 .nomore {
@@ -116,7 +115,7 @@ pager {
     padding: $space;
     text-align: center;
     color: #999999;
-    border-top: 1px solid #F4F7FC;
+    border-top: 1px solid #f7fbf9;
 }
 
 @media screen and (max-width: 1200px) {

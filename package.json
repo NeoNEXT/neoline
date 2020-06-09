@@ -1,6 +1,10 @@
 {
     "name": "neoline",
     "version": "1.4.1",
+    "engines": {
+        "node": "^12.10.0",
+        "npm": "~6.13.0"
+    },
     "scripts": {
         "ng": "ng",
         "debug": "ng serve --port 4200 --open true",

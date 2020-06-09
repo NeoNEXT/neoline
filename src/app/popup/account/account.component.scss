@@ -4,8 +4,8 @@
 .popup-account-header {
     width: 100%;
     height: 113px;
-    background: linear-gradient(0deg, rgba(113, 120, 221, 1), rgba(81, 91, 227, 1));
-    border-top: 1px solid rgba(81, 91, 227, 1);
+    background: linear-gradient(0deg, rgba(140, 216, 210, 1), rgba(6, 204, 171, 1));
+    border-top: 1px solid rgba(6, 204, 171, 1);
 
     .popup-account-option {
         overflow: hidden;
@@ -100,19 +100,18 @@
         text-align: center;
         font-size: 15px;
         font-weight: 500;
+        border-radius: 20px;
         color: map-get($neo-line-default, 50);
     }
 
     button:first-child {
-        border-radius: 20px;
-        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
-        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+        background: linear-gradient(0deg, rgba(6, 204, 171, 1), rgba(140, 216, 210, 1));
+        box-shadow: 0 4px 8px 0 map-get($neo-line-default, 200);
     }
 
     button:last-child {
-        border-radius: 20px;
         margin-top: 15px;
-        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+        box-shadow: 0 4px 8px 0 map-get($neo-line-default, 300);
         color: map-get($neo-line-default, 500);
     }
 }

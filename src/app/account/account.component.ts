@@ -40,8 +40,8 @@ export class AccountComponent implements OnInit {
         if (QRCode) {
             let qrcode = new QRCode('qrcode', {
                 text: this.address,
-                width: 178,
-                height: 178,
+                width: 160,
+                height: 160,
                 colorDark: '#333333',
                 colorLight: '#ffffff',
                 correctLevel: QRCode.CorrectLevel.H

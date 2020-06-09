@@ -21,7 +21,7 @@
     position: absolute;
     right: -40px;
     top: -40px;
-    background: #C2C6F5;
+    background: map-get($neo-line-default, 500);
     color: #FFFFFF;
 }
 
@@ -121,6 +121,5 @@ p.title-pwd {
     font-size: 12px;
     margin-top: $space;
     line-height: 18px;
-    background: #F3F2FF;
-    color: #9FA8BD;
+    color: #7F8993;
 }

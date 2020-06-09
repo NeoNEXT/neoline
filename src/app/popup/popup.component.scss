@@ -22,7 +22,7 @@
         .popup-nav-icon {
             height: 18px;
             position: absolute;
-            left: -10px;;
+            left: -10px;
         }
         .popup-nav-menu {
             width: 34px;
@@ -72,7 +72,6 @@
             }
         }
     }
-
 }
 
 .popup {
@@ -119,18 +118,11 @@
 .is-third-party-toolbar {
     .mat-toolbar {
         background-color: map-get($neo-line-default, 50);
-
-        .popup-nav-logo-img {
-            margin-left: 0;
-            width: 30px;
-            margin-right: 10px;
-            @include bg($img-logo);
-        }
+        border-bottom: 1px solid #f1f1f1;
 
         .popup-nav-logo-title-img {
-            margin-left: 0;
             width: 84px;
-            @include bg($img-about-logo);
+            @include bg($img-logo-title);
         }
 
         .popup-nav-network {
@@ -141,10 +133,5 @@
                 @include bg($img-tp-net-dropdown);
             }
         }
-
     }
-}
-
-.nav-box-shadow {
-    box-shadow: 0px 1px 12px 0px rgba(0, 11, 131, 0.3);
 }

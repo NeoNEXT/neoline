@@ -6,7 +6,7 @@
     font-weight: bold;
 
     &:hover {
-        background-color: map-get($colors, f4f7fc);
+        background-color: map-get($colors, f7f8f9);
         .popup-asset-top .right {
             visibility: visible;
         }
@@ -62,7 +62,7 @@
 
             span {
                 width: 15px;
-                height: 3px;
+                height: 15px;
                 display: inline-block;
                 visibility: visible;
                 @include bg($img-omi);

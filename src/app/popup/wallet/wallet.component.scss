@@ -7,7 +7,7 @@
     padding-bottom: 30px;
     border: 1px solid;
     border-color: rgba(0, 0, 0, 0);
-    background: linear-gradient(0deg, rgba(113, 120, 221, 1), rgba(81, 91, 227, 1));
+    background: linear-gradient(0deg, rgba(140, 216, 210, 1), rgba(6, 204, 171, 1));
 
     .popup-wallet-nav {
         width: 100%;
@@ -38,7 +38,7 @@
                 font-size: 3.1vw;
                 color: map-get($neo-line-default, 50);
                 span.hibernate {
-                    color: map-get($colors, c2c6f5);
+                    color: map-get($colors, 8dd9d2);
                 }
             }
 
@@ -57,4 +57,3 @@
         }
     }
 }
-

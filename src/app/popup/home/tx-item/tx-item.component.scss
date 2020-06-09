@@ -53,17 +53,17 @@
             .status {
                 font-size: 10px;
                 padding: 2px 12px;
-                background: #F2F9F2;
-                color: #6AD982;
+                background: #f2f9f2;
+                color: #6ad982;
 
                 &.wait {
-                    background: #F9F6F2;
-                    color: #F79165
+                    background: #f9f6f2;
+                    color: #f79165;
                 }
 
                 &.fail {
-                    background: #F7F7F7;
-                    color: #999999
+                    background: #f7f7f7;
+                    color: #999999;
                 }
             }
         }
@@ -78,13 +78,13 @@
                 color: #333333;
 
                 &.activity {
-                    color: #7178DD
+                    color: #71dbc4;
                 }
             }
 
             .money-amount {
                 font-size: 12px;
-                color: #9FA8BD;
+                color: #9fa8bd;
             }
         }
     }
@@ -97,7 +97,7 @@
             margin-top: 8px;
             padding-left: 20px;
             padding-right: 20px;
-            background: #F4F7FC;
+            background: #f7fbf9;
 
             .title {
                 font-size: 12px;
@@ -143,7 +143,6 @@
             }
         }
     }
-
 
     &:hover {
         cursor: pointer;

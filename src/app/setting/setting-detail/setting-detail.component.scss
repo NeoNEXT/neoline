@@ -7,6 +7,7 @@
     height: 100%;
     overflow-y: auto;
     padding-bottom: 47px;
+    background-color: #fff;
 }
 
 section {
@@ -32,41 +33,32 @@ section {
     }
 
     .option-btn {
-        display: inline-block;
         min-width: auto;
-        height: 40px;
-        line-height: 40px;
-        border-radius: 4px;
-        font-size: 16px;
-        font-weight: 500;
-        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
-        box-shadow: 0px 4px 8px 0px rgba(87, 83, 245, 0.4);
-        color: map-get($neo-line-default, 50);
     }
 }
 
 section.lang {
     @include bg($img-setting-one);
-    background-position: 33px 35px;
-    background-size: 15px 36px;
+    background-position: 28px 36px;
+    background-size: 28px 36px;
 }
 
 section.cache {
     @include bg($img-setting-two);
-    background-position: 26px 35px;
-    background-size: 23px 36px;
+    background-position: 28px 36px;
+    background-size: 28px 36px;
 }
 
 section.rate {
     @include bg($img-setting-three);
-    background-position: 25px 35px;
-    background-size: 26px 36px;
+    background-position: 28px 36px;
+    background-size: 28px 36px;
 }
 
 section.privacy {
     @include bg($img-setting-four);
-    background-position: 25px 35px;
-    background-size: 25px 36px;
+    background-position: 28px 36px;
+    background-size: 28px 36px;
 }
 
 .setting-item {
@@ -82,7 +74,7 @@ section.privacy {
 
 .border-bottom {
     padding-bottom: 30px;
-    border-bottom: 1px solid #E4E7EC;
+    border-bottom: 1px solid #e4e7ec;
 }
 
 .lang {
@@ -137,7 +129,7 @@ section.privacy {
         cursor: pointer;
         display: inline-flex;
         align-items: center;
-        color: #7178dd;
+        color: map-get($colors, 71dbc4);
     }
 
     .view-all-icon {
@@ -145,16 +137,16 @@ section.privacy {
         height: 11px;
         margin-left: 6px;
         display: inline-block;
-        transition: .4s;
+        transition: 0.4s;
         @include bg($img-setting-dropdown);
     }
 
     .view-down {
-        transform: rotate(180deg);
+        transform: rotate(0deg);
     }
 
     .view-up {
-        transform: rotate(0deg);
+        transform: rotate(-180deg);
     }
 
     .privacy-group {
@@ -195,15 +187,14 @@ section.privacy {
                 .address {
                     color: #999999;
                 }
-
             }
 
             .approval {
-                color: #7178dd;
-                background: #F4F7FC;
+                color: map-get($colors, 71dbc4);
+                background: #f7fbf9;
 
                 span {
-                    @include bg($img-setting-authed);
+                    @include bg($img-authorization-success);
                 }
             }
 
@@ -212,7 +203,7 @@ section.privacy {
                 background: #f2f2f2;
 
                 span {
-                    @include bg($img-setting-unauth);
+                    @include bg($img-authorization-fail);
                 }
             }
 
@@ -253,10 +244,9 @@ section.privacy {
             }
         }
 
-
         .privacy-item:last-child {
             padding-bottom: 0;
-            border-bottom: 1px solid #E4E7EC;
+            border-bottom: 1px solid #e4e7ec;
         }
 
         .empty {

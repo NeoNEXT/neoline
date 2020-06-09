@@ -21,7 +21,7 @@
     position: absolute;
     right: -40px;
     top: -40px;
-    background: #C2C6F5;
+    background: map-get($neo-line-default, 500);
     color: #FFFFFF;
 }
 

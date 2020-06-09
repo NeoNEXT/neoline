@@ -8,21 +8,16 @@
     button {
         width: 80px;
         height: 35px;
+        border-radius: 17px;
+        font-weight: 500;
     }
 
     button:first-child {
-        border-radius: 17px;
-        font-weight: 500;
         margin-right: 25px;
-        background: linear-gradient(0deg, rgba(81, 91, 227, 1), rgba(113, 120, 221, 1));
-        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
-        color: map-get($neo-line-default, 50);
     }
 
     button:last-child {
-        border-radius: 17px;
-        font-weight: 500;
-        box-shadow: 0 4px 8px 0 rgba(87, 83, 245, 0.4);
+        box-shadow: 0 4px 8px 0 map-get($neo-line-default, 300);
         color: map-get($neo-line-default, 500);
     }
 }

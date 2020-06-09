@@ -8,19 +8,19 @@
 
 $neo-line-default: (
     50: #ffffff,
-    100: #dcaff5, // dcaff5
-    200: #b39ff6, // b39ff6
-    300: #7e7cf3, // 7e7cf3
-    400: #686beb, // 686beb
-    500: #515be3, // 515be3
-    600: #404bd6, // 404bd6
-    700: #373daf, // 373daf
-    800: #302fa9, // 302fa9
-    900: #271f92, // 271f92
+    100: #f8fbf9,
+    200: #ecfbf1,
+    300: #8dd9d2,
+    400: #71dbc4,
+    500: #06ccab,
+    600: #00a379,
+    700: #009269,
+    800: #00815b,
+    900: #00633d,
     A100: #ffffff,
-    A200: #dcaff5, // dcaff5
-    A400: #686beb, // 686beb
-    A700: #373daf, // 373daf
+    A200: #dcaff5,
+    A400: #71dbc4,
+    A700: #00815b,
     contrast: (
         50: $black-87-opacity,
         100: $black-87-opacity,
@@ -35,7 +35,7 @@ $neo-line-default: (
         A100: $black-87-opacity,
         A200: $black-87-opacity,
         A400: $black-87-opacity,
-        A700: white,
+        A700: white
     )
 );
 
@@ -43,10 +43,10 @@ $neo-line-default: (
 // (imported above). For each palette, you can optionally specify a default, lighter, and darker
 // hue. Available color palettes: https://material.io/design/color/
 $default-app-primary: mat-palette($neo-line-default);
-$default-app-accent:  mat-palette($mat-pink, A200, A100, A400);
+$default-app-accent: mat-palette($mat-pink, A200, A100, A400);
 
 // The warn palette is optional (defaults to red).
-$default-app-warn:    mat-palette($mat-red);
+$default-app-warn: mat-palette($mat-red);
 
 // Create the theme object (a Sass map containing all of the palettes).
 $default-app-theme: mat-light-theme($default-app-primary, $default-app-accent, $default-app-warn);
@@ -56,8 +56,12 @@ $default-app-theme: mat-light-theme($default-app-primary, $default-app-accent, $
 // that you are using.
 @include angular-material-theme($default-app-theme);
 
+$space-sm: 10px;
 $space: 15px;
+$space-lg: 20px;
+$space-xl: 30px;
 
-.light.mat-progress-spinner circle, .light.mat-spinner circle {
-    stroke: #F4F7FC !important;
+.light.mat-progress-spinner circle,
+.light.mat-spinner circle {
+    stroke: #f7fbf9 !important;
 }
