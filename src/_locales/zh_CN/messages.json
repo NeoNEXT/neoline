@@ -478,5 +478,8 @@
     },
     "myTokens": {
         "message": "我的Tokens"
+    },
+    "authorized": {
+        "message": "已授权"
     }
 }

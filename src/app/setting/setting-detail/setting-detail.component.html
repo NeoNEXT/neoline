@@ -13,14 +13,16 @@
             <p class="title">{{ 'clearCache' | translate | async}}</p>
             <p class="tip">{{ 'clearCacheTip' | translate | async}}</p>
         </div>
-        <button class="option-btn" color="primary" mat-raised-button (click)="clearCache()">{{ 'clearCacheBtn' | translate | async}}</button>
+        <button class="option-btn" color="primary" mat-raised-button
+            (click)="clearCache()">{{ 'clearCacheBtn' | translate | async}}</button>
     </div>
 </section>
 <section class="rate">
     <div class="setting-item asset-item border-bottom">
         <div class="setting-item-left">
             <p class="title">{{ 'currencyUnit' | translate | async}}</p>
-            <p class="tip" *ngIf="rateTime">{{ 'updateTime' | translate | async}} {{rateTime * 1000 | date: 'M月d日 y年 HH:mm'}} {{'beijingTime' | translate | async}}</p>
+            <p class="tip" *ngIf="rateTime">{{ 'updateTime' | translate | async}}
+                {{rateTime * 1000 | date: 'M月d日 y年 HH:mm'}} {{'beijingTime' | translate | async}}</p>
         </div>
         <div>
             <button mat-stroked-button class="asset-btn" [matMenuTriggerFor]="assetMenu">
@@ -65,7 +67,7 @@
                 <div class="privacy-data-right">
                     <div class="status" [ngClass]="item.status ? 'approval' : 'refuse'">
                         <span></span>
-                        {{ item.status ? '已授权' : '已拒绝' }}
+                        {{ item.status ? ('authorized' | translate | async) : ('rejected' | translate | async) }}
                     </div>
                     <div class="delete" (click)="delSite(item.key)">
                         <span></span>

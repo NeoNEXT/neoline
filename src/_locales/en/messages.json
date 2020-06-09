@@ -478,5 +478,8 @@
     },
     "myTokens": {
         "message": "my Tokens"
+    },
+    "authorized": {
+        "message": "Authorized"
     }
 }

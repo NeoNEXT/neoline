@@ -14,7 +14,8 @@
                 <span class="websit-title">
                     {{ item.title }}
                 </span>
-                <span class="websit-status"   [ngClass]="{ 'success': item.status, 'fail': !item.status }">{{ item.status ? '已授权' : '已拒绝' }}</span>
+                <span class="websit-status"
+                    [ngClass]="{ 'success': item.status, 'fail': !item.status }">{{ item.status ? ('authorized' | translate | async) : ('rejected' | translate | async) }}</span>
             </div>
             <p class="websit-url">
                 {{ item.hostname }}
