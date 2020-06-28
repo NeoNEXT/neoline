@@ -27,9 +27,11 @@ module.exports = [{
         ]
     },
     plugins: [
-        new CopyWebpackPlugin([
-            "extension/manifest.json"
-        ])
+        new CopyWebpackPlugin({
+            patterns: [
+                "extension/manifest.json"
+            ]
+        })
     ]
 }, {
     mode: "production",
