@@ -13,6 +13,7 @@ import { Observable } from 'rxjs';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
 import { ERRORS, requestTarget, Invoke } from '@/models/dapi';
+import { AssignmentNodeDependencies } from 'mathjs';
 
 @Component({
     templateUrl: 'invoke-multi.component.html',
@@ -43,7 +44,6 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         this.aRoute.queryParams.subscribe((params: any) => {
             this.pramsData = params;
             this.messageID = params.messageID;
-            console.log(this.pramsData);
             if (params.network !== undefined) {
                 if (params.network === 'MainNet') {
                     this.global.modifyNet('MainNet');
@@ -70,7 +70,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 });
             });
             this.fee = parseFloat(params.fee) || 0;
-            if (this.assetIntentOverrides) {
+            if (this.assetIntentOverrides === null) {
                 newJson = this.pramsData.assetIntentOverrides.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
                 newJson = newJson.replace(/'/g, '"');
                 this.assetIntentOverrides = JSON.parse(newJson);
@@ -79,7 +79,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     item.attachedAssets = null;
                 });
             }
-            this.broadcastOverride = this.pramsData.broadcastOverride || false;
+            this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
             setTimeout(() => {
                 this.pwdDialog();
             }, 0);
@@ -140,6 +140,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     return: requestTarget.InvokeMulti,
                     ID: this.messageID
                 });
+                window.close();
             } else {
                 this.resolveSend(this.tx);
             }
@@ -173,6 +174,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     ID: this.messageID
                 });
                 this.global.snackBarTip('transferFailed');
+                window.close();
             } else {
                 this.chrome.windowCallback({
                     data: {
@@ -191,6 +193,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                         transfer: ['transfer', 'result']
                     }
                 }]);
+                window.close();
             }
         }, err => {
             this.loading = false;
@@ -248,8 +251,10 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     if (item.attachedAssets) {
                         if (item.attachedAssets.NEO) {
                             try {
-                                newTx.addOutput({ assetId: NEO.substring(2),
-                                    value: new Fixed8(Number(item.attachedAssets.NEO)), scriptHash: toScript });
+                                newTx.addOutput({
+                                    assetId: NEO.substring(2),
+                                    value: new Fixed8(Number(item.attachedAssets.NEO)), scriptHash: toScript
+                                });
                             } catch (error) {
                                 this.chrome.windowCallback({
                                     error: ERRORS.MALFORMED_INPUT,
@@ -261,8 +266,10 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                         }
                         if (item.attachedAssets.GAS) {
                             try {
-                                newTx.addOutput({ assetId: GAS.substring(2),
-                                    value: new Fixed8(Number(item.attachedAssets.GAS)), scriptHash: toScript });
+                                newTx.addOutput({
+                                    assetId: GAS.substring(2),
+                                    value: new Fixed8(Number(item.attachedAssets.GAS)), scriptHash: toScript
+                                });
                             } catch (error) {
                                 this.chrome.windowCallback({
                                     error: ERRORS.MALFORMED_INPUT,
@@ -288,8 +295,28 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     }
                 }
             } else {
-                newTx.outputs = this.assetIntentOverrides.outlets;
-                newTx.inputs = this.assetIntentOverrides.inputs;
+                this.assetIntentOverrides.outputs.forEach(element => {
+                    const toScripts = wallet.getScriptHashFromAddress(element.address)
+                    let assetId = element.asset;
+                    if(element.asset.toString().toLowerCase() === 'gas') {
+                        assetId = GAS;
+                    }
+                    if(element.asset.toString().toLowerCase() === 'neo') {
+                        assetId = NEO;
+                    }
+                    newTx.addOutput({
+                        assetId:  assetId.startsWith('0x') ? assetId.substring(2) : assetId,
+                        value: new Fixed8(Number(element.value)),
+                        scriptHash: toScripts.startsWith('0x') &&
+                            toScripts.length === 42 ? toScripts.substring(2) : toScripts
+                    })
+                });
+                this.assetIntentOverrides.inputs.forEach(element => {
+                    newTx.inputs.push(new TransactionInput({
+                        prevIndex: element.index,
+                        prevHash: element.txid.startsWith('0x') && element.txid.length === 66 ? element.txid.substring(2) : element.txid
+                    }))
+                });
             }
             newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
             const uniqTag = `from NeoLine at ${new Date().getTime()}`;

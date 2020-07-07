@@ -69,14 +69,14 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     newJson = newJson.replace(/'/g, '"');
                     this.attachedAssets = JSON.parse(newJson);
                 }
-                if (this.assetIntentOverrides) {
+                if (this.assetIntentOverrides == null) {
                     newJson = this.pramsData.assetIntentOverrides.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
                     newJson = newJson.replace(/'/g, '"');
                     this.assetIntentOverrides = JSON.parse(newJson);
                     this.fee = 0;
                     this.attachedAssets = null;
                 }
-                this.broadcastOverride = this.pramsData.broadcastOverride || false;
+                this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
                 setTimeout(() => {
                     this.pwdDialog();
                 }, 0);
@@ -139,6 +139,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     return: requestTarget.Invoke,
                     ID: this.messageID
                 });
+                window.close();
             } else {
                 this.resolveSend(this.tx);
             }
@@ -171,6 +172,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     return: requestTarget.Invoke,
                     ID: this.messageID
                 });
+                window.close();
                 this.global.snackBarTip('transferFailed');
             } else {
                 this.chrome.windowCallback({
@@ -190,6 +192,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         transfer: ['transfer', 'result']
                     }
                 }]);
+                window.close();
             }
         }, err => {
             this.loading = false;
@@ -267,8 +270,28 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     }
                 }
             } else {
-                newTx.outputs = this.assetIntentOverrides.outlets;
-                newTx.inputs = this.assetIntentOverrides.inputs;
+                this.assetIntentOverrides.outputs.forEach(element => {
+                    const toScripts = wallet.getScriptHashFromAddress(element.address)
+                    let assetId = element.asset;
+                    if(element.asset.toString().toLowerCase() === 'gas') {
+                        assetId = GAS;
+                    }
+                    if(element.asset.toString().toLowerCase() === 'neo') {
+                        assetId = NEO;
+                    }
+                    newTx.addOutput({
+                        assetId:  assetId.startsWith('0x') ? assetId.substring(2) : assetId,
+                        value: new Fixed8(Number(element.value)),
+                        scriptHash: toScripts.startsWith('0x') &&
+                            toScripts.length === 42 ? toScripts.substring(2) : toScripts
+                    })
+                });
+                this.assetIntentOverrides.inputs.forEach(element => {
+                    newTx.inputs.push(new TransactionInput({
+                        prevIndex: element.index,
+                        prevHash: element.txid.startsWith('0x') && element.txid.length === 66 ? element.txid.substring(2) : element.txid
+                    }))
+                });
             }
             newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
             const uniqTag = `from NeoLine at ${new Date().getTime()}`;

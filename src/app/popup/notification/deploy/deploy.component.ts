@@ -46,7 +46,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                 } else {
                     this.global.modifyNet('TestNet');
                 }
-                this.broadcastOverride = this.pramsData.broadcastOverride || false;
+                this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
                 setTimeout(() => {
                     this.pwdDialog();
                 }, 0);
@@ -109,6 +109,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                     return: requestTarget.Deploy,
                     ID: this.messageID
                 });
+                window.close();
             } else {
                 this.resolveSend(this.tx);
             }
@@ -141,6 +142,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                     return: requestTarget.Deploy,
                     ID: this.messageID
                 });
+                window.close();
                 this.global.snackBarTip('transferFailed');
             } else {
                 this.chrome.windowCallback({
@@ -151,6 +153,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                     return: requestTarget.Deploy,
                     ID: this.messageID
                 });
+                window.close();
                 const setData = {};
                 setData[`${this.pramsData.network}TxArr`] =  await this.chrome.getLocalStorage(`${this.pramsData.network}TxArr`) || [];
                 setData[`${this.pramsData.network}TxArr`].push('0x' + transaction.hash);
