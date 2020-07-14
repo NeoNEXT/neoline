@@ -262,9 +262,9 @@ export class NeonService {
         return wallet.generatePrivateKey();
     }
 
-    public createTx(from: string, to: string, balances: UTXO[], amount: number, fee: number = 0): Transaction {
+    public createTx(fromAddress: string, to: string, balances: UTXO[], amount: number, fee: number = 0): Transaction {
 
-        const fromScript = wallet.getScriptHashFromAddress(from);
+        const fromScript = wallet.getScriptHashFromAddress(fromAddress);
         const toScript = wallet.getScriptHashFromAddress(to);
         if (fromScript.length !== 40 || toScript.length !== 40) {
             throw new Error('target address error');
@@ -298,12 +298,13 @@ export class NeonService {
         if (payback > 0) {
             newTx.addOutput({ assetId, value: new Fixed8(payback), scriptHash: fromScript });
         }
-        const uniqTag = `from NeoLine at ${new Date().getTime()}`;
-        newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
+        const remark = 'From NeoLine';
+        newTx.addAttribute(tx.TxAttrUsage.Remark1, u.str2hexstring(remark));
         return newTx;
     }
-    public createTxForNEP5(from: string, to: string, scriptHash: string, amount: number, decimals: number): Transaction {
-        const fromScript = wallet.getScriptHashFromAddress(from);
+    public createTxForNEP5(fraomAddress: string, to: string, scriptHash: string, amount: number, decimals: number,
+        broadcastOverride: boolean = false): Transaction {
+        const fromScript = wallet.getScriptHashFromAddress(fraomAddress);
         const toScript = wallet.getScriptHashFromAddress(to);
         if (fromScript.length !== 40 || toScript.length !== 40) {
             throw new Error('target address error');
@@ -319,8 +320,8 @@ export class NeonService {
             ]
         }) + 'f1';
         newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
-        const uniqTag = `from NeoLine at ${new Date().getTime()}`;
-        newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
+        const remark = broadcastOverride ? 'From NeoLine' : `From NeoLine at ${new Date().getTime()}`;
+        newTx.addAttribute(tx.TxAttrUsage.Remark1, u.str2hexstring(remark));
         return newTx;
     }
     public claimGAS(claims: Array<ClaimItem>, value: number): Observable<Transaction> {

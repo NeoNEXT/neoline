@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { TransferRoutingModule } from './transfer.route';
 import { TransferComponent } from './transfer.component';
-import { TransferCreateomponent } from './create/create.component';
+import { TransferCreateComponent } from './create/create.component';
 import { TransferResultComponent } from './result/result.component';
 import { ShareModule } from '../share';
 import { TransferService } from './transfer.service';
@@ -12,7 +12,7 @@ import { TransferExportComponent } from './export/export.component';
 
 @NgModule({
     declarations: [
-        TransferComponent, TransferCreateomponent, TransferResultComponent,
+        TransferComponent, TransferCreateComponent, TransferResultComponent,
         TransferReceiveComponent, TransferExportComponent,
         PwdDialog
     ],

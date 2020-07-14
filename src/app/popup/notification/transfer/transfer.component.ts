@@ -133,7 +133,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.loading = false;
             this.loadingMsg = '';
             this.balance = res;
-            this.transfer.create(this.fromAddress, this.toAddress, this.assetId, this.amount, this.fee, res.decimals).subscribe((tx) => {
+            this.transfer.create(this.fromAddress, this.toAddress, this.assetId, this.amount, this.fee, res.decimals,
+                this.broadcastOverride).subscribe((tx) => {
                 if (this.pwd && this.pwd.length) {
                     this.global.log('start transfer with pwd');
                     this.resolveSign(tx, this.pwd);

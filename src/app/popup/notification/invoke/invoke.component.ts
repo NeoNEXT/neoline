@@ -294,8 +294,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 });
             }
             newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
-            const uniqTag = `from NeoLine at ${new Date().getTime()}`;
-            newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
+            const remark = this.broadcastOverride ? 'From NeoLine' : `From NeoLine at ${new Date().getTime()}`;
+            newTx.addAttribute(tx.TxAttrUsage.Remark1, u.str2hexstring(remark));
             resolve(newTx);
         });
     }

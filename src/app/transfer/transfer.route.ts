@@ -2,7 +2,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { NgModule } from '@angular/core';
 
 import { TransferComponent } from './transfer.component';
-import { TransferCreateomponent } from './create/create.component';
+import { TransferCreateComponent } from './create/create.component';
 import { TransferResultComponent } from './result/result.component';
 import { TransferReceiveComponent } from './receive/receive.component';
 import { TransferExportComponent } from './export/export.component';
@@ -15,7 +15,7 @@ const routes: Routes = [
         outlet: 'transfer',
         // canActivate: [WalletGuard],
         children: [
-            { path: 'create/:id', component: TransferCreateomponent },
+            { path: 'create/:id', component: TransferCreateComponent },
             { path: 'result', component: TransferResultComponent },
             { path: 'receive', component: TransferReceiveComponent },
             { path: 'export', component: TransferExportComponent }

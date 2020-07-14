@@ -36,7 +36,7 @@ import { wallet } from '@cityofzion/neon-core';
     templateUrl: 'create.component.html',
     styleUrls: ['create.component.scss']
 })
-export class TransferCreateomponent implements OnInit {
+export class TransferCreateComponent implements OnInit {
     public balance: Balance;
     public amount: number;
     public fee: number = 0.0011;

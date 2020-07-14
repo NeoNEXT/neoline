@@ -210,8 +210,8 @@ export class PopupNoticeDeployComponent implements OnInit {
                 });
                 window.close();
             }
-            const uniqTag = `from NeoLine at ${new Date().getTime()}`;
-            newTx.addAttribute(tx.TxAttrUsage.Remark1, u.reverseHex(u.str2hexstring(uniqTag)));
+            const remark = this.broadcastOverride ? 'From NeoLine' : `From NeoLine at ${new Date().getTime()}`;
+            newTx.addAttribute(tx.TxAttrUsage.Remark1, u.str2hexstring(remark));
             newTx.gas = new Fixed8(amount);
             resolve(newTx);
         });
