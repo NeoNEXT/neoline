@@ -234,7 +234,7 @@ interface AssetOutput {
     value: string;
 }
 
-interface TxHashAttribute extends Argument {
+export interface TxHashAttribute extends Argument {
     txAttrUsage: 'Hash1' | 'Hash2' | 'Hash3' | 'Hash4' | 'Hash5' | 'Hash6' | 'Hash7' | 'Hash8' |
     'Hash9' | 'Hash10' | 'Hash11' | 'Hash12' | 'Hash13' | 'Hash14' | 'Hash15';
 }

@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import Neon, { wallet, tx, nep5 } from '@cityofzion/neon-js';
+import Neon, { wallet, tx, rpc } from '@cityofzion/neon-js';
 import { Wallet, WalletJSON } from '@cityofzion/neon-core/lib/wallet';
 import { Observable, from, Observer, of, Subject } from 'rxjs';
 import { map, catchError, startWith, publish, refCount } from 'rxjs/operators';
@@ -9,8 +9,7 @@ import { Transaction, TransactionInput } from '@cityofzion/neon-core/lib/tx';
 import { UTXO, ClaimItem, GAS } from '@/models/models';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { sc, u } from '@cityofzion/neon-core';
-import { EVENT } from '@/models/dapi';
-
+import { EVENT, TxHashAttribute } from '@/models/dapi';
 @Injectable()
 export class NeonService {
     private _wallet: Wallet;
@@ -318,12 +317,24 @@ export class NeonService {
                 u.reverseHex(toScript),
                 amount * Math.pow(10, decimals)
             ]
-        }) + 'f1';
+        });
         newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
         const remark = broadcastOverride ? 'From NeoLine' : `From NeoLine at ${new Date().getTime()}`;
         newTx.addAttribute(tx.TxAttrUsage.Remark1, u.str2hexstring(remark));
         return newTx;
     }
+
+    public getVerificationSignatureForSmartContract(ScriptHash: string): Promise<any> {
+        return rpc.Query.getContractState(ScriptHash).execute(this.global.RPCDomain)
+            .then(({ result }) => {
+                const { parameters } = result;
+                return new tx.Witness({
+                    invocationScript: '00'.repeat(parameters.length),
+                    verificationScript: '',
+                });
+            });
+    }
+
     public claimGAS(claims: Array<ClaimItem>, value: number): Observable<Transaction> {
         return new Observable(observer => {
             const claimArr = [];
@@ -353,5 +364,41 @@ export class NeonService {
         return this._wallet
             ? this.$wallet.pipe(startWith(this._wallet), publish(), refCount())
             : this.$wallet.pipe(publish(), refCount());
+    }
+
+    private zeroPad(input: string | any[] | sc.OpCode, length: number, padEnd?: boolean) {
+        const zero = '0';
+        input = String(input);
+
+        if (padEnd) {
+            return input + zero.repeat(length - input.length);
+        }
+
+        return zero.repeat(length - input.length) + input;
+    }
+
+    public parseTxHashAttr({ type, value, txAttrUsage }: TxHashAttribute): TxHashAttribute {
+        let parsedValue = this.zeroPad(value, 64, true);
+        switch (type) {
+            case 'Boolean':
+                parsedValue = this.zeroPad(!!value ? sc.OpCode.PUSHT : sc.OpCode.PUSHF, 64, true);
+                break;
+            case 'Address':
+                parsedValue = this.zeroPad(u.reverseHex(wallet.getScriptHashFromAddress(value)), 64, true);
+                break;
+            case 'Integer':
+                const h = Number(value).toString(16);
+                parsedValue = this.zeroPad(u.reverseHex(h.length % 2 ? '0' + h : h), 64, true);
+                break;
+            case 'String':
+                parsedValue = this.zeroPad(u.ab2hexstring(u.str2ab(value)), 64, true);
+                break;
+        }
+
+        return {
+            type,
+            value: parsedValue,
+            txAttrUsage,
+        };
     }
 }

@@ -3,7 +3,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService } from '@/app/core';
 import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzion/neon-core/lib/tx';
 import { wallet, tx, sc, u } from '@cityofzion/neon-core';
-import { nep5 } from '@cityofzion/neon-js';
 
 import { MatDialog } from '@angular/material/dialog';
 import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
@@ -12,8 +11,7 @@ import { NEO, UTXO, GAS } from '@/models/models';
 import { Observable } from 'rxjs';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
-import { ERRORS, requestTarget, Invoke } from '@/models/dapi';
-import { AssignmentNodeDependencies } from 'mathjs';
+import { ERRORS, requestTarget, Invoke, TxHashAttribute } from '@/models/dapi';
 
 @Component({
     templateUrl: 'invoke-multi.component.html',
@@ -29,6 +27,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     public loading = false;
     public loadingMsg: string;
     private messageID = 0;
+    private txHashAttributes: TxHashAttribute[] = null;
+    private utxos: UTXO[] = []
 
     constructor(
         private aRoute: ActivatedRoute,
@@ -51,8 +51,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     this.global.modifyNet('TestNet');
                 }
             }
-            let newJson = this.pramsData.invokeArgs.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
-            newJson = newJson.replace(/'/g, '"');
+            let newJson = this.pramsData.invokeArgs.replace(/([a-zA-Z0-9]+?):/g, '"$1":').replace(/'/g, '"');
             const tempInvokeArgs = JSON.parse(newJson);
             tempInvokeArgs.forEach((item, index) => {
                 item.args.forEach((arg, argIndex) => {
@@ -65,19 +64,23 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     scriptHash: item.scriptHash,
                     operation: item.operation,
                     args: tempInvokeArgs[index].args,
-                    triggerContractVerification: false,
+                    triggerContractVerification: item.triggerContractVerification !== undefined
+                        ? item.triggerContractVerification.toString() === 'true' : false,
                     attachedAssets: item.attachedAssets
                 });
             });
             this.fee = parseFloat(params.fee) || 0;
-            if (this.assetIntentOverrides === null) {
-                newJson = this.pramsData.assetIntentOverrides.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
-                newJson = newJson.replace(/'/g, '"');
+            if (this.assetIntentOverrides === null && this.pramsData.assetIntentOverrides !== undefined) {
+                newJson = this.pramsData.assetIntentOverrides.replace(/([a-zA-Z0-9]+?):/g, '"$1":').replace(/'/g, '"');
                 this.assetIntentOverrides = JSON.parse(newJson);
                 this.fee = 0;
                 this.invokeArgs.forEach(item => {
                     item.attachedAssets = null;
                 });
+            }
+            if (this.txHashAttributes === null && this.pramsData.txHashAttributes !== undefined) {
+                newJson = this.pramsData.txHashAttributes.replace(/([a-zA-Z0-9]+?):/g, '"$1":').replace(/'/g, '"')
+                this.txHashAttributes = JSON.parse(newJson);
             }
             this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
             setTimeout(() => {
@@ -135,7 +138,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.chrome.windowCallback({
                     data: {
                         txid: transaction.hash,
-                        signedTX: this.tx.serialize(true)
+                        signedTx: this.tx.serialize(true)
                     },
                     return: requestTarget.InvokeMulti,
                     ID: this.messageID
@@ -161,54 +164,68 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         });
     }
 
-    private resolveSend(transaction: Transaction) {
-        return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
-            signature_transaction: transaction.serialize(true)
-        }).subscribe(async (res: any) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            if (!res.bool_status) {
+    private async resolveSend(transaction: Transaction) {
+        new Promise((myResolve) => {
+            myResolve(true)
+        }).then(res => {
+            const triggerContracts = Object.keys(this.invokeArgs.reduce((accum, { scriptHash, triggerContractVerification }) => {
+                if (triggerContractVerification) {
+                    accum[scriptHash] = true;
+                }
+                return accum;
+            }, {}));
+            return Promise.all(triggerContracts.map(scriptHash => this.neon.getVerificationSignatureForSmartContract(scriptHash)))
+        }).then(scripts => {
+            transaction.scripts = [...scripts, ...transaction.scripts];
+            return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
+                signature_transaction: transaction.serialize(true)
+            }).subscribe(async (res: any) => {
+                this.loading = false;
+                this.loadingMsg = '';
+                if (!res.bool_status) {
+                    this.chrome.windowCallback({
+                        error: ERRORS.RPC_ERROR,
+                        return: requestTarget.InvokeMulti,
+                        ID: this.messageID
+                    });
+                    this.global.snackBarTip('transferFailed');
+                    window.close();
+                } else {
+                    this.chrome.windowCallback({
+                        data: {
+                            txid: transaction.hash,
+                            nodeURL: `${this.global.apiDomain}`
+                        },
+                        return: requestTarget.InvokeMulti,
+                        ID: this.messageID
+                    });
+                    const setData = {};
+                    setData[`${this.pramsData.network}TxArr`] = await this.chrome.getLocalStorage(`${this.pramsData.network}TxArr`) || [];
+                    setData[`${this.pramsData.network}TxArr`].push('0x' + transaction.hash);
+                    this.chrome.setLocalStorage(setData);
+                    this.router.navigate([{
+                        outlets: {
+                            transfer: ['transfer', 'result']
+                        }
+                    }]);
+                    window.close();
+                }
+            }, err => {
+                this.loading = false;
+                this.loadingMsg = '';
                 this.chrome.windowCallback({
                     error: ERRORS.RPC_ERROR,
                     return: requestTarget.InvokeMulti,
                     ID: this.messageID
                 });
-                this.global.snackBarTip('transferFailed');
-                window.close();
-            } else {
-                this.chrome.windowCallback({
-                    data: {
-                        txid: transaction.hash,
-                        nodeURL: `${this.global.apiDomain}`
-                    },
-                    return: requestTarget.InvokeMulti,
-                    ID: this.messageID
-                });
-                const setData = {};
-                setData[`${this.pramsData.network}TxArr`] = await this.chrome.getLocalStorage(`${this.pramsData.network}TxArr`) || [];
-                setData[`${this.pramsData.network}TxArr`].push('0x' + transaction.hash);
-                this.chrome.setLocalStorage(setData);
-                this.router.navigate([{
-                    outlets: {
-                        transfer: ['transfer', 'result']
-                    }
-                }]);
-                window.close();
-            }
-        }, err => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.chrome.windowCallback({
-                error: ERRORS.RPC_ERROR,
-                return: requestTarget.InvokeMulti,
-                ID: this.messageID
+                this.global.snackBarTip('transferFailed', err);
             });
-            this.global.snackBarTip('transferFailed', err);
-        });
+        })
+
     }
 
     private createTxForNEP5(): Promise<Transaction> {
-        return new Promise(async (resolve, reject) => {
+        return new Promise(async (mResolve, reject) => {
             const fromScript = wallet.getScriptHashFromAddress(this.neon.address);
             let newTx = new tx.InvocationTransaction();
             let script = '';
@@ -234,7 +251,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 }
                 try {
                     script += sc.createScript({
-                        scriptHash: item.scriptHash.startsWith('0x') && item.scriptHash.length === 42 ? item.scriptHash.substring(2) : item.scriptHash,
+                        scriptHash: item.scriptHash.startsWith('0x')
+                            && item.scriptHash.length === 42 ? item.scriptHash.substring(2) : item.scriptHash,
                         operation: item.operation,
                         args: item.args
                     });
@@ -243,7 +261,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     reject(error);
                 }
             });
-            newTx.script = script + 'f1';
+            newTx.script = script;
             if (this.assetIntentOverrides == null) {
                 this.invokeArgs.forEach(async item => {
                     const toScript = item.scriptHash.startsWith('0x') &&
@@ -298,14 +316,14 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.assetIntentOverrides.outputs.forEach(element => {
                     const toScripts = wallet.getScriptHashFromAddress(element.address)
                     let assetId = element.asset;
-                    if(element.asset.toString().toLowerCase() === 'gas') {
+                    if (element.asset.toString().toLowerCase() === 'gas') {
                         assetId = GAS;
                     }
-                    if(element.asset.toString().toLowerCase() === 'neo') {
+                    if (element.asset.toString().toLowerCase() === 'neo') {
                         assetId = NEO;
                     }
                     newTx.addOutput({
-                        assetId:  assetId.startsWith('0x') ? assetId.substring(2) : assetId,
+                        assetId: assetId.startsWith('0x') ? assetId.substring(2) : assetId,
                         value: new Fixed8(Number(element.value)),
                         scriptHash: toScripts.startsWith('0x') &&
                             toScripts.length === 42 ? toScripts.substring(2) : toScripts
@@ -318,22 +336,55 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     }))
                 });
             }
-            newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
-            const remark = this.broadcastOverride ? 'From NeoLine' : `From NeoLine at ${new Date().getTime()}`;
-            newTx.addAttribute(tx.TxAttrUsage.Remark1, u.str2hexstring(remark));
-            resolve(newTx);
+            newTx = this.addAttributes(newTx);
+            mResolve(newTx);
         });
+    }
+
+    private addAttributes(transaction: InvocationTransaction): InvocationTransaction {
+        const fromScript = wallet.getScriptHashFromAddress(this.neon.address);
+        if (this.txHashAttributes !== null) {
+            this.txHashAttributes.forEach((item, index) => {
+                this.txHashAttributes[index] = this.neon.parseTxHashAttr(this.txHashAttributes[index]);
+                const info = this.txHashAttributes[index];
+                if (tx.TxAttrUsage[info.txAttrUsage]) {
+                    transaction.addAttribute(tx.TxAttrUsage[info.txAttrUsage], info.value);
+                }
+            });
+        }
+        let addScriptHash = '';
+        // tslint:disable-next-line:prefer-for-of
+        for (let i = 0; i < this.invokeArgs.length; i++) {
+            if (this.invokeArgs[i].triggerContractVerification) {
+                addScriptHash = this.invokeArgs[i].scriptHash
+            }
+        }
+        if (addScriptHash !== '') {
+            transaction.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(addScriptHash));
+        } else if (
+            (transaction.inputs.length === 0 && transaction.outputs.length === 0 && !this.assetIntentOverrides) ||
+            this.assetIntentOverrides && this.assetIntentOverrides.inputs && this.assetIntentOverrides.inputs.length &&
+            // tslint:disable-next-line: max-line-length
+            !this.assetIntentOverrides.inputs.filter(({ index, txid }) => this.utxos.find(utxo => utxo.n === index && (utxo.txid === txid || utxo.txid.slice(2) === txid))).length
+        ) {
+            transaction.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
+        }
+        const remark = this.broadcastOverride ? 'From NeoLine' : `From NeoLine at ${new Date().getTime()}`;
+        transaction.addAttribute(tx.TxAttrUsage.Remark1, u.str2hexstring(remark));
+        return transaction;
+
     }
 
     private getBalance(address: string, asset: string): Observable<UTXO[]> {
         return this.http.get(`${this.global.apiDomain}/v1/transactions/getutxoes?address=${address}&asset_id=${asset}`).pipe(map((res) => {
+            this.utxos = (res as any).result as UTXO[];
             return (res as any).result as UTXO[];
         }));
     }
 
     private addInputs(assetid: string, amount: number, fromScript: string,
         newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
-        return new Promise((resolve, reject) => {
+        return new Promise((mResolve, reject) => {
             this.getBalance(this.neon.address, assetid).subscribe((balances: any) => {
                 if (balances.length === 0) {
                     reject('no balance');
@@ -346,7 +397,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 for (const item of balances) {
                     curr = this.global.mathAdd(curr, parseFloat(item.value) || 0);
                     newTx.inputs.push(new TransactionInput({
-                        prevIndex: item.n, prevHash: item.txid.startsWith('0x') && item.txid.length == 66 ? item.txid.substring(2) : item.txid
+                        prevIndex: item.n,
+                        prevHash: item.txid.startsWith('0x') && item.txid.length === 66 ? item.txid.substring(2) : item.txid
                     }));
                     if (curr >= amount + fee) {
                         break;
@@ -360,13 +412,13 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 if (payback > 0) {
                     newTx.addOutput({ assetId, value: new Fixed8(payback), scriptHash: fromScript });
                 }
-                resolve(newTx);
+                mResolve(newTx);
             });
         });
     }
 
     public addFee(from: string, newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
-        return new Promise((resolve, reject) => {
+        return new Promise((mResolve, reject) => {
             this.getBalance(from, GAS).subscribe(res => {
                 let curr = 0.0;
                 for (const item of res) {
@@ -398,7 +450,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     }
                     newTx.addOutput({ assetId: gasAssetId, value: this.global.mathSub(curr, fee), scriptHash: fromScript });
                 }
-                resolve(newTx);
+                mResolve(newTx);
             });
         });
     }

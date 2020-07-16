@@ -34,6 +34,7 @@ import { evaluate, add, subtract, multiply, divide, bignumber } from 'mathjs';
 @Injectable()
 export class GlobalService {
     public apiDomain: string;
+    public RPCDomain: string;
     public $wallet: Subject < string > ;
     public languageJson: any = null;
     public debug = false;
@@ -62,8 +63,10 @@ export class GlobalService {
         this.net = net;
         if (net === 'MainNet') {
             this.apiDomain = environment.mainApiBase;
+            this.RPCDomain = environment.mainRPC
         } else {
             this.apiDomain = environment.testApiBase;
+            this.RPCDomain = environment.testRPC
         }
     }
     public log(...params: any[]) {

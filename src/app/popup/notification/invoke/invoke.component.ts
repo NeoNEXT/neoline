@@ -10,7 +10,7 @@ import { NEO, UTXO, GAS } from '@/models/models';
 import { Observable } from 'rxjs';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
-import { ERRORS, requestTarget } from '@/models/dapi';
+import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
 
 @Component({
     templateUrl: 'invoke.component.html',
@@ -22,6 +22,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
     public operation = '';
     public args = null;
     public tx: Transaction;
+    public triggerContractVerification: boolean = false;
     public attachedAssets = null;
     public fee = null;
     public broadcastOverride = null;
@@ -29,6 +30,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
     public loading = false;
     public loadingMsg: string;
     private messageID = 0;
+    private txHashAttributes: TxHashAttribute[] = null;
+    private utxos: UTXO[] = []
 
     constructor(
         private aRoute: ActivatedRoute,
@@ -51,6 +54,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     this.global.modifyNet('TestNet');
                 }
             }
+            this.triggerContractVerification = params.triggerContractVerification !== undefined
+                ? params.triggerContractVerification.toString() === 'true' : false
             if (params.scriptHash !== undefined && params.operation !== undefined && params.args !== undefined) {
                 this.scriptHash = params.scriptHash;
                 this.operation = params.operation;
@@ -69,12 +74,16 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     newJson = newJson.replace(/'/g, '"');
                     this.attachedAssets = JSON.parse(newJson);
                 }
-                if (this.assetIntentOverrides == null) {
+                if (this.assetIntentOverrides == null && this.pramsData.assetIntentOverrides !== undefined) {
                     newJson = this.pramsData.assetIntentOverrides.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
                     newJson = newJson.replace(/'/g, '"');
                     this.assetIntentOverrides = JSON.parse(newJson);
                     this.fee = 0;
                     this.attachedAssets = null;
+                }
+                if (this.txHashAttributes === null && this.pramsData.txHashAttributes !== undefined) {
+                    newJson = this.pramsData.txHashAttributes.replace(/([a-zA-Z0-9]+?):/g, '"$1":').replace(/'/g, '"')
+                    this.txHashAttributes = JSON.parse(newJson);
                 }
                 this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
                 setTimeout(() => {
@@ -134,7 +143,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 this.chrome.windowCallback({
                     data: {
                         txid: transaction.hash,
-                        signedTX: this.tx.serialize(true)
+                        signedTx: this.tx.serialize(true)
                     },
                     return: requestTarget.Invoke,
                     ID: this.messageID
@@ -160,7 +169,10 @@ export class PopupNoticeInvokeComponent implements OnInit {
         });
     }
 
-    private resolveSend(transaction: Transaction) {
+    private async resolveSend(transaction: Transaction) {
+        if (this.triggerContractVerification) {
+            transaction.scripts = [await this.neon.getVerificationSignatureForSmartContract(this.scriptHash), ...transaction.scripts];
+        }
         return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
             signature_transaction: transaction.serialize(true)
         }).subscribe(async (res: any) => {
@@ -209,7 +221,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
     private createTxForNEP5(): Promise<Transaction> {
         return new Promise(async (resolve, reject) => {
             const fromScript = wallet.getScriptHashFromAddress(this.neon.address);
-            const toScript = this.scriptHash.startsWith('0x') && this.scriptHash.length === 42 ? this.scriptHash.substring(2) : this.scriptHash;
+            const toScript = this.scriptHash.startsWith('0x') && this.scriptHash.length === 42
+                ? this.scriptHash.substring(2) : this.scriptHash;
             let newTx = new tx.InvocationTransaction();
             if (this.scriptHash.length !== 42 && this.scriptHash.length !== 40) {
                 this.chrome.windowCallback({
@@ -224,10 +237,11 @@ export class PopupNoticeInvokeComponent implements OnInit {
             }
             try {
                 newTx.script = sc.createScript({
-                    scriptHash: this.scriptHash.startsWith('0x') && this.scriptHash.length === 42 ? this.scriptHash.substring(2) : this.scriptHash,
+                    scriptHash: this.scriptHash.startsWith('0x') && this.scriptHash.length === 42
+                        ? this.scriptHash.substring(2) : this.scriptHash,
                     operation: this.operation,
                     args: this.args
-                }) + 'f1';
+                });
             } catch (error) {
                 reject(error);
             }
@@ -273,14 +287,14 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 this.assetIntentOverrides.outputs.forEach(element => {
                     const toScripts = wallet.getScriptHashFromAddress(element.address)
                     let assetId = element.asset;
-                    if(element.asset.toString().toLowerCase() === 'gas') {
+                    if (element.asset.toString().toLowerCase() === 'gas') {
                         assetId = GAS;
                     }
-                    if(element.asset.toString().toLowerCase() === 'neo') {
+                    if (element.asset.toString().toLowerCase() === 'neo') {
                         assetId = NEO;
                     }
                     newTx.addOutput({
-                        assetId:  assetId.startsWith('0x') ? assetId.substring(2) : assetId,
+                        assetId: assetId.startsWith('0x') ? assetId.substring(2) : assetId,
                         value: new Fixed8(Number(element.value)),
                         scriptHash: toScripts.startsWith('0x') &&
                             toScripts.length === 42 ? toScripts.substring(2) : toScripts
@@ -293,15 +307,41 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     }))
                 });
             }
-            newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
-            const remark = this.broadcastOverride ? 'From NeoLine' : `From NeoLine at ${new Date().getTime()}`;
-            newTx.addAttribute(tx.TxAttrUsage.Remark1, u.str2hexstring(remark));
+            newTx = this.addAttributes(newTx);
             resolve(newTx);
         });
     }
 
+    private addAttributes(transaction: InvocationTransaction): InvocationTransaction {
+        const fromScript = wallet.getScriptHashFromAddress(this.neon.address);
+        if (this.txHashAttributes !== null) {
+            this.txHashAttributes.forEach((item, index) => {
+                this.txHashAttributes[index] = this.neon.parseTxHashAttr(this.txHashAttributes[index]);
+                const info = this.txHashAttributes[index];
+                if (tx.TxAttrUsage[info.txAttrUsage]) {
+                    transaction.addAttribute(tx.TxAttrUsage[info.txAttrUsage], info.value);
+                }
+            });
+        }
+        if (this.triggerContractVerification) {
+            transaction.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(this.scriptHash));
+        } else if (
+            (transaction.inputs.length === 0 && transaction.outputs.length === 0 && !this.assetIntentOverrides) ||
+            this.assetIntentOverrides && this.assetIntentOverrides.inputs && this.assetIntentOverrides.inputs.length &&
+            // tslint:disable-next-line: max-line-length
+            !this.assetIntentOverrides.inputs.filter(({ index, txid }) => this.utxos.find(utxo => utxo.n === index && (utxo.txid === txid || utxo.txid.slice(2) === txid))).length
+        ) {
+            transaction.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
+        }
+        const remark = this.broadcastOverride ? 'From NeoLine' : `From NeoLine at ${new Date().getTime()}`;
+        transaction.addAttribute(tx.TxAttrUsage.Remark1, u.str2hexstring(remark));
+        return transaction;
+
+    }
+
     private getBalance(address: string, asset: string): Observable<UTXO[]> {
         return this.http.get(`${this.global.apiDomain}/v1/transactions/getutxoes?address=${address}&asset_id=${asset}`).pipe(map((res) => {
+            this.utxos = (res as any).result as UTXO[];
             return (res as any).result as UTXO[];
         }));
     }
@@ -322,7 +362,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 for (const item of balances) {
                     curr = this.global.mathAdd(curr, parseFloat(item.value) || 0);
                     newTx.inputs.push(new TransactionInput({
-                        prevIndex: item.n, prevHash: item.txid.startsWith('0x') && item.txid.length == 66 ? item.txid.substring(2) : item.txid
+                        prevIndex: item.n, prevHash: item.txid.startsWith('0x') && item.txid.length === 66
+                            ? item.txid.substring(2) : item.txid
                     }));
                     if (curr >= amount + fee) {
                         break;

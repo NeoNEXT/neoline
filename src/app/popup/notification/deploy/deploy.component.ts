@@ -6,12 +6,12 @@ import { wallet, tx, sc, u } from '@cityofzion/neon-core';
 import { MatDialog } from '@angular/material/dialog';
 import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
 import { HttpClient } from '@angular/common/http';
-import { ERRORS, DeployArgs, GAS, requestTarget } from '@/models/dapi';
-import { generateDeployScript, ScriptBuilder, OpCode } from '@cityofzion/neon-core/lib/sc';
+import { ERRORS, GAS, requestTarget } from '@/models/dapi';
+import { ScriptBuilder } from '@cityofzion/neon-core/lib/sc';
 import { Observable } from 'rxjs';
 import { UTXO } from '@/models/models';
 import { map } from 'rxjs/operators';
-import { str2hexstring, hexstring2ab, num2fixed8, Fixed8, str2ab, num2hexstring } from '@cityofzion/neon-core/lib/u';
+import { str2hexstring, Fixed8 } from '@cityofzion/neon-core/lib/u';
 
 @Component({
     templateUrl: 'deploy.component.html',
@@ -104,7 +104,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                 this.chrome.windowCallback({
                     data: {
                         txid: transaction.hash,
-                        signedTX: this.tx.serialize(true)
+                        signedTx: this.tx.serialize(true)
                     },
                     return: requestTarget.Deploy,
                     ID: this.messageID
