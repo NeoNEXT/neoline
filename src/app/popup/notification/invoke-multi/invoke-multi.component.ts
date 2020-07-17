@@ -12,6 +12,7 @@ import { Observable } from 'rxjs';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
 import { ERRORS, requestTarget, Invoke, TxHashAttribute } from '@/models/dapi';
+import { resolve } from 'path';
 
 @Component({
     templateUrl: 'invoke-multi.component.html',
@@ -105,7 +106,6 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.createTxForNEP5().then(res => {
                     this.resolveSign(res, pwd);
                 }).catch(err => {
-                    console.log(err);
                     this.chrome.windowCallback({
                         error: ERRORS.MALFORMED_INPUT,
                         return: requestTarget.InvokeMulti,
@@ -336,12 +336,11 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     }))
                 });
             }
-            newTx = this.addAttributes(newTx);
-            mResolve(newTx);
+            mResolve(await this.addAttributes(newTx))
         });
     }
 
-    private addAttributes(transaction: InvocationTransaction): InvocationTransaction {
+    private async addAttributes(transaction: InvocationTransaction): Promise<InvocationTransaction> {
         const fromScript = wallet.getScriptHashFromAddress(this.neon.address);
         if (this.txHashAttributes !== null) {
             this.txHashAttributes.forEach((item, index) => {
@@ -359,6 +358,10 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 addScriptHash = this.invokeArgs[i].scriptHash
             }
         }
+        if(this.assetIntentOverrides && this.assetIntentOverrides.inputs && this.assetIntentOverrides.inputs.length) {
+            this.utxos = this.utxos.concat(await this.getBalance(this.neon.address, NEO));
+            this.utxos = this.utxos.concat(await this.getBalance(this.neon.address, GAS));
+        }
         if (addScriptHash !== '') {
             transaction.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(addScriptHash));
         } else if (
@@ -372,20 +375,20 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         const remark = this.broadcastOverride ? 'From NeoLine' : `From NeoLine at ${new Date().getTime()}`;
         transaction.addAttribute(tx.TxAttrUsage.Remark1, u.str2hexstring(remark));
         return transaction;
-
     }
 
-    private getBalance(address: string, asset: string): Observable<UTXO[]> {
-        return this.http.get(`${this.global.apiDomain}/v1/transactions/getutxoes?address=${address}&asset_id=${asset}`).pipe(map((res) => {
-            this.utxos = (res as any).result as UTXO[];
-            return (res as any).result as UTXO[];
-        }));
+    private getBalance(address: string, asset: string): Promise<UTXO[]> {
+        return new Promise(mResolve => {
+            this.http.get(`${this.global.apiDomain}/v1/transactions/getutxoes?address=${address}&asset_id=${asset}`).pipe(map((res) => {
+                mResolve((res as any).result as UTXO[]);
+            })).toPromise();
+        });
     }
 
     private addInputs(assetid: string, amount: number, fromScript: string,
         newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
         return new Promise((mResolve, reject) => {
-            this.getBalance(this.neon.address, assetid).subscribe((balances: any) => {
+            this.getBalance(this.neon.address, assetid).then((balances: any) => {
                 if (balances.length === 0) {
                     reject('no balance');
                 }
@@ -419,7 +422,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
 
     public addFee(from: string, newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
         return new Promise((mResolve, reject) => {
-            this.getBalance(from, GAS).subscribe(res => {
+            this.getBalance(from, GAS).then(res => {
                 let curr = 0.0;
                 for (const item of res) {
                     curr = this.global.mathAdd(curr, parseFloat(item.value) || 0);

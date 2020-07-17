@@ -307,12 +307,12 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     }))
                 });
             }
-            newTx = this.addAttributes(newTx);
+            newTx = await this.addAttributes(newTx);
             resolve(newTx);
         });
     }
 
-    private addAttributes(transaction: InvocationTransaction): InvocationTransaction {
+    private async addAttributes(transaction: InvocationTransaction): Promise<InvocationTransaction> {
         const fromScript = wallet.getScriptHashFromAddress(this.neon.address);
         if (this.txHashAttributes !== null) {
             this.txHashAttributes.forEach((item, index) => {
@@ -322,6 +322,10 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     transaction.addAttribute(tx.TxAttrUsage[info.txAttrUsage], info.value);
                 }
             });
+        }
+        if(this.assetIntentOverrides && this.assetIntentOverrides.inputs && this.assetIntentOverrides.inputs.length) {
+            this.utxos = this.utxos.concat(await this.getBalance(this.neon.address, NEO));
+            this.utxos = this.utxos.concat(await this.getBalance(this.neon.address, GAS));
         }
         if (this.triggerContractVerification) {
             transaction.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(this.scriptHash));
@@ -339,17 +343,18 @@ export class PopupNoticeInvokeComponent implements OnInit {
 
     }
 
-    private getBalance(address: string, asset: string): Observable<UTXO[]> {
-        return this.http.get(`${this.global.apiDomain}/v1/transactions/getutxoes?address=${address}&asset_id=${asset}`).pipe(map((res) => {
-            this.utxos = (res as any).result as UTXO[];
-            return (res as any).result as UTXO[];
-        }));
+    private getBalance(address: string, asset: string): Promise<UTXO[]> {
+        return new Promise(mResolve => {
+            this.http.get(`${this.global.apiDomain}/v1/transactions/getutxoes?address=${address}&asset_id=${asset}`).pipe(map((res) => {
+                mResolve((res as any).result as UTXO[]);
+            })).toPromise();
+        });
     }
 
     private addAttachedAssets(assetid: string, amount: number, fromScript: string,
         toScript: string, newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
         return new Promise((resolve, reject) => {
-            this.getBalance(this.neon.address, assetid).subscribe((balances: any) => {
+            this.getBalance(this.neon.address, assetid).then((balances: any) => {
                 if (balances.length === 0) {
                     reject('no balance');
                 }
@@ -384,7 +389,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
 
     public addFee(from: string, newTx: InvocationTransaction, fee: number = 0): Promise<InvocationTransaction> {
         return new Promise((resolve, reject) => {
-            this.getBalance(from, GAS).subscribe(res => {
+            this.getBalance(from, GAS).then(res => {
                 let curr = 0.0;
                 for (const item of res) {
                     curr = this.global.mathAdd(curr, parseFloat(item.value) || 0);
