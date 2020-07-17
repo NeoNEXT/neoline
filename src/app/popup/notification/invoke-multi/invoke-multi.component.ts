@@ -13,6 +13,8 @@ import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
 import { ERRORS, requestTarget, Invoke, TxHashAttribute } from '@/models/dapi';
 import { resolve } from 'path';
+import { type } from 'os';
+import { string } from 'mathjs';
 
 @Component({
     templateUrl: 'invoke-multi.component.html',
@@ -59,6 +61,21 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     if (arg.type === 'Address') {
                         const param2 = u.reverseHex(wallet.getScriptHashFromAddress(arg.value));
                         tempInvokeArgs[index].args[argIndex] = param2;
+                    } else if(arg.type === 'Boolean') {
+                        if(typeof arg.value === 'string') {
+                            if((arg.value && arg.value.toLowerCase()) === 'true') {
+                                tempInvokeArgs[index].args[argIndex] = true
+                            } else if(arg.value && arg.value.toLowerCase() === 'false') {
+                                tempInvokeArgs[index].args[argIndex] = false;
+                            } else {
+                                this.chrome.windowCallback({
+                                    error: ERRORS.MALFORMED_INPUT,
+                                    return: requestTarget.InvokeMulti,
+                                    ID: this.messageID
+                                });
+                                window.close();
+                            }
+                        }
                     }
                 });
                 this.invokeArgs.push({
@@ -145,7 +162,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 });
                 window.close();
             } else {
-                this.resolveSend(this.tx);
+                console.log(this.tx);
+                // this.resolveSend(this.tx);
             }
         }).catch((err) => {
             this.loading = false;

@@ -66,6 +66,21 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     if (item.type === 'Address') {
                         const param2 = u.reverseHex(wallet.getScriptHashFromAddress(item.value));
                         this.args[index] = param2;
+                    } else if (item.type === 'Boolean') {
+                        if(typeof item.value === 'string') {
+                            if((item.value && item.value.toLowerCase()) === 'true') {
+                                this.args[index] = true
+                            } else if(item.value && item.value.toLowerCase() === 'false') {
+                                this.args[index] = false;
+                            } else {
+                                this.chrome.windowCallback({
+                                    error: ERRORS.MALFORMED_INPUT,
+                                    return: requestTarget.Invoke,
+                                    ID: this.messageID
+                                });
+                                window.close();
+                            }
+                        }
                     }
                 });
                 this.fee = parseFloat(params.fee) || 0;
@@ -323,7 +338,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 }
             });
         }
-        if(this.assetIntentOverrides && this.assetIntentOverrides.inputs && this.assetIntentOverrides.inputs.length) {
+        if (this.assetIntentOverrides && this.assetIntentOverrides.inputs && this.assetIntentOverrides.inputs.length) {
             this.utxos = this.utxos.concat(await this.getBalance(this.neon.address, NEO));
             this.utxos = this.utxos.concat(await this.getBalance(this.neon.address, GAS));
         }
