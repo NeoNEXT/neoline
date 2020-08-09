@@ -148,7 +148,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                 this.chrome.windowCallback({
                     data: {
                         txid: transaction.hash,
-                        nodeURL: `${this.global.apiDomain}`
+                        nodeUrl: `${this.global.apiDomain}`
                     },
                     return: requestTarget.Deploy,
                     ID: this.messageID

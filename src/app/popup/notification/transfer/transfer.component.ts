@@ -211,7 +211,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.chrome.windowCallback({
                 data: {
                     txid: tx.hash,
-                    nodeURL: `${this.global.apiDomain}`
+                    nodeUrl: `${this.global.apiDomain}`
                 },
                 return: requestTarget.Send,
                 ID: this.messageID

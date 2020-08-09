@@ -205,7 +205,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 this.chrome.windowCallback({
                     data: {
                         txid: transaction.hash,
-                        nodeURL: `${this.global.apiDomain}`
+                        nodeUrl: `${this.global.apiDomain}`
                     },
                     return: requestTarget.Invoke,
                     ID: this.messageID
