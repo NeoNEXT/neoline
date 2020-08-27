@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService } from '@/app/core';
 import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzion/neon-core/lib/tx';
-import { wallet, tx, sc, u } from '@cityofzion/neon-core';
+import { wallet, tx, sc, u, rpc } from '@cityofzion/neon-core';
 import { MatDialog } from '@angular/material/dialog';
 import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
 import { HttpClient } from '@angular/common/http';
@@ -67,10 +67,10 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         const param2 = u.reverseHex(wallet.getScriptHashFromAddress(item.value));
                         this.args[index] = param2;
                     } else if (item.type === 'Boolean') {
-                        if(typeof item.value === 'string') {
-                            if((item.value && item.value.toLowerCase()) === 'true') {
+                        if (typeof item.value === 'string') {
+                            if ((item.value && item.value.toLowerCase()) === 'true') {
                                 this.args[index] = true
-                            } else if(item.value && item.value.toLowerCase() === 'false') {
+                            } else if (item.value && item.value.toLowerCase() === 'false') {
                                 this.args[index] = false;
                             } else {
                                 this.chrome.windowCallback({
@@ -188,9 +188,15 @@ export class PopupNoticeInvokeComponent implements OnInit {
         if (this.triggerContractVerification) {
             transaction.scripts = [await this.neon.getVerificationSignatureForSmartContract(this.scriptHash), ...transaction.scripts];
         }
-        return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
-            signature_transaction: transaction.serialize(true)
-        }).subscribe(async (res: any) => {
+        return rpc.Query.sendRawTransaction(transaction.serialize(true)).execute(this.global.RPCDomain).then(async res => {
+            if (
+                !res.result ||
+                (res.result && typeof res.result === 'object' && res.result.succeed === false)
+            ) {
+                throw {
+                    msg: 'Transaction rejected by RPC node.'
+                };
+            }
             this.loading = false;
             this.loadingMsg = '';
             if (!res.bool_status) {
@@ -221,7 +227,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 }]);
                 window.close();
             }
-        }, err => {
+        }).catch(err => {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
@@ -229,7 +235,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 return: requestTarget.Invoke,
                 ID: this.messageID
             });
-            this.global.snackBarTip('transferFailed', err);
+            this.global.snackBarTip('transferFailed', err.msg || err);
         });
     }
 

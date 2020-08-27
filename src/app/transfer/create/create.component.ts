@@ -31,6 +31,8 @@ import {
     Transaction
 } from '@cityofzion/neon-core/lib/tx';
 import { wallet } from '@cityofzion/neon-core';
+import { rpc } from '@cityofzion/neon-js';
+
 
 @Component({
     templateUrl: 'create.component.html',
@@ -96,19 +98,19 @@ export class TransferCreateComponent implements OnInit {
         this.creating = true;
         this.transfer.create(this.fromAddress, this.toAddress, this.balance.asset_id, this.amount,
             this.checkFee ? this.fee : 0, this.balance.decimals).subscribe((res) => {
-            this.dialog.open(PwdDialog).afterClosed().subscribe((pwd) => {
-                if (pwd && pwd.length) {
-                    this.global.log('start transfer with pwd');
-                    this.resolveSign(res, pwd);
-                } else {
-                    this.creating = false;
-                    this.global.log('cancel pay');
-                }
+                this.dialog.open(PwdDialog).afterClosed().subscribe((pwd) => {
+                    if (pwd && pwd.length) {
+                        this.global.log('start transfer with pwd');
+                        this.resolveSign(res, pwd);
+                    } else {
+                        this.creating = false;
+                        this.global.log('cancel pay');
+                    }
+                });
+            }, (err) => {
+                this.creating = false;
+                this.global.snackBarTip('wentWrong', err);
             });
-        }, (err) => {
-            this.creating = false;
-            this.global.snackBarTip('wentWrong', err);
-        });
     }
 
     public close() {
@@ -120,7 +122,6 @@ export class TransferCreateComponent implements OnInit {
     }
 
     private resolveSign(tx: Transaction, pwd: string) {
-        console.log(this.neon.wallet.accounts);
         this.neon.wallet.accounts[0].decrypt(pwd).then((acc) => {
             tx.sign(acc);
             this.global.log('signed tx', tx);
@@ -132,12 +133,15 @@ export class TransferCreateComponent implements OnInit {
         });
     }
     private resolveSend(tx: Transaction) {
-        // this.creating = false;
-        // this.router.navigate([{ outlets: { transfer: ['transfer', 'result'] } }]);
-        // return;
-        return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
-            signature_transaction: tx.serialize(true)
-        }).subscribe(res => {
+        return rpc.Query.sendRawTransaction(tx.serialize(true)).execute(this.global.RPCDomain).then(res => {
+            if (
+                !res.result ||
+                (res.result && typeof res.result === 'object' && res.result.succeed === false)
+            ) {
+                throw {
+                    msg: 'Transaction rejected by RPC node.'
+                };
+            }
             this.creating = false;
             if (this.fromAddress !== this.toAddress) {
                 const txTarget = {
@@ -154,9 +158,10 @@ export class TransferCreateComponent implements OnInit {
                     transfer: ['transfer', 'result']
                 }
             }]);
-        }, err => {
+            return res;
+        }).catch(err => {
             this.creating = false;
-            this.global.snackBarTip('transferFailed', err);
+            this.global.snackBarTip('transferFailed', err.msg || err);
         });
     }
 

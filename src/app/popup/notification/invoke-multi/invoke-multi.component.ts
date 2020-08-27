@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService } from '@/app/core';
 import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzion/neon-core/lib/tx';
-import { wallet, tx, sc, u } from '@cityofzion/neon-core';
+import { wallet, tx, sc, u, rpc } from '@cityofzion/neon-core';
+
 
 import { MatDialog } from '@angular/material/dialog';
 import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
@@ -61,11 +62,11 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     if (arg.type === 'Address') {
                         const param2 = u.reverseHex(wallet.getScriptHashFromAddress(arg.value));
                         tempInvokeArgs[index].args[argIndex] = param2;
-                    } else if(arg.type === 'Boolean') {
-                        if(typeof arg.value === 'string') {
-                            if((arg.value && arg.value.toLowerCase()) === 'true') {
+                    } else if (arg.type === 'Boolean') {
+                        if (typeof arg.value === 'string') {
+                            if ((arg.value && arg.value.toLowerCase()) === 'true') {
                                 tempInvokeArgs[index].args[argIndex] = true
-                            } else if(arg.value && arg.value.toLowerCase() === 'false') {
+                            } else if (arg.value && arg.value.toLowerCase() === 'false') {
                                 tempInvokeArgs[index].args[argIndex] = false;
                             } else {
                                 this.chrome.windowCallback({
@@ -162,8 +163,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 });
                 window.close();
             } else {
-                console.log(this.tx);
-                // this.resolveSend(this.tx);
+                this.resolveSend(this.tx);
             }
         }).catch((err) => {
             this.loading = false;
@@ -195,9 +195,15 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             return Promise.all(triggerContracts.map(scriptHash => this.neon.getVerificationSignatureForSmartContract(scriptHash)))
         }).then(scripts => {
             transaction.scripts = [...scripts, ...transaction.scripts];
-            return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
-                signature_transaction: transaction.serialize(true)
-            }).subscribe(async (res: any) => {
+            return rpc.Query.sendRawTransaction(transaction.serialize(true)).execute(this.global.RPCDomain).then(async res => {
+                if (
+                    !res.result ||
+                    (res.result && typeof res.result === 'object' && res.result.succeed === false)
+                ) {
+                    throw {
+                        msg: 'Transaction rejected by RPC node.'
+                    };
+                }
                 this.loading = false;
                 this.loadingMsg = '';
                 if (!res.bool_status) {
@@ -228,7 +234,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     }]);
                     window.close();
                 }
-            }, err => {
+            }).catch(err => {
                 this.loading = false;
                 this.loadingMsg = '';
                 this.chrome.windowCallback({
@@ -236,7 +242,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     return: requestTarget.InvokeMulti,
                     ID: this.messageID
                 });
-                this.global.snackBarTip('transferFailed', err);
+                this.global.snackBarTip('transferFailed', err.msg || err);
             });
         })
 
@@ -376,7 +382,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 addScriptHash = this.invokeArgs[i].scriptHash
             }
         }
-        if(this.assetIntentOverrides && this.assetIntentOverrides.inputs && this.assetIntentOverrides.inputs.length) {
+        if (this.assetIntentOverrides && this.assetIntentOverrides.inputs && this.assetIntentOverrides.inputs.length) {
             this.utxos = this.utxos.concat(await this.getBalance(this.neon.address, NEO));
             this.utxos = this.utxos.concat(await this.getBalance(this.neon.address, GAS));
         }

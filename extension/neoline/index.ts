@@ -5,10 +5,11 @@
 import {
     httpGet,
     getStorage,
-    getLocalStorage
+    getLocalStorage,
+    httpPost
 } from '../common/index';
 import { requestTarget, Account, AccountPublicKey,
-    SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS, VerifyMessageArgs, mainApi, testApi } from '../common/data_module';
+    SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS, VerifyMessageArgs, mainApi, testApi, mainRPC, testRPC } from '../common/data_module';
 import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, sign, str2hexstring, verify, hexstring2str } from '../common/utils';
 import randomBytes = require('randomBytes');
 
@@ -209,13 +210,18 @@ window.addEventListener('message', async (e) => {
                 if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
                     apiUrl = res || 'MainNet';
                 }
-                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
-                httpGet(`${apiUrl}/v1/getblock?block_index=${parameter.blockHeight}`, (returnRes) => {
+                apiUrl = apiUrl === 'MainNet' ? mainRPC : testRPC;
+                httpPost(apiUrl, {
+                    jsonrpc: '2.0',
+                    method: 'getblock',
+                    params: [parameter.blockHeight, 1],
+                    id: 1
+                },(returnRes) => {
                     window.postMessage({
                         return: requestTarget.Block,
-                        data: !returnRes.bool_status ? null : returnRes.result,
+                        data: returnRes.error !== undefined ? null : returnRes.result,
                         ID: e.data.ID,
-                        error: returnRes.bool_status ? null : ERRORS.RPC_ERROR
+                        error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
                     }, '*');
                 }, null);
             });

@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService } from '@/app/core';
 import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzion/neon-core/lib/tx';
-import { wallet, tx, sc, u } from '@cityofzion/neon-core';
+import { wallet, tx, sc, u, rpc } from '@cityofzion/neon-core';
 import { MatDialog } from '@angular/material/dialog';
 import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
 import { HttpClient } from '@angular/common/http';
@@ -131,9 +131,15 @@ export class PopupNoticeDeployComponent implements OnInit {
     }
 
     private resolveSend(transaction: Transaction) {
-        return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
-            signature_transaction: transaction.serialize(true)
-        }).subscribe(async (res: any) => {
+        return rpc.Query.sendRawTransaction(transaction.serialize(true)).execute(this.global.RPCDomain).then(async res => {
+            if (
+                !res.result ||
+                (res.result && typeof res.result === 'object' && res.result.succeed === false)
+            ) {
+                throw {
+                    msg: 'Transaction rejected by RPC node.'
+                };
+            }
             this.loading = false;
             this.loadingMsg = '';
             if (!res.bool_status) {
@@ -164,7 +170,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                     }
                 }]);
             }
-        }, err => {
+        }).catch(err => {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
@@ -172,7 +178,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                 return: requestTarget.Deploy,
                 ID: this.messageID
             });
-            this.global.snackBarTip('transferFailed', err);
+            this.global.snackBarTip('transferFailed', err.msg || err);
         });
     }
 

@@ -21,7 +21,7 @@ import {
     setLocalStorage,
     getLocalStorage
 } from '../common';
-import { requestTarget, GetBalanceArgs, BalanceRequest, ERRORS, mainApi, testApi, EVENT } from '../common/data_module';
+import { requestTarget, GetBalanceArgs, BalanceRequest, ERRORS, mainApi, testApi, EVENT, mainRPC, testRPC } from '../common/data_module';
 import { reverseHex, getScriptHashFromAddress } from '../common/utils';
 /**
  * Background methods support.
@@ -42,15 +42,25 @@ export function expand() {
     setInterval(() => {
         getStorage('net', async (res) => {
             const network = res || 'MainNet';
-            const apiUrl = network === 'MainNet' ? mainApi : testApi;
-            httpGet(`${apiUrl}/v1/getblockheight`, async (blockHeightData) => {
+            const apiUrl = network === 'MainNet' ? mainRPC : testRPC;
+            httpPost(apiUrl, {
+                jsonrpc: '2.0',
+                method: 'getblockcount',
+                params: [],
+                id: 1
+            }, async (blockHeightData) => {
                 const oldHeight = await getLocalStorage(`${network}BlockHeight`, () => {}) || 0;
-                if (blockHeightData.bool_status && blockHeightData.result > oldHeight ) {
+                if (blockHeightData.err === undefined && blockHeightData.result > oldHeight ) {
                     const setData = {};
                     setData[`${network}BlockHeight`] = blockHeightData.result;
                     setLocalStorage(setData);
-                    httpGet(`${apiUrl}/v1/getblock?block_index=${blockHeightData.result}`, (blockDetail) => {
-                        if (blockDetail.bool_status) {
+                    httpPost(apiUrl, {
+                        jsonrpc: '2.0',
+                        method: 'getblock',
+                        params: [blockHeightData.result, 1],
+                        id: 1
+                    }, (blockDetail) => {
+                        if (blockDetail.error === undefined) {
                             const txStrArr = [];
                             blockDetail.result.tx.forEach(item => {
                                 txStrArr.push(item.txid);
