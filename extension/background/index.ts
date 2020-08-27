@@ -57,7 +57,7 @@ export function expand() {
                     httpPost(apiUrl, {
                         jsonrpc: '2.0',
                         method: 'getblock',
-                        params: [blockHeightData.result, 1],
+                        params: [blockHeightData.result - 1, 1],
                         id: 1
                     }, (blockDetail) => {
                         if (blockDetail.error === undefined) {
