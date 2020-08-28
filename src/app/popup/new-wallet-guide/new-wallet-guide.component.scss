@@ -6,27 +6,51 @@ section {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding-top: 70px;
-    background: linear-gradient(0deg, rgba(140, 216, 210, 1), rgba(6, 204, 171, 1));
+    padding-top: 60px;
+    background: linear-gradient(0deg, #00BDC3, #05CBAB);
+}
+
+.bg-img {
+    position: absolute;
+    top: 100px;
+    left: 58px;
 }
 
 .title {
-    font-weight: 500;
-    font-size: 25px;
+    font-weight: bold;
+    font-size: 30px;
     color: #fff;
+    z-index: 0;
 }
 
+.button-box {
+    width: 100%;
+    height: 280px;
+    position: absolute;
+    bottom: 0;
+    text-align: center;
+    background: white;
+    border-radius: 20px 20px 0px 0px;
+}
+
+
+
 button {
-    width: 290px;
-    height: 45px;
+    width: calc(100% - 60px);
+    height: 50px;
     border-radius: 22px;
     font-size: 15px;
     font-weight: 500;
     cursor: pointer;
+    color:  map-get($neo-line-default, 500);
 }
 
 .create {
-    margin: 50px 0 25px 0;
-    background: rgba(255, 255, 255, 1);
-    color: map-get($neo-line-default, 500);
+    margin-top: 50px;
+    color: map-get($neo-line-default, 50);
+}
+.import {
+    margin-top: 15px;
+    background: map-get($neo-line-default, 200);
+    color:  map-get($neo-line-default, 500);
 }

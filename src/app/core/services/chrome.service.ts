@@ -16,6 +16,7 @@ import {
     AuthorizationData,
 } from '@/models/models';
 import { EVENT } from '@/models/dapi';
+import { loschmidtDependencies } from 'mathjs';
 
 declare var chrome: any;
 
@@ -372,7 +373,6 @@ export class ChromeService {
             }
         }));
     }
-
     public setTransaction(transaction: object) {
         if (!this.check) {
             localStorage.setItem('transaction', JSON.stringify(transaction));
@@ -386,7 +386,6 @@ export class ChromeService {
             console.log('set account failed', e);
         }
     }
-
     public getTransaction(): Observable<object> {
         if (!this.check) {
             try {
@@ -411,7 +410,6 @@ export class ChromeService {
             }
         }));
     }
-
     public setAuthorization(websits: object) {
         if (!this.check) {
             localStorage.setItem('connectedWebsites', JSON.stringify(websits));
@@ -651,6 +649,55 @@ export class ChromeService {
         }));
     }
 
+    public setLoginData(password: string, hash: string, salt: string) {
+        if (!this.check) {
+            localStorage.setItem('loginData', JSON.stringify({
+                hash,
+                salt
+            }));
+            localStorage.setItem('password', password);
+            return;
+        }
+        try {
+            this.crx.setLocalStorage({
+                loginData: JSON.stringify({
+                    hash,
+                    salt
+                })
+            });
+        } catch (e) {
+            console.log('set loginData failed', e);
+        }
+    }
+
+    public getLoginData(): Observable<JSON> {
+        if (!this.check) {
+            try {
+                return of(JSON.parse(localStorage.getItem('loginData')));
+            } catch (e) {
+                return throwError('please get loginData json to local storage when debug mode on');
+            }
+        }
+        return from(new Promise<JSON>((resolve, reject) => {
+            try {
+                this.crx.getStorage('loginData', (res) => {
+                    if (res) {
+                        resolve(JSON.parse(res));
+                    } else {
+                        resolve(null);
+                    }
+                });
+            } catch (e) {
+                reject('failed');
+            }
+        }));
+    }
+    public getPassword() {
+        if (!this.check) {
+            return localStorage.getItem('password');
+        }
+        return this.crx.password;
+    }
 
     public clearStorage() {
         if (!this.check) {

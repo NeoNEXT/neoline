@@ -60,11 +60,10 @@
 
         .popup-nav-network {
             width: 107px;
-            height: 25px;
-            line-height: 25px;
-            border-radius: 12px;
+            height: 30px;
+            line-height: 30px;
+            border-radius: 30px;
             font-size: 12px;
-
             .popup-nav-network-icon {
                 width: 5px;
                 height: 3px;
@@ -103,12 +102,7 @@
         @include bg($img-login-logo);
     }
     .popup-nav-network {
-        border-color: map-get($neo-line-default, 50);
-    }
-
-    .popup-nav-network {
-        border-color: map-get($neo-line-default, 50);
-
+        border-color: map-get($colors, f7f7f7);
         .popup-nav-network-icon {
             @include bg($img-net-dropdown);
         }
@@ -126,8 +120,8 @@
         }
 
         .popup-nav-network {
-            border-color: map-get($colors, e5e5e5);
-            color: map-get($colors, 666666);
+            border-color: map-get($colors, f7f7f7);
+            color: map-get($neo-line-default, 50);
 
             .popup-nav-network-icon {
                 @include bg($img-tp-net-dropdown);

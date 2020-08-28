@@ -30,6 +30,8 @@ import {
     ChromeService
 } from './chrome.service';
 import { evaluate, add, subtract, multiply, divide, bignumber } from 'mathjs';
+import { randomBytes, pbkdf2 } from 'crypto';
+import CryptoJS from 'crypto-js';
 
 @Injectable()
 export class GlobalService {
@@ -147,5 +149,25 @@ export class GlobalService {
         })
         res += ` AppVersion/${this.chromeSer.getVersion() ? this.chromeSer.getVersion() : 'debug'}`;
         return res;
+    }
+
+    public createHash(password: string) {
+        const randomSalt = randomBytes(24).toString('hex');
+        const hash = CryptoJS.PBKDF2(password, randomSalt, {
+            keySize: 24,
+            iterations: 1000,
+            hasher: CryptoJS.algo.SHA1
+        })
+        console.log(hash);
+        pbkdf2(password, randomSalt, 1000, 24, 'sha256', (error, key) => {
+            console.log(error);
+            console.log(key);
+        })
+    }
+
+    public validatePassword(password: string) {
+        this.chromeSer.getLoginData().subscribe(res => {
+            console.log(res);
+        })
     }
 }

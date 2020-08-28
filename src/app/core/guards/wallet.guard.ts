@@ -24,14 +24,13 @@ export class WalletGuard implements CanActivate {
                     this.chrome.setLogin('false');
                     this.router.navigateByUrl('/wallet');
                 } else {
-                    this.chrome.getLogin().subscribe((shoudLogin) => {
-                        if (shoudLogin) {
-                            this.router.navigateByUrl('/login');
-                            this.global.log('Wallet should login.');
-                        } else {
-                            resolve(res);
-                        }
-                    });
+                    const password = this.chrome.getPassword()
+                    if(password !== '' && password !== undefined || password !== null) {
+                        resolve(res);
+                    } else {
+                        this.router.navigateByUrl('/login');
+                        this.global.log('Wallet should login.');
+                    }
                 }
             });
         });
@@ -53,13 +52,12 @@ export class PopupLoginGuard implements CanActivate {
                     this.chrome.setLogin('false');
                     this.router.navigateByUrl('/popup/wallet/new');
                 } else {
-                    this.chrome.getLogin().subscribe((shoudLogin) => {
-                        if (shoudLogin) {
-                            resolve(true);
-                        } else {
-                            resolve(false);
-                        }
-                    });
+                    const password = this.chrome.getPassword()
+                    if(password !== '' && password !== undefined && password !== null) {
+                        resolve(false);
+                    } else {
+                        resolve(true);
+                    }
                 }
             });
         });
@@ -81,13 +79,12 @@ export class LoginGuard implements CanActivate {
                     this.chrome.setLogin('false');
                     this.router.navigateByUrl('/wallet');
                 } else {
-                    this.chrome.getLogin().subscribe((shoudLogin) => {
-                        if (shoudLogin) {
-                            resolve(true);
-                        } else {
-                            resolve(false);
-                        }
-                    });
+                    const password = this.chrome.getPassword()
+                    if(password !== '' && password !== undefined || password !== null) {
+                        resolve(false);
+                    } else {
+                        resolve(true);
+                    }
                 }
             });
         });
@@ -111,13 +108,12 @@ export class OpenedWalletGuard implements CanActivate {
                     this.chrome.setLogin('false');
                     resolve(true);
                 } else {
-                    this.chrome.getLogin().subscribe((shoudLogin) => {
-                        if (shoudLogin) {
-                            this.router.navigateByUrl('/popup/login');
-                        } else {
-                            resolve(true);
-                        }
-                    });
+                    const password = this.chrome.getPassword()
+                    if(password !== '' && password !== undefined || password !== null) {
+                        resolve(true);
+                    } else {
+                        this.router.navigateByUrl('/popup/login');
+                    }
                 }
             });
         });
@@ -148,14 +144,13 @@ export class PopupWalletGuard implements CanActivate {
                     this.router.navigateByUrl('/popup/wallet/new');
                     this.global.log('Wallet has not opened yet.');
                 } else {
-                    this.chrome.getLogin().subscribe((shoudLogin) => {
-                        if (shoudLogin) {
-                            this.router.navigateByUrl('/popup/login');
-                            this.global.log('Wallet should login.');
-                        } else {
-                            resolve(res);
-                        }
-                    });
+                    const password = this.chrome.getPassword()
+                    if(password !== '' && password !== undefined || password !== null) {
+                        resolve(res);
+                    } else {
+                        this.router.navigateByUrl('/popup/login');
+                        this.global.log('Wallet should login.');
+                    }
                 }
             });
         });

@@ -31,6 +31,7 @@ declare var chrome;
 
 let currLang = 'en';
 let tabCurr: any;
+export let password = '';
 
 export const version = chrome.runtime.getManifest().version;
 

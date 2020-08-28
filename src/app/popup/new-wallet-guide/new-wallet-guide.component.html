@@ -1,6 +1,9 @@
 <section>
+    <img class="bg-img" src="/assets/images/wallet_guard_bg.png" alt="">
     <p class="title">{{ 'createYour' | translate | async}}</p>
     <p class="title">{{ 'firstDigitalIdentity' | translate | async}}</p>
-    <button mat-button class="create" routerLink="/popup/wallet/create">{{ 'createNewWallet' | translate | async}}</button>
-    <button mat-raised-button color="primary" routerLink="/popup/wallet/import">{{ 'importNewWallet' | translate | async}}</button>
+    <div class="button-box">
+        <button mat-raised-button class="create" color="primary" routerLink="/popup/wallet/create">{{ 'createNewWallet' | translate | async}}</button>
+        <button mat-raised-button class="import" routerLink="/popup/wallet/import">{{ 'importNewWallet' | translate | async}}</button>
+    </div>
 </section>
