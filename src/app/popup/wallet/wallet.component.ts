@@ -34,6 +34,7 @@ export class PopupWalletComponent implements OnInit, AfterContentInit {
     public walletImport: WalletImport;
     public hideImportPwd: boolean;
     public hideWIF: boolean;
+    public isWIF = true;
 
 
     constructor(private router: Router, private neon: NeonService,
@@ -74,6 +75,14 @@ export class PopupWalletComponent implements OnInit, AfterContentInit {
         this.hidePwd = !this.hidePwd;
     }
 
+    public toggleImportPwd(): void {
+        this.hideImportPwd = !this.hideImportPwd;
+    }
+
+    public toggleWIF(): void {
+        this.hideWIF = !this.hideWIF;
+    }
+
     public submitCreate(): void {
         this.loading = true;
         const password = this.chrome.getPassword() === null ? this.wallet.password : this.chrome.getPassword();
@@ -99,7 +108,12 @@ export class PopupWalletComponent implements OnInit, AfterContentInit {
     }
 
     public submitImport(): void {
+        if (!wallet.isWIF(this.walletImport.WIF) && !wallet.isPrivateKey(this.walletImport.WIF)) {
+            this.isWIF = false;
+            return;
+        }
         this.loading = true;
+
         const password = this.chrome.getPassword() === null ? this.wallet.password : this.chrome.getPassword();
         if (wallet.isPrivateKey(this.walletImport.WIF)) {
             this.neon.importPrivateKey(this.walletImport.WIF, this.walletImport.password, this.walletImport.walletName)

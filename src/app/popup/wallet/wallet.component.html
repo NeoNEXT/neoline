@@ -70,7 +70,7 @@
                         <mat-label>{{ 'enterWIF' | translate | async }}</mat-label>
                         <input matInput [(ngModel)]="walletImport.WIF" name="WIF" (keyup)="isWIF = true" #WIF="ngModel"
                             required [type]="hideWIF ? 'password' : 'text'"
-                            (keyup.enter)="(!isInit && !walletImportForm.invalid && !loading && confirmPassword.value == password.value) ? submit() : null " />
+                            (keyup.enter)="(!isInit && !walletImportForm.invalid && !loading) ? submitImport() : null " />
                         <button tabindex="-1" mat-button matSuffix mat-icon-button type="button" (click)="toggleWIF()">
                             <span [class]="hideWIF ? 'hide-pwd' : ''"></span>
                         </button>
