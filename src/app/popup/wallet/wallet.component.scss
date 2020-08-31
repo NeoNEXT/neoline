@@ -117,11 +117,13 @@
     .mat-form-field-prefix {
         top: -5px;
     }
-    button {
-        top: -8px;
-    }
     .mat-form-field-appearance-fill .mat-form-field-flex {
         border-radius: 10px;
         background: #F9F9F9;
+    }
+    .popup-wallet-input-body {
+        button {
+            top: -8px;
+        }
     }
 }

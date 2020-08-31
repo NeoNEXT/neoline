@@ -11,24 +11,13 @@
 
     .mat-toolbar {
         height: 64px;
-        .btn-back {
-            width: 30px;
-            height: 28px;
-            padding: 5px 10px;
-            &.active {
-                display: none;
-            }
-        }
-        .popup-nav-icon {
-            height: 18px;
-            position: absolute;
-            left: -10px;
-        }
         .popup-nav-menu {
             width: 34px;
             height: 34px;
             border-radius: 50%;
             overflow: hidden;
+            margin-left: 20px;
+            margin-top: 10px;
             &.is-login {
                 display: none;
             }
@@ -45,16 +34,9 @@
         .popup-nav-logo {
             flex: auto;
             .popup-nav-logo-img {
-                height: 25px;
+                height: 20px;
                 display: inline-block;
                 vertical-align: middle;
-                &.is-login {
-                    margin-left: 14px;
-                }
-            }
-
-            .popup-nav-logo-img-logout {
-                margin-left: 0px;
             }
         }
 
@@ -97,7 +79,6 @@
 .no-third-party-toolbar {
     height: auto;
     .popup-nav-logo-img {
-        margin-left: 107px;
         width: 84px;
         @include bg($img-login-logo);
     }
@@ -110,23 +91,23 @@
     }
 }
 
-.is-third-party-toolbar {
-    .mat-toolbar {
-        background-color: map-get($neo-line-default, 50);
-        border-bottom: 1px solid #f1f1f1;
+// .is-third-party-toolbar {
+//     .mat-toolbar {
+//         background-color: map-get($neo-line-default, 50);
+//         border-bottom: 1px solid #f1f1f1;
 
-        .popup-nav-logo-title-img {
-            width: 84px;
-            @include bg($img-logo-title);
-        }
+//         .popup-nav-logo-title-img {
+//             width: 84px;
+//             @include bg($img-logo-title);
+//         }
 
-        .popup-nav-network {
-            border-color: map-get($colors, f7f7f7);
-            color: map-get($neo-line-default, 50);
+//         .popup-nav-network {
+//             border-color: map-get($colors, f7f7f7);
+//             color: map-get($neo-line-default, 50);
 
-            .popup-nav-network-icon {
-                @include bg($img-tp-net-dropdown);
-            }
-        }
-    }
-}
+//             .popup-nav-network-icon {
+//                 @include bg($img-tp-net-dropdown);
+//             }
+//         }
+//     }
+// }

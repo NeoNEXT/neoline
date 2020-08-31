@@ -101,11 +101,13 @@
     .mat-form-field-prefix {
         top: -5px;
     }
-    button {
-        top: -8px;
-    }
     .popup-login-logo .mat-form-field-appearance-fill .mat-form-field-flex {
         border-radius: 10px;
         background: #F9F9F9;
+    }
+    .popup-login-input {
+        button {
+            top: -8px;
+        }
     }
 }
