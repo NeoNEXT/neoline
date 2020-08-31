@@ -32,6 +32,7 @@ import {
 import { evaluate, add, subtract, multiply, divide, bignumber } from 'mathjs';
 import { randomBytes, pbkdf2 } from 'crypto';
 import CryptoJS from 'crypto-js';
+import { resolve } from 'path';
 
 @Injectable()
 export class GlobalService {
@@ -158,16 +159,22 @@ export class GlobalService {
             iterations: 1000,
             hasher: CryptoJS.algo.SHA1
         })
-        console.log(hash);
-        pbkdf2(password, randomSalt, 1000, 24, 'sha256', (error, key) => {
-            console.log(error);
-            console.log(key);
-        })
+        this.chromeSer.setLoginData(password, hash.toString(), randomSalt )
     }
 
-    public validatePassword(password: string) {
-        this.chromeSer.getLoginData().subscribe(res => {
-            console.log(res);
+    public validatePassword(password: string): Promise<boolean> {
+        return new Promise(mResolve => {
+            this.chromeSer.getLoginData().subscribe((res: any) => {
+                const hash = CryptoJS.PBKDF2(password, res.salt, {
+                    keySize: 24,
+                    iterations: 1000,
+                    hasher: CryptoJS.algo.SHA1
+                })
+                if(hash.toString() === res.hash) {
+                    this.chromeSer.setLoginData(password, hash.toString(), res.salt);
+                }
+                mResolve(hash.toString() === res.hash)
+            })
         })
     }
 }

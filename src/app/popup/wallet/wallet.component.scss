@@ -5,55 +5,123 @@
     width: 100%;
     min-height: 100%;
     padding-bottom: 30px;
-    border: 1px solid;
-    border-color: rgba(0, 0, 0, 0);
-    background: linear-gradient(0deg, rgba(140, 216, 210, 1), rgba(6, 204, 171, 1));
-
-    .popup-wallet-nav {
+    background: map-get($neo-line-default, 500);
+    .triangle {
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-bottom: 8px solid white;
+        &.wallet-create {
+            margin-left: calc(25% - 12px);
+        }
+        &.wallet-import {
+            margin-left: calc(75% - 12px);
+        }
+    }
+    .tab-container {
         width: 100%;
-        height: 74px;
-        overflow: hidden;
+        height: 100%;
+        background-color: white;
+        border-radius: 20px 20px 0px 0px;
+        padding-top: 35px;
 
-        .back-btn {
-            float: left;
-            width: 10px;
-            height: 18px;
-            margin-top: 27px;
-            margin-left: 22px;
-            @include bg($img-back);
+        .title {
+            margin-left: 30px;
+            margin-bottom: 12px;
+            color: #434543;
+        }
 
-            &:hover {
-                cursor: pointer;
+        .popup-wallet-input-body {
+            width: calc(100% - 40px);
+            border-radius: 10px;
+            margin-left: 20px;
+            margin-right: 20px;
+            margin-top: 8px;
+            font-size: 15px;
+        }
+
+        img {
+            margin-right: 20px;
+            top: -5px;
+            margin-left: 10px;
+        }
+
+        button {
+            span {
+                display: inline-block;
+                width: 17px;
+                height: 17px;
+                margin-top: -3px;
+                @include bg($img-show-pwd);
+            }
+
+            span.hide-pwd {
+                @include bg($img-hide-pwd);
             }
         }
-        .popup-wallet-nav-item {
-            width: 40px;
-            margin-top: 23px;
-            overflow: hidden;
+    }
+}
 
-            .popup-wallet-nav-item-link {
-                width: 100%;
-                text-align: center;
-                margin-bottom: 6px;
-                font-size: 3.1vw;
-                color: map-get($neo-line-default, 50);
-                span.hibernate {
-                    color: map-get($colors, 8dd9d2);
-                }
-            }
 
-            .popup-wallet-nav-item-block {
-                height: 4px;
-                background-color: map-get($neo-line-default, 50);
+@mixin button-common {
+    width: calc(100% - 40px);
+    height: 50px;
+    border-radius: 20px;
+    margin-left: 20px;
+    margin-right: 25px;
+    font-size: 15px;
+    font-weight: 500;
+}
+.popup-wallet-body-submit {
+    margin-top: 60px;
+    margin-bottom: 15px;
+    @include button-common;
+}
+
+.popup-wallet-body-cancel {
+    @include button-common;
+    background: map-get($neo-line-default, 200);
+    color: map-get($neo-line-default, 500);
+}
+
+
+::ng-deep .mat-form-field-underline {
+    display: none;
+}
+
+::ng-deep .mat-tab-group {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    .mat-tab-header {
+        border: none;
+        .mat-tab-label {
+            width: 50%;
+            color: white;
+            opacity: 80%;
+            font-size: 18px;
+            .mat-tab-label-active {
+                opacity: 100%;
             }
         }
-        .popup-wallet-nav-item-create {
-            float: left;
-            margin-left: 100px;
-        }
-        .popup-wallet-nav-item-import {
-            float: right;
-            margin-right: 100px;
-        }
+    }
+}
+
+::ng-deep .mat-tab-body-wrapper {
+    height: 100%;
+    flex-grow: 1;
+    .mat-form-field-label {
+        color: #CDD1D9;
+    }
+    .mat-form-field-prefix {
+        top: -5px;
+    }
+    button {
+        top: -8px;
+    }
+    .mat-form-field-appearance-fill .mat-form-field-flex {
+        border-radius: 10px;
+        background: #F9F9F9;
     }
 }

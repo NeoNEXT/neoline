@@ -38,16 +38,17 @@ export class LoginComponent implements OnInit, AfterContentInit {
         });
     }
 
-    public login() {
+    public async login() {
         this.loading = true;
-        this.accountWallet.accounts[0].decrypt(this.wallet.password).then((res) => {
+        const validateResult = await this.global.validatePassword(this.wallet.password)
+        if (validateResult) {
             this.loading = false;
             this.chrome.verifyLogin();
-            this.router.navigateByUrl('/asset');
-        }).catch((err) => {
+            this.router.navigateByUrl('/popup/home');
+        } else {
             this.loading = false;
             this.global.snackBarTip('loginFailed');
-        });
+        }
     }
 
     public togglePwd() {

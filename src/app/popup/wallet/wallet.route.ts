@@ -3,8 +3,6 @@ import { NgModule } from '@angular/core';
 
 import { PopupComponent } from '@popup/popup.component';
 import { PopupWalletComponent } from '@popup/wallet/wallet.component';
-import { PopupWalletImportComponent } from '@popup/wallet/import/import.component';
-import { PopupWalletCreateComponent } from '@popup/wallet/create/create.component';
 
 import { OpenedWalletGuard } from '@app/core';
 
@@ -16,13 +14,18 @@ const routes: Routes = [
             {
                 path: 'wallet',
                 component: PopupWalletComponent,
-                canActivate: [ OpenedWalletGuard ],
-                children: [
-                    { path: '', component: PopupWalletCreateComponent },
-                    { path: 'create', component: PopupWalletCreateComponent },
-                    { path: 'import', component: PopupWalletImportComponent }
-                ]
+                canActivate: [ OpenedWalletGuard ]
             },
+            {
+                path: 'wallet/import',
+                component: PopupWalletComponent,
+                canActivate: [ OpenedWalletGuard ]
+            },
+            {
+                path: 'wallet/create',
+                component: PopupWalletComponent,
+                canActivate: [ OpenedWalletGuard ]
+            }
         ]
     }
 ];

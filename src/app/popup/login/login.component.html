@@ -9,13 +9,13 @@
     </div>
 
     <form #loginForm="ngForm">
-        <mat-form-field class="popup-login-input">
-            <img matPrefix src="../../../assets/images/lock.png" alt="" />
-            <input matInput [placeholder]="'pwdInput' | translate | async" [minlength]="limit.passwordLimitation[0]"
-                [maxlength]="limit.passwordLimitation[1]" [pattern]="limit.pattern"
-                [minlength]="limit.passwordLimitation[0]" [maxlength]="limit.passwordLimitation[1]"
-                [pattern]="limit.pattern" name="password" #password="ngModel" required [(ngModel)]="wallet.password"
-                [type]="hidePwd ? 'password' : 'text'"
+        <mat-form-field class="popup-login-input" appearance="fill">
+            <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
+            <mat-label>{{ 'pwdInput' | translate | async }}</mat-label>
+            <input matInput [minlength]="limit.passwordLimitation[0]" [maxlength]="limit.passwordLimitation[1]"
+                [pattern]="limit.pattern" [minlength]="limit.passwordLimitation[0]"
+                [maxlength]="limit.passwordLimitation[1]" [pattern]="limit.pattern" name="password" #password="ngModel"
+                required [(ngModel)]="wallet.password" [type]="hidePwd ? 'password' : 'text'"
                 (keyup.enter)="(!isInit && !loginForm.invalid && !loading) ? login() : null " />
             <button mat-button matSuffix mat-icon-button type="button" (click)="togglePwd()">
                 <span [class]="hidePwd ? 'hide-pwd' : '' "></span>
@@ -29,7 +29,8 @@
             </mat-error>
         </mat-form-field>
     </form>
-    <button mat-raised-button color="primary" class="popup-login" [disabled]="isInit || loginForm.invalid || loading"
+    <button mat-button color="primary" class="popup-login-reset">重置钱包</button>
+    <button mat-flat-button color="primary" class="popup-login" [disabled]="isInit || loginForm.invalid || loading"
         (click)="login()">
         <ng-container *ngIf="!loading">{{ 'login' | translate | async}}</ng-container>
         <ng-container *ngIf="loading">{{ 'logining' | translate | async}}</ng-container>

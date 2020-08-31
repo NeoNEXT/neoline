@@ -4,6 +4,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import {MatCheckboxModule} from '@angular/material/checkbox';
+import {MatTabsModule} from '@angular/material/tabs';
 import {
     MatSnackBarModule
 } from '@angular/material/snack-bar';
@@ -73,6 +74,7 @@ import { NumberDirective } from './directives/number';
         MatRadioModule,
         MatSlideToggleModule,
         MatSnackBarModule,
+        MatTabsModule,
         MatToolbarModule,
         MatTooltipModule,
         PagerComponent,

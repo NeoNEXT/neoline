@@ -665,6 +665,7 @@ export class ChromeService {
                     salt
                 })
             });
+            this.crx.password = password;
         } catch (e) {
             console.log('set loginData failed', e);
         }

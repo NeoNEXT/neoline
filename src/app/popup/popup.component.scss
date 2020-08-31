@@ -103,6 +103,7 @@
     }
     .popup-nav-network {
         border-color: map-get($colors, f7f7f7);
+        margin-top: 10px;
         .popup-nav-network-icon {
             @include bg($img-net-dropdown);
         }

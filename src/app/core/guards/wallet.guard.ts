@@ -25,7 +25,7 @@ export class WalletGuard implements CanActivate {
                     this.router.navigateByUrl('/wallet');
                 } else {
                     const password = this.chrome.getPassword()
-                    if(password !== '' && password !== undefined || password !== null) {
+                    if(password !== '' && password !== undefined && password !== null) {
                         resolve(res);
                     } else {
                         this.router.navigateByUrl('/login');
@@ -50,7 +50,7 @@ export class PopupLoginGuard implements CanActivate {
             this.neon.walletIsOpen().subscribe((res: any) => {
                 if (!res) {
                     this.chrome.setLogin('false');
-                    this.router.navigateByUrl('/popup/wallet/new');
+                    this.router.navigateByUrl('/popup/wallet/new-guide');
                 } else {
                     const password = this.chrome.getPassword()
                     if(password !== '' && password !== undefined && password !== null) {
@@ -80,7 +80,7 @@ export class LoginGuard implements CanActivate {
                     this.router.navigateByUrl('/wallet');
                 } else {
                     const password = this.chrome.getPassword()
-                    if(password !== '' && password !== undefined || password !== null) {
+                    if(password !== '' && password !== undefined && password !== null) {
                         resolve(false);
                     } else {
                         resolve(true);
@@ -109,7 +109,7 @@ export class OpenedWalletGuard implements CanActivate {
                     resolve(true);
                 } else {
                     const password = this.chrome.getPassword()
-                    if(password !== '' && password !== undefined || password !== null) {
+                    if(password !== '' && password !== undefined && password !== null) {
                         resolve(true);
                     } else {
                         this.router.navigateByUrl('/popup/login');
@@ -141,11 +141,11 @@ export class PopupWalletGuard implements CanActivate {
                         this.chrome.setHistory(state.url);
                     }
                     this.chrome.setLogin('false');
-                    this.router.navigateByUrl('/popup/wallet/new');
+                    this.router.navigateByUrl('/popup/wallet/new-guide');
                     this.global.log('Wallet has not opened yet.');
                 } else {
                     const password = this.chrome.getPassword()
-                    if(password !== '' && password !== undefined || password !== null) {
+                    if(password !== '' && password !== undefined && password !== null) {
                         resolve(res);
                     } else {
                         this.router.navigateByUrl('/popup/login');

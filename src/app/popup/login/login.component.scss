@@ -48,16 +48,16 @@
 }
 
 .popup-login-input {
-    width: 291px;
-    margin-top: 50px;
-    margin-left: 42px;
+    width: calc(100% - 40px);
+    margin-top: 25px;
+    margin-left: 20px;
+    margin-right: 20px;
     font-size: 15px;
 
     img {
-        width: 15px;
-        height: 15px;
-        margin-right: 5px;
-        margin-bottom: -2px;
+        margin-right: 20px;
+        top: -5px;
+        margin-left: 10px;
     }
 
     button {
@@ -75,31 +75,37 @@
 }
 
 .popup-login {
-    width: 291px;
-    height: 40px;
-    margin: auto;
-    margin-top: 50px;
+    width: calc(100% - 40px);
+    height: 50px;
+    border-radius: 20px;
+    margin-left: 20px;
+    margin-right: 25px;
     font-size: 15px;
     font-weight: 500;
-    // color: map-get($neo-line-default, 50);
-    // background: map-get($neo-line-default, 500);
-    border-radius: 40px;
-    display: block;
-    box-shadow: 0 2px 4px 0 map-get($neo-line-default, 200);
+    margin-top: 40px;
 }
-.popup-login-or {
-    font-size: 13px;
-    font-weight: 400;
-    display: flex;
-    justify-content: center;
-    margin: 15px 0;
-    color: #999999;
+
+.popup-login-reset {
+    float: right;
+    margin-top: 0px;
+    margin-right: 15px;
 }
-.popup-login-or-link {
-    font-size: 13px;
-    font-weight: 500;
-    display: flex;
-    justify-content: center;
-    cursor: pointer;
-    color: #7a87a9;
+
+::ng-deep {
+    .mat-form-field-label {
+        color: #CDD1D9;
+    }
+    .mat-form-field-underline {
+        display: none;
+    }
+    .mat-form-field-prefix {
+        top: -5px;
+    }
+    button {
+        top: -8px;
+    }
+    .popup-login-logo .mat-form-field-appearance-fill .mat-form-field-flex {
+        border-radius: 10px;
+        background: #F9F9F9;
+    }
 }

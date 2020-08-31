@@ -13,7 +13,7 @@ const routes: Routes = [
         children: [
             {
                 canActivate: [ OpenedWalletGuard ],
-                path: 'wallet/new',
+                path: 'wallet/new-guide',
                 component: PopupNewWalletGuideComponent
             },
         ]
