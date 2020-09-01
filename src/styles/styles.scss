@@ -75,7 +75,8 @@ body {
 }
 
 .custom-dialog-panel {
-    width: 90vw;
+    width: 92vw;
+    max-width: 92vw !important;
     background: #fff;
     border-radius: 15px;
     .mat-dialog-container {

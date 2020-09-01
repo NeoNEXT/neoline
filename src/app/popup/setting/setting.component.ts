@@ -1,81 +1,52 @@
-import {
-    Component,
-    OnInit
-} from '@angular/core';
-import {
-    Router
-} from '@angular/router';
-import {
-    MatDialog
-} from '@angular/material/dialog';
-
-import {
-    Balance,
-    NEO,
-} from '@models/models';
+import { Component, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 
 import {
     PopupLanguageDialogComponent,
-    PopupClearStorageDialogComponent,
-    PopupNameDialogComponent
+    PopupClearStorageDialogComponent
 } from '@popup/_dialogs';
+import { PopupAuthorizationListDialogComponent } from '@popup/_dialogs/authorization-list/authorization-list.dialog';
 
 import {
     ChromeService,
     GlobalService,
-    NeonService,
     AssetState,
-    TransactionState,
     SettingState
 } from '@app/core';
-import {
-    Wallet
-} from '@cityofzion/neon-core/lib/wallet';
-import {
-    PopupConfirmDialogComponent
-} from '../_dialogs/confirm/confirm.dialog';
-import {
-    map
-} from 'rxjs/operators';
-import { EVENT } from '@/models/dapi';
 
 @Component({
     templateUrl: 'setting.component.html',
     styleUrls: ['setting.component.scss']
 })
 export class PopupSettingComponent implements OnInit {
-    public walletArr: Array < Wallet > ;
-    public wallet: Wallet;
     public lang: string;
     public rateCurrency: string;
-    public rateCurrencys: Array < string > ;
+    public rateCurrencys: Array<string>;
     public rateTime: number;
     public isDark;
 
     constructor(
-        private router: Router,
         private chrome: ChromeService,
         private global: GlobalService,
-        private neon: NeonService,
         private asset: AssetState,
         private dialog: MatDialog,
-        private transaction: TransactionState,
-        private setting: SettingState,
+        private setting: SettingState
     ) {
-        this.walletArr = this.neon.walletArr;
-        this.wallet = this.neon.wallet;
         this.rateCurrencys = this.setting.rateCurrencys;
         this.rateCurrency = this.asset.rateCurrency;
         this.isDark = this.setting.theme === 'dark-theme' ? true : false;
     }
 
     ngOnInit(): void {
-        this.chrome.getLang().subscribe((res) => {
-            this.lang = res;
-        }, (err) => {
-            this.global.log('get lang setting failed', err);
-            this.lang = '';
-        });
+        this.chrome.getLang().subscribe(
+            res => {
+                this.lang = res;
+            },
+            err => {
+                this.global.log('get lang setting failed', err);
+                this.lang = '';
+            }
+        );
         this.asset.getRate().subscribe(rateBalance => {
             const tempRateObj = rateBalance.result;
             if (JSON.stringify(tempRateObj) === '{}') {
@@ -85,52 +56,27 @@ export class PopupSettingComponent implements OnInit {
         });
     }
 
-    public detail(w: Wallet) {
-        if (this.isActivityWallet(w)) {
-            this.router.navigateByUrl('/popup/account');
-        } else {
-            this.wallet = this.neon.parseWallet(w);
-            this.chrome.setWallet(this.wallet.export());
-            this.chrome.windowCallback({
-                data: {
-                    address: this.wallet.accounts[0].address,
-                    label: this.wallet.name
-                },
-                return: EVENT.ACCOUNT_CHANGED
-            });
-            location.href = `index.html#popup`;
-        }
-    }
-
     public language() {
-        return this
-            .dialog
-            .open(
-                PopupLanguageDialogComponent, {
-                    data: {
-                        currentOption: this.lang,
-                        optionGroup: ['en', 'zh_CN'],
-                        type: 'lang'
-                    },
-                    panelClass: 'custom-dialog-panel'
-                }
-            );
+        return this.dialog.open(PopupLanguageDialogComponent, {
+            data: {
+                currentOption: this.lang,
+                optionGroup: ['en', 'zh_CN'],
+                type: 'lang'
+            },
+            panelClass: 'custom-dialog-panel'
+        });
     }
 
     public modifyRateCurrency() {
-        const tempDialog = this
-            .dialog
-            .open(
-                PopupLanguageDialogComponent, {
-                    data: {
-                        currentOption: this.rateCurrency,
-                        optionGroup: this.rateCurrencys,
-                        type: 'currency'
-                    },
-                    panelClass: 'custom-dialog-panel'
-                }
-            );
-        tempDialog.afterClosed().subscribe((currency) => {
+        const tempDialog = this.dialog.open(PopupLanguageDialogComponent, {
+            data: {
+                currentOption: this.rateCurrency,
+                optionGroup: this.rateCurrencys,
+                type: 'currency'
+            },
+            panelClass: 'custom-dialog-panel'
+        });
+        tempDialog.afterClosed().subscribe(currency => {
             if (!currency) {
                 return;
             }
@@ -139,72 +85,24 @@ export class PopupSettingComponent implements OnInit {
         });
     }
 
-
-    public createWallet() {
-        this.router.navigateByUrl('/popup/wallet/create');
-    }
-
-    public importWallet() {
-        this.router.navigateByUrl('/popup/wallet/import');
-    }
-    public exportWallet() {
-        const sJson = JSON.stringify(this.neon.wallet.export());
-        const element = document.createElement('a');
-        element.setAttribute('href', 'data:text/json;charset=UTF-8,' + encodeURIComponent(sJson));
-        element.setAttribute('download', `${this.neon.wallet.name}.json`);
-        element.style.display = 'none';
-        document.body.appendChild(element);
-        element.click();
-        document.body.removeChild(element);
-    }
-
     public clearCache() {
-        this.dialog.open(PopupClearStorageDialogComponent, {
-            panelClass: 'custom-dialog-panel'
-        }).afterClosed().subscribe((confirm) => {
-            if (confirm) {
-                this.chrome.clearAssetFile();
-                this.asset.clearCache();
-                this.global.snackBarTip('clearSuccess');
-            }
-        });
-    }
-
-    public isActivityWallet(w: Wallet) {
-        if (w.accounts[0].address === this.wallet.accounts[0].address) {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public updateName(w: Wallet) {
-        return this
-            .dialog
-            .open(PopupNameDialogComponent, {
-                data: w
+        this.dialog
+            .open(PopupClearStorageDialogComponent, {
+                panelClass: 'custom-dialog-panel'
+            })
+            .afterClosed()
+            .subscribe(confirm => {
+                if (confirm) {
+                    this.chrome.clearAssetFile();
+                    this.asset.clearCache();
+                    this.global.snackBarTip('clearSuccess');
+                }
             });
     }
-    public removeWallet(w: Wallet) {
-        this.dialog.open(PopupConfirmDialogComponent, {
-            data: 'delWalletConfirm',
+
+    viewAllAuth() {
+        this.dialog.open(PopupAuthorizationListDialogComponent, {
             panelClass: 'custom-dialog-panel'
-        }).afterClosed().subscribe((confirm) => {
-            if (confirm) {
-                this.neon.delWallet(w).subscribe(res => {
-                    if (res) {
-                        this.walletArr = this.neon.walletArr;
-                        this.wallet = this.neon.wallet;
-                        // this.router.navigate(['popup/home'], {
-                        //     replaceUrl: true
-                        // });
-                        location.href = `index.html#popup`;
-                    } else {
-                        this.walletArr = this.neon.walletArr;
-                        this.wallet = this.neon.wallet;
-                    }
-                });
-            }
         });
     }
 

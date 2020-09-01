@@ -1,0 +1,32 @@
+<div class="title">
+    {{ 'authorizationManage' | translate | async}}
+    <mat-icon class="close" [mat-dialog-close]="false" >close</mat-icon>
+</div>
+
+
+<div class="popup-authorization-list-content">
+    <div class="authorization-container">
+        <div class="empty" *ngIf="authorizationList.length == 0">
+            {{ 'empty' | translate | async }}
+        </div>
+        <div class="authorization-item" *ngFor="let item of authorizationList">
+            <img class="icon" [src]="item.icon" alt="">
+            <div class="info-box">
+                <div class="top">
+                    <span class="websit-title">
+                        {{ item.title }}
+                    </span>
+                    <span class="websit-status"
+                        [ngClass]="{ 'success': item.status, 'fail': !item.status }">{{ item.status ? ('authorized' | translate | async) : ('rejected' | translate | async) }}</span>
+                </div>
+                <p class="websit-url">
+                    {{ item.hostname }}
+                </p>
+            </div>
+            <div class="remove-btn" (click)="delItem(item.hostname)">
+                {{ 'delete' | translate | async }}
+            </div>
+        </div>
+    </div>
+    <div class="clear-all" (click)="delAll()">{{ 'authDelAllTip' | translate | async }}</div>
+</div>
