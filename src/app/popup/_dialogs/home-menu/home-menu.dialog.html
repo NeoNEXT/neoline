@@ -1,0 +1,39 @@
+<div class="dialog-home-menu-container">
+    <p class="triangle"></p>
+    <div class="menu-body">
+        <mat-toolbar>
+            <span class="title">已添加账户</span>
+            <span class="spacer"></span>
+            <button mat-flat-button>
+                <img src="/assets/images/home-menu/close.png" alt="">
+                <span class="text">登出</span></button>
+        </mat-toolbar>
+        <div class="wallet-container">
+            <div class="account-item" (click)="selectAccount(item)" *ngFor="let item of walletArr; let i = index">
+                <div class="selected">
+                    <img src="/assets/images/home-menu/wallet-selected.png" alt="" [hidden]="!isActivityWallet(item)">
+                </div>
+                <img class="avatar" [avatar]="item.accounts[0].address" />
+                <span class="name">{{ item.name }}</span>
+            </div>
+        </div>
+        <hr class="wallet-line" />
+        <div class="create-wallet-container menu-item" [routerLink]="['/popup/wallet/create']" (click)="dismiss()" matRipple >
+            <img src="/assets/images/home-menu/create.png" alt="">
+            <span>{{ 'createWallet' | translate | async }}</span>
+        </div>
+        <div class="import-wallet-container menu-item" [routerLink]="['/popup/wallet/import']" (click)="dismiss()" matRipple>
+            <img src="/assets/images/home-menu/import.png" alt="">
+            <span>{{ 'importWallet' | translate | async }}</span>
+        </div>
+        <hr class="import-line" />
+        <div class="import-wallet-container menu-item" [routerLink]="['/popup/setting']" (click)="dismiss()" matRipple>
+            <img src="/assets/images/home-menu/settings.png" alt="">
+            <span>{{ 'setting' | translate | async }}</span>
+        </div>
+        <div class="import-wallet-container menu-item" [routerLink]="['/popup/about']" (click)="dismiss()" matRipple>
+            <img src="/assets/images/home-menu/about.png" alt="">
+            <span>{{ 'about' | translate | async }}</span>
+        </div>
+    </div>
+</div>

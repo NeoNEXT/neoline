@@ -15,6 +15,8 @@ import {
     RouterEvent,
     NavigationEnd
 } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { PopupHomeMenuDialogComponent } from './_dialogs';
 
 @Component({
     templateUrl: 'popup.component.html',
@@ -34,6 +36,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
         private global: GlobalService,
         private neon: NeonService,
         private router: Router,
+        private dialog: MatDialog,
         private assetSer: AssetState
     ) {
         this.walletIsOpen = false;
@@ -77,6 +80,21 @@ export class PopupComponent implements OnInit, AfterViewInit {
                 this.net = 'MainNet';
             }
         }, 0);
+    }
+
+    public topMenu() {
+        this.dialog.open(PopupHomeMenuDialogComponent, {
+            position: {
+                top: '65px',
+                right: '10px'
+            },
+            autoFocus: false,
+            width: '315px',
+            maxWidth: 375,
+            maxHeight: 500,
+        }).afterClosed().subscribe((confirm) => {
+
+        });
     }
 
     public modifyNet(net: string) {

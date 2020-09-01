@@ -11,7 +11,7 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { PopupRoutingModule } from '@popup/popup.route';
 import { PopupComponent } from '@popup/popup.component';
 import { PopupSidenavComponent } from '@popup/sidenav/sidenav.component';
-import { PopupLogoutDialogComponent, PopupClearStorageDialogComponent, PopupConfirmDialogComponent } from '@popup/_dialogs';
+import { PopupLogoutDialogComponent, PopupClearStorageDialogComponent, PopupConfirmDialogComponent, PopupHomeMenuDialogComponent } from '@popup/_dialogs';
 import { PopupQRCodeDialogComponent } from '@popup/_dialogs';
 import { PopupLanguageDialogComponent } from '@popup/_dialogs';
 import { PopupNameDialogComponent } from '@popup/_dialogs';
@@ -44,7 +44,8 @@ import { PopupAuthorizationListModule } from './authorization-list/authorization
         PopupAddTokenDialogComponent,
         PopupDelTokenDialogComponent,
         PopupClearStorageDialogComponent,
-        PopupConfirmDialogComponent
+        PopupConfirmDialogComponent,
+        PopupHomeMenuDialogComponent
     ],
     imports: [
         FormsModule,
@@ -77,7 +78,8 @@ import { PopupAuthorizationListModule } from './authorization-list/authorization
         PopupAddTokenDialogComponent,
         PopupDelTokenDialogComponent,
         PopupClearStorageDialogComponent,
-        PopupConfirmDialogComponent
+        PopupConfirmDialogComponent,
+        PopupHomeMenuDialogComponent
     ]
 })
 export class PopupModule {}

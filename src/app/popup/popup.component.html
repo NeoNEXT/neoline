@@ -23,7 +23,7 @@
                     <button mat-menu-item (click)="modifyNet('MainNet')">{{ 'mainNet' | translate | async }}</button>
                     <button mat-menu-item (click)="modifyNet('TestNet')">{{ 'testNet' | translate | async }}</button>
                 </mat-menu>
-                <span class="popup-nav-menu" (click)="sidenav?.toggle()" *ngIf="walletIsOpen && !isLogin">
+                <span class="popup-nav-menu" (click)="topMenu()" *ngIf="walletIsOpen && !isLogin">
                     <img [avatar]="address" />
                 </span>
             </mat-toolbar>

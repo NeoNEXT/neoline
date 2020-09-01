@@ -41,6 +41,7 @@ import { CopyDirective } from './directives/copy';
 import { AvatarDirective } from './directives/avatar';
 import { TranslatePipe } from './pipes/translate.pipe';
 import { NumberDirective } from './directives/number';
+import { MatRippleModule } from '@angular/material/core';
 
 @NgModule({
     declarations: [
@@ -76,6 +77,7 @@ import { NumberDirective } from './directives/number';
         MatSnackBarModule,
         MatTabsModule,
         MatToolbarModule,
+        MatRippleModule,
         MatTooltipModule,
         PagerComponent,
         PopupPagerComponent,
