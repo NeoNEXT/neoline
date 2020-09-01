@@ -22,8 +22,6 @@ export class PopupWalletComponent implements OnInit, AfterContentInit {
     public createStatus = 'hibernate';
     public importStatus = '';
 
-    public havePassword: boolean = false;
-
     public selected = new FormControl(2);
     public wallet: WalletCreation;
     public limit: any;
@@ -50,8 +48,6 @@ export class PopupWalletComponent implements OnInit, AfterContentInit {
         this.walletImport = new WalletImport();
         this.hideImportPwd = true;
         this.hideWIF = true;
-        this.havePassword =  this.chrome.getPassword() === '' || this.chrome.getPassword() === null
-        || this.chrome.getPassword() === undefined;
     }
 
     ngAfterContentInit(): void {
@@ -85,15 +81,11 @@ export class PopupWalletComponent implements OnInit, AfterContentInit {
 
     public submitCreate(): void {
         this.loading = true;
-        const password = this.chrome.getPassword() === null ? this.wallet.password : this.chrome.getPassword();
         this.neon
-            .createWallet(password, this.wallet.walletName)
+            .createWallet(this.wallet.password, this.wallet.walletName)
             .subscribe(
                 (res: any) => {
                     if (this.neon.verifyWallet(res)) {
-                        if(this.neon.getWalletArrayJSON().length === 0) {
-                            this.global.createHash(this.wallet.password);
-                        }
                         this.updateLocalWallet(res)
                     } else {
                         this.global.snackBarTip('existingWallet');
@@ -113,16 +105,11 @@ export class PopupWalletComponent implements OnInit, AfterContentInit {
             return;
         }
         this.loading = true;
-
-        const password = this.chrome.getPassword() === null ? this.wallet.password : this.chrome.getPassword();
         if (wallet.isPrivateKey(this.walletImport.WIF)) {
             this.neon.importPrivateKey(this.walletImport.WIF, this.walletImport.password, this.walletImport.walletName)
                 .subscribe((res: any) => {
                     this.loading = false;
                     if (this.neon.verifyWallet(res)) {
-                        if(this.neon.getWalletArrayJSON().length === 0) {
-                            this.global.createHash(this.wallet.password);
-                        }
                         this.updateLocalWallet(res);
                     } else {
                         this.global.snackBarTip('existingWallet');
@@ -135,9 +122,6 @@ export class PopupWalletComponent implements OnInit, AfterContentInit {
                     (res: any) => {
                         this.loading = false;
                         if (this.neon.verifyWallet(res)) {
-                            if(this.neon.getWalletArrayJSON().length === 0) {
-                                this.global.createHash(this.wallet.password);
-                            }
                             this.updateLocalWallet(res);
                         } else {
                             this.global.snackBarTip('existingWallet');
@@ -152,6 +136,8 @@ export class PopupWalletComponent implements OnInit, AfterContentInit {
     }
 
     private updateLocalWallet(data: any) {
+        this.neon.pushWIFArray(data.accounts[0].wif);
+        this.chrome.setWIFArray(this.neon.WIFArr);
         this.neon.pushWalletArray(data.export());
         this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
         this.chrome.setWallet(data.export());

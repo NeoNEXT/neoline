@@ -648,58 +648,6 @@ export class ChromeService {
             }
         }));
     }
-
-    public setLoginData(password: string, hash: string, salt: string) {
-        if (!this.check) {
-            localStorage.setItem('loginData', JSON.stringify({
-                hash,
-                salt
-            }));
-            localStorage.setItem('password', password);
-            return;
-        }
-        try {
-            this.crx.setLocalStorage({
-                loginData: JSON.stringify({
-                    hash,
-                    salt
-                })
-            });
-            this.crx.password = password;
-        } catch (e) {
-            console.log('set loginData failed', e);
-        }
-    }
-
-    public getLoginData(): Observable<JSON> {
-        if (!this.check) {
-            try {
-                return of(JSON.parse(localStorage.getItem('loginData')));
-            } catch (e) {
-                return throwError('please get loginData json to local storage when debug mode on');
-            }
-        }
-        return from(new Promise<JSON>((resolve, reject) => {
-            try {
-                this.crx.getStorage('loginData', (res) => {
-                    if (res) {
-                        resolve(JSON.parse(res));
-                    } else {
-                        resolve(null);
-                    }
-                });
-            } catch (e) {
-                reject('failed');
-            }
-        }));
-    }
-    public getPassword() {
-        if (!this.check) {
-            return localStorage.getItem('password');
-        }
-        return this.crx.password;
-    }
-
     public clearStorage() {
         if (!this.check) {
             localStorage.clear();

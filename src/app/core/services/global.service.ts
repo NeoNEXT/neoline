@@ -151,30 +151,4 @@ export class GlobalService {
         res += ` AppVersion/${this.chromeSer.getVersion() ? this.chromeSer.getVersion() : 'debug'}`;
         return res;
     }
-
-    public createHash(password: string) {
-        const randomSalt = randomBytes(24).toString('hex');
-        const hash = CryptoJS.PBKDF2(password, randomSalt, {
-            keySize: 24,
-            iterations: 1000,
-            hasher: CryptoJS.algo.SHA1
-        })
-        this.chromeSer.setLoginData(password, hash.toString(), randomSalt )
-    }
-
-    public validatePassword(password: string): Promise<boolean> {
-        return new Promise(mResolve => {
-            this.chromeSer.getLoginData().subscribe((res: any) => {
-                const hash = CryptoJS.PBKDF2(password, res.salt, {
-                    keySize: 24,
-                    iterations: 1000,
-                    hasher: CryptoJS.algo.SHA1
-                })
-                if(hash.toString() === res.hash) {
-                    this.chromeSer.setLoginData(password, hash.toString(), res.salt);
-                }
-                mResolve(hash.toString() === res.hash)
-            })
-        })
-    }
 }

@@ -19,7 +19,7 @@
                             {{ limit.nameLimitation[0] }}-{{ limit.nameLimitation[1] }} </mat-error>
                     </mat-form-field>
 
-                    <mat-form-field *ngIf="havePassword" class="popup-wallet-input-body" appearance="fill"
+                    <mat-form-field class="popup-wallet-input-body" appearance="fill"
                         focused="true">
                         <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
                         <mat-label>{{ 'enterPassword' | translate | async }}</mat-label>
@@ -79,7 +79,7 @@
                     <mat-error class="error-wif" *ngIf="isWIF === false">{{ 'WIFPattern' | translate | async }}
                     </mat-error>
 
-                    <mat-form-field *ngIf="havePassword" class="popup-wallet-input-body" appearance="fill"
+                    <mat-form-field class="popup-wallet-input-body" appearance="fill"
                         focused="true">
                         <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
                         <mat-label>{{ 'enterPassword' | translate | async }}</mat-label>
