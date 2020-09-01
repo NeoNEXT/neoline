@@ -47,8 +47,9 @@ export class PopupLanguageDialogComponent implements OnInit {
         this.dialogRef.close();
     }
 
-    public select() {
-        if (this.data.currentOption === this.targetOption) {
+    public select(targetOption: any) {
+        this.targetOption = targetOption;
+        if (this.data.currentOption === targetOption) {
             return;
         }
         if (this.data.type === 'lang') {

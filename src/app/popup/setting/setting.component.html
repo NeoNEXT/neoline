@@ -1,4 +1,4 @@
-<p class="popup-setting-title">{{ 'myAccounts' | translate | async}}</p>
+<!-- <p class="popup-setting-title">{{ 'myAccounts' | translate | async}}</p>
 
 <div class="popup-setting-account">
 
@@ -12,7 +12,6 @@
             </div>
             <div class="popup-setting-asset-info">
                 <div class="popup-setting-asset-title">{{ item.name }}</div>
-                <!-- <div class="popup-setting-asset-value">{{ balance?.balance || '0' }} NEO</div> -->
             </div>
             <div class="popup-setting-account-menu">
                 <button mat-icon-button class="menu-btn-box" (click)="$event.stopPropagation()"
@@ -45,12 +44,24 @@
         <div>{{ 'exportWallet' | translate | async}}</div>
     </div>
 </div>
-<hr>
+<hr> -->
+
+<div class="nav">
+    <div class="content">
+        <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="">
+        通用设置
+    </div>
+    <div class="divide"></div>
+</div>
+
 <div class="popup-setting-menu">
     <div class="popup-setting-item" (click)="language()">
         <div class="popup-setting-language-logo"></div>
         <div>{{ 'language' | translate | async}}</div>
-        <div class="popup-setting-language-current">{{ lang | languageName }}</div>
+        <div class="popup-setting-language-current">
+            {{ lang | languageName }}
+            <img src="/assets/images/arrow-right.png" alt="">
+        </div>
     </div>
     <!-- <div class="popup-setting-item">
         <div class="popup-setting-theme-logo"></div>
@@ -69,19 +80,21 @@
     </div>
     <div class="popup-setting-cache-btn" (click)="clearCache()">{{ 'clearCacheBtn' | translate | async}}</div>
 </div>
-<hr>
 <div class="popup-setting-menu setting-asset-rate" (click)="modifyRateCurrency()">
     <div class="current-currency">
         <span class="title">{{ 'currencyUnit' | translate | async}}</span>
-        <span class="value">{{ rateCurrency }}</span>
+        <div>
+            <span class="value">{{ rateCurrency }}</span>
+            <img src="/assets/images/arrow-right.png" alt="">
+        </div>
     </div>
     <p class="update-time" *ngIf="rateTime">{{ 'updateTime' | translate | async}} {{rateTime * 1000 | date: 'M月d日 y年 HH:mm'}} {{'beijingTime' | translate | async}}</p>
 </div>
-<hr>
 <div class="popup-setting-authorization" [routerLink]="['/popup/authorization-list']">
     <div class="popup-setting-authorization-head">
         <span class="title">{{ 'authorizationManage' | translate | async}}</span>
-        <span class="view-all">{{ 'viewAll' | translate | async}} ></span>
+        <img src="/assets/images/arrow-right.png" alt="">
+        <!-- <span class="view-all">{{ 'viewAll' | translate | async}} ></span> -->
     </div>
     <span class="tip">{{ 'authorizationManageTips' | translate | async }}</span>
 </div>

@@ -107,12 +107,12 @@ export class PopupSettingComponent implements OnInit {
             .dialog
             .open(
                 PopupLanguageDialogComponent, {
-                    width: '170px',
                     data: {
                         currentOption: this.lang,
                         optionGroup: ['en', 'zh_CN'],
                         type: 'lang'
-                    }
+                    },
+                    panelClass: 'custom-dialog-panel'
                 }
             );
     }
@@ -122,12 +122,12 @@ export class PopupSettingComponent implements OnInit {
             .dialog
             .open(
                 PopupLanguageDialogComponent, {
-                    width: '170px',
                     data: {
                         currentOption: this.rateCurrency,
                         optionGroup: this.rateCurrencys,
                         type: 'currency'
-                    }
+                    },
+                    panelClass: 'custom-dialog-panel'
                 }
             );
         tempDialog.afterClosed().subscribe((currency) => {
@@ -159,7 +159,9 @@ export class PopupSettingComponent implements OnInit {
     }
 
     public clearCache() {
-        this.dialog.open(PopupClearStorageDialogComponent).afterClosed().subscribe((confirm) => {
+        this.dialog.open(PopupClearStorageDialogComponent, {
+            panelClass: 'custom-dialog-panel'
+        }).afterClosed().subscribe((confirm) => {
             if (confirm) {
                 this.chrome.clearAssetFile();
                 this.asset.clearCache();
@@ -185,7 +187,8 @@ export class PopupSettingComponent implements OnInit {
     }
     public removeWallet(w: Wallet) {
         this.dialog.open(PopupConfirmDialogComponent, {
-            data: 'delWalletConfirm'
+            data: 'delWalletConfirm',
+            panelClass: 'custom-dialog-panel'
         }).afterClosed().subscribe((confirm) => {
             if (confirm) {
                 this.neon.delWallet(w).subscribe(res => {

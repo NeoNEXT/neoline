@@ -73,3 +73,15 @@ body {
     box-shadow: none;
     background: none;
 }
+
+.custom-dialog-panel {
+    width: 90vw;
+    background: #fff;
+    border-radius: 15px;
+    .mat-dialog-container {
+        box-shadow: none;
+        background: none;
+        padding: 0;
+        border-radius: 0;
+    }
+}

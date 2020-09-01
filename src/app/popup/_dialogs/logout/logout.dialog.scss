@@ -1,17 +1,30 @@
 @import 'src/styles/theme-default';
 
-div {
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 20px;
+.title {
+    height: 100px;
+    line-height: 100px;
     text-align: center;
+    margin: 0 10px;
+    border-bottom: 1px solid #efefef;
 }
 
-button {
-    width: 250px;
-    border-radius: 20px;
-    display: block;
-    &:first-of-type {
-        margin-bottom: $space;
+.choose-group {
+    margin: 0 10px;
+    .item {
+        display: inline-block;
+        margin: 22px 0;
+        width: 50%;
+        text-align: center;
+        font-size: 17px;
+        font-weight: 500;
+        &:first-child {
+            border-right: 1px solid #efefef;
+        }
+        &.cancel {
+            color: #afb6be;
+        }
+        &.ok {
+            color: #06ccab;
+        }
     }
 }

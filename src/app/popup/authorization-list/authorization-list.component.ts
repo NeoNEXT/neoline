@@ -38,7 +38,8 @@ export class PopupAuthorizationListComponent implements OnInit {
 
     public delAll() {
         this.dialog.open(PopupConfirmDialogComponent, {
-            data: 'delAllAuthListConfirm'
+            data: 'delAllAuthListConfirm',
+            panelClass: 'custom-dialog-panel'
         }).afterClosed().subscribe((confirm) => {
             if (confirm) {
                 this.authorizationList = [];

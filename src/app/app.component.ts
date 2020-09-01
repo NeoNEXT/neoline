@@ -126,7 +126,9 @@ export class AppComponent {
         }
     }
     public closeWallet() {
-        this.dialog.open(PopupLogoutDialogComponent).afterClosed().subscribe((confirm) => {
+        this.dialog.open(PopupLogoutDialogComponent, {
+            panelClass: 'custom-dialog-panel'
+        }).afterClosed().subscribe((confirm) => {
             if (confirm) {
                 this.chrome.clearLogin();
                 this.router.navigateByUrl('/login');

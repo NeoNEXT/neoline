@@ -182,7 +182,9 @@ export class PopupAssetsComponent implements OnInit {
     }
 
     public delAsset(index: number) {
-        this.dialog.open(PopupDelTokenDialogComponent).afterClosed().subscribe((confirm) => {
+        this.dialog.open(PopupDelTokenDialogComponent, {
+            panelClass: 'custom-dialog-panel'
+        }).afterClosed().subscribe((confirm) => {
             if (confirm) {
                 const i = this.watch.findIndex((w) => w.asset_id === this.displayAssets[index].asset_id);
                 if (i >= 0) {

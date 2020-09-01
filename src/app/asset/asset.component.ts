@@ -116,7 +116,9 @@ export class AssetComponent implements OnInit, OnDestroy {
     // 隐藏资产
     public delAsset(index: number) {
         const delId = this.displayAssets[index].asset_id;
-        this.dialog.open(PopupDelTokenDialogComponent).afterClosed().subscribe((confirm) => {
+        this.dialog.open(PopupDelTokenDialogComponent, {
+            panelClass: 'custom-dialog-panel'
+        }).afterClosed().subscribe((confirm) => {
             if (confirm) {
                 const i = this.watch.findIndex((w) => w.asset_id === this.displayAssets[index].asset_id);
                 if (i >= 0) {

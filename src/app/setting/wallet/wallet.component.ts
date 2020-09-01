@@ -52,7 +52,8 @@ export class SettingWalletComponent implements OnInit {
 
     public removeWallet(w: Wallet) {
         this.dialog.open(PopupConfirmDialogComponent, {
-            data: 'delWalletConfirm'
+            data: 'delWalletConfirm',
+            panelClass: 'custom-dialog-panel'
         }).afterClosed().subscribe((confirm) => {
             if (confirm) {
                 this.neon.delWallet(w).subscribe(res => {

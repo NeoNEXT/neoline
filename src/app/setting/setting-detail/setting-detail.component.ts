@@ -71,7 +71,9 @@ export class SettingDetailComponent implements OnInit {
     }
 
     public clearCache() {
-        this.dialog.open(PopupClearStorageDialogComponent).afterClosed().subscribe((confirm) => {
+        this.dialog.open(PopupClearStorageDialogComponent, {
+            panelClass: 'custom-dialog-panel'
+        }).afterClosed().subscribe((confirm) => {
             if (confirm) {
                 this.chrome.clearAssetFile();
                 this.asset.clearCache();
@@ -111,7 +113,8 @@ export class SettingDetailComponent implements OnInit {
 
     public delAllSite() {
         this.dialog.open(PopupConfirmDialogComponent, {
-            data: 'delAllAuthListConfirm'
+            data: 'delAllAuthListConfirm',
+            panelClass: 'custom-dialog-panel'
         }).afterClosed().subscribe((confirm) => {
             if (confirm) {
                 this.authorizationList = [];

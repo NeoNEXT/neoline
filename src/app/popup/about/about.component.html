@@ -1,21 +1,34 @@
+
+<div class="nav">
+    <div class="content">
+        <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="">
+        关于我们
+    </div>
+    <div class="divide"></div>
+</div>
+
 <div class="popup-about-logo">
     <img src="/assets/images/logo_title.png" alt="">
 </div>
 <div class="popup-about-version"  *ngIf="version !== ''">{{ 'version' | translate | async}}: {{ version }}</div>
 
+
+
 <div class="popup-about">
-    <div class="popup-about-privacy-item">
-        <div>
-            <p>{{ 'privacyPolicy' | translate | async }}</p>
-        </div>
-        <div>
-            <p>{{ 'termsOfUse' | translate | async }}</p>
-        </div>
+    <div class="about-item">
+        <span>{{ 'privacyPolicy' | translate | async }}</span>
+        <img src="/assets/images/arrow-right.png" alt="">
     </div>
-    <div class="popup-about-site">
-        <p>{{ 'companyWebsite' | translate | async }}</p>
+    <div class="about-item">
+        <span>{{ 'termsOfUse' | translate | async }}</span>
+        <img src="/assets/images/arrow-right.png" alt="">
     </div>
-    <div class="popup-about-contact">
-        <p>{{ 'contactUs' | translate | async }}</p>
+    <div class="about-item">
+        <span>{{ 'companyWebsite' | translate | async }}</span>
+        <img src="/assets/images/arrow-right.png" alt="">
+    </div>
+    <div class="about-item">
+        <span>{{ 'contactUs' | translate | async }}</span>
+        <img src="/assets/images/arrow-right.png" alt="">
     </div>
 </div>
