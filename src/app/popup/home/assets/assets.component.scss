@@ -1,0 +1,34 @@
+.asset-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 0 20px;
+    border-bottom: 1px solid #efefef;
+    color: #444644;
+    padding: 25px 0;
+    .avatar {
+        width: 40px;
+        margin-right: 15px;
+        margin-left: 5px;
+    }
+    .name {
+        flex: 1;
+        font-size: 18px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+    }
+    .right {
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        margin-right: 5px;
+        padding-left: 10px;
+        text-align: right;
+        .rate {
+            font-size: 15px;
+            color: #808A94;
+        }
+    }
+}

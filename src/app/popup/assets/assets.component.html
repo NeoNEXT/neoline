@@ -1,46 +1,38 @@
-<div class="popup-assets-top">
-    <div [routerLink]="['/popup/home']" *ngIf="!isSearch"></div>
-    <div *ngIf="isSearch" (click)="backDisplayAssets()"></div>
-
-    <button class="add-currenycy" mat-raised-button (click)="search()" *ngIf="!isSearch">
-        <span></span>
+<div class="nav">
+    <div class="content">
+        <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="">
         {{ 'addAsset' | translate | async}}
-    </button>
-
-    <button class="search" *ngIf="isSearch">
-        <span></span>
-        <input autofocus (keyup.enter)="searchCurrency()" [(ngModel)]="searchValue" type="text" [placeholder]="'searchAssetsInput' | translate | async">
-    </button>
-
+    </div>
+    <div class="divide"></div>
 </div>
 
-<div class="popup-assets-list" [ngClass]="isSearch ? 'low-height' : 'high-height'">
-    <div *ngIf="isLoading">{{ 'loading' | translate | async}}...</div>
-
-    <ng-container *ngIf="!isLoading && !isSearch">
-        <app-asset
-        *ngFor="let asset of displayAssets; let index = index"
-        [asset]="asset"
-        [rateCurrency]='rateCurrency'
-        [index]="index"
-        (onDelAsset)="delAsset($event)"></app-asset>
-    </ng-container>
-
-    <ng-container *ngIf="!isLoading && isSearch">
-        <p *ngIf="searchAssets" class="search-title">{{ 'searchResult' | translate | async}}</p>
-        <p *ngIf="!searchAssets" class="search-title">{{ 'searchAllResult' | translate | async}}</p>
-        <app-asset-search
-            *ngFor="let asset of searchAssets || allAssets?.items;let index = index"
-            [asset]="asset"
-            [index]="index"
-            [isSearchAssets]="searchAssets ? true : false"
-            (onAddAsset)="addAsset($event)"></app-asset-search>
-    </ng-container>
+<div class="search">
+    <button>
+        <span class="search-icon" (click)="searchCurrency()"></span>
+        <input autofocus (keyup.enter)="searchCurrency()" [(ngModel)]="searchValue" type="text"
+            [placeholder]="'searchAssetsInput' | translate | async">
+        <img (click)="searchValue=''" *ngIf="searchValue" src="/assets/images/clear-search.png" class="clear" alt="">
+    </button>
 </div>
 
-<div class="popup-asset-page" *ngIf="isSearch">
-    <app-popup-pager *ngIf="!searchAssets" [currentPage]="allAssets?.page || 1" [totalPageCount]="allAssets?.pages || 0" [totalItemCount]="allAssets?.total || 0"
-        (onPage)="page($event)"></app-popup-pager>
+<p *ngIf="searchAssets" class="search-title">{{ 'searchResult' | translate | async}}</p>
+<p *ngIf="!searchAssets" class="search-title">{{ 'searchAllResult' | translate | async}}</p>
+
+<div class="popup-assets-list">
+    <div class="loading" *ngIf="isLoading">{{ 'loading' | translate | async}}...</div>
+    <ng-container *ngIf="!isLoading">
+        <app-asset-search *ngFor="let asset of searchAssets || allAssets?.items;let index = index" [asset]="asset"
+            [index]="index" [isSearchAssets]="searchAssets ? true : false" (onAddAsset)="addAsset($event)">
+        </app-asset-search>
+    </ng-container>
+    <p *ngIf="searchAssets && searchAssets?.length===0" class="no-data">
+        没有更多数据了
+    </p>
+</div>
+
+<div class="popup-asset-page">
+    <app-popup-pager *ngIf="!searchAssets" [currentPage]="allAssets?.page || 1" [totalPageCount]="allAssets?.pages || 0"
+        [totalItemCount]="allAssets?.total || 0" (onPage)="page($event)"></app-popup-pager>
     <app-popup-pager *ngIf="searchAssets" [currentPage]="1" [totalPageCount]="0" [totalItemCount]="0"
         (onPage)="page($event)"></app-popup-pager>
 </div>

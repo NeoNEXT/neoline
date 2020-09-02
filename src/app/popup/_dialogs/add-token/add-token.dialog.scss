@@ -2,16 +2,15 @@
 @import 'src/styles/popup-default';
 
 .title {
-    font-size: 14px;
-    font-weight: 500;
-    color: map-get($colors, 333333);
+    padding: 30px 26px 0;
+    font-size: 16px;
+    color: #303434;
 }
 
 .token {
-    height: 29px;
-    width: 100%;
+    height: 35px;
     display: flex;
-    margin: 15px 0;
+    margin: 30px 30px 25px 30px;
 
     .name,
     .value {
@@ -23,11 +22,9 @@
 
     .avatar {
         display: inline-block;
-        width: 29px;
-        height: 29px;
-        border-radius: 3px;
-        margin-right: 12px;
-        // background: rgba(73, 73, 73, 1);
+        width: 35px;
+        height: 35px;
+        margin-right: 8px;
     }
 
     .name .currency-group {
@@ -40,7 +37,7 @@
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
-        color: map-get($colors, 282828);
+        color: #444644;
     }
 
     .value {
@@ -48,7 +45,7 @@
         font-weight: 500;
         padding-left: 10px;
         overflow: hidden;
-        color: map-get($colors, 333333);
+        color: #808a94;
 
         .amount {
             overflow: hidden;
@@ -58,9 +55,24 @@
     }
 }
 
-.button-group button {
-    width: 107px;
-    &:first-child {
-        margin-right: $space-xl;
+.choose-group {
+    margin: 0 10px;
+    border-top: 1px solid #efefef;
+    .item {
+        display: inline-block;
+        margin: 22px 0;
+        width: 50%;
+        text-align: center;
+        font-size: 17px;
+        font-weight: 500;
+        &:first-child {
+            border-right: 1px solid #efefef;
+        }
+        &.cancel {
+            color: #afb6be;
+        }
+        &.ok {
+            color: #06ccab;
+        }
     }
 }

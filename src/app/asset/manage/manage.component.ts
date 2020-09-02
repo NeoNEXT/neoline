@@ -147,7 +147,8 @@ export class AssetManageComponent implements OnInit, OnDestroy {
     public addAsset(index: number) {
         const assetItem = this.searchAssets === false ? this.allAssets.items[index] : this.searchAssets[index];
         this.dialog.open(PopupAddTokenDialogComponent, {
-            data: assetItem
+            data: assetItem,
+            panelClass: 'custom-dialog-panel'
         }).afterClosed().subscribe((confirm) => {
             if (confirm) {
                 if (this.searchAssets !== false) {

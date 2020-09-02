@@ -1,114 +1,94 @@
 @import 'src/styles/popup-default';
 @import 'src/styles/theme-default';
 
-.popup-assets-top {
-    width: 100%;
-    height: 40px;
-    overflow: hidden;
-    position: fixed;
-    top: 64px;
-    background-color: map-get($neo-line-default, 500);
-
-    div {
-        float: left;
-        width: 10px;
-        height: 18px;
-        margin-top: 6px;
-        margin-left: 22px;
-        @include bg($img-back);
-
-        &:hover {
-            cursor: pointer;
-        }
-    }
-
-    button.add-currenycy {
-        min-width: 100px;
+.nav {
+    height: 65px;
+    background-color: #06ccab;
+    position: relative;
+    .content {
         height: 30px;
-        line-height: 30px;
-        display: block;
-        float: right;
-        border-radius: 15px;
-        font-size: 14px;
-        margin-right: 15px;
+        padding-top: 5px;
+        font-size: 20px;
         font-weight: 500;
-        text-align: center;
-        color: map-get($neo-line-default, 500);
+        color: #ffffff;
+        display: flex;
+        align-items: center;
 
-        span {
-            width: 12px;
-            height: 12px;
-            display: inline-block;
-            @include bg($img-manage-asset);
+        img {
+            height: 30px;
+            margin-right: 11px;
         }
     }
+    .divide {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 15px;
+        background: #ffffff;
+        border-radius: 15px 15px 0px 0px;
+    }
+}
 
-    button.search {
-        width: 300px;
-        height: 30px;
-        line-height: 30px;
+.search {
+    margin: 10px 15px 0 10px;
+    ::-webkit-input-placeholder {
+        color: #ced2da;
+    }
+    button {
+        width: 100%;
+        height: 45px;
+        line-height: 45px;
         display: inline-flex;
         align-items: center;
-        float: right;
-        border-radius: 15px;
-        font-size: 12px;
-        margin-right: 15px;
-        padding: 0 20px;
-        font-weight: 500;
-        text-align: left;
+        justify-content: space-between;
+        border-radius: 23px;
         border: none;
-        background: map-get($neo-line-default, 50);
-        ::-webkit-input-placeholder {
-            color: map-get($colors, 9fa8bd);
-        }
-
-        span {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            margin-right: 8px;
-            @include bg($img-search);
-        }
-
-        input {
-            width: 240px;
-            border: none;
-            font-size: 12px;
-        }
+        background: #fafafa;
+        padding: 0 20px;
     }
+
+    span.search-icon {
+        display: inline-block;
+        width: 12px;
+        height: 12px;
+        margin-right: 8px;
+        @include bg($img-search);
+    }
+    img.clear {
+        width: 15px;
+        margin-left: 8px;
+    }
+
+    input {
+        border: none;
+        font-size: 16px;
+        flex: 1;
+        color: #444644;
+        background: none;
+    }
+}
+
+.search-title {
+    margin-top: 20px;
+    margin-left: 20px;
+    font-size: 15px;
+    color: #07ccab;
 }
 
 .popup-assets-list {
-    // max-height: 456px;
     overflow: scroll;
-    margin-top: 40px;
-
+    margin-top: 5px;
+    height: 330px;
+    font-size: 15px;
     &::-webkit-scrollbar {
         display: none;
     }
-
-    div:first-child {
-        height: 456px;
-        line-height: 456px;
+    .no-data, .loading {
+        margin-top: 40px;
         text-align: center;
         font-size: 15px;
-        color: map-get($colors, f2f2f2);
+        color: #b0b6be;
     }
-
-    .search-title {
-        margin: 15px 0;
-        font-size: 12px;
-        font-weight: 500;
-        margin-left: 15px;
-        color: map-get($colors, 999999);
-    }
-}
-
-.high-height {
-    max-height: 496px;
-}
-.low-height {
-    max-height: 456px;
 }
 
 .popup-asset-page {

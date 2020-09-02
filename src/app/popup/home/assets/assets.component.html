@@ -1,0 +1,13 @@
+<div class="asset-item">
+    <img class="avatar" [src]="asset?.avatar || ''" alt="">
+    <span class="name">{{ asset?.name }}</span>
+    <div class="right">
+        <div class="amount">
+            {{ asset?.balance || '0'}}
+            <!-- &nbsp;{{ asset?.symbol }} -->
+        </div>
+        <div class="rate" *ngIf="asset?.rateBalance && asset?.rateBalance != 0">
+            {{asset?.rateBalance | number: '1.0-2'}}&nbsp;{{rateCurrency}}
+        </div>
+    </div>
+</div>

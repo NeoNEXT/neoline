@@ -1,5 +1,18 @@
-import { Component, OnChanges, SimpleChanges, OnInit, OnDestroy, ViewChild } from '@angular/core';
-import { AssetState, NeonService, HttpService, GlobalService, ChromeService } from '@/app/core';
+import {
+    Component,
+    OnChanges,
+    SimpleChanges,
+    OnInit,
+    OnDestroy,
+    ViewChild
+} from '@angular/core';
+import {
+    AssetState,
+    NeonService,
+    HttpService,
+    GlobalService,
+    ChromeService
+} from '@/app/core';
 import { NEO, Balance } from '@/models/models';
 import { TransferService } from '@/app/transfer/transfer.service';
 import { Wallet } from '@cityofzion/neon-core/lib/wallet';
@@ -20,7 +33,6 @@ export class PopupHomeComponent implements OnInit {
     public rateCurrency: string;
     public net: string;
 
-
     private status = {
         confirmed: 'confirmed',
         estimated: 'estimated',
@@ -35,13 +47,14 @@ export class PopupHomeComponent implements OnInit {
     public init = false;
 
     public currentTxPage = 2;
+    assetList: Balance[] = [];
     constructor(
         private assetState: AssetState,
         private neon: NeonService,
         private http: HttpService,
         private global: GlobalService,
         private transfer: TransferService,
-        private chrome: ChromeService,
+        private chrome: ChromeService
     ) {
         this.wallet = this.neon.wallet;
         this.rateCurrency = this.assetState.rateCurrency;
@@ -52,31 +65,106 @@ export class PopupHomeComponent implements OnInit {
             lastModified = imageObj['last-modified'];
             this.imageUrl = imageObj['image-src'];
         }
-        this.assetState.getAssetSrc(NEO, lastModified).subscribe((assetRes: any) => {
-            if (assetRes && assetRes.status === 200) {
-                this.assetState.setAssetFile(assetRes, NEO).then(src => {
-                    this.imageUrl = src;
-                });
-            } else if (assetRes && assetRes.status === 404) {
-                this.imageUrl = this.assetState.defaultAssetSrc;
-            }
-        });
+        this.assetState
+            .getAssetSrc(NEO, lastModified)
+            .subscribe((assetRes: any) => {
+                if (assetRes && assetRes.status === 200) {
+                    this.assetState.setAssetFile(assetRes, NEO).then(src => {
+                        this.imageUrl = src;
+                    });
+                } else if (assetRes && assetRes.status === 404) {
+                    this.imageUrl = this.assetState.defaultAssetSrc;
+                }
+            });
     }
 
     ngOnInit(): void {
         this.net = this.global.net;
-        this.assetState.fetchBalance(this.wallet.accounts[0].address).subscribe(balanceArr => {
-            this.handlerBalance(balanceArr);
+        this.getAssetList();
+    }
+
+    getAssetList() {
+        this.assetState
+            .fetchBalance(this.wallet.accounts[0].address)
+            .subscribe(balanceArr => {
+                this.handlerBalance(balanceArr);
+                this.chrome.getWatch().subscribe(watching => {
+                    this.assetList = [];
+                    let rateSymbol = '';
+                    balanceArr.map((r, index) => {
+                        if (r.balance && r.balance > 0) {
+                            rateSymbol += r.symbol + ',';
+                        }
+                        this.assetList.push(r);
+                        this.getAssetSrc(r.asset_id, index);
+                    });
+                    rateSymbol = rateSymbol.slice(0, -1);
+                    this.getAssetListRate(rateSymbol);
+                    //  去重
+                    watching.forEach((w, index) => {
+                        if (
+                            balanceArr.findIndex(
+                                r => r.asset_id === w.asset_id
+                            ) < 0
+                        ) {
+                            this.assetList.push(w);
+                            this.getAssetSrc(
+                                w.asset_id,
+                                balanceArr.length + index
+                            );
+                        }
+                    });
+                });
+            });
+    }
+
+    // 获取资产汇率
+    getAssetListRate(rateSymbol: string) {
+        this.assetState.getAssetRate(rateSymbol).subscribe(rateBalance => {
+            this.assetList.map(d => {
+                if (d.symbol.toLowerCase() in rateBalance) {
+                    d.rateBalance =
+                        rateBalance[d.symbol.toLowerCase()] * d.balance;
+                }
+                return d;
+            });
         });
+    }
+
+    public getAssetSrc(assetId, index) {
+        const imageObj = this.assetState.assetFile.get(assetId);
+        let lastModified = '';
+        if (imageObj) {
+            lastModified = imageObj['last-modified'];
+            this.assetList[index].avatar = imageObj['image-src'];
+        }
+        this.assetState
+            .getAssetSrc(assetId, lastModified)
+            .subscribe(assetRes => {
+                if (assetRes && assetRes['status'] === 200) {
+                    this.assetState
+                        .setAssetFile(assetRes, assetId)
+                        .then(src => {
+                            this.assetList[index].avatar = src;
+                        });
+                } else if (assetRes && assetRes['status'] === 404) {
+                    this.assetList[
+                        index
+                    ].avatar = this.assetState.defaultAssetSrc;
+                }
+            });
     }
 
     public onScrolltaChange(el: Element) {
         const tabGroup = el.children[el.children.length - 1];
         console.log(this.txPageComponent.loading);
-        if(tabGroup.clientHeight - el.scrollTop < 343 && !this.txPageComponent.loading) {
-            console.log('load')
-            this.txPageComponent.getInTransactions(this.currentTxPage)
-            this.currentTxPage ++;
+        if (
+            tabGroup.clientHeight - el.scrollTop < 343 &&
+            !this.txPageComponent.loading
+        ) {
+            console.log('load');
+            this.txPageComponent.getInTransactions(this.currentTxPage);
+            this.currentTxPage++;
         }
     }
 
@@ -100,10 +188,14 @@ export class PopupHomeComponent implements OnInit {
     }
 
     public findBalance(balanceRes, watching) {
-        let balance = balanceRes.find(b => b.asset_id === this.assetId) || watching.find(w => w.asset_id === this.assetId);
+        let balance =
+            balanceRes.find(b => b.asset_id === this.assetId) ||
+            watching.find(w => w.asset_id === this.assetId);
         if (!balance) {
             this.assetId = NEO;
-            balance = balanceRes.find(b => b.asset_id === this.assetId) || watching.find(w => w.asset_id === this.assetId);
+            balance =
+                balanceRes.find(b => b.asset_id === this.assetId) ||
+                watching.find(w => w.asset_id === this.assetId);
         }
         balance.balance = Number(balance.balance);
         this.balance = balance;
@@ -111,16 +203,19 @@ export class PopupHomeComponent implements OnInit {
 
     public getAssetRate() {
         if (this.balance.balance && this.balance.balance > 0) {
-            this.assetState.getAssetRate(this.balance.symbol).subscribe(rateBalance => {
-                if (this.balance.symbol.toLowerCase() in rateBalance) {
-                    this.balance.rateBalance = rateBalance[this.balance.symbol.toLowerCase()] * this.balance.balance;
-                }
-            });
+            this.assetState
+                .getAssetRate(this.balance.symbol)
+                .subscribe(rateBalance => {
+                    if (this.balance.symbol.toLowerCase() in rateBalance) {
+                        this.balance.rateBalance =
+                            rateBalance[this.balance.symbol.toLowerCase()] *
+                            this.balance.balance;
+                    }
+                });
         } else {
             this.balance.rateBalance = 0;
         }
     }
-
 
     public claim() {
         this.loading = true;
@@ -133,62 +228,99 @@ export class PopupHomeComponent implements OnInit {
             return;
         }
         this.neon.claimGAS(this.claimsData, this.claimNumber).subscribe(tx => {
-            return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
-                signature_transaction: tx.serialize(true)
-            }).subscribe(res => {
-                if (this.intervalClaim === null) {
-                    this.initInterval();
-                }
-            }, err => {
-                this.loading = false;
-                if (this.intervalClaim === null) {
-                    this.initInterval();
-                }
-            });
+            return this.http
+                .post(`${this.global.apiDomain}/v1/transactions/transfer`, {
+                    signature_transaction: tx.serialize(true)
+                })
+                .subscribe(
+                    res => {
+                        if (this.intervalClaim === null) {
+                            this.initInterval();
+                        }
+                    },
+                    err => {
+                        this.loading = false;
+                        if (this.intervalClaim === null) {
+                            this.initInterval();
+                        }
+                    }
+                );
         });
     }
 
     private initInterval() {
         this.intervalClaim = setInterval(() => {
-            this.assetState.fetchClaim(this.neon.address).subscribe((claimRes: any) => {
-                if (Number(claimRes.unspent_claim) === 0) {
-                    this.loading = false;
-                    this.claimNumber = claimRes.uncollect_claim;
-                    clearInterval(this.intervalClaim);
-                    this.intervalClaim = null;
-                    this.claimStatus = this.status.success;
-                }
-            });
+            this.assetState
+                .fetchClaim(this.neon.address)
+                .subscribe((claimRes: any) => {
+                    if (Number(claimRes.unspent_claim) === 0) {
+                        this.loading = false;
+                        this.claimNumber = claimRes.uncollect_claim;
+                        clearInterval(this.intervalClaim);
+                        this.intervalClaim = null;
+                        this.claimStatus = this.status.success;
+                    }
+                });
         }, 10000);
     }
 
     private syncNow() {
-        this.transfer.create(this.neon.address, this.neon.address, NEO, 1).subscribe((res) => {
-            res.sign(this.neon.WIFArr[this.neon.walletArr.findIndex(item =>
-                item.accounts[0].address === this.neon.wallet.accounts[0].address)]);
-            this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
-                signature_transaction: res.serialize(true)
-            }).subscribe(txRes => {
-                if (this.intervalClaim === null) {
-                    this.intervalClaim = setInterval(() => {
-                        this.assetState.fetchClaim(this.neon.address).subscribe((claimRes: any) => {
-                            if (Number(claimRes.unspent_claim) !== 0) {
-                                this.loading = false;
-                                this.claimsData = claimRes.claims;
-                                this.claimNumber = claimRes.unspent_claim;
-                                clearInterval(this.intervalClaim);
-                                this.claimStatus = this.status.confirmed;
-                                this.intervalClaim = null;
+        this.transfer
+            .create(this.neon.address, this.neon.address, NEO, 1)
+            .subscribe(
+                res => {
+                    res.sign(
+                        this.neon.WIFArr[
+                            this.neon.walletArr.findIndex(
+                                item =>
+                                    item.accounts[0].address ===
+                                    this.neon.wallet.accounts[0].address
+                            )
+                        ]
+                    );
+                    this.http
+                        .post(
+                            `${this.global.apiDomain}/v1/transactions/transfer`,
+                            {
+                                signature_transaction: res.serialize(true)
                             }
-                        });
-                    }, 10000);
+                        )
+                        .subscribe(
+                            txRes => {
+                                if (this.intervalClaim === null) {
+                                    this.intervalClaim = setInterval(() => {
+                                        this.assetState
+                                            .fetchClaim(this.neon.address)
+                                            .subscribe((claimRes: any) => {
+                                                if (
+                                                    Number(
+                                                        claimRes.unspent_claim
+                                                    ) !== 0
+                                                ) {
+                                                    this.loading = false;
+                                                    this.claimsData =
+                                                        claimRes.claims;
+                                                    this.claimNumber =
+                                                        claimRes.unspent_claim;
+                                                    clearInterval(
+                                                        this.intervalClaim
+                                                    );
+                                                    this.claimStatus = this.status.confirmed;
+                                                    this.intervalClaim = null;
+                                                }
+                                            });
+                                    }, 10000);
+                                }
+                            },
+                            txErr => {
+                                this.loading = false;
+                            }
+                        );
+                },
+                err => {
+                    this.global.snackBarTip('wentWrong', err);
                 }
-            }, txErr => {
-                this.loading = false;
-            });
-        }, (err) => {
-            this.global.snackBarTip('wentWrong', err);
-        });
+            );
     }
 
     private initClaim() {

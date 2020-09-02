@@ -13,6 +13,7 @@ import { PopupHomeRoutingModule } from '@popup/home/home.route';
 
 import { ShareModule } from '@app/share';
 import { PopupHomeTxPageComponent } from './tx-page/tx-page.component';
+import { PopupAssetsComponent } from './assets/assets.component'
 
 @NgModule({
     declarations: [
@@ -25,6 +26,7 @@ import { PopupHomeTxPageComponent } from './tx-page/tx-page.component';
         PopupHomeTxFilterComponent,
         PopupHomeTxHeaderComponent,
         PopupHomeTxItemComponent,
+        PopupAssetsComponent,
     ],
     imports: [
         CommonModule,

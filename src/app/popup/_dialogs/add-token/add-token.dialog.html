@@ -1,4 +1,4 @@
-<p class="title">{{ 'addAssetTip' | translate | async }}</p>
+<P class="title">{{ 'addAssetTip' | translate | async}}</P>
 
 <section class="token">
     <div class="name">
@@ -14,9 +14,7 @@
     </div>
 </section>
 
-<section class="button-group">
-    <button [mat-dialog-close]="false" autofocus mat-stroked-button color="primary"
-        (click)=cancel()>{{ 'cancel' | translate | async}}</button>
-    <button [mat-dialog-close]="true" mat-raised-button color="primary"
-        (click)=enter()>{{ 'yes' | translate | async }}</button>
-</section>
+<div class="choose-group">
+    <div class="cancel item" [mat-dialog-close]="false">{{ 'cancel' | translate | async}}</div>
+    <div class="ok item" [mat-dialog-close]="true">{{ 'yes' | translate | async}}</div>
+</div>
