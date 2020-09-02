@@ -1,0 +1,27 @@
+<div class="popup-home-tx-page">
+    <div class="tx-item" *ngFor="let item of txData;let i = index">
+        <div class="head">
+            <span class="time">{{ item.block_time * 1000 | date:'yyyy-MM-dd HH:mm' }}</span>
+            <img class="more-info-btn" src="/assets/images/home/arrow.png" alt=""
+                (click)="$event.stopPropagation();show = !show" [ngClass]="{'active': show}">
+        </div>
+        <div class="content">
+            <img class="tx-type-icon" [src]="value > 0 ? '/assets/images/home/send.png': '/assets/images/home/receive.png' "
+                alt="">
+            <div class="status-box">
+                <p class="tx-type">
+                    {{ item.value < 0 ? 'Sent ' + symbol : 'Received ' + symbol }}
+                </p>
+                <p class="status" [ngClass]="{'wait': id === -1}">
+                    {{ id === -1 ? ('confirming' | translate | async): ('confirmed' | translate | async) }}·
+                    <span>Txid: {{ item.txid }}</span>
+                </p>
+            </div>
+            <div class="amount-box">
+                <p class="asset-amount" [class] = "{receive: item.value > 0, send: item.value <= 0}">{{ item.value }}</p>
+                <p class="money-amount"></p>
+            </div>
+        </div>
+        <hr>
+    </div>
+</div>

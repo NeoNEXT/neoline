@@ -1,14 +1,17 @@
-import { Component, OnChanges, SimpleChanges, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnChanges, SimpleChanges, OnInit, OnDestroy, ViewChild } from '@angular/core';
 import { AssetState, NeonService, HttpService, GlobalService, ChromeService } from '@/app/core';
 import { NEO, Balance } from '@/models/models';
 import { TransferService } from '@/app/transfer/transfer.service';
 import { Wallet } from '@cityofzion/neon-core/lib/wallet';
+import { PopupHomeTxPageComponent } from './tx-page/tx-page.component';
 
 @Component({
     templateUrl: 'home.component.html',
     styleUrls: ['home.component.scss']
 })
 export class PopupHomeComponent implements OnInit {
+    @ViewChild('txPage')
+    txPageComponent: PopupHomeTxPageComponent;
     public imageUrl: any = '';
     selectedIndex = 0;
     public assetId: string = NEO;
@@ -31,6 +34,7 @@ export class PopupHomeComponent implements OnInit {
     public showClaim = false;
     public init = false;
 
+    public currentTxPage = 2;
     constructor(
         private assetState: AssetState,
         private neon: NeonService,
@@ -40,7 +44,6 @@ export class PopupHomeComponent implements OnInit {
         private chrome: ChromeService,
     ) {
         this.wallet = this.neon.wallet;
-        console.log(this.wallet);
         this.rateCurrency = this.assetState.rateCurrency;
 
         const imageObj = this.assetState.assetFile.get(this.assetId);
@@ -49,12 +52,12 @@ export class PopupHomeComponent implements OnInit {
             lastModified = imageObj['last-modified'];
             this.imageUrl = imageObj['image-src'];
         }
-        this.assetState.getAssetSrc(NEO, lastModified).subscribe(assetRes => {
-            if (assetRes && assetRes['status'] === 200) {
+        this.assetState.getAssetSrc(NEO, lastModified).subscribe((assetRes: any) => {
+            if (assetRes && assetRes.status === 200) {
                 this.assetState.setAssetFile(assetRes, NEO).then(src => {
                     this.imageUrl = src;
                 });
-            } else if (assetRes && assetRes['status'] === 404) {
+            } else if (assetRes && assetRes.status === 404) {
                 this.imageUrl = this.assetState.defaultAssetSrc;
             }
         });
@@ -65,6 +68,16 @@ export class PopupHomeComponent implements OnInit {
         this.assetState.fetchBalance(this.wallet.accounts[0].address).subscribe(balanceArr => {
             this.handlerBalance(balanceArr);
         });
+    }
+
+    public onScrolltaChange(el: Element) {
+        const tabGroup = el.children[el.children.length - 1];
+        console.log(this.txPageComponent.loading);
+        if(tabGroup.clientHeight - el.scrollTop < 343 && !this.txPageComponent.loading) {
+            console.log('load')
+            this.txPageComponent.getInTransactions(this.currentTxPage)
+            this.currentTxPage ++;
+        }
     }
 
     public handlerBalance(balanceRes: Balance[]) {

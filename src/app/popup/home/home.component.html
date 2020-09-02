@@ -7,7 +7,7 @@
             </div>
             <img class="menu" src="/assets/images/home/menu.png" alt="">
         </mat-toolbar>
-        <div class="popup-home-body">
+        <div class="popup-home-body" appScroll (scrollChange)="onScrolltaChange($event)">
             <div class="asset-logo-box">
                 <img class="asset-logo" [src]="imageUrl || ''" alt="">
             </div>
@@ -53,10 +53,11 @@
                 </div>
                 <div class="tab-content-container">
                     <div class="tab-assets-container" [hidden]="selectedIndex == 1">
-
                     </div>
                     <div class="tab-transaction-container" [hidden]="selectedIndex == 0">
-                        transaction
+                        <app-tx-page [assetId]="assetId" [rateCurrency]="rateCurrency" [symbol]="balance?.symbol"
+                            #txPage>
+                        </app-tx-page>
                     </div>
                 </div>
             </div>

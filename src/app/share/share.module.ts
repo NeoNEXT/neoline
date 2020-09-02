@@ -42,6 +42,7 @@ import { AvatarDirective } from './directives/avatar';
 import { TranslatePipe } from './pipes/translate.pipe';
 import { NumberDirective } from './directives/number';
 import { MatRippleModule } from '@angular/material/core';
+import { ScrollDirective } from './directives/scroll';
 
 @NgModule({
     declarations: [
@@ -54,6 +55,7 @@ import { MatRippleModule } from '@angular/material/core';
         CopyDirective,
         NumberDirective,
         AvatarDirective,
+        ScrollDirective
     ],
     imports: [CommonModule, MatIconModule, MatButtonModule],
     exports: [
@@ -64,6 +66,7 @@ import { MatRippleModule } from '@angular/material/core';
         TranslatePipe,
         NumberDirective,
         CopyDirective,
+        ScrollDirective,
         AvatarDirective,
         MatButtonModule,
         MatCheckboxModule,
