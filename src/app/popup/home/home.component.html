@@ -1,1 +1,65 @@
-<router-outlet></router-outlet>
+<div class="popup-home">
+    <div class="container">
+        <mat-toolbar>
+            <div class="wallet-info">
+                <p class="name">{{ wallet?.name || '' }}</p>
+                <p class="address">{{ wallet?.accounts[0].address || '' }}</p>
+            </div>
+            <img class="menu" src="/assets/images/home/menu.png" alt="">
+        </mat-toolbar>
+        <div class="popup-home-body">
+            <div class="asset-logo-box">
+                <img class="asset-logo" [src]="imageUrl || ''" alt="">
+            </div>
+            <p class="asset-balance">{{ balance?.balance || 0 }} {{ balance?.symbol }}</p>
+            <p class="asset-money">{{ balance?.rateBalance }} {{ rateCurrency }} </p>
+            <div class="transaction-btn-container">
+                <button class="receive-btn" mat-stroked-button color="primary">
+                    <img src="/assets/images/home/receive.png" alt="">
+                    <span>{{ 'receive' | translate | async }}</span>
+                </button>
+                <button class="transfer-btn" mat-flat-button color="primary">
+                    <img src="/assets/images/home/send.png" alt="">
+                    <span>{{ 'transfer' | translate | async }}</span>
+                </button>
+            </div>
+
+            <div class="claim-container" *ngIf="showClaim">
+                <div class="gas-logo-box">
+                    <img class="gas-logo" [src]="imageUrl || ''" alt="">
+                </div>
+                <div class="claim-status-box">
+                    <p class="number">{{ claimNumber }} GAS</p>
+                    <p class="status">{{ claimStatus | translate | async }}</p>
+                </div>
+                <button class="claim-btn" mat-flat-button (click)="claim()"
+                    [disabled]="loading || !init || !showClaim ">
+                    <ng-container *ngIf="!loading && claimStatus != 'success'">
+                        {{ claimStatus != 'confirmed' ? ('syncNow' | translate | async) : ('claim' | translate | async) }}
+                    </ng-container>
+                    <ng-container *ngIf="claimStatus == 'success' && !loading"><img src="/assets/images/select.png"
+                            alt=""></ng-container>
+                    <mat-spinner *ngIf="loading" strokeWidth="2" diameter="20"></mat-spinner>
+                </button>
+            </div>
+            <hr class="claim-line">
+            <div class="tabs-group">
+                <div class="tabs-container">
+                    <p matRipple [class]="{ selected: selectedIndex == 0}" (click)="selectedIndex = 0">
+                        {{ 'assets' | translate | async}}</p>
+                    <p matRipple [class]="{ selected: selectedIndex == 1}" (click)="selectedIndex = 1">
+                        {{ 'transaction' | translate | async}}</p>
+                    <img class="asset-add" src="/assets/images/home/add.png" alt="">
+                </div>
+                <div class="tab-content-container">
+                    <div class="tab-assets-container" [hidden]="selectedIndex == 1">
+
+                    </div>
+                    <div class="tab-transaction-container" [hidden]="selectedIndex == 0">
+                        transaction
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,177 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+
+.popup-home {
+    height: 100%;
+    background: map-get($neo-line-default, 500);
+    .container {
+        height: 100%;
+        background: white;
+        border-radius: 15px 15px 0px 0px;
+    }
+
+    mat-toolbar {
+        height: 62px;
+        background: #F7FBF9;
+        border-radius: 15px 15px 0px 0px;
+        text-align: center;
+        .wallet-info {
+            width:  100%;
+            position: absolute;
+            left: 0px;
+            top: 0px;
+            padding: 10px 70px;
+            p {
+                width: 100%;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+            }
+        }
+        .name {
+            font-size: 17px;
+            color: #2F3333;
+            line-height: 18px;
+        }
+        .address {
+            font-size: 13px;
+            color: #7F8993;
+            line-height: 14px;
+            margin-top: 8px;
+        }
+        .menu {
+            height: 18px;
+            width: 18px;
+            margin-right: 20px;
+            position: absolute;
+            right: 0px;
+        }
+    }
+    .popup-home-body {
+        height: calc(100% - 62px);
+        position: relative;
+        overflow: auto;
+        .asset-logo-box {
+            width: 50px;
+            height: 50px;
+            padding: 10px;
+            border: 0.5px solid #EFEFEF;
+            border-radius: 50%;
+            margin: 17px auto;
+            .asset-logo {
+              height: 30px;
+              width: 30px;
+            }
+        }
+        .asset-balance {
+            font-size: 30px;
+            color: #444644;
+            text-align: center;
+            width: 100%;
+            padding: 0px 20px;
+            line-height: 30px;
+            overflow-wrap: break-word;
+        }
+        .asset-money {
+            font-size: 16px;
+            color: #A0A8BE;
+            text-align: center;
+            width: 100%;
+            padding: 0px 20px;
+            margin-top: 14px;
+            overflow-wrap: break-word;
+        }
+        .transaction-btn-container {
+            text-align: center;
+            margin-top: 20px;
+            margin-bottom: 10px;
+            button {
+                width: 120px;
+                height: 45px;
+                border-radius: 22px;
+                img {
+                    height: 18px;
+                    width: 18px;
+                    margin-right: 10px;
+                }
+                &:nth-child(1) {
+                    border-color: map-get($neo-line-default, 500);
+                }
+                &:nth-child(2) {
+                    margin-left: 20px;
+                }
+            }
+        }
+
+        .claim-container {
+            height: 80px;
+            display: flex;
+            align-items: center;
+            padding: 0 25px;
+            .gas-logo-box {
+                width: 40px;
+                height: 40px;
+                padding: 5px;
+                border: 0.5px solid #EFEFEF;
+                border-radius: 50%;
+                .gas-logo {
+                  height: 30px;
+                  width: 30px;
+                }
+            }
+            .claim-status-box {
+                margin-left: 13px;
+                flex: 1 1 auto;
+                .number {
+                    font-size: 16px;
+                    color: #444644;
+                }
+                .status {
+                    font-size: 13px;
+                    color: #B0B6BE;
+                }
+            }
+            button {
+                background: #ECFBF1;
+                height: 35px;
+                border-radius: 18px;
+                color: map-get($neo-line-default, 500);
+            }
+        }
+        .claim-line {
+            border: none;
+            border-top: 6px solid #F7F7F7;
+        }
+        .tabs-container {
+            height: 55px;
+            display: flex;
+            align-items: center;
+            background: white;
+            position: sticky;
+            top: -2px;
+            z-index: 100;
+            p {
+                display: inline-block;
+                min-width: 72px;
+                height: 55px;
+                line-height: 55px;
+                padding-top: 4px;
+                text-align: center;
+                font-size: 17px;
+                color: #B0B6BE;
+                &.selected {
+                    color: map-get($neo-line-default, 500);
+                    border-bottom: 1.5px solid map-get($neo-line-default, 500);;
+                }
+            }
+            img {
+                width: 60px;
+                height: 30px;
+                position: absolute;
+                right: 25px;
+                top: 15px;
+            }
+        }
+    }
+}
