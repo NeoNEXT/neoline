@@ -37,6 +37,7 @@ import { PopupNewWalletGuideModule } from './new-wallet-guide';
 
 import { PopupServiceModule } from '@popup/_services';
 import { PopupNotificationModule } from './notification';
+import { TransferModule } from './transfer';
 
 @NgModule({
     declarations: [
@@ -66,6 +67,7 @@ import { PopupNotificationModule } from './notification';
         MatSidenavModule,
         MatListModule,
         PopupSettingModule,
+        TransferModule,
         PopupAboutModule,
         PopupAccountModule,
         PopupHomeModule,
