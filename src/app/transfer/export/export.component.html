@@ -1,20 +1,20 @@
-<button mat-icon-button class="close" (click)="close()">
-    <mat-icon>close</mat-icon>
-</button>
+<div class="close-position">
+    <div class="close" (click)="close()">
+        <mat-icon>close</mat-icon>
+    </div>
+</div>
 
-<p class="name">{{wallet?.name}}</p>
-<p class="address">{{address}}</p>
+<img class="avatar" [avatar]="address" />
+<div class="name">
+    <p (click)="updateName()">{{wallet?.name}}</p>
+</div>
+<p class="address" (click)="copy(address)">{{address}}</p>
 <p class="title">{{ 'displayWIF' | translate | async}}</p>
 <p class="title-pwd" *ngIf="!verified">{{ 'password' | translate | async}}</p>
 <p class="title-pwd" *ngIf="verified">{{ 'wif' | translate | async}}</p>
-<input 
-    type="password" 
-    placeholder="{{ 'verifyPassword' | translate | async}}" 
-    *ngIf="!verified" 
-    [(ngModel)]="pwd"
-    (keyup.enter)="verify()"
-    class="pwd" />
-<p class="address wif" *ngIf="verified">{{wif}}</p>
+<input type="password" placeholder="{{ 'verifyPassword' | translate | async}}" *ngIf="!verified" [(ngModel)]="pwd"
+    (keyup.enter)="verify()" class="pwd" />
+<p class="wif" *ngIf="verified" (click)="copy(wif)">{{wif}}</p>
 <p class="tip">
     <span>{{ 'caution' | translate | async}}</span> :<br />
     <span>{{ 'transferExportTip' | translate | async}}</span>

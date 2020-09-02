@@ -1,38 +1,53 @@
-@import 'src/styles/theme-default';
-@import 'src/styles/popup-default';
-
 .title {
-    font-size: 14px;
-    font-weight: 500;
-    margin-bottom: 8px;
-    color: map-get($colors, 333333);
+    padding: 30px 26px 0;
+    font-size: 16px;
+    color: #303434;
 }
 
-.tip {
+.input-name {
     width: 100%;
+    padding: 20px 25px 25px 25px;
+    position: relative;
+    &::before {
+        content: '';
+        height: 1px;
+        position: absolute;
+        bottom: 0;
+        left: 10px;
+        right: 10px;
+        background-color: #efefef;
+    }
     input {
         width: 100%;
-        padding: 0 12px;
-        font-size: 12px;
+        height: 50px;
+        background: #fafafa;
+        border-radius: 5px;
+        font-size: 15px;
+        padding: 0 16px;
+        border: none;
+        &::-webkit-input-placeholder {
+            color: #ced2da;
+        }
     }
 }
 
-.button-group {
-    min-width: 300px;
-    button {
-        width: 107px;
+.choose-group {
+    margin: 0 10px;
+    .item {
+        display: inline-block;
+        margin: 22px 0;
+        width: 50%;
+        text-align: center;
+        font-size: 17px;
+        font-weight: 500;
+        &:first-child {
+            border-right: 1px solid #efefef;
+        }
+        &.cancel {
+            color: #afb6be;
+        }
+        &.ok {
+            color: #06ccab;
+        }
     }
-    button:not(:first-of-type) {
-        margin-left: $space-xl;
-    }
-}
-
-:host ::ng-deep .mat-form-field-appearance-legacy .mat-form-field-label {
-    padding: 0 12px;
-    font-size: 14px;
-    color: map-get($colors, 999999);
-}
-
-:host ::ng-deep .mat-form-field-label-wrapper {
-    top: -1em;
 }

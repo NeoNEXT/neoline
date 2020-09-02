@@ -1,22 +1,9 @@
-import {
-    Component,
-    OnInit
-} from '@angular/core';
-import {
-    Wallet
-} from '@cityofzion/neon-core/lib/wallet';
-import {
-    NeonService, GlobalService
-} from '@app/core';
-import {
-    Router
-} from '@angular/router';
-import {
-    MatDialog,
-} from '@angular/material/dialog';
-import {
-    PopupNameDialogComponent
-} from '@popup/_dialogs';
+import { Component, OnInit } from '@angular/core';
+import { Wallet } from '@cityofzion/neon-core/lib/wallet';
+import { NeonService, GlobalService } from '@app/core';
+import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { PopupNameDialogComponent } from '@popup/_dialogs';
 
 declare var QRCode: any;
 
@@ -54,16 +41,18 @@ export class AccountComponent implements OnInit {
     }
 
     public export() {
-        this.router.navigate([{
-            outlets: {
-                transfer: ['transfer', 'export']
+        this.router.navigate([
+            {
+                outlets: {
+                    transfer: ['transfer', 'export']
+                }
             }
-        }]);
+        ]);
     }
 
     public updateName() {
-        return this
-            .dialog
-            .open(PopupNameDialogComponent);
+        return this.dialog.open(PopupNameDialogComponent, {
+            panelClass: 'custom-dialog-panel'
+        });
     }
 }

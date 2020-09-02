@@ -1,28 +1,18 @@
-<div class="popup-account-header">
-    <div class="popup-account-option">
-        <span class="back-btn" routerLink="/popup/setting" *ngIf="address != ''"></span>
-        <div class="option-right">
-            <span (click)="updateName()"></span>
-            <span (click)="qrcode()"></span>
-        </div>
+<div class="nav">
+    <div class="content">
+        <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="">
+        账户详情
     </div>
-
-    <div class="popup-account-logo">
-        <img [avatar]="address" />
-    </div>
+    <div class="divide"></div>
 </div>
 
-<div class="popup-account-name">{{ walletName }}</div>
-<div class="popup-account-tip">{{ 'address' | translate | async}}</div>
-<div
-    class="popup-account-address">
-    <textarea type="text" id="popup-account-address-copy" [value]="address" readonly></textarea>
+<div class="container">
+    <img class="qrcode" (click)="qrcode()" src="/assets/images/qrcode.png" alt="">
+    <img class="avatar" [avatar]="address" />
+    <div class="name" (click)="updateName()">{{ walletName }}</div>
+    <p class="address-title">{{ 'address' | translate | async}}</p>
+    <div class="address" (click)="copy()">{{ address }}</div>
+    <button mat-button class="key" (click)="wif()">{{ 'displayWIF' | translate | async}}</button>
+    <button mat-button class="link">在 NeoTube 上查看</button>
 </div>
 
-<div class="popup-account-toolbar">
-    <button mat-button (click)="wif()">{{ 'displayWIF' | translate | async}}</button>
-    <button
-        mat-button
-        copy="popup-account-address-copy"
-        (onCopy)="copied()">{{ 'copyAddress' | translate | async}}</button>
-</div>

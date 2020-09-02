@@ -1,19 +1,7 @@
-import {
-    Component,
-    OnInit,
-    Inject
-} from '@angular/core';
-import {
-    MatDialogRef, MAT_DIALOG_DATA
-} from '@angular/material/dialog';
-import {
-    ChromeService,
-    NeonService,
-    GlobalService,
-} from '@app/core';
-import {
-    WalletInitConstant
-} from '@popup/_lib/constant';
+import { Component, OnInit, Inject } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { ChromeService, NeonService, GlobalService } from '@app/core';
+import { WalletInitConstant } from '@popup/_lib/constant';
 
 @Component({
     templateUrl: './name.dialog.html',
@@ -24,7 +12,7 @@ export class PopupNameDialogComponent implements OnInit {
     public limit = WalletInitConstant;
 
     constructor(
-        private dialogRef: MatDialogRef < PopupNameDialogComponent > ,
+        private dialogRef: MatDialogRef<PopupNameDialogComponent>,
         private chrome: ChromeService,
         private global: GlobalService,
         private neon: NeonService,
@@ -41,18 +29,20 @@ export class PopupNameDialogComponent implements OnInit {
         if (this.name.trim() === '') {
             return;
         }
-        this.neon.updateWalletName(this.name, this.chooseWallet)
-            .subscribe(
-                (res: any) => {
-                    this.chrome.setWallet(res.export());
-                    this.neon.walletArr.find((item) => item.accounts[0].address === res.accounts[0].address).name = this.name;
-                    this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
-                    this.dialogRef.close();
-                    this.global.snackBarTip('nameModifySucc');
-                },
-                (err: any) => {
-                    this.global.log('update wallet name faild', err);
-                    this.global.snackBarTip('nameModifyFailed');
-                });
+        this.neon.updateWalletName(this.name, this.chooseWallet).subscribe(
+            (res: any) => {
+                this.chrome.setWallet(res.export());
+                this.neon.walletArr.find(
+                    item => item.accounts[0].address === res.accounts[0].address
+                ).name = this.name;
+                this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
+                this.dialogRef.close();
+                this.global.snackBarTip('nameModifySucc');
+            },
+            (err: any) => {
+                this.global.log('update wallet name faild', err);
+                this.global.snackBarTip('nameModifyFailed');
+            }
+        );
     }
 }
