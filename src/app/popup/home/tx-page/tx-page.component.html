@@ -6,14 +6,14 @@
                 (click)="$event.stopPropagation();show = !show" [ngClass]="{'active': show}">
         </div>
         <div class="content">
-            <img class="tx-type-icon" [src]="value > 0 ? '/assets/images/home/send.png': '/assets/images/home/receive.png' "
+            <img class="tx-type-icon" [src]="item.value > 0 ? '/assets/images/home/send.png': '/assets/images/home/receive.png' "
                 alt="">
             <div class="status-box">
                 <p class="tx-type">
                     {{ item.value < 0 ? 'Sent ' + symbol : 'Received ' + symbol }}
                 </p>
-                <p class="status" [ngClass]="{'wait': id === -1}">
-                    {{ id === -1 ? ('confirming' | translate | async): ('confirmed' | translate | async) }}·
+                <p class="status" [ngClass]="{'wait': item.id === -1}">
+                    {{ item.id === -1 ? ('confirming' | translate | async): ('confirmed' | translate | async) }}·
                     <span>Txid: {{ item.txid }}</span>
                 </p>
             </div>
