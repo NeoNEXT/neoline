@@ -5,6 +5,7 @@ import { TransferComponent } from './transfer.component';
 import { TransferReceiveComponent } from './receive/receive.component';
 import { WalletGuard, PopupWalletGuard } from '@app/core';
 import { PopupComponent } from '../popup.component';
+import { TransferCreateComponent } from './create/create.component';
 
 const routes: Routes = [
     {
@@ -15,7 +16,8 @@ const routes: Routes = [
                 path: 'transfer',
                 component: TransferComponent,
                 children: [
-                    { path: 'receive', component: TransferReceiveComponent }
+                    { path: 'receive', component: TransferReceiveComponent },
+                    { path: 'create', component: TransferCreateComponent }
                 ]
             }
         ]

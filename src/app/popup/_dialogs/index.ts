@@ -7,3 +7,5 @@ export { PopupQRCodeDialogComponent } from '@popup/_dialogs/qrcode/qrcode.dialog
 export { PopupClearStorageDialogComponent } from '@popup/_dialogs/clear-storage/clear-storage.dialog';
 export { PopupConfirmDialogComponent } from '@popup/_dialogs/confirm/confirm.dialog';
 export { PopupHomeMenuDialogComponent } from '@popup/_dialogs/home-menu/home-menu.dialog';
+export { PopupAddressDialogComponent } from '@popup/_dialogs/address/address.dialog';
+
