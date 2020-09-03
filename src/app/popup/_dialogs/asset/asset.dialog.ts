@@ -32,7 +32,6 @@ export class PopupAssetDialogComponent implements OnInit {
     ) { }
 
     ngOnInit() {
-        console.log(this.data);
         this.data.balances.forEach(async (item, index) => {
             this.logoUrlArr[index] = await this.assetState.getAssetImage(item.asset_id);
         })

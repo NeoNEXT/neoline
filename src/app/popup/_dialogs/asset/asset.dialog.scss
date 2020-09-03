@@ -10,6 +10,8 @@
 }
 
 .container {
+    max-height: 440px;
+    overflow: auto;
     .asset-item {
         height: 80px;
         width: 100%;

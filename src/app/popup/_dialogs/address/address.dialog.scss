@@ -9,6 +9,8 @@
     text-align: center;
 }
 .container {
+    max-height: 440px;
+    overflow: auto;
     .search-box {
         border: 0.5px solid #DFDFDF;
         height: 50px;
