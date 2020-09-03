@@ -6,12 +6,14 @@ import { TransferReceiveComponent } from './receive/receive.component';
 import { ShareModule } from '@/app/share';
 import { TransferService } from './transfer.service';
 import { TransferCreateComponent } from './create/create.component';
+import { PopupTransferConfirmComponent } from './confirm/confirm.component';
 
 @NgModule({
     declarations: [
         TransferComponent,
         TransferReceiveComponent,
-        TransferCreateComponent
+        TransferCreateComponent,
+        PopupTransferConfirmComponent
     ],
     imports: [CommonModule, TransferRoutingModule, ShareModule],
     exports: [],

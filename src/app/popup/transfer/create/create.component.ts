@@ -30,6 +30,7 @@ import {
 import { wallet } from '@cityofzion/neon-core';
 import { rpc } from '@cityofzion/neon-js';
 import { PopupAddressDialogComponent, PopupAssetDialogComponent } from '../../_dialogs';
+import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
 
 
 @Component({
@@ -106,6 +107,16 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('balanceLack');
             return;
         }
+        // this.dialog.open(PopupTransferConfirmComponent, {
+        //     panelClass: 'custom-dialog-panel-full',
+        //     height: '600px',
+        //     width: '100%',
+        //     hasBackdrop: false,
+        //     maxWidth: '400px',
+        //     autoFocus: false
+        // }).afterClosed().subscribe((index: number) => {
+        //     console.log(this.balances[index]);
+        // });
         this.creating = true;
         this.transfer.create(this.fromAddress, this.toAddress, this.chooseAsset.asset_id, this.amount,
             this.fee || 0, this.chooseAsset.decimals).subscribe((res) => {

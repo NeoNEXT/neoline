@@ -1,0 +1,60 @@
+@import 'src/styles/popup-default';
+@import 'src/styles/theme-default';
+
+.mat-toolbar-fixed {
+    width: 100%;
+    // height: auto;
+    position: fixed;
+    left: 0;
+    top: 0;
+    z-index: 99999999;
+    .mat-toolbar {
+        height: 64px;
+        .popup-nav-logo {
+            flex: auto;
+            .popup-nav-logo-img {
+                height: 20px;
+                display: inline-block;
+                vertical-align: middle;
+            }
+        }
+
+        .popup-nav-network {
+            width: 107px;
+            height: 30px;
+            line-height: 30px;
+            border-radius: 30px;
+            font-size: 12px;
+            .popup-nav-network-icon {
+                width: 5px;
+                height: 3px;
+                display: inline-block;
+            }
+        }
+        .close {
+            width: 23px;
+            height: 23px;
+            padding: 5px;
+            margin-top: 10px;
+            margin-left: 15px;
+        }
+
+    }
+}
+.no-third-party-toolbar {
+    height: auto;
+
+    .popup-nav-logo-img {
+        width: 84px;
+        @include bg($img-login-logo);
+    }
+
+    .popup-nav-network {
+        border-color: map-get($colors, f7f7f7);
+        margin-top: 10px;
+
+        .popup-nav-network-icon {
+            @include bg($img-net-dropdown);
+        }
+    }
+}
