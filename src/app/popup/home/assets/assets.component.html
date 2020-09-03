@@ -1,5 +1,7 @@
 <div class="asset-item">
-    <img class="avatar" [src]="asset?.avatar || ''" alt="">
+    <div class="avatar-box">
+        <img [src]="asset?.avatar || ''" alt="">
+    </div>
     <span class="name">{{ asset?.name }}</span>
     <div class="right">
         <div class="amount">

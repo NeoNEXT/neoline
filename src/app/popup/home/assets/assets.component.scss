@@ -6,10 +6,20 @@
     border-bottom: 1px solid #efefef;
     color: #444644;
     padding: 25px 0;
-    .avatar {
+    .avatar-box {
         width: 40px;
-        margin-right: 15px;
+        height: 40px;
+        border: 0.5px solid #efefef;
+        border-radius: 50%;
         margin-left: 5px;
+        margin-right: 15px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        img {
+            height: 25px;
+            max-width: 25px;
+        }
     }
     .name {
         flex: 1;
@@ -23,14 +33,15 @@
         margin-right: 5px;
         padding-left: 10px;
         text-align: right;
-        .amount, .rate {
+        .amount,
+        .rate {
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
         }
         .rate {
             font-size: 15px;
-            color: #808A94;
+            color: #808a94;
         }
     }
 }
