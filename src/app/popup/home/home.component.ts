@@ -16,7 +16,7 @@ import {
 import { NEO, Balance } from '@/models/models';
 import { TransferService } from '@/app/transfer/transfer.service';
 import { Wallet } from '@cityofzion/neon-core/lib/wallet';
-import { PopupHomeTxPageComponent } from './tx-page/tx-page.component';
+import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.component';
 
 @Component({
     templateUrl: 'home.component.html',
@@ -24,7 +24,7 @@ import { PopupHomeTxPageComponent } from './tx-page/tx-page.component';
 })
 export class PopupHomeComponent implements OnInit {
     @ViewChild('txPage')
-    txPageComponent: PopupHomeTxPageComponent;
+    txPageComponent: PopupTxPageComponent;
     public imageUrl: any = '';
     selectedIndex = 0;
     public assetId: string = NEO;
@@ -173,15 +173,6 @@ export class PopupHomeComponent implements OnInit {
             this.findBalance(balanceRes, watching);
             // 获取交易
             // this.getInTransactions(1);
-            // 获取资产汇率
-            this.getAssetRate();
-        });
-    }
-
-    // 监听 balance 发生变化
-    public listenBalance(balanceRes: Balance[]) {
-        this.chrome.getWatch().subscribe(watching => {
-            this.findBalance(balanceRes, watching);
             // 获取资产汇率
             this.getAssetRate();
         });

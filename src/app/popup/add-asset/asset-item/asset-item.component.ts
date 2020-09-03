@@ -7,7 +7,7 @@ import { GlobalService } from '@/app/core';
     templateUrl: './asset-item.component.html',
     styleUrls: ['./asset-item.component.scss']
 })
-export class AssetItemComponent implements OnInit {
+export class PopupAssetItemComponent implements OnInit {
     @Input() asset: Balance;
     @Input() index: number;
     @Input() isSearchAssets: boolean;

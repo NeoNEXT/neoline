@@ -12,7 +12,6 @@ import { PopupHomeComponent } from '@popup/home/home.component';
 import { PopupHomeRoutingModule } from '@popup/home/home.route';
 
 import { ShareModule } from '@app/share';
-import { PopupHomeTxPageComponent } from './tx-page/tx-page.component';
 import { PopupAssetsComponent } from './assets/assets.component'
 
 @NgModule({
@@ -21,7 +20,6 @@ import { PopupAssetsComponent } from './assets/assets.component'
         PopupHomeFilterBarComponent,
         PopupHomeDetailComponent,
         PopupHomeDigestComponent,
-        PopupHomeTxPageComponent,
         PopupHomeTransferComponent,
         PopupHomeTxFilterComponent,
         PopupHomeTxHeaderComponent,

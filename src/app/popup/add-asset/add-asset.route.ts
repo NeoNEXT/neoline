@@ -2,7 +2,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { NgModule } from '@angular/core';
 
 import { PopupComponent } from '@popup/popup.component';
-import { PopupAssetsComponent } from '@popup/assets/assets.component';
+import { PopupAddAssetComponent } from '@popup/add-asset/add-asset.component';
 
 import { PopupWalletGuard } from '@app/core';
 
@@ -10,12 +10,12 @@ const routes: Routes = [
     {
         path: 'popup',
         component: PopupComponent,
-        canActivate: [ PopupWalletGuard ],
+        canActivate: [PopupWalletGuard],
         children: [
             {
-                path: 'assets',
-                component: PopupAssetsComponent
-            },
+                path: 'add-asset',
+                component: PopupAddAssetComponent
+            }
         ]
     }
 ];
@@ -24,4 +24,4 @@ const routes: Routes = [
     imports: [RouterModule.forChild(routes)],
     exports: [RouterModule]
 })
-export class PopupAssetsRoutingModule { }
+export class PopupAddAssetRoutingModule {}

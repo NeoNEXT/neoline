@@ -1,0 +1,34 @@
+<div class="nav">
+    <div class="content">
+        <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="">
+        {{ balance?.name }}
+    </div>
+    <div class="divide"></div>
+</div>
+
+<div class="sub-nav">
+    <div class="asset-logo-box">
+        <img class="asset-logo" [src]="imageUrl || ''" alt="">
+    </div>
+    <img src="/assets/images/asset-detail/nav.png" class="nav-img" alt="">
+</div>
+
+<div class="container" appScroll (scrollChange)="onScrolltaChange($event)">
+    <p class="asset-balance">{{ balance?.balance || 0 }} {{ balance?.symbol }}</p>
+    <p class="asset-money">{{ balance?.rateBalance }} {{ rateCurrency }} </p>
+    <div class="transaction-btn-container">
+        <button class="receive-btn" mat-stroked-button color="primary">
+            <img src="/assets/images/home/receive.png" alt="">
+            <span>{{ 'receive' | translate | async }}</span>
+        </button>
+        <button class="transfer-btn" mat-flat-button color="primary">
+            <img src="/assets/images/home/send.png" alt="">
+            <span>{{ 'transfer' | translate | async }}</span>
+        </button>
+    </div>
+    <p class="tx-title">{{ 'transaction' | translate | async}}</p>
+    <div class="tx">
+        <app-tx-page [assetId]="assetId" [rateCurrency]="rateCurrency" [symbol]="balance?.symbol" #txPage>
+        </app-tx-page>
+    </div>
+</div>

@@ -11,6 +11,8 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { PopupRoutingModule } from '@popup/popup.route';
 import { PopupComponent } from '@popup/popup.component';
 import { PopupSidenavComponent } from '@popup/sidenav/sidenav.component';
+import { PopupAssetDetailComponent } from './asset-detail/asset-detail.component';
+
 import {
     PopupLogoutDialogComponent,
     PopupClearStorageDialogComponent,
@@ -32,7 +34,7 @@ import { PopupAboutModule } from '@popup/about';
 import { PopupAccountModule } from '@popup/account';
 import { PopupHomeModule } from '@popup/home';
 import { PopupLoginModule } from '@popup/login';
-import { PopupAssetsModule } from '@popup/assets';
+import { PopupAddAssetModule } from '@popup/add-asset';
 import { PopupNewWalletGuideModule } from './new-wallet-guide';
 
 import { PopupServiceModule } from '@popup/_services';
@@ -52,7 +54,8 @@ import { TransferModule } from './transfer';
         PopupClearStorageDialogComponent,
         PopupConfirmDialogComponent,
         PopupHomeMenuDialogComponent,
-        PopupAuthorizationListDialogComponent
+        PopupAuthorizationListDialogComponent,
+        PopupAssetDetailComponent
     ],
     imports: [
         FormsModule,
@@ -72,7 +75,7 @@ import { TransferModule } from './transfer';
         PopupAccountModule,
         PopupHomeModule,
         PopupLoginModule,
-        PopupAssetsModule,
+        PopupAddAssetModule,
         PopupServiceModule,
         PopupNewWalletGuideModule
     ],

@@ -3,7 +3,6 @@ import { NgModule } from '@angular/core';
 
 import { PopupComponent } from '@popup/popup.component';
 import { PopupHomeComponent } from '@popup/home/home.component';
-import { PopupHomeDetailComponent } from '@popup/home/detail/detail.component';
 
 import { PopupWalletGuard } from '@app/core';
 
@@ -13,15 +12,11 @@ const routes: Routes = [
     {
         path: 'popup',
         component: PopupComponent,
-        canActivate: [ PopupWalletGuard ],
+        canActivate: [PopupWalletGuard],
         children: [
             {
                 path: 'home',
-                component: PopupHomeComponent,
-                children: [
-                    { path: '', redirectTo: `/popup/home/${ NEO }`, pathMatch: 'full' },
-                    { path: ':id', component: PopupHomeDetailComponent },
-                ]
+                component: PopupHomeComponent
             }
         ]
     }
@@ -31,4 +26,4 @@ const routes: Routes = [
     imports: [RouterModule.forChild(routes)],
     exports: [RouterModule]
 })
-export class PopupHomeRoutingModule { }
+export class PopupHomeRoutingModule {}

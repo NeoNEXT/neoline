@@ -14,7 +14,7 @@ import { forkJoin } from 'rxjs';
     templateUrl: 'tx-page.component.html',
     styleUrls: ['tx-page.component.scss']
 })
-export class PopupHomeTxPageComponent implements OnInit, OnDestroy {
+export class PopupTxPageComponent implements OnInit, OnDestroy {
     @Input() assetId = '';
     @Input() symbol = '';
     @Input() rateCurrency: string;

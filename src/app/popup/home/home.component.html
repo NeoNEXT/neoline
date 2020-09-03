@@ -49,7 +49,7 @@
                         {{ 'assets' | translate | async}}</p>
                     <p matRipple [class]="{ selected: selectedIndex == 1}" (click)="selectedIndex = 1">
                         {{ 'transaction' | translate | async}}</p>
-                    <img class="asset-add" src="/assets/images/home/add.png" routerLink="/popup/assets" alt="">
+                    <img class="asset-add" src="/assets/images/home/add.png" routerLink="/popup/add-asset" alt="">
                 </div>
                 <div class="tab-content-container">
                     <div class="tab-assets-container" [hidden]="selectedIndex == 1">

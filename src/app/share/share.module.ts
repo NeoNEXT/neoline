@@ -33,6 +33,7 @@ import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { PagerComponent } from './components/pager/pager.component';
 import { PopupPagerComponent } from './components/popup-pager/popup-pager.component';
+import { PopupTxPageComponent } from './components/tx-page/tx-page.component';
 
 import { LimitStrPipe } from './pipes/limit-str.pipe';
 import { LimitPageStringPipe } from './pipes/limit-page-string.pipe';
@@ -48,6 +49,7 @@ import { ScrollDirective } from './directives/scroll';
     declarations: [
         PagerComponent,
         PopupPagerComponent,
+        PopupTxPageComponent,
         LimitStrPipe,
         LimitPageStringPipe,
         LanguageNamePipe,
@@ -84,6 +86,7 @@ import { ScrollDirective } from './directives/scroll';
         MatTooltipModule,
         PagerComponent,
         PopupPagerComponent,
+        PopupTxPageComponent,
         ReactiveFormsModule,
     ],
     providers: [],

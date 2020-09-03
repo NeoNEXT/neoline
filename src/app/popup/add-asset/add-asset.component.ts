@@ -6,20 +6,16 @@ import {
     NeonService,
     GlobalService
 } from '@/app/core';
-import { map, mapTo, switchMap } from 'rxjs/operators';
 import { MatDialog } from '@angular/material/dialog';
 
-import {
-    PopupAddTokenDialogComponent,
-    PopupDelTokenDialogComponent
-} from '@popup/_dialogs';
+import { PopupAddTokenDialogComponent } from '@popup/_dialogs';
 import { forkJoin } from 'rxjs';
 
 @Component({
-    templateUrl: 'assets.component.html',
-    styleUrls: ['assets.component.scss']
+    templateUrl: 'add-asset.component.html',
+    styleUrls: ['add-asset.component.scss']
 })
-export class PopupAssetsComponent implements OnInit {
+export class PopupAddAssetComponent implements OnInit {
     public allAssets: PageData<Asset>; // 所有的资产
     public searchAssets: any = false; // 搜索的资产
     public watch: Balance[] = []; // 用户添加的资产
