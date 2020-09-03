@@ -29,6 +29,7 @@ import {
 } from '@cityofzion/neon-core/lib/tx';
 import { wallet } from '@cityofzion/neon-core';
 import { rpc } from '@cityofzion/neon-js';
+import { PopupAddressDialogComponent } from '../../_dialogs';
 
 
 @Component({
@@ -180,7 +181,12 @@ export class TransferCreateComponent implements OnInit {
     }
 
     public chooseToAddress() {
-        console.log('choose')
+        this.dialog.open(PopupAddressDialogComponent, {
+            data: {},
+            panelClass: 'custom-dialog-panel'
+        }).afterClosed().subscribe((address: string) => {
+            this.toAddress = address;
+        });
     }
 
     public getAddresSub() {
