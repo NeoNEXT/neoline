@@ -6,12 +6,12 @@ import { PopupAssetsComponent } from '@popup/assets/assets.component';
 import { PopupAssetsRoutingModule } from '@popup/assets/assets.route';
 
 import { ShareModule } from '@app/share';
-import { PopupAssetSearchComponent } from './asset-search/asset-search.component';
+import { AssetItemComponent } from './asset-item/asset-item.component';
 
 @NgModule({
     declarations: [
         PopupAssetsComponent,
-        PopupAssetSearchComponent
+        AssetItemComponent
     ],
     imports: [
         CommonModule,

@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { PageData, Balance, Asset } from '@/models/models';
 import {
     AssetState,
@@ -13,6 +13,7 @@ import {
     PopupAddTokenDialogComponent,
     PopupDelTokenDialogComponent
 } from '@popup/_dialogs';
+import { forkJoin } from 'rxjs';
 
 @Component({
     templateUrl: 'assets.component.html',
@@ -20,13 +21,13 @@ import {
 })
 export class PopupAssetsComponent implements OnInit {
     public allAssets: PageData<Asset>; // 所有的资产
-    public searchAssets: any = false; // 所有的资产
-    public displayAssets: Balance[] = []; // 要显示的资产
-    public watch: Balance[]; // 用户添加的资产
-    public isLoading: boolean;
+    public searchAssets: any = false; // 搜索的资产
+    public watch: Balance[] = []; // 用户添加的资产
+    public moneyAssets: Balance[] = []; // 有钱的资产
+    public isLoading = false;
     public searchValue: string = '';
-    public rateSymbol = '';
-    public rateCurrency: string;
+
+    sourceScrollHeight = 0;
 
     constructor(
         private asset: AssetState,
@@ -34,90 +35,61 @@ export class PopupAssetsComponent implements OnInit {
         private neon: NeonService,
         private dialog: MatDialog,
         private global: GlobalService
-    ) {
-        this.watch = [];
-        this.displayAssets = [];
-        this.isLoading = false;
-        this.rateCurrency = this.asset.rateCurrency;
-    }
+    ) {}
 
     ngOnInit(): void {
         // let address = 'Af1FkesAboWnz7PfvXsEiXiwoH3PPzx7ta';
-        this.getBalance();
-    }
-
-    public getBalance() {
-        this.asset
-            .fetchBalance(this.neon.address)
-            .pipe(
-                switchMap(res =>
-                    this.chrome.getWatch().pipe(
-                        map(watching => {
-                            this.displayAssets = [];
-                            this.rateSymbol = '';
-                            res.map((r, index) => {
-                                if (r.balance && r.balance > 0) {
-                                    this.rateSymbol += r.symbol + ',';
-                                }
-                                this.displayAssets.push(r);
-                                this.getAssetSrc(r.asset_id, index, 'display');
-                            });
-                            this.rateSymbol = this.rateSymbol.slice(0, -1);
-                            this.getAssetRate();
-                            //  去重
-                            const newWatch = [];
-                            watching.forEach((w, index) => {
-                                if (
-                                    res.findIndex(
-                                        r => r.asset_id === w.asset_id
-                                    ) < 0
-                                ) {
-                                    newWatch.push(w);
-                                    this.displayAssets.push(w);
-                                    this.getAssetSrc(
-                                        w.asset_id,
-                                        res.length + index,
-                                        'display'
-                                    );
-                                }
-                            });
-                            this.watch = newWatch;
-                            // this.displayAssets.push(...newWatch);
-                            return res;
-                        })
-                    )
-                )
-            )
-            .subscribe(() => {
-                this.getAllBalance(1);
-            });
+        const getMoneyBalance = this.asset.fetchBalance(this.neon.address);
+        const getWatch = this.chrome.getWatch();
+        forkJoin([getMoneyBalance, getWatch]).subscribe(res => {
+            this.moneyAssets = res[0];
+            this.watch = res[1];
+            this.getAllBalance(1);
+        });
     }
 
     public getAllBalance(page) {
         this.isLoading = true;
-        this.asset.fetchAll(page).then(res => {
-            this.allAssets = res;
-            this.allAssets.items.forEach((e, index) => {
-                this.getAssetSrc(e.asset_id, index, 'all');
-                this.allAssets.items[index].watching =
-                    this.displayAssets.findIndex(
-                        (w: Balance) => w.asset_id === e.asset_id
-                    ) >= 0;
-            });
-            this.isLoading = false;
-        });
-    }
+        this.asset.fetchAll(page).then((res: PageData<Asset>) => {
+            if (page === 1) {
+                this.allAssets = res;
+            } else {
+                this.allAssets.page = res.page;
+                this.allAssets.pages = res.pages;
+                this.allAssets.total = res.total;
+                this.allAssets.per_page = res.per_page;
+                this.allAssets.items = this.allAssets.items.concat(res.items);
+            }
 
-    // 获取资产汇率
-    public getAssetRate() {
-        this.asset.getAssetRate(this.rateSymbol).subscribe(rateBalance => {
-            this.displayAssets.map(d => {
-                if (d.symbol.toLowerCase() in rateBalance) {
-                    d.rateBalance =
-                        rateBalance[d.symbol.toLowerCase()] * d.balance;
+            const length =
+                res.page * res.per_page < res.total
+                    ? res.page * res.per_page
+                    : res.total;
+            for (
+                let index = (res.page - 1) * res.per_page;
+                index < length;
+                index++
+            ) {
+                if (this.allAssets.items[index].asset_id) {
+                    this.getAssetSrc(
+                        this.allAssets.items[index].asset_id,
+                        index,
+                        'all'
+                    );
+                    this.allAssets.items[index].watching =
+                        this.moneyAssets.findIndex(
+                            (m: Balance) =>
+                                m.asset_id ===
+                                this.allAssets.items[index].asset_id
+                        ) >= 0 ||
+                        this.watch.findIndex(
+                            (w: Balance) =>
+                                w.asset_id ===
+                                this.allAssets.items[index].asset_id
+                        ) >= 0;
                 }
-                return d;
-            });
+            }
+            this.isLoading = false;
         });
     }
 
@@ -130,22 +102,18 @@ export class PopupAssetsComponent implements OnInit {
                 this.allAssets.items[index].avatar = imageObj['image-src'];
             } else if (type === 'search') {
                 this.searchAssets[index].avatar = imageObj['image-src'];
-            } else if (type === 'display') {
-                this.displayAssets[index].avatar = imageObj['image-src'];
             }
         }
         this.asset.getAssetSrc(assetId, lastModified).subscribe(assetRes => {
-            if (assetRes && assetRes['status'] === 200) {
+            if (assetRes && assetRes.status === 200) {
                 this.asset.setAssetFile(assetRes, assetId).then(src => {
                     if (type === 'all') {
                         this.allAssets.items[index].avatar = src;
                     } else if (type === 'search') {
                         this.searchAssets[index].avatar = src;
-                    } else if (type === 'display') {
-                        this.displayAssets[index].avatar = src;
                     }
                 });
-            } else if (assetRes && assetRes['status'] === 404) {
+            } else if (assetRes && assetRes.status === 404) {
                 if (type === 'all') {
                     this.allAssets.items[
                         index
@@ -154,18 +122,9 @@ export class PopupAssetsComponent implements OnInit {
                     this.searchAssets[
                         index
                     ].avatar = this.asset.defaultAssetSrc;
-                } else if (type === 'display') {
-                    this.displayAssets[
-                        index
-                    ].avatar = this.asset.defaultAssetSrc;
                 }
             }
         });
-    }
-
-    public page(page: number) {
-        this.isLoading = true;
-        this.getAllBalance(page);
     }
 
     public addAsset(index: number) {
@@ -189,44 +148,12 @@ export class PopupAssetsComponent implements OnInit {
                             this.allAssets.items[i].watching = true;
                         }
                         this.searchAssets[index].watching = true;
-                        this.displayAssets.push(this.searchAssets[index]);
                     } else {
                         this.allAssets.items[index].watching = true;
-                        this.displayAssets.push(this.allAssets.items[index]);
                     }
                     this.watch.push(assetItem);
                     this.chrome.setWatch(this.watch);
                     this.global.snackBarTip('addSucc');
-                }
-            });
-    }
-
-    public delAsset(index: number) {
-        this.dialog
-            .open(PopupDelTokenDialogComponent, {
-                panelClass: 'custom-dialog-panel'
-            })
-            .afterClosed()
-            .subscribe(confirm => {
-                if (confirm) {
-                    const i = this.watch.findIndex(
-                        w => w.asset_id === this.displayAssets[index].asset_id
-                    );
-                    if (i >= 0) {
-                        this.watch.splice(i, 1);
-                        this.chrome.setWatch(this.watch);
-                    }
-                    for (const allIndex in this.allAssets.items) {
-                        if (
-                            this.allAssets.items[allIndex].asset_id ===
-                            this.displayAssets[index].asset_id
-                        ) {
-                            this.allAssets.items[allIndex].watching = false;
-                            break;
-                        }
-                    }
-                    this.displayAssets.splice(index, 1);
-                    this.global.snackBarTip('hiddenSucc');
                 }
             });
     }
@@ -237,7 +164,10 @@ export class PopupAssetsComponent implements OnInit {
                 this.searchAssets = res;
                 this.searchAssets.forEach((s, index) => {
                     this.searchAssets[index].watching =
-                        this.displayAssets.findIndex(
+                        this.moneyAssets.findIndex(
+                            (m: Balance) => m.asset_id === s.asset_id
+                        ) >= 0 ||
+                        this.watch.findIndex(
                             (w: Balance) => w.asset_id === s.asset_id
                         ) >= 0;
                     this.getAssetSrc(s.asset_id, index, 'search');
@@ -245,6 +175,20 @@ export class PopupAssetsComponent implements OnInit {
             });
         } else {
             this.searchAssets = false;
+        }
+    }
+
+    public onScrolltaChange(el: Element) {
+        const clientHeight = el.clientHeight;
+        const scrollHeight = el.scrollHeight;
+        const scrollTop = el.scrollTop;
+        if (
+            scrollHeight - clientHeight < scrollTop + 100 &&
+            this.sourceScrollHeight < scrollHeight &&
+            this.allAssets.page < this.allAssets.pages
+        ) {
+            this.getAllBalance(++this.allAssets.page);
+            this.sourceScrollHeight = scrollHeight;
         }
     }
 }

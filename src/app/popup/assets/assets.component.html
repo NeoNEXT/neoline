@@ -18,21 +18,12 @@
 <p *ngIf="searchAssets" class="search-title">{{ 'searchResult' | translate | async}}</p>
 <p *ngIf="!searchAssets" class="search-title">{{ 'searchAllResult' | translate | async}}</p>
 
-<div class="popup-assets-list">
-    <div class="loading" *ngIf="isLoading">{{ 'loading' | translate | async}}...</div>
-    <ng-container *ngIf="!isLoading">
-        <app-asset-search *ngFor="let asset of searchAssets || allAssets?.items;let index = index" [asset]="asset"
-            [index]="index" [isSearchAssets]="searchAssets ? true : false" (onAddAsset)="addAsset($event)">
-        </app-asset-search>
-    </ng-container>
+<div class="popup-assets-list" appScroll (scrollChange)="onScrolltaChange($event)">
+    <app-asset-item *ngFor="let asset of searchAssets || allAssets?.items;let index = index" [asset]="asset"
+        [index]="index" [isSearchAssets]="searchAssets ? true : false" (onAddAsset)="addAsset($event)">
+    </app-asset-item>
+    <div class="loading" *ngIf="isLoading">{{ 'loading' | translate | async}}</div>
     <p *ngIf="searchAssets && searchAssets?.length===0" class="no-data">
         没有更多数据了
     </p>
-</div>
-
-<div class="popup-asset-page">
-    <app-popup-pager *ngIf="!searchAssets" [currentPage]="allAssets?.page || 1" [totalPageCount]="allAssets?.pages || 0"
-        [totalItemCount]="allAssets?.total || 0" (onPage)="page($event)"></app-popup-pager>
-    <app-popup-pager *ngIf="searchAssets" [currentPage]="1" [totalPageCount]="0" [totalItemCount]="0"
-        (onPage)="page($event)"></app-popup-pager>
 </div>

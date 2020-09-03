@@ -76,9 +76,13 @@
 }
 
 .popup-assets-list {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
     overflow: scroll;
     margin-top: 5px;
-    height: 330px;
+    height: 360px;
     font-size: 15px;
     &::-webkit-scrollbar {
         display: none;
@@ -89,12 +93,4 @@
         font-size: 15px;
         color: #b0b6be;
     }
-}
-
-.popup-asset-page {
-    position: fixed;
-    left: 0;
-    bottom: 0;
-    width: 375px;
-    height: auto;
 }

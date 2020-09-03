@@ -20,12 +20,14 @@
     }
     .right {
         max-width: 150px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
         margin-right: 5px;
         padding-left: 10px;
         text-align: right;
+        .amount, .rate {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
         .rate {
             font-size: 15px;
             color: #808A94;

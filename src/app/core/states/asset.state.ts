@@ -1,38 +1,18 @@
-import {
-    Injectable
-} from '@angular/core';
-import {
-    HttpService
-} from '../services/http.service';
-import {
-    GlobalService
-} from '../services/global.service';
-import {
-    ChromeService
-} from '../services/chrome.service';
-import {
-    Observable,
-    Subject,
-    from,
-    of ,
-} from 'rxjs';
-import {
-    Balance,
-} from 'src/models/models';
-import {
-    map,
-    switchMap,
-    refCount,
-    publish,
-} from 'rxjs/operators';
+import { Injectable } from '@angular/core';
+import { HttpService } from '../services/http.service';
+import { GlobalService } from '../services/global.service';
+import { ChromeService } from '../services/chrome.service';
+import { Observable, Subject, from, of } from 'rxjs';
+import { Balance } from 'src/models/models';
+import { map, switchMap, refCount, publish } from 'rxjs/operators';
 
 @Injectable()
 export class AssetState {
-    public assetFile: Map < string, {} > = new Map();
+    public assetFile: Map<string, {}> = new Map();
     public defaultAssetSrc = '/assets/images/default_asset_logo.jpg';
-    public $webAddAssetId: Subject < Balance > = new Subject();
-    public $webDelAssetId: Subject < string > = new Subject();
-    public assetRate: Map < string, {} > = new Map();
+    public $webAddAssetId: Subject<Balance> = new Subject();
+    public $webDelAssetId: Subject<string> = new Subject();
+    public assetRate: Map<string, {}> = new Map();
     public rateCurrency: string;
 
     public balanceSource = new Subject<Balance[]>();
@@ -41,7 +21,7 @@ export class AssetState {
     constructor(
         private http: HttpService,
         private global: GlobalService,
-        private chrome: ChromeService,
+        private chrome: ChromeService
     ) {
         this.chrome.getAssetFile().subscribe(res => {
             this.assetFile = res;
@@ -72,7 +52,7 @@ export class AssetState {
         this.$webDelAssetId.next(id);
     }
 
-    public popDelAssetId(): Observable < any > {
+    public popDelAssetId(): Observable<any> {
         return this.$webDelAssetId.pipe(publish(), refCount());
     }
 
@@ -80,7 +60,7 @@ export class AssetState {
         this.$webAddAssetId.next(id);
     }
 
-    public popAddAssetId(): Observable < any > {
+    public popAddAssetId(): Observable<any> {
         return this.$webAddAssetId.pipe(publish(), refCount());
     }
 
@@ -89,36 +69,65 @@ export class AssetState {
         this.assetRate = new Map();
     }
 
-    public detail(address: string, id: string): Observable < Balance > {
-        return this.fetchBalance(address).pipe(switchMap(balance => this.chrome.getWatch().pipe(map(watching => {
-            return balance.find((e) => e.asset_id === id) || watching.find(w => w.asset_id === id);
-        }))));
+    public detail(address: string, id: string): Observable<Balance> {
+        return this.fetchBalance(address).pipe(
+            switchMap(balance =>
+                this.chrome.getWatch().pipe(
+                    map(watching => {
+                        return (
+                            balance.find(e => e.asset_id === id) ||
+                            watching.find(w => w.asset_id === id)
+                        );
+                    })
+                )
+            )
+        );
     }
 
-    public fetchBalance(address: string): Observable < any > {
-        return this.http.get(`${ this.global.apiDomain }/v1/address/assets?address=${ address }`).pipe(map(res => {
-            this.pushBalance(res);
-            return res;
-        }));
+    public fetchBalance(address: string): Observable<any> {
+        return this.http
+            .get(
+                `${this.global.apiDomain}/v1/address/assets?address=${address}`
+            )
+            .pipe(
+                map(res => {
+                    this.pushBalance(res);
+                    return res;
+                })
+            );
     }
 
-    public fetchClaim(address: string): Observable < any > {
-        return  this.http.get(`${ this.global.apiDomain }/v1/transactions/claim/${ address }`);
+    public fetchClaim(address: string): Observable<any> {
+        return this.http.get(
+            `${this.global.apiDomain}/v1/transactions/claim/${address}`
+        );
     }
 
-    public fetchAll(page: number): Promise < any > {
-        return this.http.get(`${this.global.apiDomain}/v1/asset/getpluginsassets?page_index=${page}`).toPromise();
+    public fetchAll(page: number): Promise<any> {
+        return this.http
+            .get(
+                `${this.global.apiDomain}/v1/asset/getpluginsassets?page_index=${page}`
+            )
+            .toPromise();
     }
 
-    public searchAsset(query: string): Observable < any > {
-        return this.http.get(`${this.global.apiDomain}/v1/search?query=${query}`);
+    public searchAsset(query: string): Observable<any> {
+        return this.http.get(
+            `${this.global.apiDomain}/v1/search?query=${query}`
+        );
     }
 
-    public getAssetSrc(assetId: string, lastModified: string): Observable < string > {
-        return this.http.getImage(`${ this.global.apiDomain }/logo/${ assetId }`, lastModified);
+    public getAssetSrc(
+        assetId: string,
+        lastModified: string
+    ): Observable<any> {
+        return this.http.getImage(
+            `${this.global.apiDomain}/logo/${assetId}`,
+            lastModified
+        );
     }
 
-    public setAssetFile(res: any, assetId: string): Promise < any > {
+    public setAssetFile(res: XMLHttpRequest, assetId: string): Promise<any> {
         const temp = {};
         temp['last-modified'] = res.getResponseHeader('Last-Modified');
         return new Promise((resolve, reject) => {
@@ -133,11 +142,11 @@ export class AssetState {
             };
         });
     }
-    public getRate(): Observable < any > {
+    public getRate(): Observable<any> {
         return this.http.get(`${this.global.apiDomain}/v1/asset/exchange_rate`);
     }
 
-    public getAssetRate(coins: string): Observable < any > {
+    public getAssetRate(coins: string): Observable<any> {
         if (!coins) {
             return of({});
         }
@@ -149,7 +158,11 @@ export class AssetState {
             const tempAssetRate = this.assetRate.get(element);
             if (tempAssetRate) {
                 rateRes[element] = tempAssetRate['rate'];
-                if (new Date().getTime() / 1000 - tempAssetRate['last-modified'] > 1200) {
+                if (
+                    new Date().getTime() / 1000 -
+                        tempAssetRate['last-modified'] >
+                    1200
+                ) {
                     targetCoins += element + ',';
                 }
             } else {
@@ -160,26 +173,35 @@ export class AssetState {
         if (targetCoins === '') {
             return of(rateRes);
         }
-        return this.http.get(`${this.global.apiDomain}/v1/asset/exchange_rate`).pipe(map(rateBalance => {
-            const targetCoinsAry = targetCoins.split(',');
-            targetCoinsAry.forEach(coin => {
-                let tempRate = {};
-                tempRate['last-modified'] = rateBalance['response_time'];
-                if (coin in rateBalance.result) {
-                    tempRate['rate'] = Number(rateBalance.result[coin][this.rateCurrency.toString().toLowerCase()]);
-                    rateRes[coin] = tempRate['rate'];
-                } else {
-                    tempRate['rate'] = undefined;
-                    rateRes[coin] = undefined;
-                }
-                this.assetRate.set(coin, tempRate);
-            });
-            if (this.rateCurrency === 'CNY') {
-                this.chrome.setAssetCNYRate(this.assetRate);
-            } else {
-                this.chrome.setAssetUSDRate(this.assetRate);
-            }
-            return rateRes;
-        }));
+        return this.http
+            .get(`${this.global.apiDomain}/v1/asset/exchange_rate`)
+            .pipe(
+                map(rateBalance => {
+                    const targetCoinsAry = targetCoins.split(',');
+                    targetCoinsAry.forEach(coin => {
+                        let tempRate = {};
+                        tempRate['last-modified'] =
+                            rateBalance['response_time'];
+                        if (coin in rateBalance.result) {
+                            tempRate['rate'] = Number(
+                                rateBalance.result[coin][
+                                    this.rateCurrency.toString().toLowerCase()
+                                ]
+                            );
+                            rateRes[coin] = tempRate['rate'];
+                        } else {
+                            tempRate['rate'] = undefined;
+                            rateRes[coin] = undefined;
+                        }
+                        this.assetRate.set(coin, tempRate);
+                    });
+                    if (this.rateCurrency === 'CNY') {
+                        this.chrome.setAssetCNYRate(this.assetRate);
+                    } else {
+                        this.chrome.setAssetUSDRate(this.assetRate);
+                    }
+                    return rateRes;
+                })
+            );
     }
 }
