@@ -8,4 +8,5 @@ export { PopupClearStorageDialogComponent } from '@popup/_dialogs/clear-storage/
 export { PopupConfirmDialogComponent } from '@popup/_dialogs/confirm/confirm.dialog';
 export { PopupHomeMenuDialogComponent } from '@popup/_dialogs/home-menu/home-menu.dialog';
 export { PopupAddressDialogComponent } from '@popup/_dialogs/address/address.dialog';
+export { PopupAssetDialogComponent } from '@popup/_dialogs/asset/asset.dialog';
 

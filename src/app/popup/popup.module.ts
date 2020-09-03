@@ -18,7 +18,8 @@ import {
     PopupClearStorageDialogComponent,
     PopupConfirmDialogComponent,
     PopupHomeMenuDialogComponent,
-    PopupAddressDialogComponent
+    PopupAddressDialogComponent,
+    PopupAssetDialogComponent
 } from '@popup/_dialogs';
 import { PopupAuthorizationListDialogComponent } from '@popup/_dialogs/authorization-list/authorization-list.dialog';
 import { PopupQRCodeDialogComponent } from '@popup/_dialogs';
@@ -50,6 +51,7 @@ import { TransferModule } from './transfer';
         PopupQRCodeDialogComponent,
         PopupLanguageDialogComponent,
         PopupAddressDialogComponent,
+        PopupAssetDialogComponent,
         PopupNameDialogComponent,
         PopupAddTokenDialogComponent,
         PopupDelTokenDialogComponent,
@@ -87,6 +89,7 @@ import { TransferModule } from './transfer';
         PopupQRCodeDialogComponent,
         PopupLanguageDialogComponent,
         PopupAddressDialogComponent,
+        PopupAssetDialogComponent,
         PopupNameDialogComponent,
         PopupAddTokenDialogComponent,
         PopupDelTokenDialogComponent,

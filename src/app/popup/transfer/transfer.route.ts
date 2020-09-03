@@ -17,6 +17,7 @@ const routes: Routes = [
                 component: TransferComponent,
                 children: [
                     { path: 'receive', component: TransferReceiveComponent },
+                    { path: 'create/:id', component: TransferCreateComponent },
                     { path: 'create', component: TransferCreateComponent }
                 ]
             }

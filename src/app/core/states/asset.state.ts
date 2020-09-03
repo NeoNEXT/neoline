@@ -204,4 +204,19 @@ export class AssetState {
                 })
             );
     }
+
+    public async getAssetImage(assetId: string) {
+        const imageObj = this.assetFile.get(assetId);
+        let lastModified = '';
+        if (imageObj) {
+            lastModified = imageObj['last-modified'];
+            return imageObj['image-src'];
+        }
+        const assetRes = await this.getAssetSrc(assetId, lastModified).toPromise();
+        if (assetRes && assetRes.status === 200) {
+            const src = await this.setAssetFile(assetRes, assetId)
+        } else if (assetRes && assetRes.status === 404) {
+            return this.defaultAssetSrc;
+        }
+    }
 }

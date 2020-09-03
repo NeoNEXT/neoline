@@ -29,7 +29,7 @@ import {
 } from '@cityofzion/neon-core/lib/tx';
 import { wallet } from '@cityofzion/neon-core';
 import { rpc } from '@cityofzion/neon-js';
-import { PopupAddressDialogComponent } from '../../_dialogs';
+import { PopupAddressDialogComponent, PopupAssetDialogComponent } from '../../_dialogs';
 
 
 @Component({
@@ -37,7 +37,6 @@ import { PopupAddressDialogComponent } from '../../_dialogs';
     styleUrls: ['create.component.scss']
 })
 export class TransferCreateComponent implements OnInit {
-    public balance: Balance;
     public amount: number;
     public fee: number ;
     public fromAddress: string;
@@ -45,8 +44,9 @@ export class TransferCreateComponent implements OnInit {
     public creating: boolean = false;
 
     public assetLogoUrl = '';
-    public chooseAssets: Balance;
+    public chooseAsset: Balance;
 
+    public balances: Array<Balance> = [];
     public assetId: string;
     public net: string;
     constructor(
@@ -67,10 +67,21 @@ export class TransferCreateComponent implements OnInit {
         this.net = this.global.net;
         this.fromAddress = this.neon.address;
         this.aRoute.params.subscribe((params) => {
-            this.asset.detail(this.neon.address, params.id).subscribe((res: Balance) => {
-                res.balance = Number(res.balance);
-                this.balance = res;
-                this.assetId = this.balance.asset_id;
+            if(params.id) {
+                this.asset.detail(this.neon.address, params.id).subscribe(async (res: Balance) => {
+                    res.balance = Number(res.balance);
+                    this.chooseAsset = res;
+                    this.assetId = res.asset_id;
+                    this.assetLogoUrl = await this.asset.getAssetImage(this.assetId);
+                });
+            }
+            this.asset.fetchBalance(this.neon.address).subscribe(async balanceArr => {
+                this.balances = balanceArr;
+                if(!params.id) {
+                    this.assetId = this.balances[0].asset_id;
+                    this.chooseAsset = this.balances[0];
+                    this.assetLogoUrl = await this.asset.getAssetImage(this.assetId);
+                }
             });
         });
     }
@@ -87,17 +98,17 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('wrongAddress');
             return;
         }
-        if (this.balance.balance === undefined || this.balance.balance <= 0) {
+        if (this.chooseAsset.balance === undefined || this.chooseAsset.balance <= 0) {
             this.global.snackBarTip('balanceLack');
             return;
         }
-        if (parseFloat(this.balance.balance.toString()) < parseFloat(this.amount.toString())) {
+        if (parseFloat(this.chooseAsset.balance.toString()) < parseFloat(this.amount.toString())) {
             this.global.snackBarTip('balanceLack');
             return;
         }
         this.creating = true;
-        this.transfer.create(this.fromAddress, this.toAddress, this.balance.asset_id, this.amount,
-            this.fee || 0, this.balance.decimals).subscribe((res) => {
+        this.transfer.create(this.fromAddress, this.toAddress, this.chooseAsset.asset_id, this.amount,
+            this.fee || 0, this.chooseAsset.decimals).subscribe((res) => {
                 this.global.log('start transfer');
                 this.resolveSign(res);
             }, (err) => {
@@ -180,13 +191,31 @@ export class TransferCreateComponent implements OnInit {
         });
     }
 
-    public chooseToAddress() {
+    public selectToAddress() {
         this.dialog.open(PopupAddressDialogComponent, {
             data: {},
+            maxHeight: 500,
             panelClass: 'custom-dialog-panel'
         }).afterClosed().subscribe((address: string) => {
             this.toAddress = address;
         });
+    }
+
+    public selectAsset() {
+        if(this.balances.length > 0) {
+            this.dialog.open(PopupAssetDialogComponent, {
+                data: {
+                    balances:  this.balances,
+                    selected: this.balances.findIndex(item => item.asset_id === this.assetId)
+                },
+                maxHeight: 500,
+                panelClass: 'custom-dialog-panel'
+            }).afterClosed().subscribe(async (index: number) => {
+                this.chooseAsset = this.balances[index];
+                this.assetId = this.chooseAsset.asset_id;
+                this.assetLogoUrl = await this.asset.getAssetImage(this.assetId);
+            });
+        }
     }
 
     public getAddresSub() {
