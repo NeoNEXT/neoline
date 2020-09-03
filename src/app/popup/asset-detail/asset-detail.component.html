@@ -27,8 +27,5 @@
         </button>
     </div>
     <p class="tx-title">{{ 'transaction' | translate | async}}</p>
-    <div class="tx">
-        <app-tx-page [assetId]="assetId" [rateCurrency]="rateCurrency" [symbol]="balance?.symbol" #txPage>
-        </app-tx-page>
-    </div>
+    <app-tx-page [assetId]="assetId" [rateCurrency]="rateCurrency" [symbol]="balance?.symbol" #txPage></app-tx-page>
 </div>
