@@ -1,0 +1,166 @@
+@import 'src/styles/theme-default';
+
+.nav {
+    height: 65px;
+    background-color: #06ccab;
+    position: relative;
+
+    .content {
+        height: 30px;
+        padding-top: 5px;
+        font-size: 20px;
+        font-weight: 500;
+        color: #ffffff;
+        display: flex;
+        align-items: center;
+
+        img {
+            height: 30px;
+            margin-right: 11px;
+        }
+    }
+
+    .divide {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 15px;
+        background: #ffffff;
+        border-radius: 15px 15px 0px 0px;
+    }
+}
+
+.transfer-body {
+    .container {
+        display: flex;
+        align-items: center;
+        margin-top: 20px;
+    }
+
+    .label {
+        display: inline-block;
+        vertical-align: middle;
+        width: 50px;
+        word-wrap: break-word;
+        font-size: 16px;
+        color: #808A94;
+        text-align: center;
+        margin-left: 18px;
+        margin-right: 15px;
+    }
+
+    .box {
+        display: inline-flex;
+        flex: 1 1 auto;
+        max-width: 275px;
+        align-items: center;
+        background-color: #FAFAFA;
+        border-radius: 10px;
+        min-height: 60px;
+        margin-right: 20px;
+    }
+
+    hr {
+        border: none;
+        border-top: 0.5px solid #EFEFEF;
+        margin-top: 44px;
+    }
+
+    .to-container {
+        p {
+            flex: 1 1 auto;
+            font-size: 16px;
+            color: map-get($neo-line-default, 500);
+        }
+
+    }
+
+    .asset-box {
+        padding-top: 10px;
+        padding-bottom: 10px;
+
+        .asset-logo {
+            width: 50px;
+            height: 50px;
+            margin-left: 20px;
+        }
+
+        .asset-info {
+            flex: 1 1 auto;
+            max-width: 150px;
+            margin-left: 16px;
+
+            p {
+                &:nth-child(1) {
+                    font-size: 16px;
+                    color: #444644;
+                }
+
+                &:nth-child(2) {
+                    width: 50%;
+                    overflow: auto;
+                    margin-top: 8px;
+                    color: #808A94;
+                    font-size: 14px;
+                    white-space: nowrap;
+                    margin-right: 20px;
+                }
+            }
+        }
+    }
+
+    .amount-box {
+        input {
+            min-width: 100px;
+            border: none;
+            flex: 1 1 auto;
+            height: 60px;
+            display: inline-block;
+            color: #303433;
+            font-size: 18px;
+            padding-left: 25px;
+            background: transparent;
+        }
+        button {
+            margin-left: 10px;
+            margin-right: 15px;
+        }
+    }
+
+    .fee-box {
+        input {
+            border: none;
+            flex: 1 1 auto;
+            height: 60px;
+            display: inline-block;
+            color: #303433;
+            font-size: 18px;
+            padding: 0 25px;
+            background: transparent;
+        }
+    }
+
+    .drop {
+        width: 7.5px;
+        height: 4px;
+        margin-right: 25px;
+    }
+}
+
+
+.btn-box {
+    display: inline-block;
+    margin: 20px auto;
+
+    button {
+        &:nth-child(1) {
+            background: #ECFBF1;
+            color: map-get($neo-line-default, 500);
+        }
+
+        margin-left: 15px;
+        border-radius: 25px;
+        height: 50px;
+        width: 160px;
+    }
+}

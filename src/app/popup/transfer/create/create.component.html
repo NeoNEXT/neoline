@@ -1,0 +1,46 @@
+<div class="nav">
+    <div class="content">
+        <img src="/assets/images/nav-back.png" (click)="cancel()" alt="">
+        {{ 'transfer' | translate | async }}
+    </div>
+    <div class="divide"></div>
+</div>
+
+<div class="transfer-body">
+    <div class="to-container container">
+        <span class="label">{{ 'transgerTo' | translate | async }}</span>
+        <div class="to-box box" matRipple (click)="chooseToAddress()">
+            <p>{{ getAddresSub() }}</p>
+            <img class="drop" src="/assets/images/transaction/drop.png" alt="">
+        </div>
+    </div>
+    <div class="current-asset-container container">
+        <span class="label">币种</span>
+        <div class="asset-box box" matRipple>
+            <img class="asset-logo" [src]="assetLogoUrl" alt="">
+            <div class="asset-info">
+                <p>{{ chooseAssets?.symbol || 'NEO' }}</p>
+                <p>{{ 'balance' | translate | async }}:{{ chooseAssets?.balance }}{{ chooseAssets?.symbol }}</p>
+            </div>
+            <img class="drop" src="/assets/images/transaction/drop.png" alt="">
+        </div>
+    </div>
+    <div class="amount-container container">
+        <span class="label">数量</span>
+        <div class="amount-box box">
+            <input type="number" placeholder="0" [(ngModel)]="amount" >
+            <button mat-button color="primary" (click)="amount=chooseAssets?.balance || 0">全部转账</button>
+        </div>
+    </div>
+    <div class="fee-container container">
+        <span class="label">{{ 'priorityFee' | translate | async }}</span>
+        <div class="fee-box box">
+            <input type="number" placeholder="选填" [(ngModel)]="fee" >
+        </div>
+    </div>
+    <hr>
+    <div class="btn-box">
+        <button mat-flat-button (click)="cancel()">{{ 'cancel' | translate | async}}</button>
+        <button mat-flat-button (click)="submit()" color="primary">{{ 'yes' | translate | async}}</button>
+    </div>
+</div>
