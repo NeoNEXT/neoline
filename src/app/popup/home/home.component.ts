@@ -157,12 +157,10 @@ export class PopupHomeComponent implements OnInit {
 
     public onScrolltaChange(el: Element) {
         const tabGroup = el.children[el.children.length - 1];
-        console.log(this.txPageComponent.loading);
         if (
             tabGroup.clientHeight - el.scrollTop < 343 &&
             !this.txPageComponent.loading
         ) {
-            console.log('load');
             this.txPageComponent.getInTransactions(this.currentTxPage);
             this.currentTxPage++;
         }
