@@ -108,11 +108,11 @@
                 .mat-tab-label {
                     width: 50%;
                     color: white;
-                    opacity: 80%;
+                    opacity: 0.8;
                     font-size: 18px;
 
-                    .mat-tab-label-active {
-                        opacity: 100%;
+                    &.mat-tab-label-active {
+                        opacity: 1;
                     }
                 }
             }

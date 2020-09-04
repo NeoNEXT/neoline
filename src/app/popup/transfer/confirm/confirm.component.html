@@ -1,17 +1,79 @@
 <div class="transfer-confirm-container">
-    <div class="mat-toolbar-fixed no-third-party-toolbar" >
-        <mat-toolbar color="primary">
-            <span class="popup-nav-logo">
-                <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
-            </span>
-            <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
-                {{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}
-                <span class="popup-nav-network-icon"></span>
-            </button>
-            <mat-menu #menu="matMenu">
-                <button mat-menu-item>{{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}</button>
-            </mat-menu>
-            <img class="close" (click)="exit()" src="/assets/images/dialog/close.png" alt="">
-        </mat-toolbar>
+    <div class="container">
+        <div class="mat-toolbar-fixed no-third-party-toolbar" >
+            <mat-toolbar color="primary">
+                <span class="popup-nav-logo">
+                    <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
+                </span>
+                <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
+                    {{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}
+                    <span class="popup-nav-network-icon"></span>
+                </button>
+                <mat-menu #menu="matMenu">
+                    <button mat-menu-item>{{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}</button>
+                </mat-menu>
+                <img class="close" (click)="exit()" src="/assets/images/dialog/close.png" alt="">
+            </mat-toolbar>
+        </div>
+        <div class="transfer-confirm-body">
+            <mat-toolbar>
+                <div>
+                    <img class="avatar" [avatar]="data.fromAddress">
+                    <span>{{ fromName }}</span>
+                </div>
+
+                <img class="arrow" src="/assets/images/dialog/transfer_arrow.png" alt="">
+                <div>
+                    <img class="avatar" [avatar]="data.toAddress">
+                    <span>{{ getAddressSub(data.toAddress) }}</span>
+                </div>
+            </mat-toolbar>
+            <div class="transfer-detail-container">
+                <div class="type-box">
+                    <span></span>
+                    <span>TRANSFER</span>
+                </div>
+                <div class="asset-info-box">
+                    <div class="logo-box">
+                        <img [src]="assetImageUrl" alt="">
+                    </div>
+                    <div class="asset-amount-box">
+                        <p>-100NEO</p>
+                        <p>-10000000USD</p>
+                    </div>
+                </div>
+                <div class="detail-tab-content">
+                    <mat-tab-group mat-align-tabs="center" >
+                        <mat-tab label="详情">
+                            <div class="fee-box detail-item">
+                                <p class="label">GAS FEE</p>
+                                <div class="fee-info">
+                                    <p>编辑</p>
+                                    <p>100 GAS</p>
+                                    <p>10000 USD</p>
+                                </div>
+                            </div>
+                            <hr>
+                            <div class="total-box detail-item">
+                                <p  class="label">TOTAL</p>
+                                <div class="total-info">
+                                    <p>Amount+GAS FEE</p>
+                                    <p>100 NEO + 100GAS</p>
+                                    <p>200000USD</p>
+                                </div>
+                            </div>
+                        </mat-tab>
+                        <mat-tab label="数据">
+                            数据
+                        </mat-tab>
+                    </mat-tab-group>
+                </div>
+                <hr>
+                <div class="btn-box">
+                    <button mat-flat-button (click)="exit()">{{ 'cancel' | translate | async}}</button>
+                    <button mat-flat-button  color="primary">{{ 'yes' | translate | async}}</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

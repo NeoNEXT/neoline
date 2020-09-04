@@ -8,7 +8,7 @@ import {
 } from '@angular/material/dialog';
 
 import {
-    ChromeService, AssetState,
+    ChromeService, AssetState, NeonService,
 } from '@app/core';
 
 @Component({
@@ -18,14 +18,37 @@ import {
 export class PopupTransferConfirmComponent implements OnInit {
     public logoUrlArr = [];
     public net = '';
+    public fromName: string = '';
+    public assetImageUrl: string = '';
     constructor(
         private dialogRef: MatDialogRef<PopupTransferConfirmComponent>,
+        private neon: NeonService,
+        private assetState: AssetState,
         @Inject(MAT_DIALOG_DATA) public data: {
+            fromAddress: string ,
+            toAddress: string,
+            asset: string,
+            amount: string,
+            remark: string,
+            fee: string,
+            network: string,
+            broadcastOverride: boolean
+        } = {
+            fromAddress: '',
+            toAddress: '',
+            asset: '',
+            amount: '',
+            remark: '',
+            fee: '',
+            network: '',
+            broadcastOverride: false
         }
     ) { }
 
-    ngOnInit() {
-        console.log('confirm');
+    async ngOnInit() {
+        const wallet = this.neon.wallet;
+        this.fromName = wallet.name;
+        this.assetImageUrl = await this.assetState.getAssetImage(this.data.asset)
     }
 
     public select(index: number) {
@@ -34,5 +57,9 @@ export class PopupTransferConfirmComponent implements OnInit {
 
     public exit() {
         this.dialogRef.close();
+    }
+
+    public getAddressSub(address: string) {
+        return `${address.substr(0, 3)}...${address.substr(address.length - 4, address.length - 1)} `
     }
 }

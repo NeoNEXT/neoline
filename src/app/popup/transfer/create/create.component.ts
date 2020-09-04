@@ -85,6 +85,20 @@ export class TransferCreateComponent implements OnInit {
                 }
             });
         });
+        this.dialog.open(PopupTransferConfirmComponent, {
+            panelClass: 'custom-dialog-panel-full',
+            height: '600px',
+            width: '100%',
+            hasBackdrop: false,
+            maxWidth: '400px',
+            autoFocus: false,
+            data: {
+                fromAddress: 'account1',
+                toAddress: 'AWSEU4BXpjGVdw9ajnFBXh8Rg8cgw9f3Zo'
+            }
+        }).afterClosed().subscribe((index: number) => {
+            console.log(this.balances[index]);
+        });
     }
 
     public submit() {
@@ -107,16 +121,6 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('balanceLack');
             return;
         }
-        // this.dialog.open(PopupTransferConfirmComponent, {
-        //     panelClass: 'custom-dialog-panel-full',
-        //     height: '600px',
-        //     width: '100%',
-        //     hasBackdrop: false,
-        //     maxWidth: '400px',
-        //     autoFocus: false
-        // }).afterClosed().subscribe((index: number) => {
-        //     console.log(this.balances[index]);
-        // });
         this.creating = true;
         this.transfer.create(this.fromAddress, this.toAddress, this.chooseAsset.asset_id, this.amount,
             this.fee || 0, this.chooseAsset.decimals).subscribe((res) => {
