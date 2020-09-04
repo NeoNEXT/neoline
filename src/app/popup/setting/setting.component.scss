@@ -17,6 +17,7 @@
         img {
             height: 30px;
             margin-right: 11px;
+            cursor: pointer;
         }
     }
     .divide {
@@ -247,6 +248,7 @@ hr {
         text-align: center;
         margin: 18px auto;
         float: right;
+        cursor: pointer;
         color: map-get($neo-line-default, 50);
     }
 }

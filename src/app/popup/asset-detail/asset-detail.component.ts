@@ -1,8 +1,15 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { AssetState, NeonService, ChromeService } from '@/app/core';
-import { ActivatedRoute } from '@angular/router';
+import {
+    AssetState,
+    NeonService,
+    ChromeService,
+    GlobalService
+} from '@/app/core';
+import { ActivatedRoute, Router } from '@angular/router';
 import { NEO, Balance } from '@/models/models';
 import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.component';
+import { MatDialog } from '@angular/material/dialog';
+import { PopupDelTokenDialogComponent } from '../_dialogs';
 
 @Component({
     templateUrl: 'asset-detail.component.html',
@@ -18,11 +25,19 @@ export class PopupAssetDetailComponent implements OnInit {
     sourceScrollHeight = 0;
     currentTxPage = 1;
 
+    // 菜单
+    showMenu = false;
+    watch: Balance[]; // 用户添加的资产
+    canHideBalance = false;
+
     constructor(
         private assetState: AssetState,
         private aRouter: ActivatedRoute,
         private chrome: ChromeService,
-        private neon: NeonService
+        private neon: NeonService,
+        private dialog: MatDialog,
+        private global: GlobalService,
+        private router: Router
     ) {
         this.rateCurrency = this.assetState.rateCurrency;
     }
@@ -37,8 +52,14 @@ export class PopupAssetDetailComponent implements OnInit {
                 .subscribe(balanceArr => {
                     this.handlerBalance(balanceArr);
                 });
+            this.chrome.getWatch().subscribe(res => {
+                this.watch = res;
+                this.canHideBalance =
+                    res.findIndex(w => w.asset_id === this.assetId) >= 0;
+            });
         });
     }
+
     handlerBalance(balanceRes: Balance[]) {
         this.chrome.getWatch().subscribe(watching => {
             this.findBalance(balanceRes, watching);
@@ -82,5 +103,26 @@ export class PopupAssetDetailComponent implements OnInit {
             this.txPageComponent.getInTransactions(++this.currentTxPage);
             this.sourceScrollHeight = scrollHeight;
         }
+    }
+
+    hideBalance() {
+        this.dialog
+            .open(PopupDelTokenDialogComponent, {
+                panelClass: 'custom-dialog-panel'
+            })
+            .afterClosed()
+            .subscribe(confirm => {
+                if (confirm) {
+                    const i = this.watch.findIndex(
+                        w => w.asset_id === this.assetId
+                    );
+                    if (i >= 0) {
+                        this.watch.splice(i, 1);
+                        this.chrome.setWatch(this.watch);
+                        this.global.snackBarTip('hiddenSucc');
+                        this.router.navigateByUrl('/popup/home');
+                    }
+                }
+            });
     }
 }

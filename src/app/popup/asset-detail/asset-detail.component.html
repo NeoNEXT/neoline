@@ -10,7 +10,11 @@
     <div class="asset-logo-box">
         <img class="asset-logo" [src]="imageUrl || ''" alt="">
     </div>
-    <img src="/assets/images/asset-detail/nav.png" class="nav-img" alt="">
+    <img src="/assets/images/asset-detail/nav.png" (click)="showMenu=!showMenu" class="nav-img" alt="">
+    <ul class="sub-menu" *ngIf="showMenu">
+        <li matRipple *ngIf="canHideBalance" (click)="hideBalance()">隐藏{{ balance?.name }}</li>
+        <li matRipple>在NeoTube上查看</li>
+    </ul>
 </div>
 
 <div class="container" appScroll (scrollChange)="onScrolltaChange($event)">

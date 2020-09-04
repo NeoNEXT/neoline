@@ -17,6 +17,7 @@
         img {
             height: 30px;
             margin-right: 11px;
+            cursor: pointer;
         }
     }
     .divide {
@@ -54,6 +55,32 @@
         height: 20px;
         right: 25px;
         top: 5px;
+        cursor: pointer;
+    }
+    .sub-menu {
+        position: absolute;
+        right: 10px;
+        top: 38px;
+        width: 220px;
+        background: #ffffff;
+        box-shadow: 1px 4px 9px 1px rgba(0, 0, 0, 0.14);
+        border-radius: 10px;
+        padding: 10px 0;
+        z-index: 999999;
+        li {
+            padding: 15px 30px;
+            font-size: 16px;
+            color: #444644;
+            list-style: none;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            word-break: break-all;
+            &:hover {
+                color: #07ccab;
+            }
+        }
     }
 }
 
