@@ -217,6 +217,28 @@
             }
         }
     }
+
+    .data-detail-box {
+        .json-box {
+            width: calc(100% - 50px);
+            margin: 14px 25px;
+            border-radius: 5px;
+            padding: 18px;
+            background-color: #F8F8F8;
+            color: #808A94;
+            pre {
+                white-space: pre-wrap;
+                word-wrap: break-word;
+                font-size: 14px;
+            }
+        }
+        .hex-label {
+            color: #B0B6BE;
+            font-size: 15px;
+            margin-top: 25px;
+            margin-left: 20px;
+        }
+    }
 }
 
 hr {

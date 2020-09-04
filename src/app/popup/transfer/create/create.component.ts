@@ -85,20 +85,6 @@ export class TransferCreateComponent implements OnInit {
                 }
             });
         });
-        this.dialog.open(PopupTransferConfirmComponent, {
-            panelClass: 'custom-dialog-panel-full',
-            height: '600px',
-            width: '100%',
-            hasBackdrop: false,
-            maxWidth: '400px',
-            autoFocus: false,
-            data: {
-                fromAddress: 'account1',
-                toAddress: 'AWSEU4BXpjGVdw9ajnFBXh8Rg8cgw9f3Zo'
-            }
-        }).afterClosed().subscribe((index: number) => {
-            console.log(this.balances[index]);
-        });
     }
 
     public submit() {
@@ -143,6 +129,25 @@ export class TransferCreateComponent implements OnInit {
             ]
             tx.sign(wif);
             this.global.log('signed tx', tx);
+            this.dialog.open(PopupTransferConfirmComponent, {
+                panelClass: 'custom-dialog-panel-full',
+                height: '600px',
+                width: '100%',
+                hasBackdrop: false,
+                maxWidth: '400px',
+                autoFocus: false,
+                data: {
+                    fromAddress: 'account1',
+                    toAddress: 'AWSEU4BXpjGVdw9ajnFBXh8Rg8cgw9f3Zo',
+                    asset: this.assetId,
+                    amount: this.amount,
+                    fee: this.fee,
+                    network: this.net,
+                    txSerialize: tx.serialize(true)
+                },
+            }).afterClosed().subscribe((index: number) => {
+                console.log(this.balances[index]);
+            });
             this.resolveSend(tx);
         } catch (error) {
             console.log(tx, error);

@@ -20,6 +20,7 @@ export class PopupTransferConfirmComponent implements OnInit {
     public net = '';
     public fromName: string = '';
     public assetImageUrl: string = '';
+    public datajson = {};
     constructor(
         private dialogRef: MatDialogRef<PopupTransferConfirmComponent>,
         private neon: NeonService,
@@ -32,7 +33,8 @@ export class PopupTransferConfirmComponent implements OnInit {
             remark: string,
             fee: string,
             network: string,
-            broadcastOverride: boolean
+            broadcastOverride: boolean,
+            txSerialize: string
         } = {
             fromAddress: '',
             toAddress: '',
@@ -41,14 +43,20 @@ export class PopupTransferConfirmComponent implements OnInit {
             remark: '',
             fee: '',
             network: '',
-            broadcastOverride: false
-        }
+            broadcastOverride: false,
+            txSerialize: '',
+        },
     ) { }
 
     async ngOnInit() {
         const wallet = this.neon.wallet;
         this.fromName = wallet.name;
         this.assetImageUrl = await this.assetState.getAssetImage(this.data.asset)
+        for(const key in this.data) {
+            if(this.data[key] !== '') {
+                this.datajson[key] = this.data[key];
+            }
+        }
     }
 
     public select(index: number) {

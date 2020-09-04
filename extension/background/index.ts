@@ -383,23 +383,40 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 });
 
 export function windowCallback(data) {
-    if (tabCurr === null || tabCurr === undefined || tabCurr === []) {
-        chrome.tabs.query({
-            active: true,
-            currentWindow: true
-        }, (tabs) => {
-            tabCurr = tabs;
-            if (tabCurr.length >= 1) {
-                chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
+    chrome.tabs.query({
+    }, (tabs: any) => {
+        console.log(tabs);
+        // tabCurr = tabs;
+        if(tabs.length > 0) {
+            tabs.forEach(item => {
+                chrome.tabs.sendMessage(item.id, data, (response) => {
                     // tabCurr = null;
                 });
-            }
-        });
-    } else {
-        if (tabCurr.length >= 1) {
-            chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
-                // tabCurr = null;
-            });
+            })
         }
-    }
+        // if (tabCurr.length >= 1) {
+        //     chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
+        //         // tabCurr = null;
+        //     });
+        // }
+    });
+    // if (tabCurr === null || tabCurr === undefined || tabCurr === []) {
+    //     chrome.tabs.query({
+    //         active: true,
+    //         currentWindow: true
+    //     }, (tabs) => {
+    //         tabCurr = tabs;
+    //         if (tabCurr.length >= 1) {
+                // chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
+                //     // tabCurr = null;
+                // });
+    //         }
+    //     });
+    // } else {
+    //     if (tabCurr.length >= 1) {
+    //         chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
+    //             // tabCurr = null;
+    //         });
+    //     }
+    // }
 }

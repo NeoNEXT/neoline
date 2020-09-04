@@ -64,7 +64,15 @@
                             </div>
                         </mat-tab>
                         <mat-tab label="数据">
-                            数据
+                            <div class="data-detail-box">
+                                <div class="json-box">
+                                    <pre>{{ datajson | json }}</pre>
+                                </div>
+                                <p class="hex-label">hex</p>
+                                <p class="json-box">
+                                    0912839182093891023
+                                </p>
+                            </div>
                         </mat-tab>
                     </mat-tab-group>
                 </div>
