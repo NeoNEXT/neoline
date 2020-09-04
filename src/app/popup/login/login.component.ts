@@ -63,7 +63,7 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
         this.accountWallet.accounts[0].decrypt(this.wallet.password).then((res) => {
             this.loading = false;
             this.chrome.verifyLogin();
-            this.router.navigateByUrl('/asset');
+            this.router.navigateByUrl('/popup/home');
         }).catch((err) => {
             this.loading = false;
             this.global.snackBarTip('loginFailed');

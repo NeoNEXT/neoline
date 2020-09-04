@@ -33,6 +33,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
     private txHashAttributes: TxHashAttribute[] = null;
     private utxos: UTXO[] = []
 
+    private extraWitness: [] = [];
+
     constructor(
         private aRoute: ActivatedRoute,
         private router: Router,
@@ -101,6 +103,11 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     this.txHashAttributes = JSON.parse(newJson);
                 }
                 this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
+                if(params.extra_witness !== undefined) {
+                    newJson = this.pramsData.extra_witness.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
+                    newJson = newJson.replace(/'/g, '"');
+                    this.extraWitness = JSON.parse(newJson);
+                }
                 setTimeout(() => {
                     this.pwdDialog();
                 }, 0);
@@ -188,7 +195,31 @@ export class PopupNoticeInvokeComponent implements OnInit {
         if (this.triggerContractVerification) {
             transaction.scripts = [await this.neon.getVerificationSignatureForSmartContract(this.scriptHash), ...transaction.scripts];
         }
-        return rpc.Query.sendRawTransaction(transaction.serialize(true)).execute(this.global.RPCDomain).then(async res => {
+        if (this.extraWitness.length > 0) {
+            this.extraWitness.forEach( (item: any) => {
+                if(item.invocationScript !== undefined || item.verificationScript !== undefined) {
+                    transaction.scripts.push(new tx.Witness({
+                        invocationScript: item.invocationScript || '',
+                        verificationScript: item.verificationScript || ''
+                    }))
+                }
+            });
+        }
+        let serialize = ''
+        try {
+            serialize = transaction.serialize(true)
+        } catch (error) {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.chrome.windowCallback({
+                error: ERRORS.RPC_ERROR,
+                return: requestTarget.InvokeMulti,
+                ID: this.messageID
+            });
+            this.global.snackBarTip('transferFailed', error.msg || error);
+            return
+        }
+        return rpc.Query.sendRawTransaction(serialize).execute(this.global.RPCDomain).then(async res => {
             if (
                 !res.result ||
                 (res.result && typeof res.result === 'object' && res.result.succeed === false)

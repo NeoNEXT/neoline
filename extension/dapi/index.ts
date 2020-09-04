@@ -161,12 +161,14 @@ export class Init {
 
     public invokeRead(parameter: InvokeReadArgs): Promise<object> {
         if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
-            parameter.operation === undefined || parameter.operation === '' ||
-            parameter.args === undefined || parameter.args.length === 0) {
+            parameter.operation === undefined || parameter.operation === '') {
             return new Promise((_, reject) => {
                 reject(ERRORS.MALFORMED_INPUT);
             });
         } else {
+            if(parameter.args === undefined) {
+                parameter.args = [];
+            }
             return sendMessage(requestTarget.InvokeRead, parameter);
         }
     }
@@ -193,13 +195,15 @@ export class Init {
 
     public async invoke(parameter: InvokeArgs) {
         if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
-            parameter.operation === undefined || parameter.operation === '' ||
-            parameter.args === undefined) {
+            parameter.operation === undefined || parameter.operation === '') {
             return new Promise((_, reject) => {
                 reject(ERRORS.MALFORMED_INPUT);
             });
         } else {
             let authState: any;
+            if(parameter.args === undefined) {
+                parameter.args = [];
+            }
             try {
                 authState = await getAuthState() || 'NONE';
             } catch (error) {
@@ -236,8 +240,7 @@ export class Init {
             if (parameter.invokeArgs instanceof Array && parameter.invokeArgs.length > 0) {
                 parameter.invokeArgs.forEach(item => {
                     if (item.scriptHash === undefined || item.scriptHash === '' ||
-                        item.operation === undefined || item.operation === '' ||
-                        item.args === undefined) {
+                        item.operation === undefined || item.operation === '') {
                         return new Promise((_, reject) => {
                             reject(ERRORS.MALFORMED_INPUT);
                         });

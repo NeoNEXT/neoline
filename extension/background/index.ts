@@ -318,7 +318,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
                         const value = key === 'args' || key === 'assetIntentOverrides' || key === 'attachedAssets' ||
-                            key === 'assetIntentOverrides' || key === 'txHashAttributes' ?
+                            key === 'assetIntentOverrides' || key === 'txHashAttributes' || key === 'extra_witness' ?
                             JSON.stringify(params[key]) : params[key];
                         queryString += `${key}=${value}&`;
                     }
@@ -342,7 +342,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
                         const value = key === 'invokeArgs' || key === 'assetIntentOverrides' || key === 'attachedAssets' ||
-                            key === 'assetIntentOverrides' || key === 'txHashAttributes' ?
+                            key === 'assetIntentOverrides' || key === 'txHashAttributes'|| key === 'extra_witness' ?
                             JSON.stringify(params[key]) : params[key];
                         queryString += `${key}=${value}&`;
                     }

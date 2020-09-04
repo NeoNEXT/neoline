@@ -67,15 +67,6 @@
     background-color: map-get($neo-line-default, 50);
 }
 
-.side-nav {
-    position: absolute;
-    top: 0;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background-color: map-get($neo-line-default, 50);
-}
-
 .no-third-party-toolbar {
     height: auto;
     .popup-nav-logo-img {
@@ -91,23 +82,23 @@
     }
 }
 
-// .is-third-party-toolbar {
-//     .mat-toolbar {
-//         background-color: map-get($neo-line-default, 50);
-//         border-bottom: 1px solid #f1f1f1;
+.is-third-party-toolbar {
+    .mat-toolbar {
+        background-color: map-get($neo-line-default, 50);
+        border-bottom: 1px solid #f1f1f1;
 
-//         .popup-nav-logo-title-img {
-//             width: 84px;
-//             @include bg($img-logo-title);
-//         }
+        .popup-nav-logo-title-img {
+            width: 84px;
+            @include bg($img-logo-title);
+        }
 
-//         .popup-nav-network {
-//             border-color: map-get($colors, f7f7f7);
-//             color: map-get($neo-line-default, 50);
+        .popup-nav-network {
+            border-color: map-get($colors, f7f7f7);
+            color: map-get($colors, 666666);
 
-//             .popup-nav-network-icon {
-//                 @include bg($img-tp-net-dropdown);
-//             }
-//         }
-//     }
-// }
+            .popup-nav-network-icon {
+                @include bg($img-tp-net-dropdown);
+            }
+        }
+    }
+}
