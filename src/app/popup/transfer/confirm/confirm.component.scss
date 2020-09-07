@@ -231,6 +231,9 @@
                 word-wrap: break-word;
                 font-size: 14px;
             }
+            &.serialize {
+                word-break: break-all;
+            }
         }
         .hex-label {
             color: #B0B6BE;

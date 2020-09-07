@@ -8,8 +8,9 @@ import {
 } from '@angular/material/dialog';
 
 import {
-    ChromeService, AssetState, NeonService,
+    ChromeService, AssetState, NeonService, GlobalService,
 } from '@app/core';
+import { NEO, GAS } from '@/models/models';
 
 @Component({
     templateUrl: 'confirm.component.html',
@@ -20,14 +21,21 @@ export class PopupTransferConfirmComponent implements OnInit {
     public net = '';
     public fromName: string = '';
     public assetImageUrl: string = '';
-    public datajson = {};
+    public datajson: any = {};
+    public symbol = ''
+    public money = '';
+    public feeMoney = '0';
+    public totalMoney = '';
+    public rateCurrency = ''
     constructor(
         private dialogRef: MatDialogRef<PopupTransferConfirmComponent>,
         private neon: NeonService,
         private assetState: AssetState,
+        private global: GlobalService,
         @Inject(MAT_DIALOG_DATA) public data: {
             fromAddress: string ,
             toAddress: string,
+            symbol: string,
             asset: string,
             amount: string,
             remark: string,
@@ -38,10 +46,11 @@ export class PopupTransferConfirmComponent implements OnInit {
         } = {
             fromAddress: '',
             toAddress: '',
+            symbol: '',
             asset: '',
-            amount: '',
+            amount: '0',
             remark: '',
-            fee: '',
+            fee: '0',
             network: '',
             broadcastOverride: false,
             txSerialize: '',
@@ -51,20 +60,58 @@ export class PopupTransferConfirmComponent implements OnInit {
     async ngOnInit() {
         const wallet = this.neon.wallet;
         this.fromName = wallet.name;
-        this.assetImageUrl = await this.assetState.getAssetImage(this.data.asset)
+        this.rateCurrency = this.assetState.rateCurrency
+        this.assetImageUrl = await this.assetState.getAssetImage(this.data.asset);
         for(const key in this.data) {
-            if(this.data[key] !== '') {
+            if(this.data[key] !== '' && key !== 'txSerialize') {
                 this.datajson[key] = this.data[key];
             }
         }
+        console.log(this.data);
+        this.getSymbol();
+        this.getAssetRate();
     }
 
-    public select(index: number) {
-        this.dialogRef.close(index);
+    private async getSymbol() {
+        if(this.data.asset === NEO) {
+            this.symbol = 'NEO'
+            return
+        }
+        if(this.data.asset === GAS) {
+            this.symbol = 'GAS'
+            return
+        }
+        if(this.data.symbol === '') {
+            this.symbol = (await this.assetState.getNep5Detail(this.data.asset).toPromise()).nep5.symbol;
+        } else {
+            this.symbol = this.data.symbol;
+        }
+    }
+
+    public async getAssetRate() {
+        if(Number( this.data.fee) > 0) {
+            this.feeMoney = await this.getMoney('GAS', Number(this.data.fee))
+        }
+        const assetRate = await this.assetState.getAssetRate(this.symbol).toPromise();
+        this.money = await this.getMoney(this.symbol, Number(this.data.amount));
+        this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
+    }
+
+    public async getMoney(symbol: string, balance: number): Promise<string> {
+        const rate = await this.assetState.getAssetRate(symbol).toPromise();
+        if (symbol.toLowerCase() in rate) {
+            return this.global.mathmul(Number(rate[symbol.toLowerCase()]), Number(balance)).toString();
+        } else {
+            return '';
+        }
+    }
+
+    public confirm() {
+        this.dialogRef.close(true);
     }
 
     public exit() {
-        this.dialogRef.close();
+        this.dialogRef.close(false);
     }
 
     public getAddressSub(address: string) {

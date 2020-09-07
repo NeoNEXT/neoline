@@ -38,8 +38,8 @@
                         <img [src]="assetImageUrl" alt="">
                     </div>
                     <div class="asset-amount-box">
-                        <p>-100NEO</p>
-                        <p>-10000000USD</p>
+                        <p>-{{ data.amount }} {{ symbol }}</p>
+                        <p>-{{ money }}{{ rateCurrency }}</p>
                     </div>
                 </div>
                 <div class="detail-tab-content">
@@ -49,8 +49,8 @@
                                 <p class="label">GAS FEE</p>
                                 <div class="fee-info">
                                     <p>编辑</p>
-                                    <p>100 GAS</p>
-                                    <p>10000 USD</p>
+                                    <p>{{ data.fee }} GAS</p>
+                                    <p>{{ feeMoney }}{{ rateCurrency }}</p>
                                 </div>
                             </div>
                             <hr>
@@ -58,8 +58,8 @@
                                 <p  class="label">TOTAL</p>
                                 <div class="total-info">
                                     <p>Amount+GAS FEE</p>
-                                    <p>100 NEO + 100GAS</p>
-                                    <p>200000USD</p>
+                                    <p>{{ data.amount }} {{ symbol }} + {{ data.fee }}GAS</p>
+                                    <p>{{ totalMoney }}{{ rateCurrency }}</p>
                                 </div>
                             </div>
                         </mat-tab>
@@ -69,8 +69,8 @@
                                     <pre>{{ datajson | json }}</pre>
                                 </div>
                                 <p class="hex-label">hex</p>
-                                <p class="json-box">
-                                    0912839182093891023
+                                <p class="json-box serialize">
+                                    {{ data.txSerialize }}
                                 </p>
                             </div>
                         </mat-tab>
@@ -79,7 +79,7 @@
                 <hr>
                 <div class="btn-box">
                     <button mat-flat-button (click)="exit()">{{ 'cancel' | translate | async}}</button>
-                    <button mat-flat-button  color="primary">{{ 'yes' | translate | async}}</button>
+                    <button mat-flat-button (click)="confirm()"  color="primary">{{ 'yes' | translate | async}}</button>
                 </div>
             </div>
         </div>

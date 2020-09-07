@@ -29,7 +29,7 @@ import {
 } from '@cityofzion/neon-core/lib/tx';
 import { wallet } from '@cityofzion/neon-core';
 import { rpc } from '@cityofzion/neon-js';
-import { PopupAddressDialogComponent, PopupAssetDialogComponent } from '../../_dialogs';
+import { PopupAddressDialogComponent, PopupAssetDialogComponent, PopupTransferSuccessDialogComponent } from '../../_dialogs';
 import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
 
 
@@ -140,15 +140,18 @@ export class TransferCreateComponent implements OnInit {
                     fromAddress: 'account1',
                     toAddress: 'AWSEU4BXpjGVdw9ajnFBXh8Rg8cgw9f3Zo',
                     asset: this.assetId,
+                    symbol: this.chooseAsset.symbol,
                     amount: this.amount,
-                    fee: this.fee,
+                    fee: this.fee || '0',
                     network: this.net,
                     txSerialize: tx.serialize(true)
                 },
-            }).afterClosed().subscribe((index: number) => {
-                console.log(this.balances[index]);
+            }).afterClosed().subscribe((isConfirm: boolean) => {
+                this.creating = false;
+                if(isConfirm === true) {
+                    this.resolveSend(tx);
+                }
             });
-            this.resolveSend(tx);
         } catch (error) {
             console.log(tx, error);
             this.creating = false;
@@ -174,12 +177,12 @@ export class TransferCreateComponent implements OnInit {
                 this.pushTransaction(txTarget);
             }
             // todo transfer done
-            this.global.log('transfer done', res);
-            this.router.navigate([{
-                outlets: {
-                    transfer: ['transfer', 'result']
-                }
-            }]);
+            this.global.log('transfer done', 'res');
+            this.dialog.open(PopupTransferSuccessDialogComponent, {
+                panelClass: 'custom-dialog-panel'
+            }).afterClosed().subscribe(() => {
+                history.go(-1);
+            })
             return res;
         }
         catch (err) {

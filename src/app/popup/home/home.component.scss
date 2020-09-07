@@ -174,7 +174,16 @@
                 background: #ECFBF1;
                 height: 35px;
                 border-radius: 18px;
+                cursor: pointer;
                 color: map-get($neo-line-default, 500);
+                mat-spinner {
+                    margin: auto;
+                }
+                img {
+                    width: 15px;
+                    height: 15px;
+                    margin: auto;
+                }
             }
         }
         .claim-line {
