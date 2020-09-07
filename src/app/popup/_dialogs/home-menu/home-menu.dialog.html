@@ -2,11 +2,11 @@
     <p class="triangle"></p>
     <div class="menu-body">
         <mat-toolbar>
-            <span class="title">已添加账户</span>
+            <span class="title">{{ 'accountAdded' | translate | async }}</span>
             <span class="spacer"></span>
             <button mat-flat-button>
                 <img src="/assets/images/home-menu/close.png" alt="">
-                <span class="text">登出</span></button>
+                <span class="text">{{ 'logout' | translate | async }}</span></button>
         </mat-toolbar>
         <div class="wallet-container">
             <div class="account-item" (click)="selectAccount(item)" *ngFor="let item of walletArr; let i = index">
@@ -29,7 +29,7 @@
         <hr class="import-line" />
         <div class="import-wallet-container menu-item" [routerLink]="['/popup/setting']" (click)="dismiss()" matRipple>
             <img src="/assets/images/home-menu/settings.png" alt="">
-            <span>{{ 'setting' | translate | async }}</span>
+            <span>{{ 'generalSettings' | translate | async }}</span>
         </div>
         <div class="import-wallet-container menu-item" [routerLink]="['/popup/about']" (click)="dismiss()" matRipple>
             <img src="/assets/images/home-menu/about.png" alt="">

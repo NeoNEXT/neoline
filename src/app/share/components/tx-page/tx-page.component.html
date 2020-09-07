@@ -24,4 +24,7 @@
         </div>
         <hr>
     </div>
+    <p *ngIf="txData && txData?.length===0" class="no-data">
+        {{ 'noMoreData' | translate | async }}
+    </p>
 </div>

@@ -24,6 +24,6 @@
     </app-asset-item>
     <div class="loading" *ngIf="isLoading">{{ 'loading' | translate | async}}</div>
     <p *ngIf="searchAssets && searchAssets?.length===0" class="no-data">
-        没有更多数据了
+        {{ 'noMoreData' | translate | async }}
     </p>
 </div>

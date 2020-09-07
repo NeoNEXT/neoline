@@ -1,7 +1,7 @@
 <div class="nav">
     <div class="content">
         <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="">
-        账户详情
+        {{ 'accountDetails' | translate | async }}
     </div>
     <div class="divide"></div>
 </div>
@@ -13,6 +13,6 @@
     <p class="address-title">{{ 'address' | translate | async}}</p>
     <div class="address" (click)="copy()">{{ address }}</div>
     <button mat-button class="key" (click)="wif()">{{ 'displayWIF' | translate | async}}</button>
-    <button mat-button class="link">在 NeoTube 上查看</button>
+    <button mat-button class="link">{{ 'viewOnNeoTube' | translate | async }}</button>
 </div>
 

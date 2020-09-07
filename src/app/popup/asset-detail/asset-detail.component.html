@@ -13,8 +13,8 @@
     <img src="/assets/images/asset-detail/nav.png" (click)="showMenu=!showMenu" class="nav-img" alt="">
     <section class="veil" *ngIf="showMenu" (click)="showMenu=false"></section>
     <ul class="sub-menu" *ngIf="showMenu">
-        <li matRipple *ngIf="canHideBalance" (click)="hideBalance()">隐藏{{ balance?.name }}</li>
-        <li matRipple (click)="toWeb()">在NeoTube上查看</li>
+        <li matRipple *ngIf="canHideBalance" (click)="hideBalance()">{{ 'hidden' | translate | async }}{{ ' ' + balance?.name }}</li>
+        <li matRipple (click)="toWeb()">{{ 'viewOnNeoTube' | translate | async }}</li>
     </ul>
 </div>
 

@@ -1,5 +1,5 @@
-<div class="title" *ngIf="data.type === 'lang'">选择语言</div>
-<div class="title" *ngIf="data.type === 'currency'">选择计价方式</div>
+<div class="title" *ngIf="data.type === 'lang'">{{ 'language' | translate | async }}</div>
+<div class="title" *ngIf="data.type === 'currency'">{{ 'currencyUnit' | translate | async }}</div>
 <div class="container">
     <div class="item" *ngFor="let item of data.optionGroup" (click)="select(item)" >
         <span *ngIf="data.type === 'lang'">{{item | languageName}}</span>

@@ -17,6 +17,9 @@ import { NEO, Balance } from '@/models/models';
 import { TransferService } from '@/app/transfer/transfer.service';
 import { Wallet } from '@cityofzion/neon-core/lib/wallet';
 import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.component';
+import { MatDialog } from '@angular/material/dialog';
+import { PopupConfirmDialogComponent } from '../_dialogs';
+import { Router } from '@angular/router';
 
 @Component({
     templateUrl: 'home.component.html',
@@ -57,7 +60,9 @@ export class PopupHomeComponent implements OnInit {
         private http: HttpService,
         private global: GlobalService,
         private transfer: TransferService,
-        private chrome: ChromeService
+        private chrome: ChromeService,
+        private dialog: MatDialog,
+        private router: Router
     ) {
         this.wallet = this.neon.wallet;
         this.rateCurrency = this.assetState.rateCurrency;
@@ -340,5 +345,25 @@ export class PopupHomeComponent implements OnInit {
                 this.net === 'TestNet' ? 'testnet.' : ''
             }neotube.io/address/${this.neon.address}/page/1`
         );
+    }
+    removeAccount() {
+        this.showMenu = false;
+        this.dialog
+            .open(PopupConfirmDialogComponent, {
+                data: 'delWalletConfirm',
+                panelClass: 'custom-dialog-panel'
+            })
+            .afterClosed()
+            .subscribe(confirm => {
+                if (confirm) {
+                    this.neon.delWallet(this.wallet).subscribe(res => {
+                        if (this.neon.walletArr.length === 0) {
+                            this.router.navigateByUrl('/popup/wallet/new-guide');
+                        } else {
+                            location.reload();
+                        }
+                    });
+                }
+            });
     }
 }

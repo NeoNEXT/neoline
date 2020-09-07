@@ -24,7 +24,7 @@
         "message": "首页"
     },
     "about": {
-        "message": "关于"
+        "message": "关于我们"
     },
     "expandView": {
         "message": "网页版"
@@ -410,6 +410,9 @@
     "from": {
         "message": "来自"
     },
+    "to": {
+        "message": "发给"
+    },
     "currencyUnit": {
         "message": "货币单位"
     },
@@ -484,5 +487,26 @@
     },
     "systemSettings": {
         "message": "系统设置"
+    },
+    "logout": {
+        "message": "登出"
+    },
+    "noMoreData": {
+        "message": "没有更多数据了"
+    },
+    "generalSettings": {
+        "message": "通用设置"
+    },
+    "viewOnNeoTube": {
+        "message": "在 NeoTube 上查看"
+    },
+    "accountDetails": {
+        "message": "账户详情"
+    },
+    "accountAdded": {
+        "message": "已添加账户"
+    },
+    "removeAccount": {
+        "message": "移除账号"
     }
 }

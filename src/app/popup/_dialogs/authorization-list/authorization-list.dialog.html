@@ -28,5 +28,5 @@
             </div>
         </div>
     </div>
-    <div class="clear-all" (click)="delAll()">{{ 'authDelAllTip' | translate | async }}</div>
+    <div class="clear-all" *ngIf="authorizationList.length > 0" (click)="delAll()">{{ 'authDelAllTip' | translate | async }}</div>
 </div>

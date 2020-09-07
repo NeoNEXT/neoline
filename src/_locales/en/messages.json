@@ -24,7 +24,7 @@
         "message": "Home"
     },
     "about": {
-        "message": "About"
+        "message": "About Us"
     },
     "expandView": {
         "message": "Expand View"
@@ -410,6 +410,9 @@
     "from": {
         "message": "From"
     },
+    "to": {
+        "message": "To"
+    },
     "currencyUnit": {
         "message": "Currency Unit"
     },
@@ -484,5 +487,26 @@
     },
     "systemSettings": {
         "message": "System settings"
+    },
+    "logout": {
+        "message": "Logout"
+    },
+    "noMoreData": {
+        "message": "No more data"
+    },
+    "generalSettings": {
+        "message": "General settings"
+    },
+    "viewOnNeoTube": {
+        "message": "View on NeoTube"
+    },
+    "accountDetails": {
+        "message": "Account details"
+    },
+    "accountAdded": {
+        "message": "Account added"
+    },
+    "removeAccount": {
+        "message": "Remove account"
     }
 }
