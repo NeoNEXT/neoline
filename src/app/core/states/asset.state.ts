@@ -231,4 +231,13 @@ export class AssetState {
             `${this.global.apiDomain}/v1/nep5/${assetId}`
         );
     }
+
+    public async getMoney(symbol: string, balance: number): Promise<string> {
+        const rate = await this.getAssetRate(symbol).toPromise();
+        if (symbol.toLowerCase() in rate) {
+            return this.global.mathmul(Number(rate[symbol.toLowerCase()]), Number(balance)).toString();
+        } else {
+            return '0';
+        }
+    }
 }

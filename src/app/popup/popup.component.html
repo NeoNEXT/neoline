@@ -26,7 +26,7 @@
 
     </div>
 
-    <div class="mat-toolbar-fixed is-third-party-toolbar" *ngIf="isThirdParty">
+    <!-- <div class="mat-toolbar-fixed is-third-party-toolbar" *ngIf="isThirdParty">
         <mat-toolbar>
             <span class="popup-nav-logo">
                 <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
@@ -37,13 +37,13 @@
             </button>
             <mat-menu #menu="matMenu">
                 <button mat-menu-item>{{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}</button>
-                <!-- <button mat-menu-item (click)="modifyNetThird('test')">{{ 'testNet' | translate | async }}</button> -->
+                <button mat-menu-item (click)="modifyNetThird('test')">{{ 'testNet' | translate | async }}</button>
             </mat-menu>
         </mat-toolbar>
-    </div>
+    </div> -->
 
 
-    <div class="popup">
+    <div class="popup" [class]="{third: isThirdParty}">
         <router-outlet></router-outlet>
     </div>
 </mat-sidenav-container>

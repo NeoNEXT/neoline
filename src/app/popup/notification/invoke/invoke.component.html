@@ -4,34 +4,69 @@
     </div>
     <h3>{{ loadingMsg }}</h3>
 </div>
-<div class="invoke-body">
-
-    <div class="script-hash-box">
-        <p>scriptHash: </p>
-        <p class="content">{{ scriptHash }}</p>
-    </div>
-    <div class="operation-box">
-        <p>operation: </p>
-        <p class="content">{{ operation }}</p>
-    </div>
-    <div class="args-box">
-        <p>args: </p>
-        <p class="content">{{ args | json }}</p>
-    </div>
-    <div class="args-box">
-        <p>attachedAssets: </p>
-        <p class="content">{{ attachedAssets | json }}</p>
-    </div>
-    <div class="args-box">
-        <p>fee: </p>
-        <p class="content">{{ fee }}</p>
-    </div>
-    <div class="args-box">
-        <p>broadcastOverride: </p>
-        <p class="content">{{ broadcastOverride }}</p>
-    </div>
-    <div class="args-box">
-        <p>assetIntentOverrides: </p>
-        <p class="content">{{ assetIntentOverrides | json }}</p>
+<div class="transfer-confirm-container">
+    <div class="container">
+        <div class="mat-toolbar-fixed no-third-party-toolbar" >
+            <mat-toolbar color="primary">
+                <span class="popup-nav-logo">
+                    <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
+                </span>
+                <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
+                    {{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}
+                    <span class="popup-nav-network-icon"></span>
+                </button>
+                <mat-menu #menu="matMenu">
+                    <button mat-menu-item>{{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}</button>
+                </mat-menu>
+                <img class="close" (click)="exit()" src="/assets/images/dialog/close.png" alt="">
+            </mat-toolbar>
+        </div>
+        <div class="transfer-confirm-body">
+            <div class="transfer-detail-container">
+                <div class="type-box">
+                    <span></span>
+                    <span>INVOKE</span>
+                </div>
+                <div class="asset-info-box">
+                    <div class="logo-box">
+                        <img [src]="assetImageUrl" alt="">
+                    </div>
+                    <div class="asset-amount-box">
+                        <p>NEO</p>
+                    </div>
+                </div>
+                <div class="detail-tab-content">
+                    <mat-tab-group mat-align-tabs="center" >
+                        <mat-tab label="详情">
+                            <div class="fee-box detail-item">
+                                <p class="label">GAS FEE</p>
+                                <div class="fee-info">
+                                    <p>编辑</p>
+                                    <p>{{ fee }} GAS</p>
+                                    <p>{{ feeMoney }}{{ rateCurrency }}</p>
+                                </div>
+                            </div>
+                            <hr>
+                        </mat-tab>
+                        <mat-tab label="数据">
+                            <div class="data-detail-box">
+                                <div class="json-box">
+                                    <pre>{{ dataJson | json }}</pre>
+                                </div>
+                                <p class="hex-label">hex</p>
+                                <p class="json-box serialize">
+                                    {{ txSerialize }}
+                                </p>
+                            </div>
+                        </mat-tab>
+                    </mat-tab-group>
+                </div>
+                <hr>
+                <div class="btn-box">
+                    <button mat-flat-button (click)="exit()">{{ 'cancel' | translate | async}}</button>
+                    <button mat-flat-button (click)="confirm()"  color="primary">{{ 'yes' | translate | async}}</button>
+                </div>
+            </div>
+        </div>
     </div>
 </div>

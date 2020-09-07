@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GlobalService, NeonService, ChromeService } from '@/app/core';
+import { GlobalService, NeonService, ChromeService, AssetState } from '@/app/core';
 import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzion/neon-core/lib/tx';
 import { wallet, tx, sc, u, rpc } from '@cityofzion/neon-core';
 
@@ -22,6 +22,13 @@ import { string } from 'mathjs';
     styleUrls: ['invoke-multi.component.scss']
 })
 export class PopupNoticeInvokeMultiComponent implements OnInit {
+    public net: string = '';
+    public dataJson = {};
+    public feeMoney = '0';
+    public rateCurrency = '';
+    public txSerialize = ''
+    public assetImageUrl = '';
+
     private pramsData: any;
     public tx: Transaction;
     public invokeArgs: Invoke[] = [];
@@ -43,12 +50,17 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         private neon: NeonService,
         private dialog: MatDialog,
         private http: HttpClient,
-        private chrome: ChromeService
+        private chrome: ChromeService,
+        private assetState: AssetState
     ) { }
 
     ngOnInit(): void {
-        this.aRoute.queryParams.subscribe((params: any) => {
-            this.pramsData = params;
+        this.assetState.getAssetImage(NEO).then(res => {
+            this.assetImageUrl = res;
+        });
+        this.net = this.global.net;
+        this.aRoute.queryParams.subscribe(async (params: any) => {
+            this.pramsData = JSON.parse(JSON.stringify(params)) ;
             this.messageID = params.messageID;
             if (params.network !== undefined) {
                 if (params.network === 'MainNet') {
@@ -57,19 +69,33 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     this.global.modifyNet('TestNet');
                 }
             }
-            let newJson = this.pramsData.invokeArgs.replace(/([a-zA-Z0-9]+?):/g, '"$1":').replace(/'/g, '"');
-            const tempInvokeArgs = JSON.parse(newJson);
-            tempInvokeArgs.forEach((item, index) => {
+            for (const key in this.pramsData) {
+                if (Object.prototype.hasOwnProperty.call(this.pramsData, key)) {
+                    let tempObject: any
+                    try {
+                        tempObject = this.pramsData[key].replace(/([a-zA-Z0-9]+?):/g, '"$1":').replace(/'/g, '"');
+                        tempObject = JSON.parse(tempObject);
+                    } catch (error) {
+                        tempObject = this.pramsData[key];
+                    };
+                    this.pramsData[key] = tempObject;
+                }
+            }
+            if(Number( this.pramsData.fee) > 0) {
+                this.feeMoney = await this.assetState.getMoney('GAS', Number(this.pramsData.fee))
+            }
+            this.dataJson = this.pramsData
+            this.pramsData.invokeArgs.forEach((item, index) => {
                 item.args.forEach((arg, argIndex) => {
                     if (arg.type === 'Address') {
                         const param2 = u.reverseHex(wallet.getScriptHashFromAddress(arg.value));
-                        tempInvokeArgs[index].args[argIndex] = param2;
+                        this.pramsData.invokeArgs[index].args[argIndex] = param2;
                     } else if (arg.type === 'Boolean') {
                         if (typeof arg.value === 'string') {
                             if ((arg.value && arg.value.toLowerCase()) === 'true') {
-                                tempInvokeArgs[index].args[argIndex] = true
+                                this.pramsData.invokeArgs[index].args[argIndex] = true
                             } else if (arg.value && arg.value.toLowerCase() === 'false') {
-                                tempInvokeArgs[index].args[argIndex] = false;
+                                this.pramsData.invokeArgs[index].args[argIndex] = false;
                             } else {
                                 this.chrome.windowCallback({
                                     error: ERRORS.MALFORMED_INPUT,
@@ -84,7 +110,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.invokeArgs.push({
                     scriptHash: item.scriptHash,
                     operation: item.operation,
-                    args: tempInvokeArgs[index].args,
+                    args: this.pramsData.invokeArgs[index].args,
                     triggerContractVerification: item.triggerContractVerification !== undefined
                         ? item.triggerContractVerification.toString() === 'true' : false,
                     attachedAssets: item.attachedAssets
@@ -92,25 +118,31 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             });
             this.fee = parseFloat(params.fee) || 0;
             if (this.assetIntentOverrides === null && this.pramsData.assetIntentOverrides !== undefined) {
-                newJson = this.pramsData.assetIntentOverrides.replace(/([a-zA-Z0-9]+?):/g, '"$1":').replace(/'/g, '"');
-                this.assetIntentOverrides = JSON.parse(newJson);
+                this.assetIntentOverrides = this.pramsData.assetIntentOverrides
                 this.fee = 0;
+                this.feeMoney = '0';
                 this.invokeArgs.forEach(item => {
                     item.attachedAssets = null;
                 });
             }
             if (this.txHashAttributes === null && this.pramsData.txHashAttributes !== undefined) {
-                newJson = this.pramsData.txHashAttributes.replace(/([a-zA-Z0-9]+?):/g, '"$1":').replace(/'/g, '"')
-                this.txHashAttributes = JSON.parse(newJson);
+                this.txHashAttributes = this.pramsData.txHashAttributes
             }
             if (params.extra_witness !== undefined) {
-                newJson = this.pramsData.extra_witness.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
-                newJson = newJson.replace(/'/g, '"');
-                this.extraWitness = JSON.parse(newJson);
+                this.extraWitness = this.pramsData.extra_witness
             }
             this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
             setTimeout(() => {
-                this.pwdDialog();
+                this.createTxForNEP5().then(res => {
+                    this.resolveSign(res);
+                }).catch(err => {
+                    this.chrome.windowCallback({
+                        error: ERRORS.MALFORMED_INPUT,
+                        return: requestTarget.InvokeMulti,
+                        ID: this.messageID
+                    });
+                    window.close();
+                });
             }, 0);
         });
         window.onbeforeunload = () => {
@@ -122,71 +154,35 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         };
     }
 
-    private pwdDialog() {
-        this.dialog.open(PwdDialog, {
-            disableClose: true
-        }).afterClosed().subscribe((pwd) => {
-            if (pwd && pwd.length) {
-                this.global.log('start transfer with pwd');
-                this.createTxForNEP5().then(res => {
-                    this.resolveSign(res, pwd);
-                }).catch(err => {
-                    this.chrome.windowCallback({
-                        error: ERRORS.MALFORMED_INPUT,
-                        return: requestTarget.InvokeMulti,
-                        ID: this.messageID
-                    });
-                    window.close();
-                });
-            } else {
-                this.global.log('cancel pay');
-            }
-        });
-    }
-
-    private resolveSign(transaction: Transaction, pwd: string) {
+    private resolveSign(transaction: Transaction) {
         this.loading = true;
         this.loadingMsg = 'Wait';
         if (transaction === null) {
             return;
         }
-        this.neon.wallet.accounts[0].decrypt(pwd).then((acc) => {
+        try {
+            const wif = this.neon.WIFArr[
+                this.neon.walletArr.findIndex(item => item.accounts[0].address === this.neon.wallet.accounts[0].address)
+            ]
             try {
-                transaction.sign(acc);
+                transaction.sign(wif);
             } catch (error) {
                 console.log(error);
             }
             this.tx = transaction;
-            if (this.broadcastOverride === true) {
-                this.loading = false;
-                this.loadingMsg = '';
-                this.chrome.windowCallback({
-                    data: {
-                        txid: transaction.hash,
-                        signedTx: this.tx.serialize(true)
-                    },
-                    return: requestTarget.InvokeMulti,
-                    ID: this.messageID
-                });
-                window.close();
-            } else {
-                this.resolveSend(this.tx);
-            }
-        }).catch((err) => {
+            this.txSerialize = this.tx.serialize(true);
+            this.loading = false
+        } catch (error) {
             this.loading = false;
             this.loadingMsg = '';
-            this.global.snackBarTip('verifyFailed', err);
-            this.dialog.open(PwdDialog, {
-                disableClose: true
-            }).afterClosed().subscribe((pwdText) => {
-                if (pwdText && pwdText.length) {
-                    this.global.log('start transfer with pwd');
-                    this.resolveSign(transaction, pwdText);
-                } else {
-                    this.global.log('cancel pay');
-                }
+            this.global.snackBarTip('verifyFailed', error);
+            this.chrome.windowCallback({
+                error: ERRORS.DEFAULT,
+                return: requestTarget.Invoke,
+                ID: this.messageID
             });
-        });
+            window.close();
+        }
     }
 
     private async resolveSend(transaction: Transaction) {
@@ -239,7 +235,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 }
                 this.loading = false;
                 this.loadingMsg = '';
-                if (!res.bool_status) {
+                if (res.error !== undefined) {
                     this.chrome.windowCallback({
                         error: ERRORS.RPC_ERROR,
                         return: requestTarget.InvokeMulti,
@@ -513,6 +509,33 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 mResolve(newTx);
             });
         });
+    }
+
+    public exit() {
+        this.chrome.windowCallback({
+            error: ERRORS.CANCELLED,
+            return: requestTarget.Invoke,
+            ID: this.messageID
+        });
+        window.close();
+    }
+
+    public confirm() {
+        if (this.broadcastOverride === true) {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.chrome.windowCallback({
+                data: {
+                    txid: this.tx.hash,
+                    signedTx: this.tx.serialize(true)
+                },
+                return: requestTarget.InvokeMulti,
+                ID: this.messageID
+            });
+            window.close();
+        } else {
+            this.resolveSend(this.tx);
+        }
     }
 
 }
