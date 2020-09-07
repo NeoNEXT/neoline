@@ -59,7 +59,6 @@ export class PopupNoticeInvokeComponent implements OnInit {
         this.assetState.getAssetImage(NEO).then(res => {
             this.assetImageUrl = res;
         });
-        this.net = this.global.net;
         this.aRoute.queryParams.subscribe(async (params: any) => {
             this.pramsData = JSON.parse(JSON.stringify(params)) ;
             this.messageID = params.messageID;
@@ -70,6 +69,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     this.global.modifyNet('TestNet');
                 }
             }
+            this.net = this.global.net;
             for (const key in this.pramsData) {
                 if (Object.prototype.hasOwnProperty.call(this.pramsData, key)) {
                     let tempObject: any

@@ -58,7 +58,6 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         this.assetState.getAssetImage(NEO).then(res => {
             this.assetImageUrl = res;
         });
-        this.net = this.global.net;
         this.aRoute.queryParams.subscribe(async (params: any) => {
             this.pramsData = JSON.parse(JSON.stringify(params)) ;
             this.messageID = params.messageID;
@@ -68,6 +67,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 } else {
                     this.global.modifyNet('TestNet');
                 }
+                this.net = this.global.net;
+
             }
             for (const key in this.pramsData) {
                 if (Object.prototype.hasOwnProperty.call(this.pramsData, key)) {
@@ -178,7 +179,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             this.global.snackBarTip('verifyFailed', error);
             this.chrome.windowCallback({
                 error: ERRORS.DEFAULT,
-                return: requestTarget.Invoke,
+                return: requestTarget.InvokeMulti,
                 ID: this.messageID
             });
             window.close();
@@ -514,7 +515,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     public exit() {
         this.chrome.windowCallback({
             error: ERRORS.CANCELLED,
-            return: requestTarget.Invoke,
+            return: requestTarget.InvokeMulti,
             ID: this.messageID
         });
         window.close();

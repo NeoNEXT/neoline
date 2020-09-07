@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GlobalService, NeonService, ChromeService } from '@/app/core';
+import { GlobalService, NeonService, ChromeService, AssetState } from '@/app/core';
 import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzion/neon-core/lib/tx';
 import { wallet, tx, sc, u, rpc } from '@cityofzion/neon-core';
 import { MatDialog } from '@angular/material/dialog';
@@ -9,7 +9,7 @@ import { HttpClient } from '@angular/common/http';
 import { ERRORS, GAS, requestTarget } from '@/models/dapi';
 import { ScriptBuilder } from '@cityofzion/neon-core/lib/sc';
 import { Observable } from 'rxjs';
-import { UTXO } from '@/models/models';
+import { UTXO, NEO } from '@/models/models';
 import { map } from 'rxjs/operators';
 import { str2hexstring, Fixed8 } from '@cityofzion/neon-core/lib/u';
 
@@ -18,9 +18,16 @@ import { str2hexstring, Fixed8 } from '@cityofzion/neon-core/lib/u';
     styleUrls: ['deploy.component.scss']
 })
 export class PopupNoticeDeployComponent implements OnInit {
+    public net: string = '';
+    public dataJson = {};
+    public feeMoney = '0';
+    public rateCurrency = '';
+    public txSerialize = ''
+    public assetImageUrl = '';
+    public fee = '';
+
     public pramsData: any;
     public tx: Transaction;
-
     public broadcastOverride = null;
     public loading = false;
     public loadingMsg: string;
@@ -33,22 +40,41 @@ export class PopupNoticeDeployComponent implements OnInit {
         private neon: NeonService,
         private dialog: MatDialog,
         private http: HttpClient,
-        private chrome: ChromeService
+        private chrome: ChromeService,
+        private assetState: AssetState
     ) { }
 
     ngOnInit(): void {
-        this.aRoute.queryParams.subscribe((params: any) => {
+        this.assetState.getAssetImage(NEO).then(res => {
+            this.assetImageUrl = res;
+        });
+        this.aRoute.queryParams.subscribe(async (params: any) => {
             this.pramsData = params;
             this.messageID = params.messageID;
+            this.dataJson = this.pramsData;
+            this.fee = this.pramsData.networkFee;
+            if(Number( this.pramsData.fee) > 0) {
+                this.feeMoney = await this.assetState.getMoney('GAS', Number(this.fee))
+            }
             if (params.network !== undefined) {
                 if (params.network === 'MainNet') {
                     this.global.modifyNet('MainNet');
                 } else {
                     this.global.modifyNet('TestNet');
                 }
+                this.net = this.global.net;
                 this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
                 setTimeout(() => {
-                    this.pwdDialog();
+                    this.createTxForNEP5().then(res => {
+                        this.resolveSign(res);
+                    }).catch(err => {
+                        this.chrome.windowCallback({
+                            error: ERRORS.MALFORMED_INPUT,
+                            return: requestTarget.Deploy,
+                            ID: this.messageID
+                        });
+                        window.close();
+                    });
                 }, 0);
             } else {
                 return;
@@ -63,71 +89,35 @@ export class PopupNoticeDeployComponent implements OnInit {
         };
     }
 
-    private pwdDialog() {
-        this.dialog.open(PwdDialog, {
-            disableClose: true
-        }).afterClosed().subscribe((pwd) => {
-            if (pwd && pwd.length) {
-                this.global.log('start transfer with pwd');
-                this.createTxForNEP5().then(res => {
-                    this.resolveSign(res, pwd);
-                }).catch(err => {
-                    this.chrome.windowCallback({
-                        error: ERRORS.MALFORMED_INPUT,
-                        return: requestTarget.Deploy,
-                        ID: this.messageID
-                    });
-                    window.close();
-                });
-            } else {
-                this.global.log('cancel pay');
-            }
-        });
-    }
-
-    private resolveSign(transaction: Transaction, pwd: string) {
+    private resolveSign(transaction: Transaction) {
         this.loading = true;
         this.loadingMsg = 'Wait';
         if (transaction === null) {
             return;
         }
-        this.neon.wallet.accounts[0].decrypt(pwd).then((acc) => {
+        try {
+            const wif = this.neon.WIFArr[
+                this.neon.walletArr.findIndex(item => item.accounts[0].address === this.neon.wallet.accounts[0].address)
+            ]
             try {
-                transaction.sign(acc);
+                transaction.sign(wif);
             } catch (error) {
                 console.log(error);
             }
             this.tx = transaction;
-            if (this.broadcastOverride === true) {
-                this.loading = false;
-                this.loadingMsg = '';
-                this.chrome.windowCallback({
-                    data: {
-                        txid: transaction.hash,
-                        signedTx: this.tx.serialize(true)
-                    },
-                    return: requestTarget.Deploy,
-                    ID: this.messageID
-                });
-                window.close();
-            } else {
-                this.resolveSend(this.tx);
-            }
-        }).catch((err) => {
+            this.txSerialize = this.tx.serialize(true);
+            this.loading = false
+        } catch (error) {
             this.loading = false;
             this.loadingMsg = '';
-            this.global.snackBarTip('verifyFailed', err);
-            this.dialog.open(PwdDialog, {
-                disableClose: true
-            }).afterClosed().subscribe((pwdText) => {
-                if (pwdText && pwdText.length) {
-                    this.global.log('start transfer with pwd');
-                    this.resolveSign(transaction, pwdText);
-                } else {
-                    this.global.log('cancel pay');
-                }
+            this.global.snackBarTip('verifyFailed', error);
+            this.chrome.windowCallback({
+                error: ERRORS.DEFAULT,
+                return: requestTarget.Invoke,
+                ID: this.messageID
             });
-        });
+            window.close();
+        }
     }
 
     private resolveSend(transaction: Transaction) {
@@ -207,7 +197,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                 reject(error);
             }
             try {
-                newTx = await this.addFee(fromAddress, newTx, amount + parseFloat(this.pramsData.networkFee));
+                newTx = await this.addFee(fromAddress, newTx, amount + parseFloat(this.fee));
             } catch (error) {
                 this.chrome.windowCallback({
                     error: ERRORS.INSUFFICIENT_FUNDS,
@@ -260,5 +250,31 @@ export class PopupNoticeDeployComponent implements OnInit {
                 resolve(newTx);
             });
         });
+    }
+     public exit() {
+        this.chrome.windowCallback({
+            error: ERRORS.CANCELLED,
+            return: requestTarget.Deploy,
+            ID: this.messageID
+        });
+        window.close();
+    }
+
+    public confirm() {
+        if (this.broadcastOverride === true) {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.chrome.windowCallback({
+                data: {
+                    txid: this.tx.hash,
+                    signedTx: this.tx.serialize(true)
+                },
+                return: requestTarget.Deploy,
+                ID: this.messageID
+            });
+            window.close();
+        } else {
+            this.resolveSend(this.tx);
+        }
     }
 }
