@@ -205,10 +205,12 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             if (this.extraWitness.length > 0) {
                 this.extraWitness.forEach((item: any) => {
                     if (item.invocationScript !== undefined || item.verificationScript !== undefined) {
-                        transaction.scripts.push(new tx.Witness({
+                        const tempWitness = new tx.Witness({
                             invocationScript: item.invocationScript || '',
                             verificationScript: item.verificationScript || ''
-                        }))
+                        })
+                        tempWitness.scriptHash = item.scriptHash
+                        transaction.scripts.push(tempWitness)
                     }
                 });
             }

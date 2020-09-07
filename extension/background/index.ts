@@ -50,8 +50,8 @@ export function expand() {
                 params: [],
                 id: 1
             }, async (blockHeightData) => {
-                const oldHeight = await getLocalStorage(`${network}BlockHeight`, () => {}) || 0;
-                if (blockHeightData.err === undefined && blockHeightData.result > oldHeight ) {
+                const oldHeight = await getLocalStorage(`${network}BlockHeight`, () => { }) || 0;
+                if (blockHeightData.err === undefined && blockHeightData.result > oldHeight) {
                     const setData = {};
                     setData[`${network}BlockHeight`] = blockHeightData.result;
                     setLocalStorage(setData);
@@ -81,8 +81,8 @@ export function expand() {
                     }, '*');
                 }
             }, '*');
-            const txArr = await getLocalStorage(`${network}TxArr`, (temp) => {}) || [];
-            httpPost(`${apiUrl}/v1/transactions/confirms`, {txids: txArr}, (txConfirmData) => {
+            const txArr = await getLocalStorage(`${network}TxArr`, (temp) => { }) || [];
+            httpPost(`${apiUrl}/v1/transactions/confirms`, { txids: txArr }, (txConfirmData) => {
                 if (txConfirmData.bool_status) {
                     const txConfirms = txConfirmData.result;
                     txConfirms.forEach(item => {
@@ -130,11 +130,11 @@ export function expand() {
                 };
             }
         }, {
-            urls: [
-                chrome.runtime.getURL('')
-            ],
-            types: ['main_frame']
-        },
+        urls: [
+            chrome.runtime.getURL('')
+        ],
+        types: ['main_frame']
+    },
         ['blocking']
     );
 })();
@@ -283,11 +283,35 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             const args = request.parameter[2];
             args.forEach((item, index) => {
                 if (item.type === 'Address') {
-                    args[index] = reverseHex(getScriptHashFromAddress(item.value))
+                    args[index] = {
+                        type: 'Hash160',
+                        value: reverseHex(getScriptHashFromAddress(item.value))
+                    }
+                } else if (item.type === 'Boolean') {
+                    if (typeof item.value === 'string') {
+                        if ((item.value && item.value.toLowerCase()) === 'true') {
+                            this.args[index] = {
+                                type: 'Boolean',
+                                value: true
+                            }
+                        } else if (item.value && item.value.toLowerCase() === 'false') {
+                            this.args[index] = {
+                                type: 'Boolean',
+                                value: false
+                            }
+                        } else {
+                            this.chrome.windowCallback({
+                                error: ERRORS.MALFORMED_INPUT,
+                                return: requestTarget.Invoke,
+                                ID: this.messageID
+                            });
+                            window.close();
+                        }
+                    }
                 }
             });
             request.parameter[2] = args;
-            const returnRes = {data: {}, ID: request.ID, return: requestTarget.InvokeRead, error: null};
+            const returnRes = { data: {}, ID: request.ID, return: requestTarget.InvokeRead, error: null };
             httpPost(`${request.network}/v1/transactions/invokeread`, { params: request.parameter }, (res) => {
                 res.return = requestTarget.InvokeRead;
                 if (res.bool_status) {
@@ -342,7 +366,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
                         const value = key === 'invokeArgs' || key === 'assetIntentOverrides' || key === 'attachedAssets' ||
-                            key === 'assetIntentOverrides' || key === 'txHashAttributes'|| key === 'extra_witness' ?
+                            key === 'assetIntentOverrides' || key === 'txHashAttributes' || key === 'extra_witness' ?
                             JSON.stringify(params[key]) : params[key];
                         queryString += `${key}=${value}&`;
                     }
@@ -387,7 +411,7 @@ export function windowCallback(data) {
     }, (tabs: any) => {
         console.log(tabs);
         // tabCurr = tabs;
-        if(tabs.length > 0) {
+        if (tabs.length > 0) {
             tabs.forEach(item => {
                 chrome.tabs.sendMessage(item.id, data, (response) => {
                     // tabCurr = null;
@@ -407,9 +431,9 @@ export function windowCallback(data) {
     //     }, (tabs) => {
     //         tabCurr = tabs;
     //         if (tabCurr.length >= 1) {
-                // chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
-                //     // tabCurr = null;
-                // });
+    // chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
+    //     // tabCurr = null;
+    // });
     //         }
     //     });
     // } else {

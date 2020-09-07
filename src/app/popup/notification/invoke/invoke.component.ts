@@ -12,6 +12,7 @@ import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
 import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
 
+
 @Component({
     templateUrl: 'invoke.component.html',
     styleUrls: ['invoke.component.scss']
@@ -103,7 +104,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     this.txHashAttributes = JSON.parse(newJson);
                 }
                 this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
-                if(params.extra_witness !== undefined) {
+                if (params.extra_witness !== undefined) {
                     newJson = this.pramsData.extra_witness.replace(/([a-zA-Z0-9]+?):/g, '"$1":');
                     newJson = newJson.replace(/'/g, '"');
                     this.extraWitness = JSON.parse(newJson);
@@ -196,12 +197,14 @@ export class PopupNoticeInvokeComponent implements OnInit {
             transaction.scripts = [await this.neon.getVerificationSignatureForSmartContract(this.scriptHash), ...transaction.scripts];
         }
         if (this.extraWitness.length > 0) {
-            this.extraWitness.forEach( (item: any) => {
-                if(item.invocationScript !== undefined || item.verificationScript !== undefined) {
-                    transaction.scripts.push(new tx.Witness({
+            this.extraWitness.forEach((item: any) => {
+                if (item.invocationScript !== undefined || item.verificationScript !== undefined) {
+                    const tempWitness = new tx.Witness({
                         invocationScript: item.invocationScript || '',
                         verificationScript: item.verificationScript || ''
-                    }))
+                    })
+                    tempWitness.scriptHash = item.scriptHash
+                    transaction.scripts.push(tempWitness)
                 }
             });
         }
@@ -213,7 +216,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.loadingMsg = '';
             this.chrome.windowCallback({
                 error: ERRORS.RPC_ERROR,
-                return: requestTarget.InvokeMulti,
+                return: requestTarget.Invoke,
                 ID: this.messageID
             });
             this.global.snackBarTip('transferFailed', error.msg || error);
@@ -230,7 +233,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
             }
             this.loading = false;
             this.loadingMsg = '';
-            if (!res.bool_status) {
+            if (res.error !== undefined) {
                 this.chrome.windowCallback({
                     error: ERRORS.RPC_ERROR,
                     return: requestTarget.Invoke,
@@ -476,5 +479,4 @@ export class PopupNoticeInvokeComponent implements OnInit {
             });
         });
     }
-
 }
