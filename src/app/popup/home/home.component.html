@@ -5,7 +5,14 @@
                 <p class="name">{{ wallet?.name || '' }}</p>
                 <p class="address">{{ wallet?.accounts[0].address || '' }}</p>
             </div>
-            <img class="menu" src="/assets/images/home/menu.png" alt="">
+            <img class="menu" src="/assets/images/home/menu.png" (click)="showMenu=!showMenu" alt="">
+            <section class="veil" *ngIf="showMenu" (click)="showMenu=false"></section>
+            <ul class="sub-menu" *ngIf="showMenu">
+                <li matRipple>账户详情</li>
+                <li matRipple (click)="toWeb()">在NeoTube上查看</li>
+                <!-- <li matRipple>展开视图</li> -->
+                <li matRipple>移除账号</li>
+            </ul>
         </mat-toolbar>
         <div class="popup-home-body" appScroll (scrollChange)="onScrolltaChange($event)">
             <div class="asset-logo-box">

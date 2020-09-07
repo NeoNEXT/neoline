@@ -48,6 +48,9 @@ export class PopupHomeComponent implements OnInit {
 
     public currentTxPage = 2;
     assetList: Balance[] = [];
+
+    // 菜单
+    showMenu = false;
     constructor(
         private assetState: AssetState,
         private neon: NeonService,
@@ -328,5 +331,14 @@ export class PopupHomeComponent implements OnInit {
             this.init = true;
             this.loading = false;
         });
+    }
+
+    toWeb() {
+        this.showMenu = false;
+        window.open(
+            `https://${
+                this.net === 'TestNet' ? 'testnet.' : ''
+            }neotube.io/address/${this.neon.address}/page/1`
+        );
     }
 }

@@ -1,6 +1,16 @@
 @import 'src/styles/popup-default';
 @import 'src/styles/theme-default';
 
+.veil {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: transparent;
+    z-index: 999999;
+}
+
 .nav {
     height: 65px;
     background-color: #06ccab;

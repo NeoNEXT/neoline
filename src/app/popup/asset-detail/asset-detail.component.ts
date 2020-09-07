@@ -29,6 +29,7 @@ export class PopupAssetDetailComponent implements OnInit {
     showMenu = false;
     watch: Balance[]; // 用户添加的资产
     canHideBalance = false;
+    net: string;
 
     constructor(
         private assetState: AssetState,
@@ -43,6 +44,7 @@ export class PopupAssetDetailComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.net = this.global.net;
         this.aRouter.params.subscribe(async (params: any) => {
             this.assetId = params.assetId || NEO;
             this.imageUrl = await this.assetState.getAssetImage(this.assetId);
@@ -124,5 +126,14 @@ export class PopupAssetDetailComponent implements OnInit {
                     }
                 }
             });
+    }
+
+    toWeb() {
+        this.showMenu = false;
+        window.open(
+            `https://${
+                this.net === 'TestNet' ? 'testnet.' : ''
+            }neotube.io/address/${this.neon.address}/page/1`
+        );
     }
 }

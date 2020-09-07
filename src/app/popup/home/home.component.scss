@@ -1,6 +1,15 @@
 @import 'src/styles/theme-default';
 @import 'src/styles/popup-default';
 
+.veil {
+    position: fixed;
+    left: 0;
+    right: 0;
+    top: 0;
+    bottom: 0;
+    background: transparent;
+    z-index: 999;
+}
 
 .popup-home {
     height: 100%;
@@ -16,6 +25,7 @@
         background: #F7FBF9;
         border-radius: 15px 15px 0px 0px;
         text-align: center;
+        position: relative;
         .wallet-info {
             width:  100%;
             position: absolute;
@@ -46,6 +56,33 @@
             margin-right: 20px;
             position: absolute;
             right: 0px;
+        }
+        .sub-menu {
+            position: absolute;
+            right: 10px;
+            top: 55px;
+            width: 220px;
+            background: #ffffff;
+            box-shadow: 1px 4px 9px 1px rgba(0, 0, 0, 0.14);
+            border-radius: 10px;
+            padding: 10px 0;
+            z-index: 999999;
+            li {
+                padding: 15px 30px;
+                font-size: 16px;
+                color: #444644;
+                font-weight: normal;
+                text-align: left;
+                list-style: none;
+                cursor: pointer;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                word-break: break-all;
+                &:hover {
+                    color: #07ccab;
+                }
+            }
         }
     }
     .popup-home-body {
