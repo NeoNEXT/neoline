@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, ViewChild, ElementRef } from '@angular/core';
 import {
     MatDialogRef
 } from '@angular/material/dialog';
@@ -9,11 +9,13 @@ import { NeonService, ChromeService, GlobalService } from '@/app/core';
 import { Router } from '@angular/router';
 import { EVENT } from '@/models/dapi';
 
+
 @Component({
     templateUrl: 'home-menu.dialog.html',
     styleUrls: ['home-menu.dialog.scss']
 })
 export class PopupHomeMenuDialogComponent {
+    @ViewChild('walletContainer') private walletContainer: ElementRef;
     public walletArr: Array<Wallet>;
     public wallet: Wallet;
     constructor(
@@ -33,6 +35,15 @@ export class PopupHomeMenuDialogComponent {
             return false;
         }
     }
+    public scrollToBottom() {
+        console.log(this.walletContainer);
+        try {
+            this.walletContainer.nativeElement.scrollTo(0,this.walletContainer.nativeElement.scrollHeight)
+        } catch(err) {
+
+        }
+    }
+
     public dismiss() {
         this.dialogRef.close();
     }

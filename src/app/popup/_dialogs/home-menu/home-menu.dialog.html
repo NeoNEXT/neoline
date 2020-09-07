@@ -8,7 +8,8 @@
                 <img src="/assets/images/home-menu/close.png" alt="">
                 <span class="text">{{ 'lock' | translate | async }}</span></button>
         </mat-toolbar>
-        <div class="wallet-container">
+        <div class="wallet-container" #walletContainer>
+            <img (click)="scrollToBottom()" src="/assets/images/dialog/scroll_to_bottom.png" alt="">
             <div class="account-item" (click)="selectAccount(item)" *ngFor="let item of walletArr; let i = index">
                 <div class="selected">
                     <img src="/assets/images/home-menu/wallet-selected.png" alt="" [hidden]="!isActivityWallet(item)">

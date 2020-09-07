@@ -45,6 +45,14 @@
         .wallet-container {
             max-height: 160px;
             overflow: auto;
+            scroll-behavior: smooth;
+            >img {
+                width: 30px;
+                height: 30px;
+                position: fixed;
+                top: 230px;
+                right: 30px;
+            }
             .account-item {
                 height: 70px;
                 line-height: 70px;
