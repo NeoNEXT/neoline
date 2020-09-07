@@ -41,7 +41,7 @@
                             <div class="fee-box detail-item">
                                 <p class="label">GAS FEE</p>
                                 <div class="fee-info">
-                                    <p>{{ 'edit' | translate | async }}</p>
+                                    <p (click)="editFee()">{{ 'edit' | translate | async }}</p>
                                     <p>{{ fee }} GAS</p>
                                     <p>{{ feeMoney }}{{ rateCurrency }}</p>
                                 </div>

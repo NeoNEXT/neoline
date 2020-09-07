@@ -21,7 +21,8 @@ import {
     PopupAddressDialogComponent,
     PopupAssetDialogComponent,
     PopupTxDetailDialogComponent,
-    PopupTransferSuccessDialogComponent
+    PopupTransferSuccessDialogComponent,
+    PopupInputDialogComponent
 } from '@popup/_dialogs';
 import { PopupAuthorizationListDialogComponent } from '@popup/_dialogs/authorization-list/authorization-list.dialog';
 import { PopupQRCodeDialogComponent } from '@popup/_dialogs';
@@ -63,7 +64,8 @@ import { TransferModule } from './transfer';
         PopupAuthorizationListDialogComponent,
         PopupAssetDetailComponent,
         PopupTxDetailDialogComponent,
-        PopupTransferSuccessDialogComponent
+        PopupTransferSuccessDialogComponent,
+        PopupInputDialogComponent
     ],
     imports: [
         FormsModule,
@@ -102,7 +104,8 @@ import { TransferModule } from './transfer';
         PopupHomeMenuDialogComponent,
         PopupAuthorizationListDialogComponent,
         PopupTxDetailDialogComponent,
-        PopupTransferSuccessDialogComponent
+        PopupTransferSuccessDialogComponent,
+        PopupInputDialogComponent
     ]
 })
 export class PopupModule {}

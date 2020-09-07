@@ -189,6 +189,7 @@
                 &:nth-child(1) {
                     color:  map-get($neo-line-default, 500);
                     font-size: 12px;
+                    padding: 5px
                 }
                 &:nth-child(2) {
                     color: #303434;

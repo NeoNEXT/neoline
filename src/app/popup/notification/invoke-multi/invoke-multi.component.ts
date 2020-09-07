@@ -16,6 +16,7 @@ import { ERRORS, requestTarget, Invoke, TxHashAttribute } from '@/models/dapi';
 import { resolve } from 'path';
 import { type } from 'os';
 import { string } from 'mathjs';
+import { PopupInputDialogComponent } from '../../_dialogs';
 
 @Component({
     templateUrl: 'invoke-multi.component.html',
@@ -538,5 +539,29 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             this.resolveSend(this.tx);
         }
     }
+    public editFee() {
+        this.dialog.open(PopupInputDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+            data: {
+                type: 'number',
+                title: 'editFee'
+            }
+        }).afterClosed().subscribe(async (inputStr: string) => {
+            if(inputStr !== '' && inputStr !== null ) {
+                let text = inputStr;
+                const index = inputStr.indexOf('.')
+                if(index >= 0) {
+                    if(inputStr.length - index > 8) {
+                        text = text.substring(0, index + 9);
+                    }
+                }
+                this.fee = text;
+                if(Number(this.fee) > 0) {
+                    this.feeMoney = await this.assetState.getMoney('GAS', Number(this.fee))
+                }
+            }
+        })
+    }
+
 
 }

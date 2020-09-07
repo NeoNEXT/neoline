@@ -511,5 +511,8 @@
     },
     "removeAccount": {
         "message": "Remove account"
+    },
+    "editFee": {
+        "message": "Edit Fee"
     }
 }

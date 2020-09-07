@@ -1,0 +1,10 @@
+<P class="title">{{ data.title | translate | async}}</P>
+
+<div class="input-container">
+    <input [(ngModel)]="inputText" [type]="data.type" (keyup.enter)="confirm()">
+</div>
+
+<div class="choose-group">
+    <div class="cancel item" (click)="cancel()">{{ 'cancel' | translate | async}}</div>
+    <div class="ok item" (click)="confirm()">{{ 'yes' | translate | async}}</div>
+</div>

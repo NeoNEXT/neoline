@@ -11,4 +11,5 @@ export { PopupAddressDialogComponent } from '@popup/_dialogs/address/address.dia
 export { PopupAssetDialogComponent } from '@popup/_dialogs/asset/asset.dialog';
 export { PopupTxDetailDialogComponent } from '@popup/_dialogs/tx-detail/tx-detail.dialog';
 export { PopupTransferSuccessDialogComponent } from '@popup/_dialogs/transfer-success/transfer-success.component';
+export { PopupInputDialogComponent } from '@popup/_dialogs/input/input.dialog';
 

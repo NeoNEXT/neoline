@@ -4,13 +4,14 @@ import {
     Inject
 } from '@angular/core';
 import {
-    MatDialogRef, MAT_DIALOG_DATA,
+    MatDialogRef, MAT_DIALOG_DATA, MatDialog,
 } from '@angular/material/dialog';
 
 import {
     ChromeService, AssetState, NeonService, GlobalService,
 } from '@app/core';
 import { NEO, GAS } from '@/models/models';
+import { PopupInputDialogComponent } from '../../_dialogs';
 
 @Component({
     templateUrl: 'confirm.component.html',
@@ -28,6 +29,7 @@ export class PopupTransferConfirmComponent implements OnInit {
     public totalMoney = '';
     public rateCurrency = ''
     constructor(
+        private dialog: MatDialog,
         private dialogRef: MatDialogRef<PopupTransferConfirmComponent>,
         private neon: NeonService,
         private assetState: AssetState,
@@ -104,6 +106,32 @@ export class PopupTransferConfirmComponent implements OnInit {
         } else {
             return '';
         }
+    }
+
+    public editFee() {
+        this.dialog.open(PopupInputDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+            data: {
+                type: 'number',
+                title: 'editFee'
+            }
+        }).afterClosed().subscribe(async (inputStr: string) => {
+            if(inputStr !== '' && inputStr !== null ) {
+                let text = inputStr;
+                const index = inputStr.indexOf('.')
+                if(index >= 0) {
+                    if(inputStr.length - index > 8) {
+                        text = text.substring(0, index + 9);
+                    }
+                }
+                this.data.fee = text;
+                if(Number( this.data.fee) > 0) {
+                    this.feeMoney = await this.getMoney('GAS', Number(this.data.fee))
+                }
+                this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
+
+            }
+        })
     }
 
     public confirm() {

@@ -511,5 +511,8 @@
     },
     "removeAccount": {
         "message": "移除账号"
+    },
+    "editFee": {
+        "message": "编辑优先费"
     }
 }
