@@ -83,6 +83,7 @@ export class PopupHomeComponent implements OnInit {
 
     ngOnInit(): void {
         this.net = this.global.net;
+        this.initClaim();
         this.getAssetList();
     }
 
