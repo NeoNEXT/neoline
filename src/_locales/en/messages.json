@@ -369,10 +369,10 @@
         "message": "wrong Encrypted Key"
     },
     "tranSubmit": {
-        "message": "Transaction submitted."
+        "message": "Transaction submitted"
     },
     "waitConfirm": {
-        "message": "Please wait for confirmation."
+        "message": "Please wait for confirmation"
     },
     "transaction": {
         "message": "Transaction"

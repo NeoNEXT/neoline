@@ -3,7 +3,7 @@ import { HttpService } from '../services/http.service';
 import { GlobalService } from '../services/global.service';
 import { ChromeService } from '../services/chrome.service';
 import { Observable, Subject, from, of } from 'rxjs';
-import { Balance } from 'src/models/models';
+import { Balance, AssetDetail, Nep5Detail } from 'src/models/models';
 import { map, switchMap, refCount, publish } from 'rxjs/operators';
 
 @Injectable()
@@ -218,5 +218,17 @@ export class AssetState {
         } else if (assetRes && assetRes.status === 404) {
             return this.defaultAssetSrc;
         }
+    }
+
+    public getAssetDetail(assetId: string): Observable<AssetDetail> {
+        return  this.http.get(
+            `${this.global.apiDomain}/v1/asset/${assetId}`
+        );
+    }
+
+    public getNep5Detail(assetId: string): Observable<Nep5Detail> {
+        return  this.http.get(
+            `${this.global.apiDomain}/v1/nep5/${assetId}`
+        );
     }
 }

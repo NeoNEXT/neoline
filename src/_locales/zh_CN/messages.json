@@ -369,10 +369,10 @@
         "message": "Encrypted Key 错误"
     },
     "tranSubmit": {
-        "message": "交易已提交。"
+        "message": "交易已提交"
     },
     "waitConfirm": {
-        "message": "请等待交易确认。"
+        "message": "请等待交易确认"
     },
     "transaction": {
         "message": "交易"

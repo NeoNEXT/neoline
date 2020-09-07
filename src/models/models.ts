@@ -1,4 +1,4 @@
-export interface PageData < T > {
+export interface PageData<T> {
     page: number;
     pages: number;
     per_page: number;
@@ -14,6 +14,44 @@ export interface ClaimItem {
     txid: string;
     value: number;
     n: number;
+}
+
+export interface AssetDetail {
+    addresses: number,
+    admin: string,
+    amount: string,
+    assetId: string,
+    blockIndex: number,
+    blockTime: number,
+    id: number,
+    name: string,
+    precision: number,
+    transactions: number,
+    type: string
+}
+
+
+export interface Nep5Detail {
+    nep5: {
+        addresses: number,
+        admin: string,
+        amount: string,
+        assetId: string,
+        blockIndex: number,
+        nep5_name: string,
+        precision: number,
+        symbol: string,
+        transactions: number,
+        txid: string,
+        type: string
+    },
+    nep5reg: {
+        author: string,
+        description: string,
+        email: string,
+        name: string,
+        version: string
+    }
 }
 
 export interface Balance {

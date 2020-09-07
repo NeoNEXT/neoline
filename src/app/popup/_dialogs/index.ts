@@ -10,3 +10,5 @@ export { PopupHomeMenuDialogComponent } from '@popup/_dialogs/home-menu/home-men
 export { PopupAddressDialogComponent } from '@popup/_dialogs/address/address.dialog';
 export { PopupAssetDialogComponent } from '@popup/_dialogs/asset/asset.dialog';
 export { PopupTxDetailDialogComponent } from '@popup/_dialogs/tx-detail/tx-detail.dialog';
+export { PopupTransferSuccessDialogComponent } from '@popup/_dialogs/transfer-success/transfer-success.component';
+
