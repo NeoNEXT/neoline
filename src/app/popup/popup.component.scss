@@ -65,7 +65,7 @@
     overflow-y: auto;
     overflow-x: hidden;
     background-color: map-get($neo-line-default, 50);
-    &.third {
+    &.isConfirm {
         height: 100%;
         top: 0;
     }
