@@ -41,7 +41,7 @@
                             <div class="fee-box detail-item">
                                 <p class="label">GAS FEE</p>
                                 <div class="fee-info">
-                                    <p>编辑</p>
+                                    <p>{{ 'edit' | translate | async }}</p>
                                     <p>{{ fee }} GAS</p>
                                     <p>{{ feeMoney }}{{ rateCurrency }}</p>
                                 </div>
@@ -53,7 +53,7 @@
                                 <div class="json-box">
                                     <pre>{{ dataJson | json }}</pre>
                                 </div>
-                                <p class="hex-label">hex</p>
+                                <p class="hex-label">HEX</p>
                                 <p class="json-box serialize">
                                     {{ txSerialize }}
                                 </p>

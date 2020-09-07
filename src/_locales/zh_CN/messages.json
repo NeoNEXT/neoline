@@ -8,6 +8,9 @@
     "account": {
         "message": "钱包"
     },
+    "edit": {
+        "message": "编辑"
+    },
     "assets": {
         "message": "资产"
     },

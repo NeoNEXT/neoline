@@ -8,6 +8,9 @@
     "account": {
         "message": "Wallets"
     },
+    "edit": {
+        "message": "Edit"
+    },
     "assets": {
         "message": "Assets"
     },
