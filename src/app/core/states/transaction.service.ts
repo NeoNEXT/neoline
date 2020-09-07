@@ -50,4 +50,8 @@ export class TransactionState {
         }
         return this.http.get(url);
     }
+
+    getTxDetail(txid: string): Observable<any> {
+        return this.http.get(`${this.global.apiDomain}/v1/transactions/gettransaction/${txid}`)
+    }
 }

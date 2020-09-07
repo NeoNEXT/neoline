@@ -2,11 +2,22 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin: 0 20px;
-    border-bottom: 1px solid #efefef;
     color: #444644;
-    padding: 25px 0;
+    padding: 25px 20px;
     cursor: pointer;
+    position: relative;
+    &::before {
+        content: '';
+        position: absolute;
+        left: 20px;
+        right: 20px;
+        bottom: 0;
+        height: 1px;
+        background: #efefef;
+    }
+    &:hover {
+        background: lightgray;
+    }
     .avatar-box {
         width: 40px;
         height: 40px;

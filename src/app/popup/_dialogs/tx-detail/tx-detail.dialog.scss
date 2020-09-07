@@ -1,0 +1,63 @@
+.title {
+    height: 60px;
+    line-height: 60px;
+    font-size: 18px;
+    font-weight: 500;
+    color: #202224;
+    text-align: left;
+    position: relative;
+    padding-left: 23px;
+    margin-top: 9px;
+    .close {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        color: #999;
+        cursor: pointer;
+    }
+}
+
+.item {
+    font-size: 15px;
+    min-height: 55px;
+    padding: 0 23px;
+    position: relative;
+    &:last-child {
+        margin-bottom: 30px;
+    }
+    &::before {
+        position: absolute;
+        content: '';
+        left: 15px;
+        right: 15px;
+        bottom: 0;
+        height: 1px;
+        background: #efefef;
+    }
+    &.row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    &.column {
+        padding-top: 17px;
+        padding-bottom: 17px;
+        .name {
+            margin-bottom: 10px;
+        }
+        .value {
+            font-size: 13px;
+        }
+    }
+    .name {
+        color: #202224;
+    }
+    .value, .address-group {
+        color: #707C82;
+    }
+    .address-group {
+        max-height: 80px;
+        overflow: scroll;
+        font-size: 13px;
+    }
+}

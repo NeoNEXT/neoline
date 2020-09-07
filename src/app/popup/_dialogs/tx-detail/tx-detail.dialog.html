@@ -1,0 +1,26 @@
+<div class="title">
+    <span>{{ data.tx.value < 0 ? 'Sent ' : 'Received '}} {{ data.symbol }}</span>
+    <mat-icon class="close" [mat-dialog-close]="false" >close</mat-icon>
+</div>
+<div class="item row">
+    <span class="name">Amount</span>
+    <span class="value">{{ data.tx.value + ' ' + data.symbol }}</span>
+</div>
+<div class="item row">
+    <span class="name">Time</span>
+    <span class="value">{{ data.tx.block_time * 1000 | date:'yyyy-MM-dd HH:mm' }}</span>
+</div>
+<div class="item column">
+    <p class="name">From</p>
+    <div class="address-group">
+        <p *ngFor="let item of txDetail?.tokenTXs">{{ item?.from }}</p>
+        <p *ngFor="let item of txDetail?.vin">{{ item?.address }}</p>
+    </div>
+</div>
+<div class="item column">
+    <p class="name">Send to</p>
+    <div class="address-group">
+        <p *ngFor="let item of txDetail?.tokenTXs">{{ item?.to }}</p>
+        <p *ngFor="let item of txDetail?.vout">{{ item?.address }}</p>
+    </div>
+</div>

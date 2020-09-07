@@ -9,4 +9,4 @@ export { PopupConfirmDialogComponent } from '@popup/_dialogs/confirm/confirm.dia
 export { PopupHomeMenuDialogComponent } from '@popup/_dialogs/home-menu/home-menu.dialog';
 export { PopupAddressDialogComponent } from '@popup/_dialogs/address/address.dialog';
 export { PopupAssetDialogComponent } from '@popup/_dialogs/asset/asset.dialog';
-
+export { PopupTxDetailDialogComponent } from '@popup/_dialogs/tx-detail/tx-detail.dialog';
