@@ -4,9 +4,9 @@
         <mat-toolbar>
             <span class="title">{{ 'accountAdded' | translate | async }}</span>
             <span class="spacer"></span>
-            <button mat-flat-button>
+            <button mat-flat-button (click)="lock()">
                 <img src="/assets/images/home-menu/close.png" alt="">
-                <span class="text">{{ 'logout' | translate | async }}</span></button>
+                <span class="text">{{ 'lock' | translate | async }}</span></button>
         </mat-toolbar>
         <div class="wallet-container">
             <div class="account-item" (click)="selectAccount(item)" *ngFor="let item of walletArr; let i = index">

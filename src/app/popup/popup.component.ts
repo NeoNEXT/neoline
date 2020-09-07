@@ -97,8 +97,10 @@ export class PopupComponent implements OnInit, AfterViewInit {
             width: '315px',
             maxWidth: 375,
             maxHeight: 500,
-        }).afterClosed().subscribe((confirm) => {
-
+        }).afterClosed().subscribe((res) => {
+            if(res === 'lock') {
+                this.isLogin = false
+            }
         });
     }
 

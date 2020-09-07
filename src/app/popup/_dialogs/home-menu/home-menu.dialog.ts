@@ -5,7 +5,7 @@ import {
 import {
     Wallet
 } from '@cityofzion/neon-core/lib/wallet';
-import { NeonService, ChromeService } from '@/app/core';
+import { NeonService, ChromeService, GlobalService } from '@/app/core';
 import { Router } from '@angular/router';
 import { EVENT } from '@/models/dapi';
 
@@ -21,6 +21,7 @@ export class PopupHomeMenuDialogComponent {
         private chrome: ChromeService,
         private dialogRef: MatDialogRef<PopupHomeMenuDialogComponent>,
         private neon: NeonService,
+        private global: GlobalService
     ) {
         this.walletArr = this.neon.walletArr;
         this.wallet = this.neon.wallet;
@@ -49,4 +50,9 @@ export class PopupHomeMenuDialogComponent {
         location.href = `index.html#popup`;
     }
 
+    public lock() {
+        this.dialogRef.close('lock');
+        this.chrome.clearLogin();
+        this.router.navigateByUrl('/popup/login');
+    }
 }

@@ -491,8 +491,8 @@
     "systemSettings": {
         "message": "System settings"
     },
-    "logout": {
-        "message": "Logout"
+    "lock": {
+        "message": "Lock"
     },
     "noMoreData": {
         "message": "No more data"

@@ -491,8 +491,8 @@
     "systemSettings": {
         "message": "系统设置"
     },
-    "logout": {
-        "message": "登出"
+    "lock": {
+        "message": "锁定"
     },
     "noMoreData": {
         "message": "没有更多数据了"
