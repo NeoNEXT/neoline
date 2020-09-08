@@ -16,7 +16,7 @@ import {
     TransactionState
 } from '@/app/core';
 import {
-    Balance
+    Balance, NEO
 } from '@/models/models';
 import {
     Transaction
@@ -26,25 +26,37 @@ import {
 } from '@/app/transfer/transfer.service';
 import { ERRORS, requestTarget } from '@/models/dapi';
 import { rpc } from '@cityofzion/neon-js';
+import { MatDialog } from '@angular/material/dialog';
+import { PopupInputDialogComponent } from '../../_dialogs';
 
 @Component({
     templateUrl: 'transfer.component.html',
     styleUrls: ['transfer.component.scss']
 })
 export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
+
+    public dataJson: any = {};
+    public rateCurrency = '';
+    public txSerialize = ''
+    public assetImageUrl = '';
+    public tx: Transaction;
+    public money = '';
+    public feeMoney = '0';
+    public totalMoney = '';
+
     public balance: Balance;
     public creating = false;
-    public fromAddress: string;
-    public toAddress: string;
-    public assetId: string;
-    public symbol: string;
-    public amount: number;
+    public fromAddress: string = '';
+    public toAddress: string = '';
+    public assetId: string = '';
+    public symbol: string = '';
+    public amount: number = 0;
     public remark: string = '';
     private network: string = '';
     public loading = false;
     public loadingMsg: string;
     public wallet: any;
-    public pwd = '';
+
     public fee: number;
     public init = false;
     private broadcastOverride = false;
@@ -60,18 +72,38 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         private http: HttpService,
         private global: GlobalService,
         private chrome: ChromeService,
-        private txState: TransactionState
+        private txState: TransactionState,
+        private dialog: MatDialog
     ) { }
 
     ngOnInit(): void {
-        this.net = this.global.net;
+        this.asset.getAssetImage(NEO).then(res => {
+            this.assetImageUrl = res;
+        });
+        this.rateCurrency = this.asset.rateCurrency
         this.fromAddress = this.neon.address;
         this.wallet = this.neon.wallet;
         this.aRoute.queryParams.subscribe((params: any) => {
+            const pramsData = JSON.parse(JSON.stringify(params));
+            this.dataJson = JSON.stringify(params);
             this.messageID = params.messageID;
             if (JSON.stringify(params) === '{}') {
                 return;
             }
+            for (const key in pramsData) {
+                if (Object.prototype.hasOwnProperty.call(pramsData, key)) {
+                    let tempObject: any
+                    try {
+                        tempObject = pramsData[key].replace(/([a-zA-Z0-9]+?):/g, '"$1":').replace(/'/g, '"');
+                        tempObject = JSON.parse(tempObject);
+                    } catch (error) {
+                        tempObject = pramsData[key];
+                    };
+                    pramsData[key] = tempObject;
+                }
+            }
+            this.dataJson = pramsData;
+            this.dataJson.messageID = undefined;
             this.broadcastOverride = (params.broadcastOverride === 'true' || params.broadcastOverride === true);
             window.onbeforeunload = () => {
                 this.chrome.windowCallback({
@@ -85,6 +117,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             } else {
                 this.global.modifyNet('TestNet');
             }
+            this.net = this.global.net;
             this.network = params.network || 'MainNet';
             this.toAddress = params.toAddress || '';
             this.assetId = params.asset || '';
@@ -97,6 +130,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                     this.init = true;
                     this.symbol = res.symbol;
                     this.balance = res;
+                    this.submit();
+                    this.getAssetRate();
                 });
             } else {
                 this.asset.fetchBalance(this.neon.address).subscribe(res => {
@@ -109,6 +144,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                         this.global.snackBarTip('balanceLack');
                         return;
                     }
+                    this.submit();
+                    this.getAssetRate();
                 });
             }
         });
@@ -119,9 +156,6 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public submit() {
         this.loading = true;
         this.loadingMsg = 'Loading';
-        if (this.creating) {
-            return;
-        }
         if (this.balance.balance === undefined || this.balance.balance <= 0) {
             this.global.snackBarTip('balanceLack');
             return;
@@ -137,13 +171,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.balance = res;
             this.transfer.create(this.fromAddress, this.toAddress, this.assetId, this.amount, this.fee, res.decimals,
                 this.broadcastOverride).subscribe((tx) => {
-                    if (this.pwd && this.pwd.length) {
-                        this.global.log('start transfer with pwd');
-                        this.resolveSign(tx, this.pwd);
-                    } else {
-                        this.creating = false;
-                        this.global.log('cancel pay');
-                    }
+                    this.resolveSign(tx);
                 }, (err) => {
                     this.creating = false;
                     this.global.snackBarTip('wentWrong');
@@ -161,41 +189,40 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         window.close();
     }
 
-    private resolveSign(tx: Transaction, pwd: string) {
+    private resolveSign(transaction: Transaction) {
         this.loading = true;
         this.loadingMsg = 'Wait';
-        this.neon.wallet.accounts[0].decrypt(pwd).then((acc) => {
-            if (this.remark !== '') {
-                tx.addRemark(this.remark);
+        try {
+            const wif = this.neon.WIFArr[
+                this.neon.walletArr.findIndex(item => item.accounts[0].address === this.neon.wallet.accounts[0].address)
+            ]
+            try {
+                transaction.sign(wif);
+            } catch (error) {
+                console.log(error);
             }
-            tx.sign(acc);
+            this.tx = transaction;
+            this.txSerialize = this.tx.serialize(true);
+            this.loading = false
+            this.loadingMsg = '';
+            this.creating = false;
+        } catch (error) {
             this.loading = false;
             this.loadingMsg = '';
             this.creating = false;
-            if (this.broadcastOverride) {
-                this.loading = false;
-                this.loadingMsg = '';
-                this.chrome.windowCallback({
-                    data: {
-                        txid: tx.hash,
-                        signedTx: tx.serialize(true)
-                    },
-                    return: requestTarget.Send,
-                    ID: this.messageID
-                });
-            } else {
-                this.resolveSend(tx);
-            }
-        }).catch((err) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.creating = false;
-            this.global.snackBarTip('verifyFailed', err);
-        });
+            this.global.snackBarTip('verifyFailed', error);
+            this.chrome.windowCallback({
+                error: ERRORS.DEFAULT,
+                return: requestTarget.Invoke,
+                ID: this.messageID
+            });
+            window.close();
+        }
     }
 
     private resolveSend(tx: Transaction) {
         this.loadingMsg = 'Wait';
+        this.loading = true;
         return rpc.Query.sendRawTransaction(tx.serialize(true)).execute(this.global.RPCDomain).then(async res => {
             if (
                 !res.result ||
@@ -267,6 +294,73 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.chrome.setTransaction(res);
             this.txState.pushTxSource();
         });
+    }
+
+    public async getAssetRate() {
+        if (Number(this.fee) > 0) {
+            this.feeMoney = await this.asset.getMoney('GAS', Number(this.fee))
+        }
+        const assetRate = await this.asset.getAssetRate(this.symbol).toPromise();
+        this.money = await this.asset.getMoney(this.symbol, Number(this.amount));
+        this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
+    }
+
+    public exit() {
+        this.chrome.windowCallback({
+            error: ERRORS.CANCELLED,
+            return: requestTarget.Invoke,
+            ID: this.messageID
+        });
+        window.close();
+    }
+
+    public confirm() {
+        if (this.creating) {
+            return;
+        }
+        if (this.broadcastOverride) {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.chrome.windowCallback({
+                data: {
+                    txid: this.tx.hash,
+                    signedTx: this.tx.serialize(true)
+                },
+                return: requestTarget.Send,
+                ID: this.messageID
+            });
+            window.close();
+        } else {
+            this.resolveSend(this.tx);
+        }
+    }
+    public editFee() {
+        this.dialog.open(PopupInputDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+            data: {
+                type: 'number',
+                title: 'editFee'
+            }
+        }).afterClosed().subscribe(async (inputStr: string) => {
+            if (inputStr !== '' && inputStr !== null) {
+                let text = inputStr;
+                const index = inputStr.indexOf('.')
+                if (index >= 0) {
+                    if (inputStr.length - index > 8) {
+                        text = text.substring(0, index + 9);
+                    }
+                }
+                this.fee = Number(text);
+                if (Number(this.fee) > 0) {
+                    this.feeMoney = await this.asset.getMoney('GAS', Number(this.fee))
+                }
+                this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
+            }
+        })
+    }
+
+    public getAddressSub(address: string) {
+        return `${address.substr(0, 3)}...${address.substr(address.length - 4, address.length - 1)} `
     }
 
 }
