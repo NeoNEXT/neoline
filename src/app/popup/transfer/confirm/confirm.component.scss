@@ -165,6 +165,7 @@
 
 .detail-tab-content {
     margin-top: 20px;
+    height: calc(100% - 210px);
     hr {
         border: none;
         border-top: 0.5px solid #EFEFEF;
@@ -251,9 +252,11 @@ hr {
 }
 
 .btn-box {
-    display: inline-block;
-    margin: 20px auto;
-    margin-bottom: 0px;
+    display: flex;
+    width: 100%;
+    margin: 20px auto 0;
+    align-items: center;
+    justify-content: center;
     button {
         &:nth-child(1) {
             background: #ECFBF1;
@@ -285,7 +288,7 @@ hr {
                 }
             }
             .mat-tab-body {
-                height: 200px;
+                height: 100%;
             }
             .mat-tab-body-wrapper {
                 height: 100%;
