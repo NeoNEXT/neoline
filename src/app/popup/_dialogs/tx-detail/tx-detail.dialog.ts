@@ -15,6 +15,18 @@ export class PopupTxDetailDialogComponent {
     ) {
         this.txState.getTxDetail(this.data.tx.txid).subscribe(res => {
             this.txDetail = res;
+            this.txDetail.vin = this.txDetail.vin.reduce((prev, element) => {
+                if (!prev.find(item => item.address === element.address)) {
+                    prev.push(element)
+                }
+                return prev
+            }, [])
+            this.txDetail.vout = this.txDetail.vout.reduce((prev, element) => {
+                if (!prev.find(item => item.address === element.address)) {
+                    prev.push(element)
+                }
+                return prev
+            }, [])
         });
     }
 }
