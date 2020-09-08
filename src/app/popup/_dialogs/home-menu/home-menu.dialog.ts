@@ -36,7 +36,6 @@ export class PopupHomeMenuDialogComponent {
         }
     }
     public scrollToBottom() {
-        console.log(this.walletContainer);
         try {
             this.walletContainer.nativeElement.scrollTo(0,this.walletContainer.nativeElement.scrollHeight)
         } catch(err) {

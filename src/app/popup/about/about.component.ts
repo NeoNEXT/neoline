@@ -14,4 +14,24 @@ export class PopupAboutComponent implements OnInit {
     ngOnInit(): void {
         this.version = this.chrome.getVersion();
     }
+
+    public async jumbToWeb(type: number) {
+        let lang = await this.chrome.getLang().toPromise()
+        if (lang !== 'en') {
+            lang = ''
+        } else {
+            lang = '/en'
+        }
+        switch (type) {
+            case 0:
+                window.open(`https://neoline.io${lang}/privacy`);
+                break;
+            case 1:
+                window.open(`https://neoline.io${lang}/agreement`);
+                break;
+            case 2:
+                window.open(`https://neoline.io${lang}`);
+                break;
+        }
+    }
 }

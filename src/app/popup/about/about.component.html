@@ -15,19 +15,19 @@
 
 
 <div class="popup-about">
-    <div class="about-item">
+    <div matRipple (click)="jumbToWeb(0)" class="about-item">
         <span>{{ 'privacyPolicy' | translate | async }}</span>
         <img src="/assets/images/arrow-right.png" alt="">
     </div>
-    <div class="about-item">
+    <div matRipple (click)="jumbToWeb(1)" class="about-item">
         <span>{{ 'termsOfUse' | translate | async }}</span>
         <img src="/assets/images/arrow-right.png" alt="">
     </div>
-    <div class="about-item">
+    <div matRipple (click)="jumbToWeb(2)" class="about-item">
         <span>{{ 'companyWebsite' | translate | async }}</span>
         <img src="/assets/images/arrow-right.png" alt="">
     </div>
-    <div class="about-item">
+    <div matRipple class="about-item">
         <span>{{ 'contactUs' | translate | async }}</span>
         <img src="/assets/images/arrow-right.png" alt="">
     </div>
