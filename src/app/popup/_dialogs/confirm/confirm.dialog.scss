@@ -1,6 +1,9 @@
 .title {
-    height: 100px;
-    line-height: 100px;
+    min-height: 100px;
+    display: flex;
+    padding-left: 20px;
+    padding-right: 20px;
+    align-items: center;
     text-align: center;
     margin: 0 10px;
 }
@@ -10,7 +13,7 @@
     border-top: 1px solid #efefef;
     .item {
         display: inline-block;
-        margin: 22px 0;
+        padding: 22px 0;
         width: 50%;
         text-align: center;
         font-size: 17px;

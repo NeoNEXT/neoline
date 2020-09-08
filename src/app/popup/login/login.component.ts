@@ -22,6 +22,8 @@ import {
     ChromeService,
     GlobalService
 } from '@/app/core';
+import { MatDialog } from '@angular/material/dialog';
+import { PopupConfirmDialogComponent } from '../_dialogs';
 
 
 @Component({
@@ -40,7 +42,8 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
         private router: Router,
         private neon: NeonService,
         private chrome: ChromeService,
-        private global: GlobalService
+        private global: GlobalService,
+        private dialog: MatDialog
     ) {
         this.hidePwd = true;
         this.wallet = new WalletCreation();
@@ -72,5 +75,17 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
 
     public togglePwd() {
         this.hidePwd = !this.hidePwd;
+    }
+
+    public resetWallet() {
+        this.dialog.open(PopupConfirmDialogComponent, {
+            data: 'resetWalletConfirm',
+            panelClass: 'custom-dialog-panel'
+        }).afterClosed().subscribe(confirm => {
+            if (confirm) {
+                this.chrome.resetWallet();
+                this.router.navigateByUrl('/popup/wallet');
+            }
+        });
     }
 }

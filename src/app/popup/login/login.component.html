@@ -29,7 +29,7 @@
             </mat-error>
         </mat-form-field>
     </form>
-    <button mat-button color="primary" class="popup-login-reset">重置钱包</button>
+    <button mat-button color="primary" class="popup-login-reset" (click)="resetWallet()">重置钱包</button>
     <button mat-flat-button color="primary" class="popup-login" [disabled]="isInit || loginForm.invalid || loading"
         (click)="login()">
         <ng-container *ngIf="!loading">{{ 'login' | translate | async}}</ng-container>

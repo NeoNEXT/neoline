@@ -51,7 +51,7 @@ export class PopupLoginGuard implements CanActivate {
             this.neon.walletIsOpen().subscribe((res: any) => {
                 if (!res) {
                     this.chrome.setLogin('false');
-                    this.router.navigateByUrl('/popup/wallet');
+                    this.router.navigateByUrl('/popup/wallet/new-guide');
                 } else {
                     this.chrome.getLogin().subscribe((shoudLogin) => {
                         if (shoudLogin) {
@@ -145,7 +145,7 @@ export class PopupWalletGuard implements CanActivate {
                         this.chrome.setHistory(state.url);
                     }
                     this.chrome.setLogin('false');
-                    this.router.navigateByUrl('/popup/wallet');
+                    this.router.navigateByUrl('/popup/wallet/new-guide');
                     this.global.log('Wallet has not opened yet.');
                 } else {
                     this.chrome.getLogin().subscribe((shoudLogin) => {

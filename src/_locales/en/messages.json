@@ -514,5 +514,8 @@
     },
     "editFee": {
         "message": "Edit Fee"
+    },
+    "resetWalletConfirm": {
+        "message": "After resetting the wallet, all the original wallet data will be erased and cannot be retrieved. Please confirm resetting the wallet?"
     }
 }

@@ -660,6 +660,18 @@ export class ChromeService {
         }
     }
 
+    public resetWallet() {
+        if (!this.check) {
+            localStorage.removeItem('wallet');
+            localStorage.removeItem('walletArr');
+            localStorage.removeItem('WIFArr');
+        } else {
+            this.crx.removeLocalStorage('wallet');
+            this.crx.removeStorage('walletArr');
+            this.crx.removeStorage('WIFArr');
+        }
+    }
+
     public getLocalStorage(key): Promise<any> {
         return this.crx.getLocalStorage(key, (res) => {
             return res;
