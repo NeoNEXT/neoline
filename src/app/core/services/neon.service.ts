@@ -335,21 +335,42 @@ export class NeonService {
             });
     }
 
-    public claimGAS(claims: Array<ClaimItem>, value: number): Observable<Transaction> {
+    public claimGAS(claims: Array<ClaimItem>): Observable<Array<Transaction>> {
         return new Observable(observer => {
-            const claimArr = [];
+            const claimArr = [[]];
+            const valueArr = [];
+            let count = 0
+            let txCount = 0;
+            let itemValue = 0;
             claims.forEach(item => {
-                claimArr.push({
+                count++;
+                claimArr[txCount].push({
                     prevHash: item.txid.length === 66 ? item.txid.slice(2) : item.txid,
                     prevIndex: item.n,
                 });
+                itemValue = this.global.mathAdd(itemValue, Number(item.claim));
+                if(count >= 20) {
+                    txCount ++;
+                    count = 0
+                    claimArr[txCount] = [];
+                    valueArr.push(itemValue);
+                    itemValue = 0
+                }
             });
-            const newTx = new tx.ClaimTransaction({
-                claims: claimArr
-            });
-            newTx.addIntent('GAS', value, this.address);
-            newTx.sign(this.WIFArr[this._walletArr.findIndex(item => item.accounts[0].address === this._wallet.accounts[0].address)]);
-            observer.next(newTx);
+            if(itemValue !== 0) {
+                valueArr.push(itemValue);
+            }
+            const wif = this.WIFArr[this._walletArr.findIndex(item => item.accounts[0].address === this._wallet.accounts[0].address)];
+            const txArr = [];
+            claimArr.forEach((item, index) => {
+                const newTx = new tx.ClaimTransaction({
+                    claims: item
+                });
+                newTx.addIntent('GAS', valueArr[index], this.address);
+                newTx.sign(wif);
+                txArr.push(newTx);
+            })
+            observer.next(txArr);
             observer.complete();
         });
     }

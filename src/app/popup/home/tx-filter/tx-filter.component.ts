@@ -8,6 +8,7 @@ import {
 import { NEO } from '@/models/models';
 import { AssetState, NeonService, HttpService, GlobalService, ChromeService } from '@/app/core';
 import { TransferService } from '@/app/transfer/transfer.service';
+import { rpc } from '@cityofzion/neon-core';
 
 @Component({
     selector: 'app-tx-filter',
@@ -81,19 +82,17 @@ export class PopupHomeTxFilterComponent implements OnInit, OnChanges {
             this.syncNow();
             return;
         }
-        this.neon.claimGAS(this.claimsData, this.claimNumber).subscribe(tx => {
-            return this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
-                signature_transaction: tx.serialize(true)
-            }).subscribe(res => {
-                if (this.intervalClaim === null) {
-                    this.initInterval();
+        this.neon.claimGAS(this.claimsData).subscribe(tx => {
+            tx.forEach(item => {
+                try {
+                    rpc.Query.sendRawTransaction(item.serialize(true)).execute(this.global.RPCDomain)
+                } catch (error) {
+                    this.loading = false;
                 }
-            }, err => {
-                this.loading = false;
-                if (this.intervalClaim === null) {
-                    this.initInterval();
-                }
-            });
+            })
+            if (this.intervalClaim === null) {
+                this.initInterval();
+            }
         });
     }
 

@@ -20,6 +20,8 @@ import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.componen
 import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '../_dialogs';
 import { Router } from '@angular/router';
+import { rpc } from '@cityofzion/neon-core';
+
 
 @Component({
     templateUrl: 'home.component.html',
@@ -225,24 +227,17 @@ export class PopupHomeComponent implements OnInit {
             this.syncNow();
             return;
         }
-        this.neon.claimGAS(this.claimsData, this.claimNumber).subscribe(tx => {
-            return this.http
-                .post(`${this.global.apiDomain}/v1/transactions/transfer`, {
-                    signature_transaction: tx.serialize(true)
-                })
-                .subscribe(
-                    res => {
-                        if (this.intervalClaim === null) {
-                            this.initInterval();
-                        }
-                    },
-                    err => {
-                        this.loading = false;
-                        if (this.intervalClaim === null) {
-                            this.initInterval();
-                        }
-                    }
-                );
+        this.neon.claimGAS(this.claimsData).subscribe(tx => {
+            tx.forEach(item => {
+                try {
+                    rpc.Query.sendRawTransaction(item.serialize(true)).execute(this.global.RPCDomain)
+                } catch (error) {
+                    this.loading = false;
+                }
+            })
+            if (this.intervalClaim === null) {
+                this.initInterval();
+            }
         });
     }
 
@@ -269,11 +264,11 @@ export class PopupHomeComponent implements OnInit {
                 res => {
                     res.sign(
                         this.neon.WIFArr[
-                            this.neon.walletArr.findIndex(
-                                item =>
-                                    item.accounts[0].address ===
-                                    this.neon.wallet.accounts[0].address
-                            )
+                        this.neon.walletArr.findIndex(
+                            item =>
+                                item.accounts[0].address ===
+                                this.neon.wallet.accounts[0].address
+                        )
                         ]
                     );
                     this.http
@@ -343,7 +338,7 @@ export class PopupHomeComponent implements OnInit {
         this.showMenu = false;
         window.open(
             `https://${
-                this.net === 'TestNet' ? 'testnet.' : ''
+            this.net === 'TestNet' ? 'testnet.' : ''
             }neotube.io/address/${this.neon.address}/page/1`
         );
     }
