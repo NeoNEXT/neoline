@@ -15,7 +15,7 @@ export class PopupInputDialogComponent implements OnInit {
         private chrome: ChromeService,
         private global: GlobalService,
         private neon: NeonService,
-        @Inject(MAT_DIALOG_DATA) private data: {
+        @Inject(MAT_DIALOG_DATA) public data: {
             type: string,
             title: string
         }
