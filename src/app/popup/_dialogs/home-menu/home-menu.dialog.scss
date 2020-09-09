@@ -52,12 +52,18 @@
                 position: fixed;
                 top: 230px;
                 right: 30px;
+                cursor: pointer;
             }
             .account-item {
                 height: 70px;
                 line-height: 70px;
                 padding-left: 20px;
                 padding-right: 20px;
+                cursor: pointer;
+                color: #434543;
+                &:hover {
+                    color: #07ccab;
+                }
             }
             .selected {
                 height: 18px;
@@ -72,24 +78,28 @@
                 vertical-align: middle;
             }
             .name {
-                color: #434543;
                 font-size: 18px;
                 vertical-align: middle;
                 margin-left: 16px;
             }
+
         }
         .menu-item {
             height: 60px;
             line-height: 60px;
             padding: 0px 20px;
+            cursor: pointer;
+            color: #434543;
             span {
                 margin-left: 15px;
                 font-size: 17px;
-                color: #434543;
                 vertical-align: middle;
             }
             img {
                 vertical-align: middle;
+            }
+            &:hover {
+                color: #07ccab;
             }
         }
         hr {

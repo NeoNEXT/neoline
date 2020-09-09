@@ -285,7 +285,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 if (item.type === 'Address') {
                     args[index] = {
                         type: 'Hash160',
-                        value: reverseHex(getScriptHashFromAddress(item.value))
+                        value: getScriptHashFromAddress(item.value)
                     }
                 } else if (item.type === 'Boolean') {
                     if (typeof item.value === 'string') {

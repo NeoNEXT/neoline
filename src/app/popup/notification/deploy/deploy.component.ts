@@ -20,7 +20,7 @@ import { PopupInputDialogComponent } from '../../_dialogs';
 })
 export class PopupNoticeDeployComponent implements OnInit {
     public net: string = '';
-    public dataJson = {};
+    public dataJson: any = {};
     public feeMoney = '0';
     public rateCurrency = '';
     public txSerialize = ''
@@ -53,6 +53,7 @@ export class PopupNoticeDeployComponent implements OnInit {
             this.pramsData = params;
             this.messageID = params.messageID;
             this.dataJson = this.pramsData;
+            this.dataJson.messageID = undefined;
             this.fee = this.pramsData.networkFee;
             if(Number( this.pramsData.fee) > 0) {
                 this.feeMoney = await this.assetState.getMoney('GAS', Number(this.fee))
@@ -114,7 +115,7 @@ export class PopupNoticeDeployComponent implements OnInit {
             this.global.snackBarTip('verifyFailed', error);
             this.chrome.windowCallback({
                 error: ERRORS.DEFAULT,
-                return: requestTarget.Invoke,
+                return: requestTarget.Deploy,
                 ID: this.messageID
             });
             window.close();

@@ -24,7 +24,7 @@ import { PopupInputDialogComponent } from '../../_dialogs';
 })
 export class PopupNoticeInvokeMultiComponent implements OnInit {
     public net: string = '';
-    public dataJson = {};
+    public dataJson: any = {};
     public feeMoney = '0';
     public rateCurrency = '';
     public txSerialize = ''
@@ -87,6 +87,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.feeMoney = await this.assetState.getMoney('GAS', Number(this.pramsData.fee))
             }
             this.dataJson = this.pramsData
+            this.dataJson.messageID = undefined;
             this.pramsData.invokeArgs.forEach((item, index) => {
                 item.args.forEach((arg, argIndex) => {
                     if (arg.type === 'Address') {
@@ -321,7 +322,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.invokeArgs.forEach(async item => {
                     const toScript = item.scriptHash.startsWith('0x') &&
                         item.scriptHash.length === 42 ? item.scriptHash.substring(2) : item.scriptHash;
-                    if (item.attachedAssets) {
+                    if (item.attachedAssets !== null && item.attachedAssets !== undefined) {
                         if (item.attachedAssets.NEO) {
                             try {
                                 newTx.addOutput({

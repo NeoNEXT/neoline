@@ -308,7 +308,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public exit() {
         this.chrome.windowCallback({
             error: ERRORS.CANCELLED,
-            return: requestTarget.Invoke,
+            return: requestTarget.Send,
             ID: this.messageID
         });
         window.close();

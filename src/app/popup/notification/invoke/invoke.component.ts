@@ -21,7 +21,7 @@ import { PopupInputDialogComponent } from '../../_dialogs';
 export class PopupNoticeInvokeComponent implements OnInit {
 
     public net: string = '';
-    public dataJson = {};
+    public dataJson: any = {};
     public feeMoney = '0';
     public rateCurrency = '';
     public txSerialize = ''
@@ -87,6 +87,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 this.feeMoney = await this.assetState.getMoney('GAS', Number(this.pramsData.fee))
             }
             this.dataJson = this.pramsData
+            this.dataJson.messageID = undefined;
             this.triggerContractVerification = params.triggerContractVerification !== undefined
                 ? params.triggerContractVerification.toString() === 'true' : false
             if (params.scriptHash !== undefined && params.operation !== undefined && params.args !== undefined) {
@@ -295,7 +296,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 reject(error);
             }
             if (this.assetIntentOverrides == null) {
-                if (this.attachedAssets !== null) {
+                if (this.attachedAssets !== null && this.attachedAssets !== undefined) {
                     if (this.attachedAssets.NEO) {
                         try {
                             newTx = await this.addAttachedAssets(NEO, this.attachedAssets.NEO, fromScript, toScript, newTx);
@@ -456,7 +457,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     reject('no enough GAS to fee');
                     this.chrome.windowCallback({
                         error: ERRORS.INSUFFICIENT_FUNDS,
-                        return: requestTarget.Deploy,
+                        return: requestTarget.Invoke,
                         ID: this.messageID
                     });
                     window.close();
