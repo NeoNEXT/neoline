@@ -8,6 +8,7 @@
     position: relative;
     padding-left: 23px;
     margin-top: 9px;
+
     .close {
         position: absolute;
         right: 15px;
@@ -22,9 +23,11 @@
     min-height: 55px;
     padding: 0 23px;
     position: relative;
+
     &:last-child {
         margin-bottom: 30px;
     }
+
     &::before {
         position: absolute;
         content: '';
@@ -34,27 +37,41 @@
         height: 1px;
         background: #efefef;
     }
+
     &.row {
         display: flex;
         justify-content: space-between;
         align-items: center;
     }
+
     &.column {
         padding-top: 17px;
         padding-bottom: 17px;
+
         .name {
             margin-bottom: 10px;
         }
+
         .value {
             font-size: 13px;
         }
     }
+
     .name {
         color: #202224;
     }
-    .value, .address-group {
+
+    .value,
+    .address-group {
         color: #707C82;
     }
+
+    .value.txid {
+        word-break: break-all;
+        text-align: left;
+        margin-left: 20px;
+    }
+
     .address-group {
         max-height: 80px;
         overflow: scroll;

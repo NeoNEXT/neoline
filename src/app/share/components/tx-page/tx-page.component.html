@@ -6,19 +6,20 @@
                 (click)="$event.stopPropagation();show = !show" [ngClass]="{'active': show}">
         </div>
         <div class="content">
-            <img class="tx-type-icon" [src]="item.value > 0 ? '/assets/images/home/receive.png': '/assets/images/home/send_black.png' "
+            <img class="tx-type-icon"
+                [src]="item.value > 0 ? '/assets/images/home/receive.png': '/assets/images/home/send_black.png' "
                 alt="">
             <div class="status-box">
                 <p class="tx-type">
                     {{ item.value < 0 ? 'Sent ' + symbol : 'Received ' + symbol }}
                 </p>
                 <p class="status" [ngClass]="{'wait': item.id === -1}">
-                    {{ item.id === -1 ? ('confirming' | translate | async): ('confirmed' | translate | async) }}·
+                    {{ item.id === -1 || item.id === undefined ? ('confirming' | translate | async): ('confirmed' | translate | async) }}·
                     <span>Txid: {{ item.txid }}</span>
                 </p>
             </div>
             <div class="amount-box">
-                <p class="asset-amount" [class] = "{receive: item.value > 0, send: item.value <= 0}">{{ item.value }}</p>
+                <p class="asset-amount" [class]="{receive: item.value > 0, send: item.value <= 0}">{{ item.value }}</p>
                 <p class="money-amount"></p>
             </div>
         </div>

@@ -39,7 +39,7 @@ import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
 })
 export class TransferCreateComponent implements OnInit {
     public amount: number;
-    public fee: number ;
+    public fee: number;
     public fromAddress: string;
     public toAddress: string;
     public creating: boolean = false;
@@ -68,7 +68,7 @@ export class TransferCreateComponent implements OnInit {
         this.net = this.global.net;
         this.fromAddress = this.neon.address;
         this.aRoute.params.subscribe((params) => {
-            if(params.id) {
+            if (params.id) {
                 this.asset.detail(this.neon.address, params.id).subscribe(async (res: Balance) => {
                     res.balance = Number(res.balance);
                     this.chooseAsset = res;
@@ -78,7 +78,7 @@ export class TransferCreateComponent implements OnInit {
             }
             this.asset.fetchBalance(this.neon.address).subscribe(async balanceArr => {
                 this.balances = balanceArr;
-                if(!params.id) {
+                if (!params.id) {
                     this.assetId = this.balances[0].asset_id;
                     this.chooseAsset = this.balances[0];
                     this.assetLogoUrl = await this.asset.getAssetImage(this.assetId);
@@ -148,7 +148,7 @@ export class TransferCreateComponent implements OnInit {
                 },
             }).afterClosed().subscribe((isConfirm: boolean) => {
                 this.creating = false;
-                if(isConfirm === true) {
+                if (isConfirm === true) {
                     this.resolveSend(tx);
                 }
             });
@@ -172,7 +172,7 @@ export class TransferCreateComponent implements OnInit {
                 const txTarget = {
                     txid: '0x' + tx.hash,
                     value: -this.amount,
-                    block_time: res.response_time
+                    block_time: new Date().getTime() / 1000
                 };
                 this.pushTransaction(txTarget);
             }
@@ -229,10 +229,10 @@ export class TransferCreateComponent implements OnInit {
     }
 
     public selectAsset() {
-        if(this.balances.length > 0) {
+        if (this.balances.length > 0) {
             this.dialog.open(PopupAssetDialogComponent, {
                 data: {
-                    balances:  this.balances,
+                    balances: this.balances,
                     selected: this.balances.findIndex(item => item.asset_id === this.assetId)
                 },
                 maxHeight: 500,

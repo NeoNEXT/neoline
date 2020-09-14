@@ -43,7 +43,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
         private txState: TransactionState,
         private http: HttpService,
         private dialog: MatDialog
-    ) {}
+    ) { }
     ngOnInit(): void {
         this.net = this.global.net;
         this.address = this.neon.address;
@@ -76,6 +76,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
         );
         if (page === 1) {
             this.chrome.getTransaction().subscribe(inTxData => {
+                console.log(inTxData);
                 if (
                     inTxData[this.net] === undefined ||
                     inTxData[this.net][this.address] === undefined ||

@@ -239,7 +239,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                 const txTarget = {
                     txid: '0x' + tx.hash,
                     value: -this.amount,
-                    block_time: res.response_time
+                    block_time: new Date().getTime() / 1000
                 };
                 this.pushTransaction(txTarget);
             }

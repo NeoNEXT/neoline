@@ -1,7 +1,7 @@
 <P class="title">{{ data.title | translate | async}}</P>
 
 <div class="input-container">
-    <input [(ngModel)]="inputText" [type]="data.type" (keyup.enter)="confirm()">
+    <input [(ngModel)]="inputText" [type]="data.type" min="0" (keyup.enter)="confirm()">
 </div>
 
 <div class="choose-group">

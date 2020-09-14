@@ -30,14 +30,14 @@
     <div class="amount-container container">
         <span class="label">数量</span>
         <div class="amount-box box">
-            <input type="number" placeholder="0" [(ngModel)]="amount" >
+            <input type="number" min="0" placeholder="0" [(ngModel)]="amount">
             <button mat-button color="primary" (click)="amount=chooseAsset?.balance || 0">全部转账</button>
         </div>
     </div>
     <div class="fee-container container">
         <span class="label">{{ 'priorityFee' | translate | async }}</span>
         <div class="fee-box box">
-            <input type="number" placeholder="选填" [(ngModel)]="fee" >
+            <input type="number" min="0" placeholder="选填" [(ngModel)]="fee">
         </div>
     </div>
     <hr>
