@@ -128,9 +128,15 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                     }
                     this.chrome.setTransaction(inTxData);
                     if (this.assetId !== '') {
+                        if (txPage.items.length === 0) {
+                            this.noMoreData = true
+                        }
                         txPage.items = this.inTransaction.concat(txPage.items);
                         this.txData = txPage.items;
                     } else {
+                        if (txPage.length === 0) {
+                            this.noMoreData = true
+                        }
                         txPage = this.inTransaction.concat(txPage);
                         this.txData = txPage;
                     }

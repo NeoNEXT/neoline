@@ -9,7 +9,8 @@
                 <span class="text">{{ 'lock' | translate | async }}</span></button>
         </mat-toolbar>
         <div class="wallet-container" #walletContainer>
-            <img (click)="scrollToBottom()" src="/assets/images/dialog/scroll_to_bottom.png" alt="">
+            <img *ngIf="walletArr.length > 2" (click)="scrollToBottom()"
+                src="/assets/images/dialog/scroll_to_bottom.png" alt="">
             <div class="account-item" (click)="selectAccount(item)" *ngFor="let item of walletArr; let i = index">
                 <div class="selected">
                     <img src="/assets/images/home-menu/wallet-selected.png" alt="" [hidden]="!isActivityWallet(item)">
@@ -19,11 +20,13 @@
             </div>
         </div>
         <hr class="wallet-line" />
-        <div class="create-wallet-container menu-item" [routerLink]="['/popup/wallet/create']" (click)="dismiss()" matRipple >
+        <div class="create-wallet-container menu-item" [routerLink]="['/popup/wallet/create']" (click)="dismiss()"
+            matRipple>
             <img src="/assets/images/home-menu/create.png" alt="">
             <span>{{ 'createWallet' | translate | async }}</span>
         </div>
-        <div class="import-wallet-container menu-item" [routerLink]="['/popup/wallet/import']" (click)="dismiss()" matRipple>
+        <div class="import-wallet-container menu-item" [routerLink]="['/popup/wallet/import']" (click)="dismiss()"
+            matRipple>
             <img src="/assets/images/home-menu/import.png" alt="">
             <span>{{ 'importWallet' | translate | async }}</span>
         </div>
