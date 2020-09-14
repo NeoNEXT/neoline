@@ -18,7 +18,7 @@ export class TxItemComponent implements OnInit {
     ngOnInit(): void { }
 
     public txDetail(txid: string) {
-        if (this.global.apiDomain.match('tmobi') === null) {
+        if (this.global.net === 'MainNet') {
             window.open(`https://neotube.io/transaction/${txid}`);
         } else {
             window.open(`https://testnet.neotube.io/transaction/${txid}`);

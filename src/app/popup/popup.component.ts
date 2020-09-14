@@ -71,7 +71,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
         this.neon.walletIsOpen().subscribe((res: any) => {
             this.global.$wallet.next(res ? 'open' : 'close');
         });
-        if (this.global.apiDomain.match('tmobi') !== null) {
+        if (this.global.net === 'TestNet') {
             this.net = 'TestNet';
         } else {
             this.net = 'MainNet';
@@ -79,7 +79,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
     }
     ngAfterViewInit(): void {
         setTimeout(() => {
-            if (this.global.apiDomain.match('tmobi') !== null) {
+            if (this.global.net === 'TestNet') {
                 this.net = 'TestNet';
             } else {
                 this.net = 'MainNet';

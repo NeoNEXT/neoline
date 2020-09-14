@@ -43,8 +43,9 @@ export function expand() {
     setInterval(() => {
         getStorage('net', async (res) => {
             const network = res || 'MainNet';
-            const apiUrl = network === 'MainNet' ? mainRPC : testRPC;
-            httpPost(apiUrl, {
+            const RPCUrl = network === 'MainNet' ? mainRPC : testRPC;
+            const apiUrl = network === 'MainNet' ? mainApi : testApi;
+            httpPost(RPCUrl, {
                 jsonrpc: '2.0',
                 method: 'getblockcount',
                 params: [],
@@ -55,7 +56,7 @@ export function expand() {
                     const setData = {};
                     setData[`${network}BlockHeight`] = blockHeightData.result;
                     setLocalStorage(setData);
-                    httpPost(apiUrl, {
+                    httpPost(RPCUrl, {
                         jsonrpc: '2.0',
                         method: 'getblock',
                         params: [blockHeightData.result - 1, 1],

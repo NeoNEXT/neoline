@@ -55,7 +55,7 @@ export class PopupNoticeDeployComponent implements OnInit {
             this.dataJson = this.pramsData;
             this.dataJson.messageID = undefined;
             this.fee = this.pramsData.networkFee;
-            if(Number( this.pramsData.fee) > 0) {
+            if (Number(this.pramsData.fee) > 0) {
                 this.feeMoney = await this.assetState.getMoney('GAS', Number(this.fee))
             }
             if (params.network !== undefined) {
@@ -146,15 +146,15 @@ export class PopupNoticeDeployComponent implements OnInit {
                 this.chrome.windowCallback({
                     data: {
                         txid: transaction.hash,
-                        nodeUrl: `${this.global.apiDomain}`
+                        nodeUrl: `${this.global.RPCDomain}`
                     },
                     return: requestTarget.Deploy,
                     ID: this.messageID
                 });
                 window.close();
                 const setData = {};
-                setData[`${this.pramsData.network}TxArr`] =  await this.chrome.getLocalStorage(`${this.pramsData.network}TxArr`) || [];
-                setData[`${this.pramsData.network}TxArr`].push('0x' + transaction.hash);
+                setData[`${this.net}TxArr`] = await this.chrome.getLocalStorage(`${this.net}TxArr`) || [];
+                setData[`${this.net}TxArr`].push('0x' + transaction.hash);
                 this.chrome.setLocalStorage(setData);
                 this.router.navigate([{
                     outlets: {
@@ -176,12 +176,12 @@ export class PopupNoticeDeployComponent implements OnInit {
 
     private createTxForNEP5(): Promise<Transaction> {
         return new Promise(async (resolve, reject) => {
-            const amount = (this.pramsData.dynamicInvoke === 'true'  ? 500 : 0) + (this.pramsData.needsStorage === 'true' ? 400 : 0) + 90;
+            const amount = (this.pramsData.dynamicInvoke === 'true' ? 500 : 0) + (this.pramsData.needsStorage === 'true' ? 400 : 0) + 90;
             const fromAddress = this.neon.wallet.accounts[0].address;
             let newTx = new tx.InvocationTransaction();
             // tslint:disable-next-line: no-bitwise
             const num = (this.pramsData.needsStorage === 'true' ? 1 : 0) | (this.pramsData.dynamicInvoke === 'true' ? 2 : 0) |
-                        (this.pramsData.isPayable === 'true' ? 4 : 0);
+                (this.pramsData.isPayable === 'true' ? 4 : 0);
             const sb = new ScriptBuilder();
             sb.emitPush(str2hexstring(this.pramsData.description))
                 .emitPush(str2hexstring(this.pramsData.email))
@@ -253,7 +253,7 @@ export class PopupNoticeDeployComponent implements OnInit {
             });
         });
     }
-     public exit() {
+    public exit() {
         this.chrome.windowCallback({
             error: ERRORS.CANCELLED,
             return: requestTarget.Deploy,
@@ -287,16 +287,16 @@ export class PopupNoticeDeployComponent implements OnInit {
                 title: 'editFee'
             }
         }).afterClosed().subscribe(async (inputStr: string) => {
-            if(inputStr !== '' && inputStr !== null ) {
+            if (inputStr !== '' && inputStr !== null) {
                 let text = inputStr;
                 const index = inputStr.indexOf('.')
-                if(index >= 0) {
-                    if(inputStr.length - index > 8) {
+                if (index >= 0) {
+                    if (inputStr.length - index > 8) {
                         text = text.substring(0, index + 9);
                     }
                 }
                 this.fee = text;
-                if(Number(this.fee) > 0) {
+                if (Number(this.fee) > 0) {
                     this.feeMoney = await this.assetState.getMoney('GAS', Number(this.fee))
                 }
             }

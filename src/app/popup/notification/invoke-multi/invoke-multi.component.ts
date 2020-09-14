@@ -60,7 +60,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             this.assetImageUrl = res;
         });
         this.aRoute.queryParams.subscribe(async (params: any) => {
-            this.pramsData = JSON.parse(JSON.stringify(params)) ;
+            this.pramsData = JSON.parse(JSON.stringify(params));
             this.messageID = params.messageID;
             if (params.network !== undefined) {
                 if (params.network === 'MainNet') {
@@ -83,7 +83,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     this.pramsData[key] = tempObject;
                 }
             }
-            if(Number( this.pramsData.fee) > 0) {
+            if (Number(this.pramsData.fee) > 0) {
                 this.feeMoney = await this.assetState.getMoney('GAS', Number(this.pramsData.fee))
             }
             this.dataJson = this.pramsData
@@ -250,14 +250,14 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     this.chrome.windowCallback({
                         data: {
                             txid: transaction.hash,
-                            nodeUrl: `${this.global.apiDomain}`
+                            nodeUrl: `${this.global.RPCDomain}`
                         },
                         return: requestTarget.InvokeMulti,
                         ID: this.messageID
                     });
                     const setData = {};
-                    setData[`${this.pramsData.network}TxArr`] = await this.chrome.getLocalStorage(`${this.pramsData.network}TxArr`) || [];
-                    setData[`${this.pramsData.network}TxArr`].push('0x' + transaction.hash);
+                    setData[`${this.net}TxArr`] = await this.chrome.getLocalStorage(`${this.net}TxArr`) || [];
+                    setData[`${this.net}TxArr`].push('0x' + transaction.hash);
                     this.chrome.setLocalStorage(setData);
                     this.router.navigate([{
                         outlets: {
@@ -548,16 +548,16 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 title: 'editFee'
             }
         }).afterClosed().subscribe(async (inputStr: string) => {
-            if(inputStr !== '' && inputStr !== null ) {
+            if (inputStr !== '' && inputStr !== null) {
                 let text = inputStr;
                 const index = inputStr.indexOf('.')
-                if(index >= 0) {
-                    if(inputStr.length - index > 8) {
+                if (index >= 0) {
+                    if (inputStr.length - index > 8) {
                         text = text.substring(0, index + 9);
                     }
                 }
                 this.fee = text;
-                if(Number(this.fee) > 0) {
+                if (Number(this.fee) > 0) {
                     this.feeMoney = await this.assetState.getMoney('GAS', Number(this.fee))
                 }
             }

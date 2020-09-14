@@ -160,7 +160,7 @@ export class AssetState {
                 rateRes[element] = tempAssetRate['rate'];
                 if (
                     new Date().getTime() / 1000 -
-                        tempAssetRate['last-modified'] >
+                    tempAssetRate['last-modified'] >
                     1200
                 ) {
                     targetCoins += element + ',';
@@ -185,7 +185,7 @@ export class AssetState {
                         if (coin in rateBalance.result) {
                             tempRate['rate'] = Number(
                                 rateBalance.result[coin][
-                                    this.rateCurrency.toString().toLowerCase()
+                                this.rateCurrency.toString().toLowerCase()
                                 ]
                             );
                             rateRes[coin] = tempRate['rate'];
@@ -221,19 +221,24 @@ export class AssetState {
     }
 
     public getAssetDetail(assetId: string): Observable<AssetDetail> {
-        return  this.http.get(
+        return this.http.get(
             `${this.global.apiDomain}/v1/asset/${assetId}`
         );
     }
 
     public getNep5Detail(assetId: string): Observable<Nep5Detail> {
-        return  this.http.get(
+        return this.http.get(
             `${this.global.apiDomain}/v1/nep5/${assetId}`
         );
     }
 
     public async getMoney(symbol: string, balance: number): Promise<string> {
-        const rate = await this.getAssetRate(symbol).toPromise();
+        let rate: any;
+        try {
+            rate = await this.getAssetRate(symbol).toPromise();
+        } catch (error) {
+            rate = {};
+        }
         if (symbol.toLowerCase() in rate) {
             return this.global.mathmul(Number(rate[symbol.toLowerCase()]), Number(balance)).toString();
         } else {

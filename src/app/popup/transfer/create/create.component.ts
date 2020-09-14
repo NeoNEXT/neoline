@@ -191,11 +191,11 @@ export class TransferCreateComponent implements OnInit {
         }
     }
 
-    public pushTransaction(transaction: object) {
+    public pushTransaction(transaction: any) {
         const net = this.net;
         const address = this.fromAddress;
         const assetId = this.assetId;
-        this.chrome.getTransaction().subscribe(res => {
+        this.chrome.getTransaction().subscribe(async res => {
             if (res === null || res === undefined) {
                 res = {};
             }
@@ -211,6 +211,10 @@ export class TransferCreateComponent implements OnInit {
             res[net][address][assetId].unshift(transaction);
             this.chrome.setTransaction(res);
             this.txState.pushTxSource();
+            const setData = {};
+            setData[`${this.net}TxArr`] = await this.chrome.getLocalStorage(`${this.net}TxArr`) || [];
+            setData[`${this.net}TxArr`].push(transaction.txid);
+            this.chrome.setLocalStorage(setData);
         });
     }
 
