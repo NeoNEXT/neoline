@@ -5,7 +5,7 @@ export { ChromeService } from './services/chrome.service';
 export { HttpService } from './services/http.service';
 export { WalletGuard, PopupWalletGuard, OpenedWalletGuard } from './guards/wallet.guard';
 export { AssetState } from './states/asset.state';
-export { TransactionState } from './states/transaction.service';
+export { TransactionState } from './states/transaction.state';
 export { BlockState } from './states/block.state';
 export { NotificationService } from './services/notification.service';
 export { SettingState } from './states/setting.state';

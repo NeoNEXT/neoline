@@ -165,7 +165,7 @@
         "message": "pages"
     },
     "transferId": {
-        "message": "TXID"
+        "message": "TxID"
     },
     "transferVolume": {
         "message": "Volume"

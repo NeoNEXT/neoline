@@ -11,15 +11,16 @@
                 alt="">
             <div class="status-box">
                 <p class="tx-type">
-                    {{ item.value < 0 ? 'Sent ' + symbol : 'Received ' + symbol }}
+                    {{ assetId === ''? item.type : (item.value < 0 ? 'Sent' : 'Received') }}
                 </p>
                 <p class="status" [ngClass]="{'wait': item.id === -1}">
                     {{ item.id === -1 || item.id === undefined ? ('confirming' | translate | async): ('confirmed' | translate | async) }}·
-                    <span>Txid: {{ item.txid }}</span>
+                    <span>TxID: {{ item.txid }}</span>
                 </p>
             </div>
             <div class="amount-box">
-                <p class="asset-amount" [class]="{receive: item.value > 0, send: item.value <= 0}">{{ item.value }}</p>
+                <p class="asset-amount" [class]="{receive: item.value > 0, send: item.value <= 0}">
+                    {{ item.value }} {{ assetId === '' ? item.symbol : symbol }}</p>
                 <p class="money-amount"></p>
             </div>
         </div>

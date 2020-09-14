@@ -32,7 +32,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
     public net: string;
     public address: string;
     public inTransaction: Array<Transaction>;
-    public txData: Array<Transaction> = [];
+    public txData: Array<any> = [];
     public currentPage = 0;
     public loading = false;
     constructor(
@@ -66,17 +66,16 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
         const sinceId = -1;
         const absPage = 1;
         maxId = page > 1 ? this.txData[this.txData.length - 1].id : -1;
-        const httpReq1 = this.txState.fetchTx(
+        const httpReq1 = this.assetId !== '' ? this.txState.fetchTx(
             this.neon.address,
             page,
             this.assetId,
             maxId,
             sinceId,
             absPage
-        );
+        ) : this.txState.getAllTx(this.neon.address, maxId);
         if (page === 1) {
             this.chrome.getTransaction().subscribe(inTxData => {
-                console.log(inTxData);
                 if (
                     inTxData[this.net] === undefined ||
                     inTxData[this.net][this.address] === undefined ||
@@ -101,7 +100,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                     }
                 );
                 forkJoin(httpReq1, httpReq2).subscribe(result => {
-                    const txPage = result[0];
+                    let txPage = result[0];
                     let txConfirm = result[1];
                     txConfirm = txConfirm.result;
                     txConfirm.forEach(item => {
@@ -127,8 +126,13 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                         ] = this.inTransaction;
                     }
                     this.chrome.setTransaction(inTxData);
-                    txPage.items = this.inTransaction.concat(txPage.items);
-                    this.txData = txPage.items;
+                    if (this.assetId !== '') {
+                        txPage.items = this.inTransaction.concat(txPage.items);
+                        this.txData = txPage.items;
+                    } else {
+                        txPage = this.inTransaction.concat(txPage);
+                        this.txData = txPage;
+                    }
                     // 重新获取地址余额，更新整个页面的余额
                     this.asset
                         .fetchBalance(this.neon.address)
@@ -140,7 +144,11 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
             });
         } else {
             httpReq1.subscribe(res => {
-                this.txData = this.txData.concat(res.items);
+                if (this.assetId === '') {
+                    this.txData = this.txData.concat(res);
+                } else {
+                    this.txData = this.txData.concat(res.items);
+                }
                 this.loading = false;
             });
         }

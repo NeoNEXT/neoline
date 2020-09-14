@@ -8,7 +8,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { HttpService } from './services/http.service';
 import { WalletGuard, PopupWalletGuard, OpenedWalletGuard, PopupLoginGuard, LoginGuard } from './guards/wallet.guard';
 import { AssetState } from './states/asset.state';
-import { TransactionState } from './states/transaction.service';
+import { TransactionState } from './states/transaction.state';
 import { BlockState } from './states/block.state';
 import { LoaderDialog } from './dialogs/loader/loader.dialog';
 import { MatDialogModule } from '@angular/material/dialog';

@@ -31,25 +31,35 @@ export class TransactionState {
     constructor(
         private http: HttpService,
         private global: GlobalService
-    ) {}
+    ) { }
 
     public pushTxSource() {
         this.txSource.next('new');
     }
 
     public fetchTx(address: string, page: number, asset: string,
-        max_id: number = -1, since_id: number = -1, abs_page: number = 1): Observable < any > {
+        maxId: number = -1, sinceId: number = -1, absPage: number = 1): Observable<any> {
         let url = `${this.global.apiDomain}/v1/transactions/gettransactions?` +
-            `address=${address}&asset_id=${asset}&page_size=10&abs_page=${abs_page}`;
-        if (max_id !== -1) {
-            url += `&max_id=${max_id}`;
+            `address=${address}&asset_id=${asset}&page_size=10&abs_page=${absPage}`;
+        if (maxId !== -1) {
+            url += `&max_id=${maxId}`;
         }
-        if (since_id !== -1) {
-            url += `&since_id=${since_id}`;
+        if (sinceId !== -1) {
+            url += `&since_id=${sinceId}`;
 
         }
         return this.http.get(url);
     }
+
+    public getAllTx(address: string, maxId: number = -1,): Observable<any> {
+        let url = `${this.global.apiDomain}/v1/transactions?` +
+            `address=${address}&page_size=10`;
+        if (maxId !== -1) {
+            url += `&max_id=${maxId}`;
+        }
+        return this.http.get(url);
+    }
+
 
     getTxDetail(txid: string): Observable<any> {
         return this.http.get(`${this.global.apiDomain}/v1/transactions/gettransaction/${txid}`)
