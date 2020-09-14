@@ -55,7 +55,7 @@ export class TransactionState {
         let url = `${this.global.apiDomain}/v1/transactions?` +
             `address=${address}&page_size=10`;
         if (maxId !== -1) {
-            url += `&max_id=${maxId}`;
+            url += `&max_id=${maxId - 1}`;
         }
         return this.http.get(url);
     }

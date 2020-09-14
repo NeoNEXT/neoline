@@ -170,7 +170,7 @@ export class PopupHomeComponent implements OnInit {
         const tabGroup = el.children[el.children.length - 1];
         if (
             tabGroup.clientHeight - el.scrollTop < 343 &&
-            !this.txPageComponent.loading
+            !this.txPageComponent.loading && !this.txPageComponent.noMoreData
         ) {
             this.txPageComponent.getInTransactions(this.currentTxPage);
             this.currentTxPage++;

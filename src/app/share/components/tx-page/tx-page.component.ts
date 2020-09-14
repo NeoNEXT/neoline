@@ -35,6 +35,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
     public txData: Array<any> = [];
     public currentPage = 0;
     public loading = false;
+    public noMoreData: boolean = false;
     constructor(
         private asset: AssetState,
         private global: GlobalService,
@@ -146,8 +147,14 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
             httpReq1.subscribe(res => {
                 if (this.assetId === '') {
                     this.txData = this.txData.concat(res);
+                    if (res.length === 0) {
+                        this.noMoreData = true
+                    }
                 } else {
                     this.txData = this.txData.concat(res.items);
+                    if (res.items.length === 0) {
+                        this.noMoreData = true
+                    }
                 }
                 this.loading = false;
             });

@@ -26,7 +26,8 @@
         </div>
         <hr>
     </div>
-    <p *ngIf="txData && txData?.length===0" class="no-data">
+    <div class="loading" *ngIf="loading">{{ 'loading' | translate | async}}</div>
+    <p *ngIf="txData && txData?.length===0 || noMoreData" class="no-data">
         {{ 'noMoreData' | translate | async }}
     </p>
 </div>

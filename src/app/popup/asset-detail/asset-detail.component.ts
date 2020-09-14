@@ -100,7 +100,7 @@ export class PopupAssetDetailComponent implements OnInit {
         const scrollTop = el.scrollTop;
         if (
             scrollHeight - clientHeight < scrollTop + 100 &&
-            this.sourceScrollHeight < scrollHeight
+            this.sourceScrollHeight < scrollHeight && !this.txPageComponent.noMoreData
         ) {
             this.txPageComponent.getInTransactions(++this.currentTxPage);
             this.sourceScrollHeight = scrollHeight;
@@ -132,7 +132,7 @@ export class PopupAssetDetailComponent implements OnInit {
         this.showMenu = false;
         window.open(
             `https://${
-                this.net === 'TestNet' ? 'testnet.' : ''
+            this.net === 'TestNet' ? 'testnet.' : ''
             }neotube.io/address/${this.neon.address}/page/1`
         );
     }

@@ -5,14 +5,17 @@
     .tx-item {
         position: relative;
         height: 100px;
+
         &:hover {
             cursor: pointer;
             background: lightgray;
         }
+
         .head {
             margin-left: 20px;
             margin-right: 20px;
             padding-top: 10px;
+
             .time {
                 font-size: 12px;
                 color: #B0B6BE;
@@ -42,6 +45,7 @@
                 margin-top: 10px;
                 width: 60%;
                 margin-left: 25px;
+
                 .tx-type {
                     font-size: 14px;
                     color: #333333;
@@ -54,6 +58,7 @@
                     white-space: nowrap;
                     overflow: hidden;
                     margin-top: 4px;
+
                     &.wait {
                         color: #F89266;
                     }
@@ -61,6 +66,7 @@
                     &.fail {
                         color: #07CCAB;
                     }
+
                     span {
                         vertical-align: middle;
                         text-overflow: ellipsis;
@@ -86,9 +92,11 @@
                     &.activity {
                         color: #71dbc4;
                     }
+
                     &.send {
                         color: #444644;
                     }
+
                     &.receive {
                         color: #07CCAB;
                     }
@@ -102,6 +110,7 @@
                 }
             }
         }
+
         hr {
             border: none;
             width: 100%;
@@ -110,10 +119,13 @@
             bottom: 0px;
         }
     }
-    .no-data {
+
+    .no-data,
+    .loading {
         margin-top: 40px;
         text-align: center;
         font-size: 15px;
         color: #b0b6be;
+        margin-bottom: 40px;
     }
 }
