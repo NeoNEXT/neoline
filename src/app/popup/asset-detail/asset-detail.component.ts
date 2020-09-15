@@ -86,7 +86,9 @@ export class PopupAssetDetailComponent implements OnInit {
                     if (this.balance.symbol.toLowerCase() in rateBalance) {
                         this.balance.rateBalance =
                             rateBalance[this.balance.symbol.toLowerCase()] *
-                            this.balance.balance;
+                            this.balance.balance || 0;
+                    } else {
+                        this.balance.rateBalance = 0;
                     }
                 });
         } else {

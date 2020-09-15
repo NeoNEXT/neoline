@@ -210,6 +210,8 @@ export class PopupHomeComponent implements OnInit {
                         this.balance.rateBalance =
                             rateBalance[this.balance.symbol.toLowerCase()] *
                             this.balance.balance;
+                    } else {
+                        this.balance.rateBalance = 0;
                     }
                 });
         } else {
