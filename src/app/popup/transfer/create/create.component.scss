@@ -101,11 +101,11 @@
             font-size: 18px;
             padding-left: 25px;
             background: transparent;
+            max-width: 200px;
         }
 
         button {
-            margin-left: 10px;
-            margin-right: 15px;
+            display: inline;
         }
     }
 

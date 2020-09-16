@@ -116,6 +116,9 @@
     "transgerTo": {
         "message": "Transfer to"
     },
+    "allTransfer": {
+        "message": "All"
+    },
     "currencies": {
         "message": "Currencies"
     },

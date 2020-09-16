@@ -54,6 +54,14 @@ export class PopupAccountComponent implements OnInit {
         });
     }
 
+    toWeb() {
+        window.open(
+            `https://${
+            this.global.net === 'TestNet' ? 'testnet.' : ''
+            }neotube.io/address/${this.neon.address}/page/1`
+        );
+    }
+
     copy() {
         const input = document.createElement('input');
         input.setAttribute('readonly', 'readonly');

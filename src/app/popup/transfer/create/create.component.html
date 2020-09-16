@@ -32,7 +32,7 @@
         <div class="amount-box box">
             <input type="number" min="0" placeholder="0" [(ngModel)]="amount">
             <button mat-button color="primary"
-                (click)="amount=chooseAsset?.balance || 0">{{ 'all' | translate | async }}</button>
+                (click)="amount=chooseAsset?.balance || 0">{{ 'allTransfer' | translate | async }}</button>
         </div>
     </div>
     <div class="fee-container container">

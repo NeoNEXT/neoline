@@ -107,6 +107,9 @@
     "received": {
         "message": "收款"
     },
+    "allTransfer": {
+        "message": "全部"
+    },
     "sent": {
         "message": "支出"
     },
