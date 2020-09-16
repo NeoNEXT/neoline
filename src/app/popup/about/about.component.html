@@ -1,4 +1,3 @@
-
 <div class="nav">
     <div class="content">
         <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="">
@@ -10,7 +9,7 @@
 <div class="popup-about-logo">
     <img src="/assets/images/logo_title.png" alt="">
 </div>
-<div class="popup-about-version"  *ngIf="version !== ''">{{ 'version' | translate | async}}: {{ version }}</div>
+<div class="popup-about-version" *ngIf="version !== ''">{{ 'version' | translate | async}}: {{ version }}</div>
 
 
 
@@ -27,8 +26,10 @@
         <span>{{ 'companyWebsite' | translate | async }}</span>
         <img src="/assets/images/arrow-right.png" alt="">
     </div>
-    <div matRipple class="about-item">
-        <span>{{ 'contactUs' | translate | async }}</span>
-        <img src="/assets/images/arrow-right.png" alt="">
-    </div>
+    <a href="mailto:support@neoline.io">
+        <div matRipple class="about-item">
+            <span>{{ 'contactUs' | translate | async }}</span>
+            <img src="/assets/images/arrow-right.png" alt="">
+        </div>
+    </a>
 </div>

@@ -4,6 +4,7 @@
     height: 65px;
     background-color: #06ccab;
     position: relative;
+
     .content {
         height: 30px;
         padding-top: 5px;
@@ -19,6 +20,7 @@
             cursor: pointer;
         }
     }
+
     .divide {
         position: absolute;
         bottom: 0;
@@ -32,6 +34,7 @@
 .popup-about-logo {
     text-align: center;
     margin-top: 25px;
+
     img {
         height: 30px;
     }
@@ -49,6 +52,7 @@
 .popup-about {
     margin-top: 50px;
     padding: 0 20px;
+
     .about-item {
         height: 65px;
         background: #f8f8f8;
@@ -60,11 +64,19 @@
         display: flex;
         justify-content: space-between;
         align-items: center;
+
         &:not(:last-of-type) {
             margin-bottom: 15px;
         }
+
         img {
             height: 11px;
         }
+    }
+
+    a {
+        display: block;
+        margin-top: 15px;
+        text-decoration: none;
     }
 }
