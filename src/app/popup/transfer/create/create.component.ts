@@ -137,8 +137,8 @@ export class TransferCreateComponent implements OnInit {
                 maxWidth: '400px',
                 autoFocus: false,
                 data: {
-                    fromAddress: 'account1',
-                    toAddress: 'AWSEU4BXpjGVdw9ajnFBXh8Rg8cgw9f3Zo',
+                    fromAddress: this.fromAddress,
+                    toAddress: this.toAddress,
                     asset: this.assetId,
                     symbol: this.chooseAsset.symbol,
                     amount: this.amount,
@@ -238,6 +238,9 @@ export class TransferCreateComponent implements OnInit {
                 maxHeight: 500,
                 panelClass: 'custom-dialog-panel'
             }).afterClosed().subscribe(async (index: number) => {
+                if (index === undefined) {
+                    return
+                }
                 this.chooseAsset = this.balances[index];
                 this.assetId = this.chooseAsset.asset_id;
                 this.assetLogoUrl = await this.asset.getAssetImage(this.assetId);
