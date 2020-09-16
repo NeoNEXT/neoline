@@ -104,11 +104,20 @@
     "receive": {
         "message": "收款"
     },
+    "received": {
+        "message": "收款"
+    },
+    "sent": {
+        "message": "支出"
+    },
     "balance": {
         "message": "余额"
     },
     "transgerTo": {
         "message": "转账给"
+    },
+    "currencies": {
+        "message": "币种"
     },
     "transferToTip": {
         "message": "收款地址"

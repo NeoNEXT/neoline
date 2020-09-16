@@ -15,7 +15,7 @@
         </div>
     </div>
     <div class="current-asset-container container">
-        <span class="label">币种</span>
+        <span class="label">{{ 'currencies' | translate | async }}</span>
         <div class="asset-box box" matRipple (click)="selectAsset()">
             <div class="asset-logo">
                 <img [src]="assetLogoUrl" alt="">
@@ -28,16 +28,17 @@
         </div>
     </div>
     <div class="amount-container container">
-        <span class="label">数量</span>
+        <span class="label">{{ 'amount' | translate | async }}</span>
         <div class="amount-box box">
             <input type="number" min="0" placeholder="0" [(ngModel)]="amount">
-            <button mat-button color="primary" (click)="amount=chooseAsset?.balance || 0">全部转账</button>
+            <button mat-button color="primary"
+                (click)="amount=chooseAsset?.balance || 0">{{ 'all' | translate | async }}</button>
         </div>
     </div>
     <div class="fee-container container">
         <span class="label">{{ 'priorityFee' | translate | async }}</span>
         <div class="fee-box box">
-            <input type="number" min="0" placeholder="选填" [(ngModel)]="fee">
+            <input type="number" min="0" placeholder="{{ 'priorityFeeTip' | translate | async }}" [(ngModel)]="fee">
         </div>
     </div>
     <hr>

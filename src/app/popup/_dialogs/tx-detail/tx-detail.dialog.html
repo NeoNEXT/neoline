@@ -1,5 +1,6 @@
 <div class="title">
-    <span>{{ data.tx.value < 0 ? 'Sent ' : 'Received '}} {{ data.symbol }}</span>
+    <span>{{ data.tx.value < 0 ? ('sent' | translate | async) : ('received' | translate | async) }}
+        {{ data.symbol }}</span>
     <mat-icon class="close" [mat-dialog-close]="false">close</mat-icon>
 </div>
 <div class="item row">

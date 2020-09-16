@@ -104,11 +104,20 @@
     "receive": {
         "message": "Receive"
     },
+    "received": {
+        "message": "Received"
+    },
+    "sent": {
+        "message": "Sent"
+    },
     "balance": {
         "message": "Balance"
     },
     "transgerTo": {
         "message": "Transfer to"
+    },
+    "currencies": {
+        "message": "Currencies"
     },
     "transferToTip": {
         "message": "Who will receive"
