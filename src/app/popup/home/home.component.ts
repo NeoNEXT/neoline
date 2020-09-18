@@ -260,62 +260,42 @@ export class PopupHomeComponent implements OnInit {
     }
 
     private syncNow() {
-        this.transfer
-            .create(this.neon.address, this.neon.address, NEO, 1)
-            .subscribe(
-                res => {
-                    res.sign(
-                        this.neon.WIFArr[
-                        this.neon.walletArr.findIndex(
-                            item =>
-                                item.accounts[0].address ===
-                                this.neon.wallet.accounts[0].address
-                        )
-                        ]
-                    );
-                    this.http
-                        .post(
-                            `${this.global.apiDomain}/v1/transactions/transfer`,
-                            {
-                                signature_transaction: res.serialize(true)
-                            }
-                        )
-                        .subscribe(
-                            txRes => {
-                                if (this.intervalClaim === null) {
-                                    this.intervalClaim = setInterval(() => {
-                                        this.assetState
-                                            .fetchClaim(this.neon.address)
-                                            .subscribe((claimRes: any) => {
-                                                if (
-                                                    Number(
-                                                        claimRes.unspent_claim
-                                                    ) !== 0
-                                                ) {
-                                                    this.loading = false;
-                                                    this.claimsData =
-                                                        claimRes.claims;
-                                                    this.claimNumber =
-                                                        claimRes.unspent_claim;
-                                                    clearInterval(
-                                                        this.intervalClaim
-                                                    );
-                                                    this.claimStatus = this.status.confirmed;
-                                                    this.intervalClaim = null;
-                                                }
-                                            });
-                                    }, 10000);
-                                }
-                            },
-                            txErr => {
-                                this.loading = false;
-                            }
-                        );
-                },
-                err => {
-                    this.global.snackBarTip('wentWrong', err);
+        this.transfer.create(this.neon.address, this.neon.address, NEO, 1).subscribe(
+            async res => {
+                const wif = this.neon.WIFArr[this.neon.walletArr.findIndex(item =>
+                    item.accounts[0].address === this.neon.wallet.accounts[0].address
+                )]
+                res.sign(wif);
+                try {
+                    const result = await rpc.Query.sendRawTransaction(res.serialize(true)).execute(this.global.RPCDomain)
+                    if (result.error === undefined || result.error === null) {
+                        if (this.intervalClaim === null) {
+                            this.intervalClaim = setInterval(() => {
+                                this.assetState.fetchClaim(this.neon.address)
+                                    .subscribe((claimRes: any) => {
+                                        if (Number(claimRes.unspent_claim) !== 0) {
+                                            this.loading = false;
+                                            this.claimsData = claimRes.claims;
+                                            this.claimNumber = claimRes.unspent_claim;
+                                            clearInterval(this.intervalClaim);
+                                            this.claimStatus = this.status.confirmed;
+                                            this.intervalClaim = null;
+                                        }
+                                    });
+                            }, 10000);
+                        } else {
+                            this.loading = false;
+
+                        }
+                    }
+                } catch (error) {
+                    this.loading = false;
                 }
-            );
+            },
+            err => {
+                this.global.snackBarTip('wentWrong', err);
+            }
+        );
     }
 
     private initClaim() {

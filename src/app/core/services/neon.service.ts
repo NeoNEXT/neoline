@@ -10,6 +10,8 @@ import { UTXO, ClaimItem, GAS } from '@/models/models';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { sc, u } from '@cityofzion/neon-core';
 import { EVENT, TxHashAttribute } from '@/models/dapi';
+import { bignumber } from 'mathjs';
+
 @Injectable()
 export class NeonService {
     private _wallet: Wallet;
@@ -309,13 +311,15 @@ export class NeonService {
             throw new Error('target address error');
         }
         const newTx = new tx.InvocationTransaction();
+        const amountBigNumber = bignumber(amount).mul(bignumber(10).pow(decimals))
         newTx.script = sc.createScript({
             scriptHash: scriptHash.startsWith('0x') && scriptHash.length === 42 ? scriptHash.substring(2) : scriptHash,
             operation: 'transfer',
             args: [
                 u.reverseHex(fromScript),
                 u.reverseHex(toScript),
-                amount * Math.pow(10, decimals)
+                amountBigNumber.toNumber() >= bignumber(10).pow(16).toNumber() ?
+                    this.num2hex(amountBigNumber.toString()) : amountBigNumber.toNumber()
             ]
         });
         newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
@@ -349,15 +353,15 @@ export class NeonService {
                     prevIndex: item.n,
                 });
                 itemValue = this.global.mathAdd(itemValue, Number(item.claim));
-                if(count >= 20) {
-                    txCount ++;
+                if (count >= 20) {
+                    txCount++;
                     count = 0
                     claimArr[txCount] = [];
                     valueArr.push(itemValue);
                     itemValue = 0
                 }
             });
-            if(itemValue !== 0) {
+            if (itemValue !== 0) {
                 valueArr.push(itemValue);
             }
             const wif = this.WIFArr[this._walletArr.findIndex(item => item.accounts[0].address === this._wallet.accounts[0].address)];
@@ -421,5 +425,16 @@ export class NeonService {
             value: parsedValue,
             txAttrUsage,
         };
+    }
+
+    private num2hex(num: string): string {
+        const size = 64;
+        let hexstring = (Number(num.toString())).toString(16);
+        hexstring =
+            hexstring.length % size === 0 ?
+                hexstring :
+                ('0'.repeat(size) + hexstring).substring(hexstring.length);
+        hexstring = u.reverseHex(hexstring);
+        return hexstring
     }
 }
