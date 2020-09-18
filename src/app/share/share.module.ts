@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
-import {MatCheckboxModule} from '@angular/material/checkbox';
-import {MatTabsModule} from '@angular/material/tabs';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { MatTabsModule } from '@angular/material/tabs';
 import {
     MatSnackBarModule
 } from '@angular/material/snack-bar';
@@ -29,6 +29,7 @@ import {
 import {
     MatTooltipModule
 } from '@angular/material/tooltip';
+import { MatSelectModule } from '@angular/material/select';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
 import { PagerComponent } from './components/pager/pager.component';
@@ -72,6 +73,7 @@ import { ScrollDirective } from './directives/scroll';
         AvatarDirective,
         MatButtonModule,
         MatCheckboxModule,
+        MatSelectModule,
         MatDialogModule,
         MatIconModule,
         MatInputModule,

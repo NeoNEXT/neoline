@@ -410,7 +410,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 export function windowCallback(data) {
     chrome.tabs.query({
     }, (tabs: any) => {
-        console.log(tabs);
+        // console.log(tabs);
         // tabCurr = tabs;
         if (tabs.length > 0) {
             tabs.forEach(item => {

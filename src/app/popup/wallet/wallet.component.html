@@ -1,7 +1,7 @@
 <div class="popup-wallet">
     <!-- <div class="back-btn" routerLink="/popup/setting" *ngIf="address != ''"></div> -->
     <mat-tab-group mat-align-tabs="center" animationDuration="0ms" [selectedIndex]="selected.value"
-    (selectedIndexChange)="selected.setValue($event)">
+        (selectedIndexChange)="selected.setValue($event)">
         <mat-tab label="{{ 'create' | translate | async}}">
             <div class="triangle wallet-create">
             </div>
@@ -19,8 +19,7 @@
                             {{ limit.nameLimitation[0] }}-{{ limit.nameLimitation[1] }} </mat-error>
                     </mat-form-field>
 
-                    <mat-form-field class="popup-wallet-input-body" appearance="fill"
-                        focused="true">
+                    <mat-form-field class="popup-wallet-input-body" appearance="fill" focused="true">
                         <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
                         <mat-label>{{ 'enterPassword' | translate | async }}</mat-label>
                         <input matInput [(ngModel)]="wallet.password" name="password" #password="ngModel" required
@@ -53,7 +52,17 @@
             </div>
             <div class="import-container tab-container">
                 <p class="title">{{ 'welcomeImport' | translate | async}}</p>
-                <form #walletImportForm="ngForm">
+                <div class="popup-wallet-import-type-box">
+                    <span>导入方式</span>
+                    <mat-form-field class="popup-wallet-import-type-select-box" appearance="fill">
+                        <mat-label>导入方式</mat-label>
+                        <mat-select [(value)]="importType" color="white">
+                            <mat-option value="0">私钥导入</mat-option>
+                            <mat-option value="1">文件导入</mat-option>
+                        </mat-select>
+                    </mat-form-field>
+                </div>
+                <form [hidden]="importType !== '0'" #walletImportForm="ngForm">
                     <mat-form-field class="popup-wallet-input-body" appearance="fill">
                         <img matPrefix src="/assets/images/wallet/wallet_icon.png" alt="" />
                         <mat-label>{{ 'enterWalletName' | translate | async }}</mat-label>
@@ -79,8 +88,7 @@
                     <mat-error class="error-wif" *ngIf="isWIF === false">{{ 'WIFPattern' | translate | async }}
                     </mat-error>
 
-                    <mat-form-field class="popup-wallet-input-body" appearance="fill"
-                        focused="true">
+                    <mat-form-field class="popup-wallet-input-body" appearance="fill" focused="true">
                         <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
                         <mat-label>{{ 'enterPassword' | translate | async }}</mat-label>
                         <input matInput [(ngModel)]="walletImport.password" name="password" #password="ngModel" required
@@ -98,8 +106,37 @@
                         </mat-error>
                     </mat-form-field>
                 </form>
-                <button class="popup-wallet-body-submit" mat-flat-button color="primary"
-                    [disabled]="isInit || walletImportForm.invalid || loading" (click)="submitImport()">
+                <div class="import-nep6-file" [hidden]="importType !== '1'">
+                    <button mat-stroked-button>
+                        {{ 'chooseNep6File' | translate | async }}
+                        <input class="choose-nep6-input" (change)="onFileSelected($event)" type="file">
+                    </button>
+                    <p class="name">{{ nep6Name }}</p>
+                    <form #nep6Form="ngForm">
+                        <mat-form-field class="popup-wallet-input-body" appearance="fill" focused="true">
+                            <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
+                            <mat-label>{{ 'enterPassword' | translate | async }}</mat-label>
+                            <input matInput [(ngModel)]="walletNep6Import.password" name="password" #password="ngModel"
+                                required [minlength]="limit.passwordLimitation[0]"
+                                [maxlength]="limit.passwordLimitation[1]" [pattern]="limit.pattern"
+                                [type]="hideNep6Pwd ? 'password' : 'text'" />
+                            <button tabindex="-1" mat-button matSuffix mat-icon-button type="button"
+                                (click)="hideNep6Pwd = !hideNep6Pwd">
+                                <span [class]="hideNep6Pwd ? 'hide-pwd' : ''"></span>
+                            </button>
+                            <mat-error *ngIf="password.errors?.required">{{ 'passwordRequired' | translate | async }}
+                            </mat-error>
+                            <mat-error *ngIf="password.errors?.minlength">{{ 'lengthLimit' | translate | async }}:
+                                {{ limit.passwordLimitation[0] }}-{{ limit.passwordLimitation[1] }} </mat-error>
+                            <mat-error *ngIf="password.errors?.pattern">
+                                {{ 'onlySupport' | translate | async}}: 0-9 A-Z a-z _-+=,.:!
+                            </mat-error>
+                        </mat-form-field>
+                    </form>
+                </div>
+
+                <button class="popup-wallet-body-submit" mat-flat-button color="primary" [disabled]="isInit || (walletImportForm.invalid && importType === '0') || loading
+                    || (nep6Json == null || nep6Form.invalid)" (click)="submitImport()">
                     <ng-container *ngIf="!loading">{{ 'import' | translate | async }}</ng-container>
                     <ng-container *ngIf="loading">{{ 'importing' | translate | async }}</ng-container>
                 </button>
