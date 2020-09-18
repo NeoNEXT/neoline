@@ -32,6 +32,7 @@ import {
 } from '@cityofzion/neon-core/lib/tx';
 import { wallet } from '@cityofzion/neon-core';
 import { rpc } from '@cityofzion/neon-js';
+import { bignumber } from 'mathjs';
 
 
 @Component({
@@ -40,7 +41,7 @@ import { rpc } from '@cityofzion/neon-js';
 })
 export class TransferCreateComponent implements OnInit {
     public balance: Balance;
-    public amount: number;
+    public amount: string;
     public fee: number = 0.0011;
     public fromAddress: string;
     public toAddress: string;
@@ -91,7 +92,7 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('balanceLack');
             return;
         }
-        if (parseFloat(this.balance.balance.toString()) < parseFloat(this.amount.toString())) {
+        if (bignumber(this.balance.balance.toString()) < bignumber(this.amount.toString())) {
             this.global.snackBarTip('balanceLack');
             return;
         }

@@ -28,6 +28,7 @@ import { ERRORS, requestTarget } from '@/models/dapi';
 import { rpc } from '@cityofzion/neon-js';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupInputDialogComponent } from '../../_dialogs';
+import { bignumber } from 'mathjs';
 
 @Component({
     templateUrl: 'transfer.component.html',
@@ -50,7 +51,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public toAddress: string = '';
     public assetId: string = '';
     public symbol: string = '';
-    public amount: number = 0;
+    public amount: string = '0';
     public remark: string = '';
     private network: string = '';
     public loading = false;
@@ -160,7 +161,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.global.snackBarTip('balanceLack');
             return;
         }
-        if (parseFloat(this.balance.balance.toString()) < parseFloat(this.amount.toString()) || this.amount === 0) {
+        if (bignumber(this.balance.balance.toString()) < bignumber(this.amount.toString()) || this.amount === '0') {
             this.global.snackBarTip('balanceLack');
             return;
         }

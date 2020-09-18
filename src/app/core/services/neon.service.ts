@@ -263,7 +263,7 @@ export class NeonService {
         return wallet.generatePrivateKey();
     }
 
-    public createTx(fromAddress: string, to: string, balances: UTXO[], amount: number, fee: number = 0): Transaction {
+    public createTx(fromAddress: string, to: string, balances: UTXO[], amount: string, fee: number = 0): Transaction {
 
         const fromScript = wallet.getScriptHashFromAddress(fromAddress);
         const toScript = wallet.getScriptHashFromAddress(to);
@@ -280,30 +280,30 @@ export class NeonService {
         const newTx = new tx.ContractTransaction();
 
         newTx.addOutput({ assetId, value: new Fixed8(amount), scriptHash: toScript });
-        let curr = 0.0;
+        let curr = bignumber('0');
         for (const item of balances) {
-            curr = this.global.mathAdd(curr, parseFloat(item.value) || 0);
+            curr = curr.add(bignumber(item.value) || 0);
             newTx.inputs.push(new TransactionInput({
                 prevIndex: item.n, prevHash: item.txid.startsWith('0x') &&
                     item.txid.length === 66 ? item.txid.substring(2) : item.txid
             }));
-            if (curr >= amount + fee) {
+            if (curr >= bignumber(amount).add(bignumber(fee))) {
                 break;
             }
         }
         const payback = (assetId === GAS || assetId === GAS.substring(2)) ?
-            this.global.mathSub(this.global.mathSub(curr, amount), fee) : this.global.mathSub(curr, amount);
-        if (payback < 0) {
+            curr.sub(amount).sub(fee) : curr.sub(amount);
+        if (payback < bignumber('0')) {
             throw new Error('no enough balance to pay');
         }
-        if (payback > 0) {
-            newTx.addOutput({ assetId, value: new Fixed8(payback), scriptHash: fromScript });
+        if (payback > bignumber('0')) {
+            newTx.addOutput({ assetId, value: payback.toNumber(), scriptHash: fromScript });
         }
         const remark = 'From NeoLine';
         newTx.addAttribute(tx.TxAttrUsage.Remark1, u.str2hexstring(remark));
         return newTx;
     }
-    public createTxForNEP5(fraomAddress: string, to: string, scriptHash: string, amount: number, decimals: number,
+    public createTxForNEP5(fraomAddress: string, to: string, scriptHash: string, amount: string, decimals: number,
         broadcastOverride: boolean = false): Transaction {
         const fromScript = wallet.getScriptHashFromAddress(fraomAddress);
         const toScript = wallet.getScriptHashFromAddress(to);
@@ -318,8 +318,7 @@ export class NeonService {
             args: [
                 u.reverseHex(fromScript),
                 u.reverseHex(toScript),
-                amountBigNumber.toNumber() >= bignumber(10).pow(16).toNumber() ?
-                    this.num2hex(amountBigNumber.toString()) : amountBigNumber.toNumber()
+                Neon.create.contractParam('Integer', amountBigNumber.toFixed())
             ]
         });
         newTx.addAttribute(tx.TxAttrUsage.Script, u.reverseHex(fromScript));
@@ -425,16 +424,5 @@ export class NeonService {
             value: parsedValue,
             txAttrUsage,
         };
-    }
-
-    private num2hex(num: string): string {
-        const size = 64;
-        let hexstring = (Number(num.toString())).toString(16);
-        hexstring =
-            hexstring.length % size === 0 ?
-                hexstring :
-                ('0'.repeat(size) + hexstring).substring(hexstring.length);
-        hexstring = u.reverseHex(hexstring);
-        return hexstring
     }
 }

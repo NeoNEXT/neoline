@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService, AssetState } from '@/app/core';
 import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzion/neon-core/lib/tx';
 import { wallet, tx, sc, u, rpc } from '@cityofzion/neon-core';
+import Neon from '@cityofzion/neon-js';
 import { MatDialog } from '@angular/material/dialog';
 import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
 import { HttpClient } from '@angular/common/http';
@@ -12,6 +13,7 @@ import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
 import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
 import { PopupInputDialogComponent } from '../../_dialogs';
+
 
 
 @Component({
@@ -113,6 +115,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
                                 window.close();
                             }
                         }
+                    } else if (item.type === 'Integer') {
+                        this.args[index] = Neon.create.contractParam('Integer', item.value.toString())
                     }
                 });
                 this.fee = parseFloat(params.fee) || 0;

@@ -49,11 +49,11 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
 
     private address: string = '';
     public balance: Balance;
-    public txPage: PageData < Transaction > ;
+    public txPage: PageData<Transaction>;
     public assetId: string = '';
     private requesting = false;
     public loading = true;
-    public inTransaction: Array < Transaction > ;
+    public inTransaction: Array<Transaction>;
     public rateCurrency: string;
     public net: string;
 
@@ -71,7 +71,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         private chrome: ChromeService,
         private http: HttpService,
         private transferSer: TransferService
-    ) {}
+    ) { }
 
     ngOnInit(): void {
         this.address = this.neon.address;
@@ -182,7 +182,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                     this.inTransaction = inTxData[this.net][this.address][this.assetId];
                 }
                 const txIdArray = [];
-                this.inTransaction = this.inTransaction.filter(item => (new Date().getTime()) / 1000 -  item.block_time <= 120);
+                this.inTransaction = this.inTransaction.filter(item => (new Date().getTime()) / 1000 - item.block_time <= 120);
                 this.inTransaction.forEach(item => {
                     txIdArray.push(item.txid);
                 });
@@ -298,7 +298,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     }
 
     private syncNow() {
-        this.transferSer.create(this.neon.address, this.neon.address, NEO, 1).subscribe((res) => {
+        this.transferSer.create(this.neon.address, this.neon.address, NEO, '1').subscribe((res) => {
             res.sign(this.neon.WIFArr[this.neon.walletArr.findIndex(item =>
                 item.accounts[0].address === this.neon.wallet.accounts[0].address)]);
             this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {

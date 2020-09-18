@@ -260,7 +260,7 @@ export class PopupHomeComponent implements OnInit {
     }
 
     private syncNow() {
-        this.transfer.create(this.neon.address, this.neon.address, NEO, 1).subscribe(
+        this.transfer.create(this.neon.address, this.neon.address, NEO, '1').subscribe(
             async res => {
                 const wif = this.neon.WIFArr[this.neon.walletArr.findIndex(item =>
                     item.accounts[0].address === this.neon.wallet.accounts[0].address

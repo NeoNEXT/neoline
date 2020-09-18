@@ -6,17 +6,14 @@ import { wallet, tx, sc, u, rpc } from '@cityofzion/neon-core';
 
 
 import { MatDialog } from '@angular/material/dialog';
-import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
 import { HttpClient } from '@angular/common/http';
 import { NEO, UTXO, GAS } from '@/models/models';
-import { Observable } from 'rxjs';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
 import { ERRORS, requestTarget, Invoke, TxHashAttribute } from '@/models/dapi';
-import { resolve } from 'path';
-import { type } from 'os';
-import { string } from 'mathjs';
 import { PopupInputDialogComponent } from '../../_dialogs';
+import Neon from '@cityofzion/neon-js';
+
 
 @Component({
     templateUrl: 'invoke-multi.component.html',
@@ -108,6 +105,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                                 window.close();
                             }
                         }
+                    } else if (item.type === 'Integer') {
+                        this.pramsData.invokeArgs[index].args[argIndex] = Neon.create.contractParam('Integer', item.value.toString())
                     }
                 });
                 this.invokeArgs.push({

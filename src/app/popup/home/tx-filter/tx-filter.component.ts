@@ -111,7 +111,7 @@ export class PopupHomeTxFilterComponent implements OnInit, OnChanges {
     }
 
     private syncNow() {
-        this.transfer.create(this.neon.address, this.neon.address, NEO, 1).subscribe((res) => {
+        this.transfer.create(this.neon.address, this.neon.address, NEO, '1').subscribe((res) => {
             res.sign(this.neon.WIFArr[this.neon.walletArr.findIndex(item =>
                 item.accounts[0].address === this.neon.wallet.accounts[0].address)]);
             this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {

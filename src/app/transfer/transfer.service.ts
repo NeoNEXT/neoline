@@ -13,7 +13,7 @@ export class TransferService {
         private http: HttpService,
         private global: GlobalService,
     ) { }
-    public create(from: string, to: string, asset: string, amount: number, fee: number = 0, decimals: number = 0,
+    public create(from: string, to: string, asset: string, amount: string, fee: number = 0, decimals: number = 0,
         broadcastOverride: boolean = false): Observable<Transaction> {
         if (this.neon.isAsset(asset)) {
             return new Observable(observer => {

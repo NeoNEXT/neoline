@@ -31,6 +31,7 @@ import { wallet } from '@cityofzion/neon-core';
 import { rpc } from '@cityofzion/neon-js';
 import { PopupAddressDialogComponent, PopupAssetDialogComponent, PopupTransferSuccessDialogComponent } from '../../_dialogs';
 import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
+import { bignumber } from 'mathjs';
 
 
 @Component({
@@ -38,7 +39,7 @@ import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
     styleUrls: ['create.component.scss']
 })
 export class TransferCreateComponent implements OnInit {
-    public amount: number;
+    public amount: string;
     public fee: number;
     public fromAddress: string;
     public toAddress: string;
@@ -103,8 +104,14 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('balanceLack');
             return;
         }
-        if (parseFloat(this.chooseAsset.balance.toString()) < parseFloat(this.amount.toString())) {
+        if (bignumber(this.chooseAsset.balance.toString()) < bignumber(this.amount.toString())) {
             this.global.snackBarTip('balanceLack');
+            return;
+        }
+        try {
+            bignumber(this.amount)
+        } catch (error) {
+            this.global.snackBarTip('checkInput');
             return;
         }
         this.creating = true;
@@ -253,6 +260,17 @@ export class TransferCreateComponent implements OnInit {
             return `${this.toAddress.substr(0, 6)}...${this.toAddress.substr(this.toAddress.length - 7, this.toAddress.length - 1)} `
         } else {
             return ''
+        }
+    }
+
+    public numberCheck(event) {
+        const inputStr = String.fromCharCode(event.keyCode);
+        let re = /^[0-9\.]+$/;
+        if (this.amount !== undefined && this.amount.indexOf('.') >= 0) {
+            re = /^[0-9]+$/;
+        }
+        if (!re.test(inputStr)) {
+            return false;
         }
     }
 }
