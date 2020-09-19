@@ -161,7 +161,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.global.snackBarTip('balanceLack');
             return;
         }
-        if (bignumber(this.balance.balance.toString()) < bignumber(this.amount.toString()) || this.amount === '0') {
+        if (bignumber(this.balance.balance.toString()).comparedTo(bignumber(this.amount.toString())) === -1  || this.amount === '0') {
             this.global.snackBarTip('balanceLack');
             return;
         }

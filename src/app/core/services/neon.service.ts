@@ -287,7 +287,7 @@ export class NeonService {
                 prevIndex: item.n, prevHash: item.txid.startsWith('0x') &&
                     item.txid.length === 66 ? item.txid.substring(2) : item.txid
             }));
-            if (curr >= bignumber(amount).add(bignumber(fee))) {
+            if (curr.comparedTo(bignumber(amount).add(bignumber(fee))) === 1 ) {
                 break;
             }
         }

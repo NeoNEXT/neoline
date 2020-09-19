@@ -56,7 +56,9 @@ export class PopupNoticeDeployComponent implements OnInit {
             this.dataJson.messageID = undefined;
             this.fee = this.pramsData.networkFee;
             if (Number(this.pramsData.fee) > 0) {
-                this.feeMoney = await this.assetState.getMoney('GAS', Number(this.fee))
+                this.assetState.getMoney('GAS', Number(this.fee)).then(res => {
+                    this.feeMoney = res;
+                })
             }
             if (params.network !== undefined) {
                 if (params.network === 'MainNet') {
@@ -297,7 +299,9 @@ export class PopupNoticeDeployComponent implements OnInit {
                 }
                 this.fee = text;
                 if (Number(this.fee) > 0) {
-                    this.feeMoney = await this.assetState.getMoney('GAS', Number(this.fee))
+                    this.assetState.getMoney('GAS', Number(this.fee)).then(res => {
+                        this.feeMoney = res;
+                    })
                 }
             }
         })

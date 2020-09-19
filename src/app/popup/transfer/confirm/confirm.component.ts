@@ -92,20 +92,26 @@ export class PopupTransferConfirmComponent implements OnInit {
 
     public async getAssetRate() {
         if(Number( this.data.fee) > 0) {
-            this.feeMoney = await this.getMoney('GAS', Number(this.data.fee))
+            this.getMoney('GAS', Number(this.data.fee)).then(res => {
+                this.feeMoney = res;
+            })
         }
-        const assetRate = await this.assetState.getAssetRate(this.symbol).toPromise();
-        this.money = await this.getMoney(this.symbol, Number(this.data.amount));
+        this.getMoney(this.symbol, Number(this.data.amount)).then(res => {
+            this.money = res;
+        })
         this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
     }
 
     public async getMoney(symbol: string, balance: number): Promise<string> {
-        const rate = await this.assetState.getAssetRate(symbol).toPromise();
-        if (symbol.toLowerCase() in rate) {
-            return this.global.mathmul(Number(rate[symbol.toLowerCase()]), Number(balance)).toString();
-        } else {
-            return '';
-        }
+        return new Promise((mResolve) => {
+            this.assetState.getAssetRate(symbol).subscribe(rate => {
+                if (symbol.toLowerCase() in rate) {
+                    mResolve(this.global.mathmul(Number(rate[symbol.toLowerCase()]), Number(balance)).toString());
+                } else {
+                    mResolve('');
+                }
+            });
+        })
     }
 
     public editFee() {
@@ -126,7 +132,9 @@ export class PopupTransferConfirmComponent implements OnInit {
                 }
                 this.data.fee = text;
                 if(Number( this.data.fee) > 0) {
-                    this.feeMoney = await this.getMoney('GAS', Number(this.data.fee))
+                    this.getMoney('GAS', Number(this.data.fee)).then(res => {
+                        this.feeMoney = res;
+                    })
                 }
                 this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
 

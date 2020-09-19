@@ -104,7 +104,7 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('balanceLack');
             return;
         }
-        if (bignumber(this.chooseAsset.balance.toString()) < bignumber(this.amount.toString())) {
+        if (bignumber(this.chooseAsset.balance.toString()).comparedTo( bignumber(this.amount.toString())) === -1) {
             this.global.snackBarTip('balanceLack');
             return;
         }

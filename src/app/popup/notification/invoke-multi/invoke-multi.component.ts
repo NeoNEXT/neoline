@@ -81,7 +81,9 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 }
             }
             if (Number(this.pramsData.fee) > 0) {
-                this.feeMoney = await this.assetState.getMoney('GAS', Number(this.pramsData.fee))
+                this.assetState.getMoney('GAS', Number(this.pramsData.fee)).then(res => {
+                    this.feeMoney = res;
+                })
             }
             this.dataJson = this.pramsData
             this.dataJson.messageID = undefined;
@@ -557,7 +559,9 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 }
                 this.fee = text;
                 if (Number(this.fee) > 0) {
-                    this.feeMoney = await this.assetState.getMoney('GAS', Number(this.fee))
+                    this.assetState.getMoney('GAS', Number(this.fee)).then(res => {
+                        this.feeMoney = res;
+                    })
                 }
             }
         })
