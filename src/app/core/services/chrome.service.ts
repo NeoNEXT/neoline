@@ -342,37 +342,6 @@ export class ChromeService {
             console.log('set watch failed', e);
         }
     }
-    public setHistory(history: string) {
-        if (!this.check) {
-            localStorage.setItem('history', JSON.stringify(history));
-            return;
-        }
-        try {
-            this.crx.setStorage({
-                history
-            });
-        } catch (e) {
-            console.log('set history failed', e);
-        }
-    }
-    public getHistory(): Observable<string> {
-        if (!this.check) {
-            try {
-                return of(JSON.parse(localStorage.getItem('history')));
-            } catch (e) {
-                return throwError('please get history json to local storage when debug mode on');
-            }
-        }
-        return from(new Promise<string>((resolve, reject) => {
-            try {
-                this.crx.getStorage('history', (res) => {
-                    resolve(res || '');
-                });
-            } catch (e) {
-                reject('failed');
-            }
-        }));
-    }
     public setTransaction(transaction: object) {
         if (!this.check) {
             localStorage.setItem('transaction', JSON.stringify(transaction));

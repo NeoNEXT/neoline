@@ -60,7 +60,6 @@
                 width: 36px;
                 height: 36px;
                 margin: 0 55px;
-                @include bg($img-tp-auth-select);
             }
         }
 
@@ -159,7 +158,6 @@
             display: inline-block;
             width: 71px;
             height: 23px;
-            @include bg($img-tp-auth-secure);
         }
     }
 }

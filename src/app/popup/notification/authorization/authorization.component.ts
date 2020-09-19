@@ -49,7 +49,11 @@ export class PopupNoticeAuthComponent implements OnInit {
         this.accountName = this.wallet.name;
         this.aRouter.queryParams.subscribe((params: any) => {
             this.paramsData = params;
-            this.iconSrc = params.icon;
+            if(params === undefined || params.icon === undefined) {
+                this.iconSrc = '/assets/images/default_asset_logo.jpg'
+            } else {
+                this.iconSrc = params.icon;
+            }
             this.hostname = params.hostname;
             this.title = params.title;
             if (params.network) {

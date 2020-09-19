@@ -13,7 +13,7 @@ import {
     Wallet
 } from '@cityofzion/neon-core/lib/wallet';
 import {
-    Router
+    Router, ActivatedRoute
 } from '@angular/router';
 import {
     NeonService
@@ -39,6 +39,7 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
     public accountWallet: Wallet;
 
     constructor(
+        private route: ActivatedRoute,
         private router: Router,
         private neon: NeonService,
         private chrome: ChromeService,
@@ -66,7 +67,8 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
         this.accountWallet.accounts[0].decrypt(this.wallet.password).then((res) => {
             this.loading = false;
             this.chrome.verifyLogin();
-            this.router.navigateByUrl('/popup/home');
+            const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
+            this.router.navigateByUrl(returnUrl);
         }).catch((err) => {
             this.loading = false;
             this.global.snackBarTip('loginFailed');

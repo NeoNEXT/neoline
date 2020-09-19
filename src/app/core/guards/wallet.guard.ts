@@ -46,6 +46,8 @@ export class PopupLoginGuard implements CanActivate {
         private chrome: ChromeService
     ) { }
     canActivate(
+        route: ActivatedRouteSnapshot,
+        state: RouterStateSnapshot,
     ): Observable<boolean> | Promise<boolean> | boolean {
         return new Promise(resolve => {
             this.neon.walletIsOpen().subscribe((res: any) => {
@@ -113,7 +115,7 @@ export class OpenedWalletGuard implements CanActivate {
                 } else {
                     this.chrome.getLogin().subscribe((shoudLogin) => {
                         if (shoudLogin) {
-                            this.router.navigateByUrl('/popup/login');
+                            this.router.navigate(['/popup/login'], { queryParams: { returnUrl: state.url }});
                         } else {
                             resolve(true);
                         }
@@ -141,16 +143,14 @@ export class PopupWalletGuard implements CanActivate {
         return new Promise(resolve => {
             this.neon.walletIsOpen().subscribe((res: any) => {
                 if (!res) {
-                    if (route.url[0].path === 'notification') {
-                        this.chrome.setHistory(state.url);
-                    }
                     this.chrome.setLogin('false');
-                    this.router.navigateByUrl('/popup/wallet/new-guide');
                     this.global.log('Wallet has not opened yet.');
+                    this.router.navigate(['/popup/wallet/new-guide'], { queryParams: { returnUrl: state.url }});
+
                 } else {
                     this.chrome.getLogin().subscribe((shoudLogin) => {
                         if (shoudLogin) {
-                            this.router.navigateByUrl('/popup/login');
+                            this.router.navigate(['/popup/login'], { queryParams: { returnUrl: state.url }});
                             this.global.log('Wallet should login.');
                         } else {
                             resolve(res);

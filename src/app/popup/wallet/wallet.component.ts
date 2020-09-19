@@ -1,5 +1,5 @@
 import { Component, OnInit, AfterContentInit } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { NeonService, ChromeService, GlobalService } from '@/app/core';
 import { WalletCreation, WalletImport } from '../_lib/models';
 import { WalletInitConstant } from '../_lib/constant';
@@ -35,7 +35,10 @@ export class PopupWalletComponent implements OnInit, AfterContentInit {
     public nep6Name = '';
     public hideNep6Pwd: boolean;
 
-    constructor(private router: Router, private neon: NeonService,
+    constructor(
+        private route: ActivatedRoute,
+        private router: Router,
+        private neon: NeonService,
         private chrome: ChromeService,
         private global: GlobalService,
     ) {
@@ -166,7 +169,8 @@ export class PopupWalletComponent implements OnInit, AfterContentInit {
         this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
         this.chrome.setWallet(data.export());
         this.global.$wallet.next('open');
-        this.jumpRouter();
+        const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
+        this.router.navigateByUrl(returnUrl);
     }
 
     public onFileSelected(event: any) {
@@ -194,27 +198,6 @@ export class PopupWalletComponent implements OnInit, AfterContentInit {
                 console.log('error reading file');
             };
         }
-    }
-
-
-    private jumpRouter() {
-        this.chrome.getHistory().subscribe((history) => {
-            if (history != null) {
-                if (history.indexOf('notification') > -1) {
-                    this.chrome.setHistory('');
-                    this.router.navigateByUrl(history);
-                } else {
-                    this.chrome.setHistory('');
-                    location.href = `index.html#popup`;
-                }
-            } else {
-                this.chrome.setHistory('');
-                location.href = `index.html#popup`;
-            }
-        }, (err) => {
-            this.chrome.setHistory('');
-            location.href = `index.html#popup`;
-        });
     }
 
     public cancel() {
