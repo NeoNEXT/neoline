@@ -23,7 +23,7 @@ export class PopupWalletComponent implements OnInit, AfterContentInit {
     public loading = false;
     public isInit: boolean;
 
-    public importType = '1';
+    public importType = '0';
     public walletImport: WalletImport;
     public hideImportPwd: boolean;
     public hideWIF: boolean;

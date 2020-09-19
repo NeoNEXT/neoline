@@ -136,7 +136,7 @@
                 </div>
 
                 <button class="popup-wallet-body-submit" mat-flat-button color="primary" [disabled]="isInit || (walletImportForm.invalid && importType === '0') || loading
-                    || (nep6Json == null || nep6Form.invalid)" (click)="submitImport()">
+                    || ((nep6Json == null || nep6Form.invalid) && importType === '1')" (click)="submitImport()">
                     <ng-container *ngIf="!loading">{{ 'import' | translate | async }}</ng-container>
                     <ng-container *ngIf="loading">{{ 'importing' | translate | async }}</ng-container>
                 </button>
