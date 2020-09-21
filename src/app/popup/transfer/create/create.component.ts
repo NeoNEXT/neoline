@@ -29,10 +29,10 @@ import {
 } from '@cityofzion/neon-core/lib/tx';
 import { wallet } from '@cityofzion/neon-core';
 import { rpc } from '@cityofzion/neon-js';
-import { PopupAddressDialogComponent, PopupAssetDialogComponent, PopupTransferSuccessDialogComponent } from '../../_dialogs';
+import { PopupAddressDialogComponent, PopupAssetDialogComponent, PopupTransferSuccessDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
 import { bignumber } from 'mathjs';
-
+import { GasFeeSpeed } from '@popup/_lib/type';
 
 @Component({
     templateUrl: 'create.component.html',
@@ -40,7 +40,9 @@ import { bignumber } from 'mathjs';
 })
 export class TransferCreateComponent implements OnInit {
     public amount: string;
-    public fee: number;
+    public fee = 0;
+    gasFeeObj: any = {};
+    matSliderParam: GasFeeSpeed;
     public fromAddress: string;
     public toAddress: string;
     public creating: boolean = false;
@@ -86,6 +88,17 @@ export class TransferCreateComponent implements OnInit {
                 }
             });
         });
+        this.getGasFee();
+    }
+
+    getGasFee() {
+        this.asset.getGasFee().subscribe(res => {
+            if (res.status === 'success') {
+                this.matSliderParam = res.data;
+                this.gasFeeObj.left = (Number(this.matSliderParam.propose_price) - Number(this.matSliderParam.slow_price)) / 2;
+                this.gasFeeObj.right = Number(this.matSliderParam.propose_price) + this.gasFeeObj.left;
+            }
+        })
     }
 
     public submit() {
@@ -272,5 +285,19 @@ export class TransferCreateComponent implements OnInit {
         if (!re.test(inputStr)) {
             return false;
         }
+    }
+
+    public editFee() {
+        this.dialog.open(PopupEditFeeDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+            data: {
+                fee: this.fee,
+                speedFee: this.matSliderParam
+            }
+        }).afterClosed().subscribe(res => {
+            if (res !== false) {
+                this.fee = res;
+            }
+        })
     }
 }

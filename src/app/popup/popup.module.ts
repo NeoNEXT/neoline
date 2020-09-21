@@ -7,6 +7,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
+import { MatSliderModule } from '@angular/material/slider';
 
 import { PopupRoutingModule } from '@popup/popup.route';
 import { PopupComponent } from '@popup/popup.component';
@@ -22,7 +23,8 @@ import {
     PopupAssetDialogComponent,
     PopupTxDetailDialogComponent,
     PopupTransferSuccessDialogComponent,
-    PopupInputDialogComponent
+    PopupInputDialogComponent,
+    PopupEditFeeDialogComponent
 } from '@popup/_dialogs';
 import { PopupAuthorizationListDialogComponent } from '@popup/_dialogs/authorization-list/authorization-list.dialog';
 import { PopupQRCodeDialogComponent } from '@popup/_dialogs';
@@ -65,7 +67,8 @@ import { TransferModule } from './transfer';
         PopupAssetDetailComponent,
         PopupTxDetailDialogComponent,
         PopupTransferSuccessDialogComponent,
-        PopupInputDialogComponent
+        PopupInputDialogComponent,
+        PopupEditFeeDialogComponent
     ],
     imports: [
         FormsModule,
@@ -75,6 +78,7 @@ import { TransferModule } from './transfer';
         MatMenuModule,
         MatSnackBarModule,
         MatDialogModule,
+        MatSliderModule,
         PopupWalletModule,
         PopupNotificationModule,
         MatSidenavModule,
@@ -105,7 +109,8 @@ import { TransferModule } from './transfer';
         PopupAuthorizationListDialogComponent,
         PopupTxDetailDialogComponent,
         PopupTransferSuccessDialogComponent,
-        PopupInputDialogComponent
+        PopupInputDialogComponent,
+        PopupEditFeeDialogComponent
     ]
 })
 export class PopupModule {}

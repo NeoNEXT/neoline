@@ -5,6 +5,7 @@ import { ChromeService } from '../services/chrome.service';
 import { Observable, Subject, from, of } from 'rxjs';
 import { Balance, AssetDetail, Nep5Detail } from 'src/models/models';
 import { map, switchMap, refCount, publish } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable()
 export class AssetState {
@@ -17,11 +18,13 @@ export class AssetState {
 
     public balanceSource = new Subject<Balance[]>();
     public balanceSub$ = this.balanceSource.asObservable();
+    gasFeeApi = 'http://47.110.14.167:8080';
 
     constructor(
         private http: HttpService,
         private global: GlobalService,
-        private chrome: ChromeService
+        private chrome: ChromeService,
+        private httpClient: HttpClient
     ) {
         this.chrome.getAssetFile().subscribe(res => {
             this.assetFile = res;
@@ -244,5 +247,9 @@ export class AssetState {
         } else {
             return '0';
         }
+    }
+
+    public getGasFee(): Observable<any> {
+        return this.httpClient.get(`${this.gasFeeApi}/v1/neo2/fees`);
     }
 }

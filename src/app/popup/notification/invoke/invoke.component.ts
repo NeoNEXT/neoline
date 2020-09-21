@@ -12,7 +12,7 @@ import { Observable } from 'rxjs';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
 import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
-import { PopupInputDialogComponent } from '../../_dialogs';
+import { PopupInputDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 
 
 
@@ -508,26 +508,21 @@ export class PopupNoticeInvokeComponent implements OnInit {
         }
     }
     public editFee() {
-        this.dialog.open(PopupInputDialogComponent, {
+        this.dialog.open(PopupEditFeeDialogComponent, {
             panelClass: 'custom-dialog-panel',
             data: {
-                type: 'number',
-                title: 'editFee'
+                fee: this.fee
             }
-        }).afterClosed().subscribe(async (inputStr: string) => {
-            if (inputStr !== '' && inputStr !== null) {
-                let text = inputStr;
-                const index = inputStr.indexOf('.')
-                if (index >= 0) {
-                    if (inputStr.length - index > 8) {
-                        text = text.substring(0, index + 9);
-                    }
-                }
-                this.fee = text;
-                if (Number(this.fee) > 0) {
-                    this.assetState.getMoney('GAS', Number(this.fee)).then(res => {
-                        this.feeMoney = res;
-                    })
+        }).afterClosed().subscribe(res => {
+            if (res !== false) {
+                this.fee = res;
+                if (res === 0) {
+                    this.feeMoney = '0';
+                } else {
+
+                    this.assetState.getMoney('GAS', Number(this.fee)).then(feeMoney => {
+                        this.feeMoney = feeMoney;
+                    });
                 }
             }
         })

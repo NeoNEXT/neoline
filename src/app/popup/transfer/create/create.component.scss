@@ -110,15 +110,21 @@
     }
 
     .fee-box {
-        input {
-            border: none;
-            flex: 1 1 auto;
-            height: 60px;
-            display: inline-block;
-            color: #303433;
-            font-size: 18px;
-            padding: 0 25px;
-            background: transparent;
+        display: flex;
+        justify-content: space-between;
+        padding: 0 15px 0 25px;
+        .fee-left {
+            .desc {
+                font-size: 17px;
+                color: #202224;
+            }
+            .value {
+                font-size: 15px;
+                color: #707c82;
+            }
+        }
+        img.arrow {
+            height: 11px;
         }
     }
 

@@ -529,5 +529,17 @@
     },
     "resetWalletConfirm": {
         "message": "重置钱包后，原钱包数据将全部被清除，无法找回，请问是否确认重置钱包"
+    },
+    "slow": {
+        "message": "慢"
+    },
+    "medium": {
+        "message": "中"
+    },
+    "fast": {
+        "message": "快"
+    },
+    "customize": {
+        "message": "自定义"
     }
 }
