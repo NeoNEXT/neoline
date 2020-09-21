@@ -6,7 +6,9 @@
     padding: 20px 15px 0 15px;
     text-align: center;
     width: 100%;
+    height: calc(100% - 100px);
     position: relative;
+    overflow: scroll;
     .title {
         line-height: 80px;
     }
@@ -167,8 +169,13 @@
     width: 100%;
     padding: 0 27px;
     margin: 30px 0;
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
 
     .button-group {
+        display: flex;
         width: 100%;
         position: relative;
     }

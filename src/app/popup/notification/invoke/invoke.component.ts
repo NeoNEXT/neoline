@@ -471,7 +471,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         return: requestTarget.Invoke,
                         ID: this.messageID
                     });
-                    window.close();
+                    this.global.snackBarTip('no enough GAS to fee');
                 }
                 if (payback > 0) {
                     const fromScript = wallet.getScriptHashFromAddress(from);

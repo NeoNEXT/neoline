@@ -17,7 +17,7 @@
     </div>
     <p class="detail-en">{{ title }} {{ 'thAuthTip' | translate | async}}</p>
     <p class="detail-cn">{{ 'thAuthDetail' | translate | async}}</p>
-    <a class="more" href="">{{ 'thAuthMore' | translate | async}}></a>
+    <!-- <a class="more" href="">{{ 'thAuthMore' | translate | async}}></a> -->
     <div class="choose-auth-rule">
         <span class="select-radio" [ngClass]="{'selected': ruleCheck }" (click)="ruleCheck = !ruleCheck"></span>
         <select class="auth-rule-select" [(ngModel)]="ruleSelected">
