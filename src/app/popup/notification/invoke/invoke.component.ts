@@ -162,9 +162,24 @@ export class PopupNoticeInvokeComponent implements OnInit {
         };
     }
 
-    private resolveSign(transaction: Transaction) {
+    private async resolveSign(transaction: Transaction) {
         this.loading = true;
         this.loadingMsg = 'Wait';
+        if (this.triggerContractVerification) {
+            transaction.scripts = [await this.neon.getVerificationSignatureForSmartContract(this.scriptHash), ...transaction.scripts];
+        }
+        if (this.extraWitness.length > 0) {
+            this.extraWitness.forEach((item: any) => {
+                if (item.invocationScript !== undefined || item.verificationScript !== undefined) {
+                    const tempWitness = new tx.Witness({
+                        invocationScript: item.invocationScript || '',
+                        verificationScript: item.verificationScript || ''
+                    })
+                    tempWitness.scriptHash = item.scriptHash
+                    transaction.scripts.push(tempWitness)
+                }
+            });
+        }
         if (transaction === null) {
             return;
         }
@@ -194,25 +209,11 @@ export class PopupNoticeInvokeComponent implements OnInit {
     }
 
     private async resolveSend(transaction: Transaction) {
-        if (this.triggerContractVerification) {
-            transaction.scripts = [await this.neon.getVerificationSignatureForSmartContract(this.scriptHash), ...transaction.scripts];
-        }
-        if (this.extraWitness.length > 0) {
-            this.extraWitness.forEach((item: any) => {
-                if (item.invocationScript !== undefined || item.verificationScript !== undefined) {
-                    const tempWitness = new tx.Witness({
-                        invocationScript: item.invocationScript || '',
-                        verificationScript: item.verificationScript || ''
-                    })
-                    tempWitness.scriptHash = item.scriptHash
-                    transaction.scripts.push(tempWitness)
-                }
-            });
-        }
         let serialize = ''
         try {
             serialize = transaction.serialize(true)
         } catch (error) {
+            console.log(serialize);
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
@@ -223,6 +224,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.global.snackBarTip('transferFailed', error.msg || error);
             return
         }
+        console.log(serialize);
+        console.log(this.global.RPCDomain);
         return rpc.Query.sendRawTransaction(serialize).execute(this.global.RPCDomain).then(async res => {
             if (
                 !res.result ||
@@ -263,6 +266,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 window.close();
             }
         }).catch(err => {
+            console.log(err);
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
@@ -374,6 +378,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.txHashAttributes.forEach((item, index) => {
                 this.txHashAttributes[index] = this.neon.parseTxHashAttr(this.txHashAttributes[index]);
                 const info = this.txHashAttributes[index];
+                console.log(info)
                 if (tx.TxAttrUsage[info.txAttrUsage]) {
                     transaction.addAttribute(tx.TxAttrUsage[info.txAttrUsage], info.value);
                 }

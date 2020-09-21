@@ -161,6 +161,18 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     private resolveSign(transaction: Transaction) {
         this.loading = true;
         this.loadingMsg = 'Wait';
+        if (this.extraWitness.length > 0) {
+            this.extraWitness.forEach((item: any) => {
+                if (item.invocationScript !== undefined || item.verificationScript !== undefined) {
+                    const tempWitness = new tx.Witness({
+                        invocationScript: item.invocationScript || '',
+                        verificationScript: item.verificationScript || ''
+                    })
+                    tempWitness.scriptHash = item.scriptHash
+                    transaction.scripts.push(tempWitness)
+                }
+            });
+        }
         if (transaction === null) {
             return;
         }
@@ -202,18 +214,6 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             return Promise.all(triggerContracts.map(scriptHash => this.neon.getVerificationSignatureForSmartContract(scriptHash)))
         }).then(scripts => {
             transaction.scripts = [...scripts, ...transaction.scripts];
-            if (this.extraWitness.length > 0) {
-                this.extraWitness.forEach((item: any) => {
-                    if (item.invocationScript !== undefined || item.verificationScript !== undefined) {
-                        const tempWitness = new tx.Witness({
-                            invocationScript: item.invocationScript || '',
-                            verificationScript: item.verificationScript || ''
-                        })
-                        tempWitness.scriptHash = item.scriptHash
-                        transaction.scripts.push(tempWitness)
-                    }
-                });
-            }
             let serialize = ''
             try {
                 serialize = transaction.serialize(true)
