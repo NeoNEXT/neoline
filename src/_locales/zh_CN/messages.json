@@ -541,5 +541,32 @@
     },
     "customize": {
         "message": "自定义"
+    },
+    "resetWallet": {
+        "message": "重置钱包"
+    },
+    "transferAddress": {
+        "message": "转账地址"
+    },
+    "selectAsset": {
+        "message": "选择币种"
+    },
+    "importMethod": {
+        "message": "导入方式"
+    },
+    "importKey": {
+        "message": "私钥导入"
+    },
+    "importFile": {
+        "message": "文件导入"
+    },
+    "personalAccount": {
+        "message": "个人账户"
+    },
+    "details": {
+        "message": "详情"
+    },
+    "data": {
+        "message": "数据"
     }
 }

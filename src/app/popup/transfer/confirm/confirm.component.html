@@ -44,13 +44,13 @@
                 </div>
                 <div class="detail-tab-content">
                     <mat-tab-group mat-align-tabs="center" >
-                        <mat-tab label="详情">
+                        <mat-tab [label]="'details' | translate | async">
                             <div class="fee-box detail-item">
                                 <p class="label">GAS FEE</p>
                                 <div class="fee-info">
                                     <p (click)="editFee()">{{ 'edit' | translate | async }}</p>
                                     <p>{{ data.fee }} GAS</p>
-                                    <p>{{ feeMoney }}{{ rateCurrency }}</p>
+                                    <p>{{ feeMoney }} {{ rateCurrency }}</p>
                                 </div>
                             </div>
                             <hr>
@@ -59,11 +59,11 @@
                                 <div class="total-info">
                                     <p>Amount+GAS FEE</p>
                                     <p>{{ data.amount }} {{ symbol }} + {{ data.fee }}GAS</p>
-                                    <p>{{ totalMoney }}{{ rateCurrency }}</p>
+                                    <p>{{ totalMoney }} {{ rateCurrency }}</p>
                                 </div>
                             </div>
                         </mat-tab>
-                        <mat-tab label="数据">
+                        <mat-tab [label]="'data' | translate | async">
                             <div class="data-detail-box">
                                 <div class="json-box">
                                     <pre>{{ datajson | json }}</pre>

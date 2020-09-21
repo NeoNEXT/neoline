@@ -166,10 +166,21 @@ export class TransferCreateComponent implements OnInit {
                     network: this.net,
                     txSerialize: tx.serialize(true)
                 },
-            }).afterClosed().subscribe((isConfirm: boolean) => {
+            }).afterClosed().subscribe((isConfirm) => {
                 this.creating = false;
-                if (isConfirm === true) {
-                    this.resolveSend(tx);
+                if (isConfirm !== false) {
+                    if (this.fee !== isConfirm) {
+                        this.fee = isConfirm;
+                        this.transfer.create(this.fromAddress, this.toAddress, this.chooseAsset.asset_id, this.amount,
+                            this.fee || 0, this.chooseAsset.decimals).subscribe((res) => {
+                                this.global.log('start transfer');
+                                this.resolveSend(tx);
+                            }, (err) => {
+                                this.global.snackBarTip('wentWrong', err);
+                            });
+                    } else {
+                        this.resolveSend(tx);
+                    }
                 }
             });
         } catch (error) {

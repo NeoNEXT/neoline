@@ -27,7 +27,7 @@ import {
 import { ERRORS, requestTarget } from '@/models/dapi';
 import { rpc } from '@cityofzion/neon-js';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupInputDialogComponent } from '../../_dialogs';
+import { PopupInputDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { bignumber } from 'mathjs';
 
 @Component({
@@ -336,26 +336,22 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         }
     }
     public editFee() {
-        this.dialog.open(PopupInputDialogComponent, {
+        this.dialog.open(PopupEditFeeDialogComponent, {
             panelClass: 'custom-dialog-panel',
             data: {
-                type: 'number',
-                title: 'editFee'
+                fee: this.fee
             }
-        }).afterClosed().subscribe(async (inputStr: string) => {
-            if (inputStr !== '' && inputStr !== null) {
-                let text = inputStr;
-                const index = inputStr.indexOf('.')
-                if (index >= 0) {
-                    if (inputStr.length - index > 8) {
-                        text = text.substring(0, index + 9);
-                    }
+        }).afterClosed().subscribe(res => {
+            if (res !== false) {
+                this.fee = res;
+                if (res === 0) {
+                    this.feeMoney = '0';
+                } else {
+                    this.asset.getMoney('GAS', Number(this.fee)).then(feeMoney => {
+                        this.feeMoney = feeMoney;
+                        this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
+                    });
                 }
-                this.fee = Number(text);
-                if (Number(this.fee) > 0) {
-                    this.feeMoney = await this.asset.getMoney('GAS', Number(this.fee))
-                }
-                this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
             }
         })
     }

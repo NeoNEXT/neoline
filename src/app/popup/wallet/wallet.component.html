@@ -53,12 +53,12 @@
             <div class="import-container tab-container">
                 <p class="title">{{ 'welcomeImport' | translate | async}}</p>
                 <div class="popup-wallet-import-type-box">
-                    <span>导入方式</span>
+                    <span>{{ 'importMethod' | translate | async }}</span>
                     <mat-form-field class="popup-wallet-import-type-select-box" appearance="fill">
-                        <mat-label>导入方式</mat-label>
+                        <mat-label>{{ 'importMethod' | translate | async }}</mat-label>
                         <mat-select [(value)]="importType" color="white">
-                            <mat-option value="0">私钥导入</mat-option>
-                            <mat-option value="1">文件导入</mat-option>
+                            <mat-option value="0">{{ 'importKey' | translate | async }}</mat-option>
+                            <mat-option value="1">{{ 'importFile' | translate | async }}</mat-option>
                         </mat-select>
                     </mat-form-field>
                 </div>

@@ -541,5 +541,32 @@
     },
     "customize": {
         "message": "Customize"
+    },
+    "resetWallet": {
+        "message": "Reset Wallet"
+    },
+    "transferAddress": {
+        "message": "Transfer Address"
+    },
+    "selectAsset": {
+        "message": "Choose Asset"
+    },
+    "importMethod": {
+        "message": "Import Method"
+    },
+    "importKey": {
+        "message": "Private Key Import"
+    },
+    "importFile": {
+        "message": "File Import"
+    },
+    "personalAccount": {
+        "message": "Personal Account"
+    },
+    "details": {
+        "message": "Details"
+    },
+    "data": {
+        "message": "Data"
     }
 }

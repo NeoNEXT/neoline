@@ -37,7 +37,7 @@
                 </div>
                 <div class="detail-tab-content">
                     <mat-tab-group mat-align-tabs="center" >
-                        <mat-tab label="详情">
+                        <mat-tab [label]="'details' | translate | async">
                             <div class="fee-box detail-item">
                                 <p class="label">GAS FEE</p>
                                 <div class="fee-info">
@@ -48,7 +48,7 @@
                             </div>
                             <hr>
                         </mat-tab>
-                        <mat-tab label="数据">
+                        <mat-tab [label]="'data' | translate | async">
                             <div class="data-detail-box">
                                 <div class="json-box">
                                     <pre>{{ dataJson | json }}</pre>
