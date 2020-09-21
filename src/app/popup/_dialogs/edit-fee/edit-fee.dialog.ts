@@ -3,6 +3,12 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { GasFeeSpeed } from '@popup/_lib/type';
 import { AssetState } from '@app/core';
 
+const defaultGasFeeSpeed = {
+    slow_price: '0',
+    propose_price: '0.01',
+    fast_price: '0.02'
+}
+
 @Component({
     templateUrl: 'edit-fee.dialog.html',
     styleUrls: ['edit-fee.dialog.scss']
@@ -10,8 +16,8 @@ import { AssetState } from '@app/core';
 export class PopupEditFeeDialogComponent {
     showCustom = false;
     fee = 0;
-    step: number;
-    speedFee: GasFeeSpeed;
+    step = 0.01;
+    speedFee: GasFeeSpeed = defaultGasFeeSpeed;
     constructor(
         private dialogRef: MatDialogRef<PopupEditFeeDialogComponent>,
         private assetState: AssetState,
