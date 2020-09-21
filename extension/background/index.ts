@@ -248,6 +248,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 sendResponse('');
                 return true;
             }
+        case requestTarget.Login: {
+            getLocalStorage('shouldLogin', res => {
+                if(res === 'true') {
+                    windowCallback({
+                        return: requestTarget.Login,
+                        data: true
+                    });
+                } else {
+                    window.open('/index.html#popup/login?notification=true', '_blank',
+                    'height=620, width=386, resizable=no, top=0, left=0');
+                }
+            })
+            return true
+        }
         case requestTarget.Balance: {
             const parameter = request.parameter as GetBalanceArgs;
             const postData = [];

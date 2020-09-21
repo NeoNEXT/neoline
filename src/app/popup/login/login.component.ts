@@ -24,6 +24,7 @@ import {
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '../_dialogs';
+import { requestTarget } from '@/models/dapi';
 
 
 @Component({
@@ -65,6 +66,13 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
     public login() {
         this.loading = true;
         this.accountWallet.accounts[0].decrypt(this.wallet.password).then((res) => {
+            if(this.route.snapshot.queryParams.notification !== undefined) {
+                this.chrome.windowCallback({
+                    data: true,
+                    return: requestTarget.Login
+                });
+                window.close()
+            }
             this.loading = false;
             this.chrome.verifyLogin();
             const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';

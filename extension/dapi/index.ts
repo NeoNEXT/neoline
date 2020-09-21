@@ -94,6 +94,7 @@ export class Init {
                 connectResult = true;
             }
             if (connectResult === true) {
+                await login();
                 return sendMessage(requestTarget.Account);
             } else {
                 return new Promise((_, reject) => {
@@ -125,6 +126,7 @@ export class Init {
                 connectResult = true;
             }
             if (connectResult === true) {
+                await login();
                 return sendMessage(requestTarget.AccountPublicKey);
             } else {
                 return new Promise((_, reject) => {
@@ -636,6 +638,28 @@ function connect(open = true): Promise<any> {
                     console.log(error);
                 }
             }
+            resolveMain(res);
+        });
+    });
+}
+
+function login(open = true): Promise<any> {
+    return new Promise((resolveMain) => {
+        if (open) {
+            window.postMessage({
+                target: requestTarget.Login
+            }, '*');
+        }
+        const promise = new Promise((resolve) => {
+            const callbackFn = (event) => {
+                if (event.data.return !== undefined && (event.data.return === requestTarget.Login)) {
+                    resolve(event.data.data);
+                    window.removeEventListener('message', callbackFn);
+                }
+            };
+            window.addEventListener('message', callbackFn);
+        });
+        promise.then(async res => {
             resolveMain(res);
         });
     });

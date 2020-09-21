@@ -64,7 +64,8 @@ export enum requestTarget {
     Deploy = 'neoline.target_deploy',
     Send = 'neoline.target_send',
     Connect = 'neoline.target_connect',
-    AuthState = 'neoline.target_auth_state'
+    AuthState = 'neoline.target_auth_state',
+    Login = 'neoline.target_login'
 
 }
 
