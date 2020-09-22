@@ -21,7 +21,7 @@ import {
     setLocalStorage,
     getLocalStorage
 } from '../common';
-import { requestTarget, GetBalanceArgs, BalanceRequest, ERRORS, mainApi, testApi, EVENT, mainRPC, testRPC } from '../common/data_module';
+import { requestTarget, GetBalanceArgs, BalanceRequest, ERRORS, mainApi, testApi, EVENT, mainRPC, testRPC, InvokeReadMultiArgs } from '../common/data_module';
 import { reverseHex, getScriptHashFromAddress } from '../common/utils';
 /**
  * Background methods support.
@@ -305,12 +305,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 } else if (item.type === 'Boolean') {
                     if (typeof item.value === 'string') {
                         if ((item.value && item.value.toLowerCase()) === 'true') {
-                            this.args[index] = {
+                            args[index] = {
                                 type: 'Boolean',
                                 value: true
                             }
                         } else if (item.value && item.value.toLowerCase() === 'false') {
-                            this.args[index] = {
+                            args[index] = {
                                 type: 'Boolean',
                                 value: false
                             }
@@ -341,6 +341,56 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
                 windowCallback(returnRes);
             }, null);
+            sendResponse('');
+            return;
+        }
+        case requestTarget.InvokeReadMulti: {
+            try {
+                const requestData = (request.parameter as InvokeReadMultiArgs);
+                requestData.invokeReadArgs.forEach(invokeReadItem => {
+                    invokeReadItem.args.forEach((item, index) => {
+                        if (item.type === 'Address') {
+                            invokeReadItem.args[index] = {
+                                type: 'Hash160',
+                                value: getScriptHashFromAddress(item.value)
+                            }
+                        } else if (item.type === 'Boolean') {
+                            if (typeof item.value === 'string') {
+                                if ((item.value && item.value.toLowerCase()) === 'true') {
+                                    invokeReadItem.args[index] = {
+                                        type: 'Boolean',
+                                        value: true
+                                    }
+                                } else if (item.value && item.value.toLowerCase() === 'false') {
+                                    invokeReadItem.args[index] = {
+                                        type: 'Boolean',
+                                        value: false
+                                    }
+                                } else {
+                                    this.chrome.windowCallback({
+                                        error: ERRORS.MALFORMED_INPUT,
+                                        return: requestTarget.Invoke,
+                                        ID: this.messageID
+                                    });
+                                    window.close();
+                                }
+                            }
+                        }
+                    });
+                })
+                const returnRes = { data: [], ID: request.ID, return: requestTarget.InvokeReadMulti, error: null };
+                httpPost(`${request.network}/v1/transactions/invokemulti`, { invokeArgs: request.parameter.invokeReadArgs }, (res) => {
+                    res.return = requestTarget.InvokeMulti;
+                    if (res.bool_status) {
+                        returnRes.data = res.result;
+                    } else {
+                        returnRes.error = ERRORS.RPC_ERROR;
+                    }
+                    windowCallback(returnRes);
+                }, null);
+            } catch (error) {
+                windowCallback({ data: [], ID: request.ID, return: requestTarget.InvokeReadMulti, error: ERRORS.RPC_ERROR });
+            }
             sendResponse('');
             return;
         }

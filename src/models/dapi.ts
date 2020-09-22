@@ -19,7 +19,7 @@ export const ERRORS = {
     },
     MALFORMED_INPUT: {
         type: 'MALFORMED_INPUT',
-        description: 'An input such as the address is not a valid NEO address',
+        description: 'Please check your input',
         data: null
     },
     CANCELLED: {

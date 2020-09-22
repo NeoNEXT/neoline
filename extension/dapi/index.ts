@@ -1,6 +1,6 @@
 import {
     Provider, EVENT, requestTarget, Networks, Account,
-    AccountPublicKey, BalanceResults, GetBalanceArgs, InvokeReadArgs,
+    AccountPublicKey, BalanceResults, GetBalanceArgs, InvokeReadArgs, InvokeReadMultiArgs,
     TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput,
     ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response, DeployArgs, DeployOutput, InvokeMultiArgs
 } from '../common/data_module';
@@ -168,10 +168,22 @@ export class Init {
                 reject(ERRORS.MALFORMED_INPUT);
             });
         } else {
-            if(parameter.args === undefined) {
+            if (parameter.args === undefined) {
                 parameter.args = [];
             }
             return sendMessage(requestTarget.InvokeRead, parameter);
+        }
+    }
+
+    public invokeReadMulti(parameter: InvokeReadMultiArgs): Promise<object> {
+        if (!(parameter.invokeReadArgs instanceof Array) ||
+            parameter.invokeReadArgs.length !== undefined &&
+            parameter.invokeReadArgs.length === 0) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
+            });
+        } else {
+            return sendMessage(requestTarget.InvokeReadMulti, parameter);
         }
     }
 
@@ -203,7 +215,7 @@ export class Init {
             });
         } else {
             let authState: any;
-            if(parameter.args === undefined) {
+            if (parameter.args === undefined) {
                 parameter.args = [];
             }
             try {

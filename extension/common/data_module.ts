@@ -23,7 +23,7 @@ export const ERRORS = {
     },
     MALFORMED_INPUT: {
         type: 'MALFORMED_INPUT',
-        description: 'An input such as the address is not a valid NEO address',
+        description: 'Please check your input',
         data: null
     },
     CANCELLED: {
@@ -60,6 +60,7 @@ export enum requestTarget {
     Balance = 'neoline.target_balance',
     Storage = 'neoline.target_storage',
     InvokeRead = 'neoline.target_invoke_read',
+    InvokeReadMulti = 'neoline.target_invoke_read_multi',
     VerifyMessage = 'neoline.target_verify_message',
     Transaction = 'neoline.target_transaction',
     Block = 'neoline.target_block',
@@ -137,6 +138,18 @@ export interface InvokeReadArgs {
     args: Argument[]; // any input arguments for the operation
     network?: string;  // Network to submit this request to.If omitted, will default to network the wallet is currently set to.
 }
+
+export interface InvokeReadMultiArgs {
+    invokeReadArgs: Array<InvokeReadMultiArg>;
+    network?: string;  // Network to submit this request to.If omitted, will default to network the wallet is currently set to.
+}
+
+export interface InvokeReadMultiArg {
+    scriptHash: string; // script hash of the smart contract to invoke a read on
+    operation: string; // operation on the smart contract to call
+    args: Argument[]; // any input arguments for the operation
+}
+
 
 export interface Argument {
     type: ArgumentDataType;

@@ -213,7 +213,6 @@ export class PopupNoticeInvokeComponent implements OnInit {
         try {
             serialize = transaction.serialize(true)
         } catch (error) {
-            console.log(serialize);
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
@@ -224,8 +223,6 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.global.snackBarTip('transferFailed', error.msg || error);
             return
         }
-        console.log(serialize);
-        console.log(this.global.RPCDomain);
         return rpc.Query.sendRawTransaction(serialize).execute(this.global.RPCDomain).then(async res => {
             if (
                 !res.result ||
@@ -378,7 +375,6 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.txHashAttributes.forEach((item, index) => {
                 this.txHashAttributes[index] = this.neon.parseTxHashAttr(this.txHashAttributes[index]);
                 const info = this.txHashAttributes[index];
-                console.log(info)
                 if (tx.TxAttrUsage[info.txAttrUsage]) {
                     transaction.addAttribute(tx.TxAttrUsage[info.txAttrUsage], info.value);
                 }
