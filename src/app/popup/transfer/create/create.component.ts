@@ -41,8 +41,7 @@ import { GasFeeSpeed } from '@popup/_lib/type';
 export class TransferCreateComponent implements OnInit {
     public amount: string;
     public fee = 0;
-    gasFeeObj: any = {};
-    matSliderParam: GasFeeSpeed;
+    matSliderParam;
     public fromAddress: string;
     public toAddress: string;
     public creating: boolean = false;
@@ -95,8 +94,6 @@ export class TransferCreateComponent implements OnInit {
         this.asset.getGasFee().subscribe(res => {
             if (res.status === 'success') {
                 this.matSliderParam = res.data;
-                this.gasFeeObj.left = (Number(this.matSliderParam.propose_price) - Number(this.matSliderParam.slow_price)) / 2;
-                this.gasFeeObj.right = Number(this.matSliderParam.propose_price) + this.gasFeeObj.left;
             }
         })
     }
@@ -306,7 +303,7 @@ export class TransferCreateComponent implements OnInit {
                 speedFee: this.matSliderParam
             }
         }).afterClosed().subscribe(res => {
-            if (res !== false) {
+            if (typeof res === 'number') {
                 this.fee = res;
             }
         })

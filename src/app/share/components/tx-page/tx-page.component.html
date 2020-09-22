@@ -1,5 +1,5 @@
 <div class="popup-home-tx-page">
-    <div class="tx-item" *ngFor="let item of txData;let i = index" (click)="showDetail(item)">
+    <div class="tx-item" *ngFor="let item of txData;let i = index" (click)="showDetail(item, assetId === '' ? item.symbol : symbol)">
         <div class="head">
             <span class="time">{{ item.block_time * 1000 | date:'yyyy-MM-dd HH:mm' }}</span>
             <img class="more-info-btn" src="/assets/images/home/arrow.png" alt=""

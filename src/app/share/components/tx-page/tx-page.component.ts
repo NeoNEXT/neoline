@@ -167,12 +167,12 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
         }
     }
 
-    showDetail(tx) {
+    showDetail(tx, symbol) {
         this.dialog.open(PopupTxDetailDialogComponent, {
             panelClass: 'custom-dialog-panel',
             data: {
                 tx,
-                symbol: this.symbol
+                symbol
             }
         });
     }

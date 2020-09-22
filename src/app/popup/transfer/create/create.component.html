@@ -39,9 +39,11 @@
         <span class="label">{{ 'priorityFee' | translate | async }}</span>
         <div class="fee-box box" (click)="editFee()">
             <div class="fee-left">
-                <span *ngIf="fee < gasFeeObj?.left">{{ 'slow' | translate |async }}</span>
-                <span *ngIf="fee >= gasFeeObj?.left && fee <= gasFeeObj?.right">{{ 'medium' | translate |async }}</span>
-                <span *ngIf="fee > gasFeeObj?.right">{{ 'fast' | translate |async }}</span>
+                <span *ngIf="fee == matSliderParam?.slow_price">{{ 'slow' | translate |async }}</span>
+                <span *ngIf="fee == matSliderParam?.propose_price">{{ 'medium' | translate |async }}</span>
+                <span *ngIf="fee == matSliderParam?.fast_price">{{ 'fast' | translate |async }}</span>
+                <span
+                    *ngIf="fee!=matSliderParam?.slow_price && fee!=matSliderParam?.propose_price && fee!=matSliderParam?.fast_price">{{ 'customize' | translate |async }}</span>
                 <p class="value">{{ fee }} GAS</p>
             </div>
             <img src="/assets/images/arrow-right.png" class="arrow" alt="">
