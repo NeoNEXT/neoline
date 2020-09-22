@@ -33,6 +33,7 @@ import { evaluate, add, subtract, multiply, divide, bignumber } from 'mathjs';
 import { randomBytes, pbkdf2 } from 'crypto';
 import CryptoJS from 'crypto-js';
 import { resolve } from 'path';
+import { HttpErrorResponse } from '@angular/common/http';
 
 @Injectable()
 export class GlobalService {
@@ -99,8 +100,13 @@ export class GlobalService {
         (img.target as any).src = '/assets/images/logo.png';
     }
 
-    public snackBarTip(msg: string, serverError = '') {
+    public snackBarTip(msg: string, serverError: any = '') {
         let message = this.notification.content[msg];
+        if (serverError instanceof HttpErrorResponse) {
+            serverError = serverError.statusText;
+        } else if (typeof serverError !== 'string') {
+            serverError = '';
+        }
         if (serverError !== '') {
             message = message + ': ' + serverError;
         }
