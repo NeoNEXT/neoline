@@ -13,6 +13,7 @@ import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
 import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
 import { PopupInputDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
+import { GasFeeSpeed } from '../../_lib/type';
 
 
 
@@ -121,7 +122,18 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         this.args[index] = Neon.create.contractParam('Integer', item.value.toString())
                     }
                 });
-                this.fee = parseFloat(params.fee) || 0;
+                // this.fee = parseFloat(params.fee) || 0;
+                if (params.fee) {
+                    this.fee = parseFloat(params.fee);
+                } else {
+                    if (this.assetState.gasFeeSpeed) {
+                        this.fee = this.assetState.gasFeeSpeed.propose_price;
+                    } else {
+                        this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
+                            this.fee = res.propose_price;
+                        });
+                    }
+                }
                 this.attachedAssets = this.pramsData.attachedAssets
 
                 if (this.assetIntentOverrides == null && this.pramsData.assetIntentOverrides !== undefined) {

@@ -5,7 +5,7 @@
 
 <div class="content">
     <p class="value">{{ fee }} GAS</p>
-    <mat-slider color="primary" [min]="speedFee?.slow_price" [max]="speedFee?.fast_price" [step]="step" [(ngModel)]="fee">
+    <mat-slider color="primary" [min]="gasFeeSpeed?.slow_price" [max]="gasFeeSpeed?.fast_price" [step]="step" [(ngModel)]="fee">
     </mat-slider>
     <div class="speed">
         <span>{{ 'slow' | translate |async }}</span>

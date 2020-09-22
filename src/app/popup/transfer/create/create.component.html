@@ -22,7 +22,7 @@
             </div>
             <div class="asset-info">
                 <p>{{ chooseAsset?.symbol || 'NEO' }}</p>
-                <p>{{ 'balance' | translate | async }}:{{ chooseAsset?.balance }}{{ chooseAsset?.symbol }}</p>
+                <p>{{ 'balance' | translate | async }}:{{ chooseAsset?.balance }} {{ chooseAsset?.symbol }}</p>
             </div>
             <img class="drop" src="/assets/images/transaction/drop.png" alt="">
         </div>
@@ -39,11 +39,11 @@
         <span class="label">{{ 'priorityFee' | translate | async }}</span>
         <div class="fee-box box" (click)="editFee()">
             <div class="fee-left">
-                <span *ngIf="fee == matSliderParam?.slow_price">{{ 'slow' | translate |async }}</span>
-                <span *ngIf="fee == matSliderParam?.propose_price">{{ 'medium' | translate |async }}</span>
-                <span *ngIf="fee == matSliderParam?.fast_price">{{ 'fast' | translate |async }}</span>
+                <span *ngIf="fee == gasFeeSpeed?.slow_price">{{ 'slow' | translate |async }}</span>
+                <span *ngIf="fee == gasFeeSpeed?.propose_price">{{ 'medium' | translate |async }}</span>
+                <span *ngIf="fee == gasFeeSpeed?.fast_price">{{ 'fast' | translate |async }}</span>
                 <span
-                    *ngIf="fee!=matSliderParam?.slow_price && fee!=matSliderParam?.propose_price && fee!=matSliderParam?.fast_price">{{ 'customize' | translate |async }}</span>
+                    *ngIf="fee!=gasFeeSpeed?.slow_price && fee!=gasFeeSpeed?.propose_price && fee!=gasFeeSpeed?.fast_price">{{ 'customize' | translate |async }}</span>
                 <p class="value">{{ fee }} GAS</p>
             </div>
             <img src="/assets/images/arrow-right.png" class="arrow" alt="">

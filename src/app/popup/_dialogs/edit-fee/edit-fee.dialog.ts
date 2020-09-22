@@ -3,12 +3,6 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { GasFeeSpeed } from '@popup/_lib/type';
 import { AssetState } from '@app/core';
 
-const defaultGasFeeSpeed = {
-    slow_price: '0',
-    propose_price: '0.01',
-    fast_price: '0.02'
-}
-
 @Component({
     templateUrl: 'edit-fee.dialog.html',
     styleUrls: ['edit-fee.dialog.scss']
@@ -17,7 +11,7 @@ export class PopupEditFeeDialogComponent {
     showCustom = false;
     fee = 0;
     step = 0.01;
-    speedFee: GasFeeSpeed = defaultGasFeeSpeed;
+    gasFeeSpeed: GasFeeSpeed;
     constructor(
         private dialogRef: MatDialogRef<PopupEditFeeDialogComponent>,
         private assetState: AssetState,
@@ -28,8 +22,8 @@ export class PopupEditFeeDialogComponent {
         }
     ) {
         if (this.data.speedFee) {
-            this.speedFee = this.data.speedFee;
-            this.step = (Number(this.speedFee.fast_price) - Number(this.speedFee.slow_price)) / 2;
+            this.gasFeeSpeed = this.data.speedFee;
+            this.step = (Number(this.gasFeeSpeed.fast_price) - Number(this.gasFeeSpeed.slow_price)) / 2;
         } else {
             this.getGasFee();
         }
@@ -37,12 +31,15 @@ export class PopupEditFeeDialogComponent {
     }
 
     getGasFee() {
-        this.assetState.getGasFee().subscribe(res => {
-            if (res.status === 'success') {
-                this.speedFee = res.data;
-                this.step = (Number(this.speedFee.fast_price) - Number(this.speedFee.slow_price)) / 2;
-            }
-        });
+        if (this.assetState.gasFeeSpeed) {
+            this.gasFeeSpeed = this.assetState.gasFeeSpeed;
+            this.step = (Number(this.gasFeeSpeed.fast_price) - Number(this.gasFeeSpeed.slow_price)) / 2;
+        } else {
+            this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
+                this.gasFeeSpeed = res;
+                this.step = (Number(this.gasFeeSpeed.fast_price) - Number(this.gasFeeSpeed.slow_price)) / 2;
+            });
+        }
     }
 
     ok() {

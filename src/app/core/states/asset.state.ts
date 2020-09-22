@@ -6,6 +6,7 @@ import { Observable, Subject, from, of } from 'rxjs';
 import { Balance, AssetDetail, Nep5Detail } from 'src/models/models';
 import { map, switchMap, refCount, publish } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
+import { GasFeeSpeed } from '@popup/_lib/type';
 
 @Injectable()
 export class AssetState {
@@ -19,6 +20,7 @@ export class AssetState {
     public balanceSource = new Subject<Balance[]>();
     public balanceSub$ = this.balanceSource.asObservable();
     gasFeeApi = 'http://47.110.14.167:8080';
+    gasFeeSpeed: GasFeeSpeed;
 
     constructor(
         private http: HttpService,
@@ -250,6 +252,11 @@ export class AssetState {
     }
 
     public getGasFee(): Observable<any> {
-        return this.httpClient.get(`${this.gasFeeApi}/v1/neo2/fees`);
+        return this.httpClient.get(`${this.gasFeeApi}/v1/neo2/fees`).pipe(map((res: any) => {
+            if (res.status === 'success') {
+                this.gasFeeSpeed = res.data;
+                return res.data;
+            }
+        }));
     }
 }

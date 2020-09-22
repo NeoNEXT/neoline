@@ -29,6 +29,7 @@ import { rpc } from '@cityofzion/neon-js';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupInputDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { bignumber } from 'mathjs';
+import { GasFeeSpeed } from '../../_lib/type';
 
 @Component({
     templateUrl: 'transfer.component.html',
@@ -124,7 +125,18 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.assetId = params.asset || '';
             this.amount = params.amount || 0;
             this.symbol = params.symbol || '';
-            this.fee = params.fee || 0;
+            // this.fee = params.fee || 0;
+            if (params.fee) {
+                this.fee = parseFloat(params.fee);
+            } else {
+                if (this.asset.gasFeeSpeed) {
+                    this.fee = Number(this.asset.gasFeeSpeed.propose_price);
+                } else {
+                    this.asset.getGasFee().subscribe((res: GasFeeSpeed) => {
+                        this.fee = Number(res.propose_price);
+                    });
+                }
+            }
             this.remark = params.remark || '';
             if (this.assetId !== undefined && this.assetId !== '') {
                 this.asset.detail(this.neon.address, this.assetId).subscribe((res: Balance) => {

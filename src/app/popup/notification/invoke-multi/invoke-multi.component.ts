@@ -13,6 +13,7 @@ import { map } from 'rxjs/operators';
 import { ERRORS, requestTarget, Invoke, TxHashAttribute } from '@/models/dapi';
 import { PopupInputDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import Neon from '@cityofzion/neon-js';
+import { GasFeeSpeed } from '../../_lib/type';
 
 
 @Component({
@@ -120,7 +121,18 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     attachedAssets: item.attachedAssets
                 });
             });
-            this.fee = parseFloat(params.fee) || 0;
+            // this.fee = parseFloat(params.fee) || 0;
+            if (params.fee) {
+                this.fee = parseFloat(params.fee);
+            } else {
+                if (this.assetState.gasFeeSpeed) {
+                    this.fee = this.assetState.gasFeeSpeed.propose_price;
+                } else {
+                    this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
+                        this.fee = res.propose_price;
+                    });
+                }
+            }
             if (this.assetIntentOverrides === null && this.pramsData.assetIntentOverrides !== undefined) {
                 this.assetIntentOverrides = this.pramsData.assetIntentOverrides
                 this.fee = 0;

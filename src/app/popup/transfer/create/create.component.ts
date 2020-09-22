@@ -32,7 +32,7 @@ import { rpc } from '@cityofzion/neon-js';
 import { PopupAddressDialogComponent, PopupAssetDialogComponent, PopupTransferSuccessDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
 import { bignumber } from 'mathjs';
-import { GasFeeSpeed } from '@popup/_lib/type';
+import { GasFeeSpeed } from '../../_lib/type';
 
 @Component({
     templateUrl: 'create.component.html',
@@ -40,8 +40,8 @@ import { GasFeeSpeed } from '@popup/_lib/type';
 })
 export class TransferCreateComponent implements OnInit {
     public amount: string;
-    public fee = 0;
-    matSliderParam;
+    public fee: any;
+    gasFeeSpeed: GasFeeSpeed;
     public fromAddress: string;
     public toAddress: string;
     public creating: boolean = false;
@@ -87,15 +87,15 @@ export class TransferCreateComponent implements OnInit {
                 }
             });
         });
-        this.getGasFee();
-    }
-
-    getGasFee() {
-        this.asset.getGasFee().subscribe(res => {
-            if (res.status === 'success') {
-                this.matSliderParam = res.data;
-            }
-        })
+        if (this.asset.gasFeeSpeed) {
+            this.gasFeeSpeed = this.asset.gasFeeSpeed;
+            this.fee = this.asset.gasFeeSpeed.propose_price;
+        } else {
+            this.asset.getGasFee().subscribe((res: GasFeeSpeed) => {
+                this.gasFeeSpeed = res;
+                this.fee = res.propose_price;
+            });
+        }
     }
 
     public submit() {
@@ -300,7 +300,7 @@ export class TransferCreateComponent implements OnInit {
             panelClass: 'custom-dialog-panel',
             data: {
                 fee: this.fee,
-                speedFee: this.matSliderParam
+                speedFee: this.gasFeeSpeed
             }
         }).afterClosed().subscribe(res => {
             if (typeof res === 'number') {
