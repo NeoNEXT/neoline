@@ -9,7 +9,6 @@ export function httpGet(url, callback, headers) {
             }
         }
     }
-    xhr.setRequestHeader('X-Request-Agent', getUseAgent());
     xhr.onreadystatechange = () => {
         if (xhr.readyState === 4) {
             // JSON.parse does not evaluate the attacker's scripts.
@@ -35,7 +34,6 @@ export function httpGetImage(url, callback, headers) {
             }
         }
     }
-    xhr.setRequestHeader('X-Request-Agent', getUseAgent());
     xhr.onreadystatechange = () => {
         if (xhr.readyState === 4) {
             try {
@@ -52,7 +50,6 @@ export function httpPost(url, data, callback, headers) {
     const xhr = new XMLHttpRequest();
     xhr.open('POST', url, true);
     xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-    xhr.setRequestHeader('X-Request-Agent', getUseAgent());
     if (headers) {
         for (const key in headers) {
             if (key !== undefined) {

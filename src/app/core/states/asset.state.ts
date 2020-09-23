@@ -2,11 +2,12 @@ import { Injectable } from '@angular/core';
 import { HttpService } from '../services/http.service';
 import { GlobalService } from '../services/global.service';
 import { ChromeService } from '../services/chrome.service';
-import { Observable, Subject, from, of } from 'rxjs';
+import { Observable, Subject, from, of, forkJoin } from 'rxjs';
 import { Balance, AssetDetail, Nep5Detail } from 'src/models/models';
 import { map, switchMap, refCount, publish } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { GasFeeSpeed } from '@popup/_lib/type';
+import { bignumber } from 'mathjs';
 
 @Injectable()
 export class AssetState {
@@ -19,8 +20,8 @@ export class AssetState {
 
     public balanceSource = new Subject<Balance[]>();
     public balanceSub$ = this.balanceSource.asObservable();
-    gasFeeApi = 'http://47.110.14.167:8080';
-    gasFeeSpeed: GasFeeSpeed;
+    public goApi = 'http://47.110.14.167:8080';
+    public gasFeeSpeed: GasFeeSpeed;
 
     constructor(
         private http: HttpService,
@@ -148,7 +149,11 @@ export class AssetState {
         });
     }
     public getRate(): Observable<any> {
-        return this.http.get(`${this.global.apiDomain}/v1/asset/exchange_rate`);
+        return this.http.get(`${this.goApi}/v1/coin/rates?chain=neo`);
+    }
+
+    public getFiatRate(): Observable<any> {
+        return this.http.get(`${this.goApi}/v1/fiat/rates`);
     }
 
     public getAssetRate(coins: string): Observable<any> {
@@ -156,8 +161,9 @@ export class AssetState {
             return of({});
         }
         coins = coins.toLowerCase();
+        console.log(coins);
         const coinsAry = coins.split(',');
-        let rateRes = {};
+        const rateRes = {};
         let targetCoins = '';
         coinsAry.forEach(element => {
             const tempAssetRate = this.assetRate.get(element);
@@ -178,21 +184,18 @@ export class AssetState {
         if (targetCoins === '') {
             return of(rateRes);
         }
-        return this.http
-            .get(`${this.global.apiDomain}/v1/asset/exchange_rate`)
+        return forkJoin(this.getRate(), this.getFiatRate())
             .pipe(
-                map(rateBalance => {
+                map(result => {
+                    const rateBalance = result[0];
+                    const fiatData = result[1];
                     const targetCoinsAry = targetCoins.split(',');
                     targetCoinsAry.forEach(coin => {
-                        let tempRate = {};
-                        tempRate['last-modified'] =
-                            rateBalance['response_time'];
-                        if (coin in rateBalance.result) {
-                            tempRate['rate'] = Number(
-                                rateBalance.result[coin][
-                                this.rateCurrency.toString().toLowerCase()
-                                ]
-                            );
+                        const tempRate = {};
+                        tempRate['last-modified'] = rateBalance['response_time'];
+                        if (coin in rateBalance) {
+                            tempRate['rate'] = bignumber(rateBalance[coin].price || 0)
+                                .mul(bignumber(fiatData.rates && fiatData.rates[this.rateCurrency.toUpperCase()]) || 0).toFixed();
                             rateRes[coin] = tempRate['rate'];
                         } else {
                             tempRate['rate'] = undefined;
@@ -252,7 +255,7 @@ export class AssetState {
     }
 
     public getGasFee(): Observable<any> {
-        return this.httpClient.get(`${this.gasFeeApi}/v1/neo2/fees`).pipe(map((res: any) => {
+        return this.httpClient.get(`${this.goApi}/v1/neo2/fees`).pipe(map((res: any) => {
             if (res.status === 'success') {
                 this.gasFeeSpeed = res.data;
                 return res.data;
