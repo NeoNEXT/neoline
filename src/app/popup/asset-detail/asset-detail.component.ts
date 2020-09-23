@@ -6,7 +6,7 @@ import {
     GlobalService
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NEO, Balance } from '@/models/models';
+import { NEO, Balance, GAS } from '@/models/models';
 import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.component';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupDelTokenDialogComponent } from '../_dialogs';
@@ -132,10 +132,14 @@ export class PopupAssetDetailComponent implements OnInit {
 
     toWeb() {
         this.showMenu = false;
+        const isNep5 = this.assetId !== NEO && this.assetId !== GAS;
+        console.log( `https://${
+            this.net === 'TestNet' ? 'testnet.' : ''
+            }neotube.io/${isNep5 ? 'nep5' : 'asset'}/${this.assetId}`)
         window.open(
             `https://${
             this.net === 'TestNet' ? 'testnet.' : ''
-            }neotube.io/address/${this.neon.address}/page/1`
+            }neotube.io/${isNep5 ? 'nep5' : 'asset'}/${this.assetId}/page/1`
         );
     }
 }
