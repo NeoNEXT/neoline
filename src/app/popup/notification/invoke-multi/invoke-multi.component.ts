@@ -560,17 +560,29 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 fee: this.fee
             }
         }).afterClosed().subscribe(res => {
-            if (res !== false) {
+            if (res && res !== false) {
                 this.fee = res;
                 if (res === 0) {
                     this.feeMoney = '0';
                 } else {
-
                     this.assetState.getMoney('GAS', Number(this.fee)).then(feeMoney => {
                         this.feeMoney = feeMoney;
                     });
                 }
             }
+            setTimeout(() => {
+                this.loading = true;
+                this.createTxForNEP5().then(result => {
+                    this.resolveSign(result);
+                }).catch(err => {
+                    this.chrome.windowCallback({
+                        error: ERRORS.MALFORMED_INPUT,
+                        return: requestTarget.Invoke,
+                        ID: this.messageID
+                    });
+                    window.close();
+                });
+            }, 0);
         })
     }
 

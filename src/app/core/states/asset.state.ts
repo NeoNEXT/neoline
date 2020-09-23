@@ -161,7 +161,6 @@ export class AssetState {
             return of({});
         }
         coins = coins.toLowerCase();
-        console.log(coins);
         const coinsAry = coins.split(',');
         const rateRes = {};
         let targetCoins = '';

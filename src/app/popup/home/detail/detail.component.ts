@@ -27,7 +27,7 @@ import {
 import {
     FilterBarService
 } from '@popup/_services/filter-bar.service';
-import { Unsubscribable, forkJoin } from 'rxjs';
+import { Unsubscribable, forkJoin, from } from 'rxjs';
 
 @Component({
     templateUrl: 'detail.component.html',
@@ -37,10 +37,10 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     public balance: Balance;
     public address: string;
     public assetId: string;
-    public txPage: PageData < Transaction > ;
+    public txPage: PageData<Transaction>;
     public isLoading: boolean;
     public needLoadWhenSymbolSwitch: boolean;
-    public inTransaction: Array < Transaction > ;
+    public inTransaction: Array<Transaction>;
     public rateCurrency: string;
     public net: string;
 
@@ -151,15 +151,17 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                     this.inTransaction = inTxData[this.net][this.address][this.assetId];
                 }
                 const txIdArray = [];
-                this.inTransaction = this.inTransaction.filter(item => (new Date().getTime()) / 1000 -  item.block_time <= 120);
+                this.inTransaction = this.inTransaction.filter(item => (new Date().getTime()) / 1000 - item.block_time <= 120);
                 this.inTransaction.forEach(item => {
                     txIdArray.push(item.txid);
                 });
-                const httpReq2 = this.http.post(`${this.global.apiDomain}/v1/transactions/confirms`, {
+                const httpReq2 = txIdArray.length !== 0 ? this.http.post(`${this.global.apiDomain}/v1/transactions/confirms`, {
                     txids: txIdArray
+                }) : new Promise<any>((mResolve) => {
+                    mResolve({result: []});
                 });
                 forkJoin(httpReq1, httpReq2).subscribe(result => {
-                    let txPage = result[0];
+                    const txPage = result[0];
                     let txConfirm = result[1];
                     txConfirm = txConfirm.result;
                     txConfirm.forEach(item => {

@@ -94,12 +94,12 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                 this.inTransaction.forEach(item => {
                     txIdArray.push(item.txid);
                 });
-                const httpReq2 = this.http.post(
-                    `${this.global.apiDomain}/v1/transactions/confirms`,
-                    {
+                const httpReq2 = txIdArray.length !== 0 ?
+                    this.http.post(`${this.global.apiDomain}/v1/transactions/confirms`, {
                         txids: txIdArray
-                    }
-                );
+                    }) : new Promise<any>((mResolve) => {
+                        mResolve({result: []});
+                    });
                 forkJoin(httpReq1, httpReq2).subscribe(result => {
                     let txPage = result[0];
                     let txConfirm = result[1];

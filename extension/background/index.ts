@@ -83,6 +83,9 @@ export function expand() {
                 }
             }, '*');
             const txArr = await getLocalStorage(`${network}TxArr`, (temp) => { }) || [];
+            if(txArr.length === 0) {
+                return;
+            }
             httpPost(`${apiUrl}/v1/transactions/confirms`, { txids: txArr }, (txConfirmData) => {
                 if (txConfirmData.bool_status) {
                     const txConfirms = txConfirmData.result;
@@ -104,7 +107,7 @@ export function expand() {
                             }
                         }, '*');
                     });
-                }
+                };
                 const setData = {};
                 setData[`${network}TxArr`] = txArr;
                 setLocalStorage(setData);
