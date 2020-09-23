@@ -39,9 +39,9 @@
         <span class="label">{{ 'priorityFee' | translate | async }}</span>
         <div class="fee-box box" (click)="editFee()">
             <div class="fee-left">
-                <span *ngIf="fee == gasFeeSpeed?.slow_price">{{ 'slow' | translate |async }}</span>
-                <span *ngIf="fee == gasFeeSpeed?.propose_price">{{ 'medium' | translate |async }}</span>
-                <span *ngIf="fee == gasFeeSpeed?.fast_price">{{ 'fast' | translate |async }}</span>
+                <span *ngIf="gasFeeSpeed && fee == gasFeeSpeed?.slow_price">{{ 'slow' | translate |async }}</span>
+                <span *ngIf="gasFeeSpeed && fee == gasFeeSpeed?.propose_price">{{ 'medium' | translate |async }}</span>
+                <span *ngIf="gasFeeSpeed && fee == gasFeeSpeed?.fast_price">{{ 'fast' | translate |async }}</span>
                 <span
                     *ngIf="fee!=gasFeeSpeed?.slow_price && fee!=gasFeeSpeed?.propose_price && fee!=gasFeeSpeed?.fast_price">{{ 'customize' | translate |async }}</span>
                 <p class="value">{{ fee }} GAS</p>
