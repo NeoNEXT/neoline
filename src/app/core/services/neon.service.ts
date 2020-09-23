@@ -36,6 +36,12 @@ export class NeonService {
         return this._WIFArr || [];
     }
 
+    public reset() {
+        this._wallet = null;
+        this._walletArr = [];
+        this._WIFArr = [];
+    }
+
     public pushWalletArray(w: WalletJSON) {
         this._walletArr.push(this.parseWallet(w));
     }

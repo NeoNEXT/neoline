@@ -631,14 +631,13 @@ export class ChromeService {
 
     public resetWallet() {
         if (!this.check) {
-            localStorage.removeItem('wallet');
-            localStorage.removeItem('walletArr');
-            localStorage.removeItem('WIFArr');
+            localStorage.setItem('shouldLogin', 'false');
         } else {
-            this.crx.removeLocalStorage('wallet');
-            this.crx.removeStorage('walletArr');
-            this.crx.removeStorage('WIFArr');
+            this.crx.setLocalStorage({setLocalStorage: false});
         }
+        this.setWIFArray([]);
+        this.setWalletArray([]);
+        this.setWallet(undefined);
     }
 
     public getLocalStorage(key): Promise<any> {

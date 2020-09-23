@@ -93,6 +93,7 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
             panelClass: 'custom-dialog-panel'
         }).afterClosed().subscribe(confirm => {
             if (confirm) {
+                this.neon.reset();
                 this.chrome.resetWallet();
                 this.router.navigateByUrl('/popup/wallet');
             }
