@@ -671,7 +671,7 @@ function login(open = true): Promise<any> {
             };
             window.addEventListener('message', callbackFn);
         });
-        promise.then(async res => {
+        promise.then(res => {
             resolveMain(res);
         });
     });

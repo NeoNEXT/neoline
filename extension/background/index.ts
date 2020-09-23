@@ -222,12 +222,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case requestTarget.Connect:
         case requestTarget.AuthState:
             {
-                chrome.tabs.query({
-                    active: true,
-                    currentWindow: true
-                }, (tabs) => {
-                    tabCurr = tabs;
-                });
                 getStorage('connectedWebsites', (res: any) => {
                     if ((res !== undefined && res[request.hostname] !== undefined) || request.connect === 'true') {
                         if (res !== undefined && res[request.hostname] !== undefined && res[request.hostname].status === 'false') {
@@ -253,7 +247,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         case requestTarget.Login: {
             getLocalStorage('shouldLogin', res => {
-                if(res === 'true') {
+                if(res === 'true' || res === true) {
                     windowCallback({
                         return: requestTarget.Login,
                         data: true

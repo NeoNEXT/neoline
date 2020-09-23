@@ -24,7 +24,7 @@ import {
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '../_dialogs';
-import { requestTarget } from '@/models/dapi';
+import { ERRORS, requestTarget } from '@/models/dapi';
 
 
 @Component({
@@ -55,6 +55,12 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
 
     ngOnInit(): void {
         this.accountWallet = this.neon.wallet;
+        window.onbeforeunload = () => {
+            this.chrome.windowCallback({
+                data: ERRORS.CANCELLED,
+                return: requestTarget.Login
+            });
+        };
     }
 
     ngAfterContentInit(): void {

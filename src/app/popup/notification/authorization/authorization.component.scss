@@ -71,6 +71,9 @@
                 position: absolute;
                 width: 134px;
                 color: map-get($colors, 333333);
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
             }
             .left {
                 left: 67px;
