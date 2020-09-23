@@ -130,6 +130,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 } else {
                     this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
                         this.fee = res.propose_price;
+                        this.signTx();
                     });
                 }
             }
@@ -148,18 +149,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.extraWitness = this.pramsData.extra_witness
             }
             this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
-            setTimeout(() => {
-                this.createTxForNEP5().then(res => {
-                    this.resolveSign(res);
-                }).catch(err => {
-                    this.chrome.windowCallback({
-                        error: ERRORS.MALFORMED_INPUT,
-                        return: requestTarget.InvokeMulti,
-                        ID: this.messageID
-                    });
-                    window.close();
-                });
-            }, 0);
+            this.signTx();
         });
         window.onbeforeunload = () => {
             this.chrome.windowCallback({
@@ -512,7 +502,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                         return: requestTarget.Deploy,
                         ID: this.messageID
                     });
-                    this.global.snackBarTip('no enough GAS to fee');
+                    this.global.snackBarTip('transferFailed', 'no enough GAS to fee');
                 }
                 if (payback > 0) {
                     const fromScript = wallet.getScriptHashFromAddress(from);
@@ -570,21 +560,23 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     });
                 }
             }
-            setTimeout(() => {
-                this.loading = true;
-                this.createTxForNEP5().then(result => {
-                    this.resolveSign(result);
-                }).catch(err => {
-                    this.chrome.windowCallback({
-                        error: ERRORS.MALFORMED_INPUT,
-                        return: requestTarget.Invoke,
-                        ID: this.messageID
-                    });
-                    window.close();
-                });
-            }, 0);
+            this.signTx();
         })
     }
 
-
+    private signTx() {
+        setTimeout(() => {
+            this.loading = true;
+            this.createTxForNEP5().then(result => {
+                this.resolveSign(result);
+            }).catch(err => {
+                this.chrome.windowCallback({
+                    error: ERRORS.MALFORMED_INPUT,
+                    return: requestTarget.InvokeMulti,
+                    ID: this.messageID
+                });
+                window.close();
+            });
+        }, 0);
+    }
 }

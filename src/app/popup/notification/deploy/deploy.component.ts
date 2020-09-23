@@ -13,6 +13,7 @@ import { UTXO, NEO } from '@/models/models';
 import { map } from 'rxjs/operators';
 import { str2hexstring, Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { PopupInputDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
+import { GasFeeSpeed } from '../../_lib/type';
 
 @Component({
     templateUrl: 'deploy.component.html',
@@ -54,7 +55,18 @@ export class PopupNoticeDeployComponent implements OnInit {
             this.messageID = params.messageID;
             this.dataJson = this.pramsData;
             this.dataJson.messageID = undefined;
-            this.fee = this.pramsData.networkFee;
+            if (this.pramsData.networkFee) {
+                this.fee = this.pramsData.networkFee;
+            } else {
+                if (this.assetState.gasFeeSpeed) {
+                    this.fee = this.assetState.gasFeeSpeed.propose_price;
+                } else {
+                    this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
+                        this.fee = res.propose_price;
+                        this.signTx();
+                    });
+                }
+            }
             if (Number(this.pramsData.fee) > 0) {
                 this.assetState.getMoney('GAS', Number(this.fee)).then(res => {
                     this.feeMoney = res;
@@ -68,18 +80,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                 }
                 this.net = this.global.net;
                 this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
-                setTimeout(() => {
-                    this.createTxForNEP5().then(res => {
-                        this.resolveSign(res);
-                    }).catch(err => {
-                        this.chrome.windowCallback({
-                            error: ERRORS.MALFORMED_INPUT,
-                            return: requestTarget.Deploy,
-                            ID: this.messageID
-                        });
-                        window.close();
-                    });
-                }, 0);
+                this.signTx();
             } else {
                 return;
             }
@@ -298,20 +299,23 @@ export class PopupNoticeDeployComponent implements OnInit {
                         this.feeMoney = feeMoney;
                     });
                 }
-                setTimeout(() => {
-                    this.loading = true;
-                    this.createTxForNEP5().then(result => {
-                        this.resolveSign(result);
-                    }).catch(err => {
-                        this.chrome.windowCallback({
-                            error: ERRORS.MALFORMED_INPUT,
-                            return: requestTarget.Invoke,
-                            ID: this.messageID
-                        });
-                        window.close();
-                    });
-                }, 0);
+                this.signTx();
             }
         })
+    }
+    private signTx() {
+        setTimeout(() => {
+            this.loading = true;
+            this.createTxForNEP5().then(result => {
+                this.resolveSign(result);
+            }).catch(err => {
+                this.chrome.windowCallback({
+                    error: ERRORS.MALFORMED_INPUT,
+                    return: requestTarget.Deploy,
+                    ID: this.messageID
+                });
+                window.close();
+            });
+        }, 0);
     }
 }

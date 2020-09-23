@@ -131,6 +131,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     } else {
                         this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
                             this.fee = res.propose_price;
+                            this.signTx();
                         });
                     }
                 }
@@ -149,18 +150,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 if (params.extra_witness !== undefined) {
                     this.extraWitness = this.pramsData.extra_witness
                 }
-                setTimeout(() => {
-                    this.createTxForNEP5().then(res => {
-                        this.resolveSign(res);
-                    }).catch(err => {
-                        this.chrome.windowCallback({
-                            error: ERRORS.MALFORMED_INPUT,
-                            return: requestTarget.Invoke,
-                            ID: this.messageID
-                        });
-                        window.close();
-                    });
-                }, 0);
+                this.signTx();
             } else {
                 return;
             }
@@ -479,7 +469,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         return: requestTarget.Invoke,
                         ID: this.messageID
                     });
-                    this.global.snackBarTip('no enough GAS to fee');
+                    this.global.snackBarTip('transferFailed', 'no enough GAS to fee');
                 }
                 if (payback > 0) {
                     const fromScript = wallet.getScriptHashFromAddress(from);
@@ -536,20 +526,24 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         this.feeMoney = feeMoney;
                     });
                 }
-                setTimeout(() => {
-                    this.loading = true;
-                    this.createTxForNEP5().then(result => {
-                        this.resolveSign(result);
-                    }).catch(err => {
-                        this.chrome.windowCallback({
-                            error: ERRORS.MALFORMED_INPUT,
-                            return: requestTarget.Invoke,
-                            ID: this.messageID
-                        });
-                        window.close();
-                    });
-                }, 0);
+                this.signTx();
             }
         })
+    }
+
+    private signTx() {
+        setTimeout(() => {
+            this.loading = true;
+            this.createTxForNEP5().then(result => {
+                this.resolveSign(result);
+            }).catch(err => {
+                this.chrome.windowCallback({
+                    error: ERRORS.MALFORMED_INPUT,
+                    return: requestTarget.Invoke,
+                    ID: this.messageID
+                });
+                window.close();
+            });
+        }, 0);
     }
 }
