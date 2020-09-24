@@ -397,7 +397,7 @@ window.addEventListener('message', async (e) => {
         }
         case requestTarget.Login: {
             getLocalStorage('shouldLogin', res => {
-                if(res === true) {
+                if(res === true || res === 'true') {
                     chrome.runtime.sendMessage(e.data, (response) => {
                         return Promise.resolve('Dummy response to keep the console quiet');
                     });

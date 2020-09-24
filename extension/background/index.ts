@@ -247,7 +247,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         case requestTarget.Login: {
             getLocalStorage('shouldLogin', res => {
-                if(res === 'true' || res === true) {
+                if(res === 'false' || res === false) {
                     windowCallback({
                         return: requestTarget.Login,
                         data: true
