@@ -14,6 +14,7 @@ import { ERRORS, requestTarget, Invoke, TxHashAttribute } from '@/models/dapi';
 import { PopupInputDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import Neon from '@cityofzion/neon-js';
 import { GasFeeSpeed } from '../../_lib/type';
+import { bignumber, min } from 'mathjs';
 
 
 @Component({
@@ -27,11 +28,13 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     public rateCurrency = '';
     public txSerialize = ''
     public assetImageUrl = '';
+    public showFeeEdit: boolean = true;
 
     private pramsData: any;
     public tx: Transaction;
     public invokeArgs: Invoke[] = [];
     public fee = null;
+    public minFee = 0;
     public broadcastOverride = null;
     public assetIntentOverrides = null;
     public loading = false;
@@ -120,24 +123,29 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                         ? item.triggerContractVerification.toString() === 'true' : false,
                     attachedAssets: item.attachedAssets
                 });
+                if(item.scriptHash === 'f46719e2d16bf50cddcef9d4bbfece901f73cbb6') {
+                    this.showFeeEdit = false;
+                }
             });
-            // this.fee = parseFloat(params.fee) || 0;
+            if(params.minReqFee) {
+                this.minFee = Number(params.minReqFee);
+            }
             if (params.fee) {
-                this.fee = parseFloat(params.fee);
+                this.fee = Number(params.fee);
             } else {
                 if (this.assetState.gasFeeSpeed) {
-                    this.fee = this.assetState.gasFeeSpeed.propose_price;
+                    this.fee = bignumber(this.minFee).add(bignumber(this.assetState.gasFeeSpeed.propose_price)).toNumber();
                 } else {
                     this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
-                        this.fee = res.propose_price;
+                        this.fee = bignumber(this.minFee).add(bignumber(res.propose_price)).toNumber();
                         this.signTx();
                     });
                 }
             }
             if (this.assetIntentOverrides === null && this.pramsData.assetIntentOverrides !== undefined) {
                 this.assetIntentOverrides = this.pramsData.assetIntentOverrides
-                this.fee = 0;
-                this.feeMoney = '0';
+                // this.fee = 0;
+                // this.feeMoney = '0';
                 this.invokeArgs.forEach(item => {
                     item.attachedAssets = null;
                 });
@@ -394,6 +402,13 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                         prevHash: element.txid.startsWith('0x') && element.txid.length === 66 ? element.txid.substring(2) : element.txid
                     }))
                 });
+                if (this.fee > 0 && this.showFeeEdit) {
+                    try {
+                        newTx = await this.addFee(this.neon.wallet.accounts[0].address, newTx, this.fee);
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
             }
             mResolve(await this.addAttributes(newTx))
         });
@@ -547,11 +562,15 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         this.dialog.open(PopupEditFeeDialogComponent, {
             panelClass: 'custom-dialog-panel',
             data: {
-                fee: this.fee
+                fee: this.fee,
+                minFee: this.minFee
             }
         }).afterClosed().subscribe(res => {
             if (typeof res === 'number') {
                 this.fee = res;
+                if(res < this.minFee) {
+                    this.fee = this.minFee;
+                }
                 if (res === 0) {
                     this.feeMoney = '0';
                 } else {

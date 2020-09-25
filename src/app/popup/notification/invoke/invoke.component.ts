@@ -14,6 +14,7 @@ import { map } from 'rxjs/operators';
 import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
 import { PopupInputDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { GasFeeSpeed } from '../../_lib/type';
+import { bignumber } from 'mathjs';
 
 
 
@@ -29,6 +30,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
     public rateCurrency = '';
     public txSerialize = ''
     public assetImageUrl = '';
+    public showFeeEdit: boolean = true;
 
     private pramsData: any;
     public scriptHash = '';
@@ -38,6 +40,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
     public triggerContractVerification: boolean = false;
     public attachedAssets = null;
     public fee = null;
+    public minFee = 0;
     public broadcastOverride = null;
     public assetIntentOverrides = null;
     public loading = false;
@@ -99,6 +102,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 this.scriptHash = params.scriptHash;
                 this.operation = params.operation;
                 this.args = this.pramsData.args;
+                this.showFeeEdit = this.scriptHash !== 'f46719e2d16bf50cddcef9d4bbfece901f73cbb6';
                 this.args.forEach((item, index) => {
                     if (item.type === 'Address') {
                         const param2 = u.reverseHex(wallet.getScriptHashFromAddress(item.value));
@@ -123,14 +127,17 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     }
                 });
                 // this.fee = parseFloat(params.fee) || 0;
+                if(params.minReqFee) {
+                    this.minFee = Number(params.minReqFee);
+                }
                 if (params.fee) {
-                    this.fee = parseFloat(params.fee);
+                    this.fee = Number(params.fee);
                 } else {
                     if (this.assetState.gasFeeSpeed) {
-                        this.fee = this.assetState.gasFeeSpeed.propose_price;
+                        this.fee = bignumber(this.minFee).add(bignumber(this.assetState.gasFeeSpeed.propose_price)).toNumber();
                     } else {
                         this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
-                            this.fee = res.propose_price;
+                            this.fee = bignumber(this.minFee).add(bignumber(res.propose_price)).toNumber();
                             this.signTx();
                         });
                     }
@@ -139,8 +146,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
 
                 if (this.assetIntentOverrides == null && this.pramsData.assetIntentOverrides !== undefined) {
                     this.assetIntentOverrides = this.pramsData.assetIntentOverrides
-                    this.fee = 0;
-                    this.feeMoney = '0';
+                    // this.fee = 0;
+                    // this.feeMoney = '0';
                     this.attachedAssets = null;
                 }
                 if (this.txHashAttributes === null && this.pramsData.txHashAttributes !== undefined) {
@@ -343,6 +350,13 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     }
                 }
             } else {
+                if (this.fee > 0 && this.showFeeEdit) {
+                    try {
+                        newTx = await this.addFee(this.neon.wallet.accounts[0].address, newTx, this.fee);
+                    } catch (error) {
+                        console.log(error);
+                    }
+                }
                 this.assetIntentOverrides.outputs.forEach(element => {
                     const toScripts = wallet.getScriptHashFromAddress(element.address)
                     let assetId = element.asset;
@@ -514,11 +528,15 @@ export class PopupNoticeInvokeComponent implements OnInit {
         this.dialog.open(PopupEditFeeDialogComponent, {
             panelClass: 'custom-dialog-panel',
             data: {
-                fee: this.fee
+                fee: this.fee,
+                minFee: this.minFee
             }
         }).afterClosed().subscribe(res => {
             if (typeof res === 'number') {
                 this.fee = res;
+                if(res < this.minFee) {
+                    this.fee = this.minFee;
+                }
                 if (res === 0) {
                     this.feeMoney = '0';
                 } else {

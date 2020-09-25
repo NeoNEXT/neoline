@@ -45,6 +45,7 @@ import { TranslatePipe } from './pipes/translate.pipe';
 import { NumberDirective } from './directives/number';
 import { MatRippleModule } from '@angular/material/core';
 import { ScrollDirective } from './directives/scroll';
+import { NumberFixedPipe } from './pipes/number-fixed.pipe';
 
 @NgModule({
     declarations: [
@@ -55,6 +56,7 @@ import { ScrollDirective } from './directives/scroll';
         LimitPageStringPipe,
         LanguageNamePipe,
         TranslatePipe,
+        NumberFixedPipe,
         CopyDirective,
         NumberDirective,
         AvatarDirective,
@@ -67,6 +69,7 @@ import { ScrollDirective } from './directives/scroll';
         LimitStrPipe,
         LanguageNamePipe,
         TranslatePipe,
+        NumberFixedPipe,
         NumberDirective,
         CopyDirective,
         ScrollDirective,

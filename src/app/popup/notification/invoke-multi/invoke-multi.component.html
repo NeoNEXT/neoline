@@ -41,9 +41,9 @@
                             <div class="fee-box detail-item">
                                 <p class="label">GAS FEE</p>
                                 <div class="fee-info">
-                                    <p (click)="editFee()">{{ 'edit' | translate | async }}</p>
-                                    <p>{{ fee }} GAS</p>
-                                    <p>{{ feeMoney }} {{ rateCurrency }}</p>
+                                    <p (click)="editFee()" *ngIf="showFeeEdit">{{ 'edit' | translate | async }}</p>
+                                    <p>{{ (showFeeEdit ? fee : 0) | numberFixed }} GAS</p>
+                                    <p>{{ (showFeeEdit ? feeMoney : 0) | numberFixed }} {{ rateCurrency }}</p>
                                 </div>
                             </div>
                             <hr>

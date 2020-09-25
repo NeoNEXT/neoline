@@ -18,8 +18,8 @@
             <div class="asset-logo-box">
                 <img class="asset-logo" [src]="imageUrl || ''" alt="">
             </div>
-            <p class="asset-balance">{{ balance?.balance || 0 }} {{ balance?.symbol }}</p>
-            <p class="asset-money">{{ balance?.rateBalance }} {{ rateCurrency }} </p>
+            <p class="asset-balance">{{ (balance?.balance || 0) | numberFixed}} {{ balance?.symbol }}</p>
+            <p class="asset-money">{{ balance?.rateBalance | numberFixed }} {{ rateCurrency }} </p>
             <div class="transaction-btn-container">
                 <button class="receive-btn" mat-stroked-button color="primary"
                     [routerLink]="['/popup/transfer/receive']">
@@ -37,7 +37,7 @@
                     <img class="gas-logo" [src]="imageUrl || ''" alt="">
                 </div>
                 <div class="claim-status-box">
-                    <p class="number">{{ claimNumber }} GAS</p>
+                    <p class="number">{{ claimNumber | numberFixed }} GAS</p>
                     <p class="status">{{ claimStatus | translate | async }}</p>
                 </div>
                 <button class="claim-btn" mat-flat-button (click)="claim()"

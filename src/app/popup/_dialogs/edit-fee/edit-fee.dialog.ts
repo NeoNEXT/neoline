@@ -10,6 +10,7 @@ import { bignumber } from 'mathjs';
 })
 export class PopupEditFeeDialogComponent {
     showCustom = false;
+    minFee = 0;
     fee = 0;
     gasFeeSpeed: GasFeeSpeed;
     level = 1;
@@ -20,11 +21,14 @@ export class PopupEditFeeDialogComponent {
         public data: {
             fee: number;
             speedFee?: any;
+            minFee: number;
         }
     ) {
+        this.minFee = this.data.minFee || 0;
         this.fee = this.data.fee;
         if (this.data.speedFee) {
             this.gasFeeSpeed = this.data.speedFee;
+            this.updateGasFeeSpeed();
             this.updateLevel();
         } else {
             this.getGasFee();
@@ -34,13 +38,23 @@ export class PopupEditFeeDialogComponent {
     getGasFee() {
         if (this.assetState.gasFeeSpeed) {
             this.gasFeeSpeed = this.assetState.gasFeeSpeed;
+            if(Number(this.gasFeeSpeed.slow_price) === 0) {
+                this.updateGasFeeSpeed()
+            }
             this.updateLevel();
         } else {
             this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
                 this.gasFeeSpeed = res;
                 this.updateLevel();
+                this.updateGasFeeSpeed()
             });
         }
+    }
+
+    updateGasFeeSpeed() {
+        this.gasFeeSpeed.slow_price = bignumber(this.gasFeeSpeed.slow_price).add(bignumber(this.minFee)).toFixed();
+        this.gasFeeSpeed.propose_price = bignumber(this.gasFeeSpeed.propose_price).add(bignumber(this.minFee)).toFixed();
+        this.gasFeeSpeed.fast_price = bignumber(this.gasFeeSpeed.fast_price).add(bignumber(this.minFee)).toFixed();
     }
 
     updateLevel() {
@@ -60,7 +74,7 @@ export class PopupEditFeeDialogComponent {
     updateFee() {
         switch (this.level) {
             case 0:
-                this.fee = bignumber(this.gasFeeSpeed && this.gasFeeSpeed.slow_price || this.fee).toNumber();
+                this.fee = bignumber((this.gasFeeSpeed && this.gasFeeSpeed.slow_price) || this.fee).toNumber();
                 break;
             case 1:
                 this.fee = bignumber(this.gasFeeSpeed && this.gasFeeSpeed.propose_price || this.fee).toNumber();
