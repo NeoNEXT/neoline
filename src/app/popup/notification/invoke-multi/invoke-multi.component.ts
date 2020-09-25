@@ -123,7 +123,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                         ? item.triggerContractVerification.toString() === 'true' : false,
                     attachedAssets: item.attachedAssets
                 });
-                if(item.scriptHash === 'f46719e2d16bf50cddcef9d4bbfece901f73cbb6') {
+                if(item.scriptHash === 'f46719e2d16bf50cddcef9d4bbfece901f73cbb6' && item.operator === 'refund') {
                     this.showFeeEdit = false;
                 }
             });

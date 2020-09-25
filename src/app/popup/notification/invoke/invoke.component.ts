@@ -102,7 +102,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 this.scriptHash = params.scriptHash;
                 this.operation = params.operation;
                 this.args = this.pramsData.args;
-                this.showFeeEdit = this.scriptHash !== 'f46719e2d16bf50cddcef9d4bbfece901f73cbb6';
+                this.showFeeEdit =
+                    this.scriptHash !== 'f46719e2d16bf50cddcef9d4bbfece901f73cbb6'
+                    && this.operation !== 'refund';
                 this.args.forEach((item, index) => {
                     if (item.type === 'Address') {
                         const param2 = u.reverseHex(wallet.getScriptHashFromAddress(item.value));
@@ -127,7 +129,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     }
                 });
                 // this.fee = parseFloat(params.fee) || 0;
-                if(params.minReqFee) {
+                if (params.minReqFee) {
                     this.minFee = Number(params.minReqFee);
                 }
                 if (params.fee) {
@@ -534,7 +536,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
         }).afterClosed().subscribe(res => {
             if (typeof res === 'number') {
                 this.fee = res;
-                if(res < this.minFee) {
+                if (res < this.minFee) {
                     this.fee = this.minFee;
                 }
                 if (res === 0) {
