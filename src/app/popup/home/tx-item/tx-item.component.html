@@ -1,6 +1,6 @@
 <div class="popup-home-tx" (click)="$event.stopPropagation();txDetail(txid)">
     <div class="head">
-        <span class="time">{{ time * 1000 | date:'yyyy-MM-dd HH:mm' }}</span>
+        <span class="time">{{ time * 1000 | date:'yyyy-MM-dd HH:mm:ss' }}</span>
         <img class="more-info-btn" src="/assets/images/down_arrow.png" alt=""
             (click)="$event.stopPropagation();show = !show" [ngClass]="{'active': show}">
     </div>
