@@ -25,7 +25,7 @@
                         <input matInput [(ngModel)]="wallet.password" name="password" #password="ngModel" required
                             [minlength]="limit.passwordLimitation[0]" [maxlength]="limit.passwordLimitation[1]"
                             [pattern]="limit.pattern" [type]="hideImportPwd ? 'password' : 'text'" />
-                        <button tabindex="-1" mat-button matSuffix mat-icon-button type="button" (click)="togglePwd()">
+                        <button tabindex="-1" mat-button matSuffix mat-icon-button type="button" (click)="toggleImportPwd()">
                             <span [class]="hideImportPwd ? 'hide-pwd' : ''"></span>
                         </button>
                         <mat-error *ngIf="password.errors?.required">{{ 'passwordRequired' | translate | async }}
