@@ -83,7 +83,7 @@ export function expand() {
                 }
             }, '*');
             const txArr = await getLocalStorage(`${network}TxArr`, (temp) => { }) || [];
-            if(txArr.length === 0) {
+            if (txArr.length === 0) {
                 return;
             }
             httpPost(`${apiUrl}/v1/transactions/confirms`, { txids: txArr }, (txConfirmData) => {
@@ -247,14 +247,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         case requestTarget.Login: {
             getLocalStorage('shouldLogin', res => {
-                if(res === 'false' || res === false) {
+                if (res === 'false' || res === false) {
                     windowCallback({
                         return: requestTarget.Login,
                         data: true
                     });
                 } else {
                     window.open('/index.html#popup/login?notification=true', '_blank',
-                    'height=620, width=386, resizable=no, top=0, left=0');
+                        'height=620, width=386, resizable=no, top=0, left=0');
                 }
             })
             return true
@@ -312,10 +312,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                                 value: false
                             }
                         } else {
-                            this.chrome.windowCallback({
+                            chrome.windowCallback({
                                 error: ERRORS.MALFORMED_INPUT,
-                                return: requestTarget.Invoke,
-                                ID: this.messageID
+                                return: requestTarget.InvokeRead,
+                                ID: request.ID
                             });
                             window.close();
                         }
@@ -324,9 +324,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             });
             request.parameter[2] = args;
             const returnRes = { data: {}, ID: request.ID, return: requestTarget.InvokeRead, error: null };
-            httpPost(`${request.network}/v1/transactions/invokeread`, { params: request.parameter }, (res) => {
+            httpPost(`${request.network}`, {
+                jsonrpc: '2.0',
+                method: 'invokefunction',
+                params: request.parameter,
+                id: 3
+            }, (res) => {
                 res.return = requestTarget.InvokeRead;
-                if (res.bool_status) {
+                if (!res.error) {
                     returnRes.data = {
                         script: res.result.script,
                         state: res.result.state,
@@ -343,48 +348,64 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
         case requestTarget.InvokeReadMulti: {
             try {
-                const requestData = (request.parameter as InvokeReadMultiArgs);
-                requestData.invokeReadArgs.forEach(invokeReadItem => {
-                    invokeReadItem.args.forEach((item, index) => {
+                const requestData = request.parameter;
+                requestData.invokeReadArgs.forEach((invokeReadItem: any, index) => {
+                    invokeReadItem.args.forEach((item, itemIndex) => {
                         if (item.type === 'Address') {
-                            invokeReadItem.args[index] = {
+                            invokeReadItem.args[itemIndex] = {
                                 type: 'Hash160',
                                 value: getScriptHashFromAddress(item.value)
                             }
                         } else if (item.type === 'Boolean') {
                             if (typeof item.value === 'string') {
                                 if ((item.value && item.value.toLowerCase()) === 'true') {
-                                    invokeReadItem.args[index] = {
+                                    invokeReadItem.args[itemIndex] = {
                                         type: 'Boolean',
                                         value: true
                                     }
                                 } else if (item.value && item.value.toLowerCase() === 'false') {
-                                    invokeReadItem.args[index] = {
+                                    invokeReadItem.args[itemIndex] = {
                                         type: 'Boolean',
                                         value: false
                                     }
                                 } else {
-                                    this.chrome.windowCallback({
+                                    chrome.windowCallback({
                                         error: ERRORS.MALFORMED_INPUT,
-                                        return: requestTarget.Invoke,
-                                        ID: this.messageID
+                                        return: requestTarget.InvokeReadMulti,
+                                        ID: request.ID
                                     });
                                     window.close();
                                 }
                             }
                         }
                     });
+                    requestData.invokeReadArgs[index] = [invokeReadItem.scriptHash,invokeReadItem.operation, invokeReadItem.args];
                 })
                 const returnRes = { data: [], ID: request.ID, return: requestTarget.InvokeReadMulti, error: null };
-                httpPost(`${request.network}/v1/transactions/invokemulti`, { invokeArgs: request.parameter.invokeReadArgs }, (res) => {
-                    res.return = requestTarget.InvokeMulti;
-                    if (res.bool_status) {
-                        returnRes.data = res.result;
-                    } else {
-                        returnRes.error = ERRORS.RPC_ERROR;
-                    }
-                    windowCallback(returnRes);
-                }, null);
+                let requestCount = 0;
+                requestData.invokeReadArgs.forEach(item => {
+                    httpPost(`${request.network}`, {
+                        jsonrpc: '2.0',
+                        method: 'invokefunction',
+                        params: item,
+                        id: 3
+                    }, (res) => {
+                        requestCount ++;
+                        if (!res.error) {
+                            returnRes.data.push({
+                                script: res.result.script,
+                                state: res.result.state,
+                                gas_consumed: res.result.gas_consumed,
+                                stack: res.result.stack
+                            });
+                        } else {
+                            returnRes.error = ERRORS.RPC_ERROR;
+                        }
+                        if(requestCount === requestData.invokeReadArgs.length) {
+                            windowCallback(returnRes);
+                        }
+                    }, null);
+                })
             } catch (error) {
                 windowCallback({ data: [], ID: request.ID, return: requestTarget.InvokeReadMulti, error: ERRORS.RPC_ERROR });
             }

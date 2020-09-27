@@ -145,7 +145,7 @@ window.addEventListener('message', async (e) => {
                 if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
                     apiUrl = res || 'MainNet';
                 }
-                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
+                apiUrl = apiUrl === 'MainNet' ? mainRPC : testRPC;
                 e.data.network = apiUrl;
                 e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
                 chrome.runtime.sendMessage(e.data, (response) => {
@@ -161,7 +161,7 @@ window.addEventListener('message', async (e) => {
                 if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
                     apiUrl = res || 'MainNet';
                 }
-                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
+                apiUrl = apiUrl === 'MainNet' ? mainRPC : testRPC;
                 e.data.network = apiUrl;
                 chrome.runtime.sendMessage(e.data, (response) => {
                     return Promise.resolve('Dummy response to keep the console quiet');
