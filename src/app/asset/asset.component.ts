@@ -28,6 +28,7 @@ import {
 import {
     Unsubscribable
 } from 'rxjs';
+import { bignumber } from 'mathjs';
 
 @Component({
     templateUrl: 'asset.component.html',
@@ -82,7 +83,7 @@ export class AssetComponent implements OnInit, OnDestroy {
         this.displayAssets = [];
         this.rateSymbol = '';
         balanceRes.forEach(r => {
-            if (r.balance && r.balance > 0) {
+            if (r.balance && bignumber(r.balance).comparedTo(0) === 1) {
                 this.rateSymbol += r.symbol + ',';
             }
             this.displayAssets.push(r);

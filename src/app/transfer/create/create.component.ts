@@ -69,7 +69,7 @@ export class TransferCreateComponent implements OnInit {
         this.fromAddress = this.neon.address;
         this.aRoute.params.subscribe((params) => {
             this.asset.detail(this.neon.address, params.id).subscribe((res: Balance) => {
-                res.balance = Number(res.balance);
+                res.balance = bignumber(res.balance).toFixed();
                 this.balance = res;
                 this.assetId = this.balance.asset_id;
             });
@@ -88,7 +88,7 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('wrongAddress');
             return;
         }
-        if (this.balance.balance === undefined || this.balance.balance <= 0) {
+        if (this.balance.balance === undefined || bignumber(this.balance.balance ).comparedTo(0) < 1) {
             this.global.snackBarTip('balanceLack');
             return;
         }

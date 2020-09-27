@@ -27,6 +27,7 @@ import {
 } from 'rxjs';
 import { TransferService } from '@/app/transfer/transfer.service';
 import { rpc } from '@cityofzion/neon-core';
+import { bignumber } from 'mathjs';
 
 
 @Component({
@@ -141,10 +142,11 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     }
 
     public getAssetRate() {
-        if (this.balance !== undefined && this.balance.balance && this.balance.balance > 0) {
+        if (this.balance !== undefined && this.balance.balance && bignumber(this.balance.balance).comparedTo(0) === 1) {
             this.asset.getAssetRate(this.balance.symbol).subscribe(rateBalance => {
                 if (this.balance.symbol.toLowerCase() in rateBalance) {
-                    this.balance.rateBalance = rateBalance[this.balance.symbol.toLowerCase()] * this.balance.balance;
+                    this.balance.rateBalance = bignumber(rateBalance[this.balance.symbol.toLowerCase()])
+                        .mul(bignumber(this.balance.balance)).toNumber();
                 }
             });
         } else {

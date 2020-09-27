@@ -27,6 +27,7 @@ import {
 import {
     FilterBarService
 } from '@popup/_services/filter-bar.service';
+import { bignumber } from 'mathjs';
 import { Unsubscribable, forkJoin, from } from 'rxjs';
 
 @Component({
@@ -130,10 +131,11 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
     }
 
     public getAssetRate() {
-        if (this.balance.balance && this.balance.balance > 0) {
+        if (this.balance.balance && bignumber(this.balance.balance).comparedTo(0) === 1) {
             this.asset.getAssetRate(this.balance.symbol).subscribe(rateBalance => {
                 if (this.balance.symbol.toLowerCase() in rateBalance) {
-                    this.balance.rateBalance = rateBalance[this.balance.symbol.toLowerCase()] * this.balance.balance;
+                    this.balance.rateBalance = bignumber(rateBalance[this.balance.symbol.toLowerCase()])
+                        .mul(bignumber(this.balance.balance)).toNumber();
                 }
             });
         } else {
@@ -158,7 +160,7 @@ export class PopupHomeDetailComponent implements OnInit, OnDestroy {
                 const httpReq2 = txIdArray.length !== 0 ? this.http.post(`${this.global.apiDomain}/v1/transactions/confirms`, {
                     txids: txIdArray
                 }) : new Promise<any>((mResolve) => {
-                    mResolve({result: []});
+                    mResolve({ result: [] });
                 });
                 forkJoin(httpReq1, httpReq2).subscribe(result => {
                     const txPage = result[0];

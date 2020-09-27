@@ -10,6 +10,7 @@ import { NEO, Balance, GAS } from '@/models/models';
 import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.component';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupDelTokenDialogComponent } from '../_dialogs';
+import { bignumber } from 'mathjs';
 
 @Component({
     templateUrl: 'asset-detail.component.html',
@@ -79,14 +80,13 @@ export class PopupAssetDetailComponent implements OnInit {
     }
 
     getAssetRate() {
-        if (this.balance.balance && this.balance.balance > 0) {
+        if (this.balance.balance && bignumber(this.balance.balance).comparedTo(0) > 0) {
             this.assetState
                 .getAssetRate(this.balance.symbol)
                 .subscribe(rateBalance => {
                     if (this.balance.symbol.toLowerCase() in rateBalance) {
-                        this.balance.rateBalance =
-                            rateBalance[this.balance.symbol.toLowerCase()] *
-                            this.balance.balance || 0;
+                        this.balance.rateBalance = bignumber(rateBalance[this.balance.symbol.toLowerCase()])
+                            .mul(bignumber(this.balance.balance)).toNumber() || 0;
                     } else {
                         this.balance.rateBalance = 0;
                     }
@@ -133,12 +133,10 @@ export class PopupAssetDetailComponent implements OnInit {
     toWeb() {
         this.showMenu = false;
         const isNep5 = this.assetId !== NEO && this.assetId !== GAS;
-        console.log( `https://${
-            this.net === 'TestNet' ? 'testnet.' : ''
+        console.log(`https://${this.net === 'TestNet' ? 'testnet.' : ''
             }neotube.io/${isNep5 ? 'nep5' : 'asset'}/${this.assetId}`)
         window.open(
-            `https://${
-            this.net === 'TestNet' ? 'testnet.' : ''
+            `https://${this.net === 'TestNet' ? 'testnet.' : ''
             }neotube.io/${isNep5 ? 'nep5' : 'asset'}/${this.assetId}/page/1`
         );
     }

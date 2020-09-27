@@ -21,6 +21,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '../_dialogs';
 import { Router } from '@angular/router';
 import { rpc } from '@cityofzion/neon-core';
+import { bignumber } from 'mathjs';
 
 
 @Component({
@@ -134,8 +135,11 @@ export class PopupHomeComponent implements OnInit {
         this.assetState.getAssetRate(rateSymbol).subscribe(rateBalance => {
             this.assetList.map(d => {
                 if (d.symbol.toLowerCase() in rateBalance) {
-                    d.rateBalance =
-                        rateBalance[d.symbol.toLowerCase()] * d.balance;
+                    try {
+                        d.rateBalance = bignumber(rateBalance[d.symbol.toLowerCase()]).mul(bignumber(d.balance)).toNumber();
+                    } catch (error) {
+                        d.rateBalance = 0;
+                    }
                 }
                 return d;
             });
@@ -202,14 +206,14 @@ export class PopupHomeComponent implements OnInit {
     }
 
     public getAssetRate() {
-        if (this.balance.balance && this.balance.balance > 0) {
+        if (this.balance.balance && bignumber(this.balance.balance ).comparedTo(0) === 1) {
             this.assetState
                 .getAssetRate(this.balance.symbol)
                 .subscribe(rateBalance => {
                     if (this.balance.symbol.toLowerCase() in rateBalance) {
                         this.balance.rateBalance =
                             rateBalance[this.balance.symbol.toLowerCase()] *
-                            this.balance.balance || 0;
+                            bignumber(this.balance.balance || 0 ).toNumber();
                     } else {
                         this.balance.rateBalance = 0;
                     }

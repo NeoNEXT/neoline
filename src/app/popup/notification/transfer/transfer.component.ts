@@ -169,7 +169,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public submit() {
         this.loading = true;
         this.loadingMsg = 'Loading';
-        if (this.balance.balance === undefined || this.balance.balance <= 0) {
+        if (this.balance.balance === undefined || bignumber(this.balance.balance ).comparedTo(0) < 1) {
             this.global.snackBarTip('balanceLack');
             return;
         }

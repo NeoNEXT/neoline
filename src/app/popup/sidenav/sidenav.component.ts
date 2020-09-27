@@ -90,7 +90,7 @@ export class PopupSidenavComponent implements OnInit, OnDestroy {
 
     public handlerBalance(balanceRes: Balance[]) {
         const balance = balanceRes.find(b => b.asset_id === NEO);
-        this.neoBalance = balance.balance;
+        this.neoBalance = Number(balance.balance);
         this.neoSymbol = balance.symbol;
     }
 

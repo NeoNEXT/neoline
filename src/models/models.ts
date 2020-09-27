@@ -56,7 +56,7 @@ export interface Nep5Detail {
 
 export interface Balance {
     asset_id: string;
-    balance: number;
+    balance: string;
     name: string;
     symbol: string;
     watching: boolean;
