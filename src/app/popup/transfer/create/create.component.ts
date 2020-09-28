@@ -41,6 +41,8 @@ import { GasFeeSpeed } from '../../_lib/type';
 export class TransferCreateComponent implements OnInit {
     public amount: string;
     public fee: any;
+    public loading = false;
+    public loadingMsg: string;
     gasFeeSpeed: GasFeeSpeed;
     public fromAddress: string;
     public toAddress: string;
@@ -187,6 +189,8 @@ export class TransferCreateComponent implements OnInit {
         }
     }
     private async resolveSend(tx: Transaction) {
+        this.loading = true;
+        this.loadingMsg = 'Wait';
         try {
             const res = await rpc.Query.sendRawTransaction(tx.serialize(true)).execute(this.global.RPCDomain);
             if (!res.result ||
@@ -211,12 +215,16 @@ export class TransferCreateComponent implements OnInit {
             }).afterClosed().subscribe(() => {
                 history.go(-1);
             })
+            this.loading = false;
+            this.loadingMsg = '';
             return res;
         }
         catch (err) {
             this.creating = false;
             this.global.snackBarTip('transferFailed', err.msg || err);
         }
+        this.loading = false;
+        this.loadingMsg = '';
     }
 
     public pushTransaction(transaction: any) {

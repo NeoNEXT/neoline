@@ -38,8 +38,8 @@
                         <img [src]="assetImageUrl" alt="">
                     </div>
                     <div class="asset-amount-box">
-                        <p>-{{ data.amount }} {{ symbol }}</p>
-                        <p>-{{ money }} {{ rateCurrency }}</p>
+                        <p>-{{ data.amount | numberFixed }} {{ symbol }}</p>
+                        <p>-{{ money | numberFixed }} {{ rateCurrency }}</p>
                     </div>
                 </div>
                 <div class="detail-tab-content">
@@ -49,8 +49,8 @@
                                 <p class="label">GAS FEE</p>
                                 <div class="fee-info">
                                     <p (click)="editFee()">{{ 'edit' | translate | async }}</p>
-                                    <p>{{ data.fee }} GAS</p>
-                                    <p>{{ feeMoney }} {{ rateCurrency }}</p>
+                                    <p>{{ data.fee | numberFixed }} GAS</p>
+                                    <p>{{ feeMoney | numberFixed }} {{ rateCurrency }}</p>
                                 </div>
                             </div>
                             <hr>
@@ -58,8 +58,8 @@
                                 <p  class="label">TOTAL</p>
                                 <div class="total-info">
                                     <p>Amount+GAS FEE</p>
-                                    <p>{{ data.amount }} {{ symbol }} + {{ data.fee }}GAS</p>
-                                    <p>{{ totalMoney }} {{ rateCurrency }}</p>
+                                    <p>{{ data.amount | numberFixed }} {{ symbol }} + {{ data.fee | numberFixed }}GAS</p>
+                                    <p>{{ totalMoney | numberFixed }} {{ rateCurrency }}</p>
                                 </div>
                             </div>
                         </mat-tab>
