@@ -1,0 +1,56 @@
+<div class="create-container tab-container">
+    <p class="title">{{ 'welcomeCreate' | translate | async}}</p>
+    <form #walletForm="ngForm">
+        <mat-form-field class="popup-wallet-input-body" appearance="fill">
+            <img matPrefix src="/assets/images/wallet/wallet_icon.png" alt="" />
+            <mat-label>{{ 'enterWalletName' | translate | async }}</mat-label>
+            <input matInput [(ngModel)]="wallet.walletName" [minlength]="limit.nameLimitation[0]"
+                [maxlength]="limit.nameLimitation[1]" name="walletName" #walletName="ngModel" required />
+            <mat-error *ngIf="walletName.errors?.required">{{ 'walletNameIsRequired' | translate | async }}
+            </mat-error>
+            <mat-error *ngIf="walletName.errors?.minlength">{{ 'lengthLimit' | translate | async }}:
+                {{ limit.nameLimitation[0] }}-{{ limit.nameLimitation[1] }} </mat-error>
+        </mat-form-field>
+
+        <mat-form-field class="popup-wallet-input-body" appearance="fill" focused="true">
+            <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
+            <mat-label>{{ 'enterPassword' | translate | async }}</mat-label>
+            <input matInput [(ngModel)]="wallet.password" name="password" #password="ngModel" required
+                [minlength]="limit.passwordLimitation[0]" [maxlength]="limit.passwordLimitation[1]"
+                [pattern]="limit.pattern" [type]="hidePwd ? 'password' : 'text'" />
+            <button tabindex="-1" mat-button matSuffix mat-icon-button type="button" (click)="hidePwd = !hidePwd">
+                <span [class]="hidePwd ? 'hide-pwd' : ''"></span>
+            </button>
+            <mat-error *ngIf="password.errors?.required">{{ 'passwordRequired' | translate | async }}
+            </mat-error>
+            <mat-error *ngIf="password.errors?.minlength">{{ 'lengthLimit' | translate | async }}:
+                {{ limit.passwordLimitation[0] }}-{{ limit.passwordLimitation[1] }} </mat-error>
+            <mat-error *ngIf="password.errors?.pattern">
+                {{ 'onlySupport' | translate | async}}: 0-9 A-Z a-z _-+=,.:!
+            </mat-error>
+        </mat-form-field>
+        <mat-form-field class="popup-wallet-input-body" appearance="fill" focused="true">
+            <img matPrefix src="/assets/images/wallet/wallet_lock.png" />
+            <mat-label>{{ 'enterConfirmPassword' | translate | async }}</mat-label>
+            <input matInput [(ngModel)]="wallet.confirmPassword" name="confirmPassword" #confirmPassword="ngModel"
+                required [minlength]="limit.passwordLimitation[0]" [maxlength]="limit.passwordLimitation[1]"
+                [pattern]="limit.pattern" [type]="hideConfirmPwd ? 'password' : 'text'"
+                (keyup.enter)="(!isInit && !walletForm.invalid && !loading && confirmPassword.value == password.value) ? submitCreate() : null " />
+            <button tabindex="-1" mat-button matSuffix mat-icon-button type="button"
+                (click)="hideConfirmPwd = !hideConfirmPwd">
+                <span [class]="hideConfirmPwd ? 'hide-pwd' : ''"></span>
+            </button>
+        </mat-form-field>
+        <mat-error class="error" *ngIf="confirmPassword.value != password.value && confirmPassword.value != ''">
+            {{ 'confirmError' | translate | async }}</mat-error>
+
+    </form>
+    <button class="popup-wallet-body-submit" mat-flat-button color="primary"
+        [disabled]="isInit || walletForm.invalid || loading || confirmPassword.value != password.value" (click)="submitCreate()">
+        <ng-container *ngIf="!loading">{{ 'create' | translate | async }}</ng-container>
+        <ng-container *ngIf="loading">{{ 'creating' | translate | async }}</ng-container>
+    </button>
+    <button class="popup-wallet-body-cancel" mat-flat-button (click)="cancel()">
+        <ng-container>{{ 'cancel' | translate | async }}</ng-container>
+    </button>
+</div>

@@ -7,10 +7,14 @@ import { PopupWalletRoutingModule } from '@popup/wallet/wallet.route';
 import { ShareModule } from '@app/share';
 
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { PopupWalletCreateComponent } from './create/create.component';
+import { PopupWalletImportComponent } from './import/import.component';
 
 @NgModule({
     declarations: [
-        PopupWalletComponent
+        PopupWalletComponent,
+        PopupWalletCreateComponent,
+        PopupWalletImportComponent
     ],
     imports: [
         CommonModule,
