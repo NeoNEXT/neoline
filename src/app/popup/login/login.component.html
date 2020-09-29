@@ -12,8 +12,7 @@
         <mat-form-field class="popup-login-input" appearance="fill">
             <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
             <mat-label>{{ 'pwdInput' | translate | async }}</mat-label>
-            <input matInput [minlength]="limit.passwordLimitation[0]" [maxlength]="limit.passwordLimitation[1]"
-                [pattern]="limit.pattern" [minlength]="limit.passwordLimitation[0]"
+            <input matInput [minlength]="limit.passwordLimitation[0]"
                 [maxlength]="limit.passwordLimitation[1]" [pattern]="limit.pattern" name="password" #password="ngModel"
                 required [(ngModel)]="wallet.password" [type]="hidePwd ? 'password' : 'text'"
                 (keyup.enter)="(!isInit && !loginForm.invalid && !loading) ? login() : null " />
