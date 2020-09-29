@@ -43,6 +43,7 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
         this.walletImport = new WalletImport();
         this.hideImportPwd = true;
         this.hideWIF = true;
+        this.hideConfirmPwd = true;
 
         this.walletNep6Import = new WalletImport();
         this.hideNep6Pwd = true;

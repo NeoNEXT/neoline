@@ -33,6 +33,8 @@ let currLang = 'en';
 let tabCurr: any;
 export let password = '';
 
+export let haveBackupTip: boolean = null;
+
 export const version = chrome.runtime.getManifest().version;
 
 export function expand() {

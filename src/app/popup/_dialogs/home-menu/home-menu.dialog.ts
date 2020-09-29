@@ -58,6 +58,7 @@ export class PopupHomeMenuDialogComponent {
             return: EVENT.ACCOUNT_CHANGED
         });
         location.href = `index.html#popup`;
+        this.chrome.setHaveBackupTip(null);
     }
 
     public lock() {

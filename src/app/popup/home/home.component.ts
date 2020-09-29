@@ -55,7 +55,7 @@ export class PopupHomeComponent implements OnInit {
     public currentTxPage = 2;
     assetList: Balance[] = [];
 
-    showBackup = true;
+    showBackup: boolean = null;
 
     // 菜单
     showMenu = false;
@@ -95,6 +95,12 @@ export class PopupHomeComponent implements OnInit {
         this.net = this.global.net;
         this.initClaim();
         this.getAssetList();
+        this.showBackup = this.chrome.getHaveBackupTip();
+        if( this.showBackup === null) {
+            this.chrome.getWalletStatus(this.neon.address).subscribe(res => {
+                this.showBackup = !res;
+            });
+        }
     }
 
     getAssetList() {
@@ -349,5 +355,9 @@ export class PopupHomeComponent implements OnInit {
                     });
                 }
             });
+    }
+    backupLater() {
+        this.chrome.setHaveBackupTip(false);
+        this.showBackup = false;
     }
 }

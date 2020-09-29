@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupBackupTipDialogComponent } from '../_dialogs';
-import { NeonService, GlobalService } from '@/app/core';
+import { NeonService, GlobalService, ChromeService } from '@/app/core';
 
 declare var QRCode: any;
 
@@ -11,12 +11,15 @@ declare var QRCode: any;
 })
 export class PopupBackupComponent implements OnInit {
     showKey = false;
-    public address: string;
+    WIF = '';
 
-    constructor(private neon: NeonService, private global: GlobalService, private dialog: MatDialog) {}
+    constructor(private neon: NeonService, private global: GlobalService, private dialog: MatDialog,
+        private chrome: ChromeService) { }
 
     ngOnInit(): void {
-        this.address = this.neon.address;
+        this.WIF = this.neon.WIFArr[
+            this.neon.walletArr.findIndex(item => item.accounts[0].address === this.neon.wallet.accounts[0].address)
+        ]
     }
 
     backup() {
@@ -35,10 +38,11 @@ export class PopupBackupComponent implements OnInit {
     }
 
     showKeyQrCode() {
+        this.updateWalletStatus();
         if (QRCode) {
             setTimeout(() => {
                 const qrcode = new QRCode('key-qrcode', {
-                    text: this.address,
+                    text: this.WIF,
                     width: 140,
                     height: 140,
                     colorDark: '#333333',
@@ -52,7 +56,7 @@ export class PopupBackupComponent implements OnInit {
     copy() {
         const input = document.createElement('input');
         input.setAttribute('readonly', 'readonly');
-        input.setAttribute('value', this.address);
+        input.setAttribute('value', this.WIF);
         document.body.appendChild(input);
         input.select();
         if (document.execCommand('copy')) {
@@ -60,5 +64,10 @@ export class PopupBackupComponent implements OnInit {
             this.global.snackBarTip('copied');
         }
         document.body.removeChild(input);
+    }
+
+    updateWalletStatus() {
+        this.chrome.setHaveBackupTip(false);
+        this.chrome.setWalletsStatus(this.neon.address);
     }
 }

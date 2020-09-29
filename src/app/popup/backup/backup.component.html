@@ -19,7 +19,7 @@
     <p class="title">{{ 'youPrivateKey' | translate | async }}</p>
     <div id="key-qrcode"></div>
     <div class="copy-key">
-        <div class="key">c63D9eA53bA7d06Ba2E592626dE52fEc63D9eA53bA7d06Ba2E592626dE52FE</div>
+        <div class="key">{{ WIF }}</div>
         <img src="/assets/images/backup/copy.png" (click)="copy()" alt="">
     </div>
     <p class="tip">{{ 'privateKeyTip' | translate | async }}</p>

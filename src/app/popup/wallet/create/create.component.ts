@@ -25,6 +25,7 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
         private neon: NeonService
     ) {
         this.hidePwd = true;
+        this.hideConfirmPwd = true;
         this.wallet = new WalletCreation();
         this.limit = WalletInitConstant;
     }

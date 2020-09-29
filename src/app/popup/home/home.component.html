@@ -78,7 +78,7 @@
     <p class="title">{{ 'backUpsafeTip' | translate | async }}</p>
     <p class="desc">{{ 'backUpSafeDesc' | translate | async }}</p>
     <div class="btn-group">
-        <button mat-button class="cancel" (click)="showBackup = false">
+        <button mat-button class="cancel" (click)="backupLater()">
             {{ 'backUpTipLater' | translate | async }}
         </button>
         <button mat-button class="yes" routerLink="/popup/backup">{{ 'backUpNow' | translate | async }}</button>

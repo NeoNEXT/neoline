@@ -17,6 +17,7 @@ import {
 } from '@/models/models';
 import { EVENT } from '@/models/dapi';
 import { loschmidtDependencies } from 'mathjs';
+import { stat } from 'fs';
 
 declare var chrome: any;
 
@@ -71,7 +72,7 @@ export class ChromeService {
      * Get saved account from storage.
      * 从存储中获取当前钱包
      */
-    public getWallet(): Observable<WalletJSON> {
+    public getWallet(): Observable<any> {
         if (!this.check) {
             try {
                 return of(JSON.parse(localStorage.getItem('wallet')));
@@ -89,7 +90,7 @@ export class ChromeService {
             }
         }));
     }
-    public getWalletArray(): Observable<Array<WalletJSON>> {
+    public getWalletArray(): Observable<Array<any>> {
         if (!this.check) {
             try {
                 return of(JSON.parse(localStorage.getItem('walletArr')));
@@ -130,7 +131,7 @@ export class ChromeService {
      * Set wallet as active account, and add to history list.
      * 保存当前钱包，并记录到历史
      */
-    public setWallet(w: WalletJSON) {
+    public setWallet(w: any) {
         if (!this.check) {
             localStorage.setItem('wallet', JSON.stringify(w));
             return;
@@ -147,7 +148,7 @@ export class ChromeService {
      * Set wallets, and add to history list.
      * 保存钱包数组，并记录到历史
      */
-    public setWalletArray(w: Array<WalletJSON>) {
+    public setWalletArray(w: Array<any>) {
         if (!this.check) {
             localStorage.setItem('walletArr', JSON.stringify(w));
             return;
@@ -633,11 +634,86 @@ export class ChromeService {
         if (!this.check) {
             localStorage.setItem('shouldLogin', 'false');
         } else {
-            this.crx.setLocalStorage({setLocalStorage: false});
+            this.crx.setLocalStorage({ setLocalStorage: false });
         }
         this.setWIFArray([]);
         this.setWalletArray([]);
         this.setWallet(undefined);
+    }
+
+    public getHaveBackupTip() {
+        if (!this.check) {
+            if (sessionStorage.getItem('haveBackupTip') === 'true') {
+                return true
+            }
+            if (sessionStorage.getItem('haveBackupTip') === 'false') {
+                return false
+            }
+            return sessionStorage.getItem('haveBackupTip');
+        } else {
+            console.log('----------');
+            console.log(this.crx.haveBackupTip);
+            return this.crx.haveBackupTip;
+        }
+    }
+
+    public setHaveBackupTip(status?: boolean) {
+        const setValue = status === null
+        if (status === null) {
+            if (!this.check) {
+                sessionStorage.removeItem('haveBackupTip');
+            } else {
+                this.crx.haveBackupTip = null;
+            }
+        } else {
+            if (!this.check) {
+                sessionStorage.setItem('haveBackupTip', status.toString());
+            } else {
+                this.crx.haveBackupTip = status;
+            }
+        }
+    }
+
+    public setWalletsStatus(address: string) {
+        let walletsIsBackup = {};
+        if (!this.check) {
+            walletsIsBackup = JSON.parse(localStorage.getItem('walletsStatus')) || {};
+            walletsIsBackup[address] = true;
+            localStorage.setItem('walletsStatus', JSON.stringify(walletsIsBackup));
+        } else {
+            this.crx.getLocalStorage('walletsStatus', (res) => {
+                if (res) {
+                    walletsIsBackup = res || {};
+                } else {
+                    walletsIsBackup = {};
+                }
+                walletsIsBackup[address] = true;
+                this.crx.setLocalStorage({
+                    walletsStatus: walletsIsBackup
+                });
+            });
+        }
+    }
+
+    public getWalletStatus(address: string): Observable<boolean> {
+        let walletsIsBackup = {};
+        if (!this.check) {
+            try {
+                walletsIsBackup = JSON.parse(localStorage.getItem('walletsStatus'));
+                return of(walletsIsBackup[address] || false);
+            } catch (e) {
+                return of(false);
+            }
+        }
+        return from(new Promise<boolean>((resolve, reject) => {
+            try {
+                this.crx.getLocalStorage('walletsStatus', (res) => {
+                    resolve((res && res[address]) || false);
+                });
+            } catch (e) {
+                resolve(false);
+            }
+        }));
     }
 
     public getLocalStorage(key): Promise<any> {
@@ -645,6 +721,7 @@ export class ChromeService {
             return res;
         });
     }
+
 
     public setLocalStorage(data) {
         this.crx.setLocalStorage(data);

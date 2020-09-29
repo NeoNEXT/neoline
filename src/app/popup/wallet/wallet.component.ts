@@ -34,15 +34,21 @@ export class PopupWalletComponent implements OnInit {
         }
     }
 
-    public updateLocalWallet(data: any) {
-        console.log(data);
+    public updateLocalWallet(data: any, type: number) {
+
         this.neon.pushWIFArray(data.accounts[0].wif);
         this.chrome.setWIFArray(this.neon.WIFArr);
         this.neon.pushWalletArray(data.export());
         this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
         this.chrome.setWallet(data.export());
         this.global.$wallet.next('open');
-        const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
+        if(type === 0) {
+            this.chrome.setHaveBackupTip(true);
+        } else {
+            this.chrome.setWalletsStatus(this.neon.address)
+            this.chrome.setHaveBackupTip(false);
+        }
+        const returnUrl = this.route.snapshot.queryParams.returnUrl || (type === 0 ?'/popup/backup' : '/popup');
         this.router.navigateByUrl(returnUrl);
     }
 
