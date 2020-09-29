@@ -123,23 +123,32 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                         ? item.triggerContractVerification.toString() === 'true' : false,
                     attachedAssets: item.attachedAssets
                 });
-                if(item.scriptHash === 'f46719e2d16bf50cddcef9d4bbfece901f73cbb6' && item.operator === 'refund') {
+                if ((item.scriptHash === 'f46719e2d16bf50cddcef9d4bbfece901f73cbb6'
+                    && item.operation === 'refund' && this.pramsData.hostname.indexOf('flamingo') >= 0)) {
                     this.showFeeEdit = false;
                 }
             });
-            if(params.minReqFee) {
+            if (this.pramsData.hostname.indexOf('switcheo') >= 0) {
+                this.showFeeEdit = false;
+            }
+            if (params.minReqFee) {
                 this.minFee = Number(params.minReqFee);
             }
             if (params.fee) {
-                this.fee = Number(params.fee);
+                this.fee = Number(params.fee) || 0;
             } else {
-                if (this.assetState.gasFeeSpeed) {
-                    this.fee = bignumber(this.minFee).add(bignumber(this.assetState.gasFeeSpeed.propose_price)).toNumber();
+                if(this.showFeeEdit) {
+                    if (this.assetState.gasFeeSpeed) {
+                        this.fee = bignumber(this.minFee).add(bignumber(this.assetState.gasFeeSpeed.propose_price)).toNumber();
+                    } else {
+                        this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
+                            this.fee = bignumber(this.minFee).add(bignumber(res.propose_price)).toNumber();
+                            this.signTx();
+                        });
+                    }
                 } else {
-                    this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
-                        this.fee = bignumber(this.minFee).add(bignumber(res.propose_price)).toNumber();
-                        this.signTx();
-                    });
+                    this.fee = 0;
+                    this.feeMoney = '0';
                 }
             }
             if (this.assetIntentOverrides === null && this.pramsData.assetIntentOverrides !== undefined) {
@@ -212,6 +221,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     }
 
     private async resolveSend(transaction: Transaction) {
+        this.loading = true;
+        this.loadingMsg = 'Wait';
         new Promise((myResolve) => {
             myResolve(true)
         }).then(res => {
@@ -568,7 +579,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         }).afterClosed().subscribe(res => {
             if (typeof res === 'number') {
                 this.fee = res;
-                if(res < this.minFee) {
+                if (res < this.minFee) {
                     this.fee = this.minFee;
                 }
                 if (res === 0) {

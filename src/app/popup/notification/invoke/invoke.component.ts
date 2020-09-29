@@ -102,9 +102,13 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 this.scriptHash = params.scriptHash;
                 this.operation = params.operation;
                 this.args = this.pramsData.args;
-                this.showFeeEdit =
-                    this.scriptHash !== 'f46719e2d16bf50cddcef9d4bbfece901f73cbb6'
-                    && this.operation !== 'refund';
+                if ((this.scriptHash === 'f46719e2d16bf50cddcef9d4bbfece901f73cbb6'
+                    && this.operation === 'refund')) {
+                    this.showFeeEdit = false;
+                }
+                if (this.pramsData.hostname.indexOf('switcheo') >= 0) {
+                    this.showFeeEdit = false;
+                }
                 this.args.forEach((item, index) => {
                     if (item.type === 'Address') {
                         const param2 = u.reverseHex(wallet.getScriptHashFromAddress(item.value));
@@ -135,13 +139,18 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 if (params.fee) {
                     this.fee = Number(params.fee);
                 } else {
-                    if (this.assetState.gasFeeSpeed) {
-                        this.fee = bignumber(this.minFee).add(bignumber(this.assetState.gasFeeSpeed.propose_price)).toNumber();
+                    if (this.showFeeEdit) {
+                        if (this.assetState.gasFeeSpeed) {
+                            this.fee = bignumber(this.minFee).add(bignumber(this.assetState.gasFeeSpeed.propose_price)).toNumber();
+                        } else {
+                            this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
+                                this.fee = bignumber(this.minFee).add(bignumber(res.propose_price)).toNumber();
+                                this.signTx();
+                            });
+                        }
                     } else {
-                        this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
-                            this.fee = bignumber(this.minFee).add(bignumber(res.propose_price)).toNumber();
-                            this.signTx();
-                        });
+                        this.fee = 0;
+                        this.feeMoney = '0';
                     }
                 }
                 this.attachedAssets = this.pramsData.attachedAssets
@@ -220,6 +229,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
     }
 
     private async resolveSend(transaction: Transaction) {
+        this.loading = true;
+        this.loadingMsg = 'Wait';
         let serialize = ''
         try {
             serialize = transaction.serialize(true)

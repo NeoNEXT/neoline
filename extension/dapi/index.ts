@@ -231,6 +231,7 @@ export class Init {
                     connectResult = true;
                 }
                 if (connectResult === true) {
+                    (parameter as any).hostname = location.hostname;
                     return sendMessage(requestTarget.Invoke, parameter);
                 } else {
                     return new Promise((_, reject) => {
@@ -279,6 +280,7 @@ export class Init {
                     connectResult = true;
                 }
                 if (connectResult === true) {
+                    (parameter as any).hostname = location.hostname;
                     return sendMessage(requestTarget.InvokeMulti, parameter);
                 } else {
                     return new Promise((_, reject) => {
