@@ -139,6 +139,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 if (params.fee) {
                     this.fee = Number(params.fee);
                 } else {
+                    this.fee = 0;
                     if (this.showFeeEdit) {
                         if (this.assetState.gasFeeSpeed) {
                             this.fee = bignumber(this.minFee).add(bignumber(this.assetState.gasFeeSpeed.propose_price)).toNumber();
@@ -148,23 +149,22 @@ export class PopupNoticeInvokeComponent implements OnInit {
                                 this.signTx();
                             });
                         }
-                    } else {
-                        this.fee = 0;
-                        this.feeMoney = '0';
                     }
                 }
                 this.attachedAssets = this.pramsData.attachedAssets
 
                 if (this.assetIntentOverrides == null && this.pramsData.assetIntentOverrides !== undefined) {
                     this.assetIntentOverrides = this.pramsData.assetIntentOverrides
-                    // this.fee = 0;
-                    // this.feeMoney = '0';
+                    if(!this.showFeeEdit) {
+                        this.fee = 0;
+                        this.feeMoney = '0';
+                    }
                     this.attachedAssets = null;
                 }
                 if (this.txHashAttributes === null && this.pramsData.txHashAttributes !== undefined) {
                     this.txHashAttributes = this.pramsData.txHashAttributes
                 }
-                this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
+                this.broadcastOverride = this.pramsData.broadcastOverride === true || false;
                 if (params.extra_witness !== undefined) {
                     this.extraWitness = this.pramsData.extra_witness
                 }

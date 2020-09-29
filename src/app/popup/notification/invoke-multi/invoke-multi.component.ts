@@ -137,7 +137,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             if (params.fee) {
                 this.fee = Number(params.fee) || 0;
             } else {
-                if(this.showFeeEdit) {
+                this.fee = 0;
+                if (this.showFeeEdit) {
                     if (this.assetState.gasFeeSpeed) {
                         this.fee = bignumber(this.minFee).add(bignumber(this.assetState.gasFeeSpeed.propose_price)).toNumber();
                     } else {
@@ -146,15 +147,14 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                             this.signTx();
                         });
                     }
-                } else {
-                    this.fee = 0;
-                    this.feeMoney = '0';
                 }
             }
             if (this.assetIntentOverrides === null && this.pramsData.assetIntentOverrides !== undefined) {
                 this.assetIntentOverrides = this.pramsData.assetIntentOverrides
-                // this.fee = 0;
-                // this.feeMoney = '0';
+                if(!this.showFeeEdit) {
+                    this.fee = 0;
+                    this.feeMoney = '0';
+                }
                 this.invokeArgs.forEach(item => {
                     item.attachedAssets = null;
                 });
@@ -165,7 +165,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             if (params.extra_witness !== undefined) {
                 this.extraWitness = this.pramsData.extra_witness
             }
-            this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
+            this.broadcastOverride = this.pramsData.broadcastOverride === true || false;
             this.signTx();
         });
         window.onbeforeunload = () => {
@@ -200,12 +200,12 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.neon.walletArr.findIndex(item => item.accounts[0].address === this.neon.wallet.accounts[0].address)
             ]
             try {
-                transaction.sign(wif);
+                this.tx = transaction.sign(wif);
             } catch (error) {
                 console.log(error);
             }
-            this.tx = transaction;
             this.txSerialize = this.tx.serialize(true);
+
             this.loading = false
         } catch (error) {
             this.loading = false;
@@ -221,6 +221,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     }
 
     private async resolveSend(transaction: Transaction) {
+
         this.loading = true;
         this.loadingMsg = 'Wait';
         new Promise((myResolve) => {
@@ -349,7 +350,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                             try {
                                 newTx.addOutput({
                                     assetId: NEO.substring(2),
-                                    value: new Fixed8(Number(item.attachedAssets.NEO)), scriptHash: toScript
+                                    value: new Fixed8(Number(item.attachedAssets.NEO)),
+                                    scriptHash: toScript
                                 });
                             } catch (error) {
                                 this.chrome.windowCallback({
@@ -364,7 +366,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                             try {
                                 newTx.addOutput({
                                     assetId: GAS.substring(2),
-                                    value: new Fixed8(Number(item.attachedAssets.GAS)), scriptHash: toScript
+                                    value: new Fixed8(Number(item.attachedAssets.GAS)),
+                                    scriptHash: toScript
                                 });
                             } catch (error) {
                                 this.chrome.windowCallback({
@@ -536,7 +539,9 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     if (gasAssetId.startsWith('0x') && gasAssetId.length === 66) {
                         gasAssetId = gasAssetId.substring(2);
                     }
-                    newTx.addOutput({ assetId: gasAssetId, value: this.global.mathSub(curr, fee), scriptHash: fromScript });
+                    newTx.addOutput({
+                        assetId: gasAssetId, value: this.global.mathSub(curr, fee), scriptHash: fromScript
+                    });
                 }
                 mResolve(newTx);
             });
@@ -553,7 +558,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     }
 
     public confirm() {
-        if (this.broadcastOverride === true) {
+        if (this.broadcastOverride) {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
