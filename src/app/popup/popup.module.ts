@@ -13,6 +13,7 @@ import { PopupRoutingModule } from '@popup/popup.route';
 import { PopupComponent } from '@popup/popup.component';
 import { PopupSidenavComponent } from '@popup/sidenav/sidenav.component';
 import { PopupAssetDetailComponent } from './asset-detail/asset-detail.component';
+import { PopupBackupComponent } from './backup/backup.component';
 
 import {
     PopupLogoutDialogComponent,
@@ -24,7 +25,8 @@ import {
     PopupTxDetailDialogComponent,
     PopupTransferSuccessDialogComponent,
     PopupInputDialogComponent,
-    PopupEditFeeDialogComponent
+    PopupEditFeeDialogComponent,
+    PopupBackupTipDialogComponent
 } from '@popup/_dialogs';
 import { PopupAuthorizationListDialogComponent } from '@popup/_dialogs/authorization-list/authorization-list.dialog';
 import { PopupQRCodeDialogComponent } from '@popup/_dialogs';
@@ -65,10 +67,12 @@ import { TransferModule } from './transfer';
         PopupHomeMenuDialogComponent,
         PopupAuthorizationListDialogComponent,
         PopupAssetDetailComponent,
+        PopupBackupComponent,
         PopupTxDetailDialogComponent,
         PopupTransferSuccessDialogComponent,
         PopupInputDialogComponent,
-        PopupEditFeeDialogComponent
+        PopupEditFeeDialogComponent,
+        PopupBackupTipDialogComponent
     ],
     imports: [
         FormsModule,
@@ -110,7 +114,8 @@ import { TransferModule } from './transfer';
         PopupTxDetailDialogComponent,
         PopupTransferSuccessDialogComponent,
         PopupInputDialogComponent,
-        PopupEditFeeDialogComponent
+        PopupEditFeeDialogComponent,
+        PopupBackupTipDialogComponent
     ]
 })
 export class PopupModule {}

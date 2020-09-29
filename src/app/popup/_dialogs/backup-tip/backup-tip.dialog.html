@@ -1,0 +1,7 @@
+<div class="container">
+    <div class="title"><img src="/assets/images/backup/warn.png" alt="">
+        {{ 'donotScreenshot' | translate | async }}
+    </div>
+    <p class="desc">{{ 'donotScreenshotTip' | translate | async }}</p>
+    <button mat-button class="yes" [mat-dialog-close]="true">{{ 'iKonw' | translate | async }}</button>
+</div>

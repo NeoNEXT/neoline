@@ -22,12 +22,12 @@
 
     mat-toolbar {
         height: 62px;
-        background: #F7FBF9;
+        background: #f7fbf9;
         border-radius: 15px 15px 0px 0px;
         text-align: center;
         position: relative;
         .wallet-info {
-            width:  100%;
+            width: 100%;
             position: absolute;
             left: 0px;
             top: 0px;
@@ -41,12 +41,12 @@
         }
         .name {
             font-size: 17px;
-            color: #2F3333;
+            color: #2f3333;
             line-height: 18px;
         }
         .address {
             font-size: 13px;
-            color: #7F8993;
+            color: #7f8993;
             line-height: 14px;
             margin-top: 8px;
         }
@@ -94,12 +94,12 @@
             width: 50px;
             height: 50px;
             padding: 10px;
-            border: 0.5px solid #EFEFEF;
+            border: 0.5px solid #efefef;
             border-radius: 50%;
             margin: 17px auto;
             .asset-logo {
-              height: 30px;
-              width: 30px;
+                height: 30px;
+                width: 30px;
             }
         }
         .asset-balance {
@@ -113,7 +113,7 @@
         }
         .asset-money {
             font-size: 16px;
-            color: #A0A8BE;
+            color: #a0a8be;
             text-align: center;
             width: 100%;
             padding: 0px 20px;
@@ -151,11 +151,11 @@
                 width: 40px;
                 height: 40px;
                 padding: 5px;
-                border: 0.5px solid #EFEFEF;
+                border: 0.5px solid #efefef;
                 border-radius: 50%;
                 .gas-logo {
-                  height: 30px;
-                  width: 30px;
+                    height: 30px;
+                    width: 30px;
                 }
             }
             .claim-status-box {
@@ -167,11 +167,11 @@
                 }
                 .status {
                     font-size: 13px;
-                    color: #B0B6BE;
+                    color: #b0b6be;
                 }
             }
             button {
-                background: #ECFBF1;
+                background: #ecfbf1;
                 height: 35px;
                 border-radius: 18px;
                 cursor: pointer;
@@ -188,7 +188,7 @@
         }
         .claim-line {
             border: none;
-            border-top: 6px solid #F7F7F7;
+            border-top: 6px solid #f7f7f7;
         }
         .tabs-container {
             height: 55px;
@@ -206,11 +206,11 @@
                 padding-top: 4px;
                 text-align: center;
                 font-size: 17px;
-                color: #B0B6BE;
+                color: #b0b6be;
                 cursor: pointer;
                 &.selected {
                     color: map-get($neo-line-default, 500);
-                    border-bottom: 1.5px solid map-get($neo-line-default, 500);;
+                    border-bottom: 1.5px solid map-get($neo-line-default, 500);
                 }
             }
             img {
@@ -220,6 +220,49 @@
                 right: 25px;
                 top: 15px;
                 cursor: pointer;
+            }
+        }
+    }
+}
+
+.backup-tip {
+    position: fixed;
+    bottom: 20px;
+    left: 4%;
+    width: 92%;
+    background: #303434;
+    opacity: 0.9;
+    border-radius: 10px;
+    padding: 20px 25px;
+    z-index: 9999999;
+    .title {
+        font-size: 18px;
+        font-weight: 500;
+        color: #06ccac;
+        text-align: center;
+    }
+    .desc {
+        font-size: 13px;
+        color: #ffffff;
+        line-height: 18px;
+        margin-top: 20px;
+    }
+    .btn-group {
+        margin-top: 15px;
+        font-size: 15px;
+        button {
+            width: 48%;
+            height: 35px;
+            line-height: 35px;
+            border-radius: 5px;
+            color: #fff;
+            &.cancel {
+                border: 1px solid #ffffff;
+                margin-right: 4%;
+                background: none;
+            }
+            &.yes {
+                background: #6a6d6c;
             }
         }
     }

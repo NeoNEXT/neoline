@@ -13,3 +13,4 @@ export { PopupTxDetailDialogComponent } from '@popup/_dialogs/tx-detail/tx-detai
 export { PopupTransferSuccessDialogComponent } from '@popup/_dialogs/transfer-success/transfer-success.component';
 export { PopupInputDialogComponent } from '@popup/_dialogs/input/input.dialog';
 export { PopupEditFeeDialogComponent } from '@popup/_dialogs/edit-fee/edit-fee.dialog';
+export { PopupBackupTipDialogComponent } from '@popup/_dialogs/backup-tip/backup-tip.dialog';

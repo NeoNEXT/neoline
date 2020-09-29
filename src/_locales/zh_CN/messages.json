@@ -568,5 +568,47 @@
     },
     "data": {
         "message": "数据"
+    },
+    "backUp": {
+        "message": "备份"
+    },
+    "backUpTip": {
+        "message": "备份提示"
+    },
+    "backUpDesc1": {
+        "message": "1. 掌握私钥等于掌握了账户资产所有权"
+    },
+    "backUpDesc2": {
+        "message": "2. 请认真抄写，且大小写区分，并保管在安全的地方；NEOLine为去中心化钱包，不会存储您的私钥；私钥一旦丢失无法找回，请务必备份私钥。"
+    },
+    "backUpNow": {
+        "message": "立即备份"
+    },
+    "backUpLater": {
+        "message": "稍后备份"
+    },
+    "donotScreenshot": {
+        "message": "请勿截图"
+    },
+    "donotScreenshotTip": {
+        "message": "切勿截图分享和保存，这可能被第三方恶意软件截取，造成资产损失。抄写时注意周边环境安全。"
+    },
+    "iKonw": {
+        "message": "我已知道"
+    },
+    "youPrivateKey": {
+        "message": "您的私钥"
+    },
+    "privateKeyTip": {
+        "message": "提醒：请妥善保管您的私钥，不要透露给任何人"
+    },
+    "backUpsafeTip": {
+        "message": "安全提醒"
+    },
+    "backUpTipLater": {
+        "message": "稍后提醒"
+    },
+    "backUpSafeDesc": {
+        "message": "你的身份助记词未备份，请务必备份助记词用于恢复身份下钱包资产，防止忘记密码、应用删除、手机丢失等情况导致资产损失"
     }
 }

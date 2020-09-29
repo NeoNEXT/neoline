@@ -55,6 +55,8 @@ export class PopupHomeComponent implements OnInit {
     public currentTxPage = 2;
     assetList: Balance[] = [];
 
+    showBackup = true;
+
     // 菜单
     showMenu = false;
     constructor(

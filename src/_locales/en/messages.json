@@ -568,5 +568,47 @@
     },
     "data": {
         "message": "Data"
+    },
+    "backUp": {
+        "message": "Back Up"
+    },
+    "backUpTip": {
+        "message": "Back up Reminder"
+    },
+    "backUpDesc1": {
+        "message": "1. Mastering the private key is equivalent to mastering the ownership of account assets"
+    },
+    "backUpDesc2": {
+        "message": "2. Please copy carefully, distinguish between uppercase and lowercase, and keep it in a safe place; NeoLine is a decentralized wallet and will not store your private key; once the private key is lost, it cannot be retrieved, please make sure to back up the private key."
+    },
+    "backUpNow": {
+        "message": "Now"
+    },
+    "backUpLater": {
+        "message": "Later"
+    },
+    "donotScreenshot": {
+        "message": "Please do not capture"
+    },
+    "donotScreenshotTip": {
+        "message": "Do not share or save screenshots, which may be captured by third party malware and cause asset loss. Pay attention to the safety of the surrounding environment when copying."
+    },
+    "iKonw": {
+        "message": "Known"
+    },
+    "youPrivateKey": {
+        "message": "Your Private key"
+    },
+    "privateKeyTip": {
+        "message": "Tip: Please keep your private key properly and do not disclose it to anyone"
+    },
+    "backUpsafeTip": {
+        "message": "Security Warning"
+    },
+    "backUpTipLater": {
+        "message": "Later"
+    },
+    "backUpSafeDesc": {
+        "message": "你的身份助记词未备份，请务必备份助记词用于恢复身份下钱包资产，防止忘记密码、应用删除、手机丢失等情况导致资产损失"
     }
 }
