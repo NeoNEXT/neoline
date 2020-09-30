@@ -490,13 +490,14 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 }
                 const payback = this.global.mathSub(curr, fee);
                 if (payback < 0) {
-                    reject('no enough GAS to fee');
-                    this.chrome.windowCallback({
-                        error: ERRORS.INSUFFICIENT_FUNDS,
-                        return: requestTarget.Invoke,
-                        ID: this.messageID
-                    });
-                    this.global.snackBarTip('transferFailed', 'no enough GAS to fee');
+                    this.fee = curr;
+                    // reject('no eunough GAS to fee');
+                    // this.chrome.windowCallback({
+                    //     error: ERRORS.INSUFFICIENT_FUNDS,
+                    //     return: requestTarget.Invoke,
+                    //     ID: this.messageID
+                    // });
+                    // this.global.snackBarTip('transferFailed', 'no enough GAS to fee');
                 }
                 if (payback > 0) {
                     const fromScript = wallet.getScriptHashFromAddress(from);
