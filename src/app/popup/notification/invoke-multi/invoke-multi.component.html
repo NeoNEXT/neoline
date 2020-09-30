@@ -43,7 +43,7 @@
                                 <div class="fee-info">
                                     <p (click)="editFee()" *ngIf="showFeeEdit">{{ 'edit' | translate | async }}</p>
                                     <p>{{ (showFeeEdit ? fee : 0) | numberFixed }} GAS</p>
-                                    <p>{{ (showFeeEdit ? feeMoney : 0) | numberFixed }} {{ rateCurrency }}</p>
+                                    <p>{{ (showFeeEdit ? feeMoney : 0) | numberFixed:2 }} {{ rateCurrency }}</p>
                                 </div>
                             </div>
                             <hr>

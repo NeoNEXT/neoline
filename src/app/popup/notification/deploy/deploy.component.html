@@ -43,7 +43,7 @@
                                 <div class="fee-info">
                                     <p (click)="editFee()">{{ 'edit' | translate | async }}</p>
                                     <p>{{ fee }} GAS</p>
-                                    <p>{{ feeMoney }} {{ rateCurrency }}</p>
+                                    <p>{{ feeMoney | numberFixed:2 }} {{ rateCurrency }}</p>
                                 </div>
                             </div>
                             <hr>

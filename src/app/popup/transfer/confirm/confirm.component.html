@@ -39,7 +39,7 @@
                     </div>
                     <div class="asset-amount-box">
                         <p>-{{ data.amount | numberFixed }} {{ symbol }}</p>
-                        <p>-{{ money | numberFixed }} {{ rateCurrency }}</p>
+                        <p>-{{ money | numberFixed:2 }} {{ rateCurrency }}</p>
                     </div>
                 </div>
                 <div class="detail-tab-content">
@@ -50,7 +50,7 @@
                                 <div class="fee-info">
                                     <p (click)="editFee()">{{ 'edit' | translate | async }}</p>
                                     <p>{{ data.fee | numberFixed }} GAS</p>
-                                    <p>{{ feeMoney | numberFixed }} {{ rateCurrency }}</p>
+                                    <p>{{ feeMoney | numberFixed:2 }} {{ rateCurrency }}</p>
                                 </div>
                             </div>
                             <hr>
@@ -59,7 +59,7 @@
                                 <div class="total-info">
                                     <p>Amount+GAS FEE</p>
                                     <p>{{ data.amount | numberFixed }} {{ symbol }} + {{ data.fee | numberFixed }}GAS</p>
-                                    <p>{{ totalMoney | numberFixed }} {{ rateCurrency }}</p>
+                                    <p>{{ totalMoney | numberFixed:2 }} {{ rateCurrency }}</p>
                                 </div>
                             </div>
                         </mat-tab>

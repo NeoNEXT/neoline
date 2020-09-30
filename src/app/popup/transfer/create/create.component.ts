@@ -116,7 +116,7 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('balanceLack');
             return;
         }
-        if (bignumber(this.chooseAsset.balance.toString()).comparedTo( bignumber(this.amount.toString())) === -1) {
+        if (bignumber(this.chooseAsset.balance.toString()).comparedTo(bignumber(this.amount.toString())) === -1) {
             this.global.snackBarTip('balanceLack');
             return;
         }
@@ -172,9 +172,9 @@ export class TransferCreateComponent implements OnInit {
                         this.fee = isConfirm;
                         this.transfer.create(this.fromAddress, this.toAddress, this.chooseAsset.asset_id, this.amount,
                             this.fee || 0, this.chooseAsset.decimals).subscribe((res) => {
-                                this.global.log('start transfer');
                                 this.resolveSend(tx);
                             }, (err) => {
+                                console.log(err);
                                 this.global.snackBarTip('wentWrong', err);
                             });
                     } else {
@@ -293,7 +293,6 @@ export class TransferCreateComponent implements OnInit {
     }
 
     public numberCheck(event) {
-        console.log(this.amount);
         const inputStr = String.fromCharCode(event.keyCode);
         let re = /^[0-9\.]+$/;
         if (this.amount !== undefined && this.amount.indexOf('.') >= 0) {

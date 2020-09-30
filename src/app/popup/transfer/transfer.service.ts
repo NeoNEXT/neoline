@@ -23,6 +23,8 @@ export class TransferService {
                         this.addFee(from, newTx, fee).subscribe(res => {
                             observer.next(res);
                             observer.complete();
+                        }, error => {
+                            observer.error(error);
                         });
                     } else {
                         observer.next(newTx);
@@ -37,6 +39,8 @@ export class TransferService {
                     this.addFee(from, newTx, fee).subscribe(res => {
                         observer.next(res);
                         observer.complete();
+                    }, error => {
+                        observer.error(error);
                     });
                 } else {
                     observer.next(newTx);

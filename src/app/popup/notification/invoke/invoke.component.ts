@@ -568,6 +568,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.createTxForNEP5().then(result => {
                 this.resolveSign(result);
             }).catch(err => {
+                if(err === 'no enough GAS to fee') {
+                    return;
+                }
                 this.chrome.windowCallback({
                     error: ERRORS.MALFORMED_INPUT,
                     return: requestTarget.Invoke,

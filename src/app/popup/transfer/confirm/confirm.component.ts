@@ -94,12 +94,21 @@ export class PopupTransferConfirmComponent implements OnInit {
         if(Number( this.data.fee) > 0) {
             this.getMoney('GAS', Number(this.data.fee)).then(res => {
                 this.feeMoney = res;
+                if(this.money !== '') {
+                    this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
+                } else {
+                    this.totalMoney = this.feeMoney;
+                }
             })
         }
         this.getMoney(this.symbol, Number(this.data.amount)).then(res => {
             this.money = res;
+            if(this.feeMoney !== '' && Number( this.data.fee) > 0) {
+                this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
+            } else {
+                this.totalMoney = res;
+            }
         })
-        this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
     }
 
     public async getMoney(symbol: string, balance: number): Promise<string> {

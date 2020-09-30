@@ -651,8 +651,6 @@ export class ChromeService {
             }
             return sessionStorage.getItem('haveBackupTip');
         } else {
-            console.log('----------');
-            console.log(this.crx.haveBackupTip);
             return this.crx.haveBackupTip;
         }
     }
