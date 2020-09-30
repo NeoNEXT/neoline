@@ -54,7 +54,7 @@
         "message": "欢迎来到 NeoLine. 导入"
     },
     "enterWalletName": {
-        "message": "输入钱包名"
+        "message": "设置钱包名"
     },
     "walletNameIsRequired": {
         "message": "钱包名必填"

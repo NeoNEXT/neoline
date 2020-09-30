@@ -9,7 +9,7 @@
             <!-- &nbsp;{{ asset?.symbol }} -->
         </div>
         <div class="rate" *ngIf="asset?.rateBalance && asset?.rateBalance != 0">
-            {{asset?.rateBalance | number: '1.0-2'}}&nbsp;{{rateCurrency}}
+            {{asset?.rateBalance | numberFixed:2 }}&nbsp;{{rateCurrency}}
         </div>
     </div>
 </div>

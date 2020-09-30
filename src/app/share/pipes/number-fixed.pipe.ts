@@ -5,7 +5,14 @@ import { bignumber } from 'mathjs';
     name: 'numberFixed'
 })
 export class NumberFixedPipe implements PipeTransform {
-    public transform(value: any) {
-        return bignumber(value).toFixed();
+    public transform(value: any, decimal: number = null) {
+        if(!value) {
+            return 0;
+        }
+        if(decimal != null) {
+            return bignumber(value).toDP(decimal, 1).toFixed();
+        } else {
+            return bignumber(value).toFixed();
+        }
     }
 }

@@ -54,7 +54,7 @@
         "message": "Welcome to NeoLine. Import"
     },
     "enterWalletName": {
-        "message": "Enter wallet name"
+        "message": "Set wallet name"
     },
     "walletNameIsRequired": {
         "message": "Wallet name is required"

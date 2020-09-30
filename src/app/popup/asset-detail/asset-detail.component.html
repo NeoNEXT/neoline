@@ -20,7 +20,7 @@
 
 <div class="container" appScroll (scrollChange)="onScrolltaChange($event)">
     <p class="asset-balance">{{ (balance?.balance || 0) | numberFixed }} {{ balance?.symbol }}</p>
-    <p class="asset-money">{{ balance?.rateBalance | numberFixed }} {{ rateCurrency }} </p>
+    <p class="asset-money">{{ balance?.rateBalance | numberFixed:2 }} {{ rateCurrency }} </p>
     <div class="transaction-btn-container">
         <button class="receive-btn" mat-stroked-button color="primary" [routerLink]="['/popup/transfer/receive']">
             <img src="/assets/images/home/receive.png" alt="">

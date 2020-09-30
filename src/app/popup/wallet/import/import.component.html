@@ -4,7 +4,7 @@
         <span>{{ 'importMethod' | translate | async }}</span>
         <mat-form-field class="popup-wallet-import-type-select-box" appearance="fill">
             <mat-label>{{ 'importMethod' | translate | async }}</mat-label>
-            <mat-select [(value)]="importType" color="white">
+            <mat-select *ngIf="importType" [(value)]="importType" color="white">
                 <mat-option value="0">{{ 'importKey' | translate | async }}</mat-option>
                 <mat-option value="1">{{ 'importFile' | translate | async }}</mat-option>
             </mat-select>
