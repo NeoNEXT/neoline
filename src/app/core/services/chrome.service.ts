@@ -319,7 +319,7 @@ export class ChromeService {
         }
         return from(new Promise<Balance[]>((resolve, reject) => {
             try {
-                this.crx.getStorage('watch', (res) => {
+                this.crx.getLocalStorage('watch', (res) => {
                     if (!Array.isArray(res)) {
                         res = [];
                     }
@@ -336,7 +336,7 @@ export class ChromeService {
             return;
         }
         try {
-            this.crx.setStorage({
+            this.crx.setLocalStorage({
                 watch
             });
         } catch (e) {
