@@ -21,7 +21,7 @@ export class AssetState {
     public balanceSource = new Subject<Balance[]>();
     public balanceSub$ = this.balanceSource.asObservable();
     // goApi = 'http://47.110.14.167:8080';
-    goApi = 'https://api.neoline.vip';
+    goApi = 'https://api.neoline.io';
     public gasFeeSpeed: GasFeeSpeed;
     public gasFeeDefaultSpeed: GasFeeSpeed = {
         slow_price: '0',
