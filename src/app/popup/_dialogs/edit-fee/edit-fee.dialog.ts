@@ -43,6 +43,9 @@ export class PopupEditFeeDialogComponent {
             }
             this.updateLevel();
         } else {
+            this.gasFeeSpeed = this.assetState.gasFeeDefaultSpeed;
+            this.updateLevel();
+            this.updateGasFeeSpeed()
             this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
                 this.gasFeeSpeed = res;
                 this.updateLevel();
