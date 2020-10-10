@@ -14,3 +14,4 @@ export { PopupTransferSuccessDialogComponent } from '@popup/_dialogs/transfer-su
 export { PopupInputDialogComponent } from '@popup/_dialogs/input/input.dialog';
 export { PopupEditFeeDialogComponent } from '@popup/_dialogs/edit-fee/edit-fee.dialog';
 export { PopupBackupTipDialogComponent } from '@popup/_dialogs/backup-tip/backup-tip.dialog';
+export { PopupSubscriptionEmailDialogComponent } from '@popup/_dialogs/subscription-email/subscription-email.dialog';

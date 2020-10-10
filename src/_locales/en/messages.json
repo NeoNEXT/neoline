@@ -610,5 +610,23 @@
     },
     "backUpSafeDesc": {
         "message": "Your private key has not been backed up yet. Please be sure to back up the private key to restore all assets corresponding to this address, to prevent the asset loss caused by forgetting password, application deletion, phone loss, etc."
+    },
+    "receiveOurNewsletter": {
+        "message": "Receive our Newsletter"
+    },
+    "newsletterTip": {
+        "message": "Get the latest updates from the NeoLine team"
+    },
+    "newsletterDesc": {
+        "message": "You can unsubscribe from these newsletters at any time.For more information about how to unsubscribe, our privacy practices and how we are committed to protecting and respecting your privacy, please check our "
+    },
+    "newsletterPlaceholder": {
+        "message": "E-mail"
+    },
+    "privacyPolicy.": {
+        "message": "Privacy policy."
+    },
+    "signUpToReceiveUpdatesAndAnnouncements": {
+        "message": "Sign up to receive updates and announcements"
     }
 }

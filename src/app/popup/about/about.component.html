@@ -6,30 +6,15 @@
     <div class="divide"></div>
 </div>
 
-<div class="popup-about-logo">
-    <img src="/assets/images/logo_title.png" alt="">
-</div>
-<div class="popup-about-version" *ngIf="version !== ''">{{ 'version' | translate | async}}: {{ version }}</div>
-
-
-
-<div class="popup-about">
-    <div matRipple (click)="jumbToWeb(0)" class="about-item">
-        <span>{{ 'privacyPolicy' | translate | async }}</span>
-        <img src="/assets/images/arrow-right.png" alt="">
+<div class="container">
+    <img class="logo" src="/assets/images/logo_title.png" alt="">
+    <div class="version" *ngIf="version !== ''">{{ 'version' | translate | async}}: {{ version }}</div>
+    <div class="subscription" (click)="openSubscription()">
+        <div class="to-subscription">{{ 'receiveOurNewsletter' | translate | async }}<img src="/assets/images/arrow-right.png" alt=""></div>
+        <p class="tip">{{ 'signUpToReceiveUpdatesAndAnnouncements' | translate | async }}</p>
     </div>
-    <div matRipple (click)="jumbToWeb(1)" class="about-item">
-        <span>{{ 'termsOfUse' | translate | async }}</span>
-        <img src="/assets/images/arrow-right.png" alt="">
-    </div>
-    <div matRipple (click)="jumbToWeb(2)" class="about-item">
-        <span>{{ 'companyWebsite' | translate | async }}</span>
-        <img src="/assets/images/arrow-right.png" alt="">
-    </div>
-    <a href="mailto:support@neoline.io">
-        <div matRipple class="about-item">
-            <span>{{ 'contactUs' | translate | async }}</span>
-            <img src="/assets/images/arrow-right.png" alt="">
-        </div>
-    </a>
+    <p class="about-item" (click)="jumbToWeb(0)">{{ 'privacyPolicy' | translate | async }}</p>
+    <p class="about-item" (click)="jumbToWeb(1)">{{ 'termsOfUse' | translate | async }}</p>
+    <p class="about-item" (click)="jumbToWeb(2)">{{ 'companyWebsite' | translate | async }}</p>
+    <p class="about-item" (click)="jumbToWeb(3)">{{ 'contactUs' | translate | async }}</p>
 </div>

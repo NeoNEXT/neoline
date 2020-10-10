@@ -29,7 +29,8 @@ export class NotificationService {
         wrongAddress: 'Please enter a legal address',
         rejected: 'Rejected',
         rateCurrencySetSucc: 'Asset conversion target revised successfully!',
-        nep6Wrong: 'Choose the correct file'
+        nep6Wrong: 'Choose the correct file',
+        agreePrivacyPolicy: 'Please agree to the privacy agreement'
     };
     CN = {
         close: '关闭',
@@ -56,7 +57,8 @@ export class NotificationService {
         wrongAddress: '请输入合法地址',
         rejected: '已拒绝',
         rateCurrencySetSucc: '资产兑换目标修改成功',
-        nep6Wrong: '请选择正确的文件'
+        nep6Wrong: '请选择正确的文件',
+        agreePrivacyPolicy: '请同意隐私协议'
     };
     constructor(
         public chrome: ChromeService

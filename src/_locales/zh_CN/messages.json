@@ -610,5 +610,23 @@
     },
     "backUpSafeDesc": {
         "message": "您的私钥还未备份，请务必备份私钥用于恢复该地址对应的所有资产，防止忘记密码、应用误删除、手机丢失等情况导致的资产损失。"
+    },
+    "receiveOurNewsletter": {
+        "message": "订阅电子报"
+    },
+    "newsletterTip": {
+        "message": "从NeoLine团队获取最新更新"
+    },
+    "newsletterDesc": {
+        "message": "您可以随时取消订阅这些通讯。 有关如何退订，我们的隐私惯例以及我们如何致力于保护和尊重您的隐私的更多信息，请查看我们的"
+    },
+    "privacyPolicy.": {
+        "message": "隐私政策。"
+    },
+    "newsletterPlaceholder": {
+        "message": "请填写您的邮箱地址"
+    },
+    "signUpToReceiveUpdatesAndAnnouncements": {
+        "message": "注册以接收更新和公告"
     }
 }
