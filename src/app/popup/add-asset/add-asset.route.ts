@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 
 import { PopupComponent } from '@popup/popup.component';
 import { PopupAddAssetComponent } from '@popup/add-asset/add-asset.component';
+import { PopupMyAssetsComponent } from './my-assets/my-assets.component';
 
 import { PopupWalletGuard } from '@app/core';
 
@@ -15,6 +16,10 @@ const routes: Routes = [
             {
                 path: 'add-asset',
                 component: PopupAddAssetComponent
+            },
+            {
+                path: 'my-assets',
+                component: PopupMyAssetsComponent
             }
         ]
     }

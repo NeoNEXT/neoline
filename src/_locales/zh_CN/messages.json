@@ -628,5 +628,17 @@
     },
     "signUpToReceiveUpdatesAndAnnouncements": {
         "message": "注册以接收更新和公告"
+    },
+    "recommendedAssets": {
+        "message": "推荐资产"
+    },
+    "myAssets": {
+        "message": "我的资产"
+    },
+    "addAssetWarn": {
+        "message": "该资产未经钱包官方安全审核，请注意风险！"
+    },
+    "saveChanges": {
+        "message": "保存修改"
     }
 }

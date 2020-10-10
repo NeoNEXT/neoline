@@ -1,0 +1,13 @@
+<div class="asset-item">
+    <div class="avatar-box">
+        <img [src]="asset?.avatar || ''" alt="">
+    </div>
+    <div class="item-middle">
+        <div class="asset-name">
+            <span class="long">{{asset.name}}</span>
+            (<span class="short">{{ asset.symbol }}</span>)
+        </div>
+        <p class="asset-id" *ngIf="isSearchAssets">{{asset?.asset_id}}</p>
+    </div>
+    <img class="delete" src="/assets/images/add-asset/delete.png" alt="">
+</div>

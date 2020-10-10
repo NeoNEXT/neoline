@@ -15,8 +15,10 @@
     </button>
 </div>
 
+<div class="my-assets" routerLink="/popup/my-assets">{{ 'myAssets' | translate | async }}<img src="/assets/images/arrow-right.png" alt=""></div>
+
 <p *ngIf="searchAssets" class="search-title">{{ 'searchResult' | translate | async}}</p>
-<p *ngIf="!searchAssets" class="search-title">{{ 'searchAllResult' | translate | async}}</p>
+<p *ngIf="!searchAssets" class="search-title">{{ 'recommendedAssets' | translate | async }}</p>
 
 <div class="popup-assets-list" appScroll (scrollChange)="onScrolltaChange($event)">
     <app-asset-item *ngFor="let asset of searchAssets || allAssets?.items;let index = index" [asset]="asset"

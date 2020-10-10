@@ -27,7 +27,8 @@ import {
     PopupInputDialogComponent,
     PopupEditFeeDialogComponent,
     PopupBackupTipDialogComponent,
-    PopupSubscriptionEmailDialogComponent
+    PopupSubscriptionEmailDialogComponent,
+    PopupAddTokenWarnDialogComponent
 } from '@popup/_dialogs';
 import { PopupAuthorizationListDialogComponent } from '@popup/_dialogs/authorization-list/authorization-list.dialog';
 import { PopupQRCodeDialogComponent } from '@popup/_dialogs';
@@ -74,7 +75,8 @@ import { TransferModule } from './transfer';
         PopupInputDialogComponent,
         PopupEditFeeDialogComponent,
         PopupBackupTipDialogComponent,
-        PopupSubscriptionEmailDialogComponent
+        PopupSubscriptionEmailDialogComponent,
+        PopupAddTokenWarnDialogComponent
     ],
     imports: [
         FormsModule,
@@ -118,7 +120,8 @@ import { TransferModule } from './transfer';
         PopupInputDialogComponent,
         PopupEditFeeDialogComponent,
         PopupBackupTipDialogComponent,
-        PopupSubscriptionEmailDialogComponent
+        PopupSubscriptionEmailDialogComponent,
+        PopupAddTokenWarnDialogComponent
     ]
 })
 export class PopupModule {}

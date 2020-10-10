@@ -8,14 +8,14 @@ import {
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 
-import { PopupAddTokenDialogComponent, PopupAddTokenWarnDialogComponent } from '@popup/_dialogs';
+import { PopupAddTokenDialogComponent } from '@popup/_dialogs';
 import { forkJoin } from 'rxjs';
 
 @Component({
-    templateUrl: 'add-asset.component.html',
-    styleUrls: ['add-asset.component.scss']
+    templateUrl: 'my-assets.component.html',
+    styleUrls: ['my-assets.component.scss']
 })
-export class PopupAddAssetComponent implements OnInit {
+export class PopupMyAssetsComponent implements OnInit {
     public allAssets: PageData<Asset>; // 所有的资产
     public searchAssets: any = false; // 搜索的资产
     public watch: Balance[] = []; // 用户添加的资产
@@ -42,7 +42,6 @@ export class PopupAddAssetComponent implements OnInit {
             this.watch = res[1];
             this.getAllBalance(1);
         });
-        this.addAssetWarn();
     }
 
     public getAllBalance(page) {
@@ -187,18 +186,5 @@ export class PopupAddAssetComponent implements OnInit {
             this.getAllBalance(++this.allAssets.page);
             this.sourceScrollHeight = scrollHeight;
         }
-    }
-
-    addAssetWarn() {
-        this.dialog
-        .open(PopupAddTokenWarnDialogComponent, {
-            panelClass: 'custom-dialog-panel',
-            disableClose: true
-        })
-        .afterClosed()
-        .subscribe(confirm => {
-            if (confirm === true) {
-            }
-        });
     }
 }

@@ -628,5 +628,17 @@
     },
     "signUpToReceiveUpdatesAndAnnouncements": {
         "message": "Sign up to receive updates and announcements"
+    },
+    "recommendedAssets": {
+        "message": "Recommended Assets"
+    },
+    "myAssets": {
+        "message": "My Assets"
+    },
+    "addAssetWarn": {
+        "message": "Please be aware that this asset is not officially verified by the wallet and there will be risks involved in its security."
+    },
+    "saveChanges": {
+        "message": "Save changes"
     }
 }
