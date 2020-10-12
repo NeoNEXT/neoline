@@ -1,13 +1,14 @@
 <div class="asset-item">
     <div class="avatar-box">
-        <img [src]="asset?.avatar || ''" alt="">
+        <img [src]="asset?.image_url || ''" alt="">
+        <span *ngIf="shouldAdd() && !fixed()" class="red-cirlce"></span>
     </div>
     <div class="item-middle">
         <div class="asset-name">
             <span class="long">{{asset.name}}</span>
             (<span class="short">{{ asset.symbol }}</span>)
         </div>
-        <p class="asset-id" *ngIf="isSearchAssets">{{asset?.asset_id}}</p>
     </div>
-    <img class="delete" src="/assets/images/add-asset/delete.png" alt="">
+    <button mat-raised-button *ngIf="!asset.watching && !fixed()" class="unadd" (click)="addAsset(index)" >{{ 'add' | translate | async}}</button>
+    <img class="delete" *ngIf="asset.watching && !fixed()" src="/assets/images/add-asset/delete.png" alt="" (click)="removeAsset(index)">
 </div>

@@ -6,7 +6,7 @@ import {
     GlobalService
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NEO, Balance, GAS } from '@/models/models';
+import { NEO, Balance, GAS, Asset } from '@/models/models';
 import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.component';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupDelTokenDialogComponent } from '../_dialogs';
@@ -28,7 +28,7 @@ export class PopupAssetDetailComponent implements OnInit {
 
     // 菜单
     showMenu = false;
-    watch: Balance[]; // 用户添加的资产
+    watch: Asset[]; // 用户添加的资产
     canHideBalance = false;
     net: string;
 

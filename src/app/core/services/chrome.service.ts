@@ -11,10 +11,7 @@ import {
 import {
     WalletJSON
 } from '@cityofzion/neon-core/lib/wallet';
-import {
-    Balance,
-    AuthorizationData,
-} from '@/models/models';
+import { Asset } from '@/models/models';
 import { EVENT } from '@/models/dapi';
 import { loschmidtDependencies } from 'mathjs';
 import { stat } from 'fs';
@@ -305,7 +302,7 @@ export class ChromeService {
             }
         }));
     }
-    public getWatch(): Observable<Balance[]> {
+    public getWatch(): Observable<Asset[]> {
         if (!this.check) {
             try {
                 let rs = JSON.parse(localStorage.getItem('watch')) || [];
@@ -317,7 +314,7 @@ export class ChromeService {
                 return throwError('please set watch to local storage when debug mode on');
             }
         }
-        return from(new Promise<Balance[]>((resolve, reject) => {
+        return from(new Promise<Asset[]>((resolve, reject) => {
             try {
                 this.crx.getLocalStorage('watch', (res) => {
                     if (!Array.isArray(res)) {
@@ -330,7 +327,7 @@ export class ChromeService {
             }
         }));
     }
-    public setWatch(watch: Balance[]) {
+    public setWatch(watch: Asset[]) {
         if (!this.check) {
             localStorage.setItem('watch', JSON.stringify(watch));
             return;

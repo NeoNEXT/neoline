@@ -14,6 +14,7 @@ import {
     map,
 } from 'rxjs/operators';
 import {
+    Asset,
     Balance,
 } from '@/models/models';
 import {
@@ -37,7 +38,7 @@ import { bignumber } from 'mathjs';
 export class AssetComponent implements OnInit, OnDestroy {
     public address: string = '';
     public displayAssets; // 要显示的资产
-    public watch: Balance[]; // 用户添加的资产
+    public watch: Asset[]; // 用户添加的资产
     public rateSymbol = '';
     public rateCurrency: string;
 

@@ -1,6 +1,7 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { Balance, NEO, GAS, EXT, EDS } from '@/models/models';
+import { NEO, GAS, EXT, EDS, Asset } from '@/models/models';
 import { GlobalService } from '@/app/core';
+import { bignumber } from 'mathjs';
 
 @Component({
     selector: 'app-my-asset-item',
@@ -8,22 +9,33 @@ import { GlobalService } from '@/app/core';
     styleUrls: ['./my-asset-item.component.scss']
 })
 export class PopupMyAssetItemComponent implements OnInit {
-    @Input() asset: Balance;
+
+    @Input() asset: Asset;
     @Input() index: number;
-    @Input() isSearchAssets: boolean;
 
     // tslint:disable-next-line:no-output-on-prefix
     @Output() onAddAsset = new EventEmitter<any>();
+    @Output() removeAssetOutput = new EventEmitter<any>();
 
-    constructor(public global: GlobalService) {}
+    constructor(public global: GlobalService) { }
 
-    ngOnInit(): void {}
+    ngOnInit(): void { }
 
-    public fixed(assetId: string) {
-        return [NEO, GAS, EXT, EDS].includes(assetId);
+    public fixed() {
+        return [NEO, GAS].indexOf(this.asset.asset_id) >= 0;
+    }
+
+    public shouldAdd() {
+        return bignumber(this.asset.balance || '0').comparedTo(bignumber('0')) === 1
+            && this.asset.is_risk !== true
+            && !this.asset.watching
     }
 
     public addAsset(index: number) {
         this.onAddAsset.emit(index);
+    }
+
+    public removeAsset(index: number) {
+        this.removeAssetOutput.emit(index);
     }
 }

@@ -42,7 +42,7 @@ export class AssetManageComponent implements OnInit, OnDestroy {
     public allAssets: PageData < Asset > ; // 所有的资产
     public searchAssets: any = false; // 搜索出来的资产
     public displayAssets: Balance[] = []; // 要显示的资产
-    public watch: Balance[]; // 用户添加的资产
+    public watch: Asset[]; // 用户添加的资产
     public isLoading: boolean;
     public isSearch: boolean = false;
     public searchValue: string;
@@ -103,7 +103,7 @@ export class AssetManageComponent implements OnInit, OnDestroy {
 
     public getAllBalance(page) {
         this.requesting = true;
-        this.asset.fetchAll(page).then(res => {
+        this.asset.fetchAll().then(res => {
             this.allAssets = res;
             this.allAssets.items.forEach((element, index) => {
                 this.allAssets.items[index].watching =

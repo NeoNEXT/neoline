@@ -109,23 +109,47 @@ export class AssetState {
             );
     }
 
+    public fetchBalanceGo(address: string): Observable<any> {
+        return this.http.get(`${this.goApi}/v1/neo2/address/assets?address=${address}`).pipe(
+            map(res => {
+                const result = [];
+                res.asset.forEach(item => {
+                    result.push(item)
+                })
+                res.nep5.forEach(item => {
+                    result.push(item)
+                })
+                return result
+            })
+        )
+    }
+
     public fetchClaim(address: string): Observable<any> {
         return this.http.get(
             `${this.global.apiDomain}/v1/transactions/claim/${address}`
         );
     }
 
-    public fetchAll(page: number): Promise<any> {
+    public fetchAll(): Promise<any> {
         return this.http
             .get(
-                `${this.global.apiDomain}/v1/asset/getpluginsassets?page_index=${page}`
+                `${this.goApi}/v1/neo2/assets`
             )
             .toPromise();
     }
 
+    public fetchAllowList(): Promise<any> {
+        return this.http
+            .get(
+                `${this.goApi}/v1/neo2/allowlist`
+            )
+            .toPromise();
+    }
+
+
     public searchAsset(query: string): Observable<any> {
         return this.http.get(
-            `${this.global.apiDomain}/v1/search?query=${query}`
+            `${this.goApi}/v1/neo2/search/asset?q=${query}`
         );
     }
 
@@ -135,6 +159,13 @@ export class AssetState {
     ): Observable<any> {
         return this.http.getImage(
             `${this.global.apiDomain}/logo/${assetId}`,
+            lastModified
+        );
+    }
+
+    public getAssetImageFromUrl(url: string, lastModified: string) {
+        return this.http.getImage(
+            url,
             lastModified
         );
     }

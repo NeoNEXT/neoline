@@ -2,17 +2,15 @@
     <div class="content">
         <img src="/assets/images/nav-back.png" routerLink="/popup/add-asset" alt="">
         <span class="title">{{ 'myAssets' | translate | async }}</span>
-        <span class="save">{{ 'saveChanges' | translate | async }}</span>
+        <!-- <span class="save">{{ 'saveChanges' | translate | async }}</span> -->
     </div>
     <div class="divide"></div>
 </div>
 
-<div class="popup-assets-list" appScroll (scrollChange)="onScrolltaChange($event)">
-    <app-my-asset-item *ngFor="let asset of searchAssets || allAssets?.items;let index = index" [asset]="asset"
-        [index]="index" [isSearchAssets]="searchAssets ? true : false" (onAddAsset)="addAsset($event)">
+<div class="popup-assets-list">
+    <app-my-asset-item *ngFor="let asset of myAssets;let index = index" [asset]="asset"
+        [index]="index" (onAddAsset)="addAssetCheck($event)" (removeAssetOutput)="removeAsset($event)">
     </app-my-asset-item>
     <div class="loading" *ngIf="isLoading">{{ 'loading' | translate | async}}</div>
-    <p *ngIf="searchAssets && searchAssets?.length===0" class="no-data">
-        {{ 'noMoreData' | translate | async }}
-    </p>
+
 </div>

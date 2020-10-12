@@ -66,6 +66,8 @@ export interface Balance {
 }
 export interface Asset extends Balance {
     watching: boolean;
+    image_url: string;
+    is_risk: boolean;
 }
 export interface Transaction {
     block_time: number;

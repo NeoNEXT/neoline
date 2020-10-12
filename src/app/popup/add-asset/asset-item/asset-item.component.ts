@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { Balance, NEO, GAS, EXT, EDS } from '@/models/models';
+import { Balance, NEO, GAS, EXT, EDS, Asset } from '@/models/models';
 import { GlobalService } from '@/app/core';
 
 @Component({
@@ -8,7 +8,7 @@ import { GlobalService } from '@/app/core';
     styleUrls: ['./asset-item.component.scss']
 })
 export class PopupAssetItemComponent implements OnInit {
-    @Input() asset: Balance;
+    @Input() asset: Asset;
     @Input() index: number;
     @Input() isSearchAssets: boolean;
 

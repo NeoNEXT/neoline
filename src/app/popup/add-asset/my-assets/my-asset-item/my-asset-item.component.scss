@@ -18,9 +18,20 @@
         display: inline-flex;
         align-items: center;
         justify-content: center;
+        position: relative;
         img {
             height: 25px;
             max-width: 25px;
+        }
+        .red-cirlce {
+            display: block;
+            height: 8px;
+            width: 8px;
+            border-radius: 8px;
+            background: #FA5656;
+            position: absolute;
+            left: 30px;
+            top: 0px;
         }
     }
     .item-middle {
@@ -51,5 +62,18 @@
 
     img.delete {
         height: 23px;
+    }
+    button {
+        width: 62px;
+        height: 30px;
+        line-height: 30px;
+        padding: 0;
+        border-radius: 15px;
+        font-weight: 500;
+        font-size: 14px;
+        color: map-get($neo-line-default, 50);
+        &.unadd {
+            background: map-get($neo-line-default, 500);
+        }
     }
 }
