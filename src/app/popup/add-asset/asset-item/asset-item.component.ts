@@ -19,8 +19,8 @@ export class PopupAssetItemComponent implements OnInit {
 
     ngOnInit(): void {}
 
-    public fixed(assetId: string) {
-        return [NEO, GAS, EXT, EDS].includes(assetId);
+    public fixed() {
+        return [NEO, GAS].indexOf(this.asset.asset_id) >= 0;
     }
 
     public addAsset(index: number) {

@@ -9,6 +9,6 @@
         </div>
         <p class="asset-id" *ngIf="isSearchAssets">{{asset?.asset_id}}</p>
     </div>
-    <button mat-raised-button *ngIf="asset.watching" disabled class="added">{{ 'added' | translate | async}}</button>
-    <button mat-raised-button *ngIf="!asset.watching" class="unadd" (click)="addAsset(index)" >{{ 'add' | translate | async}}</button>
+    <button mat-raised-button *ngIf="asset.watching || fixed()" disabled class="added">{{ 'added' | translate | async}}</button>
+    <button mat-raised-button *ngIf="!asset.watching && !fixed()" class="unadd" (click)="addAsset(index)" >{{ 'add' | translate | async}}</button>
 </div>

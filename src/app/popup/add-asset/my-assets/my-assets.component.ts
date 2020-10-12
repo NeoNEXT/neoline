@@ -47,8 +47,11 @@ export class PopupMyAssetsComponent implements OnInit {
         this.isLoading = true;
 
         this.watch.forEach(item => {
-            if (this.moneyAssets.findIndex(balanceItem => balanceItem.asset_id === item.asset_id) < 0) {
+            const moneyAssetIndex = this.moneyAssets.findIndex(balanceItem => balanceItem.asset_id === item.asset_id)
+            if (moneyAssetIndex < 0) {
                 this.myAssets.push(item);
+            } else {
+                this.myAssets[moneyAssetIndex].watching = true;
             }
         })
         this.myAssets.forEach((item, index) => {
@@ -70,7 +73,7 @@ export class PopupMyAssetsComponent implements OnInit {
         }
         this.asset.getAssetImageFromUrl(asset.image_url, lastModified).subscribe(assetRes => {
             if (assetRes && assetRes.status === 200) {
-                this.asset.setAssetFile(assetRes, asset.image_url).then(src => {
+                this.asset.setAssetFile(assetRes, asset.asset_id).then(src => {
                     this.myAssets[index].image_url = src;
                 });
             } else if (assetRes && assetRes.status === 404) {

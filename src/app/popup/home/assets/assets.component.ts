@@ -1,5 +1,5 @@
 import { Component, OnInit, Input } from '@angular/core';
-import { Balance } from '@/models/models';
+import { Asset } from '@/models/models';
 import { GlobalService } from '@/app/core';
 import { bignumber } from 'mathjs';
 
@@ -9,7 +9,7 @@ import { bignumber } from 'mathjs';
     styleUrls: ['assets.component.scss']
 })
 export class PopupAssetsComponent implements OnInit {
-    @Input() asset: Balance;
+    @Input() asset: Asset;
     @Input() public rateCurrency: string;
 
     // tslint:disable-next-line:no-output-on-prefix

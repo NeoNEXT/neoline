@@ -303,42 +303,51 @@ export class ChromeService {
         }));
     }
     public getWatch(): Observable<Asset[]> {
-        if (!this.check) {
-            try {
-                let rs = JSON.parse(localStorage.getItem('watch')) || [];
-                if (!Array.isArray(rs)) {
-                    rs = [];
-                }
-                return of(rs);
-            } catch (e) {
-                return throwError('please set watch to local storage when debug mode on');
-            }
-        }
-        return from(new Promise<Asset[]>((resolve, reject) => {
-            try {
-                this.crx.getLocalStorage('watch', (res) => {
-                    if (!Array.isArray(res)) {
-                        res = [];
+        return new Observable(observer => {
+            this.getNet().subscribe(net => {
+                if (!this.check) {
+                    try {
+                        let rs = JSON.parse(localStorage.getItem(`watch_${net}`)) || [];
+                        if (!Array.isArray(rs)) {
+                            rs = [];
+                        }
+                        observer.next(rs);
+                        observer.complete();
+                    } catch (e) {
+                        observer.error('please set watch to local storage when debug mode on');
+                        observer.complete();
                     }
-                    resolve(res);
-                });
-            } catch (e) {
-                reject('failed');
-            }
-        }));
+                } else {
+                    try {
+                        this.crx.getLocalStorage(`watch_${net}`, (res) => {
+                            if (!Array.isArray(res)) {
+                                res = [];
+                            }
+                            observer.next(res);
+                            observer.complete();
+                        });
+                    } catch (e) {
+                        observer.error('failed');
+                        observer.complete();
+                    }
+                }
+            })
+        })
     }
     public setWatch(watch: Asset[]) {
-        if (!this.check) {
-            localStorage.setItem('watch', JSON.stringify(watch));
-            return;
-        }
-        try {
-            this.crx.setLocalStorage({
-                watch
-            });
-        } catch (e) {
-            console.log('set watch failed', e);
-        }
+        this.getNet().subscribe(net => {
+            if (!this.check) {
+                localStorage.setItem(`watch_${net}`, JSON.stringify(watch));
+                return;
+            }
+            try {
+                const saveData = {};
+                saveData[`watch_${net}`]= watch;
+                this.crx.setLocalStorage(saveData);
+            } catch (e) {
+                console.log('set watch failed', e);
+            }
+        })
     }
     public setTransaction(transaction: object) {
         if (!this.check) {

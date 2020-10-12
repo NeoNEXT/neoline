@@ -20,8 +20,6 @@ export class AssetState {
 
     public balanceSource = new Subject<Balance[]>();
     public balanceSub$ = this.balanceSource.asObservable();
-    // goApi = 'http://47.110.14.167:8080';
-    goApi = 'https://api.neoline.io';
     public gasFeeSpeed: GasFeeSpeed;
     public gasFeeDefaultSpeed: GasFeeSpeed = {
         slow_price: '0',
@@ -110,7 +108,7 @@ export class AssetState {
     }
 
     public fetchBalanceGo(address: string): Observable<any> {
-        return this.http.get(`${this.goApi}/v1/neo2/address/assets?address=${address}`).pipe(
+        return this.http.get(`${this.global.apiGoDomain}/v1/neo2/address/assets?address=${address}`).pipe(
             map(res => {
                 const result = [];
                 res.asset.forEach(item => {
@@ -133,7 +131,7 @@ export class AssetState {
     public fetchAll(): Promise<any> {
         return this.http
             .get(
-                `${this.goApi}/v1/neo2/assets`
+                `${this.global.apiGoDomain}/v1/neo2/assets`
             )
             .toPromise();
     }
@@ -141,7 +139,7 @@ export class AssetState {
     public fetchAllowList(): Promise<any> {
         return this.http
             .get(
-                `${this.goApi}/v1/neo2/allowlist`
+                `${this.global.apiGoDomain}/v1/neo2/allowlist`
             )
             .toPromise();
     }
@@ -149,7 +147,7 @@ export class AssetState {
 
     public searchAsset(query: string): Observable<any> {
         return this.http.get(
-            `${this.goApi}/v1/neo2/search/asset?q=${query}`
+            `${this.global.apiGoDomain}/v1/neo2/search/asset?q=${query}`
         );
     }
 
@@ -186,11 +184,11 @@ export class AssetState {
         });
     }
     public getRate(): Observable<any> {
-        return this.http.get(`${this.goApi}/v1/coin/rates?chain=neo`);
+        return this.http.get(`${this.global.apiGoDomain}/v1/coin/rates?chain=neo`);
     }
 
     public getFiatRate(): Observable<any> {
-        return this.http.get(`${this.goApi}/v1/fiat/rates`);
+        return this.http.get(`${this.global.apiGoDomain}/v1/fiat/rates`);
     }
 
     public getAssetRate(coins: string): Observable<any> {
@@ -291,7 +289,7 @@ export class AssetState {
     }
 
     public getGasFee(): Observable<any> {
-        return this.httpClient.get(`${this.goApi}/v1/neo2/fees`).pipe(map((res: any) => {
+        return this.httpClient.get(`${this.global.apiGoDomain}/v1/neo2/fees`).pipe(map((res: any) => {
             if (res.status === 'success') {
                 this.gasFeeSpeed = res.data;
                 return res.data;

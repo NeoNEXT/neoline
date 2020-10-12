@@ -13,7 +13,7 @@ import {
     GlobalService,
     ChromeService
 } from '@/app/core';
-import { NEO, Balance } from '@/models/models';
+import { NEO, Balance, Asset, GAS } from '@/models/models';
 import { TransferService } from '@/app/transfer/transfer.service';
 import { Wallet } from '@cityofzion/neon-core/lib/wallet';
 import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.component';
@@ -51,9 +51,10 @@ export class PopupHomeComponent implements OnInit {
     private intervalClaim = null;
     public showClaim = false;
     public init = false;
+    public haveNotAddAssets: boolean = false;
 
     public currentTxPage = 2;
-    assetList: Balance[] = [];
+    assetList: Asset[] = [];
 
     showBackup: boolean = null;
 
@@ -105,35 +106,43 @@ export class PopupHomeComponent implements OnInit {
 
     getAssetList() {
         this.assetState
-            .fetchBalance(this.wallet.accounts[0].address)
+            .fetchBalanceGo(this.wallet.accounts[0].address)
             .subscribe(balanceArr => {
                 this.handlerBalance(balanceArr);
                 this.chrome.getWatch().subscribe(watching => {
                     this.assetList = [];
+                    const showAssetList = [];
                     let rateSymbol = '';
                     balanceArr.map((r, index) => {
                         if (r.balance && r.balance > 0) {
                             rateSymbol += r.symbol + ',';
                         }
                         this.assetList.push(r);
-                        this.getAssetSrc(r.asset_id, index);
                     });
                     rateSymbol = rateSymbol.slice(0, -1);
                     this.getAssetListRate(rateSymbol);
                     //  去重
+                    this.assetList.forEach(asset => {
+                        if(watching.findIndex(watchingItem => watchingItem.asset_id === asset.asset_id) >= 0
+                        || asset.asset_id === NEO || asset.asset_id === GAS) {
+                            showAssetList.push(asset)
+                        } else if(asset.is_risk !== true) {
+                            this.haveNotAddAssets = true;
+                        }
+                    })
                     watching.forEach((w, index) => {
                         if (
                             balanceArr.findIndex(
                                 r => r.asset_id === w.asset_id
                             ) < 0
                         ) {
-                            this.assetList.push(w);
-                            this.getAssetSrc(
-                                w.asset_id,
-                                balanceArr.length + index
-                            );
+                            showAssetList.push(w);
                         }
                     });
+                    this.assetList = showAssetList;
+                    this.assetList.forEach((asset, index) => {
+                        this.getAssetSrc(asset, index);
+                    })
                 });
             });
     }
@@ -154,26 +163,26 @@ export class PopupHomeComponent implements OnInit {
         });
     }
 
-    public getAssetSrc(assetId, index) {
-        const imageObj = this.assetState.assetFile.get(assetId);
+    public getAssetSrc(asset: Asset, index) {
+        const imageObj = this.assetState.assetFile.get(asset.asset_id);
         let lastModified = '';
         if (imageObj) {
             lastModified = imageObj['last-modified'];
-            this.assetList[index].avatar = imageObj['image-src'];
+            this.assetList[index].image_url = imageObj['image-src'];
         }
         this.assetState
-            .getAssetSrc(assetId, lastModified)
+            .getAssetImageFromUrl(asset.image_url, lastModified)
             .subscribe(assetRes => {
-                if (assetRes && assetRes['status'] === 200) {
+                if (assetRes && assetRes.status === 200) {
                     this.assetState
-                        .setAssetFile(assetRes, assetId)
+                        .setAssetFile(assetRes, asset.asset_id)
                         .then(src => {
-                            this.assetList[index].avatar = src;
+                            this.assetList[index].image_url = src;
                         });
-                } else if (assetRes && assetRes['status'] === 404) {
+                } else if (assetRes && assetRes.status === 404) {
                     this.assetList[
                         index
-                    ].avatar = this.assetState.defaultAssetSrc;
+                    ].image_url = this.assetState.defaultAssetSrc;
                 }
             });
     }
