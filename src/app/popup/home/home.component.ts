@@ -169,6 +169,9 @@ export class PopupHomeComponent implements OnInit {
         if (imageObj) {
             lastModified = imageObj['last-modified'];
             this.assetList[index].image_url = imageObj['image-src'];
+            if(new Date().getTime() / 1000 - Number(lastModified || 0) < 1200) {
+                return
+            }
         }
         this.assetState
             .getAssetImageFromUrl(asset.image_url, lastModified)

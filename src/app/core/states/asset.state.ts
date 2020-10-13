@@ -170,7 +170,7 @@ export class AssetState {
 
     public setAssetFile(res: XMLHttpRequest, assetId: string): Promise<any> {
         const temp = {};
-        temp['last-modified'] = res.getResponseHeader('Last-Modified');
+        temp['last-modified'] = res.getResponseHeader('Last-Modified') || new Date().getTime();
         return new Promise((resolve, reject) => {
             const a = new FileReader();
             a.readAsDataURL(res.response); // 读取文件保存在result中

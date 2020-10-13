@@ -13,7 +13,7 @@
     </div>
     <p class="desc">
         {{ 'newsletterDesc' | translate | async }}<span
-            (click)="openPrivacyPolicy()">{{ 'privacyPolicy.' | translate | async }}</span>
+            (click)="openPrivacyPolicy()">{{ 'privacyPolicyWrods' | translate | async }}</span>
     </p>
     <button mat-flat-button color="primary" class="submit"
         [disabled]="emailRegExp.test(email)===false || isSelected===false"

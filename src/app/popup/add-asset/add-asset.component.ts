@@ -82,6 +82,9 @@ export class PopupAddAssetComponent implements OnInit {
             } else if (type === 'search') {
                 this.searchAssets[index].image_url = imageObj['image-src'];
             }
+            if(new Date().getTime() / 1000 - Number(lastModified || 0) < 1200) {
+                return
+            }
         }
         this.asset.getAssetImageFromUrl(asset.image_url, lastModified).subscribe(assetRes => {
             if (assetRes && assetRes.status === 200) {

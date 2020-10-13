@@ -21,6 +21,7 @@ declare var chrome: any;
 @Injectable()
 export class ChromeService {
     private crx: any = null;
+    private net: string = 'MainNet';
     constructor() {
         try {
             this.crx = chrome.extension.getBackgroundPage().NEOLineBackground; //  chrome.extension.getBackgroundPage();
@@ -303,51 +304,43 @@ export class ChromeService {
         }));
     }
     public getWatch(): Observable<Asset[]> {
-        return new Observable(observer => {
-            this.getNet().subscribe(net => {
-                if (!this.check) {
-                    try {
-                        let rs = JSON.parse(localStorage.getItem(`watch_${net}`)) || [];
-                        if (!Array.isArray(rs)) {
-                            rs = [];
-                        }
-                        observer.next(rs);
-                        observer.complete();
-                    } catch (e) {
-                        observer.error('please set watch to local storage when debug mode on');
-                        observer.complete();
-                    }
-                } else {
-                    try {
-                        this.crx.getLocalStorage(`watch_${net}`, (res) => {
-                            if (!Array.isArray(res)) {
-                                res = [];
-                            }
-                            observer.next(res);
-                            observer.complete();
-                        });
-                    } catch (e) {
-                        observer.error('failed');
-                        observer.complete();
-                    }
+        if (!this.check) {
+            try {
+                let rs = JSON.parse(localStorage.getItem(`watch_${this.net}`)) || [];
+                if (!Array.isArray(rs)) {
+                    rs = [];
                 }
-            })
-        })
+                return of(rs);
+            } catch (e) {
+                return throwError('please set watch to local storage when debug mode on');
+            }
+        } else {
+            return from(new Promise<Asset[]>((resolve, reject) => {
+                try {
+                    this.crx.getLocalStorage(`watch_${this.net}`, (res) => {
+                        if (!Array.isArray(res)) {
+                            res = [];
+                        }
+                        resolve(res);
+                    });
+                } catch (e) {
+                    reject('failed');
+                }
+            }));
+        }
     }
     public setWatch(watch: Asset[]) {
-        this.getNet().subscribe(net => {
-            if (!this.check) {
-                localStorage.setItem(`watch_${net}`, JSON.stringify(watch));
-                return;
-            }
-            try {
-                const saveData = {};
-                saveData[`watch_${net}`]= watch;
-                this.crx.setLocalStorage(saveData);
-            } catch (e) {
-                console.log('set watch failed', e);
-            }
-        })
+        if (!this.check) {
+            localStorage.setItem(`watch_${this.net}`, JSON.stringify(watch));
+            return;
+        }
+        try {
+            const saveData = {};
+            saveData[`watch_${this.net}`]= watch;
+            this.crx.setLocalStorage(saveData);
+        } catch (e) {
+            console.log('set watch failed', e);
+        }
     }
     public setTransaction(transaction: object) {
         if (!this.check) {
@@ -583,6 +576,7 @@ export class ChromeService {
     }
 
     public setNet(net: string) {
+        this.net = net;
         if (!this.check) {
             localStorage.setItem('net', JSON.stringify(net));
             return;
@@ -606,6 +600,7 @@ export class ChromeService {
         if (!this.check) {
             try {
                 if (localStorage.getItem('net')) {
+                    this.net = JSON.parse(localStorage.getItem('net'))
                     return of(JSON.parse(localStorage.getItem('net')));
                 } else {
                     return of('MainNet'); // 默认网络
@@ -617,6 +612,7 @@ export class ChromeService {
         return from(new Promise<string>((resolve, reject) => {
             try {
                 this.crx.getStorage('net', (res) => {
+                    this.net = res || 'MainNet';
                     resolve(res || 'MainNet');
                 });
             } catch (e) {

@@ -620,7 +620,7 @@
     "newsletterDesc": {
         "message": "您可以随时取消订阅这些通讯。 有关如何退订，我们的隐私惯例以及我们如何致力于保护和尊重您的隐私的更多信息，请查看我们的"
     },
-    "privacyPolicy.": {
+    "privacyPolicyWrods": {
         "message": "隐私政策。"
     },
     "newsletterPlaceholder": {
