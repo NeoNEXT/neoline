@@ -23,7 +23,6 @@ export class PopupAddAssetComponent implements OnInit {
     public moneyAssets: Asset[] = []; // 有钱的资产
     public isLoading = false;
     public searchValue: string = '';
-    public haveNotAddAssets: boolean = false;
 
     sourceScrollHeight = 0;
 
@@ -42,7 +41,6 @@ export class PopupAddAssetComponent implements OnInit {
             this.moneyAssets = res[0];
             this.watch = res[1];
             this.getAllBalance();
-            this.haveShouldAddAsset();
         });
     }
 
@@ -82,9 +80,6 @@ export class PopupAddAssetComponent implements OnInit {
             } else if (type === 'search') {
                 this.searchAssets[index].image_url = imageObj['image-src'];
             }
-            if(new Date().getTime() / 1000 - Number(lastModified || 0) < 1200) {
-                return
-            }
         }
         this.asset.getAssetImageFromUrl(asset.image_url, lastModified).subscribe(assetRes => {
             if (assetRes && assetRes.status === 200) {
@@ -95,7 +90,7 @@ export class PopupAddAssetComponent implements OnInit {
                         this.searchAssets[index].image_url = src;
                     }
                 });
-            } else if (assetRes && (assetRes.status === 404 || assetRes.status === 304)) {
+            } else if (assetRes && (assetRes.status === 404)) {
                 if (type === 'all') {
                     this.allowAssets[
                         index
@@ -178,16 +173,5 @@ export class PopupAddAssetComponent implements OnInit {
         } else {
             this.addAsset(index);
         }
-    }
-
-    public haveShouldAddAsset() {
-        this.moneyAssets.forEach(item => {
-            if(item.is_risk !== true
-                && this.watch.findIndex(watchItem => watchItem.asset_id === item.asset_id) < 0
-                && item.asset_id !== NEO && item.asset_id !== GAS) {
-                this.haveNotAddAssets = true;
-                return;
-            }
-        })
     }
 }

@@ -22,7 +22,8 @@ export class PopupMyAssetItemComponent implements OnInit {
     ngOnInit(): void { }
 
     public fixed() {
-        return [NEO, GAS].indexOf(this.asset.asset_id) >= 0;
+        return [NEO, GAS].indexOf(this.asset.asset_id) >= 0
+            || (bignumber(this.asset.balance || 0).comparedTo(0) === 1 && this.asset.is_risk !== true);
     }
 
     public shouldAdd() {

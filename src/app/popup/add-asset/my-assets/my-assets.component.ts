@@ -69,10 +69,7 @@ export class PopupMyAssetsComponent implements OnInit {
         let lastModified = '';
         if (imageObj) {
             lastModified = imageObj['last-modified'];
-            this.myAssets[index].image_url = imageObj['image-src'];
-            if(new Date().getTime() / 1000 - Number(lastModified || 0) < 1200) {
-                return
-            }
+                this.myAssets[index].image_url = imageObj['image-src'];
         }
         this.asset.getAssetImageFromUrl(asset.image_url, lastModified).subscribe(assetRes => {
             if (assetRes && assetRes.status === 200) {

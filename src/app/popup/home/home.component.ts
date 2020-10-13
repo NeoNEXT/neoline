@@ -51,7 +51,6 @@ export class PopupHomeComponent implements OnInit {
     private intervalClaim = null;
     public showClaim = false;
     public init = false;
-    public haveNotAddAssets: boolean = false;
 
     public currentTxPage = 2;
     assetList: Asset[] = [];
@@ -123,11 +122,8 @@ export class PopupHomeComponent implements OnInit {
                     this.getAssetListRate(rateSymbol);
                     //  去重
                     this.assetList.forEach(asset => {
-                        if(watching.findIndex(watchingItem => watchingItem.asset_id === asset.asset_id) >= 0
-                        || asset.asset_id === NEO || asset.asset_id === GAS) {
+                        if(asset.is_risk !== true || watching.findIndex(item => item.asset_id === asset.asset_id)) {
                             showAssetList.push(asset)
-                        } else if(asset.is_risk !== true) {
-                            this.haveNotAddAssets = true;
                         }
                     })
                     watching.forEach((w, index) => {
@@ -169,9 +165,6 @@ export class PopupHomeComponent implements OnInit {
         if (imageObj) {
             lastModified = imageObj['last-modified'];
             this.assetList[index].image_url = imageObj['image-src'];
-            if(new Date().getTime() / 1000 - Number(lastModified || 0) < 1200) {
-                return
-            }
         }
         this.assetState
             .getAssetImageFromUrl(asset.image_url, lastModified)
