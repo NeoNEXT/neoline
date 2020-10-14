@@ -84,7 +84,7 @@ export class PopupTransferConfirmComponent implements OnInit {
             return
         }
         if(this.data.symbol === '') {
-            this.symbol = (await this.assetState.getNep5Detail(this.data.asset).toPromise()).nep5.symbol;
+            this.symbol = (await this.assetState.getNep5Detail(this.data.asset).toPromise()).symbol;
         } else {
             this.symbol = this.data.symbol;
         }

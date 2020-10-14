@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Subject, Observable, of } from 'rxjs';
-import { HttpService } from '../services/http.service';
+import { Subject } from 'rxjs';
 import { Block } from '@/models/models';
-import { map, refCount, publish, startWith } from 'rxjs/operators';
-import { GlobalService } from '../services/global.service';
+import { refCount, publish, startWith } from 'rxjs/operators';
 
 @Injectable()
 export class BlockState {

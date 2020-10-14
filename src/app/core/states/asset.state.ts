@@ -3,11 +3,12 @@ import { HttpService } from '../services/http.service';
 import { GlobalService } from '../services/global.service';
 import { ChromeService } from '../services/chrome.service';
 import { Observable, Subject, from, of, forkJoin } from 'rxjs';
-import { Balance, AssetDetail, Nep5Detail } from 'src/models/models';
+import { Balance, Nep5Detail } from 'src/models/models';
 import { map, switchMap, refCount, publish } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { GasFeeSpeed } from '@popup/_lib/type';
 import { bignumber } from 'mathjs';
+import { rpc } from '@cityofzion/neon-js';
 
 @Injectable()
 export class AssetState {
@@ -95,19 +96,6 @@ export class AssetState {
     }
 
     public fetchBalance(address: string): Observable<any> {
-        return this.http
-            .get(
-                `${this.global.apiDomain}/v1/address/assets?address=${address}`
-            )
-            .pipe(
-                map(res => {
-                    this.pushBalance(res);
-                    return res;
-                })
-            );
-    }
-
-    public fetchBalanceGo(address: string): Observable<any> {
         return this.http.get(`${this.global.apiGoDomain}/v1/neo2/address/assets?address=${address}`).pipe(
             map(res => {
                 const result = [];
@@ -123,9 +111,21 @@ export class AssetState {
     }
 
     public fetchClaim(address: string): Observable<any> {
-        return this.http.get(
-            `${this.global.apiDomain}/v1/transactions/claim/${address}`
-        );
+        const getClaimable = from(rpc.Query.getClaimable(address).execute(this.global.RPCDomain));
+        const getUnclaimed = from(rpc.Query.getUnclaimed(address).execute(this.global.RPCDomain));
+        return forkJoin([getClaimable, getUnclaimed]).pipe(map(res => {
+            const result = {
+                available: 0,
+                unavailable: 0,
+                claimable: []
+            };
+            const claimableData = res[0];
+            const unclaimed = res[1];
+            result.available = unclaimed.result.available || 0;
+            result.unavailable = unclaimed.result.unavailable || 0;
+            result.claimable = claimableData.result.claimable || [];
+            return result;
+        }))
     }
 
     public fetchAll(): Promise<any> {
@@ -218,7 +218,7 @@ export class AssetState {
         if (targetCoins === '') {
             return of(rateRes);
         }
-        return forkJoin(this.getRate(), this.getFiatRate())
+        return forkJoin([this.getRate(), this.getFiatRate()])
             .pipe(
                 map(result => {
                     const rateBalance = result[0];
@@ -262,15 +262,9 @@ export class AssetState {
         }
     }
 
-    public getAssetDetail(assetId: string): Observable<AssetDetail> {
-        return this.http.get(
-            `${this.global.apiDomain}/v1/asset/${assetId}`
-        );
-    }
-
     public getNep5Detail(assetId: string): Observable<Nep5Detail> {
         return this.http.get(
-            `${this.global.apiDomain}/v1/nep5/${assetId}`
+            `${this.global.apiGoDomain}/v1/neo2/nep5/${assetId}`
         );
     }
 

@@ -100,7 +100,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                     }) : new Promise<any>((mResolve) => {
                         mResolve({result: []});
                     });
-                forkJoin(httpReq1, httpReq2).subscribe(result => {
+                forkJoin([httpReq1, httpReq2]).subscribe(result => {
                     let txPage = result[0];
                     let txConfirm = result[1];
                     txConfirm = txConfirm.result;

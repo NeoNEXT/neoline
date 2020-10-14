@@ -7,13 +7,14 @@ export interface PageData<T> {
 }
 
 export interface ClaimItem {
-    claim: string;
-    end: number;
-    start: number;
+    end_height: number;
+    generated: number;
+    n: number;
+    start_height: number;
     sys_fee: number;
     txid: string;
+    unclaimed: number;
     value: number;
-    n: number;
 }
 
 export interface AssetDetail {
@@ -32,26 +33,26 @@ export interface AssetDetail {
 
 
 export interface Nep5Detail {
-    nep5: {
-        addresses: number,
-        admin: string,
-        amount: string,
-        assetId: string,
-        blockIndex: number,
-        nep5_name: string,
-        precision: number,
-        symbol: string,
-        transactions: number,
-        txid: string,
-        type: string
-    },
-    nep5reg: {
+    addresses: number,
+    admin: string,
+    amount: string,
+    asset_id: string,
+    block_index: number,
+    block_time: number,
+    decimals: number,
+    id: number,
+    name: string,
+    nep5_info: {
         author: string,
         description: string,
         email: string,
         name: string,
         version: string
-    }
+    },
+    symbol: string,
+    transactions: number,
+    txid: string,
+    type: string
 }
 
 export interface Balance {

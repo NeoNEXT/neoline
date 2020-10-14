@@ -191,7 +191,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 const httpReq2 = this.http.post(`${this.global.apiDomain}/v1/transactions/confirms`, {
                     txids: txIdArray
                 });
-                forkJoin(httpReq1, httpReq2).subscribe(result => {
+                forkJoin([httpReq1, httpReq2]).subscribe(result => {
                     let txPage = result[0];
                     let txConfirm = result[1];
                     txConfirm = txConfirm.result;
@@ -288,9 +288,9 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     private initInterval() {
         this.intervalClaim = setInterval(() => {
             this.asset.fetchClaim(this.neon.address).subscribe((claimRes: any) => {
-                if (Number(claimRes.unspent_claim) === 0) {
+                if (Number(claimRes.available) === 0) {
                     this.loading = false;
-                    this.claimNumber = claimRes.uncollect_claim;
+                    this.claimNumber = claimRes.unavailable;
                     clearInterval(this.intervalClaim);
                     this.intervalClaim = null;
                     this.claimStatus = this.status.success;
@@ -309,10 +309,10 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 if (this.intervalClaim === null) {
                     this.intervalClaim = setInterval(() => {
                         this.asset.fetchClaim(this.neon.address).subscribe((claimRes: any) => {
-                            if (Number(claimRes.unspent_claim) !== 0) {
+                            if (Number(claimRes.available) !== 0) {
                                 this.loading = false;
-                                this.claimsData = claimRes.claims;
-                                this.claimNumber = claimRes.unspent_claim;
+                                this.claimsData = claimRes.claimable;
+                                this.claimNumber = claimRes.available;
                                 clearInterval(this.intervalClaim);
                                 this.claimStatus = this.status.confirmed;
                                 this.intervalClaim = null;
@@ -330,12 +330,12 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
 
     private initClaim() {
         this.asset.fetchClaim(this.neon.address).subscribe((res: any) => {
-            this.claimsData = res.claims;
-            if (res.unspent_claim > 0) {
-                this.claimNumber = res.unspent_claim;
+            this.claimsData = res.claimable;
+            if (res.available > 0) {
+                this.claimNumber = res.available;
                 this.showClaim = true;
-            } else if (res.uncollect_claim > 0) {
-                this.claimNumber = res.uncollect_claim;
+            } else if (res.unavailable > 0) {
+                this.claimNumber = res.unavailable;
                 this.claimStatus = this.status.estimated;
                 this.showClaim = true;
             } else {

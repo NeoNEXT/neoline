@@ -33,7 +33,7 @@ export class PopupMyAssetsComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        const getMoneyBalance = this.asset.fetchBalanceGo(this.neon.address);
+        const getMoneyBalance = this.asset.fetchBalance(this.neon.address);
         const getWatch = this.chrome.getWatch();
         forkJoin([getMoneyBalance, getWatch]).subscribe(res => {
             this.moneyAssets = res[0];

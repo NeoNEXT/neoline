@@ -105,7 +105,7 @@ export class PopupHomeComponent implements OnInit {
 
     getAssetList() {
         this.assetState
-            .fetchBalanceGo(this.wallet.accounts[0].address)
+            .fetchBalance(this.wallet.accounts[0].address)
             .subscribe(balanceArr => {
                 this.handlerBalance(balanceArr);
                 this.chrome.getWatch().subscribe(watching => {
@@ -265,9 +265,9 @@ export class PopupHomeComponent implements OnInit {
             this.assetState
                 .fetchClaim(this.neon.address)
                 .subscribe((claimRes: any) => {
-                    if (Number(claimRes.unspent_claim) === 0) {
+                    if (Number(claimRes.available) === 0) {
                         this.loading = false;
-                        this.claimNumber = claimRes.uncollect_claim;
+                        this.claimNumber = claimRes.unavailable;
                         clearInterval(this.intervalClaim);
                         this.intervalClaim = null;
                         this.claimStatus = this.status.success;
@@ -290,10 +290,10 @@ export class PopupHomeComponent implements OnInit {
                             this.intervalClaim = setInterval(() => {
                                 this.assetState.fetchClaim(this.neon.address)
                                     .subscribe((claimRes: any) => {
-                                        if (Number(claimRes.unspent_claim) !== 0) {
+                                        if (Number(claimRes.available) !== 0) {
                                             this.loading = false;
-                                            this.claimsData = claimRes.claims;
-                                            this.claimNumber = claimRes.unspent_claim;
+                                            this.claimsData = claimRes.claimable;
+                                            this.claimNumber = claimRes.available;
                                             clearInterval(this.intervalClaim);
                                             this.claimStatus = this.status.confirmed;
                                             this.intervalClaim = null;
@@ -317,12 +317,12 @@ export class PopupHomeComponent implements OnInit {
 
     private initClaim() {
         this.assetState.fetchClaim(this.neon.address).subscribe((res: any) => {
-            this.claimsData = res.claims;
-            if (res.unspent_claim > 0) {
-                this.claimNumber = res.unspent_claim;
+            this.claimsData = res.claimable;
+            if (res.available > 0) {
+                this.claimNumber = res.available;
                 this.showClaim = true;
-            } else if (res.uncollect_claim > 0) {
-                this.claimNumber = res.uncollect_claim;
+            } else if (res.unavailable > 0) {
+                this.claimNumber = res.unavailable;
                 this.claimStatus = this.status.estimated;
                 this.showClaim = true;
             } else {

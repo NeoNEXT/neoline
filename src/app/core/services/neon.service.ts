@@ -357,7 +357,7 @@ export class NeonService {
                     prevHash: item.txid.length === 66 ? item.txid.slice(2) : item.txid,
                     prevIndex: item.n,
                 });
-                itemValue = this.global.mathAdd(itemValue, Number(item.claim));
+                itemValue = this.global.mathAdd(itemValue, Number(item.unclaimed));
                 if (count >= 20) {
                     txCount++;
                     count = 0
