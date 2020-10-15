@@ -64,10 +64,6 @@ export class HttpService {
     }
 
     public get(url: string): Observable<any> {
-        let tempUrl = url.slice(this.global.apiDomain.length);
-        if (url.indexOf('?') >= 0) {
-            tempUrl = url.slice(this.global.apiDomain.length, url.indexOf('?'));
-        }
         if (this.chrome.check) {
             return from(new Promise((resolve, reject) => {
                 this.chrome.httpGet(url, (res) => {

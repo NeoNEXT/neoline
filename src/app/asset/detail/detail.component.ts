@@ -174,8 +174,8 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         });
     }
 
-    private getInTransactions(page, maxId = -1, sinceId = -1, absPage = 1) {
-        const httpReq1 = this.txState.fetchTx(this.neon.address, page, this.assetId, maxId, sinceId, absPage);
+    private getInTransactions(page, maxId = -1) {
+        const httpReq1 = this.txState.fetchTx(this.neon.address, page, this.assetId, maxId);
         if (page === 1) {
             this.chrome.getTransaction().subscribe(inTxData => {
                 if (inTxData[this.net] === undefined || inTxData[this.net][this.address] === undefined || inTxData[this.net][this.address][this.assetId] === undefined) {
@@ -188,7 +188,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 this.inTransaction.forEach(item => {
                     txIdArray.push(item.txid);
                 });
-                const httpReq2 = this.http.post(`${this.global.apiDomain}/v1/transactions/confirms`, {
+                const httpReq2 = this.http.post(`${this.global.apiGoDomain}/v1/neo2/txids_valid`, {
                     txids: txIdArray
                 });
                 forkJoin([httpReq1, httpReq2]).subscribe(result => {
@@ -230,19 +230,10 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
 
     public page(page: number) {
         let maxId = -1;
-        let sinceId = -1;
-        let absPage = Math.abs(this.txPage.page - page);
-        if (page === 1) {
-            absPage = 1;
-        }
         if (page > this.txPage.page) {
             maxId = this.txPage.items[this.txPage.items.length - 1].id;
-        } else {
-            if (page !== 1) {
-                sinceId = this.txPage.items[0].id;
-            }
         }
-        this.getInTransactions(page, maxId, sinceId, absPage);
+        this.getInTransactions(page, maxId);
     }
 
 
@@ -303,9 +294,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         this.transferSer.create(this.neon.address, this.neon.address, NEO, '1').subscribe((res) => {
             res.sign(this.neon.WIFArr[this.neon.walletArr.findIndex(item =>
                 item.accounts[0].address === this.neon.wallet.accounts[0].address)]);
-            this.http.post(`${this.global.apiDomain}/v1/transactions/transfer`, {
-                signature_transaction: res.serialize(true)
-            }).subscribe(txRes => {
+            rpc.Query.sendRawTransaction( res.serialize(true)).execute(this.global.RPCDomain).then(txRex => {
                 if (this.intervalClaim === null) {
                     this.intervalClaim = setInterval(() => {
                         this.asset.fetchClaim(this.neon.address).subscribe((claimRes: any) => {
@@ -320,9 +309,9 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                         });
                     }, 10000);
                 }
-            }, txErr => {
+            }).catch(err => {
                 this.loading = false;
-            });
+            })
         }, (err) => {
             this.global.snackBarTip('wentWrong', err);
         });

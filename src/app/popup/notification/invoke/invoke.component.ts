@@ -431,8 +431,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
 
     private getBalance(address: string, asset: string): Promise<UTXO[]> {
         return new Promise(mResolve => {
-            this.http.get(`${this.global.apiDomain}/v1/transactions/getutxoes?address=${address}&asset_id=${asset}`).pipe(map((res) => {
-                mResolve((res as any).result as UTXO[]);
+            this.http.get(`${this.global.apiGoDomain}/v1/neo2/address/utxo?address=${address}&asset_id=${asset}`).pipe(map((res: any) => {
+                mResolve((res.data || []) as UTXO[]);
             })).toPromise();
         });
     }

@@ -64,16 +64,12 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
         }
         this.loading = true;
         let maxId = -1;
-        const sinceId = -1;
-        const absPage = 1;
         maxId = page > 1 ? this.txData[this.txData.length - 1].id : -1;
         const httpReq1 = this.assetId !== '' ? this.txState.fetchTx(
             this.neon.address,
             page,
             this.assetId,
-            maxId,
-            sinceId,
-            absPage
+            maxId
         ) : this.txState.getAllTx(this.neon.address, maxId);
         if (page === 1) {
             this.chrome.getTransaction().subscribe(inTxData => {
@@ -95,13 +91,13 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                     txIdArray.push(item.txid);
                 });
                 const httpReq2 = txIdArray.length !== 0 ?
-                    this.http.post(`${this.global.apiDomain}/v1/transactions/confirms`, {
+                    this.http.post(`${this.global.apiGoDomain}/v1/neo2/txids_valid`, {
                         txids: txIdArray
                     }) : new Promise<any>((mResolve) => {
                         mResolve({result: []});
                     });
                 forkJoin([httpReq1, httpReq2]).subscribe(result => {
-                    let txPage = result[0];
+                    let txData = result[0];
                     let txConfirm = result[1];
                     txConfirm = txConfirm.result;
                     txConfirm.forEach(item => {
@@ -128,17 +124,17 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                     }
                     this.chrome.setTransaction(inTxData);
                     if (this.assetId !== '') {
-                        if (txPage.items.length === 0) {
+                        if (txData.length === 0) {
                             this.noMoreData = true
                         }
-                        txPage.items = this.inTransaction.concat(txPage.items);
-                        this.txData = txPage.items;
+                        txData = this.inTransaction.concat(txData);
+                        this.txData = txData;
                     } else {
-                        if (txPage.length === 0) {
+                        if (txData.length === 0) {
                             this.noMoreData = true
                         }
-                        txPage = this.inTransaction.concat(txPage);
-                        this.txData = txPage;
+                        txData = this.inTransaction.concat(txData);
+                        this.txData = txData;
                     }
                     // 重新获取地址余额，更新整个页面的余额
                     this.asset

@@ -38,22 +38,18 @@ export class TransactionState {
     }
 
     public fetchTx(address: string, page: number, asset: string,
-        maxId: number = -1, sinceId: number = -1, absPage: number = 1): Observable<any> {
-        let url = `${this.global.apiDomain}/v1/transactions/gettransactions?` +
-            `address=${address}&asset_id=${asset}&page_size=10&abs_page=${absPage}`;
+        maxId: number = -1): Observable<any> {
+        let url = `${this.global.apiGoDomain}/v1/neo2/transactions/${address}/${asset}` +
+            `?count=10`;
         if (maxId !== -1) {
             url += `&max_id=${maxId}`;
-        }
-        if (sinceId !== -1) {
-            url += `&since_id=${sinceId}`;
-
         }
         return this.http.get(url);
     }
 
     public getAllTx(address: string, maxId: number = -1,): Observable<any> {
-        let url = `${this.global.apiDomain}/v1/transactions?` +
-            `address=${address}&page_size=10`;
+        let url = `${this.global.apiGoDomain}/v1/neo2/address/transactions/all?` +
+            `address=${address}&count=10`;
         if (maxId !== -1) {
             url += `&max_id=${maxId - 1}`;
         }
@@ -62,6 +58,6 @@ export class TransactionState {
 
 
     getTxDetail(txid: string): Observable<any> {
-        return this.http.get(`${this.global.apiDomain}/v1/transactions/gettransaction/${txid}`)
+        return this.http.get(`${this.global.apiGoDomain}/v1/neo2/transaction/${txid}`)
     }
 }
