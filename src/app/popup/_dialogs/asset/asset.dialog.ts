@@ -8,13 +8,9 @@ import {
 } from '@angular/material/dialog';
 
 import {
-    ChromeService, AssetState,
+    AssetState,
 } from '@app/core';
-import {
-    WalletJSON
-} from '@cityofzion/neon-core/lib/wallet';
-import { wallet } from '@cityofzion/neon-js';
-import { Balance } from '@/models/models';
+import { Asset } from '@/models/models';
 
 @Component({
     templateUrl: 'asset.dialog.html',
@@ -26,14 +22,14 @@ export class PopupAssetDialogComponent implements OnInit {
         private dialogRef: MatDialogRef<PopupAssetDialogComponent>,
         private assetState: AssetState,
         @Inject(MAT_DIALOG_DATA) public data: {
-            balances: Array<Balance>,
+            balances: Array<Asset>,
             selected: number
         }
     ) { }
 
     ngOnInit() {
         this.data.balances.forEach(async (item, index) => {
-            this.logoUrlArr[index] = await this.assetState.getAssetImage(item.asset_id);
+            this.logoUrlArr[index] = await this.assetState.getAssetImage(item);
         })
     }
 

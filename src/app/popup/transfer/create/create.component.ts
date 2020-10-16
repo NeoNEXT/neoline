@@ -49,9 +49,9 @@ export class TransferCreateComponent implements OnInit {
     public creating: boolean = false;
 
     public assetLogoUrl = '';
-    public chooseAsset: Balance;
+    public chooseAsset: Asset;
 
-    public balances: Array<Balance> = [];
+    public balances: Array<Asset> = [];
     public assetId: string;
     public net: string;
     constructor(
@@ -73,11 +73,11 @@ export class TransferCreateComponent implements OnInit {
         this.fromAddress = this.neon.address;
         this.aRoute.params.subscribe((params) => {
             if (params.id) {
-                this.asset.detail(this.neon.address, params.id).subscribe(async (res: Balance) => {
+                this.asset.detail(this.neon.address, params.id).subscribe(async (res: Asset) => {
                     res.balance = bignumber(res.balance).toFixed();
                     this.chooseAsset = res;
                     this.assetId = res.asset_id;
-                    this.assetLogoUrl = await this.asset.getAssetImage(this.assetId);
+                    this.assetLogoUrl = await this.asset.getAssetImage(res);
                 });
             }
             this.asset.fetchBalance(this.neon.address).subscribe(async balanceArr => {
@@ -85,7 +85,7 @@ export class TransferCreateComponent implements OnInit {
                 if (!params.id) {
                     this.assetId = this.balances[0].asset_id;
                     this.chooseAsset = this.balances[0];
-                    this.assetLogoUrl = await this.asset.getAssetImage(this.assetId);
+                    this.assetLogoUrl = await this.asset.getAssetImage(this.balances[0]);
                 }
             });
         });
@@ -279,7 +279,7 @@ export class TransferCreateComponent implements OnInit {
                 }
                 this.chooseAsset = this.balances[index];
                 this.assetId = this.chooseAsset.asset_id;
-                this.assetLogoUrl = await this.asset.getAssetImage(this.assetId);
+                this.assetLogoUrl = await this.asset.getAssetImage(this.chooseAsset);
             });
         }
     }

@@ -42,7 +42,7 @@ export class TransactionState {
         let url = `${this.global.apiGoDomain}/v1/neo2/transactions/${address}/${asset}` +
             `?count=10`;
         if (maxId !== -1) {
-            url += `&max_id=${maxId}`;
+            url += `&max_id=${maxId - 1}`;
         }
         return this.http.get(url);
     }

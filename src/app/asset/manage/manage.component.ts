@@ -39,7 +39,7 @@ import { Unsubscribable } from 'rxjs';
 })
 export class AssetManageComponent implements OnInit, OnDestroy {
     private requesting = false;
-    public allAssets: PageData < Asset > ; // 所有的资产
+    public allAssets: Asset[] ; // 所有的资产
     public searchAssets: any = false; // 搜索出来的资产
     public displayAssets: Balance[] = []; // 要显示的资产
     public watch: Asset[]; // 用户添加的资产
@@ -61,7 +61,7 @@ export class AssetManageComponent implements OnInit, OnDestroy {
             this.displayAssets = [];
             this.displayAssets.push(...res)
             //  去重
-            let newWatch = [];
+            const newWatch = [];
             watching.forEach((w) => {
                 if (res.findIndex((r) => r.asset_id === w.asset_id) < 0) {
                     newWatch.push(w);
@@ -85,9 +85,9 @@ export class AssetManageComponent implements OnInit, OnDestroy {
                     }
                 }
             } else {
-                for (const index in this.allAssets.items) {
-                    if (this.allAssets.items[index].asset_id === delId) {
-                        this.allAssets.items[index].watching = false;
+                for (const index in this.allAssets) {
+                    if (this.allAssets[index].asset_id === delId) {
+                        this.allAssets[index].watching = false;
                         return;
                     }
                 }
@@ -105,38 +105,38 @@ export class AssetManageComponent implements OnInit, OnDestroy {
         this.requesting = true;
         this.asset.fetchAll().then(res => {
             this.allAssets = res;
-            this.allAssets.items.forEach((element, index) => {
-                this.allAssets.items[index].watching =
+            this.allAssets.forEach((element, index) => {
+                this.allAssets[index].watching =
                     this.displayAssets.findIndex((w: Balance) => w.asset_id === element.asset_id) >= 0;
-                this.getAssetSrc(element.asset_id, index, 'all');
+                this.getAssetSrc(element, index, 'all');
             });
             this.requesting = false;
         });
     }
 
-    public getAssetSrc(assetId, index, type) {
-        const imageObj = this.asset.assetFile.get(assetId);
+    public getAssetSrc(asset: Asset, index, type) {
+        const imageObj = this.asset.assetFile.get(asset.asset_id);
         let lastModified = '';
         if (imageObj) {
             lastModified = imageObj['last-modified'];
             if (type === 'all') {
-                this.allAssets.items[index].avatar = imageObj['image-src'];
+                this.allAssets[index].avatar = imageObj['image-src'];
             } else if (type === 'search') {
                 this.searchAssets[index].avatar = imageObj['image-src'];
             }
         }
-        this.asset.getAssetSrc(assetId, lastModified).subscribe(assetRes => {
+        this.asset.getAssetImageFromUrl(asset.image_url, lastModified).subscribe(assetRes => {
             if (assetRes && assetRes['status'] === 200) {
-                this.asset.setAssetFile(assetRes, assetId).then(src => {
+                this.asset.setAssetFile(assetRes, asset.asset_id).then(src => {
                     if (type === 'all') {
-                        this.allAssets.items[index].avatar = src;
+                        this.allAssets[index].avatar = src;
                     } else if (type === 'search') {
                         this.searchAssets[index].avatar = src;
                     }
                 });
             } else if (assetRes && assetRes['status'] === 404) {
                 if (type === 'all') {
-                    this.allAssets.items[index].avatar = this.asset.defaultAssetSrc;
+                    this.allAssets[index].avatar = this.asset.defaultAssetSrc;
                 } else if (type === 'search') {
                     this.searchAssets[index].avatar = this.asset.defaultAssetSrc;
                 }
@@ -145,20 +145,20 @@ export class AssetManageComponent implements OnInit, OnDestroy {
     }
 
     public addAsset(index: number) {
-        const assetItem = this.searchAssets === false ? this.allAssets.items[index] : this.searchAssets[index];
+        const assetItem = this.searchAssets === false ? this.allAssets[index] : this.searchAssets[index];
         this.dialog.open(PopupAddTokenDialogComponent, {
             data: assetItem,
             panelClass: 'custom-dialog-panel'
         }).afterClosed().subscribe((confirm) => {
             if (confirm) {
                 if (this.searchAssets !== false) {
-                    const i = this.allAssets.items.findIndex((a) => a.asset_id === assetItem.asset_id);
+                    const i = this.allAssets.findIndex((a) => a.asset_id === assetItem.asset_id);
                     if (i >= 0) {
-                        this.allAssets.items[i].watching = true;
+                        this.allAssets[i].watching = true;
                     }
                     this.searchAssets[index].watching = true;
                 } else {
-                    this.allAssets.items[index].watching = true;
+                    this.allAssets[index].watching = true;
                 }
                 this.displayAssets.push(assetItem);
                 this.watch.push(assetItem);
@@ -187,7 +187,7 @@ export class AssetManageComponent implements OnInit, OnDestroy {
                 this.searchAssets = res;
                 this.searchAssets.forEach((element, index) => {
                     this.searchAssets[index].watching = this.displayAssets.findIndex((w: Balance) => w.asset_id === element.asset_id) >= 0;
-                    this.getAssetSrc(element.asset_id, index, 'search');
+                    this.getAssetSrc(element, index, 'search');
                 });
             });
         } else {

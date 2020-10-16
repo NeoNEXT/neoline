@@ -78,17 +78,6 @@ export class PopupHomeComponent implements OnInit {
             lastModified = imageObj['last-modified'];
             this.imageUrl = imageObj['image-src'];
         }
-        this.assetState
-            .getAssetSrc(NEO, lastModified)
-            .subscribe((assetRes: any) => {
-                if (assetRes && assetRes.status === 200) {
-                    this.assetState.setAssetFile(assetRes, NEO).then(src => {
-                        this.imageUrl = src;
-                    });
-                } else if (assetRes && assetRes.status === 404) {
-                    this.imageUrl = this.assetState.defaultAssetSrc;
-                }
-            });
     }
 
     ngOnInit(): void {
@@ -179,6 +168,11 @@ export class PopupHomeComponent implements OnInit {
                     this.assetList[
                         index
                     ].image_url = this.assetState.defaultAssetSrc;
+                }
+                if(asset.asset_id === NEO) {
+                    this.imageUrl =  this.assetList[
+                        index
+                    ].image_url;
                 }
             });
     }

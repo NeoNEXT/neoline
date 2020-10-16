@@ -48,7 +48,7 @@ export class PopupAssetDetailComponent implements OnInit {
         this.net = this.global.net;
         this.aRouter.params.subscribe(async (params: any) => {
             this.assetId = params.assetId || NEO;
-            this.imageUrl = await this.assetState.getAssetImage(this.assetId);
+            this.imageUrl = await this.assetState.getAssetImageFromAssetId(this.assetId);
             // 获取资产信息
             this.assetState
                 .fetchBalance(this.neon.address)

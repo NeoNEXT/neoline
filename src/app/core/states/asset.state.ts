@@ -3,7 +3,7 @@ import { HttpService } from '../services/http.service';
 import { GlobalService } from '../services/global.service';
 import { ChromeService } from '../services/chrome.service';
 import { Observable, Subject, from, of, forkJoin } from 'rxjs';
-import { Balance, Nep5Detail } from 'src/models/models';
+import { Asset, Balance, Nep5Detail } from 'src/models/models';
 import { map, switchMap, refCount, publish } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { GasFeeSpeed } from '@popup/_lib/type';
@@ -151,16 +151,6 @@ export class AssetState {
         );
     }
 
-    public getAssetSrc(
-        assetId: string,
-        lastModified: string
-    ): Observable<any> {
-        return this.http.getImage(
-            `${this.global.apiDomain}/logo/${assetId}`,
-            lastModified
-        );
-    }
-
     public getAssetImageFromUrl(url: string, lastModified: string) {
         return this.http.getImage(
             url,
@@ -247,17 +237,28 @@ export class AssetState {
             );
     }
 
-    public async getAssetImage(assetId: string) {
-        const imageObj = this.assetFile.get(assetId);
+    public async getAssetImage(asset: Asset) {
+        const imageObj = this.assetFile.get(asset.asset_id);
         let lastModified = '';
         if (imageObj) {
             lastModified = imageObj['last-modified'];
             return imageObj['image-src'];
         }
-        const assetRes = await this.getAssetSrc(assetId, lastModified).toPromise();
+        const assetRes = await this.getAssetImageFromUrl(asset.image_url, lastModified).toPromise();
         if (assetRes && assetRes.status === 200) {
-            const src = await this.setAssetFile(assetRes, assetId)
+            const src = await this.setAssetFile(assetRes, asset.asset_id)
         } else if (assetRes && assetRes.status === 404) {
+            return this.defaultAssetSrc;
+        }
+    }
+
+    public getAssetImageFromAssetId(asset: string) {
+        const imageObj = this.assetFile.get(asset);
+        let lastModified = '';
+        if (imageObj) {
+            lastModified = imageObj['last-modified'];
+            return imageObj['image-src'];
+        } else {
             return this.defaultAssetSrc;
         }
     }

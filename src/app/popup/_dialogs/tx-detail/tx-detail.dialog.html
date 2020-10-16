@@ -18,14 +18,14 @@
 <div class="item column">
     <p class="name">{{ 'from' | translate | async }}</p>
     <div class="address-group">
-        <p *ngFor="let item of txDetail?.tokenTXs">{{ item?.from }}</p>
+        <p *ngFor="let item of txDetail?.nep5">{{ item?.from }}</p>
         <p *ngFor="let item of txDetail?.vin">{{ item?.address }}</p>
     </div>
 </div>
 <div class="item column">
     <p class="name">{{ 'to' | translate | async }}</p>
     <div class="address-group">
-        <p *ngFor="let item of txDetail?.tokenTXs">{{ item?.to }}</p>
+        <p *ngFor="let item of txDetail?.nep5">{{ item?.to }}</p>
         <p *ngFor="let item of txDetail?.vout">{{ item?.address }}</p>
     </div>
 </div>

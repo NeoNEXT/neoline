@@ -47,7 +47,7 @@ export class PopupNoticeDeployComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        this.assetState.getAssetImage(NEO).then(res => {
+        this.assetState.getAssetImageFromAssetId(NEO).then(res => {
             this.assetImageUrl = res;
         });
         this.aRoute.queryParams.subscribe(async (params: any) => {

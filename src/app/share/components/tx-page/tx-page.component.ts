@@ -97,7 +97,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                         mResolve({result: []});
                     });
                 forkJoin([httpReq1, httpReq2]).subscribe(result => {
-                    let txData = result[0];
+                    let txData = result[0] || [];
                     let txConfirm = result[1];
                     txConfirm = txConfirm.result;
                     txConfirm.forEach(item => {
@@ -147,14 +147,15 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
             });
         } else {
             httpReq1.subscribe(res => {
+                const resultData = res || [];
                 if (this.assetId === '') {
-                    this.txData = this.txData.concat(res);
-                    if (res.length === 0) {
+                    this.txData = this.txData.concat(resultData);
+                    if (resultData.length === 0) {
                         this.noMoreData = true
                     }
                 } else {
-                    this.txData = this.txData.concat(res.items);
-                    if (res.items.length === 0) {
+                    this.txData = this.txData.concat(resultData);
+                    if (resultData.length === 0) {
                         this.noMoreData = true
                     }
                 }

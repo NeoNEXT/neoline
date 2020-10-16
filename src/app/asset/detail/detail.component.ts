@@ -163,7 +163,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
             lastModified = imageObj['last-modified'];
             this.imageUrl = imageObj['image-src'];
         }
-        this.asset.getAssetSrc(this.assetId, lastModified).subscribe(assetRes => {
+        this.asset.getAssetImageFromAssetId(this.assetId).subscribe(assetRes => {
             if (assetRes && assetRes['status'] === 200) {
                 this.asset.setAssetFile(assetRes, this.assetId).then(src => {
                     this.imageUrl = src;

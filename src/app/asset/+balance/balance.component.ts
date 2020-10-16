@@ -31,7 +31,7 @@ export class BalanceComponent implements OnInit {
     @Input() public asset: any;
     @Input() public index: number;
     @Input() public rateCurrency: string;
-    @Output() onDelAsset = new EventEmitter < any > ();
+    @Output() delAssetOutput = new EventEmitter < any > ();
 
     constructor(
         public global: GlobalService,
@@ -48,7 +48,7 @@ export class BalanceComponent implements OnInit {
             lastModified = imageObj['last-modified'];
             this.imageUrl = imageObj['image-src'];
         }
-        this.assetState.getAssetSrc(assetId, lastModified).subscribe(assetRes => {
+        this.assetState.getAssetImageFromUrl(this.asset.image_url, lastModified).subscribe(assetRes => {
             if (assetRes && assetRes['status'] === 200) {
                 this.assetState.setAssetFile(assetRes, assetId).then(src => {
                     this.imageUrl = src;
@@ -63,7 +63,7 @@ export class BalanceComponent implements OnInit {
     }
     public delAsset() {
         this.isDel = true;
-        this.onDelAsset.emit(this.index);
+        this.delAssetOutput.emit(this.index);
     }
     public fixed(assetId: string) {
         return [NEO, GAS].includes(assetId);
