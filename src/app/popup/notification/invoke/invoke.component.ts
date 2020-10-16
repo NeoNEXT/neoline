@@ -1,12 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GlobalService, NeonService, ChromeService, AssetState } from '@/app/core';
+import { GlobalService, NeonService, ChromeService, AssetState, HttpService } from '@/app/core';
 import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzion/neon-core/lib/tx';
 import { wallet, tx, sc, u, rpc } from '@cityofzion/neon-core';
 import Neon from '@cityofzion/neon-js';
 import { MatDialog } from '@angular/material/dialog';
-import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
-import { HttpClient } from '@angular/common/http';
 import { NEO, UTXO, GAS } from '@/models/models';
 import { Observable } from 'rxjs';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
@@ -57,15 +55,13 @@ export class PopupNoticeInvokeComponent implements OnInit {
         private global: GlobalService,
         private neon: NeonService,
         private dialog: MatDialog,
-        private http: HttpClient,
+        private http: HttpService,
         private chrome: ChromeService,
         private assetState: AssetState
     ) { }
 
     ngOnInit(): void {
-        this.assetState.getAssetImageFromAssetId(NEO).then(res => {
-            this.assetImageUrl = res;
-        });
+        this.assetImageUrl = this.assetState.getAssetImageFromAssetId(NEO)
         this.aRoute.queryParams.subscribe(async (params: any) => {
             this.pramsData = JSON.parse(JSON.stringify(params));
             this.messageID = params.messageID;
@@ -431,7 +427,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
 
     private getBalance(address: string, asset: string): Promise<UTXO[]> {
         return new Promise(mResolve => {
-            this.http.get(`${this.global.apiGoDomain}/v1/neo2/address/utxo?address=${address}&asset_id=${asset}`).pipe(map((res: any) => {
+            this.http.get(`${this.global.apiDomain}/v1/neo2/address/utxo?address=${address}&asset_id=${asset}`).pipe(map((res: any) => {
                 mResolve((res.data || []) as UTXO[]);
             })).toPromise();
         });

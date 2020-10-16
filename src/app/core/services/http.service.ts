@@ -67,19 +67,23 @@ export class HttpService {
         if (this.chrome.check) {
             return from(new Promise((resolve, reject) => {
                 this.chrome.httpGet(url, (res) => {
-                    if ((res && res.bool_status) || res.status === 'success') {
-                        resolve(res.data || res.result);
+                    if (res.status === 'success') {
+                        resolve(res.data);
                     } else {
                         reject(res && res.msg || res);
                     }
+                }, {
+                    Network: this.global.net === 'MainNet' ? 'mainnet' : 'testnet'
                 });
             }));
         }
         return this.http.get(url, {
-            headers: {}
+            headers: {
+                Network: this.global.net === 'MainNet' ? 'mainnet' : 'testnet'
+            }
         }).pipe(map((res: any) => {
-            if ((res && res.bool_status) || res.status === 'success') {
-                return res.data || res.result;
+            if (res && res.status === 'success') {
+                return res.data;
             } else {
                 throw res && res.msg || res;
             }
@@ -89,18 +93,22 @@ export class HttpService {
         if (this.chrome.check) {
             return from(new Promise((resolve, reject) => {
                 this.chrome.httpPost(url, data, (res) => {
-                    if (res && res.bool_status) {
+                    if (res && res.status === 'success') {
                         resolve(res.data || res);
                     } else {
                         reject(res && res.msg || res);
                     }
+                }, {
+                    Network: this.global.net === 'MainNet' ? 'mainnet' : 'testnet'
                 });
             }));
         }
         return this.http.post(url, data, {
-            headers: {}
+            headers: {
+                Network: this.global.net === 'MainNet' ? 'mainnet' : 'testnet'
+            }
         }).pipe(map((res: any) => {
-            if (res && res.bool_status) {
+            if (res && res.status === 'success') {
                 return res.data || res;
             } else {
                 throw res && res.msg || res;

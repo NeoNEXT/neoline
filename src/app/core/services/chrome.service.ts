@@ -303,10 +303,10 @@ export class ChromeService {
             }
         }));
     }
-    public getWatch(): Observable<Asset[]> {
+    public getWatch(address: string): Observable<Asset[]> {
         if (!this.check) {
             try {
-                let rs = JSON.parse(localStorage.getItem(`watch_${this.net}`)) || [];
+                let rs = (JSON.parse(localStorage.getItem(`watch_${this.net.toLowerCase()}`))|| {})[address] || [];
                 if (!Array.isArray(rs)) {
                     rs = [];
                 }
@@ -317,7 +317,8 @@ export class ChromeService {
         } else {
             return from(new Promise<Asset[]>((resolve, reject) => {
                 try {
-                    this.crx.getLocalStorage(`watch_${this.net}`, (res) => {
+                    this.crx.getLocalStorage(`watch_${this.net.toLowerCase()}`, (res) => {
+                        res = (res || {})[address] || [];
                         if (!Array.isArray(res)) {
                             res = [];
                         }
@@ -329,18 +330,43 @@ export class ChromeService {
             }));
         }
     }
-    public setWatch(watch: Asset[]) {
+    public getAllWatch(): Observable<object> {
         if (!this.check) {
-            localStorage.setItem(`watch_${this.net}`, JSON.stringify(watch));
-            return;
+            try {
+                const rs = JSON.parse(localStorage.getItem(`watch_${this.net.toLowerCase()}`))|| {};
+                return of(rs);
+            } catch (e) {
+                return throwError('please set watch to local storage when debug mode on');
+            }
+        } else {
+            return from(new Promise<Asset[]>((resolve, reject) => {
+                try {
+                    this.crx.getLocalStorage(`watch_${this.net.toLowerCase()}`, (res) => {
+                        res = res || {};
+                        resolve(res);
+                    });
+                } catch (e) {
+                    reject('failed');
+                }
+            }));
         }
-        try {
-            const saveData = {};
-            saveData[`watch_${this.net}`]= watch;
-            this.crx.setLocalStorage(saveData);
-        } catch (e) {
-            console.log('set watch failed', e);
-        }
+    }
+    public setWatch(address: string, watch: Asset[]) {
+        this.getAllWatch().subscribe(watchObject => {
+            const saveWatch = watchObject || {};
+            saveWatch[address] = watch;
+            if (!this.check) {
+                localStorage.setItem(`watch_${this.net.toLowerCase()}`, JSON.stringify(saveWatch));
+                return;
+            }
+            try {
+                const saveData = {};
+                saveData[`watch_${this.net.toLowerCase()}`]= saveWatch;
+                this.crx.setLocalStorage(saveData);
+            } catch (e) {
+                console.log('set watch failed', e);
+            }
+        })
     }
     public setTransaction(transaction: object) {
         if (!this.check) {

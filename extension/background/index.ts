@@ -21,7 +21,7 @@ import {
     setLocalStorage,
     getLocalStorage
 } from '../common';
-import { requestTarget, GetBalanceArgs, BalanceRequest, ERRORS, mainApi, testApi, EVENT, mainRPC, testRPC, InvokeReadMultiArgs } from '../common/data_module';
+import { requestTarget, GetBalanceArgs, BalanceRequest, ERRORS, mainApi, EVENT, mainRPC, testRPC, InvokeReadMultiArgs } from '../common/data_module';
 import { reverseHex, getScriptHashFromAddress } from '../common/utils';
 /**
  * Background methods support.
@@ -46,7 +46,6 @@ export function expand() {
         getStorage('net', async (res) => {
             const network = res || 'MainNet';
             const RPCUrl = network === 'MainNet' ? mainRPC : testRPC;
-            const apiUrl = network === 'MainNet' ? mainApi : testApi;
             httpPost(RPCUrl, {
                 jsonrpc: '2.0',
                 method: 'getblockcount',
@@ -88,32 +87,36 @@ export function expand() {
             if (txArr.length === 0) {
                 return;
             }
-            httpPost(`${apiUrl}/v1/transactions/confirms`, { txids: txArr }, (txConfirmData) => {
-                if (txConfirmData.bool_status) {
-                    const txConfirms = txConfirmData.result;
+            httpPost(`${mainApi}/v1/neo2/txids_valid`, { txids: txArr }, (txConfirmData) => {
+                if (txConfirmData.status === 'success') {
+                    const txConfirms = txConfirmData.result || [];
                     txConfirms.forEach(item => {
                         const tempIndex = txArr.findIndex(e => e === item);
                         if (tempIndex >= 0) {
                             txArr.splice(tempIndex, 1);
                         }
-                        httpGet(`${apiUrl}/v1/transactions/gettransaction/${item}`, (txDetail) => {
-                            if (txDetail.bool_status) {
+                        httpGet(`${mainApi}/v1/neo2/transaction/${item}`, (txDetail) => {
+                            if (txDetail.status === 'success') {
                                 windowCallback({
                                     data: {
-                                        txid: txDetail.result.txID,
-                                        blockHeight: txDetail.result.blockIndex,
-                                        blockTime: txDetail.result.blockTime,
+                                        txid: item,
+                                        blockHeight: txDetail.data.block_index,
+                                        blockTime: txDetail.data.block_time,
                                     },
                                     return: EVENT.TRANSACTION_CONFIRMED
                                 });
                             }
-                        }, '*');
+                        }, {
+                            Network: network === 'MainNet' ? 'mainenet' : 'testnet'
+                        });
                     });
                 };
                 const setData = {};
                 setData[`${network}TxArr`] = txArr;
                 setLocalStorage(setData);
-            }, null);
+            }, {
+                Network: network === 'MainNet' ? 'mainenet' : 'testnet'
+            });
         });
     }, 20000);
     if (navigator.language === 'zh-CN') {
@@ -282,14 +285,16 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     postData.push(pushData);
                 });
             }
-            httpPost(`${parameter.network}/v1/getbalances`, { params: postData }, (returnData) => {
+            httpPost(`${mainApi}/v1/getbalances`, { params: postData }, (returnData) => {
                 windowCallback({
                     return: requestTarget.Balance,
                     data: returnData.result,
                     ID: request.ID,
-                    error: returnData.bool_status ? null : ERRORS.RPC_ERROR
+                    error: returnData.status === 'success' ? null : ERRORS.RPC_ERROR
                 });
-            }, null);
+            }, {
+                Network: parameter.network === 'MainNet' ? 'mainenet' : 'testnet'
+            });
             sendResponse('');
             return;
         }

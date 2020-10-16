@@ -34,7 +34,7 @@ export class PopupMyAssetsComponent implements OnInit {
 
     ngOnInit(): void {
         const getMoneyBalance = this.asset.fetchBalance(this.neon.address);
-        const getWatch = this.chrome.getWatch();
+        const getWatch = this.chrome.getWatch(this.neon.address);
         forkJoin([getMoneyBalance, getWatch]).subscribe(res => {
             this.moneyAssets = res[0];
             this.watch = res[1];
@@ -94,7 +94,7 @@ export class PopupMyAssetsComponent implements OnInit {
                 if (confirm) {
                     this.myAssets[index].watching = true;
                     this.watch.push(assetItem);
-                    this.chrome.setWatch(this.watch);
+                    this.chrome.setWatch(this.neon.address, this.watch);
                     this.global.snackBarTip('addSucc');
                 }
             });
@@ -131,7 +131,7 @@ export class PopupMyAssetsComponent implements OnInit {
                 if (i >= 0) {
                     this.myAssets[index].watching = false;
                     this.watch.splice(i, 1);
-                    this.chrome.setWatch(this.watch);
+                    this.chrome.setWatch(this.neon.address, this.watch);
                     this.global.snackBarTip('hiddenSucc');
                 }
             }

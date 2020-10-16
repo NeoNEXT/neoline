@@ -91,15 +91,14 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                     txIdArray.push(item.txid);
                 });
                 const httpReq2 = txIdArray.length !== 0 ?
-                    this.http.post(`${this.global.apiGoDomain}/v1/neo2/txids_valid`, {
+                    this.http.post(`${this.global.apiDomain}/v1/neo2/txids_valid`, {
                         txids: txIdArray
                     }) : new Promise<any>((mResolve) => {
                         mResolve({result: []});
                     });
                 forkJoin([httpReq1, httpReq2]).subscribe(result => {
                     let txData = result[0] || [];
-                    let txConfirm = result[1];
-                    txConfirm = txConfirm.result;
+                    const txConfirm = result[1].data || [];
                     txConfirm.forEach(item => {
                         const tempIndex = this.inTransaction.findIndex(
                             e => e.txid === item

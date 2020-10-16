@@ -91,7 +91,7 @@ export class AssetComponent implements OnInit, OnDestroy {
         });
         this.rateSymbol = this.rateSymbol.slice(0, -1);
         this.getAssetRate();
-        this.chrome.getWatch().subscribe(watching => {
+        this.chrome.getWatch(this.address).subscribe(watching => {
             const newWatch = [];
             watching.forEach((w) => {
                 if (balanceRes.findIndex((r) => r.asset_id === w.asset_id) < 0) {
@@ -108,7 +108,7 @@ export class AssetComponent implements OnInit, OnDestroy {
         this.asset.getAssetRate(this.rateSymbol).subscribe(rateBalance => {
             this.displayAssets.map(d => {
                 if (d.symbol.toLowerCase() in rateBalance) {
-                    d.rateBalance = rateBalance[d.symbol.toLowerCase()] * d.balance;
+                    d.rateBalance = (rateBalance[d.symbol.toLowerCase()] || 0) * d.balance;
                 }
                 return d;
             });
@@ -125,7 +125,7 @@ export class AssetComponent implements OnInit, OnDestroy {
                 const i = this.watch.findIndex((w) => w.asset_id === this.displayAssets[index].asset_id);
                 if (i >= 0) {
                     this.watch.splice(i, 1);
-                    this.chrome.setWatch(this.watch);
+                    this.chrome.setWatch(this.neon.address, this.watch);
                 }
                 this.displayAssets.splice(index, 1);
                 this.global.snackBarTip('hiddenSucc');

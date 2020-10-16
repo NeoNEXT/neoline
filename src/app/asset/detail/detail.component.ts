@@ -111,7 +111,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     }
 
     public handlerBalance(balanceRes: Balance[]) {
-        this.chrome.getWatch().subscribe(watching => {
+        this.chrome.getWatch(this.address).subscribe(watching => {
             this.findBalance(balanceRes, watching);
             // 获取交易
             this.getInTransactions(1);
@@ -124,7 +124,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
 
     // 监听 balance 发生变化
     public listenBalance(balanceRes: Balance[]) {
-        this.chrome.getWatch().subscribe(watching => {
+        this.chrome.getWatch(this.address).subscribe(watching => {
             this.findBalance(balanceRes, watching);
             // 获取资产汇率
             this.getAssetRate();
@@ -145,7 +145,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         if (this.balance !== undefined && this.balance.balance && bignumber(this.balance.balance).comparedTo(0) === 1) {
             this.asset.getAssetRate(this.balance.symbol).subscribe(rateBalance => {
                 if (this.balance.symbol.toLowerCase() in rateBalance) {
-                    this.balance.rateBalance = bignumber(rateBalance[this.balance.symbol.toLowerCase()])
+                    this.balance.rateBalance = bignumber(rateBalance[this.balance.symbol.toLowerCase()] || '0')
                         .mul(bignumber(this.balance.balance)).toNumber();
                 }
             });
@@ -163,15 +163,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
             lastModified = imageObj['last-modified'];
             this.imageUrl = imageObj['image-src'];
         }
-        this.asset.getAssetImageFromAssetId(this.assetId).subscribe(assetRes => {
-            if (assetRes && assetRes['status'] === 200) {
-                this.asset.setAssetFile(assetRes, this.assetId).then(src => {
-                    this.imageUrl = src;
-                });
-            } else if (assetRes && assetRes['status'] === 404) {
-                this.imageUrl = this.asset.defaultAssetSrc;
-            }
-        });
+        this.imageUrl = this.asset.getAssetImageFromAssetId(this.assetId)
     }
 
     private getInTransactions(page, maxId = -1) {
@@ -188,13 +180,12 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
                 this.inTransaction.forEach(item => {
                     txIdArray.push(item.txid);
                 });
-                const httpReq2 = this.http.post(`${this.global.apiGoDomain}/v1/neo2/txids_valid`, {
+                const httpReq2 = this.http.post(`${this.global.apiDomain}/v1/neo2/txids_valid`, {
                     txids: txIdArray
                 });
                 forkJoin([httpReq1, httpReq2]).subscribe(result => {
-                    let txPage = result[0];
-                    let txConfirm = result[1];
-                    txConfirm = txConfirm.result;
+                    const txPage = result[0];
+                    const txConfirm = result[1].data || [];
                     txConfirm.forEach(item => {
                         const tempIndex = this.inTransaction.findIndex(e => e.txid === item);
                         if (tempIndex >= 0) {

@@ -79,9 +79,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     ) { }
 
     ngOnInit(): void {
-        this.asset.getAssetImageFromAssetId(NEO).then(res => {
-            this.assetImageUrl = res;
-        });
+        this.assetImageUrl = this.asset.getAssetImageFromAssetId(NEO)
         this.rateCurrency = this.asset.rateCurrency
         this.fromAddress = this.neon.address;
         this.wallet = this.neon.wallet;

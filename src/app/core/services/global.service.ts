@@ -38,7 +38,6 @@ import { HttpErrorResponse } from '@angular/common/http';
 @Injectable()
 export class GlobalService {
     public apiDomain: string;
-    public apiGoDomain: string;
     public RPCDomain: string;
     public $wallet: Subject < string > ;
     public languageJson: any = null;
@@ -69,11 +68,9 @@ export class GlobalService {
         if (net === 'MainNet') {
             this.apiDomain = environment.mainApiBase;
             this.RPCDomain = environment.mainRPC;
-            this.apiGoDomain = environment.mainGoApiBase
         } else {
-            this.apiDomain = environment.testApiBase;
+            this.apiDomain = environment.mainApiBase;
             this.RPCDomain = environment.testRPC;
-            this.apiGoDomain = environment.testGoApiBase;
         }
     }
     public log(...params: any[]) {

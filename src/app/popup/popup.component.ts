@@ -111,6 +111,8 @@ export class PopupComponent implements OnInit, AfterViewInit {
         this.net = net;
         this.chrome.setNet(net);
         this.global.modifyNet(net);
-        location.reload();
+        // location.reload();
+        this.router.navigateByUrl('/popup/home');
+
     }
 }

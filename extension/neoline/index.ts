@@ -9,7 +9,7 @@ import {
     httpPost
 } from '../common/index';
 import { requestTarget, Account, AccountPublicKey,
-    SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS, VerifyMessageArgs, mainApi, testApi, mainRPC, testRPC } from '../common/data_module';
+    SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS, VerifyMessageArgs, mainApi, mainRPC, testRPC } from '../common/data_module';
 import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, sign, str2hexstring, verify, hexstring2str } from '../common/utils';
 import randomBytes = require('randomBytes');
 
@@ -106,12 +106,11 @@ window.addEventListener('message', async (e) => {
         }
         case requestTarget.Balance: {
             getStorage('net', async (res) => {
-                let apiUrl = e.data.parameter.network;
-                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                    apiUrl = res || 'MainNet';
+                let network = e.data.parameter.network;
+                if (network !== 'MainNet' && network !== 'TestNet') {
+                    network = res || 'MainNet';
                 }
-                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
-                e.data.parameter.network = apiUrl;
+                e.data.parameter.network = network;
                 chrome.runtime.sendMessage(e.data, (response) => {
                     return Promise.resolve('Dummy response to keep the console quiet');
                 });
@@ -121,19 +120,20 @@ window.addEventListener('message', async (e) => {
 
         case requestTarget.Storage: {
             getStorage('net', async (res) => {
-                let apiUrl = e.data.parameter.network;
-                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                    apiUrl = res || 'MainNet';
+                let network = e.data.parameter.network;
+                if (network !== 'MainNet' && network !== 'TestNet') {
+                    network = res || 'MainNet';
                 }
-                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
-                httpGet(`${apiUrl}/v1/getstorage?script_hash=${e.data.parameter.scriptHash}&key=${str2hexstring(e.data.parameter.key)}`, (returnRes) => {
+                httpGet(`${mainApi}/v1/getstorage?script_hash=${e.data.parameter.scriptHash}&key=${str2hexstring(e.data.parameter.key)}`, (returnRes) => {
                     window.postMessage({
                         return: requestTarget.Storage,
                         data: !returnRes.bool_status ? null : ({result: hexstring2str(returnRes.result)} || null),
                         ID: e.data.ID,
                         error: returnRes.bool_status ? null : ERRORS.RPC_ERROR
                     }, '*');
-                }, null);
+                }, {
+                    Network: network === 'MainNet' ? 'mainenet' : 'testnet'
+                });
             });
             return;
         }
@@ -198,22 +198,23 @@ window.addEventListener('message', async (e) => {
 
         case requestTarget.Transaction: {
             getStorage('net', async (res) => {
-                let apiUrl = e.data.parameter.network;
+                let network = e.data.parameter.network;
                 const parameter = e.data.parameter;
-                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                    apiUrl = res || 'MainNet';
+                if (network !== 'MainNet' && network !== 'TestNet') {
+                    network = res || 'MainNet';
                 }
-                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
-                e.data.network = apiUrl;
+                e.data.network = network;
                 e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
-                httpGet(`${apiUrl}/v1/transactions/gettransaction/${parameter.txid}`, (returnRes) => {
+                httpGet(`${mainApi}/v1/transactions/gettransaction/${parameter.txid}`, (returnRes) => {
                     window.postMessage({
                         return: requestTarget.Transaction,
                         data: !returnRes.bool_status ? null : returnRes.result,
                         ID: e.data.ID,
                         error: returnRes.bool_status ? null : ERRORS.RPC_ERROR
                     }, '*');
-                }, null);
+                }, {
+                    Network: network === 'MainNet' ? 'mainenet' : 'testnet'
+                });
             });
             return;
         }
@@ -250,8 +251,13 @@ window.addEventListener('message', async (e) => {
                 if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
                     apiUrl = res || 'MainNet';
                 }
-                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
-                httpGet(`${apiUrl}/v1/getapplicationlog?txid=${parameter.txid}`, (returnRes) => {
+                apiUrl = apiUrl === 'MainNet' ? mainRPC : testRPC;
+                httpPost(apiUrl, {
+                    jsonrpc: '2.0',
+                    method: 'getapplicationlog',
+                    params: [parameter.txid],
+                    id: 1
+                },(returnRes) => {
                     window.postMessage({
                         return: requestTarget.ApplicationLog,
                         data: !returnRes.bool_status ? null : returnRes.result,
@@ -279,11 +285,11 @@ window.addEventListener('message', async (e) => {
 
         case requestTarget.InvokeMulti: {
             getStorage('net', async (res) => {
-                let apiUrl = e.data.parameter.network;
-                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                    apiUrl = res || 'MainNet';
+                let network = e.data.parameter.network;
+                if (network !== 'MainNet' && network !== 'TestNet') {
+                    network = res || 'MainNet';
                 }
-                e.data.parameter.network = apiUrl;
+                e.data.parameter.network = network;
                 chrome.runtime.sendMessage(e.data, (response) => {
                     return Promise.resolve('Dummy response to keep the console quiet');
                 });
@@ -322,11 +328,11 @@ window.addEventListener('message', async (e) => {
 
         case requestTarget.Deploy: {
             getStorage('net', async (res) => {
-                let apiUrl = e.data.parameter.network;
-                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                    apiUrl = res || 'MainNet';
+                let network = e.data.parameter.network;
+                if (network !== 'MainNet' && network !== 'TestNet') {
+                    network = res || 'MainNet';
                 }
-                e.data.parameter.network = apiUrl;
+                e.data.parameter.network = network;
                 chrome.runtime.sendMessage(e.data, (response) => {
                     return Promise.resolve('Dummy response to keep the console quiet');
                 });
@@ -353,13 +359,12 @@ window.addEventListener('message', async (e) => {
             const assetID = parameter.asset.length < 10 ? '' : parameter.asset;
             const symbol = parameter.asset.length >= 10 ? '' : parameter.asset;
             getStorage('net', async (res) => {
-                let apiUrl = parameter.network;
-                if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                    apiUrl = res || 'MainNet';
+                let network = parameter.network;
+                if (network !== 'MainNet' && network !== 'TestNet') {
+                    network = res || 'MainNet';
                 }
-                e.data.parameter.network = apiUrl;
-                apiUrl = apiUrl === 'MainNet' ? mainApi : testApi;
-                httpGet(`${apiUrl}/v1/address/assets?address=${parameter.fromAddress}${assetID !== '' ? `&asset_id=${assetID}` : ''}${symbol !== '' ? `&symbol=${symbol}` : ''}`, (resBalance) => {
+                e.data.parameter.network = network;
+                httpGet(`${mainApi}/v1/address/assets?address=${parameter.fromAddress}${assetID !== '' ? `&asset_id=${assetID}` : ''}${symbol !== '' ? `&symbol=${symbol}` : ''}`, (resBalance) => {
                     let enough = true; // 有足够的钱
                     let hasAsset = false;  // 该地址有这个资产
                     for (const asset of resBalance.result) {
@@ -384,7 +389,9 @@ window.addEventListener('message', async (e) => {
                         }, '*');
                         return;
                     }
-                }, null);
+                }, {
+                    Network: network === 'MainNet' ? 'mainenet' : 'testnet'
+                });
             });
 
             return;

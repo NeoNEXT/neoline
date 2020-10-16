@@ -83,7 +83,7 @@ export class AssetState {
     public detail(address: string, id: string): Observable<Balance> {
         return this.fetchBalance(address).pipe(
             switchMap(balance =>
-                this.chrome.getWatch().pipe(
+                this.chrome.getWatch(address).pipe(
                     map(watching => {
                         return (
                             balance.find(e => e.asset_id === id) ||
@@ -96,9 +96,11 @@ export class AssetState {
     }
 
     public fetchBalance(address: string): Observable<any> {
-        return this.http.get(`${this.global.apiGoDomain}/v1/neo2/address/assets?address=${address}`).pipe(
+        return this.http.get(`${this.global.apiDomain}/v1/neo2/address/assets?address=${address}`).pipe(
             map(res => {
                 const result = [];
+                res.asset = res.asset || [];
+                res.nep5 = res.nep5 || [];
                 res.asset.forEach(item => {
                     result.push(item)
                 })
@@ -131,23 +133,25 @@ export class AssetState {
     public fetchAll(): Promise<any> {
         return this.http
             .get(
-                `${this.global.apiGoDomain}/v1/neo2/assets`
+                `${this.global.apiDomain}/v1/neo2/assets`
             )
             .toPromise();
     }
 
-    public fetchAllowList(): Promise<any> {
-        return this.http
+    public fetchAllowList(): Observable<any> {
+        return from(this.http
             .get(
-                `${this.global.apiGoDomain}/v1/neo2/allowlist`
+                `${this.global.apiDomain}/v1/neo2/allowlist`
             )
-            .toPromise();
+            .toPromise()).pipe(map(res => {
+                return res || [];
+            }));
     }
 
 
     public searchAsset(query: string): Observable<any> {
         return this.http.get(
-            `${this.global.apiGoDomain}/v1/neo2/search/asset?q=${query}`
+            `${this.global.apiDomain}/v1/neo2/search/asset?q=${query}`
         );
     }
 
@@ -174,11 +178,11 @@ export class AssetState {
         });
     }
     public getRate(): Observable<any> {
-        return this.http.get(`${this.global.apiGoDomain}/v1/coin/rates?chain=neo`);
+        return this.http.get(`${this.global.apiDomain}/v1/coin/rates?chain=neo`);
     }
 
     public getFiatRate(): Observable<any> {
-        return this.http.get(`${this.global.apiGoDomain}/v1/fiat/rates`);
+        return this.http.get(`${this.global.apiDomain}/v1/fiat/rates`);
     }
 
     public getAssetRate(coins: string): Observable<any> {
@@ -265,7 +269,7 @@ export class AssetState {
 
     public getNep5Detail(assetId: string): Observable<Nep5Detail> {
         return this.http.get(
-            `${this.global.apiGoDomain}/v1/neo2/nep5/${assetId}`
+            `${this.global.apiDomain}/v1/neo2/nep5/${assetId}`
         );
     }
 
@@ -284,11 +288,9 @@ export class AssetState {
     }
 
     public getGasFee(): Observable<any> {
-        return this.httpClient.get(`${this.global.apiGoDomain}/v1/neo2/fees`).pipe(map((res: any) => {
-            if (res.status === 'success') {
-                this.gasFeeSpeed = res.data;
-                return res.data;
-            }
+        return this.http.get(`${this.global.apiDomain}/v1/neo2/fees`).pipe(map((res: any) => {
+            this.gasFeeSpeed = res || this.gasFeeDefaultSpeed;
+            return res || this.gasFeeDefaultSpeed;
         }));
     }
 }

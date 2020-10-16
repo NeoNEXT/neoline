@@ -97,7 +97,7 @@ export class PopupHomeComponent implements OnInit {
             .fetchBalance(this.wallet.accounts[0].address)
             .subscribe(balanceArr => {
                 this.handlerBalance(balanceArr);
-                this.chrome.getWatch().subscribe(watching => {
+                this.chrome.getWatch(this.neon.address).subscribe(watching => {
                     this.assetList = [];
                     const showAssetList = [];
                     let rateSymbol = '';
@@ -138,7 +138,7 @@ export class PopupHomeComponent implements OnInit {
             this.assetList.map(d => {
                 if (d.symbol.toLowerCase() in rateBalance) {
                     try {
-                        d.rateBalance = bignumber(rateBalance[d.symbol.toLowerCase()]).mul(bignumber(d.balance)).toNumber();
+                        d.rateBalance = bignumber(rateBalance[d.symbol.toLowerCase()] || '0').mul(bignumber(d.balance)).toNumber();
                     } catch (error) {
                         d.rateBalance = 0;
                     }
@@ -189,7 +189,7 @@ export class PopupHomeComponent implements OnInit {
     }
 
     public handlerBalance(balanceRes: Balance[]) {
-        this.chrome.getWatch().subscribe(watching => {
+        this.chrome.getWatch(this.neon.address).subscribe(watching => {
             this.findBalance(balanceRes, watching);
             // 获取交易
             // this.getInTransactions(1);
@@ -219,7 +219,7 @@ export class PopupHomeComponent implements OnInit {
                 .subscribe(rateBalance => {
                     if (this.balance.symbol.toLowerCase() in rateBalance) {
                         this.balance.rateBalance =
-                            rateBalance[this.balance.symbol.toLowerCase()] *
+                            (rateBalance[this.balance.symbol.toLowerCase()] || 0) *
                             bignumber(this.balance.balance || 0 ).toNumber();
                     } else {
                         this.balance.rateBalance = 0;

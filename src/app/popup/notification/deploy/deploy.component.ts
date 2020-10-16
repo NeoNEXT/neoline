@@ -1,11 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GlobalService, NeonService, ChromeService, AssetState } from '@/app/core';
+import { GlobalService, NeonService, ChromeService, AssetState, HttpService } from '@/app/core';
 import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzion/neon-core/lib/tx';
 import { wallet, tx, sc, u, rpc } from '@cityofzion/neon-core';
 import { MatDialog } from '@angular/material/dialog';
-import { PwdDialog } from '@/app/transfer/+pwd/pwd.dialog';
-import { HttpClient } from '@angular/common/http';
 import { ERRORS, GAS, requestTarget } from '@/models/dapi';
 import { ScriptBuilder } from '@cityofzion/neon-core/lib/sc';
 import { Observable } from 'rxjs';
@@ -41,15 +39,13 @@ export class PopupNoticeDeployComponent implements OnInit {
         private global: GlobalService,
         private neon: NeonService,
         private dialog: MatDialog,
-        private http: HttpClient,
+        private http: HttpService,
         private chrome: ChromeService,
         private assetState: AssetState
     ) { }
 
     ngOnInit(): void {
-        this.assetState.getAssetImageFromAssetId(NEO).then(res => {
-            this.assetImageUrl = res;
-        });
+        this.assetImageUrl = this.assetState.getAssetImageFromAssetId(NEO)
         this.aRoute.queryParams.subscribe(async (params: any) => {
             this.pramsData = params;
             this.messageID = params.messageID;
@@ -137,7 +133,7 @@ export class PopupNoticeDeployComponent implements OnInit {
             }
             this.loading = false;
             this.loadingMsg = '';
-            if (!res.bool_status) {
+            if (res.error !== null && res.error !== undefined) {
                 this.chrome.windowCallback({
                     error: ERRORS.RPC_ERROR,
                     return: requestTarget.Deploy,
@@ -219,7 +215,7 @@ export class PopupNoticeDeployComponent implements OnInit {
     }
 
     private getBalance(address: string, asset: string): Observable<UTXO[]> {
-        return this.http.get(`${this.global.apiGoDomain}/v1/neo2/address/utxo?address=${address}&asset_id=${asset}`).pipe(map((res) => {
+        return this.http.get(`${this.global.apiDomain}/v1/neo2/address/utxo?address=${address}&asset_id=${asset}`).pipe(map((res) => {
             return ((res as any).data || []) as UTXO[];
         }));
     }
