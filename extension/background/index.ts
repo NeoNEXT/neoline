@@ -22,7 +22,7 @@ import {
     getLocalStorage
 } from '../common';
 import { requestTarget, GetBalanceArgs, BalanceRequest, ERRORS, mainApi, EVENT, mainRPC, testRPC, InvokeReadMultiArgs } from '../common/data_module';
-import { reverseHex, getScriptHashFromAddress } from '../common/utils';
+import { reverseHex, getScriptHashFromAddress, hexstring2str } from '../common/utils';
 /**
  * Background methods support.
  * Call window.NeoLineBackground to use.
@@ -107,7 +107,7 @@ export function expand() {
                                 });
                             }
                         }, {
-                            Network: network === 'MainNet' ? 'mainenet' : 'testnet'
+                            Network: network === 'MainNet' ? 'mainnet' : 'testnet'
                         });
                     });
                 };
@@ -115,7 +115,7 @@ export function expand() {
                 setData[`${network}TxArr`] = txArr;
                 setLocalStorage(setData);
             }, {
-                Network: network === 'MainNet' ? 'mainenet' : 'testnet'
+                Network: network === 'MainNet' ? 'mainnet' : 'testnet'
             });
         });
     }, 20000);
@@ -221,7 +221,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                             '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                     }
                 });
-                sendResponse('');
                 return true;
             }
         case requestTarget.Connect:
@@ -246,8 +245,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         window.open(`/index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`, '_blank',
                             'height=620, width=386, resizable=no, top=0, left=0');
                     }
+                    sendResponse('');
                 });
-                sendResponse('');
                 return true;
             }
         case requestTarget.Login: {
@@ -267,35 +266,70 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         case requestTarget.Balance: {
             const parameter = request.parameter as GetBalanceArgs;
             const postData = [];
-            if (!(parameter.params as BalanceRequest[]).length) {
-                const tempParams = parameter.params as BalanceRequest;
+            let params = [];
+            if(parameter.params instanceof Array) {
+                params = parameter.params
+            } else {
+                params.push(parameter.params)
+            }
+            params.forEach(item => {
+                const assetIds = [];
+                const symbols = [];
+                (item.assets || []).forEach((asset: string) => {
+                    try {
+                        if (asset.startsWith('0x') && asset.length === 66) {
+                            asset = asset.substring(2);
+                        }
+                        hexstring2str(asset);
+                        if(asset.length === 64) {
+                            assetIds.push(`0x${asset}`);
+                        }
+                        if(asset.length === 40) {
+                            assetIds.push(asset)
+                        }
+                    } catch (error) {
+                        symbols.push(asset);
+                    }
+                });
                 const pushData = {
-                    address: tempParams.address,
-                    assets: tempParams.assets || [],
-                    fetchUTXO: tempParams.fetchUTXO || false
+                    address: item.address,
+                    asset_ids: assetIds,
+                    symbols,
+                    fetch_utxo: item.fetchUTXO || false
                 };
                 postData.push(pushData);
-            } else {
-                (parameter.params as BalanceRequest[]).forEach(item => {
-                    const pushData = {
-                        address: item.address,
-                        assets: item.assets || [],
-                        fetchUTXO: item.fetchUTXO || false
-                    };
-                    postData.push(pushData);
-                });
-            }
-            httpPost(`${mainApi}/v1/getbalances`, { params: postData }, (returnData) => {
-                windowCallback({
-                    return: requestTarget.Balance,
-                    data: returnData.result,
-                    ID: request.ID,
-                    error: returnData.status === 'success' ? null : ERRORS.RPC_ERROR
-                });
-            }, {
-                Network: parameter.network === 'MainNet' ? 'mainenet' : 'testnet'
             });
-            sendResponse('');
+            httpPost(`${mainApi}/v1/neo2/address/balances`, { params: postData }, (response) => {
+                if(response.status === 'success') {
+                    const returnData = response.data
+                    for (const key in returnData) {
+                        if (Object.prototype.hasOwnProperty.call(returnData, key)) {
+                            returnData[key].map(item => {
+                                item.assetID = item.asset_id;
+                                item.asset_id = undefined;
+                                return item;
+                            })
+                        }
+                    }
+                    windowCallback({
+                        return: requestTarget.Balance,
+                        data: returnData,
+                        ID: request.ID,
+                        error: null
+                    });
+                    sendResponse('');
+                } else {
+                    windowCallback({
+                        return: requestTarget.Balance,
+                        data: null,
+                        ID: request.ID,
+                        error: ERRORS.RPC_ERROR
+                    });
+                    sendResponse('');
+                }
+            }, {
+                Network: parameter.network === 'MainNet' ? 'mainnet' : 'testnet'
+            });
             return;
         }
         case requestTarget.InvokeRead: {
@@ -349,8 +383,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     returnRes.error = ERRORS.RPC_ERROR;
                 }
                 windowCallback(returnRes);
+                sendResponse('');
             }, null);
-            sendResponse('');
             return;
         }
         case requestTarget.InvokeReadMulti: {
@@ -410,13 +444,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         }
                         if(requestCount === requestData.invokeReadArgs.length) {
                             windowCallback(returnRes);
+                            sendResponse('');
                         }
                     }, null);
                 })
             } catch (error) {
                 windowCallback({ data: [], ID: request.ID, return: requestTarget.InvokeReadMulti, error: ERRORS.RPC_ERROR });
+                sendResponse('');
             }
-            sendResponse('');
             return;
         }
         case requestTarget.Invoke: {
@@ -440,7 +475,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 window.open(`index.html#popup/notification/invoke?${queryString}messageID=${request.ID}`,
                     '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
             });
-            sendResponse('');
+            // sendResponse('');
             return;
         }
         case requestTarget.InvokeMulti: {

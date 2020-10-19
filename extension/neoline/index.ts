@@ -124,16 +124,20 @@ window.addEventListener('message', async (e) => {
                 if (network !== 'MainNet' && network !== 'TestNet') {
                     network = res || 'MainNet';
                 }
-                httpGet(`${mainApi}/v1/getstorage?script_hash=${e.data.parameter.scriptHash}&key=${str2hexstring(e.data.parameter.key)}`, (returnRes) => {
+                const apiUrl = network === 'MainNet' ? mainRPC : testRPC;
+                httpPost(apiUrl, {
+                    jsonrpc: '2.0',
+                    method: 'getstorage',
+                    params: [e.data.parameter.scriptHash, str2hexstring(e.data.parameter.key)],
+                    id: 1
+                },(returnRes) => {
                     window.postMessage({
                         return: requestTarget.Storage,
-                        data: !returnRes.bool_status ? null : ({result: hexstring2str(returnRes.result)} || null),
+                        data: returnRes.error !== undefined ? null : ({result: hexstring2str(returnRes.result)} || null),
                         ID: e.data.ID,
-                        error: returnRes.bool_status ? null : ERRORS.RPC_ERROR
+                        error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
                     }, '*');
-                }, {
-                    Network: network === 'MainNet' ? 'mainenet' : 'testnet'
-                });
+                }, null);
             });
             return;
         }
@@ -205,15 +209,15 @@ window.addEventListener('message', async (e) => {
                 }
                 e.data.network = network;
                 e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
-                httpGet(`${mainApi}/v1/transactions/gettransaction/${parameter.txid}`, (returnRes) => {
+                httpGet(`${mainApi}/v1/neo2/transaction/${parameter.txid}`, (returnRes) => {
                     window.postMessage({
                         return: requestTarget.Transaction,
-                        data: !returnRes.bool_status ? null : returnRes.result,
+                        data: returnRes.status !== 'success' ? null : returnRes.data,
                         ID: e.data.ID,
-                        error: returnRes.bool_status ? null : ERRORS.RPC_ERROR
+                        error: returnRes.status === 'success' ? null : ERRORS.RPC_ERROR
                     }, '*');
                 }, {
-                    Network: network === 'MainNet' ? 'mainenet' : 'testnet'
+                    Network: network === 'MainNet' ? 'mainnet' : 'testnet'
                 });
             });
             return;
@@ -260,9 +264,9 @@ window.addEventListener('message', async (e) => {
                 },(returnRes) => {
                     window.postMessage({
                         return: requestTarget.ApplicationLog,
-                        data: !returnRes.bool_status ? null : returnRes.result,
+                        data: returnRes.error !== undefined ? null : returnRes.result,
                         ID: e.data.ID,
-                        error: returnRes.bool_status ? null : ERRORS.RPC_ERROR
+                        error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
                     }, '*');
                 }, null);
             });
@@ -364,14 +368,15 @@ window.addEventListener('message', async (e) => {
                     network = res || 'MainNet';
                 }
                 e.data.parameter.network = network;
-                httpGet(`${mainApi}/v1/address/assets?address=${parameter.fromAddress}${assetID !== '' ? `&asset_id=${assetID}` : ''}${symbol !== '' ? `&symbol=${symbol}` : ''}`, (resBalance) => {
+                httpGet(`${mainApi}/v1/neo2/address/assets?address=${parameter.fromAddress}`, (resBalance) => {
                     let enough = true; // 有足够的钱
                     let hasAsset = false;  // 该地址有这个资产
-                    for (const asset of resBalance.result) {
+                    const assets = (resBalance.data.asset as []).concat(resBalance.data.nep5 || []) as any;
+                    for (const asset of assets) {
                         if (asset.asset_id === assetID || String(asset.symbol).toLowerCase() === symbol.toLowerCase()) {
                             hasAsset = true;
                             e.data.parameter.asset = asset.asset_id;
-                            if (asset.balance < parameter.amount) {
+                            if (Number(asset.balance) < Number(parameter.amount)) {
                                 enough = false;
                             }
                             break;
@@ -390,7 +395,7 @@ window.addEventListener('message', async (e) => {
                         return;
                     }
                 }, {
-                    Network: network === 'MainNet' ? 'mainenet' : 'testnet'
+                    Network: network === 'MainNet' ? 'mainnet' : 'testnet'
                 });
             });
 
