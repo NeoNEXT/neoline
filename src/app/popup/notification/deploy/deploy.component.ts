@@ -216,7 +216,7 @@ export class PopupNoticeDeployComponent implements OnInit {
 
     private getBalance(address: string, asset: string): Observable<UTXO[]> {
         return this.http.get(`${this.global.apiDomain}/v1/neo2/address/utxo?address=${address}&asset_id=${asset}`).pipe(map((res) => {
-            return ((res as any).data || []) as UTXO[];
+            return (res || []) as UTXO[];
         }));
     }
 

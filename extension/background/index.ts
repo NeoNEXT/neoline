@@ -89,7 +89,7 @@ export function expand() {
             }
             httpPost(`${mainApi}/v1/neo2/txids_valid`, { txids: txArr }, (txConfirmData) => {
                 if (txConfirmData.status === 'success') {
-                    const txConfirms = txConfirmData.result || [];
+                    const txConfirms = txConfirmData.data || [];
                     txConfirms.forEach(item => {
                         const tempIndex = txArr.findIndex(e => e === item);
                         if (tempIndex >= 0) {

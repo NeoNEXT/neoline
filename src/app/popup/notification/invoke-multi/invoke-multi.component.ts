@@ -465,7 +465,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     private getBalance(address: string, asset: string): Promise<UTXO[]> {
         return new Promise(mResolve => {
             this.http.get(`${this.global.apiDomain}/v1/neo2/address/utxo?address=${address}&asset_id=${asset}`).pipe(map((res) => {
-                mResolve(((res as any).data || []) as UTXO[]);
+                mResolve((res || []) as UTXO[]);
             })).toPromise();
         });
     }
@@ -580,7 +580,9 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 minFee: this.minFee
             }
         }).afterClosed().subscribe(res => {
+            console.log(res);
             if (typeof res === 'number') {
+                console.log(res);
                 this.fee = res;
                 if (res < this.minFee) {
                     this.fee = this.minFee;
