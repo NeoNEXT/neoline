@@ -12,6 +12,7 @@ import { map } from 'rxjs/operators';
 import { str2hexstring, Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { PopupInputDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { GasFeeSpeed } from '../../_lib/type';
+import { utf8Encode } from '@angular/compiler/src/util';
 
 @Component({
     templateUrl: 'deploy.component.html',
@@ -182,11 +183,11 @@ export class PopupNoticeDeployComponent implements OnInit {
             const num = (this.pramsData.needsStorage === 'true' ? 1 : 0) | (this.pramsData.dynamicInvoke === 'true' ? 2 : 0) |
                 (this.pramsData.isPayable === 'true' ? 4 : 0);
             const sb = new ScriptBuilder();
-            sb.emitPush(str2hexstring(this.pramsData.description))
-                .emitPush(str2hexstring(this.pramsData.email))
-                .emitPush(str2hexstring(this.pramsData.author))
-                .emitPush(str2hexstring(this.pramsData.version))
-                .emitPush(str2hexstring(this.pramsData.name))
+            sb.emitPush(str2hexstring(utf8Encode(this.pramsData.description)))
+                .emitPush(str2hexstring(utf8Encode(this.pramsData.email)))
+                .emitPush(str2hexstring(utf8Encode(this.pramsData.author)))
+                .emitPush(str2hexstring(utf8Encode(this.pramsData.version)))
+                .emitPush(str2hexstring(utf8Encode(this.pramsData.name)))
                 .emitPush(num)
                 .emitPush(this.pramsData.returnType || 'ff00')
                 .emitPush(this.pramsData.parameterList)

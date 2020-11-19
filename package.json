@@ -44,8 +44,11 @@
         "mathjs": "^7.0.1",
         "minimist": "^1.2.5",
         "tslib": "^2.0.0",
+        "websocket-extensions": "^0.1.4",
         "zone.js": "~0.10.3",
-        "websocket-extensions": "^0.1.4"
+        "npm-registry-fetch": "^4.0.5",
+        "lodash": "^4.17.19",
+        "webpack-subresource-integrity": "^1.5.1"
     },
     "devDependencies": {
         "@angular-builders/custom-webpack": "^9.1.0",
@@ -69,6 +72,9 @@
         "acorn": "^7.3.1",
         "kind-of": "^6.0.3",
         "ecstatic": "^4.1.4",
-        "websocket-extensions": "^0.1.4"
+        "websocket-extensions": "^0.1.4",
+        "npm-registry-fetch": "^4.0.5",
+        "lodash": "^4.17.19",
+        "webpack-subresource-integrity": "^1.5.1"
     }
 }

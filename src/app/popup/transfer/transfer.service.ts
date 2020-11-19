@@ -18,17 +18,21 @@ export class TransferService {
         if (this.neon.isAsset(asset)) {
             return new Observable(observer => {
                 this.getBalance(from, asset).subscribe((balance) => {
-                    const newTx = this.neon.createTx(from, to, balance, amount, fee);
-                    if (fee > 0 && asset !== GAS) {
-                        this.addFee(from, newTx, fee).subscribe(res => {
-                            observer.next(res);
+                    try {
+                        const newTx = this.neon.createTx(from, to, balance, amount, fee);
+                        if (fee > 0 && asset !== GAS) {
+                            this.addFee(from, newTx, fee).subscribe(res => {
+                                observer.next(res);
+                                observer.complete();
+                            }, error => {
+                                observer.error(error);
+                            });
+                        } else {
+                            observer.next(newTx);
                             observer.complete();
-                        }, error => {
-                            observer.error(error);
-                        });
-                    } else {
-                        observer.next(newTx);
-                        observer.complete();
+                        }
+                    } catch (error) {
+                        observer.error(error.message);
                     }
                 });
             });
