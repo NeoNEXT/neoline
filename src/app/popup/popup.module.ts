@@ -11,7 +11,6 @@ import { MatSliderModule } from '@angular/material/slider';
 
 import { PopupRoutingModule } from '@popup/popup.route';
 import { PopupComponent } from '@popup/popup.component';
-import { PopupSidenavComponent } from '@popup/sidenav/sidenav.component';
 import { PopupAssetDetailComponent } from './asset-detail/asset-detail.component';
 import { PopupBackupComponent } from './backup/backup.component';
 
@@ -55,7 +54,6 @@ import { TransferModule } from './transfer';
 @NgModule({
     declarations: [
         PopupComponent,
-        PopupSidenavComponent,
         PopupLogoutDialogComponent,
         PopupQRCodeDialogComponent,
         PopupLanguageDialogComponent,
