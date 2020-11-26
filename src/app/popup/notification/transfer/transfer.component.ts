@@ -27,7 +27,7 @@ import {
 import { ERRORS, requestTarget } from '@/models/dapi';
 import { rpc } from '@cityofzion/neon-js';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupInputDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
+import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import { bignumber } from 'mathjs';
 import { GasFeeSpeed } from '../../_lib/type';
 

@@ -10,7 +10,7 @@ import { NEO, UTXO, GAS } from '@/models/models';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
 import { ERRORS, requestTarget, Invoke, TxHashAttribute } from '@/models/dapi';
-import { PopupInputDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
+import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import Neon from '@cityofzion/neon-js';
 import { GasFeeSpeed } from '../../_lib/type';
 import { bignumber, min } from 'mathjs';

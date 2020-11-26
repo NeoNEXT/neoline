@@ -11,7 +11,7 @@ import {
     ChromeService, AssetState, NeonService, GlobalService,
 } from '@app/core';
 import { NEO, GAS } from '@/models/models';
-import { PopupInputDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
+import { PopupEditFeeDialogComponent } from '../../_dialogs';
 
 @Component({
     templateUrl: 'confirm.component.html',

@@ -10,7 +10,7 @@ import { Observable } from 'rxjs';
 import { UTXO, NEO } from '@/models/models';
 import { map } from 'rxjs/operators';
 import { str2hexstring, Fixed8 } from '@cityofzion/neon-core/lib/u';
-import { PopupInputDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
+import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import { GasFeeSpeed } from '../../_lib/type';
 import { utf8Encode } from '@angular/compiler/src/util';
 
