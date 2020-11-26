@@ -1,10 +1,7 @@
-export { PopupLanguageDialogComponent } from './language/language.dialog';
+export { PopupSelectDialogComponent } from './select/select.dialog';
 export { PopupAddTokenDialogComponent } from './add-token/add-token.dialog';
-export { PopupDelTokenDialogComponent } from './del-token/del-token.dialog';
-export { PopupLogoutDialogComponent } from './logout/logout.dialog';
 export { PopupNameDialogComponent } from './name/name.dialog';
 export { PopupQRCodeDialogComponent } from './qrcode/qrcode.dialog';
-export { PopupClearStorageDialogComponent } from './clear-storage/clear-storage.dialog';
 export { PopupConfirmDialogComponent } from './confirm/confirm.dialog';
 export { PopupHomeMenuDialogComponent } from './home-menu/home-menu.dialog';
 export { PopupAddressDialogComponent } from './address/address.dialog';

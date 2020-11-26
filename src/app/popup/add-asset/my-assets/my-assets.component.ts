@@ -4,16 +4,20 @@ import {
     AssetState,
     ChromeService,
     NeonService,
-    GlobalService
+    GlobalService,
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 
-import { PopupAddTokenDialogComponent, PopupAddTokenWarnDialogComponent, PopupDelTokenDialogComponent } from '@popup/_dialogs';
+import {
+    PopupAddTokenDialogComponent,
+    PopupAddTokenWarnDialogComponent,
+    PopupConfirmDialogComponent,
+} from '@popup/_dialogs';
 import { forkJoin } from 'rxjs';
 
 @Component({
     templateUrl: 'my-assets.component.html',
-    styleUrls: ['my-assets.component.scss']
+    styleUrls: ['my-assets.component.scss'],
 })
 export class PopupMyAssetsComponent implements OnInit {
     public myAssets: Array<Asset> = []; // 所有的资产
@@ -30,12 +34,12 @@ export class PopupMyAssetsComponent implements OnInit {
         private neon: NeonService,
         private dialog: MatDialog,
         private global: GlobalService
-    ) { }
+    ) {}
 
     ngOnInit(): void {
         const getMoneyBalance = this.asset.fetchBalance(this.neon.address);
         const getWatch = this.chrome.getWatch(this.neon.address);
-        forkJoin([getMoneyBalance, getWatch]).subscribe(res => {
+        forkJoin([getMoneyBalance, getWatch]).subscribe((res) => {
             this.moneyAssets = res[0];
             this.watch = res[1];
             this.myAssets = this.moneyAssets;
@@ -46,21 +50,27 @@ export class PopupMyAssetsComponent implements OnInit {
     public getAllBalance(page) {
         this.isLoading = true;
 
-        this.watch.forEach(item => {
-            const moneyAssetIndex = this.moneyAssets.findIndex(balanceItem => balanceItem.asset_id === item.asset_id)
+        this.watch.forEach((item) => {
+            const moneyAssetIndex = this.moneyAssets.findIndex(
+                (balanceItem) => balanceItem.asset_id === item.asset_id
+            );
             if (moneyAssetIndex < 0) {
                 this.myAssets.push(item);
             } else {
                 this.myAssets[moneyAssetIndex].watching = true;
             }
-        })
+        });
         this.myAssets.forEach((item, index) => {
-            const moneyIndex = this.moneyAssets.findIndex(balanceAsset => balanceAsset.asset_id === item.asset_id);
+            const moneyIndex = this.moneyAssets.findIndex(
+                (balanceAsset) => balanceAsset.asset_id === item.asset_id
+            );
             if (moneyIndex >= 0) {
-                this.myAssets[index].balance = this.moneyAssets[moneyIndex].balance;
+                this.myAssets[index].balance = this.moneyAssets[
+                    moneyIndex
+                ].balance;
             }
-            this.getAssetSrc(item, index)
-        })
+            this.getAssetSrc(item, index);
+        });
         this.isLoading = false;
     }
 
@@ -69,28 +79,32 @@ export class PopupMyAssetsComponent implements OnInit {
         let lastModified = '';
         if (imageObj) {
             lastModified = imageObj['last-modified'];
-                this.myAssets[index].image_url = imageObj['image-src'];
+            this.myAssets[index].image_url = imageObj['image-src'];
         }
-        this.asset.getAssetImageFromUrl(asset.image_url, lastModified).subscribe(assetRes => {
-            if (assetRes && assetRes.status === 200) {
-                this.asset.setAssetFile(assetRes, asset.asset_id).then(src => {
-                    this.myAssets[index].image_url = src;
-                });
-            } else if (assetRes && assetRes.status === 404) {
-                this.myAssets[index].image_url = this.asset.defaultAssetSrc;
-            }
-        });
+        this.asset
+            .getAssetImageFromUrl(asset.image_url, lastModified)
+            .subscribe((assetRes) => {
+                if (assetRes && assetRes.status === 200) {
+                    this.asset
+                        .setAssetFile(assetRes, asset.asset_id)
+                        .then((src) => {
+                            this.myAssets[index].image_url = src;
+                        });
+                } else if (assetRes && assetRes.status === 404) {
+                    this.myAssets[index].image_url = this.asset.defaultAssetSrc;
+                }
+            });
     }
 
     public addAsset(index: number) {
-        const assetItem = this.myAssets[index]
+        const assetItem = this.myAssets[index];
         this.dialog
             .open(PopupAddTokenDialogComponent, {
                 data: assetItem,
-                panelClass: 'custom-dialog-panel'
+                panelClass: 'custom-dialog-panel',
             })
             .afterClosed()
-            .subscribe(confirm => {
+            .subscribe((confirm) => {
                 if (confirm) {
                     this.myAssets[index].watching = true;
                     this.watch.push(assetItem);
@@ -103,14 +117,17 @@ export class PopupMyAssetsComponent implements OnInit {
     public addAssetCheck(index: number) {
         const assetItem = this.myAssets[index];
         if (assetItem.is_risk === true) {
-            this.dialog.open(PopupAddTokenWarnDialogComponent, {
-                panelClass: 'custom-dialog-panel',
-                disableClose: true
-            }).afterClosed().subscribe(confirm => {
-                if (confirm) {
-                    this.addAsset(index);
-                }
-            });
+            this.dialog
+                .open(PopupAddTokenWarnDialogComponent, {
+                    panelClass: 'custom-dialog-panel',
+                    disableClose: true,
+                })
+                .afterClosed()
+                .subscribe((confirm) => {
+                    if (confirm) {
+                        this.addAsset(index);
+                    }
+                });
         } else {
             this.addAsset(index);
         }
@@ -119,22 +136,23 @@ export class PopupMyAssetsComponent implements OnInit {
     public removeAsset(index: number) {
         const asset = this.myAssets[index];
         this.dialog
-        .open(PopupDelTokenDialogComponent, {
-            panelClass: 'custom-dialog-panel'
-        })
-        .afterClosed()
-        .subscribe(confirm => {
-            if (confirm) {
-                const i = this.watch.findIndex(
-                    w => w.asset_id === asset.asset_id
-                );
-                if (i >= 0) {
-                    this.myAssets[index].watching = false;
-                    this.watch.splice(i, 1);
-                    this.chrome.setWatch(this.neon.address, this.watch);
-                    this.global.snackBarTip('hiddenSucc');
+            .open(PopupConfirmDialogComponent, {
+                data: 'delAssetTip',
+                panelClass: 'custom-dialog-panel',
+            })
+            .afterClosed()
+            .subscribe((confirm) => {
+                if (confirm) {
+                    const i = this.watch.findIndex(
+                        (w) => w.asset_id === asset.asset_id
+                    );
+                    if (i >= 0) {
+                        this.myAssets[index].watching = false;
+                        this.watch.splice(i, 1);
+                        this.chrome.setWatch(this.neon.address, this.watch);
+                        this.global.snackBarTip('hiddenSucc');
+                    }
                 }
-            }
-        });
+            });
     }
 }

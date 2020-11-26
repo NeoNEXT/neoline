@@ -64,8 +64,6 @@ const POPUP_COMPONENTS = [
 
 //#region dialogs
 import {
-    PopupLogoutDialogComponent,
-    PopupClearStorageDialogComponent,
     PopupConfirmDialogComponent,
     PopupHomeMenuDialogComponent,
     PopupAddressDialogComponent,
@@ -78,15 +76,12 @@ import {
     PopupAddTokenWarnDialogComponent,
     PopupAuthorizationListDialogComponent,
     PopupQRCodeDialogComponent,
-    PopupLanguageDialogComponent,
+    PopupSelectDialogComponent,
     PopupNameDialogComponent,
     PopupAddTokenDialogComponent,
-    PopupDelTokenDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
-    PopupLogoutDialogComponent,
-    PopupClearStorageDialogComponent,
     PopupConfirmDialogComponent,
     PopupHomeMenuDialogComponent,
     PopupAddressDialogComponent,
@@ -99,10 +94,9 @@ const POPUP_DIALOGS = [
     PopupAddTokenWarnDialogComponent,
     PopupAuthorizationListDialogComponent,
     PopupQRCodeDialogComponent,
-    PopupLanguageDialogComponent,
+    PopupSelectDialogComponent,
     PopupNameDialogComponent,
     PopupAddTokenDialogComponent,
-    PopupDelTokenDialogComponent,
 ];
 
 //#endregion

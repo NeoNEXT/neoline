@@ -2,21 +2,21 @@ import { Component, OnInit } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 
 import {
-    PopupLanguageDialogComponent,
-    PopupClearStorageDialogComponent
+    PopupSelectDialogComponent,
+    PopupConfirmDialogComponent,
+    PopupAuthorizationListDialogComponent,
 } from '@popup/_dialogs';
-import { PopupAuthorizationListDialogComponent } from '@popup/_dialogs/authorization-list/authorization-list.dialog';
 
 import {
     ChromeService,
     GlobalService,
     AssetState,
-    SettingState
+    SettingState,
 } from '@app/core';
 
 @Component({
     templateUrl: 'setting.component.html',
-    styleUrls: ['setting.component.scss']
+    styleUrls: ['setting.component.scss'],
 })
 export class PopupSettingComponent implements OnInit {
     public lang: string;
@@ -39,15 +39,15 @@ export class PopupSettingComponent implements OnInit {
 
     ngOnInit(): void {
         this.chrome.getLang().subscribe(
-            res => {
+            (res) => {
                 this.lang = res;
             },
-            err => {
+            (err) => {
                 this.global.log('get lang setting failed', err);
                 this.lang = '';
             }
         );
-        this.asset.getRate().subscribe(rateBalance => {
+        this.asset.getRate().subscribe((rateBalance) => {
             const tempRateObj = rateBalance.result;
             if (JSON.stringify(tempRateObj) === '{}') {
                 return;
@@ -57,26 +57,26 @@ export class PopupSettingComponent implements OnInit {
     }
 
     public language() {
-        return this.dialog.open(PopupLanguageDialogComponent, {
+        return this.dialog.open(PopupSelectDialogComponent, {
             data: {
                 currentOption: this.lang,
                 optionGroup: ['en', 'zh_CN'],
-                type: 'lang'
+                type: 'lang',
             },
-            panelClass: 'custom-dialog-panel'
+            panelClass: 'custom-dialog-panel',
         });
     }
 
     public modifyRateCurrency() {
-        const tempDialog = this.dialog.open(PopupLanguageDialogComponent, {
+        const tempDialog = this.dialog.open(PopupSelectDialogComponent, {
             data: {
                 currentOption: this.rateCurrency,
                 optionGroup: this.rateCurrencys,
-                type: 'currency'
+                type: 'currency',
             },
-            panelClass: 'custom-dialog-panel'
+            panelClass: 'custom-dialog-panel',
         });
-        tempDialog.afterClosed().subscribe(currency => {
+        tempDialog.afterClosed().subscribe((currency) => {
             if (!currency) {
                 return;
             }
@@ -87,11 +87,12 @@ export class PopupSettingComponent implements OnInit {
 
     public clearCache() {
         this.dialog
-            .open(PopupClearStorageDialogComponent, {
-                panelClass: 'custom-dialog-panel'
+            .open(PopupConfirmDialogComponent, {
+                data: 'clearStorageTips',
+                panelClass: 'custom-dialog-panel',
             })
             .afterClosed()
-            .subscribe(confirm => {
+            .subscribe((confirm) => {
                 if (confirm) {
                     this.chrome.clearAssetFile();
                     this.asset.clearCache();
@@ -102,7 +103,7 @@ export class PopupSettingComponent implements OnInit {
 
     viewAllAuth() {
         this.dialog.open(PopupAuthorizationListDialogComponent, {
-            panelClass: 'custom-dialog-panel'
+            panelClass: 'custom-dialog-panel',
         });
     }
 

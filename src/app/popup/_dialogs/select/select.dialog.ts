@@ -1,40 +1,28 @@
-import {
-    Component,
-    Inject,
-    OnInit
-} from '@angular/core';
-import {
-    MatDialogRef,
-    MAT_DIALOG_DATA
-} from '@angular/material/dialog';
+import { Component, Inject, OnInit } from '@angular/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import {
-    ChromeService,
-    GlobalService,
-    AssetState
-} from '@app/core';
-import {
-    Router
-} from '@angular/router';
+import { ChromeService, GlobalService, AssetState } from '@app/core';
+import { Router } from '@angular/router';
 
 @Component({
-    templateUrl: 'language.dialog.html',
-    styleUrls: ['language.dialog.scss']
+    templateUrl: 'select.dialog.html',
+    styleUrls: ['select.dialog.scss'],
 })
-export class PopupLanguageDialogComponent implements OnInit {
+export class PopupSelectDialogComponent implements OnInit {
     public targetOption: string;
     public rateCurrency: string;
 
     constructor(
-        private dialogRef: MatDialogRef < PopupLanguageDialogComponent > ,
+        private dialogRef: MatDialogRef<PopupSelectDialogComponent>,
         private chromeSer: ChromeService,
         private global: GlobalService,
         private router: Router,
         private assetSer: AssetState,
-        @Inject(MAT_DIALOG_DATA) public data: {
-            optionGroup: [],
-            currentOption: string,
-            type: string // lang, currency
+        @Inject(MAT_DIALOG_DATA)
+        public data: {
+            optionGroup: [];
+            currentOption: string;
+            type: 'lang' | 'currency' | 'chain'; // lang, currency
         }
     ) {}
 

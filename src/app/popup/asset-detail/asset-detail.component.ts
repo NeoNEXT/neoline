@@ -3,18 +3,18 @@ import {
     AssetState,
     NeonService,
     ChromeService,
-    GlobalService
+    GlobalService,
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NEO, Balance, GAS, Asset } from '@/models/models';
 import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.component';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupDelTokenDialogComponent } from '../_dialogs';
+import { PopupConfirmDialogComponent } from '@popup/_dialogs';
 import { bignumber } from 'mathjs';
 
 @Component({
     templateUrl: 'asset-detail.component.html',
-    styleUrls: ['asset-detail.component.scss']
+    styleUrls: ['asset-detail.component.scss'],
 })
 export class PopupAssetDetailComponent implements OnInit {
     balance: Balance;
@@ -48,23 +48,25 @@ export class PopupAssetDetailComponent implements OnInit {
         this.net = this.global.net;
         this.aRouter.params.subscribe(async (params: any) => {
             this.assetId = params.assetId || NEO;
-            this.imageUrl = await this.assetState.getAssetImageFromAssetId(this.assetId);
+            this.imageUrl = await this.assetState.getAssetImageFromAssetId(
+                this.assetId
+            );
             // 获取资产信息
             this.assetState
                 .fetchBalance(this.neon.address)
-                .subscribe(balanceArr => {
+                .subscribe((balanceArr) => {
                     this.handlerBalance(balanceArr);
                 });
-            this.chrome.getWatch(this.neon.address).subscribe(res => {
+            this.chrome.getWatch(this.neon.address).subscribe((res) => {
                 this.watch = res;
                 this.canHideBalance =
-                    res.findIndex(w => w.asset_id === this.assetId) >= 0;
+                    res.findIndex((w) => w.asset_id === this.assetId) >= 0;
             });
         });
     }
 
     handlerBalance(balanceRes: Balance[]) {
-        this.chrome.getWatch(this.neon.address).subscribe(watching => {
+        this.chrome.getWatch(this.neon.address).subscribe((watching) => {
             this.findBalance(balanceRes, watching);
             // 获取资产汇率
             this.getAssetRate();
@@ -73,20 +75,29 @@ export class PopupAssetDetailComponent implements OnInit {
 
     findBalance(balanceRes, watching) {
         const balance =
-            balanceRes.find(b => b.asset_id === this.assetId) ||
-            watching.find(w => w.asset_id === this.assetId);
+            balanceRes.find((b) => b.asset_id === this.assetId) ||
+            watching.find((w) => w.asset_id === this.assetId);
         balance.balance = Number(balance.balance);
         this.balance = balance;
     }
 
     getAssetRate() {
-        if (this.balance.balance && bignumber(this.balance.balance).comparedTo(0) > 0) {
+        if (
+            this.balance.balance &&
+            bignumber(this.balance.balance).comparedTo(0) > 0
+        ) {
             this.assetState
                 .getAssetRate(this.balance.symbol)
-                .subscribe(rateBalance => {
+                .subscribe((rateBalance) => {
                     if (this.balance.symbol.toLowerCase() in rateBalance) {
-                        this.balance.rateBalance = bignumber(rateBalance[this.balance.symbol.toLowerCase()] || '0')
-                            .mul(bignumber(this.balance.balance)).toNumber() || 0;
+                        this.balance.rateBalance =
+                            bignumber(
+                                rateBalance[
+                                    this.balance.symbol.toLowerCase()
+                                ] || '0'
+                            )
+                                .mul(bignumber(this.balance.balance))
+                                .toNumber() || 0;
                     } else {
                         this.balance.rateBalance = 0;
                     }
@@ -102,7 +113,8 @@ export class PopupAssetDetailComponent implements OnInit {
         const scrollTop = el.scrollTop;
         if (
             scrollHeight - clientHeight < scrollTop + 100 &&
-            this.sourceScrollHeight < scrollHeight && !this.txPageComponent.noMoreData
+            this.sourceScrollHeight < scrollHeight &&
+            !this.txPageComponent.noMoreData
         ) {
             this.txPageComponent.getInTransactions(++this.currentTxPage);
             this.sourceScrollHeight = scrollHeight;
@@ -111,14 +123,15 @@ export class PopupAssetDetailComponent implements OnInit {
 
     hideBalance() {
         this.dialog
-            .open(PopupDelTokenDialogComponent, {
-                panelClass: 'custom-dialog-panel'
+            .open(PopupConfirmDialogComponent, {
+                data: 'delAssetTip',
+                panelClass: 'custom-dialog-panel',
             })
             .afterClosed()
-            .subscribe(confirm => {
+            .subscribe((confirm) => {
                 if (confirm) {
                     const i = this.watch.findIndex(
-                        w => w.asset_id === this.assetId
+                        (w) => w.asset_id === this.assetId
                     );
                     if (i >= 0) {
                         this.watch.splice(i, 1);
@@ -133,11 +146,15 @@ export class PopupAssetDetailComponent implements OnInit {
     toWeb() {
         this.showMenu = false;
         const isNep5 = this.assetId !== NEO && this.assetId !== GAS;
-        console.log(`https://${this.net === 'TestNet' ? 'testnet.' : ''
-            }neotube.io/${isNep5 ? 'nep5' : 'asset'}/${this.assetId}`)
+        console.log(
+            `https://${this.net === 'TestNet' ? 'testnet.' : ''}neotube.io/${
+                isNep5 ? 'nep5' : 'asset'
+            }/${this.assetId}`
+        );
         window.open(
-            `https://${this.net === 'TestNet' ? 'testnet.' : ''
-            }neotube.io/${isNep5 ? 'nep5' : 'asset'}/${this.assetId}/page/1`
+            `https://${this.net === 'TestNet' ? 'testnet.' : ''}neotube.io/${
+                isNep5 ? 'nep5' : 'asset'
+            }/${this.assetId}/page/1`
         );
     }
 }

@@ -1,39 +1,20 @@
-import {
-    Component,
-    OnDestroy
-} from '@angular/core';
-import {
-    Router,
-    NavigationEnd
-} from '@angular/router';
-import {
-    ChromeService,
-    GlobalService,
-    NeonService,
-    AssetState
-} from './core';
-import {
-    MatDialog
-} from '@angular/material/dialog';
-import {
-    LogoutDialog
-} from './+logout/logout.dialog';
-import {
-    Wallet
-} from '@cityofzion/neon-core/lib/wallet';
-import {
-    PopupLogoutDialogComponent
-} from './popup/_dialogs/logout/logout.dialog';
+import { Component, OnDestroy } from '@angular/core';
+import { Router, NavigationEnd } from '@angular/router';
+import { ChromeService, GlobalService, NeonService, AssetState } from './core';
+import { MatDialog } from '@angular/material/dialog';
+import { LogoutDialog } from './+logout/logout.dialog';
+import { Wallet } from '@cityofzion/neon-core/lib/wallet';
 import { HttpClient } from '@angular/common/http';
 import { EVENT } from '@/models/dapi';
+import { PopupConfirmDialogComponent } from '@popup/_dialogs';
 
 @Component({
     selector: 'neo-line',
     templateUrl: './app.component.html',
-    styleUrls: ['./app.component.scss']
+    styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-    public walletArr: Array < Wallet > ;
+    public walletArr: Array<Wallet>;
     public wallet: Wallet;
     public address: string;
     public hideNav: boolean = true;
@@ -50,10 +31,12 @@ export class AppComponent {
         private assetSer: AssetState,
         private http: HttpClient
     ) {
-        this.chrome.getLang().subscribe(res => {
-            this.http.get(`/_locales/${res}/messages.json`).subscribe(temp => {
-                this.global.languageJson = temp;
-            });
+        this.chrome.getLang().subscribe((res) => {
+            this.http
+                .get(`/_locales/${res}/messages.json`)
+                .subscribe((temp) => {
+                    this.global.languageJson = temp;
+                });
         });
         this.router.events.subscribe((event) => {
             this.hideNav404 = false;
@@ -61,7 +44,9 @@ export class AppComponent {
                 this.hideNav404 = true;
             });
             if (event instanceof NavigationEnd) {
-                this.hideNav = event.url.startsWith('/popup') || event.url.startsWith('/login');
+                this.hideNav =
+                    event.url.startsWith('/popup') ||
+                    event.url.startsWith('/login');
             }
         });
         this.global.walletListen().subscribe((res) => {
@@ -82,12 +67,15 @@ export class AppComponent {
             this.walletArr = this.neon.walletArr;
             this.address = this.neon.address;
         });
-        this.chrome.getNet().subscribe(net => {
+        this.chrome.getNet().subscribe((net) => {
             this.net = net;
         });
         if (localStorage.getItem('theme')) {
             const body = document.getElementsByTagName('body')[0];
-            body.setAttribute('data-theme-style', localStorage.getItem('theme'));
+            body.setAttribute(
+                'data-theme-style',
+                localStorage.getItem('theme')
+            );
         }
     }
 
@@ -118,32 +106,43 @@ export class AppComponent {
             this.chrome.windowCallback({
                 data: {
                     address: this.wallet.accounts[0].address,
-                    label: this.wallet.name
+                    label: this.wallet.name,
                 },
-                return: EVENT.ACCOUNT_CHANGED
+                return: EVENT.ACCOUNT_CHANGED,
             });
             location.href = `index.html`;
         }
     }
     public closeWallet() {
-        this.dialog.open(PopupLogoutDialogComponent, {
-            panelClass: 'custom-dialog-panel'
-        }).afterClosed().subscribe((confirm) => {
-            if (confirm) {
-                this.chrome.clearLogin();
-                this.router.navigateByUrl('/login');
-            }
-        });
+        this.dialog
+            .open(PopupConfirmDialogComponent, {
+                data: 'logoutTip',
+                panelClass: 'custom-dialog-panel',
+            })
+            .afterClosed()
+            .subscribe((confirm) => {
+                if (confirm) {
+                    this.chrome.clearLogin();
+                    this.router.navigateByUrl('/login');
+                }
+            });
     }
     public close() {
-        this.dialog.open(LogoutDialog, {
-            panelClass: 'custom-dialog-container'
-        }).afterClosed().subscribe((confirm) => {
-            if (confirm) {
-                this.chrome.closeWallet();
-                this.global.$wallet.next('close');
-                this.router.navigateByUrl(this.router.url.indexOf('/popup') >= 0 ? '/popup/wallet' : '/wallet');
-            }
-        });
+        this.dialog
+            .open(LogoutDialog, {
+                panelClass: 'custom-dialog-container',
+            })
+            .afterClosed()
+            .subscribe((confirm) => {
+                if (confirm) {
+                    this.chrome.closeWallet();
+                    this.global.$wallet.next('close');
+                    this.router.navigateByUrl(
+                        this.router.url.indexOf('/popup') >= 0
+                            ? '/popup/wallet'
+                            : '/wallet'
+                    );
+                }
+            });
     }
 }
