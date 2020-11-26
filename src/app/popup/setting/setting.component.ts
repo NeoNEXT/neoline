@@ -52,7 +52,7 @@ export class PopupSettingComponent implements OnInit {
             if (JSON.stringify(tempRateObj) === '{}') {
                 return;
             }
-            this.rateTime = tempRateObj.response_time;
+            this.rateTime = tempRateObj && tempRateObj.response_time;
         });
     }
 

@@ -15,7 +15,7 @@ import { LogoutDialog } from './+logout/logout.dialog';
 import { AccountModule } from './account';
 import { SettingModule } from './setting';
 import { TransferModule } from './transfer';
-import { PopupNotificationModule } from './popup/notification';
+import { PopupNotificationModule } from './popup/notification/notification.module';
 import { LoginComponent } from './login/login.component';
 
 @NgModule({

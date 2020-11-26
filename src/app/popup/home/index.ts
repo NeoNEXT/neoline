@@ -1,1 +1,2 @@
-export { PopupHomeModule } from '@popup/home/home.module';
+export { PopupHomeComponent } from './home.component';
+export { PopupAssetsComponent } from './assets/assets.component';

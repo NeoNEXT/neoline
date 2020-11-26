@@ -1,13 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { ChromeService, NeonService } from '@/app/core';
-import { PopupConfirmDialogComponent } from '..';
+import { PopupConfirmDialogComponent } from '../confirm/confirm.dialog';
 
 @Component({
     templateUrl: 'authorization-list.dialog.html',
     styleUrls: ['authorization-list.dialog.scss']
 })
-export class PopupAuthorizationListDialogComponent {
+export class PopupAuthorizationListDialogComponent implements OnInit {
     public authorizationList = [];
     constructor(
         private chrome: ChromeService,

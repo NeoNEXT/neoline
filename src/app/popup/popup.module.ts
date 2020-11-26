@@ -2,6 +2,10 @@ import { NgModule } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { CommonModule } from '@angular/common';
 
+import { PopupRoutingModule } from './popup.route';
+import { ShareModule } from '@app/share';
+
+//#region third modules
 import { MatMenuModule } from '@angular/material/menu';
 import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatListModule } from '@angular/material/list';
@@ -9,11 +13,56 @@ import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatSliderModule } from '@angular/material/slider';
 
-import { PopupRoutingModule } from '@popup/popup.route';
-import { PopupComponent } from '@popup/popup.component';
+const THIRD_MODULES = [
+    MatMenuModule,
+    MatSnackBarModule,
+    MatDialogModule,
+    MatSliderModule,
+    MatSidenavModule,
+    MatListModule,
+];
+//#endregion
+
+//#region modules
+import { PopupAddAssetModule } from './add-asset/add-asset.module';
+import { PopupNotificationModule } from './notification/notification.module';
+import { TransferModule } from './transfer/transfer.module';
+import { PopupWalletModule } from './wallet/wallet.module';
+
+const POPUP_MODULES = [
+    PopupAddAssetModule,
+    PopupNotificationModule,
+    TransferModule,
+    PopupWalletModule,
+];
+//#endregion
+
+//#region components
+import { PopupComponent } from './popup.component';
+import { PopupAboutComponent } from './about/about.component';
+import { PopupAccountComponent } from './account/account.component';
 import { PopupAssetDetailComponent } from './asset-detail/asset-detail.component';
 import { PopupBackupComponent } from './backup/backup.component';
+import { PopupAssetsComponent, PopupHomeComponent } from './home';
+import { PopupLoginComponent } from './login/login.component';
+import { PopupNewWalletGuideComponent } from './new-wallet-guide/new-wallet-guide.component';
+import { PopupSettingComponent } from './setting/setting.component';
 
+const POPUP_COMPONENTS = [
+    PopupComponent,
+    PopupAboutComponent,
+    PopupAccountComponent,
+    PopupAssetDetailComponent,
+    PopupBackupComponent,
+    PopupAssetsComponent,
+    PopupHomeComponent,
+    PopupLoginComponent,
+    PopupNewWalletGuideComponent,
+    PopupSettingComponent,
+];
+//#endregion
+
+//#region dialogs
 import {
     PopupLogoutDialogComponent,
     PopupClearStorageDialogComponent,
@@ -26,97 +75,49 @@ import {
     PopupEditFeeDialogComponent,
     PopupBackupTipDialogComponent,
     PopupSubscriptionEmailDialogComponent,
-    PopupAddTokenWarnDialogComponent
+    PopupAddTokenWarnDialogComponent,
+    PopupAuthorizationListDialogComponent,
+    PopupQRCodeDialogComponent,
+    PopupLanguageDialogComponent,
+    PopupNameDialogComponent,
+    PopupAddTokenDialogComponent,
+    PopupDelTokenDialogComponent,
 } from '@popup/_dialogs';
-import { PopupAuthorizationListDialogComponent } from '@popup/_dialogs/authorization-list/authorization-list.dialog';
-import { PopupQRCodeDialogComponent } from '@popup/_dialogs';
-import { PopupLanguageDialogComponent } from '@popup/_dialogs';
-import { PopupNameDialogComponent } from '@popup/_dialogs';
-import { PopupAddTokenDialogComponent } from '@popup/_dialogs';
-import { PopupDelTokenDialogComponent } from '@popup/_dialogs';
 
-import { ShareModule } from '@app/share';
+const POPUP_DIALOGS = [
+    PopupLogoutDialogComponent,
+    PopupClearStorageDialogComponent,
+    PopupConfirmDialogComponent,
+    PopupHomeMenuDialogComponent,
+    PopupAddressDialogComponent,
+    PopupAssetDialogComponent,
+    PopupTxDetailDialogComponent,
+    PopupTransferSuccessDialogComponent,
+    PopupEditFeeDialogComponent,
+    PopupBackupTipDialogComponent,
+    PopupSubscriptionEmailDialogComponent,
+    PopupAddTokenWarnDialogComponent,
+    PopupAuthorizationListDialogComponent,
+    PopupQRCodeDialogComponent,
+    PopupLanguageDialogComponent,
+    PopupNameDialogComponent,
+    PopupAddTokenDialogComponent,
+    PopupDelTokenDialogComponent,
+];
 
-import { PopupWalletModule } from '@popup/wallet';
-import { PopupSettingModule } from '@popup/setting';
-import { PopupAboutModule } from '@popup/about';
-import { PopupAccountModule } from '@popup/account';
-import { PopupHomeModule } from '@popup/home';
-import { PopupLoginModule } from '@popup/login';
-import { PopupAddAssetModule } from '@popup/add-asset';
-import { PopupNewWalletGuideModule } from './new-wallet-guide';
-
-import { PopupServiceModule } from '@popup/_services';
-import { PopupNotificationModule } from './notification';
-import { TransferModule } from './transfer';
+//#endregion
 
 @NgModule({
-    declarations: [
-        PopupComponent,
-        PopupLogoutDialogComponent,
-        PopupQRCodeDialogComponent,
-        PopupLanguageDialogComponent,
-        PopupAddressDialogComponent,
-        PopupAssetDialogComponent,
-        PopupNameDialogComponent,
-        PopupAddTokenDialogComponent,
-        PopupDelTokenDialogComponent,
-        PopupClearStorageDialogComponent,
-        PopupConfirmDialogComponent,
-        PopupHomeMenuDialogComponent,
-        PopupAuthorizationListDialogComponent,
-        PopupAssetDetailComponent,
-        PopupBackupComponent,
-        PopupTxDetailDialogComponent,
-        PopupTransferSuccessDialogComponent,
-        PopupEditFeeDialogComponent,
-        PopupBackupTipDialogComponent,
-        PopupSubscriptionEmailDialogComponent,
-        PopupAddTokenWarnDialogComponent
-    ],
+    declarations: [...POPUP_DIALOGS, ...POPUP_COMPONENTS],
     imports: [
         FormsModule,
         CommonModule,
         PopupRoutingModule,
         ShareModule,
-        MatMenuModule,
-        MatSnackBarModule,
-        MatDialogModule,
-        MatSliderModule,
-        PopupWalletModule,
-        PopupNotificationModule,
-        MatSidenavModule,
-        MatListModule,
-        PopupSettingModule,
-        TransferModule,
-        PopupAboutModule,
-        PopupAccountModule,
-        PopupHomeModule,
-        PopupLoginModule,
-        PopupAddAssetModule,
-        PopupServiceModule,
-        PopupNewWalletGuideModule
+        ...THIRD_MODULES,
+        ...POPUP_MODULES,
     ],
     exports: [],
-    entryComponents: [
-        PopupLogoutDialogComponent,
-        PopupQRCodeDialogComponent,
-        PopupLanguageDialogComponent,
-        PopupAddressDialogComponent,
-        PopupAssetDialogComponent,
-        PopupNameDialogComponent,
-        PopupAddTokenDialogComponent,
-        PopupDelTokenDialogComponent,
-        PopupClearStorageDialogComponent,
-        PopupConfirmDialogComponent,
-        PopupHomeMenuDialogComponent,
-        PopupAuthorizationListDialogComponent,
-        PopupTxDetailDialogComponent,
-        PopupTransferSuccessDialogComponent,
-        PopupEditFeeDialogComponent,
-        PopupBackupTipDialogComponent,
-        PopupSubscriptionEmailDialogComponent,
-        PopupAddTokenWarnDialogComponent
-    ]
+    entryComponents: [...POPUP_DIALOGS],
 })
 export class PopupModule {}
