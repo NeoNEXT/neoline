@@ -18,6 +18,7 @@ export class PopupHomeMenuDialogComponent {
     @ViewChild('walletContainer') private walletContainer: ElementRef;
     public walletArr: Array<Wallet>;
     public wallet: Wallet;
+    public tabType: 'Neo2' | 'Neo3';
     constructor(
         private router: Router,
         private chrome: ChromeService,

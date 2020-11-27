@@ -503,8 +503,8 @@
     "systemSettings": {
         "message": "系统设置"
     },
-    "lock": {
-        "message": "锁定"
+    "singOut": {
+        "message": "登出"
     },
     "noMoreData": {
         "message": "没有更多数据了"

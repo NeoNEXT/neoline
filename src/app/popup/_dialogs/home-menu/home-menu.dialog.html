@@ -6,8 +6,18 @@
             <span class="spacer"></span>
             <button mat-flat-button (click)="lock()">
                 <img src="/assets/images/home-menu/close.png" alt="">
-                <span class="text">{{ 'lock' | translate | async }}</span></button>
+                <span class="text">{{ 'singOut' | translate | async }}</span></button>
         </mat-toolbar>
+        <div class="nav-container">
+            <ul class="toggle">
+                <li [ngClass]="{active: tabType === 'Neo2'}"
+                    (click)="tabType='Neo2'">
+                    {{ 'Neo2' }}</li>
+                <li [ngClass]="{active: tabType === 'Neo3'}"
+                    (click)="tabType='Neo3'">
+                    {{ 'Neo3' }}</li>
+            </ul>
+        </div>
         <div class="wallet-container" #walletContainer>
             <img *ngIf="walletArr.length > 2" (click)="scrollToBottom()"
                 src="/assets/images/dialog/scroll_to_bottom.png" alt="">

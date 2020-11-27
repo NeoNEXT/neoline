@@ -45,7 +45,9 @@ body {
         background-color: $bg-base-dark;
     }
 }
-
+li {
+    list-style: none;
+}
 .custom-dialog-container .mat-dialog-container {
     padding: 0;
 }
