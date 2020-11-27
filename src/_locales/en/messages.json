@@ -503,8 +503,8 @@
     "systemSettings": {
         "message": "System settings"
     },
-    "singOut": {
-        "message": "Sing Out"
+    "lock": {
+        "message": "Lock"
     },
     "noMoreData": {
         "message": "No more data"

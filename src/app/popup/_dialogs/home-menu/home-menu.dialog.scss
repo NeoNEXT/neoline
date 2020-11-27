@@ -45,7 +45,7 @@
                 vertical-align: middle;
             }
         }
-
+   
         .nav-container {
             padding: 0 20px;
             max-height: 60px;
@@ -55,7 +55,7 @@
                 border-radius: 15px;
                 background: #F5F5F5;
                 padding: 3px;
-                li {
+                & > li {
                     display: inline-block;
                     padding: 0 10px;
                     height: 24px;
@@ -63,8 +63,8 @@
                     line-height: 24px;
                     color: #7F8993;
                     font-size: 14px;
-                    cursor: pointer;
                     border-radius: 20px;
+                    overflow: hidden;
                     transition: background-color 0.2s ease-in-out;
                     &.active {
                         color: #fff;
