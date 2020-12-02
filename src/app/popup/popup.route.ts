@@ -21,14 +21,33 @@ const routes: Routes = [
     {
         path: 'popup',
         component: PopupComponent,
-        canActivate: [PopupWalletGuard],
         children: [
             { path: '', redirectTo: `/popup/home`, pathMatch: 'full' },
-            { path: 'about', component: PopupAboutComponent },
-            { path: 'account', component: PopupAccountComponent },
-            { path: 'asset/:assetId', component: PopupAssetDetailComponent },
-            { path: 'backup', component: PopupBackupComponent },
-            { path: 'home', component: PopupHomeComponent },
+            {
+                path: 'about',
+                canActivate: [PopupWalletGuard],
+                component: PopupAboutComponent,
+            },
+            {
+                path: 'account',
+                canActivate: [PopupWalletGuard],
+                component: PopupAccountComponent,
+            },
+            {
+                path: 'asset/:assetId',
+                canActivate: [PopupWalletGuard],
+                component: PopupAssetDetailComponent,
+            },
+            {
+                path: 'backup',
+                canActivate: [PopupWalletGuard],
+                component: PopupBackupComponent,
+            },
+            {
+                path: 'home',
+                canActivate: [PopupWalletGuard],
+                component: PopupHomeComponent,
+            },
             {
                 canActivate: [PopupLoginGuard],
                 path: 'login',
@@ -39,7 +58,11 @@ const routes: Routes = [
                 path: 'wallet/new-guide',
                 component: PopupNewWalletGuideComponent,
             },
-            { path: 'setting', component: PopupSettingComponent },
+            {
+                path: 'setting',
+                canActivate: [PopupWalletGuard],
+                component: PopupSettingComponent,
+            },
         ],
     },
 ];

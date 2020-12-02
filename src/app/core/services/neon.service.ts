@@ -20,7 +20,7 @@ import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { sc, u } from '@cityofzion/neon-core';
 import { EVENT, TxHashAttribute } from '@/models/dapi';
 import { bignumber } from 'mathjs';
-import { ChainType } from '@popup/_lib';
+import { ChainType, ChainValues } from '@popup/_lib';
 
 class InitChainWalletArr {
     Neo2: Wallet[] = [];
@@ -54,12 +54,12 @@ export class NeonService {
         return this._wallet || null;
     }
 
-    public get walletArr(): Array<Wallet> {
-        return this._walletArr[this.chainType] || null;
+    public get walletArr(): InitChainWalletArr {
+        return this._walletArr || null;
     }
 
-    public get WIFArr(): Array<string> {
-        return this._WIFArr[this.chainType] || [];
+    public get WIFArr(): InitChainWIFtArr {
+        return this._WIFArr || null;
     }
 
     public reset() {
@@ -134,12 +134,12 @@ export class NeonService {
             );
             this.$wallet.next(this._wallet);
         });
-        this.chrome.getWIFArray(this.chainType).subscribe((res) => {
+        this.chrome.getWIFArray().subscribe((res) => {
             if (res !== undefined && res !== null && res.length > 0) {
                 this._WIFArr[this.chainType] = res;
             }
         });
-        return this.chrome.getWalletArray(this.chainType).pipe(
+        return this.chrome.getWalletArray().pipe(
             map((res) => {
                 if (res.length > 0) {
                     const tempArray = [];
@@ -206,20 +206,14 @@ export class NeonService {
             w.accounts[0].address === this._wallet.accounts[0].address ||
             w === null
         ) {
-            if (this.walletArr.length === 1) {
+            if (this.walletArr[this.chainType].length === 1) {
                 this.chrome.closeWallet();
                 this._walletArr[this.chainType].splice(index, 1);
                 if (this._WIFArr[this.chainType].length > index) {
                     this._WIFArr[this.chainType].splice(index, 1);
                 }
-                this.chrome.setWalletArray(
-                    this.getWalletArrayJSON(),
-                    this.chainType
-                );
-                this.chrome.setWIFArray(
-                    this._WIFArr[this.chainType],
-                    this.chainType
-                );
+                this.chrome.setWalletArray(this.getWalletArrayJSON());
+                this.chrome.setWIFArray(this._WIFArr[this.chainType]);
                 this.chrome.windowCallback({
                     data: {
                         address: this.wallet.accounts[0].address || '',
@@ -237,14 +231,8 @@ export class NeonService {
                     wallet3.isAddress(this.address) ? 'Neo3' : 'Neo2'
                 );
                 this.chrome.setWallet(this._wallet.export());
-                this.chrome.setWalletArray(
-                    this.getWalletArrayJSON(),
-                    this.chainType
-                );
-                this.chrome.setWIFArray(
-                    this._WIFArr[this.chainType],
-                    this.chainType
-                );
+                this.chrome.setWalletArray(this.getWalletArrayJSON());
+                this.chrome.setWIFArray(this._WIFArr[this.chainType]);
             }
             return of(true);
         } else {
@@ -252,14 +240,8 @@ export class NeonService {
                 this._WIFArr[this.chainType].splice(index, 1);
             }
             this._walletArr[this.chainType].splice(index, 1);
-            this.chrome.setWalletArray(
-                this.getWalletArrayJSON(),
-                this.chainType
-            );
-            this.chrome.setWIFArray(
-                this._WIFArr[this.chainType],
-                this.chainType
-            );
+            this.chrome.setWalletArray(this.getWalletArrayJSON());
+            this.chrome.setWIFArray(this._WIFArr[this.chainType]);
             return of(false);
         }
     }
@@ -529,7 +511,7 @@ export class NeonService {
                 valueArr.push(itemValue);
             }
             const wif = this.WIFArr[
-                this._walletArr[this.chainType].findIndex(
+                this._walletArr[ChainValues.Neo2].findIndex(
                     (item) =>
                         item.accounts[0].address ===
                         this._wallet.accounts[0].address

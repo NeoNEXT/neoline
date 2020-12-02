@@ -5,3 +5,8 @@
  */
 export type ChainType = 'Neo2' | 'Neo3';
 export const ChainTypeGroups = ['Neo2', 'Neo3'];
+
+export enum ChainValues {
+    Neo2,
+    Neo3,
+}
