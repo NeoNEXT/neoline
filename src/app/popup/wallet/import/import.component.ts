@@ -1,19 +1,25 @@
 import { GlobalService, NeonService } from '@/app/core';
-import { AfterContentInit, Component, EventEmitter, OnInit, Output } from '@angular/core';
+import {
+    AfterContentInit,
+    Component,
+    EventEmitter,
+    OnInit,
+    Output,
+} from '@angular/core';
 import { WalletInitConstant } from '../../_lib/constant';
 import { WalletCreation, WalletImport } from '../../_lib/models';
 import { Observable, of } from 'rxjs';
-import { wallet } from '@cityofzion/neon-js';
+import { wallet as wallet2 } from '@cityofzion/neon-js';
+import { wallet as wallet3 } from '@cityofzion/neon-js-neo3';
 import { Wallet } from '@cityofzion/neon-core/lib/wallet';
-
 
 @Component({
     selector: 'wallet-import',
     templateUrl: 'import.component.html',
-    styleUrls: ['import.component.scss']
+    styleUrls: ['import.component.scss'],
 })
-
 export class PopupWalletImportComponent implements OnInit, AfterContentInit {
+    neonWallet: any = wallet2;
 
     public loading = false;
     public isInit: boolean;
@@ -33,10 +39,7 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
     public hideNep6Pwd: boolean;
 
     @Output() submit = new EventEmitter<any>();
-    constructor(
-        private global: GlobalService,
-        private neon: NeonService
-    ) {
+    constructor(private global: GlobalService, private neon: NeonService) {
         this.isInit = true;
         this.limit = WalletInitConstant;
 
@@ -47,9 +50,17 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
 
         this.walletNep6Import = new WalletImport();
         this.hideNep6Pwd = true;
+        switch (this.neon.chainType) {
+            case 'Neo2':
+                this.neonWallet = wallet2;
+                break;
+            case 'Neo3':
+                this.neonWallet = wallet3;
+                break;
+        }
     }
 
-    ngOnInit() { }
+    ngOnInit() {}
 
     ngAfterContentInit(): void {
         setTimeout(() => {
@@ -64,9 +75,15 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
             reader.readAsText(this.nep6File, 'UTF-8');
             reader.onload = (evt: any) => {
                 this.nep6Json = JSON.parse(evt.target.result);
-                if (this.nep6Json.accounts === undefined || this.nep6Json.accounts[0] === undefined
-                    || !wallet.isNEP2((this.nep6Json.accounts[0] as any).key || this.nep6Json.name === undefined
-                        || this.nep6Json.name === '')) {
+                if (
+                    this.nep6Json.accounts === undefined ||
+                    this.nep6Json.accounts[0] === undefined ||
+                    !this.neonWallet.isNEP2(
+                        (this.nep6Json.accounts[0] as any).key ||
+                            this.nep6Json.name === undefined ||
+                            this.nep6Json.name === ''
+                    )
+                ) {
                     this.global.snackBarTip('nep6Wrong');
                     this.nep6Json = null;
                     this.nep6Name = '';
@@ -76,7 +93,8 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
                     this.nep6Name = this.nep6Json.name;
                     this.walletNep6Import.walletName = this.nep6Json.name;
                 }
-                this.walletNep6Import.EncrpytedKey = (this.nep6Json.accounts[0] as any).key;
+                this.walletNep6Import.EncrpytedKey = (this.nep6Json
+                    .accounts[0] as any).key;
             };
             reader.onerror = (evt) => {
                 console.log('error reading file');
@@ -86,14 +104,22 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
 
     public submitImport(): void {
         if (this.importType === '0') {
-            if (!wallet.isWIF(this.walletImport.WIF) && !wallet.isPrivateKey(this.walletImport.WIF)) {
+            if (
+                !this.neonWallet.isWIF(this.walletImport.WIF) &&
+                !this.neonWallet.isPrivateKey(this.walletImport.WIF)
+            ) {
                 this.isWIF = false;
                 console.log(this.isWIF);
                 return;
             }
             this.loading = true;
-            if (wallet.isPrivateKey(this.walletImport.WIF)) {
-                this.neon.importPrivateKey(this.walletImport.WIF, this.walletImport.password, this.walletImport.walletName)
+            if (this.neonWallet.isPrivateKey(this.walletImport.WIF)) {
+                this.neon
+                    .importPrivateKey(
+                        this.walletImport.WIF,
+                        this.walletImport.password,
+                        this.walletImport.walletName
+                    )
                     .subscribe((res: any) => {
                         this.loading = false;
                         if (this.neon.verifyWallet(res)) {
@@ -104,7 +130,11 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
                     });
             } else {
                 this.neon
-                    .importWIF(this.walletImport.WIF, this.walletImport.password, this.walletImport.walletName)
+                    .importWIF(
+                        this.walletImport.WIF,
+                        this.walletImport.password,
+                        this.walletImport.walletName
+                    )
                     .subscribe(
                         (res: any) => {
                             this.loading = false;
@@ -118,28 +148,36 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
                             this.global.log('import wallet faild', err);
                             this.global.snackBarTip('walletImportFailed');
                             this.loading = false;
-                        });
+                        }
+                    );
             }
         } else {
-            if (!wallet.isNEP2(this.walletNep6Import.EncrpytedKey)) {
+            if (!this.neonWallet.isNEP2(this.walletNep6Import.EncrpytedKey)) {
                 return;
             }
             this.loading = true;
-            this.neon.importEncryptKey(this.walletNep6Import.EncrpytedKey, this.walletNep6Import.password, this.walletNep6Import.walletName)
-                .subscribe((res: any) => {
-                    this.loading = false;
-                    if (this.neon.verifyWallet(res)) {
-                        this.submit.emit(res);
-                    } else {
-                        this.global.snackBarTip('existingWallet');
+            this.neon
+                .importEncryptKey(
+                    this.walletNep6Import.EncrpytedKey,
+                    this.walletNep6Import.password,
+                    this.walletNep6Import.walletName
+                )
+                .subscribe(
+                    (res: any) => {
+                        this.loading = false;
+                        if (this.neon.verifyWallet(res)) {
+                            this.submit.emit(res);
+                        } else {
+                            this.global.snackBarTip('existingWallet');
+                        }
+                    },
+                    (err: any) => {
+                        this.loading = false;
+                        this.global.log('import wallet faild', err);
+                        this.global.snackBarTip('walletImportFailed', '');
                     }
-                }, (err: any) => {
-                    this.loading = false;
-                    this.global.log('import wallet faild', err);
-                    this.global.snackBarTip('walletImportFailed', '');
-                });
+                );
         }
-
     }
 
     public cancel() {

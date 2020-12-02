@@ -10,11 +10,9 @@
         </mat-toolbar>
         <div class="nav-container">
             <ul class="toggle">
-                <li [ngClass]="{active: tabType === 'Neo2'}"
-                    (click)="tabType='Neo2'">
+                <li [ngClass]="{active: tabType === 'Neo2'}" (click)="tabType='Neo2'">
                     {{ 'Neo2' }}</li>
-                <li [ngClass]="{active: tabType === 'Neo3'}"
-                    (click)="tabType='Neo3'">
+                <li [ngClass]="{active: tabType === 'Neo3'}" (click)="tabType='Neo3'">
                     {{ 'Neo3' }}</li>
             </ul>
         </div>
@@ -30,13 +28,11 @@
             </div>
         </div>
         <hr class="wallet-line" />
-        <div class="create-wallet-container menu-item" [routerLink]="['/popup/wallet/create']" (click)="dismiss()"
-            matRipple>
+        <div class="create-wallet-container menu-item" (click)="to('create')" (click)="dismiss()" matRipple>
             <img src="/assets/images/home-menu/create.png" alt="">
             <span>{{ 'createWallet' | translate | async }}</span>
         </div>
-        <div class="import-wallet-container menu-item" [routerLink]="['/popup/wallet/import']" (click)="dismiss()"
-            matRipple>
+        <div class="import-wallet-container menu-item" (click)="to('import')" (click)="dismiss()" matRipple>
             <img src="/assets/images/home-menu/import.png" alt="">
             <span>{{ 'importWallet' | translate | async }}</span>
         </div>

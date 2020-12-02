@@ -14,7 +14,6 @@
         "http": "http-server dist",
         "build:crx": "yarn webpack --config extension/webpack.config.js",
         "webpack": "node --max_old_space_size=4096 node_modules/webpack/bin/webpack.js",
-        "preinstall": "node -e \"if(process.env.npm_execpath.indexOf('yarn') === -1) throw new Error('Please use Yarn instead of NPM to install dependencies. See: https://yarnpkg.com/lang/en/docs/install/')\"",
         "postinstall": "node patch.js"
     },
     "private": true,
@@ -30,7 +29,9 @@
         "@angular/platform-browser": "^9.1.11",
         "@angular/platform-browser-dynamic": "^9.1.11",
         "@angular/router": "^9.1.11",
-        "@cityofzion/neon-js": "^4.8.0",
+        "@cityofzion/neon-core-neo3": "npm:@cityofzion/neon-core@^5.0.0-next.4",
+        "@cityofzion/neon-js": "npm:@cityofzion/neon-js@^4.8.0",
+        "@cityofzion/neon-js-neo3": "npm:@cityofzion/neon-js@^5.0.0-next.4",
         "@types/crypto-js": "^3.1.47",
         "@types/elliptic": "^6.4.12",
         "@types/mathjs": "^6.0.5",
@@ -41,14 +42,14 @@
         "ecstatic": "^4.1.4",
         "hammerjs": "^2.0.8",
         "kind-of": "^6.0.3",
+        "lodash": "^4.17.19",
         "mathjs": "^7.0.1",
         "minimist": "^1.2.5",
-        "tslib": "^2.0.0",
-        "websocket-extensions": "^0.1.4",
-        "zone.js": "~0.10.3",
         "npm-registry-fetch": "^4.0.5",
-        "lodash": "^4.17.19",
-        "webpack-subresource-integrity": "^1.5.1"
+        "tslib": "^2.0.0",
+        "webpack-subresource-integrity": "^1.5.1",
+        "websocket-extensions": "^0.1.4",
+        "zone.js": "~0.10.3"
     },
     "devDependencies": {
         "@angular-builders/custom-webpack": "^9.1.0",

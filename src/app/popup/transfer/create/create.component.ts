@@ -27,7 +27,8 @@ import {
 import {
     Transaction
 } from '@cityofzion/neon-core/lib/tx';
-import { wallet } from '@cityofzion/neon-core';
+import { wallet as wallet2 } from '@cityofzion/neon-core';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { rpc } from '@cityofzion/neon-js';
 import { PopupAddressDialogComponent, PopupAssetDialogComponent, PopupTransferSuccessDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
@@ -39,6 +40,8 @@ import { GasFeeSpeed } from '../../_lib/type';
     styleUrls: ['create.component.scss']
 })
 export class TransferCreateComponent implements OnInit {
+    neonWallet: any = wallet2;
+
     public amount: string;
     public fee: any;
     public loading = false;
@@ -66,7 +69,16 @@ export class TransferCreateComponent implements OnInit {
         private chrome: ChromeService,
         private block: BlockState,
         private txState: TransactionState
-    ) { }
+    ) {
+        switch(this.neon.chainType) {
+            case 'Neo2':
+                this.neonWallet = wallet2;
+                break;
+            case 'Neo3':
+                this.neonWallet = wallet3;
+                break;
+        }
+    }
 
     ngOnInit(): void {
         this.net = this.global.net;
@@ -108,7 +120,7 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('checkInput');
             return;
         }
-        if (wallet.isAddress(this.toAddress) === false) {
+        if (this.neonWallet.isAddress(this.toAddress) === false) {
             this.global.snackBarTip('wrongAddress');
             return;
         }
@@ -285,7 +297,7 @@ export class TransferCreateComponent implements OnInit {
     }
 
     public getAddresSub() {
-        if (wallet.isAddress(this.toAddress)) {
+        if (this.neonWallet.isAddress(this.toAddress)) {
             return `${this.toAddress.substr(0, 6)}...${this.toAddress.substr(this.toAddress.length - 7, this.toAddress.length - 1)} `
         } else {
             return ''

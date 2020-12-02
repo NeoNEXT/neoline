@@ -9,6 +9,8 @@ import { HttpClient } from '@angular/common/http';
 import { GasFeeSpeed } from '@popup/_lib/type';
 import { bignumber } from 'mathjs';
 import { rpc } from '@cityofzion/neon-js';
+import { NeonService } from '../services/neon.service';
+import { TX_LIST_PAGE_SIZE } from '@popup/_lib';
 
 @Injectable()
 export class AssetState {
@@ -25,19 +27,22 @@ export class AssetState {
     public gasFeeDefaultSpeed: GasFeeSpeed = {
         slow_price: '0',
         propose_price: '0.011',
-        fast_price: '0.2'
-    }
+        fast_price: '0.2',
+    };
+
+    NEO3_HOST = 'http://47.110.14.167:8085/v1';
 
     constructor(
         private http: HttpService,
         private global: GlobalService,
         private chrome: ChromeService,
-        private httpClient: HttpClient
+        private httpClient: HttpClient,
+        private neonService: NeonService
     ) {
-        this.chrome.getAssetFile().subscribe(res => {
+        this.chrome.getAssetFile().subscribe((res) => {
             this.assetFile = res;
         });
-        this.chrome.getRateCurrency().subscribe(res => {
+        this.chrome.getRateCurrency().subscribe((res) => {
             this.rateCurrency = res;
             this.changeRateCurrency(res);
         });
@@ -49,11 +54,11 @@ export class AssetState {
     public changeRateCurrency(currency) {
         this.rateCurrency = currency;
         if (currency === 'CNY') {
-            this.chrome.getAssetCNYRate().subscribe(res => {
+            this.chrome.getAssetCNYRate().subscribe((res) => {
                 this.assetRate = res;
             });
         } else {
-            this.chrome.getAssetUSDRate().subscribe(res => {
+            this.chrome.getAssetUSDRate().subscribe((res) => {
                 this.assetRate = res;
             });
         }
@@ -82,12 +87,12 @@ export class AssetState {
 
     public detail(address: string, id: string): Observable<Balance> {
         return this.fetchBalance(address).pipe(
-            switchMap(balance =>
+            switchMap((balance) =>
                 this.chrome.getWatch(address).pipe(
-                    map(watching => {
+                    map((watching) => {
                         return (
-                            balance.find(e => e.asset_id === id) ||
-                            watching.find(w => w.asset_id === id)
+                            balance.find((e) => e.asset_id === id) ||
+                            watching.find((w) => w.asset_id === id)
                         );
                     })
                 )
@@ -96,70 +101,88 @@ export class AssetState {
     }
 
     public fetchBalance(address: string): Observable<any> {
-        return this.http.get(`${this.global.apiDomain}/v1/neo2/address/assets?address=${address}`).pipe(
-            map(res => {
-                const result = [];
-                res.asset = res.asset || [];
-                res.nep5 = res.nep5 || [];
-                res.asset.forEach(item => {
-                    result.push(item)
+        if (this.neonService.chainType === 'Neo3') {
+            return this.fetchNeo3AddressTokens(address);
+        }
+        return this.http
+            .get(
+                `${this.global.apiDomain}/v1/neo2/address/assets?address=${address}`
+            )
+            .pipe(
+                map((res) => {
+                    const result = [];
+                    res.asset = res.asset || [];
+                    res.nep5 = res.nep5 || [];
+                    res.asset.forEach((item) => {
+                        result.push(item);
+                    });
+                    res.nep5.forEach((item) => {
+                        result.push(item);
+                    });
+                    return result;
                 })
-                res.nep5.forEach(item => {
-                    result.push(item)
-                })
-                return result
-            })
-        )
+            );
     }
 
     public fetchClaim(address: string): Observable<any> {
-        const getClaimable = from(rpc.Query.getClaimable(address).execute(this.global.RPCDomain));
-        const getUnclaimed = from(rpc.Query.getUnclaimed(address).execute(this.global.RPCDomain));
-        return forkJoin([getClaimable, getUnclaimed]).pipe(map(res => {
-            const result = {
-                available: 0,
-                unavailable: 0,
-                claimable: []
-            };
-            const claimableData = res[0];
-            const unclaimed = res[1];
-            result.available = unclaimed.result.available || 0;
-            result.unavailable = unclaimed.result.unavailable || 0;
-            result.claimable = claimableData.result.claimable || [];
-            return result;
-        }))
+        const getClaimable = from(
+            rpc.Query.getClaimable(address).execute(this.global.RPCDomain)
+        );
+        const getUnclaimed = from(
+            rpc.Query.getUnclaimed(address).execute(this.global.RPCDomain)
+        );
+        return forkJoin([getClaimable, getUnclaimed]).pipe(
+            map((res) => {
+                const result = {
+                    available: 0,
+                    unavailable: 0,
+                    claimable: [],
+                };
+                const claimableData = res[0];
+                const unclaimed = res[1];
+                result.available = unclaimed.result.available || 0;
+                result.unavailable = unclaimed.result.unavailable || 0;
+                result.claimable = claimableData.result.claimable || [];
+                return result;
+            })
+        );
     }
 
     public fetchAll(): Promise<any> {
+        if (this.neonService.chainType === 'Neo3') {
+            return this.fetchNeo3TokenList().toPromise();
+        }
         return this.http
-            .get(
-                `${this.global.apiDomain}/v1/neo2/assets`
-            )
+            .get(`${this.global.apiDomain}/v1/neo2/assets`)
             .toPromise();
     }
 
     public fetchAllowList(): Observable<any> {
-        return from(this.http
-            .get(
-                `${this.global.apiDomain}/v1/neo2/allowlist`
-            )
-            .toPromise()).pipe(map(res => {
+        if (this.neonService.chainType === 'Neo3') {
+            return this.fetchNeo3PopularToken();
+        }
+        return from(
+            this.http
+                .get(`${this.global.apiDomain}/v1/neo2/allowlist`)
+                .toPromise()
+        ).pipe(
+            map((res) => {
                 return res || [];
-            }));
+            })
+        );
     }
 
-
     public searchAsset(query: string): Observable<any> {
+        if (this.neonService.chainType === 'Neo3') {
+            return this.searchNeo3Token(query);
+        }
         return this.http.get(
             `${this.global.apiDomain}/v1/neo2/search/asset?q=${query}`
         );
     }
 
     public getAssetImageFromUrl(url: string, lastModified: string) {
-        return this.http.getImage(
-            url,
-            lastModified
-        );
+        return this.http.getImage(url, lastModified);
     }
 
     public setAssetFile(res: XMLHttpRequest, assetId: string): Promise<any> {
@@ -178,7 +201,9 @@ export class AssetState {
         });
     }
     public getRate(): Observable<any> {
-        return this.http.get(`${this.global.apiDomain}/v1/coin/rates?chain=neo`);
+        return this.http.get(
+            `${this.global.apiDomain}/v1/coin/rates?chain=neo`
+        );
     }
 
     public getFiatRate(): Observable<any> {
@@ -193,13 +218,13 @@ export class AssetState {
         const coinsAry = coins.split(',');
         const rateRes = {};
         let targetCoins = '';
-        coinsAry.forEach(element => {
+        coinsAry.forEach((element) => {
             const tempAssetRate = this.assetRate.get(element);
             if (tempAssetRate) {
                 rateRes[element] = tempAssetRate['rate'];
                 if (
                     new Date().getTime() / 1000 -
-                    tempAssetRate['last-modified'] >
+                        tempAssetRate['last-modified'] >
                     1200
                 ) {
                     targetCoins += element + ',';
@@ -212,33 +237,42 @@ export class AssetState {
         if (targetCoins === '') {
             return of(rateRes);
         }
-        return forkJoin([this.getRate(), this.getFiatRate()])
-            .pipe(
-                map(result => {
-                    const rateBalance = result[0];
-                    const fiatData = result[1];
-                    const targetCoinsAry = targetCoins.split(',');
-                    targetCoinsAry.forEach(coin => {
-                        const tempRate = {};
-                        tempRate['last-modified'] = rateBalance['response_time'];
-                        if (coin in rateBalance) {
-                            tempRate['rate'] = bignumber(rateBalance[coin].price || 0)
-                                .mul(bignumber(fiatData.rates && fiatData.rates[this.rateCurrency.toUpperCase()]) || 0).toFixed();
-                            rateRes[coin] = tempRate['rate'];
-                        } else {
-                            tempRate['rate'] = undefined;
-                            rateRes[coin] = undefined;
-                        }
-                        this.assetRate.set(coin, tempRate);
-                    });
-                    if (this.rateCurrency === 'CNY') {
-                        this.chrome.setAssetCNYRate(this.assetRate);
+        return forkJoin([this.getRate(), this.getFiatRate()]).pipe(
+            map((result) => {
+                const rateBalance = result[0];
+                const fiatData = result[1];
+                const targetCoinsAry = targetCoins.split(',');
+                targetCoinsAry.forEach((coin) => {
+                    const tempRate = {};
+                    tempRate['last-modified'] = rateBalance['response_time'];
+                    if (coin in rateBalance) {
+                        tempRate['rate'] = bignumber(
+                            rateBalance[coin].price || 0
+                        )
+                            .mul(
+                                bignumber(
+                                    fiatData.rates &&
+                                        fiatData.rates[
+                                            this.rateCurrency.toUpperCase()
+                                        ]
+                                ) || 0
+                            )
+                            .toFixed();
+                        rateRes[coin] = tempRate['rate'];
                     } else {
-                        this.chrome.setAssetUSDRate(this.assetRate);
+                        tempRate['rate'] = undefined;
+                        rateRes[coin] = undefined;
                     }
-                    return rateRes;
-                })
-            );
+                    this.assetRate.set(coin, tempRate);
+                });
+                if (this.rateCurrency === 'CNY') {
+                    this.chrome.setAssetCNYRate(this.assetRate);
+                } else {
+                    this.chrome.setAssetUSDRate(this.assetRate);
+                }
+                return rateRes;
+            })
+        );
     }
 
     public async getAssetImage(asset: Asset) {
@@ -248,9 +282,12 @@ export class AssetState {
             lastModified = imageObj['last-modified'];
             return imageObj['image-src'];
         }
-        const assetRes = await this.getAssetImageFromUrl(asset.image_url, lastModified).toPromise();
+        const assetRes = await this.getAssetImageFromUrl(
+            asset.image_url,
+            lastModified
+        ).toPromise();
         if (assetRes && assetRes.status === 200) {
-            const src = await this.setAssetFile(assetRes, asset.asset_id)
+            const src = await this.setAssetFile(assetRes, asset.asset_id);
         } else if (assetRes && assetRes.status === 404) {
             return this.defaultAssetSrc;
         }
@@ -281,16 +318,80 @@ export class AssetState {
             rate = {};
         }
         if (symbol.toLowerCase() in rate) {
-            return this.global.mathmul(Number(rate[symbol.toLowerCase()]), Number(balance)).toString();
+            return this.global
+                .mathmul(Number(rate[symbol.toLowerCase()]), Number(balance))
+                .toString();
         } else {
             return '0';
         }
     }
 
     public getGasFee(): Observable<any> {
-        return this.http.get(`${this.global.apiDomain}/v1/neo2/fees`).pipe(map((res: any) => {
-            this.gasFeeSpeed = res || this.gasFeeDefaultSpeed;
-            return res || this.gasFeeDefaultSpeed;
-        }));
+        return this.http.get(`${this.global.apiDomain}/v1/neo2/fees`).pipe(
+            map((res: any) => {
+                this.gasFeeSpeed = res || this.gasFeeDefaultSpeed;
+                return res || this.gasFeeDefaultSpeed;
+            })
+        );
     }
+
+    //#region neo3
+    /**
+     * 格式化neo3 接口返回数据，字段名 contract => asset_id
+     * @param data 接口数据
+     */
+    formatResponseData(data: any[]) {
+        return data.map((item) => {
+            item.asset_id = item.contract;
+            delete item.contract;
+            return item;
+        });
+    }
+
+    /**
+     * 获取指定网络节点所有资产
+     */
+    fetchNeo3TokenList(): Observable<any> {
+        return this.http.get(`${this.NEO3_HOST}/neo3/assets`).pipe(
+            map((res) => {
+                return this.formatResponseData(res);
+            })
+        );
+    }
+
+    /**
+     * 获取某地址大于 0 的资产
+     * @param address 地址
+     */
+    fetchNeo3AddressTokens(address: string): Observable<any> {
+        return this.http
+            .get(`${this.NEO3_HOST}/neo3/address/assets?address=${address}`)
+            .pipe(
+                map((res) => {
+                    return this.formatResponseData(res);
+                })
+            );
+    }
+
+    /**
+     * 获取推荐资产
+     */
+    fetchNeo3PopularToken(): Observable<any> {
+        return this.http.get(`${this.NEO3_HOST}/neo3/allowlist`).pipe(
+            map((res) => {
+                return this.formatResponseData(res);
+            })
+        );
+    }
+
+    /**
+     * 模糊搜素资产信息
+     * @param query 搜索信息
+     */
+    searchNeo3Token(query: string): Observable<any> {
+        return this.http.get(
+            `${this.NEO3_HOST}/v1/neo3/search/asset?q=${query}`
+        );
+    }
+    //#endregion
 }

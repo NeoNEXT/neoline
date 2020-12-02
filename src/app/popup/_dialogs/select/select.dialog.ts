@@ -1,8 +1,9 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { ChromeService, GlobalService, AssetState } from '@app/core';
+import { ChromeService, GlobalService, AssetState, NeonService } from '@app/core';
 import { Router } from '@angular/router';
+import { ChainType } from '@popup/_lib';
 
 @Component({
     templateUrl: 'select.dialog.html',
@@ -18,6 +19,7 @@ export class PopupSelectDialogComponent implements OnInit {
         private global: GlobalService,
         private router: Router,
         private assetSer: AssetState,
+        private neonService: NeonService,
         @Inject(MAT_DIALOG_DATA)
         public data: {
             optionGroup: [];
@@ -40,15 +42,21 @@ export class PopupSelectDialogComponent implements OnInit {
         if (this.data.currentOption === targetOption) {
             return;
         }
-        if (this.data.type === 'lang') {
-            this.chromeSer.setLang(this.targetOption);
-            this.global.snackBarTip('langSetSucc');
-            location.href = `index.html#popup/setting`;
-        } else if (this.data.type === 'currency') {
-            this.rateCurrency = this.targetOption;
-            this.assetSer.changeRateCurrency(this.rateCurrency);
-            this.chromeSer.setRateCurrency(this.rateCurrency);
-            this.dialogRef.close(this.targetOption);
+        switch (this.data.type) {
+            case 'lang':
+                this.chromeSer.setLang(this.targetOption);
+                this.global.snackBarTip('langSetSucc');
+                location.href = `index.html#popup/setting`;
+                break;
+            case 'currency':
+                this.rateCurrency = this.targetOption;
+                this.assetSer.changeRateCurrency(this.rateCurrency);
+                this.chromeSer.setRateCurrency(this.rateCurrency);
+                this.dialogRef.close(this.targetOption);
+                break;
+            case 'chain':
+                this.neonService.selectChainType(this.targetOption as ChainType);
+                this.dialogRef.close(this.targetOption);
         }
     }
 }
