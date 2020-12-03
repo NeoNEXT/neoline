@@ -63,6 +63,14 @@ export class NeonService {
         return this._WIFArr || null;
     }
 
+    public get neo2WalletArr(): Wallet[] {
+        return this._walletArr2 || null;
+    }
+
+    public get neo3WalletArr(): Wallet[] {
+        return this._walletArr3 || null;
+    }
+
     public reset() {
         this._wallet = null;
         this._walletArr = [];
@@ -70,24 +78,12 @@ export class NeonService {
     }
 
     public pushWalletArray(w: WalletJSON) {
-        switch (this.selectedChainType) {
-            case 'Neo2':
-                this._walletArr2.push(this.parseWallet(w));
-                break;
-            case 'Neo3':
-                this._walletArr3.push(this.parseWallet(w));
-                break;
-        }
+        this.changeChainType(this.selectedChainType);
+        this._walletArr.push(this.parseWallet(w));
     }
     public pushWIFArray(WIF: string) {
-        switch (this.selectedChainType) {
-            case 'Neo2':
-                this._WIFArr2.push(WIF);
-                break;
-            case 'Neo3':
-                this._WIFArr3.push(WIF);
-                break;
-        }
+        this.changeChainType(this.selectedChainType);
+        this._WIFArr.push(WIF);
     }
 
     public getWalletArrayJSON(
@@ -159,7 +155,6 @@ export class NeonService {
             getNeo3WalletArr,
         ]).pipe(
             map((res) => {
-                console.log(res);
                 // wallet
                 this._wallet = this.parseWallet(res[0]);
                 this.$wallet.next(this._wallet);
@@ -190,7 +185,6 @@ export class NeonService {
                     this._walletArr3 = tempArray;
                     flag.Neo3 = true;
                 }
-                console.log(this.selectedChainType);
                 if (this.address) {
                     this.changeChainType(
                         wallet3.isAddress(this.address) ? 'Neo3' : 'Neo2'
@@ -688,9 +682,6 @@ export class NeonService {
                 this._walletArr = this._walletArr3;
                 break;
         }
-        console.log(this._WIFArr);
-        console.log(this._WIFArr2);
-        console.log(this._WIFArr3);
     }
 
     selectChainType(chain: ChainType) {

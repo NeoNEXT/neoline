@@ -13,7 +13,10 @@ import { ChainTypeGroups, ChainType } from '@popup/_lib';
 })
 export class PopupHomeMenuDialogComponent {
     @ViewChild('walletContainer') private walletContainer: ElementRef;
-    public walletArr: Array<Wallet>;
+    public walletArr: { Neo2: Wallet[]; Neo3: Wallet[] } = {
+        Neo2: [],
+        Neo3: [],
+    };
     public wallet: Wallet;
     public tabType: ChainType;
     constructor(
@@ -24,8 +27,10 @@ export class PopupHomeMenuDialogComponent {
         private global: GlobalService,
         private dialog: MatDialog
     ) {
-        this.walletArr = this.neon.walletArr;
+        this.walletArr.Neo2 = this.neon.neo2WalletArr;
+        this.walletArr.Neo3 = this.neon.neo3WalletArr;
         this.wallet = this.neon.wallet;
+        this.tabType = this.neon.currentWalletChainType;
     }
     public isActivityWallet(w: Wallet) {
         if (w.accounts[0].address === this.wallet.accounts[0].address) {
