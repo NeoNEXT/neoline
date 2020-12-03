@@ -64,8 +64,8 @@ export class TransactionState {
 
     getTxDetail(
         txid: string,
-        address?: string,
-        assetId?: string
+        address: string,
+        assetId: string
     ): Observable<any> {
         if (this.neonService.currentWalletChainType === 'Neo3') {
             return this.fetchNeo3TxDetail(address, assetId, txid);
@@ -81,6 +81,19 @@ export class TransactionState {
 
     //#region neo3
     /**
+     * 格式化neo3 接口返回数据，字段名 contract => asset_id
+     * @param data 接口数据
+     */
+    formatResponseData(data: any[]) {
+        return data.map((item) => {
+            item.asset_id = item.contract;
+            item.value = item.amount;
+            item.from = [item.from];
+            item.to = [item.to];
+            return item;
+        });
+    }
+    /**
      * 获取某资产的交易列表
      * @param address 地址
      * @param assetId 资产id
@@ -95,9 +108,13 @@ export class TransactionState {
         if (maxId !== -1) {
             req += `&max_id=${maxId - 1}`;
         }
-        return this.http.get(
-            `${this.NEO3_HOST}/neo3/address/transactions${req}`
-        );
+        return this.http
+            .get(`${this.NEO3_HOST}/neo3/address/transactions${req}`)
+            .pipe(
+                map((res) => {
+                    return this.formatResponseData(res);
+                })
+            );
     }
 
     /**
@@ -110,9 +127,13 @@ export class TransactionState {
         if (maxId !== -1) {
             req += `&max_id=${maxId - 1}`;
         }
-        return this.http.get(
-            `${this.NEO3_HOST}/neo3/address/transactions${req}`
-        );
+        return this.http
+            .get(`${this.NEO3_HOST}/neo3/address/transactions${req}`)
+            .pipe(
+                map((res) => {
+                    return this.formatResponseData(res);
+                })
+            );
     }
 
     /**
@@ -128,7 +149,7 @@ export class TransactionState {
     ): Observable<any> {
         return this.http
             .get(
-                `${this.NEO3_HOST}/v1/neo3/transaction/${address}/${assetId}/${txid}`
+                `${this.NEO3_HOST}/neo3/transaction/${address}/${assetId}/${txid}`
             )
             .pipe(
                 map((res) => {

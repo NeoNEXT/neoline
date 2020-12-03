@@ -22,6 +22,7 @@ import { PopupConfirmDialogComponent } from '../_dialogs';
 import { Router } from '@angular/router';
 import { rpc } from '@cityofzion/neon-core';
 import { bignumber } from 'mathjs';
+import { NEO3_CONTRACT } from '../_lib';
 
 
 @Component({
@@ -33,7 +34,7 @@ export class PopupHomeComponent implements OnInit {
     txPageComponent: PopupTxPageComponent;
     public imageUrl: any = '';
     selectedIndex = 0;
-    public assetId: string = NEO;
+    public assetId: string;
     public wallet: Wallet;
     public balance: Balance;
     public rateCurrency: string;
@@ -71,6 +72,7 @@ export class PopupHomeComponent implements OnInit {
     ) {
         this.wallet = this.neon.wallet;
         this.rateCurrency = this.assetState.rateCurrency;
+        this.assetId = this.neon.currentWalletChainType === 'Neo2' ? NEO : NEO3_CONTRACT;
 
         const imageObj = this.assetState.assetFile.get(this.assetId);
         let lastModified = '';
@@ -97,7 +99,7 @@ export class PopupHomeComponent implements OnInit {
             .fetchBalance(this.wallet.accounts[0].address)
             .subscribe(balanceArr => {
                 this.handlerBalance(balanceArr);
-                this.chrome.getWatch(this.neon.address).subscribe(watching => {
+                this.chrome.getWatch(this.neon.address, this.neon.currentWalletChainType).subscribe(watching => {
                     this.assetList = [];
                     const showAssetList = [];
                     let rateSymbol = '';
@@ -189,7 +191,7 @@ export class PopupHomeComponent implements OnInit {
     }
 
     public handlerBalance(balanceRes: Balance[]) {
-        this.chrome.getWatch(this.neon.address).subscribe(watching => {
+        this.chrome.getWatch(this.neon.address, this.neon.currentWalletChainType).subscribe(watching => {
             this.findBalance(balanceRes, watching);
             // 获取交易
             // this.getInTransactions(1);
@@ -203,7 +205,7 @@ export class PopupHomeComponent implements OnInit {
             balanceRes.find(b => b.asset_id === this.assetId) ||
             watching.find(w => w.asset_id === this.assetId);
         if (!balance) {
-            this.assetId = NEO;
+            this.assetId = this.neon.currentWalletChainType === 'Neo2' ? NEO : NEO3_CONTRACT;
             balance =
                 balanceRes.find(b => b.asset_id === this.assetId) ||
                 watching.find(w => w.asset_id === this.assetId);

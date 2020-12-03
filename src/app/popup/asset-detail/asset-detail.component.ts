@@ -57,7 +57,7 @@ export class PopupAssetDetailComponent implements OnInit {
                 .subscribe((balanceArr) => {
                     this.handlerBalance(balanceArr);
                 });
-            this.chrome.getWatch(this.neon.address).subscribe((res) => {
+            this.chrome.getWatch(this.neon.address, this.neon.currentWalletChainType).subscribe((res) => {
                 this.watch = res;
                 this.canHideBalance =
                     res.findIndex((w) => w.asset_id === this.assetId) >= 0;
@@ -66,7 +66,7 @@ export class PopupAssetDetailComponent implements OnInit {
     }
 
     handlerBalance(balanceRes: Balance[]) {
-        this.chrome.getWatch(this.neon.address).subscribe((watching) => {
+        this.chrome.getWatch(this.neon.address, this.neon.currentWalletChainType).subscribe((watching) => {
             this.findBalance(balanceRes, watching);
             // 获取资产汇率
             this.getAssetRate();
@@ -135,7 +135,7 @@ export class PopupAssetDetailComponent implements OnInit {
                     );
                     if (i >= 0) {
                         this.watch.splice(i, 1);
-                        this.chrome.setWatch(this.neon.address, this.watch);
+                        this.chrome.setWatch(this.neon.address, this.watch, this.neon.currentWalletChainType);
                         this.global.snackBarTip('hiddenSucc');
                         this.router.navigateByUrl('/popup/home');
                     }

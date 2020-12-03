@@ -111,7 +111,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     }
 
     public handlerBalance(balanceRes: Balance[]) {
-        this.chrome.getWatch(this.address).subscribe(watching => {
+        this.chrome.getWatch(this.address, this.neon.currentWalletChainType).subscribe(watching => {
             this.findBalance(balanceRes, watching);
             // 获取交易
             this.getInTransactions(1);
@@ -124,7 +124,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
 
     // 监听 balance 发生变化
     public listenBalance(balanceRes: Balance[]) {
-        this.chrome.getWatch(this.address).subscribe(watching => {
+        this.chrome.getWatch(this.address, this.neon.currentWalletChainType).subscribe(watching => {
             this.findBalance(balanceRes, watching);
             // 获取资产汇率
             this.getAssetRate();

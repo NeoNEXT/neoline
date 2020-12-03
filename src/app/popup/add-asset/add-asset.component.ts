@@ -36,10 +36,12 @@ export class PopupAddAssetComponent implements OnInit {
 
     ngOnInit(): void {
         const getMoneyBalance = this.asset.fetchBalance(this.neon.address);
-        const getWatch = this.chrome.getWatch(this.neon.address);
+        const getWatch = this.chrome.getWatch(this.neon.address, this.neon.currentWalletChainType);
         forkJoin([getMoneyBalance, getWatch]).subscribe(res => {
             this.moneyAssets = res[0];
             this.watch = res[1];
+            console.log(this.moneyAssets);
+            console.log(this.watch);
             this.getAllBalance();
         });
     }
@@ -59,7 +61,7 @@ export class PopupAddAssetComponent implements OnInit {
                         index,
                         'all'
                     );
-                    asset.watching = this.watch.findIndex(
+                    this.allowAssets[index].watching = this.watch.findIndex(  // watching=true 已添加
                         (w: Balance) =>
                             w.asset_id ===
                             asset.asset_id
@@ -129,7 +131,7 @@ export class PopupAddAssetComponent implements OnInit {
                         this.allowAssets[index].watching = true;
                     }
                     this.watch.push(assetItem);
-                    this.chrome.setWatch(this.neon.address, this.watch);
+                    this.chrome.setWatch(this.neon.address, this.watch, this.neon.currentWalletChainType);
                     this.global.snackBarTip('addSucc');
                 }
             });

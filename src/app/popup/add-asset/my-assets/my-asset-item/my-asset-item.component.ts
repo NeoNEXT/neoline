@@ -2,6 +2,7 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { NEO, GAS, EXT, EDS, Asset } from '@/models/models';
 import { GlobalService } from '@/app/core';
 import { bignumber } from 'mathjs';
+import { NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
 
 @Component({
     selector: 'app-my-asset-item',
@@ -22,7 +23,7 @@ export class PopupMyAssetItemComponent implements OnInit {
     ngOnInit(): void { }
 
     public fixed() {
-        return [NEO, GAS].indexOf(this.asset.asset_id) >= 0
+        return [NEO, GAS, NEO3_CONTRACT, GAS3_CONTRACT].indexOf(this.asset.asset_id) >= 0
             || (bignumber(this.asset.balance || 0).comparedTo(0) === 1 && this.asset.is_risk !== true);
     }
 

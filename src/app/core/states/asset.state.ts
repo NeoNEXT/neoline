@@ -88,7 +88,7 @@ export class AssetState {
     public detail(address: string, id: string): Observable<Balance> {
         return this.fetchBalance(address).pipe(
             switchMap((balance) =>
-                this.chrome.getWatch(address).pipe(
+                this.chrome.getWatch(address, this.neonService.currentWalletChainType).pipe(
                     map((watching) => {
                         return (
                             balance.find((e) => e.asset_id === id) ||

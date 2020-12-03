@@ -57,7 +57,7 @@ export class AssetManageComponent implements OnInit, OnDestroy {
     ) {}
 
     ngOnInit(): void {
-        this.asset.fetchBalance(this.neon.address).pipe(switchMap((res) => this.chrome.getWatch(this.neon.address).pipe(map((watching) => {
+        this.asset.fetchBalance(this.neon.address).pipe(switchMap((res) => this.chrome.getWatch(this.neon.address, this.neon.currentWalletChainType).pipe(map((watching) => {
             this.displayAssets = [];
             this.displayAssets.push(...res)
             //  去重
@@ -162,7 +162,7 @@ export class AssetManageComponent implements OnInit, OnDestroy {
                 }
                 this.displayAssets.push(assetItem);
                 this.watch.push(assetItem);
-                this.chrome.setWatch(this.neon.address, this.watch);
+                this.chrome.setWatch(this.neon.address, this.watch, this.neon.currentWalletChainType);
                 this.asset.pushAddAssetId(assetItem);
                 this.global.snackBarTip('addSucc');
             }

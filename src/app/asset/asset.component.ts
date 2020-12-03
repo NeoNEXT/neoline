@@ -75,7 +75,7 @@ export class AssetComponent implements OnInit, OnDestroy {
         });
         this.rateSymbol = this.rateSymbol.slice(0, -1);
         this.getAssetRate();
-        this.chrome.getWatch(this.address).subscribe((watching) => {
+        this.chrome.getWatch(this.address, this.neon.currentWalletChainType).subscribe((watching) => {
             const newWatch = [];
             watching.forEach((w) => {
                 if (
@@ -118,7 +118,7 @@ export class AssetComponent implements OnInit, OnDestroy {
                     );
                     if (i >= 0) {
                         this.watch.splice(i, 1);
-                        this.chrome.setWatch(this.neon.address, this.watch);
+                        this.chrome.setWatch(this.neon.address, this.watch, this.neon.currentWalletChainType);
                     }
                     this.displayAssets.splice(index, 1);
                     this.global.snackBarTip('hiddenSucc');

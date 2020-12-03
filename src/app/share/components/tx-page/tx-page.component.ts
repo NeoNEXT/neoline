@@ -168,7 +168,9 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
             panelClass: 'custom-dialog-panel',
             data: {
                 tx,
-                symbol
+                symbol,
+                address: this.address,
+                assetId: this.assetId
             }
         });
     }
