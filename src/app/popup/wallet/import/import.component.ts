@@ -50,7 +50,7 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
 
         this.walletNep6Import = new WalletImport();
         this.hideNep6Pwd = true;
-        switch (this.neon.chainType) {
+        switch (this.neon.selectedChainType) {
             case 'Neo2':
                 this.neonWallet = wallet2;
                 break;

@@ -101,7 +101,7 @@ export class AssetState {
     }
 
     public fetchBalance(address: string): Observable<any> {
-        if (this.neonService.chainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === 'Neo3') {
             return this.fetchNeo3AddressTokens(address);
         }
         return this.http
@@ -149,7 +149,7 @@ export class AssetState {
     }
 
     public fetchAll(): Promise<any> {
-        if (this.neonService.chainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === 'Neo3') {
             return this.fetchNeo3TokenList().toPromise();
         }
         return this.http
@@ -158,7 +158,7 @@ export class AssetState {
     }
 
     public fetchAllowList(): Observable<any> {
-        if (this.neonService.chainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === 'Neo3') {
             return this.fetchNeo3PopularToken();
         }
         return from(
@@ -173,7 +173,7 @@ export class AssetState {
     }
 
     public searchAsset(query: string): Observable<any> {
-        if (this.neonService.chainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === 'Neo3') {
             return this.searchNeo3Token(query);
         }
         return this.http.get(

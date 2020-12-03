@@ -35,7 +35,7 @@ export class PopupNameDialogComponent implements OnInit {
                 this.neon.walletArr.find(
                     item => item.accounts[0].address === res.accounts[0].address
                 ).name = this.name;
-                this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
+                this.chrome.setWalletArray(this.neon.getWalletArrayJSON(), this.neon.currentWalletChainType);
                 this.dialogRef.close();
                 this.global.snackBarTip('nameModifySucc');
             },

@@ -22,7 +22,7 @@ export class PopupAddressDialogComponent implements OnInit {
         private chromeSer: ChromeService,
         private neonService: NeonService
     ) {
-        switch (this.neonService.chainType) {
+        switch (this.neonService.currentWalletChainType) {
             case 'Neo2':
                 this.neonWallet = wallet2;
                 break;
@@ -33,7 +33,7 @@ export class PopupAddressDialogComponent implements OnInit {
     }
 
     ngOnInit() {
-        this.chromeSer.getWalletArray().subscribe((res) => {
+        this.chromeSer.getWalletArray(this.neonService.currentWalletChainType).subscribe((res) => {
             this.addressArr = res;
         });
     }

@@ -183,10 +183,10 @@ export class WalletImportComponent implements OnInit, AfterViewInit {
 
     private updateLocalWallet(data: any) {
         this.neon.pushWIFArray(data.accounts[0].wif);
-        this.chrome.setWIFArray(this.neon.WIFArr);
+        this.chrome.setWIFArray(this.neon.WIFArr, this.neon.selectedChainType);
 
         this.neon.pushWalletArray(data.export());
-        this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
+        this.chrome.setWalletArray(this.neon.getWalletArrayJSON(), this.neon.selectedChainType);
         this.chrome.setWallet(data.export());
         this.global.$wallet.next('open');
         this.jumpRouter();

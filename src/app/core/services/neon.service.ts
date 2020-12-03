@@ -10,7 +10,7 @@ import Neon3, {
     rpc as rpc3,
 } from '@cityofzion/neon-js-neo3';
 import { Wallet, WalletJSON } from '@cityofzion/neon-core/lib/wallet';
-import { Observable, from, Observer, of, Subject } from 'rxjs';
+import { Observable, from, Observer, of, Subject, forkJoin } from 'rxjs';
 import { map, catchError, startWith, publish, refCount } from 'rxjs/operators';
 import { ChromeService } from './chrome.service';
 import { GlobalService } from './global.service';
@@ -24,8 +24,8 @@ import { ChainType } from '@popup/_lib';
 
 @Injectable()
 export class NeonService {
-    currentWalletChainType: ChainType = 'Neo2';
-    selectedChainType: ChainType = 'Neo2';
+    currentWalletChainType: ChainType;
+    selectedChainType: ChainType;
 
     private _neon: any = Neon2;
     private _neonWallet: any = wallet2;
@@ -35,14 +35,14 @@ export class NeonService {
     private _selectedNeon: any = Neon2;
     private _selectedNeonWallet: any = wallet2;
 
-    private _walletArr: Wallet[];
-    private _WIFArr: string[];
+    private _walletArr: Wallet[] = [];
+    private _WIFArr: string[] = [];
 
-    private _walletArr2: Wallet[];
-    private _WIFArr2: string[];
+    private _walletArr2: Wallet[] = [];
+    private _WIFArr2: string[] = [];
 
-    private _walletArr3: Wallet[];
-    private _WIFArr3: string[];
+    private _walletArr3: Wallet[] = [];
+    private _WIFArr3: string[] = [];
 
     private _wallet: Wallet;
     private $wallet: Subject<Wallet> = new Subject();
@@ -70,10 +70,24 @@ export class NeonService {
     }
 
     public pushWalletArray(w: WalletJSON) {
-        this._walletArr.push(this.parseWallet(w));
+        switch (this.selectedChainType) {
+            case 'Neo2':
+                this._walletArr2.push(this.parseWallet(w));
+                break;
+            case 'Neo3':
+                this._walletArr3.push(this.parseWallet(w));
+                break;
+        }
     }
     public pushWIFArray(WIF: string) {
-        this._WIFArr.push(WIF);
+        switch (this.selectedChainType) {
+            case 'Neo2':
+                this._WIFArr2.push(WIF);
+                break;
+            case 'Neo3':
+                this._WIFArr3.push(WIF);
+                break;
+        }
     }
 
     public getWalletArrayJSON(
@@ -125,34 +139,66 @@ export class NeonService {
     }
     constructor(private chrome: ChromeService, private global: GlobalService) {}
 
-    // public clearCache() {
-    //     this._wallet = new Wallet();
-    //     this._walletArr = [];
-    //     this.$wallet = new Subject();
-    // }
+    public clearCache() {
+        this._wallet = new Wallet();
+        this._walletArr = [];
+        this.$wallet = new Subject();
+    }
 
     public walletIsOpen(): Observable<boolean> {
-        this.chrome.getWallet().subscribe((res) => {
-            this._wallet = this.parseWallet(res);
-            this.changeChainType(
-                wallet3.isAddress(this.address) ? 'Neo3' : 'Neo2'
-            );
-            this.$wallet.next(this._wallet);
-        });
-        this.chrome.getWIFArray().subscribe((res) => {
-            if (res !== undefined && res !== null && res.length > 0) {
-                this._WIFArr = res;
-            }
-        });
-        return this.chrome.getWalletArray().pipe(
+        const getWallet = this.chrome.getWallet();
+        const getNeo2WIFArr = this.chrome.getWIFArray('Neo2');
+        const getNeo3WIFArr = this.chrome.getWIFArray('Neo3');
+        const getNeo2WalletArr = this.chrome.getWalletArray('Neo2');
+        const getNeo3WalletArr = this.chrome.getWalletArray('Neo3');
+        return forkJoin([
+            getWallet,
+            getNeo2WIFArr,
+            getNeo3WIFArr,
+            getNeo2WalletArr,
+            getNeo3WalletArr,
+        ]).pipe(
             map((res) => {
-                if (res.length > 0) {
+                console.log(res);
+                // wallet
+                this._wallet = this.parseWallet(res[0]);
+                this.$wallet.next(this._wallet);
+                // neo2 WIFArr
+                if (res[1] && res[1].length > 0) {
+                    this._WIFArr2 = res[1];
+                }
+                // neo3 WIFArr
+                if (res[2] && res[2].length > 0) {
+                    this._WIFArr3 = res[2];
+                }
+                const flag = { Neo2: false, Neo3: false };
+                // neo2 walletArr
+                if (res[3] && res[3].length > 0) {
                     const tempArray = [];
-                    res.forEach((item) => {
+                    res[3].forEach((item) => {
                         tempArray.push(this.parseWallet(item));
                     });
-                    this._walletArr = tempArray;
-                    this.global.log('已打开钱包', this._walletArr);
+                    this._walletArr2 = tempArray;
+                    flag.Neo2 = true;
+                }
+                // neo2 walletArr
+                if (res[4] && res[4].length > 0) {
+                    const tempArray = [];
+                    res[4].forEach((item) => {
+                        tempArray.push(this.parseWallet(item));
+                    });
+                    this._walletArr3 = tempArray;
+                    flag.Neo3 = true;
+                }
+                console.log(this.selectedChainType);
+                if (this.address) {
+                    this.changeChainType(
+                        wallet3.isAddress(this.address) ? 'Neo3' : 'Neo2'
+                    );
+                } else {
+                    this.changeChainType(this.selectedChainType);
+                }
+                if (flag[this.currentWalletChainType]) {
                     return true;
                 } else {
                     return false;
@@ -214,8 +260,14 @@ export class NeonService {
                 if (this._WIFArr.length > index) {
                     this._WIFArr.splice(index, 1);
                 }
-                this.chrome.setWalletArray(this.getWalletArrayJSON());
-                this.chrome.setWIFArray(this._WIFArr);
+                this.chrome.setWalletArray(
+                    this.getWalletArrayJSON(),
+                    this.currentWalletChainType
+                );
+                this.chrome.setWIFArray(
+                    this._WIFArr,
+                    this.currentWalletChainType
+                );
                 this.chrome.windowCallback({
                     data: {
                         address: this.wallet.accounts[0].address || '',
@@ -229,12 +281,18 @@ export class NeonService {
                     this._WIFArr.splice(index, 1);
                 }
                 this._wallet = this._walletArr[0];
-                this.selectChainType(
+                this.changeChainType(
                     wallet3.isAddress(this.address) ? 'Neo3' : 'Neo2'
                 );
                 this.chrome.setWallet(this._wallet.export());
-                this.chrome.setWalletArray(this.getWalletArrayJSON());
-                this.chrome.setWIFArray(this._WIFArr);
+                this.chrome.setWalletArray(
+                    this.getWalletArrayJSON(),
+                    this.currentWalletChainType
+                );
+                this.chrome.setWIFArray(
+                    this._WIFArr,
+                    this.currentWalletChainType
+                );
             }
             return of(true);
         } else {
@@ -242,8 +300,11 @@ export class NeonService {
                 this._WIFArr.splice(index, 1);
             }
             this._walletArr.splice(index, 1);
-            this.chrome.setWalletArray(this.getWalletArrayJSON());
-            this.chrome.setWIFArray(this._WIFArr);
+            this.chrome.setWalletArray(
+                this.getWalletArrayJSON(),
+                this.currentWalletChainType
+            );
+            this.chrome.setWIFArray(this._WIFArr, this.currentWalletChainType);
             return of(false);
         }
     }
@@ -627,6 +688,9 @@ export class NeonService {
                 this._walletArr = this._walletArr3;
                 break;
         }
+        console.log(this._WIFArr);
+        console.log(this._WIFArr2);
+        console.log(this._WIFArr3);
     }
 
     selectChainType(chain: ChainType) {

@@ -37,9 +37,9 @@ export class PopupWalletComponent implements OnInit {
     public updateLocalWallet(data: any, type: number) {
 
         this.neon.pushWIFArray(data.accounts[0].wif);
-        this.chrome.setWIFArray(this.neon.WIFArr);
+        this.chrome.setWIFArray(this.neon.WIFArr, this.neon.selectedChainType);
         this.neon.pushWalletArray(data.export());
-        this.chrome.setWalletArray(this.neon.getWalletArrayJSON());
+        this.chrome.setWalletArray(this.neon.getWalletArrayJSON(), this.neon.selectedChainType);
         this.chrome.setWallet(data.export());
         this.global.$wallet.next('open');
         if(type === 0) {

@@ -70,7 +70,7 @@ export class TransferCreateComponent implements OnInit {
         private block: BlockState,
         private txState: TransactionState
     ) {
-        switch(this.neon.chainType) {
+        switch(this.neon.currentWalletChainType) {
             case 'Neo2':
                 this.neonWallet = wallet2;
                 break;

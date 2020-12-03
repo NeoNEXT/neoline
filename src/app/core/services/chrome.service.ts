@@ -15,6 +15,7 @@ import { Asset } from '@/models/models';
 import { EVENT } from '@/models/dapi';
 import { loschmidtDependencies } from 'mathjs';
 import { stat } from 'fs';
+import { ChainType } from '@/app/popup/_lib';
 
 declare var chrome: any;
 
@@ -88,17 +89,18 @@ export class ChromeService {
             }
         }));
     }
-    public getWalletArray(): Observable<Array<any>> {
+    public getWalletArray(chainType: ChainType): Observable<Array<any>> {
+        const storageName = `walletArr-${chainType}`;
         if (!this.check) {
             try {
-                return of(JSON.parse(localStorage.getItem('walletArr')));
+                return of(JSON.parse(localStorage.getItem(storageName)));
             } catch (e) {
                 return throwError('please set wallet json to local storage when debug mode on');
             }
         }
         return from(new Promise<Array<WalletJSON>>((resolve, reject) => {
             try {
-                this.crx.getLocalStorage('walletArr', (res) => {
+                this.crx.getLocalStorage(storageName, (res) => {
                     resolve(res);
                 });
             } catch (e) {
@@ -106,17 +108,18 @@ export class ChromeService {
             }
         }));
     }
-    public getWIFArray(): Observable<Array<string>> {
+    public getWIFArray(chainType: ChainType): Observable<Array<string>> {
+        const storageName = `WIFArr-${chainType}`;
         if (!this.check) {
             try {
-                return of(JSON.parse(localStorage.getItem('WIFArr')));
+                return of(JSON.parse(localStorage.getItem(storageName)));
             } catch (e) {
                 return throwError('please set wif json to local storage when debug mode on');
             }
         }
         return from(new Promise<Array<string>>((resolve, reject) => {
             try {
-                this.crx.getLocalStorage('WIFArr', (res) => {
+                this.crx.getLocalStorage(storageName, (res) => {
                     resolve(res);
                 });
             } catch (e) {
@@ -146,15 +149,16 @@ export class ChromeService {
      * Set wallets, and add to history list.
      * 保存钱包数组，并记录到历史
      */
-    public setWalletArray(w: Array<any>) {
+    public setWalletArray(w: Array<any>, chainType: ChainType) {
+        const storageName = `walletArr-${chainType}`;
         if (!this.check) {
-            localStorage.setItem('walletArr', JSON.stringify(w));
+            localStorage.setItem(storageName, JSON.stringify(w));
             return;
         }
         try {
-            this.crx.setLocalStorage({
-                walletArr: w
-            });
+            const saveData = {};
+            saveData[storageName] = w;
+            this.crx.setLocalStorage(saveData);
         } catch (e) {
             console.log('set account failed', e);
         }
@@ -164,15 +168,16 @@ export class ChromeService {
      * Set wallets, and add to history list.
      * 保存wif数组，并记录到历史
      */
-    public setWIFArray(WIFArr: Array<string>) {
+    public setWIFArray(WIFArr: Array<string>, chainType: ChainType) {
+        const storageName = `WIFArr-${chainType}`;
         if (!this.check) {
-            localStorage.setItem('WIFArr', JSON.stringify(WIFArr));
+            localStorage.setItem(storageName, JSON.stringify(WIFArr));
             return;
         }
         try {
-            this.crx.setLocalStorage({
-                WIFArr
-            });
+            const saveData = {};
+            saveData[storageName] = WIFArr;
+            this.crx.setLocalStorage(saveData);
         } catch (e) {
             console.log('set account failed', e);
         }
@@ -664,8 +669,10 @@ export class ChromeService {
         } else {
             this.crx.setLocalStorage({ setLocalStorage: false });
         }
-        this.setWIFArray([]);
-        this.setWalletArray([]);
+        this.setWIFArray([], 'Neo2');
+        this.setWIFArray([], 'Neo3');
+        this.setWalletArray([], 'Neo2');
+        this.setWalletArray([], 'Neo3');
         this.setWallet(undefined);
     }
 

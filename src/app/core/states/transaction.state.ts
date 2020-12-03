@@ -29,7 +29,7 @@ export class TransactionState {
         asset: string,
         maxId: number = -1
     ): Observable<any> {
-        if (this.neonService.chainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === 'Neo3') {
             return this.fetchNeo3TokenTxs(address, asset, maxId);
         }
         let url =
@@ -46,7 +46,7 @@ export class TransactionState {
     }
 
     public getAllTx(address: string, maxId: number = -1): Observable<any> {
-        if (this.neonService.chainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === 'Neo3') {
             return this.fetchNeo3AllTxs(address, maxId);
         }
         let url =
@@ -67,7 +67,7 @@ export class TransactionState {
         address?: string,
         assetId?: string
     ): Observable<any> {
-        if (this.neonService.chainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === 'Neo3') {
             return this.fetchNeo3TxDetail(address, assetId, txid);
         }
         return this.http

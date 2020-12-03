@@ -80,7 +80,7 @@ export class SettingWalletComponent implements OnInit {
             return;
         }
         if (this.oldName !== '' && this.oldName !== this.walletArr[index].name) {
-            this.chrome.setWalletArray(this.neon.getWalletArrayJSON(this.walletArr));
+            this.chrome.setWalletArray(this.neon.getWalletArrayJSON(this.walletArr), this.neon.currentWalletChainType);
             this.oldName = '';
             if (this.isActivityWallet(this.walletArr[index])) {
                 this.wallet.name = this.walletArr[index].name;
