@@ -26,21 +26,21 @@ import { ChainType } from '@popup/_lib';
 export class NeonService {
     currentWalletChainType: ChainType;
     selectedChainType: ChainType;
-
+    // 当前钱包的链
     private _neon: any = Neon2;
     private _neonWallet: any = wallet2;
     private _neonTx: any = tx2;
     private _neonRpc: any = rpc2;
-
+    // 创建导入钱包的链
     private _selectedNeon: any = Neon2;
     private _selectedNeonWallet: any = wallet2;
-
+    // 当前钱包所在链的钱包数组
     private _walletArr: Wallet[] = [];
     private _WIFArr: string[] = [];
-
+    // neo2
     private _walletArr2: Wallet[] = [];
     private _WIFArr2: string[] = [];
-
+    // neo3
     private _walletArr3: Wallet[] = [];
     private _WIFArr3: string[] = [];
 
@@ -249,7 +249,6 @@ export class NeonService {
             w === null
         ) {
             if (this.walletArr.length === 1) {
-                this.chrome.closeWallet();
                 this._walletArr.splice(index, 1);
                 if (this._WIFArr.length > index) {
                     this._WIFArr.splice(index, 1);
@@ -262,13 +261,28 @@ export class NeonService {
                     this._WIFArr,
                     this.currentWalletChainType
                 );
-                this.chrome.windowCallback({
-                    data: {
-                        address: this.wallet.accounts[0].address || '',
-                        label: this.wallet.name || '',
-                    },
-                    return: EVENT.DISCONNECTED,
-                });
+                const otherChainWalletArr =
+                    this.currentWalletChainType === 'Neo2'
+                        ? this._walletArr3
+                        : this._walletArr2;
+                if (otherChainWalletArr.length <= 0) {
+                    // 另一条链也没有钱包
+                    this.chrome.closeWallet();
+                    this.chrome.windowCallback({
+                        data: {
+                            address: this.wallet.accounts[0].address || '',
+                            label: this.wallet.name || '',
+                        },
+                        return: EVENT.DISCONNECTED,
+                    });
+                } else {
+                    // 另一条链还有钱包，切换到另一条链
+                    this._wallet = otherChainWalletArr[0];
+                    this.changeChainType(
+                        wallet3.isAddress(this.address) ? 'Neo3' : 'Neo2'
+                    );
+                    this.chrome.setWallet(this._wallet.export());
+                }
             } else {
                 this._walletArr.splice(index, 1);
                 if (this._WIFArr.length > index) {
