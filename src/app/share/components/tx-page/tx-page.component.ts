@@ -170,7 +170,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                 tx,
                 symbol,
                 address: this.address,
-                assetId: this.assetId
+                assetId: tx.asset_id
             }
         });
     }
