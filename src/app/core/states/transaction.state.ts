@@ -4,14 +4,12 @@ import { GlobalService } from '../services/global.service';
 import { Subject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { NeonService } from '../services/neon.service';
-import { TX_LIST_PAGE_SIZE } from '@popup/_lib';
+import { TX_LIST_PAGE_SIZE, NEO3_HOST } from '@popup/_lib';
 
 @Injectable()
 export class TransactionState {
     public txSource = new Subject();
     public txSub$ = this.txSource.asObservable();
-
-    NEO3_HOST = 'http://47.110.14.167:8085/v1';
 
     constructor(
         private http: HttpService,
@@ -109,7 +107,7 @@ export class TransactionState {
             req += `&max_id=${maxId - 1}`;
         }
         return this.http
-            .get(`${this.NEO3_HOST}/neo3/address/transactions${req}`)
+            .get(`${NEO3_HOST}/neo3/address/transactions${req}`)
             .pipe(
                 map((res) => {
                     return this.formatResponseData(res);
@@ -128,7 +126,7 @@ export class TransactionState {
             req += `&max_id=${maxId - 1}`;
         }
         return this.http
-            .get(`${this.NEO3_HOST}/neo3/address/transactions${req}`)
+            .get(`${NEO3_HOST}/neo3/address/transactions${req}`)
             .pipe(
                 map((res) => {
                     return this.formatResponseData(res);
@@ -148,9 +146,7 @@ export class TransactionState {
         txid: string
     ): Observable<any> {
         return this.http
-            .get(
-                `${this.NEO3_HOST}/neo3/transaction/${address}/${assetId}/${txid}`
-            )
+            .get(`${NEO3_HOST}/neo3/transaction/${address}/${assetId}/${txid}`)
             .pipe(
                 map((res) => {
                     return res || {};
@@ -163,7 +159,7 @@ export class TransactionState {
      * @param hashes 交易id 数组
      */
     fetchNeo3TransactionValid(hashes: string[]): Observable<any> {
-        return this.http.post(`${this.NEO3_HOST}/neo3/hash_valid`, hashes);
+        return this.http.post(`${NEO3_HOST}/neo3/hash_valid`, hashes);
     }
     //#endregion
 }

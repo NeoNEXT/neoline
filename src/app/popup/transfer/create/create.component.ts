@@ -27,6 +27,9 @@ import {
 import {
     Transaction
 } from '@cityofzion/neon-core/lib/tx';
+import {
+    Transaction as Transaction3
+} from '@cityofzion/neon-core-neo3/lib/tx';
 import { wallet as wallet2 } from '@cityofzion/neon-core';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { rpc } from '@cityofzion/neon-js';
@@ -153,7 +156,7 @@ export class TransferCreateComponent implements OnInit {
         history.go(-1);
     }
 
-    private resolveSign(tx: Transaction) {
+    private resolveSign(tx: Transaction | Transaction3) {
         try {
             const wif = this.neon.WIFArr[
                 this.neon.walletArr.findIndex(item => item.accounts[0].address === this.neon.wallet.accounts[0].address)
@@ -200,7 +203,7 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('signFailed', error);
         }
     }
-    private async resolveSend(tx: Transaction) {
+    private async resolveSend(tx: Transaction | Transaction3) {
         this.loading = true;
         this.loadingMsg = 'Wait';
         try {

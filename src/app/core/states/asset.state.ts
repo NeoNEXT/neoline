@@ -10,7 +10,7 @@ import { GasFeeSpeed } from '@popup/_lib/type';
 import { bignumber } from 'mathjs';
 import { rpc } from '@cityofzion/neon-js';
 import { NeonService } from '../services/neon.service';
-import { TX_LIST_PAGE_SIZE } from '@popup/_lib';
+import { NEO3_HOST } from '@popup/_lib';
 
 @Injectable()
 export class AssetState {
@@ -24,13 +24,12 @@ export class AssetState {
     public balanceSource = new Subject<Balance[]>();
     public balanceSub$ = this.balanceSource.asObservable();
     public gasFeeSpeed: GasFeeSpeed;
+    public neo3GasFeeSpeed: GasFeeSpeed;
     public gasFeeDefaultSpeed: GasFeeSpeed = {
         slow_price: '0',
         propose_price: '0.011',
         fast_price: '0.2',
     };
-
-    NEO3_HOST = 'http://47.110.14.167:8085/v1';
 
     constructor(
         private http: HttpService,
@@ -88,14 +87,16 @@ export class AssetState {
     public detail(address: string, id: string): Observable<Balance> {
         return this.fetchBalance(address).pipe(
             switchMap((balance) =>
-                this.chrome.getWatch(address, this.neonService.currentWalletChainType).pipe(
-                    map((watching) => {
-                        return (
-                            balance.find((e) => e.asset_id === id) ||
-                            watching.find((w) => w.asset_id === id)
-                        );
-                    })
-                )
+                this.chrome
+                    .getWatch(address, this.neonService.currentWalletChainType)
+                    .pipe(
+                        map((watching) => {
+                            return (
+                                balance.find((e) => e.asset_id === id) ||
+                                watching.find((w) => w.asset_id === id)
+                            );
+                        })
+                    )
             )
         );
     }
@@ -327,6 +328,9 @@ export class AssetState {
     }
 
     public getGasFee(): Observable<any> {
+        if (this.neonService.currentWalletChainType === 'Neo3') {
+            return this.fetchNeo3GasFee();
+        }
         return this.http.get(`${this.global.apiDomain}/v1/neo2/fees`).pipe(
             map((res: any) => {
                 this.gasFeeSpeed = res || this.gasFeeDefaultSpeed;
@@ -352,7 +356,7 @@ export class AssetState {
      * 获取指定网络节点所有资产
      */
     fetchNeo3TokenList(): Observable<any> {
-        return this.http.get(`${this.NEO3_HOST}/neo3/assets`).pipe(
+        return this.http.get(`${NEO3_HOST}/neo3/assets`).pipe(
             map((res) => {
                 return this.formatResponseData(res);
             })
@@ -365,7 +369,7 @@ export class AssetState {
      */
     fetchNeo3AddressTokens(address: string): Observable<any> {
         return this.http
-            .get(`${this.NEO3_HOST}/neo3/address/assets?address=${address}`)
+            .get(`${NEO3_HOST}/neo3/address/assets?address=${address}`)
             .pipe(
                 map((res) => {
                     return this.formatResponseData(res);
@@ -377,7 +381,7 @@ export class AssetState {
      * 获取推荐资产
      */
     fetchNeo3PopularToken(): Observable<any> {
-        return this.http.get(`${this.NEO3_HOST}/neo3/allowlist`).pipe(
+        return this.http.get(`${NEO3_HOST}/neo3/allowlist`).pipe(
             map((res) => {
                 return this.formatResponseData(res);
             })
@@ -389,8 +393,19 @@ export class AssetState {
      * @param query 搜索信息
      */
     searchNeo3Token(query: string): Observable<any> {
-        return this.http.get(
-            `${this.NEO3_HOST}/v1/neo3/search/asset?q=${query}`
+        return this.http.get(`${NEO3_HOST}/neo3/search/asset?q=${query}`).pipe(
+            map((res) => {
+                return this.formatResponseData(res);
+            })
+        );
+    }
+
+    fetchNeo3GasFee(): Observable<any> {
+        return this.http.get(`${NEO3_HOST}/neo3/fees`).pipe(
+            map((res: any) => {
+                this.neo3GasFeeSpeed = res || this.gasFeeDefaultSpeed;
+                return res || this.gasFeeDefaultSpeed;
+            })
         );
     }
     //#endregion

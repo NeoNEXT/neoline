@@ -7,6 +7,7 @@ import { ShareModule } from '@/app/share';
 import { TransferService } from './transfer.service';
 import { TransferCreateComponent } from './create/create.component';
 import { PopupTransferConfirmComponent } from './confirm/confirm.component';
+import { Neo3TransferService } from './neo3-transfer.service';
 
 @NgModule({
     declarations: [
@@ -17,7 +18,7 @@ import { PopupTransferConfirmComponent } from './confirm/confirm.component';
     ],
     imports: [CommonModule, TransferRoutingModule, ShareModule],
     exports: [],
-    providers: [TransferService],
+    providers: [TransferService, Neo3TransferService],
     entryComponents: []
 })
 export class TransferModule { }

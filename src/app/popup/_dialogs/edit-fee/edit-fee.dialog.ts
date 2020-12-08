@@ -61,13 +61,13 @@ export class PopupEditFeeDialogComponent {
     }
 
     updateLevel() {
-        const slow = bignumber(this.gasFeeSpeed.slow_price).toFixed()
-        const middle = bignumber(this.gasFeeSpeed.propose_price).toFixed()
-        const fast = bignumber(this.gasFeeSpeed.fast_price).toFixed()
-        const current = bignumber(this.fee).toFixed()
-        if(current<= slow) {
+        const slow = bignumber(this.gasFeeSpeed.slow_price)
+        const middle = bignumber(this.gasFeeSpeed.propose_price)
+        const fast = bignumber(this.gasFeeSpeed.fast_price)
+        const current = bignumber(this.fee)
+        if(current.comparedTo(slow) <= 0) {
             this.level = 0
-        } else if(current > slow && current < fast ) {
+        } else if(current.comparedTo(slow) > 0 && current.comparedTo(fast) < 0) {
             this.level = 1;
         } else {
             this.level = 2;

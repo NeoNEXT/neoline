@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
 import { Transaction, TransactionInput } from '@cityofzion/neon-core/lib/tx';
+import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, of } from 'rxjs';
 import { map, delay } from 'rxjs/operators';
 import { UTXO, GAS } from '@/models/models';
 import { wallet } from '@cityofzion/neon-core';
 import { NeonService, HttpService, GlobalService } from '@/app/core';
+import { Neo3TransferService } from './neo3-transfer.service';
 
 @Injectable()
 export class TransferService {
@@ -12,9 +14,13 @@ export class TransferService {
         private neon: NeonService,
         private http: HttpService,
         private global: GlobalService,
+        private neo3TransferService: Neo3TransferService
     ) { }
     public create(from: string, to: string, asset: string, amount: string, fee: number = 0, decimals: number = 0,
-        broadcastOverride: boolean = false): Observable<Transaction> {
+        broadcastOverride: boolean = false): Observable<Transaction | Transaction3> {
+        if (this.neon.currentWalletChainType === 'Neo3') {
+            return this.neo3TransferService.createNeo3Tx({addressFrom: from, addressTo: to, tokenScriptHash: asset, amount, networkFee: fee});
+        }
         if (this.neon.isAsset(asset)) {
             return new Observable(observer => {
                 this.getBalance(from, asset).subscribe((balance) => {

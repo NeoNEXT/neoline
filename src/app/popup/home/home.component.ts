@@ -84,7 +84,9 @@ export class PopupHomeComponent implements OnInit {
 
     ngOnInit(): void {
         this.net = this.global.net;
-        this.initClaim();
+        if (this.neon.currentWalletChainType === 'Neo2') {
+            this.initClaim();
+        }
         this.getAssetList();
         this.showBackup = this.chrome.getHaveBackupTip();
         if( this.showBackup === null) {
