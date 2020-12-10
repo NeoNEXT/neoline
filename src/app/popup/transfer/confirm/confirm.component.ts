@@ -12,6 +12,8 @@ import {
 } from '@app/core';
 import { NEO, GAS } from '@/models/models';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
+import { forkJoin } from 'rxjs';
+import { bignumber } from 'mathjs';
 
 @Component({
     templateUrl: 'confirm.component.html',
@@ -24,10 +26,15 @@ export class PopupTransferConfirmComponent implements OnInit {
     public assetImageUrl: string = '';
     public datajson: any = {};
     public symbol = ''
-    public money = '';
-    public feeMoney = '0';
-    public totalMoney = '';
+    public money;
+    public feeMoney;
+    public totalMoney;
+    public systemFeeMoney;
+    public networkFeeMoney;
+    public totalFee;
     public rateCurrency = ''
+
+    isNeo3 = false;
     constructor(
         private dialog: MatDialog,
         private dialogRef: MatDialogRef<PopupTransferConfirmComponent>,
@@ -42,6 +49,8 @@ export class PopupTransferConfirmComponent implements OnInit {
             amount: string,
             remark: string,
             fee: string,
+            networkFee?: any,
+            systemFee?: any,
             network: string,
             broadcastOverride: boolean,
             txSerialize: string
@@ -56,8 +65,14 @@ export class PopupTransferConfirmComponent implements OnInit {
             network: '',
             broadcastOverride: false,
             txSerialize: '',
+            networkFee: 0,
+            systemFee: 0
         },
-    ) { }
+    ) {
+        if (this.neon.currentWalletChainType === 'Neo3') {
+            this.isNeo3 = true;
+        }
+    }
 
     async ngOnInit() {
         const wallet = this.neon.wallet;
@@ -91,28 +106,25 @@ export class PopupTransferConfirmComponent implements OnInit {
     }
 
     public async getAssetRate() {
-        if(Number( this.data.fee) > 0) {
-            this.getMoney('GAS', Number(this.data.fee)).then(res => {
-                this.feeMoney = res;
-                if(this.money !== '') {
-                    this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
-                } else {
-                    this.totalMoney = this.feeMoney;
-                }
-            })
-        }
-        this.getMoney(this.symbol, Number(this.data.amount)).then(res => {
-            this.money = res;
-            if(this.feeMoney !== '' && Number( this.data.fee) > 0) {
-                this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
-            } else {
-                this.totalMoney = res;
-            }
-        })
+        const getFeeMoney = this.getMoney('GAS', Number(this.data.fee));
+        const getTransferMoney = this.getMoney(this.symbol, Number(this.data.amount));
+        const getSystemFeeMoney = this.getMoney('GAS', this.data.systemFee);
+        const getNetworkFeeMoney = this.getMoney('GAS', this.data.networkFee);
+        this.totalFee = bignumber(this.data.fee).add(this.data.systemFee).add(this.data.networkFee);
+        forkJoin([getFeeMoney, getSystemFeeMoney, getNetworkFeeMoney, getTransferMoney]).subscribe(res => {
+            this.feeMoney = res[0];
+            this.systemFeeMoney = res[1];
+            this.networkFeeMoney = res[2];
+            this.money = res[3];
+            this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
+        });
     }
 
     public async getMoney(symbol: string, balance: number): Promise<string> {
         return new Promise((mResolve) => {
+            if (balance == 0) {
+                mResolve('0');
+            }
             this.assetState.getAssetRate(symbol).subscribe(rate => {
                 if (symbol.toLowerCase() in rate) {
                     mResolve(this.global.mathmul(Number(rate[symbol.toLowerCase()]), Number(balance)).toString());
@@ -132,14 +144,12 @@ export class PopupTransferConfirmComponent implements OnInit {
         }).afterClosed().subscribe(res => {
             if (res !== false) {
                 this.data.fee = res;
-                if (res === 0) {
-                    this.feeMoney = '0';
-                } else {
-                    this.assetState.getMoney('GAS', Number(this.data.fee)).then(feeMoney => {
-                        this.feeMoney = feeMoney;
-                        this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
-                    });
-                }
+                this.datajson.fee = res;
+                this.assetState.getMoney('GAS', Number(this.data.fee)).then(feeMoney => {
+                    this.feeMoney = feeMoney;
+                    this.totalFee = bignumber(this.data.fee).add(this.data.systemFee).add(this.data.networkFee);
+                    this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
+                });
             }
         })
     }

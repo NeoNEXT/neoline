@@ -11,7 +11,7 @@ import { bignumber } from 'mathjs';
 export class PopupEditFeeDialogComponent {
     showCustom = false;
     minFee = 0;
-    fee = 0;
+    fee: any = 0;
     gasFeeSpeed: GasFeeSpeed;
     level = 1;
     constructor(
@@ -25,7 +25,7 @@ export class PopupEditFeeDialogComponent {
         }
     ) {
         this.minFee = this.data.minFee || 0;
-        this.fee = this.data.fee;
+        this.fee = bignumber(this.data.fee).toFixed();
         if (this.data.speedFee) {
             this.gasFeeSpeed = this.data.speedFee;
             this.updateGasFeeSpeed();

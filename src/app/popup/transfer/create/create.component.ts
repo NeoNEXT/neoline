@@ -31,12 +31,13 @@ import {
     Transaction as Transaction3
 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { wallet as wallet2 } from '@cityofzion/neon-core';
-import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+import { wallet as wallet3, CONST as CONST3 } from '@cityofzion/neon-core-neo3';
 import { rpc } from '@cityofzion/neon-js';
 import { PopupAddressDialogComponent, PopupAssetDialogComponent, PopupTransferSuccessDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
 import { bignumber } from 'mathjs';
 import { GasFeeSpeed } from '../../_lib/type';
+import { Neo3TransferService } from '../neo3-transfer.service';
 
 @Component({
     templateUrl: 'create.component.html',
@@ -71,7 +72,8 @@ export class TransferCreateComponent implements OnInit {
         private http: HttpService,
         private chrome: ChromeService,
         private block: BlockState,
-        private txState: TransactionState
+        private txState: TransactionState,
+        private neo3Transfer: Neo3TransferService
     ) {
         switch(this.neon.currentWalletChainType) {
             case 'Neo2':
@@ -148,7 +150,11 @@ export class TransferCreateComponent implements OnInit {
                 this.resolveSign(res);
             }, (err) => {
                 this.creating = false;
-                this.global.snackBarTip('wentWrong', err);
+                if (this.neon.currentWalletChainType === 'Neo3' && err) {
+                    this.global.snackBarTip('wentWrong', err, 10000);
+                } else {
+                    this.global.snackBarTip('wentWrong', err);
+                }
             });
     }
 
@@ -161,8 +167,29 @@ export class TransferCreateComponent implements OnInit {
             const wif = this.neon.WIFArr[
                 this.neon.walletArr.findIndex(item => item.accounts[0].address === this.neon.wallet.accounts[0].address)
             ]
-            tx.sign(wif);
+            switch(this.neon.currentWalletChainType) {
+                case 'Neo2':
+                    tx.sign(wif);
+                    break;
+                case 'Neo3':
+                    tx.sign(wif, CONST3.MAGIC_NUMBER.TestNet);
+                    break;
+            }
             this.global.log('signed tx', tx);
+            const diaglogData: any = {
+                fromAddress: this.fromAddress,
+                toAddress: this.toAddress,
+                asset: this.assetId,
+                symbol: this.chooseAsset.symbol,
+                amount: this.amount,
+                fee: this.fee || '0',
+                network: this.net,
+                txSerialize: tx.serialize(true)
+            };
+            if (this.neon.currentWalletChainType === 'Neo3') {
+                diaglogData.systemFee = (tx as Transaction3).systemFee.toNumber();
+                diaglogData.networkFee = bignumber((tx as Transaction3).networkFee.toNumber()).minus(this.fee).toFixed();
+            }
             this.dialog.open(PopupTransferConfirmComponent, {
                 panelClass: 'custom-dialog-panel-full',
                 height: '600px',
@@ -170,27 +197,30 @@ export class TransferCreateComponent implements OnInit {
                 hasBackdrop: false,
                 maxWidth: '400px',
                 autoFocus: false,
-                data: {
-                    fromAddress: this.fromAddress,
-                    toAddress: this.toAddress,
-                    asset: this.assetId,
-                    symbol: this.chooseAsset.symbol,
-                    amount: this.amount,
-                    fee: this.fee || '0',
-                    network: this.net,
-                    txSerialize: tx.serialize(true)
-                },
+                data: diaglogData
             }).afterClosed().subscribe((isConfirm) => {
                 this.creating = false;
                 if (isConfirm !== false) {
-                    if (this.fee !== isConfirm) {
+                    if (this.fee != isConfirm) {
                         this.fee = isConfirm;
                         this.transfer.create(this.fromAddress, this.toAddress, this.chooseAsset.asset_id, this.amount,
                             this.fee || 0, this.chooseAsset.decimals).subscribe((res) => {
-                                this.resolveSend(tx);
+                                switch(this.neon.currentWalletChainType) {
+                                    case 'Neo2':
+                                        res.sign(wif);
+                                        break;
+                                    case 'Neo3':
+                                        res.sign(wif, CONST3.MAGIC_NUMBER.TestNet);
+                                        break;
+                                }
+                                this.resolveSend(res);
                             }, (err) => {
                                 console.log(err);
-                                this.global.snackBarTip('wentWrong', err);
+                                if (this.neon.currentWalletChainType === 'Neo3' && err) {
+                                    this.global.snackBarTip('wentWrong', err, 10000);
+                                } else {
+                                    this.global.snackBarTip('wentWrong', err);
+                                }
                             });
                     } else {
                         this.resolveSend(tx);
@@ -207,17 +237,33 @@ export class TransferCreateComponent implements OnInit {
         this.loading = true;
         this.loadingMsg = 'Wait';
         try {
-            const res = await rpc.Query.sendRawTransaction(tx.serialize(true)).execute(this.global.RPCDomain);
-            if (!res.result ||
-                (res.result && typeof res.result === 'object' && res.result.succeed === false)) {
-                throw {
-                    msg: 'Transaction rejected by RPC node.'
-                };
+            let res;
+            let txid: string;
+            switch(this.neon.currentWalletChainType) {
+                case 'Neo2':
+                    res = await rpc.Query.sendRawTransaction(tx.serialize(true)).execute(this.global.RPCDomain);
+                    if (!res.result ||
+                        (res.result && typeof res.result === 'object' && res.result.succeed === false)) {
+                        throw {
+                            msg: 'Transaction rejected by RPC node.'
+                        };
+                    }
+                    txid = '0x' + tx.hash;
+                    break;
+                case 'Neo3':
+                    res = await this.neo3Transfer.sendNeo3Tx(tx as Transaction3);
+                    if (!res) {
+                        throw {
+                            msg: 'Transaction rejected by RPC node.'
+                        };
+                    }
+                    txid = res;
+                    break;
             }
             this.creating = false;
             if (this.fromAddress !== this.toAddress) {
                 const txTarget = {
-                    txid: '0x' + tx.hash,
+                    txid,
                     value: -this.amount,
                     block_time: new Date().getTime() / 1000
                 };

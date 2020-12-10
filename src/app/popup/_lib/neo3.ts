@@ -1,4 +1,5 @@
 export const NEO3_RPC_HOST = 'https://neo3-testnet.neoline.vip';
+// export const NEO3_RPC_HOST = 'http://seed2t.neo.org:20332';
 export const NEO3_HOST = 'http://47.110.14.167:8085/v1';
 
 export const NEO3_CONTRACT = '0xde5f57d430d3dece511cf975a8d37848cb9e0525';

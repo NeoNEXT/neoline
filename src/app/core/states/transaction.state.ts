@@ -4,7 +4,7 @@ import { GlobalService } from '../services/global.service';
 import { Subject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { NeonService } from '../services/neon.service';
-import { TX_LIST_PAGE_SIZE, NEO3_HOST } from '@popup/_lib';
+import { TX_LIST_PAGE_SIZE, NEO3_HOST, NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
 
 @Injectable()
 export class TransactionState {
@@ -88,6 +88,13 @@ export class TransactionState {
             item.value = item.amount;
             item.from = [item.from];
             item.to = [item.to];
+            item.block_time /= 1000;
+            if (item.contract === NEO3_CONTRACT) {
+                item.symbol = 'NEO';
+            }
+            if (item.contract === GAS3_CONTRACT) {
+                item.symbol = 'GAS';
+            }
             return item;
         });
     }

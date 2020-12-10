@@ -100,7 +100,7 @@ export class GlobalService {
         (img.target as any).src = '/assets/images/logo.png';
     }
 
-    public snackBarTip(msg: string, serverError: any = '') {
+    public snackBarTip(msg: string, serverError: any = '', time = 3000) {
         let message = this.notification.content[msg];
         if (serverError instanceof HttpErrorResponse) {
             serverError = serverError.statusText;
@@ -113,7 +113,7 @@ export class GlobalService {
         this.snackBar.open(message, this.notification.content.close, {
             horizontalPosition: 'center',
             verticalPosition: 'top',
-            duration: 3000
+            duration: time
         });
     }
 

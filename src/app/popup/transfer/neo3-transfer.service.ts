@@ -1,8 +1,10 @@
+import { Injectable } from '@angular/core';
 import { CONST, rpc, sc, tx, u, wallet } from '@cityofzion/neon-core-neo3';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from } from 'rxjs';
 import { NEO3_RPC_HOST } from '@popup/_lib';
-import { Injectable } from '@angular/core';
+import { AssetState } from '@app/core';
+import { bignumber } from 'mathjs';
 
 const rpcClient = new rpc.RPCClient(NEO3_RPC_HOST);
 
@@ -10,20 +12,20 @@ interface CreateNeo3TxInput {
     addressFrom: string;
     addressTo: string;
     tokenScriptHash: string;
-    amount: string;
+    amount: any;
     networkFee: number;
-}
-interface SendNeo3TxInput {
-    fromAccount: any;
-    neo3UnsignedTx: tx.Transaction;
+    decimals: number;
 }
 
 @Injectable()
 export class Neo3TransferService {
+    constructor(public assetState: AssetState) {}
     createNeo3Tx(params: CreateNeo3TxInput): Observable<Transaction> {
+        const assetStateTemp = this.assetState;
         const tempScriptHash = wallet.getScriptHashFromAddress(
             params.addressFrom
         );
+        params.amount = bignumber(params.amount).mul(bignumber(10).pow(params.decimals)).toNumber();
         const inputs = {
             scriptHash: tempScriptHash,
             fromAccountAddress: params.addressFrom,
@@ -31,9 +33,8 @@ export class Neo3TransferService {
             tokenScriptHash: params.tokenScriptHash,
             amountToTransfer: params.amount,
             systemFee: 0,
-            networkFee: params.networkFee || 0,
+            networkFee: bignumber(params.networkFee).toNumber() || 0,
         };
-
         const vars: any = {};
 
         /**
@@ -44,20 +45,6 @@ export class Neo3TransferService {
          * All these checks can be performed through RPC calls to a NEO node.
          */
 
-        console.log(inputs);
-        // Since the token is now an NEP-5 token, we transfer using a VM script.
-        const script = sc.createScript({
-            scriptHash: inputs.tokenScriptHash,
-            operation: 'transfer',
-            args: [
-                sc.ContractParam.hash160(inputs.fromAccountAddress),
-                sc.ContractParam.hash160(inputs.toAccountAddress),
-                inputs.amountToTransfer,
-            ],
-        });
-        console.log('---------');
-        console.log(script);
-
         async function createTransaction() {
             console.log(`\n\n --- Today's Task ---`);
             console.log(
@@ -66,19 +53,16 @@ export class Neo3TransferService {
                     `to ${inputs.toAccountAddress}`
             );
 
-            console.log(inputs);
             // Since the token is now an NEP-5 token, we transfer using a VM script.
-            // const script = sc.createScript({
-            //     scriptHash: inputs.tokenScriptHash,
-            //     operation: 'transfer',
-            //     args: [
-            //         sc.ContractParam.hash160(inputs.fromAccountAddress),
-            //         sc.ContractParam.hash160(inputs.toAccountAddress),
-            //         inputs.amountToTransfer,
-            //     ],
-            // });
-            console.log('---------');
-            console.log(script);
+            const script = sc.createScript({
+                scriptHash: inputs.tokenScriptHash,
+                operation: 'transfer',
+                args: [
+                    sc.ContractParam.hash160(inputs.fromAccountAddress),
+                    sc.ContractParam.hash160(inputs.toAccountAddress),
+                    inputs.amountToTransfer,
+                ],
+            });
 
             // We retrieve the current block height as we need to
             const currentHeight = await rpcClient.getBlockCount();
@@ -130,19 +114,6 @@ export class Neo3TransferService {
             const networkFeeEstimate = feePerByte
                 .mul(transactionByteSize)
                 .add(witnessProcessingFee);
-            // if (
-            //     inputs.networkFee &&
-            //     inputs.networkFee >= networkFeeEstimate.toNumber()
-            // ) {
-            //     vars.tx.networkFee = new u.Fixed8(inputs.networkFee);
-            //     console.log(
-            //         `  i Node indicates ${networkFeeEstimate.toNumber()} networkFee but using user provided value of ${
-            //             inputs.networkFee
-            //         }`
-            //     );
-            // } else {
-            //     vars.tx.networkFee = networkFeeEstimate;
-            // }
             vars.tx.networkFee = new u.Fixed8(
                 inputs.networkFee + networkFeeEstimate.toNumber()
             );
@@ -228,12 +199,15 @@ export class Neo3TransferService {
         async function checkBalance() {
             let balanceResponse;
             try {
-                balanceResponse = await rpcClient.query({
-                    method: 'getnep5balances',
-                    params: [inputs.fromAccountAddress],
-                    id: 1,
-                    jsonrpc: '2.0',
-                });
+                // balanceResponse = await rpcClient.query({
+                //     method: 'getnep5balances',
+                //     params: [inputs.fromAccountAddress],
+                //     id: 1,
+                //     jsonrpc: '2.0',
+                // });
+                balanceResponse = await assetStateTemp
+                    .fetchBalance(inputs.fromAccountAddress)
+                    .toPromise();
             } catch (e) {
                 console.log(
                     '\u001b[31m  ✗ Unable to get balances as plugin was not available. \u001b[0m'
@@ -241,13 +215,13 @@ export class Neo3TransferService {
                 return;
             }
             // Check for token funds
-            const balances = balanceResponse.balance.filter((bal) =>
-                bal.assethash.includes(inputs.tokenScriptHash)
+            const balances = balanceResponse.filter((bal) =>
+                bal.asset_id.includes(inputs.tokenScriptHash)
             );
             const balanceAmount =
-                balances.length === 0 ? 0 : balances[0].amount;
+                balances.length === 0 ? 0 : balances[0].balance;
             if (balanceAmount < inputs.amountToTransfer) {
-                throw new Error(`Insufficient funds! Found ${balanceAmount}`);
+                throw { msg: `Insufficient funds! Found ${balanceAmount}` };
             } else {
                 console.log('\u001b[32m  ✓ Token funds found \u001b[0m');
             }
@@ -256,18 +230,17 @@ export class Neo3TransferService {
             const gasRequirements = new u.Fixed8(vars.tx.networkFee).plus(
                 vars.tx.systemFee
             );
-            const gasBalance = balanceResponse.balance.filter((bal) =>
-                bal.assethash.includes(CONST.ASSET_ID.GAS)
+            const gasBalance = balanceResponse.filter((bal) =>
+                bal.asset_id.includes(CONST.ASSET_ID.GAS)
             );
             const gasAmount =
                 gasBalance.length === 0
                     ? new u.Fixed8(0)
-                    : u.Fixed8.fromRawNumber(gasBalance[0].amount);
-
+                    : new u.Fixed8(gasBalance[0].balance);
             if (gasAmount.lt(gasRequirements)) {
-                throw new Error(
-                    `Insufficient gas to pay for fees! Required ${gasRequirements.toString()} but only had ${gasAmount.toString()}`
-                );
+                throw {
+                    msg: `Insufficient gas to pay for fees! Required ${gasRequirements.toString()} but only had ${gasAmount.toString()}`,
+                };
             } else {
                 console.log(
                     `\u001b[32m  ✓ Sufficient GAS for fees found (${gasRequirements.toString()}) \u001b[0m`
@@ -281,37 +254,17 @@ export class Neo3TransferService {
                 .then(checkNetworkFee)
                 .then(checkSystemFee)
                 .then(checkBalance)
-                // .then(performTransfer)
                 .then(() => {
                     return vars.tx;
                 })
         );
     }
 
-    sendNeo3Tx(params: SendNeo3TxInput): Promise<any> {
-        /**
-         * And finally, to send it off to network.
-         */
-        params.fromAccount = new wallet.Account(params.fromAccount.privateKey);
-        async function performTransfer() {
-            const signedTransaction = params.neo3UnsignedTx.sign(
-                params.fromAccount,
-                CONST.MAGIC_NUMBER.TestNet
-            );
+    async sendNeo3Tx(tx1: Transaction): Promise<any> {
+        const result = await rpcClient.sendRawTransaction(tx1.serialize(true));
 
-            console.log(params.neo3UnsignedTx.toJson());
-            const result = await rpcClient.sendRawTransaction(
-                signedTransaction.serialize(true)
-            );
-
-            console.log('\n\n--- Transaction hash ---');
-            console.log(result);
-            return result;
-        }
-
-        return performTransfer().then((hash) => {
-            const res = { txid: hash };
-            return res;
-        });
+        console.log('\n\n--- Transaction hash ---');
+        console.log(result);
+        return result;
     }
 }

@@ -46,7 +46,7 @@
                     <mat-tab-group mat-align-tabs="center" >
                         <mat-tab [label]="'details' | translate | async">
                             <div class="fee-box detail-item">
-                                <p class="label">GAS FEE</p>
+                                <p class="label">{{ isNeo3 ? 'PRIORITY FEE' : 'GAS FEE' }}</p>
                                 <div class="fee-info">
                                     <p (click)="editFee()">{{ 'edit' | translate | async }}</p>
                                     <p>{{ data.fee | numberFixed }} GAS</p>
@@ -54,11 +54,29 @@
                                 </div>
                             </div>
                             <hr>
+                            <div class="fee-box detail-item" *ngIf="isNeo3===true">
+                                <p class="label">SYSTEM FEE</p>
+                                <div class="fee-info">
+                                    <p></p>
+                                    <p>{{ data.systemFee | numberFixed }} GAS</p>
+                                    <p>{{ systemFeeMoney | numberFixed:2 }} {{ rateCurrency }}</p>
+                                </div>
+                            </div>
+                            <hr *ngIf="isNeo3===true">
+                            <div class="fee-box detail-item" *ngIf="isNeo3===true">
+                                <p class="label">NETWORK FEE</p>
+                                <div class="fee-info">
+                                    <p></p>
+                                    <p>{{ data.networkFee | numberFixed }} GAS</p>
+                                    <p>{{ networkFeeMoney | numberFixed:2 }} {{ rateCurrency }}</p>
+                                </div>
+                            </div>
+                            <hr *ngIf="isNeo3===true">
                             <div class="total-box detail-item">
                                 <p  class="label">TOTAL</p>
                                 <div class="total-info">
                                     <p>Amount+GAS FEE</p>
-                                    <p>{{ data.amount | numberFixed }} {{ symbol }} + {{ data.fee | numberFixed }}GAS</p>
+                                    <p>{{ data.amount | numberFixed }} {{ symbol }} + {{ totalFee | numberFixed }}GAS</p>
                                     <p>{{ totalMoney | numberFixed:2 }} {{ rateCurrency }}</p>
                                 </div>
                             </div>

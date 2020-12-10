@@ -10,7 +10,7 @@ import { GasFeeSpeed } from '@popup/_lib/type';
 import { bignumber } from 'mathjs';
 import { rpc } from '@cityofzion/neon-js';
 import { NeonService } from '../services/neon.service';
-import { NEO3_HOST } from '@popup/_lib';
+import { NEO3_HOST, NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
 
 @Injectable()
 export class AssetState {
@@ -306,6 +306,9 @@ export class AssetState {
     }
 
     public getNep5Detail(assetId: string): Observable<Nep5Detail> {
+        if (this.neonService.currentWalletChainType === 'Neo3') {
+            return this.fetchNeo3AssetDetail(assetId);
+        }
         return this.http.get(
             `${this.global.apiDomain}/v1/neo2/nep5/${assetId}`
         );
@@ -347,7 +350,12 @@ export class AssetState {
     formatResponseData(data: any[]) {
         return data.map((item) => {
             item.asset_id = item.contract;
-            delete item.contract;
+            if (item.contract === NEO3_CONTRACT) {
+                item.symbol = 'NEO';
+            }
+            if (item.contract === GAS3_CONTRACT) {
+                item.symbol = 'GAS';
+            }
             return item;
         });
     }
@@ -405,6 +413,20 @@ export class AssetState {
             map((res: any) => {
                 this.neo3GasFeeSpeed = res || this.gasFeeDefaultSpeed;
                 return res || this.gasFeeDefaultSpeed;
+            })
+        );
+    }
+
+    /**
+     * 获取资产详情
+     * @param assetId 资产id
+     */
+    public fetchNeo3AssetDetail(assetId: string): Observable<any> {
+        return this.http.get(
+            `${this.global.apiDomain}/neo3/asset/${assetId}`
+        ).pipe(
+            map((res) => {
+                return this.formatResponseData(res);
             })
         );
     }

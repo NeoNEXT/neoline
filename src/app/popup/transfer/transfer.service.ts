@@ -19,7 +19,15 @@ export class TransferService {
     public create(from: string, to: string, asset: string, amount: string, fee: number = 0, decimals: number = 0,
         broadcastOverride: boolean = false): Observable<Transaction | Transaction3> {
         if (this.neon.currentWalletChainType === 'Neo3') {
-            return this.neo3TransferService.createNeo3Tx({addressFrom: from, addressTo: to, tokenScriptHash: asset, amount, networkFee: fee});
+            return new Observable(observer => {
+                this.neo3TransferService.createNeo3Tx({addressFrom: from, addressTo: to, tokenScriptHash: asset, amount, networkFee: fee, decimals}).subscribe(tx => {
+                        observer.next(tx);
+                        observer.complete();
+                }, error => {
+                    observer.error(error.msg);
+                    observer.complete();
+                })
+            });
         }
         if (this.neon.isAsset(asset)) {
             return new Observable(observer => {

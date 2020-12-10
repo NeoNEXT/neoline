@@ -308,7 +308,11 @@ export class PopupHomeComponent implements OnInit {
                 }
             },
             err => {
-                this.global.snackBarTip('wentWrong', err);
+                if (this.neon.currentWalletChainType === 'Neo3' && err) {
+                    this.global.snackBarTip('wentWrong', err, 10000);
+                } else {
+                    this.global.snackBarTip('wentWrong', err);
+                }
             }
         );
     }
