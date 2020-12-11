@@ -16,7 +16,7 @@ export class LoginComponent implements OnInit, AfterContentInit {
     public hidePwd: boolean;
     public loading = false;
     public isInit: boolean;
-    public accountWallet: Wallet;
+    public accountWallet;
     constructor(
         private router: Router,
         private neon: NeonService,

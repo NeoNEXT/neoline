@@ -9,9 +9,8 @@ import {
 import {
     WalletInitConstant
 } from '../_lib/constant';
-import {
-    Wallet
-} from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import {
     Router, ActivatedRoute
 } from '@angular/router';
@@ -37,7 +36,7 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
     public hidePwd: boolean;
     public loading = false;
     public isInit: boolean;
-    public accountWallet: Wallet;
+    public accountWallet: Wallet2 | Wallet3;
 
     constructor(
         private route: ActivatedRoute,
@@ -71,7 +70,7 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
 
     public login() {
         this.loading = true;
-        this.accountWallet.accounts[0].decrypt(this.wallet.password).then((res) => {
+        (this.accountWallet.accounts[0] as any).decrypt(this.wallet.password).then((res) => {
             if(this.route.snapshot.queryParams.notification !== undefined) {
                 this.chrome.windowCallback({
                     data: true,
@@ -101,7 +100,7 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
             if (confirm) {
                 this.neon.reset();
                 this.chrome.resetWallet();
-                this.router.navigateByUrl('/popup/wallet');
+                this.router.navigateByUrl('/popup/wallet/new-guide');
             }
         });
     }

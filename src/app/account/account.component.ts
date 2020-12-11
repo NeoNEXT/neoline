@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
-import { Wallet } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { NeonService, GlobalService } from '@app/core';
 import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
@@ -12,7 +13,7 @@ declare var QRCode: any;
     styleUrls: ['account.component.scss']
 })
 export class AccountComponent implements OnInit {
-    public w: Wallet;
+    public w: Wallet2 | Wallet3;
     public address: string;
     constructor(
         private neon: NeonService,

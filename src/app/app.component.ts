@@ -3,7 +3,8 @@ import { Router, NavigationEnd } from '@angular/router';
 import { ChromeService, GlobalService, NeonService, AssetState } from './core';
 import { MatDialog } from '@angular/material/dialog';
 import { LogoutDialog } from './+logout/logout.dialog';
-import { Wallet } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { HttpClient } from '@angular/common/http';
 import { EVENT } from '@/models/dapi';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
@@ -14,8 +15,8 @@ import { PopupConfirmDialogComponent } from '@popup/_dialogs';
     styleUrls: ['./app.component.scss'],
 })
 export class AppComponent {
-    public walletArr: Array<Wallet>;
-    public wallet: Wallet;
+    public walletArr: Array<Wallet2 | Wallet3>;
+    public wallet: Wallet2 | Wallet3;
     public address: string;
     public hideNav: boolean = true;
     public walletIsOpen: boolean = false;
@@ -89,7 +90,7 @@ export class AppComponent {
         location.reload();
     }
 
-    public isActivityWallet(w: Wallet) {
+    public isActivityWallet(w: Wallet2 | Wallet3) {
         if (w.accounts[0].address === this.wallet.accounts[0].address) {
             return true;
         } else {
@@ -97,7 +98,7 @@ export class AppComponent {
         }
     }
 
-    public chooseAccount(w: Wallet) {
+    public chooseAccount(w: Wallet2 | Wallet3) {
         if (this.isActivityWallet(w)) {
             return;
         } else {

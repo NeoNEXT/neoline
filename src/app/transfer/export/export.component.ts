@@ -10,7 +10,7 @@ import { PopupNameDialogComponent } from '@/app/popup/_dialogs';
     styleUrls: ['export.component.scss']
 })
 export class TransferExportComponent implements OnInit {
-    public wallet: Wallet;
+    public wallet;
     public address: string;
     public verified = false;
     public loading = false;

@@ -1,8 +1,10 @@
 .title {
-    height: 100px;
-    line-height: 100px;
+    min-height: 100px;
+    padding: 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
     text-align: center;
-    margin: 0 10px;
 }
 
 .choose-group {

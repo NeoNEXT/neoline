@@ -2,7 +2,8 @@ import { Component, OnInit } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 
 import { ChromeService, NeonService } from '@app/core';
-import { WalletJSON } from '@cityofzion/neon-core/lib/wallet';
+import { WalletJSON as WalletJSON2 } from '@cityofzion/neon-core/lib/wallet';
+import { WalletJSON as WalletJSON3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-js-neo3';
 
@@ -15,7 +16,7 @@ export class PopupAddressDialogComponent implements OnInit {
 
     public address: string = '';
 
-    public addressArr: Array<WalletJSON> = [];
+    public addressArr: Array<WalletJSON2 | WalletJSON3> = [];
 
     constructor(
         private dialogRef: MatDialogRef<PopupAddressDialogComponent>,

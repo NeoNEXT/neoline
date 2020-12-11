@@ -9,7 +9,14 @@ import Neon3, {
     tx as tx3,
     rpc as rpc3,
 } from '@cityofzion/neon-js-neo3';
-import { Wallet, WalletJSON } from '@cityofzion/neon-core/lib/wallet';
+import {
+    Wallet as Wallet2,
+    WalletJSON as WalletJSON2,
+} from '@cityofzion/neon-core/lib/wallet';
+import {
+    Wallet as Wallet3,
+    WalletJSON as WalletJSON3,
+} from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Observable, from, Observer, of, Subject, forkJoin } from 'rxjs';
 import { map, catchError, startWith, publish, refCount } from 'rxjs/operators';
 import { ChromeService } from './chrome.service';
@@ -35,27 +42,27 @@ export class NeonService {
     private _selectedNeon: any = Neon2;
     private _selectedNeonWallet: any = wallet2;
     // 当前钱包所在链的钱包数组
-    private _walletArr: Wallet[] = [];
+    private _walletArr: Array<Wallet2 | Wallet3> = [];
     private _WIFArr: string[] = [];
     // neo2
-    private _walletArr2: Wallet[] = [];
+    private _walletArr2: Array<Wallet2 | Wallet3> = [];
     private _WIFArr2: string[] = [];
     // neo3
-    private _walletArr3: Wallet[] = [];
+    private _walletArr3: Array<Wallet2 | Wallet3> = [];
     private _WIFArr3: string[] = [];
 
-    private _wallet: Wallet;
-    private $wallet: Subject<Wallet> = new Subject();
+    private _wallet: Wallet2 | Wallet3;
+    private $wallet: Subject<Wallet2 | Wallet3> = new Subject();
 
     /**
      * Currently opened wallet, return null if unexists.
      * 获取当前打开的钱包 不存在则返回null
      */
-    public get wallet(): Wallet {
+    public get wallet(): Wallet2 | Wallet3 {
         return this._wallet || null;
     }
 
-    public get walletArr(): Wallet[] {
+    public get walletArr(): Array<Wallet2 | Wallet3> {
         return this._walletArr || null;
     }
 
@@ -63,11 +70,11 @@ export class NeonService {
         return this._WIFArr || null;
     }
 
-    public get neo2WalletArr(): Wallet[] {
+    public get neo2WalletArr(): Array<Wallet2 | Wallet3> {
         return this._walletArr2 || null;
     }
 
-    public get neo3WalletArr(): Wallet[] {
+    public get neo3WalletArr(): Array<Wallet2 | Wallet3> {
         return this._walletArr3 || null;
     }
 
@@ -77,7 +84,7 @@ export class NeonService {
         this._WIFArr = [];
     }
 
-    public pushWalletArray(w: WalletJSON) {
+    public pushWalletArray(w: WalletJSON2 | WalletJSON3) {
         this.changeChainType(this.selectedChainType);
         this._walletArr.push(this.parseWallet(w));
     }
@@ -87,8 +94,8 @@ export class NeonService {
     }
 
     public getWalletArrayJSON(
-        walletArr: Array<Wallet> = null
-    ): Array<WalletJSON> {
+        walletArr: Array<Wallet2 | Wallet3> = null
+    ): Array<WalletJSON2 | WalletJSON3> {
         const res = [];
         if (walletArr === null) {
             this._walletArr.forEach((item) => {
@@ -106,7 +113,7 @@ export class NeonService {
      * 判断钱包地址是否存在
      * @param w 钱包地址
      */
-    public verifyWallet(w: Wallet): boolean {
+    public verifyWallet(w: Wallet2 | Wallet3): boolean {
         if (this._walletArr === []) {
             return true;
         } else {
@@ -136,7 +143,10 @@ export class NeonService {
     constructor(private chrome: ChromeService, private global: GlobalService) {}
 
     public clearCache() {
-        this._wallet = new Wallet();
+        this._wallet =
+            this.currentWalletChainType === 'Neo2'
+                ? new Wallet2()
+                : new Wallet3();
         this._walletArr = [];
         this.$wallet = new Subject();
     }
@@ -210,6 +220,7 @@ export class NeonService {
      * @param key encrypt password for new address
      */
     public createWallet(key: string, name: string = null): Observable<any> {
+        this.selectChainType();
         const privateKey = this._selectedNeonWallet.generatePrivateKey();
         const account = new this._selectedNeonWallet.Account(privateKey);
         const w = this._selectedNeon.create.wallet({
@@ -229,7 +240,10 @@ export class NeonService {
      * 修改钱包的账户名
      * @param name name of wallet
      */
-    public updateWalletName(name: string, w: Wallet): Observable<Wallet> {
+    public updateWalletName(
+        name: string,
+        w: Wallet2 | Wallet3
+    ): Observable<Wallet2 | Wallet3> {
         if (w === this._wallet || w === null) {
             this._wallet.name = name;
             this.$wallet.next(this._wallet);
@@ -240,7 +254,7 @@ export class NeonService {
         }
     }
 
-    public delWallet(w: Wallet): Observable<boolean> {
+    public delWallet(w: Wallet2 | Wallet3): Observable<boolean> {
         this.changeChainType(this.currentWalletChainType);
         const index = this._walletArr.findIndex(
             (item) => item.accounts[0].address === w.accounts[0].address
@@ -328,7 +342,8 @@ export class NeonService {
         privKey: string,
         key: string,
         name: string = null
-    ): Observable<Wallet> {
+    ): Observable<Wallet2 | Wallet3> {
+        this.selectChainType();
         const account = new this._selectedNeonWallet.Account(privKey);
         const w = this._selectedNeon.create.wallet({
             name: name || 'NeoLineUser',
@@ -353,7 +368,8 @@ export class NeonService {
         wif: string,
         key: string,
         name: string = null
-    ): Observable<Wallet> {
+    ): Observable<Wallet2 | Wallet3> {
+        this.selectChainType();
         const account = new this._selectedNeonWallet.Account(
             this._selectedNeonWallet.getPrivateKeyFromWIF(wif)
         );
@@ -379,8 +395,9 @@ export class NeonService {
         encKey: string,
         key: string,
         name: string
-    ): Observable<Wallet> {
-        return new Observable((observer: Observer<Wallet>) => {
+    ): Observable<Wallet2 | Wallet3> {
+        this.selectChainType();
+        return new Observable((observer: Observer<Wallet2 | Wallet3>) => {
             const w = this._selectedNeon.create.wallet({
                 name: name || 'NeoLineUser',
             } as any);
@@ -406,9 +423,13 @@ export class NeonService {
                 });
         });
     }
-    public parseWallet(src: any): Wallet {
+    public parseWallet(src: any): Wallet2 | Wallet3 {
         try {
-            const w = new Wallet(src);
+            let isNeo3 = false;
+            if (wallet3.isAddress(src.accounts[0].address)) {
+                isNeo3 = true;
+            }
+            const w = isNeo3 ? new Wallet3(src) : new Wallet2(src);
             if (!w.accounts.length) {
                 return null;
             }
@@ -425,6 +446,7 @@ export class NeonService {
         amount: string,
         fee: number = 0
     ): Transaction {
+        this.changeChainType();
         const fromScript = this._neonWallet.getScriptHashFromAddress(
             fromAddress
         );
@@ -491,6 +513,7 @@ export class NeonService {
         decimals: number,
         broadcastOverride: boolean = false
     ): Transaction {
+        this.changeChainType();
         const fromScript = this._neonWallet.getScriptHashFromAddress(
             fraomAddress
         );
@@ -534,6 +557,7 @@ export class NeonService {
     public getVerificationSignatureForSmartContract(
         ScriptHash: string
     ): Promise<any> {
+        this.changeChainType();
         return this._neonRpc.Query.getContractState(ScriptHash)
             .execute(this.global.RPCDomain)
             .then(({ result }) => {
@@ -546,6 +570,7 @@ export class NeonService {
     }
 
     public claimGAS(claims: Array<ClaimItem>): Observable<Array<Transaction>> {
+        this.changeChainType();
         return new Observable((observer) => {
             const claimArr = [[]];
             const valueArr = [];
@@ -605,7 +630,7 @@ export class NeonService {
     /**
      * 修改钱包名称时，web 头部名称跟着修改
      */
-    public walletSub(): Observable<Wallet> {
+    public walletSub(): Observable<Wallet2 | Wallet3> {
         return this._wallet
             ? this.$wallet.pipe(startWith(this._wallet), publish(), refCount())
             : this.$wallet.pipe(publish(), refCount());
@@ -631,6 +656,7 @@ export class NeonService {
         value,
         txAttrUsage,
     }: TxHashAttribute): TxHashAttribute {
+        this.changeChainType();
         let parsedValue = this.zeroPad(value, 64, true);
         switch (type) {
             case 'Boolean':
@@ -674,7 +700,7 @@ export class NeonService {
     }
 
     //#region neo3
-    changeChainType(chain: ChainType) {
+    changeChainType(chain: ChainType = this.currentWalletChainType) {
         if (chain === 'Neo3') {
             this.chrome.setNet('TestNet');
             this.global.modifyNet('TestNet');
@@ -700,10 +726,7 @@ export class NeonService {
         }
     }
 
-    selectChainType(chain: ChainType) {
-        if (this.selectedChainType === chain) {
-            return;
-        }
+    selectChainType(chain: ChainType = this.selectedChainType) {
         this.selectedChainType = chain;
         switch (chain) {
             case 'Neo2':

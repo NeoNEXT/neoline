@@ -11,7 +11,8 @@ import { WalletCreation, WalletImport } from '../../_lib/models';
 import { Observable, of } from 'rxjs';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-js-neo3';
-import { Wallet } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
     selector: 'wallet-import',
@@ -34,7 +35,7 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
 
     public walletNep6Import: WalletImport;
     public nep6File: any;
-    public nep6Json: Wallet = null;
+    public nep6Json: Wallet2 | Wallet3 = null;
     public nep6Name = '';
     public hideNep6Pwd: boolean;
 

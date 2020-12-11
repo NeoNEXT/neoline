@@ -123,7 +123,7 @@ export class TransferCreateComponent implements OnInit {
     }
 
     private resolveSign(tx: Transaction, pwd: string) {
-        this.neon.wallet.accounts[0].decrypt(pwd).then((acc) => {
+        (this.neon.wallet.accounts[0] as any).decrypt(pwd).then((acc) => {
             tx.sign(acc);
             this.global.log('signed tx', tx);
             this.resolveSend(tx);

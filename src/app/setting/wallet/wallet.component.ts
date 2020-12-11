@@ -10,8 +10,8 @@ import { EVENT } from '@/models/dapi';
     styleUrls: ['wallet.component.scss']
 })
 export class SettingWalletComponent implements OnInit {
-    public walletArr: Array<Wallet>;
-    public wallet: Wallet;
+    public walletArr;
+    public wallet;
     private oldName = '';
     constructor(
         private neon: NeonService,

@@ -1,6 +1,7 @@
 import { Component, ViewChild, ElementRef } from '@angular/core';
 import { MatDialogRef, MatDialog } from '@angular/material/dialog';
-import { Wallet } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { NeonService, ChromeService, GlobalService } from '@/app/core';
 import { Router } from '@angular/router';
 import { EVENT } from '@/models/dapi';
@@ -13,11 +14,11 @@ import { ChainTypeGroups, ChainType } from '@popup/_lib';
 })
 export class PopupHomeMenuDialogComponent {
     @ViewChild('walletContainer') private walletContainer: ElementRef;
-    public walletArr: { Neo2: Wallet[]; Neo3: Wallet[] } = {
+    public walletArr: { Neo2: Array<Wallet2 | Wallet3>; Neo3: Array<Wallet2 | Wallet3> } = {
         Neo2: [],
         Neo3: [],
     };
-    public wallet: Wallet;
+    public wallet: Wallet2 | Wallet3;
     public tabType: ChainType;
     constructor(
         private router: Router,
@@ -32,7 +33,7 @@ export class PopupHomeMenuDialogComponent {
         this.wallet = this.neon.wallet;
         this.tabType = this.neon.currentWalletChainType;
     }
-    public isActivityWallet(w: Wallet) {
+    public isActivityWallet(w: Wallet2 | Wallet3) {
         if (w.accounts[0].address === this.wallet.accounts[0].address) {
             return true;
         } else {
@@ -52,7 +53,7 @@ export class PopupHomeMenuDialogComponent {
         this.dialogRef.close();
     }
 
-    public selectAccount(w: Wallet) {
+    public selectAccount(w: Wallet2 | Wallet3) {
         this.wallet = this.neon.parseWallet(w);
         this.chrome.setWallet(this.wallet.export());
         this.chrome.windowCallback({

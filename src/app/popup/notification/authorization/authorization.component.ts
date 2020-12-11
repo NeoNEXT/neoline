@@ -16,9 +16,7 @@ import {
 import {
     Wallet
 } from '@cityofzion/neon-core/lib/wallet';
-import {
-    wallet
-} from '@cityofzion/neon-core';
+
 import { ERRORS, EVENT , requestTarget } from '@/models/dapi';
 
 @Component({
@@ -29,7 +27,7 @@ export class PopupNoticeAuthComponent implements OnInit {
     public iconSrc = '';
     public hostname = '';
     public title = '';
-    public wallet: Wallet;
+    public wallet;
     public address = '';
     public accountName = '';
     private paramsData: any;

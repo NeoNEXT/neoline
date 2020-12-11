@@ -16,7 +16,7 @@ export class PopupNoticeSignComponent implements OnInit {
     public iconSrc = '';
     public hostname = '';
     public title = '';
-    public wallet: Wallet;
+    public wallet;
     public balance: number;
     constructor(
         private asset: AssetState,

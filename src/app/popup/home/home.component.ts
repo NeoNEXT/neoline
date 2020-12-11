@@ -15,7 +15,8 @@ import {
 } from '@/app/core';
 import { NEO, Balance, Asset, GAS } from '@/models/models';
 import { TransferService } from '@/app/transfer/transfer.service';
-import { Wallet } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.component';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '../_dialogs';
@@ -35,7 +36,7 @@ export class PopupHomeComponent implements OnInit {
     public imageUrl: any = '';
     selectedIndex = 0;
     public assetId: string;
-    public wallet: Wallet;
+    public wallet: Wallet2 | Wallet3;
     public balance: Balance;
     public rateCurrency: string;
     public net: string;

@@ -9,8 +9,11 @@ import {
     Subject
 } from 'rxjs';
 import {
-    WalletJSON
+    WalletJSON as WalletJSON2
 } from '@cityofzion/neon-core/lib/wallet';
+import {
+    WalletJSON as WalletJSON3
+} from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Asset } from '@/models/models';
 import { EVENT } from '@/models/dapi';
 import { loschmidtDependencies } from 'mathjs';
@@ -79,7 +82,7 @@ export class ChromeService {
                 return throwError('please set wallet json to local storage when debug mode on');
             }
         }
-        return from(new Promise<WalletJSON>((resolve, reject) => {
+        return from(new Promise<WalletJSON2 | WalletJSON3>((resolve, reject) => {
             try {
                 this.crx.getLocalStorage('wallet', (res) => {
                     resolve(res);
@@ -98,7 +101,7 @@ export class ChromeService {
                 return throwError('please set wallet json to local storage when debug mode on');
             }
         }
-        return from(new Promise<Array<WalletJSON>>((resolve, reject) => {
+        return from(new Promise<Array<WalletJSON2 | WalletJSON3>>((resolve, reject) => {
             try {
                 this.crx.getLocalStorage(storageName, (res) => {
                     resolve(res);
