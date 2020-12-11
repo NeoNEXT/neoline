@@ -16,7 +16,7 @@
                 <span class="popup-nav-network-icon"></span>
             </button>
             <mat-menu #menu="matMenu">
-                <button mat-menu-item (click)="modifyNet('MainNet')">{{ 'mainNet' | translate | async }}</button>
+                <button mat-menu-item (click)="modifyNet('MainNet')" *ngIf="isNeo3===false">{{ 'mainNet' | translate | async }}</button>
                 <button mat-menu-item (click)="modifyNet('TestNet')">{{ 'testNet' | translate | async }}</button>
             </mat-menu>
             <span class="popup-nav-menu" (click)="topMenu()" *ngIf="walletIsOpen && !isLogin">

@@ -677,6 +677,10 @@ export class NeonService {
         if (this.currentWalletChainType === chain) {
             return;
         }
+        if (chain === 'Neo3') {
+            this.chrome.setNet('TestNet');
+            this.global.modifyNet('TestNet');
+        }
         this.currentWalletChainType = chain;
         switch (chain) {
             case 'Neo2':

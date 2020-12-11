@@ -348,7 +348,7 @@ export class AssetState {
      * @param data 接口数据
      */
     formatResponseData(data: any[]) {
-        return data.map((item) => {
+        return data && data.map((item) => {
             item.asset_id = item.contract;
             if (item.contract === NEO3_CONTRACT) {
                 item.symbol = 'NEO';

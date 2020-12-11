@@ -32,6 +32,9 @@ export class PopupComponent implements OnInit, AfterViewInit {
     public currentUrl: string = this.router.url;
     public net: string;
 
+    // neo3 只有测试网
+    isNeo3 = false;
+
     constructor(
         private chrome: ChromeService,
         private global: GlobalService,
@@ -43,6 +46,9 @@ export class PopupComponent implements OnInit, AfterViewInit {
         this.walletIsOpen = false;
         this.isLogin = false;
         this.address = this.neon.address;
+        if (this.neon.currentWalletChainType === 'Neo3') {
+            this.isNeo3 = true;
+        }
     }
 
     ngOnInit(): void {
