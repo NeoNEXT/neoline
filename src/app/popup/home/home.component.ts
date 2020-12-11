@@ -174,7 +174,7 @@ export class PopupHomeComponent implements OnInit {
                         index
                     ].image_url = this.assetState.defaultAssetSrc;
                 }
-                if(asset.asset_id === NEO) {
+                if(asset.asset_id === NEO || asset.asset_id === NEO3_CONTRACT) {
                     this.imageUrl =  this.assetList[
                         index
                     ].image_url;

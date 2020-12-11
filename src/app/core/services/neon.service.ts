@@ -81,7 +81,11 @@ export class NeonService {
     public reset() {
         this._wallet = null;
         this._walletArr = [];
+        this._walletArr2 = [];
+        this._walletArr3 = [];
         this._WIFArr = [];
+        this._WIFArr2 = [];
+        this._WIFArr3 = [];
     }
 
     public pushWalletArray(w: WalletJSON2 | WalletJSON3) {
@@ -148,6 +152,8 @@ export class NeonService {
                 ? new Wallet2()
                 : new Wallet3();
         this._walletArr = [];
+        this._walletArr2 = [];
+        this._walletArr3 = [];
         this.$wallet = new Subject();
     }
 
