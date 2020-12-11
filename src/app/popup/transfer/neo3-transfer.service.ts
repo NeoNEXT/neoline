@@ -25,7 +25,9 @@ export class Neo3TransferService {
         const tempScriptHash = wallet.getScriptHashFromAddress(
             params.addressFrom
         );
-        params.amount = bignumber(params.amount).mul(bignumber(10).pow(params.decimals)).toNumber();
+        params.amount = bignumber(params.amount)
+            .mul(bignumber(10).pow(params.decimals))
+            .toNumber();
         const inputs = {
             scriptHash: tempScriptHash,
             fromAccountAddress: params.addressFrom,
@@ -218,10 +220,15 @@ export class Neo3TransferService {
             const balances = balanceResponse.filter((bal) =>
                 bal.asset_id.includes(inputs.tokenScriptHash)
             );
-            const balanceAmount =
+            const sourceBalanceAmount =
                 balances.length === 0 ? 0 : balances[0].balance;
+            const balanceAmount = bignumber(sourceBalanceAmount)
+                .mul(bignumber(10).pow(params.decimals))
+                .toNumber();
             if (balanceAmount < inputs.amountToTransfer) {
-                throw { msg: `Insufficient funds! Found ${balanceAmount}` };
+                throw {
+                    msg: `Insufficient funds! Found ${sourceBalanceAmount}`,
+                };
             } else {
                 console.log('\u001b[32m  ✓ Token funds found \u001b[0m');
             }
@@ -245,6 +252,21 @@ export class Neo3TransferService {
                 console.log(
                     `\u001b[32m  ✓ Sufficient GAS for fees found (${gasRequirements.toString()}) \u001b[0m`
                 );
+            }
+
+            // 如果转的是 gas
+            if (inputs.tokenScriptHash.indexOf(CONST.ASSET_ID.GAS) >= 0) {
+                const gasRequirements8 = bignumber(
+                    gasRequirements.toNumber()
+                ).mul(bignumber(10).pow(params.decimals));
+                const totalRequirements = bignumber(inputs.amountToTransfer)
+                    .add(gasRequirements8)
+                    .toNumber();
+                if (balanceAmount < totalRequirements) {
+                    throw {
+                        msg: `Insufficient funds! Found ${sourceBalanceAmount}`,
+                    };
+                }
             }
         }
 
