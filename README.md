@@ -14,10 +14,6 @@ https://neoline.io/dapi
 
 1. Ensure you have [angular-cli](https://angular.io/cli) installed.
 2. Clone this repository.
-3. Run `yarn` to install dependencies.
-4. Run `yarn start` for local development.
-5. Run `yarn build` to build release assets for [chrome extension debug](https://developer.chrome.com/extensions/tut_debugging).
-
-## Use npm
-
-By default this project is forced to use `yarn`. To use `npm`, just remove the `preinstall` script in `package.json`.
+3. Run `npm install` to install dependencies.
+4. Run `npm run start` for local development.
+5. Run `npm run build` to build release assets for [chrome extension debug](https://developer.chrome.com/extensions/tut_debugging).
