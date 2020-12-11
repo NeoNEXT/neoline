@@ -241,6 +241,7 @@ export class NeonService {
     }
 
     public delWallet(w: Wallet): Observable<boolean> {
+        this.changeChainType(this.currentWalletChainType);
         const index = this._walletArr.findIndex(
             (item) => item.accounts[0].address === w.accounts[0].address
         );
@@ -674,9 +675,6 @@ export class NeonService {
 
     //#region neo3
     changeChainType(chain: ChainType) {
-        if (this.currentWalletChainType === chain) {
-            return;
-        }
         if (chain === 'Neo3') {
             this.chrome.setNet('TestNet');
             this.global.modifyNet('TestNet');
