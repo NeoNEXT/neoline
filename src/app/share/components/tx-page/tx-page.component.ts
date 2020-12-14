@@ -17,6 +17,7 @@ import { Transaction, PageData } from '@/models/models';
 import { forkJoin } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupTxDetailDialogComponent } from '@/app/popup/_dialogs';
+import { NEO3_HOST } from '@popup/_lib';
 
 @Component({
     selector: 'app-tx-page',
@@ -90,15 +91,28 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                 this.inTransaction.forEach(item => {
                     txIdArray.push(item.txid);
                 });
-                const httpReq2 = txIdArray.length !== 0 ?
-                    this.http.post(`${this.global.apiDomain}/v1/neo2/txids_valid`, {
-                        txids: txIdArray
-                    }) : new Promise<any>((mResolve) => {
+                let httpReq2;
+                if (txIdArray.length === 0) {
+                    httpReq2 = new Promise<any>((mResolve) => {
                         mResolve({result: []});
                     });
-                forkJoin([httpReq1, httpReq2]).subscribe(result => {
+                } else {
+                    switch (this.neon.currentWalletChainType) {
+                        case 'Neo2':
+                            httpReq2 = this.http.post(`${this.global.apiDomain}/v1/neo2/txids_valid`, {
+                                txids: txIdArray
+                            });
+                            break;
+                        case 'Neo3':
+                            httpReq2 = this.http.post(`${NEO3_HOST}/neo3/hash_valid`, {
+                                hashes: txIdArray
+                            });
+                            break;
+                    }
+                }
+                forkJoin([httpReq1, httpReq2]).subscribe((result: any) => {
                     let txData = result[0] || [];
-                    const txConfirm = result[1].data || [];
+                    const txConfirm = result[1] || [];
                     txConfirm.forEach(item => {
                         const tempIndex = this.inTransaction.findIndex(
                             e => e.txid === item
