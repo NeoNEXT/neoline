@@ -94,7 +94,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                 let httpReq2;
                 if (txIdArray.length === 0) {
                     httpReq2 = new Promise<any>((mResolve) => {
-                        mResolve({result: []});
+                        mResolve([]);
                     });
                 } else {
                     switch (this.neon.currentWalletChainType) {
