@@ -108,9 +108,9 @@ export class PopupTransferConfirmComponent implements OnInit {
     public async getAssetRate() {
         const getFeeMoney = this.getMoney('GAS', Number(this.data.fee));
         const getTransferMoney = this.getMoney(this.symbol, Number(this.data.amount));
-        const getSystemFeeMoney = this.getMoney('GAS', this.data.systemFee);
-        const getNetworkFeeMoney = this.getMoney('GAS', this.data.networkFee);
-        this.totalFee = bignumber(this.data.fee).add(this.data.systemFee).add(this.data.networkFee);
+        const getSystemFeeMoney = this.getMoney('GAS', this.data.systemFee || 0);
+        const getNetworkFeeMoney = this.getMoney('GAS', this.data.networkFee || 0);
+        this.totalFee = bignumber(this.data.fee).add(this.data.systemFee || 0).add(this.data.networkFee || 0);
         forkJoin([getFeeMoney, getSystemFeeMoney, getNetworkFeeMoney, getTransferMoney]).subscribe(res => {
             this.feeMoney = res[0];
             this.systemFeeMoney = res[1];
@@ -147,7 +147,7 @@ export class PopupTransferConfirmComponent implements OnInit {
                 this.datajson.fee = res;
                 this.assetState.getMoney('GAS', Number(this.data.fee)).then(feeMoney => {
                     this.feeMoney = feeMoney;
-                    this.totalFee = bignumber(this.data.fee).add(this.data.systemFee).add(this.data.networkFee);
+                    this.totalFee = bignumber(this.data.fee).add(this.data.systemFee || 0).add(this.data.networkFee || 0);
                     this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
                 });
             }

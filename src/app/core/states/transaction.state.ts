@@ -160,13 +160,5 @@ export class TransactionState {
                 })
             );
     }
-
-    /**
-     * 判断交易是否被确认
-     * @param hashes 交易id 数组
-     */
-    fetchNeo3TransactionValid(hashes: string[]): Observable<any> {
-        return this.http.post(`${NEO3_HOST}/neo3/hash_valid`, hashes);
-    }
     //#endregion
 }

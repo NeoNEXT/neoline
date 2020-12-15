@@ -94,7 +94,7 @@ export class HttpService {
             return from(new Promise((resolve, reject) => {
                 this.chrome.httpPost(url, data, (res) => {
                     if (res && res.status === 'success') {
-                        resolve(res.data || res);
+                        resolve(res.data);
                     } else {
                         reject(res && res.msg || res);
                     }
@@ -109,7 +109,7 @@ export class HttpService {
             }
         }).pipe(map((res: any) => {
             if (res && res.status === 'success') {
-                return res.data || res;
+                return res.data;
             } else {
                 throw res && res.msg || res;
             }
