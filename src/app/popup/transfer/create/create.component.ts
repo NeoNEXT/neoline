@@ -38,6 +38,7 @@ import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
 import { bignumber } from 'mathjs';
 import { GasFeeSpeed } from '../../_lib/type';
 import { Neo3TransferService } from '../neo3-transfer.service';
+import { GAS3_CONTRACT } from '../../_lib';
 
 @Component({
     templateUrl: 'create.component.html',
@@ -61,6 +62,8 @@ export class TransferCreateComponent implements OnInit {
     public balances: Array<Asset> = [];
     public assetId: string;
     public net: string;
+
+    istransferAll = false;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -375,6 +378,51 @@ export class TransferCreateComponent implements OnInit {
             if (typeof res === 'number') {
                 this.fee = res;
             }
+        })
+    }
+
+    // 点击转全部资产
+    transferAll(fee = this.fee || 0) {
+        if (this.istransferAll) {
+            return;
+        }
+        this.istransferAll = true;
+        // 不是 GAS 资产时
+        if (this.chooseAsset.asset_id !== GAS && this.chooseAsset.asset_id !== GAS3_CONTRACT) {
+            this.amount = this.chooseAsset.balance;
+            this.istransferAll = false;
+            return;
+        }
+        const tAmount = bignumber(this.chooseAsset.balance).minus(fee);
+        let tempAmount;
+        if (tAmount.comparedTo(0) <= 0) {
+            fee = 0;
+            this.fee = 0; // 优先费大于全部资产时，小费重设为0
+            tempAmount = this.chooseAsset.balance;
+        } else {
+            tempAmount = tAmount.toString();
+        }
+        // neo2 的 GAS
+        if (this.chooseAsset.asset_id === GAS) {
+            this.amount = tempAmount;
+            this.istransferAll = false;
+            return;
+        }
+        // neo3 的GAS
+        const param = {
+            addressFrom: this.fromAddress,
+            addressTo: this.toAddress || this.fromAddress,
+            tokenScriptHash: this.chooseAsset.asset_id,
+            amount: tempAmount,
+            networkFee: fee,
+            decimals: this.chooseAsset.decimals,
+        };
+        this.neo3Transfer.createNeo3Tx(param, true).subscribe(tx => {
+            this.amount = bignumber(this.chooseAsset.balance).minus(tx.networkFee.toNumber()).minus(tx.systemFee.toNumber()).toString();
+            this.fee = fee;
+            this.istransferAll = false;
+        }, () => {
+            this.istransferAll = false;
         })
     }
 }

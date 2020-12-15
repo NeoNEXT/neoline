@@ -38,7 +38,7 @@
         <div class="amount-box box">
             <input type="string" min="0" placeholder="0" [(ngModel)]="amount" (keypress)="numberCheck($event)">
             <button mat-button color="primary"
-                (click)="amount=chooseAsset?.balance || 0">{{ 'allTransfer' | translate | async }}</button>
+                (click)="transferAll()">{{ 'allTransfer' | translate | async }}</button>
         </div>
     </div>
     <div class="fee-container container">

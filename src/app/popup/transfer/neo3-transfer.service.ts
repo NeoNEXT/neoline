@@ -20,7 +20,7 @@ interface CreateNeo3TxInput {
 @Injectable()
 export class Neo3TransferService {
     constructor(public assetState: AssetState) {}
-    createNeo3Tx(params: CreateNeo3TxInput): Observable<Transaction> {
+    createNeo3Tx(params: CreateNeo3TxInput, isTransferAll = false): Observable<Transaction> {
         const assetStateTemp = this.assetState;
         const tempScriptHash = wallet.getScriptHashFromAddress(
             params.addressFrom
@@ -268,6 +268,17 @@ export class Neo3TransferService {
                     };
                 }
             }
+        }
+
+        if (isTransferAll) {
+            return from(
+                createTransaction()
+                    .then(checkNetworkFee)
+                    .then(checkSystemFee)
+                    .then(() => {
+                        return vars.tx;
+                    })
+            );
         }
 
         return from(
