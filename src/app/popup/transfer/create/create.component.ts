@@ -136,7 +136,7 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('balanceLack');
             return;
         }
-        if (bignumber(this.chooseAsset.balance.toString()).comparedTo(bignumber(this.amount.toString())) === -1) {
+        if (typeof this.amount === 'undefined' || bignumber(this.chooseAsset.balance.toString()).comparedTo(bignumber(this.amount.toString())) === -1) {
             this.global.snackBarTip('balanceLack');
             return;
         }
@@ -147,10 +147,12 @@ export class TransferCreateComponent implements OnInit {
             return;
         }
         this.creating = true;
+        this.loading = true;
         this.transfer.create(this.fromAddress, this.toAddress, this.chooseAsset.asset_id, this.amount,
             this.fee || 0, this.chooseAsset.decimals).subscribe((res) => {
                 this.global.log('start transfer');
                 this.resolveSign(res);
+                this.loading = false;
             }, (err) => {
                 this.creating = false;
                 if (this.neon.currentWalletChainType === 'Neo3' && err) {
@@ -417,9 +419,11 @@ export class TransferCreateComponent implements OnInit {
             networkFee: fee,
             decimals: this.chooseAsset.decimals,
         };
+        this.loading = true;
         this.neo3Transfer.createNeo3Tx(param, true).subscribe(tx => {
             this.amount = bignumber(this.chooseAsset.balance).minus(tx.networkFee.toNumber()).minus(tx.systemFee.toNumber()).toString();
             this.fee = fee;
+            this.loading = false;
             this.istransferAll = false;
         }, () => {
             this.istransferAll = false;

@@ -116,6 +116,9 @@
     "balance": {
         "message": "余额"
     },
+    "balancecolon": {
+        "message": "余额："
+    },
     "transgerTo": {
         "message": "转账给"
     },
@@ -640,5 +643,8 @@
     },
     "saveChanges": {
         "message": "保存修改"
+    },
+    "selectAChain": {
+        "message": "选择链"
     }
 }

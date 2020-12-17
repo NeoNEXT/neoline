@@ -113,6 +113,9 @@
     "balance": {
         "message": "Balance"
     },
+    "balancecolon": {
+        "message": "Balance:"
+    },
     "transgerTo": {
         "message": "Transfer to"
     },
@@ -156,7 +159,7 @@
         "message": "Caution"
     },
     "transferExportTip": {
-        "message": "Please keep your PrivateKey safe, do not show it to anyone"
+        "message": "Please keep your Private Key safe, do not show it to anyone"
     },
     "verify": {
         "message": "Verify"
@@ -640,5 +643,8 @@
     },
     "saveChanges": {
         "message": "Save changes"
+    },
+    "selectAChain": {
+        "message": "Select a Chain"
     }
 }
