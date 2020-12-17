@@ -1,4 +1,4 @@
-@import 'src/styles/popup-default';
+@import "src/styles/popup-default";
 
 .nav {
     height: 65px;
@@ -30,43 +30,53 @@
         border-radius: 15px 15px 0px 0px;
     }
 }
-.container {
-    padding: 0 25px;
-    line-height: 1;
-    img.logo {
+
+.popup-about-logo {
+    text-align: center;
+    margin-top: 25px;
+
+    img {
         height: 30px;
-        margin-top: 25px;
     }
-    .version {
-        color: #afb5bd;
-        font-size: 15px;
-        margin-top: 20px;
-    }
-    .subscription {
-        padding: 17px 0;
-        margin-top: 27px;
-        border-bottom: 1px solid #efefef;
-        .to-subscription {
-            color: #434543;
-            font-size: 17px;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            cursor: pointer;
-            img {
-                height: 11px;
-            }
-        }
-        .tip {
-            color: #afb5bd;
-            font-size: 15px;
-            margin-top: 12px;
-        }
-    }
+}
+
+.popup-about-version {
+    text-align: center;
+    margin-top: 2px;
+    // color: map-get($colors, 9fa8bd);
+    font-size: 15px;
+    font-weight: 400;
+    color: #afb6be;
+}
+
+.popup-about {
+    margin-top: 50px;
+    padding: 0 20px;
+
     .about-item {
-        color: #05cbab;
+        height: 65px;
+        background: #f8f8f8;
+        border-radius: 10px;
         font-size: 17px;
-        margin-top: 30px;
-        cursor: pointer;
+        font-weight: 400;
+        color: #434543;
+        padding: 0 18px 0 26px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+
+        &:not(:last-of-type) {
+            margin-bottom: 15px;
+        }
+
+        img {
+            height: 11px;
+        }
+    }
+
+    a {
+        display: block;
+        margin-top: 15px;
+        text-decoration: none;
     }
 }
