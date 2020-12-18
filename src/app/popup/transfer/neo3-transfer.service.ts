@@ -227,7 +227,7 @@ export class Neo3TransferService {
                 .toNumber();
             if (balanceAmount < inputs.amountToTransfer) {
                 throw {
-                    msg: `Insufficient funds! Found ${sourceBalanceAmount}`,
+                    msg: `${this.notification.content['insufficientSystemFee'] + sourceBalanceAmount}`,
                 };
             } else {
                 console.log('\u001b[32m  ✓ Token funds found \u001b[0m');
