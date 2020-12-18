@@ -646,5 +646,23 @@
     },
     "selectAChain": {
         "message": "选择链"
+    },
+    "TOTAL": {
+        "message": "总额"
+    },
+    "TRANSFER": {
+        "message": "转账"
+    },
+    "PRIORITYFEE": {
+        "message": "优先费"
+    },
+    "SYSTEMFEE": {
+        "message": "系统费用"
+    },
+    "NETWORKFEE": {
+        "message": "网络费用"
+    },
+    "GASFEE": {
+        "message": "GAS"
     }
 }

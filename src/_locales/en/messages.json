@@ -646,5 +646,23 @@
     },
     "selectAChain": {
         "message": "Select a Chain"
+    },
+    "TOTAL": {
+        "message": "TOTAL" 
+    },
+    "TRANSFER": {
+        "message": "TRANSFER"
+    },
+    "PRIORITYFEE": {
+        "message": "PRIORITY FEE"
+    },
+    "SYSTEMFEE": {
+        "message": "SYSTEM FEE"
+    },
+    "NETWORKFEE": {
+        "message": "NETWORK FEE"
+    },
+    "GASFEE": {
+        "message": "GAS FEE"
     }
 }

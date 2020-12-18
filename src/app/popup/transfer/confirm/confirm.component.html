@@ -31,7 +31,7 @@
             <div class="transfer-detail-container">
                 <div class="type-box">
                     <span></span>
-                    <span>TRANSFER</span>
+                    <span>{{ 'TRANSFER' | translate | async }}</span>
                 </div>
                 <div class="asset-info-box">
                     <div class="logo-box">
@@ -46,7 +46,7 @@
                     <mat-tab-group mat-align-tabs="center" >
                         <mat-tab [label]="'details' | translate | async">
                             <div class="fee-box detail-item">
-                                <p class="label">{{ isNeo3 ? 'PRIORITY FEE' : 'GAS FEE' }}</p>
+                                <p class="label">{{ (isNeo3 ? 'PRIORITYFEE' : 'GASFEE') | translate | async }}</p>
                                 <div class="fee-info">
                                     <p (click)="editFee()">{{ 'edit' | translate | async }}</p>
                                     <p>{{ data.fee | numberFixed }} GAS</p>
@@ -55,7 +55,7 @@
                             </div>
                             <hr>
                             <div class="fee-box detail-item" *ngIf="isNeo3===true">
-                                <p class="label">SYSTEM FEE</p>
+                                <p class="label">{{ 'SYSTEMFEE' | translate | async }}</p>
                                 <div class="fee-info">
                                     <p></p>
                                     <p>{{ data.systemFee | numberFixed }} GAS</p>
@@ -64,7 +64,7 @@
                             </div>
                             <hr *ngIf="isNeo3===true">
                             <div class="fee-box detail-item" *ngIf="isNeo3===true">
-                                <p class="label">NETWORK FEE</p>
+                                <p class="label">{{ 'NETWORKFEE' | translate | async }}</p>
                                 <div class="fee-info">
                                     <p></p>
                                     <p>{{ data.networkFee | numberFixed }} GAS</p>
@@ -73,9 +73,9 @@
                             </div>
                             <hr *ngIf="isNeo3===true">
                             <div class="total-box detail-item">
-                                <p  class="label">TOTAL</p>
+                                <p  class="label">{{ 'TOTAL' | translate | async }}</p>
                                 <div class="total-info">
-                                    <p>Amount+GAS FEE</p>
+                                    <p>{{ 'amount' | translate | async }}+{{ 'GASFEE' | translate | async }}</p>
                                     <p>{{ data.amount | numberFixed }} {{ symbol }} + {{ totalFee | numberFixed }}GAS</p>
                                     <p>{{ totalMoney | numberFixed:2 }} {{ rateCurrency }}</p>
                                 </div>
