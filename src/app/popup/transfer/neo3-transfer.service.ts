@@ -246,7 +246,7 @@ export class Neo3TransferService {
                     : new u.Fixed8(gasBalance[0].balance);
             if (gasAmount.lt(gasRequirements)) {
                 throw {
-                    msg: `${this.notification.content['insufficientBalance'] + gasRequirements.toString() + this.notification.content['insufficientBalbutOnlyHadance'] + gasAmount.toString()}`,
+                    msg: `${this.notification.content['insufficientBalance'] + gasRequirements.toString() + this.notification.content['butOnlyHad'] + gasAmount.toString()}`,
                 };
             } else {
                 console.log(
@@ -264,7 +264,7 @@ export class Neo3TransferService {
                     .toNumber();
                 if (balanceAmount < totalRequirements) {
                     throw {
-                        msg: `Insufficient funds! Found ${sourceBalanceAmount}`,
+                        msg: `${this.notification.content['insufficientSystemFee'] + sourceBalanceAmount}`,
                     };
                 }
             }

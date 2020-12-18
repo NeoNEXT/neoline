@@ -32,7 +32,8 @@ export class NotificationService {
         nep6Wrong: 'Choose the correct file',
         agreePrivacyPolicy: 'Please agree to the privacy agreement',
         insufficientBalance: 'Insufficient GAS to pay for fees! Required',
-        butOnlyHad: 'but only had'
+        butOnlyHad: 'but only had',
+        insufficientSystemFee: 'Insufficient balance when system fee added'
     };
     CN = {
         close: '关闭',
@@ -62,7 +63,8 @@ export class NotificationService {
         nep6Wrong: '请选择正确的文件',
         agreePrivacyPolicy: '请同意隐私协议',
         insufficientBalance: 'GAS 不足以支付费用！需要',
-        butOnlyHad: '但只有'
+        butOnlyHad: '但只有',
+        insufficientSystemFee: '加上系统费用后余额不足'
     };
     constructor(
         public chrome: ChromeService

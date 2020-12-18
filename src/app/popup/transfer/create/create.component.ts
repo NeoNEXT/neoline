@@ -132,20 +132,23 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('wrongAddress');
             return;
         }
-        if (this.amount === undefined || bignumber(this.chooseAsset.balance.toString()).comparedTo(bignumber(this.amount.toString())) === -1) {
-            this.global.snackBarTip('balanceLack');
-            return;
-        }
         if (this.chooseAsset.balance === undefined || bignumber(this.chooseAsset.balance).comparedTo(0) === -1) {
             this.global.snackBarTip('balanceLack');
             return;
         }
+        
         try {
             bignumber(this.amount)
         } catch (error) {
             this.global.snackBarTip('checkInput');
             return;
         }
+
+        if (this.amount === undefined || bignumber(this.chooseAsset.balance.toString()).comparedTo(bignumber(this.amount.toString())) === -1) {
+            this.global.snackBarTip('balanceLack');
+            return;
+        }
+
         this.creating = true;
         this.loading = true;
         this.transfer.create(this.fromAddress, this.toAddress, this.chooseAsset.asset_id, this.amount,
