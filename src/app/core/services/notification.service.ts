@@ -30,7 +30,9 @@ export class NotificationService {
         rejected: 'Rejected',
         rateCurrencySetSucc: 'Asset conversion target revised successfully!',
         nep6Wrong: 'Choose the correct file',
-        agreePrivacyPolicy: 'Please agree to the privacy agreement'
+        agreePrivacyPolicy: 'Please agree to the privacy agreement',
+        insufficientBalance: 'Insufficient GAS to pay for fees! Required',
+        butOnlyHad: 'but only had'
     };
     CN = {
         close: '关闭',
@@ -58,7 +60,9 @@ export class NotificationService {
         rejected: '已拒绝',
         rateCurrencySetSucc: '资产兑换目标修改成功',
         nep6Wrong: '请选择正确的文件',
-        agreePrivacyPolicy: '请同意隐私协议'
+        agreePrivacyPolicy: '请同意隐私协议',
+        insufficientBalance: 'GAS 不足以支付费用！需要',
+        butOnlyHad: '但只有'
     };
     constructor(
         public chrome: ChromeService

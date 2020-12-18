@@ -3,7 +3,7 @@ import { CONST, rpc, sc, tx, u, wallet } from '@cityofzion/neon-core-neo3';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from } from 'rxjs';
 import { NEO3_RPC_HOST } from '@popup/_lib';
-import { AssetState } from '@app/core';
+import { AssetState, NotificationService } from '@app/core';
 import { bignumber } from 'mathjs';
 
 const rpcClient = new rpc.RPCClient(NEO3_RPC_HOST);
@@ -19,7 +19,7 @@ interface CreateNeo3TxInput {
 
 @Injectable()
 export class Neo3TransferService {
-    constructor(public assetState: AssetState) {}
+    constructor(public assetState: AssetState, public notification: NotificationService) {}
     createNeo3Tx(params: CreateNeo3TxInput, isTransferAll = false): Observable<Transaction> {
         const assetStateTemp = this.assetState;
         const tempScriptHash = wallet.getScriptHashFromAddress(
@@ -246,7 +246,7 @@ export class Neo3TransferService {
                     : new u.Fixed8(gasBalance[0].balance);
             if (gasAmount.lt(gasRequirements)) {
                 throw {
-                    msg: `Insufficient gas to pay for fees! Required ${gasRequirements.toString()} but only had ${gasAmount.toString()}`,
+                    msg: `${this.notification.content['insufficientBalance'] + gasRequirements.toString() + this.notification.content['insufficientBalbutOnlyHadance'] + gasAmount.toString()}`,
                 };
             } else {
                 console.log(
