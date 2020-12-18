@@ -26,10 +26,8 @@
         <span>{{ 'companyWebsite' | translate | async }}</span>
         <img src="/assets/images/arrow-right.png" alt="">
     </div>
-    <a href="mailto:support@neoline.io">
-        <div matRipple class="about-item">
-            <span>{{ 'contactUs' | translate | async }}</span>
-            <img src="/assets/images/arrow-right.png" alt="">
-        </div>
-    </a>
+    <div matRipple (click)="jumbToWeb(3)" class="about-item">
+        <span>{{ 'contactUs' | translate | async }}</span>
+        <img src="/assets/images/arrow-right.png" alt="">
+    </div>
 </div>

@@ -32,6 +32,9 @@ export class PopupAboutComponent implements OnInit {
             case 2:
                 window.open(`https://neoline.io${lang}`);
                 break;
+            case 3:
+                window.open(`mailto:support@neoline.io`);
+                break;
         }
     }
 }
