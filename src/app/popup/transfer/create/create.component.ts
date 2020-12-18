@@ -132,11 +132,11 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('wrongAddress');
             return;
         }
-        if (this.chooseAsset.balance === undefined || bignumber(this.chooseAsset.balance).comparedTo(0) === -1) {
+        if (this.amount === undefined || bignumber(this.chooseAsset.balance.toString()).comparedTo(bignumber(this.amount.toString())) === -1) {
             this.global.snackBarTip('balanceLack');
             return;
         }
-        if (typeof this.amount === 'undefined' || bignumber(this.chooseAsset.balance.toString()).comparedTo(bignumber(this.amount.toString())) === -1) {
+        if (this.chooseAsset.balance === undefined || bignumber(this.chooseAsset.balance).comparedTo(0) === -1) {
             this.global.snackBarTip('balanceLack');
             return;
         }
@@ -426,6 +426,7 @@ export class TransferCreateComponent implements OnInit {
             this.loading = false;
             this.istransferAll = false;
         }, () => {
+            this.loading = false;
             this.istransferAll = false;
         })
     }
