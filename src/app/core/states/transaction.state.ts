@@ -4,7 +4,7 @@ import { GlobalService } from '../services/global.service';
 import { Subject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { NeonService } from '../services/neon.service';
-import { TX_LIST_PAGE_SIZE, NEO3_HOST, NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
+import { TX_LIST_PAGE_SIZE, NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
 
 @Injectable()
 export class TransactionState {
@@ -114,7 +114,7 @@ export class TransactionState {
             req += `&max_id=${maxId - 1}`;
         }
         return this.http
-            .get(`${NEO3_HOST}/neo3/address/transactions${req}`)
+            .get(`${this.global.apiDomain}/v1/neo3/address/transactions${req}`)
             .pipe(
                 map((res) => {
                     return this.formatResponseData(res);
@@ -133,7 +133,7 @@ export class TransactionState {
             req += `&max_id=${maxId - 1}`;
         }
         return this.http
-            .get(`${NEO3_HOST}/neo3/address/transactions${req}`)
+            .get(`${this.global.apiDomain}/v1/neo3/address/transactions${req}`)
             .pipe(
                 map((res) => {
                     return this.formatResponseData(res);
@@ -153,7 +153,7 @@ export class TransactionState {
         txid: string
     ): Observable<any> {
         return this.http
-            .get(`${NEO3_HOST}/neo3/transaction/${address}/${assetId}/${txid}`)
+            .get(`${this.global.apiDomain}/v1/neo3/transaction/${address}/${assetId}/${txid}`)
             .pipe(
                 map((res) => {
                     return res || {};

@@ -17,7 +17,6 @@ import { Transaction, PageData } from '@/models/models';
 import { forkJoin } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupTxDetailDialogComponent } from '@/app/popup/_dialogs';
-import { NEO3_HOST } from '@popup/_lib';
 
 @Component({
     selector: 'app-tx-page',
@@ -104,7 +103,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                             });
                             break;
                         case 'Neo3':
-                            httpReq2 = this.http.post(`${NEO3_HOST}/neo3/hash_valid`, {
+                            httpReq2 = this.http.post(`${this.global.apiDomain}/v1/neo3/hash_valid`, {
                                 hashes: txIdArray
                             });
                             break;

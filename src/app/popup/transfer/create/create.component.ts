@@ -158,6 +158,7 @@ export class TransferCreateComponent implements OnInit {
                 this.loading = false;
             }, (err) => {
                 this.creating = false;
+                this.loading = false;
                 if (this.neon.currentWalletChainType === 'Neo3' && err) {
                     this.global.snackBarTip('wentWrong', err, 10000);
                 } else {

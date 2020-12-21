@@ -10,7 +10,7 @@ import { GasFeeSpeed } from '@popup/_lib/type';
 import { bignumber } from 'mathjs';
 import { rpc } from '@cityofzion/neon-js';
 import { NeonService } from '../services/neon.service';
-import { NEO3_HOST, NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
+import { NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
 
 @Injectable()
 export class AssetState {
@@ -364,7 +364,7 @@ export class AssetState {
      * 获取指定网络节点所有资产
      */
     fetchNeo3TokenList(): Observable<any> {
-        return this.http.get(`${NEO3_HOST}/neo3/assets`).pipe(
+        return this.http.get(`${this.global.apiDomain}/v1/neo3/assets`).pipe(
             map((res) => {
                 return this.formatResponseData(res);
             })
@@ -377,7 +377,7 @@ export class AssetState {
      */
     fetchNeo3AddressTokens(address: string): Observable<any> {
         return this.http
-            .get(`${NEO3_HOST}/neo3/address/assets?address=${address}`)
+            .get(`${this.global.apiDomain}/v1/neo3/address/assets?address=${address}`)
             .pipe(
                 map((res) => {
                     return this.formatResponseData(res);
@@ -389,7 +389,7 @@ export class AssetState {
      * 获取推荐资产
      */
     fetchNeo3PopularToken(): Observable<any> {
-        return this.http.get(`${NEO3_HOST}/neo3/allowlist`).pipe(
+        return this.http.get(`${this.global.apiDomain}/v1/neo3/allowlist`).pipe(
             map((res) => {
                 return this.formatResponseData(res);
             })
@@ -401,7 +401,7 @@ export class AssetState {
      * @param query 搜索信息
      */
     searchNeo3Token(query: string): Observable<any> {
-        return this.http.get(`${NEO3_HOST}/neo3/search/asset?q=${query}`).pipe(
+        return this.http.get(`${this.global.apiDomain}/v1/neo3/search/asset?q=${query}`).pipe(
             map((res) => {
                 return this.formatResponseData(res);
             })
@@ -409,7 +409,7 @@ export class AssetState {
     }
 
     fetchNeo3GasFee(): Observable<any> {
-        return this.http.get(`${NEO3_HOST}/neo3/fees`).pipe(
+        return this.http.get(`${this.global.apiDomain}/v1/neo3/fees`).pipe(
             map((res: any) => {
                 res.propose_price = bignumber(res.propose_price).dividedBy(bignumber(10).pow(8)).toFixed();
                 res.fast_price = bignumber(res.fast_price).dividedBy(bignumber(10).pow(8)).toFixed();

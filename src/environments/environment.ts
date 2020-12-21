@@ -8,6 +8,8 @@ export const environment = {
     mainApiBase: 'http://47.110.14.167:8085',
     mainRPC: 'https://neo2-mainnet.neoline.io',
     testRPC: 'https://neo2-testnet.neoline.io',
+    neo3MainRPC: 'https://neo3-testnet.neoline.vip',
+    neo3TestRPC: 'https://neo3-testnet.neoline.vip',
 };
 
 /*

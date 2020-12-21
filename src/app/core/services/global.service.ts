@@ -39,6 +39,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 export class GlobalService {
     public apiDomain: string;
     public RPCDomain: string;
+    public Neo3RPCDomain: string;
     public $wallet: Subject < string > ;
     public languageJson: any = null;
     public debug = false;
@@ -68,9 +69,11 @@ export class GlobalService {
         if (net === 'MainNet') {
             this.apiDomain = environment.mainApiBase;
             this.RPCDomain = environment.mainRPC;
+            this.Neo3RPCDomain = environment.neo3MainRPC;
         } else {
             this.apiDomain = environment.mainApiBase;
             this.RPCDomain = environment.testRPC;
+            this.Neo3RPCDomain = environment.neo3TestRPC;
         }
     }
     public log(...params: any[]) {

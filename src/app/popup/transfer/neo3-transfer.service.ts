@@ -2,11 +2,8 @@ import { Injectable } from '@angular/core';
 import { CONST, rpc, sc, tx, u, wallet } from '@cityofzion/neon-core-neo3';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from } from 'rxjs';
-import { NEO3_RPC_HOST } from '@popup/_lib';
-import { AssetState, NotificationService } from '@app/core';
+import { AssetState, NotificationService, GlobalService } from '@app/core';
 import { bignumber } from 'mathjs';
-
-const rpcClient = new rpc.RPCClient(NEO3_RPC_HOST);
 
 interface CreateNeo3TxInput {
     addressFrom: string;
@@ -19,9 +16,22 @@ interface CreateNeo3TxInput {
 
 @Injectable()
 export class Neo3TransferService {
-    constructor(public assetState: AssetState, public notification: NotificationService) {}
-    createNeo3Tx(params: CreateNeo3TxInput, isTransferAll = false): Observable<Transaction> {
+    rpcClient;
+    constructor(
+        public assetState: AssetState,
+        public notification: NotificationService,
+        private globalService: GlobalService
+    ) {
+        this.rpcClient = new rpc.RPCClient(this.globalService.Neo3RPCDomain);
+    }
+    createNeo3Tx(
+        params: CreateNeo3TxInput,
+        isTransferAll = false
+    ): Observable<Transaction> {
         const assetStateTemp = this.assetState;
+        const notificationTemp = this.notification;
+        const rpcClientTemp = this.rpcClient;
+
         const tempScriptHash = wallet.getScriptHashFromAddress(
             params.addressFrom
         );
@@ -67,7 +77,7 @@ export class Neo3TransferService {
             });
 
             // We retrieve the current block height as we need to
-            const currentHeight = await rpcClient.getBlockCount();
+            const currentHeight = await rpcClientTemp.getBlockCount();
             vars.tx = new tx.Transaction({
                 sender: inputs.scriptHash as any,
                 signers: [
@@ -89,7 +99,7 @@ export class Neo3TransferService {
          * signatures) and also the cost of running the verification of signatures.
          */
         async function checkNetworkFee() {
-            const feePerByteInvokeResponse: any = await rpcClient.invokeFunction(
+            const feePerByteInvokeResponse: any = await rpcClientTemp.invokeFunction(
                 CONST.NATIVE_CONTRACTS.POLICY,
                 'getFeePerByte'
             );
@@ -131,7 +141,7 @@ export class Neo3TransferService {
          * with `HALT` and give us the token name if it exists.
          */
         async function checkToken() {
-            const tokenNameResponse: any = await rpcClient.invokeFunction(
+            const tokenNameResponse: any = await rpcClientTemp.invokeFunction(
                 inputs.tokenScriptHash,
                 'name'
             );
@@ -163,7 +173,7 @@ export class Neo3TransferService {
                     inputs.amountToTransfer,
                 ],
             });
-            const invokeFunctionResponse = await rpcClient.invokeScript(
+            const invokeFunctionResponse = await rpcClientTemp.invokeScript(
                 script,
                 [
                     {
@@ -201,7 +211,7 @@ export class Neo3TransferService {
         async function checkBalance() {
             let balanceResponse;
             try {
-                // balanceResponse = await rpcClient.query({
+                // balanceResponse = await rpcClientTemp.query({
                 //     method: 'getnep5balances',
                 //     params: [inputs.fromAccountAddress],
                 //     id: 1,
@@ -227,7 +237,10 @@ export class Neo3TransferService {
                 .toNumber();
             if (balanceAmount < inputs.amountToTransfer) {
                 throw {
-                    msg: `${this.notification.content['insufficientSystemFee'] + sourceBalanceAmount}`,
+                    msg: `${
+                        notificationTemp.content['insufficientSystemFee'] +
+                        sourceBalanceAmount
+                    }`,
                 };
             } else {
                 console.log('\u001b[32m  ✓ Token funds found \u001b[0m');
@@ -246,7 +259,12 @@ export class Neo3TransferService {
                     : new u.Fixed8(gasBalance[0].balance);
             if (gasAmount.lt(gasRequirements)) {
                 throw {
-                    msg: `${this.notification.content['insufficientBalance'] + gasRequirements.toString() + this.notification.content['butOnlyHad'] + gasAmount.toString()}`,
+                    msg: `${
+                        notificationTemp.content['insufficientBalance'] +
+                        gasRequirements.toString() +
+                        notificationTemp.content['butOnlyHad'] +
+                        gasAmount.toString()
+                    }`,
                 };
             } else {
                 console.log(
@@ -264,7 +282,10 @@ export class Neo3TransferService {
                     .toNumber();
                 if (balanceAmount < totalRequirements) {
                     throw {
-                        msg: `${this.notification.content['insufficientSystemFee'] + sourceBalanceAmount}`,
+                        msg: `${
+                            notificationTemp.content['insufficientSystemFee'] +
+                            sourceBalanceAmount
+                        }`,
                     };
                 }
             }
@@ -294,7 +315,9 @@ export class Neo3TransferService {
     }
 
     async sendNeo3Tx(tx1: Transaction): Promise<any> {
-        const result = await rpcClient.sendRawTransaction(tx1.serialize(true));
+        const result = await this.rpcClient.sendRawTransaction(
+            tx1.serialize(true)
+        );
 
         console.log('\n\n--- Transaction hash ---');
         console.log(result);
