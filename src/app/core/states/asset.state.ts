@@ -411,6 +411,7 @@ export class AssetState {
     fetchNeo3GasFee(): Observable<any> {
         return this.http.get(`${this.global.apiDomain}/v1/neo3/fees`).pipe(
             map((res: any) => {
+                res.slow_price = bignumber(res.slow_price).dividedBy(bignumber(10).pow(8)).toFixed();
                 res.propose_price = bignumber(res.propose_price).dividedBy(bignumber(10).pow(8)).toFixed();
                 res.fast_price = bignumber(res.fast_price).dividedBy(bignumber(10).pow(8)).toFixed();
                 this.neo3GasFeeSpeed = res || this.gasFeeDefaultSpeed;

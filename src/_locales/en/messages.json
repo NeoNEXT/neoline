@@ -411,7 +411,7 @@
         "message": "WIF(Private key)"
     },
     "delWalletConfirm": {
-        "message": "Are you sure delete this wallet?"
+        "message": "Are you sure to delete this wallet?"
     },
     "delAllAuthListConfirm": {
         "message": "Are you sure delete all authorized sites?"
