@@ -136,7 +136,7 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('balanceLack');
             return;
         }
-        
+
         try {
             bignumber(this.amount)
         } catch (error) {
@@ -144,7 +144,7 @@ export class TransferCreateComponent implements OnInit {
             return;
         }
 
-        if (this.amount === undefined || bignumber(this.chooseAsset.balance.toString()).comparedTo(bignumber(this.amount.toString())) === -1) {
+        if (bignumber(this.chooseAsset.balance.toString()).comparedTo(bignumber(this.amount.toString())) === -1) {
             this.global.snackBarTip('balanceLack');
             return;
         }
