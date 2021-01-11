@@ -354,7 +354,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         }).afterClosed().subscribe(res => {
             if (res !== false) {
                 this.fee = res;
-                if (res === 0) {
+                if (res === 0 || res === '0') {
                     this.feeMoney = '0';
                 } else {
                     this.asset.getMoney('GAS', Number(this.fee)).then(feeMoney => {

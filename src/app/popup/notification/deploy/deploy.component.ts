@@ -286,12 +286,11 @@ export class PopupNoticeDeployComponent implements OnInit {
                 fee: this.fee
             }
         }).afterClosed().subscribe(res => {
-            if (typeof res === 'number') {
+            if (res !== false) {
                 this.fee = res.toString();
-                if (res === 0) {
+                if (res === 0 || res === '0') {
                     this.feeMoney = '0';
                 } else {
-
                     this.assetState.getMoney('GAS', Number(this.fee)).then(feeMoney => {
                         this.feeMoney = feeMoney;
                     });

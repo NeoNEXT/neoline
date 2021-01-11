@@ -77,13 +77,13 @@ export class PopupEditFeeDialogComponent {
     updateFee() {
         switch (this.level) {
             case 0:
-                this.fee = bignumber((this.gasFeeSpeed && this.gasFeeSpeed.slow_price) || this.fee).toNumber();
+                this.fee = bignumber((this.gasFeeSpeed && this.gasFeeSpeed.slow_price) || this.fee).toFixed();
                 break;
             case 1:
                 this.fee = bignumber(this.gasFeeSpeed && this.gasFeeSpeed.propose_price || this.fee).toFixed();
                 break;
             case 2:
-                this.fee = bignumber(this.gasFeeSpeed && this.gasFeeSpeed.fast_price || this.fee).toNumber();
+                this.fee = bignumber(this.gasFeeSpeed && this.gasFeeSpeed.fast_price || this.fee).toFixed();
                 break;
         }
     }

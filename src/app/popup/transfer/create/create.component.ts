@@ -381,7 +381,7 @@ export class TransferCreateComponent implements OnInit {
                 speedFee: this.gasFeeSpeed
             }
         }).afterClosed().subscribe(res => {
-            if (typeof res === 'number') {
+            if (res !== false) {
                 this.fee = res;
             }
         })
