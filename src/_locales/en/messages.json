@@ -27,7 +27,7 @@
         "message": "Home"
     },
     "about": {
-        "message": "About Us"
+        "message": "About us"
     },
     "expandView": {
         "message": "Expand View"
@@ -648,7 +648,7 @@
         "message": "Select a Chain"
     },
     "TOTAL": {
-        "message": "TOTAL" 
+        "message": "TOTAL"
     },
     "TRANSFER": {
         "message": "TRANSFER"
