@@ -347,7 +347,7 @@ export class PopupHomeComponent implements OnInit {
                 );
                 break;
             case 'Neo3':
-                window.open(`https://neo3.neotube.io/tokens/neo-top-holder/${this.neon.address}`);
+                window.open(`https://neo3.neotube.io/address/${this.neon.address}`);
                 break;
         }
     }
