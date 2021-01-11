@@ -151,10 +151,17 @@ export class PopupAssetDetailComponent implements OnInit {
                 isNep5 ? 'nep5' : 'asset'
             }/${this.assetId}`
         );
-        window.open(
-            `https://${this.net === 'TestNet' ? 'testnet.' : ''}neotube.io/${
-                isNep5 ? 'nep5' : 'asset'
-            }/${this.assetId}/page/1`
-        );
+        switch (this.neon.currentWalletChainType) {
+            case 'Neo2':
+                window.open(
+                    `https://${this.net === 'TestNet' ? 'testnet.' : ''}neotube.io/${
+                        isNep5 ? 'nep5' : 'asset'
+                    }/${this.assetId}/page/1`
+                );
+                break;
+            case 'Neo3':
+                window.open(`https://neo3.neotube.io/tokens/nep5/${this.assetId}`);
+                break;
+        }
     }
 }

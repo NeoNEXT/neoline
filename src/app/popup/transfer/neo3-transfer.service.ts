@@ -31,6 +31,7 @@ export class Neo3TransferService {
         const assetStateTemp = this.assetState;
         const notificationTemp = this.notification;
         const rpcClientTemp = this.rpcClient;
+        const neo3This = this;
 
         const tempScriptHash = wallet.getScriptHashFromAddress(
             params.addressFrom
@@ -48,6 +49,8 @@ export class Neo3TransferService {
             networkFee: bignumber(params.networkFee).toNumber() || 0,
         };
         const vars: any = {};
+        const NEW_POLICY_CONTRACT = 'dde31084c0fdbebc7f5ed5f53a38905305ccee14';
+        const NEW_GAS = '0xa6a6c15dcdc9b997dac448b6926522d22efeedfb';
 
         /**
          * We will perform the following checks:
@@ -73,6 +76,7 @@ export class Neo3TransferService {
                     sc.ContractParam.hash160(inputs.fromAccountAddress),
                     sc.ContractParam.hash160(inputs.toAccountAddress),
                     inputs.amountToTransfer,
+                    null,
                 ],
             });
 
@@ -86,7 +90,7 @@ export class Neo3TransferService {
                         scopes: tx.WitnessScope.CalledByEntry,
                     },
                 ],
-                validUntilBlock: currentHeight + 1000000,
+                validUntilBlock: currentHeight + 30,
                 systemFee: vars.systemFee,
                 script,
             });
@@ -100,7 +104,7 @@ export class Neo3TransferService {
          */
         async function checkNetworkFee() {
             const feePerByteInvokeResponse: any = await rpcClientTemp.invokeFunction(
-                CONST.NATIVE_CONTRACTS.POLICY,
+                NEW_POLICY_CONTRACT,
                 'getFeePerByte'
             );
 
@@ -171,10 +175,11 @@ export class Neo3TransferService {
                     sc.ContractParam.hash160(inputs.fromAccountAddress),
                     sc.ContractParam.hash160(inputs.toAccountAddress),
                     inputs.amountToTransfer,
+                    null,
                 ],
             });
             const invokeFunctionResponse = await rpcClientTemp.invokeScript(
-                script,
+                neo3This.hexToBase64(script),
                 [
                     {
                         account: inputs.scriptHash,
@@ -187,10 +192,8 @@ export class Neo3TransferService {
                     'Transfer script errored out! You might not have sufficient funds for this transfer.'
                 );
             }
-            const requiredSystemFee: any = u.Fixed8.fromRawNumber(
-                invokeFunctionResponse.gasconsumed
-            );
-            if (inputs.systemFee && inputs.systemFee >= requiredSystemFee) {
+            const requiredSystemFee = new u.Fixed8(invokeFunctionResponse.gasconsumed);
+            if (inputs.systemFee && new u.Fixed8(inputs.systemFee) >= requiredSystemFee) {
                 vars.tx.systemFee = new u.Fixed8(inputs.systemFee);
                 console.log(
                     `  i Node indicates ${requiredSystemFee} systemFee but using user provided value of ${inputs.systemFee}`
@@ -251,7 +254,7 @@ export class Neo3TransferService {
                 vars.tx.systemFee
             );
             const gasBalance = balanceResponse.filter((bal) =>
-                bal.asset_id.includes(CONST.ASSET_ID.GAS)
+                bal.asset_id.includes(NEW_GAS)
             );
             const gasAmount =
                 gasBalance.length === 0
@@ -273,7 +276,7 @@ export class Neo3TransferService {
             }
 
             // 如果转的是 gas
-            if (inputs.tokenScriptHash.indexOf(CONST.ASSET_ID.GAS) >= 0) {
+            if (inputs.tokenScriptHash.indexOf(NEW_GAS) >= 0) {
                 const gasRequirements8 = bignumber(
                     gasRequirements.toNumber()
                 ).mul(bignumber(10).pow(params.decimals));
@@ -316,11 +319,16 @@ export class Neo3TransferService {
 
     async sendNeo3Tx(tx1: Transaction): Promise<any> {
         const result = await this.rpcClient.sendRawTransaction(
-            tx1.serialize(true)
+            this.hexToBase64(tx1.serialize(true))
         );
 
         console.log('\n\n--- Transaction hash ---');
         console.log(result);
         return result;
+    }
+
+    // 字符串转base64
+    hexToBase64(str: string) {
+        return Buffer.from(str, 'hex').toString('base64');
     }
 }

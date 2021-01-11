@@ -1,2 +1,2 @@
-export const NEO3_CONTRACT = '0xde5f57d430d3dece511cf975a8d37848cb9e0525';
-export const GAS3_CONTRACT = '0x668e0c1f9d7b70a99dd9e06eadd4c784d641afbc';
+export const NEO3_CONTRACT = '0x0a46e2e37c9987f570b4af253fb77e7eef0f72b6';
+export const GAS3_CONTRACT = '0xa6a6c15dcdc9b997dac448b6926522d22efeedfb';

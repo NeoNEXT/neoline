@@ -338,11 +338,18 @@ export class PopupHomeComponent implements OnInit {
 
     toWeb() {
         this.showMenu = false;
-        window.open(
-            `https://${
-            this.net === 'TestNet' ? 'testnet.' : ''
-            }neotube.io/address/${this.neon.address}/page/1`
-        );
+        switch (this.neon.currentWalletChainType) {
+            case 'Neo2':
+                window.open(
+                    `https://${
+                    this.net === 'TestNet' ? 'testnet.' : ''
+                    }neotube.io/address/${this.neon.address}/page/1`
+                );
+                break;
+            case 'Neo3':
+                window.open(`https://neo3.neotube.io/tokens/neo-top-holder/${this.neon.address}`);
+                break;
+        }
     }
     removeAccount() {
         this.showMenu = false;
