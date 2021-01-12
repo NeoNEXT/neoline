@@ -212,6 +212,9 @@ export class AssetState {
     }
 
     public getAssetRate(coins: string): Observable<any> {
+        if (this.neonService.currentWalletChainType === 'Neo3') {
+            return of({});
+        }
         if (!coins) {
             return of({});
         }

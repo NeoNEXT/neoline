@@ -93,7 +93,10 @@ export class ChromeService {
         }));
     }
     public getWalletArray(chainType: ChainType): Observable<Array<any>> {
-        const storageName = `walletArr-${chainType}`;
+        let storageName = `walletArr-${chainType}`;
+        if (chainType === 'Neo2') {
+            storageName = 'walletArr';
+        }
         if (!this.check) {
             try {
                 return of(JSON.parse(localStorage.getItem(storageName)));
@@ -112,7 +115,10 @@ export class ChromeService {
         }));
     }
     public getWIFArray(chainType: ChainType): Observable<Array<string>> {
-        const storageName = `WIFArr-${chainType}`;
+        let storageName = `WIFArr-${chainType}`;
+        if (chainType === 'Neo2') {
+            storageName = 'WIFArr';
+        }
         if (!this.check) {
             try {
                 return of(JSON.parse(localStorage.getItem(storageName)));
@@ -153,7 +159,10 @@ export class ChromeService {
      * 保存钱包数组，并记录到历史
      */
     public setWalletArray(w: Array<any>, chainType: ChainType) {
-        const storageName = `walletArr-${chainType}`;
+        let storageName = `walletArr-${chainType}`;
+        if (chainType === 'Neo2') {
+            storageName = 'walletArr';
+        }
         if (!this.check) {
             localStorage.setItem(storageName, JSON.stringify(w));
             return;
@@ -172,7 +181,10 @@ export class ChromeService {
      * 保存wif数组，并记录到历史
      */
     public setWIFArray(WIFArr: Array<string>, chainType: ChainType) {
-        const storageName = `WIFArr-${chainType}`;
+        let storageName = `WIFArr-${chainType}`;
+        if (chainType === 'Neo2') {
+            storageName = 'WIFArr';
+        }
         if (!this.check) {
             localStorage.setItem(storageName, JSON.stringify(WIFArr));
             return;
