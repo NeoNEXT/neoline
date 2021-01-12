@@ -110,9 +110,9 @@ export class Neo3TransferService {
 
             if (feePerByteInvokeResponse.state !== 'HALT') {
                 if (inputs.networkFee === 0) {
-                    throw new Error(
-                        'Unable to retrieve data to calculate network fee.'
-                    );
+                    throw {
+                        msg: 'Unable to retrieve data to calculate network fee.'
+                    };
                 } else {
                     console.log(
                         '\u001b[31m  ✗ Unable to get information to calculate network fee.  Using user provided value.\u001b[0m'
@@ -151,9 +151,9 @@ export class Neo3TransferService {
             );
 
             if (tokenNameResponse.state !== 'HALT') {
-                throw new Error(
-                    'Token not found! Please check the provided tokenScriptHash is correct.'
-                );
+                throw {
+                    msg: 'Token not found! Please check the provided tokenScriptHash is correct.'
+                };
             }
 
             vars.tokenName = u.HexString.fromBase64(
@@ -188,9 +188,9 @@ export class Neo3TransferService {
                 ]
             );
             if (invokeFunctionResponse.state !== 'HALT') {
-                throw new Error(
-                    'Transfer script errored out! You might not have sufficient funds for this transfer.'
-                );
+                throw {
+                    msg: 'Transfer script errored out! You might not have sufficient funds for this transfer.'
+                };
             }
             const requiredSystemFee = new u.Fixed8(invokeFunctionResponse.gasconsumed);
             if (inputs.systemFee && new u.Fixed8(inputs.systemFee) >= requiredSystemFee) {
