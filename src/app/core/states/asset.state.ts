@@ -224,7 +224,7 @@ export class AssetState {
         let targetCoins = '';
         coinsAry.forEach((element) => {
             const tempAssetRate = this.assetRate.get(element);
-            if (tempAssetRate) {
+            if (tempAssetRate && tempAssetRate['last-modified']) {
                 rateRes[element] = tempAssetRate['rate'];
                 if (
                     new Date().getTime() / 1000 -
