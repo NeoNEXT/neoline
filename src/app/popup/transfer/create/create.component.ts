@@ -76,7 +76,7 @@ export class TransferCreateComponent implements OnInit {
         private chrome: ChromeService,
         private block: BlockState,
         private txState: TransactionState,
-        private neo3Transfer: Neo3TransferService
+        private neo3Transfer: Neo3TransferService,
     ) {
         switch(this.neon.currentWalletChainType) {
             case 'Neo2':
@@ -196,8 +196,8 @@ export class TransferCreateComponent implements OnInit {
                 txSerialize: tx.serialize(true)
             };
             if (this.neon.currentWalletChainType === 'Neo3') {
-                diaglogData.systemFee = (tx as Transaction3).systemFee.toNumber();
-                diaglogData.networkFee = bignumber((tx as Transaction3).networkFee.toNumber()).minus(this.fee).toFixed();
+                diaglogData.systemFee = (tx as Transaction3).systemFee.toString();
+                diaglogData.networkFee = bignumber((tx as Transaction3).networkFee.toString()).minus(this.fee).toFixed();
             }
             this.dialog.open(PopupTransferConfirmComponent, {
                 panelClass: 'custom-dialog-panel-full',
@@ -425,7 +425,7 @@ export class TransferCreateComponent implements OnInit {
         };
         this.loading = true;
         this.neo3Transfer.createNeo3Tx(param, true).subscribe(tx => {
-            this.amount = bignumber(this.chooseAsset.balance).minus(tx.networkFee.toNumber()).minus(tx.systemFee.toNumber()).toString();
+            this.amount = bignumber(this.chooseAsset.balance).minus(tx.networkFee.toString()).minus(tx.systemFee.toString()).toString();
             this.fee = fee;
             this.loading = false;
             this.istransferAll = false;

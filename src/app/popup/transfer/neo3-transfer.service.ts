@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
-import { CONST, rpc, sc, tx, u, wallet } from '@cityofzion/neon-core-neo3';
+import { CONST, rpc, sc, tx, u, wallet } from '@cityofzion/neon-core-neo3/lib';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from } from 'rxjs';
 import { AssetState, NotificationService, GlobalService } from '@app/core';
 import { bignumber } from 'mathjs';
+import { NEO3_VERSION } from '../_lib';
 
 interface CreateNeo3TxInput {
     addressFrom: string;
@@ -46,11 +47,11 @@ export class Neo3TransferService {
             tokenScriptHash: params.tokenScriptHash,
             amountToTransfer: params.amount,
             systemFee: 0,
-            networkFee: bignumber(params.networkFee).toNumber() || 0,
+            networkFee: bignumber(params.networkFee).mul(bignumber(10).pow(8)).toNumber() || 0,
         };
         const vars: any = {};
-        const NEW_POLICY_CONTRACT = 'dde31084c0fdbebc7f5ed5f53a38905305ccee14';
-        const NEW_GAS = '0xa6a6c15dcdc9b997dac448b6926522d22efeedfb';
+        const NEW_POLICY_CONTRACT = '0x79bcd398505eb779df6e67e4be6c14cded08e2f2';
+        const NEW_GAS = '0x70e2301955bf1e74cbb31d18c2f96972abadb328';
 
         /**
          * We will perform the following checks:
@@ -83,7 +84,7 @@ export class Neo3TransferService {
             // We retrieve the current block height as we need to
             const currentHeight = await rpcClientTemp.getBlockCount();
             vars.tx = new tx.Transaction({
-                sender: inputs.scriptHash as any,
+                version: NEO3_VERSION,
                 signers: [
                     {
                         account: inputs.scriptHash,
@@ -92,6 +93,7 @@ export class Neo3TransferService {
                 ],
                 validUntilBlock: currentHeight + 30,
                 systemFee: vars.systemFee,
+                networkFee: vars.networkFee,
                 script,
             });
             console.log('\u001b[32m  ✓ Transaction created \u001b[0m');
@@ -105,7 +107,7 @@ export class Neo3TransferService {
         async function checkNetworkFee() {
             const feePerByteInvokeResponse: any = await rpcClientTemp.invokeFunction(
                 NEW_POLICY_CONTRACT,
-                'getFeePerByte'
+                'getExecFeeFactor',
             );
 
             if (feePerByteInvokeResponse.state !== 'HALT') {
@@ -214,12 +216,6 @@ export class Neo3TransferService {
         async function checkBalance() {
             let balanceResponse;
             try {
-                // balanceResponse = await rpcClientTemp.query({
-                //     method: 'getnep5balances',
-                //     params: [inputs.fromAccountAddress],
-                //     id: 1,
-                //     jsonrpc: '2.0',
-                // });
                 balanceResponse = await assetStateTemp
                     .fetchBalance(inputs.fromAccountAddress)
                     .toPromise();
@@ -260,7 +256,8 @@ export class Neo3TransferService {
                 gasBalance.length === 0
                     ? new u.Fixed8(0)
                     : new u.Fixed8(gasBalance[0].balance);
-            if (gasAmount.lt(gasRequirements)) {
+            const txSystemFee = bignumber(gasRequirements.toNumber()).dividedBy(bignumber(10).pow(8)).toFixed();
+            if (gasAmount.lt(txSystemFee)) {
                 throw {
                     msg: `${
                         notificationTemp.content['insufficientBalance'] +
@@ -318,6 +315,7 @@ export class Neo3TransferService {
     }
 
     async sendNeo3Tx(tx1: Transaction): Promise<any> {
+        console.log(this.hexToBase64(tx1.serialize(true)));
         const result = await this.rpcClient.sendRawTransaction(
             this.hexToBase64(tx1.serialize(true))
         );
