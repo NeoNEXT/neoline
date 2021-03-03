@@ -122,13 +122,11 @@ export class Neo3TransferService {
                     vars.tx.networkFee = new u.Fixed8(inputs.networkFee);
                 }
             }
-            const feePerByte = u.Fixed8.fromRawNumber(
-                feePerByteInvokeResponse.stack[0].value
-            );
+            const feePerByte = new u.Fixed8(feePerByteInvokeResponse.stack[0].value);
             // Account for witness size
             const transactionByteSize = vars.tx.serialize().length / 2 + 109;
             // Hardcoded. Running a witness is always the same cost for the basic account.
-            const witnessProcessingFee = u.Fixed8.fromRawNumber(1000390);
+            const witnessProcessingFee = new u.Fixed8(1000390);
             const networkFeeEstimate = feePerByte
                 .mul(transactionByteSize)
                 .add(witnessProcessingFee);
@@ -315,7 +313,6 @@ export class Neo3TransferService {
     }
 
     async sendNeo3Tx(tx1: Transaction): Promise<any> {
-        console.log(this.hexToBase64(tx1.serialize(true)));
         const result = await this.rpcClient.sendRawTransaction(
             this.hexToBase64(tx1.serialize(true))
         );
