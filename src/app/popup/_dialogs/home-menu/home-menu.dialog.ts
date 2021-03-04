@@ -68,6 +68,7 @@ export class PopupHomeMenuDialogComponent {
     }
 
     public lock() {
+        this.global.$wallet.next('close');
         this.dialogRef.close('lock');
         this.chrome.clearLogin();
         this.router.navigateByUrl('/popup/login');

@@ -80,6 +80,7 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
             }
             this.loading = false;
             this.chrome.verifyLogin();
+            this.global.$wallet.next('open');
             const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
             this.router.navigateByUrl(returnUrl);
         }).catch((err) => {
