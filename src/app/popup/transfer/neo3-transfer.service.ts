@@ -47,19 +47,11 @@ export class Neo3TransferService {
             tokenScriptHash: params.tokenScriptHash,
             amountToTransfer: params.amount,
             systemFee: 0,
-            networkFee: bignumber(params.networkFee).mul(bignumber(10).pow(8)).toNumber() || 0,
+            networkFee: bignumber(params.networkFee).times(bignumber(10).pow(8)).toNumber() || 0,
         };
         const vars: any = {};
         const NEW_POLICY_CONTRACT = '0x79bcd398505eb779df6e67e4be6c14cded08e2f2';
         const NEW_GAS = '0x70e2301955bf1e74cbb31d18c2f96972abadb328';
-
-        /**
-         * We will perform the following checks:
-         * 1. The token exists. This can be done by performing a invokeFunction call.
-         * 2. The amount of token exists on fromAccount.
-         * 3. The amount of GAS for fees exists on fromAccount.
-         * All these checks can be performed through RPC calls to a NEO node.
-         */
 
         async function createTransaction() {
             console.log(`\n\n --- Today's Task ---`);
@@ -99,11 +91,6 @@ export class Neo3TransferService {
             console.log('\u001b[32m  ✓ Transaction created \u001b[0m');
         }
 
-        /**
-         * Network fees pay for the processing and storage of the transaction in the
-         * network. There is a cost incurred per byte of the transaction (without the
-         * signatures) and also the cost of running the verification of signatures.
-         */
         async function checkNetworkFee() {
             const feePerByteInvokeResponse: any = await rpcClientTemp.invokeFunction(
                 NEW_POLICY_CONTRACT,
@@ -122,51 +109,18 @@ export class Neo3TransferService {
                     vars.tx.networkFee = new u.Fixed8(inputs.networkFee);
                 }
             }
-            const feePerByte = new u.Fixed8(feePerByteInvokeResponse.stack[0].value);
-            // Account for witness size
-            const transactionByteSize = vars.tx.serialize().length / 2 + 109;
-            // Hardcoded. Running a witness is always the same cost for the basic account.
-            const witnessProcessingFee = new u.Fixed8(1000390);
-            const networkFeeEstimate = feePerByte
-                .mul(transactionByteSize)
-                .add(witnessProcessingFee);
-            vars.tx.networkFee = new u.Fixed8(
-                inputs.networkFee + networkFeeEstimate.toNumber()
-            );
+            const networkFee = feePerByteInvokeResponse.gasconsumed;
+            const feePerByte = feePerByteInvokeResponse.stack[0].value;
+            // 字节费 = 字节长度 * 倍率(feePerByte)
+            const transactionByteSize = bignumber(vars.tx.serialize().length / 2 + 109).times(feePerByte);
+            const networkFeeEstimate = bignumber(networkFee).plus(transactionByteSize).toNumber();
+            vars.tx.networkFee = u.Fixed8.fromRawNumber(bignumber(networkFeeEstimate).plus(inputs.systemFee).toNumber());
             vars.networkFeeEstimate = networkFeeEstimate;
             console.log(
                 `\u001b[32m  ✓ Network Fee set: ${vars.tx.networkFee} \u001b[0m`
             );
         }
 
-        /**
-         * First, we check that the token exists. We perform an invokeFunction RPC call
-         * which calls the `name` method of the contract. The VM should exit successfully
-         * with `HALT` and give us the token name if it exists.
-         */
-        async function checkToken() {
-            const tokenNameResponse: any = await rpcClientTemp.invokeFunction(
-                inputs.tokenScriptHash,
-                'name'
-            );
-
-            if (tokenNameResponse.state !== 'HALT') {
-                throw {
-                    msg: 'Token not found! Please check the provided tokenScriptHash is correct.'
-                };
-            }
-
-            vars.tokenName = u.HexString.fromBase64(
-                tokenNameResponse.stack[0].value
-            ).toAscii();
-
-            console.log('\u001b[32m  ✓ Token found \u001b[0m');
-        }
-
-        /**
-         * SystemFees pay for the processing of the script carried in the transaction. We
-         * can easily get this number by using invokeScript with the appropriate signers.
-         */
         async function checkSystemFee() {
             const script = sc.createScript({
                 scriptHash: inputs.tokenScriptHash,
@@ -192,102 +146,13 @@ export class Neo3TransferService {
                     msg: 'Transfer script errored out! You might not have sufficient funds for this transfer.'
                 };
             }
-            const requiredSystemFee = new u.Fixed8(invokeFunctionResponse.gasconsumed);
-            if (inputs.systemFee && new u.Fixed8(inputs.systemFee) >= requiredSystemFee) {
-                vars.tx.systemFee = new u.Fixed8(inputs.systemFee);
-                console.log(
-                    `  i Node indicates ${requiredSystemFee} systemFee but using user provided value of ${inputs.systemFee}`
-                );
-            } else {
-                vars.tx.systemFee = requiredSystemFee;
-            }
+            // const requiredSystemFee = u.Fixed8.fromRawNumber(invokeFunctionResponse.gasconsumed);
+            vars.tx.systemFee = u.Fixed8.fromRawNumber(invokeFunctionResponse.gasconsumed);
             console.log(
                 `\u001b[32m  ✓ SystemFee set: ${vars.tx.systemFee.toString()}\u001b[0m`
             );
         }
-
-        /**
-         * We will also need to check that the inital address has sufficient funds for the transfer.
-         * We look for both funds of the token we intend to transfer and GAS required to pay for the transaction.
-         * For this, we rely on the NEP5Tracker plugin. Hopefully, the node we select has the plugin installed.
-         */
-        async function checkBalance() {
-            let balanceResponse;
-            try {
-                balanceResponse = await assetStateTemp
-                    .fetchBalance(inputs.fromAccountAddress)
-                    .toPromise();
-            } catch (e) {
-                console.log(
-                    '\u001b[31m  ✗ Unable to get balances as plugin was not available. \u001b[0m'
-                );
-                return;
-            }
-            // Check for token funds
-            const balances = balanceResponse.filter((bal) =>
-                bal.asset_id.includes(inputs.tokenScriptHash)
-            );
-            const sourceBalanceAmount =
-                balances.length === 0 ? 0 : balances[0].balance;
-            const balanceAmount = bignumber(sourceBalanceAmount)
-                .mul(bignumber(10).pow(params.decimals))
-                .toNumber();
-            if (balanceAmount < inputs.amountToTransfer) {
-                throw {
-                    msg: `${
-                        notificationTemp.content['insufficientSystemFee'] +
-                        sourceBalanceAmount
-                    }`,
-                };
-            } else {
-                console.log('\u001b[32m  ✓ Token funds found \u001b[0m');
-            }
-
-            // Check for gas funds for fees
-            const gasRequirements = new u.Fixed8(vars.tx.networkFee).plus(
-                vars.tx.systemFee
-            );
-            const gasBalance = balanceResponse.filter((bal) =>
-                bal.asset_id.includes(NEW_GAS)
-            );
-            const gasAmount =
-                gasBalance.length === 0
-                    ? new u.Fixed8(0)
-                    : new u.Fixed8(gasBalance[0].balance);
-            const txSystemFee = bignumber(gasRequirements.toNumber()).dividedBy(bignumber(10).pow(8)).toFixed();
-            if (gasAmount.lt(txSystemFee)) {
-                throw {
-                    msg: `${
-                        notificationTemp.content['insufficientBalance'] +
-                        gasRequirements.toString() +
-                        notificationTemp.content['butOnlyHad'] +
-                        gasAmount.toString()
-                    }`,
-                };
-            } else {
-                console.log(
-                    `\u001b[32m  ✓ Sufficient GAS for fees found (${gasRequirements.toString()}) \u001b[0m`
-                );
-            }
-
-            // 如果转的是 gas
-            if (inputs.tokenScriptHash.indexOf(NEW_GAS) >= 0) {
-                const gasRequirements8 = bignumber(
-                    gasRequirements.toNumber()
-                ).mul(bignumber(10).pow(params.decimals));
-                const totalRequirements = bignumber(inputs.amountToTransfer)
-                    .add(gasRequirements8)
-                    .toNumber();
-                if (balanceAmount < totalRequirements) {
-                    throw {
-                        msg: `${
-                            notificationTemp.content['insufficientSystemFee'] +
-                            sourceBalanceAmount
-                        }`,
-                    };
-                }
-            }
-        }
+        
 
         if (isTransferAll) {
             return from(
@@ -299,13 +164,11 @@ export class Neo3TransferService {
                     })
             );
         }
-
         return from(
             createTransaction()
-                // .then(checkToken)
                 .then(checkNetworkFee)
                 .then(checkSystemFee)
-                .then(checkBalance)
+                // .then(checkBalance)
                 .then(() => {
                     return vars.tx;
                 })
@@ -318,7 +181,6 @@ export class Neo3TransferService {
         );
 
         console.log('\n\n--- Transaction hash ---');
-        console.log(result);
         return result;
     }
 

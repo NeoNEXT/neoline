@@ -77,7 +77,7 @@ export class PopupTransferConfirmComponent implements OnInit {
     async ngOnInit() {
         const wallet = this.neon.wallet;
         this.fromName = wallet.name;
-        this.rateCurrency = this.assetState.rateCurrency
+        this.rateCurrency = this.assetState.rateCurrency;
         this.assetImageUrl = await this.assetState.getAssetImageFromAssetId(this.data.asset);
         for(const key in this.data) {
             if(this.data[key] !== '' && key !== 'txSerialize') {
@@ -116,7 +116,7 @@ export class PopupTransferConfirmComponent implements OnInit {
             this.systemFeeMoney = res[1];
             this.networkFeeMoney = res[2];
             this.money = res[3];
-            this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
+            // this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
         });
     }
 
@@ -142,13 +142,13 @@ export class PopupTransferConfirmComponent implements OnInit {
                 fee: this.data.fee
             }
         }).afterClosed().subscribe(res => {
-            if (res !== false) {
+            if (res !== false && res !== undefined) {
                 this.data.fee = res;
                 this.datajson.fee = res;
                 this.assetState.getMoney('GAS', Number(this.data.fee)).then(feeMoney => {
                     this.feeMoney = feeMoney;
                     this.totalFee = bignumber(this.data.fee).add(this.data.systemFee || 0).add(this.data.networkFee || 0);
-                    this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
+                    // this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
                 });
             }
         })

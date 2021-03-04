@@ -110,7 +110,6 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
                 !this.neonWallet.isPrivateKey(this.walletImport.WIF)
             ) {
                 this.isWIF = false;
-                console.log(this.isWIF);
                 return;
             }
             this.loading = true;
