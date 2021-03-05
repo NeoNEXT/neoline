@@ -116,7 +116,7 @@ export class PopupTransferConfirmComponent implements OnInit {
             this.systemFeeMoney = res[1];
             this.networkFeeMoney = res[2];
             this.money = res[3];
-            // this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
+            this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
         });
     }
 
@@ -129,7 +129,7 @@ export class PopupTransferConfirmComponent implements OnInit {
                 if (symbol.toLowerCase() in rate) {
                     mResolve(this.global.mathmul(Number(rate[symbol.toLowerCase()]), Number(balance)).toString());
                 } else {
-                    mResolve('');
+                    mResolve('0');
                 }
             });
         })
@@ -142,13 +142,13 @@ export class PopupTransferConfirmComponent implements OnInit {
                 fee: this.data.fee
             }
         }).afterClosed().subscribe(res => {
-            if (res !== false && res !== undefined) {
+            if (res !== false) {
                 this.data.fee = res;
                 this.datajson.fee = res;
                 this.assetState.getMoney('GAS', Number(this.data.fee)).then(feeMoney => {
                     this.feeMoney = feeMoney;
                     this.totalFee = bignumber(this.data.fee).add(this.data.systemFee || 0).add(this.data.networkFee || 0);
-                    // this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
+                    this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
                 });
             }
         })

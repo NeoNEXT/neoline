@@ -38,7 +38,7 @@ import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
 import { bignumber } from 'mathjs';
 import { GasFeeSpeed } from '../../_lib/type';
 import { Neo3TransferService } from '../neo3-transfer.service';
-import { GAS3_CONTRACT } from '../../_lib';
+import { GAS3_CONTRACT, NEO3_MAGIC_NUMBER_TESTNET } from '../../_lib';
 
 @Component({
     templateUrl: 'create.component.html',
@@ -181,7 +181,7 @@ export class TransferCreateComponent implements OnInit {
                     tx.sign(wif);
                     break;
                 case 'Neo3':
-                    tx.sign(wif, CONST3.MAGIC_NUMBER.TestNet);
+                    tx.sign(wif, NEO3_MAGIC_NUMBER_TESTNET);
                     break;
             }
             this.global.log('signed tx', tx);
@@ -219,7 +219,7 @@ export class TransferCreateComponent implements OnInit {
                                         res.sign(wif);
                                         break;
                                     case 'Neo3':
-                                        res.sign(wif, CONST3.MAGIC_NUMBER.TestNet);
+                                        res.sign(wif, NEO3_MAGIC_NUMBER_TESTNET);
                                         break;
                                 }
                                 this.resolveSend(res);
