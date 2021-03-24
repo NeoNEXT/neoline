@@ -154,7 +154,6 @@ export class AppComponent {
         }
     }
     public updateNeo3Address() {
-        console.log(JSON.parse(localStorage.getItem('neo3AddressFlag')))
         if (!JSON.parse(localStorage.getItem('neo3AddressFlag'))) {
             const walletArrNeo3 = JSON.parse(localStorage.getItem('walletArr-Neo3'));
             const WIFArrNeo3 = JSON.parse(localStorage.getItem('WIFArr-Neo3'));
