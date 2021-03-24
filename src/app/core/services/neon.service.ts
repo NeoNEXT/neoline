@@ -8,7 +8,7 @@ import Neon3, {
     wallet as wallet3,
     tx as tx3,
     rpc as rpc3,
-} from '@cityofzion/neon-js-neo3';
+} from '@cityofzion/neon-js-neo3/lib';
 import {
     Wallet as Wallet2,
     WalletJSON as WalletJSON2,
@@ -192,7 +192,7 @@ export class NeonService {
                     this._walletArr2 = tempArray;
                     flag.Neo2 = true;
                 }
-                // neo2 walletArr
+                // neo3 walletArr
                 if (res[4] && res[4].length > 0) {
                     const tempArray = [];
                     res[4].forEach((item) => {
