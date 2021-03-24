@@ -10,7 +10,7 @@ import { WalletInitConstant } from '../../_lib/constant';
 import { WalletCreation, WalletImport } from '../../_lib/models';
 import { Observable, of } from 'rxjs';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
-import { wallet as wallet3 } from '@cityofzion/neon-js-neo3';
+import { wallet as wallet3 } from '@cityofzion/neon-js-neo3/lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 

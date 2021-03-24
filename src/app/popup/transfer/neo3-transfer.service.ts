@@ -49,8 +49,8 @@ export class Neo3TransferService {
             networkFee: bignumber(params.networkFee).toNumber() || 0,
         };
         const vars: any = {};
-        const NEW_POLICY_CONTRACT = '0x79bcd398505eb779df6e67e4be6c14cded08e2f2';
-        const NEW_GAS = '0x70e2301955bf1e74cbb31d18c2f96972abadb328';
+        const NEW_POLICY_CONTRACT = '0xcc5e4edd9f5f8dba8bb65734541df7a1c081c67b';
+        const NEW_GAS = '0xd2a4cff31913016155e38e474a2c06d08be276cf';
 
         /**
          * We will perform the following checks:
@@ -106,7 +106,7 @@ export class Neo3TransferService {
                 NEW_POLICY_CONTRACT,
                 'getExecFeeFactor',
             );
-
+            console.log(feePerByteInvokeResponse)
             if (feePerByteInvokeResponse.state !== 'HALT') {
                 if (inputs.networkFee === 0) {
                     throw {
