@@ -159,7 +159,6 @@ export class ChromeService {
      * 保存钱包数组，并记录到历史
      */
     public setWalletArray(w: Array<any>, chainType: ChainType) {
-        console.log(chainType)
         let storageName = `walletArr-${chainType}`;
         if (chainType === 'Neo2') {
             storageName = 'walletArr';
@@ -182,7 +181,6 @@ export class ChromeService {
      * 保存wif数组，并记录到历史
      */
     public setWIFArray(WIFArr: Array<string>, chainType: ChainType) {
-        console.log(chainType)
         let storageName = `WIFArr-${chainType}`;
         if (chainType === 'Neo2') {
             storageName = 'WIFArr';
