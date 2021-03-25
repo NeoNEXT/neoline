@@ -8,7 +8,7 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { HttpClient } from '@angular/common/http';
 import { EVENT } from '@/models/dapi';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
-import Neon3, { wallet as wallet3, } from '@cityofzion/neon-js-neo3/lib';
+
 @Component({
     selector: 'neo-line',
     templateUrl: './app.component.html',

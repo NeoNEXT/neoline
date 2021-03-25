@@ -5,8 +5,7 @@ import { ChromeService, NeonService } from '@app/core';
 import { WalletJSON as WalletJSON2 } from '@cityofzion/neon-core/lib/wallet';
 import { WalletJSON as WalletJSON3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
-import { wallet as wallet3 } from '@cityofzion/neon-js-neo3/lib';
-
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 @Component({
     templateUrl: 'address.dialog.html',
     styleUrls: ['address.dialog.scss'],

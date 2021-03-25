@@ -8,7 +8,7 @@ import Neon3, {
     wallet as wallet3,
     tx as tx3,
     rpc as rpc3,
-} from '@cityofzion/neon-js-neo3/lib';
+} from '@cityofzion/neon-core-neo3/lib';
 import {
     Wallet as Wallet2,
     WalletJSON as WalletJSON2,
