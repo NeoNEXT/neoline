@@ -163,14 +163,25 @@ export class NeonService {
         const getNeo3WIFArr = this.chrome.getWIFArray('Neo3');
         const getNeo2WalletArr = this.chrome.getWalletArray('Neo2');
         const getNeo3WalletArr = this.chrome.getWalletArray('Neo3');
+        const Neo3AddressFlag = this.chrome.getUpdateNeo3AddressFlag();
         return forkJoin([
             getWallet,
             getNeo2WIFArr,
             getNeo3WIFArr,
             getNeo2WalletArr,
             getNeo3WalletArr,
+            Neo3AddressFlag,
         ]).pipe(
             map((res) => {
+                if (!res[5] && res[2] && res[2].length > 0 && res[4] && res[4].length > 0) {
+                    res[4].forEach((item, index) => {
+                        const account = new wallet3.Account(wallet3.getPrivateKeyFromWIF(res[2][index]));
+                        item.accounts[0].address = account.label;
+                        item.accounts[0].label = account.label;
+                    });
+                    this.chrome.setWalletArray(res[4], 'Neo3');
+                    this.chrome.setUpdateNeo3AddressFlag(true);
+                }
                 // wallet
                 this._wallet = this.parseWallet(res[0]);
                 this.$wallet.next(this._wallet);

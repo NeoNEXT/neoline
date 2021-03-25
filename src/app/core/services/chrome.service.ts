@@ -198,6 +198,41 @@ export class ChromeService {
         }
     }
 
+    public getUpdateNeo3AddressFlag(): Observable<any> {
+        if (!this.check) {
+            try {
+                return of(JSON.parse(localStorage.getItem('neo3AddressFlag')));
+            } catch (e) {
+                return throwError('please set neo3AddressFlag json to local storage when debug mode on');
+            }
+        }
+        return from(new Promise<WalletJSON2 | WalletJSON3>((resolve, reject) => {
+            try {
+                this.crx.getLocalStorage('neo3AddressFlag', (res) => {
+                    resolve(res);
+                });
+            } catch (e) {
+                reject('failed');
+            }
+        }));
+    }
+
+    public setUpdateNeo3AddressFlag(flag: boolean) {
+        let storageName = `neo3AddressFlag`;
+
+        if (!this.check) {
+            localStorage.setItem(storageName, JSON.stringify(flag));
+            return;
+        }
+        try {
+            const saveData = {};
+            saveData[storageName] = flag;
+            this.crx.setLocalStorage(saveData);
+        } catch (e) {
+            console.log('set account failed', e);
+        }
+    }
+
     /**
      * Close opened wallet, remove from storage
      * 清除当前打开的钱包

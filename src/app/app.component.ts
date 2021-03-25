@@ -32,8 +32,6 @@ export class AppComponent {
         private assetSer: AssetState,
         private http: HttpClient
     ) {
-        this.setUpdateNeo3AddressFlag();
-        this.updateNeo3Address();
         this.chrome.getLang().subscribe((res) => {
             this.http
                 .get(`/_locales/${res}/messages.json`)
@@ -147,24 +145,5 @@ export class AppComponent {
                     );
                 }
             });
-    }
-    public setUpdateNeo3AddressFlag() {
-        if (!localStorage.getItem('neo3AddressFlag')) {
-            localStorage.setItem('neo3AddressFlag', 'false');
-        }
-    }
-    public updateNeo3Address() {
-        if (!JSON.parse(localStorage.getItem('neo3AddressFlag'))) {
-            const walletArrNeo3 = JSON.parse(localStorage.getItem('walletArr-Neo3'));
-            const WIFArrNeo3 = JSON.parse(localStorage.getItem('WIFArr-Neo3'));
-            walletArrNeo3.forEach((item, index) => {
-                const account = new wallet3.Account(wallet3.getPrivateKeyFromWIF(WIFArrNeo3[index]));
-                console.log('item', item, 'account', account);
-                item.accounts[0].address = account.label;
-                item.accounts[0].label = account.label;
-            });
-            localStorage.setItem('walletArr-Neo3', JSON.stringify(walletArrNeo3));
-            localStorage.setItem('neo3AddressFlag', 'true');
-        }
     }
 }
