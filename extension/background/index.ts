@@ -303,7 +303,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 if(response.status === 'success') {
                     const returnData = response.data
                     for (const key in returnData) {
-                        if (Object.prototype.hasOwnProperty(key)) {
+                        if (Object.prototype.hasOwnProperty.call(returnData, key)) {
                             if (returnData[key]) {
                                 returnData[key].map(item => {
                                     item.assetID = item.asset_id;
