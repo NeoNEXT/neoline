@@ -106,7 +106,6 @@ export class Neo3TransferService {
                 NEW_POLICY_CONTRACT,
                 'getExecFeeFactor',
             );
-            console.log(feePerByteInvokeResponse)
             if (feePerByteInvokeResponse.state !== 'HALT') {
                 if (inputs.networkFee === 0) {
                     throw {
