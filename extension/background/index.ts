@@ -23,6 +23,7 @@ import {
 } from '../common';
 import { requestTarget, GetBalanceArgs, BalanceRequest, ERRORS, mainApi, EVENT, mainRPC, testRPC, InvokeReadMultiArgs } from '../common/data_module';
 import { reverseHex, getScriptHashFromAddress, hexstring2str } from '../common/utils';
+import { wallet } from '@cityofzion/neon-core-neo3';
 /**
  * Background methods support.
  * Call window.NeoLineBackground to use.
@@ -118,7 +119,7 @@ export function expand() {
                 Network: network === 'MainNet' ? 'mainnet' : 'testnet'
             });
         });
-    }, 20000);
+    }, 8000);
     if (navigator.language === 'zh-CN') {
         getStorage('lang', res => {
             if (res === undefined) {
@@ -533,23 +534,28 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     return true;
 });
 
+
 export function windowCallback(data) {
-    chrome.tabs.query({
-    }, (tabs: any) => {
-        // console.log(tabs);
-        // tabCurr = tabs;
-        if (tabs.length > 0) {
-            tabs.forEach(item => {
-                chrome.tabs.sendMessage(item.id, data, (response) => {
-                    // tabCurr = null;
-                });
-            })
+    getLocalStorage('wallet', res => {
+        if (!wallet.isAddress(res.accounts[0].address)) {
+            chrome.tabs.query({
+            }, (tabs: any) => {
+                // console.log(tabs);
+                // tabCurr = tabs;
+                if (tabs.length > 0) {
+                    tabs.forEach(item => {
+                        chrome.tabs.sendMessage(item.id, data, (response) => {
+                            // tabCurr = null;
+                        });
+                    })
+                }
+                // if (tabCurr.length >= 1) {
+                //     chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
+                //         // tabCurr = null;
+                //     });
+                // }
+            });
         }
-        // if (tabCurr.length >= 1) {
-        //     chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
-        //         // tabCurr = null;
-        //     });
-        // }
     });
     // if (tabCurr === null || tabCurr === undefined || tabCurr === []) {
     //     chrome.tabs.query({
