@@ -4,12 +4,12 @@ import Neon2, {
     tx as tx2,
     rpc as rpc2,
 } from '@cityofzion/neon-js';
-import Neon3, {
+import Neon3 from '@cityofzion/neon-js-neo3';
+import {
     wallet as wallet3,
     tx as tx3,
     rpc as rpc3,
-} from '@cityofzion/neon-js-neo3/lib';
-// import Neon3 from '@cityofzion/neon-js-neo3';
+} from '@cityofzion/neon-core-neo3/lib';
 import {
     Wallet as Wallet2,
     WalletJSON as WalletJSON2,
@@ -244,19 +244,34 @@ export class NeonService {
      */
     public createWallet(key: string, name: string = null): Observable<any> {
         this.selectChainType();
-        const privateKey = this._selectedNeonWallet.generatePrivateKey();
-        const account = new this._selectedNeonWallet.Account(privateKey);
-        const w = this._selectedNeon.create.wallet({
-            name: name || 'NeoLineUser',
-        } as any);
-        w.addAccount(account);
-        const wif = w.accounts[0].WIF;
-        return from(w.accounts[0].encrypt(key)).pipe(
-            map(() => {
-                (w.accounts[0] as any).wif = wif;
-                return w;
-            })
-        );
+        if (this.selectedChainType === 'Neo2') {
+            const privateKey = this._selectedNeonWallet.generatePrivateKey();
+            const account = new this._selectedNeonWallet.Account(privateKey);
+            const w = this._selectedNeon.create.wallet({
+                name: name || 'NeoLineUser',
+            } as any);
+            w.addAccount(account);
+            const wif = w.accounts[0].WIF;
+            return from(w.accounts[0].encrypt(key)).pipe(
+                map(() => {
+                    (w.accounts[0] as any).wif = wif;
+                    return w;
+                })
+            );
+        } else if (this.selectedChainType === 'Neo3') {
+            const account = new this._selectedNeonWallet.Account();
+            const wif = account.WIF;
+            const w = new this._selectedNeonWallet.Wallet({
+                name: name || 'NeoLineUser',
+            } as any);
+            w.addAccount(account);
+            return from(w.accounts[0].encrypt(key)).pipe(
+                map(() => {
+                    (w.accounts[0] as any).wif = wif;
+                    return w;
+                })
+            );
+        }
     }
 
     /**
@@ -367,19 +382,35 @@ export class NeonService {
         name: string = null
     ): Observable<Wallet2 | Wallet3> {
         this.selectChainType();
-        const account = new this._selectedNeonWallet.Account(privKey);
-        const w = this._selectedNeon.create.wallet({
-            name: name || 'NeoLineUser',
-        } as any);
-        w.addAccount(account);
-        const wif = w.accounts[0].WIF;
-        w.encrypt(0, key);
-        return from(w.accounts[0].encrypt(key)).pipe(
-            map(() => {
-                (w.accounts[0] as any).wif = wif;
-                return w;
-            })
-        );
+        if (this.selectedChainType === 'Neo2') {
+            const account = new this._selectedNeonWallet.Account(privKey);
+            const w = this._selectedNeon.create.wallet({
+                name: name || 'NeoLineUser',
+            } as any);
+            w.addAccount(account);
+            const wif = w.accounts[0].WIF;
+            w.encrypt(0, key);
+            return from(w.accounts[0].encrypt(key)).pipe(
+                map(() => {
+                    (w.accounts[0] as any).wif = wif;
+                    return w;
+                })
+            );
+        } else if (this.selectedChainType === 'Neo3') {
+            const account = new this._selectedNeonWallet.Account(privKey);
+            const w = new this._selectedNeonWallet.Wallet({
+                name: name || 'NeoLineUser',
+            } as any);
+            w.addAccount(account);
+            const wif = w.accounts[0].WIF;
+            w.encrypt(0, key);
+            return from(w.accounts[0].encrypt(key)).pipe(
+                map(() => {
+                    (w.accounts[0] as any).wif = wif;
+                    return w;
+                })
+            );
+        }
     }
     /**
      * Create a new wallet include given private key and encrypt by given password.
@@ -393,20 +424,37 @@ export class NeonService {
         name: string = null
     ): Observable<Wallet2 | Wallet3> {
         this.selectChainType();
-        const account = new this._selectedNeonWallet.Account(
-            this._selectedNeonWallet.getPrivateKeyFromWIF(wif)
-        );
-        const w = this._selectedNeon.create.wallet({
-            name: name || 'NeoLineUser',
-        } as any);
-        w.addAccount(account);
-        w.encrypt(0, key);
-        return from(w.accounts[0].encrypt(key)).pipe(
-            map(() => {
-                (w.accounts[0] as any).wif = wif;
-                return w;
-            })
-        );
+        if (this.selectedChainType === 'Neo2') {
+            const account = new this._selectedNeonWallet.Account(
+                this._selectedNeonWallet.getPrivateKeyFromWIF(wif)
+            );
+            const w = this._selectedNeon.create.wallet({
+                name: name || 'NeoLineUser',
+            } as any);
+            w.addAccount(account);
+            w.encrypt(0, key);
+            return from(w.accounts[0].encrypt(key)).pipe(
+                map(() => {
+                    (w.accounts[0] as any).wif = wif;
+                    return w;
+                })
+            );
+        } else if (this.selectedChainType === 'Neo3') {
+            const account = new this._selectedNeonWallet.Account(
+                this._selectedNeonWallet.getPrivateKeyFromWIF(wif)
+            );
+            const w = new this._selectedNeonWallet.Wallet({
+                name: name || 'NeoLineUser',
+            } as any);
+            w.addAccount(account);
+            w.encrypt(0, key);
+            return from(w.accounts[0].encrypt(key)).pipe(
+                map(() => {
+                    (w.accounts[0] as any).wif = wif;
+                    return w;
+                })
+            );
+        }
     }
     /**
      * Create a new wallet include given encrypted key and try decrypt it by given password.
@@ -421,29 +469,55 @@ export class NeonService {
     ): Observable<Wallet2 | Wallet3> {
         this.selectChainType();
         return new Observable((observer: Observer<Wallet2 | Wallet3>) => {
-            const w = this._selectedNeon.create.wallet({
-                name: name || 'NeoLineUser',
-            } as any);
-            w.addAccount(new this._selectedNeonWallet.Account(encKey));
-            this._selectedNeonWallet
-                .decrypt(encKey, key)
-                .then((wif) => {
-                    const account = new this._selectedNeonWallet.Account(
-                        this._selectedNeonWallet.getPrivateKeyFromWIF(wif)
-                    );
-                    const returnRes = this._selectedNeon.create.wallet({
-                        name: name || 'NeoLineUser',
-                    } as any);
-                    returnRes.addAccount(account);
-                    returnRes.encrypt(0, key);
-                    returnRes.accounts[0].encrypt(key).then((res) => {
-                        (returnRes.accounts[0] as any).wif = wif;
-                        observer.next(returnRes);
+            if (this.selectedChainType === 'Neo2') {
+                const w = this._selectedNeon.create.wallet({
+                    name: name || 'NeoLineUser',
+                } as any);
+                w.addAccount(new this._selectedNeonWallet.Account(encKey));
+                this._selectedNeonWallet
+                    .decrypt(encKey, key)
+                    .then((wif) => {
+                        const account = new this._selectedNeonWallet.Account(
+                            this._selectedNeonWallet.getPrivateKeyFromWIF(wif)
+                        );
+                        const returnRes = this._selectedNeon.create.wallet({
+                            name: name || 'NeoLineUser',
+                        } as any);
+                        returnRes.addAccount(account);
+                        returnRes.encrypt(0, key);
+                        returnRes.accounts[0].encrypt(key).then((res) => {
+                            (returnRes.accounts[0] as any).wif = wif;
+                            observer.next(returnRes);
+                        });
+                    })
+                    .catch((err) => {
+                        observer.error('import failed');
                     });
-                })
-                .catch((err) => {
-                    observer.error('import failed');
-                });
+            } else if (this.selectedChainType === 'Neo3') {
+                const w = new this._selectedNeonWallet.Wallet({
+                    name: name || 'NeoLineUser',
+                } as any);
+                w.addAccount(new this._selectedNeonWallet.Account(encKey));
+                this._selectedNeonWallet
+                    .decrypt(encKey, key)
+                    .then((wif) => {
+                        const account = new this._selectedNeonWallet.Account(
+                            this._selectedNeonWallet.getPrivateKeyFromWIF(wif)
+                        );
+                        const returnRes = new this._selectedNeonWallet.Wallet({
+                            name: name || 'NeoLineUser',
+                        } as any);
+                        returnRes.addAccount(account);
+                        returnRes.encrypt(0, key);
+                        returnRes.accounts[0].encrypt(key).then((res) => {
+                            (returnRes.accounts[0] as any).wif = wif;
+                            observer.next(returnRes);
+                        });
+                    })
+                    .catch((err) => {
+                        observer.error('import failed');
+                    });
+            }
         });
     }
     public parseWallet(src: any): Wallet2 | Wallet3 {
