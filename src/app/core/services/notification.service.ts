@@ -34,7 +34,6 @@ export class NotificationService {
         insufficientBalance: 'Insufficient GAS to pay for fees! Required',
         butOnlyHad: 'but only had',
         insufficientSystemFee: 'Insufficient balance when system fee added',
-        PleaseSwitchToNeo2: 'Please switch to Neo2 address.',
     };
     CN = {
         close: '关闭',
@@ -66,7 +65,6 @@ export class NotificationService {
         insufficientBalance: 'GAS 不足以支付费用！需要',
         butOnlyHad: '但只有',
         insufficientSystemFee: '加上系统费用后余额不足',
-        PleaseSwitchToNeo2: '请切换到 Neo2 地址。',
     };
     constructor(
         public chrome: ChromeService
