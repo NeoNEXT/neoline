@@ -13,9 +13,6 @@ import {
     ActivatedRoute,
     Router
 } from '@angular/router';
-import {
-    wallet as wallet3
-} from '@cityofzion/neon-core-neo3';
 
 import { ERRORS, EVENT , requestTarget } from '@/models/dapi';
 
@@ -32,7 +29,6 @@ export class PopupNoticeAuthComponent implements OnInit {
     public accountName = '';
     private paramsData: any;
 
-    chainType = 'Neo';
     public ruleCheck = false;
     public ruleSelected = 'true';
     constructor(
@@ -62,11 +58,6 @@ export class PopupNoticeAuthComponent implements OnInit {
                     this.global.modifyNet('TestNet');
                 }
             }
-            this.chrome.getWallet().subscribe(res => {
-                if (res && wallet3.isAddress(res.accounts[0].address)) {
-                    this.chainType = 'Neo3';
-                }
-            })
         });
     }
 
@@ -100,10 +91,6 @@ export class PopupNoticeAuthComponent implements OnInit {
         });
     }
     public connect() {
-        if (this.chainType === 'Neo3') {
-            this.global.snackBarTip('PleaseSwitchToNeo2');
-            return;
-        }
         this.chrome.getAuthorization().subscribe(res => {
             if (this.ruleCheck) {
                 if (res[this.neon.wallet.accounts[0].address] === undefined) {
