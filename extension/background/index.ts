@@ -21,9 +21,9 @@ import {
     setLocalStorage,
     getLocalStorage
 } from '../common';
-import { requestTarget, GetBalanceArgs, BalanceRequest, ERRORS, mainApi, EVENT, mainRPC, testRPC, InvokeReadMultiArgs } from '../common/data_module';
-import { reverseHex, getScriptHashFromAddress, hexstring2str } from '../common/utils';
-import { wallet } from '@cityofzion/neon-core-neo3';
+import { requestTarget, GetBalanceArgs, ERRORS, mainApi, EVENT, RPC, requestNeo3Target } from '../common/data_module';
+import { getScriptHashFromAddress, hexstring2str } from '../common/utils';
+
 /**
  * Background methods support.
  * Call window.NeoLineBackground to use.
@@ -44,79 +44,81 @@ export function expand() {
 
 (function init() {
     setInterval(() => {
-        getStorage('net', async (res) => {
-            const network = res || 'MainNet';
-            const RPCUrl = network === 'MainNet' ? mainRPC : testRPC;
-            httpPost(RPCUrl, {
-                jsonrpc: '2.0',
-                method: 'getblockcount',
-                params: [],
-                id: 1
-            }, async (blockHeightData) => {
-                const oldHeight = await getLocalStorage(`${network}BlockHeight`, () => { }) || 0;
-                if (blockHeightData.err === undefined && blockHeightData.result > oldHeight) {
-                    const setData = {};
-                    setData[`${network}BlockHeight`] = blockHeightData.result;
-                    setLocalStorage(setData);
-                    httpPost(RPCUrl, {
-                        jsonrpc: '2.0',
-                        method: 'getblock',
-                        params: [blockHeightData.result - 1, 1],
-                        id: 1
-                    }, (blockDetail) => {
-                        if (blockDetail.error === undefined) {
-                            const txStrArr = [];
-                            blockDetail.result.tx.forEach(item => {
-                                txStrArr.push(item.txid);
-                            });
-                            windowCallback({
-                                data: {
-                                    network,
-                                    blockHeight: blockHeightData.result,
-                                    blockTime: blockDetail.result.time,
-                                    blockHash: blockDetail.result.hash,
-                                    tx: txStrArr,
-                                },
-                                return: EVENT.BLOCK_HEIGHT_CHANGED
-                            });
-                        }
-
-                    }, '*');
-                }
-            }, '*');
-            const txArr = await getLocalStorage(`${network}TxArr`, (temp) => { }) || [];
-            if (txArr.length === 0) {
-                return;
-            }
-            httpPost(`${mainApi}/v1/neo2/txids_valid`, { txids: txArr }, (txConfirmData) => {
-                if (txConfirmData.status === 'success') {
-                    const txConfirms = txConfirmData.data || [];
-                    txConfirms.forEach(item => {
-                        const tempIndex = txArr.findIndex(e => e === item);
-                        if (tempIndex >= 0) {
-                            txArr.splice(tempIndex, 1);
-                        }
-                        httpGet(`${mainApi}/v1/neo2/transaction/${item}`, (txDetail) => {
-                            if (txDetail.status === 'success') {
+        getLocalStorage('chainType', async (chainType) => {
+            getStorage('net', async (res) => {
+                const chain = chainType || 'Neo2';
+                const network = res || 'MainNet';
+                let RPCUrl = RPC[chain][network];
+                httpPost(RPCUrl, {
+                    jsonrpc: '2.0',
+                    method: 'getblockcount',
+                    params: [],
+                    id: 1
+                }, async (blockHeightData) => {
+                    const oldHeight = await getLocalStorage(`${chain}_${network}BlockHeight`, () => { }) || 0;
+                    if (blockHeightData.err === undefined && blockHeightData.result > oldHeight) {
+                        const setData = {};
+                        setData[`${chain}_${network}BlockHeight`] = blockHeightData.result;
+                        setLocalStorage(setData);
+                        httpPost(RPCUrl, {
+                            jsonrpc: '2.0',
+                            method: 'getblock',
+                            params: [blockHeightData.result - 1, 1],
+                            id: 1
+                        }, (blockDetail) => {
+                            if (blockDetail.error === undefined) {
+                                const txStrArr = [];
+                                blockDetail.result.tx.forEach(item => {
+                                    txStrArr.push(item.txid);
+                                });
                                 windowCallback({
                                     data: {
-                                        txid: item,
-                                        blockHeight: txDetail.data.block_index,
-                                        blockTime: txDetail.data.block_time,
+                                        network,
+                                        blockHeight: blockHeightData.result,
+                                        blockTime: blockDetail.result.time,
+                                        blockHash: blockDetail.result.hash,
+                                        tx: txStrArr,
                                     },
-                                    return: EVENT.TRANSACTION_CONFIRMED
+                                    return: EVENT.BLOCK_HEIGHT_CHANGED
                                 });
                             }
-                        }, {
-                            Network: network === 'MainNet' ? 'mainnet' : 'testnet'
+                        }, '*');
+                    }
+                }, '*');
+                const txArr = await getLocalStorage(`${network}TxArr`, (temp) => { }) || [];
+                if (txArr.length === 0) {
+                    return;
+                }
+                httpPost(`${mainApi}/v1/neo2/txids_valid`, { txids: txArr }, (txConfirmData) => {
+                    if (txConfirmData.status === 'success') {
+                        const txConfirms = txConfirmData.data || [];
+                        txConfirms.forEach(item => {
+                            const tempIndex = txArr.findIndex(e => e === item);
+                            if (tempIndex >= 0) {
+                                txArr.splice(tempIndex, 1);
+                            }
+                            httpGet(`${mainApi}/v1/neo2/transaction/${item}`, (txDetail) => {
+                                if (txDetail.status === 'success') {
+                                    windowCallback({
+                                        data: {
+                                            txid: item,
+                                            blockHeight: txDetail.data.block_index,
+                                            blockTime: txDetail.data.block_time,
+                                        },
+                                        return: EVENT.TRANSACTION_CONFIRMED
+                                    });
+                                }
+                            }, {
+                                Network: network === 'MainNet' ? 'mainnet' : 'testnet'
+                            });
                         });
-                    });
-                };
-                const setData = {};
-                setData[`${network}TxArr`] = txArr;
-                setLocalStorage(setData);
-            }, {
-                Network: network === 'MainNet' ? 'mainnet' : 'testnet'
+                    };
+                    const setData = {};
+                    setData[`${network}TxArr`] = txArr;
+                    setLocalStorage(setData);
+                }, {
+                    Network: network === 'MainNet' ? 'mainnet' : 'testnet'
+                });
             });
         });
     }, 8000);
@@ -536,26 +538,22 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
 
 
 export function windowCallback(data) {
-    getLocalStorage('wallet', res => {
-        if (!wallet.isAddress(res.accounts[0].address)) {
-            chrome.tabs.query({
-            }, (tabs: any) => {
-                // console.log(tabs);
-                // tabCurr = tabs;
-                if (tabs.length > 0) {
-                    tabs.forEach(item => {
-                        chrome.tabs.sendMessage(item.id, data, (response) => {
-                            // tabCurr = null;
-                        });
-                    })
-                }
-                // if (tabCurr.length >= 1) {
-                //     chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
-                //         // tabCurr = null;
-                //     });
-                // }
-            });
+    chrome.tabs.query({
+    }, (tabs: any) => {
+        // console.log(tabs);
+        // tabCurr = tabs;
+        if (tabs.length > 0) {
+            tabs.forEach(item => {
+                chrome.tabs.sendMessage(item.id, data, (response) => {
+                    // tabCurr = null;
+                });
+            })
         }
+        // if (tabCurr.length >= 1) {
+        //     chrome.tabs.sendMessage(tabCurr[0].id, data, (response) => {
+        //         // tabCurr = null;
+        //     });
+        // }
     });
     // if (tabCurr === null || tabCurr === undefined || tabCurr === []) {
     //     chrome.tabs.query({
