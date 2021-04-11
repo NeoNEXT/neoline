@@ -781,6 +781,21 @@ export class ChromeService {
         }
     }
 
+    public setCurrentWalletChainType(chainType: string) {
+        if (!this.check) {
+            localStorage.setItem('chainType', chainType);
+        } else {
+            this.crx.getLocalStorage('chainType', (res) => {
+                if (!res) {
+                    chainType = 'Neo2'
+                }
+                this.crx.setLocalStorage({
+                    chainType: chainType
+                });
+            });
+        }
+    }
+
     public getWalletStatus(address: string): Observable<boolean> {
         let walletsIsBackup = {};
         if (!this.check) {
