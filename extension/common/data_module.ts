@@ -3,6 +3,16 @@ export const GAS = '0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969
 export const mainApi = 'https://api.neoline.io';
 export const mainRPC = 'https://neo2-mainnet.neoline.io';
 export const testRPC = 'https://neo2-testnet.neoline.io';
+export const RPC = {
+    'Neo2': {
+        TestNet: 'https://neo2-mainnet.neoline.io',
+        MainNet: 'https://neo2-testnet.neoline.io',
+    },
+    'Neo3': {
+        TestNet: 'https://neo3-testnet.neoline.vip',
+        MainNet: 'https://neo3-testnet.neoline.vip',
+    }
+};
 type ArgumentDataType = 'String' | 'Boolean' | 'Hash160' | 'Hash256' | 'Integer' | 'ByteArray' | 'Array' | 'Address';
 export const ERRORS = {
     NO_PROVIDER: {
@@ -48,7 +58,8 @@ export enum EVENT {
     DISCONNECTED = 'NEOLine.NEO.EVENT.DISCONNECTED',
     NETWORK_CHANGED = 'NEOLine.NEO.EVENT.NETWORK_CHANGED',
     BLOCK_HEIGHT_CHANGED = 'NEOLine.NEO.EVENT.BLOCK_HEIGHT_CHANGED',
-    TRANSACTION_CONFIRMED = 'NEOLine.NEO.EVENT.TRANSACTION_CONFIRMED'
+    TRANSACTION_CONFIRMED = 'NEOLine.NEO.EVENT.TRANSACTION_CONFIRMED',
+    CHAIN_CHANGED = 'NEOLine.NEO.EVENT.CHAIN_CHANGED'
 }
 
 export enum requestTarget {
@@ -71,7 +82,8 @@ export enum requestTarget {
     Send = 'neoline.target_send',
     Connect = 'neoline.target_connect',
     AuthState = 'neoline.target_auth_state',
-    Login = 'neoline.target_login'
+    Login = 'neoline.target_login',
+    Neo3Balance = 'neoline.target_neo3_balance',
 }
 
 export interface Provider {
@@ -99,6 +111,11 @@ export interface AccountPublicKey {
 }
 export interface GetBalanceArgs {
     params: BalanceRequest | BalanceRequest[];
+    network?: string; // Network to submit this request to.If omitted, will default to network the wallet is currently set to.
+}
+
+export interface GetNeo3BalanceArgs {
+    params: any;
     network?: string; // Network to submit this request to.If omitted, will default to network the wallet is currently set to.
 }
 
@@ -167,6 +184,8 @@ export interface Response {
 
 export interface TransactionInputArgs {
     txid: string;
+    address?: string;
+    assets?: string;
     network?: string;
 }
 

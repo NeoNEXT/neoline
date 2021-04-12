@@ -63,6 +63,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
     ngOnInit(): void {
         this.assetImageUrl = this.assetState.getAssetImageFromAssetId(NEO)
         this.aRoute.queryParams.subscribe(async (params: any) => {
+            console.log('PopupNoticeInvokeComponent', params);
             this.pramsData = JSON.parse(JSON.stringify(params));
             this.messageID = params.messageID;
             if (params.network !== undefined) {

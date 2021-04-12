@@ -785,13 +785,15 @@ export class ChromeService {
         if (!this.check) {
             localStorage.setItem('chainType', chainType);
         } else {
-            this.crx.getLocalStorage('chainType', (res) => {
-                if (!res) {
-                    chainType = 'Neo2'
+            this.crx.setLocalStorage({
+                chainType: chainType
+            });
+            this.windowCallback({
+                return: EVENT.CHAIN_CHANGED,
+                data: {
+                    networks: ['Neo2', 'Neo3'],
+                    defaultChain: chainType
                 }
-                this.crx.setLocalStorage({
-                    chainType: chainType
-                });
             });
         }
     }

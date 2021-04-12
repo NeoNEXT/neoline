@@ -277,6 +277,7 @@ export class Neo3TransferService {
                 .then(checkSystemFee)
                 .then(checkBalance)
                 .then(() => {
+                    console.log(vars)
                     return vars.tx;
                 })
         );
@@ -292,7 +293,7 @@ export class Neo3TransferService {
     }
 
     // 字符串转base64
-    hexToBase64(str: string) {
+    public hexToBase64(str: string) {
         return Buffer.from(str, 'hex').toString('base64');
     }
 }

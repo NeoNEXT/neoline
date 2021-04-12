@@ -17,10 +17,10 @@ import { bignumber, min } from 'mathjs';
 
 
 @Component({
-    templateUrl: 'invoke-multi.component.html',
-    styleUrls: ['invoke-multi.component.scss']
+    templateUrl: 'neo3Invoke-multi.component.html',
+    styleUrls: ['neo3Invoke-multi.component.scss']
 })
-export class PopupNoticeInvokeMultiComponent implements OnInit {
+export class PopupNoticeNeo3InvokeMultiComponent implements OnInit {
     public net: string = '';
     public dataJson: any = {};
     public feeMoney = '0';

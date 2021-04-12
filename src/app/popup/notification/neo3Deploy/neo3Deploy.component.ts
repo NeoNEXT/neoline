@@ -15,10 +15,10 @@ import { GasFeeSpeed } from '../../_lib/type';
 import { utf8Encode } from '@angular/compiler/src/util';
 
 @Component({
-    templateUrl: 'deploy.component.html',
-    styleUrls: ['deploy.component.scss']
+    templateUrl: 'neo3Deploy.component.html',
+    styleUrls: ['neo3Deploy.component.scss']
 })
-export class PopupNoticeDeployComponent implements OnInit {
+export class PopupNoticeNeo3DeployComponent implements OnInit {
     public net: string = '';
     public dataJson: any = {};
     public feeMoney = '0';

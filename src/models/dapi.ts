@@ -43,7 +43,9 @@ export enum EVENT {
     ACCOUNT_CHANGED = 'NEOLine.NEO.EVENT.ACCOUNT_CHANGED',
     CONNECTED = 'NEOLine.NEO.EVENT.CONNECTED',
     DISCONNECTED = 'NEOLine.NEO.EVENT.DISCONNECTED',
-    NETWORK_CHANGED = 'NEOLine.NEO.EVENT.NETWORK_CHANGED'
+    NETWORK_CHANGED = 'NEOLine.NEO.EVENT.NETWORK_CHANGED',
+    CHAIN_CHANGED = 'NEOLine.NEO.EVENT.CHAIN_CHANGED'
+
 }
 
 export enum requestTarget {
@@ -65,8 +67,8 @@ export enum requestTarget {
     Send = 'neoline.target_send',
     Connect = 'neoline.target_connect',
     AuthState = 'neoline.target_auth_state',
-    Login = 'neoline.target_login'
-
+    Login = 'neoline.target_login',
+    Neo3Balance = 'neoline.target_neo3_balance',
 }
 
 export interface Provider {
@@ -94,6 +96,11 @@ export interface AccountPublicKey {
 }
 export interface GetBalanceArgs {
     params: BalanceRequest | BalanceRequest[];
+    network?: string; // Network to submit this request to.If omitted, will default to network the wallet is currently set to.
+}
+
+export interface GetNeo3BalanceArgs {
+    params: any;
     network?: string; // Network to submit this request to.If omitted, will default to network the wallet is currently set to.
 }
 

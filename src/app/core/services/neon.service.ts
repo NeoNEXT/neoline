@@ -802,6 +802,7 @@ export class NeonService {
             this.chrome.setNet('TestNet');
             this.global.modifyNet('TestNet');
         }
+        this.chrome.setCurrentWalletChainType(chain);
         this.currentWalletChainType = chain;
         switch (chain) {
             case 'Neo2':

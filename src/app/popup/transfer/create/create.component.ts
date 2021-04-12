@@ -31,7 +31,7 @@ import {
     Transaction as Transaction3
 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { wallet as wallet2 } from '@cityofzion/neon-core';
-import { wallet as wallet3, CONST as CONST3 } from '@cityofzion/neon-core-neo3';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { rpc } from '@cityofzion/neon-js';
 import { PopupAddressDialogComponent, PopupAssetDialogComponent, PopupTransferSuccessDialogComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
