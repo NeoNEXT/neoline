@@ -1,3 +1,4 @@
+import { getLocalStorage } from 'common';
 import {
     Provider, EVENT, requestTarget, Networks, Account,
     AccountPublicKey, BalanceResults, GetBalanceArgs, InvokeReadArgs, InvokeReadMultiArgs,
