@@ -13,10 +13,7 @@ import { PopupNoticeAuthComponent } from './authorization/authorization.componen
 import { PopupNoticeInvokeComponent } from './invoke/invoke.component';
 import { PopupNoticeDeployComponent } from './deploy/deploy.component';
 import { PopupNoticeInvokeMultiComponent } from './invoke-multi/invoke-multi.component';
-<<<<<<< HEAD
 import { PopupNoticeNeo3TransferComponent } from './neo3Transfer/neo3Transfer.component';
-=======
->>>>>>> neo3_dapi_getPublicKey
 
 @NgModule({
     declarations: [
@@ -28,10 +25,7 @@ import { PopupNoticeNeo3TransferComponent } from './neo3Transfer/neo3Transfer.co
         PopupNoticeInvokeComponent,
         PopupNoticeInvokeMultiComponent,
         PopupNoticeDeployComponent,
-<<<<<<< HEAD
         PopupNoticeNeo3TransferComponent,
-=======
->>>>>>> neo3_dapi_getPublicKey
     ],
     imports: [
         CommonModule,
