@@ -55,7 +55,8 @@ export class PopupComponent implements OnInit, AfterViewInit {
         if (this.router.url.indexOf('/notification') >= 0) {
             this.isThirdParty = true;
             if(this.router.url.indexOf('/deploy') >= 0 || this.router.url.indexOf('/invoke') >= 0
-                || this.router.url.indexOf('/invoke-multi') >= 0 || this.router.url.indexOf('/transfer') >= 0 ) {
+                || this.router.url.indexOf('/invoke-multi') >= 0 || this.router.url.indexOf('/transfer') >= 0
+                || this.router.url.indexOf('/neo3Transfer') >= 0 ) {
                     this.isNotificationComfirm = true
             }
         }
