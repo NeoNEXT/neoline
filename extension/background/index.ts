@@ -535,6 +535,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
             }
         } else if (chainType === 'Neo3') {
+<<<<<<< HEAD
             switch (request.target) {
                 case requestTarget.Send:
                     {
@@ -567,6 +568,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         return true;
                     }
             }
+=======
+>>>>>>> neo3_dapi_getPublicKey
         }
     })
     sendResponse('');

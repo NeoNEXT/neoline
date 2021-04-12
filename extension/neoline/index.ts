@@ -458,8 +458,26 @@ window.addEventListener('message', async (e) => {
                             Network: network === 'MainNet' ? 'mainnet' : 'testnet'
                         });
                     });
-
-                    return;
+                }
+                case requestTarget.AccountPublicKey: {
+                    getLocalStorage('chainType', async (chainType) => {
+                    const walletArr = await getLocalStorage(`walletArr-Neo3`, () => { });
+                    const currWallet = await getLocalStorage('wallet', () => { });
+                    const WIFArr = await getLocalStorage(`WIFArr-Neo3`, () => { });
+                    const data: AccountPublicKey = { address: '', publicKey: '' };
+                    if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
+                        const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
+                            item.accounts[0].address === currWallet.accounts[0].address)]
+                        );
+                        data.address = currWallet.accounts[0].address;
+                        data.publicKey = getPublicKeyFromPrivateKey(privateKey);
+                    }
+                    window.postMessage({
+                        return: requestTarget.AccountPublicKey,
+                        data,
+                        ID: e.data.ID
+                    }, '*');
+                    })
                 }
             }
         }
