@@ -604,6 +604,31 @@ window.addEventListener('message', async (e) => {
                     });
                     return;
                 }
+                case requestTarget.VerifyMessage: {
+                    // const parameter = e.data.parameter as VerifyMessageArgs;
+                    // const walletArr = await getLocalStorage('walletArr', () => { });
+                    // const currWallet = await getLocalStorage('wallet', () => { });
+                    // const WIFArr = await getLocalStorage('WIFArr', () => { });
+                    // if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
+                    //     const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
+                    //         item.accounts[0].address === currWallet.accounts[0].address)]
+                    //     );
+                    //     const publicKey = getPublicKeyFromPrivateKey(privateKey);
+                    //     const parameterHexString = str2hexstring(parameter.message);
+                    //     const lengthHex = (parameterHexString.length / 2).toString(16).padStart(2, '0');
+                    //     const concatenatedString = lengthHex + parameterHexString;
+                    //     const serializedTransaction = '010001f0' + concatenatedString + '0000';
+                    //     window.postMessage({
+                    //         return: requestTarget.VerifyMessage,
+                    //         data: {
+                    //             result: sign(serializedTransaction, privateKey) === parameter.data &&
+                    //             publicKey === parameter.publicKey ? true : false
+                    //         },
+                    //         ID: e.data.ID
+                    //     }, '*');
+                    // }
+                    return;
+                }
             }
         }
     })
