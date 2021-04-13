@@ -536,8 +536,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             }
         } else if (chainType === 'Neo3') {
             switch (request.target) {
-                case requestTarget.Send:
-                    {
+                case requestTarget.Send: {
                         const params = request.parameter;
                         let queryString = '';
                         for (const key in params) {
@@ -565,13 +564,12 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                             }
                         });
                         return true;
-                    }
+                }
                 case requestTarget.Neo3Balance: {
                     const parameter = request.parameter;
                     httpGet(`${mainApi}/v1/neo3/address/assets?address=${parameter.address}`, (response) => {
                         if (response.status === 'success') {
                             const returnData = response.data;
-                            console.log(returnData)
                             windowCallback({
                                 return: requestTarget.Neo3Balance,
                                 ID: request.ID,

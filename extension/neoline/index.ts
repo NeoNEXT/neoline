@@ -518,6 +518,53 @@ window.addEventListener('message', async (e) => {
                     });
                     return;
                 }
+                case requestTarget.Transaction: {
+                    getStorage('net', async (res) => {
+                        let network = e.data.parameter.network;
+                        const parameter = e.data.parameter;
+                        if (network !== 'MainNet' && network !== 'TestNet') {
+                            network = res || 'MainNet';
+                        }
+                        e.data.network = network;
+                        e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
+                        const url = `${mainApi}/v1/neo3/transaction/${parameter.address}/${parameter.assetId}/${parameter.txid}`;
+                        httpGet(url, (returnRes) => {
+                            window.postMessage({
+                                return: requestTarget.Transaction,
+                                data: returnRes.status !== 'success' ? null : returnRes.data,
+                                ID: e.data.ID,
+                                error: returnRes.status === 'success' ? null : ERRORS.RPC_ERROR
+                            }, '*');
+                        }, {
+                            Network: network === 'MainNet' ? 'mainnet' : 'testnet'
+                        });
+                    });
+                    return;
+                }
+                case requestTarget.ApplicationLog: {
+                    getStorage('net', async (res) => {
+                        let apiUrl = e.data.parameter.network;
+                        const parameter = e.data.parameter as TransactionInputArgs;
+                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                            apiUrl = res || 'MainNet';
+                        }
+                        const url = RPC[chainType][apiUrl];
+                        httpPost(url, {
+                            jsonrpc: '2.0',
+                            method: 'getapplicationlog',
+                            params: [parameter.txid],
+                            id: 1
+                        },(returnRes) => {
+                            window.postMessage({
+                                return: requestTarget.ApplicationLog,
+                                data: returnRes.error !== undefined ? null : returnRes.result,
+                                ID: e.data.ID,
+                                error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
+                            }, '*');
+                        }, null);
+                    });
+                    return;
+                }
             }
         }
     })

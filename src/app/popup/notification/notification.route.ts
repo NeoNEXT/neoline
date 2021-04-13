@@ -14,7 +14,6 @@ import { PopupNoticeDeployComponent } from './deploy/deploy.component';
 import { PopupNoticeInvokeMultiComponent } from './invoke-multi/invoke-multi.component';
 import { PopupNoticeNeo3TransferComponent } from './neo3Transfer/neo3Transfer.component';
 
-
 const routes: Routes = [
     {
         path: 'popup',

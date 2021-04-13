@@ -402,6 +402,7 @@ export class Init {
                 reject(ERRORS.CONNECTION_DENIED);
             });
         } else {
+            console.log(parameter)
             return sendMessage(requestTarget.ApplicationLog, parameter);
 
         }
