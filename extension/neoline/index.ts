@@ -541,6 +541,29 @@ window.addEventListener('message', async (e) => {
                     });
                     return;
                 }
+                case requestTarget.Storage: {
+                    getStorage('net', async (res) => {
+                        let network = e.data.parameter.network;
+                        if (network !== 'MainNet' && network !== 'TestNet') {
+                            network = res || 'MainNet';
+                        }
+                        const apiUrl = RPC['Neo3'][res];
+                        httpPost(apiUrl, {
+                            jsonrpc: '2.0',
+                            method: 'getstorage',
+                            params: [e.data.parameter.scriptHash, str2hexstring(e.data.parameter.key)],
+                            id: 1
+                        },(returnRes) => {
+                            window.postMessage({
+                                return: requestTarget.Storage,
+                                data: returnRes.error !== undefined ? null : ({result: hexstring2str(returnRes.result)} || null),
+                                ID: e.data.ID,
+                                error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
+                            }, '*');
+                        }, null);
+                    });
+                    return;
+                }
                 case requestTarget.ApplicationLog: {
                     getStorage('net', async (res) => {
                         let apiUrl = e.data.parameter.network;
