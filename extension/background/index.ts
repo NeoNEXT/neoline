@@ -590,6 +590,61 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     });
                     return;
                 }
+                case requestTarget.InvokeRead: {
+                    const args = request.parameter[2];
+                    args.forEach((item, index) => {
+                        if (item.type === 'Address') {
+                            args[index] = {
+                                type: 'Hash160',
+                                value: getScriptHashFromAddress(item.value)
+                            }
+                        } else if (item.type === 'Boolean') {
+                            if (typeof item.value === 'string') {
+                                if ((item.value && item.value.toLowerCase()) === 'true') {
+                                    args[index] = {
+                                        type: 'Boolean',
+                                        value: true
+                                    }
+                                } else if (item.value && item.value.toLowerCase() === 'false') {
+                                    args[index] = {
+                                        type: 'Boolean',
+                                        value: false
+                                    }
+                                } else {
+                                    chrome.windowCallback({
+                                        error: ERRORS.MALFORMED_INPUT,
+                                        return: requestTarget.InvokeRead,
+                                        ID: request.ID
+                                    });
+                                    window.close();
+                                }
+                            }
+                        }
+                    });
+                    request.parameter[2] = args;
+                    const returnRes = { data: {}, ID: request.ID, return: requestTarget.InvokeRead, error: null };
+                    httpPost(`${request.network}`, {
+                        jsonrpc: '2.0',
+                        method: 'invokefunction',
+                        params: request.parameter,
+                        id: 3
+                    }, (res) => {
+                        res.return = requestTarget.InvokeRead;
+                        if (!res.error) {
+                            returnRes.data = {
+                                script: res.result.script,
+                                state: res.result.state,
+                                gas_consumed: res.result.gas_consumed,
+                                stack: res.result.stack
+                            };
+                        } else {
+                            returnRes.error = ERRORS.RPC_ERROR;
+                        }
+                        windowCallback(returnRes);
+                        sendResponse('');
+                    }, null);
+                    return;
+                }
             }
         }
     })

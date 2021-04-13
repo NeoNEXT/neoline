@@ -588,6 +588,22 @@ window.addEventListener('message', async (e) => {
                     });
                     return;
                 }
+                case requestTarget.InvokeRead: {
+                    getStorage('net', async (res) => {
+                        let apiUrl = e.data.parameter.network;
+                        const parameter = e.data.parameter;
+                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                            apiUrl = res || 'MainNet';
+                        }
+                        apiUrl = RPC[chainType][apiUrl];
+                        e.data.network = apiUrl;
+                        e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
+                        chrome.runtime.sendMessage(e.data, (response) => {
+                            return Promise.resolve('Dummy response to keep the console quiet');
+                        });
+                    });
+                    return;
+                }
             }
         }
     })
