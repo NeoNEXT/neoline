@@ -417,6 +417,49 @@ window.addEventListener('message', async (e) => {
             }
         } else if (chainType === 'Neo3') {
             switch (e.data.target) {
+                case requestTarget.Send: {
+                    const parameter = e.data.parameter as SendArgs;
+                    const assetID = parameter.asset.length < 10 ? '' : parameter.asset;
+                    const symbol = parameter.asset.length >= 10 ? '' : parameter.asset;
+                    getStorage('net', async (res) => {
+                        let network = parameter.network;
+                        if (network !== 'MainNet' && network !== 'TestNet') {
+                            network = res || 'MainNet';
+                        }
+                        e.data.parameter.network = network;
+                        httpGet(`${mainApi}/v1/neo3/address/assets?address=${parameter.fromAddress}`, (resBalance) => {
+                            let enough = true; // 有足够的钱
+                            let hasAsset = false;  // 该地址有这个资产
+                            const assets = resBalance.data;
+                            for (let index = 0; index < assets.length; index++) {
+                                if (assets[index].contract === assetID || String(assets[index].symbol).toLowerCase() === symbol.toLowerCase()) {
+                                    hasAsset = true;
+                                    e.data.parameter.asset = assets[index].contract;
+                                    if (Number(assets[index].balance) < Number(parameter.amount)) {
+                                        enough = false;
+                                    }
+                                    break;
+                                }
+                            }
+                            if (enough && hasAsset) {
+                                chrome.runtime.sendMessage(e.data, (response) => {
+                                    return Promise.resolve('Dummy response to keep the console quiet');
+                                });
+                            } else {
+                                window.postMessage({
+                                    return: requestTarget.Send,
+                                    error: ERRORS.INSUFFICIENT_FUNDS,
+                                    ID: e.data.ID
+                                }, '*');
+                                return;
+                            }
+                        }, {
+                            Network: network === 'MainNet' ? 'mainnet' : 'testnet'
+                        });
+                    });
+
+                    return;
+                }
                 case requestTarget.AccountPublicKey: {
                     getLocalStorage('chainType', async (chainType) => {
                     const walletArr = await getLocalStorage(`walletArr-Neo3`, () => { });
@@ -451,6 +494,53 @@ window.addEventListener('message', async (e) => {
                     });
                     return;
                 }
+                case requestTarget.Block: {
+                    getStorage('net', async (res) => {
+                        let apiUrl = e.data.parameter.network;
+                        const parameter = e.data.parameter as GetBlockInputArgs;
+                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                            apiUrl = res || 'MainNet';
+                        }
+                        const url = RPC['Neo3'][apiUrl];
+                        httpPost(url, {
+                            jsonrpc: '2.0',
+                            method: 'getblock',
+                            params: [parameter.blockHeight, 1],
+                            id: 1
+                        },(returnRes) => {
+                            window.postMessage({
+                                return: requestTarget.Block,
+                                data: returnRes.error !== undefined ? null : returnRes.result,
+                                ID: e.data.ID,
+                                error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
+                            }, '*');
+                        }, null);
+                    });
+                    return;
+                }
+                case requestTarget.Transaction: {
+                    getStorage('net', async (res) => {
+                        let network = e.data.parameter.network;
+                        const parameter = e.data.parameter;
+                        if (network !== 'MainNet' && network !== 'TestNet') {
+                            network = res || 'MainNet';
+                        }
+                        e.data.network = network;
+                        e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
+                        const url = `${mainApi}/v1/neo3/transaction/${parameter.address}/${parameter.assetId}/${parameter.txid}`;
+                        httpGet(url, (returnRes) => {
+                            window.postMessage({
+                                return: requestTarget.Transaction,
+                                data: returnRes.status !== 'success' ? null : returnRes.data,
+                                ID: e.data.ID,
+                                error: returnRes.status === 'success' ? null : ERRORS.RPC_ERROR
+                            }, '*');
+                        }, {
+                            Network: network === 'MainNet' ? 'mainnet' : 'testnet'
+                        });
+                    });
+                    return;
+                }
                 case requestTarget.Storage: {
                     getStorage('net', async (res) => {
                         let network = e.data.parameter.network;
@@ -467,6 +557,30 @@ window.addEventListener('message', async (e) => {
                             window.postMessage({
                                 return: requestTarget.Storage,
                                 data: returnRes.error !== undefined ? null : ({result: hexstring2str(returnRes.result)} || null),
+                                ID: e.data.ID,
+                                error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
+                            }, '*');
+                        }, null);
+                    });
+                    return;
+                }
+                case requestTarget.ApplicationLog: {
+                    getStorage('net', async (res) => {
+                        let apiUrl = e.data.parameter.network;
+                        const parameter = e.data.parameter as TransactionInputArgs;
+                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                            apiUrl = res || 'MainNet';
+                        }
+                        const url = RPC[chainType][apiUrl];
+                        httpPost(url, {
+                            jsonrpc: '2.0',
+                            method: 'getapplicationlog',
+                            params: [parameter.txid],
+                            id: 1
+                        },(returnRes) => {
+                            window.postMessage({
+                                return: requestTarget.ApplicationLog,
+                                data: returnRes.error !== undefined ? null : returnRes.result,
                                 ID: e.data.ID,
                                 error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
                             }, '*');
@@ -527,77 +641,6 @@ window.addEventListener('message', async (e) => {
                             ID: e.data.ID
                         }, '*');
                     }
-                    return;
-                }
-                case requestTarget.Transaction: {
-                    getStorage('net', async (res) => {
-                        let network = e.data.parameter.network;
-                        const parameter = e.data.parameter;
-                        if (network !== 'MainNet' && network !== 'TestNet') {
-                            network = res || 'MainNet';
-                        }
-                        e.data.network = network;
-                        e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
-                        const url = `${mainApi}/v1/neo3/transaction/${parameter.address}/${parameter.assetId}/${parameter.txid}`;
-                        httpGet(url, (returnRes) => {
-                            window.postMessage({
-                                return: requestTarget.Transaction,
-                                data: returnRes.status !== 'success' ? null : returnRes.data,
-                                ID: e.data.ID,
-                                error: returnRes.status === 'success' ? null : ERRORS.RPC_ERROR
-                            }, '*');
-                        }, {
-                            Network: network === 'MainNet' ? 'mainnet' : 'testnet'
-                        });
-                    });
-                    return;
-                }
-                case requestTarget.Block: {
-                    getStorage('net', async (res) => {
-                        let apiUrl = e.data.parameter.network;
-                        const parameter = e.data.parameter as GetBlockInputArgs;
-                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                            apiUrl = res || 'MainNet';
-                        }
-                        const url = RPC['Neo3'][apiUrl];
-                        httpPost(url, {
-                            jsonrpc: '2.0',
-                            method: 'getblock',
-                            params: [parameter.blockHeight, 1],
-                            id: 1
-                        },(returnRes) => {
-                            window.postMessage({
-                                return: requestTarget.Block,
-                                data: returnRes.error !== undefined ? null : returnRes.result,
-                                ID: e.data.ID,
-                                error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
-                            }, '*');
-                        }, null);
-                    });
-                    return;
-                }
-                case requestTarget.ApplicationLog: {
-                    getStorage('net', async (res) => {
-                        let apiUrl = e.data.parameter.network;
-                        const parameter = e.data.parameter as TransactionInputArgs;
-                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                            apiUrl = res || 'MainNet';
-                        }
-                        const url = RPC[chainType][apiUrl];
-                        httpPost(url, {
-                            jsonrpc: '2.0',
-                            method: 'getapplicationlog',
-                            params: [parameter.txid],
-                            id: 1
-                        },(returnRes) => {
-                            window.postMessage({
-                                return: requestTarget.ApplicationLog,
-                                data: returnRes.error !== undefined ? null : returnRes.result,
-                                ID: e.data.ID,
-                                error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
-                            }, '*');
-                        }, null);
-                    });
                     return;
                 }
                 case requestTarget.Invoke: {
@@ -665,49 +708,6 @@ window.addEventListener('message', async (e) => {
                             return Promise.resolve('Dummy response to keep the console quiet');
                         });
                     });
-                    return;
-                }
-                case requestTarget.Send: {
-                    const parameter = e.data.parameter as SendArgs;
-                    const assetID = parameter.asset.length < 10 ? '' : parameter.asset;
-                    const symbol = parameter.asset.length >= 10 ? '' : parameter.asset;
-                    getStorage('net', async (res) => {
-                        let network = parameter.network;
-                        if (network !== 'MainNet' && network !== 'TestNet') {
-                            network = res || 'MainNet';
-                        }
-                        e.data.parameter.network = network;
-                        httpGet(`${mainApi}/v1/neo3/address/assets?address=${parameter.fromAddress}`, (resBalance) => {
-                            let enough = true; // 有足够的钱
-                            let hasAsset = false;  // 该地址有这个资产
-                            const assets = resBalance.data;
-                            for (let index = 0; index < assets.length; index++) {
-                                if (assets[index].contract === assetID || String(assets[index].symbol).toLowerCase() === symbol.toLowerCase()) {
-                                    hasAsset = true;
-                                    e.data.parameter.asset = assets[index].contract;
-                                    if (Number(assets[index].balance) < Number(parameter.amount)) {
-                                        enough = false;
-                                    }
-                                    break;
-                                }
-                            }
-                            if (enough && hasAsset) {
-                                chrome.runtime.sendMessage(e.data, (response) => {
-                                    return Promise.resolve('Dummy response to keep the console quiet');
-                                });
-                            } else {
-                                window.postMessage({
-                                    return: requestTarget.Send,
-                                    error: ERRORS.INSUFFICIENT_FUNDS,
-                                    ID: e.data.ID
-                                }, '*');
-                                return;
-                            }
-                        }, {
-                            Network: network === 'MainNet' ? 'mainnet' : 'testnet'
-                        });
-                    });
-
                     return;
                 }
             }
