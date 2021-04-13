@@ -457,26 +457,8 @@ window.addEventListener('message', async (e) => {
                             Network: network === 'MainNet' ? 'mainnet' : 'testnet'
                         });
                     });
-                }
-                case requestTarget.AccountPublicKey: {
-                    getLocalStorage('chainType', async (chainType) => {
-                    const walletArr = await getLocalStorage(`walletArr-Neo3`, () => { });
-                    const currWallet = await getLocalStorage('wallet', () => { });
-                    const WIFArr = await getLocalStorage(`WIFArr-Neo3`, () => { });
-                    const data: AccountPublicKey = { address: '', publicKey: '' };
-                    if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                        const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
-                            item.accounts[0].address === currWallet.accounts[0].address)]
-                        );
-                        data.address = currWallet.accounts[0].address;
-                        data.publicKey = getPublicKeyFromPrivateKey(privateKey);
-                    }
-                    window.postMessage({
-                        return: requestTarget.AccountPublicKey,
-                        data,
-                        ID: e.data.ID
-                    }, '*');
-                    })
+
+                    return;
                 }
                 case requestTarget.AccountPublicKey: {
                     getLocalStorage('chainType', async (chainType) => {
@@ -509,6 +491,30 @@ window.addEventListener('message', async (e) => {
                         chrome.runtime.sendMessage(e.data, (response) => {
                             return Promise.resolve('Dummy response to keep the console quiet');
                         });
+                    });
+                    return;
+                }
+                case requestTarget.Block: {
+                    getStorage('net', async (res) => {
+                        let apiUrl = e.data.parameter.network;
+                        const parameter = e.data.parameter as GetBlockInputArgs;
+                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
+                            apiUrl = res || 'MainNet';
+                        }
+                        const url = RPC['Neo3'][apiUrl];
+                        httpPost(url, {
+                            jsonrpc: '2.0',
+                            method: 'getblock',
+                            params: [parameter.blockHeight, 1],
+                            id: 1
+                        },(returnRes) => {
+                            window.postMessage({
+                                return: requestTarget.Block,
+                                data: returnRes.error !== undefined ? null : returnRes.result,
+                                ID: e.data.ID,
+                                error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
+                            }, '*');
+                        }, null);
                     });
                     return;
                 }
