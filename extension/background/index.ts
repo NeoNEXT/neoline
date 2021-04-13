@@ -571,7 +571,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     httpGet(`${mainApi}/v1/neo3/address/assets?address=${parameter.address}`, (response) => {
                         if (response.status === 'success') {
                             const returnData = response.data;
-                            console.log(returnData)
                             windowCallback({
                                 return: requestTarget.Neo3Balance,
                                 ID: request.ID,

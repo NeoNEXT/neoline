@@ -458,12 +458,6 @@ window.addEventListener('message', async (e) => {
                             network = res || 'MainNet';
                         }
                         const apiUrl = RPC['Neo3'][res];
-                        console.log({
-                            jsonrpc: '2.0',
-                            method: 'getstorage',
-                            params: [e.data.parameter.scriptHash, str2hexstring(e.data.parameter.key)],
-                            id: 1
-                        })
                         httpPost(apiUrl, {
                             jsonrpc: '2.0',
                             method: 'getstorage',
@@ -697,7 +691,6 @@ window.addEventListener('message', async (e) => {
                                     break;
                                 }
                             }
-                            console.log('ID', e.data.ID, e.data)
                             if (enough && hasAsset) {
                                 chrome.runtime.sendMessage(e.data, (response) => {
                                     return Promise.resolve('Dummy response to keep the console quiet');
