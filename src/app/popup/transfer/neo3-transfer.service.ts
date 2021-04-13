@@ -277,7 +277,6 @@ export class Neo3TransferService {
                 .then(checkSystemFee)
                 .then(checkBalance)
                 .then(() => {
-                    console.log(vars)
                     return vars.tx;
                 })
         );

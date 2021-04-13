@@ -15,7 +15,6 @@ function sendMessage<K>(target: requestTarget, parameter?: any): Promise<K> {
         const promise = new Promise((resolve, reject) => {
             const callbackFn = (event) => {
                 const returnData = event.data;
-                // console.log(returnData);
                 if (returnData.return !== undefined && returnData.return === target && returnData.ID === ID) {
                     if (returnData.error !== undefined && returnData.error != null) {
                         reject(returnData.error);
@@ -402,7 +401,6 @@ export class Init {
                 reject(ERRORS.CONNECTION_DENIED);
             });
         } else {
-            console.log(parameter)
             return sendMessage(requestTarget.ApplicationLog, parameter);
 
         }
