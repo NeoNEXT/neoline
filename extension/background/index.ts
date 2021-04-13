@@ -566,6 +566,32 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         });
                         return true;
                     }
+                case requestTarget.Neo3Balance: {
+                    const parameter = request.parameter;
+                    httpGet(`${mainApi}/v1/neo3/address/assets?address=${parameter.address}`, (response) => {
+                        if (response.status === 'success') {
+                            const returnData = response.data;
+                            console.log(returnData)
+                            windowCallback({
+                                return: requestTarget.Neo3Balance,
+                                ID: request.ID,
+                                data: returnData,
+                                error: null
+                            });
+                        } else {
+                            windowCallback({
+                                return: requestTarget.Neo3Balance,
+                                data: null,
+                                ID: request.ID,
+                                error: ERRORS.RPC_ERROR
+                            });
+                        }
+                        sendResponse('');
+                    }, {
+                        Network: parameter.network === 'MainNet' ? 'mainnet' : 'testnet'
+                    });
+                    return;
+                }
             }
         }
     })

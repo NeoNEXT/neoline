@@ -441,7 +441,6 @@ window.addEventListener('message', async (e) => {
                                     break;
                                 }
                             }
-                            console.log('ID', e.data.ID, e.data)
                             if (enough && hasAsset) {
                                 chrome.runtime.sendMessage(e.data, (response) => {
                                     return Promise.resolve('Dummy response to keep the console quiet');
@@ -478,6 +477,40 @@ window.addEventListener('message', async (e) => {
                         ID: e.data.ID
                     }, '*');
                     })
+                }
+                case requestTarget.AccountPublicKey: {
+                    getLocalStorage('chainType', async (chainType) => {
+                    const walletArr = await getLocalStorage(`walletArr-Neo3`, () => { });
+                    const currWallet = await getLocalStorage('wallet', () => { });
+                    const WIFArr = await getLocalStorage(`WIFArr-Neo3`, () => { });
+                    const data: AccountPublicKey = { address: '', publicKey: '' };
+                    if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
+                        const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
+                            item.accounts[0].address === currWallet.accounts[0].address)]
+                        );
+                        data.address = currWallet.accounts[0].address;
+                        data.publicKey = getPublicKeyFromPrivateKey(privateKey);
+                    }
+                    window.postMessage({
+                        return: requestTarget.AccountPublicKey,
+                        data,
+                        ID: e.data.ID
+                    }, '*');
+                    })
+                    return;
+                }
+                case requestTarget.Neo3Balance: {
+                    getStorage('net', async (res) => {
+                        let network = e.data.parameter.network;
+                        if (network !== 'MainNet' && network !== 'TestNet') {
+                            network = res || 'MainNet';
+                        }
+                        e.data.parameter.network = network;
+                        chrome.runtime.sendMessage(e.data, (response) => {
+                            return Promise.resolve('Dummy response to keep the console quiet');
+                        });
+                    });
+                    return;
                 }
             }
         }
