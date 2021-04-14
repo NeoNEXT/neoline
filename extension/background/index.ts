@@ -54,34 +54,49 @@ export function expand() {
                     params: [],
                     id: 1
                 }, async (blockHeightData) => {
-                    const oldHeight = await getLocalStorage(`${chain}_${network}BlockHeight`, () => { }) || 0;
+                    let oldHeight = await getLocalStorage(`${chain}_${network}BlockHeight`, () => { }) || 0;
                     if (blockHeightData.err === undefined && blockHeightData.result > oldHeight) {
-                        const setData = {};
-                        setData[`${chain}_${network}BlockHeight`] = blockHeightData.result;
-                        setLocalStorage(setData);
-                        httpPost(RPCUrl, {
-                            jsonrpc: '2.0',
-                            method: 'getblock',
-                            params: [blockHeightData.result - 1, 1],
-                            id: 1
-                        }, (blockDetail) => {
-                            if (blockDetail.error === undefined) {
-                                const txStrArr = [];
-                                blockDetail.result.tx.forEach(item => {
-                                    txStrArr.push(item.txid);
-                                });
-                                windowCallback({
-                                    data: {
-                                        network,
-                                        blockHeight: blockHeightData.result,
-                                        blockTime: blockDetail.result.time,
-                                        blockHash: blockDetail.result.hash,
-                                        tx: txStrArr,
-                                    },
-                                    return: EVENT.BLOCK_HEIGHT_CHANGED
-                                });
+                        if (!oldHeight || blockHeightData.result - oldHeight > 5) {
+                            oldHeight = blockHeightData.result - 2;
+                            const setData = {};
+                            setData[`${chain}_${network}BlockHeight`] = oldHeight;
+                            setLocalStorage(setData);
+                        }
+                        let heightInterval = blockHeightData.result - oldHeight - 1;
+                        let timer;
+                        for (let intervalIndex = 0; intervalIndex < heightInterval; intervalIndex++) {
+                            timer = setTimeout(() => {
+                                const setData = {};
+                                setData[`${chain}_${network}BlockHeight`] = oldHeight + intervalIndex + 1;
+                                setLocalStorage(setData);
+                                httpPost(RPCUrl, {
+                                    jsonrpc: '2.0',
+                                    method: 'getblock',
+                                    params: [oldHeight + 1 + intervalIndex, 1],
+                                    id: 1
+                                }, (blockDetail) => {
+                                    if (blockDetail.error === undefined) {
+                                        const txStrArr = [];
+                                        blockDetail.result.tx.forEach(item => {
+                                            txStrArr.push(item.txid);
+                                        });
+                                        windowCallback({
+                                            data: {
+                                                network,
+                                                blockHeight: blockHeightData.result,
+                                                blockTime: blockDetail.result.time,
+                                                blockHash: blockDetail.result.hash,
+                                                tx: txStrArr,
+                                            },
+                                            return: EVENT.BLOCK_HEIGHT_CHANGED
+                                        });
+                                    }
+                                }, '*');
+                            }, 2000 * intervalIndex);
+                            if (heightInterval <= 1) {
+                                clearTimeout(timer);
                             }
-                        }, '*');
+                        }
                     }
                 }, '*');
                 const txArr = await getLocalStorage(`${network}TxArr`, (temp) => { }) || [];
@@ -643,6 +658,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         windowCallback(returnRes);
                         sendResponse('');
                     }, null);
+                    return;
+                }
+                case requestTarget.Invoke: {
+                    chrome.tabs.query({
+                        active: true,
+                        currentWindow: true
+                    }, (tabs) => {
+                        tabCurr = tabs;
+                    });
+                    const params = request.parameter;
+                    getStorage('connectedWebsites', (res) => {
+                        let queryString = '';
+                        for (const key in params) {
+                            if (params.hasOwnProperty(key)) {
+                                const value = key === 'args' || key === 'txHashAttributes' || key === 'extra_witness' ?
+                                    JSON.stringify(params[key]) : params[key];
+                                queryString += `${key}=${value}&`;
+                            }
+                        }
+                        window.open(`index.html#popup/notification/neo3Invoke?${queryString}messageID=${request.ID}`,
+                            '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                    });
+                    // sendResponse('');
                     return;
                 }
             }
