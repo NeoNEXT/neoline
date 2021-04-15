@@ -55,24 +55,49 @@ export function expand() {
                     id: 1
                 }, async (blockHeightData) => {
                     let oldHeight = await getLocalStorage(`${chain}_${network}BlockHeight`, () => { }) || 0;
-                    if (blockHeightData.err === undefined && blockHeightData.result > oldHeight) {
-                        if (!oldHeight || blockHeightData.result - oldHeight > 5) {
-                            oldHeight = blockHeightData.result - 2;
+                    if (oldHeight === 0 || blockHeightData.result - oldHeight > 10) {
+                        // 首次使用或者长时间未使用缓存处理
+                        oldHeight = blockHeightData.result - 1;
+                    }
+                    let heightInterval = blockHeightData.result - oldHeight;
+                    if (blockHeightData.err === undefined && heightInterval === 1) {
                             const setData = {};
-                            setData[`${chain}_${network}BlockHeight`] = oldHeight;
+                            setData[`${chain}_${network}BlockHeight`] = blockHeightData.result;
                             setLocalStorage(setData);
-                        }
-                        let heightInterval = blockHeightData.result - oldHeight - 1;
+                            httpPost(RPCUrl, {
+                                jsonrpc: '2.0',
+                                method: 'getblock',
+                                params: [blockHeightData.result - 1, 1],
+                                id: 1
+                            }, (blockDetail) => {
+                                if (blockDetail.error === undefined) {
+                                    const txStrArr = [];
+                                    blockDetail.result.tx.forEach(item => {
+                                        txStrArr.push(item.txid);
+                                    });
+                                    windowCallback({
+                                        data: {
+                                            network,
+                                            blockHeight: blockHeightData.result,
+                                            blockTime: blockDetail.result.time,
+                                            blockHash: blockDetail.result.hash,
+                                            tx: txStrArr,
+                                        },
+                                        return: EVENT.BLOCK_HEIGHT_CHANGED
+                                    });
+                                }
+                            }, '*');
+                    } else if (blockHeightData.err === undefined && heightInterval > 1) {
                         let timer;
                         for (let intervalIndex = 0; intervalIndex < heightInterval; intervalIndex++) {
                             timer = setTimeout(() => {
                                 const setData = {};
-                                setData[`${chain}_${network}BlockHeight`] = oldHeight + intervalIndex + 1;
+                                setData[`${chain}_${network}BlockHeight`] = oldHeight + intervalIndex;
                                 setLocalStorage(setData);
                                 httpPost(RPCUrl, {
                                     jsonrpc: '2.0',
                                     method: 'getblock',
-                                    params: [oldHeight + 1 + intervalIndex, 1],
+                                    params: [oldHeight + 1, 1],
                                     id: 1
                                 }, (blockDetail) => {
                                     if (blockDetail.error === undefined) {
