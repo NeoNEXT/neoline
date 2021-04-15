@@ -18,6 +18,7 @@ import {
 import {
     Balance, NEO
 } from '@/models/models';
+import { tx as tx2, u } from '@cityofzion/neon-js';
 import {
     Transaction
 } from '@cityofzion/neon-core/lib/tx';
@@ -182,6 +183,12 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.balance = res;
             this.transfer.create(this.fromAddress, this.toAddress, this.assetId, this.amount, this.fee, res.decimals,
                 this.broadcastOverride).subscribe((tx) => {
+                    if(this.remark !== '') {
+                        tx.addAttribute(
+                            tx2.TxAttrUsage.Remark2,
+                            u.str2hexstring(this.remark)
+                        );
+                    }
                     this.resolveSign(tx);
                 }, (err) => {
                     this.creating = false;
@@ -362,6 +369,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                         this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
                     });
                 }
+                this.submit();
             }
         })
     }
