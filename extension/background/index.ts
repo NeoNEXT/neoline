@@ -645,6 +645,29 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     }, null);
                     return;
                 }
+                case requestTarget.Neo3InvokeMultiple: {
+                    chrome.tabs.query({
+                        active: true,
+                        currentWindow: true
+                    }, (tabs) => {
+                        tabCurr = tabs;
+                    });
+                    const params = request.parameter;
+                    getStorage('connectedWebsites', (res) => {
+                        let queryString = '';
+                        for (const key in params) {
+                            if (params.hasOwnProperty(key)) {
+                                const value = key === 'invokeArgs' || key === 'txHashAttributes' || key === 'signers' ?
+                                    JSON.stringify(params[key]) : params[key];
+                                queryString += `${key}=${value}&`;
+                            }
+                        }
+                        window.open(`index.html#popup/notification/neo3-invoke-multiple?${queryString}messageID=${request.ID}`,
+                            '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                    });
+                    sendResponse('');
+                    return;
+                }
             }
         }
     })
