@@ -2,7 +2,8 @@ import {
     Provider, EVENT, requestTarget, Networks, Account,
     AccountPublicKey, BalanceResults, GetBalanceArgs, InvokeReadArgs, InvokeReadMultiArgs,
     TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput,
-    ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response, DeployArgs, DeployOutput, InvokeMultiArgs, GetNeo3BalanceArgs
+    ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response, DeployArgs, DeployOutput,
+    InvokeMultiArgs, GetNeo3BalanceArgs, Neo3InvokeMultiple,
 } from '../common/data_module';
 export { EVENT, ERRORS } from '../common/data_module';
 import { getMessageID } from '../common/utils';
@@ -403,6 +404,56 @@ export class Init {
         } else {
             return sendMessage(requestTarget.ApplicationLog, parameter);
 
+        }
+    }
+
+    // neo3 dapi methods
+    public async invokeMultiple(parameter: Neo3InvokeMultiple) {
+        if (parameter.invokeArgs === undefined || parameter.signers === undefined) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
+            });
+        } else {
+            if (parameter.invokeArgs instanceof Array && parameter.invokeArgs.length > 0) {
+                parameter.invokeArgs.forEach(item => {
+                    if (item.scriptHash === undefined || item.scriptHash === '' ||
+                        item.operation === undefined || item.operation === '') {
+                        return new Promise((_, reject) => {
+                            reject(ERRORS.MALFORMED_INPUT);
+                        });
+                    }
+                });
+            } else {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.MALFORMED_INPUT);
+                });
+            }
+            let authState: any;
+            try {
+                authState = await getAuthState() || 'NONE';
+            } catch (error) {
+                console.log(error);
+            }
+            if (authState === true || authState === 'NONE') {
+                let connectResult;
+                if (sessionStorage.getItem('connect') !== 'true' && authState === 'NONE') {
+                    connectResult = await connect();
+                } else {
+                    connectResult = true;
+                }
+                if (connectResult === true) {
+                    (parameter as any).hostname = location.hostname;
+                    return sendMessage(requestTarget.Neo3InvokeMultiple, parameter);
+                } else {
+                    return new Promise((_, reject) => {
+                        reject(ERRORS.CONNECTION_DENIED);
+                    });
+                }
+            } else {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.CONNECTION_DENIED);
+                });
+            }
         }
     }
 

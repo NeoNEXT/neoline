@@ -54,73 +54,115 @@ export function expand() {
                     params: [],
                     id: 1
                 }, async (blockHeightData) => {
-                    const oldHeight = await getLocalStorage(`${chain}_${network}BlockHeight`, () => { }) || 0;
-                    if (blockHeightData.err === undefined && blockHeightData.result > oldHeight) {
-                        const setData = {};
-                        setData[`${chain}_${network}BlockHeight`] = blockHeightData.result;
-                        setLocalStorage(setData);
-                        httpPost(RPCUrl, {
-                            jsonrpc: '2.0',
-                            method: 'getblock',
-                            params: [blockHeightData.result - 1, 1],
-                            id: 1
-                        }, (blockDetail) => {
-                            if (blockDetail.error === undefined) {
-                                const txStrArr = [];
-                                blockDetail.result.tx.forEach(item => {
-                                    txStrArr.push(item.txid);
-                                });
-                                windowCallback({
-                                    data: {
-                                        network,
-                                        blockHeight: blockHeightData.result,
-                                        blockTime: blockDetail.result.time,
-                                        blockHash: blockDetail.result.hash,
-                                        tx: txStrArr,
-                                    },
-                                    return: EVENT.BLOCK_HEIGHT_CHANGED
-                                });
-                            }
-                        }, '*');
+                    let oldHeight = await getLocalStorage(`${chain}_${network}BlockHeight`, () => { }) || 0;
+                    if (oldHeight === 0 || blockHeightData.result - oldHeight > 5) {
+                        oldHeight = blockHeightData.result - 1;
                     }
-                }, '*');
-                const txArr = await getLocalStorage(`${network}TxArr`, (temp) => { }) || [];
-                if (txArr.length === 0) {
-                    return;
-                }
-                httpPost(`${mainApi}/v1/neo2/txids_valid`, { txids: txArr }, (txConfirmData) => {
-                    if (txConfirmData.status === 'success') {
-                        const txConfirms = txConfirmData.data || [];
-                        txConfirms.forEach(item => {
-                            const tempIndex = txArr.findIndex(e => e === item);
-                            if (tempIndex >= 0) {
-                                txArr.splice(tempIndex, 1);
-                            }
-                            httpGet(`${mainApi}/v1/neo2/transaction/${item}`, (txDetail) => {
-                                if (txDetail.status === 'success') {
+                    let heightInterval = blockHeightData.result - oldHeight;
+                    if (blockHeightData.err === undefined && heightInterval === 1) {
+                            const setData = {};
+                            setData[`${chain}_${network}BlockHeight`] = blockHeightData.result;
+                            setLocalStorage(setData);
+                            httpPost(RPCUrl, {
+                                jsonrpc: '2.0',
+                                method: 'getblock',
+                                params: [blockHeightData.result - 1, 1],
+                                id: 1
+                            }, (blockDetail) => {
+                                if (blockDetail.error === undefined) {
+                                    const txStrArr = [];
+                                    blockDetail.result.tx.forEach(item => {
+                                        txStrArr.push(item.txid);
+                                    });
                                     windowCallback({
                                         data: {
-                                            txid: item,
-                                            blockHeight: txDetail.data.block_index,
-                                            blockTime: txDetail.data.block_time,
+                                            network,
+                                            blockHeight: blockHeightData.result,
+                                            blockTime: blockDetail.result.time,
+                                            blockHash: blockDetail.result.hash,
+                                            tx: txStrArr,
                                         },
-                                        return: EVENT.TRANSACTION_CONFIRMED
+                                        return: EVENT.BLOCK_HEIGHT_CHANGED
                                     });
                                 }
-                            }, {
-                                Network: network === 'MainNet' ? 'mainnet' : 'testnet'
+                            }, '*');
+                    } else if (blockHeightData.err === undefined && heightInterval > 1) {
+                        let timer;
+                        for (let intervalIndex = 0; intervalIndex < heightInterval; intervalIndex++) {
+                            timer = setTimeout(() => {
+                                const setData = {};
+                                setData[`${chain}_${network}BlockHeight`] = oldHeight + intervalIndex + 1;
+                                setLocalStorage(setData);
+                                httpPost(RPCUrl, {
+                                    jsonrpc: '2.0',
+                                    method: 'getblock',
+                                    params: [oldHeight + 1, 1],
+                                    id: 1
+                                }, (blockDetail) => {
+                                    if (blockDetail.error === undefined) {
+                                        const txStrArr = [];
+                                        blockDetail.result.tx.forEach(item => {
+                                            txStrArr.push(item.txid);
+                                        });
+                                        windowCallback({
+                                            data: {
+                                                network,
+                                                blockHeight: blockHeightData.result,
+                                                blockTime: blockDetail.result.time,
+                                                blockHash: blockDetail.result.hash,
+                                                tx: txStrArr,
+                                            },
+                                            return: EVENT.BLOCK_HEIGHT_CHANGED
+                                        });
+                                    }
+                                }, '*');
+                            }, 500 * intervalIndex);
+                            if (heightInterval <= 1) {
+                                clearTimeout(timer);
+                            }
+                        }
+                    }
+                }, '*');
+                if (chainType === 'Neo2') {
+                    const txArr = await getLocalStorage(`${network}TxArr`, (temp) => { }) || [];
+                    if (txArr.length === 0) {
+                        return;
+                    }
+                    httpPost(`${mainApi}/v1/neo2/txids_valid`, { txids: txArr }, (txConfirmData) => {
+                        if (txConfirmData.status === 'success') {
+                            const txConfirms = txConfirmData.data || [];
+                            txConfirms.forEach(item => {
+                                const tempIndex = txArr.findIndex(e => e === item);
+                                if (tempIndex >= 0) {
+                                    txArr.splice(tempIndex, 1);
+                                }
+                                httpGet(`${mainApi}/v1/neo2/transaction/${item}`, (txDetail) => {
+                                    if (txDetail.status === 'success') {
+                                        windowCallback({
+                                            data: {
+                                                txid: item,
+                                                blockHeight: txDetail.data.block_index,
+                                                blockTime: txDetail.data.block_time,
+                                            },
+                                            return: EVENT.TRANSACTION_CONFIRMED
+                                        });
+                                    }
+                                }, {
+                                    Network: network === 'MainNet' ? 'mainnet' : 'testnet'
+                                });
                             });
-                        });
-                    };
-                    const setData = {};
-                    setData[`${network}TxArr`] = txArr;
-                    setLocalStorage(setData);
-                }, {
-                    Network: network === 'MainNet' ? 'mainnet' : 'testnet'
-                });
+                        };
+                        const setData = {};
+                        setData[`${network}TxArr`] = txArr;
+                        setLocalStorage(setData);
+                    }, {
+                        Network: network === 'MainNet' ? 'mainnet' : 'testnet'
+                    });
+                }
             });
         });
     }, 8000);
+
     if (navigator.language === 'zh-CN') {
         getStorage('lang', res => {
             if (res === undefined) {
@@ -722,6 +764,50 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                         }
                         return;
                     })
+                }
+                case requestTarget.Invoke: {
+                    chrome.tabs.query({
+                        active: true,
+                        currentWindow: true
+                    }, (tabs) => {
+                        tabCurr = tabs;
+                    });
+                    const params = request.parameter;
+                    getStorage('connectedWebsites', (res) => {
+                        let queryString = '';
+                        for (const key in params) {
+                            if (params.hasOwnProperty(key)) {
+                                const value = key === 'args' || key === 'signers' || key === 'txHashAttributes' ?
+                                    JSON.stringify(params[key]) : params[key];
+                                queryString += `${key}=${value}&`;
+                            }
+                        }
+                        window.open(`index.html#popup/notification/neo3-invoke?${queryString}messageID=${request.ID}`,
+                            '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                    });
+                    // sendResponse('');
+                    return;
+                }
+                case requestTarget.Neo3InvokeMultiple: {
+                    chrome.tabs.query({
+                        active: true,
+                        currentWindow: true
+                    }, (tabs) => {
+                        tabCurr = tabs;
+                    });
+                    const params = request.parameter;
+                    getStorage('connectedWebsites', (res) => {
+                        let queryString = '';
+                        for (const key in params) {
+                            if (params.hasOwnProperty(key)) {
+                                const value = key === 'invokeArgs' || key === 'txHashAttributes' || key === 'signers' ?
+                                JSON.stringify(params[key]) : params[key];
+                                queryString += `${key}=${value}&`;
+                            }
+                        }
+                        window.open(`index.html#popup/notification/neo3-invoke-multiple?${queryString}messageID=${request.ID}`,
+                            '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                    });
                 }
             }
         }
