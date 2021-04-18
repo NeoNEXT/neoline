@@ -373,14 +373,10 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 operation: inputs.operation,
                 args: inputs.args,
             });
+            console.log(script)
             const invokeFunctionResponse = await rpcClientTemp.invokeScript(
                 hexToBase64(script),
-                [
-                    {
-                        account: inputs.scriptHash,
-                        scopes: tx.WitnessScope.CalledByEntry.toString(),
-                    }
-                ]
+                inputs.signers
             );
             if (invokeFunctionResponse.state !== 'HALT') {
                 throw {

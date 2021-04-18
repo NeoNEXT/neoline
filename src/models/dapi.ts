@@ -69,6 +69,7 @@ export enum requestTarget {
     AuthState = 'neoline.target_auth_state',
     Login = 'neoline.target_login',
     Neo3Balance = 'neoline.target_neo3_balance',
+    Neo3InvokeMultiple = 'neoline.target_neo3_invoke_multiple',
 }
 
 export interface Provider {

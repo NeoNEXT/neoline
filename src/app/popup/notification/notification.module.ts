@@ -15,6 +15,7 @@ import { PopupNoticeDeployComponent } from './deploy/deploy.component';
 import { PopupNoticeInvokeMultiComponent } from './invoke-multi/invoke-multi.component';
 import { PopupNoticeNeo3TransferComponent } from './neo3Transfer/neo3Transfer.component';
 import { PopupNoticeNeo3InvokeComponent } from './neo3Invoke/neo3Invoke.component';
+import { PopupNoticeNeo3InvokeMultipleComponent } from './neo3-invoke-multiple/neo3-invoke-multiple.component';
 
 @NgModule({
     declarations: [
@@ -28,6 +29,7 @@ import { PopupNoticeNeo3InvokeComponent } from './neo3Invoke/neo3Invoke.componen
         PopupNoticeDeployComponent,
         PopupNoticeNeo3TransferComponent,
         PopupNoticeNeo3InvokeComponent,
+        PopupNoticeNeo3InvokeMultipleComponent,
     ],
     imports: [
         CommonModule,

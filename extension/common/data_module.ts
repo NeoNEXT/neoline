@@ -84,6 +84,7 @@ export enum requestTarget {
     AuthState = 'neoline.target_auth_state',
     Login = 'neoline.target_login',
     Neo3Balance = 'neoline.target_neo3_balance',
+    Neo3InvokeMultiple = 'neoline.target_neo3_invoke_multiple',
 }
 
 export interface Provider {
@@ -328,4 +329,23 @@ export interface Error {
     type: string; // `NO_PROVIDER`|`CONNECTION_DENIED`
     description: string;
     data: string;
+}
+
+// neo3
+interface Signers {
+    account: string;
+    scopes: string;
+}
+export interface Neo3InvokeMultiArg {
+    scriptHash: string; // script hash of the smart contract to invoke a read on
+    operation: string; // operation on the smart contract to call
+    args: Argument[]; // any input arguments for the operation
+}
+export interface Neo3InvokeMultiple {
+    scriptHash: string,
+    operation: string,
+    invokeArgs: Array<Neo3InvokeMultiArg>,
+    fee?: string,
+    txHashAttributes?: TxHashAttribute[],
+    signers: Signers[]
 }
