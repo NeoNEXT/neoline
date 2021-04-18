@@ -115,7 +115,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                             }
                         }
                     } else if (item.type === 'Integer') {
-                        this.args[index] = Neon.create.contractParam('Integer', item.value.toString());
+                        // this.args[index] = Neon.create.contractParam('Integer', item.value.toString());
                     }
                 });
                 // this.fee = parseFloat(params.fee) || 0;
@@ -373,7 +373,6 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 operation: inputs.operation,
                 args: inputs.args,
             });
-            console.log(script)
             const invokeFunctionResponse = await rpcClientTemp.invokeScript(
                 hexToBase64(script),
                 inputs.signers
