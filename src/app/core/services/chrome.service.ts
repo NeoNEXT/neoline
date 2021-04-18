@@ -791,7 +791,7 @@ export class ChromeService {
             this.windowCallback({
                 return: EVENT.CHAIN_CHANGED,
                 data: {
-                    networks: ['Neo2', 'Neo3'],
+                    chains: ['Neo2', 'Neo3'],
                     defaultChain: chainType
                 }
             });
