@@ -645,6 +645,84 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                     }, null);
                     return;
                 }
+                case requestTarget.InvokeReadMulti: {
+                    if (!(request.parameter.signers instanceof Array)) {
+                        return new Promise((_, reject) => {
+                            reject(ERRORS.MALFORMED_INPUT);
+                        });
+                    }
+                    getStorage('net', async (net) => {
+                        try {
+                            const requestData = request.parameter;
+                            requestData.invokeReadArgs.forEach((invokeReadItem: any, index) => {
+                                invokeReadItem.args.forEach((item, itemIndex) => {
+                                    if (item === null || typeof item !== 'object') {
+                                        return;
+                                    } else if (item.type === 'Address') {
+                                        invokeReadItem.args[itemIndex] = {
+                                            type: 'Hash160',
+                                            value: getScriptHashFromAddress(item.value)
+                                        }
+                                    } else if (item.type === 'Boolean') {
+                                        if (typeof item.value === 'string') {
+                                            if ((item.value && item.value.toLowerCase()) === 'true') {
+                                                invokeReadItem.args[itemIndex] = {
+                                                    type: 'Boolean',
+                                                    value: true
+                                                }
+                                            } else if (item.value && item.value.toLowerCase() === 'false') {
+                                                invokeReadItem.args[itemIndex] = {
+                                                    type: 'Boolean',
+                                                    value: false
+                                                }
+                                            } else {
+                                                chrome.windowCallback({
+                                                    error: ERRORS.MALFORMED_INPUT,
+                                                    return: requestTarget.InvokeReadMulti,
+                                                    ID: request.ID
+                                                });
+                                                window.close();
+                                            }
+                                        }
+                                    }
+                                });
+                                requestData.invokeReadArgs[index] = [invokeReadItem.scriptHash,invokeReadItem.operation, invokeReadItem.args, requestData.signers];
+                            });
+                            const returnRes = { data: [], ID: request.ID, return: requestTarget.InvokeReadMulti, error: null };
+                            let requestCount = 0;
+                            const nodeUrl = RPC[chainType][net];
+                            requestData.invokeReadArgs.forEach(item => {
+                                httpPost(nodeUrl, {
+                                    jsonrpc: '2.0',
+                                    method: 'invokefunction',
+                                    params: item,
+                                    id: 1
+                                }, (res) => {
+                                    requestCount ++;
+                                    if (!res.error) {
+                                        returnRes.data.push({
+                                            script: res.result.script,
+                                            state: res.result.state,
+                                            gas_consumed: res.result.gas_consumed,
+                                            stack: res.result.stack
+                                        });
+                                    } else {
+                                        returnRes.error = ERRORS.RPC_ERROR;
+                                    }
+                                    if(requestCount === requestData.invokeReadArgs.length) {
+                                        windowCallback(returnRes);
+                                        sendResponse('');
+                                    }
+                                }, null);
+                            })
+                        } catch (error) {
+                            console.log(error)
+                            windowCallback({ data: [], ID: request.ID, return: requestTarget.InvokeReadMulti, error: ERRORS.RPC_ERROR });
+                            sendResponse('');
+                        }
+                        return;
+                    })
+                }
             }
         }
     })
