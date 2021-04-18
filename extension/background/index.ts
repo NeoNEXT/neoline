@@ -55,7 +55,7 @@ export function expand() {
                     id: 1
                 }, async (blockHeightData) => {
                     let oldHeight = await getLocalStorage(`${chain}_${network}BlockHeight`, () => { }) || 0;
-                    if (oldHeight === 0 || blockHeightData.result - oldHeight > 10) {
+                    if (oldHeight === 0 || blockHeightData.result - oldHeight > 5) {
                         oldHeight = blockHeightData.result - 1;
                     }
                     let heightInterval = blockHeightData.result - oldHeight;
@@ -91,7 +91,7 @@ export function expand() {
                         for (let intervalIndex = 0; intervalIndex < heightInterval; intervalIndex++) {
                             timer = setTimeout(() => {
                                 const setData = {};
-                                setData[`${chain}_${network}BlockHeight`] = oldHeight + intervalIndex;
+                                setData[`${chain}_${network}BlockHeight`] = oldHeight + intervalIndex + 1;
                                 setLocalStorage(setData);
                                 httpPost(RPCUrl, {
                                     jsonrpc: '2.0',
@@ -116,50 +116,53 @@ export function expand() {
                                         });
                                     }
                                 }, '*');
-                            }, 2000 * intervalIndex);
+                            }, 500 * intervalIndex);
                             if (heightInterval <= 1) {
                                 clearTimeout(timer);
                             }
                         }
                     }
                 }, '*');
-                const txArr = await getLocalStorage(`${network}TxArr`, (temp) => { }) || [];
-                if (txArr.length === 0) {
-                    return;
-                }
-                httpPost(`${mainApi}/v1/neo2/txids_valid`, { txids: txArr }, (txConfirmData) => {
-                    if (txConfirmData.status === 'success') {
-                        const txConfirms = txConfirmData.data || [];
-                        txConfirms.forEach(item => {
-                            const tempIndex = txArr.findIndex(e => e === item);
-                            if (tempIndex >= 0) {
-                                txArr.splice(tempIndex, 1);
-                            }
-                            httpGet(`${mainApi}/v1/neo2/transaction/${item}`, (txDetail) => {
-                                if (txDetail.status === 'success') {
-                                    windowCallback({
-                                        data: {
-                                            txid: item,
-                                            blockHeight: txDetail.data.block_index,
-                                            blockTime: txDetail.data.block_time,
-                                        },
-                                        return: EVENT.TRANSACTION_CONFIRMED
-                                    });
+                if (chainType === 'Neo2') {
+                    const txArr = await getLocalStorage(`${network}TxArr`, (temp) => { }) || [];
+                    if (txArr.length === 0) {
+                        return;
+                    }
+                    httpPost(`${mainApi}/v1/neo2/txids_valid`, { txids: txArr }, (txConfirmData) => {
+                        if (txConfirmData.status === 'success') {
+                            const txConfirms = txConfirmData.data || [];
+                            txConfirms.forEach(item => {
+                                const tempIndex = txArr.findIndex(e => e === item);
+                                if (tempIndex >= 0) {
+                                    txArr.splice(tempIndex, 1);
                                 }
-                            }, {
-                                Network: network === 'MainNet' ? 'mainnet' : 'testnet'
+                                httpGet(`${mainApi}/v1/neo2/transaction/${item}`, (txDetail) => {
+                                    if (txDetail.status === 'success') {
+                                        windowCallback({
+                                            data: {
+                                                txid: item,
+                                                blockHeight: txDetail.data.block_index,
+                                                blockTime: txDetail.data.block_time,
+                                            },
+                                            return: EVENT.TRANSACTION_CONFIRMED
+                                        });
+                                    }
+                                }, {
+                                    Network: network === 'MainNet' ? 'mainnet' : 'testnet'
+                                });
                             });
-                        });
-                    };
-                    const setData = {};
-                    setData[`${network}TxArr`] = txArr;
-                    setLocalStorage(setData);
-                }, {
-                    Network: network === 'MainNet' ? 'mainnet' : 'testnet'
-                });
+                        };
+                        const setData = {};
+                        setData[`${network}TxArr`] = txArr;
+                        setLocalStorage(setData);
+                    }, {
+                        Network: network === 'MainNet' ? 'mainnet' : 'testnet'
+                    });
+                }
             });
         });
     }, 8000);
+
     if (navigator.language === 'zh-CN') {
         getStorage('lang', res => {
             if (res === undefined) {
