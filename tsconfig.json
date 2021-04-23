@@ -22,7 +22,7 @@
         "experimentalDecorators": true,
         "importHelpers": true,
         "esModuleInterop": true,
-        "target": "es5",
+        "target": "es6",
         "typeRoots": [
             "node_modules/@types"
         ],
