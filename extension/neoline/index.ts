@@ -631,6 +631,19 @@ window.addEventListener('message', async (e) => {
                     });
                     return;
                 }
+                case requestTarget.Neo3InvokeMultiple: {
+                    getStorage('net', async (res) => {
+                        let network = e.data.parameter.network;
+                        if (network !== 'MainNet' && network !== 'TestNet') {
+                            network = res || 'MainNet';
+                        }
+                        e.data.parameter.network = network;
+                        chrome.runtime.sendMessage(e.data, (response) => {
+                            return Promise.resolve('Dummy response to keep the console quiet');
+                        });
+                    });
+                    return;
+                }
             }
         }
     })
