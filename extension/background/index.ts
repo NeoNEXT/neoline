@@ -738,7 +738,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                                     jsonrpc: '2.0',
                                     method: 'invokefunction',
                                     params: item,
-                                    id: 1
+                                    id: 3
                                 }, (res) => {
                                     requestCount ++;
                                     if (!res.error) {
@@ -761,9 +761,9 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                             console.log(error)
                             windowCallback({ data: [], ID: request.ID, return: requestTarget.InvokeReadMulti, error: ERRORS.RPC_ERROR });
                             sendResponse('');
-                        }
-                        return;
+                        };
                     })
+                    return;
                 }
                 case requestTarget.Invoke: {
                     chrome.tabs.query({
