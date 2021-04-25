@@ -29,11 +29,7 @@ export class Neo3DapiTransferService {
         const rpcClientTemp = this.rpcClient;
         const neo3This = this;
 
-        const tempScriptHash = wallet.getScriptHashFromAddress(
-                this.neon.address
-            );
         const inputs = {
-            scriptHash: tempScriptHash,
             invokeArgs: params.invokeArgs,
             signers: params.signers,
             systemFee: 0,

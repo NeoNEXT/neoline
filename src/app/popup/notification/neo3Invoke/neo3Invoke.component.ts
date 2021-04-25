@@ -301,11 +301,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
 
     private createTxForNeo3(): Observable<Transaction> {
         const rpcClientTemp = new rpc.RPCClient(this.globalService.Neo3RPCDomain);
-        const tempScriptHash = wallet.getScriptHashFromAddress(
-            this.neon.address
-        );
         const inputs = {
-            scriptHash: tempScriptHash,
             tokenScriptHash: this.scriptHash,
             systemFee: 0,
             networkFee: bignumber(this.fee).toNumber() || 0,
@@ -319,7 +315,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
             console.log(`\n\n --- Today's Task ---`);
             // Since the token is now an NEP-5 token, we transfer using a VM script.
             const script = sc.createScript({
-                scriptHash: inputs.scriptHash,
+                scriptHash: inputs.tokenScriptHash,
                 operation: inputs.operation,
                 args: inputs.args,
             });
