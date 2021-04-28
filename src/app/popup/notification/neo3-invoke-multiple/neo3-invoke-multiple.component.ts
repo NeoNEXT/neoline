@@ -1,11 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GlobalService, NeonService, ChromeService, AssetState, HttpService } from '@/app/core';
+import { GlobalService, NeonService, ChromeService, AssetState } from '@/app/core';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { sc } from '@cityofzion/neon-core-neo3/lib';
 import Neon from '@cityofzion/neon-js-neo3';
 import { MatDialog } from '@angular/material/dialog';
-import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
+import { ERRORS, TxHashAttribute } from '@/models/dapi';
+import { requestTargetN3 } from '@/models/dapi_neo3';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import { GasFeeSpeed } from '../../_lib/type';
 import { bignumber } from 'mathjs';
@@ -21,7 +22,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
     public net: string = '';
     public dataJson: any = {};
     public rateCurrency = '';
-    public txSerialize = ''
+    public txSerialize = '';
     public assetImageUrl = '';
     public showFeeEdit: boolean = true;
 
@@ -104,13 +105,14 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                             } else {
                                 this.chrome.windowCallback({
                                     error: ERRORS.MALFORMED_INPUT,
-                                    return: requestTarget.InvokeMulti,
+                                    return: requestTargetN3.InvokeMulti,
                                     ID: this.messageID
                                 });
                                 window.close();
                             }
                         }
                     } else if (item.type === 'Integer') {
+                        // TODO
                         // this.pramsData.invokeArgs[index].args[argIndex] = Neon.create.contractParam('Integer', item.value.toString())
                     }
                 });
@@ -151,7 +153,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         window.onbeforeunload = () => {
             this.chrome.windowCallback({
                 error: ERRORS.CANCELLED,
-                return: requestTarget.Neo3InvokeMultiple,
+                return: requestTargetN3.InvokeMultiple,
                 ID: this.messageID
             });
         };
@@ -208,7 +210,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             this.global.snackBarTip('verifyFailed', error);
             this.chrome.windowCallback({
                 error: ERRORS.DEFAULT,
-                return: requestTarget.Neo3InvokeMultiple,
+                return: requestTargetN3.InvokeMultiple,
                 ID: this.messageID
             });
             window.close();
@@ -236,7 +238,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                     txid: txHash,
                     nodeUrl: `${this.global.Neo3RPCDomain}`
                 },
-                return: requestTarget.Neo3InvokeMultiple,
+                return: requestTargetN3.InvokeMultiple,
                 ID: this.messageID
             });
             const setData = {};
@@ -248,13 +250,12 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                     transfer: ['transfer', 'result']
                 }
             }]);
-            window.close();
         }).catch(err => {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
                 error: ERRORS.RPC_ERROR,
-                return: requestTarget.Neo3InvokeMultiple,
+                return: requestTargetN3.InvokeMultiple,
                 ID: this.messageID
             });
             this.global.snackBarTip('transferFailed', err.msg || err);
@@ -264,7 +265,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
     public exit() {
         this.chrome.windowCallback({
             error: ERRORS.CANCELLED,
-            return: requestTarget.Neo3InvokeMultiple,
+            return: requestTargetN3.InvokeMultiple,
             ID: this.messageID
         });
         window.close();
@@ -278,10 +279,10 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 data: {
                     signedTx: this.tx.serialize(true)
                 },
-                return: requestTarget.Neo3InvokeMultiple,
+                return: requestTargetN3.InvokeMultiple,
                 ID: this.messageID
             });
-            this.signTx()
+            this.signTx();
             window.close();
         } else {
             this.resolveSend();
