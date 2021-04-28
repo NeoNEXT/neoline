@@ -12,9 +12,10 @@ import { PopupNoticeTokenComponent } from './token/token.component';
 import { PopupNoticeAuthComponent } from './authorization/authorization.component';
 import { PopupNoticeInvokeComponent } from './invoke/invoke.component';
 import { PopupNoticeDeployComponent } from './deploy/deploy.component';
+import { PopupNoticeSignMessageComponent } from './sign-message/sign-message.component';
 import { PopupNoticeInvokeMultiComponent } from './invoke-multi/invoke-multi.component';
-import { PopupNoticeNeo3TransferComponent } from './neo3Transfer/neo3Transfer.component';
-import { PopupNoticeNeo3InvokeComponent } from './neo3Invoke/neo3Invoke.component';
+import { PopupNoticeNeo3TransferComponent } from './neo3-transfer/neo3-transfer.component';
+import { PopupNoticeNeo3InvokeComponent } from './neo3-invoke/neo3-invoke.component';
 import { PopupNoticeNeo3InvokeMultipleComponent } from './neo3-invoke-multiple/neo3-invoke-multiple.component';
 
 @NgModule({
@@ -30,6 +31,7 @@ import { PopupNoticeNeo3InvokeMultipleComponent } from './neo3-invoke-multiple/n
         PopupNoticeNeo3TransferComponent,
         PopupNoticeNeo3InvokeComponent,
         PopupNoticeNeo3InvokeMultipleComponent,
+        PopupNoticeSignMessageComponent,
     ],
     imports: [
         CommonModule,
