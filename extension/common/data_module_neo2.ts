@@ -1,5 +1,4 @@
-export const NEO = '0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b';
-export const GAS = '0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7';
+
 type ArgumentDataType = 'String' | 'Boolean' | 'Hash160' | 'Hash256' | 'Integer' | 'ByteArray' | 'Array' | 'Address';
 export const ERRORS = {
     NO_PROVIDER: {
@@ -44,6 +43,8 @@ export enum EVENT {
     CONNECTED = 'NEOLine.NEO.EVENT.CONNECTED',
     DISCONNECTED = 'NEOLine.NEO.EVENT.DISCONNECTED',
     NETWORK_CHANGED = 'NEOLine.NEO.EVENT.NETWORK_CHANGED',
+    BLOCK_HEIGHT_CHANGED = 'NEOLine.NEO.EVENT.BLOCK_HEIGHT_CHANGED',
+    TRANSACTION_CONFIRMED = 'NEOLine.NEO.EVENT.TRANSACTION_CONFIRMED',
     CHAIN_CHANGED = 'NEOLine.NEO.EVENT.CHAIN_CHANGED'
 }
 
@@ -55,6 +56,7 @@ export enum requestTarget {
     Balance = 'neoline.target_balance',
     Storage = 'neoline.target_storage',
     InvokeRead = 'neoline.target_invoke_read',
+    InvokeReadMulti = 'neoline.target_invoke_read_multi',
     VerifyMessage = 'neoline.target_verify_message',
     Transaction = 'neoline.target_transaction',
     Block = 'neoline.target_block',
@@ -133,6 +135,18 @@ export interface InvokeReadArgs {
     network?: string;  // Network to submit this request to.If omitted, will default to network the wallet is currently set to.
 }
 
+export interface InvokeReadMultiArgs {
+    invokeReadArgs: Array<InvokeReadMultiArg>;
+    network?: string;  // Network to submit this request to.If omitted, will default to network the wallet is currently set to.
+}
+
+export interface InvokeReadMultiArg {
+    scriptHash: string; // script hash of the smart contract to invoke a read on
+    operation: string; // operation on the smart contract to call
+    args: Argument[]; // any input arguments for the operation
+}
+
+
 export interface Argument {
     type: ArgumentDataType;
     value: any;
@@ -205,13 +219,14 @@ export interface InvokeMultiArgs {
     invokeArgs: Invoke[];
 }
 
-export interface Invoke {
+interface Invoke {
     scriptHash: string;
     operation: string;
     args?: Argument[];
     attachedAssets?: AttachedAssets;
     triggerContractVerification?: boolean;
 }
+
 interface AttachedAssets {
     NEO?: string;
     GAS?: string;
@@ -231,11 +246,11 @@ interface AssetInput {
 
 interface AssetOutput {
     asset: string;
-    address: number;
+    address: string;
     value: string;
 }
 
-export interface TxHashAttribute extends Argument {
+interface TxHashAttribute extends Argument {
     txAttrUsage: 'Hash1' | 'Hash2' | 'Hash3' | 'Hash4' | 'Hash5' | 'Hash6' | 'Hash7' | 'Hash8' |
     'Hash9' | 'Hash10' | 'Hash11' | 'Hash12' | 'Hash13' | 'Hash14' | 'Hash15';
 }
@@ -275,9 +290,8 @@ export interface DeployArgs {
     parameterList: string;
     returnType: string;
     code: string;
-    script?: string;
     network?: string;  // Network to submit this request to. If omitted, will default to network the wallet is currently set to.
-    netowrkFee: number;
+    networkFee: number;
     broadcastOverride?: boolean;
     // In the case that the dApp would like to be responsible for broadcasting the signed transaction rather than the wallet provider
 }
@@ -292,4 +306,23 @@ export interface Error {
     type: string; // `NO_PROVIDER`|`CONNECTION_DENIED`
     description: string;
     data: string;
+}
+
+// neo3
+interface Signers {
+    account: string;
+    scopes: string;
+}
+export interface Neo3InvokeMultiArg {
+    scriptHash: string; // script hash of the smart contract to invoke a read on
+    operation: string; // operation on the smart contract to call
+    args: Argument[]; // any input arguments for the operation
+}
+export interface Neo3InvokeMultiple {
+    scriptHash: string,
+    operation: string,
+    invokeArgs: Array<Neo3InvokeMultiArg>,
+    fee?: string,
+    txHashAttributes?: TxHashAttribute[],
+    signers: Signers[]
 }

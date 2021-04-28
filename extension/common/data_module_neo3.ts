@@ -1,27 +1,27 @@
 type ArgumentDataType = 'String' | 'Boolean' | 'Hash160' | 'Hash256' | 'Integer' | 'ByteArray' | 'Array' | 'Address';
 
 export enum requestTargetN3 {
-    N3Provider = 'neoline.target_provider_n3',
-    N3Networks = 'neoline.target_networks_n3',
-    N3Account = 'neoline.target_account_n3',
-    N3AccountPublicKey = 'neoline.target_public_key_n3',
-    N3Storage = 'neoline.target_storage_n3',
-    N3InvokeRead = 'neoline.target_invoke_read_n3',
-    N3InvokeReadMulti = 'neoline.target_invoke_read_multi_n3',
-    N3VerifyMessage = 'neoline.target_verify_message_n3',
-    N3Transaction = 'neoline.target_transaction_n3',
-    N3Block = 'neoline.target_block_n3',
-    N3ApplicationLog = 'neoline.target_application_log_n3',
-    N3Invoke = 'neoline.target_invoke_n3',
-    N3InvokeMulti = 'neoline.target_invoke_multi_n3',
-    N3SignMessage = 'neoline.target_sign_message_n3',
-    N3Deploy = 'neoline.target_deploy_n3',
-    N3Send = 'neoline.target_send_n3',
-    N3Connect = 'neoline.target_connect_n3',
-    N3AuthState = 'neoline.target_auth_state_n3',
-    N3Login = 'neoline.target_login_n3',
-    N3Balance = 'neoline.target_balance_n3',
-    N3InvokeMultiple = 'neoline.target_invoke_multiple_n3',
+    Provider = 'neoline.target_provider_n3',
+    Networks = 'neoline.target_networks_n3',
+    Account = 'neoline.target_account_n3',
+    AccountPublicKey = 'neoline.target_public_key_n3',
+    Storage = 'neoline.target_storage_n3',
+    InvokeRead = 'neoline.target_invoke_read_n3',
+    InvokeReadMulti = 'neoline.target_invoke_read_multi_n3',
+    VerifyMessage = 'neoline.target_verify_message_n3',
+    Transaction = 'neoline.target_transaction_n3',
+    Block = 'neoline.target_block_n3',
+    ApplicationLog = 'neoline.target_application_log_n3',
+    Invoke = 'neoline.target_invoke_n3',
+    InvokeMulti = 'neoline.target_invoke_multi_n3',
+    SignMessage = 'neoline.target_sign_message_n3',
+    Deploy = 'neoline.target_deploy_n3',
+    Send = 'neoline.target_send_n3',
+    Connect = 'neoline.target_connect_n3',
+    AuthState = 'neoline.target_auth_state_n3',
+    Login = 'neoline.target_login_n3',
+    Balance = 'neoline.target_balance_n3',
+    InvokeMultiple = 'neoline.target_invoke_multiple_n3',
 }
 
 interface TxHashAttribute extends N3Argument {
@@ -45,8 +45,6 @@ export interface N3BalanceArgs {
     network?: string;
 }
 export interface N3TransactionArgs {
-    address: string;
-    assetId: string;
     txid: string;
     network?: string;
 }
@@ -66,11 +64,17 @@ export interface N3GetStorageArgs {
     network?: string;
 }
 
+export interface N3VerifyMessageArgs {
+    message: string; // Salt prefix + original message
+    data: string; // Signed message
+    publicKey: string; // Public key of account that signed message
+}
+
 export interface N3InvokeReadArgs {
     scriptHash: string;
     operation: string;
-    args: N3Argument[];
-    signers: Signers[];
+    args?: N3Argument[];
+    signers?: Signers[];
     network?: string;
 }
 
@@ -126,13 +130,14 @@ export interface N3BalanceResults {
     type: string;
 }
 interface N3Transfer {
-    txid: string;
+    hash: string;
     src: string;
     contract: string;
     from: string;
     to: string;
     amount: string;
 }
+
 export interface N3TransactionDetails {
     hash: string;
     size: number;
@@ -141,7 +146,7 @@ export interface N3TransactionDetails {
     block_index: number;
     block_time: number;
     version: number;
-    transfer: N3Transfer[]
+    transfers: N3Transfer[]
 }
 
 export interface N3StorageResponse {
