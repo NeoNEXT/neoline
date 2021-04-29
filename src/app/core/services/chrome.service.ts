@@ -838,9 +838,6 @@ export class ChromeService {
     }
 
     public setCurrentWalletChainType(chain: string) {
-        if (this.chainType === chain) {
-            return;
-        }
         this.chainType = chain;
         if (!this.check) {
             localStorage.setItem('chainType', chain);
