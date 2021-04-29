@@ -7,22 +7,11 @@ export enum ChainType {
 }
 export const RPC = {
     Neo2: {
-        TestNet: 'https://neo2-mainnet.neoline.io',
-        MainNet: 'https://neo2-testnet.neoline.io',
+        TestNet: 'https://neo2-testnet.neoline.io',
+        MainNet: 'https://neo2-mainnet.neoline.io',
     },
     Neo3: {
         TestNet: 'https://neo3-testnet.neoline.vip',
         MainNet: 'https://neo3-testnet.neoline.vip',
     }
 };
-
-export enum EVENT {
-    READY = 'NEOLine.NEO.EVENT.READY',
-    ACCOUNT_CHANGED = 'NEOLine.NEO.EVENT.ACCOUNT_CHANGED',
-    CONNECTED = 'NEOLine.NEO.EVENT.CONNECTED',
-    DISCONNECTED = 'NEOLine.NEO.EVENT.DISCONNECTED',
-    NETWORK_CHANGED = 'NEOLine.NEO.EVENT.NETWORK_CHANGED',
-    BLOCK_HEIGHT_CHANGED = 'NEOLine.NEO.EVENT.BLOCK_HEIGHT_CHANGED',
-    TRANSACTION_CONFIRMED = 'NEOLine.NEO.EVENT.TRANSACTION_CONFIRMED',
-    CHAIN_CHANGED = 'NEOLine.NEO.EVENT.CHAIN_CHANGED'
-}
