@@ -94,6 +94,12 @@ export function isHex(str) {
     }
 }
 
+export function base64Encode(str){
+    var encode = encodeURI(str);
+    var base64 = btoa(encode);
+    return base64;
+}
+
 /**
  * Performs a single SHA256.
  */
