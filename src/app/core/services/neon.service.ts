@@ -28,12 +28,13 @@ import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { sc, u } from '@cityofzion/neon-core';
 import { EVENT, TxHashAttribute } from '@/models/dapi';
 import { bignumber } from 'mathjs';
-import { ChainType } from '@popup/_lib';
+import { ChainId, ChainType, NetType } from '@popup/_lib';
 
 @Injectable()
 export class NeonService {
     currentWalletChainType: ChainType;
     selectedChainType: ChainType;
+    net: string;
     // 当前钱包的链
     private _neon: any = Neon2;
     private _neonWallet: any = wallet2;
@@ -145,7 +146,15 @@ export class NeonService {
             this._wallet.accounts[0].address
         );
     }
-    constructor(private chrome: ChromeService, private global: GlobalService) {}
+    constructor(
+        private chrome: ChromeService,
+        private global: GlobalService
+    ) {
+        this.chrome.getNet().subscribe(net => {
+            this.net = net;
+            console.log(this.net);
+        });
+    }
 
     public clearCache() {
         this._wallet =
@@ -799,8 +808,12 @@ export class NeonService {
     //#region neo3
     changeChainType(chain: ChainType = this.currentWalletChainType) {
         if (chain === 'Neo3') {
+            this.chrome.setChainId(ChainId.N3TestNet);
             this.chrome.setNet('TestNet');
             this.global.modifyNet('TestNet');
+        } else if (chain === 'Neo2') {
+            const chainId = this.net === 'MainNet' ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
+            this.chrome.setChainId(chainId);
         }
         this.chrome.setCurrentWalletChainType(chain);
         this.currentWalletChainType = chain;

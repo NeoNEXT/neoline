@@ -8,6 +8,7 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { HttpClient } from '@angular/common/http';
 import { EVENT } from '@/models/dapi';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
+import { ChainId, NetType } from './popup/_lib';
 
 @Component({
     selector: 'neo-line',
@@ -30,7 +31,8 @@ export class AppComponent {
         private neon: NeonService,
         private dialog: MatDialog,
         private assetSer: AssetState,
-        private http: HttpClient
+        private http: HttpClient,
+        private neonService: NeonService
     ) {
         this.chrome.getLang().subscribe((res) => {
             this.http
@@ -81,11 +83,18 @@ export class AppComponent {
     }
 
     public modifyNet(net: string) {
+        let chainId;
+        if (net === NetType.MianNet) {
+            chainId = this.neonService.currentWalletChainType === 'Neo2' ? ChainId.Neo2MainNet : ChainId.N3MainNet;
+        } else if (net === NetType.TestNet) {
+            chainId = this.neonService.currentWalletChainType === 'Neo2' ? ChainId.Neo2TestNet : ChainId.N3TestNet;
+        }
         if (this.net === net) {
             return;
         }
         this.net = net;
         this.chrome.setNet(net);
+        this.chrome.setChainId(chainId);
         this.global.modifyNet(net);
         location.reload();
     }

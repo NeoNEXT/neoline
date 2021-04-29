@@ -18,7 +18,8 @@ import { Asset } from '@/models/models';
 import { EVENT } from '@/models/dapi';
 import { loschmidtDependencies } from 'mathjs';
 import { stat } from 'fs';
-import { ChainType } from '@/app/popup/_lib';
+import { NeonService } from './neon.service'
+import { ChainId, ChainType, NetType } from '@/app/popup/_lib';
 
 declare var chrome: any;
 
@@ -26,6 +27,8 @@ declare var chrome: any;
 export class ChromeService {
     private crx: any = null;
     private net: string = 'MainNet';
+    private chainType: string = 'Neo2';
+    private chainId: ChainId = ChainId.Neo2MainNet;
     constructor() {
         try {
             this.crx = chrome.extension.getBackgroundPage().NEOLineBackground; //  chrome.extension.getBackgroundPage();
@@ -658,7 +661,16 @@ export class ChromeService {
             this.crx.removeStorage('assetUSDRate');
         }
     }
-
+    /**
+     * chainId 1 Neo2 MainNet
+     * chianId 2 Neo2 TestNet
+     * ChainId 3 N3 MainNet
+     * ChainId 4 N3 TestNet
+     *
+     * @param {string} net
+     * @return {*}
+     * @memberof ChromeService
+     */
     public setNet(net: string) {
         this.net = net;
         if (!this.check) {
@@ -669,9 +681,11 @@ export class ChromeService {
             this.crx.setStorage({
                 net
             });
+            this.crx.setNetWork(net);
             this.windowCallback({
                 return: EVENT.NETWORK_CHANGED,
                 data: {
+                    chainId: this.chainId,
                     networks: ['MainNet', 'TestNet'],
                     defaultNetwork: net === 'TestNet' ? 'TestNet' : 'MainNet'
                 }
@@ -680,6 +694,48 @@ export class ChromeService {
             console.log('set net failed', e);
         }
     }
+
+    public setChainId (chainId: ChainId) {
+        this.chainId = chainId;
+        if (!this.check) {
+            localStorage.setItem('chainId', JSON.stringify(chainId));
+            return;
+        }
+        try {
+            this.crx.setStorage({
+                chainId
+            });
+            this.crx.setNetWork(chainId);
+        } catch (e) {
+            console.log('set chianId failed', e);
+        }
+    }
+
+    public getChainId (): Observable<number> {
+        if (!this.check) {
+            try {
+                if (localStorage.getItem('chainId')) {
+                    this.net = JSON.parse(localStorage.getItem('chainId'))
+                    return of(JSON.parse(localStorage.getItem('chainId')));
+                } else {
+                    return of(ChainId.Neo2MainNet); // defult chainId
+                }
+            } catch (e) {
+                return throwError('please get chianId json to local storage when debug mode on');
+            }
+        }
+        return from(new Promise<number>((resolve, reject) => {
+            try {
+                this.crx.getStorage('chainId', (res) => {
+                    this.net = res || ChainId.Neo2MainNet;
+                    resolve(res || ChainId.Neo2MainNet);
+                });
+            } catch (e) {
+                reject('failed');
+            }
+        }));
+    }
+
     public getNet(): Observable<string> {
         if (!this.check) {
             try {
@@ -781,18 +837,23 @@ export class ChromeService {
         }
     }
 
-    public setCurrentWalletChainType(chainType: string) {
+    public setCurrentWalletChainType(chain: string) {
+        if (this.chainType === chain) {
+            return;
+        }
+        this.chainType = chain;
         if (!this.check) {
-            localStorage.setItem('chainType', chainType);
+            localStorage.setItem('chainType', chain);
         } else {
             this.crx.setLocalStorage({
-                chainType: chainType
+                chainType: chain
             });
+            this.crx.setChainType(chain);
             this.windowCallback({
                 return: EVENT.CHAIN_CHANGED,
                 data: {
                     chains: ['Neo2', 'Neo3'],
-                    defaultChain: chainType
+                    defaultChain: chain
                 }
             });
         }

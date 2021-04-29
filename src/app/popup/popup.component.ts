@@ -17,6 +17,7 @@ import {
 } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupHomeMenuDialogComponent } from './_dialogs';
+import { ChainId, NetType } from './_lib';
 
 @Component({
     templateUrl: 'popup.component.html',
@@ -41,7 +42,8 @@ export class PopupComponent implements OnInit, AfterViewInit {
         private neon: NeonService,
         private router: Router,
         private dialog: MatDialog,
-        private assetSer: AssetState
+        private assetSer: AssetState,
+        private neonService: NeonService
     ) {
         this.walletIsOpen = false;
         this.isLogin = false;
@@ -121,8 +123,18 @@ export class PopupComponent implements OnInit, AfterViewInit {
         if (this.net === net) {
             return;
         }
+        let chainId;
+        if (net === NetType.MianNet) {
+            chainId = this.neonService.currentWalletChainType === 'Neo2' ? ChainId.Neo2MainNet : ChainId.N3MainNet;
+        } else if (net === NetType.TestNet) {
+            chainId = this.neonService.currentWalletChainType === 'Neo2' ? ChainId.Neo2TestNet : ChainId.N3TestNet;
+        }
+        if (this.net === net) {
+            return;
+        }
         this.net = net;
         this.chrome.setNet(net);
+        this.chrome.setChainId(chainId);
         this.global.modifyNet(net);
         location.reload();
     }
