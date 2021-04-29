@@ -15,3 +15,10 @@ export const RPC = {
         MainNet: 'https://neo3-testnet.neoline.vip',
     }
 };
+
+export enum ChainId {
+    Neo2MainNet = 1,
+    Neo2TestNet = 2,
+    Neo3MainNet = 3,
+    Neo3TestNet = 4,
+}
