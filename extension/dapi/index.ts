@@ -64,10 +64,6 @@ export class Init {
             callback: [],
             callbackEvent: []
         },
-        CHAIN_CHANGED: {
-            callback: [],
-            callbackEvent: []
-        }
     };
 
     public getProvider(): Promise<Provider> {
@@ -517,22 +513,6 @@ export class Init {
                         this.EVENTLIST.TRANSACTION_CONFIRMED.callbackEvent.length - 1]);
                     break;
                 }
-            case this.EVENT.CHAIN_CHANGED:
-                {
-                    if (this.EVENTLIST.CHAIN_CHANGED.callback.findIndex(item => item === callback) >= 0) {
-                        return;
-                    }
-                    const callbackFn = (event) => {
-                        if (event.data.return !== undefined && event.data.return === this.EVENT.CHAIN_CHANGED) {
-                            callback(event.data.data);
-                        }
-                    };
-                    this.EVENTLIST.CHAIN_CHANGED.callback.push(callback);
-                    this.EVENTLIST.CHAIN_CHANGED.callbackEvent.push(callbackFn);
-                    window.addEventListener('message', this.EVENTLIST.CHAIN_CHANGED.callbackEvent[
-                        this.EVENTLIST.CHAIN_CHANGED.callbackEvent.length - 1]);
-                    break;
-                }
         }
     }
     public removeEventListener(type: string, removeFn: any) {
@@ -591,14 +571,6 @@ export class Init {
                     window.removeEventListener('message', this.EVENTLIST.TRANSACTION_CONFIRMED.callbackEvent[index]);
                     this.EVENTLIST.TRANSACTION_CONFIRMED.callback.splice(index, 1);
                     this.EVENTLIST.TRANSACTION_CONFIRMED.callbackEvent.splice(index, 1);
-                    break;
-                }
-            case this.EVENT.CHAIN_CHANGED:
-                {
-                    const index = this.EVENTLIST.CHAIN_CHANGED.callback.findIndex(item => item === removeFn);
-                    window.removeEventListener('message', this.EVENTLIST.CHAIN_CHANGED.callbackEvent[index]);
-                    this.EVENTLIST.CHAIN_CHANGED.callback.splice(index, 1);
-                    this.EVENTLIST.CHAIN_CHANGED.callbackEvent.splice(index, 1);
                     break;
                 }
         }

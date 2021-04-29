@@ -846,13 +846,6 @@ export class ChromeService {
                 chainType: chain
             });
             this.crx.setChainType(chain);
-            this.windowCallback({
-                return: EVENT.CHAIN_CHANGED,
-                data: {
-                    chains: ['Neo2', 'Neo3'],
-                    defaultChain: chain
-                }
-            });
         }
     }
 

@@ -813,6 +813,7 @@ export class NeonService {
             this.global.modifyNet('TestNet');
         } else if (chain === 'Neo2') {
             const chainId = this.net === 'MainNet' ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
+            this.chrome.setNet(this.net);
             this.chrome.setChainId(chainId);
         }
         this.chrome.setCurrentWalletChainType(chain);
