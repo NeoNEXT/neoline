@@ -3,25 +3,21 @@
  */
 
 import {
-    httpGet,
     getStorage,
     getLocalStorage,
-    httpPost
 } from '../common/index';
-import { requestTarget, Account, AccountPublicKey,
-    SendArgs, GetBlockInputArgs, TransactionInputArgs, ERRORS, VerifyMessageArgs, mainApi, mainRPC, testRPC, RPC } from '../common/data_module';
-import { getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, sign, str2hexstring, verify, hexstring2str } from '../common/utils';
-import randomBytes = require('randomBytes');
-
-
+import { requestTarget, Account } from '../common/data_module_neo2';
 
 declare var chrome: any;
 
-
-// 注意，此script可以单方面执行第三方页面内的逻辑，但第三方页面并不能直接操作此script，必须使用message方式
-// 后续补充一个dapi让第三方页面引入，来隐藏消息收发的实现
-// 也可以动态注入脚本进第三方页面，此方式注入的脚本如何使用ts待考虑
-
+/**
+ * Note:
+ * that this script can unilaterally execute the logic in the third-party page,
+ * but the third-party page cannot directly manipulate this script,
+ * and the message method must be used.
+ * Follow-up to add a dapi for the introduction of third-party pages to hide the realization of message sending and receiving.
+ * You can also dynamically inject scripts into third-party pages. How to use ts for scripts injected in this way is to be considered.
+ */
 const dapi = window.document.createElement('script');
 dapi.setAttribute('type', 'text/javascript');
 dapi.async = true;
@@ -35,14 +31,18 @@ dapi.onload = () => {
     }, '*');
 };
 
-window.onload = () => {
+window.addEventListener('load', () => {
     if (window.document.body != null) {
         window.document.body.appendChild(dapi);
     }
-};
+});
 
+// neo2 method
 window.addEventListener('message', async (e) => {
     switch (e.data.target) {
+        /**
+         * common dapi method
+         */
         case requestTarget.Provider: {
             getStorage('rateCurrency', (res) => {
                 if (res === undefined) {
@@ -117,536 +117,46 @@ window.addEventListener('message', async (e) => {
                 }
             })
         }
-    }
-    getLocalStorage('chainType', async (chainType) => {
-        if (chainType === 'Neo2') {
-            switch (e.data.target) {
-                case requestTarget.AccountPublicKey: {
-                    getLocalStorage('chainType', async (chainType) => {
-                    const walletArr = await getLocalStorage('walletArr', () => { });
-                    const currWallet = await getLocalStorage('wallet', () => { });
-                    const WIFArr = await getLocalStorage('WIFArr', () => { });
-                    const data: AccountPublicKey = { address: '', publicKey: '' };
-                    if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                        const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
-                            item.accounts[0].address === currWallet.accounts[0].address)]
-                        );
-                        data.address = currWallet.accounts[0].address;
-                        data.publicKey = getPublicKeyFromPrivateKey(privateKey);
-                    }
-                    window.postMessage({
-                        return: requestTarget.AccountPublicKey,
-                        data,
-                        ID: e.data.ID
-                    }, '*');
-                    })
-                    return;
-                }
-                case requestTarget.Balance: {
-                    getStorage('net', async (res) => {
-                        let network = e.data.parameter.network;
-                        if (network !== 'MainNet' && network !== 'TestNet') {
-                            network = res || 'MainNet';
-                        }
-                        e.data.parameter.network = network;
-                        chrome.runtime.sendMessage(e.data, (response) => {
-                            return Promise.resolve('Dummy response to keep the console quiet');
-                        });
-                    });
-                    return;
-                }
-                case requestTarget.Storage: {
-                    getStorage('net', async (res) => {
-                        let network = e.data.parameter.network;
-                        if (network !== 'MainNet' && network !== 'TestNet') {
-                            network = res || 'MainNet';
-                        }
-                        const apiUrl = network === 'MainNet' ? mainRPC : testRPC;
-                        httpPost(apiUrl, {
-                            jsonrpc: '2.0',
-                            method: 'getstorage',
-                            params: [e.data.parameter.scriptHash, str2hexstring(e.data.parameter.key)],
-                            id: 1
-                        },(returnRes) => {
-                            window.postMessage({
-                                return: requestTarget.Storage,
-                                data: returnRes.error !== undefined ? null : ({result: hexstring2str(returnRes.result)} || null),
-                                ID: e.data.ID,
-                                error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
-                            }, '*');
-                        }, null);
-                    });
-                    return;
-                }
-                case requestTarget.InvokeRead: {
-                    getStorage('net', async (res) => {
-                        let apiUrl = e.data.parameter.network;
-                        const parameter = e.data.parameter;
-                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                            apiUrl = res || 'MainNet';
-                        }
-                        apiUrl = apiUrl === 'MainNet' ? mainRPC : testRPC;
-                        e.data.network = apiUrl;
-                        e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
-                        chrome.runtime.sendMessage(e.data, (response) => {
-                            return Promise.resolve('Dummy response to keep the console quiet');
-                        });
-                    });
-                    return;
-                }
-                case requestTarget.InvokeReadMulti: {
-                    getStorage('net', async (res) => {
-                        let apiUrl = e.data.parameter.network;
-                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                            apiUrl = res || 'MainNet';
-                        }
-                        apiUrl = apiUrl === 'MainNet' ? mainRPC : testRPC;
-                        e.data.network = apiUrl;
-                        chrome.runtime.sendMessage(e.data, (response) => {
-                            return Promise.resolve('Dummy response to keep the console quiet');
-                        });
-                    });
-                    return;
-                }
-                case requestTarget.VerifyMessage: {
-                    const parameter = e.data.parameter as VerifyMessageArgs;
-                    const walletArr = await getLocalStorage('walletArr', () => { });
-                    const currWallet = await getLocalStorage('wallet', () => { });
-                    const WIFArr = await getLocalStorage('WIFArr', () => { });
-                    if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                        const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
-                            item.accounts[0].address === currWallet.accounts[0].address)]
-                        );
-                        const publicKey = getPublicKeyFromPrivateKey(privateKey);
-                        const parameterHexString = str2hexstring(parameter.message);
-                        const lengthHex = (parameterHexString.length / 2).toString(16).padStart(2, '0');
-                        const concatenatedString = lengthHex + parameterHexString;
-                        const serializedTransaction = '010001f0' + concatenatedString + '0000';
-                        window.postMessage({
-                            return: requestTarget.VerifyMessage,
-                            data: {
-                                result: sign(serializedTransaction, privateKey) === parameter.data &&
-                                publicKey === parameter.publicKey ? true : false
-                            },
-                            ID: e.data.ID
-                        }, '*');
-                    }
-                    return;
-                }
-                case requestTarget.Transaction: {
-                    getStorage('net', async (res) => {
-                        let network = e.data.parameter.network;
-                        const parameter = e.data.parameter;
-                        if (network !== 'MainNet' && network !== 'TestNet') {
-                            network = res || 'MainNet';
-                        }
-                        e.data.network = network;
-                        e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
-                        const url = `${mainApi}/v1/neo2/transaction/${parameter.txid}`;
-                        httpGet(url, (returnRes) => {
-                            window.postMessage({
-                                return: requestTarget.Transaction,
-                                data: returnRes.status !== 'success' ? null : returnRes.data,
-                                ID: e.data.ID,
-                                error: returnRes.status === 'success' ? null : ERRORS.RPC_ERROR
-                            }, '*');
-                        }, {
-                            Network: network === 'MainNet' ? 'mainnet' : 'testnet'
-                        });
-                    });
-                    return;
-                }
-                case requestTarget.Block: {
-                    getStorage('net', async (res) => {
-                        let apiUrl = e.data.parameter.network;
-                        const parameter = e.data.parameter as GetBlockInputArgs;
-                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                            apiUrl = res || 'MainNet';
-                        }
-                        const url = RPC['Neo2'][apiUrl];
-                        httpPost(url, {
-                            jsonrpc: '2.0',
-                            method: 'getblock',
-                            params: [parameter.blockHeight, 1],
-                            id: 1
-                        },(returnRes) => {
-                            window.postMessage({
-                                return: requestTarget.Block,
-                                data: returnRes.error !== undefined ? null : returnRes.result,
-                                ID: e.data.ID,
-                                error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
-                            }, '*');
-                        }, null);
-                    });
-                    return;
-                }
-                case requestTarget.ApplicationLog: {
-                    getStorage('net', async (res) => {
-                        let apiUrl = e.data.parameter.network;
-                        const parameter = e.data.parameter as TransactionInputArgs;
-                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                            apiUrl = res || 'MainNet';
-                        }
-                        const url = RPC['Neo2'][apiUrl];
-                        httpPost(url, {
-                            jsonrpc: '2.0',
-                            method: 'getapplicationlog',
-                            params: [parameter.txid],
-                            id: 1
-                        },(returnRes) => {
-                            window.postMessage({
-                                return: requestTarget.ApplicationLog,
-                                data: returnRes.error !== undefined ? null : returnRes.result,
-                                ID: e.data.ID,
-                                error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
-                            }, '*');
-                        }, null);
-                    });
-                    return;
-                }
-                case requestTarget.Invoke: {
-                    getStorage('net', async (res) => {
-                        let apiUrl = e.data.parameter.network;
-                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                            apiUrl = res || 'MainNet';
-                        }
-                        e.data.parameter.network = apiUrl;
-                        chrome.runtime.sendMessage(e.data, (response) => {
-                            return Promise.resolve('Dummy response to keep the console quiet');
-                        });
-                    });
-                    return;
-                }
-                case requestTarget.InvokeMulti: {
-                    getStorage('net', async (res) => {
-                        let network = e.data.parameter.network;
-                        if (network !== 'MainNet' && network !== 'TestNet') {
-                            network = res || 'MainNet';
-                        }
-                        e.data.parameter.network = network;
-                        chrome.runtime.sendMessage(e.data, (response) => {
-                            return Promise.resolve('Dummy response to keep the console quiet');
-                        });
-                    });
-                    return;
-                }
-                case requestTarget.SignMessage: {
-                    const parameter = e.data.parameter;
-                    const walletArr = await getLocalStorage('walletArr', () => { });
-                    const currWallet = await getLocalStorage('wallet', () => { });
-                    const WIFArr = await getLocalStorage('WIFArr', () => { });
-                    if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                        const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
-                            item.accounts[0].address === currWallet.accounts[0].address)]
-                        );
-                        const randomSalt = randomBytes(16).toString('hex');
-                        const publicKey = getPublicKeyFromPrivateKey(privateKey);
-                        const parameterHexString = str2hexstring(randomSalt + parameter.message);
-                        const lengthHex = (parameterHexString.length / 2).toString(16).padStart(2, '0');
-                        const concatenatedString = lengthHex + parameterHexString;
-                        const serializedTransaction = '010001f0' + concatenatedString + '0000';
-                        window.postMessage({
-                            return: requestTarget.SignMessage,
-                            data: {
-                                publicKey,
-                                data: sign(serializedTransaction, privateKey),
-                                salt: randomSalt,
-                                message: parameter.message
-                            },
-                            ID: e.data.ID
-                        }, '*');
-                    }
-                    return;
-                }
-                case requestTarget.Deploy: {
-                    getStorage('net', async (res) => {
-                        let network = e.data.parameter.network;
-                        if (network !== 'MainNet' && network !== 'TestNet') {
-                            network = res || 'MainNet';
-                        }
-                        e.data.parameter.network = network;
-                        chrome.runtime.sendMessage(e.data, (response) => {
-                            return Promise.resolve('Dummy response to keep the console quiet');
-                        });
-                    });
-                    return;
-                }
-                case requestTarget.Send: {
-                    const parameter = e.data.parameter as SendArgs;
-                    const assetID = parameter.asset.length < 10 ? '' : parameter.asset;
-                    const symbol = parameter.asset.length >= 10 ? '' : parameter.asset;
-                    getStorage('net', async (res) => {
-                        let network = parameter.network;
-                        if (network !== 'MainNet' && network !== 'TestNet') {
-                            network = res || 'MainNet';
-                        }
-                        e.data.parameter.network = network;
-                        httpGet(`${mainApi}/v1/neo2/address/assets?address=${parameter.fromAddress}`, (resBalance) => {
-                            let enough = true; // 有足够的钱
-                            let hasAsset = false;  // 该地址有这个资产
-                            const assets = (resBalance.data.asset as []).concat(resBalance.data.nep5 || []) as any;
-                            for (const asset of assets) {
-                                if (asset.asset_id === assetID || String(asset.symbol).toLowerCase() === symbol.toLowerCase()) {
-                                    hasAsset = true;
-                                    e.data.parameter.asset = asset.asset_id;
-                                    if (Number(asset.balance) < Number(parameter.amount)) {
-                                        enough = false;
-                                    }
-                                    break;
-                                }
-                            }
-                            if (enough && hasAsset) {
-                                chrome.runtime.sendMessage(e.data, (response) => {
-                                    return Promise.resolve('Dummy response to keep the console quiet');
-                                });
-                            } else {
-                                window.postMessage({
-                                    return: requestTarget.Send,
-                                    error: ERRORS.INSUFFICIENT_FUNDS,
-                                    ID: e.data.ID
-                                }, '*');
-                                return;
-                            }
-                        }, {
-                            Network: network === 'MainNet' ? 'mainnet' : 'testnet'
-                        });
-                    });
-
-                    return;
-                }
-            }
-        } else if (chainType === 'Neo3') {
-            switch (e.data.target) {
-                case requestTarget.Send: {
-                    const parameter = e.data.parameter as SendArgs;
-                    const assetID = parameter.asset.length < 10 ? '' : parameter.asset;
-                    const symbol = parameter.asset.length >= 10 ? '' : parameter.asset;
-                    getStorage('net', async (res) => {
-                        let network = parameter.network;
-                        if (network !== 'MainNet' && network !== 'TestNet') {
-                            network = res || 'MainNet';
-                        }
-                        e.data.parameter.network = network;
-                        httpGet(`${mainApi}/v1/neo3/address/assets?address=${parameter.fromAddress}`, (resBalance) => {
-                            let enough = true; // 有足够的钱
-                            let hasAsset = false;  // 该地址有这个资产
-                            const assets = resBalance.data;
-                            for (let index = 0; index < assets.length; index++) {
-                                if (assets[index].contract === assetID || String(assets[index].symbol).toLowerCase() === symbol.toLowerCase()) {
-                                    hasAsset = true;
-                                    e.data.parameter.asset = assets[index].contract;
-                                    if (Number(assets[index].balance) < Number(parameter.amount)) {
-                                        enough = false;
-                                    }
-                                    break;
-                                }
-                            }
-                            if (enough && hasAsset) {
-                                chrome.runtime.sendMessage(e.data, (response) => {
-                                    return Promise.resolve('Dummy response to keep the console quiet');
-                                });
-                            } else {
-                                window.postMessage({
-                                    return: requestTarget.Send,
-                                    error: ERRORS.INSUFFICIENT_FUNDS,
-                                    ID: e.data.ID
-                                }, '*');
-                                return;
-                            }
-                        }, {
-                            Network: network === 'MainNet' ? 'mainnet' : 'testnet'
-                        });
-                    });
-
-                    return;
-                }
-                case requestTarget.AccountPublicKey: {
-                    getLocalStorage('chainType', async (chainType) => {
-                    const walletArr = await getLocalStorage(`walletArr-Neo3`, () => { });
-                    const currWallet = await getLocalStorage('wallet', () => { });
-                    const WIFArr = await getLocalStorage(`WIFArr-Neo3`, () => { });
-                    const data: AccountPublicKey = { address: '', publicKey: '' };
-                    if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                        const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
-                            item.accounts[0].address === currWallet.accounts[0].address)]
-                        );
-                        data.address = currWallet.accounts[0].address;
-                        data.publicKey = getPublicKeyFromPrivateKey(privateKey);
-                    }
-                    window.postMessage({
-                        return: requestTarget.AccountPublicKey,
-                        data,
-                        ID: e.data.ID
-                    }, '*');
-                    })
-                    return;
-                }
-                case requestTarget.Neo3Balance: {
-                    getStorage('net', async (res) => {
-                        let network = e.data.parameter.network;
-                        if (network !== 'MainNet' && network !== 'TestNet') {
-                            network = res || 'MainNet';
-                        }
-                        e.data.parameter.network = network;
-                        chrome.runtime.sendMessage(e.data, (response) => {
-                            return Promise.resolve('Dummy response to keep the console quiet');
-                        });
-                    });
-                    return;
-                }
-                case requestTarget.Block: {
-                    getStorage('net', async (res) => {
-                        let apiUrl = e.data.parameter.network;
-                        const parameter = e.data.parameter as GetBlockInputArgs;
-                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                            apiUrl = res || 'MainNet';
-                        }
-                        const url = RPC['Neo3'][apiUrl];
-                        httpPost(url, {
-                            jsonrpc: '2.0',
-                            method: 'getblock',
-                            params: [parameter.blockHeight, 1],
-                            id: 1
-                        },(returnRes) => {
-                            window.postMessage({
-                                return: requestTarget.Block,
-                                data: returnRes.error !== undefined ? null : returnRes.result,
-                                ID: e.data.ID,
-                                error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
-                            }, '*');
-                        }, null);
-                    });
-                    return;
-                }
-                case requestTarget.Transaction: {
-                    getStorage('net', async (res) => {
-                        let network = e.data.parameter.network;
-                        const parameter = e.data.parameter;
-                        if (network !== 'MainNet' && network !== 'TestNet') {
-                            network = res || 'MainNet';
-                        }
-                        e.data.network = network;
-                        e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
-                        const url = `${mainApi}/v1/neo3/transaction/${parameter.address}/${parameter.assetId}/${parameter.txid}`;
-                        httpGet(url, (returnRes) => {
-                            window.postMessage({
-                                return: requestTarget.Transaction,
-                                data: returnRes.status !== 'success' ? null : returnRes.data,
-                                ID: e.data.ID,
-                                error: returnRes.status === 'success' ? null : ERRORS.RPC_ERROR
-                            }, '*');
-                        }, {
-                            Network: network === 'MainNet' ? 'mainnet' : 'testnet'
-                        });
-                    });
-                    return;
-                }
-                case requestTarget.Storage: {
-                    getStorage('net', async (res) => {
-                        let network = e.data.parameter.network;
-                        if (network !== 'MainNet' && network !== 'TestNet') {
-                            network = res || 'MainNet';
-                        }
-                        const apiUrl = RPC['Neo3'][res];
-                        httpPost(apiUrl, {
-                            jsonrpc: '2.0',
-                            method: 'getstorage',
-                            params: [e.data.parameter.scriptHash, str2hexstring(e.data.parameter.key)],
-                            id: 1
-                        },(returnRes) => {
-                            window.postMessage({
-                                return: requestTarget.Storage,
-                                data: returnRes.error !== undefined ? null : ({result: hexstring2str(returnRes.result)} || null),
-                                ID: e.data.ID,
-                                error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
-                            }, '*');
-                        }, null);
-                    });
-                    return;
-                }
-                case requestTarget.ApplicationLog: {
-                    getStorage('net', async (res) => {
-                        let apiUrl = e.data.parameter.network;
-                        const parameter = e.data.parameter as TransactionInputArgs;
-                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                            apiUrl = res || 'MainNet';
-                        }
-                        const url = RPC[chainType][apiUrl];
-                        httpPost(url, {
-                            jsonrpc: '2.0',
-                            method: 'getapplicationlog',
-                            params: [parameter.txid],
-                            id: 1
-                        },(returnRes) => {
-                            window.postMessage({
-                                return: requestTarget.ApplicationLog,
-                                data: returnRes.error !== undefined ? null : returnRes.result,
-                                ID: e.data.ID,
-                                error: returnRes.error === undefined ? null : ERRORS.RPC_ERROR
-                            }, '*');
-                        }, null);
-                    });
-                    return;
-                }
-                case requestTarget.Invoke: {
-                    getStorage('net', async (res) => {
-                        let apiUrl = e.data.parameter.network;
-                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                            apiUrl = res || 'MainNet';
-                        }
-                        e.data.parameter.network = apiUrl;
-                        chrome.runtime.sendMessage(e.data, (response) => {
-                            return Promise.resolve('Dummy response to keep the console quiet');
-                        });
-                    });
-                    return;
-                }
-                case requestTarget.InvokeRead: {
-                    getStorage('net', async (res) => {
-                        let apiUrl = e.data.parameter.network;
-                        const parameter = e.data.parameter;
-                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                            apiUrl = res || 'MainNet';
-                        }
-                        apiUrl = apiUrl === 'MainNet' ? mainRPC : testRPC;
-                        e.data.network = apiUrl;
-                        e.data.parameter = [parameter.scriptHash, parameter.operation, parameter.args];
-                        chrome.runtime.sendMessage(e.data, (response) => {
-                            return Promise.resolve('Dummy response to keep the console quiet');
-                        });
-                    });
-                    return;
-                }
-                case requestTarget.InvokeReadMulti: {
-                    getStorage('net', async (res) => {
-                        let apiUrl = e.data.parameter.network;
-                        if (apiUrl !== 'MainNet' && apiUrl !== 'TestNet') {
-                            apiUrl = res || 'MainNet';
-                        }
-                        apiUrl = apiUrl === 'MainNet' ? mainRPC : testRPC;
-                        e.data.network = apiUrl;
-                        chrome.runtime.sendMessage(e.data, (response) => {
-                            return Promise.resolve('Dummy response to keep the console quiet');
-                        });
-                    });
-                    return;
-                }
-                case requestTarget.Neo3InvokeMultiple: {
-                    getStorage('net', async (res) => {
-                        let network = e.data.parameter.network;
-                        if (network !== 'MainNet' && network !== 'TestNet') {
-                            network = res || 'MainNet';
-                        }
-                        e.data.parameter.network = network;
-                        chrome.runtime.sendMessage(e.data, (response) => {
-                            return Promise.resolve('Dummy response to keep the console quiet');
-                        });
-                    });
-                    return;
-                }
-            }
+        case requestTarget.AccountPublicKey: {
+            chrome.runtime.sendMessage(e.data, (response) => {
+                return Promise.resolve('Dummy response to keep the console quiet');
+            });
+            return;
         }
-    })
+
+        // neo2 dapi method
+        case requestTarget.Balance:
+        case requestTarget.Transaction:
+        case requestTarget.Block:
+        case requestTarget.ApplicationLog:
+        case requestTarget.Storage:
+        case requestTarget.InvokeRead:
+        case requestTarget.InvokeReadMulti:
+        case requestTarget.Invoke:
+        case requestTarget.InvokeMulti:
+        case requestTarget.Send:
+        case requestTarget.Deploy:
+            {
+                getStorage('net', (res) => {
+                    let network = e.data.parameter.network;
+                    if (network !== 'MainNet' && network !== 'TestNet') {
+                        network = res || 'MainNet';
+                    }
+                    e.data.parameter.network = network;
+                    chrome.runtime.sendMessage(e.data, (response) => {
+                        return Promise.resolve('Dummy response to keep the console quiet');
+                    });
+                });
+                return;
+            }
+        case requestTarget.VerifyMessage:
+        case requestTarget.SignMessage: {
+            chrome.runtime.sendMessage(e.data, (response) => {
+                return Promise.resolve('Dummy response to keep the console quiet');
+            });
+            return;
+        }
+    }
 }, false);
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {

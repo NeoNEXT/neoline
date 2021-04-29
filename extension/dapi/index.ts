@@ -1,11 +1,10 @@
 import {
-    Provider, EVENT, requestTarget, Networks, Account,
-    AccountPublicKey, BalanceResults, GetBalanceArgs, InvokeReadArgs, InvokeReadMultiArgs,
+    EVENT, requestTarget, Networks, Account, AccountPublicKey, BalanceResults,
+    GetBalanceArgs, InvokeReadArgs, InvokeReadMultiArgs, InvokeMultiArgs,
     TransactionInputArgs, TransactionDetails, SendArgs, InvokeArgs, GetBlockInputArgs, SendOutput,
-    ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response, DeployArgs, DeployOutput,
-    InvokeMultiArgs, GetNeo3BalanceArgs, Neo3InvokeMultiple,
-} from '../common/data_module';
-export { EVENT, ERRORS } from '../common/data_module';
+    ERRORS, GetStorageArgs, StorageResponse, VerifyMessageArgs, Response, DeployArgs, DeployOutput, Provider,
+} from '../common/data_module_neo2';
+export { EVENT, ERRORS } from '../common/data_module_neo2';
 import { getMessageID } from '../common/utils';
 
 function sendMessage<K>(target: requestTarget, parameter?: any): Promise<K> {
@@ -154,10 +153,6 @@ export class Init {
         }
     }
 
-    public getNeo3Balance(parameter: GetNeo3BalanceArgs): Promise<BalanceResults> {
-        return sendMessage(requestTarget.Neo3Balance, parameter);
-    }
-
     public getStorage(parameter: GetStorageArgs): Promise<StorageResponse> {
         if (parameter === undefined || parameter.scriptHash === undefined || parameter.key === undefined) {
             return new Promise((_, reject) => {
@@ -167,7 +162,6 @@ export class Init {
             return sendMessage(requestTarget.Storage, parameter);
         }
     }
-
 
     public invokeRead(parameter: InvokeReadArgs): Promise<object> {
         if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
@@ -406,57 +400,6 @@ export class Init {
 
         }
     }
-
-    // neo3 dapi methods
-    public async invokeMultiple(parameter: Neo3InvokeMultiple) {
-        if (parameter.invokeArgs === undefined || parameter.signers === undefined) {
-            return new Promise((_, reject) => {
-                reject(ERRORS.MALFORMED_INPUT);
-            });
-        } else {
-            if (parameter.invokeArgs instanceof Array && parameter.invokeArgs.length > 0) {
-                parameter.invokeArgs.forEach(item => {
-                    if (item.scriptHash === undefined || item.scriptHash === '' ||
-                        item.operation === undefined || item.operation === '') {
-                        return new Promise((_, reject) => {
-                            reject(ERRORS.MALFORMED_INPUT);
-                        });
-                    }
-                });
-            } else {
-                return new Promise((_, reject) => {
-                    reject(ERRORS.MALFORMED_INPUT);
-                });
-            }
-            let authState: any;
-            try {
-                authState = await getAuthState() || 'NONE';
-            } catch (error) {
-                console.log(error);
-            }
-            if (authState === true || authState === 'NONE') {
-                let connectResult;
-                if (sessionStorage.getItem('connect') !== 'true' && authState === 'NONE') {
-                    connectResult = await connect();
-                } else {
-                    connectResult = true;
-                }
-                if (connectResult === true) {
-                    (parameter as any).hostname = location.hostname;
-                    return sendMessage(requestTarget.Neo3InvokeMultiple, parameter);
-                } else {
-                    return new Promise((_, reject) => {
-                        reject(ERRORS.CONNECTION_DENIED);
-                    });
-                }
-            } else {
-                return new Promise((_, reject) => {
-                    reject(ERRORS.CONNECTION_DENIED);
-                });
-            }
-        }
-    }
-
 
     public addEventListener(type: string, callback: (data: object) => void) {
         switch (type) {
@@ -768,7 +711,10 @@ function getAuthState(): Promise<any> {
         }, '*');
         const promise = new Promise((resolve) => {
             const callbackFn = (event) => {
-                if (event.data.return !== undefined && event.data.return === requestTarget.AuthState) {
+                if (
+                    event.data.return !== undefined &&
+                    event.data.return === requestTarget.AuthState
+                ) {
                     resolve(event.data.data);
                     window.removeEventListener('message', callbackFn);
                 }
