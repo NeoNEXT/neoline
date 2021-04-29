@@ -37,6 +37,35 @@ export class ChromeService {
         }
     }
 
+    public setChainId() {
+        if (this.chainType === 'Neo2') {
+            debugger
+            this.chainId = this.net === NetType.MianNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
+        } else if (this.chainType === 'Neo3') {
+            this.chainId = this.net === NetType.MianNet ? ChainId.N3MainNet : ChainId.N3TestNet;
+        }
+        if (!this.check) {
+            localStorage.setItem('chainId', JSON.stringify(this.chainId));
+            return;
+        }
+        try {
+            this.crx.setStorage({
+                chainId: this.chainId
+            });
+            this.crx.setNetWork(this.net, this.chainId, this.chainType);
+            this.windowCallback({
+                return: EVENT.NETWORK_CHANGED,
+                data: {
+                    chainType: this.chainType,
+                    chainId: this.chainId,
+                    networks: ['MainNet', 'TestNet'],
+                    defaultNetwork: this.net === 'TestNet' ? 'TestNet' : 'MainNet'
+                }
+            });
+        } catch (e) {
+            console.log('set chianId failed', e);
+        }
+    }
 
     /**
      * check is in chrome extension env
@@ -157,6 +186,26 @@ export class ChromeService {
             console.log('set account failed', e);
         }
     }
+    /**
+     * Set wallet as active chainType, and add to history list.
+     * 保存当前链，并记录到历史
+     */
+    public setCurrentWalletChainType(chain: string) {
+        this.chainType = chain;
+        this.setChainId();
+        if (!this.check) {
+            localStorage.setItem('chainType', chain);
+            return;
+        }
+        try {
+            this.crx.setLocalStorage({
+                chainType: chain
+            });
+        } catch (e) {
+            console.log('set chainType failed', e);
+        }
+    }
+
     /**
      * Set wallets, and add to history list.
      * 保存钱包数组，并记录到历史
@@ -673,6 +722,7 @@ export class ChromeService {
      */
     public setNet(net: string) {
         this.net = net;
+        this.setChainId();
         if (!this.check) {
             localStorage.setItem('net', JSON.stringify(net));
             return;
@@ -681,59 +731,9 @@ export class ChromeService {
             this.crx.setStorage({
                 net
             });
-            this.crx.setNetWork(net);
-            this.windowCallback({
-                return: EVENT.NETWORK_CHANGED,
-                data: {
-                    chainId: this.chainId,
-                    networks: ['MainNet', 'TestNet'],
-                    defaultNetwork: net === 'TestNet' ? 'TestNet' : 'MainNet'
-                }
-            });
         } catch (e) {
             console.log('set net failed', e);
         }
-    }
-
-    public setChainId (chainId: ChainId) {
-        this.chainId = chainId;
-        if (!this.check) {
-            localStorage.setItem('chainId', JSON.stringify(chainId));
-            return;
-        }
-        try {
-            this.crx.setStorage({
-                chainId
-            });
-            this.crx.setNetWork(chainId);
-        } catch (e) {
-            console.log('set chianId failed', e);
-        }
-    }
-
-    public getChainId (): Observable<number> {
-        if (!this.check) {
-            try {
-                if (localStorage.getItem('chainId')) {
-                    this.net = JSON.parse(localStorage.getItem('chainId'))
-                    return of(JSON.parse(localStorage.getItem('chainId')));
-                } else {
-                    return of(ChainId.Neo2MainNet); // defult chainId
-                }
-            } catch (e) {
-                return throwError('please get chianId json to local storage when debug mode on');
-            }
-        }
-        return from(new Promise<number>((resolve, reject) => {
-            try {
-                this.crx.getStorage('chainId', (res) => {
-                    this.net = res || ChainId.Neo2MainNet;
-                    resolve(res || ChainId.Neo2MainNet);
-                });
-            } catch (e) {
-                reject('failed');
-            }
-        }));
     }
 
     public getNet(): Observable<string> {
@@ -834,18 +834,6 @@ export class ChromeService {
                     walletsStatus: walletsIsBackup
                 });
             });
-        }
-    }
-
-    public setCurrentWalletChainType(chain: string) {
-        this.chainType = chain;
-        if (!this.check) {
-            localStorage.setItem('chainType', chain);
-        } else {
-            this.crx.setLocalStorage({
-                chainType: chain
-            });
-            this.crx.setChainType(chain);
         }
     }
 

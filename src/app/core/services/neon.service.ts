@@ -152,7 +152,6 @@ export class NeonService {
     ) {
         this.chrome.getNet().subscribe(net => {
             this.net = net;
-            console.log(this.net);
         });
     }
 
@@ -808,15 +807,9 @@ export class NeonService {
     //#region neo3
     changeChainType(chain: ChainType = this.currentWalletChainType) {
         if (chain === 'Neo3') {
-            this.chrome.setChainId(ChainId.N3TestNet);
             this.chrome.setNet('TestNet');
             this.global.modifyNet('TestNet');
-        } else if (chain === 'Neo2') {
-            const chainId = this.net === 'MainNet' ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
-            this.chrome.setNet(this.net);
-            this.chrome.setChainId(chainId);
         }
-        this.chrome.setCurrentWalletChainType(chain);
         this.currentWalletChainType = chain;
         switch (chain) {
             case 'Neo2':

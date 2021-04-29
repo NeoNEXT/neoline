@@ -97,7 +97,8 @@ export function expand() {
                             windowCallback({
                                 data: {
                                     chainId: currCahinId,
-                                    currNetWork,
+                                    NetWork: currNetWork,
+                                    chainType: chainType,
                                     blockHeight: blockHeightData.result,
                                     blockTime: blockDetail.result.time,
                                     blockHash: blockDetail.result.hash,
@@ -127,7 +128,9 @@ export function expand() {
                                     });
                                     windowCallback({
                                         data: {
-                                            currNetWork,
+                                            chainId: currCahinId,
+                                            NetWork: currNetWork,
+                                            chainType: chainType,
                                             blockHeight: blockHeightData.result,
                                             blockTime: blockDetail.result.time,
                                             blockHash: blockDetail.result.hash,
@@ -221,15 +224,9 @@ export function setPopup(lang) {
     }
 }
 
-export function setNetWork(netWork) {
+export function setNetWork(netWork, chainId, chainType) {
     currNetWork = netWork;
-}
-
-export function setChainId(chainId) {
     currCahinId = chainId;
-}
-
-export function setChainType(chainType) {
     currChain = chainType;
 }
 

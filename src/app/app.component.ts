@@ -83,18 +83,11 @@ export class AppComponent {
     }
 
     public modifyNet(net: string) {
-        let chainId;
-        if (net === NetType.MianNet) {
-            chainId = this.neonService.currentWalletChainType === 'Neo2' ? ChainId.Neo2MainNet : ChainId.N3MainNet;
-        } else if (net === NetType.TestNet) {
-            chainId = this.neonService.currentWalletChainType === 'Neo2' ? ChainId.Neo2TestNet : ChainId.N3TestNet;
-        }
         if (this.net === net) {
             return;
         }
         this.net = net;
         this.chrome.setNet(net);
-        this.chrome.setChainId(chainId);
         this.global.modifyNet(net);
         location.reload();
     }
