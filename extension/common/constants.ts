@@ -16,9 +16,12 @@ export const RPC = {
     }
 };
 
+/**
+ * @param N3MainNet Mainnet is not yet online, Mainnet Id 3
+ */
 export enum ChainId {
     Neo2MainNet = 1,
     Neo2TestNet = 2,
-    Neo3MainNet = 3,
-    Neo3TestNet = 4,
+    N3MainNet = 4,
+    N3TestNet = 4,
 }

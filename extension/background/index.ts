@@ -97,7 +97,7 @@ export function expand() {
                             windowCallback({
                                 data: {
                                     chainId: currCahinId,
-                                    NetWork: currNetWork,
+                                    netWork: currNetWork,
                                     chainType: chainType,
                                     blockHeight: blockHeightData.result,
                                     blockTime: blockDetail.result.time,
@@ -129,7 +129,7 @@ export function expand() {
                                     windowCallback({
                                         data: {
                                             chainId: currCahinId,
-                                            NetWork: currNetWork,
+                                            netWork: currNetWork,
                                             chainType: chainType,
                                             blockHeight: blockHeightData.result,
                                             blockTime: blockDetail.result.time,
@@ -854,7 +854,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     }
                     sendResponse('');
                 }, {
-                    Network: parameter.network === 'MainNet' ? 'mainnet' : 'testnet'
+                    Network: request.network === 'MainNet' ? 'mainnet' : 'testnet'
                 });
             } catch (error) {
                 windowCallback({
@@ -890,7 +890,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     }
                     sendResponse('');
                 }, {
-                    Network: parameter.network === 'MainNet' ? 'mainnet' : 'testnet'
+                    Network: request.network === 'MainNet' ? 'mainnet' : 'testnet'
                 });
             } catch (error) {
                 windowCallback({
@@ -906,8 +906,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         case requestTargetN3.Block: {
             try {
                 const parameter = request.parameter as N3GetBlockInputArgs;
-                const nodeUrl = RPC.Neo3[parameter.network];
-                httpPost(nodeUrl, {
+                httpPost(request.nodeUrl, {
                     jsonrpc: '2.0',
                     method: 'getblock',
                     params: [parameter.blockHeight, 1],
@@ -935,8 +934,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         case requestTargetN3.ApplicationLog: {
             try {
                 const parameter = request.parameter as N3ApplicationLogArgs;
-                const nodeUrl = RPC.Neo3[parameter.network];
-                httpPost(nodeUrl, {
+                httpPost(request.nodeUrl, {
                     jsonrpc: '2.0',
                     method: 'getapplicationlog',
                     params: [parameter.txid],
@@ -964,8 +962,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         case requestTargetN3.Storage: {
             try {
                 const parameter = request.parameter as N3GetStorageArgs;
-                const nodeUrl = RPC.Neo3[parameter.network];
-                httpPost(nodeUrl, {
+                httpPost(request.nodeUrl, {
                     jsonrpc: '2.0',
                     method: 'getstorage',
                     params: [parameter.scriptHash, base64Encode(parameter.key)],
@@ -992,7 +989,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         case requestTargetN3.InvokeRead: {
             const parameter = request.parameter as N3InvokeReadArgs;
-            const nodeUrl = RPC.Neo3[parameter.network];
             request.parameter = [parameter.scriptHash, parameter.operation, parameter.args, parameter.signers];
             const args = request.parameter[2];
             args.forEach((item, index) => {
@@ -1026,7 +1022,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             });
             request.parameter[2] = args;
             const returnRes = { data: {}, ID: request.ID, return: requestTargetN3.InvokeRead, error: null };
-            httpPost(nodeUrl, {
+            httpPost(request.nodeUrl, {
                 jsonrpc: '2.0',
                 method: 'invokefunction',
                 params: request.parameter,

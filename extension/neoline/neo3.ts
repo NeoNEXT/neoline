@@ -4,10 +4,11 @@
 
 import {
     getStorage,
-    getLocalStorage,
+    getLocalStorage
 } from '../common/index';
-import { Account, requestTarget } from '../common/data_module_neo2';
+import { ERRORS } from '../common/data_module_neo2';
 import { requestTargetN3 } from '../common/data_module_neo3';
+import { ChainId, RPC } from '../common/constants';
 
 declare var chrome: any;
 
@@ -46,6 +47,21 @@ window.addEventListener('message', async (e) => {
     switch (e.data.target) {
         case requestTargetN3.Balance:
         case requestTargetN3.Transaction:
+            {
+                getStorage('chainId', (res) => {
+                    let chainId = e.data.parameter.chainId;
+                    let network;
+                    if (chainId !== ChainId.N3MainNet && chainId !== ChainId.N3TestNet) {
+                        chainId = res || ChainId.N3MainNet;
+                        network = res === ChainId.N3MainNet ? 'MainNet' : 'TestNet';
+                    }
+                    e.data.parameter.network = network;
+                    chrome.runtime.sendMessage(e.data, (response) => {
+                        return Promise.resolve('Dummy response to keep the console quiet');
+                    });
+                });
+                return;
+            }
         case requestTargetN3.Block:
         case requestTargetN3.ApplicationLog:
         case requestTargetN3.Storage:
@@ -55,12 +71,15 @@ window.addEventListener('message', async (e) => {
         case requestTargetN3.InvokeMultiple:
         case requestTargetN3.Send:
             {
-                getStorage('net', (res) => {
-                    let network = e.data.parameter.network;
-                    if (network !== 'MainNet' && network !== 'TestNet') {
-                        network = res || 'MainNet';
+                    getStorage('chainId', (res) => {
+                    let chainId = e.data.parameter.chainId;
+                    let network;
+                    if (chainId !== ChainId.N3MainNet && chainId !== ChainId.N3TestNet) {
+                        chainId = res || ChainId.N3MainNet;
+                        network = res === ChainId.N3MainNet ? 'MainNet' : 'TestNet';
                     }
                     e.data.parameter.network = network;
+                    e.data.nodeUrl = RPC.Neo3[network];
                     chrome.runtime.sendMessage(e.data, (response) => {
                         return Promise.resolve('Dummy response to keep the console quiet');
                     });

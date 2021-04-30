@@ -11,6 +11,7 @@ export const ChainTypeGroups = ['Neo2', 'Neo3'];
  * chianId 2 Neo2 TestNet
  * ChainId 3 N3 MainNet
  * ChainId 4 N3 TestNet
+ * @param N3MainNet Mainnet is not yet online, Mainnet Id 3
  *
  * @export
  * @enum {number}
@@ -18,7 +19,7 @@ export const ChainTypeGroups = ['Neo2', 'Neo3'];
 export enum ChainId {
     Neo2MainNet = 1,
     Neo2TestNet = 2,
-    N3MainNet = 3,
+    N3MainNet = 4,
     N3TestNet = 4,
 }
 
