@@ -39,13 +39,6 @@ export class SettingWalletComponent implements OnInit {
         } else {
             this.wallet = this.neon.parseWallet(w);
             this.chrome.setWallet(this.wallet.export());
-            this.chrome.windowCallback({
-                data: {
-                    address: this.wallet.accounts[0].address,
-                    label: this.wallet.name
-                },
-                return: EVENT.ACCOUNT_CHANGED
-            });
             location.href = `index.html`;
         }
     }

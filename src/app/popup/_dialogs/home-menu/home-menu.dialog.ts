@@ -56,13 +56,6 @@ export class PopupHomeMenuDialogComponent {
     public selectAccount(w: Wallet2 | Wallet3) {
         this.wallet = this.neon.parseWallet(w);
         this.chrome.setWallet(this.wallet.export());
-        this.chrome.windowCallback({
-            data: {
-                address: this.wallet.accounts[0].address,
-                label: this.wallet.name,
-            },
-            return: EVENT.ACCOUNT_CHANGED,
-        });
         location.href = `index.html#popup`;
         this.chrome.setHaveBackupTip(null);
     }

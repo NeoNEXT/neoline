@@ -204,6 +204,13 @@ export class ChromeService {
             this.crx.setLocalStorage({
                 wallet: w
             });
+            this.windowCallback({
+                data: {
+                    address: w.accounts[0].address,
+                    label: w.name,
+                },
+                return: EVENT.ACCOUNT_CHANGED,
+            });
             this.setCurrentWalletChainType(currChainType);
         } catch (e) {
             console.log('set account failed', e);
