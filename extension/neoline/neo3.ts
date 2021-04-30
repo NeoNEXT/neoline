@@ -47,21 +47,7 @@ window.addEventListener('message', async (e) => {
     switch (e.data.target) {
         case requestTargetN3.Balance:
         case requestTargetN3.Transaction:
-            {
-                getStorage('chainId', (res) => {
-                    let chainId = e.data.parameter.chainId;
-                    let network;
-                    if (chainId !== ChainId.N3MainNet && chainId !== ChainId.N3TestNet) {
-                        chainId = res || ChainId.N3MainNet;
-                        network = res === ChainId.N3MainNet ? 'MainNet' : 'TestNet';
-                    }
-                    e.data.parameter.network = network;
-                    chrome.runtime.sendMessage(e.data, (response) => {
-                        return Promise.resolve('Dummy response to keep the console quiet');
-                    });
-                });
-                return;
-            }
+
         case requestTargetN3.Block:
         case requestTargetN3.ApplicationLog:
         case requestTargetN3.Storage:
@@ -70,30 +56,36 @@ window.addEventListener('message', async (e) => {
         case requestTargetN3.Invoke:
         case requestTargetN3.InvokeMultiple:
         case requestTargetN3.Send:
-            {
-                getStorage('chainId', (res) => {
-                    let chainId = e.data.parameter.chainId;
-                    let network;
-                    if (chainId !== ChainId.N3MainNet && chainId !== ChainId.N3TestNet) {
-                        chainId = res || ChainId.N3MainNet;
-                        network = res === ChainId.N3MainNet ? 'MainNet' : 'TestNet';
-                    }
-                    e.data.parameter.network = network;
-                    e.data.nodeUrl = RPC.Neo3[network];
-                    chrome.runtime.sendMessage(e.data, (response) => {
-                        return Promise.resolve('Dummy response to keep the console quiet');
-                    });
-                });
-                return;
-            }
 
         case requestTargetN3.VerifyMessage:
-        case requestTargetN3.SignMessage: {
-            chrome.runtime.sendMessage(e.data, (response) => {
-                return Promise.resolve('Dummy response to keep the console quiet');
-            });
-            return;
-        }
+        case requestTargetN3.SignMessage:
+            {
+                getLocalStorage('chainType', (res) => {
+                    if (res !== 'Neo3') {
+                        window.postMessage({
+                            return: e.data.target,
+                            error: ERRORS.CHAIN_NOT_MATCH,
+                            ID: e.data.ID
+                        }, '*');
+                        return;
+                    } else {
+                        getStorage('chainId', (res) => {
+                            let chainId = e.data.parameter.chainId;
+                            let network;
+                            if (chainId !== ChainId.N3MainNet && chainId !== ChainId.N3TestNet) {
+                                chainId = res || ChainId.N3MainNet;
+                                network = res === ChainId.N3MainNet ? 'MainNet' : 'TestNet';
+                            }
+                            e.data.parameter.network = network;
+                            e.data.nodeUrl = RPC.Neo3[network];
+                            chrome.runtime.sendMessage(e.data, (response) => {
+                                return Promise.resolve('Dummy response to keep the console quiet');
+                            });
+                        });
+                        return;
+                    }
+                });
+            }
     }
 }, false);
 

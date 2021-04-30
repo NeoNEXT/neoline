@@ -6,7 +6,7 @@ import {
     getStorage,
     getLocalStorage,
 } from '../common/index';
-import { requestTarget, Account } from '../common/data_module_neo2';
+import { requestTarget, Account, ERRORS } from '../common/data_module_neo2';
 
 declare var chrome: any;
 
@@ -135,26 +135,34 @@ window.addEventListener('message', async (e) => {
         case requestTarget.InvokeMulti:
         case requestTarget.Send:
         case requestTarget.Deploy:
-            {
-                getStorage('net', (res) => {
-                    let network = e.data.parameter.network;
-                    if (network !== 'MainNet' && network !== 'TestNet') {
-                        network = res || 'MainNet';
-                    }
-                    e.data.parameter.network = network;
-                    chrome.runtime.sendMessage(e.data, (response) => {
-                        return Promise.resolve('Dummy response to keep the console quiet');
-                    });
-                });
-                return;
-            }
+
         case requestTarget.VerifyMessage:
-        case requestTarget.SignMessage: {
-            chrome.runtime.sendMessage(e.data, (response) => {
-                return Promise.resolve('Dummy response to keep the console quiet');
-            });
-            return;
-        }
+        case requestTarget.SignMessage:
+            {
+                getLocalStorage('chainType', (res) => {
+                    if (res !== 'Neo2') {
+                        window.postMessage({
+                            return: e.data.target,
+                            error: ERRORS.CHAIN_NOT_MATCH,
+                            ID: e.data.ID
+                        }, '*');
+                        return;
+                    } else {
+                        getStorage('net', (res) => {
+                            let network = e.data.parameter.network;
+                            if (network !== 'MainNet' && network !== 'TestNet') {
+                                network = res || 'MainNet';
+                            }
+                            e.data.parameter.network = network;
+                            chrome.runtime.sendMessage(e.data, (response) => {
+                                return Promise.resolve('Dummy response to keep the console quiet');
+                            });
+                        });
+                        return;
+                    }
+
+                });
+            }
     }
 }, false);
 

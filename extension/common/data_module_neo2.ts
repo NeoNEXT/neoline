@@ -35,6 +35,11 @@ export const ERRORS = {
         type: 'FAIL',
         description: 'The request failed.',
         data: null
+    },
+    CHAIN_NOT_MATCH: {
+        type: 'CHAIN_NOT_MATCH',
+        description: 'The currently opened chain does not match the type of the call chain, please switch the chain.',
+        data: null
     }
 };
 export enum EVENT {
@@ -167,6 +172,9 @@ export interface TransactionInputArgs {
 }
 
 export interface TransactionDetails {
+    chainId: number;
+    netWork: string;
+    chainType: string;
     txid: string;
     size: number;
     type: string;
