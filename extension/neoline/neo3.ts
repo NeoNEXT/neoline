@@ -71,7 +71,7 @@ window.addEventListener('message', async (e) => {
         case requestTargetN3.InvokeMultiple:
         case requestTargetN3.Send:
             {
-                    getStorage('chainId', (res) => {
+                getStorage('chainId', (res) => {
                     let chainId = e.data.parameter.chainId;
                     let network;
                     if (chainId !== ChainId.N3MainNet && chainId !== ChainId.N3TestNet) {
@@ -96,13 +96,4 @@ window.addEventListener('message', async (e) => {
         }
     }
 }, false);
-
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-    if (request != null) {
-        window.postMessage(request, '*');
-        sendResponse('');
-        return Promise.resolve('Dummy response to keep the console quiet');
-    }
-});
-
 
