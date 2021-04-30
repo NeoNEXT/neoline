@@ -37,11 +37,10 @@ window.addEventListener('load', () => {
     }
 });
 
-// neo2 method
 window.addEventListener('message', async (e) => {
     switch (e.data.target) {
         /**
-         * common dapi method
+         * common dapi methods
          */
         case requestTarget.Provider: {
             getStorage('rateCurrency', (res) => {
@@ -92,7 +91,7 @@ window.addEventListener('message', async (e) => {
                 res = res || {};
                 window.postMessage({
                     return: requestTarget.AuthState,
-                    data: currWallet ?  res[currWallet.accounts[0].address] || [] : []
+                    data: currWallet ? res[currWallet.accounts[0].address] || [] : []
                 }, '*');
             });
             return;
@@ -105,7 +104,7 @@ window.addEventListener('message', async (e) => {
         }
         case requestTarget.Login: {
             getLocalStorage('shouldLogin', res => {
-                if(res === true || res === 'true') {
+                if (res === true || res === 'true') {
                     chrome.runtime.sendMessage(e.data, (response) => {
                         return Promise.resolve('Dummy response to keep the console quiet');
                     });
@@ -124,7 +123,7 @@ window.addEventListener('message', async (e) => {
             return;
         }
 
-        // neo2 dapi method
+        // neo2 dapi methods
         case requestTarget.Balance:
         case requestTarget.Transaction:
         case requestTarget.Block:
