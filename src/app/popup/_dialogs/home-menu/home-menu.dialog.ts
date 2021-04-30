@@ -56,7 +56,6 @@ export class PopupHomeMenuDialogComponent {
     public selectAccount(w: Wallet2 | Wallet3) {
         this.wallet = this.neon.parseWallet(w);
         this.chrome.setWallet(this.wallet.export());
-        this.chrome.setCurrentWalletChainType(this.tabType);
         this.chrome.windowCallback({
             data: {
                 address: this.wallet.accounts[0].address,

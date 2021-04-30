@@ -14,6 +14,9 @@ import {
 import {
     WalletJSON as WalletJSON3
 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import {
+    wallet as wallet3,
+} from '@cityofzion/neon-core-neo3/lib';
 import { Asset } from '@/models/models';
 import { EVENT } from '@/models/dapi';
 import { loschmidtDependencies } from 'mathjs';
@@ -27,8 +30,6 @@ declare var chrome: any;
 export class ChromeService {
     private crx: any = null;
     private net: string = 'MainNet';
-    private chainType: string = 'Neo2';
-    private chainId: ChainId = ChainId.Neo2MainNet;
     constructor() {
         try {
             this.crx = chrome.extension.getBackgroundPage().NEOLineBackground; //  chrome.extension.getBackgroundPage();
@@ -37,27 +38,28 @@ export class ChromeService {
         }
     }
 
-    public setChainId() {
-        if (this.chainType === 'Neo2') {
-            debugger
-            this.chainId = this.net === NetType.MianNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
-        } else if (this.chainType === 'Neo3') {
-            this.chainId = this.net === NetType.MianNet ? ChainId.N3MainNet : ChainId.N3TestNet;
+    public async setChainId() {
+        const chainType = await this.getCurrentWalletChainType();
+        let currChainId;
+        if (chainType == 'Neo2') {
+            currChainId = this.net === NetType.MianNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
+        } else if (chainType == 'Neo3') {
+            currChainId = this.net === NetType.MianNet ? ChainId.N3MainNet : ChainId.N3TestNet;
         }
         if (!this.check) {
-            localStorage.setItem('chainId', JSON.stringify(this.chainId));
+            localStorage.setItem('chainId', JSON.stringify(currChainId));
             return;
         }
         try {
             this.crx.setStorage({
-                chainId: this.chainId
+                chainId: currChainId
             });
-            this.crx.setNetWork(this.net, this.chainId, this.chainType);
+            this.crx.setNetWork(this.net, currChainId, chainType);
             this.windowCallback({
                 return: EVENT.NETWORK_CHANGED,
                 data: {
-                    chainType: this.chainType,
-                    chainId: this.chainId,
+                    chainType: chainType,
+                    chainId: currChainId,
                     networks: ['MainNet', 'TestNet'],
                     defaultNetwork: this.net === 'TestNet' ? 'TestNet' : 'MainNet'
                 }
@@ -66,6 +68,24 @@ export class ChromeService {
             console.log('set chianId failed', e);
         }
     }
+
+    public getChainId() {
+        if (!this.check) {
+            return new Promise<string>(resolve => {
+                resolve(localStorage.getItem('chainId'));
+            });
+        }
+        return new Promise<string>((resolve, reject) => {
+            try {
+                this.crx.getLocalStorage('chainId', (res) => {
+                    resolve(res || 1);
+                });
+            } catch (e) {
+                reject('failed');
+            }
+        });
+    }
+
 
     /**
      * check is in chrome extension env
@@ -174,14 +194,17 @@ export class ChromeService {
      * 保存当前钱包，并记录到历史
      */
     public setWallet(w: any) {
+        const currChainType = wallet3.isAddress(w.accounts[0].address) ? 'Neo3' : 'Neo2';
         if (!this.check) {
             localStorage.setItem('wallet', JSON.stringify(w));
+            this.setCurrentWalletChainType(currChainType);
             return;
         }
         try {
             this.crx.setLocalStorage({
                 wallet: w
             });
+            this.setCurrentWalletChainType(currChainType);
         } catch (e) {
             console.log('set account failed', e);
         }
@@ -191,19 +214,36 @@ export class ChromeService {
      * 保存当前链，并记录到历史
      */
     public setCurrentWalletChainType(chain: string) {
-        this.chainType = chain;
-        this.setChainId();
         if (!this.check) {
             localStorage.setItem('chainType', chain);
+            this.setChainId();
             return;
         }
         try {
             this.crx.setLocalStorage({
                 chainType: chain
             });
+            this.setChainId();
         } catch (e) {
             console.log('set chainType failed', e);
         }
+    }
+
+    public getCurrentWalletChainType() {
+        if (!this.check) {
+            return new Promise<string>(resolve => {
+                resolve(localStorage.getItem('chainType'));
+            });
+        }
+        return new Promise<string>((resolve, reject) => {
+            try {
+                this.crx.getLocalStorage('chainType', (res) => {
+                    resolve(res || 'Neo2');
+                });
+            } catch (e) {
+                reject('failed');
+            }
+        });
     }
 
     /**
@@ -722,12 +762,13 @@ export class ChromeService {
      */
     public setNet(net: string) {
         this.net = net;
-        this.setChainId();
         if (!this.check) {
+            this.setChainId();
             localStorage.setItem('net', JSON.stringify(net));
             return;
         }
         try {
+            this.setChainId();
             this.crx.setStorage({
                 net
             });
