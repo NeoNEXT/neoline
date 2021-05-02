@@ -115,6 +115,7 @@ window.addEventListener('message', async (e) => {
                     }, '*');
                 }
             })
+            break;
         }
         case requestTarget.AccountPublicKey: {
             chrome.runtime.sendMessage(e.data, (response) => {

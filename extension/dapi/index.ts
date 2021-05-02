@@ -93,8 +93,14 @@ export class Init {
                 connectResult = true;
             }
             if (connectResult === true) {
-                await login();
-                return sendMessage(requestTarget.Account);
+                const isLogin = await login();
+                if(isLogin === true) {
+                    return sendMessage(requestTarget.Account);
+                } else {
+                    return new Promise((_, reject) => {
+                        reject(ERRORS.CONNECTION_DENIED);
+                    });
+                }
             } else {
                 return new Promise((_, reject) => {
                     reject(ERRORS.CONNECTION_DENIED);
@@ -125,8 +131,14 @@ export class Init {
                 connectResult = true;
             }
             if (connectResult === true) {
-                await login();
-                return sendMessage(requestTarget.AccountPublicKey);
+                const isLogin = await login();
+                if(isLogin === true) {
+                    return sendMessage(requestTarget.Account);
+                } else {
+                    return new Promise((_, reject) => {
+                        reject(ERRORS.CONNECTION_DENIED);
+                    });
+                }
             } else {
                 return new Promise((_, reject) => {
                     reject(ERRORS.CONNECTION_DENIED);
