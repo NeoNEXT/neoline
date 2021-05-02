@@ -36,6 +36,7 @@ export class ChromeService {
     }
 
     public async setChainId() {
+        const oldChainId = await this.getChainId();
         const chainType = await this.getCurrentWalletChainType();
         let currChainId: ChainId;
         if (chainType === 'Neo2') {
@@ -52,14 +53,16 @@ export class ChromeService {
                 chainId: currChainId
             });
             this.crx.setNetWork(this.net, currChainId, chainType);
-            this.windowCallback({
-                return: EVENT.NETWORK_CHANGED,
-                data: {
-                    chainId: currChainId,
-                    networks: ['MainNet', 'TestNet', 'N3-TestNet'],
-                    defaultNetwork: NETWORKS[currChainId] || 'MainNet'
-                }
-            });
+            if(oldChainId.toString() !== currChainId.toString()) {
+                this.windowCallback({
+                    return: EVENT.NETWORK_CHANGED,
+                    data: {
+                        chainId: currChainId,
+                        networks: ['MainNet', 'TestNet', 'N3-TestNet'],
+                        defaultNetwork: NETWORKS[currChainId - 1] || 'MainNet'
+                    }
+                });
+            }
         } catch (e) {
             console.log('set chianId failed', e);
         }
@@ -73,7 +76,7 @@ export class ChromeService {
         }
         return new Promise<string>((resolve, reject) => {
             try {
-                this.crx.getLocalStorage('chainId', (res) => {
+                this.crx.getStorage('chainId', (res) => {
                     resolve(res || 1);
                 });
             } catch (e) {
