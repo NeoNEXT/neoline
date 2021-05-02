@@ -7,6 +7,7 @@ import {
     getLocalStorage,
 } from '../common/index';
 import { requestTarget, Account, ERRORS } from '../common/data_module_neo2';
+import { NETWORKS } from '../common/constants';
 
 declare var chrome: any;
 
@@ -57,15 +58,19 @@ window.addEventListener('message', async (e) => {
             return;
         }
         case requestTarget.Networks: {
-            getStorage('net', (res) => {
-                window.postMessage({
-                    return: requestTarget.Networks,
-                    data: {
-                        networks: ['MainNet', 'TestNet'],
-                        defaultNetwork: res || 'MainNet'
-                    },
-                    ID: e.data.ID
-                }, '*');
+            getStorage('net', async (res) => {
+                getStorage('chainId',  (chainId) => {
+                    console.log(chainId);
+                    window.postMessage({
+                        return: requestTarget.Networks,
+                        data: {
+                            networks: ['MainNet', 'TestNet', 'N3-TestNet'],
+                            defaultNetwork: NETWORKS[chainId - 1] || 'MainNet',
+                            chainId
+                        },
+                        ID: e.data.ID
+                    }, '*');
+                });
             });
             return;
         }

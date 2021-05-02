@@ -18,10 +18,7 @@ import {
     wallet as wallet3,
 } from '@cityofzion/neon-core-neo3/lib';
 import { Asset } from '@/models/models';
-import { EVENT } from '@/models/dapi';
-import { loschmidtDependencies } from 'mathjs';
-import { stat } from 'fs';
-import { NeonService } from './neon.service'
+import { EVENT, NETWORKS } from '@/models/dapi';
 import { ChainId, ChainType, NetType } from '@/app/popup/_lib';
 
 declare var chrome: any;
@@ -40,10 +37,10 @@ export class ChromeService {
 
     public async setChainId() {
         const chainType = await this.getCurrentWalletChainType();
-        let currChainId;
-        if (chainType == 'Neo2') {
+        let currChainId: ChainId;
+        if (chainType === 'Neo2') {
             currChainId = this.net === NetType.MianNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
-        } else if (chainType == 'Neo3') {
+        } else if (chainType === 'Neo3') {
             currChainId = this.net === NetType.MianNet ? ChainId.N3MainNet : ChainId.N3TestNet;
         }
         if (!this.check) {
@@ -58,10 +55,9 @@ export class ChromeService {
             this.windowCallback({
                 return: EVENT.NETWORK_CHANGED,
                 data: {
-                    chainType: chainType,
                     chainId: currChainId,
-                    networks: ['MainNet', 'TestNet'],
-                    defaultNetwork: this.net === 'TestNet' ? 'TestNet' : 'MainNet'
+                    networks: ['MainNet', 'TestNet', 'N3-TestNet'],
+                    defaultNetwork: NETWORKS[currChainId] || 'MainNet'
                 }
             });
         } catch (e) {
