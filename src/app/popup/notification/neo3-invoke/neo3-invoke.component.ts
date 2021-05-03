@@ -281,6 +281,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
             this.loadingMsg = '';
             this.chrome.windowCallback({
                 data: {
+                    txid: this.tx.hash(),
                     signedTx: this.tx.serialize(true)
                 },
                 return: requestTargetN3.Invoke,

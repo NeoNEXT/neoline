@@ -277,6 +277,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             this.loadingMsg = '';
             this.chrome.windowCallback({
                 data: {
+                    txid: this.tx.hash(),
                     signedTx: this.tx.serialize(true)
                 },
                 return: requestTargetN3.InvokeMultiple,
