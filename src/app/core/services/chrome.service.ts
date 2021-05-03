@@ -58,7 +58,7 @@ export class ChromeService {
                     return: EVENT.NETWORK_CHANGED,
                     data: {
                         chainId: currChainId,
-                        networks: ['MainNet', 'TestNet', 'N3-TestNet'],
+                        networks: ['MainNet', 'TestNet', 'N3TestNet'],
                         defaultNetwork: NETWORKS[currChainId - 1] || 'MainNet'
                     }
                 });

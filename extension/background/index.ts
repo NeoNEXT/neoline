@@ -61,7 +61,8 @@ export function expand() {
     setInterval(async () => {
         const chainType = await getLocalStorage('chainType', () => { });
         const chainId = chainType === ChainType.Neo2 ? 1 : 1;
-        let rpcUrl = RPC[chainType]['TestNet'];
+        const newLocal = 'TestNet';
+        let rpcUrl = RPC[chainType][newLocal];
         if (chainType === ChainType.Neo2) {
             rpcUrl = RPC[chainType][currNetWork];
         } else if (chainType === ChainType.Neo3) {
@@ -78,7 +79,7 @@ export function expand() {
                 if (oldHeight === 0 || blockHeightData.result - oldHeight > 5) {
                     oldHeight = blockHeightData.result - 1;
                 }
-                let heightInterval = blockHeightData.result - oldHeight;
+                const heightInterval = blockHeightData.result - oldHeight;
                 if (blockHeightData.err === undefined && heightInterval === 1) {
                     const setData = {};
                     setData[`${chainType}_${currNetWork}BlockHeight`] = blockHeightData.result;
@@ -98,7 +99,6 @@ export function expand() {
                                 data: {
                                     chainId: currCahinId,
                                     netWork: currNetWork,
-                                    chainType: chainType,
                                     blockHeight: blockHeightData.result,
                                     blockTime: blockDetail.result.time,
                                     blockHash: blockDetail.result.hash,
@@ -130,7 +130,6 @@ export function expand() {
                                         data: {
                                             chainId: currCahinId,
                                             netWork: currNetWork,
-                                            chainType: chainType,
                                             blockHeight: blockHeightData.result,
                                             blockTime: blockDetail.result.time,
                                             blockHash: blockDetail.result.hash,
@@ -250,7 +249,6 @@ getLocalStorage('startTime', (time) => {
     }
 });
 
-
 chrome.windows.onRemoved.addListener(() => {
     chrome.tabs.query({}, (res) => {
         if (res.length === 0) { // All browsers are closed
@@ -260,7 +258,6 @@ chrome.windows.onRemoved.addListener(() => {
         }
     });
 });
-
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     switch (request.target) {
@@ -430,7 +427,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     return: requestTarget.Transaction,
                     data: null,
                     ID: request.parameter.ID,
-                    error: error
+                    error
                 });
             }
             sendResponse('');
@@ -459,7 +456,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     return: requestTarget.Block,
                     data: null,
                     ID: request.ID,
-                    error: error
+                    error
                 });
                 sendResponse('');
             }
@@ -488,7 +485,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     return: requestTarget.ApplicationLog,
                     data: null,
                     ID: request.ID,
-                    error: error
+                    error
                 });
                 sendResponse('');
             }
@@ -517,7 +514,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     return: requestTarget.Storage,
                     data: null,
                     ID: request.ID,
-                    error: error
+                    error
                 });
                 sendResponse('');
             }
@@ -897,7 +894,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     return: requestTargetN3.Transaction,
                     data: null,
                     ID: request.parameter.ID,
-                    error: error
+                    error
                 });
                 sendResponse('');
             }
@@ -925,7 +922,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     return: requestTargetN3.Block,
                     data: null,
                     ID: request.ID,
-                    error: error
+                    error
                 });
                 sendResponse('');
             }
@@ -953,7 +950,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     return: requestTargetN3.ApplicationLog,
                     data: null,
                     ID: request.ID,
-                    error: error
+                    error
                 });
                 sendResponse('');
             }
@@ -981,7 +978,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     return: requestTargetN3.Storage,
                     data: null,
                     ID: request.ID,
-                    error: error
+                    error
                 });
                 sendResponse('');
             }
@@ -1080,7 +1077,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                             }
                         }
                     });
-                    requestData.invokeReadArgs[index] = [invokeReadItem.scriptHash, invokeReadItem.operation, invokeReadItem.args, requestData.signers];
+                    requestData.invokeReadArgs[index] =
+                        [invokeReadItem.scriptHash, invokeReadItem.operation, invokeReadItem.args, requestData.signers];
                 });
                 const returnRes = { data: [], ID: request.ID, return: requestTargetN3.InvokeReadMulti, error: null };
                 let requestCount = 0;

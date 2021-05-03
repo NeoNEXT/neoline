@@ -69,12 +69,12 @@ window.addEventListener('message', async (e) => {
                         }, '*');
                         return;
                     } else {
-                        getStorage('chainId', (res) => {
+                        getStorage('chainId', (result) => {
                             let chainId = e.data.parameter.chainId;
                             let network;
                             if (chainId !== ChainId.N3MainNet && chainId !== ChainId.N3TestNet) {
-                                chainId = res || ChainId.N3MainNet;
-                                network = res === ChainId.N3MainNet ? 'MainNet' : 'TestNet';
+                                chainId = result || ChainId.N3MainNet;
+                                network = result === ChainId.N3MainNet ? 'MainNet' : 'TestNet';
                             }
                             e.data.parameter.network = network;
                             e.data.nodeUrl = RPC.Neo3[network];

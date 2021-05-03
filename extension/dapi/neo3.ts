@@ -344,26 +344,6 @@ export class Init {
 
 export const N3: any = new Init();
 
-window.addEventListener('message', e => {
-    const response = e.data;
-    if (response.target) {
-        window.dispatchEvent(new CustomEvent(
-            response.target,
-            {
-                detail: response.data
-            }
-        ));
-    }
-    if (response.return) {
-        window.dispatchEvent(new CustomEvent(
-            response.return,
-            {
-                detail: response.data
-            }
-        ));
-    }
-});
-
 function connect(open = true): Promise<any> {
     return new Promise((resolveMain) => {
         if (open) {

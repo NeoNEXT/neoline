@@ -64,7 +64,7 @@ window.addEventListener('message', async (e) => {
                     window.postMessage({
                         return: requestTarget.Networks,
                         data: {
-                            networks: ['MainNet', 'TestNet', 'N3-TestNet'],
+                            networks: ['MainNet', 'TestNet', 'N3TestNet'],
                             defaultNetwork: NETWORKS[chainId - 1] || 'MainNet',
                             chainId
                         },
@@ -154,10 +154,10 @@ window.addEventListener('message', async (e) => {
                         }, '*');
                         return;
                     } else {
-                        getStorage('net', (res) => {
+                        getStorage('net', (result: string) => {
                             let network = e.data.parameter.network;
                             if (network !== 'MainNet' && network !== 'TestNet') {
-                                network = res || 'MainNet';
+                                network = result || 'MainNet';
                             }
                             e.data.parameter.network = network;
                             chrome.runtime.sendMessage(e.data, (response) => {
