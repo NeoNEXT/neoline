@@ -76,6 +76,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
                 if (res.url.indexOf('/notification') >= 0) {
                     this.isThirdParty = true;
                 }
+                this.isLogin = res.url.indexOf('login') >= 0;
                 this.currentUrl = res.url;
             }
         });
