@@ -147,40 +147,77 @@ export function expand() {
                 }
             }, '*')
         }, 0);
-        const txArr = await getLocalStorage(`${currNetWork}TxArr`, (temp) => { }) || [];
-        if (txArr.length === 0) {
-            return;
-        }
-        httpPost(`${mainApi}/v1/neo2/txids_valid`, { txids: txArr }, (txConfirmData) => {
-            if (txConfirmData.status === 'success') {
-                const txConfirms = txConfirmData.data || [];
-                txConfirms.forEach(item => {
-                    const tempIndex = txArr.findIndex(e => e === item);
-                    if (tempIndex >= 0) {
-                        txArr.splice(tempIndex, 1);
-                    }
-                    httpGet(`${mainApi}/v1/neo2/transaction/${item}`, (txDetail) => {
-                        if (txDetail.status === 'success') {
-                            windowCallback({
-                                data: {
-                                    txid: item,
-                                    blockHeight: txDetail.data.block_index,
-                                    blockTime: txDetail.data.block_time,
-                                },
-                                return: EVENT.TRANSACTION_CONFIRMED
-                            });
+        if(chainType === ChainType.Neo2) {
+            const txArr = await getLocalStorage(`${currNetWork}TxArr`, (temp) => { }) || [];
+            if (txArr.length === 0) {
+                return;
+            }
+            httpPost(`${mainApi}/v1/neo2/txids_valid`, { txids: txArr }, (txConfirmData) => {
+                if (txConfirmData.status === 'success') {
+                    const txConfirms = txConfirmData.data || [];
+                    txConfirms.forEach(item => {
+                        const tempIndex = txArr.findIndex(e => e === item);
+                        if (tempIndex >= 0) {
+                            txArr.splice(tempIndex, 1);
                         }
-                    }, {
-                        Network: currNetWork === 'MainNet' ? 'mainnet' : 'testnet'
+                        httpGet(`${mainApi}/v1/neo2/transaction/${item}`, (txDetail) => {
+                            if (txDetail.status === 'success') {
+                                windowCallback({
+                                    data: {
+                                        txid: item,
+                                        blockHeight: txDetail.data.block_index,
+                                        blockTime: txDetail.data.block_time,
+                                    },
+                                    return: EVENT.TRANSACTION_CONFIRMED
+                                });
+                            }
+                        }, {
+                            Network: currNetWork === 'MainNet' ? 'mainnet' : 'testnet'
+                        });
                     });
-                });
-            };
-            const setData = {};
-            setData[`${currNetWork}TxArr`] = txArr;
-            setLocalStorage(setData);
-        }, {
-            Network: currNetWork === 'MainNet' ? 'mainnet' : 'testnet'
-        });
+                };
+                const setData = {};
+                setData[`${currNetWork}TxArr`] = txArr;
+                setLocalStorage(setData);
+            }, {
+                Network: currNetWork === 'MainNet' ? 'mainnet' : 'testnet'
+            });
+        } else if(chainType === ChainType.Neo3) {
+            const txArr = await getLocalStorage(`N3${currNetWork}TxArr`, (temp) => { }) || [];
+            if (txArr.length === 0) {
+                return;
+            }
+            httpPost(`${mainApi}/v1/neo3/hash_valid`, { hashes: txArr }, (txConfirmData) => {
+                if (txConfirmData.status === 'success') {
+                    const txConfirms = txConfirmData.data || [];
+                    txConfirms.forEach(item => {
+                        const tempIndex = txArr.findIndex(e => e === item);
+                        if (tempIndex >= 0) {
+                            txArr.splice(tempIndex, 1);
+                        }
+                        httpGet(`${mainApi}/v1/neo3/dapi/transaction/${item}`, (txDetail) => {
+                            if (txDetail.status === 'success') {
+                                windowCallback({
+                                    data: {
+                                        txid: item,
+                                        blockHeight: txDetail.data.block_index,
+                                        blockTime: txDetail.data.block_time,
+                                    },
+                                    return: EVENT.TRANSACTION_CONFIRMED
+                                });
+                            }
+                        }, {
+                            Network: currNetWork === 'MainNet' ? 'mainnet' : 'testnet'
+                        });
+                    });
+                };
+                const setData = {};
+                setData[`N3${currNetWork}TxArr`] = txArr;
+                setLocalStorage(setData);
+            }, {
+                Network: currNetWork === 'MainNet' ? 'mainnet' : 'testnet'
+            });
+        }
     }, 8000);
 
     if (navigator.language === 'zh-CN') {

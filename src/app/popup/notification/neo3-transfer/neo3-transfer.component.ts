@@ -245,8 +245,8 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
                 ID: this.messageID
             });
             const setData = {};
-            setData[`${this.network}TxArr`] = await this.chrome.getLocalStorage(`${this.network}TxArr`) || [];
-            setData[`${this.network}TxArr`].push(TxHash);
+            setData[`N3${this.network}TxArr`] = await this.chrome.getLocalStorage(`N3${this.network}TxArr`) || [];
+            setData[`N3${this.network}TxArr`].push(TxHash);
             this.chrome.setLocalStorage(setData);
             this.router.navigate([{
                 outlets: {
