@@ -56,7 +56,6 @@ window.addEventListener('message', async (e) => {
         case requestTargetN3.Invoke:
         case requestTargetN3.InvokeMultiple:
         case requestTargetN3.Send:
-
         case requestTargetN3.VerifyMessage:
         case requestTargetN3.SignMessage:
             {
@@ -71,10 +70,10 @@ window.addEventListener('message', async (e) => {
                     } else {
                         getStorage('chainId', (result) => {
                             let chainId = e.data.parameter.chainId;
-                            let network;
+                            let network = e.data.parameter.network;
                             if (chainId !== ChainId.N3MainNet && chainId !== ChainId.N3TestNet) {
-                                chainId = result || ChainId.N3MainNet;
-                                network = result === ChainId.N3MainNet ? 'MainNet' : 'TestNet';
+                                chainId = result || ChainId.N3TestNet;
+                                network = result === ChainId.N3TestNet ? 'TestNet' : 'MainNet';
                             }
                             e.data.parameter.network = network;
                             e.data.nodeUrl = RPC.Neo3[network];

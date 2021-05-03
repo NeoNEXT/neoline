@@ -133,7 +133,7 @@ export class Init {
             if (connectResult === true) {
                 const isLogin = await login();
                 if(isLogin === true) {
-                    return sendMessage(requestTarget.Account);
+                    return sendMessage(requestTarget.AccountPublicKey);
                 } else {
                     return new Promise((_, reject) => {
                         reject(ERRORS.CONNECTION_DENIED);
