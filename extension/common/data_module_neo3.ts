@@ -40,8 +40,13 @@ export interface N3Argument {
     value: any;
 }
 
-export interface N3BalanceArgs {
+export interface N3BalanceRequest {
     address: string;
+    assetIds: string[];
+}
+
+export interface N3BalanceArgs {
+    params: N3BalanceRequest[];
     network?: string;
 }
 export interface N3TransactionArgs {
@@ -120,14 +125,14 @@ export interface N3SendArgs {
 }
 
 // result
-export interface N3BalanceResults {
-    balance: string;
-    contract: string;
-    decimals: number;
-    image_url: string;
-    name: string;
+export interface N3Balance {
+    assetID: string;
     symbol: string;
-    type: string;
+    amount: string;
+}
+
+export interface N3BalanceResults {
+    [address: string]: N3Balance[];
 }
 interface N3Transfer {
     hash: string;
