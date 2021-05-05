@@ -1,6 +1,6 @@
 import {
     Provider, Networks, Account,
-    AccountPublicKey,  ERRORS, requestTarget,
+    AccountPublicKey,  ERRORS, requestTarget
 } from '../common/data_module_neo2';
 import {
     requestTargetN3, N3InvokeReadArgs, N3InvokeReadMultiArgs,
@@ -113,7 +113,7 @@ export class Init {
     }
 
     public getBalance(parameter: N3BalanceArgs): Promise<N3BalanceResults> {
-        if (parameter === undefined || !parameter.address) {
+        if (parameter === undefined || !parameter.params === undefined) {
             return new Promise((_, reject) => {
                 reject(ERRORS.MALFORMED_INPUT);
             });
