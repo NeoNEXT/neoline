@@ -60,7 +60,6 @@ window.addEventListener('message', async (e) => {
         case requestTarget.Networks: {
             getStorage('net', async (res) => {
                 getStorage('chainId',  (chainId) => {
-                    console.log(chainId);
                     window.postMessage({
                         return: requestTarget.Networks,
                         data: {
