@@ -257,8 +257,7 @@ export class Init {
             parameter.toAddress === undefined ||
             parameter.fromAddress === undefined ||
             parameter.asset === undefined ||
-            parameter.amount === undefined ||
-            parameter.network === undefined
+            parameter.amount === undefined
         ) {
             return new Promise((_, reject) => {
                 reject(ERRORS.CONNECTION_DENIED);
