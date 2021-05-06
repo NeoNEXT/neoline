@@ -871,7 +871,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 const parameter = request.parameter as N3BalanceArgs;
                 const postData = parameter.params.map((item) => {
                     return {
-                        asset_ids: item.assetIds,
+                        contracts: item.assetIds,
                         address: item.address
                     }
                 });
@@ -882,8 +882,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                             if (Object.prototype.hasOwnProperty.call(returnData, key)) {
                                 if (returnData[key]) {
                                     returnData[key].map(item => {
-                                        item.assetID = item.asset_id;
-                                        item.asset_id = undefined;
+                                        item.assetID = item.contract;
+                                        item.contract = undefined;
                                         return item;
                                     })
                                 }
