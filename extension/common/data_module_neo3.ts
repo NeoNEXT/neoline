@@ -42,7 +42,7 @@ export interface N3Argument {
 
 export interface N3BalanceRequest {
     address: string;
-    assetIds: string[];
+    contracts: string[];
 }
 
 export interface N3BalanceArgs {
@@ -126,7 +126,7 @@ export interface N3SendArgs {
 
 // result
 export interface N3Balance {
-    assetID: string;
+    contract: string;
     symbol: string;
     amount: string;
 }
