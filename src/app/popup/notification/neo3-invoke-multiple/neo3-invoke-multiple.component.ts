@@ -112,11 +112,11 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                             }
                         }
                     } else if (item.type === 'Integer') {
-                        // TODO
+                        this.pramsData.invokeArgs[index].args[argIndex] = item.value;
                         // this.pramsData.invokeArgs[index].args[argIndex] = Neon.create.contractParam('Integer', item.value.toString())
                     }
                 });
-                if (item.operation === 'transfer' && item.args[item.args.length-1] !== null) {
+                if (item.operation === 'transfer') {
                     item.args[item.args.length] = null;
                 }
                 this.invokeArgs.push({
