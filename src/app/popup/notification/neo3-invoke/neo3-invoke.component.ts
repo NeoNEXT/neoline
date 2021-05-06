@@ -96,24 +96,19 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
             this.dataJson.messageID = undefined;
             this.triggerContractVerification = params.triggerContractVerification !== undefined
                 ? params.triggerContractVerification.toString() === 'true' : false
-            if (
-                params.operation === 'transfer' &&
-                this.pramsData.args[this.pramsData.args.length] === undefined
-            ) {
-                // this.pramsData.args[this.pramsData.args.length] = null;
-            }
             if (params.scriptHash !== undefined && params.operation !== undefined && params.args !== undefined) {
                 this.pramsData.args.forEach((item, index) => {
-                    if (item === null || typeof item !== 'object') {
+                    if (item === null) {
                         return;
-                    } else if (item.type === 'Address') {
+                    }
+                    if (item.type === 'Address') {
                         this.pramsData.args[index] = sc.ContractParam.hash160(item.value);
                     } else if (item.type === 'Boolean') {
                         if (typeof item.value === 'string') {
                             if ((item.value && item.value.toLowerCase()) === 'true') {
-                                this.args[index] = true
+                                this.pramsData.args[index] = true
                             } else if (item.value && item.value.toLowerCase() === 'false') {
-                                this.args[index] = false;
+                                this.pramsData.args[index] = false;
                             } else {
                                 this.chrome.windowCallback({
                                     error: ERRORS.MALFORMED_INPUT,
@@ -124,10 +119,16 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                             }
                         }
                     } else if (item.type === 'Integer') {
-                        // TODO
-                        // this.args[index] = Neon.create.contractParam('Integer', item.value.toString());
+                        this.pramsData.args[index] = item.value;
+                        // this.pramsData.args[index] = (Neon as any).create.contractParam('Integer', item.value.toString());
                     }
                 });
+                if (
+                    params.operation === 'transfer' &&
+                    this.pramsData.args[this.pramsData.args.length] === undefined
+                ) {
+                    this.pramsData.args[this.pramsData.args.length] = null;
+                }
                 this.invokeArgs.push({
                     scriptHash: this.pramsData.scriptHash,
                     operation: this.pramsData.operation,
