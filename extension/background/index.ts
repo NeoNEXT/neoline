@@ -869,26 +869,10 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         case requestTargetN3.Balance: {
             try {
                 const parameter = request.parameter as N3BalanceArgs;
-                const postData = parameter.params.map((item) => {
-                    return {
-                        contracts: item.assetIds,
-                        address: item.address
-                    }
-                });
+                const postData = parameter.params;
                 httpPost(`${mainApi}/v1/neo3/address/balances`, { params: postData }, (response) => {
                     if (response.status === 'success') {
                         const returnData = response.data;
-                        for (const key in returnData) {
-                            if (Object.prototype.hasOwnProperty.call(returnData, key)) {
-                                if (returnData[key]) {
-                                    returnData[key].map(item => {
-                                        item.assetID = item.contract;
-                                        item.contract = undefined;
-                                        return item;
-                                    })
-                                }
-                            }
-                        }
                         windowCallback({
                             return: requestTargetN3.Balance,
                             ID: request.ID,
