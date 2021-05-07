@@ -12,8 +12,8 @@ export const RPC = {
         MainNet: 'https://neo2-mainnet.neoline.io',
     },
     Neo3: {
-        TestNet: 'https://neo3-testnet.neoline.vip',
-        MainNet: 'https://neo3-testnet.neoline.vip',
+        N3TestNet: 'https://neo3-testnet.neoline.vip',
+        N3MainNet: 'https://neo3-testnet.neoline.vip',
     }
 };
 

@@ -21,7 +21,7 @@ import {
     setLocalStorage,
     getLocalStorage
 } from '../common';
-import { mainApi, RPC, ChainType } from '../common/constants';
+import { mainApi, RPC, ChainType, NETWORKS } from '../common/constants';
 import {
     requestTarget, GetBalanceArgs, ERRORS,
     EVENT, AccountPublicKey, GetBlockInputArgs,
@@ -63,13 +63,14 @@ export function expand() {
         const chainId = chainType === ChainType.Neo2 ? 1 : 1;
         const newLocal = 'TestNet';
         let rpcUrl = RPC[chainType][newLocal];
+        const network = NETWORKS[currCahinId - 1];
         if (chainType === ChainType.Neo2) {
             rpcUrl = RPC[chainType][currNetWork];
         } else if (chainType === ChainType.Neo3) {
             rpcUrl = RPC[chainType][currNetWork];
         }
         setTimeout(async () => {
-            let oldHeight = await getLocalStorage(`${chainType}_${currNetWork}BlockHeight`, () => { }) || 0;
+            let oldHeight = await getLocalStorage(`${chainType}_${network}BlockHeight`, () => { }) || 0;
             httpPost(rpcUrl, {
                 jsonrpc: '2.0',
                 method: 'getblockcount',
@@ -82,7 +83,7 @@ export function expand() {
                 const heightInterval = blockHeightData.result - oldHeight;
                 if (blockHeightData.err === undefined && heightInterval === 1) {
                     const setData = {};
-                    setData[`${chainType}_${currNetWork}BlockHeight`] = blockHeightData.result;
+                    setData[`${chainType}_${network}BlockHeight`] = blockHeightData.result;
                     setLocalStorage(setData);
                     httpPost(rpcUrl, {
                         jsonrpc: '2.0',
@@ -98,7 +99,7 @@ export function expand() {
                             windowCallback({
                                 data: {
                                     chainId: currCahinId,
-                                    netWork: currNetWork,
+                                    netWork: network,
                                     blockHeight: blockHeightData.result,
                                     blockTime: blockDetail.result.time,
                                     blockHash: blockDetail.result.hash,
@@ -113,7 +114,7 @@ export function expand() {
                     for (let intervalIndex = 0; intervalIndex < heightInterval; intervalIndex++) {
                         timer = setTimeout(() => {
                             const setData = {};
-                            setData[`${chainType}_${currNetWork}BlockHeight`] = oldHeight + intervalIndex + 1;
+                            setData[`${chainType}_${network}BlockHeight`] = oldHeight + intervalIndex + 1;
                             setLocalStorage(setData);
                             httpPost(rpcUrl, {
                                 jsonrpc: '2.0',
@@ -129,7 +130,7 @@ export function expand() {
                                     windowCallback({
                                         data: {
                                             chainId: currCahinId,
-                                            netWork: currNetWork,
+                                            netWork: network,
                                             blockHeight: blockHeightData.result,
                                             blockTime: blockDetail.result.time,
                                             blockHash: blockDetail.result.hash,
