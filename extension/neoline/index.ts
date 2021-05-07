@@ -59,13 +59,13 @@ window.addEventListener('message', async (e) => {
         }
         case requestTarget.Networks: {
             getStorage('net', async (res) => {
-                getStorage('chainId',  (chainId) => {
+                getStorage('chainID',  (chainID) => {
                     window.postMessage({
                         return: requestTarget.Networks,
                         data: {
                             networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                            defaultNetwork: NETWORKS[chainId - 1] || 'MainNet',
-                            chainId
+                            defaultNetwork: NETWORKS[chainID - 1] || 'MainNet',
+                            chainID
                         },
                         ID: e.data.ID
                     }, '*');

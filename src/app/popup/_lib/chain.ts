@@ -7,7 +7,7 @@ export type ChainType = 'Neo2' | 'Neo3';
 export const ChainTypeGroups = ['Neo2', 'Neo3'];
 
 /**
- * chainId 1 Neo2 MainNet
+ * chainID 1 Neo2 MainNet
  * chianId 2 Neo2 TestNet
  * ChainId 3 N3 MainNet
  * ChainId 4 N3 TestNet

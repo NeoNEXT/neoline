@@ -45,19 +45,19 @@ export class ChromeService {
             currChainId = this.net === NetType.MianNet ? ChainId.N3MainNet : ChainId.N3TestNet;
         }
         if (!this.check) {
-            localStorage.setItem('chainId', JSON.stringify(currChainId));
+            localStorage.setItem('chainID', JSON.stringify(currChainId));
             return;
         }
         try {
             this.crx.setStorage({
-                chainId: currChainId
+                chainID: currChainId
             });
             this.crx.setNetWork(this.net, currChainId, chainType);
             if(oldChainId.toString() !== currChainId.toString()) {
                 this.windowCallback({
                     return: EVENT.NETWORK_CHANGED,
                     data: {
-                        chainId: currChainId,
+                        chainID: currChainId,
                         networks: ['MainNet', 'TestNet', 'N3TestNet'],
                         defaultNetwork: NETWORKS[currChainId - 1] || 'MainNet'
                     }
@@ -71,12 +71,12 @@ export class ChromeService {
     public getChainId() {
         if (!this.check) {
             return new Promise<string>(resolve => {
-                resolve(localStorage.getItem('chainId'));
+                resolve(localStorage.getItem('chainID'));
             });
         }
         return new Promise<string>((resolve, reject) => {
             try {
-                this.crx.getStorage('chainId', (res) => {
+                this.crx.getStorage('chainID', (res) => {
                     resolve(res || 1);
                 });
             } catch (e) {
@@ -757,7 +757,7 @@ export class ChromeService {
         }
     }
     /**
-     * chainId 1 Neo2 MainNet
+     * chainID 1 Neo2 MainNet
      * chianId 2 Neo2 TestNet
      * ChainId 3 N3 MainNet
      * ChainId 4 N3 TestNet

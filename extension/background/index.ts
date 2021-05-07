@@ -60,7 +60,7 @@ export function expand() {
 (function init() {
     setInterval(async () => {
         const chainType = await getLocalStorage('chainType', () => { });
-        const chainId = chainType === ChainType.Neo2 ? 1 : 1;
+        const chainID = chainType === ChainType.Neo2 ? 1 : 1;
         const newLocal = 'TestNet';
         let rpcUrl = RPC[chainType][newLocal];
         if (chainType === ChainType.Neo2) {
@@ -74,7 +74,7 @@ export function expand() {
                 jsonrpc: '2.0',
                 method: 'getblockcount',
                 params: [],
-                id: chainId
+                id: chainID
             }, async (blockHeightData) => {
                 if (oldHeight === 0 || blockHeightData.result - oldHeight > 5) {
                     oldHeight = blockHeightData.result - 1;
@@ -88,7 +88,7 @@ export function expand() {
                         jsonrpc: '2.0',
                         method: 'getblock',
                         params: [blockHeightData.result - 1, 1],
-                        id: chainId
+                        id: chainID
                     }, (blockDetail) => {
                         if (blockDetail.error === undefined) {
                             const txStrArr = [];
@@ -97,7 +97,7 @@ export function expand() {
                             });
                             windowCallback({
                                 data: {
-                                    chainId: currCahinId,
+                                    chainID: currCahinId,
                                     netWork: currNetWork,
                                     blockHeight: blockHeightData.result,
                                     blockTime: blockDetail.result.time,
@@ -119,7 +119,7 @@ export function expand() {
                                 jsonrpc: '2.0',
                                 method: 'getblock',
                                 params: [oldHeight + 1, 1],
-                                id: chainId
+                                id: chainID
                             }, (blockDetail) => {
                                 if (blockDetail.error === undefined) {
                                     const txStrArr = [];
@@ -128,7 +128,7 @@ export function expand() {
                                     });
                                     windowCallback({
                                         data: {
-                                            chainId: currCahinId,
+                                            chainID: currCahinId,
                                             netWork: currNetWork,
                                             blockHeight: blockHeightData.result,
                                             blockTime: blockDetail.result.time,
@@ -260,9 +260,9 @@ export function setPopup(lang) {
     }
 }
 
-export function setNetWork(netWork, chainId, chainType) {
+export function setNetWork(netWork, chainID, chainType) {
     currNetWork = netWork;
-    currCahinId = chainId;
+    currCahinId = chainID;
     currChain = chainType;
 }
 

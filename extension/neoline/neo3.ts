@@ -68,11 +68,11 @@ window.addEventListener('message', async (e) => {
                         }, '*');
                         return;
                     } else {
-                        getStorage('chainId', (result) => {
-                            let chainId = e.data.parameter.chainId;
+                        getStorage('chainID', (result) => {
+                            let chainID = e.data.parameter.chainID;
                             let network = e.data.parameter.network;
-                            if (chainId !== ChainId.N3MainNet && chainId !== ChainId.N3TestNet) {
-                                chainId = result || ChainId.N3TestNet;
+                            if (chainID !== ChainId.N3MainNet && chainID !== ChainId.N3TestNet) {
+                                chainID = result || ChainId.N3TestNet;
                                 network = result === ChainId.N3TestNet ? 'TestNet' : 'MainNet';
                             }
                             e.data.parameter.network = network;
