@@ -165,6 +165,8 @@ export function expand() {
                             if (txDetail.status === 'success') {
                                 windowCallback({
                                     data: {
+                                        chainId: currCahinId,
+                                        netWork: network,
                                         txid: item,
                                         blockHeight: txDetail.data.block_index,
                                         blockTime: txDetail.data.block_time,
@@ -200,6 +202,8 @@ export function expand() {
                             if (txDetail.status === 'success') {
                                 windowCallback({
                                     data: {
+                                        chainId: currCahinId,
+                                        netWork: network,
                                         txid: item,
                                         blockHeight: txDetail.data.block_index,
                                         blockTime: txDetail.data.block_time,
