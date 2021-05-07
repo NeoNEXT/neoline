@@ -45,7 +45,7 @@ declare var chrome;
 
 let currLang = 'en';
 let currNetWork = 'MainNet';
-let currChainId = 1;
+let currChainID = 1;
 let tabCurr: any;
 let currChain = 'Neo2';
 export let password = '';
@@ -96,7 +96,7 @@ export function expand() {
                             });
                             windowCallback({
                                 data: {
-                                    chainID: currChainId,
+                                    chainID: currChainID,
                                     netWork: currNetWork,
                                     blockHeight: blockHeightData.result,
                                     blockTime: blockDetail.result.time,
@@ -127,7 +127,7 @@ export function expand() {
                                     });
                                     windowCallback({
                                         data: {
-                                            chainID: currChainId,
+                                            chainID: currChainID,
                                             netWork: currNetWork,
                                             blockHeight: blockHeightData.result,
                                             blockTime: blockDetail.result.time,
@@ -261,7 +261,7 @@ export function setPopup(lang) {
 
 export function setNetWork(netWork, chainID, chainType) {
     currNetWork = netWork;
-    currChainId = chainID;
+    currChainID = chainID;
     currChain = chainType;
 }
 
