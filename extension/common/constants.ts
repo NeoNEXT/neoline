@@ -6,6 +6,10 @@ export enum ChainType {
     Neo2 = 'Neo2',
     Neo3 = 'Neo3'
 }
+
+/**
+ * @param N3MainNet Replace after N3 mainnet is online, Currently affecting use
+ */
 export const RPC = {
     Neo2: {
         TestNet: 'https://neo2-testnet.neoline.io',
@@ -13,7 +17,7 @@ export const RPC = {
     },
     Neo3: {
         N3TestNet: 'https://neo3-testnet.neoline.vip',
-        // N3MainNet: 'https://neo3-testnet.neoline.vip',
+        N3MainNet: 'https://neo3-testnet.neoline.vip',
     }
 };
 
@@ -23,6 +27,6 @@ export const RPC = {
 export enum ChainId {
     Neo2MainNet = 1,
     Neo2TestNet = 2,
-    // N3MainNet = 3,
+    N3MainNet = 3,
     N3TestNet = 4,
 }

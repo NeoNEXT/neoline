@@ -1,3 +1,6 @@
+/**
+ * @param neo3MainRPC Replace after N3 mainnet is online, Currently affecting use
+ */
 export const environment = {
     production: true,
     name: 'default',

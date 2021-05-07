@@ -2,6 +2,9 @@
 // `ng build --prod` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
 
+/**
+ * @param neo3MainRPC Replace after N3 mainnet is online, Currently affecting use
+ */
 export const environment = {
     production: false,
     name: 'default',
