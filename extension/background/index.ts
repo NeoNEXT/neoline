@@ -45,7 +45,7 @@ declare var chrome;
 
 let currLang = 'en';
 let currNetWork = 'MainNet';
-let currCahinId = 1;
+let currChainId = 1;
 let tabCurr: any;
 let currChain = 'Neo2';
 export let password = '';
@@ -60,7 +60,6 @@ export function expand() {
 (function init() {
     setInterval(async () => {
         const chainType = await getLocalStorage('chainType', () => { });
-        const chainID = chainType === ChainType.Neo2 ? 1 : 1;
         const newLocal = 'TestNet';
         let rpcUrl = RPC[chainType][newLocal];
         if (chainType === ChainType.Neo2) {
@@ -74,7 +73,7 @@ export function expand() {
                 jsonrpc: '2.0',
                 method: 'getblockcount',
                 params: [],
-                id: chainID
+                id: 1
             }, async (blockHeightData) => {
                 if (oldHeight === 0 || blockHeightData.result - oldHeight > 5) {
                     oldHeight = blockHeightData.result - 1;
@@ -88,7 +87,7 @@ export function expand() {
                         jsonrpc: '2.0',
                         method: 'getblock',
                         params: [blockHeightData.result - 1, 1],
-                        id: chainID
+                        id: 1
                     }, (blockDetail) => {
                         if (blockDetail.error === undefined) {
                             const txStrArr = [];
@@ -97,7 +96,7 @@ export function expand() {
                             });
                             windowCallback({
                                 data: {
-                                    chainID: currCahinId,
+                                    chainID: currChainId,
                                     netWork: currNetWork,
                                     blockHeight: blockHeightData.result,
                                     blockTime: blockDetail.result.time,
@@ -119,7 +118,7 @@ export function expand() {
                                 jsonrpc: '2.0',
                                 method: 'getblock',
                                 params: [oldHeight + 1, 1],
-                                id: chainID
+                                id: 1
                             }, (blockDetail) => {
                                 if (blockDetail.error === undefined) {
                                     const txStrArr = [];
@@ -128,7 +127,7 @@ export function expand() {
                                     });
                                     windowCallback({
                                         data: {
-                                            chainID: currCahinId,
+                                            chainID: currChainId,
                                             netWork: currNetWork,
                                             blockHeight: blockHeightData.result,
                                             blockTime: blockDetail.result.time,
@@ -262,7 +261,7 @@ export function setPopup(lang) {
 
 export function setNetWork(netWork, chainID, chainType) {
     currNetWork = netWork;
-    currCahinId = chainID;
+    currChainId = chainID;
     currChain = chainType;
 }
 

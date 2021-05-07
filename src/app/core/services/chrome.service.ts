@@ -40,9 +40,9 @@ export class ChromeService {
         const chainType = await this.getCurrentWalletChainType();
         let currChainId: ChainId;
         if (chainType === 'Neo2') {
-            currChainId = this.net === NetType.MianNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
+            currChainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
         } else if (chainType === 'Neo3') {
-            currChainId = this.net === NetType.MianNet ? ChainId.N3MainNet : ChainId.N3TestNet;
+            currChainId = this.net === NetType.MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
         }
         if (!this.check) {
             localStorage.setItem('chainID', JSON.stringify(currChainId));
@@ -64,7 +64,7 @@ export class ChromeService {
                 });
             }
         } catch (e) {
-            console.log('set chianId failed', e);
+            console.log('set chainId failed', e);
         }
     }
 
@@ -758,9 +758,9 @@ export class ChromeService {
     }
     /**
      * chainID 1 Neo2 MainNet
-     * chianId 2 Neo2 TestNet
-     * ChainId 3 N3 MainNet
-     * ChainId 4 N3 TestNet
+     * chainID 2 Neo2 TestNet
+     * chainID 3 N3 MainNet
+     * chainID 4 N3 TestNet
      *
      * @param {string} net
      * @return {*}
