@@ -13,7 +13,7 @@ export const RPC = {
     },
     Neo3: {
         N3TestNet: 'https://neo3-testnet.neoline.vip',
-        N3MainNet: 'https://neo3-testnet.neoline.vip',
+        // N3MainNet: 'https://neo3-testnet.neoline.vip',
     }
 };
 
@@ -23,6 +23,6 @@ export const RPC = {
 export enum ChainId {
     Neo2MainNet = 1,
     Neo2TestNet = 2,
-    N3MainNet = 4,
+    // N3MainNet = 3,
     N3TestNet = 4,
 }
