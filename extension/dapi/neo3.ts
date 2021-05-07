@@ -50,10 +50,6 @@ export class Init {
         });
     }
 
-    public getNetworks(): Promise<Networks> {
-        return sendMessage(requestTarget.Networks);
-    }
-
     public async getAccount(): Promise<Account> {
         let authState: any;
         try {
