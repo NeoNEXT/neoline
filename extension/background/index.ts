@@ -99,7 +99,6 @@ export function expand() {
                             windowCallback({
                                 data: {
                                     chainId: currCahinId,
-                                    netWork: network,
                                     blockHeight: blockHeightData.result,
                                     blockTime: blockDetail.result.time,
                                     blockHash: blockDetail.result.hash,
@@ -130,7 +129,6 @@ export function expand() {
                                     windowCallback({
                                         data: {
                                             chainId: currCahinId,
-                                            netWork: network,
                                             blockHeight: blockHeightData.result,
                                             blockTime: blockDetail.result.time,
                                             blockHash: blockDetail.result.hash,
@@ -166,7 +164,6 @@ export function expand() {
                                 windowCallback({
                                     data: {
                                         chainId: currCahinId,
-                                        netWork: network,
                                         txid: item,
                                         blockHeight: txDetail.data.block_index,
                                         blockTime: txDetail.data.block_time,
@@ -203,7 +200,6 @@ export function expand() {
                                 windowCallback({
                                     data: {
                                         chainId: currCahinId,
-                                        netWork: network,
                                         txid: item,
                                         blockHeight: txDetail.data.block_index,
                                         blockTime: txDetail.data.block_time,
