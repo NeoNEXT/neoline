@@ -24,8 +24,8 @@ export enum ChainId {
 }
 
 export enum NetType {
-    MianNet = 'MainNet',
+    MainNet = 'MainNet',
     TestNet = 'TestNet',
-    N3MianNet = 'N3MianNet',
+    N3MainNet = 'N3MainNet',
     N3TestNet = 'N3TestNet'
 }

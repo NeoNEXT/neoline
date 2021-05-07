@@ -40,9 +40,9 @@ export class ChromeService {
         const chainType = await this.getCurrentWalletChainType();
         let currChainId: ChainId;
         if (chainType === 'Neo2') {
-            currChainId = this.net === NetType.MianNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
+            currChainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
         } else if (chainType === 'Neo3') {
-            currChainId = this.net === NetType.MianNet ? ChainId.N3MainNet : ChainId.N3TestNet;
+            currChainId = this.net === NetType.N3MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
         }
         const network = NETWORKS[currChainId - 1];
         if (!this.check) {
