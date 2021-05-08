@@ -8,7 +8,7 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { HttpClient } from '@angular/common/http';
 import { EVENT } from '@/models/dapi';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
-import { ChainID, NetType } from './popup/_lib';
+import { ChainId, NetType } from './popup/_lib';
 
 @Component({
     selector: 'neo-line',

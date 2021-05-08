@@ -19,7 +19,7 @@ import {
 } from '@cityofzion/neon-core-neo3/lib';
 import { Asset } from '@/models/models';
 import { EVENT, NETWORKS } from '@/models/dapi';
-import { ChainID, ChainType, NetType } from '@/app/popup/_lib';
+import { ChainId, ChainType, NetType } from '@/app/popup/_lib';
 
 declare var chrome: any;
 
@@ -36,29 +36,29 @@ export class ChromeService {
     }
 
     public async setChainId() {
-        const oldChainId = await this.getChainId();
+        const oldChainID = await this.getChainId();
         const chainType = await this.getCurrentWalletChainType();
-        let currChainID: ChainID;
+        let currChainId: ChainId;
         if (chainType === 'Neo2') {
-            currChainID = this.net === NetType.MainNet ? ChainID.Neo2MainNet : ChainID.Neo2TestNet;
+            currChainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
         } else if (chainType === 'Neo3') {
-            currChainID = this.net === NetType.N3MainNet ? ChainID.N3MainNet : ChainID.N3TestNet;
+            currChainId = this.net === NetType.N3MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
         }
-        const network = NETWORKS[currChainID - 1];
+        const network = NETWORKS[currChainId - 1];
         if (!this.check) {
-            localStorage.setItem('chainID', JSON.stringify(currChainID));
+            localStorage.setItem('chainId', JSON.stringify(currChainId));
             return;
         }
         try {
             this.crx.setStorage({
-                chainID: currChainID
+                chainId: currChainId
             });
-            this.crx.setNetWork(network, currChainID, chainType);
-            if(oldChainId.toString() !== currChainID.toString()) {
+            this.crx.setNetwork(network, currChainId, chainType);
+            if(oldChainID.toString() !== currChainId.toString()) {
                 this.windowCallback({
                     return: EVENT.NETWORK_CHANGED,
                     data: {
-                        chainID: currChainID,
+                        chainId: currChainId,
                         networks: ['MainNet', 'TestNet', 'N3TestNet'],
                         defaultNetwork: network || 'MainNet'
                     }
@@ -72,12 +72,12 @@ export class ChromeService {
     public getChainId() {
         if (!this.check) {
             return new Promise<string>(resolve => {
-                resolve(localStorage.getItem('chainID'));
+                resolve(localStorage.getItem('chainId'));
             });
         }
         return new Promise<string>((resolve, reject) => {
             try {
-                this.crx.getStorage('chainID', (res) => {
+                this.crx.getStorage('chainId', (res) => {
                     resolve(res || 1);
                 });
             } catch (e) {
@@ -758,10 +758,10 @@ export class ChromeService {
         }
     }
     /**
-     * chainID 1 Neo2 MainNet
-     * chainID 2 Neo2 TestNet
-     * chainID 3 N3 MainNet
-     * chainID 4 N3 TestNet
+     * chainId 1 Neo2 MainNet
+     * chainId 2 Neo2 TestNet
+     * chainId 3 N3 MainNet
+     * chainId 4 N3 TestNet
      *
      * @param {string} net
      * @return {*}

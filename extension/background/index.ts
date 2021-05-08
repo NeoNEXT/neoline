@@ -21,7 +21,7 @@ import {
     setLocalStorage,
     getLocalStorage
 } from '../common';
-import { mainApi, RPC, ChainType, NETWORKS } from '../common/constants';
+import { mainApi, RPC, ChainType, NETWORKS, ChainId, Network } from '../common/constants';
 import {
     requestTarget, GetBalanceArgs, ERRORS,
     EVENT, AccountPublicKey, GetBlockInputArgs,
@@ -34,7 +34,7 @@ import {
     N3InvokeReadArgs, N3InvokeReadMultiArgs, N3SendArgs , N3TransactionArgs,
     N3VerifyMessageArgs, requestTargetN3
 } from '../common/data_module_neo3';
-import { base64Encode, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getScriptHashFromAddress, hexstring2str, sign, str2hexstring } from '../common/utils';
+import { base64Encode, getNetwork, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getRepHeaderNetworkType, getScriptHashFromAddress, hexstring2str, sign, str2hexstring } from '../common/utils';
 import randomBytes = require('randomBytes');
 
 /**
@@ -44,8 +44,8 @@ import randomBytes = require('randomBytes');
 declare var chrome;
 
 let currLang = 'en';
-let currNetWork = 'MainNet';
-let currChainID = 1;
+let currNetwork = 'MainNet';
+let currChainId = 1;
 let tabCurr: any;
 let currChain = 'Neo2';
 export let password = '';
@@ -62,11 +62,11 @@ export function expand() {
         const chainType = await getLocalStorage('chainType', () => { });
         const newLocal = 'TestNet';
         let rpcUrl = RPC[chainType][newLocal];
-        const network = NETWORKS[currChainID - 1];
+        let network: Network = getNetwork(currChainId);
         if (chainType === ChainType.Neo2) {
-            rpcUrl = RPC[chainType][currNetWork];
+            rpcUrl = RPC[chainType][currNetwork];
         } else if (chainType === ChainType.Neo3) {
-            rpcUrl = RPC[chainType][currNetWork];
+            rpcUrl = RPC[chainType][currNetwork];
         }
         setTimeout(async () => {
             let oldHeight = await getLocalStorage(`${chainType}_${network}BlockHeight`, () => { }) || 0;
@@ -97,7 +97,7 @@ export function expand() {
                             });
                             windowCallback({
                                 data: {
-                                    chainID: currChainID,
+                                    chainId: currChainId,
                                     blockHeight: blockHeightData.result,
                                     blockTime: blockDetail.result.time,
                                     blockHash: blockDetail.result.hash,
@@ -127,7 +127,7 @@ export function expand() {
                                     });
                                     windowCallback({
                                         data: {
-                                            chainID: currChainID,
+                                            chainId: currChainId,
                                             blockHeight: blockHeightData.result,
                                             blockTime: blockDetail.result.time,
                                             blockHash: blockDetail.result.hash,
@@ -146,7 +146,7 @@ export function expand() {
             }, '*')
         }, 0);
         if(chainType === ChainType.Neo2) {
-            const txArr = await getLocalStorage(`${currNetWork}TxArr`, (temp) => { }) || [];
+            const txArr = await getLocalStorage(`${currNetwork}TxArr`, (temp) => { }) || [];
             if (txArr.length === 0) {
                 return;
             }
@@ -162,7 +162,7 @@ export function expand() {
                             if (txDetail.status === 'success') {
                                 windowCallback({
                                     data: {
-                                        chainID: currChainID,
+                                        chainId: currChainId,
                                         txid: item,
                                         blockHeight: txDetail.data.block_index,
                                         blockTime: txDetail.data.block_time,
@@ -171,18 +171,18 @@ export function expand() {
                                 });
                             }
                         }, {
-                            Network: currNetWork === 'MainNet' ? 'mainnet' : 'testnet'
+                            Network: getRepHeaderNetworkType(currNetwork)
                         });
                     });
                 };
                 const setData = {};
-                setData[`${currNetWork}TxArr`] = txArr;
+                setData[`${currNetwork}TxArr`] = txArr;
                 setLocalStorage(setData);
             }, {
-                Network: currNetWork === 'MainNet' ? 'mainnet' : 'testnet'
+                Network: getRepHeaderNetworkType(currNetwork)
             });
         } else if(chainType === ChainType.Neo3) {
-            const txArr = await getLocalStorage(`N3${currNetWork}TxArr`, (temp) => { }) || [];
+            const txArr = await getLocalStorage(`N3${currNetwork}TxArr`, (temp) => { }) || [];
             if (txArr.length === 0) {
                 return;
             }
@@ -198,7 +198,7 @@ export function expand() {
                             if (txDetail.status === 'success') {
                                 windowCallback({
                                     data: {
-                                        chainID: currChainID,
+                                        chainId: currChainId,
                                         txid: item,
                                         blockHeight: txDetail.data.block_index,
                                         blockTime: txDetail.data.block_time,
@@ -207,15 +207,15 @@ export function expand() {
                                 });
                             }
                         }, {
-                            Network: currNetWork === 'MainNet' ? 'mainnet' : 'testnet'
+                            Network: getRepHeaderNetworkType(currNetwork)
                         });
                     });
                 };
                 const setData = {};
-                setData[`N3${currNetWork}TxArr`] = txArr;
+                setData[`N3${currNetwork}TxArr`] = txArr;
                 setLocalStorage(setData);
             }, {
-                Network: currNetWork === 'MainNet' ? 'mainnet' : 'testnet'
+                Network: getRepHeaderNetworkType(currNetwork)
             });
         }
     }, 8000);
@@ -260,9 +260,9 @@ export function setPopup(lang) {
     }
 }
 
-export function setNetWork(netWork, chainID, chainType) {
-    currNetWork = netWork;
-    currChainID = chainID;
+export function setNetwork(network, chainId, chainType) {
+    currNetwork = network;
+    currChainId = chainId;
     currChain = chainType;
 }
 
@@ -431,7 +431,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     sendResponse('');
                 }
             }, {
-                Network: parameter.network === 'MainNet' ? 'mainnet' : 'testnet'
+                Network: getRepHeaderNetworkType(parameter.network)
             });
             return;
         }
@@ -457,7 +457,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         });
                     }
                 }, {
-                    Network: parameter.network === 'MainNet' ? 'mainnet' : 'testnet'
+                    Network: getRepHeaderNetworkType(parameter.network)
                 });
             } catch (error) {
                 windowCallback({
@@ -838,7 +838,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     return;
                 }
             }, {
-                Network: request.parameter.network === 'MainNet' ? 'mainnet' : 'testnet'
+                Network: getRepHeaderNetworkType(request.parameter.network)
             });
             return true;
         }
@@ -889,7 +889,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     }
                     sendResponse('');
                 }, {
-                    Network: request.network === 'MainNet' ? 'mainnet' : 'testnet'
+                    Network: getRepHeaderNetworkType(request.parameter.network)
                 });
             } catch (error) {
                 windowCallback({
@@ -925,7 +925,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     }
                     sendResponse('');
                 }, {
-                    Network: request.network === 'MainNet' ? 'mainnet' : 'testnet'
+                    Network: getRepHeaderNetworkType(request.parameter.network)
                 });
             } catch (error) {
                 windowCallback({
@@ -1305,7 +1305,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     return;
                 }
             }, {
-                Network: parameter.network === 'MainNet' ? 'mainnet' : 'testnet'
+                Network: getRepHeaderNetworkType(request.parameter.network)
             });
             return true;
         }

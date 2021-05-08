@@ -7,6 +7,18 @@ export enum ChainType {
     Neo3 = 'Neo3'
 }
 
+export enum Network {
+    Neo2MainNet = 'MainNet',
+    Neo2TestNet = 'TestNet',
+    N3MainNet = 'N3MainNet',
+    N3TestNet = 'N3TestNet'
+}
+
+export enum ReqHeaderNetworkType {
+    mainnet = 'mainnet',
+    testnet = 'testnet'
+}
+
 /**
  * @param N3MainNet Replace after N3 mainnet is online, Currently affecting use
  */
@@ -24,7 +36,7 @@ export const RPC = {
 /**
  * @param N3MainNet Mainnet is not yet online, Mainnet Id 3
  */
-export enum ChainID {
+export enum ChainId {
     Neo2MainNet = 1,
     Neo2TestNet = 2,
     N3MainNet = 3,
