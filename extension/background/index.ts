@@ -34,7 +34,7 @@ import {
     N3InvokeReadArgs, N3InvokeReadMultiArgs, N3SendArgs , N3TransactionArgs,
     N3VerifyMessageArgs, requestTargetN3
 } from '../common/data_module_neo3';
-import { base64Encode, getNetwork, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getRepHeaderNetworkType, getScriptHashFromAddress, hexstring2str, sign, str2hexstring } from '../common/utils';
+import { base64Encode, getNetwork, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getReqHeaderNetworkType, getScriptHashFromAddress, hexstring2str, sign, str2hexstring } from '../common/utils';
 import randomBytes = require('randomBytes');
 
 /**
@@ -171,7 +171,7 @@ export function expand() {
                                 });
                             }
                         }, {
-                            Network: getRepHeaderNetworkType(currNetwork)
+                            Network: getReqHeaderNetworkType(currNetwork)
                         });
                     });
                 };
@@ -179,7 +179,7 @@ export function expand() {
                 setData[`${currNetwork}TxArr`] = txArr;
                 setLocalStorage(setData);
             }, {
-                Network: getRepHeaderNetworkType(currNetwork)
+                Network: getReqHeaderNetworkType(currNetwork)
             });
         } else if(chainType === ChainType.Neo3) {
             const txArr = await getLocalStorage(`N3${currNetwork}TxArr`, (temp) => { }) || [];
@@ -207,7 +207,7 @@ export function expand() {
                                 });
                             }
                         }, {
-                            Network: getRepHeaderNetworkType(currNetwork)
+                            Network: getReqHeaderNetworkType(currNetwork)
                         });
                     });
                 };
@@ -215,7 +215,7 @@ export function expand() {
                 setData[`N3${currNetwork}TxArr`] = txArr;
                 setLocalStorage(setData);
             }, {
-                Network: getRepHeaderNetworkType(currNetwork)
+                Network: getReqHeaderNetworkType(currNetwork)
             });
         }
     }, 8000);
@@ -431,7 +431,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     sendResponse('');
                 }
             }, {
-                Network: getRepHeaderNetworkType(parameter.network)
+                Network: getReqHeaderNetworkType(parameter.network)
             });
             return;
         }
@@ -457,7 +457,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         });
                     }
                 }, {
-                    Network: getRepHeaderNetworkType(parameter.network)
+                    Network: getReqHeaderNetworkType(parameter.network)
                 });
             } catch (error) {
                 windowCallback({
@@ -838,7 +838,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     return;
                 }
             }, {
-                Network: getRepHeaderNetworkType(request.parameter.network)
+                Network: getReqHeaderNetworkType(request.parameter.network)
             });
             return true;
         }
@@ -889,7 +889,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     }
                     sendResponse('');
                 }, {
-                    Network: getRepHeaderNetworkType(request.parameter.network)
+                    Network: getReqHeaderNetworkType(request.parameter.network)
                 });
             } catch (error) {
                 windowCallback({
@@ -925,7 +925,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     }
                     sendResponse('');
                 }, {
-                    Network: getRepHeaderNetworkType(request.parameter.network)
+                    Network: getReqHeaderNetworkType(request.parameter.network)
                 });
             } catch (error) {
                 windowCallback({
@@ -1305,7 +1305,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     return;
                 }
             }, {
-                Network: getRepHeaderNetworkType(request.parameter.network)
+                Network: getReqHeaderNetworkType(request.parameter.network)
             });
             return true;
         }

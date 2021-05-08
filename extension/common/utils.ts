@@ -272,7 +272,7 @@ export function getNetwork (chainId: ChainId) {
     }
 }
 
-export function getRepHeaderNetworkType (network: string) {
+export function getReqHeaderNetworkType (network: string) {
     switch (network) {
         case Network.Neo2MainNet:
         case Network.N3MainNet:
