@@ -172,8 +172,6 @@ export interface TransactionInputArgs {
 }
 
 export interface TransactionDetails {
-    chainId: number;
-    netWork: string;
     chainType: string;
     txid: string;
     size: number;

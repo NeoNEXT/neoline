@@ -1,3 +1,6 @@
+/**
+ * @param A right neo3MainRPC value will be replaced when N3 mainnet is on.
+ */
 export const environment = {
     production: true,
     name: 'default',

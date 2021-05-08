@@ -42,8 +42,9 @@ export class ChromeService {
         if (chainType === 'Neo2') {
             currChainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
         } else if (chainType === 'Neo3') {
-            currChainId = this.net === NetType.MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
+            currChainId = this.net === NetType.N3MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
         }
+        const network = NETWORKS[currChainId - 1];
         if (!this.check) {
             localStorage.setItem('chainID', JSON.stringify(currChainId));
             return;
@@ -52,14 +53,14 @@ export class ChromeService {
             this.crx.setStorage({
                 chainID: currChainId
             });
-            this.crx.setNetWork(this.net, currChainId, chainType);
+            this.crx.setNetWork(network, currChainId, chainType);
             if(oldChainId.toString() !== currChainId.toString()) {
                 this.windowCallback({
                     return: EVENT.NETWORK_CHANGED,
                     data: {
                         chainID: currChainId,
                         networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                        defaultNetwork: NETWORKS[currChainId - 1] || 'MainNet'
+                        defaultNetwork: network || 'MainNet'
                     }
                 });
             }
@@ -316,7 +317,7 @@ export class ChromeService {
     }
 
     public setUpdateNeo3AddressFlag(flag: boolean) {
-        let storageName = `neo3AddressFlag`;
+        const storageName = `neo3AddressFlag`;
 
         if (!this.check) {
             localStorage.setItem(storageName, JSON.stringify(flag));
