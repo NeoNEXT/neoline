@@ -28,7 +28,7 @@ import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { sc, u } from '@cityofzion/neon-core';
 import { EVENT, TxHashAttribute } from '@/models/dapi';
 import { bignumber } from 'mathjs';
-import { ChainId, ChainType, NetType } from '@popup/_lib';
+import { ChainType } from '@popup/_lib';
 
 @Injectable()
 export class NeonService {

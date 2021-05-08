@@ -7,6 +7,18 @@ export enum ChainType {
     Neo3 = 'Neo3'
 }
 
+export enum Network {
+    Neo2MainNet = 'MainNet',
+    Neo2TestNet = 'TestNet',
+    N3MainNet = 'N3MainNet',
+    N3TestNet = 'N3TestNet'
+}
+
+export enum ReqHeaderNetworkType {
+    mainnet = 'mainnet',
+    testnet = 'testnet'
+}
+
 /**
  * @param N3MainNet Replace after N3 mainnet is online, Currently affecting use
  */

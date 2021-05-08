@@ -7,7 +7,7 @@ import {
     getLocalStorage,
 } from '../common/index';
 import { requestTarget, Account, ERRORS } from '../common/data_module_neo2';
-import { NETWORKS } from '../common/constants';
+import { getNetwork } from '../common/utils';
 
 declare var chrome: any;
 
@@ -64,7 +64,7 @@ window.addEventListener('message', async (e) => {
                         return: requestTarget.Networks,
                         data: {
                             networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                            defaultNetwork: NETWORKS[chainId - 1] || 'MainNet',
+                            defaultNetwork: getNetwork(chainId) || 'MainNet',
                             chainId
                         },
                         ID: e.data.ID

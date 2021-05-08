@@ -36,7 +36,7 @@ export class ChromeService {
     }
 
     public async setChainId() {
-        const oldChainId = await this.getChainId();
+        const oldChainID = await this.getChainId();
         const chainType = await this.getCurrentWalletChainType();
         let currChainId: ChainId;
         if (chainType === 'Neo2') {
@@ -53,8 +53,8 @@ export class ChromeService {
             this.crx.setStorage({
                 chainId: currChainId
             });
-            this.crx.setNetWork(network, currChainId, chainType);
-            if(oldChainId.toString() !== currChainId.toString()) {
+            this.crx.setNetwork(network, currChainId, chainType);
+            if(oldChainID.toString() !== currChainId.toString()) {
                 this.windowCallback({
                     return: EVENT.NETWORK_CHANGED,
                     data: {
@@ -65,7 +65,7 @@ export class ChromeService {
                 });
             }
         } catch (e) {
-            console.log('set chianId failed', e);
+            console.log('set chainId failed', e);
         }
     }
 
@@ -759,9 +759,9 @@ export class ChromeService {
     }
     /**
      * chainId 1 Neo2 MainNet
-     * chianId 2 Neo2 TestNet
-     * ChainId 3 N3 MainNet
-     * ChainId 4 N3 TestNet
+     * chainId 2 Neo2 TestNet
+     * chainId 3 N3 MainNet
+     * chainId 4 N3 TestNet
      *
      * @param {string} net
      * @return {*}
