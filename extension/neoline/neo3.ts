@@ -8,7 +8,7 @@ import {
 } from '../common/index';
 import { ERRORS } from '../common/data_module_neo2';
 import { requestTargetN3 } from '../common/data_module_neo3';
-import { ChainId, RPC } from '../common/constants';
+import { ChainID, RPC } from '../common/constants';
 
 declare var chrome: any;
 
@@ -71,9 +71,9 @@ window.addEventListener('message', async (e) => {
                         getStorage('chainID', (result) => {
                             let chainID = e.data.parameter.chainID;
                             let network = e.data.parameter.network;
-                            if (chainID !== ChainId.N3MainNet && chainID !== ChainId.N3TestNet) {
-                                chainID = result || ChainId.N3TestNet;
-                                network = result === ChainId.N3TestNet ? 'TestNet' : 'MainNet';
+                            if (chainID !== ChainID.N3MainNet && chainID !== ChainID.N3TestNet) {
+                                chainID = result || ChainID.N3TestNet;
+                                network = result === ChainID.N3TestNet ? 'TestNet' : 'MainNet';
                             }
                             e.data.parameter.network = network;
                             e.data.nodeUrl = RPC.Neo3[network];

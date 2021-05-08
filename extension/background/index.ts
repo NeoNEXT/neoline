@@ -127,7 +127,7 @@ export function expand() {
                                     });
                                     windowCallback({
                                         data: {
-                                            chainId: currChainID,
+                                            chainID: currChainID,
                                             blockHeight: blockHeightData.result,
                                             blockTime: blockDetail.result.time,
                                             blockHash: blockDetail.result.hash,
@@ -162,7 +162,7 @@ export function expand() {
                             if (txDetail.status === 'success') {
                                 windowCallback({
                                     data: {
-                                        chainId: currChainID,
+                                        chainID: currChainID,
                                         txid: item,
                                         blockHeight: txDetail.data.block_index,
                                         blockTime: txDetail.data.block_time,
@@ -198,7 +198,7 @@ export function expand() {
                             if (txDetail.status === 'success') {
                                 windowCallback({
                                     data: {
-                                        chainId: currChainID,
+                                        chainID: currChainID,
                                         txid: item,
                                         blockHeight: txDetail.data.block_index,
                                         blockTime: txDetail.data.block_time,

@@ -16,7 +16,7 @@ export const ChainTypeGroups = ['Neo2', 'Neo3'];
  * @export
  * @enum {number}
  */
-export enum ChainId {
+export enum ChainID {
     Neo2MainNet = 1,
     Neo2TestNet = 2,
     N3MainNet = 3,

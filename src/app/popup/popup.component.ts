@@ -17,7 +17,7 @@ import {
 } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupHomeMenuDialogComponent } from './_dialogs';
-import { ChainId, NetType } from './_lib';
+import { ChainID, NetType } from './_lib';
 
 @Component({
     templateUrl: 'popup.component.html',

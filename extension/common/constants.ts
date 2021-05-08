@@ -24,7 +24,7 @@ export const RPC = {
 /**
  * @param N3MainNet Mainnet is not yet online, Mainnet Id 3
  */
-export enum ChainId {
+export enum ChainID {
     Neo2MainNet = 1,
     Neo2TestNet = 2,
     N3MainNet = 3,

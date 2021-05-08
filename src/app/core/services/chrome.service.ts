@@ -19,7 +19,7 @@ import {
 } from '@cityofzion/neon-core-neo3/lib';
 import { Asset } from '@/models/models';
 import { EVENT, NETWORKS } from '@/models/dapi';
-import { ChainId, ChainType, NetType } from '@/app/popup/_lib';
+import { ChainID, ChainType, NetType } from '@/app/popup/_lib';
 
 declare var chrome: any;
 
@@ -38,27 +38,27 @@ export class ChromeService {
     public async setChainId() {
         const oldChainId = await this.getChainId();
         const chainType = await this.getCurrentWalletChainType();
-        let currChainId: ChainId;
+        let currChainID: ChainID;
         if (chainType === 'Neo2') {
-            currChainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
+            currChainID = this.net === NetType.MainNet ? ChainID.Neo2MainNet : ChainID.Neo2TestNet;
         } else if (chainType === 'Neo3') {
-            currChainId = this.net === NetType.N3MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
+            currChainID = this.net === NetType.N3MainNet ? ChainID.N3MainNet : ChainID.N3TestNet;
         }
-        const network = NETWORKS[currChainId - 1];
+        const network = NETWORKS[currChainID - 1];
         if (!this.check) {
-            localStorage.setItem('chainID', JSON.stringify(currChainId));
+            localStorage.setItem('chainID', JSON.stringify(currChainID));
             return;
         }
         try {
             this.crx.setStorage({
-                chainID: currChainId
+                chainID: currChainID
             });
-            this.crx.setNetWork(network, currChainId, chainType);
-            if(oldChainId.toString() !== currChainId.toString()) {
+            this.crx.setNetWork(network, currChainID, chainType);
+            if(oldChainId.toString() !== currChainID.toString()) {
                 this.windowCallback({
                     return: EVENT.NETWORK_CHANGED,
                     data: {
-                        chainID: currChainId,
+                        chainID: currChainID,
                         networks: ['MainNet', 'TestNet', 'N3TestNet'],
                         defaultNetwork: network || 'MainNet'
                     }
