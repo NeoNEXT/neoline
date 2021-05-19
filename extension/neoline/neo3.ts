@@ -70,8 +70,8 @@ window.addEventListener('message', async (e) => {
                         return;
                     } else {
                         getStorage('chainId', (result) => {
-                            let chainId = e.data.parameter.chainId;
-                            let network = e.data.parameter.network;
+                            let chainId;
+                            let network;
                             if (chainId !== ChainId.N3MainNet && chainId !== ChainId.N3TestNet) {
                                 chainId = result || ChainId.N3TestNet;
                                 network = getNetwork(result);
