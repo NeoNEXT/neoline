@@ -36,6 +36,9 @@ import {
 } from '../common/data_module_neo3';
 import { base64Encode, getNetwork, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getReqHeaderNetworkType, getScriptHashFromAddress, hexstring2str, sign, str2hexstring } from '../common/utils';
 import randomBytes = require('randomBytes');
+import {
+    wallet as wallet3,
+} from '@cityofzion/neon-core-neo3/lib';
 
 /**
  * Background methods support.
@@ -868,8 +871,18 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         // neo3 dapi method
         case requestTargetN3.Balance: {
             try {
-                const parameter = request.parameter as N3BalanceArgs;
-                const postData = parameter.params;
+                // const parameter = request.parameter as N3BalanceArgs;
+                const currWallet = await getLocalStorage('wallet', () => { });
+                const address = currWallet.accounts[0].address;
+                if (!wallet3.isAddress(address)) {
+                    return;
+                };
+                const postData = [
+                    {
+                        address: address,
+                        contracts: []
+                    }
+                ];
                 httpPost(`${mainApi}/v1/neo3/address/balances`, { params: postData }, (response) => {
                     if (response.status === 'success') {
                         const returnData = response.data;
@@ -891,6 +904,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 }, {
                     Network: getReqHeaderNetworkType(request.parameter.network)
                 });
+                console.log(getReqHeaderNetworkType(request.parameter.network));
             } catch (error) {
                 windowCallback({
                     return: requestTargetN3.Balance,
