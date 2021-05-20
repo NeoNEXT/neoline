@@ -10,9 +10,6 @@ import {
     N3StorageResponse, N3Response, N3SendArgs, N3SendOutput, N3VerifyMessageArgs,
 } from '../common/data_module_neo3';
 import { getMessageID } from '../common/utils';
-import {
-    wallet as wallet3,
-} from '@cityofzion/neon-core-neo3/lib';
 
 function sendMessage<K>(target: requestTarget | requestTargetN3, parameter?: any): Promise<K> {
     const ID = getMessageID();
@@ -111,33 +108,8 @@ export class Init {
         }
     }
 
-    public getBalance(parameter: N3BalanceArgs): Promise<N3BalanceResults> {
-        if (parameter === undefined || parameter.params === undefined) {
-            return new Promise((_, reject) => {
-                reject(ERRORS.MALFORMED_INPUT);
-            });
-        } else {
-            let errFlag = false;
-            if (parameter.params instanceof Array) {
-                for (let index = 0; index < parameter.params.length; index++) {
-                    if (
-                        !wallet3.isAddress(parameter.params[index].address) ||
-                        !(parameter.params[index].contracts instanceof Array)
-                    ) {
-                        errFlag = true;
-                        break;
-                    };
-                }
-            } else {
-                errFlag = true;
-            }
-            if (errFlag) {
-                return new Promise((_, reject) => {
-                    reject(ERRORS.MALFORMED_INPUT);
-                });
-            }
-            return sendMessage(requestTargetN3.Balance, parameter);
-        }
+    public getBalance(): Promise<N3BalanceResults> {
+        return sendMessage(requestTargetN3.Balance, {});
     }
 
     public getTransaction(parameter: N3TransactionArgs): Promise<N3TransactionDetails> {

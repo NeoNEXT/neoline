@@ -41,12 +41,11 @@ export interface N3Argument {
 }
 
 export interface N3BalanceRequest {
-    address: string;
     contracts: string[];
 }
 
 export interface N3BalanceArgs {
-    params: N3BalanceRequest[];
+    params: N3BalanceRequest;
     network?: string;
 }
 export interface N3TransactionArgs {
