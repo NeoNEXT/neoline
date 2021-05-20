@@ -145,14 +145,7 @@ window.addEventListener('message', async (e) => {
         case requestTarget.SignMessage:
             {
                 getLocalStorage('chainType', (res) => {
-                    if (res !== 'Neo2') {
-                        window.postMessage({
-                            return: e.data.target,
-                            error: ERRORS.CHAIN_NOT_MATCH,
-                            ID: e.data.ID
-                        }, '*');
-                        return;
-                    } else {
+                    if (res === 'Neo2') {
                         getStorage('net', (result: string) => {
                             let network = e.data.parameter.network;
                             if (network !== 'MainNet' && network !== 'TestNet') {
@@ -163,6 +156,13 @@ window.addEventListener('message', async (e) => {
                                 return Promise.resolve('Dummy response to keep the console quiet');
                             });
                         });
+                        return;
+                    } else {
+                        window.postMessage({
+                            return: e.data.target,
+                            error: ERRORS.CHAIN_NOT_MATCH,
+                            ID: e.data.ID
+                        }, '*');
                         return;
                     }
 

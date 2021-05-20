@@ -61,27 +61,23 @@ window.addEventListener('message', async (e) => {
         case requestTargetN3.SignMessage:
             {
                 getLocalStorage('chainType', (res) => {
-                    if (res !== 'Neo3') {
-                        window.postMessage({
-                            return: e.data.target,
-                            error: ERRORS.CHAIN_NOT_MATCH,
-                            ID: e.data.ID
-                        }, '*');
-                        return;
-                    } else {
+                    if (res === 'Neo3') {
                         getStorage('chainId', (result) => {
-                            let chainId;
-                            let network;
-                            if (chainId !== ChainId.N3MainNet && chainId !== ChainId.N3TestNet) {
-                                chainId = result || ChainId.N3TestNet;
-                                network = getNetwork(result);
-                            }
+                            // let chainId = result || ChainId.N3TestNet;
+                            let network = getNetwork(result);
                             e.data.parameter.network = network;
                             e.data.nodeUrl = RPC.Neo3[network];
                             chrome.runtime.sendMessage(e.data, (response) => {
                                 return Promise.resolve('Dummy response to keep the console quiet');
                             });
                         });
+                        return;
+                    } else {
+                        window.postMessage({
+                            return: e.data.target,
+                            error: ERRORS.CHAIN_NOT_MATCH,
+                            ID: e.data.ID
+                        }, '*');
                         return;
                     }
                 });
