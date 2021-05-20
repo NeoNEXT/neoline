@@ -46,6 +46,20 @@ window.addEventListener('load', () => {
 // neo3 dapi method
 window.addEventListener('message', async (e) => {
     switch (e.data.target) {
+        case requestTargetN3.Provider: {
+            getStorage('rateCurrency', (res) => {
+                if (res === undefined) {
+                    res = 'CNY';
+                }
+                const manifestData = chrome.runtime.getManifest();
+                manifestData.extra = { currency: res, theme: '' };
+                window.postMessage({
+                    return: requestTargetN3.Provider,
+                    data: manifestData
+                }, '*');
+            });
+            return;
+        }
         case requestTargetN3.Balance:
         case requestTargetN3.Transaction:
 
