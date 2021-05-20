@@ -423,11 +423,11 @@ function getAuthState(): Promise<any> {
 function getProvider(): Promise<Provider> {
     return new Promise((resolveMain, rejectMain) => {
         window.postMessage({
-            target: requestTarget.Provider
+            target: requestTargetN3.Provider
         }, '*');
         const promise = new Promise((resolve) => {
             const callbackFn = (event) => {
-                if (event.data.return !== undefined && event.data.return === requestTarget.Provider) {
+                if (event.data.return !== undefined && event.data.return === requestTargetN3.Provider) {
                     resolve(event.data.data);
                     window.removeEventListener('message', callbackFn);
                 }
