@@ -8,8 +8,8 @@ import {
 } from '../common/index';
 import { ERRORS } from '../common/data_module_neo2';
 import { requestTargetN3 } from '../common/data_module_neo3';
-import { ChainId, RPC } from '../common/constants';
-import { getNetwork } from '../common/utils';
+import { ChainId, Network, RPC } from '../common/constants';
+import { getNetwork, getWalletType } from '../common/utils';
 
 declare var chrome: any;
 
@@ -74,11 +74,15 @@ window.addEventListener('message', async (e) => {
         case requestTargetN3.VerifyMessage:
         case requestTargetN3.SignMessage:
             {
-                getLocalStorage('chainType', (res) => {
-                    if (res === 'Neo3') {
+                getLocalStorage('chainType', async (res) => {
+                    let currChainType = res;
+                    if (!currChainType) {
+                        currChainType = await getWalletType();
+                    };
+                    if (currChainType === 'Neo3') {
                         getStorage('chainId', (result) => {
                             // let chainId = result || ChainId.N3TestNet;
-                            let network = getNetwork(result);
+                            let network = getNetwork(result) || Network.N3TestNet;
                             e.data.parameter.network = network;
                             e.data.nodeUrl = RPC.Neo3[network];
                             chrome.runtime.sendMessage(e.data, (response) => {

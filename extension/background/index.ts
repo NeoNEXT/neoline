@@ -34,7 +34,7 @@ import {
     N3InvokeReadArgs, N3InvokeReadMultiArgs, N3SendArgs , N3TransactionArgs,
     N3VerifyMessageArgs, requestTargetN3
 } from '../common/data_module_neo3';
-import { base64Encode, getNetwork, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getReqHeaderNetworkType, getScriptHashFromAddress, hexstring2str, sign, str2hexstring } from '../common/utils';
+import { base64Encode, getNetwork, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getReqHeaderNetworkType, getScriptHashFromAddress, getWalletType, hexstring2str, sign, str2hexstring } from '../common/utils';
 import randomBytes = require('randomBytes');
 import {
     wallet as wallet3,
@@ -62,7 +62,10 @@ export function expand() {
 }
 (function init() {
     setInterval(async () => {
-        const chainType = await getLocalStorage('chainType', () => { });
+        let chainType = await getLocalStorage('chainType', () => { });
+        if (!chainType) {
+            chainType = await getWalletType();
+        };
         const newLocal = 'TestNet';
         let rpcUrl = RPC[chainType][newLocal];
         let network: Network = getNetwork(currChainId);
