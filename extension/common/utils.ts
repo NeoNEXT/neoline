@@ -6,6 +6,9 @@ import BN = require('bn.js');
 import SHA256 =  require('crypto-js/sha256');
 import hexEncoding = require('crypto-js/enc-hex');
 import { ChainId, Network, ReqHeaderNetworkType } from './constants';
+import { getLocalStorage } from '../common';
+import { wallet as wallet3} from '@cityofzion/neon-core-neo3'
+
 const curve = new ec('p256');
 
 
@@ -284,4 +287,16 @@ export function getReqHeaderNetworkType (network: string) {
             Error(`unsupport: ${network}`);
             break;
     }
+}
+
+export function getWalletType() {
+    return new Promise<string>((resolve, reject) => {
+        getLocalStorage('wallet', (wallet) => {
+            let currChainType = 'Neo2';
+            if (wallet3.isAddress(wallet.accounts[0].address)) {
+                currChainType = 'Neo3';
+            }
+            resolve(currChainType);
+        }).catch(err => reject(err));
+    })
 }

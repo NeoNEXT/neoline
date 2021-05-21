@@ -7,7 +7,7 @@ import {
     getLocalStorage,
 } from '../common/index';
 import { requestTarget, Account, ERRORS } from '../common/data_module_neo2';
-import { getNetwork } from '../common/utils';
+import { getNetwork, getWalletType } from '../common/utils';
 
 declare var chrome: any;
 
@@ -144,8 +144,12 @@ window.addEventListener('message', async (e) => {
         case requestTarget.VerifyMessage:
         case requestTarget.SignMessage:
             {
-                getLocalStorage('chainType', (res) => {
-                    if (res === 'Neo2') {
+                getLocalStorage('chainType', async (res) => {
+                    let currChainType = res;
+                    if (!currChainType) {
+                        currChainType = await getWalletType();
+                    };
+                    if (currChainType === 'Neo2') {
                         getStorage('net', (result: string) => {
                             let network = e.data.parameter.network;
                             if (network !== 'MainNet' && network !== 'TestNet') {
@@ -178,5 +182,6 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         return Promise.resolve('Dummy response to keep the console quiet');
     }
 });
+
 
 
