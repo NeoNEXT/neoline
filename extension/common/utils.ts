@@ -5,9 +5,9 @@ import BN = require('bn.js');
 
 import SHA256 =  require('crypto-js/sha256');
 import hexEncoding = require('crypto-js/enc-hex');
-import { ChainId, Network, ReqHeaderNetworkType } from './constants';
+import { AuthType, ChainId, Network, ReqHeaderNetworkType } from './constants';
 import { getLocalStorage } from '../common';
-import { wallet as wallet3} from '@cityofzion/neon-core-neo3'
+import { tx, wallet as wallet3} from '@cityofzion/neon-core-neo3'
 
 const curve = new ec('p256');
 
@@ -299,4 +299,29 @@ export function getWalletType() {
             resolve(currChainType);
         }).catch(err => reject(err));
     })
+}
+
+export function getTxAuthority(authType: AuthType) {
+    let result;
+    switch (authType) {
+        case AuthType.None:
+            result = tx.WitnessScope.None;
+            break;
+        case AuthType.CalledByEntry:
+            result = tx.WitnessScope.CalledByEntry;
+            break;
+        case AuthType.CustomContracts:
+            result = tx.WitnessScope.CustomContracts;
+            break;
+        case AuthType.CustomGroups:
+            result = tx.WitnessScope.CustomGroups;
+            break;
+        case AuthType.Global:
+            result = tx.WitnessScope.Global;
+            break;
+        default:
+            result = tx.WitnessScope.CalledByEntry;
+            break;
+    }
+    return result;
 }

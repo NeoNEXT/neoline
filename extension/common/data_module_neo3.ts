@@ -32,7 +32,7 @@ interface TxHashAttribute extends N3Argument {
 // requets params
 export interface Signers {
     account: string;
-    scopes: string;
+    scopes: 'None' | 'CalledByEntry' | 'CustomContracts' | 'CustomGroups' | 'Global';
 }
 
 export interface N3Argument {

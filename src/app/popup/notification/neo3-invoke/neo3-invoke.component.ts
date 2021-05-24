@@ -157,7 +157,12 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                     this.txHashAttributes = this.pramsData.txHashAttributes
                 }
                 if (this.signers === null && this.pramsData.signers !== undefined) {
-                    this.signers = this.pramsData.signers;
+                    this.signers = this.pramsData.signers.map(item => {
+                        return {
+                            account: item.account,
+                            scopes: this.neo3DapiTrans.getTxAuthority(item.scopes)
+                        };
+                    });
                 }
                 this.signTx();
             } else {
