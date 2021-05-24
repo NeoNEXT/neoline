@@ -13,3 +13,4 @@ export { PopupBackupTipDialogComponent } from './backup-tip/backup-tip.dialog';
 export { PopupSubscriptionEmailDialogComponent } from './subscription-email/subscription-email.dialog';
 export { PopupAddTokenWarnDialogComponent } from './add-token-warn/add-token-warn.dialog';
 export { PopupAuthorizationListDialogComponent } from './authorization-list/authorization-list.dialog';
+export { PopupDapiPromptComponent } from './dapi-Prompt/dapi-Prompt.component';

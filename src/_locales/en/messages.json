@@ -664,5 +664,20 @@
     },
     "GASFEE": {
         "message": "GAS FEE"
+    },
+    "None": {
+        "message": "Only sign transactions, and do not allow any contract to use this signature."
+    },
+    "CalledByEntry": {
+        "message": "The default signature."
+    },
+    "CustomContracts": {
+        "message": "Custom contract, the signature can be used in the specified contract."
+    },
+    "CustomGroups": {
+        "message": "Custom contract group, the signature can be used in the specified contract group."
+    },
+    "Global": {
+        "message": "The risk is extremely high. The contract may transfer all the assets in the address, and only choose when the contract is extremely trusted."
     }
 }

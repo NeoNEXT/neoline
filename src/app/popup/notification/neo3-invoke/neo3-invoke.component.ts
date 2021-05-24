@@ -7,7 +7,7 @@ import Neon from '@cityofzion/neon-js-neo3';
 import { MatDialog } from '@angular/material/dialog';
 import { ERRORS, TxHashAttribute } from '@/models/dapi';
 import { requestTargetN3 } from '@/models/dapi_neo3';
-import { PopupEditFeeDialogComponent } from '../../_dialogs';
+import { PopupDapiPromptComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { GasFeeSpeed } from '../../_lib/type';
 import { bignumber } from 'mathjs';
 import { NEO3_MAGIC_NUMBER_TESTNET, NEO3_CONTRACT } from '../../_lib';
@@ -169,6 +169,12 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 return;
             }
         });
+        this.dialog.open(PopupDapiPromptComponent, {
+            panelClass: 'custom-dialog-panel',
+            data: {
+                scopes: this.signers[0].scopes
+            }
+        }).afterClosed().subscribe(() => {});
         window.onbeforeunload = () => {
             this.chrome.windowCallback({
                 error: ERRORS.CANCELLED,
