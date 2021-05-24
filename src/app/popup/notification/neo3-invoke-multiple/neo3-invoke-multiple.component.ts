@@ -147,7 +147,14 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             if (this.txHashAttributes === null && this.pramsData.txHashAttributes !== undefined) {
                 this.txHashAttributes = this.pramsData.txHashAttributes
             }
-            this.signers = this.pramsData.signers || [];
+            if (this.pramsData.signers) {
+                this.signers = this.pramsData.signers.map(item => {
+                    return {
+                        account: item.account,
+                        scopes: this.neo3DapiTrans.getTxAuthority(item.scopes)
+                    };
+                });
+            }
             this.signTx();
         });
         window.onbeforeunload = () => {
