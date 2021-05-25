@@ -148,12 +148,6 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 this.txHashAttributes = this.pramsData.txHashAttributes
             }
             this.signers = this.pramsData.signers;
-            this.dialog.open(PopupDapiPromptComponent, {
-                panelClass: 'custom-dialog-panel',
-                data: {
-                    scopes: this.signers[0].scopes
-                }
-            }).afterClosed().subscribe(() => {});
             this.signTx();
         });
         window.onbeforeunload = () => {
@@ -335,7 +329,17 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 this.networkFee = unSignTx.networkFee.toString();
                 this.getAssetRate();
                 this.resolveSign(unSignTx);
+                this.prompt();
             })
         }, 0);
+    }
+
+    private prompt() {
+        this.dialog.open(PopupDapiPromptComponent, {
+            panelClass: 'custom-dialog-panel',
+            data: {
+                scopes: this.signers[0].scopes
+            }
+        }).afterClosed().subscribe(() => {});
     }
 }

@@ -157,12 +157,6 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                     this.txHashAttributes = this.pramsData.txHashAttributes
                 }
                 this.signers = this.pramsData.signers;
-                this.dialog.open(PopupDapiPromptComponent, {
-                    panelClass: 'custom-dialog-panel',
-                    data: {
-                        scopes: this.signers[0].scopes
-                    }
-                }).afterClosed().subscribe(() => {});
                 this.signTx();
             } else {
                 return;
@@ -345,9 +339,19 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 this.networkFee = unSignTx.networkFee.toString();
                 this.getAssetRate();
                 this.resolveSign(unSignTx);
+                this.prompt();
             }, error => {
                 console.log(error);
             });
         }, 0);
+    }
+
+    private prompt() {
+        this.dialog.open(PopupDapiPromptComponent, {
+            panelClass: 'custom-dialog-panel',
+            data: {
+                scopes: this.signers[0].scopes
+            }
+        }).afterClosed().subscribe(() => {});
     }
 }

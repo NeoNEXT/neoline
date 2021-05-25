@@ -13,7 +13,6 @@ export class PopupDapiPromptComponent implements OnInit {
     scopes: number;
     scopesType: string;
     constructor(
-        private router: Router,
         private dialogRef: MatDialogRef<PopupDapiPromptComponent>,
         @Inject(MAT_DIALOG_DATA) public data
     ) {
@@ -41,9 +40,6 @@ export class PopupDapiPromptComponent implements OnInit {
     }
 
     public close() {
-        if (this.router.url.match('notification') !== null) {
-            window.close();
-        }
         this.dialogRef.close()
     }
 }
