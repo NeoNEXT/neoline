@@ -7,7 +7,7 @@ import SHA256 =  require('crypto-js/sha256');
 import hexEncoding = require('crypto-js/enc-hex');
 import { ChainId, Network, ReqHeaderNetworkType } from './constants';
 import { getLocalStorage } from '../common';
-import { wallet as wallet3} from '@cityofzion/neon-core-neo3'
+import { tx, wallet as wallet3} from '@cityofzion/neon-core-neo3';
 
 const curve = new ec('p256');
 

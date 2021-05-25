@@ -169,10 +169,7 @@ export class Init {
 
     public invokeReadMulti(parameter: N3InvokeReadMultiArgs): Promise<object> {
         if (
-            !(parameter.invokeReadArgs instanceof Array) ||
-            !(parameter.signers instanceof Array) ||
-            parameter.invokeReadArgs.length !== undefined &&
-            parameter.invokeReadArgs.length === 0
+            !(parameter.invokeReadArgs instanceof Array)
         ) {
             return new Promise((_, reject) => {
                 reject(ERRORS.MALFORMED_INPUT);

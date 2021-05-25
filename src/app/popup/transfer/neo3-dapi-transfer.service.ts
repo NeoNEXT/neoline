@@ -5,6 +5,7 @@ import { Observable, from } from 'rxjs';
 import { AssetState, NotificationService, GlobalService, NeonService } from '@app/core';
 import { bignumber } from 'mathjs';
 import { NEW_POLICY_CONTRACT } from '../_lib';
+import { AuthType } from '@/models/dapi_neo3';
 
 interface CreateNeo3TxInput {
     invokeArgs: any[];
@@ -163,5 +164,30 @@ export class Neo3DapiTransferService {
     // 字符串转base64
     public hexToBase64(str: string) {
         return Buffer.from(str, 'hex').toString('base64');
+    }
+
+    public getTxAuthority(authType: AuthType) {
+        let result;
+        switch (authType) {
+            case AuthType.None:
+                result = tx.WitnessScope.None;
+                break;
+            case AuthType.CalledByEntry:
+                result = tx.WitnessScope.CalledByEntry;
+                break;
+            case AuthType.CustomContracts:
+                result = tx.WitnessScope.CustomContracts;
+                break;
+            case AuthType.CustomGroups:
+                result = tx.WitnessScope.CustomGroups;
+                break;
+            case AuthType.Global:
+                result = tx.WitnessScope.Global;
+                break;
+            default:
+                result = tx.WitnessScope.CalledByEntry;
+                break;
+        }
+        return result;
     }
 }

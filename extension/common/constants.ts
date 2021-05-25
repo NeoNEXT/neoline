@@ -42,3 +42,11 @@ export enum ChainId {
     N3MainNet = 3,
     N3TestNet = 4,
 }
+
+export enum WitnessScope {
+    None = 0,
+    CalledByEntry = 1,
+    CustomContracts = 16,
+    CustomGroups = 32,
+    Global = 128,
+}
