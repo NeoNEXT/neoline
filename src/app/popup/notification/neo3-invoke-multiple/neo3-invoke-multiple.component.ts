@@ -7,7 +7,7 @@ import Neon from '@cityofzion/neon-js-neo3';
 import { MatDialog } from '@angular/material/dialog';
 import { ERRORS, TxHashAttribute } from '@/models/dapi';
 import { requestTargetN3 } from '@/models/dapi_neo3';
-import { PopupEditFeeDialogComponent } from '../../_dialogs';
+import { PopupDapiPromptComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { GasFeeSpeed } from '../../_lib/type';
 import { bignumber } from 'mathjs';
 import { NEO3_MAGIC_NUMBER_TESTNET, NEO3_CONTRACT } from '../../_lib';
@@ -147,14 +147,13 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             if (this.txHashAttributes === null && this.pramsData.txHashAttributes !== undefined) {
                 this.txHashAttributes = this.pramsData.txHashAttributes
             }
-            if (this.pramsData.signers) {
-                this.signers = this.pramsData.signers.map(item => {
-                    return {
-                        account: item.account,
-                        scopes: this.neo3DapiTrans.getTxAuthority(item.scopes)
-                    };
-                });
-            }
+            this.signers = this.pramsData.signers;
+            this.dialog.open(PopupDapiPromptComponent, {
+                panelClass: 'custom-dialog-panel',
+                data: {
+                    scopes: this.signers[0].scopes
+                }
+            }).afterClosed().subscribe(() => {});
             this.signTx();
         });
         window.onbeforeunload = () => {

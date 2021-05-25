@@ -156,25 +156,18 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 if (this.txHashAttributes === null && this.pramsData.txHashAttributes !== undefined) {
                     this.txHashAttributes = this.pramsData.txHashAttributes
                 }
-                if (this.signers === null && this.pramsData.signers !== undefined) {
-                    this.signers = this.pramsData.signers.map(item => {
-                        return {
-                            account: item.account,
-                            scopes: this.neo3DapiTrans.getTxAuthority(item.scopes)
-                        };
-                    });
-                }
+                this.signers = this.pramsData.signers;
+                this.dialog.open(PopupDapiPromptComponent, {
+                    panelClass: 'custom-dialog-panel',
+                    data: {
+                        scopes: this.signers[0].scopes
+                    }
+                }).afterClosed().subscribe(() => {});
                 this.signTx();
             } else {
                 return;
             }
         });
-        this.dialog.open(PopupDapiPromptComponent, {
-            panelClass: 'custom-dialog-panel',
-            data: {
-                scopes: this.signers[0].scopes
-            }
-        }).afterClosed().subscribe(() => {});
         window.onbeforeunload = () => {
             this.chrome.windowCallback({
                 error: ERRORS.CANCELLED,

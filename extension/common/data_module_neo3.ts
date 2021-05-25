@@ -31,8 +31,8 @@ interface TxHashAttribute extends N3Argument {
 
 // requets params
 export interface Signers {
-    account: string;
-    scopes: 'None' | 'CalledByEntry' | 'CustomContracts' | 'CustomGroups' | 'Global';
+    account?: string;
+    scopes?: 0 | 1 | 16 | 32 | 128;
 }
 
 export interface N3Argument {

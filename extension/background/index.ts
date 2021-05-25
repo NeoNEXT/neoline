@@ -21,7 +21,7 @@ import {
     setLocalStorage,
     getLocalStorage
 } from '../common';
-import { mainApi, RPC, ChainType, NETWORKS, ChainId, Network } from '../common/constants';
+import { mainApi, RPC, ChainType, NETWORKS, ChainId, Network, WitnessScope } from '../common/constants';
 import {
     requestTarget, GetBalanceArgs, ERRORS,
     EVENT, AccountPublicKey, GetBlockInputArgs,
@@ -1041,6 +1041,23 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         case requestTargetN3.InvokeRead: {
             const parameter = request.parameter as N3InvokeReadArgs;
+            const currWallet = await getLocalStorage('wallet', () => { });
+            const tempScriptHash = wallet3.getScriptHashFromAddress(
+                currWallet.accounts[0].address
+            );
+            if (!parameter.signers) {
+                parameter.signers = [{
+                    account: tempScriptHash,
+                    scopes: WitnessScope.CalledByEntry
+                }];
+            } else {
+                if (!parameter.signers[0].account) {
+                    parameter.signers[0].account = tempScriptHash;
+                }
+                if (!parameter.signers[0].scopes) {
+                    parameter.signers[0].scopes = WitnessScope.CalledByEntry;
+                }
+            };
             request.parameter = [parameter.scriptHash, parameter.operation, parameter.args, parameter.signers];
             const args = request.parameter[2];
             args.forEach((item, index) => {
@@ -1082,14 +1099,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             }, (res) => {
                 res.return = requestTargetN3.InvokeRead;
                 if (!res.error) {
-                    returnRes.data = {
-                        script: res.result.script,
-                        state: res.result.state,
-                        gas_consumed: res.result.gas_consumed,
-                        stack: res.result.stack
-                    };
+                    returnRes.data = res.result;
                 } else {
-                    returnRes.error = ERRORS.RPC_ERROR;
+                    returnRes.error = res.error;
                 }
                 windowCallback(returnRes);
                 sendResponse('');
@@ -1100,6 +1112,23 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             try {
                 const requestData = request.parameter;
                 const nodeUrl = RPC.Neo3[requestData.network];
+                const currWallet = await getLocalStorage('wallet', () => { });
+                const tempScriptHash = wallet3.getScriptHashFromAddress(
+                    currWallet.accounts[0].address
+                );
+                if (!requestData.signers) {
+                    requestData.signers = [{
+                        account: tempScriptHash,
+                        scopes: WitnessScope.CalledByEntry
+                    }];
+                } else {
+                    if (!requestData.signers[0].account) {
+                        requestData.signers[0].account = tempScriptHash;
+                    }
+                    if (!requestData.signers[0].scopes) {
+                        requestData.signers[0].scopes = WitnessScope.CalledByEntry;
+                    }
+                };
                 requestData.invokeReadArgs.forEach((invokeReadItem: any, index) => {
                     invokeReadItem.args.forEach((item, itemIndex) => {
                         if (item === null || typeof item !== 'object') {
@@ -1146,14 +1175,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     }, (res) => {
                         requestCount++;
                         if (!res.error) {
-                            returnRes.data.push({
-                                script: res.result.script,
-                                state: res.result.state,
-                                gas_consumed: res.result.gas_consumed,
-                                stack: res.result.stack
-                            });
+                            returnRes.data.push(res.result);
                         } else {
-                            returnRes.error = ERRORS.RPC_ERROR;
+                            returnRes.data.push(res.error)
                         }
                         if (requestCount === requestData.invokeReadArgs.length) {
                             windowCallback(returnRes);
@@ -1231,6 +1255,23 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 tabCurr = tabs;
             });
             const params = request.parameter as N3InvokeArgs;
+            const currWallet = await getLocalStorage('wallet', () => { });
+            const tempScriptHash = wallet3.getScriptHashFromAddress(
+                currWallet.accounts[0].address
+            );
+            if (!params.signers) {
+                params.signers = [{
+                    account: tempScriptHash,
+                    scopes: WitnessScope.CalledByEntry
+                }];
+            } else {
+                if (!params.signers[0].account) {
+                    params.signers[0].account = tempScriptHash;
+                }
+                if (!params.signers[0].scopes) {
+                    params.signers[0].scopes = WitnessScope.CalledByEntry;
+                }
+            };
             getStorage('connectedWebsites', (res) => {
                 let queryString = '';
                 for (const key in params) {
@@ -1254,6 +1295,23 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 tabCurr = tabs;
             });
             const params = request.parameter as N3InvokeMultipleArgs;
+            const currWallet = await getLocalStorage('wallet', () => { });
+            const tempScriptHash = wallet3.getScriptHashFromAddress(
+                currWallet.accounts[0].address
+            );
+            if (!params.signers) {
+                params.signers = [{
+                    account: tempScriptHash,
+                    scopes: WitnessScope.CalledByEntry
+                }];
+            } else {
+                if (!params.signers[0].account) {
+                    params.signers[0].account = tempScriptHash;
+                }
+                if (!params.signers[0].scopes) {
+                    params.signers[0].scopes = WitnessScope.CalledByEntry;
+                }
+            };
             getStorage('connectedWebsites', (res) => {
                 let queryString = '';
                 for (const key in params) {
