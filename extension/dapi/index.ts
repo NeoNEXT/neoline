@@ -409,6 +409,10 @@ export class Init {
         }
     }
 
+    public addressAuth(): Promise<Object> {
+        return sendMessage(requestTarget.AddressAuth);
+    }
+
     public addEventListener(type: string, callback: (data: object) => void) {
         switch (type) {
             case this.EVENT.READY:

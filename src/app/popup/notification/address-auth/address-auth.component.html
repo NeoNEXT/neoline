@@ -1,0 +1,24 @@
+<section class="content">
+    <div class="avatar">
+        <div class="dashed-hori-line"></div>
+        <div class="dashed-vert-line"></div>
+        <div class="avatar-group">
+            <img class="left avatar" [src]="iconSrc" alt="">
+            <img class="middle" src="/assets/images/third-party/auth-select.png" alt="">
+            <img class="right" [avatar]="address" alt="">
+        </div>
+        <div class="name-group">
+            <span class="left">{{ title }}</span>
+            <span class="right">{{ accountName }}</span>
+        </div>
+        <p class="address">{{ hostname }}</p>
+        <span class="dot"></span>
+    </div>
+</section>
+
+<section class="submit-group">
+    <div class="button-group">
+        <button mat-button class="refuse" [disabled]="ruleCheck && ruleSelected == 'true'"  (click)="refuse()">{{ 'refuse' | translate | async}}</button>
+        <button mat-button class="confirm" [disabled]="ruleCheck && ruleSelected == 'false'" (click)="confirm()">{{ 'done' | translate | async}}</button>
+    </div>
+</section>

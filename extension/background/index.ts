@@ -304,6 +304,29 @@ chrome.windows.onRemoved.addListener(() => {
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     switch (request.target) {
+        case requestTarget.AddressAuth: {
+            getStorage('connectedWebsites', (res: any) => {
+                if ((res !== undefined && res[request.hostname] !== undefined) || request.connect === 'true') {
+                    if (res !== undefined && res[request.hostname] !== undefined && res[request.hostname].status === 'false') {
+                        notification(chrome.i18n.getMessage('rejected'), chrome.i18n.getMessage('rejectedTip'));
+                        windowCallback({
+                            return: requestTarget.Connect,
+                            data: false
+                        });
+                        return;
+                    }
+                    windowCallback({
+                        return: requestTarget.Connect,
+                        data: true
+                    });
+                    notification(`${chrome.i18n.getMessage('from')}: ${request.hostname}`, chrome.i18n.getMessage('connectedTip'));
+                } else {
+                    window.open(`/index.html#popup/notification/address-auth?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`, '_blank',
+                        'height=620, width=386, resizable=no, top=0, left=0');
+                }
+            });
+            return true;
+        }
         case requestTarget.Connect:
         case requestTarget.AuthState:
             {
