@@ -679,5 +679,8 @@
     },
     "Global": {
         "message": "The risk is extremely high. The contract may transfer all the assets in the address, and only choose when the contract is extremely trusted."
+    },
+    "Scope": {
+        "message": "Scope"
     }
 }

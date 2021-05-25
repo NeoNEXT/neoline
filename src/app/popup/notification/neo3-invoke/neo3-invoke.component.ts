@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService, AssetState } from '@/app/core';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { sc } from '@cityofzion/neon-core-neo3/lib';
-import Neon from '@cityofzion/neon-js-neo3';
+import Neon, { tx } from '@cityofzion/neon-js-neo3';
 import { MatDialog } from '@angular/material/dialog';
 import { ERRORS, TxHashAttribute } from '@/models/dapi';
 import { requestTargetN3 } from '@/models/dapi_neo3';
@@ -347,11 +347,13 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
     }
 
     private prompt() {
-        this.dialog.open(PopupDapiPromptComponent, {
-            panelClass: 'custom-dialog-panel',
-            data: {
-                scopes: this.signers[0].scopes
-            }
-        }).afterClosed().subscribe(() => {});
+        if (this.signers[0].scopes === tx.WitnessScope.Global) {
+            this.dialog.open(PopupDapiPromptComponent, {
+                panelClass: 'custom-dialog-panel',
+                data: {
+                    scopes: this.signers[0].scopes
+                }
+            }).afterClosed().subscribe(() => {});
+        }
     }
 }
