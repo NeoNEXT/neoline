@@ -119,7 +119,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                             }
                         }
                     } else if (item.type === 'Integer') {
-                        this.pramsData.args[index] = item.value;
+                        this.pramsData.args[index] = item;
                         // this.pramsData.args[index] = (Neon as any).create.contractParam('Integer', item.value.toString());
                     }
                 });
