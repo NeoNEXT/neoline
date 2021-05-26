@@ -885,6 +885,34 @@ export class ChromeService {
         }
     }
 
+    public setAuthorizedAddress() {
+        let authorizedAddress = {
+            Neo2: [],
+            Neo3: []
+        };
+        if (!this.check) {
+            authorizedAddress = JSON.parse(localStorage.getItem('authorizedAddress')) || {};
+            localStorage.setItem('authorizedAddress', JSON.stringify(authorizedAddress));
+        } else {
+            this.crx.getLocalStorage('authorizedAddress', (res) => {
+                if (res) {
+                    authorizedAddress = res || {
+                        Neo2: [],
+                        Neo3: []
+                    };
+                } else {
+                    authorizedAddress = {
+                        Neo2: [],
+                        Neo3: []
+                    };
+                }
+                this.crx.setLocalStorage({
+                    walletsStatus: authorizedAddress
+                });
+            });
+        }
+    }
+
     public getWalletStatus(address: string): Observable<boolean> {
         let walletsIsBackup = {};
         if (!this.check) {

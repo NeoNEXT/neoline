@@ -1,6 +1,8 @@
 import {
     Component,
+    ElementRef,
     OnInit,
+    ViewChild,
 } from '@angular/core';
 import {
     ChromeService,
@@ -12,19 +14,28 @@ import {
 } from '@angular/router';
 
 import { ERRORS, EVENT , requestTarget } from '@/models/dapi';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { ChainType } from '../../_lib';
 
 @Component({
     templateUrl: './address-auth.component.html',
     styleUrls: ['./address-auth.component.scss']
 })
 export class PopupAddressAuthComponent implements OnInit {
+    @ViewChild('walletContainer') private walletContainer: ElementRef;
+    public walletArr: { Neo2: Array<Wallet2 | Wallet3>; Neo3: Array<Wallet2 | Wallet3> } = {
+        Neo2: [],
+        Neo3: [],
+    };
+    public currWallet: Wallet2 | Wallet3;
+    public wallet: Wallet2 | Wallet3;
+    public tabType: ChainType = 'Neo2';
     public iconSrc = '';
     public hostname = '';
     public title = '';
-    public wallet;
     public address = '';
     public accountName = '';
-    private paramsData: any;
 
     public ruleCheck = false;
     public ruleSelected = 'true';
@@ -34,25 +45,22 @@ export class PopupAddressAuthComponent implements OnInit {
         private neon: NeonService,
         private global: GlobalService
     ) {
+        this.chrome.getWalletArray('Neo2').subscribe(walletArrNeo2 => { this.walletArr.Neo2 = walletArrNeo2 });
+        this.chrome.getWalletArray('Neo3').subscribe(walletArrNeo3 => { this.walletArr.Neo3 = walletArrNeo3 });
+        this.chrome.getWallet().subscribe(currWallet => { this.currWallet = currWallet });
+
         this.wallet = this.neon.wallet;
         this.address = this.wallet.accounts[0].address;
         this.accountName = this.wallet.name;
         this.aRouter.queryParams.subscribe((params: any) => {
-            this.paramsData = params;
             this.hostname = params.hostname;
+            console.log(this.hostname);
             if(params === undefined || params.icon === undefined) {
                 this.iconSrc = '/assets/images/default_asset_logo.jpg'
             } else {
                 this.iconSrc =  this.hostname.indexOf('flamingo') >= 0 ? '/assets/images/flamingo.ico' : params.icon;
             }
             this.title = params.title;
-            if (params.network) {
-                if (params.network === 'MainNet') {
-                    this.global.modifyNet('MainNet');
-                } else {
-                    this.global.modifyNet('TestNet');
-                }
-            }
         });
     }
 
@@ -63,6 +71,19 @@ export class PopupAddressAuthComponent implements OnInit {
                 return: requestTarget.Connect
             });
         };
+    }
+
+    public selectAccount() {
+
+    }
+
+    public scrollToBottom() {
+        try {
+            this.walletContainer.nativeElement.scrollTo(
+                0,
+                this.walletContainer.nativeElement.scrollHeight
+            );
+        } catch (err) {}
     }
     public refuse() {
         this.chrome.getAuthorization().subscribe(res => {

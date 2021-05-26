@@ -1,18 +1,25 @@
 <section class="content">
-    <div class="avatar">
-        <div class="dashed-hori-line"></div>
-        <div class="dashed-vert-line"></div>
-        <div class="avatar-group">
-            <img class="left avatar" [src]="iconSrc" alt="">
-            <img class="middle" src="/assets/images/third-party/auth-select.png" alt="">
-            <img class="right" [avatar]="address" alt="">
+    <div class="nav-container">
+        <ul class="toggle">
+            <li [ngClass]="{active: tabType === 'Neo2'}" (click)="tabType='Neo2'">
+                {{ 'Neo2' }}</li>
+            <li [ngClass]="{active: tabType === 'Neo3'}" (click)="tabType='Neo3'">
+                {{ 'Neo3' }}</li>
+        </ul>
+    </div>
+    <div class="wallet-container" #walletContainer>
+        <img *ngIf="walletArr[tabType].length > 2" (click)="scrollToBottom()"
+            src="/assets/images/dialog/scroll_to_bottom.png" alt="">
+        <div class="account-item" (click)="item" *ngFor="let item of walletArr[tabType]; let i = index">
+            <div class="selected">
+                <img src="/assets/images/dialog/selected.png" alt="">
+            </div>
+            <img class="avatar" [avatar]="item.accounts[0].address" />
+            <div class="account-detail">
+                <span class="label">{{ item.name }}</span>
+                <span class="address">{{ item.accounts[0].address }}</span>
+            </div>
         </div>
-        <div class="name-group">
-            <span class="left">{{ title }}</span>
-            <span class="right">{{ accountName }}</span>
-        </div>
-        <p class="address">{{ hostname }}</p>
-        <span class="dot"></span>
     </div>
 </section>
 

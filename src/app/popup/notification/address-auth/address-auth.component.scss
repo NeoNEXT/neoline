@@ -3,166 +3,101 @@
 
 .content {
     font-weight: bold;
-    padding: 20px 15px 0 15px;
+    padding: 10px 15px 0 15px;
     text-align: center;
     width: 100%;
     height: calc(100% - 100px);
     position: relative;
-    overflow: scroll;
-    .title {
-        line-height: 80px;
-    }
-
-    .avatar {
-        height: 133px;
-        position: relative;
-
-        .dashed-hori-line {
-            width: 146px;
-            height: 32px;
-            position: absolute;
-            top: 0;
-            left: 50%;
-            margin-left: -73px;
-            border-bottom: 1px dashed map-get($colors, 8dd9d2);
-        }
-
-        .dashed-vert-line {
-            height: 101px;
-            width: 0;
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            border-right: 1px dashed map-get($colors, 8dd9d2);
-        }
-
-        .avatar-group {
-            width: 100%;
-            height: 64px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 5px;
-
-            img {
-                width: 64px;
-                height: 64px;
-                display: inline-block;
-            }
-
-            img.avatar {
-                width: 64px;
-                height: 64px;
-                border-radius: 32px;
-                background: rgba(73, 73, 73, 1);
-            }
-
-            img.middle {
-                z-index: 999999;
-                width: 36px;
-                height: 36px;
-                margin: 0 55px;
-            }
-        }
-
-        .name-group {
-            span {
-                font-size: 14px;
-                position: absolute;
-                width: 134px;
-                color: map-get($colors, 333333);
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-            .left {
-                left: 67px;
-                margin-left: -67px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-            .right {
-                right: 67px;
-                margin-right: -67px;
-            }
-        }
-
-        .address {
-            position: absolute;
-            left: 67px;
-            top: 90px;
-            width: 176px;
-            margin-left: -88px;
-            font-size: 11px;
-            color: map-get($colors, 999999);
-        }
-
-        .dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            margin-left: -4px;
-            background: rgba(122, 135, 169, 1);
-        }
-    }
-    .detail-en {
-        font-size: 21px;
-        line-height: 27px;
-        margin-top: 25px;
-        padding: 0 50px;
-        color: map-get($colors, 484e6d);
-    }
-    .detail-cn {
-        margin-top: 25px;
-        font-size: 13px;
-        line-height: 18px;
-        padding: 0 25px;
-        color: map-get($colors, 484e6d);
-    }
-    a.more {
-        font-size: 12px;
-        margin-top: 15px;
-        text-decoration: none;
-        display: inline-block;
-        color: map-get($neo-line-default, 500);
-    }
-    .choose-auth-rule {
-        margin-top: 20px;
-        .select-radio {
-            height: 12px;
-            width: 12px;
-            display: inline-block;
-            border-radius: 50%;
-            vertical-align: middle;
-            background: rgba(229, 229, 229, 1);
-            border: 1px solid rgba(153, 153, 153, 1);
-            &.selected {
-                border: none;
-                @include bg($img-authorization-rule-selected);
-            }
-        }
-        .auth-rule-select {
-            padding: 5px 10px;
-            font-size: 10px;
-            margin-left: 5px;
-            border: 1px solid #e5e5e5;
-            color: #666666;
-        }
-    }
-    .secure {
+    .nav-container {
         width: 100%;
-        padding-bottom: 10px;
-        margin-top: 36px;
-        border-bottom: 1px solid map-get($colors, e5e5e5);
-        img {
-            display: inline-block;
-            width: 71px;
-            height: 23px;
+        max-height: 70px;
+        ul.toggle {
+            height: 30px;
+            border-radius: 15px;
+            background: #F5F5F5;
+            padding: 3px;
+            & > li {
+                width: 50%;
+                display: inline-block;
+                padding: 0 10px;
+                height: 24px;
+                text-align: center;
+                line-height: 24px;
+                color: #7F8993;
+                font-size: 14px;
+                border-radius: 20px;
+                overflow: hidden;
+                transition: background-color 0.2s ease-in-out;
+                &.active {
+                    color: #fff;
+                    background-color: map-get($neo-line-default, 500);
+                }
+            }
+        }
+    }
+    .wallet-container {
+        height: 100%;
+        scroll-behavior: smooth;
+        overflow-y: auto;
+
+        .account-item {
+            display: inline-flex;
+            align-items: center;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+            width: 100%;
+            height: 60px;
+            overflow: hidden;
+            cursor: pointer;
+            color: #434543;
+
+            &:hover {
+                color: #07ccab;
+            }
+        }
+
+        .selected {
+            margin: 0 8px;
+            width: 18px;
+            height: 18px;
+            line-height: 18px;
+            vertical-align: middle;
+            border: 2px solid #ccc;
+            > img {
+                // display: none;
+                height: 14px;
+                height: 14px;
+            }
+            &.active {
+                > img {
+                    display: block;
+                }
+            }
+        }
+
+        .avatar {
+            height: 45px;
+            width: 45px;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        .account-detail {
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+            text-align: left;
+            .label {
+                font-size: 18px;
+                vertical-align: middle;
+            }
+            .address {
+                width: 80%;
+                font-size: 12px;
+                vertical-align: middle;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                overflow: hidden;
+            }
         }
     }
 }
