@@ -58,7 +58,7 @@ export class Neo3DapiTransferService {
                     script += sc.createScript(item);
                 })
             } catch (error) {
-                throw `createScript: ${error}` ;
+                throw new Error(`createScript: ${error}`);
             }
             // We retrieve the current block height as we need to
             const currentHeight = await rpcClientTemp.getBlockCount();
@@ -83,9 +83,7 @@ export class Neo3DapiTransferService {
             );
             if (feePerByteInvokeResponse.state !== 'HALT') {
                 if (inputs.networkFee === 0) {
-                    throw {
-                        msg: 'Unable to retrieve data to calculate network fee.'
-                    };
+                    throw new Error('Unable to retrieve data to calculate network fee.');
                 } else {
                     console.log(
                         '\u001b[31m  ✗ Unable to get information to calculate network fee.  Using user provided value.\u001b[0m'
@@ -121,7 +119,7 @@ export class Neo3DapiTransferService {
                     script += sc.createScript(item);
                 })
             } catch (error) {
-                throw `createScript: ${error}` ;
+                throw new Error(`createScript: ${error}`);
             }
 
             const invokeFunctionResponse = await rpcClientTemp.invokeScript(
@@ -129,9 +127,7 @@ export class Neo3DapiTransferService {
                 inputs.signers
             );
             if (invokeFunctionResponse.state !== 'HALT') {
-                throw {
-                    msg: 'Transfer script errored out! You might not have sufficient funds for this transfer.'
-                };
+                throw new Error('Transfer script errored out! You might not have sufficient funds for this transfer.');
             }
             const requiredSystemFee = u.Fixed8.fromRawNumber(invokeFunctionResponse.gasconsumed);
             if (inputs.systemFee && new u.Fixed8(inputs.systemFee) >= requiredSystemFee) {
