@@ -165,7 +165,7 @@ export class Init {
         } else {
             let flag = true;
             parameter.signers.map(item => {
-                if (flag && (!item.account || !item.scopes)) {
+                if (item.account || !item.scopes) {
                     flag = false;
                 }
             });
@@ -192,7 +192,7 @@ export class Init {
         } else {
             let flag = true;
             parameter.signers.map(item => {
-                if (flag && (!item.account || !item.scopes)) {
+                if (item.account || !item.scopes) {
                     flag = false;
                 }
             });
@@ -227,7 +227,7 @@ export class Init {
         } else {
             let flag = true;
             parameter.signers.map(item => {
-                if (flag && (!item.account || !item.scopes)) {
+                if (item.account || !item.scopes) {
                     flag = false;
                 }
             });
@@ -329,7 +329,7 @@ export class Init {
         } else {
             let flag = true;
             parameter.signers.map(item => {
-                if (flag && (!item.account || !item.scopes)) {
+                if (item.account || !item.scopes) {
                     flag = false;
                 }
             });
