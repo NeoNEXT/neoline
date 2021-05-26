@@ -907,7 +907,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 }, {
                     Network: getReqHeaderNetworkType(request.parameter.network)
                 });
-                console.log(getReqHeaderNetworkType(request.parameter.network));
             } catch (error) {
                 windowCallback({
                     return: requestTargetN3.Balance,
