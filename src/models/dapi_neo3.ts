@@ -21,3 +21,11 @@ export enum requestTargetN3 {
     Balance = 'neoline.target_balance_n3',
     InvokeMultiple = 'neoline.target_invoke_multiple_n3',
 }
+
+export enum AuthType {
+    None = 'None',
+    CalledByEntry = 'CalledByEntry',
+    CustomContracts = 'CustomContracts',
+    CustomGroups = 'CustomGroups',
+    Global = 'Global'
+}

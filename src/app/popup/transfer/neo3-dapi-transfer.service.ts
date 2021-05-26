@@ -1,14 +1,15 @@
 import { Injectable } from '@angular/core';
 import { rpc, sc, tx, u, wallet } from '@cityofzion/neon-core-neo3/lib';
-import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
+import { SignerJson, SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from } from 'rxjs';
 import { AssetState, NotificationService, GlobalService, NeonService } from '@app/core';
 import { bignumber } from 'mathjs';
 import { NEW_POLICY_CONTRACT } from '../_lib';
+import { ContractCallJson } from '@cityofzion/neon-core-neo3/lib/sc';
 
 interface CreateNeo3TxInput {
-    invokeArgs: any[];
-    signers: any[];
+    invokeArgs: ContractCallJson[];
+    signers: SignerJson[];
     networkFee: number;
 }
 
@@ -28,7 +29,12 @@ export class Neo3DapiTransferService {
     ): Observable<Transaction> {
         const rpcClientTemp = this.rpcClient;
         const neo3This = this;
-
+        const singers: SignerLike[] = [{
+            account: params.signers[0].account,
+            scopes: params.signers[0].scopes,
+            allowedContracts: params.signers[0].allowedcontracts || [],
+            allowedGroups: params.signers[0].allowedgroups || []
+        }];
         const inputs = {
             invokeArgs: params.invokeArgs,
             signers: params.signers,
@@ -52,12 +58,12 @@ export class Neo3DapiTransferService {
                     script += sc.createScript(item);
                 })
             } catch (error) {
-                throw `createScript: ${error}` ;
+                throw new Error(`createScript: ${error}`);
             }
             // We retrieve the current block height as we need to
             const currentHeight = await rpcClientTemp.getBlockCount();
             vars.tx = new tx.Transaction({
-                signers: inputs.signers,
+                signers: singers,
                 validUntilBlock: currentHeight + 30,
                 systemFee: vars.systemFee,
                 script,
@@ -77,9 +83,7 @@ export class Neo3DapiTransferService {
             );
             if (feePerByteInvokeResponse.state !== 'HALT') {
                 if (inputs.networkFee === 0) {
-                    throw {
-                        msg: 'Unable to retrieve data to calculate network fee.'
-                    };
+                    throw new Error('Unable to retrieve data to calculate network fee.');
                 } else {
                     console.log(
                         '\u001b[31m  ✗ Unable to get information to calculate network fee.  Using user provided value.\u001b[0m'
@@ -115,7 +119,7 @@ export class Neo3DapiTransferService {
                     script += sc.createScript(item);
                 })
             } catch (error) {
-                throw `createScript: ${error}` ;
+                throw new Error(`createScript: ${error}`);
             }
 
             const invokeFunctionResponse = await rpcClientTemp.invokeScript(
@@ -123,9 +127,7 @@ export class Neo3DapiTransferService {
                 inputs.signers
             );
             if (invokeFunctionResponse.state !== 'HALT') {
-                throw {
-                    msg: 'Transfer script errored out! You might not have sufficient funds for this transfer.'
-                };
+                throw new Error('Transfer script errored out! You might not have sufficient funds for this transfer.');
             }
             const requiredSystemFee = u.Fixed8.fromRawNumber(invokeFunctionResponse.gasconsumed);
             if (inputs.systemFee && new u.Fixed8(inputs.systemFee) >= requiredSystemFee) {

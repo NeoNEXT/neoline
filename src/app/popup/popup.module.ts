@@ -79,6 +79,7 @@ import {
     PopupSelectDialogComponent,
     PopupNameDialogComponent,
     PopupAddTokenDialogComponent,
+    PopupDapiPromptComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -97,6 +98,7 @@ const POPUP_DIALOGS = [
     PopupSelectDialogComponent,
     PopupNameDialogComponent,
     PopupAddTokenDialogComponent,
+    PopupDapiPromptComponent,
 ];
 
 //#endregion

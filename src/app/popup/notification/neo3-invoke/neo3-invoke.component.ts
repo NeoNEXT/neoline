@@ -3,11 +3,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService, AssetState } from '@/app/core';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { sc } from '@cityofzion/neon-core-neo3/lib';
-import Neon from '@cityofzion/neon-js-neo3';
+import Neon, { tx } from '@cityofzion/neon-js-neo3';
 import { MatDialog } from '@angular/material/dialog';
 import { ERRORS, TxHashAttribute } from '@/models/dapi';
 import { requestTargetN3 } from '@/models/dapi_neo3';
-import { PopupEditFeeDialogComponent } from '../../_dialogs';
+import { PopupDapiPromptComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { GasFeeSpeed } from '../../_lib/type';
 import { bignumber } from 'mathjs';
 import { NEO3_MAGIC_NUMBER_TESTNET, NEO3_CONTRACT } from '../../_lib';
@@ -119,7 +119,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                             }
                         }
                     } else if (item.type === 'Integer') {
-                        this.pramsData.args[index] = item.value;
+                        this.pramsData.args[index] = item;
                         // this.pramsData.args[index] = (Neon as any).create.contractParam('Integer', item.value.toString());
                     }
                 });
@@ -156,9 +156,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 if (this.txHashAttributes === null && this.pramsData.txHashAttributes !== undefined) {
                     this.txHashAttributes = this.pramsData.txHashAttributes
                 }
-                if (this.signers === null && this.pramsData.signers !== undefined) {
-                    this.signers = this.pramsData.signers;
-                }
+                this.signers = this.pramsData.signers;
                 this.signTx();
             } else {
                 return;
@@ -341,9 +339,21 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 this.networkFee = unSignTx.networkFee.toString();
                 this.getAssetRate();
                 this.resolveSign(unSignTx);
+                this.prompt();
             }, error => {
                 console.log(error);
             });
         }, 0);
+    }
+
+    private prompt() {
+        if (this.signers[0].scopes === tx.WitnessScope.Global) {
+            this.dialog.open(PopupDapiPromptComponent, {
+                panelClass: 'custom-dialog-panel',
+                data: {
+                    scopes: this.signers[0].scopes
+                }
+            }).afterClosed().subscribe(() => {});
+        }
     }
 }

@@ -32,7 +32,7 @@ interface TxHashAttribute extends N3Argument {
 // requets params
 export interface Signers {
     account: string;
-    scopes: string;
+    scopes: 0 | 1 | 16 | 32 | 128;
 }
 
 export interface N3Argument {
@@ -78,7 +78,7 @@ export interface N3InvokeReadArgs {
     scriptHash: string;
     operation: string;
     args?: N3Argument[];
-    signers?: Signers[];
+    signers: Signers[];
     network?: string;
 }
 
