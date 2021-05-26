@@ -1,15 +1,15 @@
 import { Injectable } from '@angular/core';
 import { rpc, sc, tx, u, wallet } from '@cityofzion/neon-core-neo3/lib';
-import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
+import { SignerJson, SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from } from 'rxjs';
 import { AssetState, NotificationService, GlobalService, NeonService } from '@app/core';
 import { bignumber } from 'mathjs';
 import { NEW_POLICY_CONTRACT } from '../_lib';
-import { AuthType } from '@/models/dapi_neo3';
+import { ContractCallJson } from '@cityofzion/neon-core-neo3/lib/sc';
 
 interface CreateNeo3TxInput {
-    invokeArgs: any[];
-    signers: any[];
+    invokeArgs: ContractCallJson[];
+    signers: SignerJson[];
     networkFee: number;
 }
 
@@ -29,7 +29,12 @@ export class Neo3DapiTransferService {
     ): Observable<Transaction> {
         const rpcClientTemp = this.rpcClient;
         const neo3This = this;
-
+        const singers: SignerLike[] = [{
+            account: params.signers[0].account,
+            scopes: params.signers[0].scopes,
+            allowedContracts: params.signers[0].allowedcontracts || [],
+            allowedGroups: params.signers[0].allowedgroups || []
+        }];
         const inputs = {
             invokeArgs: params.invokeArgs,
             signers: params.signers,
@@ -58,7 +63,7 @@ export class Neo3DapiTransferService {
             // We retrieve the current block height as we need to
             const currentHeight = await rpcClientTemp.getBlockCount();
             vars.tx = new tx.Transaction({
-                signers: inputs.signers,
+                signers: singers,
                 validUntilBlock: currentHeight + 30,
                 systemFee: vars.systemFee,
                 script,
@@ -164,30 +169,5 @@ export class Neo3DapiTransferService {
     // 字符串转base64
     public hexToBase64(str: string) {
         return Buffer.from(str, 'hex').toString('base64');
-    }
-
-    public getTxAuthority(authType: AuthType) {
-        let result;
-        switch (authType) {
-            case AuthType.None:
-                result = tx.WitnessScope.None;
-                break;
-            case AuthType.CalledByEntry:
-                result = tx.WitnessScope.CalledByEntry;
-                break;
-            case AuthType.CustomContracts:
-                result = tx.WitnessScope.CustomContracts;
-                break;
-            case AuthType.CustomGroups:
-                result = tx.WitnessScope.CustomGroups;
-                break;
-            case AuthType.Global:
-                result = tx.WitnessScope.Global;
-                break;
-            default:
-                result = tx.WitnessScope.CalledByEntry;
-                break;
-        }
-        return result;
     }
 }

@@ -154,12 +154,26 @@ export class Init {
     }
 
     public invokeRead(parameter: N3InvokeReadArgs): Promise<object> {
-        if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
-            parameter.operation === undefined || parameter.operation === '') {
+        if (
+            parameter.scriptHash === undefined || parameter.scriptHash === '' ||
+            parameter.operation === undefined || parameter.operation === '' ||
+            parameter.signers === undefined || !(parameter.signers instanceof Array)
+        ) {
             return new Promise((_, reject) => {
                 reject(ERRORS.MALFORMED_INPUT);
             });
         } else {
+            let flag = true;
+            parameter.signers.map(item => {
+                if (flag && (!item.account || !item.scopes)) {
+                    flag = false;
+                }
+            });
+            if (!flag) {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.MALFORMED_INPUT);
+                });
+            };
             if (parameter.args === undefined) {
                 parameter.args = [];
             }
@@ -169,12 +183,24 @@ export class Init {
 
     public invokeReadMulti(parameter: N3InvokeReadMultiArgs): Promise<object> {
         if (
-            !(parameter.invokeReadArgs instanceof Array)
+            !(parameter.invokeReadArgs instanceof Array) ||
+            parameter.signers === undefined || !(parameter.signers instanceof Array)
         ) {
             return new Promise((_, reject) => {
                 reject(ERRORS.MALFORMED_INPUT);
             });
         } else {
+            let flag = true;
+            parameter.signers.map(item => {
+                if (flag && (!item.account || !item.scopes)) {
+                    flag = false;
+                }
+            });
+            if (!flag) {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.MALFORMED_INPUT);
+                });
+            };
             return sendMessage(requestTargetN3.InvokeReadMulti, parameter);
         }
     }
@@ -190,12 +216,26 @@ export class Init {
     }
 
     public async invoke(parameter: N3InvokeArgs) {
-        if (parameter.scriptHash === undefined || parameter.scriptHash === '' ||
-            parameter.operation === undefined || parameter.operation === '') {
+        if (
+            parameter.scriptHash === undefined || parameter.scriptHash === '' ||
+            parameter.operation === undefined || parameter.operation === '' ||
+            parameter.signers === undefined || !(parameter.signers instanceof Array)
+        ) {
             return new Promise((_, reject) => {
                 reject(ERRORS.MALFORMED_INPUT);
             });
         } else {
+            let flag = true;
+            parameter.signers.map(item => {
+                if (flag && (!item.account || !item.scopes)) {
+                    flag = false;
+                }
+            });
+            if (!flag) {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.MALFORMED_INPUT);
+                });
+            };
             let authState: any;
             if (parameter.args === undefined) {
                 parameter.args = [];
@@ -279,11 +319,25 @@ export class Init {
     }
 
     public async invokeMultiple(parameter: N3InvokeMultipleArgs) {
-        if (parameter.invokeArgs === undefined || parameter.signers === undefined) {
+        if (
+            parameter.signers === undefined || !(parameter.signers instanceof Array) ||
+            parameter.invokeArgs === undefined
+        ) {
             return new Promise((_, reject) => {
                 reject(ERRORS.MALFORMED_INPUT);
             });
         } else {
+            let flag = true;
+            parameter.signers.map(item => {
+                if (flag && (!item.account || !item.scopes)) {
+                    flag = false;
+                }
+            });
+            if (!flag) {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.MALFORMED_INPUT);
+                });
+            };
             if (parameter.invokeArgs instanceof Array && parameter.invokeArgs.length > 0) {
                 parameter.invokeArgs.forEach(item => {
                     if (item.scriptHash === undefined || item.scriptHash === '' ||
