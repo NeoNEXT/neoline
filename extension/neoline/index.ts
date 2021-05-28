@@ -133,21 +133,23 @@ window.addEventListener('message', async (e) => {
             return;
         }
 
-        case requestTarget.getAuthAddress: {
-            const authAddress = {
+        case requestTarget.getAuthAddresses: {
+            const authAddresses = {
                 Neo2: [],
                 Noe3: [],
             }
             getStorage('authorizedAddress', async (res) => {
                 if (res[e.data.parameter.hostname]) {
                     window.postMessage({
-                        return: requestTarget.getAuthAddress,
-                        data: res[e.data.parameter.hostname]
+                        return: requestTarget.getAuthAddresses,
+                        ID: e.data.ID,
+                        data: res[e.data.parameter.hostname],
                     }, '*');
                 } else {
                     window.postMessage({
-                        return: requestTarget.getAuthAddress,
-                        data: authAddress
+                        return: requestTarget.getAuthAddresses,
+                        ID: e.data.ID,
+                        data: authAddresses,
                     }, '*');
                 };
             });
