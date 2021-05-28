@@ -138,7 +138,7 @@ window.addEventListener('message', async (e) => {
                 Neo2: [],
                 Noe3: [],
             }
-            getStorage('authorizedAddress', async (res) => {
+            getStorage('authAddresses', async (res) => {
                 if (res[e.data.parameter.hostname]) {
                     window.postMessage({
                         return: requestTarget.getAuthAddresses,

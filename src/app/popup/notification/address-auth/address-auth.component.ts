@@ -45,10 +45,14 @@ export class PopupAddressAuthComponent implements OnInit {
         private chrome: ChromeService,
         private aRouter: ActivatedRoute,
     ) {
+        this.aRouter.queryParams.subscribe((params: any) => {
+            this.hostname = params.hostname;
+            this.messageID = params.messageID;
+        });
         this.chrome.getWallet().subscribe(currWallet => {
             this.wallet = currWallet;
         });
-        this.chrome.getAuthorizedAddress().subscribe(selectedWalletArr => {
+        this.chrome.getAuthorizedAddresses().subscribe(selectedWalletArr => {
             this.selectedWalletArr = selectedWalletArr[this.hostname] || this.selectedWalletArr;
             this.allAuthWalletArr = selectedWalletArr;
         });
@@ -83,10 +87,6 @@ export class PopupAddressAuthComponent implements OnInit {
                 };
                 return account;
             });
-        });
-        this.aRouter.queryParams.subscribe((params: any) => {
-            this.hostname = params.hostname;
-            this.messageID = params.messageID;
         });
     }
 
@@ -135,7 +135,7 @@ export class PopupAddressAuthComponent implements OnInit {
     }
     public confirm() {
         this.allAuthWalletArr[this.hostname] = this.selectedWalletArr;
-        this.chrome.setAuthorizedAddress(this.allAuthWalletArr);
+        this.chrome.setAuthorizedAddresses(this.allAuthWalletArr);
         this.chrome.windowCallback({
             data: this.selectedWalletArr,
             ID: this.messageID,

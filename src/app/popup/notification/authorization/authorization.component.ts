@@ -65,7 +65,7 @@ export class PopupNoticeAuthComponent implements OnInit {
                 }
             }
         });
-        this.chrome.getAuthorizedAddress().subscribe(selectedWalletArr => {
+        this.chrome.getAuthorizedAddresses().subscribe(selectedWalletArr => {
             this.selectedWalletArr = selectedWalletArr[this.hostname] || this.selectedWalletArr;
             this.allAuthWalletArr = selectedWalletArr;
         });
@@ -115,21 +115,21 @@ export class PopupNoticeAuthComponent implements OnInit {
                         address: currWallet.accounts[0].address
                     });
                 }
-            } else if (wallet2.isAddress(currWallet.accounts[0].address)) {
+            } else {
                 this.selectedWalletArr.Neo2.map(item => {
                     if (item.address === currWallet.accounts[0].address) {
                         authAddressFlag = false;
                     }
                 });
                 if (authAddressFlag) {
-                    this.selectedWalletArr.Neo3.push({
+                    this.selectedWalletArr.Neo2.push({
                         label: currWallet.name,
                         address: currWallet.accounts[0].address
                     });
                 }
             }
             this.allAuthWalletArr[this.hostname] = this.selectedWalletArr;
-            this.chrome.setAuthorizedAddress(this.allAuthWalletArr);
+            this.chrome.setAuthorizedAddresses(this.allAuthWalletArr);
         });
         this.chrome.getAuthorization().subscribe(res => {
             if (this.ruleCheck) {

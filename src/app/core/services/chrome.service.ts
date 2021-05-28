@@ -885,21 +885,21 @@ export class ChromeService {
         }
     }
 
-    public setAuthorizedAddress(authorizedAddress) {
+    public setAuthorizedAddresses(authAddresses) {
         if (!this.check) {
-            localStorage.setItem('authAddresses', JSON.stringify(authorizedAddress));
+            localStorage.setItem('authAddresses', JSON.stringify(authAddresses));
         } else {
             this.crx.setStorage({
-                authorizedAddress: authorizedAddress
+                authAddresses: authAddresses
             });
         }
     }
 
-    public getAuthorizedAddress() {
+    public getAuthorizedAddresses() {
         if (!this.check) {
             try {
-                const authorizedAddress = JSON.parse(localStorage.getItem('authAddresses'));
-                return of(authorizedAddress || {});
+                const authAddresses = JSON.parse(localStorage.getItem('authAddresses'));
+                return of(authAddresses || {});
             } catch (e) {
                 return of({});
             }
