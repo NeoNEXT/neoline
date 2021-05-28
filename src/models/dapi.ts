@@ -67,6 +67,7 @@ export enum requestTarget {
     Connect = 'neoline.target_connect',
     AuthState = 'neoline.target_auth_state',
     Login = 'neoline.target_login',
+    AuthAddress = 'neoline.auth_address',
 }
 
 export interface Provider {

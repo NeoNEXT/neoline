@@ -90,7 +90,6 @@ window.addEventListener('message', async (e) => {
         }
         case requestTarget.AuthState: {
             getStorage('connectedWebsites', async (res) => {
-                const walletArr = await getLocalStorage('walletArr', () => { });
                 const currWallet = await getLocalStorage('wallet', () => { });
                 res = res || {};
                 window.postMessage({
@@ -124,6 +123,35 @@ window.addEventListener('message', async (e) => {
         case requestTarget.AccountPublicKey: {
             chrome.runtime.sendMessage(e.data, (response) => {
                 return Promise.resolve('Dummy response to keep the console quiet');
+            });
+            return;
+        }
+        case requestTarget.AuthAddress: {
+            chrome.runtime.sendMessage(e.data, (response) => {
+                return Promise.resolve('Dummy response to keep the console quiet');
+            });
+            return;
+        }
+
+        case requestTarget.getAuthAddresses: {
+            const authAddresses = {
+                Neo2: [],
+                Noe3: [],
+            }
+            getStorage('authAddresses', async (res) => {
+                if (res[e.data.parameter.hostname]) {
+                    window.postMessage({
+                        return: requestTarget.getAuthAddresses,
+                        ID: e.data.ID,
+                        data: res[e.data.parameter.hostname],
+                    }, '*');
+                } else {
+                    window.postMessage({
+                        return: requestTarget.getAuthAddresses,
+                        ID: e.data.ID,
+                        data: authAddresses,
+                    }, '*');
+                };
             });
             return;
         }

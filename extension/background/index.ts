@@ -304,6 +304,11 @@ chrome.windows.onRemoved.addListener(() => {
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     switch (request.target) {
+        case requestTarget.AuthAddress: {
+            window.open(`/index.html#popup/notification/address-auth?hostname=${request.parameter.hostname}&messageID=${request.ID}`, '_blank',
+                'height=620, width=386, resizable=no, top=0, left=0');
+            return true;
+        }
         case requestTarget.Connect:
         case requestTarget.AuthState:
             {

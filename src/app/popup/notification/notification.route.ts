@@ -15,6 +15,7 @@ import { PopupNoticeInvokeMultiComponent } from './invoke-multi/invoke-multi.com
 import { PopupNoticeNeo3TransferComponent } from './neo3-transfer/neo3-transfer.component';
 import { PopupNoticeNeo3InvokeComponent } from './neo3-invoke/neo3-invoke.component';
 import { PopupNoticeNeo3InvokeMultipleComponent } from './neo3-invoke-multiple/neo3-invoke-multiple.component';
+import { PopupAddressAuthComponent } from './address-auth/address-auth.component';
 
 const routes: Routes = [
     {
@@ -37,6 +38,7 @@ const routes: Routes = [
                     { path: 'neo3-transfer', component: PopupNoticeNeo3TransferComponent},
                     { path: 'neo3-invoke', component: PopupNoticeNeo3InvokeComponent},
                     { path: 'neo3-invoke-multiple', component: PopupNoticeNeo3InvokeMultipleComponent},
+                    { path: 'address-auth', component: PopupAddressAuthComponent},
                 ]
             },
         ]

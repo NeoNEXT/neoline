@@ -885,6 +885,36 @@ export class ChromeService {
         }
     }
 
+    public setAuthorizedAddresses(authAddresses) {
+        if (!this.check) {
+            localStorage.setItem('authAddresses', JSON.stringify(authAddresses));
+        } else {
+            this.crx.setStorage({
+                authAddresses: authAddresses
+            });
+        }
+    }
+
+    public getAuthorizedAddresses() {
+        if (!this.check) {
+            try {
+                const authAddresses = JSON.parse(localStorage.getItem('authAddresses'));
+                return of(authAddresses || {});
+            } catch (e) {
+                return of({});
+            }
+        }
+        return from(new Promise<Object>((resolve, reject) => {
+            try {
+                this.crx.getStorage('authAddresses', (res) => {
+                    resolve(res || {});
+                });
+            } catch (e) {
+                reject({});
+            }
+        }));
+    }
+
     public getWalletStatus(address: string): Observable<boolean> {
         let walletsIsBackup = {};
         if (!this.check) {
