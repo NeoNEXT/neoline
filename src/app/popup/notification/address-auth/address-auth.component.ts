@@ -14,8 +14,6 @@ import { Account, ERRORS, requestTarget } from '@/models/dapi';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { ChainType } from '../../_lib';
-import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
-import { wallet as wallet2 } from '@cityofzion/neon-js';
 
 declare class authWallet {
     selected: boolean;
@@ -48,21 +46,9 @@ export class PopupAddressAuthComponent implements OnInit {
         private aRouter: ActivatedRoute,
     ) {
         this.chrome.getWallet().subscribe(currWallet => {
-            if (wallet3.isAddress(currWallet.accounts[0].address)) {
-                this.selectedWalletArr.Neo3.push({
-                    label: currWallet.name,
-                    address: currWallet.accounts[0].address
-                });
-            } else if (wallet2.isAddress(currWallet.accounts[0].address)) {
-                this.selectedWalletArr.Neo2.push({
-                    label: currWallet.name,
-                    address: currWallet.accounts[0].address
-                });
-            }
             this.wallet = currWallet;
         });
         this.chrome.getAuthorizedAddress().subscribe(selectedWalletArr => {
-            console.log(selectedWalletArr);
             this.selectedWalletArr = selectedWalletArr[this.hostname] || this.selectedWalletArr;
             this.allAuthWalletArr = selectedWalletArr;
         });
