@@ -885,32 +885,34 @@ export class ChromeService {
         }
     }
 
-    public setAuthorizedAddress() {
-        let authorizedAddress = {
-            Neo2: [],
-            Neo3: []
-        };
+    public setAuthorizedAddress(authorizedAddress) {
         if (!this.check) {
-            authorizedAddress = JSON.parse(localStorage.getItem('authorizedAddress')) || {};
             localStorage.setItem('authorizedAddress', JSON.stringify(authorizedAddress));
         } else {
-            this.crx.getLocalStorage('authorizedAddress', (res) => {
-                if (res) {
-                    authorizedAddress = res || {
-                        Neo2: [],
-                        Neo3: []
-                    };
-                } else {
-                    authorizedAddress = {
-                        Neo2: [],
-                        Neo3: []
-                    };
-                }
-                this.crx.setLocalStorage({
-                    walletsStatus: authorizedAddress
-                });
+            this.crx.setStorage({
+                authorizedAddress: authorizedAddress
             });
         }
+    }
+
+    public getAuthorizedAddress() {
+        if (!this.check) {
+            try {
+                const authorizedAddress = JSON.parse(localStorage.getItem('authorizedAddress'));
+                return of(authorizedAddress || {});
+            } catch (e) {
+                return of({});
+            }
+        }
+        return from(new Promise<Object>((resolve, reject) => {
+            try {
+                this.crx.getStorage('authorizedAddress', (res) => {
+                    resolve(res || {});
+                });
+            } catch (e) {
+                reject({});
+            }
+        }));
     }
 
     public getWalletStatus(address: string): Observable<boolean> {

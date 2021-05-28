@@ -8,16 +8,24 @@
         </ul>
     </div>
     <div class="wallet-container" #walletContainer>
-        <img *ngIf="walletArr[tabType].length > 2" (click)="scrollToBottom()"
-            src="/assets/images/dialog/scroll_to_bottom.png" alt="">
-        <div class="account-item" (click)="item" *ngFor="let item of walletArr[tabType]; let i = index">
-            <div class="selected">
-                <img src="/assets/images/dialog/selected.png" alt="">
+        <div class="account-item" *ngFor="let item of walletArr[tabType]; let i = index"
+            [ngClass]="{active: item.selected}"
+            (click)="handleSelectWallet(item, i)">
+            <div class="selected" [ngClass]="{noAllow: item.wallet.accounts[0].address === wallet.accounts[0].address}">
+                <img src="/assets/images/dialog/selected.png" alt=""
+                    [ngClass]="{noAllow: item.wallet.accounts[0].address === wallet.accounts[0].address}" />
             </div>
-            <img class="avatar" [avatar]="item.accounts[0].address" />
+            <img class="avatar" [avatar]="item.wallet.accounts[0].address"
+                [ngClass]="{noAllow: item.wallet.accounts[0].address === wallet.accounts[0].address}"/>
             <div class="account-detail">
-                <span class="label">{{ item.name }}</span>
-                <span class="address">{{ item.accounts[0].address }}</span>
+                <span class="label"
+                    [ngClass]="{noAllow: item.wallet.accounts[0].address === wallet.accounts[0].address}">
+                        {{ item.wallet.name }}
+                </span>
+                <span class="address"
+                    [ngClass]="{noAllow: item.wallet.accounts[0].address === wallet.accounts[0].address}">
+                        {{ item.wallet.accounts[0].address }}
+                </span>
             </div>
         </div>
     </div>
