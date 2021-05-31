@@ -127,7 +127,7 @@ export class PopupNoticeAuthComponent implements OnInit {
         //         }
         //     }
         //     this.allAuthWalletArr[this.hostname] = this.selectedWalletArr;
-        //     this.chrome.setAuthorizedAddresses(this.allAuthWalletArr);
+        //     this.chrome.setAuthorizedAddress(this.allAuthWalletArr);
         // });
         this.chrome.getAuthorization().subscribe(res => {
             if (this.ruleCheck) {

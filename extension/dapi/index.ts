@@ -479,7 +479,7 @@ export class Init {
         }
     }
 
-    public async getAuthAddresses(): Promise<any>{
+    public async getAuthAddress(): Promise<any>{
         const parameter = {
             hostname: location.hostname
         }
@@ -499,7 +499,7 @@ export class Init {
             if (connectResult === true) {
                 const isLogin = await login();
                 if(isLogin === true) {
-                    return sendMessage(requestTarget.getAuthAddresses, parameter);
+                    return sendMessage(requestTarget.getAuthAddress, parameter);
                 } else {
                     return new Promise((_, reject) => {
                         reject(ERRORS.CONNECTION_DENIED);

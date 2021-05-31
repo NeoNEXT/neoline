@@ -74,7 +74,7 @@ export enum requestTarget {
     AuthState = 'neoline.target_auth_state',
     Login = 'neoline.target_login',
     AuthAddress = 'neoline.auth_address',
-    getAuthAddresses = 'neoline.get_auth_addresses',
+    getAuthAddress = 'neoline.get_auth_address',
     PickAddress = 'neoline.target_pick_address',
 }
 

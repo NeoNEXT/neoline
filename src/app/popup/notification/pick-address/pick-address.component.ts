@@ -57,24 +57,13 @@ export class PopupPickAddressComponent implements OnInit {
     }
 
     ngOnInit() {
-        if (this.tabType === 'Neo2') {
-            window.onbeforeunload = () => {
-                this.chrome.windowCallback({
-                    error: ERRORS.CANCELLED,
-                    ID: this.messageID,
-                    return: requestTarget.PickAddress
-                });
-            };
-        } else if (this.tabType === 'Neo3') {
-            window.onbeforeunload = () => {
-                this.chrome.windowCallback({
-                    error: ERRORS.CANCELLED,
-                    ID: this.messageID,
-                    return: requestTargetN3.PickAddress
-                });
-            };
-        }
-
+        window.onbeforeunload = () => {
+            this.chrome.windowCallback({
+                error: ERRORS.CANCELLED,
+                ID: this.messageID,
+                return: this.tabType === 'Neo2' ? requestTarget.PickAddress : requestTargetN3.PickAddress
+            });
+        };
     }
 
     public handleSelectWallet(wallet: Wallet2 | Wallet3) {
@@ -100,37 +89,28 @@ export class PopupPickAddressComponent implements OnInit {
         } catch (err) {}
     }
     public refuse() {
-        if (this.tabType === 'Neo2') {
-            this.chrome.windowCallback({
-                error: ERRORS.CANCELLED,
-                ID: this.messageID,
-                return: requestTarget.PickAddress
-            });
-            window.close();
-        } else if (this.tabType === 'Neo3') {
-            this.chrome.windowCallback({
-                error: ERRORS.CANCELLED,
-                ID: this.messageID,
-                return: requestTargetN3.PickAddress
-            });
-            window.close();
-        }
+        this.chrome.windowCallback({
+            error: ERRORS.CANCELLED,
+            ID: this.messageID,
+            return: this.tabType === 'Neo2' ? requestTarget.PickAddress : requestTargetN3.PickAddress
+        });
+        window.close();
     }
     public confirm() {
         this.allAuthWalletArr[this.hostname] = this.selectedWalletArr;
-        this.chrome.setAuthorizedAddresses(this.allAuthWalletArr);
-        if (this.tabType === 'Neo2') {
+        this.chrome.setAuthorizedAddress(this.allAuthWalletArr);
+        if (this.selectedWalletArr.Neo2.address || this.selectedWalletArr.Neo3.address) {
             this.chrome.windowCallback({
-                data: this.selectedWalletArr,
+                data: this.tabType === 'Neo2' ? this.selectedWalletArr.Neo2 : this.selectedWalletArr.Neo3,
                 ID: this.messageID,
-                return: requestTarget.PickAddress
+                return: this.tabType === 'Neo2' ? requestTarget.PickAddress : requestTargetN3.PickAddress
             });
             window.close();
-        } else if (this.tabType === 'Neo3') {
+        } else {
             this.chrome.windowCallback({
                 error: ERRORS.CANCELLED,
                 ID: this.messageID,
-                return: requestTargetN3.PickAddress
+                return: this.tabType === 'Neo2' ? requestTarget.PickAddress : requestTargetN3.PickAddress
             });
             window.close();
         }
