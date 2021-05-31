@@ -885,12 +885,12 @@ export class ChromeService {
         }
     }
 
-    public setAuthorizedAddresses(authAddresses) {
+    public setAuthorizedAddress(authAddress) {
         if (!this.check) {
-            localStorage.setItem('authAddresses', JSON.stringify(authAddresses));
+            localStorage.setItem('authAddress', JSON.stringify(authAddress));
         } else {
             this.crx.setStorage({
-                authAddresses: authAddresses
+                authAddress: authAddress
             });
         }
     }
@@ -898,15 +898,15 @@ export class ChromeService {
     public getAuthorizedAddresses() {
         if (!this.check) {
             try {
-                const authAddresses = JSON.parse(localStorage.getItem('authAddresses'));
-                return of(authAddresses || {});
+                const authAddress = JSON.parse(localStorage.getItem('authAddress'));
+                return of(authAddress || {});
             } catch (e) {
                 return of({});
             }
         }
         return from(new Promise<Object>((resolve, reject) => {
             try {
-                this.crx.getStorage('authAddresses', (res) => {
+                this.crx.getStorage('authAddress', (res) => {
                     resolve(res || {});
                 });
             } catch (e) {

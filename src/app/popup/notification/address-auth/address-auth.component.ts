@@ -135,7 +135,7 @@ export class PopupAddressAuthComponent implements OnInit {
     }
     public confirm() {
         this.allAuthWalletArr[this.hostname] = this.selectedWalletArr;
-        this.chrome.setAuthorizedAddresses(this.allAuthWalletArr);
+        this.chrome.setAuthorizedAddress(this.allAuthWalletArr);
         this.chrome.windowCallback({
             data: this.selectedWalletArr,
             ID: this.messageID,

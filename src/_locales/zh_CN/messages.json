@@ -682,5 +682,8 @@
     },
     "Scope": {
         "message": "作用域"
+    },
+    "NoWallet": {
+        "message": "没有钱包，请导入或创建。"
     }
 }

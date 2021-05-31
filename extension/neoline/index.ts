@@ -133,25 +133,28 @@ window.addEventListener('message', async (e) => {
             return;
         }
 
-        case requestTarget.getAuthAddresses: {
-            const authAddresses = {
-                Neo2: [],
-                Noe3: [],
-            }
-            getStorage('authAddresses', async (res) => {
+        case requestTarget.getAuthAddress: {
+            getStorage('authAddress', async (res) => {
                 if (res[e.data.parameter.hostname]) {
                     window.postMessage({
-                        return: requestTarget.getAuthAddresses,
+                        return: requestTarget.getAuthAddress,
                         ID: e.data.ID,
-                        data: res[e.data.parameter.hostname],
+                        data: res[e.data.parameter.hostname].Neo2,
                     }, '*');
                 } else {
                     window.postMessage({
-                        return: requestTarget.getAuthAddresses,
+                        return: requestTarget.getAuthAddress,
                         ID: e.data.ID,
-                        data: authAddresses,
+                        data: {},
                     }, '*');
                 };
+            });
+            return;
+        }
+
+        case requestTarget.PickAddress: {
+            chrome.runtime.sendMessage(e.data, (response) => {
+                return Promise.resolve('Dummy response to keep the console quiet');
             });
             return;
         }

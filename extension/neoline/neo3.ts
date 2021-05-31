@@ -60,6 +60,30 @@ window.addEventListener('message', async (e) => {
             });
             return;
         }
+        case requestTargetN3.PickAddress: {
+            chrome.runtime.sendMessage(e.data, (response) => {
+                return Promise.resolve('Dummy response to keep the console quiet');
+            });
+            return;
+        }
+        case requestTargetN3.getAuthAddress: {
+            getStorage('authAddress', async (res) => {
+                if (res[e.data.parameter.hostname]) {
+                    window.postMessage({
+                        return: requestTargetN3.getAuthAddress,
+                        ID: e.data.ID,
+                        data: res[e.data.parameter.hostname].Neo3,
+                    }, '*');
+                } else {
+                    window.postMessage({
+                        return: requestTargetN3.getAuthAddress,
+                        ID: e.data.ID,
+                        data: {},
+                    }, '*');
+                };
+            });
+            return;
+        }
         case requestTargetN3.Balance:
         case requestTargetN3.Transaction:
 
