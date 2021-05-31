@@ -309,6 +309,16 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 'height=620, width=386, resizable=no, top=0, left=0');
             return true;
         }
+        case requestTarget.PickAddress: {
+            window.open(`/index.html#popup/notification/pick-address?hostname=${request.parameter.hostname}&chainType=Neo2&messageID=${request.ID}`, '_blank',
+                'height=620, width=386, resizable=no, top=0, left=0');
+            return true;
+        }
+        case requestTargetN3.PickAddress: {
+            window.open(`/index.html#popup/notification/pick-address?hostname=${request.parameter.hostname}&chainType=Neo3&messageID=${request.ID}`, '_blank',
+                'height=620, width=386, resizable=no, top=0, left=0');
+            return true;
+        }
         case requestTarget.Connect:
         case requestTarget.AuthState:
             {

@@ -20,6 +20,7 @@ export enum requestTargetN3 {
     Login = 'neoline.target_login_n3',
     Balance = 'neoline.target_balance_n3',
     InvokeMultiple = 'neoline.target_invoke_multiple_n3',
+    PickAddress = 'neoline.target_pick_address_n3',
 }
 
 export enum AuthType {

@@ -143,6 +143,38 @@ export class Init {
         }
     }
 
+    public async pickAddress(): Promise<Account> {
+        const parameter = {
+            hostname: location.hostname
+        }
+        let authState: any;
+        try {
+            authState = await getAuthState() || 'NONE';
+        } catch (error) {
+            console.log(error);
+        }
+        if (authState === true || authState === 'NONE') {
+            let connectResult;
+            if (sessionStorage.getItem('connect') !== 'true' && authState === 'NONE') {
+                connectResult = await connect();
+            } else {
+                connectResult = true;
+            }
+            if (connectResult === true) {
+                await login();
+                return sendMessage(requestTargetN3.PickAddress, parameter);
+            } else {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.CONNECTION_DENIED);
+                });
+            }
+        } else {
+            return new Promise((_, reject) => {
+                reject(ERRORS.CONNECTION_DENIED);
+            });
+        }
+    }
+
     public getStorage(parameter: N3GetStorageArgs): Promise<N3StorageResponse> {
         if (parameter === undefined || parameter.scriptHash === undefined || parameter.key === undefined) {
             return new Promise((_, reject) => {

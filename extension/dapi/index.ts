@@ -409,6 +409,38 @@ export class Init {
         }
     }
 
+    public async pickAddress(): Promise<Account> {
+        const parameter = {
+            hostname: location.hostname
+        }
+        let authState: any;
+        try {
+            authState = await getAuthState() || 'NONE';
+        } catch (error) {
+            console.log(error);
+        }
+        if (authState === true || authState === 'NONE') {
+            let connectResult;
+            if (sessionStorage.getItem('connect') !== 'true' && authState === 'NONE') {
+                connectResult = await connect();
+            } else {
+                connectResult = true;
+            }
+            if (connectResult === true) {
+                await login();
+                return sendMessage(requestTarget.PickAddress, parameter);
+            } else {
+                return new Promise((_, reject) => {
+                    reject(ERRORS.CONNECTION_DENIED);
+                });
+            }
+        } else {
+            return new Promise((_, reject) => {
+                reject(ERRORS.CONNECTION_DENIED);
+            });
+        }
+    }
+
     public async authAddress(): Promise<Object> {
         const parameter = {
             hostname: location.hostname

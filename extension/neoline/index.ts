@@ -156,6 +156,13 @@ window.addEventListener('message', async (e) => {
             return;
         }
 
+        case requestTarget.PickAddress: {
+            chrome.runtime.sendMessage(e.data, (response) => {
+                return Promise.resolve('Dummy response to keep the console quiet');
+            });
+            return;
+        }
+
         // neo2 dapi methods
         case requestTarget.Balance:
         case requestTarget.Transaction:

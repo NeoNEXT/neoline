@@ -13,8 +13,6 @@ import {
     ActivatedRoute,
     Router
 } from '@angular/router';
-import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
-import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { ERRORS, EVENT , requestTarget, Account } from '@/models/dapi';
 
 @Component({
@@ -101,36 +99,36 @@ export class PopupNoticeAuthComponent implements OnInit {
         });
     }
     public connect() {
-        let authAddressFlag = true;
-        this.chrome.getWallet().subscribe(currWallet => {
-            if (wallet3.isAddress(currWallet.accounts[0].address)) {
-                this.selectedWalletArr.Neo3.map(item => {
-                    if (item.address === currWallet.accounts[0].address) {
-                        authAddressFlag = false;
-                    }
-                });
-                if (authAddressFlag) {
-                    this.selectedWalletArr.Neo3.push({
-                        label: currWallet.name,
-                        address: currWallet.accounts[0].address
-                    });
-                }
-            } else {
-                this.selectedWalletArr.Neo2.map(item => {
-                    if (item.address === currWallet.accounts[0].address) {
-                        authAddressFlag = false;
-                    }
-                });
-                if (authAddressFlag) {
-                    this.selectedWalletArr.Neo2.push({
-                        label: currWallet.name,
-                        address: currWallet.accounts[0].address
-                    });
-                }
-            }
-            this.allAuthWalletArr[this.hostname] = this.selectedWalletArr;
-            this.chrome.setAuthorizedAddresses(this.allAuthWalletArr);
-        });
+        // let authAddressFlag = true;
+        // this.chrome.getWallet().subscribe(currWallet => {
+        //     if (wallet3.isAddress(currWallet.accounts[0].address)) {
+        //         this.selectedWalletArr.Neo3.map(item => {
+        //             if (item.address === currWallet.accounts[0].address) {
+        //                 authAddressFlag = false;
+        //             }
+        //         });
+        //         if (authAddressFlag) {
+        //             this.selectedWalletArr.Neo3.push({
+        //                 label: currWallet.name,
+        //                 address: currWallet.accounts[0].address
+        //             });
+        //         }
+        //     } else {
+        //         this.selectedWalletArr.Neo2.map(item => {
+        //             if (item.address === currWallet.accounts[0].address) {
+        //                 authAddressFlag = false;
+        //             }
+        //         });
+        //         if (authAddressFlag) {
+        //             this.selectedWalletArr.Neo2.push({
+        //                 label: currWallet.name,
+        //                 address: currWallet.accounts[0].address
+        //             });
+        //         }
+        //     }
+        //     this.allAuthWalletArr[this.hostname] = this.selectedWalletArr;
+        //     this.chrome.setAuthorizedAddresses(this.allAuthWalletArr);
+        // });
         this.chrome.getAuthorization().subscribe(res => {
             if (this.ruleCheck) {
                 if (res[this.neon.wallet.accounts[0].address] === undefined) {

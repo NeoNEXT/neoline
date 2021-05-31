@@ -60,6 +60,12 @@ window.addEventListener('message', async (e) => {
             });
             return;
         }
+        case requestTargetN3.PickAddress: {
+            chrome.runtime.sendMessage(e.data, (response) => {
+                return Promise.resolve('Dummy response to keep the console quiet');
+            });
+            return;
+        }
         case requestTargetN3.Balance:
         case requestTargetN3.Transaction:
 

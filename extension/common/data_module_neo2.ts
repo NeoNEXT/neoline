@@ -75,6 +75,7 @@ export enum requestTarget {
     Login = 'neoline.target_login',
     AuthAddress = 'neoline.auth_address',
     getAuthAddresses = 'neoline.get_auth_addresses',
+    PickAddress = 'neoline.target_pick_address',
 }
 
 export interface Provider {
