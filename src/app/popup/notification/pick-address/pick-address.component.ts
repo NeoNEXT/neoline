@@ -8,13 +8,15 @@ import {
     ChromeService,
 } from '@/app/core';
 import {
-    ActivatedRoute,
+    ActivatedRoute, Router,
 } from '@angular/router';
 import { Account, ERRORS, requestTarget } from '@/models/dapi';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { ChainType } from '../../_lib';
+import { ChainType, ChainTypeGroups } from '../../_lib';
 import { requestTargetN3 } from '@/models/dapi_neo3';
+import { MatDialog } from '@angular/material/dialog';
+import { PopupSelectDialogComponent } from '../../_dialogs';
 
 @Component({
     templateUrl: './pick-address.component.html',
@@ -22,7 +24,7 @@ import { requestTargetN3 } from '@/models/dapi_neo3';
 })
 export class PopupPickAddressComponent implements OnInit {
     @ViewChild('walletContainer') private walletContainer: ElementRef;
-    public walletArr: Array<Wallet2>;
+    public walletArr: Array<Wallet2> = [];
     public selectedWalletArr: { Neo2: Account; Neo3: Account; } = {
         Neo2: {
             address: '',
@@ -43,6 +45,8 @@ export class PopupPickAddressComponent implements OnInit {
     constructor(
         private chrome: ChromeService,
         private aRouter: ActivatedRoute,
+        private router: Router,
+        private dialog: MatDialog,
     ) {
         this.aRouter.queryParams.subscribe((params: any) => {
             this.hostname = params.hostname;
@@ -53,7 +57,7 @@ export class PopupPickAddressComponent implements OnInit {
             this.selectedWalletArr = selectedWalletArr[this.hostname] || this.selectedWalletArr;
             this.allAuthWalletArr = selectedWalletArr || {};
         });
-        this.chrome.getWalletArray(this.tabType).subscribe(walletArr => this.walletArr = walletArr);
+        this.chrome.getWalletArray(this.tabType).subscribe(walletArr => this.walletArr = walletArr || []);
     }
 
     ngOnInit() {
@@ -114,5 +118,28 @@ export class PopupPickAddressComponent implements OnInit {
             });
             window.close();
         }
+    }
+
+    to(type: 'create' | 'import') {
+        const params = `type=dapi&hostname=${this.hostname}&chainType=${this.tabType}&messageID=${this.messageID}`;
+        this.dialog
+            .open(PopupSelectDialogComponent, {
+                data: {
+                    optionGroup: [this.tabType],
+                    type: 'chain',
+                },
+                panelClass: 'custom-dialog-panel',
+            })
+            .afterClosed()
+            .subscribe((chain) => {
+                if (!chain) {
+                    return;
+                }
+                if (type === 'create') {
+                    this.router.navigateByUrl(`/popup/wallet/create?${params}`);
+                } else {
+                    this.router.navigateByUrl(`/popup/wallet/import?${params}`);
+                }
+            });
     }
 }

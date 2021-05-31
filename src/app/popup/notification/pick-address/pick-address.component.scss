@@ -12,19 +12,19 @@
         width: 100%;
         max-height: 70px;
         ul.toggle {
-            height: 30px;
-            border-radius: 15px;
+            height: 50px;
+            border-radius: 20px;
             background: #F5F5F5;
             padding: 3px;
             & > li {
                 display: none;
                 width: 100%;
                 padding: 0 10px;
-                height: 24px;
+                height: 44px;
                 text-align: center;
-                line-height: 24px;
+                line-height: 44px;
                 color: #7F8993;
-                font-size: 14px;
+                font-size: 16px;
                 border-radius: 20px;
                 overflow: hidden;
                 transition: background-color 0.2s ease-in-out;
@@ -99,6 +99,23 @@
                 overflow: hidden;
                 cursor: pointer;
             }
+        }
+    }
+    .no-wallet {
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        .detail {
+            height: 70px;
+            line-height: 70px;
+        }
+        > button {
+            margin-top: 20px;
+            width: 50%;
+            box-shadow: 0px 5px 8px 0px #8dd9d2;
+            background: linear-gradient(0deg, #06ccab, #8cd8d2);
+            color: #fff;
         }
     }
 }

@@ -682,5 +682,8 @@
     },
     "Scope": {
         "message": "Scope"
+    },
+    "NoWallet": {
+        "message": "No wallet, please import or create."
     }
 }
