@@ -23,7 +23,6 @@ export enum requestTargetN3 {
     Balance = 'neoline.target_balance_n3',
     InvokeMultiple = 'neoline.target_invoke_multiple_n3',
     PickAddress = 'neoline.target_pick_address_n3',
-    getAuthAddress = 'neoline.get_auth_address_n3',
 }
 
 interface TxHashAttribute extends N3Argument {
