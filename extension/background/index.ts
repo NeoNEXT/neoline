@@ -1050,24 +1050,15 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         case requestTargetN3.InvokeRead: {
             const parameter = request.parameter as N3InvokeReadArgs;
-            const currWallet = await getLocalStorage('wallet', () => { });
-            const tempScriptHash = wallet3.getScriptHashFromAddress(
-                currWallet.accounts[0].address
-            );
-            if (!parameter.signers) {
-                parameter.signers = [{
-                    account: tempScriptHash,
-                    scopes: WitnessScope.CalledByEntry
-                }];
-            } else {
-                if (!parameter.signers[0].account) {
-                    parameter.signers[0].account = tempScriptHash;
+            const signers = parameter.signers.map(item => {
+                return {
+                    account: item.account,
+                    scopes: item.scopes,
+                    allowedcontracts: item.allowedContracts || undefined,
+                    allowedgroups: item.allowedGroups || undefined,
                 }
-                if (!parameter.signers[0].scopes) {
-                    parameter.signers[0].scopes = WitnessScope.CalledByEntry;
-                }
-            };
-            request.parameter = [parameter.scriptHash, parameter.operation, parameter.args, parameter.signers];
+            });
+            request.parameter = [parameter.scriptHash, parameter.operation, parameter.args, signers];
             const args = request.parameter[2];
             args.forEach((item, index) => {
                 if (item.type === 'Address') {
@@ -1106,6 +1097,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 params: request.parameter,
                 id: 1
             }, (res) => {
+                console.log(request.parameter);
                 res.return = requestTargetN3.InvokeRead;
                 if (!res.error) {
                     returnRes.data = res.result;
@@ -1121,23 +1113,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             try {
                 const requestData = request.parameter;
                 const nodeUrl = RPC.Neo3[requestData.network];
-                const currWallet = await getLocalStorage('wallet', () => { });
-                const tempScriptHash = wallet3.getScriptHashFromAddress(
-                    currWallet.accounts[0].address
-                );
-                if (!requestData.signers) {
-                    requestData.signers = [{
-                        account: tempScriptHash,
-                        scopes: WitnessScope.CalledByEntry
-                    }];
-                } else {
-                    if (!requestData.signers[0].account) {
-                        requestData.signers[0].account = tempScriptHash;
+                const signers = requestData.signers.map(item => {
+                    return {
+                        account: item.account,
+                        scopes: item.scopes,
+                        allowedcontracts: item.allowedContracts || undefined,
+                        allowedgroups: item.allowedGroups || undefined,
                     }
-                    if (!requestData.signers[0].scopes) {
-                        requestData.signers[0].scopes = WitnessScope.CalledByEntry;
-                    }
-                };
+                });
                 requestData.invokeReadArgs.forEach((invokeReadItem: any, index) => {
                     invokeReadItem.args.forEach((item, itemIndex) => {
                         if (item === null || typeof item !== 'object') {
@@ -1171,7 +1154,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         }
                     });
                     requestData.invokeReadArgs[index] =
-                        [invokeReadItem.scriptHash, invokeReadItem.operation, invokeReadItem.args, requestData.signers];
+                        [invokeReadItem.scriptHash, invokeReadItem.operation, invokeReadItem.args, signers];
                 });
                 const returnRes = { data: [], ID: request.ID, return: requestTargetN3.InvokeReadMulti, error: null };
                 let requestCount = 0;

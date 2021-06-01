@@ -34,6 +34,8 @@ interface TxHashAttribute extends N3Argument {
 export interface Signers {
     account: string;
     scopes: 0 | 1 | 16 | 32 | 128;
+    allowedContracts?: string;
+    allowedGroups?: string;
 }
 
 export interface N3Argument {
