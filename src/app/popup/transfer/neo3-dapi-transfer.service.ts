@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { rpc, sc, tx, u, wallet } from '@cityofzion/neon-core-neo3/lib';
-import { SignerJson, SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
+import { SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from } from 'rxjs';
 import { AssetState, NotificationService, GlobalService, NeonService } from '@app/core';
 import { bignumber } from 'mathjs';
@@ -9,7 +9,7 @@ import { ContractCallJson } from '@cityofzion/neon-core-neo3/lib/sc';
 
 interface CreateNeo3TxInput {
     invokeArgs: ContractCallJson[];
-    signers: SignerJson[];
+    signers: SignerLike[];
     networkFee: number;
 }
 
@@ -29,12 +29,14 @@ export class Neo3DapiTransferService {
     ): Observable<Transaction> {
         const rpcClientTemp = this.rpcClient;
         const neo3This = this;
-        const singers: SignerLike[] = [{
-            account: params.signers[0].account,
-            scopes: params.signers[0].scopes,
-            allowedContracts: params.signers[0].allowedcontracts || [],
-            allowedGroups: params.signers[0].allowedgroups || []
-        }];
+        const signers = params.signers.map(item => {
+            return {
+                account: item.account,
+                scopes: item.scopes,
+                allowedcontracts: item.allowedContracts,
+                allowedgroups: item.allowedGroups
+            }
+        });
         const inputs = {
             invokeArgs: params.invokeArgs,
             signers: params.signers,
@@ -63,7 +65,7 @@ export class Neo3DapiTransferService {
             // We retrieve the current block height as we need to
             const currentHeight = await rpcClientTemp.getBlockCount();
             vars.tx = new tx.Transaction({
-                signers: singers,
+                signers: inputs.signers,
                 validUntilBlock: currentHeight + 30,
                 systemFee: vars.systemFee,
                 script,
@@ -124,7 +126,7 @@ export class Neo3DapiTransferService {
 
             const invokeFunctionResponse = await rpcClientTemp.invokeScript(
                 neo3This.hexToBase64(script),
-                inputs.signers
+                signers
             );
             if (invokeFunctionResponse.state !== 'HALT') {
                 throw new Error('Transfer script errored out! You might not have sufficient funds for this transfer.');
