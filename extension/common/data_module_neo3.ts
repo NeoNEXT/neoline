@@ -26,6 +26,18 @@ export enum requestTargetN3 {
     PickAddress = 'neoline.target_pick_address_n3',
 }
 
+export enum EVENT {
+    READY = 'NEOLine.N3.EVENT.READY',
+}
+
+// requets params
+export interface Signers {
+    account: string;
+    scopes: 0 | 1 | 16 | 32 | 128;
+    allowedContracts?: string;
+    allowedGroups?: string;
+}
+
 export interface N3BalanceRequest {
     contracts: string[];
 }
