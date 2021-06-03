@@ -67,13 +67,6 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
         this.aRoute.queryParams.subscribe(async (params: any) => {
             this.pramsData = JSON.parse(JSON.stringify(params));
             this.messageID = params.messageID;
-            if (params.network !== undefined) {
-                if (params.network === 'MainNet') {
-                    this.global.modifyNet('MainNet');
-                } else {
-                    this.global.modifyNet('TestNet');
-                }
-            }
             this.net = this.global.net;
             for (const key in this.pramsData) {
                 if (Object.prototype.hasOwnProperty.call(this.pramsData, key)) {
@@ -93,6 +86,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 })
             }
             this.dataJson = JSON.parse(JSON.stringify(this.pramsData));
+            console.log(this.pramsData.args)
             this.dataJson.messageID = undefined;
             this.triggerContractVerification = params.triggerContractVerification !== undefined
                 ? params.triggerContractVerification.toString() === 'true' : false
