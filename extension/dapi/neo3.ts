@@ -7,7 +7,7 @@ import {
     N3InvokeArgs, N3InvokeMultipleArgs, N3BalanceArgs,
     N3ApplicationLogArgs, N3TransactionArgs, N3BalanceResults,
     N3TransactionDetails, N3GetBlockInputArgs, N3GetStorageArgs,
-    N3StorageResponse, N3Response, N3SendArgs, N3SendOutput, N3VerifyMessageArgs,
+    N3StorageResponse, N3Response, N3SendArgs, N3SendOutput, N3VerifyMessageArgs, EVENT,
 } from '../common/data_module_neo3';
 import { getMessageID } from '../common/utils';
 
@@ -39,6 +39,14 @@ function sendMessage<K>(target: requestTarget | requestTargetN3, parameter?: any
 }
 
 export class Init {
+    public EVENT = EVENT;
+    private EVENTLIST = {
+        READY: {
+            callback: [],
+            callbackEvent: []
+        }
+    };
+
     public getProvider(): Promise<Provider> {
         return new Promise((resolveMain, _) => {
             getProvider().then(res => {
@@ -412,9 +420,79 @@ export class Init {
             }
         }
     }
+
+    public addEventListener(type: string, callback: (data: object) => void) {
+        switch (type) {
+            case this.EVENT.READY:
+                {
+                    this.getProvider().then(res => {
+                        callback(res);
+                    }).catch(error => {
+                        callback(error);
+                    });
+                    // const callbackFn = (event) => {
+                    //     if (event.data.return !== undefined && event.data.return === this.EVENT.READY) {
+                    //         callback(event.data.data);
+                    //     }
+                    // };
+                    // this.EVENTLIST.READY.callback.push(callback);
+                    // this.EVENTLIST.READY.callbackEvent.push(callbackFn);
+                    // window.addEventListener('message', this.EVENTLIST.READY[this.EVENTLIST.READY.callbackEvent.length - 1]);
+                    break;
+                }
+        }
+    }
+    public removeEventListener(type: string, removeFn: any) {
+        switch (type) {
+            case this.EVENT.READY:
+                {
+                    // const index = this.EVENTLIST.READY.callback.findIndex(item => item === fn);
+                    // window.removeEventListener('message', this.EVENTLIST.READY.callbackEvent[index]);
+                    // this.EVENTLIST.READY.callback.splice(index, 1);
+                    // this.EVENTLIST.READY.callbackEvent.splice(index, 1);
+                    break;
+                }
+        }
+    }
 }
 
 export const N3: any = new Init();
+
+if (window.dispatchEvent) {
+    getProvider().then(res => {
+        window.dispatchEvent(
+            new CustomEvent(EVENT.READY, {
+                detail: res,
+            })
+        );
+    }).catch(error => {
+        window.dispatchEvent(
+            new CustomEvent(EVENT.READY, {
+                detail: error,
+            })
+        );
+    });
+}
+
+window.addEventListener('message', e => {
+    const response = e.data;
+    if (response.target) {
+        window.dispatchEvent(new CustomEvent(
+            response.target,
+            {
+                detail: response.data
+            }
+        ));
+    }
+    if (response.return) {
+        window.dispatchEvent(new CustomEvent(
+            response.return,
+            {
+                detail: response.data
+            }
+        ));
+    }
+});
 
 function connect(open = true): Promise<any> {
     return new Promise((resolveMain) => {
