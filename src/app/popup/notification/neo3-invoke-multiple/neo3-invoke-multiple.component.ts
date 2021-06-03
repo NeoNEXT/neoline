@@ -60,16 +60,17 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
     ngOnInit(): void {
         this.assetImageUrl = this.assetState.getAssetImageFromAssetId(NEO3_CONTRACT)
         this.aRoute.queryParams.subscribe(async (params: any) => {
-            this.pramsData = JSON.parse(JSON.stringify(params));
-            this.messageID = params.messageID;
-            if (params.network !== undefined) {
-                if (params.network === 'MainNet') {
-                    this.global.modifyNet('MainNet');
-                } else {
-                    this.global.modifyNet('TestNet');
-                }
-                this.net = this.global.net;
+            this.dataJson = JSON.parse(JSON.stringify(params));
+            if (typeof this.dataJson.invokeArgs === 'string') {
+                this.dataJson.invokeArgs = JSON.parse(this.dataJson.invokeArgs);
             }
+            this.dataJson.invokeArgs.forEach(item => {
+                if (typeof item.args === 'string') {
+                    item.args = JSON.parse(item.args);
+                }
+            })
+            this.pramsData = this.dataJson;
+            this.messageID = params.messageID;
             for (const key in this.pramsData) {
                 if (Object.prototype.hasOwnProperty.call(this.pramsData, key)) {
                     let tempObject: any
@@ -87,9 +88,11 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                     this.feeMoney = res;
                 })
             }
-            this.dataJson = JSON.parse(JSON.stringify(this.pramsData));
             this.dataJson.messageID = undefined;
             this.pramsData.invokeArgs.forEach((item, index) => {
+                if (typeof item.args === 'string') {
+                    item.args = JSON.parse(item.args);
+                }
                 item.args.forEach((arg, argIndex) => {
                     if (arg === null || typeof arg !== 'object') {
                         return;
@@ -272,6 +275,10 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
     }
 
     public confirm() {
+        if (!this.tx) {
+            this.signTx();
+            return;
+        }
         if (this.broadcastOverride === true) {
             this.loading = false;
             this.loadingMsg = '';
@@ -330,6 +337,19 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 this.getAssetRate();
                 this.resolveSign(unSignTx);
                 this.prompt();
+            }, error => {
+                console.log(error);
+                if (error.type === 'rpcError') {
+                    this.global.snackBarTip('rpcError');
+                } else if (error.type === 'scriptError') {
+                    this.global.snackBarTip('checkInput');
+                }
+                this.loading = false;
+                this.chrome.windowCallback({
+                    error: error,
+                    return: requestTargetN3.InvokeMultiple,
+                    ID: this.messageID
+                });
             })
         }, 0);
     }

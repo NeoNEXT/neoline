@@ -67,13 +67,6 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
         this.aRoute.queryParams.subscribe(async (params: any) => {
             this.pramsData = JSON.parse(JSON.stringify(params));
             this.messageID = params.messageID;
-            if (params.network !== undefined) {
-                if (params.network === 'MainNet') {
-                    this.global.modifyNet('MainNet');
-                } else {
-                    this.global.modifyNet('TestNet');
-                }
-            }
             this.net = this.global.net;
             for (const key in this.pramsData) {
                 if (Object.prototype.hasOwnProperty.call(this.pramsData, key)) {
@@ -93,6 +86,10 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 })
             }
             this.dataJson = JSON.parse(JSON.stringify(this.pramsData));
+            if (typeof this.dataJson.args === 'string') {
+                this.dataJson.args = JSON.parse(this.dataJson.args);
+                this.pramsData.args = this.dataJson.args;
+            }
             this.dataJson.messageID = undefined;
             this.triggerContractVerification = params.triggerContractVerification !== undefined
                 ? params.triggerContractVerification.toString() === 'true' : false
@@ -120,7 +117,6 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                         }
                     } else if (item.type === 'Integer') {
                         this.pramsData.args[index] = item;
-                        // this.pramsData.args[index] = (Neon as any).create.contractParam('Integer', item.value.toString());
                     }
                 });
                 if (
@@ -147,7 +143,6 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                         } else {
                             this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
                                 this.fee = bignumber(this.minFee).add(bignumber(res.propose_price)).toNumber();
-                                this.signTx();
                             });
                         }
                     }
@@ -157,6 +152,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                     this.txHashAttributes = this.pramsData.txHashAttributes
                 }
                 this.signers = this.pramsData.signers;
+                this.prompt();
                 this.signTx();
             } else {
                 return;
@@ -275,6 +271,10 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
     }
 
     public confirm() {
+        if (!this.tx) {
+            this.signTx();
+            return;
+        }
         if (this.broadcastOverride === true) {
             this.loading = false;
             this.loadingMsg = '';
@@ -339,9 +339,19 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 this.networkFee = unSignTx.networkFee.toString();
                 this.getAssetRate();
                 this.resolveSign(unSignTx);
-                this.prompt();
             }, error => {
                 console.log(error);
+                if (error.type === 'rpcError') {
+                    this.global.snackBarTip('rpcError');
+                } else if (error.type === 'scriptError') {
+                    this.global.snackBarTip('checkInput');
+                }
+                this.loading = false;
+                this.chrome.windowCallback({
+                    error: error,
+                    return: requestTargetN3.Invoke,
+                    ID: this.messageID
+                });
             });
         }, 0);
     }

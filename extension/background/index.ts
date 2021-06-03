@@ -1097,7 +1097,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 params: request.parameter,
                 id: 1
             }, (res) => {
-                console.log(request.parameter);
                 res.return = requestTargetN3.InvokeRead;
                 if (!res.error) {
                     returnRes.data = res.result;
@@ -1179,7 +1178,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 })
             } catch (error) {
                 console.log(error)
-                windowCallback({ data: [], ID: request.ID, return: requestTargetN3.InvokeReadMulti, error: ERRORS.RPC_ERROR });
+                windowCallback({ data: [], ID: request.ID, return: requestTargetN3.InvokeReadMulti, error });
                 sendResponse('');
             };
             return;
@@ -1268,7 +1267,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 let queryString = '';
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
-                        const value = key === 'args' || key === 'signers' || key === 'txHashAttributes' ?
+                        const value = key === 'args' || key === 'signers' ?
                             JSON.stringify(params[key]) : params[key];
                         queryString += `${key}=${value}&`;
                     }
@@ -1308,7 +1307,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 let queryString = '';
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
-                        const value = key === 'invokeArgs' || key === 'txHashAttributes' || key === 'signers' ?
+                        const value = key === 'invokeArgs' || key === 'signers' ?
                             JSON.stringify(params[key]) : params[key];
                         queryString += `${key}=${value}&`;
                     }

@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { rpc, sc, tx, u, wallet } from '@cityofzion/neon-core-neo3/lib';
 import { SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
-import { Observable, from } from 'rxjs';
+import { Observable, from, throwError } from 'rxjs';
 import { AssetState, NotificationService, GlobalService, NeonService } from '@app/core';
 import { bignumber } from 'mathjs';
 import { NEW_POLICY_CONTRACT } from '../_lib';
@@ -44,6 +44,17 @@ export class Neo3DapiTransferService {
             networkFee: bignumber(params.networkFee).toNumber() || 0,
         };
         const vars: any = {};
+        let script: string = '';
+        try {
+            inputs.invokeArgs.forEach((item) => {
+                script += sc.createScript(item);
+            });
+        } catch (error) {
+            return throwError({
+                type: 'scriptError',
+                error: error
+            });
+        }
 
         /**
          * We will perform the following checks:
@@ -54,14 +65,6 @@ export class Neo3DapiTransferService {
          */
 
         async function createTransaction() {
-            let script: string = '';
-            try {
-                inputs.invokeArgs.forEach((item) => {
-                    script += sc.createScript(item);
-                })
-            } catch (error) {
-                throw new Error(`createScript: ${error}`);
-            }
             // We retrieve the current block height as we need to
             const currentHeight = await rpcClientTemp.getBlockCount();
             vars.tx = new tx.Transaction({
@@ -85,7 +88,10 @@ export class Neo3DapiTransferService {
             );
             if (feePerByteInvokeResponse.state !== 'HALT') {
                 if (inputs.networkFee === 0) {
-                    throw new Error('Unable to retrieve data to calculate network fee.');
+                    throw {
+                        type: 'rpcError',
+                        error: feePerByteInvokeResponse
+                    };
                 } else {
                     console.log(
                         '\u001b[31m  ✗ Unable to get information to calculate network fee.  Using user provided value.\u001b[0m'
@@ -115,21 +121,15 @@ export class Neo3DapiTransferService {
          * can easily get this number by using invokeScript with the appropriate signers.
          */
         async function checkSystemFee() {
-            let script: string = '';
-            try {
-                inputs.invokeArgs.forEach((item) => {
-                    script += sc.createScript(item);
-                })
-            } catch (error) {
-                throw new Error(`createScript: ${error}`);
-            }
-
             const invokeFunctionResponse = await rpcClientTemp.invokeScript(
                 neo3This.hexToBase64(script),
                 signers
             );
             if (invokeFunctionResponse.state !== 'HALT') {
-                throw new Error('Transfer script errored out! You might not have sufficient funds for this transfer.');
+                throw {
+                    type: 'rpcError',
+                    error: invokeFunctionResponse
+                };
             }
             const requiredSystemFee = u.Fixed8.fromRawNumber(invokeFunctionResponse.gasconsumed);
             if (inputs.systemFee && new u.Fixed8(inputs.systemFee) >= requiredSystemFee) {

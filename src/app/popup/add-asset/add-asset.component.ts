@@ -40,8 +40,6 @@ export class PopupAddAssetComponent implements OnInit {
         forkJoin([getMoneyBalance, getWatch]).subscribe(res => {
             this.moneyAssets = res[0];
             this.watch = res[1];
-            console.log(this.moneyAssets);
-            console.log(this.watch);
             this.getAllBalance();
         });
     }

@@ -1,4 +1,5 @@
-type ArgumentDataType = 'String' | 'Boolean' | 'Hash160' | 'Hash256' | 'Integer' | 'ByteArray' | 'Array' | 'Address';
+import { ContractParamJson } from "@cityofzion/neon-core-neo3/lib/sc";
+import { SignerLike } from "@cityofzion/neon-core-neo3/lib/tx";
 
 export enum requestTargetN3 {
     Provider = 'neoline.target_provider_n3',
@@ -29,22 +30,12 @@ export enum EVENT {
     READY = 'NEOLine.N3.EVENT.READY',
 }
 
-interface TxHashAttribute extends N3Argument {
-    txAttrUsage: 'Hash1' | 'Hash2' | 'Hash3' | 'Hash4' | 'Hash5' | 'Hash6' | 'Hash7' | 'Hash8' |
-    'Hash9' | 'Hash10' | 'Hash11' | 'Hash12' | 'Hash13' | 'Hash14' | 'Hash15';
-}
-
 // requets params
 export interface Signers {
     account: string;
     scopes: 0 | 1 | 16 | 32 | 128;
     allowedContracts?: string;
     allowedGroups?: string;
-}
-
-export interface N3Argument {
-    type: ArgumentDataType;
-    value: any;
 }
 
 export interface N3BalanceRequest {
@@ -84,30 +75,30 @@ export interface N3VerifyMessageArgs {
 export interface N3InvokeReadArgs {
     scriptHash: string;
     operation: string;
-    args?: N3Argument[];
-    signers: Signers[];
+    args?: [];
+    signers: SignerLike[];
     network?: string;
 }
 
 export interface N3InvokeReadMultiArgs {
     scriptHash: string; // script hash of the smart contract to invoke a read on
     operation: string; // operation on the smart contract to call
-    invokeReadArgs: N3Argument[];
-    signers: Signers[];
+    invokeReadArgs: ContractParamJson[];
+    signers: SignerLike[];
     network?: string;
 }
 
 export interface N3InvokeArgs {
     scriptHash: string;
     operation: string;
-    args: N3Argument[];
-    signers:Signers[];
+    args: ContractParamJson[];
+    signers:SignerLike[];
 }
 
 export interface N3InvokeMultiArg {
     scriptHash: string; // script hash of the smart contract to invoke a read on
     operation: string; // operation on the smart contract to call
-    args: N3Argument[]; // any input arguments for the operation
+    args: ContractParamJson[]; // any input arguments for the operation
 }
 
 export interface N3InvokeMultipleArgs {
@@ -115,8 +106,7 @@ export interface N3InvokeMultipleArgs {
     operation: string;
     invokeArgs: Array<N3InvokeMultiArg>;
     fee?: string;
-    txHashAttributes?: TxHashAttribute[];
-    signers: Signers[];
+    signers: SignerLike[];
 }
 
 export interface N3SendArgs {
