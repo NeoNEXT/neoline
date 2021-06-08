@@ -1,3 +1,4 @@
+import { wallet } from '@cityofzion/neon-core-neo3';
 import {
     Provider, Networks, Account,
     AccountPublicKey,  ERRORS, requestTarget
@@ -7,7 +8,7 @@ import {
     N3InvokeArgs, N3InvokeMultipleArgs, N3BalanceArgs,
     N3ApplicationLogArgs, N3TransactionArgs, N3BalanceResults,
     N3TransactionDetails, N3GetBlockInputArgs, N3GetStorageArgs,
-    N3StorageResponse, N3Response, N3SendArgs, N3SendOutput, N3VerifyMessageArgs, EVENT,
+    N3StorageResponse, N3Response, N3SendArgs, N3SendOutput, N3VerifyMessageArgs, EVENT, N3AddressToScriptHash, N3ScriptHashToAddress,
 } from '../common/data_module_neo3';
 import { getMessageID } from '../common/utils';
 
@@ -115,6 +116,27 @@ export class Init {
             });
         }
     }
+
+    public async AddressToScriptHash(parameter: N3AddressToScriptHash): Promise<string> {
+        if (!wallet.isAddress(parameter.address)) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
+            });
+        } else {
+            return sendMessage(requestTargetN3.AddressToScriptHash, parameter);
+        }
+    }
+
+    public async ScriptHashToAddress(parameter: N3ScriptHashToAddress): Promise<string> {
+        if (!wallet.isAddress(wallet.getAddressFromScriptHash(parameter.scriptHash))) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
+            });
+        } else {
+            return sendMessage(requestTargetN3.ScriptHashToAddress, parameter);
+        }
+    }
+
 
     public getBalance(): Promise<N3BalanceResults> {
         return sendMessage(requestTargetN3.Balance, {});

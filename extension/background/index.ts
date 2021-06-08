@@ -37,7 +37,7 @@ import {
 import { base64Encode, getNetwork, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getReqHeaderNetworkType, getScriptHashFromAddress, getWalletType, hexstring2str, sign, str2hexstring } from '../common/utils';
 import randomBytes = require('randomBytes');
 import {
-    wallet as wallet3,
+    wallet as wallet3
 } from '@cityofzion/neon-core-neo3/lib';
 
 /**
@@ -892,7 +892,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 };
                 const postData = [
                     {
-                        address: address,
+                        address,
                         contracts: []
                     }
                 ];
@@ -1374,6 +1374,24 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 Network: getReqHeaderNetworkType(request.parameter.network)
             });
             return true;
+        }
+        case requestTargetN3.AddressToScriptHash: {
+            const scriptHash = '0x' + wallet3.getScriptHashFromAddress(request.parameter.address);
+            windowCallback({
+                data: { scriptHash },
+                return: requestTargetN3.AddressToScriptHash,
+                ID: request.ID
+            });
+            return;
+        }
+        case requestTargetN3.ScriptHashToAddress: {
+            const address = wallet3.getAddressFromScriptHash(request.parameter.scriptHash);
+            windowCallback({
+                data: { address },
+                return: requestTargetN3.ScriptHashToAddress,
+                ID: request.ID
+            });
+            return;
         }
     }
     return true;

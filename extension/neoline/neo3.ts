@@ -60,7 +60,9 @@ window.addEventListener('message', async (e) => {
             });
             return;
         }
-        case requestTargetN3.PickAddress: {
+        case requestTargetN3.PickAddress:
+        case requestTargetN3.AddressToScriptHash:
+        case requestTargetN3.ScriptHashToAddress: {
             chrome.runtime.sendMessage(e.data, (response) => {
                 return Promise.resolve('Dummy response to keep the console quiet');
             });
@@ -88,7 +90,7 @@ window.addEventListener('message', async (e) => {
                     if (currChainType === 'Neo3') {
                         getStorage('chainId', (result) => {
                             // let chainId = result || ChainId.N3TestNet;
-                            let network = getNetwork(result) || Network.N3TestNet;
+                            const network = getNetwork(result) || Network.N3TestNet;
                             e.data.parameter.network = network;
                             e.data.nodeUrl = RPC.Neo3[network];
                             chrome.runtime.sendMessage(e.data, (response) => {
