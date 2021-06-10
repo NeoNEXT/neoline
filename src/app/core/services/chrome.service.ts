@@ -982,4 +982,39 @@ export class ChromeService {
             console.log('not in crx env');
         }
     }
+
+    public setInvokeArgsArray(invokeArray: Array<any>) {
+        const storageName = `InvokeArgsArray`;
+        if (!this.check) {
+            localStorage.setItem(storageName, JSON.stringify(invokeArray));
+            return;
+        }
+        try {
+            const saveData = {};
+            saveData[storageName] = invokeArray;
+            this.crx.setLocalStorage(saveData);
+        } catch (e) {
+            console.log('set account failed', e);
+        }
+    }
+
+    public getInvokeArgsArray(): Observable<Array<string>> {
+        const storageName = `InvokeArgsArray`;
+        if (!this.check) {
+            try {
+                return of(JSON.parse(localStorage.getItem(storageName)));
+            } catch (e) {
+                return throwError('please set wif json to local storage when debug mode on');
+            }
+        }
+        return from(new Promise<Array<string>>((resolve, reject) => {
+            try {
+                this.crx.getLocalStorage(storageName, (res) => {
+                    resolve(res);
+                });
+            } catch (e) {
+                reject('failed');
+            }
+        }));
+    }
 }

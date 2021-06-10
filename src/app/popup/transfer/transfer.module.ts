@@ -8,7 +8,7 @@ import { TransferService } from './transfer.service';
 import { TransferCreateComponent } from './create/create.component';
 import { PopupTransferConfirmComponent } from './confirm/confirm.component';
 import { Neo3TransferService } from './neo3-transfer.service';
-import { Neo3DapiTransferService } from './neo3-dapi-transfer.service';
+import { Neo3InvokeService } from './neo3-invoke.service';
 
 @NgModule({
     declarations: [
@@ -19,7 +19,7 @@ import { Neo3DapiTransferService } from './neo3-dapi-transfer.service';
     ],
     imports: [CommonModule, TransferRoutingModule, ShareModule],
     exports: [],
-    providers: [TransferService, Neo3TransferService, Neo3DapiTransferService],
+    providers: [TransferService, Neo3TransferService, Neo3InvokeService],
     entryComponents: []
 })
 export class TransferModule { }

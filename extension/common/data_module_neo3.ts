@@ -1,5 +1,5 @@
-import { ContractParamJson } from "@cityofzion/neon-core-neo3/lib/sc";
-import { SignerLike } from "@cityofzion/neon-core-neo3/lib/tx";
+import { ContractParamJson } from '@cityofzion/neon-core-neo3/lib/sc';
+import { SignerLike } from '@cityofzion/neon-core-neo3/lib/tx';
 
 export enum requestTargetN3 {
     Provider = 'neoline.target_provider_n3',
@@ -102,6 +102,7 @@ export interface N3InvokeArgs {
     scriptHash: string;
     operation: string;
     args: ContractParamJson[];
+    fee?: string;
     signers:SignerLike[];
 }
 
