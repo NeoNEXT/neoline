@@ -1264,14 +1264,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 }
             };
             getStorage('connectedWebsites', async (res) => {
-                const storageNmae = `InvokeArgsArray`;
+                const storageName = `InvokeArgsArray`;
                 const saveData = {};
-                const InvokeArgsArray = await getLocalStorage(storageNmae, () => {}) || [];
+                const invokeArgsArray = await getLocalStorage(storageName, () => {}) || [];
                 const data = {
                     ...params,
                     messageID: request.ID
                 }
-                saveData[storageNmae] = [data, ...InvokeArgsArray];
+                saveData[storageName] = [data, ...invokeArgsArray];
                 setLocalStorage(saveData);
                 window.open(`index.html#popup/notification/neo3-invoke?messageID=${request.ID}`,
                     '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
@@ -1313,14 +1313,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         queryString += `${key}=${value}&`;
                     }
                 }
-                const storageNmae = `InvokeArgsArray`;
+                const storageName = `InvokeArgsArray`;
                 const saveData = {};
-                const InvokeArgsArray = await getLocalStorage(storageNmae, () => {}) || [];
+                const invokeArgsArray = await getLocalStorage(storageName, () => {}) || [];
                 const data = {
                     ...params,
                     messageID: request.ID
                 }
-                saveData[storageNmae] = [data, ...InvokeArgsArray];
+                saveData[storageName] = [data, ...invokeArgsArray];
                 setLocalStorage(saveData);
                 window.open(`index.html#popup/notification/neo3-invoke-multiple?messageID=${request.ID}`,
                     '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
