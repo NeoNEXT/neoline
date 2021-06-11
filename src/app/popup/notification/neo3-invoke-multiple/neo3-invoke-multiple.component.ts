@@ -2,16 +2,15 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService, AssetState } from '@/app/core';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
-import { sc } from '@cityofzion/neon-core-neo3/lib';
-import Neon, { tx } from '@cityofzion/neon-js-neo3';
+import { tx } from '@cityofzion/neon-js-neo3';
 import { MatDialog } from '@angular/material/dialog';
-import { ERRORS, TxHashAttribute } from '@/models/dapi';
+import { ERRORS } from '@/models/dapi';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { PopupDapiPromptComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { GasFeeSpeed } from '../../_lib/type';
 import { bignumber } from 'mathjs';
 import { NEO3_MAGIC_NUMBER_TESTNET, NEO3_CONTRACT } from '../../_lib';
-import { Neo3DapiTransferService } from '../../transfer/neo3-dapi-transfer.service';
+import { Neo3InvokeService } from '../../transfer/neo3-invoke.service';
 import { forkJoin } from 'rxjs';
 
 @Component({
@@ -35,7 +34,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
     public loading = false;
     public loadingMsg: string;
     private messageID = 0;
-    private txHashAttributes: TxHashAttribute[] = null;
+    public invokeArgsArray: any[] = [];
 
     public fee = null;
     public systemFee;
@@ -54,104 +53,57 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         private dialog: MatDialog,
         private chrome: ChromeService,
         private assetState: AssetState,
-        private neo3DapiTrans: Neo3DapiTransferService,
+        private neo3Invoke: Neo3InvokeService,
     ) { }
 
     ngOnInit(): void {
         this.assetImageUrl = this.assetState.getAssetImageFromAssetId(NEO3_CONTRACT)
-        this.aRoute.queryParams.subscribe(async (params: any) => {
-            this.dataJson = JSON.parse(JSON.stringify(params));
-            if (typeof this.dataJson.invokeArgs === 'string') {
-                this.dataJson.invokeArgs = JSON.parse(this.dataJson.invokeArgs);
-            }
-            this.dataJson.invokeArgs.forEach(item => {
-                if (typeof item.args === 'string') {
-                    item.args = JSON.parse(item.args);
+        this.aRoute.queryParams.subscribe(async ({ messageID }) => {
+            let params: any;
+            this.messageID = messageID;
+            this.chrome.getInvokeArgsArray().subscribe(invokeArgsArray => {
+                this.invokeArgsArray = invokeArgsArray;
+                params = invokeArgsArray.filter(item => (item as any).messageID === messageID)[0];
+                this.dataJson = {
+                    ...params,
+                    messageID: undefined,
+                    hostname: undefined,
+                };
+                this.pramsData = params;
+                if (Number(this.pramsData.fee) > 0) {
+                    this.assetState.getMoney('GAS', Number(this.pramsData.fee)).then(res => {
+                        this.feeMoney = res;
+                    });
+                };
+                this.pramsData.invokeArgs.forEach(item => {
+                    item = this.neo3Invoke.createInvokeInputs(item);
+                    this.invokeArgs.push({
+                        ...this.neo3Invoke.createInvokeInputs(item)
+                    });
+                });
+                if (params.minReqFee) {
+                    this.minFee = Number(params.minReqFee);
                 }
-            })
-            this.pramsData = this.dataJson;
-            this.messageID = params.messageID;
-            for (const key in this.pramsData) {
-                if (Object.prototype.hasOwnProperty.call(this.pramsData, key)) {
-                    let tempObject: any
-                    try {
-                        tempObject = this.pramsData[key].replace(/([a-zA-Z0-9]+?):/g, '"$1":').replace(/'/g, '"');
-                        tempObject = JSON.parse(tempObject);
-                    } catch (error) {
-                        tempObject = this.pramsData[key];
-                    };
-                    this.pramsData[key] = tempObject;
-                }
-            }
-            if (Number(this.pramsData.fee) > 0) {
-                this.assetState.getMoney('GAS', Number(this.pramsData.fee)).then(res => {
-                    this.feeMoney = res;
-                })
-            }
-            this.dataJson.messageID = undefined;
-            this.pramsData.invokeArgs.forEach((item, index) => {
-                if (typeof item.args === 'string') {
-                    item.args = JSON.parse(item.args);
-                }
-                item.args.forEach((arg, argIndex) => {
-                    if (arg === null || typeof arg !== 'object') {
-                        return;
-                    } else if (arg.type === 'Address') {
-                        const param2 = sc.ContractParam.hash160(arg.value);
-                        this.pramsData.invokeArgs[index].args[argIndex] = param2;
-                    } else if (arg.type === 'Boolean') {
-                        if (typeof arg.value === 'string') {
-                            if ((arg.value && arg.value.toLowerCase()) === 'true') {
-                                this.pramsData.invokeArgs[index].args[argIndex] = true
-                            } else if (arg.value && arg.value.toLowerCase() === 'false') {
-                                this.pramsData.invokeArgs[index].args[argIndex] = false;
-                            } else {
-                                this.chrome.windowCallback({
-                                    error: ERRORS.MALFORMED_INPUT,
-                                    return: requestTargetN3.InvokeMulti,
-                                    ID: this.messageID
-                                });
-                                window.close();
-                            }
+                if (params.fee) {
+                    this.fee = Number(params.fee);
+                } else {
+                    this.fee = 0;
+                    if (this.showFeeEdit) {
+                        if (this.assetState.gasFeeSpeed) {
+                            this.fee = bignumber(this.minFee).add(bignumber(this.assetState.gasFeeSpeed.propose_price)).toNumber();
+                        } else {
+                            this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
+                                this.fee = bignumber(this.minFee).add(bignumber(res.propose_price)).toNumber();
+                                this.signTx();
+                            });
                         }
-                    } else if (item.type === 'Integer') {
-                        this.pramsData.invokeArgs[index].args[argIndex] = item.value;
-                        // this.pramsData.invokeArgs[index].args[argIndex] = Neon.create.contractParam('Integer', item.value.toString())
                     }
-                });
-                if (item.operation === 'transfer') {
-                    item.args[item.args.length] = null;
                 }
-                this.invokeArgs.push({
-                    scriptHash: item.scriptHash,
-                    operation: item.operation,
-                    args: this.pramsData.invokeArgs[index].args,
-                });
+                this.broadcastOverride = this.pramsData.broadcastOverride || false;
+                this.signers = this.pramsData.signers;
+                this.signTx();
+                this.prompt();
             });
-            if (params.minReqFee) {
-                this.minFee = Number(params.minReqFee);
-            }
-            if (params.fee) {
-                this.fee = Number(params.fee);
-            } else {
-                this.fee = 0;
-                if (this.showFeeEdit) {
-                    if (this.assetState.gasFeeSpeed) {
-                        this.fee = bignumber(this.minFee).add(bignumber(this.assetState.gasFeeSpeed.propose_price)).toNumber();
-                    } else {
-                        this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
-                            this.fee = bignumber(this.minFee).add(bignumber(res.propose_price)).toNumber();
-                            this.signTx();
-                        });
-                    }
-                }
-            }
-            this.broadcastOverride = this.pramsData.broadcastOverride === true || false;
-            if (this.txHashAttributes === null && this.pramsData.txHashAttributes !== undefined) {
-                this.txHashAttributes = this.pramsData.txHashAttributes
-            }
-            this.signers = this.pramsData.signers;
-            this.signTx();
         });
         window.onbeforeunload = () => {
             this.chrome.windowCallback({
@@ -176,7 +128,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
 
     public async getMoney(symbol: string, balance: number): Promise<string> {
         return new Promise((mResolve) => {
-            if (balance == 0) {
+            if (balance === 0) {
                 mResolve('0');
             }
             this.assetState.getAssetRate(symbol).subscribe(rate => {
@@ -189,10 +141,10 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         })
     }
 
-    private async resolveSign(transaction: Transaction) {
+    private async resolveSign() {
         this.loading = true;
         this.loadingMsg = 'Wait';
-        if (transaction === null) {
+        if (this.tx === null) {
             return;
         }
         try {
@@ -200,11 +152,10 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 this.neon.walletArr.findIndex(item => item.accounts[0].address === this.neon.wallet.accounts[0].address)
             ]
             try {
-                transaction.sign(wif, NEO3_MAGIC_NUMBER_TESTNET);
+                this.tx = this.tx.sign(wif, NEO3_MAGIC_NUMBER_TESTNET);
             } catch (error) {
                 console.log(error);
             }
-            this.tx = transaction;
             this.txSerialize = this.tx.serialize(true);
             this.loading = false
         } catch (error) {
@@ -224,8 +175,8 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         this.loading = true;
         this.loadingMsg = 'Wait';
 
-        return this.neo3DapiTrans.sendNeo3Tx(
-            this.neo3DapiTrans.hexToBase64(this.tx.serialize(true))
+        return this.neo3Invoke.sendNeo3Tx(
+            this.neo3Invoke.hexToBase64(this.tx.serialize(true))
         ).then(async txHash => {
             if (
                 !txHash || !txHash.startsWith('0x')
@@ -279,7 +230,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             this.signTx();
             return;
         }
-        if (this.broadcastOverride === true) {
+        if (this.broadcastOverride) {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
@@ -295,6 +246,8 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         } else {
             this.resolveSend();
         }
+        const saveData = this.invokeArgsArray.filter(item => item.messageID !== this.messageID);
+        this.chrome.setInvokeArgsArray(saveData);
     }
 
     public editFee() {
@@ -327,16 +280,16 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
     private signTx() {
         setTimeout(() => {
             this.loading = true;
-            this.neo3DapiTrans.createNeo3Tx({
-                invokeArgs: this.pramsData.invokeArgs,
+            this.neo3Invoke.createNeo3Tx({
+                invokeArgs: this.invokeArgs,
                 signers: this.signers,
                 networkFee: this.fee,
             }).subscribe((unSignTx: Transaction)  => {
                 this.systemFee = unSignTx.systemFee.toString();
                 this.networkFee = unSignTx.networkFee.toString();
+                this.tx = unSignTx;
                 this.getAssetRate();
-                this.resolveSign(unSignTx);
-                this.prompt();
+                this.resolveSign();
             }, error => {
                 console.log(error);
                 if (error.type === 'rpcError') {
@@ -346,7 +299,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 }
                 this.loading = false;
                 this.chrome.windowCallback({
-                    error: error,
+                    error: error.data,
                     return: requestTargetN3.InvokeMultiple,
                     ID: this.messageID
                 });

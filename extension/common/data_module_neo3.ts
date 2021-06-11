@@ -1,5 +1,5 @@
-import { ContractParamJson } from "@cityofzion/neon-core-neo3/lib/sc";
-import { SignerLike } from "@cityofzion/neon-core-neo3/lib/tx";
+import { ContractParamJson } from '@cityofzion/neon-core-neo3/lib/sc';
+import { SignerLike } from '@cityofzion/neon-core-neo3/lib/tx';
 
 export enum requestTargetN3 {
     Provider = 'neoline.target_provider_n3',
@@ -24,6 +24,8 @@ export enum requestTargetN3 {
     Balance = 'neoline.target_balance_n3',
     InvokeMultiple = 'neoline.target_invoke_multiple_n3',
     PickAddress = 'neoline.target_pick_address_n3',
+    AddressToScriptHash = 'neoline.target_address_toScriptHash_n3',
+    ScriptHashToAddress = 'neoline.target_scriptHash_toAddress_n3',
 }
 
 export enum EVENT {
@@ -40,6 +42,14 @@ export interface Signers {
 
 export interface N3BalanceRequest {
     contracts: string[];
+}
+
+export interface N3AddressToScriptHash {
+    address: string;
+}
+
+export interface N3ScriptHashToAddress {
+    scriptHash: string;
 }
 
 export interface N3BalanceArgs {
@@ -92,6 +102,7 @@ export interface N3InvokeArgs {
     scriptHash: string;
     operation: string;
     args: ContractParamJson[];
+    fee?: string;
     signers:SignerLike[];
 }
 

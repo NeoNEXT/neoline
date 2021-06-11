@@ -37,7 +37,7 @@ import {
 import { base64Encode, getNetwork, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getReqHeaderNetworkType, getScriptHashFromAddress, getWalletType, hexstring2str, sign, str2hexstring } from '../common/utils';
 import randomBytes = require('randomBytes');
 import {
-    wallet as wallet3,
+    wallet as wallet3
 } from '@cityofzion/neon-core-neo3/lib';
 
 /**
@@ -892,7 +892,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 };
                 const postData = [
                     {
-                        address: address,
+                        address,
                         contracts: []
                     }
                 ];
@@ -1263,16 +1263,17 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     params.signers[0].scopes = WitnessScope.CalledByEntry;
                 }
             };
-            getStorage('connectedWebsites', (res) => {
-                let queryString = '';
-                for (const key in params) {
-                    if (params.hasOwnProperty(key)) {
-                        const value = key === 'args' || key === 'signers' ?
-                            JSON.stringify(params[key]) : params[key];
-                        queryString += `${key}=${value}&`;
-                    }
+            getStorage('connectedWebsites', async (res) => {
+                const storageName = `InvokeArgsArray`;
+                const saveData = {};
+                const invokeArgsArray = await getLocalStorage(storageName, () => {}) || [];
+                const data = {
+                    ...params,
+                    messageID: request.ID
                 }
-                window.open(`index.html#popup/notification/neo3-invoke?${queryString}messageID=${request.ID}`,
+                saveData[storageName] = [data, ...invokeArgsArray];
+                setLocalStorage(saveData);
+                window.open(`index.html#popup/notification/neo3-invoke?messageID=${request.ID}`,
                     '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
             });
             sendResponse('');
@@ -1303,7 +1304,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     params.signers[0].scopes = WitnessScope.CalledByEntry;
                 }
             };
-            getStorage('connectedWebsites', (res) => {
+            getStorage('connectedWebsites', async (res) => {
                 let queryString = '';
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
@@ -1312,7 +1313,16 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         queryString += `${key}=${value}&`;
                     }
                 }
-                window.open(`index.html#popup/notification/neo3-invoke-multiple?${queryString}messageID=${request.ID}`,
+                const storageName = `InvokeArgsArray`;
+                const saveData = {};
+                const invokeArgsArray = await getLocalStorage(storageName, () => {}) || [];
+                const data = {
+                    ...params,
+                    messageID: request.ID
+                }
+                saveData[storageName] = [data, ...invokeArgsArray];
+                setLocalStorage(saveData);
+                window.open(`index.html#popup/notification/neo3-invoke-multiple?messageID=${request.ID}`,
                     '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
             });
             sendResponse('');
@@ -1374,6 +1384,24 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 Network: getReqHeaderNetworkType(request.parameter.network)
             });
             return true;
+        }
+        case requestTargetN3.AddressToScriptHash: {
+            const scriptHash = '0x' + wallet3.getScriptHashFromAddress(request.parameter.address);
+            windowCallback({
+                data: { scriptHash },
+                return: requestTargetN3.AddressToScriptHash,
+                ID: request.ID
+            });
+            return;
+        }
+        case requestTargetN3.ScriptHashToAddress: {
+            const address = wallet3.getAddressFromScriptHash(request.parameter.scriptHash);
+            windowCallback({
+                data: { address },
+                return: requestTargetN3.ScriptHashToAddress,
+                ID: request.ID
+            });
+            return;
         }
     }
     return true;
