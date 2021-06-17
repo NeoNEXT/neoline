@@ -97,7 +97,6 @@ export function expand() {
                                 params: [reqHeight, 1],
                                 id: 1
                             }, (blockDetail) => {
-                                console.log('4', reqHeight, newHeight);
                                 if (blockDetail.error === undefined) {
                                     const txStrArr = [];
                                     blockDetail.result.tx.forEach(item => {
