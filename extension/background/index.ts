@@ -69,7 +69,7 @@ export function expand() {
         };
         const newLocal = 'TestNet';
         let rpcUrl = RPC[chainType][newLocal];
-        let network: Network = getNetwork(currChainId);
+        const network: Network = getNetwork(currChainId);
         if (chainType === ChainType.Neo2) {
             rpcUrl = RPC[chainType][currNetwork];
         } else if (chainType === ChainType.Neo3) {
@@ -83,48 +83,18 @@ export function expand() {
                 params: [],
                 id: 1
             }, async (blockHeightData) => {
-                if (oldHeight === 0 || blockHeightData.result - oldHeight > 5) {
-                    oldHeight = blockHeightData.result - 1;
+                const newHeight = blockHeightData.result;
+                if (oldHeight === 0 || newHeight - oldHeight > 5) {
+                    oldHeight = newHeight - 1;
                 }
-                const heightInterval = blockHeightData.result - oldHeight;
-                if (blockHeightData.err === undefined && heightInterval === 1) {
-                    const setData = {};
-                    setData[`${chainType}_${network}BlockHeight`] = blockHeightData.result;
-                    setLocalStorage(setData);
-                    httpPost(rpcUrl, {
-                        jsonrpc: '2.0',
-                        method: 'getblock',
-                        params: [blockHeightData.result - 1, 1],
-                        id: 1
-                    }, (blockDetail) => {
-                        if (blockDetail.error === undefined) {
-                            const txStrArr = [];
-                            blockDetail.result.tx.forEach(item => {
-                                txStrArr.push(item.txid);
-                            });
-                            windowCallback({
-                                data: {
-                                    chainId: currChainId,
-                                    blockHeight: blockHeightData.result,
-                                    blockTime: blockDetail.result.time,
-                                    blockHash: blockDetail.result.hash,
-                                    tx: txStrArr,
-                                },
-                                return: EVENT.BLOCK_HEIGHT_CHANGED
-                            });
-                        }
-                    }, '*');
-                } else if (blockHeightData.err === undefined && heightInterval > 1) {
-                    let timer;
-                    for (let intervalIndex = 0; intervalIndex < heightInterval; intervalIndex++) {
+                let timer;
+                for (let reqHeight = oldHeight; reqHeight < newHeight; reqHeight++) {
+                    if (oldHeight !== newHeight) {
                         timer = setTimeout(() => {
-                            const setData = {};
-                            setData[`${chainType}_${network}BlockHeight`] = oldHeight + intervalIndex + 1;
-                            setLocalStorage(setData);
                             httpPost(rpcUrl, {
                                 jsonrpc: '2.0',
                                 method: 'getblock',
-                                params: [oldHeight + 1, 1],
+                                params: [reqHeight, 1],
                                 id: 1
                             }, (blockDetail) => {
                                 if (blockDetail.error === undefined) {
@@ -135,7 +105,7 @@ export function expand() {
                                     windowCallback({
                                         data: {
                                             chainId: currChainId,
-                                            blockHeight: blockHeightData.result,
+                                            blockHeight: reqHeight,
                                             blockTime: blockDetail.result.time,
                                             blockHash: blockDetail.result.hash,
                                             tx: txStrArr,
@@ -143,11 +113,14 @@ export function expand() {
                                         return: EVENT.BLOCK_HEIGHT_CHANGED
                                     });
                                 }
+                                if (newHeight - reqHeight <= 1) {
+                                    const setData = {};
+                                    setData[`${chainType}_${network}BlockHeight`] = newHeight;
+                                    setLocalStorage(setData);
+                                    clearTimeout(timer);
+                                }
                             }, '*');
-                        }, 500 * intervalIndex);
-                        if (heightInterval <= 1) {
-                            clearTimeout(timer);
-                        }
+                        });
                     }
                 }
             }, '*')
