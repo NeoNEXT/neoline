@@ -37,6 +37,7 @@ import {
 import { base64Encode, getNetwork, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getReqHeaderNetworkType, getScriptHashFromAddress, getWalletType, hexstring2str, sign, str2hexstring } from '../common/utils';
 import randomBytes = require('randomBytes');
 import {
+    u as u3,
     wallet as wallet3
 } from '@cityofzion/neon-core-neo3/lib';
 
@@ -1215,20 +1216,20 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             const currWallet = await getLocalStorage('wallet', () => { });
             const WIFArr = await getLocalStorage('WIFArr-Neo3', () => { });
             if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
+                const privateKey = wallet3.getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
                     item.accounts[0].address === currWallet.accounts[0].address)]
                 );
                 const randomSalt = randomBytes(16).toString('hex');
-                const publicKey = getPublicKeyFromPrivateKey(privateKey);
-                const parameterHexString = str2hexstring(randomSalt + parameter.message);
-                const lengthHex = (parameterHexString.length / 2).toString(16).padStart(2, '0');
+                const publicKey = wallet3.getPublicKeyFromPrivateKey(privateKey);
+                const parameterHexString = u3.str2hexstring(randomSalt + parameter.message);
+                const lengthHex = u3.num2VarInt(parameterHexString.length / 2);
                 const concatenatedString = lengthHex + parameterHexString;
-                const serializedTransaction = '010001f0' + concatenatedString + '0000';
+                const messageHex = '010001f0' + concatenatedString + '0000';
                 windowCallback({
                     return: requestTargetN3.SignMessage,
                     data: {
                         publicKey,
-                        data: sign(serializedTransaction, privateKey),
+                        data: wallet3.sign(messageHex, privateKey),
                         salt: randomSalt,
                         message: parameter.message
                     },
