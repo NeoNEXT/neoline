@@ -2,8 +2,7 @@ import { Injectable } from '@angular/core';
 import { rpc, sc, tx, u, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from, throwError } from 'rxjs';
-import { AssetState, NotificationService, GlobalService, NeonService } from '@app/core';
-import BigNumber from 'bignumber.js';
+import { AssetState, NotificationService, GlobalService } from '@app/core';
 import { ContractCall, ContractParam } from '@cityofzion/neon-core-neo3/lib/sc';
 
 interface CreateNeo3TxInput {
@@ -19,7 +18,6 @@ export class Neo3InvokeService {
         public assetState: AssetState,
         public notification: NotificationService,
         private globalService: GlobalService,
-        private neon: NeonService,
     ) {
         this.rpcClient = new rpc.RPCClient(this.globalService.Neo3RPCDomain);
     }
@@ -84,11 +82,12 @@ export class Neo3InvokeService {
             const { feePerByte, executionFeeFactor } = await neo3This.getFeeInformation(
                 rpcClientTemp
             );
-            const networkFeeEstimate = neo3This.calculateNetworkFee(
+            const networkFeeEstimate = await neo3This.calculateNetworkFee(
                 vars.tx,
                 feePerByte,
                 executionFeeFactor,
-                inputs.invokeArgs
+                inputs,
+                signerJson
             );
             vars.tx.networkFee = u.Fixed8.fromRawNumber(networkFeeEstimate.toString()).add(
                 params.networkFee
@@ -157,13 +156,19 @@ export class Neo3InvokeService {
         return new sc.OpToken(sc.OpCode.PUSHDATA1, '0'.repeat(128));
     }
 
-    public calculateNetworkFee(txn, feePerByte, executionFeeFactor, invokeArgs) {
+    public async calculateNetworkFee(
+        txn,
+        feePerByte,
+        executionFeeFactor,
+        params,
+        signerJson
+      ) {
         const feePerByteBigInteger =
           feePerByte instanceof u.BigInteger
             ? feePerByte
             : u.BigInteger.fromNumber(feePerByte);
         const txClone = new tx.Transaction(txn);
-        const witnesses: any[] = invokeArgs.map((item) => {
+        const witnesses: any[] = params.invokeArgs.map((item) => {
           return new tx.Witness({
             verificationScript: '00'.repeat(40),
             invocationScript: '',
@@ -189,21 +194,22 @@ export class Neo3InvokeService {
             });
           }
         });
-        let verificationExecutionFee = txClone.witnesses.reduce(
-          (totalFee, witness) => {
-            return totalFee
-              .add(
-                sc.calculateExecutionFee(
-                  witness.invocationScript.toBigEndian(),
-                  executionFeeFactor
-                )
-              )
-              .add(
-                sc.calculateExecutionFee(
-                  witness.verificationScript.toBigEndian(),
-                  executionFeeFactor
-                )
+        let verificationExecutionFee = await params.invokeArgs.reduce(
+          async (totalFee, item) => {
+            let fee = u.BigInteger.fromNumber(0);
+            try {
+              const invokeFunctionResponse = await this.rpcClient.invokeContractVerify(
+                item.scriptHash,
+                [],
+                signerJson
               );
+              if (invokeFunctionResponse.state === 'HALT') {
+                fee = u.BigInteger.fromNumber(invokeFunctionResponse.gasconsumed);
+              }
+            } catch (error) {
+              console.log(error);
+            }
+            return totalFee.add(fee);
           },
           u.BigInteger.fromNumber(0)
         );
@@ -213,7 +219,7 @@ export class Neo3InvokeService {
         }
         const sizeFee = feePerByteBigInteger.mul(txClone.serialize(true).length / 2);
         return sizeFee.add(verificationExecutionFee);
-    }
+      }
 
     public hexToBase64(str: string) {
         return Buffer.from(str, 'hex').toString('base64');
