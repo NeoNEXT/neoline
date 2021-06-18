@@ -1395,7 +1395,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             return;
         }
         case requestTargetN3.ScriptHashToAddress: {
-            const address = wallet3.getAddressFromScriptHash(request.parameter.scriptHash);
+            const scriptHash = request.parameter.scriptHash;
+            const str = scriptHash.startsWith('0x') ? scriptHash.substring(2, 44) : scriptHash;
+            const address = wallet3.getAddressFromScriptHash(str);
             windowCallback({
                 data: { address },
                 return: requestTargetN3.ScriptHashToAddress,

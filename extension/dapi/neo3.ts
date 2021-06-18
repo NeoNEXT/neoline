@@ -118,7 +118,7 @@ export class Init {
     }
 
     public async AddressToScriptHash(parameter: N3AddressToScriptHash): Promise<string> {
-        if (!wallet.isAddress(parameter.address)) {
+        if (parameter && !wallet.isAddress(parameter.address)) {
             return new Promise((_, reject) => {
                 reject(ERRORS.MALFORMED_INPUT);
             });
@@ -128,7 +128,12 @@ export class Init {
     }
 
     public async ScriptHashToAddress(parameter: N3ScriptHashToAddress): Promise<string> {
-        if (!wallet.isAddress(wallet.getAddressFromScriptHash(parameter.scriptHash))) {
+        if (
+            parameter && !wallet.isAddress(wallet.getAddressFromScriptHash(
+                parameter.scriptHash.startsWith('0x') ?
+                parameter.scriptHash.substring(2, 44) : parameter.scriptHash
+            ))
+        ) {
             return new Promise((_, reject) => {
                 reject(ERRORS.MALFORMED_INPUT);
             });
