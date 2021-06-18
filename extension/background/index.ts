@@ -37,6 +37,7 @@ import {
 import { base64Encode, getNetwork, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getReqHeaderNetworkType, getScriptHashFromAddress, getWalletType, hexstring2str, sign, str2hexstring } from '../common/utils';
 import randomBytes = require('randomBytes');
 import {
+    u as u3,
     wallet as wallet3
 } from '@cityofzion/neon-core-neo3/lib';
 
@@ -68,7 +69,7 @@ export function expand() {
         };
         const newLocal = 'TestNet';
         let rpcUrl = RPC[chainType][newLocal];
-        let network: Network = getNetwork(currChainId);
+        const network: Network = getNetwork(currChainId);
         if (chainType === ChainType.Neo2) {
             rpcUrl = RPC[chainType][currNetwork];
         } else if (chainType === ChainType.Neo3) {
@@ -82,48 +83,18 @@ export function expand() {
                 params: [],
                 id: 1
             }, async (blockHeightData) => {
-                if (oldHeight === 0 || blockHeightData.result - oldHeight > 5) {
-                    oldHeight = blockHeightData.result - 1;
+                const newHeight = blockHeightData.result;
+                if (oldHeight === 0 || newHeight - oldHeight > 5) {
+                    oldHeight = newHeight - 1;
                 }
-                const heightInterval = blockHeightData.result - oldHeight;
-                if (blockHeightData.err === undefined && heightInterval === 1) {
-                    const setData = {};
-                    setData[`${chainType}_${network}BlockHeight`] = blockHeightData.result;
-                    setLocalStorage(setData);
-                    httpPost(rpcUrl, {
-                        jsonrpc: '2.0',
-                        method: 'getblock',
-                        params: [blockHeightData.result - 1, 1],
-                        id: 1
-                    }, (blockDetail) => {
-                        if (blockDetail.error === undefined) {
-                            const txStrArr = [];
-                            blockDetail.result.tx.forEach(item => {
-                                txStrArr.push(item.txid);
-                            });
-                            windowCallback({
-                                data: {
-                                    chainId: currChainId,
-                                    blockHeight: blockHeightData.result,
-                                    blockTime: blockDetail.result.time,
-                                    blockHash: blockDetail.result.hash,
-                                    tx: txStrArr,
-                                },
-                                return: EVENT.BLOCK_HEIGHT_CHANGED
-                            });
-                        }
-                    }, '*');
-                } else if (blockHeightData.err === undefined && heightInterval > 1) {
-                    let timer;
-                    for (let intervalIndex = 0; intervalIndex < heightInterval; intervalIndex++) {
+                let timer;
+                for (let reqHeight = oldHeight; reqHeight < newHeight; reqHeight++) {
+                    if (oldHeight !== newHeight) {
                         timer = setTimeout(() => {
-                            const setData = {};
-                            setData[`${chainType}_${network}BlockHeight`] = oldHeight + intervalIndex + 1;
-                            setLocalStorage(setData);
                             httpPost(rpcUrl, {
                                 jsonrpc: '2.0',
                                 method: 'getblock',
-                                params: [oldHeight + 1, 1],
+                                params: [reqHeight, 1],
                                 id: 1
                             }, (blockDetail) => {
                                 if (blockDetail.error === undefined) {
@@ -134,7 +105,7 @@ export function expand() {
                                     windowCallback({
                                         data: {
                                             chainId: currChainId,
-                                            blockHeight: blockHeightData.result,
+                                            blockHeight: reqHeight,
                                             blockTime: blockDetail.result.time,
                                             blockHash: blockDetail.result.hash,
                                             tx: txStrArr,
@@ -142,11 +113,14 @@ export function expand() {
                                         return: EVENT.BLOCK_HEIGHT_CHANGED
                                     });
                                 }
+                                if (newHeight - reqHeight <= 1) {
+                                    const setData = {};
+                                    setData[`${chainType}_${network}BlockHeight`] = newHeight;
+                                    setLocalStorage(setData);
+                                    clearTimeout(timer);
+                                }
                             }, '*');
-                        }, 500 * intervalIndex);
-                        if (heightInterval <= 1) {
-                            clearTimeout(timer);
-                        }
+                        });
                     }
                 }
             }, '*')
@@ -1189,19 +1163,19 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             const currWallet = await getLocalStorage('wallet', () => { });
             const WIFArr = await getLocalStorage('WIFArr-Neo3', () => { });
             if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
+                const privateKey = wallet3.getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
                     item.accounts[0].address === currWallet.accounts[0].address)]
                 );
-                const publicKey = getPublicKeyFromPrivateKey(privateKey);
-                const parameterHexString = str2hexstring(parameter.message);
-                const lengthHex = (parameterHexString.length / 2).toString(16).padStart(2, '0');
+                const publicKey = wallet3.getPublicKeyFromPrivateKey(privateKey);
+                const parameterHexString = u3.str2hexstring(parameter.message);
+                const lengthHex = u3.num2VarInt(parameterHexString.length / 2);
                 const concatenatedString = lengthHex + parameterHexString;
-                const serializedTransaction = '010001f0' + concatenatedString + '0000';
+                const messageHex = '010001f0' + concatenatedString + '0000';
+                const result = wallet3.verify(messageHex, parameter.data, publicKey);
                 windowCallback({
                     return: requestTargetN3.VerifyMessage,
                     data: {
-                        result: sign(serializedTransaction, privateKey) === parameter.data &&
-                            publicKey === parameter.publicKey ? true : false
+                        result: publicKey === parameter.publicKey ? result : false
                     },
                     ID: request.ID
                 });
@@ -1215,20 +1189,20 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             const currWallet = await getLocalStorage('wallet', () => { });
             const WIFArr = await getLocalStorage('WIFArr-Neo3', () => { });
             if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
+                const privateKey = wallet3.getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
                     item.accounts[0].address === currWallet.accounts[0].address)]
                 );
                 const randomSalt = randomBytes(16).toString('hex');
-                const publicKey = getPublicKeyFromPrivateKey(privateKey);
-                const parameterHexString = str2hexstring(randomSalt + parameter.message);
-                const lengthHex = (parameterHexString.length / 2).toString(16).padStart(2, '0');
+                const publicKey = wallet3.getPublicKeyFromPrivateKey(privateKey);
+                const parameterHexString = u3.str2hexstring(randomSalt + parameter.message);
+                const lengthHex = u3.num2VarInt(parameterHexString.length / 2);
                 const concatenatedString = lengthHex + parameterHexString;
-                const serializedTransaction = '010001f0' + concatenatedString + '0000';
+                const messageHex = '010001f0' + concatenatedString + '0000';
                 windowCallback({
                     return: requestTargetN3.SignMessage,
                     data: {
                         publicKey,
-                        data: sign(serializedTransaction, privateKey),
+                        data: wallet3.sign(messageHex, privateKey),
                         salt: randomSalt,
                         message: parameter.message
                     },

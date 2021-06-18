@@ -88,4 +88,15 @@ export class PopupHomeMenuDialogComponent {
                 }
             });
     }
+
+    public exportWallet() {
+        const sJson = JSON.stringify(this.neon.wallet.export());
+        const element = document.createElement('a');
+        element.setAttribute('href', 'data:text/json;charset=UTF-8,' + encodeURIComponent(sJson));
+        element.setAttribute('download', `${this.neon.wallet.name}.json`);
+        element.style.display = 'none';
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    }
 }
