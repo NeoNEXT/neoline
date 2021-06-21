@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { rpc, sc, tx, u, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from, throwError } from 'rxjs';
-import { AssetState, NotificationService, GlobalService, NeonService } from '@app/core';
+import { AssetState, NotificationService, GlobalService } from '@app/core';
 import BigNumber from 'bignumber.js';
 import { ContractCall, ContractParam } from '@cityofzion/neon-core-neo3/lib/sc';
 
@@ -19,7 +19,6 @@ export class Neo3InvokeService {
         public assetState: AssetState,
         public notification: NotificationService,
         private globalService: GlobalService,
-        private neon: NeonService,
     ) {
         this.rpcClient = new rpc.RPCClient(this.globalService.Neo3RPCDomain);
     }
@@ -84,11 +83,12 @@ export class Neo3InvokeService {
             const { feePerByte, executionFeeFactor } = await neo3This.getFeeInformation(
                 rpcClientTemp
             );
-            const networkFeeEstimate = neo3This.calculateNetworkFee(
+            const networkFeeEstimate = await neo3This.calculateNetworkFee(
                 vars.tx,
                 feePerByte,
                 executionFeeFactor,
-                inputs.invokeArgs
+                inputs,
+                inputs.signers
             );
             vars.tx.networkFee = u.Fixed8.fromRawNumber(networkFeeEstimate.toString()).add(
                 params.networkFee
@@ -157,62 +157,80 @@ export class Neo3InvokeService {
         return new sc.OpToken(sc.OpCode.PUSHDATA1, '0'.repeat(128));
     }
 
-    public calculateNetworkFee(txn, feePerByte, executionFeeFactor, invokeArgs) {
+    public async calculateNetworkFee(
+        txn,
+        feePerByte,
+        executionFeeFactor,
+        params,
+        signers
+    ) {
         const feePerByteBigInteger =
-          feePerByte instanceof u.BigInteger
-            ? feePerByte
-            : u.BigInteger.fromNumber(feePerByte);
+            feePerByte instanceof u.BigInteger
+                ? feePerByte
+                : u.BigInteger.fromNumber(feePerByte);
         const txClone = new tx.Transaction(txn);
-        const witnesses: any[] = invokeArgs.map((item) => {
-          return new tx.Witness({
-            verificationScript: '00'.repeat(40),
-            invocationScript: '',
-          });
+        const witnesses: any[] = params.invokeArgs.map((item) => {
+            return new tx.Witness({
+                verificationScript: '00'.repeat(40),
+                invocationScript: '',
+            });
         });
         txClone.witnesses = witnesses;
         txClone.witnesses = txn.witnesses.map((w) => {
-          const verificationScript = w.verificationScript;
-          if (sc.isMultisigContract(verificationScript)) {
-            const threshold = wallet3.getSigningThresholdFromVerificationScript(
-              verificationScript.toBigEndian()
-            );
-            return new tx.Witness({
-              invocationScript: this.generateFakeInvocationScript()
-                .toScript()
-                .repeat(threshold),
-              verificationScript,
-            });
-          } else {
-            return new tx.Witness({
-              invocationScript: this.generateFakeInvocationScript().toScript(),
-              verificationScript,
-            });
-          }
+            const verificationScript = w.verificationScript;
+            if (sc.isMultisigContract(verificationScript)) {
+                const threshold = wallet3.getSigningThresholdFromVerificationScript(
+                    verificationScript.toBigEndian()
+                );
+                return new tx.Witness({
+                    invocationScript: this.generateFakeInvocationScript()
+                        .toScript()
+                        .repeat(threshold),
+                    verificationScript,
+                });
+            } else {
+                return new tx.Witness({
+                    invocationScript: this.generateFakeInvocationScript().toScript(),
+                    verificationScript,
+                });
+            }
         });
-        let verificationExecutionFee = txClone.witnesses.reduce(
-          (totalFee, witness) => {
-            return totalFee
-              .add(
-                sc.calculateExecutionFee(
-                  witness.invocationScript.toBigEndian(),
-                  executionFeeFactor
-                )
-              )
-              .add(
-                sc.calculateExecutionFee(
-                  witness.verificationScript.toBigEndian(),
-                  executionFeeFactor
-                )
-              );
-          },
-          u.BigInteger.fromNumber(0)
+        const signerJson = signers.map((signersItem) => {
+            return {
+                account: signersItem.account.toString(),
+                scopes: signersItem.scopes.toString(),
+                allowedcontracts:
+                    signersItem?.allowedContracts?.map((item) => item.toString()) ||
+                    undefined,
+                allowedgroups:
+                    signersItem?.allowedGroups?.map((item) => item.toString()) || undefined,
+            };
+        });
+        let totalFee = 0;
+        await params.invokeArgs.forEach(
+            async (item) => {
+                let fee = 0;
+                try {
+                    const invokeFunctionResponse = await this.rpcClient.invokeContractVerify(
+                        item.scriptHash,
+                        [],
+                        signerJson
+                    );
+                    if (invokeFunctionResponse.state === 'HALT') {
+                        fee = invokeFunctionResponse.gasconsumed;
+                    }
+                } catch (error) {
+                    console.log(error);
+                }
+                totalFee = totalFee + fee;
+            }
         );
-        const defaultVerificationExecutionFee = u.BigInteger.fromNumber(1007000);
-        if (verificationExecutionFee.compare(defaultVerificationExecutionFee) < 0) {
-          verificationExecutionFee = defaultVerificationExecutionFee;
+        const defaultVerificationExecutionFee = 1007000;
+        if (u.BigInteger.fromNumber(totalFee).compare(defaultVerificationExecutionFee) < 0) {
+            totalFee = defaultVerificationExecutionFee;
         }
         const sizeFee = feePerByteBigInteger.mul(txClone.serialize(true).length / 2);
-        return sizeFee.add(verificationExecutionFee);
+        return sizeFee.add(u.BigInteger.fromNumber(totalFee));
     }
 
     public hexToBase64(str: string) {
