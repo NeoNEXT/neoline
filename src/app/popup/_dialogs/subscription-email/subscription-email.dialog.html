@@ -5,7 +5,7 @@
 
 <div class="container">
     <p class="email-label">E-MAIL</p>
-    <input matInput [pattern]="limit.emailPattern" required [(ngModel)]="email" (keyup.enter)="submit()"
+    <input matInput [pattern]="limit?.emailPattern" required [(ngModel)]="email" (keyup.enter)="submit()"
         placeholder="{{ 'newsletterPlaceholder' | translate | async }}" type="email">
     <div class="tip">
         <span class="select" [ngClass]="{'active': isSelected}"

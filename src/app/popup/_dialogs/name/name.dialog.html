@@ -1,7 +1,7 @@
 <P class="title">{{ 'modifyNameTitle' | translate | async}}</P>
 
 <div class="input-name">
-    <input [(ngModel)]="name" [maxlength]="limit.nameLimitation[1]" [minlength]="limit.nameLimitation[0]"
+    <input [(ngModel)]="name" [maxlength]="limit?.nameLimitation[1]" [minlength]="limit?.nameLimitation[0]"
         [placeholder]="'modifyNameInput' | translate | async" (keyup.enter)="updateName()">
 </div>
 
