@@ -1,4 +1,4 @@
-import { GlobalService, NeonService } from '@/app/core';
+import { GlobalService, NeonService, SettingState } from '@/app/core';
 import {
     AfterContentInit,
     Component,
@@ -6,9 +6,7 @@ import {
     OnInit,
     Output,
 } from '@angular/core';
-import { WalletInitConstant } from '../../_lib/constant';
-import { WalletCreation, WalletImport } from '../../_lib/models';
-import { Observable, of } from 'rxjs';
+import { WalletImport } from '../../_lib/models';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
@@ -40,9 +38,12 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
     public hideNep6Pwd: boolean;
 
     @Output() submit = new EventEmitter<any>();
-    constructor(private global: GlobalService, private neon: NeonService) {
+    constructor(
+        private global: GlobalService,
+        private neon: NeonService,
+        private settingState: SettingState
+    ) {
         this.isInit = true;
-        this.limit = WalletInitConstant;
 
         this.walletImport = new WalletImport();
         this.hideImportPwd = true;
@@ -61,7 +62,9 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
         }
     }
 
-    ngOnInit() {}
+    async ngOnInit() {
+        this.limit = await this.settingState.getWalletInitConstant();
+    }
 
     ngAfterContentInit(): void {
         setTimeout(() => {
@@ -94,8 +97,9 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
                     this.nep6Name = this.nep6Json.name;
                     this.walletNep6Import.walletName = this.nep6Json.name;
                 }
-                this.walletNep6Import.EncrpytedKey = (this.nep6Json
-                    .accounts[0] as any).key;
+                this.walletNep6Import.EncrpytedKey = (
+                    this.nep6Json.accounts[0] as any
+                ).key;
             };
             reader.onerror = (evt) => {
                 console.log('error reading file');

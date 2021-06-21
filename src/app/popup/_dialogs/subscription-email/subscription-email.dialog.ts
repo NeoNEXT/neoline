@@ -1,21 +1,27 @@
-import { Component, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { TransactionState, GlobalService, ChromeService } from '@/app/core';
+import { Component, OnInit } from '@angular/core';
+import { GlobalService, ChromeService, SettingState } from '@/app/core';
 import { WalletInitConstant } from '../../_lib/constant';
 
 @Component({
     templateUrl: 'subscription-email.dialog.html',
-    styleUrls: ['subscription-email.dialog.scss']
+    styleUrls: ['subscription-email.dialog.scss'],
 })
-export class PopupSubscriptionEmailDialogComponent {
+export class PopupSubscriptionEmailDialogComponent implements OnInit {
     isSelected = false;
     limit: any;
     email: string;
     emailRegExp;
 
-    constructor(private global: GlobalService, private chrome: ChromeService) {
-        this.limit = WalletInitConstant;
+    constructor(
+        private global: GlobalService,
+        private chrome: ChromeService,
+        private settingState: SettingState
+    ) {
         this.emailRegExp = new RegExp(WalletInitConstant.emailPattern);
+    }
+
+    async ngOnInit(): Promise<void> {
+        this.limit = await this.settingState.getWalletInitConstant();
     }
 
     submit() {
