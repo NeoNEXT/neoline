@@ -25,9 +25,9 @@
             </mat-error>
             <mat-error *ngIf="password.errors?.minlength">{{ 'lengthLimit' | translate | async }}:
                 {{ limit.passwordLimitation[0] }}-{{ limit.passwordLimitation[1] }} </mat-error>
-            <mat-error *ngIf="password.errors?.pattern">
+            <!-- <mat-error *ngIf="password.errors?.pattern">
                 {{ 'onlySupport' | translate | async}}: 0-9 A-Z a-z _-+=,.:!
-            </mat-error>
+            </mat-error> -->
         </mat-form-field>
         <mat-form-field class="popup-wallet-input-body" appearance="fill" focused="true">
             <img matPrefix src="/assets/images/wallet/wallet_lock.png" />

@@ -45,13 +45,13 @@
                 (click)="hideImportPwd = !hideImportPwd">
                 <span [class]="hideImportPwd ? 'hide-pwd' : ''"></span>
             </button>
-            <mat-error *ngIf="password.errors?.required">{{ 'passwordRequired' | translate | async }}
+            <mat-error *ngIf="WIFpassword.errors?.required">{{ 'passwordRequired' | translate | async }}
             </mat-error>
-            <mat-error *ngIf="password.errors?.minlength">{{ 'lengthLimit' | translate | async }}:
+            <mat-error *ngIf="WIFpassword.errors?.minlength">{{ 'lengthLimit' | translate | async }}:
                 {{ limit.passwordLimitation[0] }}-{{ limit.passwordLimitation[1] }} </mat-error>
-            <mat-error *ngIf="password.errors?.pattern">
+            <!-- <mat-error *ngIf="WIFpassword.errors?.pattern">
                 {{ 'onlySupport' | translate | async}}: 0-9 A-Z a-z _-+=,.:!
-            </mat-error>
+            </mat-error> -->
         </mat-form-field>
 
         <mat-form-field class="popup-wallet-input-body" appearance="fill" focused="true">
@@ -88,9 +88,9 @@
                 </mat-error>
                 <mat-error *ngIf="password.errors?.minlength">{{ 'lengthLimit' | translate | async }}:
                     {{ limit.passwordLimitation[0] }}-{{ limit.passwordLimitation[1] }} </mat-error>
-                <mat-error *ngIf="password.errors?.pattern">
+                <!-- <mat-error *ngIf="password.errors?.pattern">
                     {{ 'onlySupport' | translate | async}}: 0-9 A-Z a-z _-+=,.:!
-                </mat-error>
+                </mat-error> -->
             </mat-form-field>
         </form>
     </div>
