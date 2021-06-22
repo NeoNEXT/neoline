@@ -353,9 +353,6 @@
     "authorizationManageTips": {
         "message": "可清除已授权网站"
     },
-    "DisableShortPassword": {
-        "message": "禁用短密码(默认)"
-    },
     "viewAll": {
         "message": "查看所有"
     },

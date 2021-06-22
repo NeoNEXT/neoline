@@ -24,7 +24,6 @@ export class PopupSettingComponent implements OnInit {
     public rateCurrencys: Array<string>;
     public rateTime: number;
     public isDark;
-    public disableShortPassword: boolean;
 
     constructor(
         private chrome: ChromeService,
@@ -39,7 +38,6 @@ export class PopupSettingComponent implements OnInit {
     }
 
     async ngOnInit(): Promise<void> {
-        this.disableShortPassword = await this.setting.getDisableShortPassword();
         this.chrome.getLang().subscribe(
             (res) => {
                 this.lang = res;
@@ -114,14 +112,6 @@ export class PopupSettingComponent implements OnInit {
             this.setting.changeTheme('dark-theme');
         } else {
             this.setting.changeTheme('light-theme');
-        }
-    }
-
-    changeMode($event) {
-        if ($event.checked === true) {
-            this.setting.changeDisableShortPassword(true);
-        } else {
-            this.setting.changeDisableShortPassword(false);
         }
     }
 }

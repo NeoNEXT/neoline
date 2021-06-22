@@ -10,13 +10,3 @@ export const WalletInitConstant = {
     pattern,
     emailPattern,
 };
-
-const devPasswordLimitation = [1, 128];
-const devPattern = `^.{${devPasswordLimitation[0]},${devPasswordLimitation[1]}}$`;
-
-export const DevWalletInitConstant = {
-    nameLimitation,
-    passwordLimitation: devPasswordLimitation,
-    pattern: devPattern,
-    emailPattern,
-};

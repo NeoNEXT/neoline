@@ -50,12 +50,3 @@
     </div>
     <span class="tip">{{ 'authorizationManageTips' | translate | async }}</span>
 </div>
-
-<div class="popup-setting-menu setting-asset-rate">
-    <div class="current-currency">
-        <span class="title">{{ 'DisableShortPassword' | translate | async }}</span>
-        <div>
-            <mat-slide-toggle color="primary" (change)="changeMode($event)" [checked]="disableShortPassword"></mat-slide-toggle>
-        </div>
-    </div>
-</div>

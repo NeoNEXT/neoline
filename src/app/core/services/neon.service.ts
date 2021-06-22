@@ -499,7 +499,7 @@ export class NeonService {
                         });
                     })
                     .catch((err) => {
-                        observer.error('import failed');
+                        observer.error('Wrong password');
                     });
             } else if (this.selectedChainType === 'Neo3') {
                 const w = new this._selectedNeonWallet.Wallet({
@@ -523,7 +523,7 @@ export class NeonService {
                         });
                     })
                     .catch((err) => {
-                        observer.error('import failed');
+                        observer.error('Wrong password');
                     });
             }
         });

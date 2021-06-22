@@ -353,9 +353,6 @@
     "authorizationManageTips": {
         "message": "Clean up authorized sites"
     },
-    "DisableShortPassword": {
-        "message": "Disable short password (default)"
-    },
     "viewAll": {
         "message": "View all"
     },

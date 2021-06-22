@@ -34,7 +34,8 @@ export class NotificationService {
         insufficientBalance: 'Insufficient GAS to pay for fees! Required',
         butOnlyHad: 'but only had',
         insufficientSystemFee: 'Insufficient balance when system fee added',
-        rpcError: 'rpc error, please check the console.'
+        rpcError: 'rpc error, please check the console.',
+        wrongPassword: 'Wrong password'
     };
     CN = {
         close: '关闭',
@@ -66,7 +67,8 @@ export class NotificationService {
         insufficientBalance: 'GAS 不足以支付费用！需要',
         butOnlyHad: '但只有',
         insufficientSystemFee: '加上系统费用后余额不足',
-        rpcError: '节点返回错误, 请查看控制台。'
+        rpcError: '节点返回错误, 请查看控制台。',
+        wrongPassword: '密码错误'
     };
     constructor(
         public chrome: ChromeService

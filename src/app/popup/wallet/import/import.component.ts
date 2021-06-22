@@ -1,4 +1,4 @@
-import { GlobalService, NeonService, SettingState } from '@/app/core';
+import { GlobalService, NeonService } from '@/app/core';
 import {
     AfterContentInit,
     Component,
@@ -6,7 +6,9 @@ import {
     OnInit,
     Output,
 } from '@angular/core';
-import { WalletImport } from '../../_lib/models';
+import { WalletInitConstant } from '../../_lib/constant';
+import { WalletCreation, WalletImport } from '../../_lib/models';
+import { Observable, of } from 'rxjs';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
@@ -38,12 +40,9 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
     public hideNep6Pwd: boolean;
 
     @Output() submit = new EventEmitter<any>();
-    constructor(
-        private global: GlobalService,
-        private neon: NeonService,
-        private settingState: SettingState
-    ) {
+    constructor(private global: GlobalService, private neon: NeonService) {
         this.isInit = true;
+        this.limit = WalletInitConstant;
 
         this.walletImport = new WalletImport();
         this.hideImportPwd = true;
@@ -62,9 +61,7 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
         }
     }
 
-    async ngOnInit() {
-        this.limit = await this.settingState.getWalletInitConstant();
-    }
+    ngOnInit() {}
 
     ngAfterContentInit(): void {
         setTimeout(() => {
@@ -97,9 +94,8 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
                     this.nep6Name = this.nep6Json.name;
                     this.walletNep6Import.walletName = this.nep6Json.name;
                 }
-                this.walletNep6Import.EncrpytedKey = (
-                    this.nep6Json.accounts[0] as any
-                ).key;
+                this.walletNep6Import.EncrpytedKey = (this.nep6Json
+                    .accounts[0] as any).key;
             };
             reader.onerror = (evt) => {
                 console.log('error reading file');
@@ -176,9 +172,14 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
                         }
                     },
                     (err: any) => {
+                        console.log(err);
                         this.loading = false;
                         this.global.log('import wallet faild', err);
-                        this.global.snackBarTip('walletImportFailed', '');
+                        if (err === 'Wrong password') {
+                            this.global.snackBarTip('wrongPassword', '');
+                        } else {
+                            this.global.snackBarTip('walletImportFailed', '');
+                        }
                     }
                 );
         }

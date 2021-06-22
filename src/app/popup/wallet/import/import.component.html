@@ -78,19 +78,13 @@
                 <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
                 <mat-label>{{ 'enterPassword' | translate | async }}</mat-label>
                 <input matInput [(ngModel)]="walletNep6Import.password" name="password" #password="ngModel" required
-                    [minlength]="limit?.passwordLimitation[0]" [maxlength]="limit?.passwordLimitation[1]"
-                    [pattern]="limit?.pattern" [type]="hideNep6Pwd ? 'password' : 'text'" />
+                    [type]="hideNep6Pwd ? 'password' : 'text'" />
                 <button tabindex="-1" mat-button matSuffix mat-icon-button type="button"
                     (click)="hideNep6Pwd = !hideNep6Pwd">
                     <span [class]="hideNep6Pwd ? 'hide-pwd' : ''"></span>
                 </button>
                 <mat-error *ngIf="password.errors?.required">{{ 'passwordRequired' | translate | async }}
                 </mat-error>
-                <mat-error *ngIf="password.errors?.minlength">{{ 'lengthLimit' | translate | async }}:
-                    {{ limit?.passwordLimitation[0] }}-{{ limit?.passwordLimitation[1] }} </mat-error>
-                <!-- <mat-error *ngIf="password.errors?.pattern">
-                    {{ 'onlySupport' | translate | async}}: 0-9 A-Z a-z _-+=,.:!
-                </mat-error> -->
             </mat-form-field>
         </form>
     </div>

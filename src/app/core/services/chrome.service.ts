@@ -253,35 +253,6 @@ export class ChromeService {
         });
     }
 
-    public setDisableShortPassword(disableShortPassword: string) {
-        if (!this.check) {
-            localStorage.setItem('disableShortPassword', disableShortPassword);
-            return;
-        }
-        try {
-            this.crx.setLocalStorage({ disableShortPassword });
-        } catch (e) {
-            console.log('set Disable short password failed', e);
-        }
-    }
-
-    public getDisableShortPassword() {
-        if (!this.check) {
-            return new Promise<string>(resolve => {
-                resolve(localStorage.getItem('disableShortPassword'));
-            });
-        }
-        return new Promise<string>((resolve, reject) => {
-            try {
-                this.crx.getLocalStorage('disableShortPassword', (res) => {
-                    resolve(res || '');
-                });
-            } catch (e) {
-                reject('failed');
-            }
-        });
-    }
-
     /**
      * Set wallets, and add to history list.
      * 保存钱包数组，并记录到历史

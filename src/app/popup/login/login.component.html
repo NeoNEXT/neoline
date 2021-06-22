@@ -12,23 +12,17 @@
         <mat-form-field class="popup-login-input" appearance="fill">
             <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
             <mat-label>{{ 'pwdInput' | translate | async }}</mat-label>
-            <input matInput [minlength]="limit?.passwordLimitation[0]"
-                [maxlength]="limit?.passwordLimitation[1]" [pattern]="limit?.pattern" name="password" #password="ngModel"
-                required [(ngModel)]="wallet.password" [type]="hidePwd ? 'password' : 'text'"
+            <input matInput name="password" #password="ngModel" required [(ngModel)]="wallet.password"
+                [type]="hidePwd ? 'password' : 'text'"
                 (keyup.enter)="(!isInit && !loginForm.invalid && !loading) ? login() : null " />
             <button mat-button matSuffix mat-icon-button type="button" (click)="togglePwd()">
                 <span [class]="hidePwd ? 'hide-pwd' : '' "></span>
             </button>
             <mat-error *ngIf="password.errors?.required">{{ 'passwordRequired' | translate | async}}</mat-error>
-            <mat-error *ngIf="password.errors?.minlength">{{ 'lengthLimit' | translate | async}}: {{
-                limit?.passwordLimitation[0] }}-{{ limit?.passwordLimitation[1] }} </mat-error>
-
-            <!-- <mat-error *ngIf="password.errors?.pattern">
-                {{ 'onlySupport' | translate | async}}: 0-9 A-Z a-z _-+=,.:!
-            </mat-error> -->
         </mat-form-field>
     </form>
-    <button mat-button color="primary" class="popup-login-reset" (click)="resetWallet()">{{ 'resetWallet' | translate | async }}</button>
+    <button mat-button color="primary" class="popup-login-reset"
+        (click)="resetWallet()">{{ 'resetWallet' | translate | async }}</button>
     <button mat-flat-button color="primary" class="popup-login" [disabled]="isInit || loginForm.invalid || loading"
         (click)="login()">
         <ng-container *ngIf="!loading">{{ 'login' | translate | async}}</ng-container>
