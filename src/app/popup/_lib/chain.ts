@@ -1,10 +1,24 @@
+import { string } from "mathjs";
+
 /**
  * 链类型
  * - `neo2`
  * - `neo3`
  */
 export type ChainType = 'Neo2' | 'Neo3';
-export const ChainTypeGroups = ['Neo2', 'Neo3'];
+export interface ChainTypeGroupsItem {
+    type: string;
+    name: string;
+}
+export const ChainTypeGroups: ChainTypeGroupsItem[] = [
+    {
+        type: 'Neo2',
+        name: 'Neo Legacy'
+    },{
+        type: 'Neo3',
+        name: 'Neo N3'
+    }
+];
 
 /**
  * chainId 1 Neo2 MainNet
