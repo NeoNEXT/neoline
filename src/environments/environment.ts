@@ -3,7 +3,8 @@
 // The list of file replacements can be found in `angular.json`.
 
 /**
- * @param A right neo3MainRPC value will be replaced when N3 mainnet is on.
+ * @param neo3MainRPC Custom configuration for node path.
+ * @param neo3TestRPC Custom configuration for node path.
  */
 export const environment = {
     production: false,
