@@ -24,7 +24,7 @@ https://neoline.io/dapi
 
 Currently support Neo N3 private chain.
 
-1. git checkout private_chain
+1. git checkout -b private_chain
 2. Please check the files in the environment folder for custom configuration.
 3. Run `npm run initneonjs` to install neonjs.
 4. Run `npm install` to install dependencies.
