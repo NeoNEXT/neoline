@@ -23,6 +23,7 @@ https://neoline.io/dapi
 ## private chain
 
 Currently support Neo N3 private chain.
+We recommend node v12.10.0 and npm v6.13.0, but there are no restriction on node version and npm version.
 
 1. git checkout -b private_chain
 2. Please check the files in the environment folder for custom configuration.
