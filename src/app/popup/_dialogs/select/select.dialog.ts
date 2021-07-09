@@ -3,7 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { ChromeService, GlobalService, AssetState, NeonService } from '@app/core';
 import { Router } from '@angular/router';
-import { ChainType, ChainTypeGroupsItem } from '@popup/_lib';
+import { ChainType, SelectItem } from '@popup/_lib';
 
 @Component({
     templateUrl: 'select.dialog.html',
@@ -22,7 +22,7 @@ export class PopupSelectDialogComponent implements OnInit {
         private neonService: NeonService,
         @Inject(MAT_DIALOG_DATA)
         public data: {
-            optionGroup: ChainTypeGroupsItem[];
+            optionGroup: SelectItem[];
             currentOption: string;
             type: 'lang' | 'currency' | 'chain'; // lang, currency
         }

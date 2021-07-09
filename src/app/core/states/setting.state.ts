@@ -2,9 +2,12 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpService } from '../services/http.service';
 import { GlobalService } from '../services/global.service';
+import { RateCurrencysType } from '@/app/popup/_lib/setting';
+import { SelectItem } from '@/app/popup/_lib';
+
 @Injectable()
 export class SettingState {
-    public rateCurrencys = ['USD', 'CNY'];
+    public rateCurrencys: Array<SelectItem> = RateCurrencysType;
     public theme = 'light-theme';
 
     constructor(

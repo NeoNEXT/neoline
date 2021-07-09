@@ -10,7 +10,8 @@ import {
     SettingState,
 } from '@app/core';
 import { Router } from '@angular/router';
-import { map } from 'rxjs/operators';
+import { SelectItem } from '@/app/popup/_lib';
+
 @Component({
     templateUrl: './setting-detail.component.html',
     styleUrls: ['./setting-detail.component.scss'],
@@ -19,7 +20,7 @@ export class SettingDetailComponent implements OnInit {
     public lang = 'zh_CN';
     public viewPrivacy = false;
     public rateCurrency: string;
-    public rateCurrencys: Array<string>;
+    public rateCurrencys: Array<SelectItem>;
     public rateTime: number;
     public authorizationList = [];
 

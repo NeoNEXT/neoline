@@ -1,4 +1,4 @@
-import { string } from "mathjs";
+import { SelectItem } from './type';
 
 /**
  * 链类型
@@ -6,11 +6,8 @@ import { string } from "mathjs";
  * - `neo3`
  */
 export type ChainType = 'Neo2' | 'Neo3';
-export interface ChainTypeGroupsItem {
-    type: string;
-    name: string;
-}
-export const ChainTypeGroups: ChainTypeGroupsItem[] = [
+
+export const ChainTypeGroups: SelectItem[] = [
     {
         type: 'Neo2',
         name: 'Neo Legacy'
