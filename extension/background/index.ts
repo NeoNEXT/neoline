@@ -100,7 +100,7 @@ export function expand() {
                                 if (blockDetail.error === undefined) {
                                     const txStrArr = [];
                                     blockDetail.result.tx.forEach(item => {
-                                        txStrArr.push(item.txid);
+                                        txStrArr.push(item.txid || item.hash);
                                     });
                                     windowCallback({
                                         data: {
@@ -162,7 +162,7 @@ export function expand() {
                 Network: getReqHeaderNetworkType(currNetwork)
             });
         } else if(chainType === ChainType.Neo3) {
-            const txArr = await getLocalStorage(`N3${currNetwork}TxArr`, (temp) => { }) || [];
+            const txArr = await getLocalStorage(`${currNetwork}TxArr`, (temp) => { }) || [];
             if (txArr.length === 0) {
                 return;
             }
@@ -192,7 +192,7 @@ export function expand() {
                     });
                 };
                 const setData = {};
-                setData[`N3${currNetwork}TxArr`] = txArr;
+                setData[`${currNetwork}TxArr`] = txArr;
                 setLocalStorage(setData);
             }, {
                 Network: getReqHeaderNetworkType(currNetwork)

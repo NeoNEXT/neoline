@@ -70,6 +70,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                     hostname: undefined,
                 };
                 this.pramsData = params;
+                this.net = this.global.net;
                 if (Number(this.pramsData.fee) > 0) {
                     this.assetState.getMoney('GAS', Number(this.pramsData.fee)).then(res => {
                         this.feeMoney = res;
