@@ -13,6 +13,8 @@ import {
     AssetState,
     SettingState,
 } from '@app/core';
+import { SelectItem } from '../_lib';
+import { LanguagesType } from '../_lib/setting';
 
 @Component({
     templateUrl: 'setting.component.html',
@@ -21,7 +23,7 @@ import {
 export class PopupSettingComponent implements OnInit {
     public lang: string;
     public rateCurrency: string;
-    public rateCurrencys: Array<string>;
+    public rateCurrencys: Array<SelectItem>;
     public rateTime: number;
     public isDark;
 
@@ -60,7 +62,7 @@ export class PopupSettingComponent implements OnInit {
         return this.dialog.open(PopupSelectDialogComponent, {
             data: {
                 currentOption: this.lang,
-                optionGroup: ['en', 'zh_CN'],
+                optionGroup: LanguagesType,
                 type: 'lang',
             },
             panelClass: 'custom-dialog-panel',

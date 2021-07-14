@@ -3,3 +3,8 @@ export interface GasFeeSpeed {
     propose_price: string;
     fast_price: string;
 }
+
+export interface SelectItem {
+    type: string;
+    name: string;
+}
