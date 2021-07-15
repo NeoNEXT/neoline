@@ -820,11 +820,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         }
                     });
                 } else {
-                    window.postMessage({
+                    windowCallback({
                         return: requestTarget.Send,
                         error: ERRORS.INSUFFICIENT_FUNDS,
                         ID: request.ID
-                    }, '*');
+                    });
+                    sendResponse('');
                     return;
                 }
             }, {
@@ -1341,17 +1342,19 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                                 error: ERRORS.MALFORMED_INPUT,
                                 ID: request.ID
                             });
+                            sendResponse('');
                         } else {
                             window.open(`index.html#popup/notification/neo3-transfer?${queryString}messageID=${request.ID}`,
                                 '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
                         }
                     });
                 } else {
-                    window.postMessage({
+                    windowCallback({
                         return: requestTargetN3.Send,
                         error: ERRORS.INSUFFICIENT_FUNDS,
                         ID: request.ID
-                    }, '*');
+                    });
+                    sendResponse('');
                     return;
                 }
             }, {
