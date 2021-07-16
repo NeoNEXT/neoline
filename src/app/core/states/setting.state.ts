@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { HttpService } from '../services/http.service';
 import { GlobalService } from '../services/global.service';
-import { WalletInitConstant, DevWalletInitConstant } from '@popup/_lib';
+import { WalletInitConstant, DevWalletInitConstant, SelectItem } from '@popup/_lib';
 import { ChromeService } from '../services/chrome.service';
+import { CurrencyType } from '@/app/popup/_lib/setting';
 
 @Injectable()
 export class SettingState {
-    public rateCurrencys = ['USD', 'CNY'];
+    public rateCurrencys: Array<SelectItem> = CurrencyType;
     public theme = 'light-theme';
     public disableShortPassword;
 

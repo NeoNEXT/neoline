@@ -14,6 +14,7 @@ import {
     SettingState,
 } from '@app/core';
 import { CurrencyType, LanguagesType } from '../_lib/setting';
+import { SelectItem } from '../_lib';
 
 @Component({
     templateUrl: 'setting.component.html',
@@ -22,7 +23,7 @@ import { CurrencyType, LanguagesType } from '../_lib/setting';
 export class PopupSettingComponent implements OnInit {
     public lang: string;
     public rateCurrency: string;
-    public rateCurrencys: Array<string>;
+    public rateCurrencys: Array<SelectItem>;
     public rateTime: number;
     public isDark;
     public disableShortPassword: boolean;
