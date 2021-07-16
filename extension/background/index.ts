@@ -807,11 +807,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         }
                     });
                 } else {
-                    window.postMessage({
+                    windowCallback({
                         return: requestTarget.Send,
                         error: ERRORS.INSUFFICIENT_FUNDS,
                         ID: request.ID
-                    }, '*');
+                    });
+                    sendResponse('');
                     return;
                 }
             }, {
@@ -1272,11 +1273,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     }
                 });
             } else {
-                window.postMessage({
+                windowCallback({
                     return: requestTargetN3.Send,
                     error: ERRORS.INSUFFICIENT_FUNDS,
                     ID: request.ID
-                }, '*');
+                });
+                sendResponse('');
                 return;
             }
             return true;
