@@ -219,9 +219,7 @@ export class Neo3InvokeService {
                     if (invokeFunctionResponse.state === 'HALT') {
                         fee = invokeFunctionResponse.gasconsumed;
                     }
-                } catch (error) {
-                    console.log(error);
-                }
+                } catch (error) {}
                 totalFee = new BigNumber(totalFee).plus(new BigNumber(fee)).toNumber();
             }
         );
