@@ -36,7 +36,8 @@ export class ChromeService {
     }
 
     public async setChainId() {
-        const oldChainID = await this.getChainId();
+        const storageName = 'network';
+        const item = await this.getChainId();
         const chainType = await this.getCurrentWalletChainType();
         let currChainId: ChainId;
         if (chainType === 'Neo2') {
@@ -46,15 +47,19 @@ export class ChromeService {
         }
         const network = NETWORKS[currChainId - 1];
         if (!this.check) {
-            localStorage.setItem('chainId', JSON.stringify(currChainId));
+            localStorage.setItem(storageName, JSON.stringify(currChainId));
             return;
         }
         try {
-            this.crx.setStorage({
-                chainId: currChainId
-            });
+            const saveData = {};
+            saveData[storageName] = {
+                chainId: currChainId,
+                networks: ['MainNet', 'TestNet', 'N3TestNet'],
+                defaultNetwork: network || 'MainNet'
+            }
+            this.crx.setStorage(saveData);
             this.crx.setNetwork(network, currChainId, chainType);
-            if(oldChainID.toString() !== currChainId.toString()) {
+            if((item as any).chainId.toString() !== currChainId.toString()) {
                 this.windowCallback({
                     return: EVENT.NETWORK_CHANGED,
                     data: {
@@ -70,15 +75,20 @@ export class ChromeService {
     }
 
     public getChainId() {
+        const storageName = 'network';
         if (!this.check) {
             return new Promise<string>(resolve => {
-                resolve(localStorage.getItem('chainId'));
+                resolve(localStorage.getItem(storageName));
             });
         }
         return new Promise<string>((resolve, reject) => {
             try {
-                this.crx.getStorage('chainId', (res) => {
-                    resolve(res || 1);
+                this.crx.getStorage(storageName, (res) => {
+                    resolve(res || {
+                        chainId: 1,
+                        defaultNetwork: 'MainNet',
+                        networks: ['MainNet', 'TestNet', 'N3TestNet']
+                    });
                 });
             } catch (e) {
                 reject('failed');
@@ -212,6 +222,7 @@ export class ChromeService {
                 return: EVENT.ACCOUNT_CHANGED,
             });
             this.setCurrentWalletChainType(currChainType);
+            this.setChainId();
         } catch (e) {
             console.log('set account failed', e);
         }
@@ -223,14 +234,12 @@ export class ChromeService {
     public setCurrentWalletChainType(chain: string) {
         if (!this.check) {
             localStorage.setItem('chainType', chain);
-            this.setChainId();
             return;
         }
         try {
             this.crx.setLocalStorage({
                 chainType: chain
             });
-            this.setChainId();
         } catch (e) {
             console.log('set chainType failed', e);
         }
@@ -770,15 +779,15 @@ export class ChromeService {
     public setNet(net: string) {
         this.net = net;
         if (!this.check) {
-            this.setChainId();
             localStorage.setItem('net', JSON.stringify(net));
+            this.setChainId();
             return;
         }
         try {
-            this.setChainId();
             this.crx.setStorage({
                 net
             });
+            this.setChainId();
         } catch (e) {
             console.log('set net failed', e);
         }
@@ -904,7 +913,7 @@ export class ChromeService {
                 return of({});
             }
         }
-        return from(new Promise<Object>((resolve, reject) => {
+        return from(new Promise<object>((resolve, reject) => {
             try {
                 this.crx.getStorage('authAddress', (res) => {
                     resolve(res || {});
