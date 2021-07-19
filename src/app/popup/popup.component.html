@@ -12,12 +12,11 @@
                 <span class="popup-nav-logo-img"></span>
             </span>
             <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
-                {{ (net === 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}
+                {{ activeNetwork?.name }}
                 <span class="popup-nav-network-icon"></span>
             </button>
             <mat-menu #menu="matMenu">
-                <button mat-menu-item (click)="modifyNet('MainNet')" *ngIf="isNeo3===false">{{ 'mainNet' | translate | async }}</button>
-                <button mat-menu-item (click)="modifyNet('TestNet')">{{ 'testNet' | translate | async }}</button>
+                <button mat-menu-item (click)="modifyNet(item)" *ngFor="let item of chainNetworks">{{ item.name }}</button>
             </mat-menu>
             <span class="popup-nav-menu" (click)="topMenu()" *ngIf="walletIsOpen && !isLogin">
                 <img [avatar]="address" />
@@ -32,12 +31,11 @@
                 <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
             </span>
             <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
-                {{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}
+                {{ activeNetwork?.name }}
                 <span class="popup-nav-network-icon"></span>
             </button>
             <mat-menu #menu="matMenu">
-                <button mat-menu-item>{{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}</button>
-                <!-- <button mat-menu-item (click)="modifyNetThird('test')">{{ 'testNet' | translate | async }}</button> -->
+                <button mat-menu-item>{{ activeNetwork?.name }}</button>
             </mat-menu>
         </mat-toolbar>
     </div>

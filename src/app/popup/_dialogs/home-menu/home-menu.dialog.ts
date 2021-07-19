@@ -2,11 +2,12 @@ import { Component, ViewChild, ElementRef } from '@angular/core';
 import { MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { NeonService, ChromeService, GlobalService } from '@/app/core';
 import { Router } from '@angular/router';
-import { EVENT } from '@/models/dapi';
 import { PopupSelectDialogComponent } from '../select/select.dialog';
-import { ChainTypeGroups, ChainType } from '@popup/_lib';
+import { ChainTypeGroups } from '@popup/_lib';
+import { ChainType, NETWORKS } from '../../_lib/constants';
 
 @Component({
     templateUrl: 'home-menu.dialog.html',
@@ -20,6 +21,8 @@ export class PopupHomeMenuDialogComponent {
     };
     public wallet: Wallet2 | Wallet3;
     public tabType: ChainType;
+    public chainType = ChainType;
+
     constructor(
         private router: Router,
         private chrome: ChromeService,
@@ -55,6 +58,18 @@ export class PopupHomeMenuDialogComponent {
 
     public selectAccount(w: Wallet2 | Wallet3) {
         this.wallet = this.neon.parseWallet(w);
+        const chainType: ChainType =
+            wallet3.isAddress(this.wallet.export().accounts[0].address) ? ChainType.Neo3 : ChainType.Neo2;
+        this.chrome.setCurrentWalletChainType(chainType);
+        switch(chainType) {
+            case ChainType.Neo2:
+                this.chrome.setActiveNetwork(NETWORKS.Neo2[0]);
+                break;
+            case ChainType.Neo3:
+                this.chrome.setActiveNetwork(NETWORKS.Neo3[0]);
+
+                break;
+        }
         this.chrome.setWallet(this.wallet.export());
         location.href = `index.html#popup`;
         this.chrome.setHaveBackupTip(null);

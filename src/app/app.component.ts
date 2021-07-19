@@ -9,6 +9,8 @@ import { HttpClient } from '@angular/common/http';
 import { EVENT } from '@/models/dapi';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
 import { ChainId, NetType } from './popup/_lib';
+import { NetworkItem, NetworkType } from './popup/_lib/types';
+import { NETWORKS } from './popup/_lib/constants';
 
 @Component({
     selector: 'neo-line',
@@ -21,7 +23,8 @@ export class AppComponent {
     public address: string;
     public hideNav: boolean = true;
     public walletIsOpen: boolean = false;
-    public net: string;
+    public chainNetworks: Array<NetworkItem>;
+    public activeNetwork: NetworkItem;
     public hideNav404: boolean = false;
 
     constructor(
@@ -40,6 +43,15 @@ export class AppComponent {
                 .subscribe((temp) => {
                     this.global.languageJson = temp;
                 });
+        });
+        this.chrome.getActiveNetwork().subscribe((networkItem: NetworkItem) => {
+            if (!networkItem) {
+                this.chainNetworks = NETWORKS.Neo2;
+                this.activeNetwork = NETWORKS.Neo2[0];
+                this.chrome.setActiveNetwork(NETWORKS.Neo2[0]);
+                return;
+            }
+            this.activeNetwork = networkItem;
         });
         this.router.events.subscribe((event) => {
             this.hideNav404 = false;
@@ -70,8 +82,8 @@ export class AppComponent {
             this.walletArr = this.neon.walletArr;
             this.address = this.neon.address;
         });
-        this.chrome.getNet().subscribe((net) => {
-            this.net = net;
+        this.chrome.getActiveNetwork().subscribe((network: NetworkItem) => {
+            this.activeNetwork = network;
         });
         if (localStorage.getItem('theme')) {
             const body = document.getElementsByTagName('body')[0];
@@ -82,13 +94,12 @@ export class AppComponent {
         }
     }
 
-    public modifyNet(net: string) {
-        if (this.net === net) {
+    public modifyNet(network: NetworkItem) {
+        if (this.activeNetwork.chainId === network.chainId) {
             return;
         }
-        this.net = net;
-        this.chrome.setNet(net);
-        this.global.modifyNet(net);
+        this.activeNetwork = network;
+        this.global.modifyNet(this.activeNetwork);
         location.reload();
     }
 

@@ -13,7 +13,7 @@ import { ERRORS, requestTarget, Invoke, TxHashAttribute } from '@/models/dapi';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import Neon from '@cityofzion/neon-js';
 import { GasFeeSpeed } from '../../_lib/type';
-import { bignumber, min } from 'mathjs';
+import { bignumber } from 'mathjs';
 
 
 @Component({
@@ -66,7 +66,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 } else {
                     this.global.modifyNet('TestNet');
                 }
-                this.net = this.global.net;
+                this.net = this.global.activeNetwork.name;
 
             }
             for (const key in this.pramsData) {

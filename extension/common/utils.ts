@@ -5,9 +5,9 @@ import BN = require('bn.js');
 
 import SHA256 =  require('crypto-js/sha256');
 import hexEncoding = require('crypto-js/enc-hex');
-import { ChainId, Network, ReqHeaderNetworkType } from './constants';
+import { ChainType, Network, ReqHeaderNetworkType } from './constants';
 import { getLocalStorage } from '../common';
-import { tx, wallet as wallet3} from '@cityofzion/neon-core-neo3';
+import { wallet as wallet3} from '@cityofzion/neon-core-neo3';
 
 const curve = new ec('p256');
 
@@ -99,8 +99,8 @@ export function isHex(str) {
 }
 
 export function base64Encode(str){
-    var encode = encodeURI(str);
-    var base64 = btoa(encode);
+    const encode = encodeURI(str);
+    const base64 = btoa(encode);
     return base64;
 }
 
@@ -161,9 +161,6 @@ export function str2hexstring(str) {
 
 /**
  * @param str HEX string
-// tslint:disable-next-line: jsdoc-format
-// tslint:disable-next-line: jsdoc-format
-// tslint:disable-next-line: no-redundant-jsdoc
  * @returns
  */
 export function hexstring2ab(str) {
@@ -259,22 +256,6 @@ export function isPublicKey(key, encoded) {
     }
 }
 
-export function getNetwork (chainId: ChainId) {
-    switch (chainId) {
-        case ChainId.Neo2MainNet:
-            return Network.Neo2MainNet;
-        case ChainId.Neo2TestNet:
-            return Network.Neo2TestNet;
-        case ChainId.N3MainNet:
-            return Network.N3MainNet;
-        case ChainId.N3TestNet:
-            return Network.N3TestNet;
-        default:
-            Error(`unsupport: ${chainId}`);
-            break;
-    }
-}
-
 export function getReqHeaderNetworkType (network: string) {
     switch (network) {
         case Network.Neo2MainNet:
@@ -292,9 +273,9 @@ export function getReqHeaderNetworkType (network: string) {
 export function getWalletType() {
     return new Promise<string>((resolve, reject) => {
         getLocalStorage('wallet', (wallet) => {
-            let currChainType = 'Neo2';
+            let currChainType = ChainType.Neo2;
             if (wallet3.isAddress(wallet.accounts[0].address)) {
-                currChainType = 'Neo3';
+                currChainType = ChainType.Neo3;
             }
             resolve(currChainType);
         }).catch(err => reject(err));

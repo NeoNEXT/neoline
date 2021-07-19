@@ -3,7 +3,6 @@ import {
     OnInit,
     Input,
     OnDestroy,
-    ɵclearResolutionOfComponentResourcesQueue
 } from '@angular/core';
 import {
     GlobalService,
@@ -13,10 +12,11 @@ import {
     HttpService,
     AssetState
 } from '@/app/core';
-import { Transaction, PageData } from '@/models/models';
+import { Transaction } from '@/models/models';
 import { forkJoin } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupTxDetailDialogComponent } from '@/app/popup/_dialogs';
+import { ChainType } from '@/app/popup/_lib/constants';
 
 @Component({
     selector: 'app-tx-page',
@@ -46,7 +46,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
         private dialog: MatDialog
     ) { }
     ngOnInit(): void {
-        this.net = this.global.net;
+        this.net = this.global.activeNetwork.name;
         this.address = this.neon.address;
         this.txData = [];
         this.getInTransactions(1);
@@ -97,12 +97,12 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                     });
                 } else {
                     switch (this.neon.currentWalletChainType) {
-                        case 'Neo2':
+                        case ChainType.Neo2:
                             httpReq2 = this.http.post(`${this.global.apiDomain}/v1/neo2/txids_valid`, {
                                 txids: txIdArray
                             });
                             break;
-                        case 'Neo3':
+                        case ChainType.Neo3:
                             httpReq2 = this.http.post(`${this.global.apiDomain}/v1/neo3/hash_valid`, {
                                 hashes: txIdArray
                             });

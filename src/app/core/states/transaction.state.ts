@@ -5,6 +5,7 @@ import { Subject, Observable } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { NeonService } from '../services/neon.service';
 import { TX_LIST_PAGE_SIZE, NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
+import { ChainType } from '@/app/popup/_lib/constants';
 
 @Injectable()
 export class TransactionState {
@@ -27,7 +28,7 @@ export class TransactionState {
         asset: string,
         maxId: number = -1
     ): Observable<any> {
-        if (this.neonService.currentWalletChainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === ChainType.Neo3) {
             return this.fetchNeo3TokenTxs(address, asset, maxId);
         }
         let url =
@@ -44,7 +45,7 @@ export class TransactionState {
     }
 
     public getAllTx(address: string, maxId: number = -1): Observable<any> {
-        if (this.neonService.currentWalletChainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === ChainType.Neo3) {
             return this.fetchNeo3AllTxs(address, maxId);
         }
         let url =
@@ -65,7 +66,7 @@ export class TransactionState {
         address: string,
         assetId: string
     ): Observable<any> {
-        if (this.neonService.currentWalletChainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === ChainType.Neo3) {
             return this.fetchNeo3TxDetail(address, assetId, txid);
         }
         return this.http

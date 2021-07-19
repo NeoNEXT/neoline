@@ -7,6 +7,7 @@ import { UTXO, GAS } from '@/models/models';
 import { wallet } from '@cityofzion/neon-core';
 import { NeonService, HttpService, GlobalService } from '@/app/core';
 import { Neo3TransferService } from './neo3-transfer.service';
+import { ChainType } from '../_lib/constants';
 
 @Injectable()
 export class TransferService {
@@ -18,9 +19,16 @@ export class TransferService {
     ) { }
     public create(from: string, to: string, asset: string, amount: string, fee: number = 0, decimals: number = 0,
         broadcastOverride: boolean = false): Observable<Transaction | Transaction3> {
-        if (this.neon.currentWalletChainType === 'Neo3') {
+        if (this.neon.currentWalletChainType === ChainType.Neo3) {
             return new Observable(observer => {
-                this.neo3TransferService.createNeo3Tx({addressFrom: from, addressTo: to, tokenScriptHash: asset, amount, networkFee: fee, decimals}).subscribe(tx => {
+                this.neo3TransferService.createNeo3Tx({
+                    addressFrom: from,
+                    addressTo: to,
+                    tokenScriptHash: asset,
+                    amount,
+                    networkFee: fee,
+                    decimals
+                }).subscribe(tx => {
                         observer.next(tx);
                         observer.complete();
                 }, error => {

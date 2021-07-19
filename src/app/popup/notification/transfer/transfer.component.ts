@@ -118,7 +118,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             } else {
                 this.global.modifyNet('TestNet');
             }
-            this.net = this.global.net;
+            this.net = this.global.activeNetwork.name;
             this.network = params.network || 'MainNet';
             this.toAddress = params.toAddress || '';
             this.assetId = params.asset || '';

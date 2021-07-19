@@ -75,7 +75,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                 } else {
                     this.global.modifyNet('TestNet');
                 }
-                this.net = this.global.net;
+                this.net = this.global.activeNetwork.name;
                 this.broadcastOverride = this.pramsData.broadcastOverride === 'true' || false;
                 this.signTx();
             } else {

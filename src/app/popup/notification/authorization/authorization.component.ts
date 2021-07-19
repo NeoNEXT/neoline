@@ -1,17 +1,14 @@
 import {
     Component,
     OnInit,
-    OnDestroy
 } from '@angular/core';
 import {
     ChromeService,
     NeonService,
-    NotificationService,
     GlobalService
 } from '@/app/core';
 import {
     ActivatedRoute,
-    Router
 } from '@angular/router';
 import { ERRORS, EVENT , requestTarget, Account } from '@/models/dapi';
 
@@ -39,8 +36,6 @@ export class PopupNoticeAuthComponent implements OnInit {
         private chrome: ChromeService,
         private aRouter: ActivatedRoute,
         private neon: NeonService,
-        private router: Router,
-        private notificationI18n: NotificationService,
         private global: GlobalService
     ) {
         this.wallet = this.neon.wallet;

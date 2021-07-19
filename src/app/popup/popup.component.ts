@@ -17,7 +17,8 @@ import {
 } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupHomeMenuDialogComponent } from './_dialogs';
-import { ChainId, NetType } from './_lib';
+import { NetworkItem } from './_lib/types';
+import { ChainType, NETWORKS } from './_lib/constants';
 
 @Component({
     templateUrl: 'popup.component.html',
@@ -32,7 +33,9 @@ export class PopupComponent implements OnInit, AfterViewInit {
     public isLogin = false;
     public currentUrl: string = this.router.url;
     public net: string;
-
+    public chainNetworks: Array<NetworkItem>;
+    public chainType: ChainType;
+    public activeNetwork: NetworkItem;
     // neo3 只有测试网
     isNeo3 = false;
 
@@ -45,12 +48,45 @@ export class PopupComponent implements OnInit, AfterViewInit {
         private assetSer: AssetState,
         private neonService: NeonService
     ) {
+        this.chainType = this.neon.currentWalletChainType;
+        switch(this.chainType) {
+            case ChainType.Neo2:
+                this.chainNetworks = this.global.networks.Neo2;
+                this.chrome.getActiveNetwork().subscribe((networkItem: NetworkItem) => {
+                    if (!networkItem) {
+                        this.activeNetwork = NETWORKS.Neo2[0];
+                        this.chrome.setActiveNetwork(NETWORKS.Neo2[0]);
+                        return;
+                    }
+                    this.activeNetwork = networkItem;
+                });
+                break;
+            case ChainType.Neo3:
+                this.chainNetworks = this.global.networks.Neo3;
+                this.chrome.getActiveNetwork().subscribe((networkItem: NetworkItem) => {
+                    if (!networkItem) {
+                        this.activeNetwork = NETWORKS.Neo3[0];
+                        this.chrome.setActiveNetwork(NETWORKS.Neo3[0]);
+                        return;
+                    }
+                    this.activeNetwork = networkItem;
+                });
+                break;
+            default:
+                // 第一次加载，currentWalletChainType 没有值时的处理
+                this.chainType = ChainType.Neo2;
+                this.chainNetworks = this.global.networks.Neo2;
+                this.activeNetwork = NETWORKS.Neo2[0];
+                this.chrome.setActiveNetwork(NETWORKS.Neo2[0]);
+                break;
+        }
+
+
+
+
         this.walletIsOpen = false;
         this.isLogin = false;
         this.address = this.neon.address;
-        if (this.neon.currentWalletChainType === 'Neo3') {
-            this.isNeo3 = true;
-        }
     }
 
     ngOnInit(): void {
@@ -87,7 +123,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
         this.neon.walletIsOpen().subscribe((res: any) => {
             this.global.$wallet.next(res ? 'open' : 'close');
         });
-        if (this.global.net === 'TestNet') {
+        if (this.global.activeNetwork.name === 'TestNet') {
             this.net = 'TestNet';
         } else {
             this.net = 'MainNet';
@@ -95,7 +131,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
     }
     ngAfterViewInit(): void {
         setTimeout(() => {
-            if (this.global.net === 'TestNet') {
+            if (this.global.activeNetwork.name === 'TestNet') {
                 this.net = 'TestNet';
             } else {
                 this.net = 'MainNet';
@@ -120,13 +156,12 @@ export class PopupComponent implements OnInit, AfterViewInit {
         });
     }
 
-    public modifyNet(net: string) {
-        if (this.net === net) {
+    public modifyNet(network: NetworkItem) {
+        if (this.activeNetwork && this.activeNetwork.chainId === network.chainId) {
             return;
         }
-        this.net = net;
-        this.chrome.setNet(net);
-        this.global.modifyNet(net);
+        this.chrome.setActiveNetwork(network);
+        this.global.modifyNetwork(network);
         location.reload();
     }
 }

@@ -72,7 +72,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     this.global.modifyNet('TestNet');
                 }
             }
-            this.net = this.global.net;
+            this.net = this.global.activeNetwork.name;
             for (const key in this.pramsData) {
                 if (Object.prototype.hasOwnProperty.call(this.pramsData, key)) {
                     let tempObject: any

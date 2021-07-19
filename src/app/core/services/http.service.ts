@@ -73,13 +73,13 @@ export class HttpService {
                         reject(res && res.msg || res);
                     }
                 }, {
-                    Network: this.global.net === 'MainNet' ? 'mainnet' : 'testnet'
+                    Network: this.global.activeNetwork.name === 'MainNet' || this.global.activeNetwork.name === 'N3MainNet' ? 'mainnet' : 'testnet'
                 });
             }));
         }
         return this.http.get(url, {
             headers: {
-                Network: this.global.net === 'MainNet' ? 'mainnet' : 'testnet'
+                Network: this.global.activeNetwork.name === 'MainNet' || this.global.activeNetwork.name === 'N3MainNet' ? 'mainnet' : 'testnet'
             }
         }).pipe(map((res: any) => {
             if (res && res.status === 'success') {
@@ -99,13 +99,13 @@ export class HttpService {
                         reject(res && res.msg || res);
                     }
                 }, {
-                    Network: this.global.net === 'MainNet' ? 'mainnet' : 'testnet'
+                    Network: this.global.activeNetwork.name === 'MainNet' || this.global.activeNetwork.name === 'N3MainNet' ? 'mainnet' : 'testnet'
                 });
             }));
         }
         return this.http.post(url, data, {
             headers: {
-                Network: this.global.net === 'MainNet' ? 'mainnet' : 'testnet'
+                Network: this.global.activeNetwork.name === 'MainNet' || this.global.activeNetwork.name === 'N3MainNet' ? 'mainnet' : 'testnet'
             }
         }).pipe(map((res: any) => {
             if (res && res.status === 'success') {

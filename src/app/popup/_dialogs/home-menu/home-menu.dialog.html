@@ -10,9 +10,9 @@
         </mat-toolbar>
         <div class="nav-container">
             <ul class="toggle">
-                <li [ngClass]="{active: tabType === 'Neo2'}" (click)="tabType='Neo2'">
+                <li [ngClass]="{active: tabType === chainType.Neo2}" (click)="tabType=chainType.Neo2">
                     {{ 'Neo Legacy' }}</li>
-                <li [ngClass]="{active: tabType === 'Neo3'}" (click)="tabType='Neo3'">
+                <li [ngClass]="{active: tabType === chainType.Neo3}" (click)="tabType=chainType.Neo3">
                     {{ 'Neo N3' }}</li>
             </ul>
         </div>

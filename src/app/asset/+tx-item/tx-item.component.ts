@@ -1,5 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { GlobalService, NeonService } from '@/app/core';
+import { ChainType } from '@/app/popup/_lib/constants';
 
 @Component({
     selector: 'tx-item',
@@ -20,14 +21,14 @@ export class TxItemComponent implements OnInit {
 
     public txDetail(txid: string) {
         switch (this.neon.currentWalletChainType) {
-            case 'Neo2':
-                if (this.global.net === 'MainNet') {
+            case ChainType.Neo2:
+                if (this.global.activeNetwork.name === 'MainNet') {
                     window.open(`https://neotube.io/transaction/${txid}`);
                 } else {
                     window.open(`https://testnet.neotube.io/transaction/${txid}`);
                 }
                 break;
-            case 'Neo3':
+            case ChainType.Neo3:
                 window.open(`https://neo3.neotube.io/transaction/${txid}`);
                 break;
         }

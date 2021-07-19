@@ -6,6 +6,7 @@ import { PopupQRCodeDialogComponent } from '@popup/_dialogs';
 import { PopupNameDialogComponent } from '@popup/_dialogs';
 
 import { GlobalService, NeonService } from '@app/core';
+import { ChainType } from '../_lib/constants';
 
 @Component({
     templateUrl: 'account.component.html',
@@ -56,14 +57,14 @@ export class PopupAccountComponent implements OnInit {
 
     toWeb() {
         switch (this.neon.currentWalletChainType) {
-            case 'Neo2':
+            case ChainType.Neo2:
                 window.open(
                     `https://${
-                    this.global.net === 'TestNet' ? 'testnet.' : ''
+                    this.global.activeNetwork.name === 'TestNet' ? 'testnet.' : ''
                     }neotube.io/address/${this.neon.address}/page/1`
                 );
                 break;
-            case 'Neo3':
+            case ChainType.Neo3:
                 window.open(`https://neo3.neotube.io/address/${this.neon.address}`);
                 break;
         }

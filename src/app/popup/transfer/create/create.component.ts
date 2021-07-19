@@ -39,6 +39,7 @@ import { bignumber } from 'mathjs';
 import { GasFeeSpeed } from '../../_lib/type';
 import { Neo3TransferService } from '../neo3-transfer.service';
 import { GAS3_CONTRACT, NEO3_MAGIC_NUMBER_TESTNET } from '../../_lib';
+import { ChainType } from '../../_lib/constants';
 
 @Component({
     templateUrl: 'create.component.html',
@@ -79,17 +80,17 @@ export class TransferCreateComponent implements OnInit {
         private neo3Transfer: Neo3TransferService,
     ) {
         switch(this.neon.currentWalletChainType) {
-            case 'Neo2':
+            case ChainType.Neo2:
                 this.neonWallet = wallet2;
                 break;
-            case 'Neo3':
+            case ChainType.Neo3:
                 this.neonWallet = wallet3;
                 break;
         }
     }
 
     ngOnInit(): void {
-        this.net = this.global.net;
+        this.net = this.global.activeNetwork.name;
         this.fromAddress = this.neon.address;
         this.aRoute.params.subscribe((params) => {
             if (params.id) {
@@ -159,7 +160,7 @@ export class TransferCreateComponent implements OnInit {
             }, (err) => {
                 this.creating = false;
                 this.loading = false;
-                if (this.neon.currentWalletChainType === 'Neo3' && err) {
+                if (this.neon.currentWalletChainType === ChainType.Neo3 && err) {
                     this.global.snackBarTip('wentWrong', err, 10000);
                 } else {
                     this.global.snackBarTip('wentWrong', err);
@@ -177,10 +178,10 @@ export class TransferCreateComponent implements OnInit {
                 this.neon.walletArr.findIndex(item => item.accounts[0].address === this.neon.wallet.accounts[0].address)
             ]
             switch(this.neon.currentWalletChainType) {
-                case 'Neo2':
+                case ChainType.Neo2:
                     tx.sign(wif);
                     break;
-                case 'Neo3':
+                case ChainType.Neo3:
                     tx.sign(wif, NEO3_MAGIC_NUMBER_TESTNET);
                     break;
             }
@@ -195,7 +196,7 @@ export class TransferCreateComponent implements OnInit {
                 network: this.net,
                 txSerialize: tx.serialize(true)
             };
-            if (this.neon.currentWalletChainType === 'Neo3') {
+            if (this.neon.currentWalletChainType === ChainType.Neo3) {
                 diaglogData.systemFee = (tx as Transaction3).systemFee.toString();
                 diaglogData.networkFee = bignumber((tx as Transaction3).networkFee.toString()).minus(this.fee).toFixed();
             }
@@ -215,17 +216,17 @@ export class TransferCreateComponent implements OnInit {
                         this.transfer.create(this.fromAddress, this.toAddress, this.chooseAsset.asset_id, this.amount,
                             this.fee || 0, this.chooseAsset.decimals).subscribe((res) => {
                                 switch(this.neon.currentWalletChainType) {
-                                    case 'Neo2':
+                                    case ChainType.Neo2:
                                         res.sign(wif);
                                         break;
-                                    case 'Neo3':
+                                    case ChainType.Neo3:
                                         res.sign(wif, NEO3_MAGIC_NUMBER_TESTNET);
                                         break;
                                 }
                                 this.resolveSend(res);
                             }, (err) => {
                                 console.log(err);
-                                if (this.neon.currentWalletChainType === 'Neo3' && err) {
+                                if (this.neon.currentWalletChainType === ChainType.Neo3 && err) {
                                     this.global.snackBarTip('wentWrong', err, 10000);
                                 } else {
                                     this.global.snackBarTip('wentWrong', err);
@@ -249,7 +250,7 @@ export class TransferCreateComponent implements OnInit {
             let res;
             let txid: string;
             switch(this.neon.currentWalletChainType) {
-                case 'Neo2':
+                case ChainType.Neo2:
                     res = await rpc.Query.sendRawTransaction(tx.serialize(true)).execute(this.global.RPCDomain);
                     if (!res.result ||
                         (res.result && typeof res.result === 'object' && res.result.succeed === false)) {
@@ -259,7 +260,7 @@ export class TransferCreateComponent implements OnInit {
                     }
                     txid = '0x' + tx.hash;
                     break;
-                case 'Neo3':
+                case ChainType.Neo3:
                     res = await this.neo3Transfer.sendNeo3Tx(tx as Transaction3);
                     if (!res) {
                         throw {

@@ -124,7 +124,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
             } else {
                 this.global.modifyNet('TestNet');
             }
-            this.net = this.global.net;
+            this.net = this.global.activeNetwork.name;
             this.network = params.network || 'MainNet';
             this.toAddress = params.toAddress || '';
             this.assetId = params.asset || '';
@@ -245,8 +245,8 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
                 ID: this.messageID
             });
             const setData = {};
-            setData[`N3${this.network}TxArr`] = await this.chrome.getLocalStorage(`N3${this.network}TxArr`) || [];
-            setData[`N3${this.network}TxArr`].push(TxHash);
+            setData[`${this.network}TxArr`] = await this.chrome.getLocalStorage(`${this.network}TxArr`) || [];
+            setData[`${this.network}TxArr`].push(TxHash);
             this.chrome.setLocalStorage(setData);
             this.router.navigate([{
                 outlets: {

@@ -24,6 +24,7 @@ import { Router } from '@angular/router';
 import { rpc } from '@cityofzion/neon-core';
 import { bignumber } from 'mathjs';
 import { NEO3_CONTRACT } from '../_lib';
+import { ChainType } from '../_lib/constants';
 
 
 @Component({
@@ -73,7 +74,7 @@ export class PopupHomeComponent implements OnInit {
     ) {
         this.wallet = this.neon.wallet;
         this.rateCurrency = this.assetState.rateCurrency;
-        this.assetId = this.neon.currentWalletChainType === 'Neo2' ? NEO : NEO3_CONTRACT;
+        this.assetId = this.neon.currentWalletChainType === ChainType.Neo2 ? NEO : NEO3_CONTRACT;
 
         const imageObj = this.assetState.assetFile.get(this.assetId);
         let lastModified = '';
@@ -84,8 +85,8 @@ export class PopupHomeComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.net = this.global.net;
-        if (this.neon.currentWalletChainType === 'Neo2') {
+        this.net = this.global.activeNetwork.name;
+        if (this.neon.currentWalletChainType === ChainType.Neo2) {
             this.initClaim();
         }
         this.getAssetList();
@@ -208,7 +209,7 @@ export class PopupHomeComponent implements OnInit {
             balanceRes.find(b => b.asset_id === this.assetId) ||
             watching.find(w => w.asset_id === this.assetId);
         if (!balance) {
-            this.assetId = this.neon.currentWalletChainType === 'Neo2' ? NEO : NEO3_CONTRACT;
+            this.assetId = this.neon.currentWalletChainType === ChainType.Neo2 ? NEO : NEO3_CONTRACT;
             balance =
                 balanceRes.find(b => b.asset_id === this.assetId) ||
                 watching.find(w => w.asset_id === this.assetId);
@@ -309,7 +310,7 @@ export class PopupHomeComponent implements OnInit {
                 }
             },
             err => {
-                if (this.neon.currentWalletChainType === 'Neo3' && err) {
+                if (this.neon.currentWalletChainType === ChainType.Neo3 && err) {
                     this.global.snackBarTip('wentWrong', err, 10000);
                 } else {
                     this.global.snackBarTip('wentWrong', err);
@@ -339,14 +340,14 @@ export class PopupHomeComponent implements OnInit {
     toWeb() {
         this.showMenu = false;
         switch (this.neon.currentWalletChainType) {
-            case 'Neo2':
+            case ChainType.Neo2:
                 window.open(
                     `https://${
                     this.net === 'TestNet' ? 'testnet.' : ''
                     }neotube.io/address/${this.neon.address}/page/1`
                 );
                 break;
-            case 'Neo3':
+            case ChainType.Neo3:
                 window.open(`https://neo3.neotube.io/address/${this.neon.address}`);
                 break;
         }

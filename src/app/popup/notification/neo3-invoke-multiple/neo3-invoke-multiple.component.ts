@@ -70,7 +70,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                     hostname: undefined,
                 };
                 this.pramsData = params;
-                this.net = this.global.net;
+                this.net = this.global.activeNetwork.name;
                 if (Number(this.pramsData.fee) > 0) {
                     this.assetState.getMoney('GAS', Number(this.pramsData.fee)).then(res => {
                         this.feeMoney = res;
@@ -197,8 +197,8 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 ID: this.messageID
             });
             const setData = {};
-            setData[`N3${this.net}TxArr`] = await this.chrome.getLocalStorage(`N3${this.net}TxArr`) || [];
-            setData[`N3${this.net}TxArr`].push(txHash);
+            setData[`${this.net}TxArr`] = await this.chrome.getLocalStorage(`${this.net}TxArr`) || [];
+            setData[`${this.net}TxArr`].push(txHash);
             this.chrome.setLocalStorage(setData);
             this.router.navigate([{
                 outlets: {

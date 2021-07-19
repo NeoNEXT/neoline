@@ -6,6 +6,7 @@ import { WalletJSON as WalletJSON2 } from '@cityofzion/neon-core/lib/wallet';
 import { WalletJSON as WalletJSON3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+import { ChainType } from '../../_lib/constants';
 @Component({
     templateUrl: 'address.dialog.html',
     styleUrls: ['address.dialog.scss'],
@@ -23,10 +24,10 @@ export class PopupAddressDialogComponent implements OnInit {
         private neonService: NeonService
     ) {
         switch (this.neonService.currentWalletChainType) {
-            case 'Neo2':
+            case ChainType.Neo2:
                 this.neonWallet = wallet2;
                 break;
-            case 'Neo3':
+            case ChainType.Neo3:
                 this.neonWallet = wallet3;
                 break;
         }

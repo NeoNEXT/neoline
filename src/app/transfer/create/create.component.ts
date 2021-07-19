@@ -33,6 +33,7 @@ import {
 import { wallet } from '@cityofzion/neon-core';
 import { rpc } from '@cityofzion/neon-js';
 import { bignumber } from 'mathjs';
+import { NetworkItem } from '@/app/popup/_lib/types';
 
 
 @Component({
@@ -65,7 +66,7 @@ export class TransferCreateComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        this.net = this.global.net;
+        this.net = this.global.activeNetwork.name;
         this.fromAddress = this.neon.address;
         this.aRoute.params.subscribe((params) => {
             this.asset.detail(this.neon.address, params.id).subscribe((res: Balance) => {

@@ -13,10 +13,10 @@ import {
 import { Account, ERRORS, requestTarget } from '@/models/dapi';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { ChainType, ChainTypeGroups } from '../../_lib';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupSelectDialogComponent } from '../../_dialogs';
+import { ChainType } from '../../_lib/constants';
 
 @Component({
     templateUrl: './pick-address.component.html',
@@ -35,8 +35,9 @@ export class PopupPickAddressComponent implements OnInit {
             label: '',
         }
     };
+    public chainType = ChainType;
     public allAuthWalletArr = {};
-    public tabType: ChainType = 'Neo2';
+    public tabType: ChainType = ChainType.Neo2;
     public hostname = '';
     public messageID = '';
 
@@ -65,7 +66,7 @@ export class PopupPickAddressComponent implements OnInit {
             this.chrome.windowCallback({
                 error: ERRORS.CANCELLED,
                 ID: this.messageID,
-                return: this.tabType === 'Neo2' ? requestTarget.PickAddress : requestTargetN3.PickAddress
+                return: this.tabType === ChainType.Neo2 ? requestTarget.PickAddress : requestTargetN3.PickAddress
             });
         };
     }
@@ -96,7 +97,7 @@ export class PopupPickAddressComponent implements OnInit {
         this.chrome.windowCallback({
             error: ERRORS.CANCELLED,
             ID: this.messageID,
-            return: this.tabType === 'Neo2' ? requestTarget.PickAddress : requestTargetN3.PickAddress
+            return: this.tabType === ChainType.Neo2 ? requestTarget.PickAddress : requestTargetN3.PickAddress
         });
         window.close();
     }
@@ -105,16 +106,16 @@ export class PopupPickAddressComponent implements OnInit {
         this.chrome.setAuthorizedAddress(this.allAuthWalletArr);
         if (this.selectedWalletArr.Neo2.address || this.selectedWalletArr.Neo3.address) {
             this.chrome.windowCallback({
-                data: this.tabType === 'Neo2' ? this.selectedWalletArr.Neo2 : this.selectedWalletArr.Neo3,
+                data: this.tabType === ChainType.Neo2 ? this.selectedWalletArr.Neo2 : this.selectedWalletArr.Neo3,
                 ID: this.messageID,
-                return: this.tabType === 'Neo2' ? requestTarget.PickAddress : requestTargetN3.PickAddress
+                return: this.tabType === ChainType.Neo2 ? requestTarget.PickAddress : requestTargetN3.PickAddress
             });
             window.close();
         } else {
             this.chrome.windowCallback({
                 error: ERRORS.CANCELLED,
                 ID: this.messageID,
-                return: this.tabType === 'Neo2' ? requestTarget.PickAddress : requestTargetN3.PickAddress
+                return: this.tabType === ChainType.Neo2 ? requestTarget.PickAddress : requestTargetN3.PickAddress
             });
             window.close();
         }

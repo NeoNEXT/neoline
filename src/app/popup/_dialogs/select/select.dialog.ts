@@ -3,7 +3,8 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { ChromeService, GlobalService, AssetState, NeonService } from '@app/core';
 import { Router } from '@angular/router';
-import { ChainType, SelectItem } from '@popup/_lib';
+import { SelectItem } from '@popup/_lib';
+import { ChainType } from '@popup/_lib/constants';
 
 @Component({
     templateUrl: 'select.dialog.html',

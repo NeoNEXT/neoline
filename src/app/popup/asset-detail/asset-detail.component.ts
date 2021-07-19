@@ -11,6 +11,7 @@ import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.componen
 import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
 import { bignumber } from 'mathjs';
+import { ChainType } from '../_lib/constants';
 
 @Component({
     templateUrl: 'asset-detail.component.html',
@@ -45,7 +46,7 @@ export class PopupAssetDetailComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.net = this.global.net;
+        this.net = this.global.activeNetwork.name;
         this.aRouter.params.subscribe(async (params: any) => {
             this.assetId = params.assetId || NEO;
             this.imageUrl = await this.assetState.getAssetImageFromAssetId(
@@ -152,14 +153,14 @@ export class PopupAssetDetailComponent implements OnInit {
             }/${this.assetId}`
         );
         switch (this.neon.currentWalletChainType) {
-            case 'Neo2':
+            case ChainType.Neo2:
                 window.open(
                     `https://${this.net === 'TestNet' ? 'testnet.' : ''}neotube.io/${
                         isNep5 ? 'nep5' : 'asset'
                     }/${this.assetId}/page/1`
                 );
                 break;
-            case 'Neo3':
+            case ChainType.Neo3:
                 window.open(`https://neo3.neotube.io/tokens/nep17/${this.assetId}`);
                 break;
         }

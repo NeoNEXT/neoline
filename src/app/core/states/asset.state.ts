@@ -11,6 +11,7 @@ import { bignumber } from 'mathjs';
 import { rpc } from '@cityofzion/neon-js';
 import { NeonService } from '../services/neon.service';
 import { NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
+import { ChainType } from '@/app/popup/_lib/constants';
 
 @Injectable()
 export class AssetState {
@@ -102,7 +103,7 @@ export class AssetState {
     }
 
     public fetchBalance(address: string): Observable<any> {
-        if (this.neonService.currentWalletChainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === ChainType.Neo3) {
             return this.fetchNeo3AddressTokens(address);
         }
         return this.http
@@ -150,7 +151,7 @@ export class AssetState {
     }
 
     public fetchAll(): Promise<any> {
-        if (this.neonService.currentWalletChainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === ChainType.Neo3) {
             return this.fetchNeo3TokenList().toPromise();
         }
         return this.http
@@ -159,7 +160,7 @@ export class AssetState {
     }
 
     public fetchAllowList(): Observable<any> {
-        if (this.neonService.currentWalletChainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === ChainType.Neo3) {
             return this.fetchNeo3PopularToken();
         }
         return from(
@@ -174,7 +175,7 @@ export class AssetState {
     }
 
     public searchAsset(query: string): Observable<any> {
-        if (this.neonService.currentWalletChainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === ChainType.Neo3) {
             return this.searchNeo3Token(query);
         }
         return this.http.get(
@@ -212,7 +213,7 @@ export class AssetState {
     }
 
     public getAssetRate(coins: string): Observable<any> {
-        if (this.neonService.currentWalletChainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === ChainType.Neo3) {
             return of({});
         }
         if (!coins) {
@@ -309,7 +310,7 @@ export class AssetState {
     }
 
     public getNep5Detail(assetId: string): Observable<Nep5Detail> {
-        if (this.neonService.currentWalletChainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === ChainType.Neo3) {
             return this.fetchNeo3AssetDetail(assetId);
         }
         return this.http.get(
@@ -334,7 +335,7 @@ export class AssetState {
     }
 
     public getGasFee(): Observable<any> {
-        if (this.neonService.currentWalletChainType === 'Neo3') {
+        if (this.neonService.currentWalletChainType === ChainType.Neo3) {
             return this.fetchNeo3GasFee();
         }
         return this.http.get(`${this.global.apiDomain}/v1/neo2/fees`).pipe(

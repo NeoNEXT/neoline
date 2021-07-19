@@ -7,7 +7,9 @@ import {
     getLocalStorage,
 } from '../common/index';
 import { requestTarget, Account, ERRORS } from '../common/data_module_neo2';
-import { getNetwork, getWalletType } from '../common/utils';
+import { getWalletType } from '../common/utils';
+import { ACTIVE_NETWORK, NetworkItem } from '../common/network';
+import { ChainType } from '../common/constants';
 
 declare var chrome: any;
 
@@ -58,18 +60,17 @@ window.addEventListener('message', async (e) => {
             return;
         }
         case requestTarget.Networks: {
-            getStorage('net', async (res) => {
-                getStorage('chainId',  (chainId) => {
-                    window.postMessage({
-                        return: requestTarget.Networks,
-                        data: {
-                            networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                            defaultNetwork: getNetwork(chainId) || 'MainNet',
-                            chainId
-                        },
-                        ID: e.data.ID
-                    }, '*');
-                });
+            getStorage(ACTIVE_NETWORK,  (network: NetworkItem) => {
+                const { chainId, name } = network;
+                window.postMessage({
+                    return: requestTarget.Networks,
+                    data: {
+                        networks: ['MainNet', 'TestNet', 'N3TestNet'],
+                        defaultNetwork: name,
+                        chainId
+                    },
+                    ID: e.data.ID
+                }, '*');
             });
             return;
         }
@@ -150,18 +151,18 @@ window.addEventListener('message', async (e) => {
         case requestTarget.VerifyMessage:
         case requestTarget.SignMessage:
             {
+
                 getLocalStorage('chainType', async (res) => {
                     let currChainType = res;
                     if (!currChainType) {
                         currChainType = await getWalletType();
                     };
-                    if (currChainType === 'Neo2') {
-                        getStorage('net', (result: string) => {
-                            let network = e.data.parameter.network;
-                            if (network !== 'MainNet' && network !== 'TestNet') {
-                                network = result || 'MainNet';
-                            }
-                            e.data.parameter.network = network;
+                    if (currChainType === ChainType.Neo2) {
+                        getStorage(ACTIVE_NETWORK,  (network: NetworkItem) => {
+                            const { name, nodeUrl } = network;
+                            const currNetwork = e.data.parameter.network ? e.data.parameter.network : name || 'MainNet';
+                            e.data.parameter.network = currNetwork;
+                            e.data.nodeUrl = nodeUrl;
                             chrome.runtime.sendMessage(e.data, (response) => {
                                 return Promise.resolve('Dummy response to keep the console quiet');
                             });

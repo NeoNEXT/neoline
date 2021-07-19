@@ -13,6 +13,7 @@ import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { ChainType } from '../../_lib/constants';
 
 @Component({
     selector: 'wallet-import',
@@ -52,10 +53,10 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
         this.walletNep6Import = new WalletImport();
         this.hideNep6Pwd = true;
         switch (this.neon.selectedChainType) {
-            case 'Neo2':
+            case ChainType.Neo2:
                 this.neonWallet = wallet2;
                 break;
-            case 'Neo3':
+            case ChainType.Neo3:
                 this.neonWallet = wallet3;
                 break;
         }

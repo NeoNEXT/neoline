@@ -30,10 +30,8 @@ import {
     ChromeService
 } from './chrome.service';
 import { evaluate, add, subtract, multiply, divide, bignumber } from 'mathjs';
-import { randomBytes, pbkdf2 } from 'crypto';
-import CryptoJS from 'crypto-js';
-import { resolve } from 'path';
 import { HttpErrorResponse } from '@angular/common/http';
+import { NetworkItem, NetworkType } from '@/app/popup/_lib/types';
 
 @Injectable()
 export class GlobalService {
@@ -43,7 +41,9 @@ export class GlobalService {
     public $wallet: Subject < string > ;
     public languageJson: any = null;
     public debug = false;
-    public net: string;
+    public networks: NetworkType;
+    public activeNetwork: any;
+
     private source404 = new Subject<string>();
     public $404 = this.source404.asObservable();
 
@@ -54,19 +54,26 @@ export class GlobalService {
         private chromeSer: ChromeService
     ) {
         this.$wallet = new Subject < string > ();
-        this.chromeSer.getNet().subscribe(net => {
-            this.net = net;
-            this.modifyNet(net);
+        this.chromeSer.getActiveNetwork().subscribe((network: NetworkItem) => {
+            this.activeNetwork = network;
+            this.modifyNet(network);
         });
+        this.chromeSer.getNetworks().subscribe((networks: NetworkType) => {
+            this.networks = networks;
+        });
+    }
+
+    public modifyNetwork(networkItem: NetworkItem) {
+        this.activeNetwork = networkItem;
     }
 
     public push404(error: string) {
         this.source404.next(error);
     }
 
-    public modifyNet(net: string) {
-        this.net = net;
-        if (net === 'MainNet') {
+    public modifyNet(network) {
+        this.activeNetwork = network || network.name;
+        if (this.activeNetwork === 'MainNet') {
             this.apiDomain = environment.mainApiBase;
             this.RPCDomain = environment.mainRPC;
             this.Neo3RPCDomain = environment.neo3MainRPC;

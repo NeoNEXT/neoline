@@ -77,7 +77,7 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
     ngOnInit(): void {
         this.address = this.neon.address;
         this.rateCurrency = this.asset.rateCurrency;
-        this.net = this.global.net;
+        this.net = this.global.activeNetwork.name;
         this.aRoute.params.subscribe((params) => {
             this.assetId = params.id;
             this.initClaim();
@@ -170,7 +170,11 @@ export class AssetDetailComponent implements OnInit, OnDestroy {
         const httpReq1 = this.txState.fetchTx(this.neon.address, page, this.assetId, maxId);
         if (page === 1) {
             this.chrome.getTransaction().subscribe(inTxData => {
-                if (inTxData[this.net] === undefined || inTxData[this.net][this.address] === undefined || inTxData[this.net][this.address][this.assetId] === undefined) {
+                if (
+                    inTxData[this.net] === undefined ||
+                    inTxData[this.net][this.address] === undefined ||
+                    inTxData[this.net][this.address][this.assetId] === undefined
+                ) {
                     this.inTransaction = [];
                 } else {
                     this.inTransaction = inTxData[this.net][this.address][this.assetId];

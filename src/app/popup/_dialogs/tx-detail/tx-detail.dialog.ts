@@ -1,6 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TransactionState, NeonService } from '@/app/core';
+import { ChainType } from '../../_lib/constants';
 
 @Component({
     templateUrl: 'tx-detail.dialog.html',
@@ -29,7 +30,7 @@ export class PopupTxDetailDialogComponent {
             .subscribe((res) => {
                 this.txDetail = res;
                 switch (this.neonService.currentWalletChainType) {
-                    case 'Neo2':
+                    case ChainType.Neo2:
                         this.txDetail.vin = this.txDetail.vin.reduce(
                             (prev, element) => {
                                 if (
@@ -57,7 +58,7 @@ export class PopupTxDetailDialogComponent {
                             []
                         );
                         break;
-                    case 'Neo3':
+                    case ChainType.Neo3:
                         this.txDetail.vin = [];
                         this.txDetail.vout = [];
                         this.txDetail.transfer.forEach((txItem) => {

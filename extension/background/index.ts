@@ -51,7 +51,7 @@ let currLang = 'en';
 let currNetwork = 'MainNet';
 let currChainId = 1;
 let tabCurr: any;
-let currChain = 'Neo2';
+let currChain = ChainType.Neo2;
 export let password = '';
 
 export let haveBackupTip: boolean = null;
@@ -330,7 +330,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         case requestTarget.AccountPublicKey: {
             try {
-                const key = currChain === 'Neo2' ? '' : `-${currChain}`;
+                const key = currChain === ChainType.Neo2 ? '' : `-${currChain}`;
                 const walletArr = await getLocalStorage(`walletArr${key}`, () => { });
                 const currWallet = await getLocalStorage('wallet', () => { });
                 const WIFArr = await getLocalStorage(`WIFArr${key}`, () => { });

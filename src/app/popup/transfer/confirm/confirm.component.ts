@@ -8,12 +8,13 @@ import {
 } from '@angular/material/dialog';
 
 import {
-    ChromeService, AssetState, NeonService, GlobalService,
+    AssetState, NeonService, GlobalService,
 } from '@app/core';
 import { NEO, GAS } from '@/models/models';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import { forkJoin } from 'rxjs';
 import { bignumber } from 'mathjs';
+import { ChainType } from '../../_lib/constants';
 
 @Component({
     templateUrl: 'confirm.component.html',
@@ -69,7 +70,7 @@ export class PopupTransferConfirmComponent implements OnInit {
             systemFee: 0
         },
     ) {
-        if (this.neon.currentWalletChainType === 'Neo3') {
+        if (this.neon.currentWalletChainType === ChainType.Neo3) {
             this.isNeo3 = true;
         }
     }
@@ -84,7 +85,7 @@ export class PopupTransferConfirmComponent implements OnInit {
                 this.datajson[key] = this.data[key];
             }
         }
-        this.net = this.global.net;
+        this.net = this.global.activeNetwork.name;
         this.getSymbol();
         this.getAssetRate();
     }
