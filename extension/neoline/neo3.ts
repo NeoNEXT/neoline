@@ -88,9 +88,9 @@ window.addEventListener('message', async (e) => {
                         currChainType = await getWalletType();
                     };
                     if (currChainType === 'Neo3') {
-                        getStorage('chainId', (result) => {
+                        getStorage('network', (result) => {
                             // let chainId = result || ChainId.N3TestNet;
-                            const network = getNetwork(result) || Network.N3TestNet;
+                            const network = getNetwork(result.chainId) || Network.N3TestNet;
                             e.data.parameter.network = network;
                             e.data.nodeUrl = RPC.Neo3[network];
                             chrome.runtime.sendMessage(e.data, (response) => {
