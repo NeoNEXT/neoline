@@ -147,7 +147,6 @@ window.addEventListener('message', async (e) => {
         case requestTarget.InvokeMulti:
         case requestTarget.Send:
         case requestTarget.Deploy:
-
         case requestTarget.VerifyMessage:
         case requestTarget.SignMessage:
             {
