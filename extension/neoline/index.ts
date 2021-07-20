@@ -7,7 +7,7 @@ import {
     getLocalStorage,
 } from '../common/index';
 import { requestTarget, Account, ERRORS } from '../common/data_module_neo2';
-import { getNetwork, getWalletType } from '../common/utils';
+import { getWalletType } from '../common/utils';
 
 declare var chrome: any;
 
