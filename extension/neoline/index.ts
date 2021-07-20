@@ -7,7 +7,7 @@ import {
     getLocalStorage,
 } from '../common/index';
 import { requestTarget, Account, ERRORS } from '../common/data_module_neo2';
-import { getNetwork, getWalletType } from '../common/utils';
+import { getWalletType } from '../common/utils';
 
 declare var chrome: any;
 
@@ -59,14 +59,10 @@ window.addEventListener('message', async (e) => {
         }
         case requestTarget.Networks: {
             getStorage('net', async (res) => {
-                getStorage('chainId',  (chainId) => {
+                getStorage('network',  (result) => {
                     window.postMessage({
                         return: requestTarget.Networks,
-                        data: {
-                            networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                            defaultNetwork: getNetwork(chainId) || 'MainNet',
-                            chainId
-                        },
+                        data: result,
                         ID: e.data.ID
                     }, '*');
                 });
