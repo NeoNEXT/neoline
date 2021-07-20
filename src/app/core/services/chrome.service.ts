@@ -49,36 +49,36 @@ export class ChromeService {
         } else if (chainType === 'Neo3') {
             currChainId = this.net === NetType.N3MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
         }
-        const network = NETWORKS[currChainId - 1];
+        const defaultNetwork = NETWORKS[currChainId - 1];
         if (!this.check) {
             localStorage.setItem(storageName, JSON.stringify({
                 chainId: currChainId,
                 networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                defaultNetwork: network || 'MainNet'
+                defaultNetwork: defaultNetwork || 'MainNet'
             }));
             return;
         }
         try {
-            const saveData = {};
-            saveData[storageName] = {
-                chainId: currChainId,
-                networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                defaultNetwork: network || 'MainNet'
-            }
-            this.crx.setStorage(saveData);
-            this.crx.setNetwork(network, currChainId, chainType);
+            this.crx.setStorage({
+                network: {
+                    chainId: currChainId,
+                    networks: ['MainNet', 'TestNet', 'N3TestNet'],
+                    defaultNetwork: defaultNetwork || 'MainNet'
+                }
+            });
+            this.crx.setNetwork(defaultNetwork, currChainId, chainType);
             if((item as any).chainId.toString() !== currChainId.toString()) {
                 this.windowCallback({
                     return: EVENT.NETWORK_CHANGED,
                     data: {
                         chainId: currChainId,
                         networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                        defaultNetwork: network || 'MainNet'
+                        defaultNetwork: defaultNetwork || 'MainNet'
                     }
                 });
             }
         } catch (e) {
-            console.log('init chainId failed', e);
+            console.log('init network failed', e);
         }
     }
 
@@ -107,21 +107,21 @@ export class ChromeService {
                         saveData[storageName] = {
                             chainId: currChainId,
                             networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                            defaultNetwork: network || 'MainNet'
+                            defaultNetwork: defaultNetwork || 'MainNet'
                         }
                         this.crx.setStorage(saveData);
-                        this.crx.setNetwork(network, currChainId, chainType);
+                        this.crx.setNetwork(defaultNetwork, currChainId, chainType);
                         this.windowCallback({
                             return: EVENT.NETWORK_CHANGED,
                             data: {
                                 chainId: currChainId,
                                 networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                                defaultNetwork: network || 'MainNet'
+                                defaultNetwork: defaultNetwork || 'MainNet'
                             }
                         });
                     }
                 } catch (e) {
-                    console.log('set chainId failed', e);
+                    console.log('set network failed', e);
                 }
             });
         });
@@ -144,7 +144,7 @@ export class ChromeService {
                     });
                 });
             } catch (e) {
-                reject('failed');
+                reject('get network failed');
             }
         });
     }
