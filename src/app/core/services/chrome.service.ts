@@ -84,45 +84,47 @@ export class ChromeService {
 
     public async setNetwork() {
         const storageName = 'network';
-        const item = await this.getNetwork();
-        const chainType = await this.getCurrentWalletChainType();
-        let currChainId: ChainId;
-        if (chainType === 'Neo2') {
-            currChainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
-        } else if (chainType === 'Neo3') {
-            currChainId = this.net === NetType.N3MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
-        }
-        const network = NETWORKS[currChainId - 1];
-        if (!this.check) {
-            localStorage.setItem(storageName, JSON.stringify({
-                chainId: currChainId,
-                networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                defaultNetwork: network || 'MainNet'
-            }));
-            return;
-        }
-        try {
-            const saveData = {};
-            saveData[storageName] = {
-                chainId: currChainId,
-                networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                defaultNetwork: network || 'MainNet'
-            }
-            this.crx.setStorage(saveData);
-            this.crx.setNetwork(network, currChainId, chainType);
-            if((item as any).chainId.toString() !== currChainId.toString()) {
-                this.windowCallback({
-                    return: EVENT.NETWORK_CHANGED,
-                    data: {
+        this.getNetwork().then((network) => {
+            this.getCurrentWalletChainType().then((chainType) => {
+                let currChainId: ChainId;
+                if (chainType === 'Neo2') {
+                    currChainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
+                } else if (chainType === 'Neo3') {
+                    currChainId = this.net === NetType.N3MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
+                }
+                const defaultNetwork = NETWORKS[currChainId - 1];
+                if (!this.check) {
+                    localStorage.setItem(storageName, JSON.stringify({
                         chainId: currChainId,
                         networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                        defaultNetwork: network || 'MainNet'
+                        defaultNetwork: defaultNetwork || 'MainNet'
+                    }));
+                    return;
+                }
+                try {
+                    if((network as any).chainId.toString() !== currChainId.toString()) {
+                        const saveData = {};
+                        saveData[storageName] = {
+                            chainId: currChainId,
+                            networks: ['MainNet', 'TestNet', 'N3TestNet'],
+                            defaultNetwork: network || 'MainNet'
+                        }
+                        this.crx.setStorage(saveData);
+                        this.crx.setNetwork(network, currChainId, chainType);
+                        this.windowCallback({
+                            return: EVENT.NETWORK_CHANGED,
+                            data: {
+                                chainId: currChainId,
+                                networks: ['MainNet', 'TestNet', 'N3TestNet'],
+                                defaultNetwork: network || 'MainNet'
+                            }
+                        });
                     }
-                });
-            }
-        } catch (e) {
-            console.log('set chainId failed', e);
-        }
+                } catch (e) {
+                    console.log('set chainId failed', e);
+                }
+            });
+        });
     }
 
     public getNetwork() {
