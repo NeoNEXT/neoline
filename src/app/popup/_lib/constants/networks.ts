@@ -1,4 +1,5 @@
 import { NetworkItem, NetworkType } from '../types';
+import { ChainType } from './chain';
 
 /**
  * @param name The name of the custom chain.
@@ -13,14 +14,16 @@ export const Neo2Networks: Array<NetworkItem> = [
         chainId: 1,
         nodeUrl: 'https://neo2-mainnet.neoline.io',
         blockBrowser: 'https://neotube.io',
-        magicNumber: 1
+        magicNumber: 1,
+        chainType: ChainType.Neo2,
     },
     {
         name: 'TestNet',
         chainId: 2,
         nodeUrl: 'https://neo2-testnet.neoline.io',
         blockBrowser: 'https://neotube.io',
-        magicNumber: 2
+        magicNumber: 2,
+        chainType: ChainType.Neo2,
     }
 ];
 
@@ -31,13 +34,15 @@ export const N3Networks: Array<NetworkItem> = [
     //     nodeUrl: 'https://neo3-testnet.neoline.vip',
     //     blockBrowser: 'https://neo3.neotube.io',
     //     magicNumber: 844378958
+    //     chainType: ChainType.Neo3,
     // },
     {
         name: 'N3TestNet',
         chainId: 4,
         nodeUrl: 'https://neo3-testnet.neoline.vip',
         blockBrowser: 'https://neo3.neotube.io',
-        magicNumber: 844378958
+        magicNumber: 844378958,
+        chainType: ChainType.Neo3,
     }
 ];
 
