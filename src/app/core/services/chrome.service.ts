@@ -82,14 +82,15 @@ export class ChromeService {
         }
     }
 
-    public async setNetwork() {
+    public async setNetwork(chain?: string) {
         const storageName = 'network';
         this.getNetwork().then((network) => {
             this.getCurrentWalletChainType().then((chainType) => {
+                const currChainType = chain ? chain : chainType;
                 let currChainId: ChainId;
-                if (chainType === 'Neo2') {
+                if (currChainType === 'Neo2') {
                     currChainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
-                } else if (chainType === 'Neo3') {
+                } else if (currChainType === 'Neo3') {
                     currChainId = this.net === NetType.N3MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
                 }
                 const defaultNetwork = NETWORKS[currChainId - 1];
@@ -110,7 +111,7 @@ export class ChromeService {
                             defaultNetwork: defaultNetwork || 'MainNet'
                         }
                         this.crx.setStorage(saveData);
-                        this.crx.setNetwork(defaultNetwork, currChainId, chainType);
+                        this.crx.setNetwork(defaultNetwork, currChainId, currChainType);
                         this.windowCallback({
                             return: EVENT.NETWORK_CHANGED,
                             data: {
@@ -275,7 +276,7 @@ export class ChromeService {
                 return: EVENT.ACCOUNT_CHANGED,
             });
             this.setCurrentWalletChainType(currChainType);
-            this.setNetwork();
+            this.setNetwork(currChainType);
         } catch (e) {
             console.log('set account failed', e);
         }
