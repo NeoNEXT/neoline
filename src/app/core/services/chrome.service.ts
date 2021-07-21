@@ -257,7 +257,7 @@ export class ChromeService {
      * 保存当前钱包，并记录到历史
      */
     public setWallet(w: any) {
-        const currChainType = wallet3.isAddress(w.accounts[0].address) ? 'Neo3' : 'Neo2';
+        const currChainType = wallet3.isAddress(w?.accounts[0].address || '') ? 'Neo3' : 'Neo2';
         if (!this.check) {
             localStorage.setItem('wallet', JSON.stringify(w));
             this.setCurrentWalletChainType(currChainType);
