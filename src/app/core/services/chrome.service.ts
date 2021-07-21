@@ -82,48 +82,43 @@ export class ChromeService {
         }
     }
 
-    public async setNetwork(chain?: string) {
+    public async setNetwork(address?: string) {
         const storageName = 'network';
         this.getNetwork().then((network) => {
-            this.getCurrentWalletChainType().then((chainType) => {
-                const currChainType = chain ? chain : chainType;
-                let currChainId: ChainId;
-                if (currChainType === 'Neo2') {
-                    currChainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
-                } else if (currChainType === 'Neo3') {
-                    currChainId = this.net === NetType.N3MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
-                }
-                const defaultNetwork = NETWORKS[currChainId - 1];
-                if (!this.check) {
-                    localStorage.setItem(storageName, JSON.stringify({
-                        chainId: currChainId,
-                        networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                        defaultNetwork: defaultNetwork || 'MainNet'
-                    }));
-                    return;
-                }
-                try {
-                    if((network as any).chainId.toString() !== currChainId.toString()) {
-                        const saveData = {};
-                        saveData[storageName] = {
-                            chainId: currChainId,
-                            networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                            defaultNetwork: defaultNetwork || 'MainNet'
-                        }
-                        this.crx.setStorage(saveData);
-                        this.crx.setNetwork(defaultNetwork, currChainId, currChainType);
-                        this.windowCallback({
-                            return: EVENT.NETWORK_CHANGED,
-                            data: {
-                                chainId: currChainId,
-                                networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                                defaultNetwork: defaultNetwork || 'MainNet'
-                            }
-                        });
+            this.getWallet().subscribe((wallet) => {
+                const chainType = wallet3.isAddress(address || wallet?.accounts[0].address) ? 'Neo3' : 'Neo2';
+                this.getNet().subscribe((net) => {
+                    let chainId;
+                    if (chainType === 'Neo3') {
+                        chainId = ChainId.N3TestNet;
+                    } else {
+                        chainId = net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
                     }
-                } catch (e) {
-                    console.log('set network failed', e);
-                }
+                    if ((network as any).chainId !== chainId) {
+                        const defaultNetwork = chainId === ChainId.Neo2MainNet ? NetType.MainNet : NetType.TestNet;
+                        const selNetwork = {
+                            chainId,
+                            networks: ['MainNet', 'TestNet', 'N3TestNet'],
+                            defaultNetwork
+                        }
+                        if (!this.check) {
+                            localStorage.setItem(storageName, JSON.stringify(selNetwork));
+                            return;
+                        }
+                        try {
+                            const saveData = {};
+                            saveData[storageName] = selNetwork;
+                            this.crx.setStorage(saveData);
+                            this.crx.setNetwork(defaultNetwork, chainId, chainType);
+                            this.windowCallback({
+                                return: EVENT.NETWORK_CHANGED,
+                                data: selNetwork
+                            });
+                        } catch (e) {
+                            console.log('set network failed', e);
+                        }
+                    }
+                })
             });
         });
     }
@@ -131,11 +126,11 @@ export class ChromeService {
     public getNetwork() {
         const storageName = 'network';
         if (!this.check) {
-            return new Promise<string>(resolve => {
+            return new Promise<any>(resolve => {
                 resolve(localStorage.getItem(storageName));
             });
         }
-        return new Promise<string>((resolve, reject) => {
+        return new Promise<any>((resolve, reject) => {
             try {
                 this.crx.getStorage(storageName, (res) => {
                     resolve(res || {
@@ -262,12 +257,15 @@ export class ChromeService {
         if (!this.check) {
             localStorage.setItem('wallet', JSON.stringify(w));
             this.setCurrentWalletChainType(currChainType);
+            this.setNetwork(w?.accounts[0].address);
             return;
         }
         try {
             this.crx.setLocalStorage({
                 wallet: w
             });
+            this.setCurrentWalletChainType(currChainType);
+            this.setNetwork(w?.accounts[0].address);
             this.windowCallback({
                 data: {
                     address: w.accounts[0].address,
@@ -275,8 +273,6 @@ export class ChromeService {
                 },
                 return: EVENT.ACCOUNT_CHANGED,
             });
-            this.setCurrentWalletChainType(currChainType);
-            this.setNetwork(currChainType);
         } catch (e) {
             console.log('set account failed', e);
         }
