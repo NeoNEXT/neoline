@@ -41,7 +41,6 @@ export class AppComponent {
                     this.global.languageJson = temp;
                 });
         });
-        this.chrome.initNetwork();
         this.router.events.subscribe((event) => {
             this.hideNav404 = false;
             this.global.$404.subscribe(() => {
@@ -89,6 +88,7 @@ export class AppComponent {
         }
         this.net = net;
         this.chrome.setNet(net);
+        this.chrome.setNetwork();
         this.global.modifyNet(net);
         location.reload();
     }

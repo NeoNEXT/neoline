@@ -45,6 +45,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
         private assetSer: AssetState,
         private neonService: NeonService
     ) {
+        this.chrome.initNetwork();
         this.walletIsOpen = false;
         this.isLogin = false;
         this.address = this.neon.address;
@@ -126,6 +127,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
         }
         this.net = net;
         this.chrome.setNet(net);
+        this.chrome.setNetwork();
         this.global.modifyNet(net);
         location.reload();
     }
