@@ -48,6 +48,7 @@ export class PopupComponent implements OnInit, AfterViewInit {
         this.walletIsOpen = false;
         this.isLogin = false;
         this.address = this.neon.address;
+        this.chrome.initNetwork();
         if (this.neon.currentWalletChainType === 'Neo3') {
             this.isNeo3 = true;
         }

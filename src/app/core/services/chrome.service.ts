@@ -47,6 +47,11 @@ export class ChromeService {
             currChainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
         } else if (chainType === 'Neo3') {
             currChainId = this.net === NetType.N3MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
+        } else {
+            // New user default chainId.
+            this.setNet('MainNet');
+            this.setCurrentWalletChainType('Neo2');
+            currChainId = ChainId.Neo2MainNet;
         }
         const defaultNetwork = NETWORKS[currChainId - 1];
         const currNetwork = {
@@ -74,7 +79,6 @@ export class ChromeService {
         this.initNetwork();
         const storageName = 'network';
         this.getNetwork().then((network) => {
-            console.log(typeof network)
             this.getWallet().subscribe((wallet) => {
                 const chainType = wallet3.isAddress(wallet?.accounts[0].address) ? 'Neo3' : 'Neo2';
                 this.getNet().subscribe((net) => {
