@@ -55,7 +55,6 @@ export class ChromeService {
             defaultNetwork: defaultNetwork || 'MainNet'
         };
         if (!this.check) {
-            console.log(currNetwork);
             localStorage.setItem(storageName, JSON.stringify(currNetwork));
             return;
         }
@@ -75,7 +74,7 @@ export class ChromeService {
         this.initNetwork();
         const storageName = 'network';
         this.getNetwork().then((network) => {
-            console.log(network)
+            console.log(typeof network)
             this.getWallet().subscribe((wallet) => {
                 const chainType = wallet3.isAddress(wallet?.accounts[0].address) ? 'Neo3' : 'Neo2';
                 this.getNet().subscribe((net) => {
@@ -118,7 +117,7 @@ export class ChromeService {
         const storageName = 'network';
         if (!this.check) {
             return new Promise<any>(resolve => {
-                resolve(localStorage.getItem(storageName));
+                resolve(JSON.parse(localStorage.getItem(storageName)));
             });
         }
         return new Promise<any>((resolve, reject) => {
