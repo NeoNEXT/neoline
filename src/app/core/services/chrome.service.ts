@@ -39,8 +39,7 @@ export class ChromeService {
         const storageName = 'network';
         const item = await this.getNetwork();
         const chainType = await this.getCurrentWalletChainType();
-        const { chainId } = (item as any);
-        if (chainId) {
+        if (item) {
             return;
         }
         let currChainId: ChainId;
@@ -50,39 +49,30 @@ export class ChromeService {
             currChainId = this.net === NetType.N3MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
         }
         const defaultNetwork = NETWORKS[currChainId - 1];
+        const currNetwork = {
+            chainId: currChainId,
+            networks: ['MainNet', 'TestNet', 'N3TestNet'],
+            defaultNetwork: defaultNetwork || 'MainNet'
+        };
         if (!this.check) {
-            localStorage.setItem(storageName, JSON.stringify({
-                chainId: currChainId,
-                networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                defaultNetwork: defaultNetwork || 'MainNet'
-            }));
+            console.log(currNetwork);
+            localStorage.setItem(storageName, JSON.stringify(currNetwork));
             return;
         }
         try {
-            this.crx.setStorage({
-                network: {
-                    chainId: currChainId,
-                    networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                    defaultNetwork: defaultNetwork || 'MainNet'
-                }
-            });
+            this.crx.setStorage(currNetwork);
             this.crx.setNetwork(defaultNetwork, currChainId, chainType);
-            if((item as any).chainId.toString() !== currChainId.toString()) {
-                this.windowCallback({
-                    return: EVENT.NETWORK_CHANGED,
-                    data: {
-                        chainId: currChainId,
-                        networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                        defaultNetwork: defaultNetwork || 'MainNet'
-                    }
-                });
-            }
+            this.windowCallback({
+                return: EVENT.NETWORK_CHANGED,
+                data: currNetwork
+            });
         } catch (e) {
             console.log('init network failed', e);
         }
     }
 
     public async setNetwork() {
+        this.initNetwork();
         const storageName = 'network';
         this.getNetwork().then((network) => {
             console.log(network)
