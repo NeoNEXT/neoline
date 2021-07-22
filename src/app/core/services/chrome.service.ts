@@ -95,7 +95,7 @@ export class ChromeService {
                         chainId = net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
                     }
                     if ((network as any).chainId !== chainId) {
-                        const defaultNetwork = chainId === ChainId.Neo2MainNet ? NetType.MainNet : NetType.TestNet;
+                        const defaultNetwork = NETWORKS[chainId - 1];
                         const selNetwork = {
                             chainId,
                             networks: ['MainNet', 'TestNet', 'N3TestNet'],
