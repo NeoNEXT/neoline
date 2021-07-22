@@ -82,11 +82,12 @@ export class ChromeService {
         }
     }
 
-    public async setNetwork(address?: string) {
+    public async setNetwork() {
         const storageName = 'network';
         this.getNetwork().then((network) => {
+            console.log(network)
             this.getWallet().subscribe((wallet) => {
-                const chainType = wallet3.isAddress(address || wallet?.accounts[0].address) ? 'Neo3' : 'Neo2';
+                const chainType = wallet3.isAddress(wallet?.accounts[0].address) ? 'Neo3' : 'Neo2';
                 this.getNet().subscribe((net) => {
                     let chainId;
                     if (chainType === 'Neo3') {
@@ -257,7 +258,7 @@ export class ChromeService {
         if (!this.check) {
             localStorage.setItem('wallet', JSON.stringify(w));
             this.setCurrentWalletChainType(currChainType);
-            this.setNetwork(w?.accounts[0].address);
+            this.setNetwork();
             return;
         }
         try {
@@ -265,7 +266,7 @@ export class ChromeService {
                 wallet: w
             });
             this.setCurrentWalletChainType(currChainType);
-            this.setNetwork(w?.accounts[0].address);
+            this.setNetwork();
             this.windowCallback({
                 data: {
                     address: w.accounts[0].address,
