@@ -88,6 +88,7 @@ export class AppComponent {
         }
         this.net = net;
         this.chrome.setNet(net);
+        this.chrome.setNetwork();
         this.global.modifyNet(net);
         location.reload();
     }

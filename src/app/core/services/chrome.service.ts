@@ -6,7 +6,6 @@ import {
     of,
     throwError,
     from,
-    Subject
 } from 'rxjs';
 import {
     WalletJSON as WalletJSON2
@@ -26,7 +25,9 @@ declare var chrome: any;
 @Injectable()
 export class ChromeService {
     private crx: any = null;
-    private net: string = 'MainNet';
+    private net: string;
+    private chainType: string;
+
     constructor() {
         try {
             this.crx = chrome.extension.getBackgroundPage().NEOLineBackground; //  chrome.extension.getBackgroundPage();
@@ -37,20 +38,19 @@ export class ChromeService {
 
     public async initNetwork() {
         const storageName = 'network';
-        const item = await this.getNetwork();
-        const chainType = await this.getCurrentWalletChainType();
-        if (item) {
+        let chainType = await this.getCurrentWalletChainType();
+        const network = await this.getNetwork();
+        if (network) {
             return;
         }
         let currChainId: ChainId;
         if (chainType === 'Neo2') {
             currChainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
         } else if (chainType === 'Neo3') {
-            currChainId = this.net === NetType.N3MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
+            currChainId = ChainId.N3TestNet;
         } else {
             // New user default chainId.
-            this.setNet('MainNet');
-            this.setCurrentWalletChainType('Neo2');
+            chainType = 'Neo2';
             currChainId = ChainId.Neo2MainNet;
         }
         const defaultNetwork = NETWORKS[currChainId - 1];
@@ -64,7 +64,9 @@ export class ChromeService {
             return;
         }
         try {
-            this.crx.setStorage(currNetwork);
+            const saveData = {};
+            saveData[storageName] = currNetwork;
+            this.crx.setStorage(saveData);
             this.crx.setNetwork(defaultNetwork, currChainId, chainType);
             this.windowCallback({
                 return: EVENT.NETWORK_CHANGED,
@@ -76,44 +78,38 @@ export class ChromeService {
     }
 
     public async setNetwork() {
-        this.initNetwork();
         const storageName = 'network';
         this.getNetwork().then((network) => {
-            this.getWallet().subscribe((wallet) => {
-                const chainType = wallet3.isAddress(wallet?.accounts[0].address) ? 'Neo3' : 'Neo2';
-                this.getNet().subscribe((net) => {
-                    let chainId;
-                    if (chainType === 'Neo3') {
-                        chainId = ChainId.N3TestNet;
-                    } else {
-                        chainId = net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
-                    }
-                    if ((network as any).chainId !== chainId) {
-                        const defaultNetwork = NETWORKS[chainId - 1];
-                        const selNetwork = {
-                            chainId,
-                            networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                            defaultNetwork
-                        }
-                        if (!this.check) {
-                            localStorage.setItem(storageName, JSON.stringify(selNetwork));
-                            return;
-                        }
-                        try {
-                            const saveData = {};
-                            saveData[storageName] = selNetwork;
-                            this.crx.setStorage(saveData);
-                            this.crx.setNetwork(defaultNetwork, chainId, chainType);
-                            this.windowCallback({
-                                return: EVENT.NETWORK_CHANGED,
-                                data: selNetwork
-                            });
-                        } catch (e) {
-                            console.log('set network failed', e);
-                        }
-                    }
-                })
-            });
+            let chainId;
+            if (this.chainType === 'Neo3') {
+                chainId = ChainId.N3TestNet;
+            } else {
+                chainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
+            }
+            if ((network as any).chainId !== chainId) {
+                const defaultNetwork = NETWORKS[chainId - 1];
+                const currNetwork = {
+                    chainId,
+                    networks: ['MainNet', 'TestNet', 'N3TestNet'],
+                    defaultNetwork
+                };
+                if (!this.check) {
+                    localStorage.setItem(storageName, JSON.stringify(currNetwork));
+                    return;
+                }
+                try {
+                    const saveData = {};
+                    saveData[storageName] = currNetwork;
+                    this.crx.setStorage(saveData);
+                    this.crx.setNetwork(defaultNetwork, chainId, this.chainType);
+                    this.windowCallback({
+                        return: EVENT.NETWORK_CHANGED,
+                        data: currNetwork
+                    });
+                } catch (e) {
+                    console.log('set network failed', e);
+                }
+            }
         });
     }
 
@@ -127,11 +123,7 @@ export class ChromeService {
         return new Promise<any>((resolve, reject) => {
             try {
                 this.crx.getStorage(storageName, (res) => {
-                    resolve(res || {
-                        chainId: 1,
-                        defaultNetwork: 'MainNet',
-                        networks: ['MainNet', 'TestNet', 'N3TestNet']
-                    });
+                    resolve(res || null);
                 });
             } catch (e) {
                 reject('get network failed');
@@ -276,6 +268,7 @@ export class ChromeService {
      * 保存当前链，并记录到历史
      */
     public setCurrentWalletChainType(chain: string) {
+        this.chainType = chain;
         if (!this.check) {
             localStorage.setItem('chainType', chain);
             return;
@@ -824,14 +817,12 @@ export class ChromeService {
         this.net = net;
         if (!this.check) {
             localStorage.setItem('net', JSON.stringify(net));
-            this.setNetwork();
             return;
         }
         try {
             this.crx.setStorage({
                 net
             });
-            this.setNetwork();
         } catch (e) {
             console.log('set net failed', e);
         }
