@@ -27,6 +27,7 @@ export class ChromeService {
     private crx: any = null;
     private net: string;
     private chainType: string;
+    private activeNetwork;
 
     constructor() {
         try {
@@ -41,6 +42,7 @@ export class ChromeService {
         let chainType = await this.getCurrentWalletChainType();
         const network = await this.getNetwork();
         if (network) {
+            this.activeNetwork = network;
             return;
         }
         let currChainId: ChainId;
@@ -59,6 +61,7 @@ export class ChromeService {
             networks: ['MainNet', 'TestNet', 'N3TestNet'],
             defaultNetwork: defaultNetwork || 'MainNet'
         };
+        this.activeNetwork = currNetwork;
         if (!this.check) {
             localStorage.setItem(storageName, JSON.stringify(currNetwork));
             return;
@@ -79,38 +82,37 @@ export class ChromeService {
 
     public async setNetwork() {
         const storageName = 'network';
-        this.getNetwork().then((network) => {
-            let chainId;
-            if (this.chainType === 'Neo3') {
-                chainId = ChainId.N3TestNet;
-            } else {
-                chainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
+        let chainId;
+        if (this.chainType === 'Neo3') {
+            chainId = ChainId.N3TestNet;
+        } else {
+            chainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
+        }
+        if (this.activeNetwork?.chainId !== chainId) {
+            const defaultNetwork = NETWORKS[chainId - 1];
+            const currNetwork = {
+                chainId,
+                networks: ['MainNet', 'TestNet', 'N3TestNet'],
+                defaultNetwork
+            };
+            this.activeNetwork = currNetwork;
+            if (!this.check) {
+                localStorage.setItem(storageName, JSON.stringify(currNetwork));
+                return;
             }
-            if ((network as any).chainId !== chainId) {
-                const defaultNetwork = NETWORKS[chainId - 1];
-                const currNetwork = {
-                    chainId,
-                    networks: ['MainNet', 'TestNet', 'N3TestNet'],
-                    defaultNetwork
-                };
-                if (!this.check) {
-                    localStorage.setItem(storageName, JSON.stringify(currNetwork));
-                    return;
-                }
-                try {
-                    const saveData = {};
-                    saveData[storageName] = currNetwork;
-                    this.crx.setStorage(saveData);
-                    this.crx.setNetwork(defaultNetwork, chainId, this.chainType);
-                    this.windowCallback({
-                        return: EVENT.NETWORK_CHANGED,
-                        data: currNetwork
-                    });
-                } catch (e) {
-                    console.log('set network failed', e);
-                }
+            try {
+                const saveData = {};
+                saveData[storageName] = currNetwork;
+                this.crx.setStorage(saveData);
+                this.crx.setNetwork(defaultNetwork, chainId, this.chainType);
+                this.windowCallback({
+                    return: EVENT.NETWORK_CHANGED,
+                    data: currNetwork
+                });
+            } catch (e) {
+                console.log('set network failed', e);
             }
-        });
+        }
     }
 
     public getNetwork() {
