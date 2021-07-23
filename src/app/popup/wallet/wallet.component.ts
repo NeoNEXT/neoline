@@ -40,16 +40,20 @@ export class PopupWalletComponent implements OnInit {
             this.importStatus = 'hibernate';
             this.selected.setValue(0)
         } else {
-            this.selected.setValue(urlParse[3] === 'import' ? 1 : 0)
+            this.selected.setValue(urlParse[3].startsWith('import') ? 1 : 0)
         }
     }
 
     public updateLocalWallet(data: any, type: number) {
-
         this.neon.pushWIFArray(data.accounts[0].wif);
         this.chrome.setWIFArray(this.neon.WIFArr, this.neon.selectedChainType);
         this.neon.pushWalletArray(data.export());
         this.chrome.setWalletArray(this.neon.getWalletArrayJSON(), this.neon.selectedChainType);
+        if (this.type === 'dapi') {
+            const params = `type=dapi&hostname=${this.hostname}&chainType=${this.chainType}&messageID=${this.messageID}`;
+            this.router.navigateByUrl(`/popup/notification/pick-address?${params}`);
+            return;
+        }
         this.chrome.setWallet(data.export());
         this.global.$wallet.next('open');
         if(type === 0) {
@@ -57,11 +61,6 @@ export class PopupWalletComponent implements OnInit {
         } else {
             this.chrome.setWalletsStatus(this.neon.address)
             this.chrome.setHaveBackupTip(false);
-        }
-        if (this.type === 'dapi') {
-            const params = `type=dapi&hostname=${this.hostname}&chainType=${this.chainType}&messageID=${this.messageID}`;
-            this.router.navigateByUrl(`/popup/notification/pick-address?${params}`);
-            return;
         }
         const returnUrl = this.route.snapshot.queryParams.returnUrl || (type === 0 ?'/popup/backup' : '/popup');
         this.router.navigateByUrl(returnUrl);
