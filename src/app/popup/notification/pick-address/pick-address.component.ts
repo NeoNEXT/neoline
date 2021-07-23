@@ -126,7 +126,7 @@ export class PopupPickAddressComponent implements OnInit {
             .open(PopupSelectDialogComponent, {
                 data: {
                     optionGroup: [{
-                        name: this.tabType,
+                        name: 'N3',
                         type: this.tabType
                     }],
                     type: 'chain',

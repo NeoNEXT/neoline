@@ -40,7 +40,7 @@ export class PopupWalletComponent implements OnInit {
             this.importStatus = 'hibernate';
             this.selected.setValue(0)
         } else {
-            this.selected.setValue(urlParse[3] === 'import' ? 1 : 0)
+            this.selected.setValue(urlParse[3].startsWith('import') ? 1 : 0)
         }
     }
 
