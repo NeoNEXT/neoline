@@ -84,11 +84,13 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 this.invokeArgs.push({
                     ...this.neo3Invoke.createInvokeInputs(this.pramsData)
                 });
+                this.broadcastOverride = this.pramsData.broadcastOverride || false;
+                this.signers = this.pramsData.signers;
                 if (params.minReqFee) {
                     this.minFee = Number(params.minReqFee);
                 }
                 if (params.fee) {
-                    this.fee = Number(params.fee);
+                    this.fee = Number(params.fee) || 0;
                 } else {
                     this.fee = 0;
                     if (this.showFeeEdit) {
@@ -97,12 +99,11 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                         } else {
                             this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
                                 this.fee = bignumber(this.minFee).add(bignumber(res.propose_price)).toNumber();
+                                this.signTx();
                             });
                         }
                     }
                 }
-                this.broadcastOverride = this.pramsData.broadcastOverride || false;
-                this.signers = this.pramsData.signers;
                 this.prompt();
                 this.signTx();
             });
@@ -251,7 +252,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 minFee: this.minFee
             }
         }).afterClosed().subscribe(res => {
-            if (res !== false) {
+            if (res || res === 0) {
                 this.fee = res;
                 if (res < this.minFee) {
                     this.fee = this.minFee;

@@ -580,9 +580,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 minFee: this.minFee
             }
         }).afterClosed().subscribe(res => {
-            console.log(res);
-            if (res !== false) {
-                console.log(res);
+            if (res || res === 0) {
                 this.fee = res;
                 if (res < this.minFee) {
                     this.fee = this.minFee;

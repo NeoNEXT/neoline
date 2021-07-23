@@ -542,7 +542,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 minFee: this.minFee
             }
         }).afterClosed().subscribe(res => {
-            if (res !== false) {
+            if (res || res === 0) {
                 this.fee = res;
                 if (res < this.minFee) {
                     this.fee = this.minFee;
