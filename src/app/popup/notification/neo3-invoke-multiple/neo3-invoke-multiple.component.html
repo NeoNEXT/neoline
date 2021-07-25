@@ -64,14 +64,6 @@
                                 </div>
                             </div>
                             <hr>
-                            <div class="total-box detail-item">
-                                <p  class="label">{{ 'TOTAL' | translate | async }}</p>
-                                <div class="total-info">
-                                    <p>{{ 'amount' | translate | async }}+{{ 'GASFEE' | translate | async }}</p>
-                                    <p>{{ totalFee | numberFixed }} GAS</p>
-                                    <p>{{ totalMoney | numberFixed:2 }} {{ rateCurrency }}</p>
-                                </div>
-                            </div>
                         </mat-tab>
                         <mat-tab [label]="'data' | translate | async">
                             <div class="data-detail-box">

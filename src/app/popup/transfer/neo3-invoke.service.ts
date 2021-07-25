@@ -223,7 +223,7 @@ export class Neo3InvokeService {
                 totalFee = new BigNumber(totalFee).plus(new BigNumber(fee)).toNumber();
             }
         );
-        const defaultVerificationExecutionFee = 1007000;
+        const defaultVerificationExecutionFee = 1236520;
         if (u.BigInteger.fromNumber(totalFee).compare(defaultVerificationExecutionFee) < 0) {
             totalFee = defaultVerificationExecutionFee;
         }

@@ -82,11 +82,13 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                         ...this.neo3Invoke.createInvokeInputs(item)
                     });
                 });
+                this.broadcastOverride = this.pramsData.broadcastOverride || false;
+                this.signers = this.pramsData.signers;
                 if (params.minReqFee) {
                     this.minFee = Number(params.minReqFee);
                 }
                 if (params.fee) {
-                    this.fee = Number(params.fee);
+                    this.fee = Number(params.fee) || 0;
                 } else {
                     this.fee = 0;
                     if (this.showFeeEdit) {
@@ -100,8 +102,6 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                         }
                     }
                 }
-                this.broadcastOverride = this.pramsData.broadcastOverride || false;
-                this.signers = this.pramsData.signers;
                 this.signTx();
                 this.prompt();
             });
@@ -259,7 +259,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 minFee: this.minFee
             }
         }).afterClosed().subscribe(res => {
-            if (res !== false) {
+            if (res || res === 0) {
                 this.fee = res;
                 this.dataJson.fee = res;
                 this.getAssetRate();
