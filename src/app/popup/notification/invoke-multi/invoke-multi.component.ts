@@ -139,10 +139,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     if (this.assetState.gasFeeSpeed) {
                         this.fee = bignumber(this.minFee).add(bignumber(this.assetState.gasFeeSpeed.propose_price)).toNumber();
                     } else {
-                        this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
-                            this.fee = bignumber(this.minFee).add(bignumber(res.propose_price)).toNumber();
-                            this.signTx();
-                        });
+                        const tempGasFeeSpeed = await this.assetState.getGasFee().toPromise();
+                        this.fee = bignumber(this.minFee).add(bignumber(tempGasFeeSpeed.propose_price)).toNumber();
                     }
                 }
             }
@@ -379,10 +377,28 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     }
                 });
                 if (NEOAmount > 0) {
-                    newTx = await this.addInputs(NEO, NEOAmount, fromScript, newTx);
+                    try {
+                        newTx = await this.addInputs(NEO, NEOAmount, fromScript, newTx);
+                    } catch (error) {
+                        this.chrome.windowCallback({
+                            error: ERRORS.INSUFFICIENT_FUNDS,
+                            return: requestTarget.InvokeMulti,
+                            ID: this.messageID
+                        });
+                        window.close();
+                    }
                 }
                 if (GASAmount > 0) {
-                    newTx = await this.addInputs(GAS, GASAmount, fromScript, newTx, this.fee);
+                    try {
+                        newTx = await this.addInputs(GAS, GASAmount, fromScript, newTx, this.fee);
+                    } catch (error) {
+                        this.chrome.windowCallback({
+                            error: ERRORS.INSUFFICIENT_FUNDS,
+                            return: requestTarget.InvokeMulti,
+                            ID: this.messageID
+                        });
+                        window.close();
+                    }
                 }
                 if (this.fee > 0 && GASAmount === 0) {
                     try {
