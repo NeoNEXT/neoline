@@ -38,7 +38,7 @@ export class Neo3TransferService {
         );
         params.amount = bignumber(params.amount)
             .mul(bignumber(10).pow(params.decimals))
-            .toNumber();
+            .toString();
         const inputs = {
             scriptHash: tempScriptHash,
             fromAccountAddress: params.addressFrom,
@@ -73,10 +73,16 @@ export class Neo3TransferService {
                 scriptHash: inputs.tokenScriptHash,
                 operation: 'transfer',
                 args: [
-                    sc.ContractParam.hash160(inputs.fromAccountAddress),
-                    sc.ContractParam.hash160(inputs.toAccountAddress),
-                    inputs.amountToTransfer,
-                    null,
+                    sc.ContractParam.hash160(inputs.fromAccountAddress).toJson(),
+                    sc.ContractParam.hash160(inputs.toAccountAddress).toJson(),
+                    {
+                        type: 'Integer',
+                        value: inputs.amountToTransfer
+                    },
+                    {
+                        type: 'Integer',
+                        value: '1'
+                    }
                 ],
             });
 
@@ -144,10 +150,16 @@ export class Neo3TransferService {
                 scriptHash: inputs.tokenScriptHash,
                 operation: 'transfer',
                 args: [
-                    sc.ContractParam.hash160(inputs.fromAccountAddress),
-                    sc.ContractParam.hash160(inputs.toAccountAddress),
-                    inputs.amountToTransfer,
-                    null,
+                    sc.ContractParam.hash160(inputs.fromAccountAddress).toJson(),
+                    sc.ContractParam.hash160(inputs.toAccountAddress).toJson(),
+                    {
+                        type: 'Integer',
+                        value: inputs.amountToTransfer
+                    },
+                    {
+                        type: 'Integer',
+                        value: '1'
+                    }
                 ],
             });
             const invokeFunctionResponse = await rpcClientTemp.invokeScript(
