@@ -79,10 +79,7 @@ export class Neo3TransferService {
                         type: 'Integer',
                         value: inputs.amountToTransfer
                     },
-                    {
-                        type: 'Integer',
-                        value: '1'
-                    }
+                    null
                 ],
             });
 
@@ -156,10 +153,7 @@ export class Neo3TransferService {
                         type: 'Integer',
                         value: inputs.amountToTransfer
                     },
-                    {
-                        type: 'Integer',
-                        value: '1'
-                    }
+                    null
                 ],
             });
             const invokeFunctionResponse = await rpcClientTemp.invokeScript(
