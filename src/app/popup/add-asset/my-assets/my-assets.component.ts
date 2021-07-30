@@ -81,19 +81,23 @@ export class PopupMyAssetsComponent implements OnInit {
             lastModified = imageObj['last-modified'];
             this.myAssets[index].image_url = imageObj['image-src'];
         }
-        this.asset
-            .getAssetImageFromUrl(asset.image_url, lastModified)
-            .subscribe((assetRes) => {
-                if (assetRes && assetRes.status === 200) {
-                    this.asset
-                        .setAssetFile(assetRes, asset.asset_id)
-                        .then((src) => {
-                            this.myAssets[index].image_url = src;
-                        });
-                } else if (assetRes && assetRes.status === 404) {
-                    this.myAssets[index].image_url = this.asset.defaultAssetSrc;
-                }
-            });
+        if (asset.image_url) {
+            this.asset
+                .getAssetImageFromUrl(asset.image_url, lastModified)
+                .subscribe((assetRes) => {
+                    if (assetRes && assetRes.status === 200) {
+                        this.asset
+                            .setAssetFile(assetRes, asset.asset_id)
+                            .then((src) => {
+                                this.myAssets[index].image_url = src;
+                            });
+                    } else if (assetRes && assetRes.status === 404) {
+                        this.myAssets[index].image_url = this.asset.defaultAssetSrc;
+                    }
+                });
+        } else {
+            this.myAssets[index].image_url = this.asset.defaultAssetSrc;
+        }
     }
 
     public addAsset(index: number) {

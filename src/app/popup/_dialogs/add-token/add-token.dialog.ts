@@ -37,15 +37,19 @@ export class PopupAddTokenDialogComponent implements OnInit {
         if (!this.asset.balance || this.asset.balance === 0) {
             this.asset.rateBalance = 0;
         }
-        this.assetState.getAssetImageFromUrl(this.asset.image_url, lastModified).subscribe(assetRes => {
-            if (assetRes && assetRes['status'] === 200) {
-                this.assetState.setAssetFile(assetRes, assetId).then(src => {
-                    this.imageUrl = src;
-                });
-            } else if (assetRes && assetRes['status'] === 404) {
-                this.imageUrl = this.assetState.defaultAssetSrc;
-            }
-        });
+        if (this.asset.image_url) {
+            this.assetState.getAssetImageFromUrl(this.asset.image_url, lastModified).subscribe(assetRes => {
+                if (assetRes && assetRes['status'] === 200) {
+                    this.assetState.setAssetFile(assetRes, assetId).then(src => {
+                        this.imageUrl = src;
+                    });
+                } else if (assetRes && assetRes['status'] === 404) {
+                    this.imageUrl = this.assetState.defaultAssetSrc;
+                }
+            });
+        } else {
+            this.imageUrl = this.assetState.defaultAssetSrc;
+        }
     }
 
     public cancel() {

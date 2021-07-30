@@ -81,27 +81,39 @@ export class PopupAddAssetComponent implements OnInit {
                 this.searchAssets[index].image_url = imageObj['image-src'];
             }
         }
-        this.asset.getAssetImageFromUrl(asset.image_url, lastModified).subscribe(assetRes => {
-            if (assetRes && assetRes.status === 200) {
-                this.asset.setAssetFile(assetRes, asset.asset_id).then(src => {
+        if (asset.image_url) {
+            this.asset.getAssetImageFromUrl(asset.image_url, lastModified).subscribe(assetRes => {
+                if (assetRes && assetRes.status === 200) {
+                    this.asset.setAssetFile(assetRes, asset.asset_id).then(src => {
+                        if (type === 'all') {
+                            this.allowAssets[index].image_url = src;
+                        } else if (type === 'search') {
+                            this.searchAssets[index].image_url = src;
+                        }
+                    });
+                } else if (assetRes && (assetRes.status === 404)) {
                     if (type === 'all') {
-                        this.allowAssets[index].image_url = src;
+                        this.allowAssets[
+                            index
+                        ].image_url = this.asset.defaultAssetSrc;
                     } else if (type === 'search') {
-                        this.searchAssets[index].image_url = src;
+                        this.searchAssets[
+                            index
+                        ].image_url = this.asset.defaultAssetSrc;
                     }
-                });
-            } else if (assetRes && (assetRes.status === 404)) {
-                if (type === 'all') {
-                    this.allowAssets[
-                        index
-                    ].image_url = this.asset.defaultAssetSrc;
-                } else if (type === 'search') {
-                    this.searchAssets[
-                        index
-                    ].image_url = this.asset.defaultAssetSrc;
                 }
+            });
+        } else {
+            if (type === 'all') {
+                this.allowAssets[
+                    index
+                ].image_url = this.asset.defaultAssetSrc;
+            } else if (type === 'search') {
+                this.searchAssets[
+                    index
+                ].image_url = this.asset.defaultAssetSrc;
             }
-        });
+        }
     }
 
     public addAsset(index: number) {
