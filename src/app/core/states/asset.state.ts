@@ -19,7 +19,8 @@ export class AssetState {
     public defaultAssetSrc = '/assets/images/default_asset_logo.jpg';
     public $webAddAssetId: Subject<Balance> = new Subject();
     public $webDelAssetId: Subject<string> = new Subject();
-    public assetRate: Map<string, {}> = new Map();
+    private assetRate: Map<string, {}> = new Map();
+    private neo3AssetRate: Map<string, {}> = new Map();
     public rateCurrency: string;
 
     public balanceSource = new Subject<Balance[]>();
@@ -54,21 +55,18 @@ export class AssetState {
     public changeRateCurrency(currency) {
         this.rateCurrency = currency;
         let tempStorageName;
+        const isNeo3 = this.neonService.currentWalletChainType === 'Neo3';
         if (currency === 'CNY') {
-            if (this.neonService.currentWalletChainType === 'Neo3') {
-                tempStorageName = RateStorageName.neo3AssetCNYRate;
-            } else {
-                tempStorageName = RateStorageName.assetCNYRate;
-            }
+            tempStorageName = isNeo3 ? RateStorageName.neo3AssetCNYRate : RateStorageName.assetCNYRate;
         } else {
-            if (this.neonService.currentWalletChainType === 'Neo3') {
-                tempStorageName = RateStorageName.neo3AssetUSDRate;
-            } else {
-                tempStorageName = RateStorageName.assetUSDRate;
-            }
+            tempStorageName = isNeo3 ? RateStorageName.neo3AssetUSDRate : RateStorageName.assetUSDRate;
         }
         this.chrome.getAssetRate(tempStorageName).subscribe((res) => {
-            this.assetRate = res;
+            if (isNeo3) {
+                this.neo3AssetRate = res;
+            } else {
+                this.assetRate = res;
+            }
         });
     }
 
@@ -91,6 +89,7 @@ export class AssetState {
     public clearCache() {
         this.assetFile = new Map();
         this.assetRate = new Map();
+        this.neo3AssetRate = new Map();
     }
 
     public detail(address: string, id: string): Observable<Balance> {
@@ -229,8 +228,9 @@ export class AssetState {
         const coinsAry = coins.split(',');
         const rateRes = {};
         let targetCoins = '';
+        const isNeo3 = this.neonService.currentWalletChainType === 'Neo3';
         coinsAry.forEach((element) => {
-            const tempAssetRate = this.assetRate.get(element);
+            const tempAssetRate = isNeo3 ? this.neo3AssetRate.get(element) : this.assetRate.get(element);
             if (tempAssetRate && tempAssetRate['last-modified']) {
                 rateRes[element] = tempAssetRate['rate'];
                 if (
@@ -274,7 +274,7 @@ export class AssetState {
                         tempRate['rate'] = undefined;
                         rateRes[coin] = undefined;
                     }
-                    this.assetRate.set(coin, tempRate);
+                    isNeo3 ? this.neo3AssetRate.set(coin, tempRate) : this.assetRate.set(coin, tempRate);
                 });
                 let tempStorageName;
                 if (this.rateCurrency === 'CNY') {
@@ -290,7 +290,7 @@ export class AssetState {
                         tempStorageName = RateStorageName.assetUSDRate;
                     }
                 }
-                this.chrome.setAssetRate(this.assetRate, tempStorageName);
+                this.chrome.setAssetRate(isNeo3 ? this.neo3AssetRate : this.assetRate, tempStorageName);
                 return rateRes;
             })
         );
