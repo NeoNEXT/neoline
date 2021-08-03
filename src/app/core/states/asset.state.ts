@@ -11,6 +11,7 @@ import { bignumber } from 'mathjs';
 import { rpc } from '@cityofzion/neon-js';
 import { NeonService } from '../services/neon.service';
 import { NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
+import { RateStorageName } from '@/app/popup/_lib/setting';
 
 @Injectable()
 export class AssetState {
@@ -52,15 +53,23 @@ export class AssetState {
     }
     public changeRateCurrency(currency) {
         this.rateCurrency = currency;
+        let tempStorageName;
         if (currency === 'CNY') {
-            this.chrome.getAssetCNYRate().subscribe((res) => {
-                this.assetRate = res;
-            });
+            if (this.neonService.currentWalletChainType === 'Neo3') {
+                tempStorageName = RateStorageName.neo3AssetCNYRate;
+            } else {
+                tempStorageName = RateStorageName.assetCNYRate;
+            }
         } else {
-            this.chrome.getAssetUSDRate().subscribe((res) => {
-                this.assetRate = res;
-            });
+            if (this.neonService.currentWalletChainType === 'Neo3') {
+                tempStorageName = RateStorageName.neo3AssetUSDRate;
+            } else {
+                tempStorageName = RateStorageName.assetUSDRate;
+            }
         }
+        this.chrome.getAssetRate(tempStorageName).subscribe((res) => {
+            this.assetRate = res;
+        });
     }
 
     public pushDelAssetId(id) {
@@ -202,8 +211,9 @@ export class AssetState {
         });
     }
     public getRate(): Observable<any> {
+        const chain = this.neonService.currentWalletChainType === 'Neo3' ? 'neo3' : 'neo';
         return this.http.get(
-            `${this.global.apiDomain}/v1/coin/rates?chain=neo`
+            `${this.global.apiDomain}/v1/coin/rates?chain=${chain}`
         );
     }
 
@@ -212,9 +222,6 @@ export class AssetState {
     }
 
     public getAssetRate(coins: string): Observable<any> {
-        if (this.neonService.currentWalletChainType === 'Neo3') {
-            return of({});
-        }
         if (!coins) {
             return of({});
         }
@@ -269,11 +276,21 @@ export class AssetState {
                     }
                     this.assetRate.set(coin, tempRate);
                 });
+                let tempStorageName;
                 if (this.rateCurrency === 'CNY') {
-                    this.chrome.setAssetCNYRate(this.assetRate);
+                    if (this.neonService.currentWalletChainType === 'Neo3') {
+                        tempStorageName = RateStorageName.neo3AssetCNYRate;
+                    } else {
+                        tempStorageName = RateStorageName.assetCNYRate;
+                    }
                 } else {
-                    this.chrome.setAssetUSDRate(this.assetRate);
+                    if (this.neonService.currentWalletChainType === 'Neo3') {
+                        tempStorageName = RateStorageName.neo3AssetUSDRate;
+                    } else {
+                        tempStorageName = RateStorageName.assetUSDRate;
+                    }
                 }
+                this.chrome.setAssetRate(this.assetRate, tempStorageName);
                 return rateRes;
             })
         );

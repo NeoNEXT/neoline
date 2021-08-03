@@ -19,6 +19,7 @@ import {
 import { Asset } from '@/models/models';
 import { EVENT, NETWORKS } from '@/models/dapi';
 import { ChainId, ChainType, NetType } from '@/app/popup/_lib';
+import { RateStorageName } from '@/app/popup/_lib/setting';
 
 declare var chrome: any;
 
@@ -722,66 +723,30 @@ export class ChromeService {
         }));
     }
 
-    public setAssetCNYRate(assetCNYRate: Map<string, {}>) {
+    public setAssetRate(assetRate: Map<string, {}>, storageName: RateStorageName) {
         if (!this.check) {
-            localStorage.setItem('assetCNYRate', JSON.stringify(Array.from(assetCNYRate.entries())));
+            localStorage.setItem(storageName, JSON.stringify(Array.from(assetRate.entries())));
             return;
         }
         try {
             this.crx.setStorage({
-                assetCNYRate: JSON.stringify(Array.from(assetCNYRate.entries()))
+                storageName: JSON.stringify(Array.from(assetRate.entries()))
             });
         } catch (e) {
-            console.log('set assetCNYRate failed', e);
+            console.log(`set ${storageName} failed`, e);
         }
     }
-    public getAssetCNYRate(): Observable<Map<string, {}>> {
+    public getAssetRate(storageName: RateStorageName): Observable<Map<string, {}>> {
         if (!this.check) {
             try {
-                return of(new Map(JSON.parse(localStorage.getItem('assetCNYRate'))));
+                return of(new Map(JSON.parse(localStorage.getItem(storageName))));
             } catch (e) {
                 return throwError('please get history json to local storage when debug mode on');
             }
         }
         return from(new Promise<Map<string, {}>>((resolve, reject) => {
             try {
-                this.crx.getStorage('assetCNYRate', (res) => {
-                    if (res) {
-                        resolve(new Map(JSON.parse(res)));
-                    } else {
-                        resolve(new Map());
-                    }
-                });
-            } catch (e) {
-                reject('failed');
-            }
-        }));
-    }
-
-    public setAssetUSDRate(assetUSDRate: Map<string, {}>) {
-        if (!this.check) {
-            localStorage.setItem('assetUSDRate', JSON.stringify(Array.from(assetUSDRate.entries())));
-            return;
-        }
-        try {
-            this.crx.setStorage({
-                assetUSDRate: JSON.stringify(Array.from(assetUSDRate.entries()))
-            });
-        } catch (e) {
-            console.log('set assetUSDRate failed', e);
-        }
-    }
-    public getAssetUSDRate(): Observable<Map<string, {}>> {
-        if (!this.check) {
-            try {
-                return of(new Map(JSON.parse(localStorage.getItem('assetUSDRate'))));
-            } catch (e) {
-                return throwError('please get history json to local storage when debug mode on');
-            }
-        }
-        return from(new Promise<Map<string, {}>>((resolve, reject) => {
-            try {
-                this.crx.getStorage('assetUSDRate', (res) => {
+                this.crx.getStorage(storageName, (res) => {
                     if (res) {
                         resolve(new Map(JSON.parse(res)));
                     } else {
@@ -837,6 +802,7 @@ export class ChromeService {
                     this.net = JSON.parse(localStorage.getItem('net'))
                     return of(JSON.parse(localStorage.getItem('net')));
                 } else {
+                    this.net = 'MainNet';
                     return of('MainNet'); // 默认网络
                 }
             } catch (e) {

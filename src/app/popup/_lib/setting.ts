@@ -19,3 +19,10 @@ export const RateCurrencysType: Array<SelectItem> = [
         type: 'CNY'
     }
 ];
+
+export enum RateStorageName {
+    assetUSDRate = 'assetUSDRate',
+    assetCNYRate = 'assetCNYRate',
+    neo3AssetUSDRate = 'neo3AssetUSDRate',
+    neo3AssetCNYRate = 'neo3AssetCNYRate',
+}
