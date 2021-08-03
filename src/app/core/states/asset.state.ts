@@ -221,7 +221,7 @@ export class AssetState {
     }
 
     public getAssetRate(coins: string): Observable<any> {
-        if (!coins) {
+        if (!coins || this.global.net !== 'MainNet') {
             return of({});
         }
         coins = coins.toLowerCase();

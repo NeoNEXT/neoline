@@ -64,7 +64,11 @@ export class PopupAccountComponent implements OnInit {
                 );
                 break;
             case 'Neo3':
-                window.open(`https://neo3.neotube.io/address/${this.neon.address}`);
+                if (this.global.net === 'MainNet') {
+                    window.open(`https://neo3.neotube.io/address/${this.neon.address}`);
+                } else {
+                    window.open(`https://neo3.testnet.neotube.io/address/${this.neon.address}`);
+                }
                 break;
         }
     }

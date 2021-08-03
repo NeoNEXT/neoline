@@ -160,7 +160,11 @@ export class PopupAssetDetailComponent implements OnInit {
                 );
                 break;
             case 'Neo3':
-                window.open(`https://neo3.neotube.io/tokens/nep17/${this.assetId}`);
+                if (this.net === 'MainNet') {
+                    window.open(`https://neo3.neotube.io/tokens/nep17/${this.assetId}`);
+                } else {
+                    window.open(`https://neo3.testnet.neotube.io/tokens/nep17/${this.assetId}`);
+                }
                 break;
         }
     }

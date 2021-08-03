@@ -28,7 +28,11 @@ export class TxItemComponent implements OnInit {
                 }
                 break;
             case 'Neo3':
-                window.open(`https://neo3.neotube.io/transaction/${txid}`);
+                if (this.global.net === 'MainNet') {
+                    window.open(`https://neo3.neotube.io/transaction/${txid}`);
+                } else {
+                    window.open(`https://neo3.testnet.neotube.io/transaction/${txid}`);
+                }
                 break;
         }
     }
