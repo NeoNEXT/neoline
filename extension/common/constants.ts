@@ -29,7 +29,7 @@ export const RPC = {
     },
     Neo3: {
         N3TestNet: 'https://neo3-testnet.neoline.vip',
-        N3MainNet: 'https://neo3-testnet.neoline.vip',
+        N3MainNet: 'https://neo3-mainnet.neoline.vip',
     }
 };
 

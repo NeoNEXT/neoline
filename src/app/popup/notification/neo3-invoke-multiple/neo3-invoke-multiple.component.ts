@@ -9,7 +9,7 @@ import { requestTargetN3 } from '@/models/dapi_neo3';
 import { PopupDapiPromptComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { GasFeeSpeed } from '../../_lib/type';
 import { bignumber } from 'mathjs';
-import { NEO3_MAGIC_NUMBER_TESTNET, NEO3_CONTRACT } from '../../_lib';
+import { NEO3_MAGIC_NUMBER, NEO3_CONTRACT } from '../../_lib';
 import { Neo3InvokeService } from '../../transfer/neo3-invoke.service';
 import { forkJoin } from 'rxjs';
 
@@ -153,7 +153,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 this.neon.walletArr.findIndex(item => item.accounts[0].address === this.neon.wallet.accounts[0].address)
             ]
             try {
-                this.tx = this.tx.sign(wif, NEO3_MAGIC_NUMBER_TESTNET);
+                this.tx = this.tx.sign(wif, NEO3_MAGIC_NUMBER[this.net]);
             } catch (error) {
                 console.log(error);
             }

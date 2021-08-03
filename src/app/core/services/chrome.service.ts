@@ -39,26 +39,26 @@ export class ChromeService {
 
     public async initNetwork() {
         const storageName = 'network';
-        let chainType = await this.getCurrentWalletChainType();
+        this.chainType = await this.getCurrentWalletChainType();
         const network = await this.getNetwork();
         if (network) {
             this.activeNetwork = network;
             return;
         }
         let currChainId: ChainId;
-        if (chainType === 'Neo2') {
+        if (this.chainType === 'Neo2') {
             currChainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
-        } else if (chainType === 'Neo3') {
+        } else if (this.chainType === 'Neo3') {
             currChainId = ChainId.N3TestNet;
         } else {
             // New user default chainId.
-            chainType = 'Neo2';
+            this.chainType = 'Neo2';
             currChainId = ChainId.Neo2MainNet;
         }
         const defaultNetwork = NETWORKS[currChainId - 1];
         const currNetwork = {
             chainId: currChainId,
-            networks: ['MainNet', 'TestNet', 'N3TestNet'],
+            networks: NETWORKS,
             defaultNetwork: defaultNetwork || 'MainNet'
         };
         this.activeNetwork = currNetwork;
@@ -70,7 +70,7 @@ export class ChromeService {
             const saveData = {};
             saveData[storageName] = currNetwork;
             this.crx.setStorage(saveData);
-            this.crx.setNetwork(defaultNetwork, currChainId, chainType);
+            this.crx.setNetwork(defaultNetwork, currChainId, this.chainType);
             this.windowCallback({
                 return: EVENT.NETWORK_CHANGED,
                 data: currNetwork
@@ -84,7 +84,7 @@ export class ChromeService {
         const storageName = 'network';
         let chainId;
         if (this.chainType === 'Neo3') {
-            chainId = ChainId.N3TestNet;
+            chainId = this.net === NetType.MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
         } else {
             chainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
         }
@@ -92,7 +92,7 @@ export class ChromeService {
             const defaultNetwork = NETWORKS[chainId - 1];
             const currNetwork = {
                 chainId,
-                networks: ['MainNet', 'TestNet', 'N3TestNet'],
+                networks: NETWORKS,
                 defaultNetwork
             };
             this.activeNetwork = currNetwork;
