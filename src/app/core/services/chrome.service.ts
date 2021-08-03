@@ -50,7 +50,7 @@ export class ChromeService {
         if (this.chainType === 'Neo2') {
             currChainId = this.net === NetType.MainNet ? ChainId.Neo2MainNet : ChainId.Neo2TestNet;
         } else if (this.chainType === 'Neo3') {
-            currChainId = ChainId.N3TestNet;
+            currChainId = this.net === NetType.MainNet ? ChainId.N3MainNet : ChainId.N3TestNet;
         } else {
             // New user default chainId.
             this.chainType = 'Neo2';
