@@ -303,13 +303,17 @@ export class AssetState {
             lastModified = imageObj['last-modified'];
             return imageObj['image-src'];
         }
-        const assetRes = await this.getAssetImageFromUrl(
-            asset.image_url,
-            lastModified
-        ).toPromise();
-        if (assetRes && assetRes.status === 200) {
-            const src = await this.setAssetFile(assetRes, asset.asset_id);
-        } else if (assetRes && assetRes.status === 404) {
+        if (asset.image_url) {
+            const assetRes = await this.getAssetImageFromUrl(
+                asset.image_url,
+                lastModified
+            ).toPromise();
+            if (assetRes && assetRes.status === 200) {
+                const src = await this.setAssetFile(assetRes, asset.asset_id);
+            } else if (assetRes && assetRes.status === 404) {
+                return this.defaultAssetSrc;
+            }
+        } else {
             return this.defaultAssetSrc;
         }
     }

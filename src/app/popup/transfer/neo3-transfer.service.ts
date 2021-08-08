@@ -38,7 +38,7 @@ export class Neo3TransferService {
         );
         params.amount = bignumber(params.amount)
             .mul(bignumber(10).pow(params.decimals))
-            .toString();
+            .toFixed();
         const inputs = {
             scriptHash: tempScriptHash,
             fromAccountAddress: params.addressFrom,
