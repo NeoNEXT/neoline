@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GlobalService, NeonService, ChromeService, AssetState, HttpService } from '@/app/core';
+import { GlobalService, NeonService, ChromeService, AssetState, HttpService, TransactionState } from '@/app/core';
 import { Transaction, TransactionInput, InvocationTransaction } from '@cityofzion/neon-core/lib/tx';
 import { wallet, tx, sc, u, rpc } from '@cityofzion/neon-core';
 import Neon from '@cityofzion/neon-js';
@@ -57,7 +57,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
         private dialog: MatDialog,
         private http: HttpService,
         private chrome: ChromeService,
-        private assetState: AssetState
+        private assetState: AssetState,
+        private txState: TransactionState
     ) { }
 
     ngOnInit(): void {
@@ -241,7 +242,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.global.snackBarTip('transferFailed', error.msg || error);
             return
         }
-        return rpc.Query.sendRawTransaction(serialize).execute(this.global.RPCDomain).then(async res => {
+        return this.txState.rpcSendRawTransaction(serialize).then(async res => {
             if (
                 !res.result ||
                 (res.result && typeof res.result === 'object' && res.result.succeed === false)
@@ -254,12 +255,12 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.loadingMsg = '';
             if (res.error !== undefined) {
                 this.chrome.windowCallback({
-                    error: ERRORS.RPC_ERROR,
+                    error: { ...ERRORS.RPC_ERROR, description: res.error.message },
                     return: requestTarget.Invoke,
                     ID: this.messageID
                 });
                 window.close();
-                this.global.snackBarTip('transferFailed');
+                this.global.handlePrcError(res.error, 'Neo2');
             } else {
                 this.chrome.windowCallback({
                     data: {
@@ -289,7 +290,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 return: requestTarget.Invoke,
                 ID: this.messageID
             });
-            this.global.snackBarTip('transferFailed', err.msg || err);
+            this.global.handlePrcError(err.error, 'Neo2');
         });
     }
 

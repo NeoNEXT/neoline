@@ -241,7 +241,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     private resolveSend(tx: Transaction) {
         this.loadingMsg = 'Wait';
         this.loading = true;
-        return rpc.Query.sendRawTransaction(tx.serialize(true)).execute(this.global.RPCDomain).then(async res => {
+        return this.txState.rpcSendRawTransaction(tx.serialize(true)).then(async res => {
             if (
                 !res.result ||
                 (res.result && typeof res.result === 'object' && res.result.succeed === false)
@@ -287,7 +287,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                 return: requestTarget.Send,
                 ID: this.messageID
             });
-            this.global.snackBarTip('transferFailed', err.msg || err);
+            this.global.handlePrcError(err.error, 'Neo2');
         });
     }
 

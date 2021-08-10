@@ -115,6 +115,27 @@ export class HttpService {
             }
         }));
     }
+
+    public rpcPost(url: string, data: any): Observable<any> {
+        if (this.chrome.check) {
+            return from(new Promise((resolve, reject) => {
+                this.chrome.httpPost(url, data, (res) => {
+                    if (res && res.status === 'success') {
+                        resolve(res.data);
+                    } else {
+                        reject(res && res.msg || res);
+                    }
+                });
+            }));
+        }
+        return this.http.post(url, data).pipe(map((res: any) => {
+            if (res && res.status === 'success') {
+                return res.data;
+            } else {
+                throw res && res.msg || res;
+            }
+        }));
+    }
     public put() {
 
     }

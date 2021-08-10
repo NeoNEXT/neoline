@@ -34,6 +34,7 @@ import { randomBytes, pbkdf2 } from 'crypto';
 import CryptoJS from 'crypto-js';
 import { resolve } from 'path';
 import { HttpErrorResponse } from '@angular/common/http';
+import { ChainType } from '@/app/popup/_lib';
 
 @Injectable()
 export class GlobalService {
@@ -101,6 +102,18 @@ export class GlobalService {
 
     public logoError(img: Event) {
         (img.target as any).src = '/assets/images/logo.png';
+    }
+
+    public handlePrcError(error, chain: ChainType) {
+        let errorMessage = error?.message || this.notification.content.transferFailed;
+        if (chain === 'Neo2' && error?.code === -505) {
+            errorMessage = this.notification.content.InsufficientNetworkFee;
+        }
+        this.snackBar.open(errorMessage, this.notification.content.close, {
+            horizontalPosition: 'center',
+            verticalPosition: 'top',
+            duration: 3000
+        });
     }
 
     public snackBarTip(msg: string, serverError: any = '', time = 3000) {

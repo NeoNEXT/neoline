@@ -250,7 +250,7 @@ export class TransferCreateComponent implements OnInit {
             let txid: string;
             switch(this.neon.currentWalletChainType) {
                 case 'Neo2':
-                    res = await rpc.Query.sendRawTransaction(tx.serialize(true)).execute(this.global.RPCDomain);
+                    res = await this.txState.rpcSendRawTransaction(tx.serialize(true));
                     if (!res.result ||
                         (res.result && typeof res.result === 'object' && res.result.succeed === false)) {
                         throw {
@@ -291,7 +291,7 @@ export class TransferCreateComponent implements OnInit {
         }
         catch (err) {
             this.creating = false;
-            this.global.snackBarTip('transferFailed', err.msg || err);
+            this.global.handlePrcError(err.error, 'Neo2');
         }
         this.loading = false;
         this.loadingMsg = '';

@@ -35,7 +35,8 @@ export class NotificationService {
         butOnlyHad: 'but only had',
         insufficientSystemFee: 'Insufficient balance when system fee added',
         rpcError: 'rpc error, please check the console.',
-        wrongPassword: 'Wrong password'
+        wrongPassword: 'Wrong password',
+        InsufficientNetworkFee: 'Insufficient network fee',
     };
     CN = {
         close: '关闭',
@@ -68,7 +69,8 @@ export class NotificationService {
         butOnlyHad: '但只有',
         insufficientSystemFee: '加上系统费用后余额不足',
         rpcError: '节点返回错误, 请查看控制台。',
-        wrongPassword: '密码错误'
+        wrongPassword: '密码错误',
+        InsufficientNetworkFee: '网络费不足',
     };
     constructor(
         public chrome: ChromeService

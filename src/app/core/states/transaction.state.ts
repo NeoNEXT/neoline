@@ -161,4 +161,14 @@ export class TransactionState {
             );
     }
     //#endregion
+
+    rpcSendRawTransaction(tx) {
+        const data = {
+            jsonrpc: '2.0',
+            id: 1234,
+            method: 'sendrawtransaction',
+            params: [tx]
+        };
+        return this.http.rpcPost(this.global.RPCDomain, data).toPromise();
+    }
 }
