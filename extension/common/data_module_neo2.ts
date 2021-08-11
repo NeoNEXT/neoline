@@ -270,6 +270,7 @@ export interface SendArgs {
     fee?: string; // (Optional) The parsed amount of network fee (in GAS) to include with transaction
     network?: string; //  Network to submit this request to. If omitted, will default to network the wallet is currently set to.
     broadcastOverride?: boolean;
+    txHashAttributes?: TxHashAttribute[];
     // In the case that the dApp would like to be responsible for broadcasting the signed transaction rather than the wallet provider
 }
 

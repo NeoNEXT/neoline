@@ -797,7 +797,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     let queryString = '';
                     for (const key in parameter) {
                         if (parameter.hasOwnProperty(key)) {
-                            const value = parameter[key];
+                            const value = key === 'txHashAttributes' ? JSON.stringify(parameter[key]) : parameter[key];
                             queryString += `${key}=${value}&`;
                         }
                     }

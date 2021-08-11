@@ -25,7 +25,7 @@ import {
 import {
     TransferService
 } from '@/app/transfer/transfer.service';
-import { ERRORS, requestTarget } from '@/models/dapi';
+import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
 import { rpc } from '@cityofzion/neon-js';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
@@ -59,6 +59,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public loading = false;
     public loadingMsg: string;
     public wallet: any;
+    private txHashAttributes: TxHashAttribute[] = null;
 
     public fee: number;
     public init = false;
@@ -124,6 +125,9 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.assetId = params.asset || '';
             this.amount = params.amount || 0;
             this.symbol = params.symbol || '';
+            if (this.txHashAttributes === null && this.dataJson.txHashAttributes !== undefined) {
+                this.txHashAttributes = this.dataJson.txHashAttributes
+            }
             // this.fee = params.fee || 0;
             if (params.fee) {
                 this.fee = parseFloat(params.fee);
@@ -188,6 +192,15 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                             tx2.TxAttrUsage.Remark2,
                             u.str2hexstring(this.remark)
                         );
+                    }
+                    if (this.txHashAttributes !== null) {
+                        this.txHashAttributes.forEach((item, index) => {
+                            this.txHashAttributes[index] = this.neon.parseTxHashAttr(this.txHashAttributes[index]);
+                            const info = this.txHashAttributes[index];
+                            if (tx2.TxAttrUsage[info.txAttrUsage]) {
+                                tx.addAttribute(tx2.TxAttrUsage[info.txAttrUsage], info.value);
+                            }
+                        });
                     }
                     this.resolveSign(tx);
                 }, (err) => {
