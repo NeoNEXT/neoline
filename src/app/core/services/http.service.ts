@@ -120,19 +120,19 @@ export class HttpService {
         if (this.chrome.check) {
             return from(new Promise((resolve, reject) => {
                 this.chrome.httpPost(url, data, (res) => {
-                    if (res && res.status === 'success') {
-                        resolve(res.data);
+                    if (res && res.result) {
+                        resolve(res);
                     } else {
-                        reject(res && res.msg || res);
+                        reject(res);
                     }
                 });
             }));
         }
         return this.http.post(url, data).pipe(map((res: any) => {
-            if (res && res.status === 'success') {
-                return res.data;
+            if (res && res.result) {
+                return res;
             } else {
-                throw res && res.msg || res;
+                throw res;
             }
         }));
     }
