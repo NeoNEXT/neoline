@@ -750,6 +750,10 @@ export class NeonService {
         const zero = '0';
         input = String(input);
 
+        if (length - input.length <= 0) {
+            return input;
+        }
+
         if (padEnd) {
             return input + zero.repeat(length - input.length);
         }
@@ -796,10 +800,10 @@ export class NeonService {
                     true
                 );
                 break;
-            case 'Hash160':
-                if (isAddressToHex) {
-                    parsedValue = str2hexstring(value);
-                }
+        }
+
+        if (isAddressToHex && (txAttrUsage as any) === 'Remark14') {
+            parsedValue = str2hexstring(value);
         }
 
         return {
