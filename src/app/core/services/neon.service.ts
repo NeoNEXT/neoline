@@ -29,6 +29,7 @@ import { sc, u } from '@cityofzion/neon-core';
 import { EVENT, TxHashAttribute } from '@/models/dapi';
 import { bignumber } from 'mathjs';
 import { ChainType } from '@popup/_lib';
+import { str2hexstring } from '@cityofzion/neon-core-neo3/lib/u';
 
 @Injectable()
 export class NeonService {
@@ -760,7 +761,7 @@ export class NeonService {
         type,
         value,
         txAttrUsage,
-    }: TxHashAttribute): TxHashAttribute {
+    }: TxHashAttribute, isAddressToHex = false): TxHashAttribute {
         this.changeChainType();
         let parsedValue = this.zeroPad(value, 64, true);
         switch (type) {
@@ -795,6 +796,10 @@ export class NeonService {
                     true
                 );
                 break;
+            case 'Hash160':
+                if (isAddressToHex) {
+                    parsedValue = str2hexstring(value);
+                }
         }
 
         return {

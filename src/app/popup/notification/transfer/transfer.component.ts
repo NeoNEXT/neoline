@@ -195,7 +195,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                     }
                     if (this.txHashAttributes !== null) {
                         this.txHashAttributes.forEach((item, index) => {
-                            this.txHashAttributes[index] = this.neon.parseTxHashAttr(this.txHashAttributes[index]);
+                            this.txHashAttributes[index] = this.neon.parseTxHashAttr(this.txHashAttributes[index], true);
                             const info = this.txHashAttributes[index];
                             if (tx2.TxAttrUsage[info.txAttrUsage]) {
                                 tx.addAttribute(tx2.TxAttrUsage[info.txAttrUsage], info.value);
