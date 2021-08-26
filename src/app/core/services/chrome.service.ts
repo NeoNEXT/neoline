@@ -514,6 +514,7 @@ export class ChromeService {
                 if (!Array.isArray(rs)) {
                     rs = [];
                 }
+                rs.forEach(item => delete item.balance);
                 return of(rs);
             } catch (e) {
                 return throwError('please set watch to local storage when debug mode on');
@@ -526,6 +527,7 @@ export class ChromeService {
                         if (!Array.isArray(res)) {
                             res = [];
                         }
+                        res.forEach(item => delete item.balance);
                         resolve(res);
                     });
                 } catch (e) {
@@ -557,6 +559,7 @@ export class ChromeService {
         }
     }
     public setWatch(address: string, watch: Asset[], chainType: ChainType) {
+        watch.forEach(item => delete item.balance);
         const storageName = `watch_${this.net.toLowerCase()}-${chainType}`;
         this.getAllWatch(chainType).subscribe(watchObject => {
             const saveWatch = watchObject || {};
