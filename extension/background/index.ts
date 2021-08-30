@@ -699,31 +699,24 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             return;
         }
         case requestTarget.SignMessage: {
-            const parameter = request.parameter;
-            const walletArr = await getLocalStorage('walletArr', () => { });
-            const currWallet = await getLocalStorage('wallet', () => { });
-            const WIFArr = await getLocalStorage('WIFArr', () => { });
-            if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
-                    item.accounts[0].address === currWallet.accounts[0].address)]
-                );
-                const randomSalt = randomBytes(16).toString('hex');
-                const publicKey = getPublicKeyFromPrivateKey(privateKey);
-                const parameterHexString = str2hexstring(randomSalt + parameter.message);
-                const lengthHex = (parameterHexString.length / 2).toString(16).padStart(2, '0');
-                const concatenatedString = lengthHex + parameterHexString;
-                const serializedTransaction = '010001f0' + concatenatedString + '0000';
-                windowCallback({
-                    return: requestTarget.SignMessage,
-                    data: {
-                        publicKey,
-                        data: sign(serializedTransaction, privateKey),
-                        salt: randomSalt,
-                        message: parameter.message
-                    },
-                    ID: request.ID
-                });
-            }
+            chrome.tabs.query({
+                active: true,
+                currentWindow: true
+            }, (tabs) => {
+                tabCurr = tabs;
+            });
+            const params = request.parameter;
+            getStorage('connectedWebsites', (res) => {
+                let queryString = '';
+                for (const key in params) {
+                    if (params.hasOwnProperty(key)) {
+                        const value = params[key];
+                        queryString += `${key}=${value}&`;
+                    }
+                }
+                window.open(`index.html#popup/notification/signature?${queryString}messageID=${request.ID}`,
+                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+            });
             sendResponse('');
             return;
         }
@@ -1185,32 +1178,25 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             return;
         }
         case requestTargetN3.SignMessage: {
-            const parameter = request.parameter;
-            const walletArr = await getLocalStorage('walletArr-Neo3', () => { });
-            const currWallet = await getLocalStorage('wallet', () => { });
-            const WIFArr = await getLocalStorage('WIFArr-Neo3', () => { });
-            if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                const privateKey = wallet3.getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
-                    item.accounts[0].address === currWallet.accounts[0].address)]
-                );
-                const randomSalt = randomBytes(16).toString('hex');
-                const publicKey = wallet3.getPublicKeyFromPrivateKey(privateKey);
-                const parameterHexString = u3.str2hexstring(randomSalt + parameter.message);
-                const lengthHex = u3.num2VarInt(parameterHexString.length / 2);
-                const concatenatedString = lengthHex + parameterHexString;
-                const messageHex = '010001f0' + concatenatedString + '0000';
-                windowCallback({
-                    return: requestTargetN3.SignMessage,
-                    data: {
-                        publicKey,
-                        data: wallet3.sign(messageHex, privateKey),
-                        salt: randomSalt,
-                        message: parameter.message
-                    },
-                    ID: request.ID
-                });
-                sendResponse('');
-            }
+            chrome.tabs.query({
+                active: true,
+                currentWindow: true
+            }, (tabs) => {
+                tabCurr = tabs;
+            });
+            const params = request.parameter;
+            getStorage('connectedWebsites', (res) => {
+                let queryString = '';
+                for (const key in params) {
+                    if (params.hasOwnProperty(key)) {
+                        const value = params[key];
+                        queryString += `${key}=${value}&`;
+                    }
+                }
+                window.open(`index.html#popup/notification/neo3-signature?${queryString}messageID=${request.ID}`,
+                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+            });
+            sendResponse('');
             return;
         }
         case requestTargetN3.Invoke: {

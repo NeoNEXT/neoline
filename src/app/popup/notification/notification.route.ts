@@ -16,6 +16,7 @@ import { PopupNoticeNeo3TransferComponent } from './neo3-transfer/neo3-transfer.
 import { PopupNoticeNeo3InvokeComponent } from './neo3-invoke/neo3-invoke.component';
 import { PopupNoticeNeo3InvokeMultipleComponent } from './neo3-invoke-multiple/neo3-invoke-multiple.component';
 import { PopupPickAddressComponent } from './pick-address/pick-address.component';
+import { PopupNoticeNeo3SignComponent } from './neo3-signature/neo3-signature.component';
 
 const routes: Routes = [
     {
@@ -38,6 +39,7 @@ const routes: Routes = [
                     { path: 'neo3-transfer', component: PopupNoticeNeo3TransferComponent},
                     { path: 'neo3-invoke', component: PopupNoticeNeo3InvokeComponent},
                     { path: 'neo3-invoke-multiple', component: PopupNoticeNeo3InvokeMultipleComponent},
+                    { path: 'neo3-signature', component: PopupNoticeNeo3SignComponent},
                     { path: 'pick-address', component: PopupPickAddressComponent},
                 ]
             },

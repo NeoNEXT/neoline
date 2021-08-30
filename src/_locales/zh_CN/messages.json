@@ -258,7 +258,7 @@
         "message": "查看更多"
     },
     "thSignTitle": {
-        "message": "正在请求你的签名"
+        "message": "这个应用正在请求你的签名。"
     },
     "signing": {
         "message": "正在签名"
