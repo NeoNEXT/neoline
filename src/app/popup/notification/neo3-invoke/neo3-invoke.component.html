@@ -90,7 +90,7 @@
                 <hr>
                 <div class="btn-box">
                     <button mat-flat-button (click)="exit()">{{ 'cancel' | translate | async}}</button>
-                    <button mat-flat-button (click)="confirm()"  color="primary">{{ 'yes' | translate | async}}</button>
+                    <button mat-flat-button [disabled]="!canSend" (click)="confirm()"  color="primary">{{ 'yes' | translate | async}}</button>
                 </div>
             </div>
         </div>

@@ -48,6 +48,8 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
     public totalFee;
     public totalMoney;
 
+    public canSend = false;
+
     constructor(
         private aRoute: ActivatedRoute,
         private router: Router,
@@ -285,12 +287,20 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 invokeArgs: this.invokeArgs,
                 signers: this.signers,
                 networkFee: this.fee,
-            }).subscribe((unSignTx: Transaction) => {
+            }).subscribe(async (unSignTx: Transaction) => {
                 this.systemFee = unSignTx.systemFee.toString();
                 this.networkFee = unSignTx.networkFee.toString();
                 this.getAssetRate();
                 this.tx = unSignTx;
-                this.resolveSign();
+                const isEnoughFee = await this.neo3Invoke.isEnoughFee(this.neon.address, unSignTx.systemFee, unSignTx.networkFee);
+                if (isEnoughFee) {
+                    this.canSend = true;
+                    this.resolveSign();
+                } else {
+                    this.loading = false;
+                    this.canSend = false;
+                    this.global.snackBarTip('InsufficientNetworkFee');
+                }
             }, error => {
                 console.log(error);
                 if (error.type === 'rpcError') {

@@ -5,6 +5,8 @@ import { Observable, from, throwError } from 'rxjs';
 import { AssetState, NotificationService, GlobalService } from '@app/core';
 import BigNumber from 'bignumber.js';
 import { ContractCall, ContractParam } from '@cityofzion/neon-core-neo3/lib/sc';
+import { Asset } from '@/models/models';
+import { GAS3_CONTRACT } from '../_lib';
 
 interface CreateNeo3TxInput {
     invokeArgs: ContractCall[];
@@ -250,5 +252,23 @@ export class Neo3InvokeService {
                 }
             })
         }
+    }
+    async isEnoughFee(fromAddress: string, systemFee, networkFee): Promise<boolean> {
+        const balanceResponse = await this.assetState
+            .fetchNeo3AddressTokens(fromAddress)
+            .toPromise();
+        const gasAsset: Asset = balanceResponse.find(
+            (item) => item.asset_id === GAS3_CONTRACT
+        );
+        const gasAmount = gasAsset ? gasAsset.balance : 0;
+        const requireGasAmount = new BigNumber(systemFee.toString()).plus(
+            new BigNumber(networkFee.toString())
+        );
+        console.log(requireGasAmount.toFixed());
+        console.log(gasAmount);
+        if (requireGasAmount.comparedTo(new BigNumber(gasAmount)) > 0) {
+            return false;
+        }
+        return true
     }
 }
