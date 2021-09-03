@@ -264,8 +264,6 @@ export class Neo3InvokeService {
         const requireGasAmount = new BigNumber(systemFee.toString()).plus(
             new BigNumber(networkFee.toString())
         );
-        console.log(requireGasAmount.toFixed());
-        console.log(gasAmount);
         if (requireGasAmount.comparedTo(new BigNumber(gasAmount)) > 0) {
             return false;
         }
