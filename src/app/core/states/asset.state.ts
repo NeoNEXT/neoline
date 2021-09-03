@@ -256,7 +256,7 @@ export class AssetState {
                 targetCoinsAry.forEach((coin) => {
                     const tempRate = {};
                     tempRate['last-modified'] = rateBalance['response_time'];
-                    if (coin in rateBalance) {
+                    if (rateBalance[coin]) {
                         tempRate['rate'] = bignumber(
                             rateBalance[coin].price || 0
                         )
@@ -338,7 +338,7 @@ export class AssetState {
         );
     }
 
-    public async getMoney(symbol: string, balance: number): Promise<string> {
+    public async getMoney(symbol: string, balance: string | number): Promise<string> {
         let rate: any;
         try {
             rate = await this.getAssetRate(symbol).toPromise();
@@ -346,9 +346,7 @@ export class AssetState {
             rate = {};
         }
         if (symbol.toLowerCase() in rate) {
-            return this.global
-                .mathmul(Number(rate[symbol.toLowerCase()]), Number(balance))
-                .toString();
+            return bignumber(rate[symbol.toLowerCase()]).times(bignumber(balance)).toFixed();
         } else {
             return '0';
         }

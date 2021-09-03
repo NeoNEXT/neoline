@@ -49,7 +49,8 @@ export class Neo3TransferService {
             networkFee: bignumber(params.networkFee).toNumber() || 0,
         };
         const vars: any = {};
-        const NEW_POLICY_CONTRACT = '0xcc5e4edd9f5f8dba8bb65734541df7a1c081c67b';
+        const NEW_POLICY_CONTRACT =
+            '0xcc5e4edd9f5f8dba8bb65734541df7a1c081c67b';
         const NEW_GAS = '0xd2a4cff31913016155e38e474a2c06d08be276cf';
 
         /**
@@ -73,13 +74,15 @@ export class Neo3TransferService {
                 scriptHash: inputs.tokenScriptHash,
                 operation: 'transfer',
                 args: [
-                    sc.ContractParam.hash160(inputs.fromAccountAddress).toJson(),
+                    sc.ContractParam.hash160(
+                        inputs.fromAccountAddress
+                    ).toJson(),
                     sc.ContractParam.hash160(inputs.toAccountAddress).toJson(),
                     {
                         type: 'Integer',
-                        value: inputs.amountToTransfer
+                        value: inputs.amountToTransfer,
                     },
-                    null
+                    null,
                 ],
             });
 
@@ -105,14 +108,15 @@ export class Neo3TransferService {
          * signatures) and also the cost of running the verification of signatures.
          */
         async function checkNetworkFee() {
-            const feePerByteInvokeResponse: any = await rpcClientTemp.invokeFunction(
-                NEW_POLICY_CONTRACT,
-                'getExecFeeFactor',
-            );
+            const feePerByteInvokeResponse: any =
+                await rpcClientTemp.invokeFunction(
+                    NEW_POLICY_CONTRACT,
+                    'getExecFeeFactor'
+                );
             if (feePerByteInvokeResponse.state !== 'HALT') {
                 if (inputs.networkFee === 0) {
                     throw {
-                        msg: 'Unable to retrieve data to calculate network fee.'
+                        msg: 'Unable to retrieve data to calculate network fee.',
                     };
                 } else {
                     console.log(
@@ -131,7 +135,9 @@ export class Neo3TransferService {
             const networkFeeEstimate = feePerByte
                 .mul(transactionByteSize)
                 .add(witnessProcessingFee);
-            vars.tx.networkFee = new u.Fixed8(inputs.networkFee).add(networkFeeEstimate);
+            vars.tx.networkFee = new u.Fixed8(inputs.networkFee).add(
+                networkFeeEstimate
+            );
             vars.networkFeeEstimate = networkFeeEstimate;
             console.log(
                 `\u001b[32m  ✓ Network Fee set: ${vars.tx.networkFee} \u001b[0m`
@@ -147,13 +153,15 @@ export class Neo3TransferService {
                 scriptHash: inputs.tokenScriptHash,
                 operation: 'transfer',
                 args: [
-                    sc.ContractParam.hash160(inputs.fromAccountAddress).toJson(),
+                    sc.ContractParam.hash160(
+                        inputs.fromAccountAddress
+                    ).toJson(),
                     sc.ContractParam.hash160(inputs.toAccountAddress).toJson(),
                     {
                         type: 'Integer',
-                        value: inputs.amountToTransfer
+                        value: inputs.amountToTransfer,
                     },
-                    null
+                    null,
                 ],
             });
             const invokeFunctionResponse = await rpcClientTemp.invokeScript(
@@ -167,11 +175,16 @@ export class Neo3TransferService {
             );
             if (invokeFunctionResponse.state !== 'HALT') {
                 throw {
-                    msg: 'Transfer script errored out! You might not have sufficient funds for this transfer.'
+                    msg: 'Transfer script errored out! You might not have sufficient funds for this transfer.',
                 };
             }
-            const requiredSystemFee = u.Fixed8.fromRawNumber(invokeFunctionResponse.gasconsumed);
-            if (inputs.systemFee && new u.Fixed8(inputs.systemFee) >= requiredSystemFee) {
+            const requiredSystemFee = u.Fixed8.fromRawNumber(
+                invokeFunctionResponse.gasconsumed
+            );
+            if (
+                inputs.systemFee &&
+                new u.Fixed8(inputs.systemFee) >= requiredSystemFee
+            ) {
                 vars.tx.systemFee = new u.Fixed8(inputs.systemFee);
                 console.log(
                     `  i Node indicates ${requiredSystemFee} systemFee but using user provided value of ${inputs.systemFee}`
@@ -212,10 +225,7 @@ export class Neo3TransferService {
                 .toNumber();
             if (balanceAmount < inputs.amountToTransfer) {
                 throw {
-                    msg: `${
-                        notificationTemp.content['insufficientSystemFee'] +
-                        sourceBalanceAmount
-                    }`,
+                    msg: `${notificationTemp.content.insufficientSystemFee} ${sourceBalanceAmount}`,
                 };
             } else {
                 console.log('\u001b[32m  ✓ Token funds found \u001b[0m');
@@ -235,11 +245,10 @@ export class Neo3TransferService {
             if (gasAmount.lt(gasRequirements)) {
                 throw {
                     msg: `${
-                        notificationTemp.content['insufficientBalance'] +
-                        gasRequirements.toString() +
-                        notificationTemp.content['butOnlyHad'] +
-                        gasAmount.toString()
-                    }`,
+                        notificationTemp.content.insufficientBalance
+                    } ${gasRequirements.toString()} ${
+                        notificationTemp.content.butOnlyHad
+                    } ${gasAmount.toString()}`,
                 };
             } else {
                 console.log(
@@ -257,10 +266,7 @@ export class Neo3TransferService {
                     .toNumber();
                 if (balanceAmount < totalRequirements) {
                     throw {
-                        msg: `${
-                            notificationTemp.content['insufficientSystemFee'] +
-                            sourceBalanceAmount
-                        }`,
+                        msg: `${notificationTemp.content.insufficientSystemFee} ${sourceBalanceAmount}`,
                     };
                 }
             }

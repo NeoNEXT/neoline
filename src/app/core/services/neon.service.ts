@@ -594,13 +594,13 @@ export class NeonService {
             assetId === GAS || assetId === GAS.substring(2)
                 ? curr.sub(amount).sub(fee)
                 : curr.sub(amount);
-        if (payback < bignumber('0')) {
+        if (payback.comparedTo(bignumber(0)) < 0) {
             throw new Error('no enough balance to pay');
         }
-        if (payback > bignumber('0')) {
+        if (payback.comparedTo(bignumber(0)) > 0) {
             newTx.addOutput({
                 assetId,
-                value: payback.toNumber(),
+                value: payback.toFixed(),
                 scriptHash: fromScript,
             });
         }

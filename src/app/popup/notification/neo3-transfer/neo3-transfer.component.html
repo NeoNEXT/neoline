@@ -54,14 +54,24 @@
                                 </div>
                             </div>
                             <hr>
-                            <div class="total-box detail-item">
-                                <p  class="label">TOTAL</p>
-                                <div class="total-info">
-                                    <p>Amount+GAS FEE</p>
-                                    <p>{{ amount }} {{ symbol }} + {{ fee }}GAS</p>
-                                    <p>{{ totalMoney | numberFixed:2 }} {{ rateCurrency }}</p>
+                            <div class="fee-box detail-item">
+                                <p class="label">{{ 'SYSTEMFEE' | translate | async }}</p>
+                                <div class="fee-info">
+                                    <p></p>
+                                    <p>{{ systemFee | numberFixed }} GAS</p>
+                                    <p>{{ systemFeeMoney | numberFixed:2 }} {{ rateCurrency }}</p>
                                 </div>
                             </div>
+                            <hr>
+                            <div class="fee-box detail-item">
+                                <p class="label">{{ 'NETWORKFEE' | translate | async }}</p>
+                                <div class="fee-info">
+                                    <p></p>
+                                    <p>{{ networkFee | numberFixed }} GAS</p>
+                                    <p>{{ networkFeeMoney | numberFixed:2 }} {{ rateCurrency }}</p>
+                                </div>
+                            </div>
+                            <hr>
                         </mat-tab>
                         <mat-tab [label]="'data' | translate | async">
                             <div class="data-detail-box">
@@ -79,7 +89,7 @@
                 <hr>
                 <div class="btn-box">
                     <button mat-flat-button (click)="exit()">{{ 'cancel' | translate | async}}</button>
-                    <button mat-flat-button (click)="confirm()"  color="primary">{{ 'yes' | translate | async}}</button>
+                    <button mat-flat-button [disabled]="!canSend" (click)="confirm()"  color="primary">{{ 'yes' | translate | async}}</button>
                 </div>
             </div>
         </div>

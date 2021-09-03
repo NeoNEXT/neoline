@@ -40,6 +40,7 @@ import {
     u as u3,
     wallet as wallet3
 } from '@cityofzion/neon-core-neo3/lib';
+import { bignumber } from 'mathjs';
 
 /**
  * Background methods support.
@@ -773,14 +774,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             const assetID = parameter.asset.length < 10 ? '' : parameter.asset;
             const symbol = parameter.asset.length >= 10 ? '' : parameter.asset;
             httpGet(`${mainApi}/v1/neo2/address/assets?address=${parameter.fromAddress}`, (resBalance) => {
-                let enough = true; // 有足够的钱
-                let hasAsset = false;  // 该地址有这个资产
+                let enough = true; // Have enough money
+                let hasAsset = false;  // This address has this asset
                 const assets = (resBalance.data.asset as []).concat(resBalance.data.nep5 || []) as any;
                 for (const asset of assets) {
                     if (asset.asset_id === assetID || String(asset.symbol).toLowerCase() === symbol.toLowerCase()) {
                         hasAsset = true;
                         request.parameter.asset = asset.asset_id;
-                        if (Number(asset.balance) < Number(parameter.amount)) {
+                        if (bignumber(asset.balance).comparedTo(bignumber(parameter.amount)) < 0) {
                             enough = false;
                         }
                         break;
@@ -1301,7 +1302,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     if (assets[index].contract === assetID || String(assets[index].symbol).toLowerCase() === symbol.toLowerCase()) {
                         hasAsset = true;
                         parameter.asset = assets[index].contract;
-                        if (Number(assets[index].balance) < Number(parameter.amount)) {
+                        if (bignumber(assets[index].balance).comparedTo(bignumber(parameter.amount)) < 0) {
                             enough = false;
                         }
                         break;

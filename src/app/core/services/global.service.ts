@@ -117,7 +117,7 @@ export class GlobalService {
     }
 
     public snackBarTip(msg: string, serverError: any = '', time = 3000) {
-        let message = this.notification.content[msg];
+        let message = this.notification.content[msg] || msg;
         if (serverError instanceof HttpErrorResponse) {
             serverError = serverError.statusText;
         } else if (typeof serverError !== 'string') {

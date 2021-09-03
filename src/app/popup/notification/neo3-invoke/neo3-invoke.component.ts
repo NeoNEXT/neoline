@@ -63,6 +63,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        this.rateCurrency = this.assetState.rateCurrency;
         this.assetImageUrl = this.assetState.getAssetImageFromAssetId(NEO3_CONTRACT);
         this.aRoute.queryParams.subscribe(async ({ messageID }) => {
             let params: any;
@@ -120,16 +121,12 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
     }
 
     public async getAssetRate() {
-        const getFeeMoney = this.getMoney('GAS', Number(this.fee));
-        const getSystemFeeMoney = this.getMoney('GAS', this.systemFee || 0);
-        const getNetworkFeeMoney = this.getMoney('GAS', this.networkFee || 0);
-        this.totalFee = bignumber(this.fee).add(this.systemFee || 0).add(this.networkFee || 0);
-        forkJoin([getFeeMoney, getSystemFeeMoney, getNetworkFeeMoney]).subscribe(res => {
-            this.feeMoney = res[0];
-            this.systemFeeMoney = res[1];
-            this.networkFeeMoney = res[2];
-            this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney);
-        });
+        this.assetState.getAssetRate('GAS').subscribe(rates => {
+            const gasPrice = rates.gas;
+            this.feeMoney = bignumber(this.fee).times(bignumber(gasPrice)).toFixed();
+            this.systemFeeMoney = bignumber(this.systemFee).times(bignumber(gasPrice)).toFixed();
+            this.networkFeeMoney = bignumber(this.networkFee).times(bignumber(gasPrice)).toFixed();
+        })
     }
 
     public async getMoney(symbol: string, balance: number): Promise<string> {

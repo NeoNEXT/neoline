@@ -57,7 +57,6 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
     public symbol: string = '';
     public amount: string = '0';
     public remark: string = '';
-    private network: string = '';
     public loading = false;
     public loadingMsg: string;
     public wallet: any;
@@ -66,8 +65,13 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
     public init = false;
     private broadcastOverride = false;
     private messageID = 0;
+    public systemFee;
+    public networkFee;
+    public systemFeeMoney;
+    public networkFeeMoney;
 
     public net: string;
+    public canSend = false;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -119,13 +123,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
                     ID: this.messageID
                 });
             };
-            if (params.network === 'MainNet') {
-                this.global.modifyNet('MainNet');
-            } else {
-                this.global.modifyNet('TestNet');
-            }
             this.net = this.global.net;
-            this.network = params.network || 'MainNet';
             this.toAddress = params.toAddress || '';
             this.assetId = params.asset || '';
             this.amount = params.amount || 0;
@@ -150,7 +148,6 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
                     this.symbol = filterAsset[0].symbol;
                     this.balance = filterAsset[0];
                     this.submit();
-                    this.getAssetRate();
                 }
             });
         });
@@ -165,11 +162,16 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
         this.loading = false;
         this.loadingMsg = '';
         this.transfer.create(this.fromAddress, this.toAddress, this.assetId, this.amount, this.fee, this.balance.decimals,
-            this.broadcastOverride).subscribe((tx) => {
+            this.broadcastOverride).subscribe((tx: any) => {
+                this.systemFee = tx.systemFee.toFixed();
+                this.networkFee = tx.networkFee.toFixed();
+                this.getAssetRate();
+                this.canSend = true;
                 this.resolveSign(tx);
             }, (err) => {
                 this.creating = false;
-                this.global.snackBarTip('wentWrong');
+                this.canSend = false;
+                this.global.snackBarTip(err);
             });
     }
 
@@ -245,8 +247,8 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
                 ID: this.messageID
             });
             const setData = {};
-            setData[`N3${this.network}TxArr`] = await this.chrome.getLocalStorage(`N3${this.network}TxArr`) || [];
-            setData[`N3${this.network}TxArr`].push(TxHash);
+            setData[`N3${this.net}TxArr`] = await this.chrome.getLocalStorage(`N3${this.net}TxArr`) || [];
+            setData[`N3${this.net}TxArr`].push(TxHash);
             this.chrome.setLocalStorage(setData);
             this.router.navigate([{
                 outlets: {
@@ -291,12 +293,15 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
     }
 
     public async getAssetRate() {
-        if (Number(this.fee) > 0) {
-            this.feeMoney = await this.asset.getMoney('GAS', Number(this.fee))
-        }
-        const assetRate = await this.asset.getAssetRate(this.symbol).toPromise();
-        this.money = await this.asset.getMoney(this.symbol, Number(this.amount));
-        this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
+        const rateSymbols = this.symbol === 'GAS' ? 'GAS' : `${this.symbol},GAS`;
+        this.asset.getAssetRate(rateSymbols).subscribe(rates => {
+            const gasPrice = rates.gas;
+            const transferAssetPrice = rates[this.symbol.toLowerCase()];
+            this.money = bignumber(this.amount).times(bignumber(transferAssetPrice)).toFixed();
+            this.feeMoney = bignumber(this.fee).times(bignumber(gasPrice)).toFixed();
+            this.systemFeeMoney = bignumber(this.systemFee).times(bignumber(gasPrice)).toFixed();
+            this.networkFeeMoney = bignumber(this.networkFee).times(bignumber(gasPrice)).toFixed();
+        })
     }
 
     public exit() {
@@ -345,6 +350,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
                         this.totalMoney = this.global.mathAdd(Number(this.feeMoney), Number(this.money)).toString();
                     });
                 }
+                this.submit();
             }
         })
     }
