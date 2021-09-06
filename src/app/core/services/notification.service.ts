@@ -37,6 +37,7 @@ export class NotificationService {
         rpcError: 'rpc error, please check the console.',
         wrongPassword: 'Wrong password',
         InsufficientNetworkFee: 'Insufficient network fee',
+        InsufficientGas: 'Insufficient GAS to pay for fees',
     };
     CN = {
         close: '关闭',
@@ -71,6 +72,7 @@ export class NotificationService {
         rpcError: '节点返回错误, 请查看控制台。',
         wrongPassword: '密码错误',
         InsufficientNetworkFee: '网络费不足',
+        InsufficientGas: 'GAS 不足以支付费用',
     };
     constructor(
         public chrome: ChromeService

@@ -296,7 +296,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 } else {
                     this.loading = false;
                     this.canSend = false;
-                    this.global.snackBarTip('InsufficientNetworkFee');
+                    this.global.snackBarTip('InsufficientGas');
                 }
             }, error => {
                 console.log(error);
