@@ -59,6 +59,8 @@ export class PopupHomeComponent implements OnInit {
 
     showBackup: boolean = null;
 
+    currentWalletIsN3;
+
     // 菜单
     showMenu = false;
     constructor(
@@ -74,6 +76,7 @@ export class PopupHomeComponent implements OnInit {
         this.wallet = this.neon.wallet;
         this.rateCurrency = this.assetState.rateCurrency;
         this.assetId = this.neon.currentWalletChainType === 'Neo2' ? NEO : NEO3_CONTRACT;
+        this.currentWalletIsN3 = this.neon.currentWalletChainType === 'Neo3';
 
         const imageObj = this.assetState.assetFile.get(this.assetId);
         let lastModified = '';
@@ -95,6 +98,13 @@ export class PopupHomeComponent implements OnInit {
                 this.showBackup = !res;
             });
         }
+    }
+
+    showAddToken(): boolean {
+        if (this.neon.currentWalletChainType === 'Neo3' && this.selectedIndex === 1) {
+            return false;
+        }
+        return true;
     }
 
     getAssetList() {

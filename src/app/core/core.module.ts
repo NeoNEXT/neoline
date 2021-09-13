@@ -14,6 +14,7 @@ import { LoaderDialog } from './dialogs/loader/loader.dialog';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SettingState } from './states/setting.state';
+import { NftState } from './states/nft.state';
 
 @NgModule({
     declarations: [
@@ -28,7 +29,7 @@ import { SettingState } from './states/setting.state';
         GlobalService, NeonService, ChromeService, HttpService,
         WalletGuard, PopupWalletGuard, OpenedWalletGuard, PopupLoginGuard, LoginGuard,
         AssetState, TransactionState, BlockState, NotificationService,
-        SettingState
+        SettingState, NftState
     ],
     entryComponents: [
         LoaderDialog

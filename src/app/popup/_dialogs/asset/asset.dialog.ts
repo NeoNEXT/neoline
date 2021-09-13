@@ -22,15 +22,19 @@ export class PopupAssetDialogComponent implements OnInit {
         private dialogRef: MatDialogRef<PopupAssetDialogComponent>,
         private assetState: AssetState,
         @Inject(MAT_DIALOG_DATA) public data: {
-            balances: Array<Asset>,
-            selected: number
+            balances?: Array<Asset>,
+            selected: number,
+            isNft?: boolean,
+            nftTokens?: any[],
         }
     ) { }
 
     ngOnInit() {
-        this.data.balances.forEach(async (item, index) => {
-            this.logoUrlArr[index] = await this.assetState.getAssetImage(item);
-        })
+        if (!this.data.isNft) {
+            this.data.balances.forEach(async (item, index) => {
+                this.logoUrlArr[index] = await this.assetState.getAssetImage(item);
+            })
+        }
     }
 
     public select(index: number) {

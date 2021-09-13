@@ -41,6 +41,7 @@ import { LimitPageStringPipe } from './pipes/limit-page-string.pipe';
 import { LanguageNamePipe } from './pipes/language-name.pipe';
 import { CopyDirective } from './directives/copy';
 import { AvatarDirective } from './directives/avatar';
+import { ErrSrcDirective } from './directives/err-src.directive';
 import { TranslatePipe } from './pipes/translate.pipe';
 import { NumberDirective } from './directives/number';
 import { MatRippleModule } from '@angular/material/core';
@@ -60,7 +61,8 @@ import { NumberFixedPipe } from './pipes/number-fixed.pipe';
         CopyDirective,
         NumberDirective,
         AvatarDirective,
-        ScrollDirective
+        ScrollDirective,
+        ErrSrcDirective
     ],
     imports: [CommonModule, MatIconModule, MatButtonModule],
     exports: [
@@ -74,6 +76,7 @@ import { NumberFixedPipe } from './pipes/number-fixed.pipe';
         CopyDirective,
         ScrollDirective,
         AvatarDirective,
+        ErrSrcDirective,
         MatButtonModule,
         MatCheckboxModule,
         MatSelectModule,

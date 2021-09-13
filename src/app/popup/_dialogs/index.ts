@@ -14,3 +14,4 @@ export { PopupSubscriptionEmailDialogComponent } from './subscription-email/subs
 export { PopupAddTokenWarnDialogComponent } from './add-token-warn/add-token-warn.dialog';
 export { PopupAuthorizationListDialogComponent } from './authorization-list/authorization-list.dialog';
 export { PopupDapiPromptComponent } from './dapi-Prompt/dapi-Prompt.component';
+export { PopupNftTxDetailDialogComponent } from './nft-tx-detail/nft-tx-detail.dialog';

@@ -5,6 +5,7 @@ import { PopupComponent } from '@popup/popup.component';
 import { PopupAboutComponent } from './about/about.component';
 import { PopupAccountComponent } from './account/account.component';
 import { PopupAssetDetailComponent } from './asset-detail/asset-detail.component';
+import { PopupNftDetailComponent } from './nft-detail/nft-detail.component';
 import { PopupBackupComponent } from './backup/backup.component';
 import { PopupHomeComponent } from './home';
 import { PopupLoginComponent } from './login/login.component';
@@ -37,6 +38,11 @@ const routes: Routes = [
                 path: 'asset/:assetId',
                 canActivate: [PopupWalletGuard],
                 component: PopupAssetDetailComponent,
+            },
+            {
+                path: 'nfts/:contract',
+                canActivate: [PopupWalletGuard],
+                component: PopupNftDetailComponent,
             },
             {
                 path: 'backup',

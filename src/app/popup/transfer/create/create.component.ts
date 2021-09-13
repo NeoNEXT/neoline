@@ -16,7 +16,8 @@ import {
     HttpService,
     BlockState,
     ChromeService,
-    TransactionState
+    TransactionState,
+    NftState
 } from '@/app/core';
 import {
     MatDialog
@@ -64,6 +65,10 @@ export class TransferCreateComponent implements OnInit {
     public net: string;
 
     istransferAll = false;
+
+    nftContract: string;
+    nftTokens: any[];
+    chooseNftToken;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -77,6 +82,7 @@ export class TransferCreateComponent implements OnInit {
         private block: BlockState,
         private txState: TransactionState,
         private neo3Transfer: Neo3TransferService,
+        private nftState: NftState
     ) {
         switch(this.neon.currentWalletChainType) {
             case 'Neo2':
@@ -92,22 +98,27 @@ export class TransferCreateComponent implements OnInit {
         this.net = this.global.net;
         this.fromAddress = this.neon.address;
         this.aRoute.params.subscribe((params) => {
-            if (params.id) {
-                this.asset.detail(this.neon.address, params.id).subscribe(async (res: Asset) => {
-                    res.balance = bignumber(res.balance).toFixed();
-                    this.chooseAsset = res;
-                    this.assetId = res.asset_id;
-                    this.assetLogoUrl = await this.asset.getAssetImage(res);
+            if (params.nftContract) {
+                this.nftContract = params.nftContract;
+                this.getNftTokens();
+            } else {
+                if (params.id) {
+                    this.asset.detail(this.neon.address, params.id).subscribe(async (res: Asset) => {
+                        res.balance = bignumber(res.balance).toFixed();
+                        this.chooseAsset = res;
+                        this.assetId = res.asset_id;
+                        this.assetLogoUrl = await this.asset.getAssetImage(res);
+                    });
+                }
+                this.asset.fetchBalance(this.neon.address).subscribe(async balanceArr => {
+                    this.balances = balanceArr;
+                    if (!params.id) {
+                        this.assetId = this.balances[0].asset_id;
+                        this.chooseAsset = this.balances[0];
+                        this.assetLogoUrl = await this.asset.getAssetImage(this.balances[0]);
+                    }
                 });
             }
-            this.asset.fetchBalance(this.neon.address).subscribe(async balanceArr => {
-                this.balances = balanceArr;
-                if (!params.id) {
-                    this.assetId = this.balances[0].asset_id;
-                    this.chooseAsset = this.balances[0];
-                    this.assetLogoUrl = await this.asset.getAssetImage(this.balances[0]);
-                }
-            });
         });
         if (this.asset.gasFeeSpeed) {
             this.gasFeeSpeed = this.asset.gasFeeSpeed;
@@ -118,6 +129,15 @@ export class TransferCreateComponent implements OnInit {
                 this.fee = res.propose_price;
             });
         }
+    }
+
+    getNftTokens() {
+        this.nftState
+            .getNftTokens(this.neon.address, this.nftContract)
+            .subscribe((res) => {
+                this.nftTokens = res;
+                this.chooseNftToken = res[0];
+            });
     }
 
     public submit() {
@@ -132,6 +152,12 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('wrongAddress');
             return;
         }
+
+        if (this.nftContract) {
+            this.nftSubmit();
+            return;
+        }
+
         if (this.chooseAsset.balance === undefined || bignumber(this.chooseAsset.balance).comparedTo(0) === -1) {
             this.global.snackBarTip('balanceLack');
             return;
@@ -165,6 +191,11 @@ export class TransferCreateComponent implements OnInit {
                     this.global.snackBarTip('wentWrong', err);
                 }
             });
+    }
+
+    private nftSubmit() {
+        this.creating = true;
+        this.loading = true;
     }
 
     public cancel() {
@@ -350,6 +381,25 @@ export class TransferCreateComponent implements OnInit {
                 this.chooseAsset = this.balances[index];
                 this.assetId = this.chooseAsset.asset_id;
                 this.assetLogoUrl = await this.asset.getAssetImage(this.chooseAsset);
+            });
+        }
+    }
+
+    selectNftAsset() {
+        if (this.nftTokens.length > 0) {
+            this.dialog.open(PopupAssetDialogComponent, {
+                data: {
+                    isNft: true,
+                    nftTokens: this.nftTokens,
+                    selected: this.nftTokens.findIndex(item => item.token_id === this.chooseNftToken.token_id)
+                },
+                maxHeight: 500,
+                panelClass: 'custom-dialog-panel'
+            }).afterClosed().subscribe(async (index: number) => {
+                if (index === undefined) {
+                    return
+                }
+                this.chooseNftToken = this.nftTokens[index];
             });
         }
     }

@@ -18,6 +18,7 @@ const routes: Routes = [
                 children: [
                     { path: 'receive', component: TransferReceiveComponent },
                     { path: 'create/:id', component: TransferCreateComponent },
+                    { path: 'create/nft/:nftContract', component: TransferCreateComponent },
                     { path: 'create', component: TransferCreateComponent }
                 ]
             }

@@ -22,23 +22,34 @@
     </div>
     <div class="current-asset-container container">
         <span class="label">{{ 'currencies' | translate | async }}</span>
-        <div class="asset-box box" matRipple (click)="selectAsset()">
+        <div class="asset-box box" *ngIf="!nftContract" matRipple (click)="selectAsset()">
             <div class="asset-logo">
                 <img [src]="assetLogoUrl" alt="">
             </div>
             <div class="asset-info">
                 <p>{{ chooseAsset?.symbol || 'NEO' }}</p>
-                <p>{{ 'balancecolon' | translate | async }}{{ chooseAsset?.balance |numberFixed }} {{ chooseAsset?.symbol }}</p>
+                <p>{{ 'balancecolon' | translate | async }}{{ chooseAsset?.balance |numberFixed }}
+                    {{ chooseAsset?.symbol }}</p>
+            </div>
+            <img class="drop" src="/assets/images/transaction/drop.png" alt="">
+        </div>
+        <div class="asset-box box" *ngIf="nftContract" matRipple (click)="selectNftAsset()">
+            <div class="asset-logo">
+                <img [src]="chooseNftToken?.info?.image" appErrorSrc alt="">
+            </div>
+            <div class="asset-info">
+                <p>#{{ chooseNftToken?.token_id }}</p>
+                <p>{{ 'balancecolon' | translate | async }}{{ chooseNftToken?.balance | numberFixed }}
+                    {{ chooseAsset?.info?.name || chooseAsset?.symbol }}</p>
             </div>
             <img class="drop" src="/assets/images/transaction/drop.png" alt="">
         </div>
     </div>
-    <div class="amount-container container">
+    <div class="amount-container container" *ngIf="!nftContract">
         <span class="label">{{ 'amount' | translate | async }}</span>
         <div class="amount-box box">
             <input type="string" min="0" placeholder="0" [(ngModel)]="amount" (keypress)="numberCheck($event)">
-            <button mat-button color="primary"
-                (click)="transferAll()">{{ 'allTransfer' | translate | async }}</button>
+            <button mat-button color="primary" (click)="transferAll()">{{ 'allTransfer' | translate | async }}</button>
         </div>
     </div>
     <div class="fee-container container">
