@@ -40,7 +40,7 @@
             <div class="asset-info">
                 <p>#{{ chooseNftToken?.token_id }}</p>
                 <p>{{ 'balancecolon' | translate | async }}{{ chooseNftToken?.balance | numberFixed }}
-                    {{ chooseAsset?.info?.name || chooseAsset?.symbol }}</p>
+                    {{ chooseNftToken?.info?.name || chooseNftToken?.symbol }}</p>
             </div>
             <img class="drop" src="/assets/images/transaction/drop.png" alt="">
         </div>

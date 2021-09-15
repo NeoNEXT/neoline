@@ -17,10 +17,10 @@ export class TransferService {
         private neo3TransferService: Neo3TransferService
     ) { }
     public create(from: string, to: string, asset: string, amount: string, fee: number = 0, decimals: number = 0,
-        broadcastOverride: boolean = false): Observable<Transaction | Transaction3> {
+        broadcastOverride: boolean = false, nftTokenId?: string): Observable<Transaction | Transaction3> {
         if (this.neon.currentWalletChainType === 'Neo3') {
             return new Observable(observer => {
-                this.neo3TransferService.createNeo3Tx({addressFrom: from, addressTo: to, tokenScriptHash: asset, amount, networkFee: fee, decimals}).subscribe(tx => {
+                this.neo3TransferService.createNeo3Tx({addressFrom: from, addressTo: to, tokenScriptHash: asset, amount, networkFee: fee, decimals, nftTokenId}).subscribe(tx => {
                         observer.next(tx);
                         observer.complete();
                 }, error => {

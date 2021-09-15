@@ -12,6 +12,7 @@ interface CreateNeo3TxInput {
     amount: any;
     networkFee: number;
     decimals: number;
+    nftTokenId?: any;
 }
 
 @Injectable()
@@ -61,16 +62,28 @@ export class Neo3TransferService {
          * All these checks can be performed through RPC calls to a NEO node.
          */
 
-        async function createTransaction() {
-            console.log(`\n\n --- Today's Task ---`);
-            console.log(
-                `Sending ${inputs.amountToTransfer} token \n` +
-                    `from ${inputs.fromAccountAddress} \n` +
-                    `to ${inputs.toAccountAddress}`
-            );
-
-            // Since the token is now an NEP-5 token, we transfer using a VM script.
-            const script = sc.createScript({
+        // Since the token is now an NEP-5 token, we transfer using a VM script.
+        let script;
+        if (params.nftTokenId) {
+            script = sc.createScript({
+                scriptHash: inputs.tokenScriptHash,
+                operation: 'transfer',
+                args: [
+                    sc.ContractParam.hash160(inputs.toAccountAddress).toJson(),
+                    sc.ContractParam.byteArray(
+                        u.hex2base64(
+                            u.reverseHex(
+                                u.BigInteger.fromNumber(
+                                    params.nftTokenId
+                                ).toHex()
+                            )
+                        )
+                    ).toJson(),
+                    null,
+                ],
+            });
+        } else {
+            script = sc.createScript({
                 scriptHash: inputs.tokenScriptHash,
                 operation: 'transfer',
                 args: [
@@ -85,6 +98,15 @@ export class Neo3TransferService {
                     null,
                 ],
             });
+        }
+
+        async function createTransaction() {
+            console.log(`\n\n --- Today's Task ---`);
+            console.log(
+                `Sending ${inputs.amountToTransfer} token \n` +
+                    `from ${inputs.fromAccountAddress} \n` +
+                    `to ${inputs.toAccountAddress}`
+            );
 
             // We retrieve the current block height as we need to
             const currentHeight = await rpcClientTemp.getBlockCount();
@@ -149,21 +171,6 @@ export class Neo3TransferService {
          * can easily get this number by using invokeScript with the appropriate signers.
          */
         async function checkSystemFee() {
-            const script = sc.createScript({
-                scriptHash: inputs.tokenScriptHash,
-                operation: 'transfer',
-                args: [
-                    sc.ContractParam.hash160(
-                        inputs.fromAccountAddress
-                    ).toJson(),
-                    sc.ContractParam.hash160(inputs.toAccountAddress).toJson(),
-                    {
-                        type: 'Integer',
-                        value: inputs.amountToTransfer,
-                    },
-                    null,
-                ],
-            });
             const invokeFunctionResponse = await rpcClientTemp.invokeScript(
                 neo3This.hexToBase64(script),
                 [
@@ -214,23 +221,6 @@ export class Neo3TransferService {
                 );
                 return;
             }
-            // Check for token funds
-            const balances = balanceResponse.filter((bal) =>
-                bal.asset_id.includes(inputs.tokenScriptHash)
-            );
-            const sourceBalanceAmount =
-                balances.length === 0 ? 0 : balances[0].balance;
-            const balanceAmount = bignumber(sourceBalanceAmount)
-                .mul(bignumber(10).pow(params.decimals))
-                .toNumber();
-            if (balanceAmount < inputs.amountToTransfer) {
-                throw {
-                    msg: `${notificationTemp.content.insufficientSystemFee} ${sourceBalanceAmount}`,
-                };
-            } else {
-                console.log('\u001b[32m  ✓ Token funds found \u001b[0m');
-            }
-
             // Check for gas funds for fees
             const gasRequirements = new u.Fixed8(vars.tx.networkFee).plus(
                 vars.tx.systemFee
@@ -255,19 +245,37 @@ export class Neo3TransferService {
                     `\u001b[32m  ✓ Sufficient GAS for fees found (${gasRequirements.toString()}) \u001b[0m`
                 );
             }
-
-            // 如果转的是 gas
-            if (inputs.tokenScriptHash.indexOf(NEW_GAS) >= 0) {
-                const gasRequirements8 = bignumber(
-                    gasRequirements.toNumber()
-                ).mul(bignumber(10).pow(params.decimals));
-                const totalRequirements = bignumber(inputs.amountToTransfer)
-                    .add(gasRequirements8)
+            if (!params.nftTokenId) {
+                // Check for token funds
+                const balances = balanceResponse.filter((bal) =>
+                    bal.asset_id.includes(inputs.tokenScriptHash)
+                );
+                const sourceBalanceAmount =
+                    balances.length === 0 ? 0 : balances[0].balance;
+                const balanceAmount = bignumber(sourceBalanceAmount)
+                    .mul(bignumber(10).pow(params.decimals))
                     .toNumber();
-                if (balanceAmount < totalRequirements) {
+                if (balanceAmount < inputs.amountToTransfer) {
                     throw {
                         msg: `${notificationTemp.content.insufficientSystemFee} ${sourceBalanceAmount}`,
                     };
+                } else {
+                    console.log('\u001b[32m  ✓ Token funds found \u001b[0m');
+                }
+
+                // 如果转的是 gas
+                if (inputs.tokenScriptHash.indexOf(NEW_GAS) >= 0) {
+                    const gasRequirements8 = bignumber(
+                        gasRequirements.toNumber()
+                    ).mul(bignumber(10).pow(params.decimals));
+                    const totalRequirements = bignumber(inputs.amountToTransfer)
+                        .add(gasRequirements8)
+                        .toNumber();
+                    if (balanceAmount < totalRequirements) {
+                        throw {
+                            msg: `${notificationTemp.content.insufficientSystemFee} ${sourceBalanceAmount}`,
+                        };
+                    }
                 }
             }
         }
