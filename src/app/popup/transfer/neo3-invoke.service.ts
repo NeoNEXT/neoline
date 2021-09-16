@@ -1,12 +1,18 @@
 import { Injectable } from '@angular/core';
-import { rpc, sc, tx, u, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
+import {
+    rpc,
+    sc,
+    tx,
+    u,
+    wallet as wallet3,
+} from '@cityofzion/neon-core-neo3/lib';
 import { SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from, throwError } from 'rxjs';
-import { AssetState, NotificationService, GlobalService } from '@app/core';
+import { AssetState, NotificationService, GlobalService, NeonService } from '@app/core';
 import BigNumber from 'bignumber.js';
 import { ContractCall, ContractParam } from '@cityofzion/neon-core-neo3/lib/sc';
 import { Asset } from '@/models/models';
-import { GAS3_CONTRACT } from '../_lib';
+import { GAS3_CONTRACT, NEO3_MAGIC_NUMBER } from '../_lib';
 
 interface CreateNeo3TxInput {
     invokeArgs: ContractCall[];
@@ -21,23 +27,25 @@ export class Neo3InvokeService {
         public assetState: AssetState,
         public notification: NotificationService,
         private globalService: GlobalService,
+        private neon: NeonService,
     ) {
         this.rpcClient = new rpc.RPCClient(this.globalService.Neo3RPCDomain);
     }
-    createNeo3Tx(
-        params: CreateNeo3TxInput,
-    ): Observable<Transaction> {
+    createNeo3Tx(params: CreateNeo3TxInput): Observable<Transaction> {
         const neo3This = this;
         const rpcClientTemp = this.rpcClient;
-        const signerJson = params.signers.map(signerItem => {
+        const signerJson = params.signers.map((signerItem) => {
             return {
                 account: signerItem.account,
                 scopes: signerItem.scopes,
-                allowedcontracts: signerItem?.allowedContracts?.map((item) => item.toString()) ||
+                allowedcontracts:
+                    signerItem?.allowedContracts?.map((item) =>
+                        item.toString()
+                    ) || undefined,
+                allowedgroups:
+                    signerItem?.allowedGroups?.map((item) => item.toString()) ||
                     undefined,
-                allowedgroups: signerItem?.allowedGroups?.map((item) => item.toString()) ||
-                    undefined
-            }
+            };
         });
         const inputs = {
             invokeArgs: params.invokeArgs,
@@ -52,7 +60,7 @@ export class Neo3InvokeService {
         } catch (error) {
             return throwError({
                 type: 'scriptError',
-                error
+                error,
             });
         }
 
@@ -73,6 +81,11 @@ export class Neo3InvokeService {
                 systemFee: vars.systemFee,
                 script,
             });
+            const wif = neo3This.neon.WIFArr[
+                neo3This.neon.walletArr.findIndex(item => item.accounts[0].address === neo3This.neon.wallet.accounts[0].address)
+            ]
+            vars.tx = vars.tx.sign(wif, NEO3_MAGIC_NUMBER[neo3This.globalService.net]);
+
             console.log('\u001b[32m  ✓ Transaction created \u001b[0m');
         }
 
@@ -82,19 +95,18 @@ export class Neo3InvokeService {
          * signatures) and also the cost of running the verification of signatures.
          */
         async function checkNetworkFee() {
-            const { feePerByte, executionFeeFactor } = await neo3This.getFeeInformation(
-                rpcClientTemp
-            );
-            const networkFeeEstimate = await neo3This.calculateNetworkFee(
+            const { feePerByte, executionFeeFactor } =
+                await neo3This.getFeeInformation(rpcClientTemp);
+            const networkFeeEstimate = neo3This.calculateNetworkFee(
                 vars.tx,
                 feePerByte,
-                executionFeeFactor,
-                inputs,
-                inputs.signers
+                executionFeeFactor
             );
-            vars.tx.networkFee = u.Fixed8.fromRawNumber(networkFeeEstimate.toString()).add(
-                params.networkFee
-            );
+
+            vars.tx.networkFee = u.Fixed8.fromRawNumber(
+                networkFeeEstimate.toString()
+            ).add(params.networkFee);
+
             console.log(
                 `\u001b[32m  ✓ Network Fee set: ${vars.tx.networkFee} \u001b[0m`
             );
@@ -112,7 +124,7 @@ export class Neo3InvokeService {
             if (invokeFunctionResponse.state !== 'HALT') {
                 throw {
                     type: 'rpcError',
-                    error: invokeFunctionResponse
+                    error: invokeFunctionResponse,
                 };
             }
             const requiredSystemFee = u.Fixed8.fromRawNumber(
@@ -135,9 +147,7 @@ export class Neo3InvokeService {
     }
 
     async sendNeo3Tx(baseTx1: string): Promise<any> {
-        const result = await this.rpcClient.sendRawTransaction(
-            baseTx1
-        );
+        const result = await this.rpcClient.sendRawTransaction(baseTx1);
 
         console.log('\n\n--- Transaction hash ---');
         return result;
@@ -148,7 +158,9 @@ export class Neo3InvokeService {
             .emitContractCall(sc.PolicyContract.INSTANCE.getFeePerByte())
             .emitContractCall(sc.PolicyContract.INSTANCE.getExecFeeFactor())
             .build();
-        const res = await client.invokeScript(u.HexString.fromHex(policyScript));
+        const res = await client.invokeScript(
+            u.HexString.fromHex(policyScript)
+        );
         const [feePerByte, executionFeeFactor] = res.stack.map((s) =>
             u.BigInteger.fromNumber(s.value)
         );
@@ -159,31 +171,16 @@ export class Neo3InvokeService {
         return new sc.OpToken(sc.OpCode.PUSHDATA1, '0'.repeat(128));
     }
 
-    public async calculateNetworkFee(
-        txn,
-        feePerByte,
-        executionFeeFactor,
-        params,
-        signers
-    ) {
-        const feePerByteBigInteger =
-            feePerByte instanceof u.BigInteger
-                ? feePerByte
-                : u.BigInteger.fromNumber(feePerByte);
+    calculateNetworkFee(txn, feePerByte, executionFeeFactor) {
+        const feePerByteBigInteger = feePerByte;
         const txClone = new tx.Transaction(txn);
-        const witnesses: any[] = params.invokeArgs.map((item) => {
-            return new tx.Witness({
-                verificationScript: '00'.repeat(40),
-                invocationScript: '',
-            });
-        });
-        txClone.witnesses = witnesses;
         txClone.witnesses = txn.witnesses.map((w) => {
             const verificationScript = w.verificationScript;
             if (sc.isMultisigContract(verificationScript)) {
-                const threshold = wallet3.getSigningThresholdFromVerificationScript(
-                    verificationScript.toBigEndian()
-                );
+                const threshold =
+                    wallet3.getSigningThresholdFromVerificationScript(
+                        verificationScript.toBigEndian()
+                    );
                 return new tx.Witness({
                     invocationScript: this.generateFakeInvocationScript()
                         .toScript()
@@ -192,45 +189,34 @@ export class Neo3InvokeService {
                 });
             } else {
                 return new tx.Witness({
-                    invocationScript: this.generateFakeInvocationScript().toScript(),
+                    invocationScript:
+                        this.generateFakeInvocationScript().toScript(),
                     verificationScript,
                 });
             }
         });
-        const signerJson = signers.map((signersItem) => {
-            return {
-                account: signersItem.account.toString(),
-                scopes: signersItem.scopes.toString(),
-                allowedcontracts:
-                    signersItem?.allowedContracts?.map((item) => item.toString()) ||
-                    undefined,
-                allowedgroups:
-                    signersItem?.allowedGroups?.map((item) => item.toString()) || undefined,
-            };
-        });
-        let totalFee = 0;
-        await params.invokeArgs.forEach(
-            async (item) => {
-                let fee = 0;
-                try {
-                    const invokeFunctionResponse = await this.rpcClient.invokeContractVerify(
-                        item.scriptHash,
-                        [],
-                        signerJson
+        const verificationExecutionFee = txClone.witnesses.reduce(
+            (totalFee, witness) => {
+                return totalFee
+                    .add(
+                        sc.calculateExecutionFee(
+                            witness.invocationScript.toBigEndian(),
+                            executionFeeFactor
+                        )
+                    )
+                    .add(
+                        sc.calculateExecutionFee(
+                            witness.verificationScript.toBigEndian(),
+                            executionFeeFactor
+                        )
                     );
-                    if (invokeFunctionResponse.state === 'HALT') {
-                        fee = invokeFunctionResponse.gasconsumed;
-                    }
-                } catch (error) {}
-                totalFee = new BigNumber(totalFee).plus(new BigNumber(fee)).toNumber();
-            }
+            },
+            u.BigInteger.fromNumber(0)
         );
-        const defaultVerificationExecutionFee = 1236520;
-        if (u.BigInteger.fromNumber(totalFee).compare(defaultVerificationExecutionFee) < 0) {
-            totalFee = defaultVerificationExecutionFee;
-        }
-        const sizeFee = feePerByteBigInteger.mul(txClone.serialize(true).length / 2);
-        return sizeFee.add(u.BigInteger.fromNumber(totalFee));
+        const sizeFee = feePerByteBigInteger.mul(
+            txClone.serialize(true).length / 2
+        );
+        return sizeFee.add(verificationExecutionFee);
     }
 
     public hexToBase64(str: string) {
@@ -242,7 +228,7 @@ export class Neo3InvokeService {
         return {
             scriptHash,
             operation,
-            args: args.map(item => {
+            args: args.map((item) => {
                 if (item && item.type && item.type === 'Address') {
                     return sc.ContractParam.hash160(item.value.toString());
                 } else if (item) {
@@ -250,10 +236,14 @@ export class Neo3InvokeService {
                 } else {
                     return null;
                 }
-            })
-        }
+            }),
+        };
     }
-    async isEnoughFee(fromAddress: string, systemFee, networkFee): Promise<boolean> {
+    async isEnoughFee(
+        fromAddress: string,
+        systemFee,
+        networkFee
+    ): Promise<boolean> {
         const balanceResponse = await this.assetState
             .fetchNeo3AddressTokens(fromAddress)
             .toPromise();
@@ -267,6 +257,6 @@ export class Neo3InvokeService {
         if (requireGasAmount.comparedTo(new BigNumber(gasAmount)) > 0) {
             return false;
         }
-        return true
+        return true;
     }
 }
