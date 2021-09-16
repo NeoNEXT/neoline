@@ -284,6 +284,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 invokeArgs: this.invokeArgs,
                 signers: this.signers,
                 networkFee: this.fee,
+                systemFee: this.pramsData.systemFee
             }).subscribe(async (unSignTx: Transaction) => {
                 this.systemFee = unSignTx.systemFee.toString();
                 this.networkFee = unSignTx.networkFee.toString();

@@ -18,6 +18,7 @@ interface CreateNeo3TxInput {
     invokeArgs: ContractCall[];
     signers: SignerLike[];
     networkFee: number;
+    systemFee?: any;
 }
 
 @Injectable()
@@ -47,12 +48,6 @@ export class Neo3InvokeService {
                     undefined,
             };
         });
-        const inputs = {
-            invokeArgs: params.invokeArgs,
-            signers: params.signers,
-            systemFee: 0,
-            networkFee: params.networkFee || 0,
-        };
         const vars: any = {};
         let script: string = '';
         try {
@@ -76,7 +71,7 @@ export class Neo3InvokeService {
             // We retrieve the current block height as we need to
             const currentHeight = await rpcClientTemp.getBlockCount();
             vars.tx = new tx.Transaction({
-                signers: inputs.signers,
+                signers: params.signers,
                 validUntilBlock: currentHeight + 30,
                 systemFee: vars.systemFee,
                 script,
@@ -130,7 +125,7 @@ export class Neo3InvokeService {
             const requiredSystemFee = u.Fixed8.fromRawNumber(
                 invokeFunctionResponse.gasconsumed
             );
-            vars.tx.systemFee = requiredSystemFee;
+            vars.tx.systemFee = requiredSystemFee.add(new BigNumber(params.systemFee));
             console.log(
                 `\u001b[32m  ✓ SystemFee set: ${vars.tx.systemFee.toString()}\u001b[0m`
             );
