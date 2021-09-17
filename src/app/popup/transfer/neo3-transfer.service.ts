@@ -76,7 +76,7 @@ export class Neo3TransferService {
                 scriptHash: inputs.tokenScriptHash,
                 operation: 'transfer',
                 args: [
-                    sc.ContractParam.hash160(inputs.toAccountAddress).toJson(),
+                    sc.ContractParam.hash160(inputs.toAccountAddress),
                     sc.ContractParam.byteArray(
                         u.hex2base64(
                             u.reverseHex(
@@ -85,8 +85,8 @@ export class Neo3TransferService {
                                 ).toHex()
                             )
                         )
-                    ).toJson(),
-                    null,
+                    ),
+                    sc.ContractParam.any(null),
                 ],
             });
         } else {
@@ -94,15 +94,10 @@ export class Neo3TransferService {
                 scriptHash: inputs.tokenScriptHash,
                 operation: 'transfer',
                 args: [
-                    sc.ContractParam.hash160(
-                        inputs.fromAccountAddress
-                    ).toJson(),
-                    sc.ContractParam.hash160(inputs.toAccountAddress).toJson(),
-                    {
-                        type: 'Integer',
-                        value: inputs.amountToTransfer,
-                    },
-                    null,
+                    sc.ContractParam.hash160(inputs.fromAccountAddress),
+                    sc.ContractParam.hash160(inputs.toAccountAddress),
+                    sc.ContractParam.integer(inputs.amountToTransfer),
+                    sc.ContractParam.any(null),
                 ],
             });
         }
