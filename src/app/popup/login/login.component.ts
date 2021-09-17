@@ -19,7 +19,8 @@ import {
 } from '@/app/core/services/neon.service';
 import {
     ChromeService,
-    GlobalService
+    GlobalService,
+    UtilServiceState
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '../_dialogs';
@@ -44,7 +45,8 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
         private neon: NeonService,
         private chrome: ChromeService,
         private global: GlobalService,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private util: UtilServiceState
     ) {
         this.hidePwd = true;
         this.wallet = new WalletCreation();
@@ -70,7 +72,11 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
 
     public login() {
         this.loading = true;
-        (this.accountWallet.accounts[0] as any).decrypt(this.wallet.password).then((res) => {
+        const account: any =
+            this.neon.currentWalletChainType === 'Neo3'
+                ? this.util.getNeo3Account()
+                : this.accountWallet.accounts[0];
+        account.decrypt(this.wallet.password).then((res) => {
             if(this.route.snapshot.queryParams.notification !== undefined) {
                 this.chrome.windowCallback({
                     data: true,

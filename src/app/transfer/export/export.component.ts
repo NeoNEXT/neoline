@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
-import { NeonService, GlobalService } from '@/app/core';
+import { NeonService, GlobalService, UtilServiceState } from '@/app/core';
 import { Wallet } from '@cityofzion/neon-core/lib/wallet';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupNameDialogComponent } from '@/app/popup/_dialogs';
@@ -20,7 +20,8 @@ export class TransferExportComponent implements OnInit {
         private router: Router,
         private neon: NeonService,
         private global: GlobalService,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private util: UtilServiceState
     ) {}
 
     ngOnInit(): void {
@@ -37,7 +38,11 @@ export class TransferExportComponent implements OnInit {
             return;
         }
         this.loading = true;
-        this.wallet.accounts[0]
+        const account =
+            this.neon.currentWalletChainType === 'Neo3'
+                ? this.util.getNeo3Account()
+                : this.wallet.accounts[0];
+        account
             .decrypt(this.pwd)
             .then(res => {
                 this.loading = false;

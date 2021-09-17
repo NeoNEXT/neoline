@@ -349,14 +349,14 @@ export class ChromeService {
     public getUpdateNeo3AddressFlag(): Observable<any> {
         if (!this.check) {
             try {
-                return of(JSON.parse(localStorage.getItem('neo3AddressFlag')));
+                return of(JSON.parse(localStorage.getItem('neo3AddressHasUpgrade')));
             } catch (e) {
-                return throwError('please set neo3AddressFlag json to local storage when debug mode on');
+                return throwError('please set neo3AddressHasUpgrade json to local storage when debug mode on');
             }
         }
         return from(new Promise<WalletJSON2 | WalletJSON3>((resolve, reject) => {
             try {
-                this.crx.getLocalStorage('neo3AddressFlag', (res) => {
+                this.crx.getLocalStorage('neo3AddressHasUpgrade', (res) => {
                     resolve(res);
                 });
             } catch (e) {
@@ -366,7 +366,7 @@ export class ChromeService {
     }
 
     public setUpdateNeo3AddressFlag(flag: boolean) {
-        const storageName = `neo3AddressFlag`;
+        const storageName = `neo3AddressHasUpgrade`;
 
         if (!this.check) {
             localStorage.setItem(storageName, JSON.stringify(flag));
