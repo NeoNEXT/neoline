@@ -18,7 +18,7 @@
             <img [src]="item?.info?.image" appErrorSrc alt="">
         </div>
         <div class="asset-info-box">
-            <p>{{ item?.info?.name || item?.symbol }} #{{ item?.token_id }}</p>
+            <p>{{ item?.info?.name || item?.symbol }} #{{ item?.token_id | nftTokenId }}</p>
             <p>{{ 'balance' | translate | async }}&nbsp;&nbsp;{{ item?.balance }}</p>
         </div>
         <img class="selected" src="/assets/images/dialog/selected.png" alt="" [hidden]="i !== data.selected">

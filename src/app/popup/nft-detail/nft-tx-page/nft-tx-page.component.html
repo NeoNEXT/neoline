@@ -11,7 +11,7 @@
                 alt="">
             <div class="status-box">
                 <p class="tx-type">
-                    {{ item.amount < 0 ? ('sent' | translate | async) : ('received' | translate | async) }} #{{ item.token_id }}
+                    {{ item.amount < 0 ? ('sent' | translate | async) : ('received' | translate | async) }} #{{ item.token_id | nftTokenId }}
                 </p>
                 <p class="status" [ngClass]="{'wait': item.id === -1}">
                     {{ item.id === -1 || item.id === undefined ? ('confirming' | translate | async): ('confirmed' | translate | async) }}·

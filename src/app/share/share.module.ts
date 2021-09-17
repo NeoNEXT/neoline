@@ -47,6 +47,7 @@ import { NumberDirective } from './directives/number';
 import { MatRippleModule } from '@angular/material/core';
 import { ScrollDirective } from './directives/scroll';
 import { NumberFixedPipe } from './pipes/number-fixed.pipe';
+import { NftTokenIdPipe } from './pipes/nft-tokenid.pipe';
 
 @NgModule({
     declarations: [
@@ -58,6 +59,7 @@ import { NumberFixedPipe } from './pipes/number-fixed.pipe';
         LanguageNamePipe,
         TranslatePipe,
         NumberFixedPipe,
+        NftTokenIdPipe,
         CopyDirective,
         NumberDirective,
         AvatarDirective,
@@ -72,6 +74,7 @@ import { NumberFixedPipe } from './pipes/number-fixed.pipe';
         LanguageNamePipe,
         TranslatePipe,
         NumberFixedPipe,
+        NftTokenIdPipe,
         NumberDirective,
         CopyDirective,
         ScrollDirective,

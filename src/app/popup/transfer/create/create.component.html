@@ -38,7 +38,7 @@
                 <img [src]="chooseNftToken?.info?.image" appErrorSrc alt="">
             </div>
             <div class="asset-info">
-                <p>#{{ chooseNftToken?.token_id }}</p>
+                <p>#{{ chooseNftToken?.token_id | nftTokenId }}</p>
                 <p>{{ 'balancecolon' | translate | async }}{{ chooseNftToken?.balance | numberFixed }}
                     {{ chooseNftToken?.info?.name || chooseNftToken?.symbol }}</p>
             </div>
