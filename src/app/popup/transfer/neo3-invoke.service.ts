@@ -8,7 +8,12 @@ import {
 } from '@cityofzion/neon-core-neo3/lib';
 import { SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from, throwError } from 'rxjs';
-import { AssetState, NotificationService, GlobalService, NeonService } from '@app/core';
+import {
+    AssetState,
+    NotificationService,
+    GlobalService,
+    NeonService,
+} from '@app/core';
 import BigNumber from 'bignumber.js';
 import { ContractCall, ContractParam } from '@cityofzion/neon-core-neo3/lib/sc';
 import { Asset } from '@/models/models';
@@ -17,7 +22,7 @@ import { GAS3_CONTRACT, NEO3_MAGIC_NUMBER } from '../_lib';
 interface CreateNeo3TxInput {
     invokeArgs: ContractCall[];
     signers: SignerLike[];
-    networkFee: number;
+    networkFee: string;
     systemFee?: any;
 }
 
@@ -28,7 +33,7 @@ export class Neo3InvokeService {
         public assetState: AssetState,
         public notification: NotificationService,
         private globalService: GlobalService,
-        private neon: NeonService,
+        private neon: NeonService
     ) {
         this.rpcClient = new rpc.RPCClient(this.globalService.Neo3RPCDomain);
     }
@@ -76,10 +81,6 @@ export class Neo3InvokeService {
                 systemFee: vars.systemFee,
                 script,
             });
-            const wif = neo3This.neon.WIFArr[
-                neo3This.neon.walletArr.findIndex(item => item.accounts[0].address === neo3This.neon.wallet.accounts[0].address)
-            ]
-            vars.tx = vars.tx.sign(wif, NEO3_MAGIC_NUMBER[neo3This.globalService.net]);
 
             console.log('\u001b[32m  ✓ Transaction created \u001b[0m');
         }
@@ -100,7 +101,7 @@ export class Neo3InvokeService {
 
             vars.tx.networkFee = u.Fixed8.fromRawNumber(
                 networkFeeEstimate.toString()
-            ).add(params.networkFee);
+            ).add(new BigNumber(params.networkFee || 0).toFixed());
 
             console.log(
                 `\u001b[32m  ✓ Network Fee set: ${vars.tx.networkFee} \u001b[0m`
@@ -125,7 +126,9 @@ export class Neo3InvokeService {
             const requiredSystemFee = u.Fixed8.fromRawNumber(
                 invokeFunctionResponse.gasconsumed
             );
-            vars.tx.systemFee = requiredSystemFee.add(params.systemFee || 0);
+            vars.tx.systemFee = requiredSystemFee.add(
+                new BigNumber(params.systemFee || 0).toFixed()
+            );
             console.log(
                 `\u001b[32m  ✓ SystemFee set: ${vars.tx.systemFee.toString()}\u001b[0m`
             );
@@ -162,34 +165,18 @@ export class Neo3InvokeService {
         return { feePerByte, executionFeeFactor };
     }
 
-    public generateFakeInvocationScript() {
-        return new sc.OpToken(sc.OpCode.PUSHDATA1, '0'.repeat(128));
-    }
-
     calculateNetworkFee(txn, feePerByte, executionFeeFactor) {
         const feePerByteBigInteger = feePerByte;
         const txClone = new tx.Transaction(txn);
-        txClone.witnesses = txn.witnesses.map((w) => {
-            const verificationScript = w.verificationScript;
-            if (sc.isMultisigContract(verificationScript)) {
-                const threshold =
-                    wallet3.getSigningThresholdFromVerificationScript(
-                        verificationScript.toBigEndian()
-                    );
-                return new tx.Witness({
-                    invocationScript: this.generateFakeInvocationScript()
-                        .toScript()
-                        .repeat(threshold),
-                    verificationScript,
-                });
-            } else {
-                return new tx.Witness({
-                    invocationScript:
-                        this.generateFakeInvocationScript().toScript(),
-                    verificationScript,
-                });
-            }
-        });
+        const wif =
+            this.neon.WIFArr[
+                this.neon.walletArr.findIndex(
+                    (item) =>
+                        item.accounts[0].address ===
+                        this.neon.wallet.accounts[0].address
+                )
+            ];
+        txClone.sign(wif, NEO3_MAGIC_NUMBER[this.globalService.net]);
         const verificationExecutionFee = txClone.witnesses.reduce(
             (totalFee, witness) => {
                 return totalFee

@@ -68,7 +68,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
         this.aRoute.queryParams.subscribe(async ({ messageID }) => {
             let params: any;
             this.messageID = messageID;
-            this.chrome.getInvokeArgsArray().subscribe(invokeArgsArray => {
+            this.chrome.getInvokeArgsArray().subscribe(async invokeArgsArray => {
                 this.invokeArgsArray = invokeArgsArray;
                 params = invokeArgsArray.filter(item => (item as any).messageID === messageID)[0];
                 this.dataJson = {
@@ -93,17 +93,15 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                     this.minFee = Number(params.minReqFee);
                 }
                 if (params.fee) {
-                    this.fee = Number(params.fee) || 0;
+                    this.fee = bignumber(params.fee).toFixed();
                 } else {
-                    this.fee = 0;
+                    this.fee = '0';
                     if (this.showFeeEdit) {
                         if (this.assetState.gasFeeSpeed) {
-                            this.fee = bignumber(this.minFee).add(bignumber(this.assetState.gasFeeSpeed.propose_price)).toNumber();
+                            this.fee = bignumber(this.minFee).add(bignumber(this.assetState.gasFeeSpeed.propose_price)).toFixed();
                         } else {
-                            this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
-                                this.fee = bignumber(this.minFee).add(bignumber(res.propose_price)).toNumber();
-                                this.signTx();
-                            });
+                            const res_1 = await this.assetState.getGasFee().toPromise();
+                            this.fee = bignumber(this.minFee).add(bignumber(res_1.propose_price)).toFixed();
                         }
                     }
                 }
@@ -122,7 +120,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
 
     public async getAssetRate() {
         this.assetState.getAssetRate('GAS').subscribe(rates => {
-            const gasPrice = rates.gas;
+            const gasPrice = rates.gas || 0;
             this.feeMoney = bignumber(this.fee).times(bignumber(gasPrice)).toFixed();
             this.systemFeeMoney = bignumber(this.systemFee).times(bignumber(gasPrice)).toFixed();
             this.networkFeeMoney = bignumber(this.networkFee).times(bignumber(gasPrice)).toFixed();

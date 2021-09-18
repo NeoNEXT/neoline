@@ -295,8 +295,8 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
     public async getAssetRate() {
         const rateSymbols = this.symbol === 'GAS' ? 'GAS' : `${this.symbol},GAS`;
         this.asset.getAssetRate(rateSymbols).subscribe(rates => {
-            const gasPrice = rates.gas;
-            const transferAssetPrice = rates[this.symbol.toLowerCase()];
+            const gasPrice = rates.gas || 0;
+            const transferAssetPrice = rates[this.symbol.toLowerCase()] || 0;
             this.money = bignumber(this.amount).times(bignumber(transferAssetPrice)).toFixed();
             this.feeMoney = bignumber(this.fee).times(bignumber(gasPrice)).toFixed();
             this.systemFeeMoney = bignumber(this.systemFee).times(bignumber(gasPrice)).toFixed();

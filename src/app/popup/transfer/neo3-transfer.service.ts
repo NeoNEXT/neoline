@@ -10,6 +10,7 @@ import {
 } from '@app/core';
 import { bignumber } from 'mathjs';
 import { NEO3_MAGIC_NUMBER } from '../_lib';
+import BigNumber from 'bignumber.js';
 
 interface CreateNeo3TxInput {
     addressFrom: string;
@@ -54,7 +55,7 @@ export class Neo3TransferService {
             tokenScriptHash: params.tokenScriptHash,
             amountToTransfer: params.amount,
             systemFee: 0,
-            networkFee: bignumber(params.networkFee).toNumber() || 0,
+            networkFee: bignumber(params.networkFee).toFixed() || 0,
         };
         const vars: any = {};
         const NEW_POLICY_CONTRACT =
@@ -123,18 +124,6 @@ export class Neo3TransferService {
                 systemFee: vars.systemFee,
                 script,
             });
-            const wif =
-                neo3This.neon.WIFArr[
-                    neo3This.neon.walletArr.findIndex(
-                        (item) =>
-                            item.accounts[0].address ===
-                            neo3This.neon.wallet.accounts[0].address
-                    )
-                ];
-            vars.tx = vars.tx.sign(
-                wif,
-                NEO3_MAGIC_NUMBER[neo3This.globalService.net]
-            );
 
             console.log('\u001b[32m  ✓ Transaction created \u001b[0m');
         }
@@ -155,7 +144,7 @@ export class Neo3TransferService {
 
             vars.tx.networkFee = u.Fixed8.fromRawNumber(
                 networkFeeEstimate.toString()
-            ).add(params.networkFee);
+            ).add(new BigNumber(params.networkFee).toFixed());
             vars.networkFeeEstimate = networkFeeEstimate;
             console.log(
                 `\u001b[32m  ✓ Network Fee set: ${vars.tx.networkFee} \u001b[0m`
@@ -248,10 +237,14 @@ export class Neo3TransferService {
                 );
                 const sourceBalanceAmount =
                     balances.length === 0 ? 0 : balances[0].balance;
-                const balanceAmount = bignumber(sourceBalanceAmount)
-                    .mul(bignumber(10).pow(params.decimals))
-                    .toNumber();
-                if (balanceAmount < inputs.amountToTransfer) {
+                const balanceAmount = bignumber(sourceBalanceAmount).mul(
+                    bignumber(10).pow(params.decimals)
+                );
+                if (
+                    balanceAmount.comparedTo(
+                        bignumber(inputs.amountToTransfer)
+                    ) < 0
+                ) {
                     throw {
                         msg: `${notificationTemp.content.insufficientSystemFee} ${sourceBalanceAmount}`,
                     };
@@ -264,10 +257,10 @@ export class Neo3TransferService {
                     const gasRequirements8 = bignumber(
                         gasRequirements.toNumber()
                     ).mul(bignumber(10).pow(params.decimals));
-                    const totalRequirements = bignumber(inputs.amountToTransfer)
-                        .add(gasRequirements8)
-                        .toNumber();
-                    if (balanceAmount < totalRequirements) {
+                    const totalRequirements = bignumber(
+                        inputs.amountToTransfer
+                    ).add(gasRequirements8);
+                    if (balanceAmount.comparedTo(totalRequirements) < 0) {
                         throw {
                             msg: `${notificationTemp.content.insufficientSystemFee} ${sourceBalanceAmount}`,
                         };
@@ -312,34 +305,18 @@ export class Neo3TransferService {
         return { feePerByte, executionFeeFactor };
     }
 
-    public generateFakeInvocationScript() {
-        return new sc.OpToken(sc.OpCode.PUSHDATA1, '0'.repeat(128));
-    }
-
     calculateNetworkFee(txn, feePerByte, executionFeeFactor) {
         const feePerByteBigInteger = feePerByte;
         const txClone = new tx.Transaction(txn);
-        txClone.witnesses = txn.witnesses.map((w) => {
-            const verificationScript = w.verificationScript;
-            if (sc.isMultisigContract(verificationScript)) {
-                const threshold =
-                    wallet.getSigningThresholdFromVerificationScript(
-                        verificationScript.toBigEndian()
-                    );
-                return new tx.Witness({
-                    invocationScript: this.generateFakeInvocationScript()
-                        .toScript()
-                        .repeat(threshold),
-                    verificationScript,
-                });
-            } else {
-                return new tx.Witness({
-                    invocationScript:
-                        this.generateFakeInvocationScript().toScript(),
-                    verificationScript,
-                });
-            }
-        });
+        const wif =
+            this.neon.WIFArr[
+                this.neon.walletArr.findIndex(
+                    (item) =>
+                        item.accounts[0].address ===
+                        this.neon.wallet.accounts[0].address
+                )
+            ];
+        txClone.sign(wif, NEO3_MAGIC_NUMBER[this.globalService.net]);
         const verificationExecutionFee = txClone.witnesses.reduce(
             (totalFee, witness) => {
                 return totalFee
