@@ -125,7 +125,7 @@ export class Neo3InvokeService {
             const requiredSystemFee = u.Fixed8.fromRawNumber(
                 invokeFunctionResponse.gasconsumed
             );
-            vars.tx.systemFee = requiredSystemFee.add(new BigNumber(params.systemFee));
+            vars.tx.systemFee = requiredSystemFee.add(params.systemFee || 0);
             console.log(
                 `\u001b[32m  ✓ SystemFee set: ${vars.tx.systemFee.toString()}\u001b[0m`
             );
