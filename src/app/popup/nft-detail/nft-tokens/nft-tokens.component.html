@@ -1,4 +1,4 @@
-<div class="asset-item" *ngFor="let token of nftTokens">
+<div class="asset-item" *ngFor="let token of nftTokens" (click)="showDetail(token)">
     <div class="avatar-box">
         <img [src]="token?.info?.image" alt="" appErrorSrc>
     </div>

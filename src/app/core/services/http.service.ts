@@ -136,6 +136,31 @@ export class HttpService {
             }
         }));
     }
+
+    public n3RpcPost(url: string, data: any): Observable<any> {
+        if (this.chrome.check) {
+            return from(new Promise((resolve, reject) => {
+                this.chrome.httpPost(url, data, (res) => {
+                    if (res && res.result) {
+                        resolve(res.result);
+                    } else if (res && res.error) {
+                        resolve(res.error);
+                    } else {
+                        reject(res);
+                    }
+                });
+            }));
+        }
+        return this.http.post(url, data).pipe(map((res: any) => {
+            if (res && res.result) {
+                return res.result;
+            } else if (res && res.error) {
+                return res.error;
+            } else {
+                throw res;
+            }
+        }));
+    }
     public put() {
 
     }

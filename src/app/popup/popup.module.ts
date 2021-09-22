@@ -88,6 +88,7 @@ import {
     PopupAddTokenDialogComponent,
     PopupDapiPromptComponent,
     PopupNftTxDetailDialogComponent,
+    PopupNftTokenDetailDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -108,6 +109,7 @@ const POPUP_DIALOGS = [
     PopupAddTokenDialogComponent,
     PopupDapiPromptComponent,
     PopupNftTxDetailDialogComponent,
+    PopupNftTokenDetailDialogComponent,
 ];
 
 //#endregion

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GlobalService, NeonService, ChromeService, AssetState } from '@/app/core';
+import { GlobalService, NeonService, ChromeService, AssetState, NotificationService } from '@/app/core';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { tx } from '@cityofzion/neon-js-neo3';
 import { MatDialog } from '@angular/material/dialog';
@@ -56,6 +56,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         private chrome: ChromeService,
         private assetState: AssetState,
         private neo3Invoke: Neo3InvokeService,
+        private notification: NotificationService
     ) { }
 
     ngOnInit(): void {
@@ -282,7 +283,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 invokeArgs: this.invokeArgs,
                 signers: this.signers,
                 networkFee: this.fee,
-                systemFee: this.pramsData.systemFee
+                systemFee: this.pramsData.extraSystemFee
             }).subscribe(async (unSignTx: Transaction)  => {
                 this.systemFee = unSignTx.systemFee.toString();
                 this.networkFee = unSignTx.networkFee.toString();
@@ -299,14 +300,20 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 }
             }, error => {
                 console.log(error);
-                if (error.type === 'rpcError') {
-                    this.global.snackBarTip('rpcError');
-                } else if (error.type === 'scriptError') {
+                let description;
+                if (error.type === 'scriptError') {
+                    description = this.notification.content.checkInput;
                     this.global.snackBarTip('checkInput');
+                } else {
+                    description = error.error.message || this.notification.content.rpcError;
+                    this.global.snackBarTip(error.error.message || 'rpcError');
                 }
                 this.loading = false;
                 this.chrome.windowCallback({
-                    error: error.data,
+                    error: {
+                        type: 'RPC_ERROR',
+                        description
+                    },
                     return: requestTargetN3.InvokeMultiple,
                     ID: this.messageID
                 });

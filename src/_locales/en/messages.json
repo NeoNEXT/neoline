@@ -685,5 +685,11 @@
     },
     "NoWallet": {
         "message": "No wallet, please import or create."
+    },
+    "Name": {
+        "message": "Name"
+    },
+    "Symbol": {
+        "message": "Symbol"
     }
 }

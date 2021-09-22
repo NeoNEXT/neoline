@@ -685,5 +685,11 @@
     },
     "NoWallet": {
         "message": "没有钱包，请导入或创建。"
+    },
+    "Name": {
+        "message": "名称"
+    },
+    "Symbol": {
+        "message": "货币名称"
     }
 }

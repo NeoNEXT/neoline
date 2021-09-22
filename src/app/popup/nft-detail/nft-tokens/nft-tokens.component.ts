@@ -1,5 +1,7 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { GlobalService, NftState, NeonService } from '@/app/core';
+import { PopupNftTokenDetailDialogComponent } from '../../_dialogs';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
     selector: 'app-nft-tokens',
@@ -17,6 +19,7 @@ export class PopupNftTokensComponent implements OnInit {
     constructor(
         public global: GlobalService,
         private nftState: NftState,
+        private dialog: MatDialog,
         private neonService: NeonService
     ) {}
 
@@ -29,5 +32,14 @@ export class PopupNftTokensComponent implements OnInit {
             .subscribe((res) => {
                 this.nftTokens = res;
             });
+    }
+
+    showDetail(token) {
+        this.dialog.open(PopupNftTokenDetailDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+            data: {
+                nftToken: token
+            },
+        });
     }
 }

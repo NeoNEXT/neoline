@@ -13,6 +13,7 @@ import {
     NotificationService,
     GlobalService,
     NeonService,
+    UtilServiceState,
 } from '@app/core';
 import BigNumber from 'bignumber.js';
 import { ContractCall, ContractParam } from '@cityofzion/neon-core-neo3/lib/sc';
@@ -33,7 +34,8 @@ export class Neo3InvokeService {
         public assetState: AssetState,
         public notification: NotificationService,
         private globalService: GlobalService,
-        private neon: NeonService
+        private neon: NeonService,
+        private util: UtilServiceState
     ) {
         this.rpcClient = new rpc.RPCClient(this.globalService.Neo3RPCDomain);
     }
@@ -47,10 +49,10 @@ export class Neo3InvokeService {
                 allowedcontracts:
                     signerItem?.allowedContracts?.map((item) =>
                         item.toString()
-                    ) || undefined,
+                    ) || [],
                 allowedgroups:
                     signerItem?.allowedGroups?.map((item) => item.toString()) ||
-                    undefined,
+                    [],
             };
         });
         const vars: any = {};
@@ -113,8 +115,8 @@ export class Neo3InvokeService {
          * can easily get this number by using invokeScript with the appropriate signers.
          */
         async function checkSystemFee() {
-            const invokeFunctionResponse = await rpcClientTemp.invokeScript(
-                u.HexString.fromHex(script),
+            const invokeFunctionResponse = await neo3This.util.n3InvokeScript(
+                u.HexString.fromHex(script).toBase64(),
                 signerJson
             );
             if (invokeFunctionResponse.state !== 'HALT') {

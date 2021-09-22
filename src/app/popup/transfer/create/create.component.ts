@@ -541,7 +541,7 @@ export class TransferCreateComponent implements OnInit {
                 const txTarget = {
                     txid,
                     value: -this.chooseNftToken.balance,
-                    block_time: Math.floor(new Date().getTime() / 1000),
+                    block_time: new Date().getTime(),
                     token_id: this.chooseNftToken.token_id
                 };
                 this.pushTransaction(txTarget);

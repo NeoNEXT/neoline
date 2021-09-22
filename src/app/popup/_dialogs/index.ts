@@ -15,3 +15,4 @@ export { PopupAddTokenWarnDialogComponent } from './add-token-warn/add-token-war
 export { PopupAuthorizationListDialogComponent } from './authorization-list/authorization-list.dialog';
 export { PopupDapiPromptComponent } from './dapi-Prompt/dapi-Prompt.component';
 export { PopupNftTxDetailDialogComponent } from './nft-tx-detail/nft-tx-detail.dialog';
+export { PopupNftTokenDetailDialogComponent } from './nft-token-detail/nft-token-detail.dialog';

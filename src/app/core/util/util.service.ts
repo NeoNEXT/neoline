@@ -4,10 +4,16 @@ import { wallet } from '@cityofzion/neon-core-neo3';
 import { wallet as walletPr5 } from '@cityofzion/neon-core-neo3-pr5';
 import { wallet as walletRc1 } from '@cityofzion/neon-core-neo3-rc1';
 import { base642hex, hex2base64 } from '@cityofzion/neon-core-neo3/lib/u';
+import { HttpService } from '../services/http.service';
+import { GlobalService } from '../services/global.service';
 
 @Injectable()
 export class UtilServiceState {
-    constructor(private neon: NeonService) {}
+    constructor(
+        private neon: NeonService,
+        private http: HttpService,
+        private global: GlobalService
+    ) {}
 
     getNeo3Account() {
         const account = this.neon.wallet.accounts[0];
@@ -62,5 +68,15 @@ export class UtilServiceState {
             }
         }
         return account;
+    }
+
+    n3InvokeScript(script, signers) {
+        const data = {
+            jsonrpc: '2.0',
+            id: 1234,
+            method: 'invokescript',
+            params: [script, signers],
+        };
+        return this.http.n3RpcPost(this.global.Neo3RPCDomain, data).toPromise();
     }
 }
