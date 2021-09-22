@@ -11,3 +11,7 @@
     </div>
     <div class="balance">{{ asset?.balance }}</div>
 </div>
+
+<p *ngIf="!nfts || nfts?.length===0" class="no-data">
+    {{ 'noData' | translate | async }}
+</p>

@@ -691,5 +691,8 @@
     },
     "Symbol": {
         "message": "Symbol"
+    },
+    "noData": {
+        "message": "No data"
     }
 }

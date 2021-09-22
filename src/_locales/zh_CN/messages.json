@@ -691,5 +691,8 @@
     },
     "Symbol": {
         "message": "货币名称"
+    },
+    "noData": {
+        "message": "没有数据"
     }
 }
