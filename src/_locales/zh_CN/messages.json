@@ -694,5 +694,8 @@
     },
     "noData": {
         "message": "没有数据"
+    },
+    "Contract": {
+        "message": "合约"
     }
 }

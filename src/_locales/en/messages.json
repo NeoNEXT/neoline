@@ -694,5 +694,8 @@
     },
     "noData": {
         "message": "No data"
+    },
+    "Contract": {
+        "message": "Contract"
     }
 }
