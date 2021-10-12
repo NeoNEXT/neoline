@@ -41,6 +41,7 @@ import {
     wallet as wallet3
 } from '@cityofzion/neon-core-neo3/lib';
 import { bignumber } from 'mathjs';
+import { wallet as wallet2 } from '@cityofzion/neon-js';
 
 /**
  * Background methods support.
@@ -675,27 +676,17 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         case requestTarget.VerifyMessage: {
             const parameter = request.parameter as VerifyMessageArgs;
-            const walletArr = await getLocalStorage('walletArr', () => { });
-            const currWallet = await getLocalStorage('wallet', () => { });
-            const WIFArr = await getLocalStorage('WIFArr', () => { });
-            if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
-                    item.accounts[0].address === currWallet.accounts[0].address)]
-                );
-                const publicKey = getPublicKeyFromPrivateKey(privateKey);
-                const parameterHexString = str2hexstring(parameter.message);
-                const lengthHex = (parameterHexString.length / 2).toString(16).padStart(2, '0');
-                const concatenatedString = lengthHex + parameterHexString;
-                const serializedTransaction = '010001f0' + concatenatedString + '0000';
-                windowCallback({
-                    return: requestTarget.VerifyMessage,
-                    data: {
-                        result: sign(serializedTransaction, privateKey) === parameter.data &&
-                            publicKey === parameter.publicKey ? true : false
-                    },
-                    ID: request.ID
-                });
-            }
+            const parameterHexString = str2hexstring(parameter.message);
+            const lengthHex = (parameterHexString.length / 2).toString(16).padStart(2, '0');
+            const messageHex = lengthHex + parameterHexString;
+            const serializedTransaction = '010001f0' + messageHex + '0000';
+            windowCallback({
+                return: requestTarget.VerifyMessage,
+                data: {
+                    result: wallet2.verify(serializedTransaction, parameter.data, parameter.publicKey)
+                },
+                ID: request.ID
+            });
             sendResponse('');
             return;
         }
@@ -1154,28 +1145,19 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         case requestTargetN3.VerifyMessage: {
             const parameter = request.parameter as N3VerifyMessageArgs;
-            const walletArr = await getLocalStorage('walletArr-Neo3', () => { });
-            const currWallet = await getLocalStorage('wallet', () => { });
-            const WIFArr = await getLocalStorage('WIFArr-Neo3', () => { });
-            if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                const privateKey = wallet3.getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
-                    item.accounts[0].address === currWallet.accounts[0].address)]
-                );
-                const publicKey = wallet3.getPublicKeyFromPrivateKey(privateKey);
-                const parameterHexString = u3.str2hexstring(parameter.message);
-                const lengthHex = u3.num2VarInt(parameterHexString.length / 2);
-                const concatenatedString = lengthHex + parameterHexString;
-                const messageHex = '010001f0' + concatenatedString + '0000';
-                const result = wallet3.verify(messageHex, parameter.data, publicKey);
-                windowCallback({
-                    return: requestTargetN3.VerifyMessage,
-                    data: {
-                        result: publicKey === parameter.publicKey ? result : false
-                    },
-                    ID: request.ID
-                });
-                sendResponse('');
-            }
+            const parameterHexString = u3.str2hexstring(parameter.message);
+            const lengthHex = u3.num2VarInt(parameterHexString.length / 2);
+            const concatenatedString = lengthHex + parameterHexString;
+            const messageHex = '010001f0' + concatenatedString + '0000';
+            const result = wallet3.verify(messageHex, parameter.data, parameter.publicKey);
+            windowCallback({
+                return: requestTargetN3.VerifyMessage,
+                data: {
+                    result
+                },
+                ID: request.ID
+            });
+            sendResponse('');
             return;
         }
         case requestTargetN3.SignMessage: {
