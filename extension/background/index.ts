@@ -332,7 +332,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         case requestTarget.AccountPublicKey: {
             try {
-                const key = currChain === 'Neo2' ? '' : `-${currChain}`;
+                const chain = await getLocalStorage(`chainType`, () => { });
+                const key = chain === 'Neo2' ? '' : `-${chain}`;
                 const walletArr = await getLocalStorage(`walletArr${key}`, () => { });
                 const currWallet = await getLocalStorage('wallet', () => { });
                 const WIFArr = await getLocalStorage(`WIFArr${key}`, () => { });
