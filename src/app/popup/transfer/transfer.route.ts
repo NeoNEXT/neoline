@@ -15,6 +15,7 @@ const routes: Routes = [
             {
                 path: 'transfer',
                 component: TransferComponent,
+                canActivate: [PopupWalletGuard],
                 children: [
                     { path: 'receive', component: TransferReceiveComponent },
                     { path: 'create/:id', component: TransferCreateComponent },

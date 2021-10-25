@@ -31,7 +31,7 @@ const routes: Routes = [
     },
     {
         path: '',
-        redirectTo: 'asset',
+        redirectTo: '/popup/home',
         pathMatch: 'full'
     }
 ];

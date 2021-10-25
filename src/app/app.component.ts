@@ -46,11 +46,11 @@ export class AppComponent {
             this.global.$404.subscribe(() => {
                 this.hideNav404 = true;
             });
-            if (event instanceof NavigationEnd) {
-                this.hideNav =
-                    event.url.startsWith('/popup') ||
-                    event.url.startsWith('/login');
-            }
+            // if (event instanceof NavigationEnd) {
+            //     this.hideNav =
+            //         event.url.startsWith('/popup') ||
+            //         event.url.startsWith('/login');
+            // }
         });
         this.global.walletListen().subscribe((res) => {
             switch (res) {
