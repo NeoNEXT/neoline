@@ -45,6 +45,23 @@
             font-weight: 400;
         }
     }
+    .wallet-list {
+        width: calc(100% - 40px);
+        background: #0000000a;
+        height: 40px;
+        line-height: 40px;
+        border-radius: 4px;
+        margin: 0 auto;
+        margin-top: 10px;
+        padding: 0 20px;
+    }
+}
+
+img.avatar {
+    height: 20px;
+    width: 20px;
+    margin-right: 6px;
+    vertical-align: middle;
 }
 
 .popup-login-input {
@@ -82,7 +99,7 @@
     margin-right: 25px;
     font-size: 15px;
     font-weight: 500;
-    margin-top: 40px;
+    margin-top: 20px;
 }
 
 .popup-login-reset {

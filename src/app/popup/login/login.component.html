@@ -8,6 +8,15 @@
         <div class="tip-content">{{ 'loginTip' | translate | async}}：</div>
     </div>
 
+    <div class="wallet-list">
+        <mat-select [(value)]="selectedWalletIndex" color="white">
+            <mat-option *ngFor="let item of allWallet; index as index" [value]="index" (click)="selectAccount(item)">
+                <img class="avatar" [avatar]="item.accounts[0].address" />
+                {{ item.name + '(' + item.accounts[0].address.slice(0, 6) + '...' + item.accounts[0].address.slice(-6) + ')' }}
+            </mat-option>
+        </mat-select>
+    </div>
+
     <form #loginForm="ngForm">
         <mat-form-field class="popup-login-input" appearance="fill">
             <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />

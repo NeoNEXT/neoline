@@ -39,6 +39,9 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
     public isInit: boolean;
     public accountWallet: Wallet2 | Wallet3;
 
+    public allWallet = [];
+    public selectedWalletIndex;
+
     constructor(
         private route: ActivatedRoute,
         private router: Router,
@@ -52,6 +55,8 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
         this.wallet = new WalletCreation();
         this.limit = WalletInitConstant;
         this.isInit = true;
+        this.allWallet = this.neon.neo2WalletArr.concat(this.neon.neo3WalletArr);
+        this.selectedWalletIndex = this.allWallet.findIndex(item => item.accounts[0].address === this.neon.wallet.accounts[0].address);
     }
 
     ngOnInit(): void {
@@ -110,5 +115,14 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
                 this.router.navigateByUrl('/popup/wallet/new-guide');
             }
         });
+    }
+
+    public selectAccount(w: Wallet2 | Wallet3) {
+        if (w.accounts[0].address === this.neon.wallet.accounts[0].address) {
+            return;
+        }
+        const wallet = this.neon.parseWallet(w);
+        this.chrome.setWallet(wallet.export());
+        location.reload();
     }
 }
