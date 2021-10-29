@@ -232,7 +232,7 @@ export class Init {
         } else {
             let flag = true;
             parameter.signers.map(item => {
-                if (!item.account || !item.scopes) {
+                if (item.account === undefined || item.scopes === undefined) {
                     flag = false;
                 }
             });
@@ -259,7 +259,7 @@ export class Init {
         } else {
             let flag = true;
             parameter.signers.map(item => {
-                if (!item.account || !item.scopes) {
+                if (item.account === undefined || item.scopes === undefined) {
                     flag = false;
                 }
             });
@@ -294,7 +294,7 @@ export class Init {
         } else {
             let flag = true;
             parameter.signers.map(item => {
-                if (!item.account || !item.scopes) {
+                if (item.account === undefined || item.scopes === undefined) {
                     flag = false;
                 }
             });
@@ -396,7 +396,7 @@ export class Init {
         } else {
             let flag = true;
             parameter.signers.map(item => {
-                if (!item.account || !item.scopes) {
+                if (item.account === undefined || item.scopes === undefined) {
                     flag = false;
                 }
             });

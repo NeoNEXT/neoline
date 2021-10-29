@@ -1204,7 +1204,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 if (!params.signers[0].account) {
                     params.signers[0].account = tempScriptHash;
                 }
-                if (!params.signers[0].scopes) {
+                if (params.signers[0].scopes === undefined) {
                     params.signers[0].scopes = WitnessScope.CalledByEntry;
                 }
             };
@@ -1245,7 +1245,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 if (!params.signers[0].account) {
                     params.signers[0].account = tempScriptHash;
                 }
-                if (!params.signers[0].scopes) {
+                if (params.signers[0].scopes === undefined) {
                     params.signers[0].scopes = WitnessScope.CalledByEntry;
                 }
             };
