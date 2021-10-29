@@ -27,57 +27,82 @@
                     <span></span>
                     <span>INVOKE</span>
                 </div>
-                <div class="asset-info-box">
-                    <div class="logo-box">
-                        <img [src]="assetImageUrl" alt="">
-                    </div>
-                    <div class="asset-amount-box">
-                        <p>NEO</p>
-                    </div>
-                </div>
+                <div class="invoke-title">NEO3 {{ net }} {{ 'ChainSmartContractDeploy' | translate | async }}</div>
                 <div class="detail-tab-content">
                     <mat-tab-group mat-align-tabs="center" >
                         <mat-tab [label]="'details' | translate | async">
-                            <div class="fee-box detail-item">
+                            <div class="fee-box detail-item short-detail-item">
                                 <p class="label">GAS FEE</p>
                                 <div class="fee-info">
-                                    <p (click)="editFee()" *ngIf="showFeeEdit">{{ 'edit' | translate | async }}</p>
-                                    <p>{{ (showFeeEdit ? fee : 0) | numberFixed }} GAS</p>
-                                    <p>{{ (showFeeEdit ? feeMoney : 0) | numberFixed:2 }} {{ rateCurrency }}</p>
+                                    <p class="edit" (click)="editFee()" *ngIf="showFeeEdit">{{ 'edit' | translate | async }}</p>
+                                    <p class="fee">{{ (showFeeEdit ? fee : 0) | numberFixed }} GAS</p>
                                 </div>
                             </div>
                             <hr>
-                            <div class="fee-box detail-item">
+                            <div class="fee-box detail-item short-detail-item">
                                 <p class="label">{{ 'SYSTEMFEE' | translate | async }}</p>
                                 <div class="fee-info">
-                                    <p></p>
-                                    <p>{{ systemFee | numberFixed }} GAS</p>
-                                    <p>{{ systemFeeMoney | numberFixed:2 }} {{ rateCurrency }}</p>
+                                    <p class="fee">{{ systemFee | numberFixed }} GAS</p>
                                 </div>
                             </div>
                             <hr>
-                            <div class="fee-box detail-item">
+                            <div class="fee-box detail-item short-detail-item">
                                 <p class="label">{{ 'NETWORKFEE' | translate | async }}</p>
                                 <div class="fee-info">
-                                    <p></p>
-                                    <p>{{ networkFee | numberFixed }} GAS</p>
-                                    <p>{{ networkFeeMoney | numberFixed:2 }} {{ rateCurrency }}</p>
+                                    <p class="fee">{{ networkFee | numberFixed }} GAS</p>
                                 </div>
                             </div>
                             <hr>
-                            <!-- <div class="total-box detail-item">
+                            <div class="total-box detail-item short-detail-item">
                                 <p  class="label">{{ 'TOTAL' | translate | async }}</p>
                                 <div class="total-info">
-                                    <p>{{ 'amount' | translate | async }}+{{ 'GASFEE' | translate | async }}</p>
-                                    <p>{{ totalFee | numberFixed }} GAS</p>
-                                    <p>{{ totalMoney | numberFixed:2 }} {{ rateCurrency }}</p>
+                                    <p class="fee">{{ totalFee | numberFixed }} GAS</p>
+                                    <p class="fee-money">{{ totalMoney | numberFixed:2 }} {{ rateCurrency }}</p>
                                 </div>
-                            </div> -->
+                            </div>
                         </mat-tab>
                         <mat-tab [label]="'data' | translate | async">
                             <div class="data-detail-box">
-                                <div class="json-box">
-                                    <pre>{{ dataJson | json }}</pre>
+                                <div class="invoke-details">
+                                    <div class="row">
+                                        <p class="name">{{ 'YourSigningAddress' | translate | async }}</p>
+                                        <p class="value">{{ signAddress }}</p>
+                                    </div>
+                                    <div class="row">
+                                        <p class="name">{{ 'ContractScriptHash' | translate | async }}</p>
+                                        <p class="value">{{ dataJson.scriptHash }}</p>
+                                    </div>
+                                    <div class="row">
+                                        <p class="name">{{ 'Operation' | translate | async }}</p>
+                                        <p class="value">{{ dataJson.operation }}</p>
+                                    </div>
+                                    <div class="row">
+                                        <p class="name">{{ 'InvocationArguments' | translate | async }}</p>
+                                        <div class="value" *ngFor="let item of dataJson.args">
+                                            <p>{{ item.type }} - {{ item.value }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row" *ngIf="dataJson?.fee!==undefined">
+                                        <p class="name">{{ 'Fee' | translate | async }}</p>
+                                        <p class="value">{{ dataJson?.fee }}</p>
+                                    </div>
+                                    <div class="row" *ngIf="dataJson?.broadcastOverride!==undefined">
+                                        <p class="name">{{ 'broadcastOverride' | translate | async }}</p>
+                                        <p class="value">{{ dataJson.broadcastOverride ? ('Yes' | translate | async) : ('No' | translate | async) }}</p>
+                                    </div>
+                                    <div class="row">
+                                        <p class="name">{{ 'signers' | translate | async }}</p>
+                                        <div class="value" *ngFor="let item of dataJson.signers">
+                                            <p>account - {{ item.account }}</p>
+                                            <p>scopes - {{ item.scopes }}</p>
+                                            <p *ngIf="item?.allowedContracts">
+                                                allowedContracts - <span *ngFor="let contract of item?.allowedContracts">{{ contract }}, </span>
+                                            </p>
+                                            <p *ngIf="item?.allowedGroups">
+                                                allowedGroups - <span *ngFor="let publicKey of item?.allowedGroups">{{ publicKey }}, </span>
+                                            </p>
+                                        </div>
+                                    </div>
                                 </div>
                                 <p class="hex-label">HEX</p>
                                 <p class="json-box serialize">

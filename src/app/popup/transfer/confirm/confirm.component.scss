@@ -177,6 +177,9 @@
         display: flex;
         align-items: center;
         padding: 0 30px;
+        &.short-detail-item {
+            height: 70px;
+        }
         .label {
             color: #202224;
             font-size: 15px;
@@ -187,16 +190,16 @@
             align-items: flex-end;
             flex-direction: column;
             p {
-                &:nth-child(1) {
+                &.edit {
                     color:  map-get($neo-line-default, 500);
                     font-size: 12px;
                     padding: 5px
                 }
-                &:nth-child(2) {
+                &.fee {
                     color: #303434;
                     font-size: 18px;
                 }
-                &:nth-child(3) {
+                &.fee-money {
                     color: #707C82;
                     font-size: 12px;
                 }
@@ -208,11 +211,11 @@
             align-items: flex-end;
             flex-direction: column;
             p {
-                &:nth-child(1), &:nth-child(3) {
+                &.edit, &.fee-money {
                     color: #707C82;
                     font-size: 12px;
                 }
-                &:nth-child(2) {
+                &.fee {
                     color:  map-get($neo-line-default, 500);;
                     font-size: 18px;
                 }

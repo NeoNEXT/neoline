@@ -697,5 +697,53 @@
     },
     "Contract": {
         "message": "合约"
+    },
+    "YourSigningAddress": {
+        "message": "您的签名地址"
+    },
+    "ContractScriptHash": {
+        "message": "合约脚本哈希"
+    },
+    "Operation": {
+        "message": "操作"
+    },
+    "InvocationArguments": {
+        "message": "调用参数"
+    },
+    "broadcastOverride": {
+        "message": "广播覆盖"
+    },
+    "signers": {
+        "message": "签名者"
+    },
+    "Fee": {
+        "message": "费用"
+    },
+    "Yes": {
+        "message": "是"
+    },
+    "No": {
+        "message": "否"
+    },
+    "AttachedAssets": {
+        "message": "附属资产"
+    },
+    "AssetIntentOverrideInputs": {
+        "message": "资产想要改写输入"
+    },
+    "AssetIntentOverrideOutputs": {
+        "message": "资产想要改写输出"
+    },
+    "triggerContractAssetVerification": {
+        "message": "将触发合约资产验证"
+    },
+    "TransactionAttributes": {
+        "message": "交易属性"
+    },
+    "asset": {
+        "message": "资产"
+    },
+    "ChainSmartContractDeploy": {
+        "message": "智能合约调用"
     }
 }

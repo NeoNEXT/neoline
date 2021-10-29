@@ -39,13 +39,12 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
     public fee = null;
     public systemFee;
     public networkFee;
-    public feeMoney = '0';
-    public systemFeeMoney;
-    public networkFeeMoney;
     public totalFee;
     public totalMoney;
 
     public canSend = false;
+
+    public signAddress;
 
     constructor(
         private aRoute: ActivatedRoute,
@@ -57,7 +56,9 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         private assetState: AssetState,
         private neo3Invoke: Neo3InvokeService,
         private notification: NotificationService
-    ) { }
+    ) {
+        this.signAddress = this.neon.address;
+    }
 
     ngOnInit(): void {
         this.rateCurrency = this.assetState.rateCurrency;
@@ -75,11 +76,6 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 };
                 this.pramsData = params;
                 this.net = this.global.net;
-                if (Number(this.pramsData.fee) > 0) {
-                    this.assetState.getMoney('GAS', Number(this.pramsData.fee)).then(res => {
-                        this.feeMoney = res;
-                    });
-                };
                 this.pramsData.invokeArgs.forEach(item => {
                     item = this.neo3Invoke.createInvokeInputs(item);
                     this.invokeArgs.push({
@@ -119,9 +115,8 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
     public async getAssetRate() {
         this.assetState.getAssetRate('GAS').subscribe(rates => {
             const gasPrice = rates.gas || 0;
-            this.feeMoney = bignumber(this.fee).times(bignumber(gasPrice)).toFixed();
-            this.systemFeeMoney = bignumber(this.systemFee).times(bignumber(gasPrice)).toFixed();
-            this.networkFeeMoney = bignumber(this.networkFee).times(bignumber(gasPrice)).toFixed();
+            this.totalFee = bignumber(this.systemFee).add(bignumber(this.networkFee)).toFixed();
+            this.totalMoney = bignumber(this.totalFee).times(bignumber(gasPrice)).toFixed();
         })
     }
 
@@ -264,13 +259,6 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 this.signTx();
                 if (res < this.minFee) {
                     this.fee = this.minFee;
-                }
-                if (res === 0 || res === '0') {
-                    this.feeMoney = '0';
-                } else {
-                    this.assetState.getMoney('GAS', Number(this.fee)).then(feeMoney => {
-                        this.feeMoney = feeMoney;
-                    });
                 }
             }
         })

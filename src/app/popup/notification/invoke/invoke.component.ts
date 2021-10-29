@@ -49,6 +49,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
 
     private extraWitness: [] = [];
 
+    public signAddress;
+
     constructor(
         private aRoute: ActivatedRoute,
         private router: Router,
@@ -59,7 +61,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
         private chrome: ChromeService,
         private assetState: AssetState,
         private txState: TransactionState
-    ) { }
+    ) {
+        this.signAddress = this.neon.address;
+    }
 
     ngOnInit(): void {
         this.assetImageUrl = this.assetState.getAssetImageFromAssetId(NEO)

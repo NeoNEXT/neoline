@@ -44,6 +44,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
 
     private extraWitness: [] = [];
 
+    public signAddress;
+
     constructor(
         private aRoute: ActivatedRoute,
         private router: Router,
@@ -54,7 +56,9 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         private chrome: ChromeService,
         private assetState: AssetState,
         private txState: TransactionState
-    ) { }
+    ) {
+        this.signAddress = this.neon.address;
+    }
 
     ngOnInit(): void {
         this.assetImageUrl = this.assetState.getAssetImageFromAssetId(NEO)
@@ -67,9 +71,8 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 } else {
                     this.global.modifyNet('TestNet');
                 }
-                this.net = this.global.net;
-
             }
+            this.net = this.global.net;
             for (const key in this.pramsData) {
                 if (Object.prototype.hasOwnProperty.call(this.pramsData, key)) {
                     let tempObject: any

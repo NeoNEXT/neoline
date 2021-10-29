@@ -123,6 +123,10 @@
         .transfer-detail-container {
             height: calc(100% - 55px);
             padding-top: 15px;
+            .invoke-title {
+                padding-left: 25px;
+                margin-top: 10px;
+            }
             .type-box {
                 border: 0.5px solid #B0B6BE;
                 text-align: center;
@@ -200,6 +204,9 @@
         display: flex;
         align-items: center;
         padding: 0 30px;
+        &.short-detail-item {
+            height: 70px;
+        }
         .label {
             color: #202224;
             font-size: 15px;
@@ -210,16 +217,16 @@
             align-items: flex-end;
             flex-direction: column;
             p {
-                &:nth-child(1) {
+                &.edit {
                     color:  map-get($neo-line-default, 500);
                     font-size: 12px;
                     padding: 5px
                 }
-                &:nth-child(2) {
+                &.fee {
                     color: #303434;
                     font-size: 18px;
                 }
-                &:nth-child(3) {
+                &.fee-money {
                     color: #707C82;
                     font-size: 12px;
                 }
@@ -231,11 +238,11 @@
             align-items: flex-end;
             flex-direction: column;
             p {
-                &:nth-child(1), &:nth-child(3) {
+                &.edit, &.fee-money {
                     color: #707C82;
                     font-size: 12px;
                 }
-                &:nth-child(2) {
+                &.fee {
                     color:  map-get($neo-line-default, 500);;
                     font-size: 18px;
                 }
@@ -244,6 +251,21 @@
     }
 
     .data-detail-box {
+        .invoke-details {
+            font-size: 14px;
+            padding: 10px 25px;
+            .row {
+                margin-top: 15px;
+                .name {
+                    color: #303434;
+                }
+                .value {
+                    margin-top: 3px;
+                    color: #707C82;
+                    word-break: break-all;
+                }
+            }
+        }
         .json-box {
             width: calc(100% - 50px);
             margin: 14px 25px;

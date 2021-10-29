@@ -697,5 +697,53 @@
     },
     "Contract": {
         "message": "Contract"
+    },
+    "YourSigningAddress": {
+        "message": "Your signing address"
+    },
+    "ContractScriptHash": {
+        "message": "Contract script hash"
+    },
+    "Operation": {
+        "message": "Operation"
+    },
+    "InvocationArguments": {
+        "message": "Invocation arguments"
+    },
+    "broadcastOverride": {
+        "message": "Broadcast Override"
+    },
+    "signers": {
+        "message": "Signers"
+    },
+    "Fee": {
+        "message": "Fee"
+    },
+    "Yes": {
+        "message": "Yes"
+    },
+    "No": {
+        "message": "No"
+    },
+    "AttachedAssets": {
+        "message": "Attached assets"
+    },
+    "AssetIntentOverrideInputs": {
+        "message": "Asset intent override inputs"
+    },
+    "AssetIntentOverrideOutputs": {
+        "message": "Asset intent override outputs"
+    },
+    "triggerContractAssetVerification": {
+        "message": "Will trigger contract asset verification?"
+    },
+    "TransactionAttributes": {
+        "message": "Transaction attributes"
+    },
+    "asset": {
+        "message": "asset"
+    },
+    "ChainSmartContractDeploy": {
+        "message": "Smart Contract Invocation"
     }
 }

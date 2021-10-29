@@ -27,31 +27,78 @@
                     <span></span>
                     <span>INVOKE</span>
                 </div>
-                <div class="asset-info-box">
-                    <div class="logo-box">
-                        <img [src]="assetImageUrl" alt="">
-                    </div>
-                    <div class="asset-amount-box">
-                        <p>NEO</p>
-                    </div>
-                </div>
+                <div class="invoke-title">NEO {{ net }} {{ 'ChainSmartContractDeploy' | translate | async }}</div>
                 <div class="detail-tab-content">
                     <mat-tab-group mat-align-tabs="center" >
                         <mat-tab [label]="'details' | translate | async">
                             <div class="fee-box detail-item">
                                 <p class="label">GAS FEE</p>
                                 <div class="fee-info">
-                                    <p (click)="editFee()" *ngIf="showFeeEdit">{{ 'edit' | translate | async }}</p>
-                                    <p>{{ (showFeeEdit ? fee : 0) | numberFixed }} GAS</p>
-                                    <p>{{ (showFeeEdit ? feeMoney : 0) | numberFixed:2 }} {{ rateCurrency }}</p>
+                                    <p class="edit" (click)="editFee()" *ngIf="showFeeEdit">{{ 'edit' | translate | async }}</p>
+                                    <p class="fee">{{ (showFeeEdit ? fee : 0) | numberFixed }} GAS</p>
+                                    <p class="fee-money">{{ (showFeeEdit ? feeMoney : 0) | numberFixed:2 }} {{ rateCurrency }}</p>
                                 </div>
                             </div>
                             <hr>
                         </mat-tab>
                         <mat-tab [label]="'data' | translate | async">
                             <div class="data-detail-box">
-                                <div class="json-box">
-                                    <pre>{{ dataJson | json }}</pre>
+                                <div class="invoke-details">
+                                    <div class="row">
+                                        <p class="name">{{ 'YourSigningAddress' | translate | async }}</p>
+                                        <p class="value">{{ signAddress }}</p>
+                                    </div>
+                                    <div class="row">
+                                        <p class="name">{{ 'ContractScriptHash' | translate | async }}</p>
+                                        <p class="value">{{ dataJson.scriptHash }}</p>
+                                    </div>
+                                    <div class="row">
+                                        <p class="name">{{ 'Operation' | translate | async }}</p>
+                                        <p class="value">{{ dataJson.operation }}</p>
+                                    </div>
+                                    <div class="row">
+                                        <p class="name">{{ 'InvocationArguments' | translate | async }}</p>
+                                        <div class="value" *ngFor="let item of dataJson.args">
+                                            <p>{{ item.type }} - {{ item.value }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row" *ngIf="dataJson?.fee!==undefined">
+                                        <p class="name">{{ 'Fee' | translate | async }}</p>
+                                        <p class="value">{{ dataJson?.fee }}</p>
+                                    </div>
+                                    <div class="row" *ngIf="dataJson?.attachedAssets!==undefined">
+                                        <p class="name">{{ 'AttachedAssets' | translate | async }}</p>
+                                        <div class="value" *ngFor="let item of dataJson.attachedAssets | keyvalue">
+                                            <p>{{ item.key }} - {{ item.value }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row" *ngIf="dataJson?.assetIntentOverrides!==undefined">
+                                        <p class="name">{{ 'AssetIntentOverrideInputs' | translate | async }}</p>
+                                        <div class="value" *ngFor="let item of dataJson.assetIntentOverrides.inputs">
+                                            <p>txid - {{ item.txid }}</p>
+                                            <p>index - {{ item.index }}</p>
+                                        </div>
+                                        <p class="name">{{ 'AssetIntentOverrideOutputs' | translate | async }}</p>
+                                        <div class="value" *ngFor="let item of dataJson.assetIntentOverrides.outputs">
+                                            <p>{{ 'asset' | translate | async }} - {{ item.asset }}</p>
+                                            <p>{{ 'address' | translate | async }} - {{ item.address }}</p>
+                                            <p>{{ 'amount' | translate | async }} - {{ item.value }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row" *ngIf="dataJson?.triggerContractVerification!==undefined">
+                                        <p class="name">{{ 'triggerContractAssetVerification' | translate | async }}</p>
+                                        <p class="value">{{ dataJson.triggerContractVerification ? ('Yes' | translate | async) : ('No' | translate | async) }}</p>
+                                    </div>
+                                    <div class="row" *ngIf="dataJson?.txHashAttributes!==undefined">
+                                        <p class="name">{{ 'TransactionAttributes' | translate | async }}</p>
+                                        <div class="value" *ngFor="let item of dataJson.txHashAttributes">
+                                            <p>{{ item.txAttrUsage }} - {{ item.value }}</p>
+                                        </div>
+                                    </div>
+                                    <div class="row" *ngIf="dataJson?.broadcastOverride!==undefined">
+                                        <p class="name">{{ 'broadcastOverride' | translate | async }}</p>
+                                        <p class="value">{{ dataJson.broadcastOverride ? ('Yes' | translate | async) : ('No' | translate | async) }}</p>
+                                    </div>
                                 </div>
                                 <p class="hex-label">HEX</p>
                                 <p class="json-box serialize">
