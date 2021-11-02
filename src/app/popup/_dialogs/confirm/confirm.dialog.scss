@@ -1,0 +1,31 @@
+.title {
+    min-height: 100px;
+    padding: 20px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    text-align: center;
+}
+
+.choose-group {
+    margin: 0 10px;
+    border-top: 1px solid #efefef;
+    .item {
+        display: inline-block;
+        padding: 22px 0;
+        width: 50%;
+        text-align: center;
+        font-size: 17px;
+        font-weight: 500;
+        cursor: pointer;
+        &:first-child {
+            border-right: 1px solid #efefef;
+        }
+        &.cancel {
+            color: #afb6be;
+        }
+        &.ok {
+            color: #06ccab;
+        }
+    }
+}

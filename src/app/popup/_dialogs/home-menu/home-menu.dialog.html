@@ -1,0 +1,53 @@
+<div class="dialog-home-menu-container">
+    <p class="triangle"></p>
+    <div class="menu-body">
+        <mat-toolbar>
+            <span class="title">{{ 'accountAdded' | translate | async }}</span>
+            <span class="spacer"></span>
+            <button mat-flat-button (click)="lock()">
+                <img src="/assets/images/home-menu/close.png" alt="">
+                <span class="text">{{ 'lock' | translate | async }}</span></button>
+        </mat-toolbar>
+        <div class="nav-container">
+            <ul class="toggle">
+                <li [ngClass]="{active: tabType === 'Neo2'}" (click)="tabType='Neo2'">
+                    {{ 'Neo Legacy' }}</li>
+                <li [ngClass]="{active: tabType === 'Neo3'}" (click)="tabType='Neo3'">
+                    {{ 'Neo N3' }}</li>
+            </ul>
+        </div>
+        <div class="wallet-container" #walletContainer>
+            <img *ngIf="walletArr[tabType].length > 2" (click)="scrollToBottom()"
+                src="/assets/images/dialog/scroll_to_bottom.png" alt="">
+            <div class="account-item" (click)="selectAccount(item)" *ngFor="let item of walletArr[tabType]; let i = index">
+                <div class="selected">
+                    <img src="/assets/images/home-menu/wallet-selected.png" alt="" [hidden]="!isActivityWallet(item)">
+                </div>
+                <img class="avatar" [avatar]="item.accounts[0].address" />
+                <span class="name">{{ item.name }}</span>
+            </div>
+        </div>
+        <hr class="wallet-line" />
+        <div class="create-wallet-container menu-item" (click)="to('create')" (click)="dismiss()" matRipple>
+            <img src="/assets/images/home-menu/create.png" alt="">
+            <span>{{ 'createWallet' | translate | async }}</span>
+        </div>
+        <div class="import-wallet-container menu-item" (click)="to('import')" (click)="dismiss()" matRipple>
+            <img src="/assets/images/home-menu/import.png" alt="">
+            <span>{{ 'importWallet' | translate | async }}</span>
+        </div>
+        <div class="menu-item" (click)="exportWallet()" matRipple>
+            <img src="/assets/images/home-menu/export.png" alt="">
+            <span>{{ 'exportWallet' | translate | async }}</span>
+        </div>
+        <hr class="import-line" />
+        <div class="import-wallet-container menu-item" [routerLink]="['/popup/setting']" (click)="dismiss()" matRipple>
+            <img src="/assets/images/home-menu/settings.png" alt="">
+            <span>{{ 'generalSettings' | translate | async }}</span>
+        </div>
+        <div class="import-wallet-container menu-item" [routerLink]="['/popup/about']" (click)="dismiss()" matRipple>
+            <img src="/assets/images/home-menu/about.png" alt="">
+            <span>{{ 'about' | translate | async }}</span>
+        </div>
+    </div>
+</div>

@@ -1,0 +1,74 @@
+<div class="loading-box" *ngIf="loading">
+    <div>
+        <mat-spinner strokeWidth="10"></mat-spinner>
+    </div>
+    <h3>{{ loadingMsg }}</h3>
+</div>
+<div class="nav">
+    <div class="content">
+        <img src="/assets/images/nav-back.png" (click)="cancel()" alt="">
+        {{ 'transfer' | translate | async }}
+    </div>
+    <div class="divide"></div>
+</div>
+
+<div class="transfer-body">
+    <div class="to-container container">
+        <span class="label">{{ 'transgerTo' | translate | async }}</span>
+        <div class="to-box box" matRipple (click)="selectToAddress()">
+            <p>{{ getAddresSub() }}</p>
+            <img class="drop" src="/assets/images/transaction/drop.png" alt="">
+        </div>
+    </div>
+    <div class="current-asset-container container">
+        <span class="label">{{ 'currencies' | translate | async }}</span>
+        <div class="asset-box box" *ngIf="!nftContract" matRipple (click)="selectAsset()">
+            <div class="asset-logo">
+                <img [src]="assetLogoUrl" alt="">
+            </div>
+            <div class="asset-info">
+                <p>{{ chooseAsset?.symbol || 'NEO' }}</p>
+                <p>{{ 'balancecolon' | translate | async }}{{ chooseAsset?.balance |numberFixed }}
+                    {{ chooseAsset?.symbol }}</p>
+            </div>
+            <img class="drop" src="/assets/images/transaction/drop.png" alt="">
+        </div>
+        <div class="asset-box box" *ngIf="nftContract" matRipple (click)="selectNftAsset()">
+            <div class="asset-logo">
+                <img [src]="chooseNftToken?.info?.image" appErrorSrc alt="">
+            </div>
+            <div class="asset-info">
+                <p>#{{ chooseNftToken?.token_id | nftTokenId }}</p>
+                <p>{{ 'balancecolon' | translate | async }}{{ chooseNftToken?.balance | numberFixed }}
+                    {{ chooseNftToken?.info?.name || chooseNftToken?.symbol }}</p>
+            </div>
+            <img class="drop" src="/assets/images/transaction/drop.png" alt="">
+        </div>
+    </div>
+    <div class="amount-container container" *ngIf="!nftContract">
+        <span class="label">{{ 'amount' | translate | async }}</span>
+        <div class="amount-box box">
+            <input type="string" min="0" placeholder="0" [(ngModel)]="amount" (keypress)="numberCheck($event)">
+            <button mat-button color="primary" (click)="transferAll()">{{ 'allTransfer' | translate | async }}</button>
+        </div>
+    </div>
+    <div class="fee-container container">
+        <span class="label">{{ 'priorityFee' | translate | async }}</span>
+        <div class="fee-box box" (click)="editFee()">
+            <div class="fee-left">
+                <span *ngIf="gasFeeSpeed && fee == gasFeeSpeed?.slow_price">{{ 'slow' | translate |async }}</span>
+                <span *ngIf="gasFeeSpeed && fee == gasFeeSpeed?.propose_price">{{ 'medium' | translate |async }}</span>
+                <span *ngIf="gasFeeSpeed && fee == gasFeeSpeed?.fast_price">{{ 'fast' | translate |async }}</span>
+                <span
+                    *ngIf="fee!=gasFeeSpeed?.slow_price && fee!=gasFeeSpeed?.propose_price && fee!=gasFeeSpeed?.fast_price">{{ 'customize' | translate |async }}</span>
+                <p class="value">{{ fee | numberFixed }} GAS</p>
+            </div>
+            <img src="/assets/images/arrow-right.png" class="arrow" alt="">
+        </div>
+    </div>
+    <hr>
+    <div class="btn-box">
+        <button mat-flat-button (click)="cancel()">{{ 'cancel' | translate | async}}</button>
+        <button mat-flat-button (click)="submit()" color="primary">{{ 'yes' | translate | async}}</button>
+    </div>
+</div>

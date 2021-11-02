@@ -1,0 +1,20 @@
+<P class="title">{{ 'addAssetTip' | translate | async}}</P>
+
+<section class="token">
+    <div class="name">
+        <img class="avatar" [src]="imageUrl || ''" alt="">
+        <div class="currency-group">
+            <p class="currency">{{asset.name}}</p>
+            <p class="currency">({{asset.symbol}})</p>
+        </div>
+    </div>
+    <div class="value">
+        <span class="tip">{{ 'balance' | translate | async }}：</span>
+        <span class="amount">{{asset.balance || '0'}}</span>
+    </div>
+</section>
+
+<div class="choose-group">
+    <div class="cancel item" [mat-dialog-close]="false">{{ 'cancel' | translate | async}}</div>
+    <div class="ok item" [mat-dialog-close]="true">{{ 'yes' | translate | async}}</div>
+</div>

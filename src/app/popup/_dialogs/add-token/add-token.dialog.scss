@@ -1,0 +1,79 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+.title {
+    padding: 30px 26px 0;
+    font-size: 16px;
+    color: #303434;
+}
+
+.token {
+    height: 35px;
+    display: flex;
+    margin: 30px 30px 25px 30px;
+
+    .name,
+    .value {
+        display: inline-block;
+        width: 50%;
+        display: inline-flex;
+        align-items: center;
+    }
+
+    .avatar {
+        display: inline-block;
+        width: 35px;
+        height: 35px;
+        margin-right: 8px;
+    }
+
+    .name .currency-group {
+        width: calc(100% - 41px);
+    }
+
+    .name .currency {
+        font-size: 13px;
+        font-weight: bold;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #444644;
+    }
+
+    .value {
+        font-size: 12px;
+        font-weight: 500;
+        padding-left: 10px;
+        overflow: hidden;
+        color: #808a94;
+
+        .amount {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+    }
+}
+
+.choose-group {
+    margin: 0 10px;
+    border-top: 1px solid #efefef;
+    .item {
+        display: inline-block;
+        margin: 22px 0;
+        width: 50%;
+        text-align: center;
+        font-size: 17px;
+        font-weight: 500;
+        cursor: pointer;
+        &:first-child {
+            border-right: 1px solid #efefef;
+        }
+        &.cancel {
+            color: #afb6be;
+        }
+        &.ok {
+            color: #06ccab;
+        }
+    }
+}

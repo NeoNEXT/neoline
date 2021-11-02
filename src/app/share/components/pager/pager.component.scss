@@ -1,0 +1,12 @@
+@import 'src/styles/theme-default';
+
+:host {
+    display: inline-block;
+}
+button {
+    vertical-align: middle;
+}
+button.active {
+    background: mat-color($default-app-primary);
+    color: #FFFFFF;
+}

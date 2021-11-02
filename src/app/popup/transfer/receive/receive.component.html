@@ -1,0 +1,14 @@
+<div class="nav">
+    <div class="content">
+        <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="">
+        {{ 'receive' | translate | async }}
+    </div>
+    <div class="divide"></div>
+</div>
+
+<div id="receive-qrcode"></div>
+<p class="address">{{ address }}</p>
+<textarea type="text" id="receive-address" [value]="address" readonly="readonly"></textarea>
+
+<button class="copy" copy="receive-address" mat-flat-button
+    (onCopy)="copied()">{{ 'copyAddress' | translate | async}}</button>

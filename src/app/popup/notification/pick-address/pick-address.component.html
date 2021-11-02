@@ -1,0 +1,40 @@
+<section class="content">
+    <div class="nav-container">
+        <ul class="toggle">
+            <li [ngClass]="{active: tabType === 'Neo2'}" (click)="tabType='Neo2'">
+                {{ 'Neo Legacy address list' }}</li>
+            <li [ngClass]="{active: tabType === 'Neo3'}" (click)="tabType='Neo3'">
+                {{ 'Neo N3 address list' }}</li>
+        </ul>
+    </div>
+    <div *ngIf="walletArr.length" class="wallet-container" #walletContainer>
+        <div class="account-item" *ngFor="let item of walletArr; let i = index"
+            [ngClass]="{active: selectedWalletArr[tabType].address === item.accounts[0].address}"
+            (click)="handleSelectWallet(item)">
+            <div class="selected">
+                <img src="/assets/images/dialog/selected.png" alt=""/>
+            </div>
+            <img class="avatar" [avatar]="item.accounts[0].address"/>
+            <div class="account-detail">
+                <span class="label">
+                    {{ item.name }}
+                </span>
+                <span class="address">
+                    {{ item.accounts[0].address }}
+                </span>
+            </div>
+        </div>
+    </div>
+    <div *ngIf="!walletArr.length" class="no-wallet">
+        <div class="detail">{{ 'NoWallet' | translate | async }}</div>
+        <button mat-button class="confirm" (click)="to('create')">{{ 'createWallet' | translate | async}}</button>
+        <button mat-button class="confirm" (click)="to('import')">{{ 'importWallet' | translate | async}}</button>
+    </div>
+</section>
+
+<section class="submit-group">
+    <div class="button-group">
+        <button mat-button class="refuse" [disabled]="ruleCheck && ruleSelected == 'true'"  (click)="refuse()">{{ 'refuse' | translate | async}}</button>
+        <button mat-button class="confirm" [disabled]="!selectedWalletArr[tabType].address || walletArr.length === 0" (click)="confirm()">{{ 'done' | translate | async}}</button>
+    </div>
+</section>

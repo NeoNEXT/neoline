@@ -1,0 +1,17 @@
+<div class="nav">
+    <div class="content">
+        <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="">
+        {{ 'accountDetails' | translate | async }}
+    </div>
+    <div class="divide"></div>
+</div>
+
+<div class="container">
+    <img class="qrcode" (click)="qrcode()" src="/assets/images/qrcode.png" alt="">
+    <img class="avatar" [avatar]="address" />
+    <div class="name" (click)="updateName()">{{ walletName }}</div>
+    <p class="address-title">{{ 'address' | translate | async}}</p>
+    <div class="address" (click)="copy()">{{ address }}</div>
+    <button mat-button class="key" (click)="wif()">{{ 'displayWIF' | translate | async}}</button>
+    <button mat-button class="link" (click)="toWeb()">{{ 'viewOnNeoTube' | translate | async }}</button>
+</div>

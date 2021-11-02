@@ -1,0 +1,37 @@
+<div class="title">
+    <span>{{ data.tx.amount < 0 ? ('sent' | translate | async) : ('received' | translate | async) }}
+        {{ data.tx?.info?.name || data.tx.symbol }}</span>
+    <mat-icon class="close" [mat-dialog-close]="false">close</mat-icon>
+</div>
+<div class="item row">
+    <span class="name">TxID</span>
+    <span class="value txid">{{ data.tx.hash }}</span>
+</div>
+<div class="item row">
+    <span class="name">{{ 'Contract' | translate | async }}</span>
+    <span class="value txid">{{ data.tx.contract }}</span>
+</div>
+<div class="item row">
+    <span class="name">Token ID</span>
+    <span class="value txid">{{ data.tx.token_id }}</span>
+</div>
+<div class="item row">
+    <span class="name">{{ 'amount' | translate | async }}</span>
+    <span class="value">{{ data.tx.amount }}</span>
+</div>
+<div class="item row">
+    <span class="name">{{ 'time' | translate | async }}</span>
+    <span class="value">{{ data.tx.block_time | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+</div>
+<div class="item column">
+    <p class="name">{{ 'from' | translate | async }}</p>
+    <div class="address-group">
+        <p>{{ data.tx.from }}</p>
+    </div>
+</div>
+<div class="item column">
+    <p class="name">{{ 'to' | translate | async }}</p>
+    <div class="address-group">
+        <p>{{ data.tx.to }}</p>
+    </div>
+</div>

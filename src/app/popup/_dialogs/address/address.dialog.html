@@ -1,0 +1,14 @@
+<div class="title" >{{ 'transferAddress' | translate | async }}</div>
+<div class="container">
+    <div class="search-box">
+        <img src="/assets/images/search.png" alt="">
+        <input type="text" [(ngModel)]="address" (ngModelChange)="checkAddress($event)">
+    </div>
+    <p class="account-title">{{ 'personalAccount' | translate | async }}</p>
+    <div class="account-box">
+        <div class="account-item" matRipple *ngFor="let item of addressArr;let i = index" (click)="select(item.accounts[0].address)">
+            <img class="avatar" [avatar]="item.accounts[0].address" />
+            <span class="address">{{ getAddressSub(item.accounts[0].address) }}</span>
+        </div>
+    </div>
+</div>

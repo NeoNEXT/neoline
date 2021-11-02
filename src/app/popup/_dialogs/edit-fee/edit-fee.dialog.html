@@ -1,0 +1,26 @@
+<div class="title">
+    <span>GAS FEE</span>
+    <mat-icon class="close" [mat-dialog-close]="false">close</mat-icon>
+</div>
+
+<div class="content">
+    <p class="value">{{ fee | numberFixed }} GAS</p>
+    <mat-slider color="primary" [min]="0" (click)="showCustom ? showCustom = !showCustom : {}" [disabled]="showCustom" [max]="2"
+        [step]="1" [(ngModel)]="level" (ngModelChange)="updateFee()">
+    </mat-slider>
+    <div class="speed">
+        <span>{{ 'slow' | translate |async }}</span>
+        <span>{{ 'medium' | translate |async }}</span>
+        <span>{{ 'fast' | translate |async }}</span>
+    </div>
+    <div class="custom">
+        <span (click)="showCustom = !showCustom">{{ 'customize' | translate | async }}<img
+                [ngClass]="{'active': showCustom}" src="/assets/images/transfer/dropdown.png" alt=""></span></div>
+    <div class="custom-input" *ngIf="showCustom">
+        <input type="number" [min]="minFee"
+            oninput="this.value=this.value.replace(/\D*(\d*)(\.?)(\d{0,8})\d*/,'$1$2$3')" pattern="[0-9]*\.?[0-9]{0,8}"
+            [(ngModel)]="fee">
+        <span>GAS</span>
+    </div>
+    <button mat-button class="ok-btn" (click)="ok()">{{ 'yes' | translate | async }}</button>
+</div>
