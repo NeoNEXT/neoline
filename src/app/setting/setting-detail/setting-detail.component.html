@@ -1,0 +1,80 @@
+<section class="lang">
+    <div class="title">
+        {{ 'setLang' | translate | async}}
+    </div>
+    <mat-radio-group [(ngModel)]="lang" (change)="save()" class="flex border-bottom">
+        <mat-radio-button color="primary" class="flex-1" value="en">English</mat-radio-button>
+        <mat-radio-button color="primary" class="flex-1" value="zh_CN">中文简体</mat-radio-button>
+    </mat-radio-group>
+</section>
+<section class="cache">
+    <div class="setting-item border-bottom">
+        <div class="setting-item-left">
+            <p class="title">{{ 'clearCache' | translate | async}}</p>
+            <p class="tip">{{ 'clearCacheTip' | translate | async}}</p>
+        </div>
+        <button class="option-btn" color="primary" mat-raised-button
+            (click)="clearCache()">{{ 'clearCacheBtn' | translate | async}}</button>
+    </div>
+</section>
+<section class="rate">
+    <div class="setting-item asset-item border-bottom">
+        <div class="setting-item-left">
+            <p class="title">{{ 'currencyUnit' | translate | async}}</p>
+            <p class="tip" *ngIf="rateTime">{{ 'updateTime' | translate | async}}
+                {{rateTime * 1000 | date: 'M月d日 y年 HH:mm'}} {{'beijingTime' | translate | async}}</p>
+        </div>
+        <div>
+            <button mat-stroked-button class="asset-btn" [matMenuTriggerFor]="assetMenu">
+                {{ rateCurrency }}
+                <span class="asset-icon"></span>
+            </button>
+            <mat-menu #assetMenu="matMenu">
+                <button (click)="changeRateCurrency(currency)" *ngFor="let currency of rateCurrencys" class="menu-btn"
+                    mat-menu-item>{{currency}}</button>
+            </mat-menu>
+        </div>
+    </div>
+</section>
+<section class="privacy">
+    <div class="border-bottom">
+        <div class="setting-item">
+            <div class="setting-item-left">
+                <p class="title">{{ 'privacyData' | translate | async}}</p>
+                <p class="tip">
+                    {{ 'clearPrivacyDataTip' | translate | async}}
+                    <span class="view-all" (click)="openPrivacy()">
+                        {{ 'viewAll' | translate | async}}
+                        <span class="view-all-icon" [ngClass]="viewPrivacy ? 'view-down' : 'view-up'"></span>
+                    </span>
+                </p>
+            </div>
+            <button class="option-btn" color="primary" (click)="delAllSite()"
+                mat-raised-button>{{ 'clearPrivacyDataBtn' | translate | async}}</button>
+        </div>
+        <div class="privacy-group" *ngIf="viewPrivacy">
+            <div class="empty" *ngIf="authorizationList.length == 0">
+                {{ 'empty' | translate | async }}
+            </div>
+            <div class="privacy-item setting-item" *ngFor="let item of authorizationList">
+                <div class="setting-item-left">
+                    <img class="avatar" [src]="item.icon" alt="">
+                    <div class="info">
+                        <p class="name">{{ item.title }}</p>
+                        <p class="address">{{ item.hostname }}</p>
+                    </div>
+                </div>
+                <div class="privacy-data-right">
+                    <div class="status" [ngClass]="item.status ? 'approval' : 'refuse'">
+                        <span></span>
+                        {{ item.status ? ('authorized' | translate | async) : ('rejected' | translate | async) }}
+                    </div>
+                    <div class="delete" (click)="delSite(item.key)">
+                        <span></span>
+                        {{ 'delete' | translate | async }}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

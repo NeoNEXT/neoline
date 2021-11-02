@@ -1,0 +1,33 @@
+<div class="popup-home-tx-page">
+    <div class="tx-item" *ngFor="let item of txData;let i = index" (click)="showDetail(item, assetId === '' ? item.symbol : symbol)">
+        <div class="head">
+            <span class="time">{{ item.block_time * 1000 | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+            <img class="more-info-btn" src="/assets/images/home/arrow.png" alt=""
+                (click)="$event.stopPropagation();show = !show" [ngClass]="{'active': show}">
+        </div>
+        <div class="content">
+            <img class="tx-type-icon"
+                [src]="item.value > 0 ? '/assets/images/home/receive.png': '/assets/images/home/send_black.png' "
+                alt="">
+            <div class="status-box">
+                <p class="tx-type">
+                    {{ assetId === ''? item.type : (item.value < 0 ? ('sent' | translate | async) : ('received' | translate | async)) }}
+                </p>
+                <p class="status" [ngClass]="{'wait': item.id === -1}">
+                    {{ item.id === -1 || item.id === undefined ? ('confirming' | translate | async): ('confirmed' | translate | async) }}·
+                    <span>TxID: {{ item.txid }}</span>
+                </p>
+            </div>
+            <div class="amount-box">
+                <p class="asset-amount" [class]="{receive: item.value > 0, send: item.value <= 0}">
+                    {{ item.value }} {{ assetId === '' ? item.symbol : symbol }}</p>
+                <p class="money-amount"></p>
+            </div>
+        </div>
+        <hr>
+    </div>
+    <div class="loading" *ngIf="loading">{{ 'loading' | translate | async}}</div>
+    <p *ngIf="noMoreData" class="no-data">
+        {{ 'noMoreData' | translate | async }}
+    </p>
+</div>

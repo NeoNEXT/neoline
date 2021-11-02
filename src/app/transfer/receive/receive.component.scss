@@ -1,0 +1,82 @@
+@import 'src/styles/theme-default';
+
+:host {
+    z-index: 21;
+    position: fixed;
+    width: 424px;
+    height: auto;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border-radius: 4px;
+    padding: $space;
+    overflow: hidden;
+    background: #FFFFFF;
+    box-shadow: 0 0 8px #969696;
+}
+
+.close {
+    height: 80px;
+    width: 80px;
+    position: absolute;
+    right: -40px;
+    top: -40px;
+    background: map-get($neo-line-default, 500);
+    color: #FFFFFF;
+}
+
+.close mat-icon {
+    float: left;
+    width: 15px;
+    height: 15px;
+    margin-left: 12px;
+    margin-top: 24px;
+}
+
+@media screen and (max-width: 1200px) {
+    :host {
+        width: 300px;
+    }
+}
+
+#receive-qrcode {
+    width: 200px;
+    height: 200px;
+    margin: $space*2 auto;
+    display: block;
+}
+
+textarea {
+    text-align: center;
+    font-size: 12px;
+    padding: $space/2;
+    margin: $space 0;
+    resize: none;
+    display: block;
+    width: 100%;
+    border-radius: 4px;
+    position: absolute;
+    opacity: 0;
+    color: #484E6D;
+    border: 1px solid #E4E7EC;
+}
+
+.address {
+    height: 38px;
+    line-height: 38px;
+    text-align: center;
+    font-size: 12px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    padding: 0 25px;
+    margin: $space 0;
+    color: #666666;
+    border: 1px solid #E4E7EC;
+}
+
+button.copy {
+    display: block;
+    width: 100%;
+    margin-bottom: $space;
+}

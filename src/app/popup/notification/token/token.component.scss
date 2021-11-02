@@ -1,0 +1,125 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+.content {
+    width: 100%;
+    padding: 0 15px;
+
+    .title {
+        width: 100%;
+        padding: 0 10px;
+        margin-top: 30px;
+        border-bottom: 1px solid map-get($colors, e5e5e5);
+
+        p {
+            word-wrap: break-word;
+            font-weight: 800;
+            line-height: 40px;
+            margin-bottom: 20px;
+            font-size: 26px;
+            color: map-get($neo-line-default, 500);
+        }
+
+        // p.english {
+        //     font-size: 30px;
+        //     color: map-get($colors, 333333);
+        // }
+
+        // p.chinese {
+        //     color: map-get($neo-line-default, 500);
+        //     font-size: 18px;
+        // }
+    }
+
+    .token {
+        font-weight: bold;
+        width: 100%;
+        display: inline-flex;
+
+        div {
+            text-align: left;
+            padding: 0 10px;
+        }
+
+        .tip {
+            font-size: 14px;
+            line-height: 50px;
+            color: map-get($colors, 666666);
+        }
+
+        .token-name {
+            width: 50%;
+            display: inline-block;
+
+            .detail {
+                display: inline-flex;
+                align-items: center;
+
+                img {
+                    display: inline-block;
+                    width: 39px;
+                    height: 39px;
+                    border-radius: 6px;
+                    margin-right: 10px;
+                    background: rgba(73, 73, 73, 1);
+                }
+
+                span {
+                    font-size: 15px;
+                    color: map-get($colors, 333333);
+                }
+            }
+        }
+
+        .token-value {
+            width: 50%;
+            display: inline-block;
+
+            .detail {
+                height: 39px;
+                line-height: 39px;
+
+                span.amount {
+                    font-size: 17px;
+                    color: map-get($colors, 333333);
+                }
+
+                span.type {
+                    font-size: 12px;
+                    color: map-get($colors, 9fa8bd);
+                }
+            }
+        }
+    }
+}
+
+.submit-group {
+    height: 40px;
+    position: fixed;
+    bottom: 50px;
+    left: 27px;
+    right: 27px;
+
+    .button-group {
+        width: 100%;
+        position: relative;
+    }
+
+    button {
+        width: 150px;
+        height: 40px;
+        border-radius: 4px;
+    }
+    button.cancel {
+        box-shadow: 0px 2px 8px 0px map-get($neo-line-default, 300);
+        color: map-get($neo-line-default, 500);
+    }
+
+    button.confirm {
+        position: absolute;
+        right: 0;
+        box-shadow: 0px 5px 8px 0px map-get($neo-line-default, 300);
+        background: linear-gradient(0deg, rgba(6, 204, 171, 1), rgba(140, 216, 210, 1));
+        color: map-get($neo-line-default, 50);
+    }
+}

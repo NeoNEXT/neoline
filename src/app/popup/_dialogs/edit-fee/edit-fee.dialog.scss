@@ -1,0 +1,95 @@
+@import 'src/styles/theme-default';
+
+.title {
+    height: 60px;
+    line-height: 60px;
+    font-size: 18px;
+    font-weight: 500;
+    color: #202224;
+    text-align: left;
+    position: relative;
+    padding-left: 23px;
+    margin-top: 9px;
+    .close {
+        position: absolute;
+        right: 15px;
+        top: 15px;
+        color: #999;
+        cursor: pointer;
+    }
+}
+
+.content {
+    height: 300px;
+    margin: 30px;
+    position: relative;
+    font-size: 15px;
+    .value {
+        font-size: 17px;
+        font-weight: 500;
+        color: #303434;
+        margin-top: 14px;
+    }
+    mat-slider {
+        width: 100%;
+    }
+    .ok-btn {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 45px;
+        background: #06ccac;
+        border-radius: 5px;
+        color: #fff;
+        font-size: 15px;
+    }
+    .speed {
+        color: #202224;
+        display: flex;
+        justify-content: space-between;
+    }
+    .custom {
+        color: #06ccac;
+        text-align: right;
+        margin-top: 26px;
+        span {
+            display: inline-flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        img {
+            width: 9px;
+            margin-left: 6px;
+            transition: all .3s;
+            &.active {
+                transform: rotate(180deg);
+            }
+        }
+    }
+    .custom-input {
+        width: 100%;
+        height: 50px;
+        background: #fafafa;
+        border-radius: 5px;
+        margin-top: 20px;
+        position: relative;
+        input {
+            border: none;
+            flex: 1 1 auto;
+            height: 50px;
+            display: inline-block;
+            color: #444644;
+            font-size: 16px;
+            padding: 0 25px;
+            padding-right: 60px;
+            background: transparent;
+        }
+        span {
+            color: #808A94;
+            position: absolute;
+            right: 19px;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+    }
+}

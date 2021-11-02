@@ -1,0 +1,113 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+.content {
+    height: 100%;
+}
+.content-left {
+    width: 320px;
+    margin-right: $space;
+    & > .title {
+        font-size: 20px;
+        font-weight: 500;
+        color: rgba(48, 52, 51, 1);
+        margin-bottom: $space-lg;
+        margin-left: $space-sm;
+    }
+    .account {
+        width: 100%;
+        height: 350px;
+        background: rgba(255, 255, 255, 1);
+        border-radius: 10px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        img {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            margin-bottom: $space-lg;
+        }
+        .name {
+            font-size: 20px;
+            font-weight: bold;
+            color: rgba(48, 52, 51, 1);
+            margin-bottom: $space;
+        }
+        .modify-name {
+            border-radius: 23px;
+        }
+    }
+}
+.content-right {
+    height: 100%;
+    overflow-y: auto;
+    .welcome {
+        line-height: 1;
+        background: mat-color(mat-palette($neo-line-default, 500));
+        border-radius: 10px;
+        padding: $space-xl;
+        margin-bottom: $space;
+        .title {
+            font-size: 22px;
+            font-weight: bold;
+            color: mat-color(mat-palette($neo-line-default, 50));
+            margin-bottom: $space;
+            display: flex;
+            img {
+                margin-right: $space-sm;
+            }
+        }
+        .desc {
+            font-size: 14px;
+            font-weight: bold;
+            color: rgba(239, 239, 239, 1);
+        }
+    }
+    .address {
+        background: mat-color(mat-palette($neo-line-default, 50));
+        border-radius: 10px;
+        padding: $space-xl;
+        & > .title {
+            font-size: 16px;
+            font-weight: 500;
+            color: rgba(67, 69, 67, 1);
+            margin-bottom: $space-lg;
+            margin-left: $space-sm;
+        }
+        #account-address {
+            padding: $space;
+            margin: $space-lg 0;
+            font-size: 14px;
+            display: block;
+            width: 100%;
+            resize: none;
+            color: #484e6d;
+            border: 1px solid rgba(242, 242, 242, 1);
+            border-radius: 5px;
+        }
+        .btn-group {
+            border-bottom: 1px solid #f2f2f2;
+            padding-bottom: $space-xl;
+            button:not(:first-of-type) {
+                margin-left: $space;
+            }
+        }
+        .qrcode-group {
+            text-align: center;
+            padding-top: 100px;
+            #qrcode {
+                width: 160px;
+                height: 160px;
+                margin: 0 auto;
+            }
+            .qrcode-title {
+                margin-top: $space-lg;
+                font-size: 14px;
+                font-weight: 400;
+                color: rgba(127, 137, 147, 1);
+            }
+        }
+    }
+}

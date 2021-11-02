@@ -1,0 +1,133 @@
+@import 'src/styles/theme-default';
+
+:host {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+}
+
+.get-claim-box {
+    display: flex;
+    padding-left: 30px;
+    width: 50%;
+    margin-bottom: 12px;
+    align-items: center;
+    img {
+        width: 40px;
+        height: 40px;
+        margin-right: 12px;
+    }
+    .info-box {
+        flex-grow: 1;
+        font-size: 12px;
+        .info-status {
+            color: rgba(0, 0, 0, 0.3);
+        }
+    }
+    button {
+        height: 35px;
+        border-radius: 17px;
+        border-radius: 17px;
+        font-weight: 500;
+        cursor: pointer;
+        font-size: 12px;
+        box-shadow: 0 4px 8px 0 map-get($neo-line-default, 300);
+        color: map-get($neo-line-default, 500);
+        mat-spinner {
+            margin: auto;
+        }
+        img {
+            width: 15px;
+            height: 15px;
+            margin: auto;
+        }
+    }
+}
+
+.info {
+    padding: $space * 2;
+    display: flex;
+    overflow: hidden;
+    .avatar {
+        width: 68px;
+        height: 68px;
+        display: inline-block;
+        margin-right: 30px;
+    }
+
+    .balance {
+        font-size: 26px;
+        font-weight: bold;
+        color: #333333;
+    }
+    .info-content {
+        flex-grow: 1;
+        .asset-id {
+            font-size: 10px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #9fa8bd;
+        }
+    }
+
+    .btn-box {
+        align-items: center;
+        display: flex;
+    }
+
+    button {
+        border-radius: 50px;
+    }
+
+    button:not(:first-of-type) {
+        margin-left: $space;
+    }
+}
+
+.rate-balance {
+    font-size: 18px;
+    font-weight: bold;
+    color: #9fa8bd;
+}
+
+.title {
+    padding: $space $space * 2;
+}
+
+.title span:first {
+    font-size: 18px;
+}
+
+.tx {
+    overflow-y: auto;
+}
+
+pager {
+    float: right;
+    margin: $space * 2;
+}
+
+.nomore {
+    font-size: 12px;
+    padding: $space;
+    text-align: center;
+    color: #999999;
+    border-top: 1px solid #f7fbf9;
+}
+
+@media screen and (max-width: 1200px) {
+    .info .balance {
+        font-size: 20px;
+    }
+    .asset-id {
+        width: 270px;
+    }
+
+    .info .avatar {
+        width: 58px;
+        height: 58px;
+    }
+}

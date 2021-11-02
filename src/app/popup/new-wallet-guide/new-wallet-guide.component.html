@@ -1,0 +1,11 @@
+<section>
+    <img class="bg-img" src="/assets/images/wallet_guard_bg.png" alt="">
+    <p class="title">{{ 'createYour' | translate | async}}</p>
+    <p class="title">{{ 'firstDigitalIdentity' | translate | async}}</p>
+    <div class="button-box">
+        <button mat-raised-button class="create" color="primary"
+            (click)="to('create')">{{ 'createNewWallet' | translate | async}}</button>
+        <button mat-raised-button class="import"
+            (click)="to('import')">{{ 'importNewWallet' | translate | async}}</button>
+    </div>
+</section>

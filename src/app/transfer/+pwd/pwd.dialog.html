@@ -1,0 +1,2 @@
+<input type="password" (keyup.enter)="submit()" [(ngModel)]="input" placeholder="{{ 'enterPassword' | translate | async}}" />
+<button mat-button color="primary" (click)="submit()">{{ 'verify' | translate | async}}</button>

@@ -1,0 +1,63 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+:host {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    height: 100%;
+}
+
+.content-left {
+    width: 320px;
+    height: 100%;
+    margin-right: $space;
+    & > .title {
+        font-size: 20px;
+        font-weight: 500;
+        color: rgba(48, 52, 51, 1);
+        margin-bottom: $space-lg;
+        margin-left: $space-sm;
+    }
+    .nav {
+        background-color: #fff;
+        border-radius: 10px;
+        .menu {
+            padding: 0 $space * 2;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            height: 60px;
+            position: relative;
+            line-height: 60px;
+            color: #282828;
+            &:hover,
+            &.active {
+                background: #f7fbf9;
+            }
+
+            &.disabled {
+                cursor: not-allowed;
+                color: #666666;
+            }
+            .cursor {
+                width: 4px;
+                height: 40px;
+                position: absolute;
+                right: 0;
+                top: 10px;
+                display: none;
+                background: mat-color($default-app-primary);
+            }
+            &.active .cursor {
+                display: block;
+            }
+        }
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    .content-left {
+        width: 240px;
+    }
+}

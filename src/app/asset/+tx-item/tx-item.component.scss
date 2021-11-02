@@ -1,0 +1,53 @@
+@import 'src/styles/theme-default';
+
+:host {
+    display: block;
+    font-size: 14px;
+    transition: 0.2s;
+}
+:host:hover {
+    cursor: pointer;
+    background: #f7fbf9;
+}
+// :host:nth-of-type(odd) {
+//     background: #F7FBF9;
+// }
+span.flex-1,
+.txid {
+    padding: $space;
+    overflow: hidden;
+    text-align: center;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    text-overflow: ellipsis;
+    color: #484e6d;
+}
+.status {
+    min-width: 50px;
+    display: inline-block;
+    margin-right: 10px;
+    padding: 2px 4px;
+    &.wait {
+        background: #f9f6f2;
+        color: #f79165;
+    }
+}
+.txid-value {
+    width: 350px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.txid {
+    width: 440px;
+    display: inline-flex;
+}
+
+@media screen and (max-width: 1200px) {
+    .txid {
+        width: 300px;
+    }
+    .txid-value {
+        width: 210px;
+    }
+}

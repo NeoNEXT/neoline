@@ -1,0 +1,19 @@
+{
+    "compileOnSave": true,
+    "include": [
+        "./"
+    ],
+    "compilerOptions": {
+        "baseUrl": ".",
+        "sourceMap": false,
+        "declaration": false,
+        "target": "es5",
+        "lib": ["dom", "es2017"],
+        "outDir": "../dist",
+        "rootDir": ".",
+        "downlevelIteration": true,
+        "typeRoots": [
+            "node_modules/@types"
+        ],
+    }
+}

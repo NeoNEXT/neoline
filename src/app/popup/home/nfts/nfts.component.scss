@@ -1,0 +1,77 @@
+@import 'src/styles/popup-default';
+@import 'src/styles/theme-default';
+
+.asset-item {
+    margin: 0 15px;
+    padding: 10px 0;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #efefef;
+
+    .avatar-box {
+        width: 40px;
+        height: 40px;
+        border: 0.5px solid #efefef;
+        border-radius: 50%;
+        margin-right: 12px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        img {
+            height: 25px;
+            max-width: 25px;
+        }
+    }
+    .item-middle {
+        flex: 1;
+        .asset-name {
+            display: inline-flex;
+            align-items: center;
+            span {
+                font-size: 14px;
+                font-weight: 500;
+                display: inline-block;
+                max-width: 100px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                white-space: nowrap;
+                color: map-get($colors, 333333);
+            }
+        }
+        .asset-id {
+            font-size: 12px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            max-width: 200px;
+            color: #9fa8bd;
+        }
+    }
+
+    button {
+        width: 62px;
+        height: 30px;
+        line-height: 30px;
+        padding: 0;
+        border-radius: 15px;
+        font-weight: 500;
+        font-size: 14px;
+        color: map-get($neo-line-default, 50);
+        &.unadd {
+            background: map-get($neo-line-default, 500);
+        }
+        &.added {
+            background: map-get($neo-line-default, 300);
+            color: map-get($neo-line-default, 50);
+        }
+    }
+}
+
+.no-data {
+    margin-top: 40px;
+    text-align: center;
+    font-size: 15px;
+    color: #b0b6be;
+    margin-bottom: 40px;
+}

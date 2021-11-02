@@ -1,0 +1,33 @@
+<div class="content flex">
+    <div class="content-left">
+        <p class="title">{{'myAccount' | translate | async}}</p>
+        <div class="account">
+            <img [avatar]="address" class="avatar" />
+            <p class="name">{{ w.name }}</p>
+            <p class="modify-name" (click)="updateName()"></p>
+            <button mat-stroked-button color="primary" class="modify-name" (click)="updateName()">{{ 'modifyNameTitle' | translate | async}}</button>
+        </div>
+    </div>
+    <div class="content-right flex-1">
+        <div class="welcome">
+            <p class="title">
+                <img src="/assets/images/hello.png" alt="">{{w.name}}
+            </p>
+            <p class="desc">{{ 'welcomeNeoLine' | translate | async}}</p>
+        </div>
+        <div class="address">
+            <p class="title">{{ 'myAddress' | translate | async}}</p>
+            <textarea rows="1" type="text" id="account-address" [value]="address" readonly="readonly"></textarea>
+            <div class="btn-group">
+                <button mat-stroked-button color="primary" copy="account-address"
+                    (onCopy)="copied()">{{ 'copyAddress' | translate | async}}</button>
+                <button mat-raised-button color="primary"
+                    (click)="export()">{{ 'displayWIF' | translate | async}}</button>
+            </div>
+            <div class="qrcode-group">
+                <div id="qrcode"></div>
+                <div class="qrcode-title">{{ 'myQRCode' | translate | async}}</div>
+            </div>
+        </div>
+    </div>
+</div>

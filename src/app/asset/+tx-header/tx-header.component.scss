@@ -1,0 +1,24 @@
+@import 'src/styles/theme-default';
+
+:host {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    font-size: 14px;
+    background: #f7fbf9;
+}
+span {
+    padding: $space;
+    overflow: hidden;
+    text-align: center;
+    color: #484e6d;
+}
+span.txid {
+    width: 440px;
+}
+
+@media screen and (max-width: 1200px) {
+    span.txid {
+        width: 300px;
+    }
+}

@@ -1,0 +1,38 @@
+<div class="info">
+    <img [src]="imageUrl || ''" class="avatar" alt="">
+    <div class="info-content">
+        <p class="balance">{{balance?.balance || '0' }} {{balance?.symbol}}</p>
+        <p class="asset-id">{{ balance?.asset_id }}</p>
+        <p class="rate-balance" *ngIf="balance?.rateBalance && balance?.rateBalance != 0">
+            {{balance?.rateBalance | number: '1.0-2'}} {{rateCurrency}}</p>
+    </div>
+    <div class="btn-box">
+            <button mat-raised-button color="primary" (click)="receive()">{{ 'receive' | translate | async}}</button>
+            <button mat-stroked-button color="primary" (click)="transfer()">{{ 'transfer' | translate | async}}</button>
+    </div>
+</div>
+<div class="get-claim-box" *ngIf="assetId==NEO && showClaim">
+        <img [src]="imageUrl" alt="">
+        <div class="info-box">
+            <p class="info-gas">{{ claimNumber }} GAS</p>
+            <p class="info-status">{{ claimStatus | translate | async }}</p>
+        </div>
+        <button mat-button color="primary" (click)="claim()" [disabled]="loading || !init || !showClaim " >
+            <ng-container *ngIf="!loading && claimStatus != 'success'">{{ claimStatus != 'confirmed' ? ('syncNow' | translate | async) : ('claim' | translate | async) }}</ng-container>
+            <ng-container *ngIf="claimStatus == 'success' && !loading"><img src="/assets/images/select.png" alt=""></ng-container>
+            <mat-spinner *ngIf="loading" strokeWidth="2" diameter="20"></mat-spinner>
+        </button>
+    </div>
+<div class="title">
+    <span>{{ 'transactions' | translate | async}}</span>
+</div>
+<div class="tx flex-1">
+    <tx-header *ngIf="txPage?.items.length > 0"></tx-header>
+    <tx-item *ngFor="let item of txPage?.items" [id]="item?.id || -1 " [time]="item.block_time" [value]="item.value" [txid]="item.txid">
+    </tx-item>
+    <div class="nomore" *ngIf="txPage?.items.length == 0">{{ 'noTransaction' | translate | async}}</div>
+</div>
+<div>
+    <!-- <pager [pages]="txPage?.pages" [page]="txPage?.page" [total]="txPage?.total"></pager> -->
+    <pager [pages]="txPage?.pages" [page]="txPage?.page" [total]="txPage?.total" (onPage)="page($event)"></pager>
+</div>

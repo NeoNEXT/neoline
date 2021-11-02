@@ -1,0 +1,135 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+:host {
+    display: block;
+    padding: $space;
+    transition: 0.2s;
+    &:not(:last-of-type) {
+        border-bottom: 1px solid #e5e5e5;
+    }
+    &.active {
+        background: #f7fbf9;
+    }
+}
+:host:hover {
+    cursor: pointer;
+    background: #f7fbf9;
+}
+
+.info {
+    margin-top: $space;
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+
+    .info-left {
+        display: inline-flex;
+        align-items: center;
+        margin-right: 5px;
+
+        .balance {
+            font-weight: 600;
+            font-size: 20px;
+            min-width: 15px;
+            color: #333333;
+        }
+
+        // .symbol {
+        //     color: #969696;
+        //     font-weight: 500;
+        //     font-size: 14px;
+        //     overflow: hidden;
+        //     text-overflow: ellipsis;
+        //     white-space: nowrap;
+        // }
+    }
+
+    .info-right {
+        font-weight: 500;
+        font-size: 14px;
+        display: inline-flex;
+        align-items: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        color: #969696;
+    }
+}
+
+.asset-top {
+    position: relative;
+    height: 40px;
+
+    .account {
+        height: 40px;
+        display: inline-flex;
+        align-items: center;
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            display: inline-block;
+            margin-right: 15px;
+            border-radius: 6px;
+        }
+
+        .symbol {
+            font-weight: 600;
+            font-size: 16px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            width: 180px;
+            color: #282828;
+        }
+    }
+
+    .operator {
+        position: absolute;
+        right: 10px;
+        cursor: pointer;
+        height: 40px;
+        width: 60px;
+        display: inline-flex;
+        align-items: center;
+        justify-content: flex-end;
+
+        &:hover {
+            button {
+                visibility: visible;
+            }
+        }
+
+        span {
+            width: 15px;
+            height: 15px;
+            display: inline-block;
+            visibility: visible;
+            @include bg($img-omi);
+        }
+
+        button {
+            width: 86px;
+            height: 30px;
+            line-height: 30px;
+            font-size: 13px;
+            border-radius: 2px;
+            text-align: left;
+            position: absolute;
+            top: 25px;
+            right: 0;
+            padding: 0 22px;
+            visibility: hidden;
+            color: map-get($colors, 484e6d);
+            background: rgba(255, 255, 255, 1);
+            box-shadow: 0px 1px 12px 0px rgba(0, 11, 131, 0.3);
+        }
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    .account .symbol {
+        max-width: 120px;
+    }
+}

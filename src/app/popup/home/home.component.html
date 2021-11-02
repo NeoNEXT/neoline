@@ -1,0 +1,89 @@
+<div class="popup-home">
+    <div class="container">
+        <mat-toolbar>
+            <div class="wallet-info">
+                <p class="name">{{ wallet?.name || '' }}</p>
+                <p class="address">{{ wallet?.accounts[0].address || '' }}</p>
+            </div>
+            <img class="menu" src="/assets/images/home/menu.png" (click)="showMenu=!showMenu" alt="">
+            <section class="veil" *ngIf="showMenu" (click)="showMenu=false"></section>
+            <ul class="sub-menu" *ngIf="showMenu">
+                <li matRipple routerLink="/popup/account">{{ 'accountDetails' | translate | async }}</li>
+                <li matRipple (click)="toWeb()">{{ 'viewOnNeoTube' | translate | async }}</li>
+                <!-- <li matRipple>展开视图</li> -->
+                <li matRipple (click)="removeAccount()">{{ 'removeAccount' | translate | async }}</li>
+            </ul>
+        </mat-toolbar>
+        <div class="popup-home-body" appScroll (scrollChange)="onScrolltaChange($event)">
+            <div class="asset-logo-box">
+                <img class="asset-logo" [src]="imageUrl || ''" alt="">
+            </div>
+            <p class="asset-balance">{{ (balance?.balance || 0) | numberFixed}} {{ balance?.symbol }}</p>
+            <p class="asset-money">{{ balance?.rateBalance | numberFixed:2 }} {{ rateCurrency }} </p>
+            <div class="transaction-btn-container">
+                <button class="receive-btn" mat-stroked-button color="primary"
+                    [routerLink]="['/popup/transfer/receive']">
+                    <img src="/assets/images/home/receive.png" alt="">
+                    <span>{{ 'receive' | translate | async }}</span>
+                </button>
+                <button class="transfer-btn" mat-flat-button color="primary" [routerLink]="['/popup/transfer/create']">
+                    <img src="/assets/images/home/send.png" alt="">
+                    <span>{{ 'transfer' | translate | async }}</span>
+                </button>
+            </div>
+
+            <div class="claim-container" *ngIf="showClaim">
+                <div class="gas-logo-box">
+                    <img class="gas-logo" [src]="imageUrl || ''" alt="">
+                </div>
+                <div class="claim-status-box">
+                    <p class="number">{{ claimNumber | numberFixed }} GAS</p>
+                    <p class="status">{{ claimStatus | translate | async }}</p>
+                </div>
+                <button class="claim-btn" mat-flat-button (click)="claim()"
+                    [disabled]="loading || !init || !showClaim ">
+                    <ng-container *ngIf="!loading && claimStatus != 'success'">
+                        {{ claimStatus != 'confirmed' ? ('syncNow' | translate | async) : ('claim' | translate | async) }}
+                    </ng-container>
+                    <ng-container *ngIf="claimStatus == 'success' && !loading"><img src="/assets/images/select.png"
+                            alt=""></ng-container>
+                    <mat-spinner *ngIf="loading" strokeWidth="2" diameter="20"></mat-spinner>
+                </button>
+            </div>
+            <hr class="claim-line">
+            <div class="tabs-group">
+                <div class="tabs-container">
+                    <p matRipple [class]="{ selected: selectedIndex == 0}" (click)="selectedIndex = 0">
+                        {{ 'assets' | translate | async}}</p>
+                    <p matRipple [class]="{ selected: selectedIndex == 1}" (click)="selectedIndex = 1">
+                        {{ currentWalletIsN3 ? 'NEP11' : ('transaction' | translate | async) }}</p>
+                    <img *ngIf="showAddToken()" class="asset-add" src="/assets/images/home/add.png" routerLink="/popup/add-asset" alt="">
+                </div>
+                <div class="tab-content-container">
+                    <div class="tab-assets-container" [hidden]="selectedIndex == 1">
+                        <app-assets *ngFor="let asset of assetList; let index = index" [asset]="asset"
+                            [rateCurrency]='rateCurrency'></app-assets>
+                    </div>
+                    <div class="tab-transaction-container" *ngIf="currentWalletIsN3===true" [hidden]="selectedIndex == 0">
+                        <app-nfts></app-nfts>
+                    </div>
+                    <div class="tab-transaction-container" *ngIf="currentWalletIsN3===false" [hidden]="selectedIndex == 0">
+                        <app-tx-page [rateCurrency]="rateCurrency" [symbol]="balance?.symbol" #txPage>
+                        </app-tx-page>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="backup-tip" *ngIf="showBackup">
+    <p class="title">{{ 'backUpsafeTip' | translate | async }}</p>
+    <p class="desc">{{ 'backUpSafeDesc' | translate | async }}</p>
+    <div class="btn-group">
+        <button mat-button class="cancel" (click)="backupLater()">
+            {{ 'backUpTipLater' | translate | async }}
+        </button>
+        <button mat-button class="yes" routerLink="/popup/backup">{{ 'backUpNow' | translate | async }}</button>
+    </div>
+</div>

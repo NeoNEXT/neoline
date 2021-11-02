@@ -1,0 +1,21 @@
+<div class="title">
+    <span>{{ 'receiveOurNewsletter' | translate | async }}</span>
+    <mat-icon class="close" [mat-dialog-close]="false">close</mat-icon>
+</div>
+
+<div class="container">
+    <p class="email-label">E-MAIL</p>
+    <input matInput [pattern]="limit?.emailPattern" required [(ngModel)]="email" (keyup.enter)="submit()"
+        placeholder="{{ 'newsletterPlaceholder' | translate | async }}" type="email">
+    <div class="tip">
+        <span class="select" [ngClass]="{'active': isSelected}"
+            (click)="isSelected=!isSelected"></span>{{ 'newsletterTip' | translate | async }}
+    </div>
+    <p class="desc">
+        {{ 'newsletterDesc' | translate | async }}<span
+            (click)="openPrivacyPolicy()">{{ 'privacyPolicyWrods' | translate | async }}</span>
+    </p>
+    <button mat-flat-button color="primary" class="submit"
+        [disabled]="emailRegExp.test(email)===false || isSelected===false"
+        (click)="submit()">{{ 'submit' | translate | async }}</button>
+</div>

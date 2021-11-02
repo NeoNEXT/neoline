@@ -1,0 +1,20 @@
+<div class="content-left flex-y">
+    <p class="title">{{'systemSettings' | translate | async}}</p>
+    <div class="nav flex-1">
+        <div class="menu" routerLink="/setting/detail" routerLinkActive="active">
+            {{ 'setting' | translate | async }}
+            <div class="cursor"></div>
+        </div>
+        <div class="menu" routerLink="/setting/wallet" routerLinkActive="active">
+            {{ 'account' | translate | async }}
+            <div class="cursor"></div>
+        </div>
+        <div class="menu" routerLink="/setting/about" routerLinkActive="active">
+            {{ 'about' | translate | async}}
+            <div class="cursor"></div>
+        </div>
+    </div>
+</div>
+<div class="flex-1">
+    <router-outlet></router-outlet>
+</div>

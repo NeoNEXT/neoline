@@ -1,0 +1,95 @@
+@import 'src/styles/theme-default.scss';
+@import 'src/styles/popup-default';
+
+form {
+    margin-top: $space*3;
+    display: block;
+    width: 360px;
+    height: auto;
+    margin: auto;
+}
+mat-form-field {
+    width: 100%;
+}
+mat-form-field:not(:first-of-type) {
+    margin-top: $space;
+}
+mat-form-field:not(:last-of-type) {
+    margin-bottom: 8px;
+}
+mat-spinner {
+    display: inline-block;
+}
+p.title {
+    font-size: 30px;
+    font-weight: 600;
+    margin-top: 30px;
+    text-align: center;
+    color: #333333;
+}
+p.tip {
+    font-size: 16px;
+    margin-top: $space*2;
+    margin-bottom: $space*3;
+    color: #666666;
+}
+.icon {
+    width: 20px;
+    height: 20px;
+    vertical-align: middle;
+    margin: 0 8px;
+}
+.error-wif {
+    position: absolute;
+    margin-top: -18px;
+    font-size: 12px;
+}
+button {
+    display: block;
+    width: 100%;
+    border-radius: 50px;
+    margin-top: $space;
+    span {
+        display: inline-block;
+        width: 17px;
+        height: 17px;
+        margin-top: -3px;
+        @include bg($img-show-pwd);
+    }
+
+    span.hide-pwd {
+        @include bg($img-hide-pwd);
+    }
+}
+
+.choose-nep6-btn {
+    margin-bottom: 12px;
+}
+
+.choose-nep6-input {
+    position: absolute;
+    left: 0;
+    height: 100%;
+    width: 100%;
+    /* background: red; */
+    opacity: 0;
+}
+.wallet-name-box {
+    text-align: center;
+    font-size: 14px;
+}
+
+@media screen and (max-width: 1200px) {
+    form {
+        margin-top: $space*2;
+    }
+    mat-form-field:not(:first-of-type) {
+        margin-top: $space/2;
+    }
+    p.title {
+        font-size: 30px;
+    }
+    p.tip {
+        margin-bottom: $space;
+    }
+}

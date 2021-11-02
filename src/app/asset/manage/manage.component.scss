@@ -1,0 +1,85 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+:host {
+    display: -webkit-box;
+    display: -webkit-flex;
+    display: flex;
+    flex-flow: column;
+    height: 100%;
+    align-items: flex-end;
+}
+.search-title {
+    font-size: 14px;
+    font-weight: 500;
+    margin-left: 30px;
+    color: map-get($colors, 999999);
+}
+.list {
+    overflow-y: auto;
+    width: 100%;
+}
+.asset {
+    padding: $space 0;
+    margin: 0 $space * 2;
+    font-size: 18px;
+    align-items: center;
+    color: #333333;
+    &:not(:first-of-type) {
+        border-top: 1px solid #f7fbf9;
+    }
+    .avatar {
+        width: 58px;
+        height: 58px;
+        display: inline-block;
+        margin-right: 19px;
+        border-radius: 6px;
+    }
+}
+.asset-width {
+    max-width: 540px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.asset-id {
+    font-size: 14px;
+    color: #9fa8bd;
+}
+button {
+    border-radius: 5px;
+    width: 75px;
+    cursor: pointer;
+}
+button:not(.watching) {
+    cursor: default;
+    background: #efefef !important;
+}
+pager {
+    margin: $space $space * 2;
+}
+
+.search-input {
+    width: 90%;
+    margin: 20px 5% 0 5%;
+    .search-prefix {
+        width: 19px;
+        height: 19px;
+        margin-right: 19px;
+        display: flex;
+        @include bg($img-search);
+    }
+}
+
+@media screen and (max-width: 1200px) {
+    .asset .avatar {
+        width: 48px;
+        height: 48px;
+    }
+    .asset-width {
+        max-width: 340px;
+    }
+    .asset-id {
+        font-size: 13px;
+    }
+}

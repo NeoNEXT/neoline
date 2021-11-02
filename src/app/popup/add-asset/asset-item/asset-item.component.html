@@ -1,0 +1,14 @@
+<div class="asset-item">
+    <div class="avatar-box">
+        <img [src]="asset?.image_url || ''" alt="">
+    </div>
+    <div class="item-middle">
+        <div class="asset-name">
+            <span class="long">{{asset.name}}</span>
+            (<span class="short">{{ asset.symbol }}</span>)
+        </div>
+        <p class="asset-id" *ngIf="isSearchAssets">{{asset?.asset_id}}</p>
+    </div>
+    <button mat-raised-button *ngIf="asset.watching || fixed()" disabled class="added">{{ 'added' | translate | async}}</button>
+    <button mat-raised-button *ngIf="!asset.watching && !fixed()" class="unadd" (click)="addAsset(index)" >{{ 'add' | translate | async}}</button>
+</div>

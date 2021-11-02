@@ -1,0 +1,104 @@
+@import 'src/styles/theme-default';
+
+:host {
+    display: block;
+    height: 100%;
+}
+.login {
+    height: 100%;
+    .login-bg {
+        width: 30%;
+        background-color: map-get($neo-line-default, 500);
+        position: relative;
+        img.logo {
+            position: absolute;
+            right: 68px;
+            top: 16px;
+            width: 122px;
+        }
+    }
+    & > img.bg {
+        height: 100%;
+    }
+    .login-body {
+        .nav {
+            width: 100%;
+            text-align: right;
+            padding-right: 20%;
+            margin-top: 12px;
+            .nav-network {
+                width: 140px;
+                height: 36px;
+                border: 0px solid rgba(206, 209, 218, 1);
+                border-radius: 18px;
+                font-size: 14px;
+                color: #afb6be;
+                border: 1px solid !important;
+
+                .nav-network-icon {
+                    display: inline-block;
+                    width: 13px;
+                    height: 14px;
+                    background: url('/assets/images/net_dropdown_white.png') no-repeat center;
+                    background-size: 100%;
+                    margin-right: 9px;
+                    margin-bottom: 4px;
+                }
+            }
+        }
+        .login-content {
+            width: 40%;
+            max-width: 450px;
+            margin-top: 100px;
+            margin-left: 20%;
+            text-align: left;
+            h1 {
+                font-size: 30px;
+            }
+
+            h3 {
+                margin-top: 40px;
+                font-size: 16px;
+                font-weight: 500;
+                color: rgba(102, 102, 102, 1);
+            }
+
+            .login-input {
+                width: 100%;
+                font-size: 15px;
+                margin-top: 60px;
+
+                img {
+                    width: 15px;
+                    height: 15px;
+                    margin-right: 5px;
+                    margin-bottom: -2px;
+                }
+
+                button {
+                    span {
+                        display: inline-block;
+                        width: 17px;
+                        height: 17px;
+                        margin-top: -3px;
+                        background: url('/assets/images/show_pwd.png') center center/contain no-repeat;
+
+                        &.hide-pwd {
+                            background: url('/assets/images/hide_pwd.png') center center/contain no-repeat;
+                        }
+                    }
+                }
+            }
+
+            .login-btn {
+                width: 100px;
+                height: 60px;
+                margin-top: 100px;
+                border-radius: 30px;
+                img {
+                    width: 32px;
+                }
+            }
+        }
+    }
+}

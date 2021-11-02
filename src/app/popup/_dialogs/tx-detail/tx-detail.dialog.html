@@ -1,0 +1,31 @@
+<div class="title">
+    <span>{{ data.tx.value < 0 ? ('sent' | translate | async) : ('received' | translate | async) }}
+        {{ data.symbol }}</span>
+    <mat-icon class="close" [mat-dialog-close]="false">close</mat-icon>
+</div>
+<div class="item row">
+    <span class="name">TxID</span>
+    <span class="value txid">{{ data.tx.txid }}</span>
+</div>
+<div class="item row">
+    <span class="name">{{ 'amount' | translate | async }}</span>
+    <span class="value">{{ data.tx.value + ' ' + data.symbol }}</span>
+</div>
+<div class="item row">
+    <span class="name">{{ 'time' | translate | async }}</span>
+    <span class="value">{{ data.tx.block_time * 1000 | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+</div>
+<div class="item column">
+    <p class="name">{{ 'from' | translate | async }}</p>
+    <div class="address-group">
+        <p *ngFor="let item of txDetail?.nep5">{{ item?.from }}</p>
+        <p *ngFor="let item of txDetail?.vin">{{ item }}</p>
+    </div>
+</div>
+<div class="item column">
+    <p class="name">{{ 'to' | translate | async }}</p>
+    <div class="address-group">
+        <p *ngFor="let item of txDetail?.nep5">{{ item?.to }}</p>
+        <p *ngFor="let item of txDetail?.vout">{{ item }}</p>
+    </div>
+</div>

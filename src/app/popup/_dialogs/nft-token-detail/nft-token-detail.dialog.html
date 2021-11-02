@@ -1,0 +1,16 @@
+<div class="title">
+    <img class="logo" [src]="data.nftToken.info?.image" appErrorSrc alt="">
+    <mat-icon class="close" [mat-dialog-close]="false">close</mat-icon>
+</div>
+<div class="item row">
+    <span class="name">{{ 'Name' | translate | async }}</span>
+    <span class="value">{{ data.nftToken.info?.name || data.nftToken.name }}</span>
+</div>
+<div class="item row">
+    <span class="name">{{ 'Symbol' | translate | async }}</span>
+    <span class="value">{{ data.nftToken.symbol }}</span>
+</div>
+<div class="item row">
+    <span class="name">Token ID</span>
+    <span class="value txid">{{ data.nftToken.token_id }}</span>
+</div>

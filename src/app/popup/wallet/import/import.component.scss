@@ -1,0 +1,59 @@
+@import 'src/app/popup/wallet/common-scss/common.scss';
+
+.popup-wallet-import-type-box {
+    width: calc(100% - 40px);
+    margin-left: 20px;
+    margin-right: 20px;
+    margin-top: 8px;
+    font-size: 15px;
+    display: flex;
+    align-items: center;
+
+    >span {
+        margin-left: 10px;
+        margin-bottom: 15px;
+    }
+
+    .popup-wallet-import-type-select-box {
+        margin-left: 20px;
+        flex: 1 1 auto;
+
+        .mat-form-field-flex {
+            background: white;
+        }
+    }
+}
+
+.import-nep6-file {
+    text-align: center;
+
+    .name {
+        text-align: center;
+        padding-left: 15px;
+        padding-right: 15px;
+        color: #7F8993;
+        margin-top: 10px;
+        font-size: 14px;
+    }
+
+    >button {
+        height: 35px;
+        background: #E0E0E0;
+        border: 0.5px solid #868686;
+        color: #434543;
+        margin: auto;
+    }
+
+    .choose-nep6-input {
+        position: absolute;
+        left: 0;
+        height: 100%;
+        width: 100%;
+        opacity: 0;
+    }
+
+    .wallet-name-box {
+        text-align: center;
+        font-size: 14px;
+    }
+}

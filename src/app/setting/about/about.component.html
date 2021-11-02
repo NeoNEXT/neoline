@@ -1,0 +1,11 @@
+<div class="logo">
+    <img src="/assets/images/about-bg.png" class="bg" alt="">
+    <img src="/assets/images/logo_title.png" alt="" class="name">
+    <p class="version" *ngIf="version !== ''">{{ 'version' | translate | async }}: {{ version }}</p>
+</div>
+<div class="blocks">
+    <div class="block-item home">{{ 'companyWebsite' | translate | async }}</div>
+    <div class="block-item contact">{{ 'contactUs' | translate | async }}</div>
+    <div class="block-item terms">{{ 'termsOfUse' | translate | async }}</div>
+    <div class="block-item policy">{{ 'privacyPolicy' | translate | async }}</div>
+</div>

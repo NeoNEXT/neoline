@@ -1,0 +1,17 @@
+@import 'src/styles/theme-default';
+
+input {
+    display: block;
+    padding: $space;
+    border-radius: 4px;
+    width: 100%;
+    background: #FFFFFF;
+    font-size: 16px;
+    color: #333333;
+    border: 1px solid #E4E7EC;
+}
+button {
+    display: block;
+    margin-top: $space;
+    width: 100%;
+}

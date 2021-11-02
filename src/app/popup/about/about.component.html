@@ -1,0 +1,33 @@
+<div class="nav">
+    <div class="content">
+        <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="">
+        {{ 'about' | translate | async }}
+    </div>
+    <div class="divide"></div>
+</div>
+
+<div class="popup-about-logo">
+    <img src="/assets/images/logo_title.png" alt="">
+</div>
+<div class="popup-about-version" *ngIf="version !== ''">{{ 'version' | translate | async}}: {{ version }}</div>
+
+
+
+<div class="popup-about">
+    <div matRipple (click)="jumbToWeb(0)" class="about-item">
+        <span>{{ 'privacyPolicy' | translate | async }}</span>
+        <img src="/assets/images/arrow-right.png" alt="">
+    </div>
+    <div matRipple (click)="jumbToWeb(1)" class="about-item">
+        <span>{{ 'termsOfUse' | translate | async }}</span>
+        <img src="/assets/images/arrow-right.png" alt="">
+    </div>
+    <div matRipple (click)="jumbToWeb(2)" class="about-item">
+        <span>{{ 'companyWebsite' | translate | async }}</span>
+        <img src="/assets/images/arrow-right.png" alt="">
+    </div>
+    <div matRipple (click)="jumbToWeb(3)" class="about-item">
+        <span>{{ 'contactUs' | translate | async }}</span>
+        <img src="/assets/images/arrow-right.png" alt="">
+    </div>
+</div>

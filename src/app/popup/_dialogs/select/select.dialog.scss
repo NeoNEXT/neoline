@@ -1,0 +1,27 @@
+.title {
+    height: 60px;
+    line-height: 60px;
+    background: #fafafa;
+    font-size: 18px;
+    font-weight: 400;
+    color: #434543;
+    border-radius: 15px 15px 0 0;
+    text-align: center;
+}
+.container {
+    padding: 0 20px 15px 20px;
+    .item {
+        height: 60px;
+        display: flex;
+        align-items: center;
+        padding: 0 6px;
+        justify-content: space-between;
+        cursor: pointer;
+        &:not(:last-of-type) {
+            border-bottom: 1px solid #efefef;
+        }
+        img {
+            height: 12px;
+        }
+    }
+}

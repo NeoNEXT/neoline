@@ -1,0 +1,11 @@
+<div class="title" *ngIf="data.type === 'lang'">{{ 'language' | translate | async }}</div>
+<div class="title" *ngIf="data.type === 'currency'">{{ 'currencyUnit' | translate | async }}</div>
+<div class="title" *ngIf="data.type === 'chain'">{{ 'selectAChain' | translate | async }}</div>
+<div class="container">
+    <div class="item" *ngFor="let item of data.optionGroup" (click)="select(item.type)">
+        <span *ngIf="data.type === 'lang'">{{item.name | languageName}}</span>
+        <span *ngIf="data.type !== 'lang'">{{item.name}}</span>
+        <img src="/assets/images/dialog/selected.png" *ngIf="data.type !== 'chain' && targetOption === item.type" alt="">
+        <img src="/assets/images/arrow-right.png" *ngIf="data.type === 'chain'" alt="">
+    </div>
+</div>

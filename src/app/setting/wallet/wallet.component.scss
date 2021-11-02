@@ -1,0 +1,110 @@
+@import 'src/styles/theme-default';
+@import 'src/styles/popup-default';
+
+:host {
+    display: block;
+    height: 100%;
+    background: #fff;
+}
+
+.my-wallet-box {
+    padding: 47px 20px 0 40px;
+    overflow: auto;
+    .head {
+        display: flex;
+        flex-direction: row;
+        padding-right: 60px;
+        .title {
+            flex-grow: 1;
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 16px;
+            color: #333333;
+        }
+        .btn-box {
+            display: inline-block;
+            button {
+                margin-left: 12px;
+            }
+        }
+    }
+
+    .wallet-item-box {
+        overflow: hidden;
+        display: flex;
+        flex-direction: row;
+
+        .wallet-select {
+            width: 80px;
+            height: 80px;
+
+            div {
+                width: 18px;
+                height: 18px;
+                margin: 35px auto;
+                @include bg($img-select);
+            }
+
+            div.wallet-not-select {
+                display: none;
+            }
+        }
+        .wallet-info {
+            width: calc(100% - 140px);
+            height: 80px;
+            overflow: hidden;
+            display: flex;
+            border-bottom: 1px solid map-get($colors, e5e5e5);
+
+            .wallet-logo {
+                width: 50px;
+                height: 50px;
+                border-radius: 50%;
+                margin-top: 15px;
+                margin-right: 12px;
+                float: left;
+
+                img {
+                    width: inherit;
+                    height: inherit;
+                }
+            }
+
+            .wallet-info {
+                height: 80px;
+                flex-grow: 1;
+                justify-content: center;
+                flex-direction: column;
+                display: flex;
+                .wallet-name {
+                    font-size: 16px;
+                    border: none;
+                    cursor: pointer;
+                }
+
+                .wallet-name:focus {
+                    border-bottom: 1px solid #e5e5e5;
+                }
+
+                .wallet-address {
+                    font-size: 12px;
+                    white-space: nowrap;
+                    overflow:hidden;
+                    text-overflow:ellipsis;
+                    color: #9FA8BD;
+                }
+            }
+            .btn-box {
+                height: 80px;
+                flex-direction: row;
+                align-items: center;
+                display: flex;
+                .option-btn {
+                    height: 36px;
+                    margin-left: 12px;
+                    display: inline-block;
+                }
+            }
+        }
+    }
+}

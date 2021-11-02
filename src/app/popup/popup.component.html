@@ -1,0 +1,49 @@
+<mat-sidenav-container class="side-nav">
+    <div class="mat-toolbar-fixed no-third-party-toolbar" *ngIf="!isThirdParty">
+        <mat-toolbar color="primary">
+            <!-- <img class="popup-nav-icon" (click)="sidenav?.toggle()" *ngIf="walletIsOpen && !isLogin"
+                src="/assets/images/nav_icon_white.png" alt="">
+            <span class="popup-nav-menu" (click)="sidenav?.toggle()" *ngIf="walletIsOpen && !isLogin">
+                <img [avatar]="address" />
+            </span>
+            <img class="btn-back" src="/assets/images/back.png" routerLink="/popup/wallet/new-guide" routerLinkActive="active" *ngIf="!walletIsOpen" alt=""> -->
+
+            <span class="popup-nav-logo">
+                <span class="popup-nav-logo-img"></span>
+            </span>
+            <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
+                {{ (net === 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}
+                <span class="popup-nav-network-icon"></span>
+            </button>
+            <mat-menu #menu="matMenu">
+                <button mat-menu-item (click)="modifyNet('MainNet')">{{ 'mainNet' | translate | async }}</button>
+                <button mat-menu-item (click)="modifyNet('TestNet')">{{ 'testNet' | translate | async }}</button>
+            </mat-menu>
+            <span class="popup-nav-menu" (click)="topMenu()" *ngIf="walletIsOpen && !isLogin">
+                <img [avatar]="address" />
+            </span>
+        </mat-toolbar>
+
+    </div>
+
+    <div class="mat-toolbar-fixed is-third-party-toolbar" *ngIf="isThirdParty && !isNotificationComfirm">
+        <mat-toolbar>
+            <span class="popup-nav-logo">
+                <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
+            </span>
+            <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
+                {{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}
+                <span class="popup-nav-network-icon"></span>
+            </button>
+            <mat-menu #menu="matMenu">
+                <button mat-menu-item>{{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}</button>
+                <!-- <button mat-menu-item (click)="modifyNetThird('test')">{{ 'testNet' | translate | async }}</button> -->
+            </mat-menu>
+        </mat-toolbar>
+    </div>
+
+
+    <div class="popup" [class]="{isConfirm: isNotificationComfirm}">
+        <router-outlet></router-outlet>
+    </div>
+</mat-sidenav-container>
