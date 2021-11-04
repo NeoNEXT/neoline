@@ -346,6 +346,22 @@ export class ChromeService {
         this.setWallet(undefined);
     }
 
+    public getPassword() {
+        if (!this.check) {
+            return sessionStorage.getItem('password');
+        } else {
+            return this.crx.password;
+        }
+    }
+
+    public setPassword(pwd: string) {
+        if (!this.check) {
+            sessionStorage.setItem('password', pwd);
+        } else {
+            this.crx.password = pwd;
+        }
+    }
+
     public getHaveBackupTip() {
         if (!this.check) {
             if (sessionStorage.getItem('haveBackupTip') === 'true') {

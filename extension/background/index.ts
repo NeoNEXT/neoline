@@ -54,7 +54,7 @@ let currNetwork = 'MainNet';
 let currChainId = 1;
 let tabCurr: any;
 let currChain = 'Neo2';
-export let password = '';
+export let password = null;
 
 export let haveBackupTip: boolean = null;
 

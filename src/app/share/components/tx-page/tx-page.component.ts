@@ -48,9 +48,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
         this.net = this.global.net;
         this.address = this.neon.address;
         this.txData = [];
-        if (this.assetId) {
-            this.getInTransactions();
-        }
+        this.getInTransactions();
     }
 
     ngOnDestroy(): void {
@@ -63,65 +61,72 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
             this.assetId !== ''
                 ? this.txState.getAssetTxs(this.neon.address, this.assetId)
                 : this.txState.getAllTxs(this.neon.address);
-        this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((inTxData) => {
-            if (
-                inTxData[this.net] === undefined ||
-                inTxData[this.net][this.address] === undefined ||
-                inTxData[this.net][this.address][this.assetId] === undefined
-            ) {
-                this.inTransaction = [];
-            } else {
-                this.inTransaction =
-                    inTxData[this.net][this.address][this.assetId];
-            }
-            const txIdArray = [];
-            this.inTransaction = this.inTransaction.filter(
-                (item) => new Date().getTime() / 1000 - item.block_time <= 7200
-            );
-            this.inTransaction.forEach((item) => {
-                txIdArray.push(item.txid);
-            });
-            let httpReq2;
-            if (txIdArray.length === 0) {
-                httpReq2 = new Promise<any>((mResolve) => {
-                    mResolve([]);
-                });
-            } else {
-                httpReq2 = this.txState.getTxsValid(txIdArray, this.neon.currentWalletChainType);
-            }
-            forkJoin([httpReq1, httpReq2]).subscribe((result: any) => {
-                let txData = result[0] || [];
-                const txConfirm = result[1] || [];
-                txConfirm.forEach((item) => {
-                    const tempIndex = this.inTransaction.findIndex(
-                        (e) => e.txid === item
-                    );
-                    if (tempIndex >= 0) {
-                        this.inTransaction.splice(tempIndex, 1);
-                    }
-                });
-                if (inTxData[this.net] === undefined) {
-                    inTxData[this.net] = {};
-                } else if (inTxData[this.net][this.address] === undefined) {
-                    inTxData[this.net][this.address] = {};
-                } else if (
+        if (this.assetId === '') {
+            httpReq1.then(res => {
+                this.txData = res || [];
+                this.loading = false;
+            })
+        } else {
+            this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((inTxData) => {
+                if (
+                    inTxData[this.net] === undefined ||
+                    inTxData[this.net][this.address] === undefined ||
                     inTxData[this.net][this.address][this.assetId] === undefined
                 ) {
-                    inTxData[this.net][this.address][this.assetId] = [];
+                    this.inTransaction = [];
                 } else {
-                    inTxData[this.net][this.address][this.assetId] =
-                        this.inTransaction;
+                    this.inTransaction =
+                        inTxData[this.net][this.address][this.assetId];
                 }
-                this.chrome.setStorage(STORAGE_NAME.transaction, inTxData);
-                txData = this.inTransaction.concat(txData);
-                this.txData = txData;
-                // Re-acquire the address balance, update the balance of the entire page
-                this.asset.getAddressBalances(this.neon.address).then((res) => {
-                    this.asset.pushBalance(res);
+                const txIdArray = [];
+                this.inTransaction = this.inTransaction.filter(
+                    (item) => new Date().getTime() / 1000 - item.block_time <= 7200
+                );
+                this.inTransaction.forEach((item) => {
+                    txIdArray.push(item.txid);
                 });
-                this.loading = false;
+                let httpReq2;
+                if (txIdArray.length === 0) {
+                    httpReq2 = new Promise<any>((mResolve) => {
+                        mResolve([]);
+                    });
+                } else {
+                    httpReq2 = this.txState.getTxsValid(txIdArray, this.neon.currentWalletChainType);
+                }
+                forkJoin([httpReq1, httpReq2]).subscribe((result: any) => {
+                    let txData = result[0] || [];
+                    const txConfirm = result[1] || [];
+                    txConfirm.forEach((item) => {
+                        const tempIndex = this.inTransaction.findIndex(
+                            (e) => e.txid === item
+                        );
+                        if (tempIndex >= 0) {
+                            this.inTransaction.splice(tempIndex, 1);
+                        }
+                    });
+                    if (inTxData[this.net] === undefined) {
+                        inTxData[this.net] = {};
+                    } else if (inTxData[this.net][this.address] === undefined) {
+                        inTxData[this.net][this.address] = {};
+                    } else if (
+                        inTxData[this.net][this.address][this.assetId] === undefined
+                    ) {
+                        inTxData[this.net][this.address][this.assetId] = [];
+                    } else {
+                        inTxData[this.net][this.address][this.assetId] =
+                            this.inTransaction;
+                    }
+                    this.chrome.setStorage(STORAGE_NAME.transaction, inTxData);
+                    txData = this.inTransaction.concat(txData);
+                    this.txData = txData;
+                    // Re-acquire the address balance, update the balance of the entire page
+                    this.asset.getAddressBalances(this.neon.address).then((res) => {
+                        this.asset.pushBalance(res);
+                    });
+                    this.loading = false;
+                });
             });
-        });
+        }
     }
 
     showDetail(tx, symbol) {

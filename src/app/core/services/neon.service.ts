@@ -502,7 +502,8 @@ export class NeonService {
     public importEncryptKey(
         encKey: string,
         key: string,
-        name: string
+        name: string,
+        newPwd: string,
     ): Observable<Wallet2 | Wallet3> {
         this.selectChainType();
         return new Observable((observer: Observer<Wallet2 | Wallet3>) => {
@@ -521,8 +522,8 @@ export class NeonService {
                             name: name || 'NeoLineUser',
                         } as any);
                         returnRes.addAccount(account);
-                        returnRes.encrypt(0, key);
-                        returnRes.accounts[0].encrypt(key).then((res) => {
+                        returnRes.encrypt(0, newPwd);
+                        returnRes.accounts[0].encrypt(newPwd).then((res) => {
                             (returnRes.accounts[0] as any).wif = wif;
                             observer.next(returnRes);
                         });
@@ -545,8 +546,8 @@ export class NeonService {
                             name: name || 'NeoLineUser',
                         } as any);
                         returnRes.addAccount(account);
-                        returnRes.encrypt(0, key);
-                        returnRes.accounts[0].encrypt(key).then((res) => {
+                        returnRes.encrypt(0, newPwd);
+                        returnRes.accounts[0].encrypt(newPwd).then((res) => {
                             (returnRes.accounts[0] as any).wif = wif;
                             observer.next(returnRes);
                         });
