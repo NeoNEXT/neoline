@@ -22,8 +22,6 @@ import { hexstring2str, base642hex } from '@cityofzion/neon-core-neo3/lib/u';
 
 @Injectable()
 export class AssetState {
-    public assetFile: Map<string, {}> = new Map();
-    public defaultAssetSrc = '/assets/images/default_asset_logo.jpg';
     public $webAddAssetId: Subject<Balance> = new Subject();
     public $webDelAssetId: Subject<string> = new Subject();
     private assetRate: Map<string, {}> = new Map();
@@ -49,9 +47,6 @@ export class AssetState {
         private chrome: ChromeService,
         private neonService: NeonService
     ) {
-        this.chrome.getStorage(STORAGE_NAME.assetFile).subscribe((res) => {
-            this.assetFile = res;
-        });
         this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
             this.rateCurrency = res;
             this.changeRateCurrency(res);
@@ -120,7 +115,6 @@ export class AssetState {
     }
 
     public clearCache() {
-        this.assetFile = new Map();
         this.assetRate = new Map();
         this.neo3AssetRate = new Map();
     }
@@ -153,25 +147,6 @@ export class AssetState {
         );
     }
 
-    public getAssetImageFromUrl(url: string, lastModified: string) {
-        return this.http.getImage(url, lastModified);
-    }
-
-    public setAssetFile(res: XMLHttpRequest, assetId: string): Promise<any> {
-        const temp = {};
-        temp['last-modified'] = res.getResponseHeader('Last-Modified');
-        return new Promise((resolve) => {
-            const a = new FileReader();
-            a.readAsDataURL(res.response); // 读取文件保存在result中
-            a.onload = (e: any) => {
-                const getRes = e.target.result; // 读取的结果在result中
-                temp['image-src'] = getRes;
-                this.assetFile.set(assetId, temp);
-                this.chrome.setStorage(STORAGE_NAME.assetFile, this.assetFile);
-                resolve(getRes);
-            };
-        });
-    }
     public getRate(): Observable<any> {
         const chain =
             this.neonService.currentWalletChainType === 'Neo3' ? 'neo3' : 'neo';
@@ -235,38 +210,6 @@ export class AssetState {
                 return rateRes;
             })
         );
-    }
-
-    public async getAssetImage(asset: Asset) {
-        const imageObj = this.assetFile.get(asset.asset_id);
-        let lastModified = '';
-        if (imageObj) {
-            lastModified = imageObj['last-modified'];
-            return imageObj['image-src'];
-        }
-        if (asset.image_url) {
-            const assetRes = await this.getAssetImageFromUrl(
-                asset.image_url,
-                lastModified
-            ).toPromise();
-            if (assetRes && assetRes.status === 200) {
-            } else if (assetRes && assetRes.status === 404) {
-                return this.defaultAssetSrc;
-            }
-        } else {
-            return this.defaultAssetSrc;
-        }
-    }
-
-    public getAssetImageFromAssetId(asset: string) {
-        const imageObj = this.assetFile.get(asset);
-        let lastModified = '';
-        if (imageObj) {
-            lastModified = imageObj['last-modified'];
-            return imageObj['image-src'];
-        } else {
-            return this.defaultAssetSrc;
-        }
     }
 
     getAssetSymbol(assetId: string): Observable<string> {

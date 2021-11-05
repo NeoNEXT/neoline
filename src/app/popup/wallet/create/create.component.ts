@@ -36,6 +36,7 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
         this.wallet = new WalletCreation();
         this.limit = WalletInitConstant;
         this.password = this.chrome.getPassword();
+        console.log(this.password);
     }
 
     ngOnInit() {}

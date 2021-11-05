@@ -23,7 +23,6 @@ export enum STORAGE_NAME {
     assetCNYRate = 'assetCNYRate',
     neo3AssetUSDRate = 'neo3AssetUSDRate',
     neo3AssetCNYRate = 'neo3AssetCNYRate',
-    assetFile = 'assetFile',
     rateCurrency = 'rateCurrency',
     wallet = 'wallet',
     walletArr = 'walletArr',
@@ -82,10 +81,6 @@ export const STORAGE_VALUE_MESSAGE = {
     neo3AssetCNYRate: {
         type: STORAGE_VALUE_TYPE.map,
         isLocal: false,
-    },
-    assetFile: {
-        type: STORAGE_VALUE_TYPE.map,
-        isLocal: true,
     },
     rateCurrency: {
         type: STORAGE_VALUE_TYPE.string,

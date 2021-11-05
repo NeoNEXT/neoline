@@ -6,7 +6,7 @@ import {
     ChromeService,
     TransferService,
 } from '@/app/core';
-import { NEO, Asset } from '@/models/models';
+import { NEO, GAS, Asset } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.component';
@@ -24,13 +24,14 @@ import BigNumber from 'bignumber.js';
 })
 export class PopupHomeComponent implements OnInit {
     @ViewChild('txPage') txPageComponent: PopupTxPageComponent;
-    imageUrl: any = '';
     selectedIndex = 0; // asset tab or transaction tab
     private assetId: string;
     wallet: Wallet2 | Wallet3;
     balance: Asset;
     rateCurrency: string;
     net: string;
+
+    GAS = GAS;
 
     private status = {
         confirmed: 'confirmed',
@@ -65,13 +66,6 @@ export class PopupHomeComponent implements OnInit {
         this.rateCurrency = this.assetState.rateCurrency;
         this.assetId = this.neon.currentWalletChainType === 'Neo2' ? NEO : NEO3_CONTRACT;
         this.currentWalletIsN3 = this.neon.currentWalletChainType === 'Neo3';
-
-        const imageObj = this.assetState.assetFile.get(this.assetId);
-        let lastModified = '';
-        if (imageObj) {
-            lastModified = imageObj['last-modified'];
-            this.imageUrl = imageObj['image-src'];
-        }
     }
 
     ngOnInit(): void {
@@ -205,45 +199,7 @@ export class PopupHomeComponent implements OnInit {
                     }
                 });
                 this.assetList = showAssetList;
-                this.assetList.forEach((asset, index) => {
-                    this.getAssetSrc(asset, index);
-                });
             });
-    }
-    private getAssetSrc(asset: Asset, index) {
-        const imageObj = this.assetState.assetFile.get(asset.asset_id);
-        let lastModified = '';
-        if (imageObj) {
-            lastModified = imageObj['last-modified'];
-            this.assetList[index].image_url = imageObj['image-src'];
-        }
-        if (asset.image_url) {
-            this.assetState
-                .getAssetImageFromUrl(asset.image_url, lastModified)
-                .subscribe((assetRes) => {
-                    if (assetRes && assetRes.status === 200) {
-                        this.assetState
-                            .setAssetFile(assetRes, asset.asset_id)
-                            .then((src) => {
-                                this.assetList[index].image_url = src;
-                            });
-                    } else if (assetRes && assetRes.status === 404) {
-                        this.assetList[index].image_url =
-                            this.assetState.defaultAssetSrc;
-                    }
-                    if (
-                        asset.asset_id === NEO ||
-                        asset.asset_id === NEO3_CONTRACT
-                    ) {
-                        this.imageUrl = this.assetList[index].image_url;
-                    }
-                });
-        } else {
-            this.assetList[index].image_url = this.assetState.defaultAssetSrc;
-            if (asset.asset_id === NEO || asset.asset_id === NEO3_CONTRACT) {
-                this.imageUrl = this.assetList[index].image_url;
-            }
-        }
     }
     // Get asset exchange rate
     private getAssetListRate(rateSymbol: string) {

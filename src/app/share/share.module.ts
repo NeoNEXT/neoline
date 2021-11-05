@@ -41,6 +41,7 @@ import { LimitPageStringPipe } from './pipes/limit-page-string.pipe';
 import { LanguageNamePipe } from './pipes/language-name.pipe';
 import { CopyDirective } from './directives/copy';
 import { AvatarDirective } from './directives/avatar';
+import { AssetLogoDirective } from './directives/asset-logo';
 import { ErrSrcDirective } from './directives/err-src.directive';
 import { TranslatePipe } from './pipes/translate.pipe';
 import { NumberDirective } from './directives/number';
@@ -63,6 +64,7 @@ import { NftTokenIdPipe } from './pipes/nft-tokenid.pipe';
         CopyDirective,
         NumberDirective,
         AvatarDirective,
+        AssetLogoDirective,
         ScrollDirective,
         ErrSrcDirective
     ],
@@ -79,6 +81,7 @@ import { NftTokenIdPipe } from './pipes/nft-tokenid.pipe';
         CopyDirective,
         ScrollDirective,
         AvatarDirective,
+        AssetLogoDirective,
         ErrSrcDirective,
         MatButtonModule,
         MatCheckboxModule,

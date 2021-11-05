@@ -24,7 +24,7 @@
         <span class="label">{{ 'currencies' | translate | async }}</span>
         <div class="asset-box box" *ngIf="!nftContract" matRipple (click)="selectAsset()">
             <div class="asset-logo">
-                <img [src]="assetLogoUrl" alt="">
+                <img [assetId]="assetId" appErrorSrc alt="">
             </div>
             <div class="asset-info">
                 <p>{{ chooseAsset?.symbol || 'NEO' }}</p>

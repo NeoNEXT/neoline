@@ -26,11 +26,11 @@ import { bignumber } from 'mathjs';
     styleUrls: ['neo3-transfer.component.scss'],
 })
 export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
+    NEO = NEO;
     public rpcClient;
     public dataJson: any = {};
     public rateCurrency = '';
     public txSerialize = '';
-    public assetImageUrl = '';
     public tx: Transaction3;
     public money = '';
     public feeMoney = '0';
@@ -77,7 +77,6 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
     }
 
     ngOnInit(): void {
-        this.assetImageUrl = this.asset.getAssetImageFromAssetId(NEO);
         this.rateCurrency = this.asset.rateCurrency;
         this.fromAddress = this.neon.address;
         this.wallet = this.neon.wallet;

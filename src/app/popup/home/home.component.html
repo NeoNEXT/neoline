@@ -16,7 +16,7 @@
         </mat-toolbar>
         <div class="popup-home-body">
             <div class="asset-logo-box">
-                <img class="asset-logo" [src]="imageUrl || ''" alt="">
+                <img class="asset-logo" [assetId]="balance?.asset_id" appErrorSrc alt="">
             </div>
             <p class="asset-balance">{{ (balance?.balance || 0) | numberFixed}} {{ balance?.symbol }}</p>
             <p class="asset-money">{{ balance?.rateBalance | numberFixed:2 }} {{ rateCurrency }} </p>
@@ -34,7 +34,7 @@
 
             <div class="claim-container" *ngIf="showClaim">
                 <div class="gas-logo-box">
-                    <img class="gas-logo" [src]="imageUrl || ''" alt="">
+                    <img class="gas-logo" [assetId]="GAS" appErrorSrc alt="">
                 </div>
                 <div class="claim-status-box">
                     <p class="number">{{ claimNumber | numberFixed }} GAS</p>

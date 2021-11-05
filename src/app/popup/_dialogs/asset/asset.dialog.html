@@ -2,7 +2,7 @@
 <div class="container" *ngIf="!data.isNft">
     <div class="asset-item" matRipple *ngFor="let item of data.balances;let i = index" (click)="select(i)">
         <div class="logo-box">
-            <img [src]="logoUrlArr[i]" alt="">
+            <img [assetId]="item.asset_id" appErrorSrc alt="">
         </div>
         <div class="asset-info-box">
             <p>{{ item?.symbol || '' }}</p>

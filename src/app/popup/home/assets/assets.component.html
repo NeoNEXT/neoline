@@ -1,6 +1,6 @@
 <div class="asset-item" [routerLink]="['/popup/asset', asset.asset_id]">
     <div class="avatar-box">
-        <img [src]="asset?.image_url || ''" alt="">
+        <img [assetId]="asset?.asset_id" appErrorSrc alt="">
     </div>
     <span class="name">{{ asset?.symbol }}</span>
     <div class="right">

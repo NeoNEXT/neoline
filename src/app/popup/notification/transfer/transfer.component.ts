@@ -25,10 +25,10 @@ import { STORAGE_NAME } from '../../_lib';
     styleUrls: ['transfer.component.scss'],
 })
 export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
+    NEO = NEO;
     public dataJson: any = {};
     public rateCurrency = '';
     public txSerialize = '';
-    public assetImageUrl = '';
     public tx: Transaction;
     public money = '';
     public feeMoney = '0';
@@ -68,7 +68,6 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     ) {}
 
     ngOnInit(): void {
-        this.assetImageUrl = this.asset.getAssetImageFromAssetId(NEO);
         this.rateCurrency = this.asset.rateCurrency;
         this.fromAddress = this.neon.address;
         this.wallet = this.neon.wallet;

@@ -19,12 +19,12 @@ import { utf8Encode } from '@angular/compiler/src/util';
     styleUrls: ['deploy.component.scss']
 })
 export class PopupNoticeDeployComponent implements OnInit {
+    NEO = NEO;
     public net: string = '';
     public dataJson: any = {};
     public feeMoney = '0';
     public rateCurrency = '';
     public txSerialize = ''
-    public assetImageUrl = '';
     public fee = '';
 
     public pramsData: any;
@@ -47,7 +47,6 @@ export class PopupNoticeDeployComponent implements OnInit {
     ) { }
 
     ngOnInit(): void {
-        this.assetImageUrl = this.assetState.getAssetImageFromAssetId(NEO)
         this.aRoute.queryParams.subscribe(async (params: any) => {
             this.pramsData = params;
             this.messageID = params.messageID;

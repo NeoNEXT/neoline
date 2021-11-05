@@ -265,7 +265,6 @@ export class ChromeService {
     }
 
     public clearAssetFile() {
-        this.removeStorage(STORAGE_NAME.assetFile);
         this.removeStorage(STORAGE_NAME.assetCNYRate);
         this.removeStorage(STORAGE_NAME.assetUSDRate);
         this.removeStorage(STORAGE_NAME.neo3AssetCNYRate);

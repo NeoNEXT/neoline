@@ -45,7 +45,6 @@ export class TransferCreateComponent implements OnInit {
     public toAddress: string;
     public creating: boolean = false;
 
-    public assetLogoUrl = '';
     public chooseAsset: Asset;
 
     public balances: Array<Asset> = [];
@@ -96,9 +95,6 @@ export class TransferCreateComponent implements OnInit {
                             res.balance = bignumber(res.balance).toFixed();
                             this.chooseAsset = res;
                             this.assetId = res.asset_id;
-                            this.assetLogoUrl = await this.asset.getAssetImage(
-                                res
-                            );
                         });
                 }
                 this.asset
@@ -108,9 +104,6 @@ export class TransferCreateComponent implements OnInit {
                         if (!params.id) {
                             this.assetId = this.balances[0].asset_id;
                             this.chooseAsset = this.balances[0];
-                            this.assetLogoUrl = await this.asset.getAssetImage(
-                                this.balances[0]
-                            );
                         }
                     });
             }
@@ -623,9 +616,6 @@ export class TransferCreateComponent implements OnInit {
                     }
                     this.chooseAsset = this.balances[index];
                     this.assetId = this.chooseAsset.asset_id;
-                    this.assetLogoUrl = await this.asset.getAssetImage(
-                        this.chooseAsset
-                    );
                 });
         }
     }

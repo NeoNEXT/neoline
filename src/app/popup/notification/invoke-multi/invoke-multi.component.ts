@@ -26,7 +26,6 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     public feeMoney = '0';
     public rateCurrency = '';
     public txSerialize = ''
-    public assetImageUrl = '';
     public showFeeEdit: boolean = true;
 
     private pramsData: any;
@@ -61,7 +60,6 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.assetImageUrl = this.assetState.getAssetImageFromAssetId(NEO)
         this.aRoute.queryParams.subscribe(async (params: any) => {
             this.pramsData = JSON.parse(JSON.stringify(params));
             this.messageID = params.messageID;

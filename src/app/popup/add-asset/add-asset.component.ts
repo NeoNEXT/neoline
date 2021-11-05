@@ -35,32 +35,6 @@ export class PopupAddAssetComponent implements OnInit {
             .subscribe((res) => (this.watch = res));
     }
 
-    public getAssetSrc() {
-        const imageObj = this.asset.assetFile.get(this.searchAsset.asset_id);
-        let lastModified = '';
-        if (imageObj) {
-            lastModified = imageObj['last-modified'];
-            this.searchAsset.image_url = imageObj['image-src'];
-        }
-        if (this.searchAsset.image_url) {
-            this.asset
-                .getAssetImageFromUrl(this.searchAsset.image_url, lastModified)
-                .subscribe((assetRes) => {
-                    if (assetRes && assetRes.status === 200) {
-                        this.asset
-                            .setAssetFile(assetRes, this.searchAsset.asset_id)
-                            .then((src) => {
-                                this.searchAsset.image_url = src;
-                            });
-                    } else if (assetRes && assetRes.status === 404) {
-                        this.searchAsset.image_url = this.asset.defaultAssetSrc;
-                    }
-                });
-        } else {
-            this.searchAsset.image_url = this.asset.defaultAssetSrc;
-        }
-    }
-
     public addAsset() {
         this.dialog
             .open(PopupAddTokenDialogComponent, {
@@ -93,7 +67,6 @@ export class PopupAddAssetComponent implements OnInit {
                 this.watch.findIndex(
                     (w: Balance) => w.asset_id === this.searchAsset.asset_id
                 ) >= 0;
-            this.getAssetSrc();
         });
     }
 }

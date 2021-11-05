@@ -8,7 +8,7 @@
 
 <div class="sub-nav">
     <div class="asset-logo-box">
-        <img class="asset-logo" [src]="imageUrl || ''" alt="">
+        <img class="asset-logo" [assetId]="balance?.asset_id" appErrorSrc alt="">
     </div>
     <img src="/assets/images/asset-detail/nav.png" (click)="showMenu=!showMenu" class="nav-img" alt="">
     <section class="veil" *ngIf="showMenu" (click)="showMenu=false"></section>

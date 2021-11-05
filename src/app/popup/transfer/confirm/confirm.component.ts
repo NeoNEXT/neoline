@@ -23,7 +23,6 @@ export class PopupTransferConfirmComponent implements OnInit {
     public logoUrlArr = [];
     public net = '';
     public fromName: string = '';
-    public assetImageUrl: string = '';
     public datajson: any = {};
     public symbol = ''
     public money;
@@ -78,7 +77,6 @@ export class PopupTransferConfirmComponent implements OnInit {
         const wallet = this.neon.wallet;
         this.fromName = wallet.name;
         this.rateCurrency = this.assetState.rateCurrency;
-        this.assetImageUrl = await this.assetState.getAssetImageFromAssetId(this.data.asset);
         for(const key in this.data) {
             if(this.data[key] !== '' && key !== 'txSerialize') {
                 this.datajson[key] = this.data[key];

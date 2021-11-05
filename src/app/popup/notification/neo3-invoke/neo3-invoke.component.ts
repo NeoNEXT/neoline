@@ -22,7 +22,6 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
     public dataJson: any = {};
     public rateCurrency = '';
     public txSerialize = '';
-    public assetImageUrl = '';
     public showFeeEdit: boolean = true;
 
     private pramsData: any;
@@ -65,7 +64,6 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
 
     ngOnInit(): void {
         this.rateCurrency = this.assetState.rateCurrency;
-        this.assetImageUrl = this.assetState.getAssetImageFromAssetId(NEO3_CONTRACT);
         this.aRoute.queryParams.subscribe(async ({ messageID }) => {
             let params: any;
             this.messageID = messageID;

@@ -45,6 +45,7 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
 
     constructor(private global: GlobalService, private neon: NeonService, private chrome: ChromeService) {
         this.password = this.chrome.getPassword();
+        console.log(this.password);
         this.isInit = true;
         this.limit = WalletInitConstant;
 
