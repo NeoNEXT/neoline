@@ -30,7 +30,6 @@ export enum STORAGE_NAME {
     WIFArr = 'WIFArr',
     'WIFArr-Neo3' = 'WIFArr-Neo3',
     chainType = 'chainType',
-    neo3AddressFlag = 'neo3AddressFlag',
     shouldLogin = 'shouldLogin',
     lang = 'lang',
     transaction = 'transaction',
@@ -108,10 +107,6 @@ export const STORAGE_VALUE_MESSAGE = {
     },
     chainType: {
         type: STORAGE_VALUE_TYPE.string,
-        isLocal: true,
-    },
-    neo3AddressFlag: {
-        type: STORAGE_VALUE_TYPE.boolean,
         isLocal: true,
     },
     shouldLogin: {
