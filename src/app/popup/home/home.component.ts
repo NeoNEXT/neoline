@@ -15,7 +15,7 @@ import { PopupConfirmDialogComponent } from '../_dialogs';
 import { Router } from '@angular/router';
 import { rpc } from '@cityofzion/neon-core';
 import { bignumber } from 'mathjs';
-import { NEO3_CONTRACT } from '../_lib';
+import { NEO3_CONTRACT, NetworkType } from '../_lib';
 import BigNumber from 'bignumber.js';
 
 @Component({
@@ -29,7 +29,7 @@ export class PopupHomeComponent implements OnInit {
     wallet: Wallet2 | Wallet3;
     balance: Asset;
     rateCurrency: string;
-    net: string;
+    network: NetworkType;
 
     GAS = GAS;
 
@@ -64,12 +64,12 @@ export class PopupHomeComponent implements OnInit {
     ) {
         this.wallet = this.neon.wallet;
         this.rateCurrency = this.assetState.rateCurrency;
-        this.assetId = this.neon.currentWalletChainType === 'Neo2' ? NEO : NEO3_CONTRACT;
+        this.assetId =
+            this.neon.currentWalletChainType === 'Neo2' ? NEO : NEO3_CONTRACT;
         this.currentWalletIsN3 = this.neon.currentWalletChainType === 'Neo3';
     }
 
     ngOnInit(): void {
-        this.net = this.global.net;
         if (this.neon.currentWalletChainType === 'Neo2') {
             this.initClaim();
         }
@@ -87,21 +87,13 @@ export class PopupHomeComponent implements OnInit {
         this.showMenu = false;
         switch (this.neon.currentWalletChainType) {
             case 'Neo2':
-                window.open(
-                    `https://${
-                        this.net === 'TestNet' ? 'testnet.' : ''
-                    }neotube.io/address/${this.neon.address}/page/1`
-                );
+                if (this.global.n2Network.explorer) {
+                    window.open(`${this.global.n2Network.explorer}address/${this.neon.address}/page/1`)
+                }
                 break;
             case 'Neo3':
-                if (this.net === 'MainNet') {
-                    window.open(
-                        `https://neo3.neotube.io/address/${this.neon.address}`
-                    );
-                } else {
-                    window.open(
-                        `https://neo3.testnet.neotube.io/address/${this.neon.address}`
-                    );
+                if (this.global.n3Network.explorer) {
+                    window.open(`${this.global.n3Network.explorer}address/${this.neon.address}`)
                 }
                 break;
         }
@@ -129,7 +121,10 @@ export class PopupHomeComponent implements OnInit {
             });
     }
     showAddToken(): boolean {
-        if (this.neon.currentWalletChainType === 'Neo3' && this.selectedIndex === 1) {
+        if (
+            this.neon.currentWalletChainType === 'Neo3' &&
+            this.selectedIndex === 1
+        ) {
             return false;
         }
         return true;
@@ -173,7 +168,13 @@ export class PopupHomeComponent implements OnInit {
         this.balance = balanceArr.find((b) => b.asset_id === this.assetId);
         this.getAssetRate();
         this.chrome
-            .getWatch(this.neon.address, this.neon.currentWalletChainType)
+            .getWatch(
+                this.neon.address,
+                this.neon.currentWalletChainType,
+                this.neon.currentWalletChainType === 'Neo2'
+                    ? this.global.n2Network.network
+                    : this.global.n3Network.network
+            )
             .subscribe((watching) => {
                 const showAssetList = [];
                 let rateSymbol = '';

@@ -21,7 +21,7 @@ import {
     setLocalStorage,
     getLocalStorage
 } from '../common';
-import { mainApi, RPC, ChainType, NETWORKS, ChainId, Network, WitnessScope } from '../common/constants';
+import { mainApi, RPC, ChainType, ChainId, Network, WitnessScope } from '../common/constants';
 import {
     requestTarget, GetBalanceArgs, ERRORS,
     EVENT, AccountPublicKey, GetBlockInputArgs,

@@ -38,14 +38,8 @@ export class PopupNftDetailComponent implements OnInit {
 
     toWeb() {
         this.showMenu = false;
-        if (this.global.net === 'MainNet') {
-            window.open(
-                `https://neo3.neotube.io/tokens/nft/${this.nftContract}`
-            );
-        } else {
-            window.open(
-                `https://neo3.testnet.neotube.io/tokens/nft/${this.nftContract}`
-            );
+        if (this.global.n3Network.explorer) {
+            window.open(`${this.global.n3Network.explorer}tokens/nft/${this.nftContract}`);
         }
     }
     onScrolltaChange(el: Element) {

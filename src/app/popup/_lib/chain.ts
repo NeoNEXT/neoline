@@ -34,9 +34,8 @@ export enum ChainId {
     N3TestNet = 4,
 }
 
-export enum NetType {
+export enum NetworkType {
     MainNet = 'MainNet',
     TestNet = 'TestNet',
-    N3MainNet = 'N3MainNet',
-    N3TestNet = 'N3TestNet'
+    PrivateNet = 'PrivateNet'
 }

@@ -1,14 +1,10 @@
 import {
     Component,
     OnInit,
-    AfterViewInit,
-    OnDestroy
 } from '@angular/core';
 import {
-    ChromeService,
     GlobalService,
     NeonService,
-    AssetState
 } from '@app/core';
 import {
     Router,
@@ -17,14 +13,13 @@ import {
 } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupHomeMenuDialogComponent } from './_dialogs';
-import { ChainId, NetType } from './_lib';
 
 @Component({
     templateUrl: 'popup.component.html',
     styleUrls: ['popup.component.scss']
 })
 
-export class PopupComponent implements OnInit, AfterViewInit {
+export class PopupComponent implements OnInit {
     public walletIsOpen = false;
     public isThirdParty: boolean = false;
     public isNotificationComfirm: boolean = false;
@@ -34,15 +29,11 @@ export class PopupComponent implements OnInit, AfterViewInit {
     public net: string;
 
     constructor(
-        private chrome: ChromeService,
         private global: GlobalService,
         private neon: NeonService,
         private router: Router,
         private dialog: MatDialog,
-        private assetSer: AssetState,
-        private neonService: NeonService
     ) {
-        this.chrome.initNetwork();
         this.walletIsOpen = false;
         this.isLogin = false;
         this.address = this.neon.address;
@@ -84,20 +75,6 @@ export class PopupComponent implements OnInit, AfterViewInit {
         this.neon.walletIsOpen().subscribe((res: any) => {
             this.global.$wallet.next(res ? 'open' : 'close');
         });
-        if (this.global.net === 'TestNet') {
-            this.net = 'TestNet';
-        } else {
-            this.net = 'MainNet';
-        }
-    }
-    ngAfterViewInit(): void {
-        setTimeout(() => {
-            if (this.global.net === 'TestNet') {
-                this.net = 'TestNet';
-            } else {
-                this.net = 'MainNet';
-            }
-        }, 0);
     }
 
     public topMenu() {
@@ -118,13 +95,6 @@ export class PopupComponent implements OnInit, AfterViewInit {
     }
 
     public modifyNet(net: string) {
-        if (this.net === net) {
-            return;
-        }
-        this.net = net;
-        this.chrome.setNet(net);
-        this.chrome.setNetwork();
-        this.global.modifyNet(net);
-        location.reload();
+
     }
 }

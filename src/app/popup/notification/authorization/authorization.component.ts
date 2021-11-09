@@ -56,13 +56,6 @@ export class PopupNoticeAuthComponent implements OnInit {
                 this.iconSrc =  this.hostname.indexOf('flamingo') >= 0 ? '/assets/images/flamingo.ico' : params.icon;
             }
             this.title = params.title;
-            if (params.network) {
-                if (params.network === 'MainNet') {
-                    this.global.modifyNet('MainNet');
-                } else {
-                    this.global.modifyNet('TestNet');
-                }
-            }
         });
         this.chrome.getStorage(STORAGE_NAME.authAddress).subscribe(selectedWalletArr => {
             this.selectedWalletArr = selectedWalletArr[this.hostname] || this.selectedWalletArr;

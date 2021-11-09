@@ -16,6 +16,7 @@ import {
     DEFAULT_NEO2_ASSETS,
     STORAGE_NAME,
     DEFAULT_NEO3_ASSETS,
+    NetworkType,
 } from '@popup/_lib';
 import BigNumber from 'bignumber.js';
 import { hexstring2str, base642hex } from '@cityofzion/neon-core-neo3/lib/u';
@@ -104,14 +105,26 @@ export class AssetState {
             params: [address],
         };
         const rpcUrl = this.global.n2Network.rpcUrl;
-        return this.http.rpcPost(rpcUrl, data).pipe(map(res => {
-            if (assetId.includes(res.balance[0].asset_hash)) {
-                return res.balance[0].unspent.map(({n, value, txid}) => ({n, txid, value, asset_id: res.balance[0].asset_hash}));
-            }
-            if (assetId.includes(res.balance[1].asset_hash)) {
-                return res.balance[1].unspent.map(({n, value, txid}) => ({n, txid, value, asset_id: res.balance[1].asset_hash}));
-            }
-        }))
+        return this.http.rpcPost(rpcUrl, data).pipe(
+            map((res) => {
+                if (assetId.includes(res.balance[0].asset_hash)) {
+                    return res.balance[0].unspent.map(({ n, value, txid }) => ({
+                        n,
+                        txid,
+                        value,
+                        asset_id: res.balance[0].asset_hash,
+                    }));
+                }
+                if (assetId.includes(res.balance[1].asset_hash)) {
+                    return res.balance[1].unspent.map(({ n, value, txid }) => ({
+                        n,
+                        txid,
+                        value,
+                        asset_id: res.balance[1].asset_hash,
+                    }));
+                }
+            })
+        );
     }
 
     public clearCache() {
@@ -160,12 +173,16 @@ export class AssetState {
     }
 
     public getAssetRate(coins: string): Observable<any> {
-        if (!coins || this.global.net !== 'MainNet') {
+        const isNeo3 = this.neonService.currentWalletChainType === 'Neo3';
+        if (
+            !coins ||
+            (isNeo3 && this.global.n3Network.network !== NetworkType.MainNet) ||
+            (!isNeo3 && this.global.n2Network.network !== NetworkType.MainNet)
+        ) {
             return of({});
         }
         coins = coins.toLowerCase();
         const rateRes = {};
-        const isNeo3 = this.neonService.currentWalletChainType === 'Neo3';
         return forkJoin([this.getRate(), this.getFiatRate()]).pipe(
             map(([rateBalance, fiatData]) => {
                 const targetCoinsAry = coins.split(',');
@@ -321,7 +338,13 @@ export class AssetState {
     async getAssetDetail(address: string, assetId: string): Promise<Asset> {
         const balance = await this.getAddressBalances(address);
         const watching = await this.chrome
-            .getWatch(address, this.neonService.currentWalletChainType)
+            .getWatch(
+                address,
+                this.neonService.currentWalletChainType,
+                this.neonService.currentWalletChainType === 'Neo2'
+                    ? this.global.n2Network.network
+                    : this.global.n3Network.network
+            )
             .toPromise();
         return (
             balance.find((e) => e.asset_id === assetId) ||

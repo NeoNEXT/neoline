@@ -7,7 +7,7 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { HttpClient } from '@angular/common/http';
 import { EVENT } from '@/models/dapi';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
-import { ChainId, NetType, STORAGE_NAME } from './popup/_lib';
+import { STORAGE_NAME } from './popup/_lib';
 
 @Component({
     selector: 'neo-line',
@@ -69,9 +69,6 @@ export class AppComponent {
             this.walletArr = this.neon.walletArr;
             this.address = this.neon.address;
         });
-        this.chrome.getNet().subscribe((net) => {
-            this.net = net;
-        });
         if (localStorage.getItem('theme')) {
             const body = document.getElementsByTagName('body')[0];
             body.setAttribute(
@@ -82,14 +79,7 @@ export class AppComponent {
     }
 
     public modifyNet(net: string) {
-        if (this.net === net) {
-            return;
-        }
-        this.net = net;
-        this.chrome.setNet(net);
-        this.chrome.setNetwork();
-        this.global.modifyNet(net);
-        location.reload();
+
     }
 
     public isActivityWallet(w: Wallet2 | Wallet3) {

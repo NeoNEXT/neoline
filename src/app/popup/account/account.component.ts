@@ -57,17 +57,13 @@ export class PopupAccountComponent implements OnInit {
     toWeb() {
         switch (this.neon.currentWalletChainType) {
             case 'Neo2':
-                window.open(
-                    `https://${
-                    this.global.net === 'TestNet' ? 'testnet.' : ''
-                    }neotube.io/address/${this.neon.address}/page/1`
-                );
+                if (this.global.n2Network.explorer) {
+                    window.open(`${this.global.n2Network.explorer}address/${this.neon.address}/page/1`)
+                }
                 break;
             case 'Neo3':
-                if (this.global.net === 'MainNet') {
-                    window.open(`https://neo3.neotube.io/address/${this.neon.address}`);
-                } else {
-                    window.open(`https://neo3.testnet.neotube.io/address/${this.neon.address}`);
+                if (this.global.n3Network.explorer) {
+                    window.open(`${this.global.n3Network.explorer}address/${this.neon.address}`)
                 }
                 break;
         }

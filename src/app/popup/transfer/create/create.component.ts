@@ -27,7 +27,7 @@ import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
 import { bignumber } from 'mathjs';
 import { GasFeeSpeed } from '../../_lib/type';
 import { Neo3TransferService } from '../neo3-transfer.service';
-import { GAS3_CONTRACT, NEO3_MAGIC_NUMBER, STORAGE_NAME } from '../../_lib';
+import { GAS3_CONTRACT, STORAGE_NAME, NetworkType } from '../../_lib';
 
 @Component({
     templateUrl: 'create.component.html',
@@ -49,7 +49,7 @@ export class TransferCreateComponent implements OnInit {
 
     public balances: Array<Asset> = [];
     public assetId: string;
-    public net: string;
+    public network: NetworkType;
 
     istransferAll = false;
 
@@ -73,15 +73,16 @@ export class TransferCreateComponent implements OnInit {
         switch (this.neon.currentWalletChainType) {
             case 'Neo2':
                 this.neonWallet = wallet2;
+                this.network = this.global.n2Network.network;
                 break;
             case 'Neo3':
                 this.neonWallet = wallet3;
+                this.network = this.global.n3Network.network;
                 break;
         }
     }
 
     ngOnInit(): void {
-        this.net = this.global.net;
         this.fromAddress = this.neon.address;
         this.aRoute.params.subscribe((params) => {
             if (params.nftContract) {
@@ -242,7 +243,7 @@ export class TransferCreateComponent implements OnInit {
                             this.neon.wallet.accounts[0].address
                     )
                 ];
-            tx.sign(wif, NEO3_MAGIC_NUMBER[this.net]);
+            tx.sign(wif, this.global.n3Network.magicNumber);
             this.global.log('signed tx', tx);
             const diaglogData: any = {
                 fromAddress: this.fromAddress,
@@ -251,7 +252,7 @@ export class TransferCreateComponent implements OnInit {
                 symbol: this.chooseNftToken.symbol,
                 amount: this.chooseNftToken.balance,
                 fee: this.fee || '0',
-                network: this.net,
+                network: this.network,
                 txSerialize: tx.serialize(true),
             };
             diaglogData.systemFee = (tx as Transaction3).systemFee.toString();
@@ -297,7 +298,7 @@ export class TransferCreateComponent implements OnInit {
                                             case 'Neo3':
                                                 res.sign(
                                                     wif,
-                                                    NEO3_MAGIC_NUMBER[this.net]
+                                                    this.global.n3Network.magicNumber
                                                 );
                                                 break;
                                         }
@@ -350,7 +351,7 @@ export class TransferCreateComponent implements OnInit {
                     tx.sign(wif);
                     break;
                 case 'Neo3':
-                    tx.sign(wif, NEO3_MAGIC_NUMBER[this.net]);
+                    tx.sign(wif, this.global.n3Network.magicNumber);
                     break;
             }
             this.global.log('signed tx', tx);
@@ -361,7 +362,7 @@ export class TransferCreateComponent implements OnInit {
                 symbol: this.chooseAsset.symbol,
                 amount: this.amount,
                 fee: this.fee || '0',
-                network: this.net,
+                network: this.network,
                 txSerialize: tx.serialize(true),
             };
             if (this.neon.currentWalletChainType === 'Neo3') {
@@ -410,7 +411,7 @@ export class TransferCreateComponent implements OnInit {
                                             case 'Neo3':
                                                 res.sign(
                                                     wif,
-                                                    NEO3_MAGIC_NUMBER[this.net]
+                                                    this.global.n3Network.magicNumber
                                                 );
                                                 break;
                                         }
@@ -556,7 +557,7 @@ export class TransferCreateComponent implements OnInit {
     }
 
     public pushTransaction(transaction: any) {
-        const net = this.net;
+        const net = this.network;
         const address = this.fromAddress;
         const assetId = this.assetId;
         this.chrome.getStorage(STORAGE_NAME.transaction).subscribe(async res => {
@@ -576,9 +577,9 @@ export class TransferCreateComponent implements OnInit {
             this.chrome.setStorage(STORAGE_NAME.transaction, res);
             this.txState.pushTxSource();
             const setData = {};
-            setData[`${this.net}TxArr`] =
-                (await this.chrome.getLocalStorage(`${this.net}TxArr`)) || [];
-            setData[`${this.net}TxArr`].push(transaction.txid);
+            setData[`${this.network}TxArr`] =
+                (await this.chrome.getLocalStorage(`${this.network}TxArr`)) || [];
+            setData[`${this.network}TxArr`].push(transaction.txid);
             this.chrome.setLocalStorage(setData);
         });
     }

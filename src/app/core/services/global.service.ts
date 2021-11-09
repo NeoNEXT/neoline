@@ -12,7 +12,6 @@ import { add, subtract, multiply, divide, bignumber } from 'mathjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import {
     ChainType,
-    N3RpcNetwork,
     RpcNetwork,
     STORAGE_NAME,
 } from '@/app/popup/_lib';
@@ -23,12 +22,12 @@ export class GlobalService {
     public $wallet: Subject<string>;
     public languageJson: any = null;
     public debug = false;
-    public net: string;
+    // public net: string;
     private source404 = new Subject<string>();
     public $404 = this.source404.asObservable();
 
-    public n3Networks: N3RpcNetwork[];
-    public n3Network: N3RpcNetwork;
+    public n3Networks: RpcNetwork[];
+    public n3Network: RpcNetwork;
     public n3SelectedNetworkIndex: number;
 
     public n2Networks: RpcNetwork[];
@@ -41,11 +40,8 @@ export class GlobalService {
         private notification: NotificationService,
         private chromeSer: ChromeService
     ) {
+        this.apiDomain = environment.mainApiBase
         this.$wallet = new Subject<string>();
-        this.chromeSer.getNet().subscribe((net) => {
-            this.net = net;
-            this.modifyNet(net);
-        });
         this.chromeSer
             .getStorage(STORAGE_NAME.n3Networks)
             .subscribe((networksRes) => {
@@ -76,14 +72,6 @@ export class GlobalService {
         this.source404.next(error);
     }
 
-    public modifyNet(net: string) {
-        this.net = net;
-        if (net === 'MainNet') {
-            this.apiDomain = environment.mainApiBase;
-        } else {
-            this.apiDomain = environment.mainApiBase;
-        }
-    }
     public log(...params: any[]) {
         if (this.debug) {
             console.log(...params);

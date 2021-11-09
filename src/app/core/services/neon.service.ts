@@ -35,7 +35,6 @@ import { str2hexstring } from '@cityofzion/neon-core-neo3/lib/u';
 export class NeonService {
     currentWalletChainType: ChainType;
     selectedChainType: ChainType;
-    net: string;
     // 当前钱包的链
     private _neon: any = Neon2;
     private _neonWallet: any = wallet2;
@@ -147,11 +146,7 @@ export class NeonService {
             this._wallet.accounts[0].address
         );
     }
-    constructor(private chrome: ChromeService, private global: GlobalService) {
-        this.chrome.getNet().subscribe((net) => {
-            this.net = net;
-        });
-    }
+    constructor(private chrome: ChromeService, private global: GlobalService) { }
 
     public clearCache() {
         this._wallet =

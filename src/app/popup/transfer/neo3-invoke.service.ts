@@ -18,7 +18,7 @@ import {
 import BigNumber from 'bignumber.js';
 import { ContractCall, ContractParam } from '@cityofzion/neon-core-neo3/lib/sc';
 import { Asset } from '@/models/models';
-import { GAS3_CONTRACT, NEO3_MAGIC_NUMBER } from '../_lib';
+import { GAS3_CONTRACT } from '../_lib';
 
 interface CreateNeo3TxInput {
     invokeArgs: ContractCall[];
@@ -178,7 +178,7 @@ export class Neo3InvokeService {
                         this.neon.wallet.accounts[0].address
                 )
             ];
-        txClone.sign(wif, NEO3_MAGIC_NUMBER[this.globalService.net]);
+        txClone.sign(wif, this.globalService.n3Network.magicNumber);
         const verificationExecutionFee = txClone.witnesses.reduce(
             (totalFee, witness) => {
                 return totalFee

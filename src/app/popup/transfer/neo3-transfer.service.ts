@@ -9,7 +9,6 @@ import {
     NeonService,
 } from '@app/core';
 import { bignumber } from 'mathjs';
-import { NEO3_MAGIC_NUMBER } from '../_lib';
 import BigNumber from 'bignumber.js';
 
 interface CreateNeo3TxInput {
@@ -315,7 +314,7 @@ export class Neo3TransferService {
                         this.neon.wallet.accounts[0].address
                 )
             ];
-        txClone.sign(wif, NEO3_MAGIC_NUMBER[this.globalService.net]);
+        txClone.sign(wif, this.globalService.n3Network.magicNumber);
         const verificationExecutionFee = txClone.witnesses.reduce(
             (totalFee, witness) => {
                 return totalFee

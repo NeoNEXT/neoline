@@ -12,6 +12,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
+import { NetworkType } from '../_lib';
 
 @Component({
     templateUrl: 'asset-detail.component.html',
@@ -29,7 +30,7 @@ export class PopupAssetDetailComponent implements OnInit {
     showMenu = false;
     watch: Asset[]; // User-added assets
     canHideBalance = false;
-    net: string;
+    network: NetworkType;
 
     constructor(
         private assetState: AssetState,
@@ -44,7 +45,7 @@ export class PopupAssetDetailComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.net = this.global.net;
+        this.network = this.neon.currentWalletChainType === 'Neo2' ? this.global.n2Network.network : this.global.n3Network.network;
         this.aRouter.params.subscribe(async (params: any) => {
             this.assetId = params.assetId || NEO;
             // 获取资产信息
@@ -54,7 +55,7 @@ export class PopupAssetDetailComponent implements OnInit {
                     this.handlerBalance(balanceArr);
                 });
             this.chrome
-                .getWatch(this.neon.address, this.neon.currentWalletChainType)
+                .getWatch(this.neon.address, this.neon.currentWalletChainType, this.network)
                 .subscribe((res) => {
                     this.watch = res;
                     this.canHideBalance =
@@ -65,7 +66,7 @@ export class PopupAssetDetailComponent implements OnInit {
 
     handlerBalance(balanceRes: Balance[]) {
         this.chrome
-            .getWatch(this.neon.address, this.neon.currentWalletChainType)
+            .getWatch(this.neon.address, this.neon.currentWalletChainType, this.network)
             .subscribe((watching) => {
                 this.findBalance(balanceRes, watching);
                 // 获取资产汇率
@@ -124,7 +125,8 @@ export class PopupAssetDetailComponent implements OnInit {
                         this.chrome.setWatch(
                             this.neon.address,
                             this.watch,
-                            this.neon.currentWalletChainType
+                            this.neon.currentWalletChainType,
+                            this.network
                         );
                         this.global.snackBarTip('hiddenSucc');
                         this.router.navigateByUrl('/popup/home');
@@ -136,30 +138,15 @@ export class PopupAssetDetailComponent implements OnInit {
     toWeb() {
         this.showMenu = false;
         const isNep5 = this.assetId !== NEO && this.assetId !== GAS;
-        console.log(
-            `https://${this.net === 'TestNet' ? 'testnet.' : ''}neotube.io/${
-                isNep5 ? 'nep5' : 'asset'
-            }/${this.assetId}`
-        );
         switch (this.neon.currentWalletChainType) {
             case 'Neo2':
-                window.open(
-                    `https://${
-                        this.net === 'TestNet' ? 'testnet.' : ''
-                    }neotube.io/${isNep5 ? 'nep5' : 'asset'}/${
-                        this.assetId
-                    }/page/1`
-                );
+                if (this.global.n2Network.explorer) {
+                    window.open(`${this.global.n2Network.explorer}${isNep5 ? 'nep5' : 'asset'}/${this.assetId}/page/1`)
+                }
                 break;
             case 'Neo3':
-                if (this.net === 'MainNet') {
-                    window.open(
-                        `https://neo3.neotube.io/tokens/nep17/${this.assetId}`
-                    );
-                } else {
-                    window.open(
-                        `https://neo3.testnet.neotube.io/tokens/nep17/${this.assetId}`
-                    );
+                if (this.global.n3Network.explorer) {
+                    window.open(`${this.global.n3Network.explorer}tokens/nep17/${this.assetId}`)
                 }
                 break;
         }

@@ -11,7 +11,7 @@ import { Transaction } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupNftTxDetailDialogComponent } from '@/app/popup/_dialogs';
 import { forkJoin } from 'rxjs';
-import { STORAGE_NAME } from '../../_lib';
+import { STORAGE_NAME, NetworkType } from '../../_lib';
 
 @Component({
     selector: 'app-nft-tx-page',
@@ -23,7 +23,7 @@ export class PopupNftTxPageComponent implements OnInit, OnDestroy {
     @Input() symbol = '';
 
     public show = false;
-    public net: string;
+    public network: NetworkType;
     public address: string;
     public inTransaction: Array<Transaction>;
     public txData: Array<any> = [];
@@ -40,7 +40,7 @@ export class PopupNftTxPageComponent implements OnInit, OnDestroy {
         private txState: TransactionState,
     ) {}
     ngOnInit(): void {
-        this.net = this.global.net;
+        this.network = this.global.n3Network.network;
         this.address = this.neon.address;
         this.txData = [];
         this.getInTransactions(1);
@@ -67,15 +67,15 @@ export class PopupNftTxPageComponent implements OnInit, OnDestroy {
         if (page === 1) {
             this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((inTxData) => {
                 if (
-                    inTxData[this.net] === undefined ||
-                    inTxData[this.net][this.address] === undefined ||
-                    inTxData[this.net][this.address][this.nftContract] ===
+                    inTxData[this.network] === undefined ||
+                    inTxData[this.network][this.address] === undefined ||
+                    inTxData[this.network][this.address][this.nftContract] ===
                         undefined
                 ) {
                     this.inTransaction = [];
                 } else {
                     this.inTransaction =
-                        inTxData[this.net][this.address][this.nftContract];
+                        inTxData[this.network][this.address][this.nftContract];
                 }
                 const txIdArray = [];
                 this.inTransaction = this.inTransaction.filter(
@@ -104,17 +104,17 @@ export class PopupNftTxPageComponent implements OnInit, OnDestroy {
                             this.inTransaction.splice(tempIndex, 1);
                         }
                     });
-                    if (inTxData[this.net] === undefined) {
-                        inTxData[this.net] = {};
-                    } else if (inTxData[this.net][this.address] === undefined) {
-                        inTxData[this.net][this.address] = {};
+                    if (inTxData[this.network] === undefined) {
+                        inTxData[this.network] = {};
+                    } else if (inTxData[this.network][this.address] === undefined) {
+                        inTxData[this.network][this.address] = {};
                     } else if (
-                        inTxData[this.net][this.address][this.nftContract] ===
+                        inTxData[this.network][this.address][this.nftContract] ===
                         undefined
                     ) {
-                        inTxData[this.net][this.address][this.nftContract] = [];
+                        inTxData[this.network][this.address][this.nftContract] = [];
                     } else {
-                        inTxData[this.net][this.address][this.nftContract] =
+                        inTxData[this.network][this.address][this.nftContract] =
                             this.inTransaction;
                     }
                     this.chrome.setStorage(STORAGE_NAME.transaction, inTxData);

@@ -7,9 +7,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { ERRORS } from '@/models/dapi';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { PopupDapiPromptComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
-import { GasFeeSpeed } from '../../_lib/type';
+import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { bignumber } from 'mathjs';
-import { NEO3_MAGIC_NUMBER, NEO3_CONTRACT, STORAGE_NAME } from '../../_lib';
+import { NEO3_CONTRACT, STORAGE_NAME } from '../../_lib';
 import { Neo3InvokeService } from '../../transfer/neo3-invoke.service';
 import { forkJoin } from 'rxjs';
 
@@ -18,7 +18,6 @@ import { forkJoin } from 'rxjs';
     styleUrls: ['neo3-invoke.component.scss']
 })
 export class PopupNoticeNeo3InvokeComponent implements OnInit {
-    public net: string = '';
     public dataJson: any = {};
     public rateCurrency = '';
     public txSerialize = '';
@@ -47,6 +46,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
     public canSend = false;
 
     public signAddress;
+    public n3Network: RpcNetwork;
 
     constructor(
         private aRoute: ActivatedRoute,
@@ -60,6 +60,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
         private notification: NotificationService
     ) {
         this.signAddress = this.neon.address;
+        this.n3Network = this.global.n3Network;
     }
 
     ngOnInit(): void {
@@ -76,7 +77,6 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                     hostname: undefined,
                 };
                 this.pramsData = params;
-                this.net = this.global.net;
                 this.pramsData.invokeArgs = this.neo3Invoke.createInvokeInputs(this.pramsData);
                 this.invokeArgs.push({
                     ...this.neo3Invoke.createInvokeInputs(this.pramsData)
@@ -146,7 +146,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 this.neon.walletArr.findIndex(item => item.accounts[0].address === this.neon.wallet.accounts[0].address)
             ]
             try {
-                this.tx = this.tx.sign(wif, NEO3_MAGIC_NUMBER[this.net]);
+                this.tx = this.tx.sign(wif, this.global.n3Network.magicNumber);
             } catch (error) {
                 console.log(error);
             }
@@ -189,8 +189,8 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 ID: this.messageID
             });
             const setData = {};
-            setData[`N3${this.net}TxArr`] = await this.chrome.getLocalStorage(`N3${this.net}TxArr`) || [];
-            setData[`N3${this.net}TxArr`].push(txHash);
+            setData[`N3${this.global.n3Network.network}TxArr`] = await this.chrome.getLocalStorage(`N3${this.global.n3Network.network}TxArr`) || [];
+            setData[`N3${this.global.n3Network.network}TxArr`].push(txHash);
             this.chrome.setLocalStorage(setData);
             this.router.navigate([{
                 outlets: {

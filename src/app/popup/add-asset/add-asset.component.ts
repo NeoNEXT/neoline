@@ -8,6 +8,7 @@ import {
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupAddTokenDialogComponent } from '@popup/_dialogs';
+import { NetworkType } from '../_lib';
 
 @Component({
     templateUrl: 'add-asset.component.html',
@@ -21,6 +22,8 @@ export class PopupAddAssetComponent implements OnInit {
 
     sourceScrollHeight = 0;
 
+    network: NetworkType;
+
     constructor(
         private asset: AssetState,
         private chrome: ChromeService,
@@ -30,8 +33,9 @@ export class PopupAddAssetComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
+        this.network = this.neon.currentWalletChainType === 'Neo2' ? this.global.n2Network.network : this.global.n3Network.network;
         this.chrome
-            .getWatch(this.neon.address, this.neon.currentWalletChainType)
+            .getWatch(this.neon.address, this.neon.currentWalletChainType, this.network)
             .subscribe((res) => (this.watch = res));
     }
 
@@ -49,7 +53,8 @@ export class PopupAddAssetComponent implements OnInit {
                     this.chrome.setWatch(
                         this.neon.address,
                         this.watch,
-                        this.neon.currentWalletChainType
+                        this.neon.currentWalletChainType,
+                        this.network
                     );
                     this.global.snackBarTip('addSucc');
                 }

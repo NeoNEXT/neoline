@@ -11,13 +11,10 @@
                 <span class="popup-nav-logo">
                     <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
                 </span>
-                <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
-                    {{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}
+                <button mat-stroked-button class="popup-nav-network">
+                    {{ n2Network.name }}
                     <span class="popup-nav-network-icon"></span>
                 </button>
-                <mat-menu #menu="matMenu">
-                    <button mat-menu-item>{{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}</button>
-                </mat-menu>
                 <img class="close" (click)="exit()" src="/assets/images/dialog/close.png" alt="">
             </mat-toolbar>
         </div>
@@ -27,7 +24,7 @@
                     <span></span>
                     <span>INVOKE-MULTI</span>
                 </div>
-                <div class="invoke-title">NEO {{ net }} {{ 'ChainSmartContractDeploy' | translate | async }}</div>
+                <div class="invoke-title">NEO {{ n2Network.network }} {{ 'ChainSmartContractDeploy' | translate | async }}</div>
                 <div class="detail-tab-content">
                     <mat-tab-group mat-align-tabs="center" >
                         <mat-tab [label]="'details' | translate | async">

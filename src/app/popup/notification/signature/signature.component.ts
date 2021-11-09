@@ -4,6 +4,7 @@ import { NeonService, ChromeService, GlobalService } from '@/app/core';
 import { ERRORS, requestTarget } from '@/models/dapi';
 import { wallet, u } from '@cityofzion/neon-js';
 import { randomBytes } from 'crypto';
+import { RpcNetwork } from '../../_lib';
 
 @Component({
     templateUrl: './signature.component.html',
@@ -11,7 +12,7 @@ import { randomBytes } from 'crypto';
 })
 export class PopupNoticeSignComponent implements OnInit {
     public address: string;
-    public net: string;
+    public n2Network: RpcNetwork;
     public message: string;
     private messageID = 0;
     constructor(
@@ -19,7 +20,9 @@ export class PopupNoticeSignComponent implements OnInit {
         private neon: NeonService,
         private chrome: ChromeService,
         private global: GlobalService
-    ) {}
+    ) {
+        this.n2Network = this.global.n2Network;
+    }
 
     ngOnInit() {
         this.address = this.neon.address;
@@ -33,7 +36,6 @@ export class PopupNoticeSignComponent implements OnInit {
                     ID: this.messageID,
                 });
             };
-            this.net = this.global.net;
         });
     }
 

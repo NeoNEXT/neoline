@@ -11,7 +11,7 @@ import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { map } from 'rxjs/operators';
 import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
-import { GasFeeSpeed } from '../../_lib/type';
+import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { bignumber } from 'mathjs';
 
 
@@ -22,7 +22,7 @@ import { bignumber } from 'mathjs';
 })
 export class PopupNoticeInvokeComponent implements OnInit {
 
-    public net: string = '';
+    public n2Network: RpcNetwork;
     public dataJson: any = {};
     public feeMoney = '0';
     public rateCurrency = '';
@@ -61,6 +61,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
         private assetState: AssetState,
         private txState: TransactionState
     ) {
+        this.n2Network = this.global.n2Network;
         this.signAddress = this.neon.address;
     }
 
@@ -68,14 +69,6 @@ export class PopupNoticeInvokeComponent implements OnInit {
         this.aRoute.queryParams.subscribe(async (params: any) => {
             this.pramsData = JSON.parse(JSON.stringify(params));
             this.messageID = params.messageID;
-            if (params.network !== undefined) {
-                if (params.network === 'MainNet') {
-                    this.global.modifyNet('MainNet');
-                } else {
-                    this.global.modifyNet('TestNet');
-                }
-            }
-            this.net = this.global.net;
             for (const key in this.pramsData) {
                 if (Object.prototype.hasOwnProperty.call(this.pramsData, key)) {
                     let tempObject: any
@@ -272,8 +265,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     ID: this.messageID
                 });
                 const setData = {};
-                setData[`${this.net}TxArr`] = await this.chrome.getLocalStorage(`${this.net}TxArr`) || [];
-                setData[`${this.net}TxArr`].push('0x' + transaction.hash);
+                setData[`${this.n2Network.network}TxArr`] = await this.chrome.getLocalStorage(`${this.n2Network.network}TxArr`) || [];
+                setData[`${this.n2Network.network}TxArr`].push('0x' + transaction.hash);
                 this.chrome.setLocalStorage(setData);
                 this.router.navigate([{
                     outlets: {

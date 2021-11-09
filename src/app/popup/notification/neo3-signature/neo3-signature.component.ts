@@ -5,6 +5,7 @@ import { randomBytes } from 'crypto';
 import { wallet, u } from '@cityofzion/neon-core-neo3';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { ERRORS } from '@/models/dapi';
+import { RpcNetwork } from '../../_lib';
 
 @Component({
     templateUrl: './neo3-signature.component.html',
@@ -12,7 +13,7 @@ import { ERRORS } from '@/models/dapi';
 })
 export class PopupNoticeNeo3SignComponent implements OnInit {
     public address: string;
-    public net: string;
+    public n3Network: RpcNetwork;
     public message: string;
     private messageID = 0;
     constructor(
@@ -23,6 +24,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
     ) {}
 
     ngOnInit() {
+        this.n3Network = this.global.n3Network;
         this.address = this.neon.address;
         this.aRouter.queryParams.subscribe((params: any) => {
             this.messageID = params.messageID;
@@ -34,7 +36,6 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
                     ID: this.messageID,
                 });
             };
-            this.net = this.global.net;
         });
     }
 

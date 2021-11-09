@@ -17,7 +17,7 @@ import { rpc } from '@cityofzion/neon-js';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import { bignumber } from 'mathjs';
-import { GasFeeSpeed } from '../../_lib/type';
+import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { STORAGE_NAME } from '../../_lib';
 
 @Component({
@@ -42,7 +42,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public symbol: string = '';
     public amount: string = '0';
     public remark: string = '';
-    private network: string = '';
+    public n2Network: RpcNetwork;
     public loading = false;
     public loadingMsg: string;
     public wallet: any;
@@ -53,7 +53,6 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     private broadcastOverride = false;
     private messageID = 0;
 
-    public net: string;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -68,6 +67,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     ) {}
 
     ngOnInit(): void {
+        this.n2Network = this.global.n2Network;
         this.rateCurrency = this.asset.rateCurrency;
         this.fromAddress = this.neon.address;
         this.wallet = this.neon.wallet;
@@ -104,13 +104,6 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                     ID: this.messageID,
                 });
             };
-            if (params.network === 'MainNet') {
-                this.global.modifyNet('MainNet');
-            } else {
-                this.global.modifyNet('TestNet');
-            }
-            this.net = this.global.net;
-            this.network = params.network || 'MainNet';
             this.toAddress = params.toAddress || '';
             this.assetId = params.asset || '';
             this.amount = params.amount || 0;
@@ -312,11 +305,11 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                     ID: this.messageID,
                 });
                 const setData = {};
-                setData[`${this.network}TxArr`] =
+                setData[`${this.n2Network.network}TxArr`] =
                     (await this.chrome.getLocalStorage(
-                        `${this.network}TxArr`
+                        `${this.n2Network.network}TxArr`
                     )) || [];
-                setData[`${this.network}TxArr`].push('0x' + tx.hash);
+                setData[`${this.n2Network.network}TxArr`].push('0x' + tx.hash);
                 this.chrome.setLocalStorage(setData);
                 this.router.navigate([
                     {
@@ -340,7 +333,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     }
 
     public pushTransaction(transaction: object) {
-        const net = this.net;
+        const net = this.n2Network.network;
         const address = this.fromAddress;
         const assetId = this.assetId;
         this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((res) => {

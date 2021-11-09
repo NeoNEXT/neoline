@@ -82,7 +82,6 @@ export class PopupTransferConfirmComponent implements OnInit {
                 this.datajson[key] = this.data[key];
             }
         }
-        this.net = this.global.net;
         this.getSymbol();
         this.getAssetRate();
     }

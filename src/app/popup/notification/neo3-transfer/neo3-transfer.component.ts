@@ -16,8 +16,8 @@ import { requestTargetN3 } from '@/models/dapi_neo3';
 import { rpc } from '@cityofzion/neon-core-neo3/lib';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
-import { GasFeeSpeed } from '../../_lib/type';
-import { NEO3_MAGIC_NUMBER, STORAGE_NAME } from '../../_lib';
+import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
+import { STORAGE_NAME } from '../../_lib';
 import { Neo3TransferService } from '../../transfer/neo3-transfer.service';
 import { bignumber } from 'mathjs';
 
@@ -57,7 +57,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
     public systemFeeMoney;
     public networkFeeMoney;
 
-    public net: string;
+    public n3Network: RpcNetwork;
     public canSend = false;
     constructor(
         private router: Router,
@@ -74,6 +74,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
         private globalService: GlobalService
     ) {
         this.rpcClient = new rpc.RPCClient(this.globalService.n3Network.rpcUrl);
+        this.n3Network = this.global.n3Network;
     }
 
     ngOnInit(): void {
@@ -113,7 +114,6 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
                     ID: this.messageID,
                 });
             };
-            this.net = this.global.net;
             this.toAddress = params.toAddress || '';
             this.assetId = params.asset || '';
             this.amount = params.amount || 0;
@@ -193,7 +193,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
                     )
                 ];
             try {
-                transaction.sign(wif, NEO3_MAGIC_NUMBER[this.net]);
+                transaction.sign(wif, this.global.n3Network.magicNumber);
             } catch (error) {
                 console.log(error);
             }
@@ -249,11 +249,11 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
                     ID: this.messageID,
                 });
                 const setData = {};
-                setData[`N3${this.net}TxArr`] =
+                setData[`N3${this.n3Network.network}TxArr`] =
                     (await this.chrome.getLocalStorage(
-                        `N3${this.net}TxArr`
+                        `N3${this.n3Network.network}TxArr`
                     )) || [];
-                setData[`N3${this.net}TxArr`].push(TxHash);
+                setData[`N3${this.n3Network.network}TxArr`].push(TxHash);
                 this.chrome.setLocalStorage(setData);
                 this.router.navigate([
                     {
@@ -278,7 +278,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
     }
 
     public pushTransaction(transaction: object) {
-        const net = this.net;
+        const net = this.n3Network.network;
         const address = this.fromAddress;
         const assetId = this.assetId;
         this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((res) => {
