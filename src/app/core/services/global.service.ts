@@ -68,6 +68,18 @@ export class GlobalService {
             });
     }
 
+    modifyNetworkRpc(chainType: ChainType, index: number) {
+        if (chainType === 'Neo2') {
+            this.n2SelectedNetworkIndex = index;
+            this.n2Network = this.n2Networks[index];
+            this.chromeSer.setStorage(STORAGE_NAME.n2SelectedNetworkIndex, index);
+        } else {
+            this.n3SelectedNetworkIndex = index;
+            this.n3Network = this.n3Networks[index];
+            this.chromeSer.setStorage(STORAGE_NAME.n3SelectedNetworkIndex, index);
+        }
+    }
+
     public push404(error: string) {
         this.source404.next(error);
     }
