@@ -260,6 +260,9 @@
     "thSignTitle": {
         "message": "This app is requesting your signature."
     },
+    "thSignTxTitle": {
+        "message": "This app is requesting you to sign the transaction."
+    },
     "signing": {
         "message": "Signing"
     },

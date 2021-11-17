@@ -1,0 +1,52 @@
+<div class="transfer-confirm-container">
+    <div class="container">
+        <div class="mat-toolbar-fixed no-third-party-toolbar">
+            <mat-toolbar color="primary">
+                <span class="popup-nav-logo">
+                    <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
+                </span>
+                <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
+                    {{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}
+                    <span class="popup-nav-network-icon"></span>
+                </button>
+                <mat-menu #menu="matMenu">
+                    <button mat-menu-item>{{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}</button>
+                </mat-menu>
+                <img class="close" (click)="cancel()" src="/assets/images/dialog/close.png" alt="">
+            </mat-toolbar>
+        </div>
+        <div class="transfer-confirm-body">
+            <mat-toolbar>
+                <div>
+                    <img class="avatar" [avatar]="address">
+                    <span>{{ address  }}</span>
+                </div>
+            </mat-toolbar>
+            <div class="transfer-detail-container">
+                <div class="type-box">
+                    <span></span>
+                    <span>SIGNTRANSACTION</span>
+                </div>
+                <div class="asset-info-box">
+                    {{ 'thSignTxTitle' | translate | async}}
+                </div>
+                <div class="detail-tab-content">
+                    <p class="item-tip" *ngIf="magicNumber">Magic Number</p>
+                    <p class="json" *ngIf="magicNumber">{{ magicNumber }}</p>
+                    <p class="item-tip">{{ 'transaction' | translate | async}}</p>
+                    <div class="item-value">
+                        <pre>{{ txJson | json }}</pre>
+                    </div>
+                    <p class="item-tip">HEX</p>
+                    <p class="json">{{ serializeTx }}</p>
+                </div>
+                <hr>
+                <div class="btn-box">
+                    <button mat-flat-button (click)="cancel()">{{ 'cancel' | translate | async}}</button>
+                    <button mat-flat-button (click)="signature()"
+                        color="primary">{{ 'yes' | translate | async}}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

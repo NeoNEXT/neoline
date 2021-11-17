@@ -81,6 +81,7 @@ window.addEventListener('message', async (e) => {
         case requestTargetN3.Send:
         case requestTargetN3.VerifyMessage:
         case requestTargetN3.SignMessage:
+        case requestTargetN3.SignTransaction:
             {
                 getLocalStorage('chainType', async (res) => {
                     let currChainType = res;

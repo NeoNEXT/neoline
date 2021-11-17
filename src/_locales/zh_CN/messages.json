@@ -260,6 +260,9 @@
     "thSignTitle": {
         "message": "这个应用正在请求你的签名。"
     },
+    "thSignTxTitle": {
+        "message": "这个应用正在请求你签名该交易。"
+    },
     "signing": {
         "message": "正在签名"
     },
