@@ -8,7 +8,7 @@ import {
 } from '../common/index';
 import { requestTarget, Account, ERRORS } from '../common/data_module_neo2';
 import { getWalletType } from '../common/utils';
-import { DEFAULT_N2_RPC_NETWORK, DEFAULT_N3_RPC_NETWORK } from '../common/constants';
+import { DEFAULT_N2_RPC_NETWORK, DEFAULT_N3_RPC_NETWORK, Neo2ChainId, Neo3ChainId, DEFAULT_NETWORKS } from '../common/constants';
 
 declare var chrome: any;
 
@@ -63,10 +63,15 @@ window.addEventListener('message', async (e) => {
                 if (res === 'Neo2') {
                     getLocalStorage('n2Networks', (n2Networks) => {
                         getLocalStorage('n2SelectedNetworkIndex', (n2SelectedNetworkIndex) => {
-                            const n2Network = n2Networks === undefined ? DEFAULT_N2_RPC_NETWORK[0] : n2Networks[n2SelectedNetworkIndex];
+                            const n2Network = n2SelectedNetworkIndex === undefined ? DEFAULT_N2_RPC_NETWORK[0] : n2Networks[n2SelectedNetworkIndex];
+                            const returnData = {
+                                chainId: Neo2ChainId[n2Network.network],
+                                networks: DEFAULT_NETWORKS,
+                                defaultNetwork: n2Network.network
+                            };
                             window.postMessage({
                                 return: requestTarget.Networks,
-                                data: n2Network,
+                                data: returnData,
                                 ID: e.data.ID
                             }, '*');
                         })
@@ -74,10 +79,15 @@ window.addEventListener('message', async (e) => {
                 } else {
                     getLocalStorage('n3Networks', (n3Networks) => {
                         getLocalStorage('n3SelectedNetworkIndex', (n3SelectedNetworkIndex) => {
-                            const n3Network = n3Networks === undefined ? DEFAULT_N3_RPC_NETWORK[0] : n3Networks[n3SelectedNetworkIndex];
+                            const n3Network = n3SelectedNetworkIndex === undefined ? DEFAULT_N3_RPC_NETWORK[0] : n3Networks[n3SelectedNetworkIndex];
+                            const returnData = {
+                                chainId: Neo3ChainId[n3Network.network],
+                                networks: DEFAULT_NETWORKS,
+                                defaultNetwork: `N3${n3Network.network}`
+                            };
                             window.postMessage({
                                 return: requestTarget.Networks,
-                                data: n3Network,
+                                data: returnData,
                                 ID: e.data.ID
                             }, '*');
                         })

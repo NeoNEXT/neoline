@@ -72,10 +72,12 @@ export class GlobalService {
         if (chainType === 'Neo2') {
             this.n2SelectedNetworkIndex = index;
             this.n2Network = this.n2Networks[index];
+            this.chromeSer.setStorage(STORAGE_NAME.n2Networks, this.n2Networks);
             this.chromeSer.setStorage(STORAGE_NAME.n2SelectedNetworkIndex, index);
         } else {
             this.n3SelectedNetworkIndex = index;
             this.n3Network = this.n3Networks[index];
+            this.chromeSer.setStorage(STORAGE_NAME.n3Networks, this.n3Networks);
             this.chromeSer.setStorage(STORAGE_NAME.n3SelectedNetworkIndex, index);
         }
     }

@@ -7,6 +7,20 @@ export enum ChainType {
     Neo3 = 'Neo3'
 }
 
+export enum Neo2ChainId {
+    MainNet = 1,
+    TestNet = 2,
+    PrivateNet = 5,
+}
+
+export enum Neo3ChainId {
+    MainNet = 3,
+    TestNet = 4,
+    PrivateNet = 6,
+}
+
+export const DEFAULT_NETWORKS = ['MainNet', 'TestNet', 'N3MainNet', 'N3TestNet'];
+
 export enum WitnessScope {
     None = 0,
     CalledByEntry = 1,
