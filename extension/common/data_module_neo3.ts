@@ -42,6 +42,7 @@ export interface Signers {
 
 export interface N3BalanceRequest {
     contracts: string[];
+    address: string;
 }
 
 export interface N3AddressToScriptHash {
@@ -53,7 +54,7 @@ export interface N3ScriptHashToAddress {
 }
 
 export interface N3BalanceArgs {
-    params: N3BalanceRequest;
+    params: N3BalanceRequest[];
     network?: string;
 }
 export interface N3TransactionArgs {

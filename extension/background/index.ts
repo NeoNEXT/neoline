@@ -17,11 +17,13 @@ import {
     setStorage,
     notification,
     httpPost,
-    httpGet,
+    httpPostPromise,
     setLocalStorage,
-    getLocalStorage
+    getLocalStorage,
+    getAssetSymbol,
+    getAssetDecimal
 } from '../common';
-import { mainApi, RPC, ChainType, ChainId, Network, WitnessScope } from '../common/constants';
+import { ChainType, WitnessScope, DEFAULT_N2_RPC_NETWORK, DEFAULT_N3_RPC_NETWORK, RpcNetwork, NEO, GAS, NEO3, GAS3 } from '../common/constants';
 import {
     requestTarget, GetBalanceArgs, ERRORS,
     EVENT, AccountPublicKey, GetBlockInputArgs,
@@ -29,19 +31,18 @@ import {
     SendArgs
 } from '../common/data_module_neo2';
 import {
-    N3ApplicationLogArgs, N3BalanceArgs, N3GetBlockInputArgs,
+    N3ApplicationLogArgs, N3GetBlockInputArgs,
     N3GetStorageArgs, N3InvokeArgs, N3InvokeMultipleArgs,
-    N3InvokeReadArgs, N3InvokeReadMultiArgs, N3SendArgs , N3TransactionArgs,
-    N3VerifyMessageArgs, requestTargetN3
+    N3InvokeReadArgs, N3SendArgs , N3TransactionArgs,
+    N3VerifyMessageArgs, requestTargetN3, N3BalanceArgs
 } from '../common/data_module_neo3';
-import { base64Encode, getNetwork, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getReqHeaderNetworkType, getScriptHashFromAddress, getWalletType, hexstring2str, sign, str2hexstring } from '../common/utils';
-import randomBytes = require('randomBytes');
+import { base64Encode, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getScriptHashFromAddress, getWalletType, hexstring2str, str2hexstring } from '../common/utils';
 import {
     u as u3,
     wallet as wallet3
 } from '@cityofzion/neon-core-neo3/lib';
-import { bignumber } from 'mathjs';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
+import BigNumber from 'bignumber.js';
 
 /**
  * Background methods support.
@@ -50,7 +51,8 @@ import { wallet as wallet2 } from '@cityofzion/neon-js';
 declare var chrome;
 
 let currLang = 'en';
-let currNetwork = 'MainNet';
+let currN2Network: RpcNetwork = DEFAULT_N2_RPC_NETWORK[0];
+let currN3Network: RpcNetwork = DEFAULT_N3_RPC_NETWORK[0];
 let currChainId = 1;
 let tabCurr: any;
 let currChain = 'Neo2';
@@ -66,16 +68,28 @@ export function expand() {
 (function init() {
     setInterval(async () => {
         let chainType = await getLocalStorage('chainType', () => { });
+        const n3Networks = await getLocalStorage('n3Networks', () => { });
+        const n2Networks = await getLocalStorage('n2Networks', () => { });
+        const n3SelectedNetworkIndex = await getLocalStorage('n3SelectedNetworkIndex', () => { });
+        const n2SelectedNetworkIndex = await getLocalStorage('n2SelectedNetworkIndex', () => { });
+        if (n2Networks && n2SelectedNetworkIndex !== undefined) {
+            currN2Network = n2Networks[n2SelectedNetworkIndex];
+        }
+        if (n3Networks && n3SelectedNetworkIndex !== undefined) {
+            currN3Network = n3Networks[n3SelectedNetworkIndex];
+        }
         if (!chainType) {
             chainType = await getWalletType();
         };
-        const newLocal = 'TestNet';
-        let rpcUrl = RPC[chainType][newLocal];
-        const network: Network = getNetwork(currChainId);
+        currChain = chainType;
+        let rpcUrl;
+        let network;
         if (chainType === ChainType.Neo2) {
-            rpcUrl = RPC[chainType][currNetwork];
+            network = n2Networks[n2SelectedNetworkIndex].network;
+            rpcUrl = n2Networks[n2SelectedNetworkIndex].rpcUrl;
         } else if (chainType === ChainType.Neo3) {
-            rpcUrl = RPC[chainType][currNetwork];
+            network = n3Networks[n3SelectedNetworkIndex].network;
+            rpcUrl = n3Networks[n3SelectedNetworkIndex].rpcUrl;
         }
         setTimeout(async () => {
             let oldHeight = await getLocalStorage(`${chainType}_${network}BlockHeight`, () => { }) || 0;
@@ -128,77 +142,67 @@ export function expand() {
             }, '*')
         }, 0);
         if(chainType === ChainType.Neo2) {
-            const txArr = await getLocalStorage(`${currNetwork}TxArr`, (temp) => { }) || [];
+            const txArr = await getLocalStorage(`${currN2Network.network}TxArr`, () => { }) || [];
             if (txArr.length === 0) {
                 return;
             }
-            httpPost(`${mainApi}/v1/neo2/txids_valid`, { txids: txArr }, (txConfirmData) => {
-                if (txConfirmData.status === 'success') {
-                    const txConfirms = txConfirmData.data || [];
-                    txConfirms.forEach(item => {
-                        const tempIndex = txArr.findIndex(e => e === item);
-                        if (tempIndex >= 0) {
-                            txArr.splice(tempIndex, 1);
-                        }
-                        httpGet(`${mainApi}/v1/neo2/transaction/${item}`, (txDetail) => {
-                            if (txDetail.status === 'success') {
-                                windowCallback({
-                                    data: {
-                                        chainId: currChainId,
-                                        txid: item,
-                                        blockHeight: txDetail.data.block_index,
-                                        blockTime: txDetail.data.block_time,
-                                    },
-                                    return: EVENT.TRANSACTION_CONFIRMED
-                                });
-                            }
-                        }, {
-                            Network: getReqHeaderNetworkType(currNetwork)
-                        });
-                    });
+            let tempTxArr = [...txArr];
+            txArr.forEach(txid => {
+                const data = {
+                    jsonrpc: '2.0',
+                    method: 'getrawtransaction',
+                    params: [txid, 1],
+                    id: 1,
                 };
-                const setData = {};
-                setData[`${currNetwork}TxArr`] = txArr;
-                setLocalStorage(setData);
-            }, {
-                Network: getReqHeaderNetworkType(currNetwork)
-            });
+                httpPost(currN2Network.rpcUrl, data, (res) => {
+                    if (res?.result?.blocktime) {
+                        windowCallback({
+                            data: {
+                                chainId: currChainId,
+                                txid,
+                                blockHeight: res?.result?.blockindex,
+                                blockTime: res?.result?.blocktime,
+                            },
+                            return: EVENT.TRANSACTION_CONFIRMED
+                        });
+                        const setData = {};
+                        tempTxArr = tempTxArr.filter(item => item !== txid);
+                        setData[`${currN2Network.network}TxArr`] = tempTxArr;
+                        setLocalStorage(setData);
+                    }
+                })
+            })
         } else if(chainType === ChainType.Neo3) {
-            const txArr = await getLocalStorage(`${currNetwork}TxArr`, (temp) => { }) || [];
+            const txArr = await getLocalStorage(`${currN3Network.network}TxArr`, () => { }) || [];
             if (txArr.length === 0) {
                 return;
             }
-            httpPost(`${mainApi}/v1/neo3/hash_valid`, { hashes: txArr }, (txConfirmData) => {
-                if (txConfirmData.status === 'success') {
-                    const txConfirms = txConfirmData.data || [];
-                    txConfirms.forEach(item => {
-                        const tempIndex = txArr.findIndex(e => e === item);
-                        if (tempIndex >= 0) {
-                            txArr.splice(tempIndex, 1);
-                        }
-                        httpGet(`${mainApi}/v1/neo3/dapi/transaction/${item}`, (txDetail) => {
-                            if (txDetail.status === 'success') {
-                                windowCallback({
-                                    data: {
-                                        chainId: currChainId,
-                                        txid: item,
-                                        blockHeight: txDetail.data.block_index,
-                                        blockTime: txDetail.data.block_time,
-                                    },
-                                    return: EVENT.TRANSACTION_CONFIRMED
-                                });
-                            }
-                        }, {
-                            Network: getReqHeaderNetworkType(currNetwork)
-                        });
-                    });
+            let tempTxArr = [...txArr];
+            txArr.forEach(txid => {
+                const data = {
+                    jsonrpc: '2.0',
+                    method: 'getrawtransaction',
+                    params: [txid, true],
+                    id: 1,
                 };
-                const setData = {};
-                setData[`${currNetwork}TxArr`] = txArr;
-                setLocalStorage(setData);
-            }, {
-                Network: getReqHeaderNetworkType(currNetwork)
-            });
+                httpPost(currN3Network.rpcUrl, data, (res) => {
+                    if (res?.result?.blocktime) {
+                        windowCallback({
+                            data: {
+                                chainId: currChainId,
+                                txid,
+                                blockHeight: res?.result?.blockindex,
+                                blockTime: res?.result?.blocktime,
+                            },
+                            return: EVENT.TRANSACTION_CONFIRMED
+                        });
+                        const setData = {};
+                        tempTxArr = tempTxArr.filter(item => item !== txid);
+                        setData[`${currN3Network.network}TxArr`] = tempTxArr;
+                        setLocalStorage(setData);
+                    }
+                })
+            })
         }
     }, 8000);
 
@@ -242,8 +246,8 @@ export function setPopup(lang) {
     }
 }
 
-export function setNetwork(network, chainId, chainType) {
-    currNetwork = network;
+export function setNetwork(chainId, chainType) {
+    // currNetwork = network;
     currChainId = chainId;
     currChain = chainType;
 }
@@ -359,53 +363,106 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
         case requestTarget.Balance: {
             const parameter = request.parameter as GetBalanceArgs;
-            const postData = [];
             let params = [];
             if (parameter.params instanceof Array) {
                 params = parameter.params
             } else {
                 params.push(parameter.params)
             }
-            params.forEach(item => {
-                const assetIds = [];
-                const symbols = [];
-                (item.assets || []).forEach((asset: string) => {
-                    try {
-                        if (asset.startsWith('0x') && asset.length === 66) {
-                            asset = asset.substring(2);
-                        }
-                        hexstring2str(asset);
-                        if (asset.length === 64) {
-                            assetIds.push(`0x${asset}`);
-                        }
-                        if (asset.length === 40) {
-                            assetIds.push(asset)
-                        }
-                    } catch (error) {
-                        symbols.push(asset);
+            const nativeBalanceReqs = [];
+            const nep5BalanceReqs = [];
+            const utxoReqs = [];
+            for (const item of params) {
+                (item.assets || []).forEach((asset: string, index) => {
+                    if (asset.toLowerCase() === 'neo') {
+                        item.assets[index] = NEO;
+                    }
+                    if (asset.toLowerCase() === 'gas') {
+                        item.assets[index] = GAS;
                     }
                 });
-                const pushData = {
-                    address: item.address,
-                    asset_ids: assetIds,
-                    symbols,
-                    fetch_utxo: item.fetchUTXO || false
+                const nativeData = {
+                    jsonrpc: '2.0',
+                    method: 'getaccountstate',
+                    params: [item.address],
+                    id: 1,
                 };
-                postData.push(pushData);
-            });
-            httpPost(`${mainApi}/v1/neo2/address/balances`, { params: postData }, (response) => {
-                if (response.status === 'success') {
-                    const returnData = response.data;
-                    for (const key in returnData) {
-                        if (Object.prototype.hasOwnProperty.call(returnData, key)) {
-                            if (returnData[key]) {
-                                returnData[key].map(item => {
-                                    item.assetID = item.asset_id;
-                                    item.asset_id = undefined;
-                                    return item;
-                                })
+                const nep5Data = { ...nativeData, method: 'getnep5balances' };
+                const nativeReq = httpPostPromise(currN2Network.rpcUrl, nativeData);
+                const nepReq = httpPostPromise(currN2Network.rpcUrl, nep5Data);
+                nativeBalanceReqs.push(nativeReq);
+                nep5BalanceReqs.push(nepReq);
+                if (item.fetchUTXO) {
+                    const utxoData = { ...nativeData, method: 'getunspents' };
+                    const utxoReq = httpPostPromise(currN2Network.rpcUrl, utxoData);
+                    utxoReqs.push(utxoReq);
+                }
+            }
+            try {
+                Promise.all(nativeBalanceReqs.concat(nep5BalanceReqs).concat(utxoReqs)).then(async res => {
+                    const returnData = {};
+                    let i = 0;
+                    let j = nativeBalanceReqs.length;
+                    let k = j * 2;
+                    for (const item of params) {
+                        returnData[item.address] = [];
+                        for (const assetId of item?.assets || []) {
+                            const res_1 = (res[i]?.balances || []).find(asset_1 => assetId.includes(asset_1.asset));
+                            const res_2 = (res[j]?.balance || []).find(asset_2 => assetId.includes(asset_2.asset_hash));
+                            const assetRes = { assetID: assetId, amount: '0', symbol: '' };
+                            let symbol = '';
+                            if (res_1) {
+                                if (assetId === NEO) {
+                                    symbol = 'NEO';
+                                }
+                                if (assetId === GAS) {
+                                    symbol = 'GAS';
+                                }
+                                assetRes.amount = res_1.value;
+                            }
+                            if (res_2) {
+                                symbol = await getAssetSymbol(assetId, currN2Network.rpcUrl);
+                                const decimal = await getAssetDecimal(assetId, currN2Network.rpcUrl);
+                                assetRes.amount = new BigNumber(res_2.amount).shiftedBy(-decimal).toFixed();
+                            }
+                            assetRes.symbol = symbol;
+                            returnData[item.address].push(assetRes);
+                        }
+                        if (!item.assets || item.assets.length === 0) {
+                            for (const res_1 of (res[i].balances || [])) {
+                                let symbol = '';
+                                if (res_1.asset === NEO) {
+                                    symbol = 'NEO';
+                                }
+                                if (res_1.asset === GAS) {
+                                    symbol = 'GAS';
+                                }
+                                const assetRes = { assetID: res_1.asset, amount: res_1.value, symbol };
+                                returnData[item.address].push(assetRes);
+                            }
+                            for (const res_2 of (res[j]?.balance || [])) {
+                                const symbol = await getAssetSymbol(res_2.asset_hash, currN2Network.rpcUrl);
+                                const decimal = await getAssetDecimal(res_2.asset_hash, currN2Network.rpcUrl);
+                                const amount = new BigNumber(res_2.amount).shiftedBy(-decimal).toFixed();
+                                const assetRes = { assetID: res_2.asset_hash, amount, symbol }
+                                returnData[item.address].push(assetRes);
                             }
                         }
+                        if (res[k] && res[k].address === item.address) {
+                            res[k].balance.forEach(utxoAsset => {
+                                const assetIndex = returnData[item.address].findIndex(assetItem =>
+                                    assetItem.assetID.includes(utxoAsset.asset_hash));
+                                if (assetIndex >= 0) {
+                                    returnData[item.address][assetIndex].unspent = utxoAsset.unspent.map(uxtoItem => {
+                                        uxtoItem.asset_id = utxoAsset.asset_hash;
+                                        return uxtoItem;
+                                    });
+                                }
+                            })
+                            k++;
+                        }
+                        i++;
+                        j++;
                     }
                     windowCallback({
                         return: requestTarget.Balance,
@@ -414,31 +471,33 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         error: null
                     });
                     sendResponse('');
-                } else {
-                    windowCallback({
-                        return: requestTarget.Balance,
-                        data: null,
-                        ID: request.ID,
-                        error: ERRORS.RPC_ERROR
-                    });
-                    sendResponse('');
-                }
-            }, {
-                Network: getReqHeaderNetworkType(parameter.network)
-            });
+                })
+            } catch (error) {
+                windowCallback({
+                    return: requestTarget.Balance,
+                    data: null,
+                    ID: request.ID,
+                    error: ERRORS.RPC_ERROR
+                });
+                sendResponse('');
+            }
             return;
         }
         case requestTarget.Transaction: {
             try {
                 const parameter = request.parameter;
-                const url = `${mainApi}/v1/neo2/transaction/${parameter.txid}`;
-                httpGet(url, (response) => {
-                    if (response.status === 'success') {
-                        const returnData = response.data;
+                const data = {
+                    jsonrpc: '2.0',
+                    method: 'getrawtransaction',
+                    params: [parameter.txid, 1],
+                    id: 1,
+                };
+                httpPost(currN2Network.rpcUrl, data, (res) => {
+                    if (res?.result?.blocktime) {
                         windowCallback({
                             return: requestTarget.Transaction,
                             ID: request.ID,
-                            data: returnData,
+                            data: res.result,
                             error: null
                         });
                     } else {
@@ -449,14 +508,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                             error: ERRORS.DEFAULT
                         });
                     }
-                }, {
-                    Network: getReqHeaderNetworkType(parameter.network)
-                });
+                })
             } catch (error) {
                 windowCallback({
                     return: requestTarget.Transaction,
                     data: null,
-                    ID: request.parameter.ID,
+                    ID: request.ID,
                     error
                 });
             }
@@ -466,7 +523,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         case requestTarget.Block: {
             try {
                 const parameter = request.parameter as GetBlockInputArgs;
-                const nodeUrl = RPC.Neo2[parameter.network];
+                const nodeUrl = currN2Network.rpcUrl;
                 httpPost(nodeUrl, {
                     jsonrpc: '2.0',
                     method: 'getblock',
@@ -495,7 +552,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         case requestTarget.ApplicationLog: {
             try {
                 const parameter = request.parameter as TransactionInputArgs;
-                const nodeUrl = RPC.Neo2[parameter.network];
+                const nodeUrl = currN2Network.rpcUrl;
                 httpPost(nodeUrl, {
                     jsonrpc: '2.0',
                     method: 'getapplicationlog',
@@ -524,7 +581,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         case requestTarget.Storage: {
             try {
                 const parameter = request.parameter as GetStorageArgs;
-                const nodeUrl = RPC.Neo2[parameter.network];
+                const nodeUrl = currN2Network.rpcUrl;
                 httpPost(nodeUrl, {
                     jsonrpc: '2.0',
                     method: 'getstorage',
@@ -551,7 +608,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             return;
         }
         case requestTarget.InvokeRead: {
-            const nodeUrl = RPC.Neo2[request.parameter.network];
+            const nodeUrl = currN2Network.rpcUrl;
             request.parameter = [request.parameter.scriptHash, request.parameter.operation, request.parameter.args];
             const args = request.parameter[2];
             args.forEach((item, index) => {
@@ -609,7 +666,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         case requestTarget.InvokeReadMulti: {
             try {
-                const nodeUrl = RPC.Neo2[request.parameter.network];
+                const nodeUrl = currN2Network.rpcUrl;
                 const requestData = request.parameter;
                 requestData.invokeReadArgs.forEach((invokeReadItem: any, index) => {
                     invokeReadItem.args.forEach((item, itemIndex) => {
@@ -699,7 +756,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 tabCurr = tabs;
             });
             const params = request.parameter;
-            getStorage('connectedWebsites', (res) => {
+            getStorage('connectedWebsites', () => {
                 let queryString = '';
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
@@ -721,7 +778,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 tabCurr = tabs;
             });
             const params = request.parameter;
-            getStorage('connectedWebsites', (res) => {
+            getStorage('connectedWebsites', () => {
                 let queryString = '';
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
@@ -745,7 +802,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 tabCurr = tabs;
             });
             const params = request.parameter;
-            getStorage('connectedWebsites', (res) => {
+            getStorage('connectedWebsites', () => {
                 let queryString = '';
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
@@ -763,23 +820,74 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         case requestTarget.Send: {
             const parameter = request.parameter as SendArgs;
-            const assetID = parameter.asset.length < 10 ? '' : parameter.asset;
+            let assetID = parameter.asset.length < 10 ? '' : parameter.asset;
             const symbol = parameter.asset.length >= 10 ? '' : parameter.asset;
-            httpGet(`${mainApi}/v1/neo2/address/assets?address=${parameter.fromAddress}`, (resBalance) => {
-                let enough = true; // Have enough money
-                let hasAsset = false;  // This address has this asset
-                const assets = (resBalance.data.asset as []).concat(resBalance.data.nep5 || []) as any;
-                for (const asset of assets) {
-                    if (asset.asset_id === assetID || String(asset.symbol).toLowerCase() === symbol.toLowerCase()) {
-                        hasAsset = true;
-                        request.parameter.asset = asset.asset_id;
-                        if (bignumber(asset.balance).comparedTo(bignumber(parameter.amount)) < 0) {
-                            enough = false;
-                        }
-                        break;
+            const data = {
+                jsonrpc: '2.0',
+                method: 'getnep5balances',
+                params: [parameter.fromAddress],
+                id: 1,
+            };
+            let isNep5 = true;
+            if (assetID === NEO || assetID === GAS || symbol.toLowerCase() === 'neo' || symbol.toLowerCase() === 'gas') {
+                if (symbol.toLowerCase() === 'neo') {
+                    assetID = NEO;
+                }
+                if (symbol.toLowerCase() === 'gas') {
+                    assetID = GAS;
+                }
+                request.parameter.asset = assetID;
+                isNep5 = false;
+                data.method = 'getaccountstate';
+            }
+            httpPost(currN2Network.rpcUrl, data, async (res) => {
+                let assetBalance;
+                if (res?.result?.balances && isNep5 === false) {
+                    const tempAsset = res?.result?.balances.find(item => assetID.includes(item.asset));
+                    if (tempAsset) {
+                        assetBalance = tempAsset.value;
                     }
                 }
-                if (enough && hasAsset) {
+                if (res?.result?.balance && isNep5 === true) {
+                    const tempAsset = res?.result?.balance.find(item => assetID.includes(item.asset_hash));
+                    if (tempAsset) {
+                        assetBalance = tempAsset.amount;
+                    }
+                }
+                if (assetBalance === undefined) {
+                    windowCallback({
+                        return: requestTarget.Send,
+                        error: ERRORS.INSUFFICIENT_FUNDS,
+                        ID: request.ID
+                    });
+                    sendResponse('');
+                    return;
+                }
+                if (isNep5) {
+                    const decimalsData = {
+                        jsonrpc: '2.0',
+                        id: 1,
+                        method: 'invokefunction',
+                        params: [assetID, 'decimals'],
+                    };
+                    const decimalsRes: any = await httpPostPromise(currN2Network.rpcUrl, decimalsData);
+                    let decimals = 0;
+                    if (decimalsRes?.result?.stack) {
+                        if (decimalsRes?.result.stack[0].type === 'Integer') {
+                            decimals = Number(
+                                decimalsRes?.result.stack[0].value || 0
+                            );
+                        }
+                        if (decimalsRes?.result.stack[0].type === 'ByteArray') {
+                            decimals = new BigNumber(
+                                decimalsRes?.result.stack[0].value || 0,
+                                16
+                            ).toNumber();
+                        }
+                    }
+                    assetBalance = new BigNumber(assetBalance).shiftedBy(-decimals);
+                }
+                if (new BigNumber(assetBalance).comparedTo(new BigNumber(parameter.amount)) >= 0) {
                     let queryString = '';
                     for (const key in parameter) {
                         if (parameter.hasOwnProperty(key)) {
@@ -814,9 +922,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     sendResponse('');
                     return;
                 }
-            }, {
-                Network: getReqHeaderNetworkType(request.parameter.network)
-            });
+            })
             return true;
         }
         case requestTarget.Deploy: {
@@ -827,7 +933,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 tabCurr = tabs;
             });
             const params = request.parameter;
-            getStorage('connectedWebsites', (res) => {
+            getStorage('connectedWebsites', () => {
                 let queryString = '';
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
@@ -844,62 +950,88 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
         // neo3 dapi method
         case requestTargetN3.Balance: {
-            try {
-                // const parameter = request.parameter as N3BalanceArgs;
-                const currWallet = await getLocalStorage('wallet', () => { });
-                const address = currWallet.accounts[0].address;
-                if (!wallet3.isAddress(address)) {
-                    return;
-                };
-                const postData = [
-                    {
-                        address,
-                        contracts: []
+            const parameter = request.parameter as N3BalanceArgs;
+            const params = parameter.params;
+            const balanceReqs = [];
+            for (const item of params) {
+                (item.contracts || []).forEach((asset: string, index) => {
+                    if (asset.toLowerCase() === 'neo') {
+                        item.contracts[index] = NEO3;
                     }
-                ];
-                httpPost(`${mainApi}/v1/neo3/address/balances`, { params: postData }, (response) => {
-                    if (response.status === 'success') {
-                        const returnData = response.data;
-                        windowCallback({
-                            return: requestTargetN3.Balance,
-                            ID: request.ID,
-                            data: returnData,
-                            error: null
-                        });
-                    } else {
-                        windowCallback({
-                            return: requestTargetN3.Balance,
-                            data: null,
-                            ID: request.ID,
-                            error: ERRORS.DEFAULT
-                        });
+                    if (asset.toLowerCase() === 'gas') {
+                        item.contracts[index] = GAS3;
                     }
-                    sendResponse('');
-                }, {
-                    Network: getReqHeaderNetworkType(request.parameter.network)
                 });
+                const reqData = {
+                    jsonrpc: '2.0',
+                    method: 'getnep17balances',
+                    params: [item.address],
+                    id: 1,
+                };
+                const tempReq = httpPostPromise(currN3Network.rpcUrl, reqData);
+                balanceReqs.push(tempReq);
+            }
+            try {
+                Promise.all(balanceReqs).then(async res => {
+                    const returnData = {};
+                    let i = 0;
+                    for (const item of params) {
+                        returnData[item.address] = [];
+                        for (const assetId of item?.contracts || []) {
+                            const res_1 = (res[i]?.balance || []).find(asset_1 => assetId.includes(asset_1.assethash));
+                            const symbol = await getAssetSymbol(assetId, currN3Network.rpcUrl);
+                            const assetRes = { assetID: assetId, amount: '0', symbol };
+                            if (res_1) {
+                                const decimal = await getAssetDecimal(assetId, currN3Network.rpcUrl);
+                                assetRes.amount = new BigNumber(res_1.amount).shiftedBy(-decimal).toFixed();
+                            }
+                            returnData[item.address].push(assetRes);
+                        }
+                        if (!item.contracts || item.contracts.length === 0) {
+                            for (const res_1 of (res[i]?.balance || [])) {
+                                const symbol = await getAssetSymbol(res_1.assethash, currN3Network.rpcUrl);
+                                const decimal = await getAssetDecimal(res_1.assethash, currN3Network.rpcUrl);
+                                const amount = new BigNumber(res_1.amount).shiftedBy(-decimal).toFixed();
+                                const assetRes = { assetID: res_1.assethash, amount, symbol }
+                                returnData[item.address].push(assetRes);
+                            }
+                        }
+                        i++;
+                    }
+                    windowCallback({
+                        return: requestTargetN3.Balance,
+                        ID: request.ID,
+                        data: returnData,
+                        error: null
+                    });
+                    sendResponse('');
+                })
             } catch (error) {
                 windowCallback({
                     return: requestTargetN3.Balance,
                     data: null,
-                    ID: request.parameter.ID,
-                    error: ERRORS.DEFAULT
+                    ID: request.ID,
+                    error: ERRORS.RPC_ERROR
                 });
                 sendResponse('');
             }
-            return true;
+            return;
         }
         case requestTargetN3.Transaction: {
             try {
                 const parameter = request.parameter as N3TransactionArgs;
-                const url = `${mainApi}/v1/neo3/dapi/transaction/${parameter.txid}`;
-                httpGet(url, (response) => {
-                    if (response.status === 'success') {
-                        const returnData = response.data;
+                const data = {
+                    jsonrpc: '2.0',
+                    method: 'getrawtransaction',
+                    params: [parameter.txid, true],
+                    id: 1,
+                };
+                httpPost(currN3Network.rpcUrl, data, (res) => {
+                    if (res?.result?.blocktime) {
                         windowCallback({
                             return: requestTargetN3.Transaction,
                             ID: request.ID,
-                            data: returnData,
+                            data: res.result,
                             error: null
                         });
                     } else {
@@ -911,14 +1043,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         });
                     }
                     sendResponse('');
-                }, {
-                    Network: getReqHeaderNetworkType(request.parameter.network)
-                });
+                })
             } catch (error) {
                 windowCallback({
                     return: requestTargetN3.Transaction,
                     data: null,
-                    ID: request.parameter.ID,
+                    ID: request.ID,
                     error
                 });
                 sendResponse('');
@@ -1072,7 +1202,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         case requestTargetN3.InvokeReadMulti: {
             try {
                 const requestData = request.parameter;
-                const nodeUrl = RPC.Neo3[requestData.network];
+                const nodeUrl = currN3Network.rpcUrl;
                 const signers = requestData.signers.map(item => {
                     return {
                         account: item.account,
@@ -1169,7 +1299,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 tabCurr = tabs;
             });
             const params = request.parameter;
-            getStorage('connectedWebsites', (res) => {
+            getStorage('connectedWebsites', () => {
                 let queryString = '';
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
@@ -1208,7 +1338,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     params.signers[0].scopes = WitnessScope.CalledByEntry;
                 }
             };
-            getStorage('connectedWebsites', async (res) => {
+            getStorage('connectedWebsites', async () => {
                 const storageName = `InvokeArgsArray`;
                 const saveData = {};
                 const invokeArgsArray = await getLocalStorage(storageName, () => {}) || [];
@@ -1249,7 +1379,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     params.signers[0].scopes = WitnessScope.CalledByEntry;
                 }
             };
-            getStorage('connectedWebsites', async (res) => {
+            getStorage('connectedWebsites', async () => {
                 let queryString = '';
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
@@ -1275,50 +1405,25 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         case requestTargetN3.Send: {
             const parameter = request.parameter as N3SendArgs;
-            const assetID = parameter.asset.length < 10 ? '' : parameter.asset;
+            let assetID = parameter.asset.length < 10 ? '' : parameter.asset;
             const symbol = parameter.asset.length >= 10 ? '' : parameter.asset;
-            httpGet(`${mainApi}/v1/neo3/address/assets?address=${parameter.fromAddress}`, (resBalance) => {
-                let enough = true; // 有足够的钱
-                let hasAsset = false;  // 该地址有这个资产
-                const assets = resBalance.data;
-                for (let index = 0; index < assets.length; index++) {
-                    if (assets[index].contract === assetID || String(assets[index].symbol).toLowerCase() === symbol.toLowerCase()) {
-                        hasAsset = true;
-                        parameter.asset = assets[index].contract;
-                        if (bignumber(assets[index].balance).comparedTo(bignumber(parameter.amount)) < 0) {
-                            enough = false;
-                        }
-                        break;
-                    }
-                }
-                if (enough && hasAsset) {
-                    let queryString = '';
-                    for (const key in parameter) {
-                        if (parameter.hasOwnProperty(key)) {
-                            const value = parameter[key];
-                            queryString += `${key}=${value}&`;
-                        }
-                    }
-                    chrome.tabs.query({
-                        active: true,
-                        currentWindow: true
-                    }, (tabs) => {
-                        tabCurr = tabs;
-                    });
-                    getLocalStorage('wallet', (wallet) => {
-                        if (wallet !== undefined && wallet.accounts[0].address !== parameter.fromAddress) {
-                            windowCallback({
-                                return: requestTargetN3.Send,
-                                error: ERRORS.MALFORMED_INPUT,
-                                ID: request.ID
-                            });
-                            sendResponse('');
-                        } else {
-                            window.open(`index.html#popup/notification/neo3-transfer?${queryString}messageID=${request.ID}`,
-                                '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
-                        }
-                    });
-                } else {
+            if (symbol.toLowerCase() === 'neo') {
+                assetID = NEO3;
+            }
+            if (symbol.toLowerCase() === 'gas') {
+                assetID = GAS3;
+            }
+            request.parameter.asset = assetID;
+            const data = {
+                jsonrpc: '2.0',
+                method: 'getnep17balances',
+                params: [parameter.fromAddress],
+                id: 1,
+            };
+            httpPost(currN3Network.rpcUrl, data, (res) => {
+                console.log(res);
+                const index = res?.result?.balance ? res?.result?.balance.findIndex(item => assetID.includes(item.assethash)) : -1;
+                if (index < 0) {
                     windowCallback({
                         return: requestTargetN3.Send,
                         error: ERRORS.INSUFFICIENT_FUNDS,
@@ -1327,8 +1432,66 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     sendResponse('');
                     return;
                 }
-            }, {
-                Network: getReqHeaderNetworkType(request.parameter.network)
+                let assetBalance = res?.result?.balance[index].amount;
+                const decimalsData = {
+                    jsonrpc: '2.0',
+                    id: 1,
+                    method: 'invokefunction',
+                    params: [assetID, 'decimals'],
+                };
+                httpPost(currN3Network.rpcUrl, decimalsData, (decimalsRes) => {
+                    let decimals = 0;
+                    if (decimalsRes?.result.stack) {
+                        if (decimalsRes?.result.stack[0].type === 'Integer') {
+                            decimals = Number(
+                                decimalsRes?.result.stack[0].value || 0
+                            );
+                        }
+                        if (decimalsRes?.result.stack[0].type === 'ByteArray') {
+                            decimals = new BigNumber(
+                                decimalsRes?.result.stack[0].value || 0,
+                                16
+                            ).toNumber();
+                        }
+                    }
+                    assetBalance = new BigNumber(assetBalance).shiftedBy(-decimals);
+                    if (assetBalance.comparedTo(new BigNumber(parameter.amount)) >= 0) {
+                        let queryString = '';
+                        for (const key in parameter) {
+                            if (parameter.hasOwnProperty(key)) {
+                                const value = parameter[key];
+                                queryString += `${key}=${value}&`;
+                            }
+                        }
+                        chrome.tabs.query({
+                            active: true,
+                            currentWindow: true
+                        }, (tabs) => {
+                            tabCurr = tabs;
+                        });
+                        getLocalStorage('wallet', (wallet) => {
+                            if (wallet !== undefined && wallet.accounts[0].address !== parameter.fromAddress) {
+                                windowCallback({
+                                    return: requestTargetN3.Send,
+                                    error: ERRORS.MALFORMED_INPUT,
+                                    ID: request.ID
+                                });
+                                sendResponse('');
+                            } else {
+                                window.open(`index.html#popup/notification/neo3-transfer?${queryString}messageID=${request.ID}`,
+                                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                            }
+                        });
+                    } else {
+                        windowCallback({
+                            return: requestTargetN3.Send,
+                            error: ERRORS.INSUFFICIENT_FUNDS,
+                            ID: request.ID
+                        });
+                        sendResponse('');
+                        return;
+                    }
+                })
             });
             return true;
         }
@@ -1363,7 +1526,7 @@ export function windowCallback(data) {
         // tabCurr = tabs;
         if (tabs.length > 0) {
             tabs.forEach(item => {
-                chrome.tabs.sendMessage(item.id, data, (response) => {
+                chrome.tabs.sendMessage(item.id, data, () => {
                     // tabCurr = null;
                 });
             })

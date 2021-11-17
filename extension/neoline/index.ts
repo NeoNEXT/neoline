@@ -8,6 +8,7 @@ import {
 } from '../common/index';
 import { requestTarget, Account, ERRORS } from '../common/data_module_neo2';
 import { getWalletType } from '../common/utils';
+import { DEFAULT_N2_RPC_NETWORK, DEFAULT_N3_RPC_NETWORK } from '../common/constants';
 
 declare var chrome: any;
 
@@ -58,15 +59,31 @@ window.addEventListener('message', async (e) => {
             return;
         }
         case requestTarget.Networks: {
-            getStorage('net', async (res) => {
-                getStorage('network',  (result) => {
-                    window.postMessage({
-                        return: requestTarget.Networks,
-                        data: result,
-                        ID: e.data.ID
-                    }, '*');
-                });
-            });
+            getLocalStorage('chainType', async (res) => {
+                if (res === 'Neo2') {
+                    getLocalStorage('n2Networks', (n2Networks) => {
+                        getLocalStorage('n2SelectedNetworkIndex', (n2SelectedNetworkIndex) => {
+                            const n2Network = n2Networks === undefined ? DEFAULT_N2_RPC_NETWORK[0] : n2Networks[n2SelectedNetworkIndex];
+                            window.postMessage({
+                                return: requestTarget.Networks,
+                                data: n2Network,
+                                ID: e.data.ID
+                            }, '*');
+                        })
+                    })
+                } else {
+                    getLocalStorage('n3Networks', (n3Networks) => {
+                        getLocalStorage('n3SelectedNetworkIndex', (n3SelectedNetworkIndex) => {
+                            const n3Network = n3Networks === undefined ? DEFAULT_N3_RPC_NETWORK[0] : n3Networks[n3SelectedNetworkIndex];
+                            window.postMessage({
+                                return: requestTarget.Networks,
+                                data: n3Network,
+                                ID: e.data.ID
+                            }, '*');
+                        })
+                    })
+                }
+            })
             return;
         }
         case requestTarget.Account: {

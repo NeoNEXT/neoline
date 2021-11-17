@@ -5,7 +5,6 @@ import BN = require('bn.js');
 
 import SHA256 =  require('crypto-js/sha256');
 import hexEncoding = require('crypto-js/enc-hex');
-import { ChainId, Network, ReqHeaderNetworkType } from './constants';
 import { getLocalStorage } from '../common';
 import { tx, wallet as wallet3} from '@cityofzion/neon-core-neo3';
 
@@ -256,36 +255,6 @@ export function isPublicKey(key, encoded) {
         return false;
     } catch (e) {
         return false;
-    }
-}
-
-export function getNetwork (chainId: ChainId) {
-    switch (chainId) {
-        case ChainId.Neo2MainNet:
-            return Network.Neo2MainNet;
-        case ChainId.Neo2TestNet:
-            return Network.Neo2TestNet;
-        case ChainId.N3MainNet:
-            return Network.N3MainNet;
-        case ChainId.N3TestNet:
-            return Network.N3TestNet;
-        default:
-            Error(`unsupport: ${chainId}`);
-            break;
-    }
-}
-
-export function getReqHeaderNetworkType (network: string) {
-    switch (network) {
-        case Network.Neo2MainNet:
-        case Network.N3MainNet:
-            return ReqHeaderNetworkType.mainnet;
-        case Network.Neo2TestNet:
-        case Network.N3TestNet:
-            return ReqHeaderNetworkType.testnet;
-        default:
-            Error(`unsupport: ${network}`);
-            break;
     }
 }
 

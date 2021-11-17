@@ -8,8 +8,8 @@ import {
 } from '../common/index';
 import { ERRORS } from '../common/data_module_neo2';
 import { requestTargetN3 } from '../common/data_module_neo3';
-import { ChainId, Network, RPC } from '../common/constants';
-import { getNetwork, getWalletType } from '../common/utils';
+import { DEFAULT_N3_RPC_NETWORK } from '../common/constants';
+import { getWalletType } from '../common/utils';
 
 declare var chrome: any;
 
@@ -88,15 +88,16 @@ window.addEventListener('message', async (e) => {
                         currChainType = await getWalletType();
                     };
                     if (currChainType === 'Neo3') {
-                        getStorage('network', (result) => {
-                            // let chainId = result || ChainId.N3TestNet;
-                            const network = getNetwork(result.chainId) || Network.N3TestNet;
-                            e.data.parameter.network = network;
-                            e.data.nodeUrl = RPC.Neo3[network];
-                            chrome.runtime.sendMessage(e.data, (response) => {
-                                return Promise.resolve('Dummy response to keep the console quiet');
-                            });
-                        });
+                        getLocalStorage('n3Networks', (n3Networks) => {
+                            getLocalStorage('n3SelectedNetworkIndex', (n3SelectedNetworkIndex) => {
+                                const n3Network = n3Networks === undefined ? DEFAULT_N3_RPC_NETWORK[0] : n3Networks[n3SelectedNetworkIndex];
+                                e.data.parameter.network = n3Network.network;
+                                e.data.nodeUrl = n3Network.rpcUrl;
+                                chrome.runtime.sendMessage(e.data, (response) => {
+                                    return Promise.resolve('Dummy response to keep the console quiet');
+                                });
+                            })
+                        })
                         return;
                     } else {
                         window.postMessage({
