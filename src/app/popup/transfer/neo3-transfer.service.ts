@@ -78,15 +78,7 @@ export class Neo3TransferService {
                 operation: 'transfer',
                 args: [
                     sc.ContractParam.hash160(inputs.toAccountAddress),
-                    sc.ContractParam.byteArray(
-                        u.hex2base64(
-                            u.reverseHex(
-                                u.BigInteger.fromNumber(
-                                    params.nftTokenId
-                                ).toHex()
-                            )
-                        )
-                    ),
+                    sc.ContractParam.byteArray(u.hex2base64(params.nftTokenId)),
                     sc.ContractParam.any(null),
                 ],
             });
