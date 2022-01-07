@@ -668,7 +668,7 @@ export class ChromeService {
     }
 
     public getRateCurrency(): Observable<string> {
-        const defaultCurrency = 'CNY';
+        const defaultCurrency = 'USD';
         if (!this.check) {
             try {
                 return of(localStorage.getItem('rateCurrency') || defaultCurrency);
