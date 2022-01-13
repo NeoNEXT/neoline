@@ -208,7 +208,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
             this.creating = false;
             this.global.snackBarTip('verifyFailed', error);
             this.chrome.windowCallback({
-                error: ERRORS.DEFAULT,
+                error: { ...ERRORS.DEFAULT, description: error?.message || error },
                 return: requestTargetN3.Send,
                 ID: this.messageID,
             });
@@ -269,7 +269,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
                 this.loadingMsg = '';
                 this.creating = false;
                 this.chrome.windowCallback({
-                    error: ERRORS.RPC_ERROR,
+                    error: { ...ERRORS.RPC_ERROR, description: err?.message || err },
                     return: requestTargetN3.Send,
                     ID: this.messageID,
                 });

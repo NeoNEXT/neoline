@@ -157,7 +157,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
             this.loadingMsg = '';
             this.global.snackBarTip('verifyFailed', error);
             this.chrome.windowCallback({
-                error: ERRORS.DEFAULT,
+                error: { ...ERRORS.DEFAULT, description: error?.message || error },
                 return: requestTargetN3.Invoke,
                 ID: this.messageID
             });
@@ -201,7 +201,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
-                error: ERRORS.RPC_ERROR,
+                error: { ...ERRORS.RPC_ERROR, description: err?.message || err },
                 return: requestTargetN3.Invoke,
                 ID: this.messageID
             });

@@ -104,7 +104,7 @@ export class PopupNoticeDeployComponent implements OnInit {
             this.loadingMsg = '';
             this.global.snackBarTip('verifyFailed', error);
             this.chrome.windowCallback({
-                error: ERRORS.DEFAULT,
+                error: { ...ERRORS.DEFAULT, description: error?.message || error },
                 return: requestTarget.Deploy,
                 ID: this.messageID
             });
@@ -155,7 +155,7 @@ export class PopupNoticeDeployComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
-                error: ERRORS.RPC_ERROR,
+                error: { ...ERRORS.RPC_ERROR, description: err?.message || err },
                 return: requestTarget.Deploy,
                 ID: this.messageID
             });
@@ -292,7 +292,7 @@ export class PopupNoticeDeployComponent implements OnInit {
                     return;
                 }
                 this.chrome.windowCallback({
-                    error: ERRORS.MALFORMED_INPUT,
+                    error: { ...ERRORS.MALFORMED_INPUT, description: err?.message || err },
                     return: requestTarget.Deploy,
                     ID: this.messageID
                 });

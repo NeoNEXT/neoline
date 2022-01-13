@@ -212,7 +212,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.loadingMsg = '';
             this.global.snackBarTip('verifyFailed', error);
             this.chrome.windowCallback({
-                error: ERRORS.DEFAULT,
+                error: { ...ERRORS.DEFAULT, description: error?.message || error },
                 return: requestTarget.Invoke,
                 ID: this.messageID
             });
@@ -230,7 +230,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
-                error: ERRORS.RPC_ERROR,
+                error: { ...ERRORS.RPC_ERROR, description: error?.message || error },
                 return: requestTarget.Invoke,
                 ID: this.messageID
             });
@@ -280,7 +280,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
-                error: ERRORS.RPC_ERROR,
+                error: { ...ERRORS.RPC_ERROR, description: err?.message || err },
                 return: requestTarget.Invoke,
                 ID: this.messageID
             });
@@ -322,7 +322,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                             newTx = await this.addAttachedAssets(NEO, this.attachedAssets.NEO, fromScript, toScript, newTx);
                         } catch (error) {
                             this.chrome.windowCallback({
-                                error: ERRORS.MALFORMED_INPUT,
+                                error: { ...ERRORS.INSUFFICIENT_FUNDS, description: error },
                                 return: requestTarget.Invoke,
                                 ID: this.messageID
                             });
@@ -556,7 +556,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     return;
                 }
                 this.chrome.windowCallback({
-                    error: ERRORS.MALFORMED_INPUT,
+                    error: { ...ERRORS.MALFORMED_INPUT, description: err?.message || err },
                     return: requestTarget.Invoke,
                     ID: this.messageID
                 });

@@ -203,7 +203,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             this.loadingMsg = '';
             this.global.snackBarTip('verifyFailed', error);
             this.chrome.windowCallback({
-                error: ERRORS.DEFAULT,
+                error: { ...ERRORS.DEFAULT, description: error?.message || error },
                 return: requestTarget.InvokeMulti,
                 ID: this.messageID
             });
@@ -234,7 +234,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.loading = false;
                 this.loadingMsg = '';
                 this.chrome.windowCallback({
-                    error: ERRORS.RPC_ERROR,
+                    error: { ...ERRORS.RPC_ERROR, description: error?.message || error },
                     return: requestTarget.InvokeMulti,
                     ID: this.messageID
                 });
@@ -283,7 +283,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.loading = false;
                 this.loadingMsg = '';
                 this.chrome.windowCallback({
-                    error: ERRORS.RPC_ERROR,
+                    error: { ...ERRORS.RPC_ERROR, description: err?.message || err },
                     return: requestTarget.InvokeMulti,
                     ID: this.messageID
                 });
@@ -345,7 +345,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                                 });
                             } catch (error) {
                                 this.chrome.windowCallback({
-                                    error: ERRORS.MALFORMED_INPUT,
+                                    error: { ...ERRORS.MALFORMED_INPUT, description: error?.message || error },
                                     return: requestTarget.InvokeMulti,
                                     ID: this.messageID
                                 });
@@ -361,7 +361,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                                 });
                             } catch (error) {
                                 this.chrome.windowCallback({
-                                    error: ERRORS.MALFORMED_INPUT,
+                                    error: { ...ERRORS.MALFORMED_INPUT, description: error?.message || error },
                                     return: requestTarget.InvokeMulti,
                                     ID: this.messageID
                                 });
@@ -610,7 +610,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                     return;
                 }
                 this.chrome.windowCallback({
-                    error: ERRORS.MALFORMED_INPUT,
+                    error: { ...ERRORS.MALFORMED_INPUT, description: err?.message || err },
                     return: requestTarget.InvokeMulti,
                     ID: this.messageID
                 });

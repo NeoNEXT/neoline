@@ -77,15 +77,7 @@ export class Neo3TransferService {
                 operation: 'transfer',
                 args: [
                     sc.ContractParam.hash160(inputs.toAccountAddress),
-                    sc.ContractParam.byteArray(
-                        u.hex2base64(
-                            u.reverseHex(
-                                u.BigInteger.fromNumber(
-                                    params.nftTokenId
-                                ).toHex()
-                            )
-                        )
-                    ),
+                    sc.ContractParam.byteArray(u.hex2base64(params.nftTokenId)),
                     sc.ContractParam.any(null),
                 ],
             });
@@ -196,8 +188,9 @@ export class Neo3TransferService {
         async function checkBalance() {
             let balanceResponse;
             try {
-                balanceResponse = await assetStateTemp
-                    .getAddressBalances(inputs.fromAccountAddress);
+                balanceResponse = await assetStateTemp.getAddressBalances(
+                    inputs.fromAccountAddress
+                );
             } catch (e) {
                 console.log(
                     '\u001b[31m  ✗ Unable to get balances as plugin was not available. \u001b[0m'
