@@ -133,7 +133,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         })
     }
 
-    private async resolveSign() {
+    private async resolveSign(sendNow = false) {
         this.loading = true;
         this.loadingMsg = 'Wait';
         if (this.tx === null) {
@@ -150,6 +150,9 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             }
             this.txSerialize = this.tx.serialize(true);
             this.loading = false
+            if (sendNow) {
+                this.resolveSend();
+            }
         } catch (error) {
             this.loading = false;
             this.loadingMsg = '';
@@ -236,7 +239,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             this.signTx();
             window.close();
         } else {
-            this.resolveSend();
+            this.signTx(true);
         }
         const saveData = this.invokeArgsArray.filter(item => item.messageID !== this.messageID);
         this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, saveData);
@@ -262,7 +265,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         })
     }
 
-    private signTx() {
+    private signTx(sendNow = false) {
         setTimeout(() => {
             this.loading = true;
             this.neo3Invoke.createNeo3Tx({
@@ -271,6 +274,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 networkFee: this.fee,
                 systemFee: this.pramsData.extraSystemFee
             }).subscribe(async (unSignTx: Transaction)  => {
+                const hasChangeFee = unSignTx.systemFee.toString() !== this.systemFee || unSignTx.networkFee.toString() !== this.networkFee;
                 this.systemFee = unSignTx.systemFee.toString();
                 this.networkFee = unSignTx.networkFee.toString();
                 this.tx = unSignTx;
@@ -278,7 +282,12 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 const isEnoughFee = await this.neo3Invoke.isEnoughFee(this.neon.address, unSignTx.systemFee, unSignTx.networkFee);
                 if (isEnoughFee) {
                     this.canSend = true;
-                    this.resolveSign();
+                    if (sendNow && hasChangeFee) {
+                        this.loading = false;
+                        this.global.snackBarTip('SystemFeeHasChanged');
+                    } else {
+                        this.resolveSign(sendNow);
+                    }
                 } else {
                     this.loading = false;
                     this.canSend = false;

@@ -39,6 +39,7 @@ export class NotificationService {
         wrongPassword: 'Wrong password',
         InsufficientNetworkFee: 'Insufficient network fee',
         InsufficientGas: 'Insufficient GAS to pay for fees',
+        SystemFeeHasChanged: 'Note: system fee has changed, please confirm again.',
     };
     CN = {
         close: '关闭',
@@ -74,6 +75,7 @@ export class NotificationService {
         wrongPassword: '密码错误',
         InsufficientNetworkFee: '网络费不足',
         InsufficientGas: 'GAS 不足以支付费用',
+        SystemFeeHasChanged: '注意：系统费用已发生变化，请再次确认。',
     };
     constructor(public chrome: ChromeService) {
         this.content = this.EN;
