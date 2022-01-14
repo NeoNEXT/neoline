@@ -1,7 +1,7 @@
 {
     "name": "NeoLine",
     "description": "NEO thin wallet for chrome extension",
-    "version": "3.4.6",
+    "version": "3.4.7",
     "manifest_version": 2,
     "browser_action": {
         "default_popup": "index.html#popup",
