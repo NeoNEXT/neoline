@@ -385,7 +385,7 @@ export class ChromeService {
             targetValue = DEFAULT_N3_RPC_NETWORK;
         }
         if (storageName === STORAGE_NAME.rateCurrency && !value) {
-            targetValue = 'CNY';
+            targetValue = 'USD';
         }
         return targetValue;
     }

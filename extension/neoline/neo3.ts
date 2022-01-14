@@ -49,7 +49,7 @@ window.addEventListener('message', async (e) => {
         case requestTargetN3.Provider: {
             getStorage('rateCurrency', (res) => {
                 if (res === undefined) {
-                    res = 'CNY';
+                    res = 'USD';
                 }
                 const manifestData = chrome.runtime.getManifest();
                 manifestData.extra = { currency: res, theme: '' };
