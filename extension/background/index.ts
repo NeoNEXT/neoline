@@ -1313,6 +1313,28 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             sendResponse('');
             return;
         }
+        case requestTargetN3.SignTransaction: {
+            chrome.tabs.query({
+                active: true,
+                currentWindow: true
+            }, (tabs) => {
+                tabCurr = tabs;
+            });
+            const params = request.parameter;
+            getStorage('connectedWebsites', (res) => {
+                let queryString = '';
+                for (const key in params) {
+                    if (params.hasOwnProperty(key)) {
+                        const value = key === 'transaction' ? JSON.stringify(params[key]) : params[key];
+                        queryString += `${key}=${value}&`;
+                    }
+                }
+                window.open(`index.html#popup/notification/neo3-sign-transaction?${queryString}messageID=${request.ID}`,
+                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+            });
+            sendResponse('');
+            return;
+        }
         case requestTargetN3.Invoke: {
             chrome.tabs.query({
                 active: true,

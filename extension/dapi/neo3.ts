@@ -345,6 +345,17 @@ export class Init {
         }
     }
 
+
+    public signTransaction(parameter): Promise<any> {
+        if (parameter.transaction === undefined) {
+            return new Promise((_, reject) => {
+                reject(ERRORS.MALFORMED_INPUT);
+            });
+        } else {
+            return sendMessage(requestTargetN3.SignTransaction, parameter);
+        }
+    }
+
     public async send(parameter: N3SendArgs): Promise<N3SendOutput> {
         if (
             parameter === undefined ||

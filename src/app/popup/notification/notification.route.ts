@@ -17,6 +17,7 @@ import { PopupNoticeNeo3InvokeComponent } from './neo3-invoke/neo3-invoke.compon
 import { PopupNoticeNeo3InvokeMultipleComponent } from './neo3-invoke-multiple/neo3-invoke-multiple.component';
 import { PopupPickAddressComponent } from './pick-address/pick-address.component';
 import { PopupNoticeNeo3SignComponent } from './neo3-signature/neo3-signature.component';
+import { PopupNoticeNeo3SignTransactionComponent } from './neo3-sign-transaction/neo3-sign-transaction.component';
 
 const routes: Routes = [
     {
@@ -40,6 +41,7 @@ const routes: Routes = [
                     { path: 'neo3-invoke', component: PopupNoticeNeo3InvokeComponent},
                     { path: 'neo3-invoke-multiple', component: PopupNoticeNeo3InvokeMultipleComponent},
                     { path: 'neo3-signature', component: PopupNoticeNeo3SignComponent},
+                    { path: 'neo3-sign-transaction', component: PopupNoticeNeo3SignTransactionComponent},
                     { path: 'pick-address', component: PopupPickAddressComponent},
                 ]
             },
