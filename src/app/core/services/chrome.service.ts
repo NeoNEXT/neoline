@@ -397,65 +397,31 @@ export class ChromeService {
         }
     }
     public clearLogin() {
-        if (!this.check) {
-            localStorage.setItem('shouldLogin', 'true');
-            return;
-        }
-        try {
-            this.crx.setLocalStorage({
-                shouldLogin: true
-            });
-        } catch (e) {
-            console.log('clear login failed', e);
-        }
+        this.setLogin(true);
     }
     public verifyLogin() {
-        if (!this.check) {
-            localStorage.setItem('shouldLogin', 'false');
-            return;
-        }
-        try {
-            this.crx.setLocalStorage({
-                shouldLogin: false
-            });
-        } catch (e) {
-            console.log('verify login', e);
-        }
+        this.setLogin(false);
     }
-    public getLogin(): Observable<boolean> {
+    public getLogin(): boolean {
         if (!this.check) {
-            return from(new Promise<boolean>(resolve => {
-                resolve(localStorage.getItem('shouldLogin') === 'true');
-            }));
-        }
-        return from(new Promise<boolean>((resolve, reject) => {
-            try {
-                this.crx.getLocalStorage('shouldLogin', (res) => {
-                    switch (res) {
-                        case true:
-                        case false:
-                            break;
-                        default:
-                            res = false;
-                    }
-                    resolve(res);
-                });
-            } catch (e) {
-                reject('failed');
-            }
-        }));
-    }
-    public setLogin(status: string) {
-        if (!this.check) {
-            localStorage.setItem('shouldLogin', status);
+            return sessionStorage.getItem('shouldLogin') === 'true';
         } else {
-            return from(new Promise((resolve, reject) => {
-                try {
-                    this.crx.setLocalStorage({ shouldLogin: status });
-                } catch (e) {
-                    reject('failed');
-                }
-            }));
+            return this.crx.shouldLogin === true;
+        }
+    }
+    public setLogin(status: boolean) {
+        if (status === null) {
+            if (!this.check) {
+                sessionStorage.removeItem('shouldLogin');
+            } else {
+                this.crx.shouldLogin = null;
+            }
+        } else {
+            if (!this.check) {
+                sessionStorage.setItem('shouldLogin', status.toString());
+            } else {
+                this.crx.shouldLogin = status;
+            }
         }
     }
     public setLang(lang: string) {
@@ -836,11 +802,7 @@ export class ChromeService {
     }
 
     public resetWallet() {
-        if (!this.check) {
-            localStorage.setItem('shouldLogin', 'false');
-        } else {
-            this.crx.setLocalStorage({ setLocalStorage: false });
-        }
+        this.setLogin(false);
         this.setWIFArray([], 'Neo2');
         this.setWIFArray([], 'Neo3');
         this.setWalletArray([], 'Neo2');
