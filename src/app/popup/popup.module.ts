@@ -28,12 +28,14 @@ import { PopupAddAssetModule } from './add-asset/add-asset.module';
 import { PopupNotificationModule } from './notification/notification.module';
 import { TransferModule } from './transfer/transfer.module';
 import { PopupWalletModule } from './wallet/wallet.module';
+import { PopupAddNftModule } from './add-nft/add-nft.module';
 
 const POPUP_MODULES = [
     PopupAddAssetModule,
     PopupNotificationModule,
     TransferModule,
     PopupWalletModule,
+    PopupAddNftModule,
 ];
 //#endregion
 

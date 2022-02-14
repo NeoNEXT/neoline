@@ -751,5 +751,8 @@
     },
     "PublicKey": {
         "message": "Public Key"
+    },
+    "AddNEP11": {
+        "message": "Add NEP11"
     }
 }

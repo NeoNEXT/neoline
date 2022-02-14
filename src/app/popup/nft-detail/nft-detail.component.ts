@@ -1,5 +1,5 @@
 import { Component, OnInit, ViewChild } from '@angular/core';
-import { GlobalService, NftState, NeonService } from '@/app/core';
+import { GlobalService, NftState, NeonService, ChromeService } from '@/app/core';
 import { ActivatedRoute } from '@angular/router';
 import { PopupNftTxPageComponent } from './nft-tx-page/nft-tx-page.component';
 
@@ -20,7 +20,8 @@ export class PopupNftDetailComponent implements OnInit {
         private aRouter: ActivatedRoute,
         private global: GlobalService,
         private nftState: NftState,
-        private neonService: NeonService
+        private neonService: NeonService,
+        private chrome: ChromeService,
     ) {}
 
     ngOnInit(): void {
@@ -33,6 +34,11 @@ export class PopupNftDetailComponent implements OnInit {
     getNfts() {
         this.nftState.getNfts(this.neonService.address).subscribe((res: any[]) => {
             this.nft = res.find((item) => item.contract === this.nftContract);
+            if (!this.nft) {
+                this.chrome.getNftWatch(this.neonService.address, this.neonService.currentWalletChainType).subscribe(res2 => {
+                    this.nft = res2.find(m => m.contract === this.nftContract);
+                })
+            }
         });
     }
 

@@ -70,6 +70,14 @@ export interface Asset extends Balance {
     image_url: string;
     is_risk: boolean;
 }
+
+export interface NftAsset {
+    contract: string;
+    name: string;
+    symbol: string;
+    watching?: boolean;
+}
+
 export interface Transaction {
     block_time: number;
     id: number;

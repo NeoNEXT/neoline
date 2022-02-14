@@ -100,11 +100,12 @@ export class PopupHomeComponent implements OnInit {
         }
     }
 
-    showAddToken(): boolean {
+    toAdd() {
         if (this.neon.currentWalletChainType === 'Neo3' && this.selectedIndex === 1) {
-            return false;
+            this.router.navigateByUrl('/popup/add-nft');
+        } else {
+            this.router.navigateByUrl('/popup/add-asset');
         }
-        return true;
     }
 
     getAssetList() {

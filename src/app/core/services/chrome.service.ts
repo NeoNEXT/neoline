@@ -16,7 +16,7 @@ import {
 import {
     wallet as wallet3,
 } from '@cityofzion/neon-core-neo3/lib';
-import { Asset } from '@/models/models';
+import { Asset, NftAsset } from '@/models/models';
 import { EVENT, NETWORKS } from '@/models/dapi';
 import { ChainId, ChainType, NetType } from '@/app/popup/_lib';
 import { RateStorageName } from '@/app/popup/_lib/setting';
@@ -528,6 +528,74 @@ export class ChromeService {
         watch.forEach(item => delete item.balance);
         const storageName = `watch_${this.net.toLowerCase()}-${chainType}`;
         this.getAllWatch(chainType).subscribe(watchObject => {
+            const saveWatch = watchObject || {};
+            saveWatch[address] = watch;
+            if (!this.check) {
+                localStorage.setItem(storageName, JSON.stringify(saveWatch));
+                return;
+            }
+            try {
+                const saveData = {};
+                saveData[storageName]= saveWatch;
+                this.crx.setLocalStorage(saveData);
+            } catch (e) {
+                console.log('set watch failed', e);
+            }
+        })
+    }
+    public getNftWatch(address: string, chainType: ChainType): Observable<NftAsset[]> {
+        const storageName = `nft_watch_${this.net.toLowerCase()}-${chainType}`;
+        if (!this.check) {
+            try {
+                let rs = (JSON.parse(localStorage.getItem(storageName))|| {})[address] || [];
+                if (!Array.isArray(rs)) {
+                    rs = [];
+                }
+                return of(rs);
+            } catch (e) {
+                return throwError('please set watch to local storage when debug mode on');
+            }
+        } else {
+            return from(new Promise<NftAsset[]>((resolve, reject) => {
+                try {
+                    this.crx.getLocalStorage(storageName, (res) => {
+                        res = (res || {})[address] || [];
+                        if (!Array.isArray(res)) {
+                            res = [];
+                        }
+                        resolve(res);
+                    });
+                } catch (e) {
+                    reject('failed');
+                }
+            }));
+        }
+    }
+    private getAllNftWatch(chainType: ChainType): Observable<object> {
+        const storageName = `nft_watch_${this.net.toLowerCase()}-${chainType}`;
+        if (!this.check) {
+            try {
+                const rs = JSON.parse(localStorage.getItem(storageName))|| {};
+                return of(rs);
+            } catch (e) {
+                return throwError('please set watch to local storage when debug mode on');
+            }
+        } else {
+            return from(new Promise<NftAsset[]>((resolve, reject) => {
+                try {
+                    this.crx.getLocalStorage(storageName, (res) => {
+                        res = res || {};
+                        resolve(res);
+                    });
+                } catch (e) {
+                    reject('failed');
+                }
+            }));
+        }
+    }
+    public setNftWatch(address: string, watch: NftAsset[], chainType: ChainType) {
+        const storageName = `nft_watch_${this.net.toLowerCase()}-${chainType}`;
+        this.getAllNftWatch(chainType).subscribe(watchObject => {
             const saveWatch = watchObject || {};
             saveWatch[address] = watch;
             if (!this.check) {

@@ -9,7 +9,7 @@
         </div>
         <p class="asset-id">{{asset?.contract}}</p>
     </div>
-    <div class="balance">{{ asset?.balance }}</div>
+    <div class="balance">{{ asset?.balance || 0 }}</div>
 </div>
 
 <p *ngIf="!nfts || nfts?.length===0" class="no-data">
