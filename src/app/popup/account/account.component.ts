@@ -6,6 +6,8 @@ import { PopupQRCodeDialogComponent } from '@popup/_dialogs';
 import { PopupNameDialogComponent } from '@popup/_dialogs';
 
 import { GlobalService, NeonService } from '@app/core';
+import { wallet } from '@cityofzion/neon-core';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 
 @Component({
     templateUrl: 'account.component.html',
@@ -14,6 +16,7 @@ import { GlobalService, NeonService } from '@app/core';
 export class PopupAccountComponent implements OnInit {
     public address: string;
     public walletName: string;
+    public publicKey: string;
 
     constructor(
         private router: Router,
@@ -30,6 +33,19 @@ export class PopupAccountComponent implements OnInit {
         this.neon.walletSub().subscribe(() => {
             this.walletName = this.neon.wallet.name;
         });
+        this.getPublicKey();
+    }
+
+    getPublicKey() {
+        const wif =
+            this.neon.WIFArr[
+                this.neon.walletArr.findIndex(
+                    (item) => item.accounts[0].address === this.address
+                )
+            ];
+        const walletThis = this.neon.currentWalletChainType === 'Neo2' ? wallet : wallet3;
+        const privateKey = walletThis.getPrivateKeyFromWIF(wif);
+        this.publicKey = walletThis.getPublicKeyFromPrivateKey(privateKey);
     }
 
     public wif() {
@@ -73,10 +89,10 @@ export class PopupAccountComponent implements OnInit {
         }
     }
 
-    copy() {
+    copy(message: string) {
         const input = document.createElement('input');
         input.setAttribute('readonly', 'readonly');
-        input.setAttribute('value', this.address);
+        input.setAttribute('value', message);
         document.body.appendChild(input);
         input.select();
         if (document.execCommand('copy')) {

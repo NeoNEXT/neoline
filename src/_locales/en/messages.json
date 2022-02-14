@@ -748,5 +748,8 @@
     },
     "ChainSmartContractDeploy": {
         "message": "Smart Contract Invocation"
+    },
+    "PublicKey": {
+        "message": "Public Key"
     }
 }
