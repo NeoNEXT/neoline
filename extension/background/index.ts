@@ -470,7 +470,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         return: requestTarget.Block,
                         data: response.error !== undefined ? null : response.result,
                         ID: request.ID,
-                        error: response.error === undefined ? null : ERRORS.RPC_ERROR
+                        error: response.error === undefined ? null : { ...ERRORS.RPC_ERROR, description: response?.error?.message }
                     });
                     sendResponse('');
                 }, null);
@@ -499,7 +499,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         return: requestTarget.ApplicationLog,
                         data: response.error !== undefined ? null : response.result,
                         ID: request.ID,
-                        error: response.error === undefined ? null : ERRORS.RPC_ERROR
+                        error: response.error === undefined ? null : { ...ERRORS.RPC_ERROR, description: response?.error?.message }
                     });
                     sendResponse('');
                 }, null);
@@ -528,7 +528,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         return: requestTarget.Storage,
                         data: response.error !== undefined ? null : ({ result: hexstring2str(response.result) } || null),
                         ID: request.ID,
-                        error: response.error === undefined ? null : ERRORS.RPC_ERROR
+                        error: response.error === undefined ? null : { ...ERRORS.RPC_ERROR, description: response?.error?.message }
                     });
                     sendResponse('');
                 }, null);
@@ -593,7 +593,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         stack: res.result.stack
                     };
                 } else {
-                    returnRes.error = ERRORS.RPC_ERROR;
+                    returnRes.error = { ...ERRORS.RPC_ERROR, description: res?.error?.message };
                 }
                 windowCallback(returnRes);
                 sendResponse('');
@@ -654,7 +654,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                                 stack: res.result.stack
                             });
                         } else {
-                            returnRes.error = ERRORS.RPC_ERROR;
+                            returnRes.error = { ...ERRORS.RPC_ERROR, description: res?.error?.message };
                         }
                         if (requestCount === requestData.invokeReadArgs.length) {
                             windowCallback(returnRes);
@@ -931,7 +931,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         return: requestTargetN3.Block,
                         data: response.error !== undefined ? null : response.result,
                         ID: request.ID,
-                        error: response.error === undefined ? null : ERRORS.RPC_ERROR
+                        error: response.error === undefined ? null : { ...ERRORS.RPC_ERROR, description: response?.error?.message }
                     });
                     sendResponse('');
                 }, null);
@@ -959,7 +959,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         return: requestTargetN3.ApplicationLog,
                         data: response.error !== undefined ? null : response.result,
                         ID: request.ID,
-                        error: response.error === undefined ? null : ERRORS.RPC_ERROR
+                        error: response.error === undefined ? null : { ...ERRORS.RPC_ERROR, description: response?.error?.message }
                     });
                     sendResponse('');
                 }, null);
@@ -987,7 +987,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         return: requestTargetN3.Storage,
                         data: response.error !== undefined ? null : ({ result: response.result } || null),
                         ID: request.ID,
-                        error: response.error === undefined ? null : ERRORS.RPC_ERROR
+                        error: response.error === undefined ? null : { ...ERRORS.RPC_ERROR, description: response?.error?.message }
                     });
                     sendResponse('');
                 }, null);

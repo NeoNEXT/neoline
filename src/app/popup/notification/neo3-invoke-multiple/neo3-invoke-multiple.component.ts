@@ -208,7 +208,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
-                error: ERRORS.RPC_ERROR,
+                error: { ...ERRORS.RPC_ERROR, description: err?.message || err },
                 return: requestTargetN3.InvokeMultiple,
                 ID: this.messageID
             });
