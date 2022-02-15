@@ -456,4 +456,14 @@ export class AssetState {
         );
     }
     //#endregion
+
+    public getUnclaimedGas(address: string): Observable<any> {
+        const data = {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getunclaimedgas',
+            params: [address],
+        };
+        return this.http.rpcPost(this.global.Neo3RPCDomain, data);
+    }
 }

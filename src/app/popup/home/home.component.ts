@@ -23,14 +23,16 @@ import { PopupConfirmDialogComponent } from '../_dialogs';
 import { Router } from '@angular/router';
 import { rpc } from '@cityofzion/neon-core';
 import { bignumber } from 'mathjs';
-import { NEO3_CONTRACT } from '../_lib';
+import { NEO3_CONTRACT, NEO3_MAGIC_NUMBER } from '../_lib';
+import BigNumber from 'bignumber.js';
+import { Neo3TransferService } from '../transfer/neo3-transfer.service';
 
 
 @Component({
     templateUrl: 'home.component.html',
     styleUrls: ['home.component.scss']
 })
-export class PopupHomeComponent implements OnInit {
+export class PopupHomeComponent implements OnInit, OnDestroy {
     @ViewChild('txPage')
     txPageComponent: PopupTxPageComponent;
     public imageUrl: any = '';
@@ -51,6 +53,7 @@ export class PopupHomeComponent implements OnInit {
     public loading = false;
     private claimsData = null;
     private intervalClaim = null;
+    private intervalN3Claim = null;
     public showClaim = false;
     public init = false;
 
@@ -71,7 +74,8 @@ export class PopupHomeComponent implements OnInit {
         private transfer: TransferService,
         private chrome: ChromeService,
         private dialog: MatDialog,
-        private router: Router
+        private router: Router,
+        private neo3TransferService: Neo3TransferService
     ) {
         this.wallet = this.neon.wallet;
         this.rateCurrency = this.assetState.rateCurrency;
@@ -88,15 +92,19 @@ export class PopupHomeComponent implements OnInit {
 
     ngOnInit(): void {
         this.net = this.global.net;
-        if (this.neon.currentWalletChainType === 'Neo2') {
-            this.initClaim();
-        }
+        this.initClaim();
         this.getAssetList();
         this.showBackup = this.chrome.getHaveBackupTip();
         if( this.showBackup === null) {
             this.chrome.getWalletStatus(this.neon.address).subscribe(res => {
                 this.showBackup = !res;
             });
+        }
+    }
+
+    ngOnDestroy(): void {
+        if (this.intervalN3Claim) {
+            clearInterval(this.intervalN3Claim);
         }
     }
 
@@ -267,18 +275,48 @@ export class PopupHomeComponent implements OnInit {
             this.syncNow();
             return;
         }
-        this.neon.claimGAS(this.claimsData).subscribe(tx => {
-            tx.forEach(item => {
-                try {
-                    rpc.Query.sendRawTransaction(item.serialize(true)).execute(this.global.RPCDomain)
-                } catch (error) {
-                    this.loading = false;
+        if (this.neon.currentWalletChainType === 'Neo2') {
+            this.neon.claimGAS(this.claimsData).subscribe(tx => {
+                tx.forEach(item => {
+                    try {
+                        rpc.Query.sendRawTransaction(item.serialize(true)).execute(this.global.RPCDomain)
+                    } catch (error) {
+                        this.loading = false;
+                    }
+                })
+                if (this.intervalClaim === null) {
+                    this.initInterval();
                 }
-            })
-            if (this.intervalClaim === null) {
-                this.initInterval();
+            });
+        } else {
+            const params = {
+                addressFrom: this.neon.address,
+                addressTo: this.neon.address,
+                tokenScriptHash: NEO3_CONTRACT,
+                amount: 0,
+                networkFee: 0,
+                decimals: 0,
             }
-        });
+            const wif =
+            this.neon.WIFArr[
+                this.neon.walletArr.findIndex(
+                    (item) => item.accounts[0].address === this.neon.address
+                )
+            ];
+            this.neo3TransferService.createNeo3Tx(params).subscribe(tx => {
+                tx.sign(
+                    wif,
+                    NEO3_MAGIC_NUMBER[this.net]
+                );
+                this.neo3TransferService.sendNeo3Tx(tx).then(res => {
+                    this.loading = false;
+                    this.claimStatus = this.status.success;
+                    setTimeout(() => {
+                        this.initClaim();
+                    }, 20000);
+                })
+            });
+        }
     }
 
     private initInterval() {
@@ -341,21 +379,43 @@ export class PopupHomeComponent implements OnInit {
     }
 
     private initClaim() {
-        this.assetState.fetchClaim(this.neon.address).subscribe((res: any) => {
-            this.claimsData = res.claimable;
-            if (res.available > 0) {
-                this.claimNumber = res.available;
+        if (this.neon.currentWalletChainType === 'Neo2') {
+            this.assetState.fetchClaim(this.neon.address).subscribe((res: any) => {
+                this.claimsData = res.claimable;
+                if (res.available > 0) {
+                    this.claimNumber = res.available;
+                    this.showClaim = true;
+                } else if (res.unavailable > 0) {
+                    this.claimNumber = res.unavailable;
+                    this.claimStatus = this.status.estimated;
+                    this.showClaim = true;
+                } else {
+                    this.showClaim = false;
+                }
+                this.init = true;
+                this.loading = false;
+            });
+        } else {
+            this.getN3UnclaimedGas();
+            if (this.intervalN3Claim) {
+                clearInterval(this.intervalN3Claim);
+            }
+            this.intervalN3Claim = setInterval(() => {
+                this.getN3UnclaimedGas();
+            }, 15000);
+        }
+    }
+
+    getN3UnclaimedGas() {
+        this.assetState.getUnclaimedGas(this.neon.address).subscribe(res => {
+            if (res.result.unclaimed) {
+                this.claimNumber = new BigNumber(res.result.unclaimed).shiftedBy(-8).toNumber();
+                this.claimStatus = this.status.confirmed;
                 this.showClaim = true;
-            } else if (res.unavailable > 0) {
-                this.claimNumber = res.unavailable;
-                this.claimStatus = this.status.estimated;
-                this.showClaim = true;
-            } else {
-                this.showClaim = false;
             }
             this.init = true;
             this.loading = false;
-        });
+        })
     }
 
     toWeb() {
