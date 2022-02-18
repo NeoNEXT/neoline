@@ -43,7 +43,7 @@ export class NftState {
             params: [q],
         };
         const res = await this.http.rpcPost(this.global.Neo3RPCDomain, data).toPromise();
-        if (res.result) {
+        if (res.result && res.result?.manifest?.supportedstandards.includes('NEP-11')) {
             const symbol = await this.getAssetSymbol(res.result.hash).toPromise();
             const target: NftAsset = {
                 name: res.result.manifest.name,

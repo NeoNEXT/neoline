@@ -408,10 +408,13 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
 
     getN3UnclaimedGas() {
         this.assetState.getUnclaimedGas(this.neon.address).subscribe(res => {
-            if (res.result.unclaimed) {
+            if (res.result.unclaimed && res.result.unclaimed !== '0') {
                 this.claimNumber = new BigNumber(res.result.unclaimed).shiftedBy(-8).toNumber();
                 this.claimStatus = this.status.confirmed;
                 this.showClaim = true;
+            } else {
+                this.showClaim = false;
+                clearInterval(this.intervalN3Claim);
             }
             this.init = true;
             this.loading = false;
