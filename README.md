@@ -12,7 +12,7 @@ https://neoline.io/dapi
 
 ## environment
 
-We recommend node v12.10.0 and npm v6.13.0, but there are no restriction on node version and npm version.
+We recommend node v14.16.0 and npm v6.13.0, but there are no restriction on node version and npm version.
 
 ## Development
 
