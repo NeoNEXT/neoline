@@ -3,6 +3,7 @@ import { NgModule } from '@angular/core';
 
 import { PopupComponent } from '@popup/popup.component';
 import { PopupAddNftComponent } from './add-nft.component';
+import { PopupMyNftsComponent } from './my-nfts/my-nfts.component';
 
 import { PopupWalletGuard } from '@app/core';
 
@@ -15,6 +16,10 @@ const routes: Routes = [
             {
                 path: 'add-nft',
                 component: PopupAddNftComponent
+            },
+            {
+                path: 'my-nfts',
+                component: PopupMyNftsComponent
             }
         ]
     }

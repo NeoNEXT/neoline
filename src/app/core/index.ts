@@ -11,3 +11,4 @@ export { NotificationService } from './services/notification.service';
 export { SettingState } from './states/setting.state';
 export { NftState } from './states/nft.state';
 export { UtilServiceState } from './util/util.service';
+export { HomeService } from './services/home.service';

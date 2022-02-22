@@ -11,7 +11,8 @@ import {
     NeonService,
     HttpService,
     GlobalService,
-    ChromeService
+    ChromeService,
+    HomeService,
 } from '@/app/core';
 import { NEO, Balance, Asset, GAS } from '@/models/models';
 import { TransferService } from '@/app/transfer/transfer.service';
@@ -26,6 +27,8 @@ import { bignumber } from 'mathjs';
 import { NEO3_CONTRACT, NEO3_MAGIC_NUMBER } from '../_lib';
 import BigNumber from 'bignumber.js';
 import { Neo3TransferService } from '../transfer/neo3-transfer.service';
+import { interval } from 'rxjs';
+import { take } from 'rxjs/operators';
 
 
 @Component({
@@ -75,7 +78,8 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         private chrome: ChromeService,
         private dialog: MatDialog,
         private router: Router,
-        private neo3TransferService: Neo3TransferService
+        private neo3TransferService: Neo3TransferService,
+        private homeService: HomeService
     ) {
         this.wallet = this.neon.wallet;
         this.rateCurrency = this.assetState.rateCurrency;
@@ -92,6 +96,16 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
 
     ngOnInit(): void {
         this.net = this.global.net;
+        if (
+            this.neon.currentWalletChainType === 'Neo3' &&
+            this.homeService.loading &&
+            new Date().getTime() - this.homeService.claimTxTime < 20000
+        ) {
+            this.loading = this.homeService.loading;
+            this.showClaim = this.homeService.showClaim;
+            this.claimNumber = this.homeService.claimNumber;
+            this.getTxStatus();
+        }
         this.initClaim();
         this.getAssetList();
         this.showBackup = this.chrome.getHaveBackupTip();
@@ -105,6 +119,12 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     ngOnDestroy(): void {
         if (this.intervalN3Claim) {
             clearInterval(this.intervalN3Claim);
+        }
+        if (this.neon.currentWalletChainType === 'Neo3') {
+            this.homeService.claimTxTime = new Date().getTime();
+            this.homeService.claimNumber = this.claimNumber;
+            this.homeService.showClaim = this.showClaim;
+            this.homeService.loading = this.loading;
         }
     }
 
@@ -289,6 +309,9 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
                 }
             });
         } else {
+            if (this.intervalN3Claim) {
+                clearInterval(this.intervalN3Claim);
+            }
             const params = {
                 addressFrom: this.neon.address,
                 addressTo: this.neon.address,
@@ -308,15 +331,27 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
                     wif,
                     NEO3_MAGIC_NUMBER[this.net]
                 );
-                this.neo3TransferService.sendNeo3Tx(tx).then(res => {
+                this.neo3TransferService.sendNeo3Tx(tx).then((hash) => {
+                    this.homeService.claimGasHash = hash;
+                    this.getTxStatus();
+                })
+            });
+        }
+    }
+
+    getTxStatus() {
+        const queryTxInterval = interval(5000).pipe(take(5)).subscribe(() => {
+            this.homeService.getN3RawTransaction(this.homeService.claimGasHash).then((res) => {
+                if (res.result.blocktime) {
+                    queryTxInterval.unsubscribe();
                     this.loading = false;
                     this.claimStatus = this.status.success;
                     setTimeout(() => {
                         this.initClaim();
-                    }, 20000);
-                })
-            });
-        }
+                    }, 3000);
+                }
+            })
+        })
     }
 
     private initInterval() {
@@ -396,6 +431,9 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
                 this.loading = false;
             });
         } else {
+            if (this.loading && new Date().getTime() - this.homeService.claimTxTime < 20000) {
+                return;
+            }
             this.getN3UnclaimedGas();
             if (this.intervalN3Claim) {
                 clearInterval(this.intervalN3Claim);

@@ -750,9 +750,12 @@
         "message": "Smart Contract Invocation"
     },
     "PublicKey": {
-        "message": "Public Key"
+        "message": "PublicKey(encoded)"
     },
     "AddNEP11": {
         "message": "Add NEP11"
+    },
+    "myNft": {
+        "message": "My NEP11"
     }
 }

@@ -16,6 +16,7 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SettingState } from './states/setting.state';
 import { NftState } from './states/nft.state';
 import { UtilServiceState } from './util/util.service';
+import { HomeService } from './services/home.service';
 
 @NgModule({
     declarations: [
@@ -30,7 +31,7 @@ import { UtilServiceState } from './util/util.service';
         GlobalService, NeonService, ChromeService, HttpService,
         WalletGuard, PopupWalletGuard, OpenedWalletGuard, PopupLoginGuard, LoginGuard,
         AssetState, TransactionState, BlockState, NotificationService,
-        SettingState, NftState, UtilServiceState
+        SettingState, NftState, UtilServiceState, HomeService
     ],
     entryComponents: [
         LoaderDialog

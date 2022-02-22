@@ -45,20 +45,30 @@ export class PopupAddNftComponent implements OnInit {
                 }
             },
             () => {
-                console.log('--------')
                 this.searchNft = {};
             }
         );
     }
 
     addNft() {
-        this.searchNft.watching = true;
-        this.watch.push(this.searchNft);
-        this.chrome.setNftWatch(
-            this.neon.address,
-            this.watch,
-            this.neon.currentWalletChainType
-        );
-        this.global.snackBarTip('addSucc');
+        if (this.searchNft.watching) {
+            this.searchNft.watching = false;
+            this.watch = this.watch.filter(w => w.contract !== this.searchNft.contract);
+            this.chrome.setNftWatch(
+                this.neon.address,
+                this.watch,
+                this.neon.currentWalletChainType
+            );
+            this.global.snackBarTip('hiddenSucc');
+        } else {
+            this.searchNft.watching = true;
+            this.watch.push(this.searchNft);
+            this.chrome.setNftWatch(
+                this.neon.address,
+                this.watch,
+                this.neon.currentWalletChainType
+            );
+            this.global.snackBarTip('addSucc');
+        }
     }
 }

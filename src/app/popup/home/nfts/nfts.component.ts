@@ -9,8 +9,7 @@ import { NftAsset } from '@/models/models';
     styleUrls: ['nfts.component.scss'],
 })
 export class PopupNftsComponent implements OnInit {
-    nfts;
-    watchNfts: NftAsset[];
+    nfts: NftAsset[];
 
     constructor(
         public global: GlobalService,

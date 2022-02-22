@@ -76,6 +76,7 @@ export interface NftAsset {
     name: string;
     symbol: string;
     watching?: boolean;
+    info?: any;
 }
 
 export interface Transaction {
