@@ -841,7 +841,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 // const parameter = request.parameter as N3BalanceArgs;
                 const currWallet = await getLocalStorage('wallet', () => { });
                 const address = currWallet.accounts[0].address;
-                if (!wallet3.isAddress(address)) {
+                if (!wallet3.isAddress(address, 53)) {
                     return;
                 };
                 const postData = [

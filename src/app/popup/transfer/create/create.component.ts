@@ -35,8 +35,6 @@ import { GAS3_CONTRACT, NEO3_MAGIC_NUMBER } from '../../_lib';
     styleUrls: ['create.component.scss'],
 })
 export class TransferCreateComponent implements OnInit {
-    neonWallet: any = wallet2;
-
     public amount: string;
     public fee: any;
     public loading = false;
@@ -72,16 +70,7 @@ export class TransferCreateComponent implements OnInit {
         private txState: TransactionState,
         private neo3Transfer: Neo3TransferService,
         private nftState: NftState
-    ) {
-        switch (this.neon.currentWalletChainType) {
-            case 'Neo2':
-                this.neonWallet = wallet2;
-                break;
-            case 'Neo3':
-                this.neonWallet = wallet3;
-                break;
-        }
-    }
+    ) {}
 
     ngOnInit(): void {
         this.net = this.global.net;
@@ -146,9 +135,16 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('checkInput');
             return;
         }
-        if (this.neonWallet.isAddress(this.toAddress) === false) {
-            this.global.snackBarTip('wrongAddress');
-            return;
+        if (this.neon.currentWalletChainType === 'Neo2') {
+            if (wallet2.isAddress(this.toAddress) === false) {
+                this.global.snackBarTip('wrongAddress');
+                return;
+            }
+        } else {
+            if (wallet3.isAddress(this.toAddress, 53) === false) {
+                this.global.snackBarTip('wrongAddress');
+                return;
+            }
         }
 
         if (this.nftContract) {
@@ -662,13 +658,24 @@ export class TransferCreateComponent implements OnInit {
     }
 
     public getAddresSub() {
-        if (this.neonWallet.isAddress(this.toAddress)) {
-            return `${this.toAddress.substr(0, 6)}...${this.toAddress.substr(
-                this.toAddress.length - 7,
-                this.toAddress.length - 1
-            )} `;
+        if (this.neon.currentWalletChainType === 'Neo2') {
+            if (wallet2.isAddress(this.toAddress)) {
+                return `${this.toAddress.substr(0, 6)}...${this.toAddress.substr(
+                    this.toAddress.length - 7,
+                    this.toAddress.length - 1
+                )} `;
+            } else {
+                return '';
+            }
         } else {
-            return '';
+            if (wallet3.isAddress(this.toAddress, 53)) {
+                return `${this.toAddress.substr(0, 6)}...${this.toAddress.substr(
+                    this.toAddress.length - 7,
+                    this.toAddress.length - 1
+                )} `;
+            } else {
+                return '';
+            }
         }
     }
 
