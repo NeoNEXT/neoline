@@ -33,6 +33,9 @@ export class PopupDapiPromptComponent implements OnInit {
             case tx.WitnessScope.Global:
                 this.scopesType = AuthType.Global;
                 break;
+            case tx.WitnessScope.WitnessRules:
+                this.scopesType = AuthType.WitnessRules;
+                break;
         }
      }
 

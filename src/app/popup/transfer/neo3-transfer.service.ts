@@ -126,13 +126,7 @@ export class Neo3TransferService {
          * signatures) and also the cost of running the verification of signatures.
          */
         async function checkNetworkFee() {
-            const { feePerByte, executionFeeFactor } =
-                await neo3This.getFeeInformation(rpcClientTemp);
-            const networkFeeEstimate = neo3This.calculateNetworkFee(
-                vars.tx,
-                feePerByte,
-                executionFeeFactor
-            );
+            const networkFeeEstimate = await neo3This.calculateNetworkFee(vars.tx);
 
             vars.tx.networkFee = u.Fixed8.fromRawNumber(
                 networkFeeEstimate.toString()
@@ -283,22 +277,7 @@ export class Neo3TransferService {
         );
     }
 
-    public async getFeeInformation(client) {
-        const policyScript = new sc.ScriptBuilder()
-            .emitContractCall(sc.PolicyContract.INSTANCE.getFeePerByte())
-            .emitContractCall(sc.PolicyContract.INSTANCE.getExecFeeFactor())
-            .build();
-        const res = await client.invokeScript(
-            u.HexString.fromHex(policyScript)
-        );
-        const [feePerByte, executionFeeFactor] = res.stack.map((s) =>
-            u.BigInteger.fromNumber(s.value)
-        );
-        return { feePerByte, executionFeeFactor };
-    }
-
-    calculateNetworkFee(txn, feePerByte, executionFeeFactor) {
-        const feePerByteBigInteger = feePerByte;
+    async calculateNetworkFee(txn) {
         const txClone = new tx.Transaction(txn);
         const wif =
             this.neon.WIFArr[
@@ -309,28 +288,8 @@ export class Neo3TransferService {
                 )
             ];
         txClone.sign(wif, NEO3_MAGIC_NUMBER[this.globalService.net]);
-        const verificationExecutionFee = txClone.witnesses.reduce(
-            (totalFee, witness) => {
-                return totalFee
-                    .add(
-                        sc.calculateExecutionFee(
-                            witness.invocationScript.toBigEndian(),
-                            executionFeeFactor
-                        )
-                    )
-                    .add(
-                        sc.calculateExecutionFee(
-                            witness.verificationScript.toBigEndian(),
-                            executionFeeFactor
-                        )
-                    );
-            },
-            u.BigInteger.fromNumber(0)
-        );
-        const sizeFee = feePerByteBigInteger.mul(
-            txClone.serialize(true).length / 2
-        );
-        return sizeFee.add(verificationExecutionFee);
+        const fee = await this.rpcClient.calculateNetworkFee(txClone);
+        return fee;
     }
 
     async sendNeo3Tx(tx1: Transaction): Promise<any> {

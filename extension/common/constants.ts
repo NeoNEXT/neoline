@@ -48,5 +48,6 @@ export enum WitnessScope {
     CalledByEntry = 1,
     CustomContracts = 16,
     CustomGroups = 32,
+    WitnessRules = 64,
     Global = 128,
 }

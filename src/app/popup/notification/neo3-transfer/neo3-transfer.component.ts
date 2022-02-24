@@ -261,7 +261,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
             this.loadingMsg = '';
             this.creating = false;
             this.chrome.windowCallback({
-                error: { ...ERRORS.RPC_ERROR, description: err?.message || err },
+                error: { ...ERRORS.RPC_ERROR, description: err?.error || err },
                 return: requestTargetN3.Send,
                 ID: this.messageID
             });

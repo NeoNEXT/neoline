@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService, AssetState, NotificationService } from '@/app/core';
-import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
+import { Transaction, Witness } from '@cityofzion/neon-core-neo3/lib/tx';
 import { tx } from '@cityofzion/neon-js-neo3';
 import { MatDialog } from '@angular/material/dialog';
 import { ERRORS } from '@/models/dapi';
@@ -152,6 +152,9 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
             ]
             try {
                 this.tx = this.tx.sign(wif, NEO3_MAGIC_NUMBER[this.net]);
+                if (this.signers.length === 2) {
+                    this.tx.witnesses.unshift(new Witness({verificationScript: '', invocationScript: ''}))
+                }
             } catch (error) {
                 console.log(error);
             }
@@ -209,7 +212,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
-                error: { ...ERRORS.RPC_ERROR, description: err?.message || err },
+                error: { ...ERRORS.RPC_ERROR, description: err?.error || err },
                 return: requestTargetN3.Invoke,
                 ID: this.messageID
             });
@@ -304,7 +307,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                     description = this.notification.content.checkInput;
                     this.global.snackBarTip('checkInput');
                 } else {
-                    description = error.error.message || this.notification.content.rpcError;
+                    description = error.error|| this.notification.content.rpcError;
                     this.global.snackBarTip(error.error.message || 'rpcError');
                 }
                 this.loading = false;

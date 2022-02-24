@@ -208,7 +208,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
-                error: { ...ERRORS.RPC_ERROR, description: err?.message || err },
+                error: { ...ERRORS.RPC_ERROR, description: err?.error || err },
                 return: requestTargetN3.InvokeMultiple,
                 ID: this.messageID
             });
@@ -305,7 +305,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                     description = this.notification.content.checkInput;
                     this.global.snackBarTip('checkInput');
                 } else {
-                    description = error.error.message || this.notification.content.rpcError;
+                    description = error.error || this.notification.content.rpcError;
                     this.global.snackBarTip(error.error.message || 'rpcError');
                 }
                 this.loading = false;

@@ -137,7 +137,7 @@ export class PopupNoticeDeployComponent implements OnInit {
             this.loadingMsg = '';
             if (res.error !== null && res.error !== undefined) {
                 this.chrome.windowCallback({
-                    error: { ...ERRORS.RPC_ERROR, description: res.error.message },
+                    error: { ...ERRORS.RPC_ERROR, description: res.error },
                     return: requestTarget.Deploy,
                     ID: this.messageID
                 });
@@ -167,7 +167,7 @@ export class PopupNoticeDeployComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             this.chrome.windowCallback({
-                error: { ...ERRORS.RPC_ERROR, description: err?.error?.message || err },
+                error: { ...ERRORS.RPC_ERROR, description: err?.error || err },
                 return: requestTarget.Deploy,
                 ID: this.messageID
             });

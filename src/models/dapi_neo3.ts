@@ -29,5 +29,6 @@ export enum AuthType {
     CalledByEntry = 'CalledByEntry',
     CustomContracts = 'CustomContracts',
     CustomGroups = 'CustomGroups',
-    Global = 'Global'
+    Global = 'Global',
+    WitnessRules = 'WitnessRules'
 }
