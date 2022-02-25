@@ -12,6 +12,7 @@ import { bignumber } from 'mathjs';
 import { NEO3_MAGIC_NUMBER, NEO3_CONTRACT } from '../../_lib';
 import { Neo3InvokeService } from '../../transfer/neo3-invoke.service';
 import { forkJoin } from 'rxjs';
+import { wallet } from '@cityofzion/neon-core-neo3';
 
 @Component({
     templateUrl: 'neo3-invoke.component.html',
@@ -286,7 +287,12 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 this.networkFee = unSignTx.networkFee.toString();
                 this.getAssetRate();
                 this.tx = unSignTx;
-                const isEnoughFee = await this.neo3Invoke.isEnoughFee(this.neon.address, unSignTx.systemFee, unSignTx.networkFee);
+                let checkAddress = this.neon.address;
+                if (this.signers.length > 1) {
+                    const scriptHash = this.signers[0].account.startsWith('0x') ? this.signers[0].account.substr(2) : this.signers[0].account;
+                    checkAddress = wallet.getAddressFromScriptHash(scriptHash);
+                }
+                const isEnoughFee = await this.neo3Invoke.isEnoughFee(checkAddress, unSignTx.systemFee, unSignTx.networkFee);
                 if (isEnoughFee) {
                     this.canSend = true;
                     if (sendNow && hasChangeFee) {
