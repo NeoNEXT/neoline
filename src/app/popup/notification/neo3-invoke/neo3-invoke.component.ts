@@ -71,6 +71,9 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
             this.chrome.getStorage(STORAGE_NAME.InvokeArgsArray).subscribe(async invokeArgsArray => {
                 this.invokeArgsArray = invokeArgsArray;
                 params = invokeArgsArray.filter(item => (item as any).messageID === messageID)[0];
+                if (!params || params.length <= 0) {
+                    return;
+                }
                 this.dataJson = {
                     ...params,
                     messageID: undefined,
