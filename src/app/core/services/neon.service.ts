@@ -169,14 +169,42 @@ export class NeonService {
         const getNeo3WalletArr = this.chrome.getStorage(
             STORAGE_NAME['walletArr-Neo3']
         );
+        const Neo3AddressFlag = this.chrome.getStorage(STORAGE_NAME.neo3AddressFlag);
         return forkJoin([
             getWallet,
             getNeo2WIFArr,
             getNeo3WIFArr,
             getNeo2WalletArr,
             getNeo3WalletArr,
+            Neo3AddressFlag,
         ]).pipe(
             map((res) => {
+                if (
+                    !res[5] &&
+                    res[2] &&
+                    res[2].length > 0 &&
+                    res[4] &&
+                    res[4].length > 0
+                ) {
+                    res[4].forEach((item, index) => {
+                        const account = new wallet3.Account(
+                            wallet3.getPrivateKeyFromWIF(res[2][index])
+                        );
+                        item.accounts[0].address = account.label;
+                        item.accounts[0].label = account.label;
+                        if (item.accounts[0].key === res[0].accounts[0].key) {
+                            res[0].accounts[0].address =
+                                item.accounts[0].address;
+                            res[0].accounts[0].label = item.accounts[0].label;
+                            this.chrome.setWallet(res[0]);
+                        }
+                    });
+                    this.chrome.setStorage(
+                        STORAGE_NAME['walletArr-Neo3'],
+                        res[4]
+                    );
+                    this.chrome.setStorage(STORAGE_NAME.neo3AddressFlag, true);
+                }
                 // wallet
                 this._wallet = this.parseWallet(res[0]);
                 this.$wallet.next(this._wallet);
@@ -470,7 +498,6 @@ export class NeonService {
         encKey: string,
         key: string,
         name: string,
-        newPwd: string,
     ): Observable<Wallet2 | Wallet3> {
         this.selectChainType();
         return new Observable((observer: Observer<Wallet2 | Wallet3>) => {
@@ -489,8 +516,8 @@ export class NeonService {
                             name: name || 'NeoLineUser',
                         } as any);
                         returnRes.addAccount(account);
-                        returnRes.encrypt(0, newPwd);
-                        returnRes.accounts[0].encrypt(newPwd).then((res) => {
+                        returnRes.encrypt(0, key);
+                        returnRes.accounts[0].encrypt(key).then((res) => {
                             (returnRes.accounts[0] as any).wif = wif;
                             observer.next(returnRes);
                         });
@@ -513,8 +540,8 @@ export class NeonService {
                             name: name || 'NeoLineUser',
                         } as any);
                         returnRes.addAccount(account);
-                        returnRes.encrypt(0, newPwd);
-                        returnRes.accounts[0].encrypt(newPwd).then((res) => {
+                        returnRes.encrypt(0, key);
+                        returnRes.accounts[0].encrypt(key).then((res) => {
                             (returnRes.accounts[0] as any).wif = wif;
                             observer.next(returnRes);
                         });

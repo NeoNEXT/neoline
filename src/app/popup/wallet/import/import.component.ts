@@ -41,11 +41,7 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
 
     @Output() submit = new EventEmitter<any>();
 
-    public password: string;
-
     constructor(private global: GlobalService, private neon: NeonService, private chrome: ChromeService) {
-        this.password = this.chrome.getPassword();
-        console.log(this.password);
         this.isInit = true;
         this.limit = WalletInitConstant;
 
@@ -122,14 +118,11 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
                 this.neon
                     .importPrivateKey(
                         this.walletImport.WIF,
-                        this.password === null ? this.walletImport.password : this.password,
+                        this.walletImport.password,
                         this.walletImport.walletName
                     )
                     .subscribe((res: any) => {
                         this.loading = false;
-                        if (this.password === null) {
-                            this.chrome.setPassword(this.walletImport.password);
-                        }
                         if (this.neon.verifyWallet(res)) {
                             this.submit.emit(res);
                         } else {
@@ -140,15 +133,12 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
                 this.neon
                     .importWIF(
                         this.walletImport.WIF,
-                        this.password === null ? this.walletImport.password : this.password,
+                        this.walletImport.password,
                         this.walletImport.walletName
                     )
                     .subscribe(
                         (res: any) => {
                             this.loading = false;
-                            if (this.password === null) {
-                                this.chrome.setPassword(this.walletImport.password);
-                            }
                             if (this.neon.verifyWallet(res)) {
                                 this.submit.emit(res);
                             } else {
@@ -171,8 +161,7 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
                 .importEncryptKey(
                     this.walletNep6Import.EncrpytedKey,
                     this.walletNep6Import.password,
-                    this.walletNep6Import.walletName,
-                    this.password
+                    this.walletNep6Import.walletName
                 )
                 .subscribe(
                     (res: any) => {

@@ -24,8 +24,6 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
     public isInit: boolean;
     @Output() submit = new EventEmitter<any>();
 
-    public password: string;
-
     constructor(
         private global: GlobalService,
         private neon: NeonService,
@@ -35,8 +33,6 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
         this.hideConfirmPwd = true;
         this.wallet = new WalletCreation();
         this.limit = WalletInitConstant;
-        this.password = this.chrome.getPassword();
-        console.log(this.password);
     }
 
     ngOnInit() {}
@@ -50,15 +46,9 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
     public submitCreate(): void {
         this.loading = true;
         this.neon
-            .createWallet(
-                this.password === null ? this.wallet.password : this.password,
-                this.wallet.walletName
-            )
+            .createWallet(this.wallet.password, this.wallet.walletName)
             .subscribe(
                 (res: any) => {
-                    if (this.password === null) {
-                        this.chrome.setPassword(this.wallet.password);
-                    }
                     if (this.neon.verifyWallet(res)) {
                         this.submit.emit(res);
                     } else {
