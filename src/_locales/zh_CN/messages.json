@@ -748,5 +748,8 @@
     },
     "ChainSmartContractDeploy": {
         "message": "智能合约调用"
+    },
+    "PublicKey": {
+        "message": "公钥(encoded)"
     }
 }
