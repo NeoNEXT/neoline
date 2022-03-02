@@ -57,6 +57,7 @@ let currChainId = 1;
 let tabCurr: any;
 let currChain = 'Neo2';
 export let password = null;
+export let shouldLogin: boolean = true;
 
 export let haveBackupTip: boolean = null;
 
@@ -257,14 +258,10 @@ getLocalStorage('startTime', (time) => {
         setLocalStorage({
             startTime: chrome.csi().startE
         });
-        setLocalStorage({
-            shouldLogin: true
-        });
+        shouldLogin = true;
     } else {
         if (time !== chrome.csi().startE) {
-            setLocalStorage({
-                shouldLogin: true
-            });
+            shouldLogin = true;
             setLocalStorage({
                 startTime: chrome.csi().startE
             });
@@ -275,9 +272,7 @@ getLocalStorage('startTime', (time) => {
 chrome.windows.onRemoved.addListener(() => {
     chrome.tabs.query({}, (res) => {
         if (res.length === 0) { // All browsers are closed
-            setLocalStorage({
-                shouldLogin: true
-            });
+            shouldLogin = true;
         }
     });
 });
@@ -321,17 +316,15 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 return true;
             }
         case requestTarget.Login: {
-            getLocalStorage('shouldLogin', res => {
-                if (res === 'false' || res === false) {
-                    windowCallback({
-                        return: requestTarget.Login,
-                        data: true
-                    });
-                } else {
-                    window.open('/index.html#popup/login?notification=true', '_blank',
-                        'height=620, width=386, resizable=no, top=0, left=0');
-                }
-            })
+            if (shouldLogin === false) {
+                windowCallback({
+                    return: requestTarget.Login,
+                    data: true
+                });
+            } else {
+                window.open('/index.html#popup/login?notification=true', '_blank',
+                    'height=620, width=386, resizable=no, top=0, left=0');
+            }
             return true;
         }
         case requestTarget.AccountPublicKey: {

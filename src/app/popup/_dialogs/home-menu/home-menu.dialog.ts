@@ -63,7 +63,7 @@ export class PopupHomeMenuDialogComponent {
     public lock() {
         this.global.$wallet.next('close');
         this.dialogRef.close('lock');
-        this.chrome.setStorage(STORAGE_NAME.shouldLogin, true);
+        this.chrome.setLogin(true);
         this.router.navigateByUrl('/popup/login');
     }
 

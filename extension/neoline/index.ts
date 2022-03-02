@@ -129,18 +129,9 @@ window.addEventListener('message', async (e) => {
             return
         }
         case requestTarget.Login: {
-            getLocalStorage('shouldLogin', res => {
-                if (res === true || res === 'true') {
-                    chrome.runtime.sendMessage(e.data, (response) => {
-                        return Promise.resolve('Dummy response to keep the console quiet');
-                    });
-                } else {
-                    window.postMessage({
-                        return: requestTarget.Login,
-                        data: true
-                    }, '*');
-                }
-            })
+            chrome.runtime.sendMessage(e.data, (response) => {
+                return Promise.resolve('Dummy response to keep the console quiet');
+            });
             break;
         }
         case requestTarget.AccountPublicKey: {

@@ -171,12 +171,36 @@ export class ChromeService {
     }
 
     public resetWallet() {
-        this.setStorage(STORAGE_NAME.shouldLogin, false);
+        this.setLogin(false);
         this.setStorage(STORAGE_NAME.WIFArr, []);
         this.setStorage(STORAGE_NAME['WIFArr-Neo3'], []);
         this.setStorage(STORAGE_NAME.walletArr, []);
         this.setStorage(STORAGE_NAME['walletArr-Neo3'], []);
         this.setWallet(undefined);
+    }
+
+    public getLogin(): boolean {
+        if (!this.check) {
+            return sessionStorage.getItem('shouldLogin') === 'true';
+        } else {
+            return this.crx.shouldLogin === true;
+        }
+    }
+
+    public setLogin(status: boolean) {
+        if (status === null) {
+            if (!this.check) {
+                sessionStorage.removeItem('shouldLogin');
+            } else {
+                this.crx.shouldLogin = null;
+            }
+        } else {
+            if (!this.check) {
+                sessionStorage.setItem('shouldLogin', status.toString());
+            } else {
+                this.crx.shouldLogin = status;
+            }
+        }
     }
 
     public getHaveBackupTip() {
@@ -345,9 +369,6 @@ export class ChromeService {
                 STORAGE_VALUE_TYPE.number
             ) {
                 targetValue = value ? Number(value) : 0;
-            }
-            if (storageName === STORAGE_NAME.shouldLogin) {
-                targetValue = value === true ? true : false;
             }
             if (
                 (storageName === STORAGE_NAME.transaction ||

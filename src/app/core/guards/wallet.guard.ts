@@ -21,17 +21,16 @@ export class WalletGuard implements CanActivate {
         return new Promise(resolve => {
             this.neon.walletIsOpen().subscribe((res: any) => {
                 if (!res) {
-                    this.chrome.setStorage(STORAGE_NAME.shouldLogin, false);
+                    this.chrome.setLogin(false);
                     this.router.navigateByUrl('/wallet');
                 } else {
-                    this.chrome.getStorage(STORAGE_NAME.shouldLogin).subscribe((shoudLogin) => {
-                        if (shoudLogin) {
-                            this.router.navigateByUrl('/login');
-                            this.global.log('Wallet should login.');
-                        } else {
-                            resolve(res);
-                        }
-                    });
+                    const shouldLogin= this.chrome.getLogin();
+                    if (shouldLogin) {
+                        this.router.navigateByUrl('/login');
+                        this.global.log('Wallet should login.');
+                    } else {
+                        resolve(res);
+                    }
                 }
             });
         });
@@ -52,16 +51,15 @@ export class PopupLoginGuard implements CanActivate {
         return new Promise(resolve => {
             this.neon.walletIsOpen().subscribe((res: any) => {
                 if (!res) {
-                    this.chrome.setStorage(STORAGE_NAME.shouldLogin, false);
+                    this.chrome.setLogin(false);
                     this.router.navigateByUrl('/popup/wallet/new-guide');
                 } else {
-                    this.chrome.getStorage(STORAGE_NAME.shouldLogin).subscribe((shoudLogin) => {
-                        if (shoudLogin) {
-                            resolve(true);
-                        } else {
-                            resolve(false);
-                        }
-                    });
+                    const shouldLogin= this.chrome.getLogin();
+                    if (shouldLogin) {
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
                 }
             });
         });
@@ -80,16 +78,15 @@ export class LoginGuard implements CanActivate {
         return new Promise(resolve => {
             this.neon.walletIsOpen().subscribe((res: any) => {
                 if (!res) {
-                    this.chrome.setStorage(STORAGE_NAME.shouldLogin, false);
+                    this.chrome.setLogin(false);
                     this.router.navigateByUrl('/wallet');
                 } else {
-                    this.chrome.getStorage(STORAGE_NAME.shouldLogin).subscribe((shoudLogin) => {
-                        if (shoudLogin) {
-                            resolve(true);
-                        } else {
-                            resolve(false);
-                        }
-                    });
+                    const shouldLogin= this.chrome.getLogin();
+                    if (shouldLogin) {
+                        resolve(true);
+                    } else {
+                        resolve(false);
+                    }
                 }
             });
         });
@@ -110,16 +107,15 @@ export class OpenedWalletGuard implements CanActivate {
         return new Promise(resolve => {
             this.neon.walletIsOpen().subscribe((res: any) => {
                 if (!res) {
-                    this.chrome.setStorage(STORAGE_NAME.shouldLogin, false);
+                    this.chrome.setLogin(false);
                     resolve(true);
                 } else {
-                    this.chrome.getStorage(STORAGE_NAME.shouldLogin).subscribe((shoudLogin) => {
-                        if (shoudLogin) {
-                            this.router.navigate(['/popup/login'], { queryParams: { returnUrl: state.url }});
-                        } else {
-                            resolve(true);
-                        }
-                    });
+                    const shouldLogin= this.chrome.getLogin();
+                    if (shouldLogin) {
+                        this.router.navigate(['/popup/login'], { queryParams: { returnUrl: state.url }});
+                    } else {
+                        resolve(true);
+                    }
                 }
             });
         });
@@ -142,19 +138,18 @@ export class PopupWalletGuard implements CanActivate {
         return new Promise(resolve => {
             this.neon.walletIsOpen().subscribe((res: any) => {
                 if (!res) {
-                    this.chrome.setStorage(STORAGE_NAME.shouldLogin, false);
+                    this.chrome.setLogin(false);
                     this.global.log('Wallet has not opened yet.');
                     this.router.navigate(['/popup/wallet/new-guide'], { queryParams: { returnUrl: state.url }});
 
                 } else {
-                    this.chrome.getStorage(STORAGE_NAME.shouldLogin).subscribe((shoudLogin) => {
-                        if (shoudLogin) {
-                            this.router.navigate(['/popup/login'], { queryParams: { returnUrl: state.url }});
-                            this.global.log('Wallet should login.');
-                        } else {
-                            resolve(res);
-                        }
-                    });
+                    const shouldLogin= this.chrome.getLogin();
+                    if (shouldLogin) {
+                        this.router.navigate(['/popup/login'], { queryParams: { returnUrl: state.url }});
+                        this.global.log('Wallet should login.');
+                    } else {
+                        resolve(res);
+                    }
                 }
             });
         });

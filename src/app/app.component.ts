@@ -108,7 +108,7 @@ export class AppComponent {
             .afterClosed()
             .subscribe((confirm) => {
                 if (confirm) {
-                    this.chrome.setStorage(STORAGE_NAME.shouldLogin, true);
+                    this.chrome.setLogin(true);
                     this.router.navigateByUrl('/login');
                 }
             });
