@@ -310,7 +310,6 @@ export class AssetState {
             })
         );
     }
-    //#endregion
 
     public async searchAsset(q: string): Promise<Asset> {
         const data = {
@@ -364,6 +363,16 @@ export class AssetState {
             return this.getN3AddressBalances(address);
         }
         return this.getNeo2AddressBalances(address);
+    }
+
+    public getUnclaimedGas(address: string): Observable<any> {
+        const data = {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getunclaimedgas',
+            params: [address],
+        };
+        return this.http.rpcPost(this.global.n3Network.rpcUrl, data);
     }
 
     //#region private function

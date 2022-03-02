@@ -22,6 +22,7 @@ import { SettingState } from './states/setting.state';
 import { NftState } from './states/nft.state';
 import { UtilServiceState } from './util/util.service';
 import { TransferService } from './services/transfer.service';
+import { HomeService } from './services/home.service';
 
 @NgModule({
     declarations: [LoaderDialog],
@@ -33,10 +34,23 @@ import { TransferService } from './services/transfer.service';
     ],
     exports: [],
     providers: [
-        GlobalService, NeonService, ChromeService, HttpService,
-        WalletGuard, PopupWalletGuard, OpenedWalletGuard, PopupLoginGuard, LoginGuard,
-        AssetState, TransactionState, NotificationService,
-        SettingState, NftState, UtilServiceState, TransferService
+        GlobalService,
+        NeonService,
+        ChromeService,
+        HttpService,
+        WalletGuard,
+        PopupWalletGuard,
+        OpenedWalletGuard,
+        PopupLoginGuard,
+        LoginGuard,
+        AssetState,
+        TransactionState,
+        NotificationService,
+        SettingState,
+        NftState,
+        UtilServiceState,
+        TransferService,
+        HomeService,
     ],
     entryComponents: [LoaderDialog],
 })
