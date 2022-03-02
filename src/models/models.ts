@@ -44,6 +44,14 @@ export interface Balance {
 export interface Asset extends Balance {
     image_url?: string;
 }
+
+export interface NftAsset {
+    contract: string;
+    name: string;
+    symbol: string;
+    watching?: boolean;
+    info?: any;
+}
 export interface Transaction {
     block_time: number;
     id?: number;

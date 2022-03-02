@@ -119,14 +119,13 @@ export class PopupHomeComponent implements OnInit {
                 }
             });
     }
-    showAddToken(): boolean {
-        if (
-            this.neon.currentWalletChainType === 'Neo3' &&
-            this.selectedIndex === 1
-        ) {
-            return false;
+
+    toAdd() {
+        if (this.neon.currentWalletChainType === 'Neo3' && this.selectedIndex === 1) {
+            this.router.navigateByUrl('/popup/add-nft');
+        } else {
+            this.router.navigateByUrl('/popup/add-asset');
         }
-        return true;
     }
     backupLater() {
         this.chrome.setHaveBackupTip(false);

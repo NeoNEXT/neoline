@@ -1,0 +1,15 @@
+<div class="nav">
+    <div class="content">
+        <img src="/assets/images/nav-back.png" routerLink="/popup/add-nft" alt="">
+        <span class="title">{{ 'myNft' | translate | async }}</span>
+    </div>
+    <div class="divide"></div>
+</div>
+
+<div class="popup-assets-list">
+    <app-my-nft-item *ngFor="let asset of nfts;let index = index" [asset]="asset" [index]="index"
+        (onAddAsset)="addAssetCheck($event)" (removeAssetOutput)="removeAsset($event)">
+    </app-my-nft-item>
+    <div class="loading" *ngIf="isLoading">{{ 'loading' | translate | async}}</div>
+
+</div>

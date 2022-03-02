@@ -1,0 +1,15 @@
+<div class="asset-item">
+    <div class="avatar-box">
+        <img [src]="asset?.info?.image" appErrorSrc="" alt="">
+    </div>
+    <div class="item-middle">
+        <div class="asset-name">
+            <span class="long">{{asset.name}}</span>
+            (<span class="short">{{ asset.symbol }}</span>)
+        </div>
+    </div>
+    <button mat-raised-button *ngIf="!asset.watching" class="unadd"
+        (click)="addAsset(index)">{{ 'add' | translate | async}}</button>
+    <img class="delete" *ngIf="asset.watching" src="/assets/images/add-asset/delete.png" alt=""
+        (click)="removeAsset(index)">
+</div>

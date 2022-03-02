@@ -9,3 +9,6 @@
         </div>
     </div>
 </div>
+<p *ngIf="nftTokens?.length <= 0" class="no-data">
+    {{ 'noMoreData' | translate | async }}
+</p>

@@ -2,6 +2,9 @@ import { Injectable } from '@angular/core';
 import { HttpService } from '../services/http.service';
 import { Observable } from 'rxjs';
 import { GlobalService } from '../services/global.service';
+import { map } from 'rxjs/operators';
+import { hexstring2str, base642hex } from '@cityofzion/neon-core-neo3/lib/u';
+import { NftAsset } from '@/models/models';
 
 @Injectable()
 export class NftState {
@@ -30,5 +33,49 @@ export class NftState {
             url += `&max_id=${maxId}`;
         }
         return this.http.get(url);
+    }
+
+    public async searchNft(q: string): Promise<NftAsset> {
+        const data = {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getcontractstate',
+            params: [q],
+        };
+        const res = await this.http.rpcPost(this.global.n3Network.rpcUrl, data).toPromise();
+        if (res?.manifest?.supportedstandards.includes('NEP-11')) {
+            const symbol = await this.getAssetSymbol(res?.hash).toPromise();
+            const target: NftAsset = {
+                name: res?.manifest.name,
+                contract: res?.hash,
+                symbol
+            }
+            return target;
+        } else {
+            throw null;
+        }
+    }
+
+    private getAssetSymbol(assetId: string): Observable<string> {
+        const data = {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'invokefunction',
+            params: [assetId, 'symbol'],
+        };
+        return this.http.rpcPost(this.global.n3Network.rpcUrl, data).pipe(
+            map((res) => {
+                let symbol = res?.stack[0].value;
+                if (res?.stack) {
+                    if (res?.stack[0].type === 'ByteArray') {
+                        symbol = hexstring2str(res?.stack[0].value);
+                    }
+                    if (res?.stack[0].type === 'ByteString') {
+                        symbol = hexstring2str(base642hex(res?.stack[0].value));
+                    }
+                }
+                return symbol;
+            })
+        );
     }
 }

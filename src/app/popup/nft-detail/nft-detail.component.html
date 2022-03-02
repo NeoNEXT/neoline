@@ -24,7 +24,7 @@
             <img src="/assets/images/home/receive.png" alt="">
             <span>{{ 'receive' | translate | async }}</span>
         </button>
-        <button class="transfer-btn" mat-flat-button color="primary" [routerLink]="['/popup/transfer/create/nft/' + nftContract]">
+        <button *ngIf="nft?.balance" class="transfer-btn" mat-flat-button color="primary" [routerLink]="['/popup/transfer/create/nft/' + nftContract]">
             <img src="/assets/images/home/send.png" alt="">
             <span>{{ 'transfer' | translate | async }}</span>
         </button>

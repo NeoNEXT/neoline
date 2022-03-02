@@ -751,5 +751,11 @@
     },
     "PublicKey": {
         "message": "PublicKey(encoded)"
+    },
+    "AddNEP11": {
+        "message": "Add NEP11"
+    },
+    "myNft": {
+        "message": "My NEP11"
     }
 }

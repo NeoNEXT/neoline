@@ -1,0 +1,28 @@
+<div class="nav">
+    <div class="content">
+        <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="">
+        {{ 'AddNEP11' | translate | async }}
+    </div>
+    <div class="divide"></div>
+</div>
+
+<div class="search">
+    <button>
+        <span class="search-icon" (click)="searchCurrency()"></span>
+        <input autofocus (keyup.enter)="searchCurrency()" [(ngModel)]="searchValue" type="text"
+            [placeholder]="'searchAssetsInput' | translate | async">
+        <img (click)="searchValue=''" *ngIf="searchValue" src="/assets/images/clear-search.png" class="clear" alt="">
+    </button>
+</div>
+
+<div class="my-assets" routerLink="/popup/my-nfts">{{ 'myNft' | translate | async }}<img src="/assets/images/arrow-right.png" alt=""></div>
+
+<p class="search-title">{{ 'searchResult' | translate | async}}</p>
+
+<div class="popup-assets-list">
+    <app-asset-item *ngIf="searchNft?.name" [asset]="searchNft" (onAddAsset)="addNft()"></app-asset-item>
+    <div class="loading" *ngIf="isLoading">{{ 'loading' | translate | async}}</div>
+    <p *ngIf="!searchNft?.name" class="no-data">
+        {{ 'noMoreData' | translate | async }}
+    </p>
+</div>

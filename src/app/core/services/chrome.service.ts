@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, of, throwError, from } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
-import { Asset } from '@/models/models';
+import { Asset, NftAsset } from '@/models/models';
 import { EVENT } from '@/models/dapi';
 import {
     ChainType,
@@ -105,7 +105,10 @@ export class ChromeService {
             );
         }
     }
-    public getAllWatch(chainType: ChainType, network: NetworkType): Observable<object> {
+    public getAllWatch(
+        chainType: ChainType,
+        network: NetworkType
+    ): Observable<object> {
         const storageName = `watch_${network.toLowerCase()}-${chainType}`;
         if (!this.check) {
             try {
@@ -131,10 +134,107 @@ export class ChromeService {
             );
         }
     }
-    public setWatch(address: string, watch: Asset[], chainType: ChainType, network: NetworkType) {
+    public setWatch(
+        address: string,
+        watch: Asset[],
+        chainType: ChainType,
+        network: NetworkType
+    ) {
         watch.forEach((item) => delete item.balance);
         const storageName = `watch_${network.toLowerCase()}-${chainType}`;
         this.getAllWatch(chainType, network).subscribe((watchObject) => {
+            const saveWatch = watchObject || {};
+            saveWatch[address] = watch;
+            if (!this.check) {
+                localStorage.setItem(storageName, JSON.stringify(saveWatch));
+                return;
+            }
+            try {
+                const saveData = {};
+                saveData[storageName] = saveWatch;
+                this.crx.setLocalStorage(saveData);
+            } catch (e) {
+                console.log('set watch failed', e);
+            }
+        });
+    }
+
+    public getNftWatch(
+        address: string,
+        chainType: ChainType,
+        network: NetworkType
+    ): Observable<NftAsset[]> {
+        const storageName = `nft_watch_${network.toLowerCase()}-${chainType}`;
+        if (!this.check) {
+            try {
+                let rs =
+                    (JSON.parse(localStorage.getItem(storageName)) || {})[
+                        address
+                    ] || [];
+                if (!Array.isArray(rs)) {
+                    rs = [];
+                }
+                return of(rs);
+            } catch (e) {
+                return throwError(
+                    'please set watch to local storage when debug mode on'
+                );
+            }
+        } else {
+            return from(
+                new Promise<NftAsset[]>((resolve, reject) => {
+                    try {
+                        this.crx.getLocalStorage(storageName, (res) => {
+                            res = (res || {})[address] || [];
+                            if (!Array.isArray(res)) {
+                                res = [];
+                            }
+                            resolve(res);
+                        });
+                    } catch (e) {
+                        reject('failed');
+                    }
+                })
+            );
+        }
+    }
+    private getAllNftWatch(
+        chainType: ChainType,
+        network: NetworkType
+    ): Observable<object> {
+        const storageName = `nft_watch_${network.toLowerCase()}-${chainType}`;
+        if (!this.check) {
+            try {
+                const rs = JSON.parse(localStorage.getItem(storageName)) || {};
+                return of(rs);
+            } catch (e) {
+                return throwError(
+                    'please set watch to local storage when debug mode on'
+                );
+            }
+        } else {
+            return from(
+                new Promise<NftAsset[]>((resolve, reject) => {
+                    try {
+                        this.crx.getLocalStorage(storageName, (res) => {
+                            res = res || {};
+                            resolve(res);
+                        });
+                    } catch (e) {
+                        reject('failed');
+                    }
+                })
+            );
+        }
+    }
+    public setNftWatch(
+        address: string,
+        watch: NftAsset[],
+        chainType: ChainType,
+        network: NetworkType
+    ) {
+        const storageName = `nft_watch_${network.toLowerCase()}-${chainType}`;
+        this.getAllNftWatch(chainType, network).subscribe((watchObject) => {
             const saveWatch = watchObject || {};
             saveWatch[address] = watch;
             if (!this.check) {
