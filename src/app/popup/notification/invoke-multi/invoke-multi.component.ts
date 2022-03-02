@@ -234,7 +234,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.loading = false;
                 this.loadingMsg = '';
                 this.chrome.windowCallback({
-                    error: { ...ERRORS.RPC_ERROR, description: error?.message || error },
+                    error: { ...ERRORS.RPC_ERROR, description: error },
                     return: requestTarget.InvokeMulti,
                     ID: this.messageID
                 });
@@ -253,7 +253,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.loadingMsg = '';
                 if (res.error !== undefined) {
                     this.chrome.windowCallback({
-                        error: { ...ERRORS.RPC_ERROR, description: res.error.message },
+                        error: { ...ERRORS.RPC_ERROR, description: res?.error },
                         return: requestTarget.InvokeMulti,
                         ID: this.messageID
                     });
@@ -283,7 +283,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 this.loading = false;
                 this.loadingMsg = '';
                 this.chrome.windowCallback({
-                    error: { ...ERRORS.RPC_ERROR, description: err?.message || err },
+                    error: { ...ERRORS.RPC_ERROR, description: err },
                     return: requestTarget.InvokeMulti,
                     ID: this.messageID
                 });
