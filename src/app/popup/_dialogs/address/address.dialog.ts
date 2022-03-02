@@ -12,8 +12,6 @@ import { STORAGE_NAME } from '../../_lib';
     styleUrls: ['address.dialog.scss'],
 })
 export class PopupAddressDialogComponent implements OnInit {
-    neonWallet: any = wallet2;
-
     public address: string = '';
 
     public addressArr: Array<WalletJSON2 | WalletJSON3> = [];
@@ -22,16 +20,7 @@ export class PopupAddressDialogComponent implements OnInit {
         private dialogRef: MatDialogRef<PopupAddressDialogComponent>,
         private chromeSer: ChromeService,
         private neonService: NeonService
-    ) {
-        switch (this.neonService.currentWalletChainType) {
-            case 'Neo2':
-                this.neonWallet = wallet2;
-                break;
-            case 'Neo3':
-                this.neonWallet = wallet3;
-                break;
-        }
-    }
+    ) {}
 
     ngOnInit() {
         const storageName =
@@ -44,7 +33,11 @@ export class PopupAddressDialogComponent implements OnInit {
     }
 
     public checkAddress(inputStr: string) {
-        if (this.neonWallet.isAddress(inputStr)) {
+        if (
+            this.neonService.currentWalletChainType === 'Neo2'
+                ? wallet2.isAddress(inputStr)
+                : wallet3.isAddress(inputStr, 53)
+        ) {
             this.dialogRef.close(inputStr);
         }
     }

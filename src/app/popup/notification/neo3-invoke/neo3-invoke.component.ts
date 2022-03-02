@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { GlobalService, NeonService, ChromeService, AssetState, NotificationService } from '@/app/core';
-import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
-import { tx } from '@cityofzion/neon-js-neo3';
+import { Transaction, Witness } from '@cityofzion/neon-core-neo3/lib/tx';
+import { tx, wallet } from '@cityofzion/neon-js-neo3';
 import { MatDialog } from '@angular/material/dialog';
 import { ERRORS } from '@/models/dapi';
 import { requestTargetN3 } from '@/models/dapi_neo3';
@@ -150,6 +150,9 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
             ]
             try {
                 this.tx = this.tx.sign(wif, this.global.n3Network.magicNumber);
+                if (this.signers.length === 2) {
+                    this.tx.witnesses.unshift(new Witness({verificationScript: '', invocationScript: ''}))
+                }
             } catch (error) {
                 console.log(error);
             }
@@ -281,7 +284,12 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 this.networkFee = unSignTx.networkFee.toString();
                 this.getAssetRate();
                 this.tx = unSignTx;
-                const isEnoughFee = await this.neo3Invoke.isEnoughFee(this.neon.address, unSignTx.systemFee, unSignTx.networkFee);
+                let checkAddress = this.neon.address;
+                if (this.signers.length > 1) {
+                    const scriptHash = this.signers[0].account.startsWith('0x') ? this.signers[0].account.substr(2) : this.signers[0].account;
+                    checkAddress = wallet.getAddressFromScriptHash(scriptHash);
+                }
+                const isEnoughFee = await this.neo3Invoke.isEnoughFee(checkAddress, unSignTx.systemFee, unSignTx.networkFee);
                 if (isEnoughFee) {
                     this.canSend = true;
                     if (sendNow && hasChangeFee) {

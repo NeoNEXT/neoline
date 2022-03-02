@@ -237,7 +237,7 @@ export class NeonService {
                 }
                 if (this.address) {
                     this.changeChainType(
-                        wallet3.isAddress(this.address) ? 'Neo3' : 'Neo2'
+                        wallet3.isAddress(this.address, 53) ? 'Neo3' : 'Neo2'
                     );
                 } else {
                     this.changeChainType(this.selectedChainType);
@@ -353,7 +353,7 @@ export class NeonService {
                     // 另一条链还有钱包，切换到另一条链
                     this._wallet = otherChainWalletArr[0];
                     this.changeChainType(
-                        wallet3.isAddress(this.address) ? 'Neo3' : 'Neo2'
+                        wallet3.isAddress(this.address, 53) ? 'Neo3' : 'Neo2'
                     );
                     this.chrome.setWallet(this._wallet.export());
                 }
@@ -364,7 +364,7 @@ export class NeonService {
                 }
                 this._wallet = this._walletArr[0];
                 this.changeChainType(
-                    wallet3.isAddress(this.address) ? 'Neo3' : 'Neo2'
+                    wallet3.isAddress(this.address, 53) ? 'Neo3' : 'Neo2'
                 );
                 this.chrome.setWallet(this._wallet.export());
                 this.chrome.setStorage(
@@ -555,7 +555,7 @@ export class NeonService {
     public parseWallet(src: any): Wallet2 | Wallet3 {
         try {
             let isNeo3 = false;
-            if (wallet3.isAddress(src.accounts[0].address)) {
+            if (wallet3.isAddress(src.accounts[0].address, 53)) {
                 isNeo3 = true;
             }
             const w = isNeo3 ? new Wallet3(src) : new Wallet2(src);

@@ -34,8 +34,6 @@ import { GAS3_CONTRACT, STORAGE_NAME, NetworkType } from '../../_lib';
     styleUrls: ['create.component.scss'],
 })
 export class TransferCreateComponent implements OnInit {
-    neonWallet: any = wallet2;
-
     public amount: string;
     public fee: any;
     public loading = false;
@@ -72,11 +70,9 @@ export class TransferCreateComponent implements OnInit {
     ) {
         switch (this.neon.currentWalletChainType) {
             case 'Neo2':
-                this.neonWallet = wallet2;
                 this.network = this.global.n2Network.network;
                 break;
             case 'Neo3':
-                this.neonWallet = wallet3;
                 this.network = this.global.n3Network.network;
                 break;
         }
@@ -138,7 +134,12 @@ export class TransferCreateComponent implements OnInit {
             this.global.snackBarTip('checkInput');
             return;
         }
-        if (this.neonWallet.isAddress(this.toAddress) === false) {
+
+        if (
+            this.neon.currentWalletChainType === 'Neo2'
+                ? wallet2.isAddress(this.toAddress) === false
+                : wallet3.isAddress(this.toAddress, 53) === false
+        ) {
             this.global.snackBarTip('wrongAddress');
             return;
         }
@@ -648,7 +649,11 @@ export class TransferCreateComponent implements OnInit {
     }
 
     public getAddresSub() {
-        if (this.neonWallet.isAddress(this.toAddress)) {
+        if (
+            this.neon.currentWalletChainType === 'Neo2'
+                ? wallet2.isAddress(this.toAddress)
+                : wallet3.isAddress(this.toAddress, 53)
+        ) {
             return `${this.toAddress.substr(0, 6)}...${this.toAddress.substr(
                 this.toAddress.length - 7,
                 this.toAddress.length - 1

@@ -541,7 +541,7 @@ export class ChromeService {
 
     //#region wallet
     public setWallet(w: any) {
-        const currChainType = wallet3.isAddress(w?.accounts[0].address || '')
+        const currChainType = wallet3.isAddress(w?.accounts[0].address || '', 53)
             ? 'Neo3'
             : 'Neo2';
         this.setStorage(STORAGE_NAME.wallet, w);
