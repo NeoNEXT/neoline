@@ -1,5 +1,6 @@
 import { Asset, NEO, GAS } from '@/models/models';
 import { NEO3_CONTRACT, GAS3_CONTRACT } from './neo3';
+import { DEFAULT_N2_RPC_NETWORK, DEFAULT_N3_RPC_NETWORK } from './type';
 
 const nameLimitation = [1, 32];
 const passwordLimitation = [8, 128];
@@ -52,18 +53,22 @@ export const STORAGE_VALUE_MESSAGE = {
     n2Networks: {
         type: STORAGE_VALUE_TYPE.array,
         isLocal: true,
+        default: DEFAULT_N2_RPC_NETWORK,
     },
     n3Networks: {
         type: STORAGE_VALUE_TYPE.array,
         isLocal: true,
+        default: DEFAULT_N3_RPC_NETWORK,
     },
     n2SelectedNetworkIndex: {
         type: STORAGE_VALUE_TYPE.number,
         isLocal: true,
+        default: 0,
     },
     n3SelectedNetworkIndex: {
         type: STORAGE_VALUE_TYPE.number,
         isLocal: true,
+        default: 0,
     },
     assetUSDRate: {
         type: STORAGE_VALUE_TYPE.map,
@@ -84,6 +89,7 @@ export const STORAGE_VALUE_MESSAGE = {
     rateCurrency: {
         type: STORAGE_VALUE_TYPE.string,
         isLocal: false,
+        default: 'USD',
     },
     wallet: {
         type: STORAGE_VALUE_TYPE.object,
@@ -116,6 +122,7 @@ export const STORAGE_VALUE_MESSAGE = {
     lang: {
         type: STORAGE_VALUE_TYPE.string,
         isLocal: false,
+        default: 'en',
     },
     transaction: {
         type: STORAGE_VALUE_TYPE.object,

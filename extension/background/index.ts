@@ -53,9 +53,7 @@ declare var chrome;
 let currLang = 'en';
 let currN2Network: RpcNetwork = DEFAULT_N2_RPC_NETWORK[0];
 let currN3Network: RpcNetwork = DEFAULT_N3_RPC_NETWORK[0];
-let currChainId = 1;
 let tabCurr: any;
-let currChain = 'Neo2';
 export let password = null;
 export let shouldLogin: boolean = true;
 
@@ -69,20 +67,15 @@ export function expand() {
 (function init() {
     setInterval(async () => {
         let chainType = await getLocalStorage('chainType', () => { });
-        const n3Networks = await getLocalStorage('n3Networks', () => { });
-        const n2Networks = await getLocalStorage('n2Networks', () => { });
-        const n3SelectedNetworkIndex = await getLocalStorage('n3SelectedNetworkIndex', () => { });
-        const n2SelectedNetworkIndex = await getLocalStorage('n2SelectedNetworkIndex', () => { });
-        if (n2Networks && n2SelectedNetworkIndex !== undefined) {
-            currN2Network = n2Networks[n2SelectedNetworkIndex];
-        }
-        if (n3Networks && n3SelectedNetworkIndex !== undefined) {
-            currN3Network = n3Networks[n3SelectedNetworkIndex];
-        }
+        const n3Networks = (await getLocalStorage('n3Networks', () => { })) || DEFAULT_N2_RPC_NETWORK;
+        const n2Networks = (await getLocalStorage('n2Networks', () => { })) || DEFAULT_N3_RPC_NETWORK;
+        const n3SelectedNetworkIndex = (await getLocalStorage('n3SelectedNetworkIndex', () => { })) || 0;
+        const n2SelectedNetworkIndex = (await getLocalStorage('n2SelectedNetworkIndex', () => { })) || 0;
+        currN2Network = n2Networks[n2SelectedNetworkIndex];
+        currN3Network = n3Networks[n3SelectedNetworkIndex];
         if (!chainType) {
             chainType = await getWalletType();
         };
-        currChain = chainType;
         let rpcUrl;
         let network;
         if (chainType === ChainType.Neo2) {
@@ -121,7 +114,7 @@ export function expand() {
                                     });
                                     windowCallback({
                                         data: {
-                                            chainId: currChainId,
+                                            chainId: currN2Network.chainId,
                                             blockHeight: reqHeight,
                                             blockTime: blockDetail.result.time,
                                             blockHash: blockDetail.result.hash,
@@ -159,7 +152,7 @@ export function expand() {
                     if (res?.result?.blocktime) {
                         windowCallback({
                             data: {
-                                chainId: currChainId,
+                                chainId: currN2Network.chainId,
                                 txid,
                                 blockHeight: res?.result?.blockindex,
                                 blockTime: res?.result?.blocktime,
@@ -190,7 +183,7 @@ export function expand() {
                     if (res?.result?.blocktime) {
                         windowCallback({
                             data: {
-                                chainId: currChainId,
+                                chainId: currN3Network.chainId,
                                 txid,
                                 blockHeight: res?.result?.blockindex,
                                 blockTime: res?.result?.blocktime,
@@ -245,12 +238,6 @@ export function setPopup(lang) {
             currLang = 'en';
             break;
     }
-}
-
-export function setNetwork(chainId, chainType) {
-    // currNetwork = network;
-    currChainId = chainId;
-    currChain = chainType;
 }
 
 getLocalStorage('startTime', (time) => {

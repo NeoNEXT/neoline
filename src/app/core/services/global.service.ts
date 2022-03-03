@@ -10,11 +10,7 @@ import { NotificationService } from './notification.service';
 import { ChromeService } from './chrome.service';
 import { add, subtract, multiply, divide, bignumber } from 'mathjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import {
-    ChainType,
-    RpcNetwork,
-    STORAGE_NAME,
-} from '@/app/popup/_lib';
+import { ChainType, RpcNetwork } from '@/app/popup/_lib';
 
 @Injectable()
 export class GlobalService {
@@ -22,7 +18,6 @@ export class GlobalService {
     public $wallet: Subject<string>;
     public languageJson: any = null;
     public debug = false;
-    // public net: string;
     private source404 = new Subject<string>();
     public $404 = this.source404.asObservable();
 
@@ -40,46 +35,8 @@ export class GlobalService {
         private notification: NotificationService,
         private chromeSer: ChromeService
     ) {
-        this.apiDomain = environment.mainApiBase
+        this.apiDomain = environment.mainApiBase;
         this.$wallet = new Subject<string>();
-        this.chromeSer
-            .getStorage(STORAGE_NAME.n3Networks)
-            .subscribe((networksRes) => {
-                this.n3Networks = networksRes;
-                this.chromeSer
-                    .getStorage(STORAGE_NAME.n3SelectedNetworkIndex)
-                    .subscribe((index) => {
-                        this.n3SelectedNetworkIndex = index;
-                        this.n3Network =
-                            this.n3Networks[this.n3SelectedNetworkIndex];
-                    });
-            });
-        this.chromeSer
-            .getStorage(STORAGE_NAME.n2Networks)
-            .subscribe((networksRes) => {
-                this.n2Networks = networksRes;
-                this.chromeSer
-                    .getStorage(STORAGE_NAME.n2SelectedNetworkIndex)
-                    .subscribe((index) => {
-                        this.n2SelectedNetworkIndex = index;
-                        this.n2Network =
-                            this.n2Networks[this.n2SelectedNetworkIndex];
-                    });
-            });
-    }
-
-    modifyNetworkRpc(chainType: ChainType, index: number) {
-        if (chainType === 'Neo2') {
-            this.n2SelectedNetworkIndex = index;
-            this.n2Network = this.n2Networks[index];
-            this.chromeSer.setStorage(STORAGE_NAME.n2Networks, this.n2Networks);
-            this.chromeSer.setStorage(STORAGE_NAME.n2SelectedNetworkIndex, index);
-        } else {
-            this.n3SelectedNetworkIndex = index;
-            this.n3Network = this.n3Networks[index];
-            this.chromeSer.setStorage(STORAGE_NAME.n3Networks, this.n3Networks);
-            this.chromeSer.setStorage(STORAGE_NAME.n3SelectedNetworkIndex, index);
-        }
     }
 
     public push404(error: string) {

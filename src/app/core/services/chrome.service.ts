@@ -9,8 +9,6 @@ import {
     STORAGE_NAME,
     STORAGE_VALUE_TYPE,
     STORAGE_VALUE_MESSAGE,
-    DEFAULT_N2_RPC_NETWORK,
-    DEFAULT_N3_RPC_NETWORK,
     NetworkType,
 } from '@/app/popup/_lib';
 
@@ -480,17 +478,12 @@ export class ChromeService {
                 targetValue = {};
             }
         }
-        if (storageName === STORAGE_NAME.lang && !value) {
-            targetValue = 'en';
-        }
-        if (storageName === STORAGE_NAME.n2Networks && !value) {
-            targetValue = DEFAULT_N2_RPC_NETWORK;
-        }
-        if (storageName === STORAGE_NAME.n3Networks && !value) {
-            targetValue = DEFAULT_N3_RPC_NETWORK;
-        }
-        if (storageName === STORAGE_NAME.rateCurrency && !value) {
-            targetValue = 'USD';
+        if (
+            !value &&
+            STORAGE_VALUE_MESSAGE[storageName].hasOwnProperty('default')
+        ) {
+            console.log('-------');
+            targetValue = (STORAGE_VALUE_MESSAGE[storageName] as any).default;
         }
         return targetValue;
     }
@@ -541,12 +534,14 @@ export class ChromeService {
 
     //#region wallet
     public setWallet(w: any) {
-        const currChainType = wallet3.isAddress(w?.accounts[0].address || '', 53)
+        const currChainType = wallet3.isAddress(
+            w?.accounts[0].address || '',
+            53
+        )
             ? 'Neo3'
             : 'Neo2';
         this.setStorage(STORAGE_NAME.wallet, w);
         this.setStorage(STORAGE_NAME.chainType, currChainType);
-        // this.setNetwork();
         if (this.check) {
             this.windowCallback({
                 data: {

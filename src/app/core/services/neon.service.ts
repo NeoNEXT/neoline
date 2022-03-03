@@ -170,6 +170,21 @@ export class NeonService {
             STORAGE_NAME['walletArr-Neo3']
         );
         const Neo3AddressFlag = this.chrome.getStorage(STORAGE_NAME.neo3AddressFlag);
+
+        //#region networks
+        const getN2Networks = this.chrome.getStorage(
+            STORAGE_NAME.n2Networks
+        );
+        const getN3Networks = this.chrome.getStorage(
+            STORAGE_NAME.n3Networks
+        );
+        const getN2SelectedNetworkIndex = this.chrome.getStorage(
+            STORAGE_NAME.n2SelectedNetworkIndex
+        );
+        const getN3SelectedNetworkIndex = this.chrome.getStorage(
+            STORAGE_NAME.n3SelectedNetworkIndex
+        );
+        //#endregion
         return forkJoin([
             getWallet,
             getNeo2WIFArr,
@@ -177,8 +192,20 @@ export class NeonService {
             getNeo2WalletArr,
             getNeo3WalletArr,
             Neo3AddressFlag,
+            getN2Networks,
+            getN2SelectedNetworkIndex,
+            getN3Networks,
+            getN3SelectedNetworkIndex,
         ]).pipe(
             map((res) => {
+                //#region networks
+                this.global.n2Networks = res[6];
+                this.global.n2SelectedNetworkIndex = res[7];
+                this.global.n3Networks = res[8];
+                this.global.n3SelectedNetworkIndex = res[9];
+                this.global.n2Network = res[6][res[7]];
+                this.global.n3Network = res[8][res[9]];
+                //#endregion
                 if (
                     !res[5] &&
                     res[2] &&

@@ -1,25 +1,22 @@
-export const NEO = '0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b';
-export const GAS = '0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7';
+export const NEO =
+    '0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b';
+export const GAS =
+    '0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7';
 export const NEO3 = '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5';
 export const GAS3 = '0xd2a4cff31913016155e38e474a2c06d08be276cf';
 export enum ChainType {
     Neo2 = 'Neo2',
-    Neo3 = 'Neo3'
+    Neo3 = 'Neo3',
 }
 
-export enum Neo2ChainId {
-    MainNet = 1,
-    TestNet = 2,
-    PrivateNet = 5,
-}
-
-export enum Neo3ChainId {
-    MainNet = 3,
-    TestNet = 4,
-    PrivateNet = 6,
-}
-
-export const DEFAULT_NETWORKS = ['MainNet', 'TestNet', 'N3MainNet', 'N3TestNet'];
+export const DEFAULT_NETWORKS = [
+    'MainNet',
+    'TestNet',
+    'PrivateNet',
+    'N3MainNet',
+    'N3TestNet',
+    'N3PrivateNet',
+];
 
 export enum WitnessScope {
     None = 0,
@@ -33,7 +30,7 @@ export enum WitnessScope {
 enum NetworkType {
     MainNet = 'MainNet',
     TestNet = 'TestNet',
-    PrivateNet = 'PrivateNet'
+    PrivateNet = 'PrivateNet',
 }
 export interface RpcNetwork {
     name: string;
@@ -41,36 +38,56 @@ export interface RpcNetwork {
     network: NetworkType;
     explorer?: string;
     magicNumber?: number;
+    chainId: number;
 }
 
 export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
     {
-        rpcUrl: 'http://seed5.ngd.network:20332',
-        name: 'N2 Testnet',
-        explorer: 'https://testnet.neotube.io/',
-        network: NetworkType.TestNet
-    },
-    {
         rpcUrl: 'http://seed7.ngd.network:10332',
         name: 'N2 Mainnet',
         explorer: 'https://neotube.io/',
-        network: NetworkType.MainNet
+        network: NetworkType.MainNet,
+        chainId: 1,
+    },
+    {
+        rpcUrl: 'http://seed5.ngd.network:20332',
+        name: 'N2 Testnet',
+        explorer: 'https://testnet.neotube.io/',
+        network: NetworkType.TestNet,
+        chainId: 2,
+    },
+    {
+        rpcUrl: '',
+        name: 'N2 PrivateNet',
+        explorer: '',
+        network: NetworkType.PrivateNet,
+        chainId: 5,
     },
 ];
 
 export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
     {
+        rpcUrl: 'https://n3seed2.ngd.network:10332',
+        name: 'N3 Mainnet',
+        magicNumber: 860833102,
+        explorer: 'https://neo3.neotube.io/',
+        network: NetworkType.MainNet,
+        chainId: 3,
+    },
+    {
         rpcUrl: 'http://seed3t4.neo.org:20332',
         name: 'N3 Testnet',
         magicNumber: 877933390,
         explorer: 'https://neo3.testnet.neotube.io/',
-        network: NetworkType.TestNet
+        network: NetworkType.TestNet,
+        chainId: 4,
     },
     {
-        rpcUrl: 'http://seed7.ngd.network:10332',
-        name: 'N3 Mainnet',
-        magicNumber: 860833102,
-        explorer: 'https://neo3.neotube.io/',
-        network: NetworkType.MainNet
+        rpcUrl: '',
+        name: 'N3 PrivateNet',
+        magicNumber: undefined,
+        explorer: '',
+        network: NetworkType.PrivateNet,
+        chainId: 6,
     },
 ];

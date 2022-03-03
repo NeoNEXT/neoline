@@ -17,23 +17,6 @@ export const ChainTypeGroups: SelectItem[] = [
     }
 ];
 
-/**
- * chainId 1 Neo2 MainNet
- * chainId 2 Neo2 TestNet
- * chainId 3 N3 MainNet
- * chainId 4 N3 TestNet
- * @param N3MainNet MainNet is not yet online, MainNet Id 3
- *
- * @export
- * @enum {number}
- */
-export enum ChainId {
-    Neo2MainNet = 1,
-    Neo2TestNet = 2,
-    N3MainNet = 3,
-    N3TestNet = 4,
-}
-
 export enum NetworkType {
     MainNet = 'MainNet',
     TestNet = 'TestNet',

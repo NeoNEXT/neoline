@@ -262,7 +262,7 @@ export function getWalletType() {
     return new Promise<string>((resolve, reject) => {
         getLocalStorage('wallet', (wallet) => {
             let currChainType = 'Neo2';
-            if (wallet3.isAddress(wallet.accounts[0].address, 53)) {
+            if (wallet && wallet3.isAddress(wallet.accounts[0].address, 53)) {
                 currChainType = 'Neo3';
             }
             resolve(currChainType);

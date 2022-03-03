@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
-import { GlobalService, NeonService } from '@app/core';
+import { GlobalService, NeonService, ChromeService } from '@app/core';
 import { Router, RouterEvent, NavigationEnd } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupHomeMenuDialogComponent } from './_dialogs';
-import { RpcNetwork } from './_lib';
+import { RpcNetwork, STORAGE_NAME } from './_lib';
 
 @Component({
     templateUrl: 'popup.component.html',
@@ -23,7 +23,8 @@ export class PopupComponent implements OnInit {
         private global: GlobalService,
         private neon: NeonService,
         private router: Router,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private chromeSer: ChromeService,
     ) {
         this.walletIsOpen = false;
         this.isLogin = false;
@@ -101,26 +102,15 @@ export class PopupComponent implements OnInit {
     }
 
     public modifyNet(index: number) {
-        if (this.neon.currentWalletChainType === 'Neo2') {
-            if (index === this.selectedNetworkIndex) {
-                return;
-            }
-            if (this.selectedNetworkIndex === 0) {
-                this.global.modifyNetworkRpc('Neo2', 1);
-            } else {
-                this.global.modifyNetworkRpc('Neo2', 0);
-            }
-        } else {
-            if (index === this.selectedNetworkIndex) {
-                return;
-            }
-            if (this.selectedNetworkIndex === 0) {
-                this.global.modifyNetworkRpc('Neo3', 1);
-            } else {
-                this.global.modifyNetworkRpc('Neo3', 0);
-            }
+        if (index === this.selectedNetworkIndex) {
+            return;
         }
         this.selectedNetworkIndex = index;
+        if (this.neon.currentWalletChainType === 'Neo2') {
+            this.chromeSer.setStorage(STORAGE_NAME.n2SelectedNetworkIndex, index);
+        } else {
+            this.chromeSer.setStorage(STORAGE_NAME.n3SelectedNetworkIndex, index);
+        }
         location.reload();
     }
 }
