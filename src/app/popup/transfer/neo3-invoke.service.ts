@@ -132,8 +132,8 @@ export class Neo3InvokeService {
 
         return from(
             createTransaction()
-                .then(checkNetworkFee)
                 .then(checkSystemFee)
+                .then(checkNetworkFee)
                 .then(() => {
                     return vars.tx;
                 })
@@ -148,7 +148,9 @@ export class Neo3InvokeService {
     }
 
     async calculateNetworkFee(txn) {
-        const txClone = new tx.Transaction(txn);
+        let txClone = txn.export();
+        txClone.systemFee = new BigNumber(txn.systemFee).shiftedBy(8).toFixed(0) as any;
+        txClone = new tx.Transaction(txClone);
         const wif =
             this.neon.WIFArr[
                 this.neon.walletArr.findIndex(
