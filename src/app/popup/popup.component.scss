@@ -106,3 +106,8 @@
         }
     }
 }
+
+span.set-net {
+    margin-left: 5px;
+    color: map-get($neo-line-default, 500);
+}

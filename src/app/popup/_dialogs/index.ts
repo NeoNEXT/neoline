@@ -15,3 +15,4 @@ export { PopupAuthorizationListDialogComponent } from './authorization-list/auth
 export { PopupDapiPromptComponent } from './dapi-Prompt/dapi-Prompt.component';
 export { PopupNftTxDetailDialogComponent } from './nft-tx-detail/nft-tx-detail.dialog';
 export { PopupNftTokenDetailDialogComponent } from './nft-token-detail/nft-token-detail.dialog';
+export { PopupSetPrivateNetDialogComponent } from './set-private-net/set-private-net.dialog';

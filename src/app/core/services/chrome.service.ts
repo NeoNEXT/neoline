@@ -249,6 +249,24 @@ export class ChromeService {
         });
     }
 
+    resetWatch(chainType: ChainType, network: NetworkType) {
+        const storageName = `watch_${network.toLowerCase()}-${chainType}`;
+        const nftStorageName = `nft_watch_${network.toLowerCase()}-${chainType}`;
+        if (!this.check) {
+            localStorage.setItem(storageName, JSON.stringify({}));
+            localStorage.setItem(nftStorageName, JSON.stringify({}));
+            return;
+        }
+        try {
+            const saveData = {};
+            saveData[storageName] = {};
+            saveData[nftStorageName] = {};
+            this.crx.setLocalStorage(saveData);
+        } catch (e) {
+            console.log('set watch failed', e);
+        }
+    }
+
     public clearAssetFile() {
         this.removeStorage(STORAGE_NAME.assetCNYRate);
         this.removeStorage(STORAGE_NAME.assetUSDRate);
@@ -482,7 +500,6 @@ export class ChromeService {
             !value &&
             STORAGE_VALUE_MESSAGE[storageName].hasOwnProperty('default')
         ) {
-            console.log('-------');
             targetValue = (STORAGE_VALUE_MESSAGE[storageName] as any).default;
         }
         return targetValue;

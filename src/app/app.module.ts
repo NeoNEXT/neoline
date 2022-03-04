@@ -9,6 +9,7 @@ import { PopupModule } from './popup';
 import { N404Module } from './404';
 import { CoreModule } from './core';
 import { PopupNotificationModule } from './popup/notification/notification.module';
+import { TransferModule } from './transfer/transfer.module';
 
 @NgModule({
     declarations: [AppComponent],
@@ -19,6 +20,7 @@ import { PopupNotificationModule } from './popup/notification/notification.modul
         CoreModule,
         ShareModule,
         PopupModule,
+        TransferModule,
         PopupNotificationModule,
         N404Module,
     ],

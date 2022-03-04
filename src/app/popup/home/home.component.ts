@@ -315,14 +315,6 @@ export class PopupHomeComponent implements OnInit {
     }
     //#endregion
 
-    hideNep11(): boolean {
-        const network = this.currentWalletIsN3 ? this.global.n3Network.network : this.global.n2Network.network;
-        if (network === NetworkType.PrivateNet) {
-            return true;
-        }
-        return false;
-    }
-
     //#region claim
     private syncNow() {
         this.transfer
