@@ -15,6 +15,10 @@
     </button>
 </div>
 
+<div class="my-assets" routerLink="/popup/my-assets">{{ 'myAssets' | translate | async }}<img src="/assets/images/arrow-right.png" alt=""></div>
+
+<p class="search-title">{{ 'searchResult' | translate | async}}</p>
+
 <div class="popup-assets-list">
     <app-asset-item *ngIf="searchAsset" [asset]="searchAsset" (onAddAsset)="addAsset()"></app-asset-item>
     <div class="loading" *ngIf="isLoading">{{ 'loading' | translate | async}}</div>

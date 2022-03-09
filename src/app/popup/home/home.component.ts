@@ -50,7 +50,6 @@ export class PopupHomeComponent implements OnInit {
     showClaim = false;
     init = false;
 
-    assetList: Asset[] = [];
     showBackup: boolean = null;
 
     currentWalletIsN3;
@@ -87,7 +86,6 @@ export class PopupHomeComponent implements OnInit {
             this.getTxStatus();
         }
         this.initClaim();
-        this.getAssetList();
         this.showBackup = this.chrome.getHaveBackupTip();
         if (this.showBackup === null) {
             this.chrome.getWalletStatus(this.neon.address).subscribe((res) => {
@@ -227,91 +225,6 @@ export class PopupHomeComponent implements OnInit {
                 }
             })
         })
-    }
-    //#endregion
-
-    //#region asset logo and rate
-    async getAssetList() {
-        const balanceArr = await this.assetState.getAddressBalances(
-            this.wallet.accounts[0].address
-        );
-        this.balance = balanceArr.find((b) => b.asset_id === this.assetId);
-        this.getAssetRate();
-        this.chrome
-            .getWatch(
-                this.neon.address,
-                this.neon.currentWalletChainType,
-                this.neon.currentWalletChainType === 'Neo2'
-                    ? this.global.n2Network.network
-                    : this.global.n3Network.network
-            )
-            .subscribe((watching) => {
-                const showAssetList = [];
-                let rateSymbol = '';
-                console.log(balanceArr);
-                console.log(watching);
-                balanceArr.map((r) => {
-                    if (
-                        r.balance &&
-                        new BigNumber(r.balance).comparedTo(0) > 0
-                    ) {
-                        rateSymbol += r.symbol + ',';
-                    }
-                    showAssetList.push(r);
-                });
-                rateSymbol = rateSymbol.slice(0, -1);
-                this.getAssetListRate(rateSymbol);
-                watching.forEach((w) => {
-                    if (
-                        balanceArr.findIndex((r) => r.asset_id === w.asset_id) <
-                        0
-                    ) {
-                        showAssetList.push(w);
-                    }
-                });
-                this.assetList = showAssetList;
-            });
-    }
-    // Get asset exchange rate
-    private getAssetListRate(rateSymbol: string) {
-        this.assetState.getAssetRate(rateSymbol).subscribe((rateBalance) => {
-            this.assetList.map((d) => {
-                if (d.symbol.toLowerCase() in rateBalance) {
-                    try {
-                        d.rateBalance = new BigNumber(
-                            rateBalance[d.symbol.toLowerCase()] || 0
-                        )
-                            .times(new BigNumber(d.balance))
-                            .toFixed();
-                    } catch (error) {
-                        d.rateBalance = '0';
-                    }
-                }
-                return d;
-            });
-        });
-    }
-    private getAssetRate() {
-        if (
-            this.balance.balance &&
-            bignumber(this.balance.balance).comparedTo(0) === 1
-        ) {
-            this.assetState
-                .getAssetRate(this.balance.symbol)
-                .subscribe((rateBalance) => {
-                    if (this.balance.symbol.toLowerCase() in rateBalance) {
-                        this.balance.rateBalance = new BigNumber(
-                            rateBalance[this.balance.symbol.toLowerCase()] || 0
-                        )
-                            .times(new BigNumber(this.balance.balance || 0))
-                            .toFixed();
-                    } else {
-                        this.balance.rateBalance = '0';
-                    }
-                });
-        } else {
-            this.balance.rateBalance = '0';
-        }
     }
     //#endregion
 

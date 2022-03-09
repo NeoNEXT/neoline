@@ -2,9 +2,9 @@ import { Injectable } from '@angular/core';
 import { HttpService } from '../services/http.service';
 import { GlobalService } from '../services/global.service';
 import { ChromeService } from '../services/chrome.service';
-import { Observable, Subject, from, of, forkJoin } from 'rxjs';
-import { Asset, Balance, NEO, GAS, UTXO } from 'src/models/models';
-import { map, refCount, publish } from 'rxjs/operators';
+import { Observable, from, of, forkJoin } from 'rxjs';
+import { Asset, NEO, GAS, UTXO } from 'src/models/models';
+import { map } from 'rxjs/operators';
 import { GasFeeSpeed } from '@popup/_lib/type';
 import { bignumber } from 'mathjs';
 import { rpc } from '@cityofzion/neon-js';
@@ -23,16 +23,11 @@ import { hexstring2str, base642hex } from '@cityofzion/neon-core-neo3/lib/u';
 
 @Injectable()
 export class AssetState {
-    public $webAddAssetId: Subject<Balance> = new Subject();
-    public $webDelAssetId: Subject<string> = new Subject();
     private assetRate: Map<string, {}> = new Map();
     private neo3AssetRate: Map<string, {}> = new Map();
     public rateCurrency: string;
 
-    public balanceSource = new Subject<Balance[]>();
-    public balanceSub$ = this.balanceSource.asObservable();
     public gasFeeSpeed: GasFeeSpeed;
-    public neo3GasFeeSpeed: GasFeeSpeed;
     public gasFeeDefaultSpeed: GasFeeSpeed = {
         slow_price: '0',
         propose_price: '0.011',
@@ -54,10 +49,7 @@ export class AssetState {
         });
     }
 
-    public pushBalance(balance: Balance[]) {
-        this.balanceSource.next(balance);
-    }
-    public changeRateCurrency(currency) {
+    changeRateCurrency(currency) {
         this.rateCurrency = currency;
         let tempStorageName;
         const isNeo3 = this.neonService.currentWalletChainType === 'Neo3';
@@ -79,59 +71,13 @@ export class AssetState {
         });
     }
 
-    //#region add remove asset
-    public pushDelAssetId(id) {
-        this.$webDelAssetId.next(id);
-    }
-
-    public popDelAssetId(): Observable<any> {
-        return this.$webDelAssetId.pipe(publish(), refCount());
-    }
-
-    public pushAddAssetId(id) {
-        this.$webAddAssetId.next(id);
-    }
-
-    public popAddAssetId(): Observable<any> {
-        return this.$webAddAssetId.pipe(publish(), refCount());
-    }
-    //#endregion
-
-    public getNeo2Utxo(address: string, assetId: string): Observable<UTXO[]> {
-        const data = {
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'getunspents',
-            params: [address],
-        };
-        const rpcUrl = this.global.n2Network.rpcUrl;
-        return this.http.rpcPost(rpcUrl, data).pipe(
-            map((res) => {
-                if (assetId.includes(res.balance[0].asset_hash)) {
-                    return res.balance[0].unspent.map(({ n, value, txid }) => ({
-                        n,
-                        txid,
-                        value,
-                        asset_id: res.balance[0].asset_hash,
-                    }));
-                }
-                if (assetId.includes(res.balance[1].asset_hash)) {
-                    return res.balance[1].unspent.map(({ n, value, txid }) => ({
-                        n,
-                        txid,
-                        value,
-                        asset_id: res.balance[1].asset_hash,
-                    }));
-                }
-            })
-        );
-    }
-
-    public clearCache() {
+    clearCache() {
         this.assetRate = new Map();
         this.neo3AssetRate = new Map();
     }
 
+    //#region claim
+    // neo2
     public fetchClaim(address: string): Observable<any> {
         const getClaimable = from(
             rpc.Query.getClaimable(address).execute(
@@ -159,7 +105,19 @@ export class AssetState {
             })
         );
     }
+    //neo3
+    public getUnclaimedGas(address: string): Observable<any> {
+        const data = {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getunclaimedgas',
+            params: [address],
+        };
+        return this.http.rpcPost(this.global.n3Network.rpcUrl, data);
+    }
+    //#endregion
 
+    //#region rate
     public getRate(): Observable<any> {
         const chain =
             this.neonService.currentWalletChainType === 'Neo3' ? 'neo3' : 'neo';
@@ -228,6 +186,77 @@ export class AssetState {
             })
         );
     }
+    //#endregion
+
+    //#region other
+    async getMoney(symbol: string, balance: string | number): Promise<string> {
+        let rate: any;
+        try {
+            rate = await this.getAssetRate(symbol).toPromise();
+        } catch (error) {
+            rate = {};
+        }
+        if (symbol.toLowerCase() in rate) {
+            return bignumber(rate[symbol.toLowerCase()])
+                .times(bignumber(balance))
+                .toFixed();
+        } else {
+            return '0';
+        }
+    }
+
+    async searchAsset(q: string): Promise<Asset> {
+        const data = {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getcontractstate',
+            params: [q],
+        };
+        const isN3 = this.neonService.currentWalletChainType === 'Neo3';
+        const rpcUrl = isN3
+            ? this.global.n3Network.rpcUrl
+            : this.global.n2Network.rpcUrl;
+        const res = await this.http.rpcPost(rpcUrl, data).toPromise();
+        const symbol = await this.getAssetSymbol(res.hash).toPromise();
+        const decimals = await this.getAssetDecimal(res.hash).toPromise();
+        const asset: Asset = {
+            name: isN3 ? res?.manifest?.name : res?.name,
+            asset_id: res?.hash,
+            symbol,
+            decimals,
+        };
+        return asset;
+    }
+
+    getNeo2Utxo(address: string, assetId: string): Observable<UTXO[]> {
+        const data = {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getunspents',
+            params: [address],
+        };
+        const rpcUrl = this.global.n2Network.rpcUrl;
+        return this.http.rpcPost(rpcUrl, data).pipe(
+            map((res) => {
+                if (assetId.includes(res.balance[0].asset_hash)) {
+                    return res.balance[0].unspent.map(({ n, value, txid }) => ({
+                        n,
+                        txid,
+                        value,
+                        asset_id: res.balance[0].asset_hash,
+                    }));
+                }
+                if (assetId.includes(res.balance[1].asset_hash)) {
+                    return res.balance[1].unspent.map(({ n, value, txid }) => ({
+                        n,
+                        txid,
+                        value,
+                        asset_id: res.balance[1].asset_hash,
+                    }));
+                }
+            })
+        );
+    }
 
     getAssetSymbol(assetId: string): Observable<string> {
         const isN3 = this.neonService.currentWalletChainType === 'Neo3';
@@ -262,78 +291,6 @@ export class AssetState {
         );
     }
 
-    public async getMoney(
-        symbol: string,
-        balance: string | number
-    ): Promise<string> {
-        let rate: any;
-        try {
-            rate = await this.getAssetRate(symbol).toPromise();
-        } catch (error) {
-            rate = {};
-        }
-        if (symbol.toLowerCase() in rate) {
-            return bignumber(rate[symbol.toLowerCase()])
-                .times(bignumber(balance))
-                .toFixed();
-        } else {
-            return '0';
-        }
-    }
-
-    public getGasFee(): Observable<any> {
-        if (this.neonService.currentWalletChainType === 'Neo3') {
-            return this.fetchNeo3GasFee();
-        }
-        return this.http.get(`${this.global.apiDomain}/v1/neo2/fees`).pipe(
-            map((res: any) => {
-                this.gasFeeSpeed = res || this.gasFeeDefaultSpeed;
-                return res || this.gasFeeDefaultSpeed;
-            })
-        );
-    }
-
-    fetchNeo3GasFee(): Observable<any> {
-        return this.http.get(`${this.global.apiDomain}/v1/neo3/fees`).pipe(
-            map((res: any) => {
-                res.slow_price = bignumber(res.slow_price)
-                    .dividedBy(bignumber(10).pow(8))
-                    .toFixed();
-                res.propose_price = bignumber(res.propose_price)
-                    .dividedBy(bignumber(10).pow(8))
-                    .toFixed();
-                res.fast_price = bignumber(res.fast_price)
-                    .dividedBy(bignumber(10).pow(8))
-                    .toFixed();
-                this.neo3GasFeeSpeed = res || this.gasFeeDefaultSpeed;
-                return res || this.gasFeeDefaultSpeed;
-            })
-        );
-    }
-
-    public async searchAsset(q: string): Promise<Asset> {
-        const data = {
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'getcontractstate',
-            params: [q],
-        };
-        const isN3 = this.neonService.currentWalletChainType === 'Neo3';
-        const rpcUrl = isN3
-            ? this.global.n3Network.rpcUrl
-            : this.global.n2Network.rpcUrl;
-        const res = await this.http.rpcPost(rpcUrl, data).toPromise();
-        const symbol = await this.getAssetSymbol(res.hash).toPromise();
-        const decimals = await this.getAssetDecimal(res.hash).toPromise();
-        const asset: Asset = {
-            name: isN3 ? res.manifest.name : res.name,
-            asset_id: res.hash,
-            symbol,
-            decimals,
-        };
-        return asset;
-    }
-
     async getAssetDetail(address: string, assetId: string): Promise<Asset> {
         const balance = await this.getAddressBalances(address);
         const watching = await this.chrome
@@ -364,16 +321,38 @@ export class AssetState {
         }
         return this.getNeo2AddressBalances(address);
     }
+    //#endregion
 
-    public getUnclaimedGas(address: string): Observable<any> {
-        const data = {
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'getunclaimedgas',
-            params: [address],
-        };
-        return this.http.rpcPost(this.global.n3Network.rpcUrl, data);
+    //#region gas fee
+    getGasFee(): Observable<any> {
+        if (this.neonService.currentWalletChainType === 'Neo3') {
+            return this.fetchNeo3GasFee();
+        }
+        return this.http.get(`${this.global.apiDomain}/v1/neo2/fees`).pipe(
+            map((res: any) => {
+                this.gasFeeSpeed = res || this.gasFeeDefaultSpeed;
+                return res || this.gasFeeDefaultSpeed;
+            })
+        );
     }
+
+    fetchNeo3GasFee(): Observable<any> {
+        return this.http.get(`${this.global.apiDomain}/v1/neo3/fees`).pipe(
+            map((res: any) => {
+                res.slow_price = bignumber(res.slow_price)
+                    .dividedBy(bignumber(10).pow(8))
+                    .toFixed();
+                res.propose_price = bignumber(res.propose_price)
+                    .dividedBy(bignumber(10).pow(8))
+                    .toFixed();
+                res.fast_price = bignumber(res.fast_price)
+                    .dividedBy(bignumber(10).pow(8))
+                    .toFixed();
+                return res || this.gasFeeDefaultSpeed;
+            })
+        );
+    }
+    //#endregion
 
     //#region private function
     private async getNeo2AddressBalances(address: string): Promise<Asset[]> {
@@ -410,7 +389,7 @@ export class AssetState {
     }
     private handleNeo2NativeBalanceResponse(data) {
         const target = [DEFAULT_NEO2_ASSETS.NEO, DEFAULT_NEO2_ASSETS.GAS];
-        data.balances.forEach((item) => {
+        (data?.balances || []).forEach((item) => {
             if (item.asset === NEO) {
                 target[0].balance = item.value;
             }
@@ -422,7 +401,7 @@ export class AssetState {
     }
     private handleNeo2BalancesResponse(data): Promise<Asset[]> {
         const result: Asset[] = [];
-        data.balance.forEach(({ amount, asset_hash }) => {
+        (data?.balance || []).forEach(({ amount, asset_hash }) => {
             result.push({
                 balance: amount,
                 asset_id: asset_hash,
@@ -435,7 +414,7 @@ export class AssetState {
         const result: Asset[] = [];
         let hasNeo = false;
         let hasGas = false;
-        data.balance.forEach(({ amount, assethash }) => {
+        (data?.balance || []).forEach(({ amount, assethash }) => {
             const assetItem: Asset = {
                 balance: amount,
                 asset_id: assethash,
@@ -495,13 +474,17 @@ export class AssetState {
                     method: 'invokefunction',
                     params: [asset_id, 'decimals'],
                 };
-                const decimalsReq = this.http.rpcPost(rpcUrl, data).toPromise();
+                const decimalsReq = this.http
+                    .rpcPost(rpcUrl, data)
+                    .toPromise()
+                    .catch((err) => err);
                 const symbolReq = this.http
                     .rpcPost(rpcUrl, {
                         ...data,
                         params: [asset_id, 'symbol'],
                     })
-                    .toPromise();
+                    .toPromise()
+                    .catch((err) => err);
                 targetIndexs.push(index);
                 rpcAssetDecimalsReqs.push(decimalsReq);
                 rpcAssetSymbolReqs.push(symbolReq);
@@ -585,13 +568,17 @@ export class AssetState {
                     method: 'invokefunction',
                     params: [asset_id, 'decimals'],
                 };
-                const decimalsReq = this.http.rpcPost(rpcUrl, data).toPromise();
+                const decimalsReq = this.http
+                    .rpcPost(rpcUrl, data)
+                    .toPromise()
+                    .catch((err) => err);
                 const symbolReq = this.http
                     .rpcPost(rpcUrl, {
                         ...data,
                         params: [asset_id, 'symbol'],
                     })
-                    .toPromise();
+                    .toPromise()
+                    .catch((err) => err);
                 targetIndexs.push(index);
                 rpcAssetDecimalsReqs.push(decimalsReq);
                 rpcAssetSymbolReqs.push(symbolReq);

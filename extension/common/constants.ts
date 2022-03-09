@@ -10,12 +10,12 @@ export enum ChainType {
 }
 
 export const DEFAULT_NETWORKS = [
-    'MainNet',
-    'TestNet',
-    'PrivateNet',
-    'N3MainNet',
-    'N3TestNet',
-    'N3PrivateNet',
+    'N2 MainNet',
+    'N2 TestNet',
+    'N2 PrivateNet',
+    'N3 MainNet',
+    'N3 TestNet',
+    'N3 PrivateNet',
 ];
 
 export enum WitnessScope {

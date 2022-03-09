@@ -15,7 +15,6 @@ import {
 } from './guards/wallet.guard';
 import { AssetState } from './states/asset.state';
 import { TransactionState } from './states/transaction.state';
-import { LoaderDialog } from './dialogs/loader/loader.dialog';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SettingState } from './states/setting.state';
@@ -25,7 +24,7 @@ import { TransferService } from './services/transfer.service';
 import { HomeService } from './services/home.service';
 
 @NgModule({
-    declarations: [LoaderDialog],
+    declarations: [],
     imports: [
         CommonModule,
         HttpClientModule,
@@ -52,6 +51,6 @@ import { HomeService } from './services/home.service';
         TransferService,
         HomeService,
     ],
-    entryComponents: [LoaderDialog],
+    entryComponents: [],
 })
 export class CoreModule {}

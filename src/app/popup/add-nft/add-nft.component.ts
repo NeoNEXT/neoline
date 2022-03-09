@@ -34,6 +34,7 @@ export class PopupAddNftComponent implements OnInit {
     }
 
     public searchCurrency() {
+        this.isLoading = true;
         this.nftState.searchNft(this.searchValue).then(
             (res) => {
                 this.searchNft = res;
@@ -43,9 +44,11 @@ export class PopupAddNftComponent implements OnInit {
                 if (index >= 0) {
                     this.searchNft.watching = true;
                 }
+                this.isLoading = false;
             },
             () => {
                 this.searchNft = {};
+                this.isLoading = false;
             }
         );
     }

@@ -91,7 +91,7 @@ window.addEventListener('message', async (e) => {
                     if (currChainType === 'Neo3') {
                         getLocalStorage('n3Networks', (n3Networks) => {
                             getLocalStorage('n3SelectedNetworkIndex', (n3SelectedNetworkIndex) => {
-                                const n3Network = n3Networks === undefined ? DEFAULT_N3_RPC_NETWORK[0] : n3Networks[n3SelectedNetworkIndex || 0];
+                                const n3Network = (n3Networks || DEFAULT_N3_RPC_NETWORK)[n3SelectedNetworkIndex || 0];
                                 e.data.parameter.network = n3Network.network;
                                 e.data.nodeUrl = n3Network.rpcUrl;
                                 chrome.runtime.sendMessage(e.data, (response) => {

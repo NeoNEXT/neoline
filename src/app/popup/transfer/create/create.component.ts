@@ -457,12 +457,11 @@ export class TransferCreateComponent implements OnInit {
             let txid: string;
             switch (this.neon.currentWalletChainType) {
                 case 'Neo2':
-                    res = await this.txState.rpcSendRawTransaction(
-                        tx.serialize(true)
-                    );
-                    if (
-                        !res
-                    ) {
+                    try {
+                        res = await this.txState.rpcSendRawTransaction(
+                            tx.serialize(true)
+                        );
+                    } catch (error) {
                         throw {
                             msg: 'Transaction rejected by RPC node.',
                         };
@@ -470,10 +469,11 @@ export class TransferCreateComponent implements OnInit {
                     txid = '0x' + tx.hash;
                     break;
                 case 'Neo3':
-                    res = await this.neo3Transfer.sendNeo3Tx(
-                        tx as Transaction3
-                    );
-                    if (!res) {
+                    try {
+                        res = await this.neo3Transfer.sendNeo3Tx(
+                            tx as Transaction3
+                        );
+                    } catch (error) {
                         throw {
                             msg: 'Transaction rejected by RPC node.',
                         };
@@ -576,7 +576,6 @@ export class TransferCreateComponent implements OnInit {
             }
             res[net][address][assetId].unshift(transaction);
             this.chrome.setStorage(STORAGE_NAME.transaction, res);
-            this.txState.pushTxSource();
             const setData = {};
             setData[`${this.network}TxArr`] =
                 (await this.chrome.getLocalStorage(`${this.network}TxArr`)) || [];

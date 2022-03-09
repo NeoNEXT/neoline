@@ -132,12 +132,6 @@ export class PopupNftTxPageComponent implements OnInit, OnDestroy {
                         txData = this.inTransaction.concat(txData);
                         this.txData = txData;
                     }
-                    // 重新获取地址余额，更新整个页面的余额
-                    // this.nftState
-                    //     .getNftTokens(this.neon.address, this.nftContract)
-                    //     .subscribe((res) => {
-                    //         this.asset.pushBalance(res);
-                    //     });
                     this.loading = false;
                 });
             });

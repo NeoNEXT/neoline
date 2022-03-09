@@ -1,4 +1,5 @@
-<div class="asset-item" [routerLink]="['/popup/asset', asset.asset_id]">
+<div class="loading" *ngIf="isLoading">{{ 'loading' | translate | async}}</div>
+<div class="asset-item" *ngFor="let asset of myAssets" [routerLink]="['/popup/asset', asset.asset_id]">
     <div class="avatar-box">
         <img [assetId]="asset?.asset_id" appErrorSrc alt="">
     </div>

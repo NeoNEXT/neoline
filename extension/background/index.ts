@@ -2,7 +2,6 @@ export {
     getStorage,
     httpGet,
     httpPost,
-    httpGetImage,
     setStorage,
     removeStorage,
     clearStorage,
@@ -67,10 +66,10 @@ export function expand() {
 (function init() {
     setInterval(async () => {
         let chainType = await getLocalStorage('chainType', () => { });
-        const n3Networks = (await getLocalStorage('n3Networks', () => { })) || DEFAULT_N2_RPC_NETWORK;
-        const n2Networks = (await getLocalStorage('n2Networks', () => { })) || DEFAULT_N3_RPC_NETWORK;
-        const n3SelectedNetworkIndex = (await getLocalStorage('n3SelectedNetworkIndex', () => { })) || 0;
+        const n2Networks = (await getLocalStorage('n2Networks', () => { })) || DEFAULT_N2_RPC_NETWORK;
+        const n3Networks = (await getLocalStorage('n3Networks', () => { })) || DEFAULT_N3_RPC_NETWORK;
         const n2SelectedNetworkIndex = (await getLocalStorage('n2SelectedNetworkIndex', () => { })) || 0;
+        const n3SelectedNetworkIndex = (await getLocalStorage('n3SelectedNetworkIndex', () => { })) || 0;
         currN2Network = n2Networks[n2SelectedNetworkIndex];
         currN3Network = n3Networks[n3SelectedNetworkIndex];
         if (!chainType) {
@@ -368,13 +367,13 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     id: 1,
                 };
                 const nep5Data = { ...nativeData, method: 'getnep5balances' };
-                const nativeReq = httpPostPromise(currN2Network.rpcUrl, nativeData);
-                const nepReq = httpPostPromise(currN2Network.rpcUrl, nep5Data);
+                const nativeReq = httpPostPromise(currN2Network.rpcUrl, nativeData).catch(err => err);
+                const nepReq = httpPostPromise(currN2Network.rpcUrl, nep5Data).catch(err => err);
                 nativeBalanceReqs.push(nativeReq);
                 nep5BalanceReqs.push(nepReq);
                 if (item.fetchUTXO) {
                     const utxoData = { ...nativeData, method: 'getunspents' };
-                    const utxoReq = httpPostPromise(currN2Network.rpcUrl, utxoData);
+                    const utxoReq = httpPostPromise(currN2Network.rpcUrl, utxoData).catch(err => err);
                     utxoReqs.push(utxoReq);
                 }
             }
@@ -428,7 +427,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                                 returnData[item.address].push(assetRes);
                             }
                         }
-                        if (res[k] && res[k].address === item.address) {
+                        if (res[k].address && res[k].address === item.address) {
                             res[k].balance.forEach(utxoAsset => {
                                 const assetIndex = returnData[item.address].findIndex(assetItem =>
                                     assetItem.assetID.includes(utxoAsset.asset_hash));
@@ -948,7 +947,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     params: [item.address],
                     id: 1,
                 };
-                const tempReq = httpPostPromise(currN3Network.rpcUrl, reqData);
+                const tempReq = httpPostPromise(currN3Network.rpcUrl, reqData).catch(err => err);
                 balanceReqs.push(tempReq);
             }
             try {

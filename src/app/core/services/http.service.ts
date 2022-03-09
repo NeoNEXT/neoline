@@ -8,53 +8,12 @@ import { NeonService } from './neon.service';
 
 @Injectable()
 export class HttpService {
-    // private completeResUrl = ['/v1/asset/exchange_rate'];
     constructor(
         private http: HttpClient,
         private chrome: ChromeService,
         private global: GlobalService,
         private neon: NeonService
     ) {}
-
-    public getImage(url: string, lastModified = ''): Observable<any> {
-        const tempHeader = {};
-        if (lastModified) {
-            tempHeader['If-Modified-Since'] = lastModified;
-        }
-        if (this.chrome.check) {
-            return from(
-                new Promise((resolve) => {
-                    this.chrome.httpGetImage(
-                        url,
-                        (res) => {
-                            resolve(res);
-                        },
-                        tempHeader
-                    );
-                })
-            );
-        }
-        return from(
-            new Promise((resolve) => {
-                const xhr = new XMLHttpRequest();
-                xhr.responseType = 'blob';
-                xhr.open('GET', url, true);
-                if (tempHeader) {
-                    for (const key in tempHeader) {
-                        if (key) {
-                            xhr.setRequestHeader(key, tempHeader[key]);
-                        }
-                    }
-                }
-                xhr.onreadystatechange = () => {
-                    if (xhr.readyState === 4) {
-                        resolve(xhr);
-                    }
-                };
-                xhr.send();
-            })
-        );
-    }
 
     public get(url: string): Observable<any> {
         let network =
@@ -99,50 +58,50 @@ export class HttpService {
                 })
             );
     }
-    public post(url: string, data: any): Observable<any> {
-        let network =
-            this.neon.currentWalletChainType === 'Neo2'
-                ? this.global.n2Network.network.toLowerCase()
-                : this.global.n3Network.network.toLowerCase();
-        if (network === 'privatenet') {
-            network = 'testnet';
-        }
-        if (this.chrome.check) {
-            return from(
-                new Promise((resolve, reject) => {
-                    this.chrome.httpPost(
-                        url,
-                        data,
-                        (res) => {
-                            if (res && res.status === 'success') {
-                                resolve(res.data);
-                            } else {
-                                reject((res && res.msg) || res);
-                            }
-                        },
-                        {
-                            Network: network,
-                        }
-                    );
-                })
-            );
-        }
-        return this.http
-            .post(url, data, {
-                headers: {
-                    Network: network,
-                },
-            })
-            .pipe(
-                map((res: any) => {
-                    if (res && res.status === 'success') {
-                        return res.data;
-                    } else {
-                        throw (res && res.msg) || res;
-                    }
-                })
-            );
-    }
+    // public post(url: string, data: any): Observable<any> {
+    //     let network =
+    //         this.neon.currentWalletChainType === 'Neo2'
+    //             ? this.global.n2Network.network.toLowerCase()
+    //             : this.global.n3Network.network.toLowerCase();
+    //     if (network === 'privatenet') {
+    //         network = 'testnet';
+    //     }
+    //     if (this.chrome.check) {
+    //         return from(
+    //             new Promise((resolve, reject) => {
+    //                 this.chrome.httpPost(
+    //                     url,
+    //                     data,
+    //                     (res) => {
+    //                         if (res && res.status === 'success') {
+    //                             resolve(res.data);
+    //                         } else {
+    //                             reject((res && res.msg) || res);
+    //                         }
+    //                     },
+    //                     {
+    //                         Network: network,
+    //                     }
+    //                 );
+    //             })
+    //         );
+    //     }
+    //     return this.http
+    //         .post(url, data, {
+    //             headers: {
+    //                 Network: network,
+    //             },
+    //         })
+    //         .pipe(
+    //             map((res: any) => {
+    //                 if (res && res.status === 'success') {
+    //                     return res.data;
+    //                 } else {
+    //                     throw (res && res.msg) || res;
+    //                 }
+    //             })
+    //         );
+    // }
 
     public rpcPost(url: string, data: any): Observable<any> {
         if (this.chrome.check) {
@@ -197,5 +156,4 @@ export class HttpService {
             })
         );
     }
-    public put() {}
 }

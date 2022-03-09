@@ -4,8 +4,8 @@ import { STORAGE_NAME } from '@/app/popup/_lib';
 
 @Injectable()
 export class NotificationService {
-    content: any;
-    EN = {
+    public content: any;
+    private EN = {
         close: 'Close',
         copied: 'Copied!',
         hiddenSucc: 'Hidden success!',
@@ -41,7 +41,7 @@ export class NotificationService {
         InsufficientGas: 'Insufficient GAS to pay for fees',
         SystemFeeHasChanged: 'Note: system fee has changed, please confirm again.',
     };
-    CN = {
+    private CN = {
         close: '关闭',
         copied: '已复制!',
         hiddenSucc: '隐藏成功!',

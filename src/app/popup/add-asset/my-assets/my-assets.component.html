@@ -1,0 +1,16 @@
+<div class="nav">
+    <div class="content">
+        <img src="/assets/images/nav-back.png" routerLink="/popup/add-asset" alt="">
+        <span class="title">{{ 'myAssets' | translate | async }}</span>
+        <!-- <span class="save">{{ 'saveChanges' | translate | async }}</span> -->
+    </div>
+    <div class="divide"></div>
+</div>
+
+<div class="popup-assets-list">
+    <app-my-asset-item *ngFor="let asset of myAssets; index as index" [asset]="asset" [index]="index"
+        (onAddAsset)="addAsset($event)" (removeAssetOutput)="removeAsset($event)">
+    </app-my-asset-item>
+    <div class="loading" *ngIf="isLoading">{{ 'loading' | translate | async}}</div>
+
+</div>

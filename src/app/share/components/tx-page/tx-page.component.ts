@@ -138,12 +138,6 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                         );
                         txData = this.inTransaction.concat(txData);
                         this.txData = txData;
-                        // Re-acquire the address balance, update the balance of the entire page
-                        this.asset
-                            .getAddressBalances(this.neon.address)
-                            .then((res) => {
-                                this.asset.pushBalance(res);
-                            });
                         this.loading = false;
                     });
                 });

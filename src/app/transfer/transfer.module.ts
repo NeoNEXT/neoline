@@ -4,7 +4,6 @@ import { TransferRoutingModule } from './transfer.route';
 import { TransferComponent } from './transfer.component';
 import { TransferResultComponent } from './result/result.component';
 import { ShareModule } from '../share';
-import { TransferService } from './transfer.service';
 import { TransferExportComponent } from './export/export.component';
 
 @NgModule({
@@ -15,7 +14,7 @@ import { TransferExportComponent } from './export/export.component';
     ],
     imports: [CommonModule, TransferRoutingModule, ShareModule],
     exports: [],
-    providers: [TransferService],
+    providers: [],
     entryComponents: [],
 })
 export class TransferModule {}

@@ -62,6 +62,7 @@ export class ChromeService {
         });
     }
 
+    //#region watch, NFT watch
     public getWatch(
         address: string,
         chainType: ChainType,
@@ -156,7 +157,6 @@ export class ChromeService {
             }
         });
     }
-
     public getNftWatch(
         address: string,
         chainType: ChainType,
@@ -248,7 +248,6 @@ export class ChromeService {
             }
         });
     }
-
     resetWatch(chainType: ChainType, network: NetworkType) {
         const storageName = `watch_${network.toLowerCase()}-${chainType}`;
         const nftStorageName = `nft_watch_${network.toLowerCase()}-${chainType}`;
@@ -266,7 +265,9 @@ export class ChromeService {
             console.log('set watch failed', e);
         }
     }
+    //#endregion
 
+    //#region reset method
     public clearAssetFile() {
         this.removeStorage(STORAGE_NAME.assetCNYRate);
         this.removeStorage(STORAGE_NAME.assetUSDRate);
@@ -294,7 +295,9 @@ export class ChromeService {
         this.setStorage(STORAGE_NAME['walletArr-Neo3'], []);
         this.setWallet(undefined);
     }
+    //#endregion
 
+    //#region should login
     public getLogin(): boolean {
         if (!this.check) {
             return sessionStorage.getItem('shouldLogin') === 'true';
@@ -318,7 +321,9 @@ export class ChromeService {
             }
         }
     }
+    //#endregion
 
+    //#region backup
     public getHaveBackupTip() {
         if (!this.check) {
             if (sessionStorage.getItem('haveBackupTip') === 'true') {
@@ -349,7 +354,9 @@ export class ChromeService {
             }
         }
     }
+    //#endregion
 
+    //#region crx method
     public getLocalStorage(key): Promise<any> {
         return this.crx.getLocalStorage(key, (res) => {
             return res;
@@ -384,18 +391,6 @@ export class ChromeService {
         }
     }
 
-    public httpGetImage(
-        url: string,
-        callback: (arg0: any) => void,
-        headers: object = null
-    ) {
-        try {
-            this.crx.httpGetImage(url, callback, headers);
-        } catch (e) {
-            console.log('not in crx env');
-        }
-    }
-
     public httpPost(
         url: string,
         data: any,
@@ -408,6 +403,7 @@ export class ChromeService {
             console.log('not in crx env');
         }
     }
+    //#endregion
 
     //#region storage
     public setStorage(storageName: STORAGE_NAME, value: any) {

@@ -296,7 +296,6 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
             }
             res[net][address][assetId].unshift(transaction);
             this.chrome.setStorage(STORAGE_NAME.transaction, res);
-            this.txState.pushTxSource();
         });
     }
 

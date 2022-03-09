@@ -62,12 +62,12 @@ window.addEventListener('message', async (e) => {
             getLocalStorage('chainType', async (res) => {
                 if (res === 'Neo2') {
                     getLocalStorage('n2Networks', (n2Networks) => {
-                        getLocalStorage('n2SelectedNetworkIndex', (n2SelectedNetworkIndex) => {
-                            const n2Network = n2SelectedNetworkIndex === undefined ? DEFAULT_N2_RPC_NETWORK[0] : n2Networks[n2SelectedNetworkIndex || 0];
+                        getLocalStorage('n2SelectedNetworkIndex', (index) => {
+                            const n2Network = (n2Networks || DEFAULT_N2_RPC_NETWORK)[index || 0];
                             const returnData = {
                                 chainId: n2Network.chainId,
                                 networks: DEFAULT_NETWORKS,
-                                defaultNetwork: n2Network.network
+                                defaultNetwork: n2Network.name
                             };
                             window.postMessage({
                                 return: requestTarget.Networks,
@@ -78,12 +78,12 @@ window.addEventListener('message', async (e) => {
                     })
                 } else {
                     getLocalStorage('n3Networks', (n3Networks) => {
-                        getLocalStorage('n3SelectedNetworkIndex', (n3SelectedNetworkIndex) => {
-                            const n3Network = n3SelectedNetworkIndex === undefined ? DEFAULT_N3_RPC_NETWORK[0] : n3Networks[n3SelectedNetworkIndex || 0];
+                        getLocalStorage('n3SelectedNetworkIndex', (index) => {
+                            const n3Network = (n3Networks || DEFAULT_N3_RPC_NETWORK)[index || 0];
                             const returnData = {
                                 chainId: n3Network.chainId,
                                 networks: DEFAULT_NETWORKS,
-                                defaultNetwork: `N3${n3Network.network}`
+                                defaultNetwork: n3Network.name
                             };
                             window.postMessage({
                                 return: requestTarget.Networks,

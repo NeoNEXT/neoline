@@ -22,7 +22,7 @@
 <div class="popup-assets-list">
     <app-asset-item *ngIf="searchNft?.name" [asset]="searchNft" (onAddAsset)="addNft()"></app-asset-item>
     <div class="loading" *ngIf="isLoading">{{ 'loading' | translate | async}}</div>
-    <p *ngIf="!searchNft?.name" class="no-data">
+    <p *ngIf="!searchNft?.name && !isLoading" class="no-data">
         {{ 'noMoreData' | translate | async }}
     </p>
 </div>

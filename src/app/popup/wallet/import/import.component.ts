@@ -5,6 +5,8 @@ import {
     EventEmitter,
     OnInit,
     Output,
+    ChangeDetectorRef,
+    AfterContentChecked,
 } from '@angular/core';
 import { WalletInitConstant } from '../../_lib/constant';
 import { WalletCreation, WalletImport } from '../../_lib/models';
@@ -19,7 +21,9 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
     templateUrl: 'import.component.html',
     styleUrls: ['import.component.scss'],
 })
-export class PopupWalletImportComponent implements OnInit, AfterContentInit {
+export class PopupWalletImportComponent
+    implements OnInit, AfterContentInit, AfterContentChecked
+{
     neonWallet: any = wallet2;
 
     public loading = false;
@@ -41,7 +45,12 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
 
     @Output() submit = new EventEmitter<any>();
 
-    constructor(private global: GlobalService, private neon: NeonService, private chrome: ChromeService) {
+    constructor(
+        private global: GlobalService,
+        private neon: NeonService,
+        private chrome: ChromeService,
+        private cdref: ChangeDetectorRef
+    ) {
         this.isInit = true;
         this.limit = WalletInitConstant;
 
@@ -70,6 +79,10 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
         });
     }
 
+    ngAfterContentChecked() {
+        this.cdref.detectChanges();
+    }
+
     public onFileSelected(event: any) {
         this.nep6File = event.target.files[0];
         if (this.nep6File) {
@@ -95,8 +108,9 @@ export class PopupWalletImportComponent implements OnInit, AfterContentInit {
                     this.nep6Name = this.nep6Json.name;
                     this.walletNep6Import.walletName = this.nep6Json.name;
                 }
-                this.walletNep6Import.EncrpytedKey = (this.nep6Json
-                    .accounts[0] as any).key;
+                this.walletNep6Import.EncrpytedKey = (
+                    this.nep6Json.accounts[0] as any
+                ).key;
             };
             reader.onerror = (evt) => {
                 console.log('error reading file');

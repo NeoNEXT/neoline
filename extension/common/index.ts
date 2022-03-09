@@ -27,29 +27,6 @@ export function httpGet(url, callback, headers?) {
     xhr.send();
 }
 
-export function httpGetImage(url, callback, headers) {
-    const xhr = new XMLHttpRequest();
-    xhr.responseType = 'blob';
-    xhr.open('GET', url, true);
-    if (headers) {
-        for (const key in headers) {
-            if (key) {
-                xhr.setRequestHeader(key, headers[key]);
-            }
-        }
-    }
-    xhr.onreadystatechange = () => {
-        if (xhr.readyState === 4) {
-            try {
-                callback(xhr);
-            } catch (e) {
-                callback('request failed');
-            }
-        }
-    };
-    xhr.send();
-}
-
 export function httpPostPromise(url, data) {
     return new Promise((resolve, reject) => {
         httpPost(url, data, (res) => {
@@ -140,19 +117,6 @@ export function notification(title = '', msg = '') {
         title,
         message: msg
     });
-}
-
-function getUseAgent() {
-    const defaultAgent = navigator.userAgent;
-    const agentArr = defaultAgent.split(' ');
-    let res = '';
-    agentArr.forEach(item => {
-        if(item.match('Chrome') !== null) {
-            res += item;
-        }
-    })
-    res += ` AppVersion/${chrome.runtime.getManifest().version ? chrome.runtime.getManifest().version : 'debug'}`;
-    return res;
 }
 
 export async function getAssetSymbol(assetId: string, rpcUrl: string) {

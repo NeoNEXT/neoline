@@ -1,11 +1,9 @@
 import { Injectable } from '@angular/core';
 import { NeonService } from './neon.service';
-import { HttpService } from './http.service';
 import { GlobalService } from './global.service';
 import { Transaction, TransactionInput } from '@cityofzion/neon-core/lib/tx';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
-import { UTXO, GAS } from '@/models/models';
+import { GAS } from '@/models/models';
 import { wallet } from '@cityofzion/neon-core';
 import { AssetState } from '../states/asset.state';
 
@@ -13,7 +11,6 @@ import { AssetState } from '../states/asset.state';
 export class TransferService {
     constructor(
         private neon: NeonService,
-        private http: HttpService,
         private global: GlobalService,
         private assetState: AssetState
     ) { }
@@ -50,7 +47,7 @@ export class TransferService {
         }
     }
 
-    public addFee(from: string, newTx: Transaction, fee: number = 0): Observable<Transaction> {
+    private addFee(from: string, newTx: Transaction, fee: number = 0): Observable<Transaction> {
         return new Observable(observer => {
             this.assetState.getNeo2Utxo(from, GAS).subscribe(res => {
                 let curr = 0.0;

@@ -1,14 +1,11 @@
 import { Injectable } from '@angular/core';
 import { Subject, Observable } from 'rxjs';
 import { publish, refCount } from 'rxjs/operators';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { LoaderDialog } from '../dialogs/loader/loader.dialog';
 import { environment } from '@/environments/environment';
 import { NotificationService } from './notification.service';
-import { ChromeService } from './chrome.service';
-import { add, subtract, multiply, divide, bignumber } from 'mathjs';
+import { add, subtract, multiply, bignumber } from 'mathjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChainType, RpcNetwork } from '@/app/popup/_lib';
 
@@ -30,10 +27,8 @@ export class GlobalService {
     public n2SelectedNetworkIndex: number;
 
     constructor(
-        private matDialog: MatDialog,
         private snackBar: MatSnackBar,
-        private notification: NotificationService,
-        private chromeSer: ChromeService
+        private notification: NotificationService
     ) {
         this.apiDomain = environment.mainApiBase;
         this.$wallet = new Subject<string>();
@@ -53,24 +48,6 @@ export class GlobalService {
      */
     public walletListen(): Observable<string> {
         return this.$wallet.pipe(publish(), refCount());
-    }
-
-    public loader(
-        msg: string,
-        cancelable: boolean = false
-    ): MatDialogRef<LoaderDialog> {
-        return this.matDialog.open(LoaderDialog, {
-            data: {
-                msg,
-                cancelable,
-            },
-            disableClose: !cancelable,
-            panelClass: 'dialog-transparent',
-        });
-    }
-
-    public logoError(img: Event) {
-        (img.target as any).src = '/assets/images/logo.png';
     }
 
     public handlePrcError(error, chain: ChainType) {
@@ -127,22 +104,5 @@ export class GlobalService {
     }
     public mathmul(a: number, b: number): number {
         return parseFloat(multiply(bignumber(a), bignumber(b)).toString());
-    }
-    public mathDiv(a: number, b: number): number {
-        return parseFloat(divide(bignumber(a), bignumber(b)).toString());
-    }
-    public getUseAgent() {
-        const defaultAgent = navigator.userAgent;
-        const agentArr = defaultAgent.split(' ');
-        let res = '';
-        agentArr.forEach((item) => {
-            if (item.match('Chrome') !== null) {
-                res += item;
-            }
-        });
-        res += ` AppVersion/${
-            this.chromeSer.getVersion() ? this.chromeSer.getVersion() : 'debug'
-        }`;
-        return res;
     }
 }

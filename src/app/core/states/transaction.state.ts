@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpService } from '../services/http.service';
 import { GlobalService } from '../services/global.service';
-import { Subject, Observable, of, forkJoin } from 'rxjs';
+import { Observable, of, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { NeonService } from '../services/neon.service';
 import { NEO3_CONTRACT, GAS3_CONTRACT, ChainType } from '@popup/_lib';
@@ -12,18 +12,12 @@ import { hexstring2str, base642hex } from '@cityofzion/neon-core-neo3/lib/u';
 
 @Injectable()
 export class TransactionState {
-    private txSource = new Subject();
-    public txSub$ = this.txSource.asObservable();
     constructor(
         private http: HttpService,
         private global: GlobalService,
         private neonService: NeonService,
         private assetState: AssetState
     ) {}
-
-    public pushTxSource() {
-        this.txSource.next('new');
-    }
 
     rpcSendRawTransaction(tx) {
         const data = {
@@ -79,7 +73,7 @@ export class TransactionState {
             })
             return forkJoin(reqs).pipe(map((res: any[]) => {
                 const result = [];
-                res.forEach(item => {
+                (res || []).forEach(item => {
                     console.log(item);
                     if (item?.blocktime) {
                         result.push(item.txid);
@@ -101,7 +95,7 @@ export class TransactionState {
         })
         return forkJoin(reqs).pipe(map((res: any[]) => {
             const result = [];
-            res.forEach(item => {
+            (res || []).forEach(item => {
                 console.log(item);
                 if (item?.blocktime) {
                     result.push(item.hash);
@@ -184,8 +178,9 @@ export class TransactionState {
         if (asset === NEO || asset === GAS) {
             res = this.handleNeo2NativeTxResponse(res);
         } else {
-            res = res.filter((item) => item.asset_id === asset);
-            res = this.handleNeo2TxResponse(res);
+            res.received = (res?.received || []).filter((item) => asset.includes(item.asset_hash));
+            res.sent = (res?.sent || []).filter((item) => asset.includes(item.asset_hash));
+            res = await this.handleNeo2TxResponse(res);
         }
         res = res.sort((a, b) => b.block_time - a.block_time);
         return res;
@@ -199,7 +194,7 @@ export class TransactionState {
     }
     private handleNeo2NativeTxResponse(data): Transaction[] {
         const target: Transaction[] = [];
-        data.sent.forEach(({ asset, asset_hash, transactions }) => {
+        (data?.sent || []).forEach(({ asset, asset_hash, transactions }) => {
             transactions.forEach(({ timestamp, txid, amount, block_index }) => {
                 target.push({
                     value: `-${amount}`,
@@ -212,7 +207,7 @@ export class TransactionState {
                 });
             });
         });
-        data.received.forEach(({ asset, asset_hash, transactions }) => {
+        (data?.received || []).forEach(({ asset, asset_hash, transactions }) => {
             transactions.forEach(({ timestamp, txid, amount, block_index }) => {
                 target.push({
                     value: amount,
@@ -225,11 +220,22 @@ export class TransactionState {
                 });
             });
         });
+        target.sort((a, b) => a.txid.localeCompare(b.txid));
+        for (let i = 1; i < target.length;) {
+            if (target[i].txid === target[i - 1].txid) {
+                target[i].value = new BigNumber(target[i].value).plus(new BigNumber(target[i-1].value));
+                target[i].type = target[i].value.comparedTo(0) > 0 ? 'received' : 'sent';
+                target[i].value = target[i].value.toFixed();
+                target.splice(i - 1, 1);
+            } else {
+                i++;
+            }
+        }
         return target;
     }
     private handleNeo2TxResponse(data): Promise<Transaction[]> {
         const result: Transaction[] = [];
-        data.sent.forEach(
+        (data?.sent || []).forEach(
             ({
                 amount,
                 asset_hash,
@@ -250,7 +256,7 @@ export class TransactionState {
                 });
             }
         );
-        data.received.forEach(
+        (data?.received || []).forEach(
             ({
                 amount,
                 asset_hash,
@@ -276,7 +282,7 @@ export class TransactionState {
     }
     private handleN3TxResponse(data): Promise<Transaction[]> {
         const result: Transaction[] = [];
-        data.sent.forEach(
+        (data?.sent || []).forEach(
             ({
                 timestamp,
                 assethash,
@@ -307,7 +313,7 @@ export class TransactionState {
                 result.push(txItem);
             }
         );
-        data.received.forEach(
+        (data?.received || []).forEach(
             ({
                 timestamp,
                 assethash,
@@ -339,6 +345,23 @@ export class TransactionState {
             }
         );
         // return of(result).toPromise();
+        result.sort((a, b) => {
+            if (a.txid.localeCompare(b.txid) === 0) {
+                return a.asset_id.localeCompare(b.asset_id);
+            } else {
+                return a.txid.localeCompare(b.txid);
+            }
+        });
+        for (let i = 1; i < result.length;) {
+            if (result[i].txid === result[i - 1].txid && result[i].asset_id === result[i - 1].asset_id) {
+                result[i].value = new BigNumber(result[i].value).plus(new BigNumber(result[i-1].value));
+                result[i].type = result[i].value.comparedTo(0) > 0 ? 'received' : 'sent';
+                result[i].value = result[i].value.toFixed();
+                result.splice(i - 1, 1);
+            } else {
+                i++;
+            }
+        }
         return this.getN3AssetSymbolAndDecimal(result);
     }
     private getNeo2AssetSymbolAndDecimal(
@@ -368,13 +391,13 @@ export class TransactionState {
                     method: 'invokefunction',
                     params: [asset_id, 'decimals'],
                 };
-                const decimalsReq = this.http.rpcPost(rpcUrl, data).toPromise();
+                const decimalsReq = this.http.rpcPost(rpcUrl, data).toPromise().catch(err => err);
                 const symbolReq = this.http
                     .rpcPost(rpcUrl, {
                         ...data,
                         params: [asset_id, 'symbol'],
                     })
-                    .toPromise();
+                    .toPromise().catch(err => err);
                 targetIndexs.push(index);
                 rpcAssetDecimalsReqs.push(decimalsReq);
                 rpcAssetSymbolReqs.push(symbolReq);
@@ -459,13 +482,13 @@ export class TransactionState {
                     method: 'invokefunction',
                     params: [asset_id, 'decimals'],
                 };
-                const decimalsReq = this.http.rpcPost(rpcUrl, data).toPromise();
+                const decimalsReq = this.http.rpcPost(rpcUrl, data).toPromise().catch(err => err);
                 const symbolReq = this.http
                     .rpcPost(rpcUrl, {
                         ...data,
                         params: [asset_id, 'symbol'],
                     })
-                    .toPromise();
+                    .toPromise().catch(err => err);
                 targetIndexs.push(index);
                 rpcAssetDecimalsReqs.push(decimalsReq);
                 rpcAssetSymbolReqs.push(symbolReq);
