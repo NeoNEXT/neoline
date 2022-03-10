@@ -8,8 +8,8 @@
             (<span class="short">{{ asset.symbol }}</span>)
         </div>
     </div>
-    <button mat-raised-button *ngIf="!asset.watching" class="unadd"
+    <button mat-raised-button *ngIf="asset?.watching===false" class="unadd"
         (click)="addAsset(index)">{{ 'add' | translate | async}}</button>
-    <img class="delete" *ngIf="asset.watching" src="/assets/images/add-asset/delete.png" alt=""
+    <img class="delete" *ngIf="asset?.watching!==false" src="/assets/images/add-asset/delete.png" alt=""
         (click)="removeAsset(index)">
 </div>

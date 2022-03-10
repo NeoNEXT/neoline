@@ -39,14 +39,17 @@ export class PopupMyNftsComponent implements OnInit {
         const getNfts = this.nftState.getNfts(this.neon.address);
         forkJoin([getNfts, getWatch]).subscribe((res) => {
             this.watchNfts = res[1];
-            const target = res[0];
+            const target = [...res[0]];
             res[1].forEach((item) => {
-                const index = res[0].findIndex((m) => m.contract === item.contract)
+                const index = target.findIndex((m) => m.contract === item.contract)
                 if (index >= 0) {
-                    target[index].watching = true;
-                    return;
+                    if (item.watching === false) {
+                        target[index].watching = false;
+                    }
                 } else {
-                    target.push(item);
+                    if (item.watching === true) {
+                        target.push(item);
+                    }
                 }
             });
             this.nfts = target;
@@ -54,29 +57,39 @@ export class PopupMyNftsComponent implements OnInit {
         });
     }
 
-    addAssetCheck(index: number) {
-        this.nfts[index].watching = true;
-        this.watchNfts.push(this.nfts[index]);
+    addAsset(index: number) {
+        const asset = { ...this.nfts[index], watching: true };
+        const i = this.watchNfts.findIndex((m) => m.contract === asset.contract);
+        if (i >= 0) {
+            this.watchNfts[i].watching = true;
+        } else {
+            this.watchNfts.push(asset);
+        }
         this.chrome.setNftWatch(
             this.neon.address,
             this.watchNfts,
             this.neon.currentWalletChainType,
             this.global.n3Network.network
         );
+        this.nfts[index].watching = true;
         this.global.snackBarTip('addSucc');
     }
 
     removeAsset(index: number) {
-        this.nfts[index].watching = false;
-        this.watchNfts = this.watchNfts.filter(
-            (w) => w.contract !== this.nfts[index].contract
-        );
+        const asset = { ...this.nfts[index], watching: false };
+        const i = this.watchNfts.findIndex((m) => m.contract === asset.contract);
+        if (i >= 0) {
+            this.watchNfts[i].watching = false;
+        } else {
+            this.watchNfts.push(asset);
+        }
         this.chrome.setNftWatch(
             this.neon.address,
             this.watchNfts,
             this.neon.currentWalletChainType,
             this.global.n3Network.network
         );
+        this.nfts[index].watching = false;
         this.global.snackBarTip('hiddenSucc');
     }
 }

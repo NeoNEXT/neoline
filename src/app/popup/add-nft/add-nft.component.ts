@@ -42,7 +42,9 @@ export class PopupAddNftComponent implements OnInit {
                     (item) => item.contract === res.contract
                 );
                 if (index >= 0) {
-                    this.searchNft.watching = true;
+                    this.searchNft.watching = this.watch[index].watching;
+                } else {
+                    this.searchNft.watching = false;
                 }
                 this.isLoading = false;
             },
@@ -54,26 +56,21 @@ export class PopupAddNftComponent implements OnInit {
     }
 
     addNft() {
-        if (this.searchNft.watching) {
-            this.searchNft.watching = false;
-            this.watch = this.watch.filter(w => w.contract !== this.searchNft.contract);
-            this.chrome.setNftWatch(
-                this.neon.address,
-                this.watch,
-                this.neon.currentWalletChainType,
-                this.global.n3Network.network
-            );
-            this.global.snackBarTip('hiddenSucc');
+        this.searchNft.watching = true;
+        const index = this.watch.findIndex(
+            (w) => w.contract === this.searchNft.contract
+        );
+        if (index >= 0) {
+            this.watch[index].watching = true;
         } else {
-            this.searchNft.watching = true;
             this.watch.push(this.searchNft);
-            this.chrome.setNftWatch(
-                this.neon.address,
-                this.watch,
-                this.neon.currentWalletChainType,
-                this.global.n3Network.network
-            );
-            this.global.snackBarTip('addSucc');
         }
+        this.chrome.setNftWatch(
+            this.neon.address,
+            this.watch,
+            this.neon.currentWalletChainType,
+            this.global.n3Network.network
+        );
+        this.global.snackBarTip('addSucc');
     }
 }

@@ -22,15 +22,23 @@ export class PopupNftsComponent implements OnInit {
         const getWatch = this.chrome.getNftWatch(this.neonService.address, this.neonService.currentWalletChainType, this.global.n3Network.network);
         const getNfts = this.nftState.getNfts(this.neonService.address)
         forkJoin([getNfts, getWatch]).subscribe(res => {
-            const target = res[0];
-            res[1].forEach(item => {
-                if (res[0].find(m => m.contract === item.contract)) {
-                    return;
+            const [moneyAssets, watch] = [...res];
+            let showAssets = [...moneyAssets];
+            watch.forEach((item) => {
+                const index = showAssets.findIndex(
+                    (m) => m.contract === item.contract
+                );
+                if (index >= 0) {
+                    if (item.watching === false) {
+                        showAssets.splice(index, 1);
+                    }
                 } else {
-                    target.push(item);
+                    if (item.watching === true) {
+                        showAssets.push(item);
+                    }
                 }
-            })
-            this.nfts = target;
+            });
+            this.nfts = showAssets;
         });
     }
 }

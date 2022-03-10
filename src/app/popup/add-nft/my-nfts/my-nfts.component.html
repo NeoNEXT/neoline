@@ -8,7 +8,7 @@
 
 <div class="popup-assets-list">
     <app-my-nft-item *ngFor="let asset of nfts;let index = index" [asset]="asset" [index]="index"
-        (onAddAsset)="addAssetCheck($event)" (removeAssetOutput)="removeAsset($event)">
+        (onAddAsset)="addAsset($event)" (removeAssetOutput)="removeAsset($event)">
     </app-my-nft-item>
     <div class="loading" *ngIf="isLoading">{{ 'loading' | translate | async}}</div>
 
