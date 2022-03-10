@@ -88,20 +88,9 @@ export class PopupAssetDetailComponent implements OnInit {
             bignumber(this.balance.balance).comparedTo(0) > 0
         ) {
             this.assetState
-                .getAssetRate(this.balance.symbol)
-                .subscribe((rateBalance) => {
-                    if (this.balance.symbol.toLowerCase() in rateBalance) {
-                        this.balance.rateBalance =
-                            new BigNumber(
-                                rateBalance[
-                                    this.balance.symbol.toLowerCase()
-                                ] || '0'
-                            )
-                                .times(new BigNumber(this.balance.balance))
-                                .toFixed() || '0';
-                    } else {
-                        this.balance.rateBalance = '0';
-                    }
+                .getAssetRate(this.balance.symbol, this.balance.asset_id)
+                .then((rate) => {
+                    this.balance.rateBalance = new BigNumber(this.balance.balance).times(rate || 0).toFixed() || '0';
                 });
         } else {
             this.balance.rateBalance = '0';

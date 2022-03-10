@@ -20,10 +20,9 @@ export enum STORAGE_NAME {
     n3Networks = 'n3Networks',
     n2SelectedNetworkIndex = 'n2SelectedNetworkIndex',
     n3SelectedNetworkIndex = 'n3SelectedNetworkIndex',
-    assetUSDRate = 'assetUSDRate',
-    assetCNYRate = 'assetCNYRate',
-    neo3AssetUSDRate = 'neo3AssetUSDRate',
-    neo3AssetCNYRate = 'neo3AssetCNYRate',
+    coinsRate = 'coinsRate',
+    fiatRate = 'fiatRate',
+    neo3CoinsRate = 'neo3CoinsRate',
     rateCurrency = 'rateCurrency',
     wallet = 'wallet',
     walletArr = 'walletArr',
@@ -70,20 +69,16 @@ export const STORAGE_VALUE_MESSAGE = {
         isLocal: true,
         default: 0,
     },
-    assetUSDRate: {
-        type: STORAGE_VALUE_TYPE.map,
+    coinsRate: {
+        type: STORAGE_VALUE_TYPE.object,
         isLocal: false,
     },
-    assetCNYRate: {
-        type: STORAGE_VALUE_TYPE.map,
+    fiatRate: {
+        type: STORAGE_VALUE_TYPE.object,
         isLocal: false,
     },
-    neo3AssetUSDRate: {
-        type: STORAGE_VALUE_TYPE.map,
-        isLocal: false,
-    },
-    neo3AssetCNYRate: {
-        type: STORAGE_VALUE_TYPE.map,
+    neo3CoinsRate: {
+        type: STORAGE_VALUE_TYPE.object,
         isLocal: false,
     },
     rateCurrency: {

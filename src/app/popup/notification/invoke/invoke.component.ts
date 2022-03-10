@@ -13,6 +13,7 @@ import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { bignumber } from 'mathjs';
+import BigNumber from 'bignumber.js';
 
 
 
@@ -82,8 +83,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 }
             }
             if (Number(this.pramsData.fee) > 0) {
-                this.assetState.getMoney('GAS', Number(this.pramsData.fee)).then(res => {
-                    this.feeMoney = res;
+                this.assetState.getAssetRate('GAS', GAS).then(rate => {
+                    this.feeMoney = new BigNumber(this.pramsData.fee).times(rate || 0).toFixed();
                 })
             }
             this.dataJson = this.pramsData
@@ -537,8 +538,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 if (res === 0 || res === '0') {
                     this.feeMoney = '0';
                 } else {
-                    this.assetState.getMoney('GAS', Number(this.fee)).then(feeMoney => {
-                        this.feeMoney = feeMoney;
+                    this.assetState.getAssetRate('GAS', GAS).then(rate => {
+                        this.feeMoney = new BigNumber(this.fee).times(rate || 0).toFixed();
                     });
                 }
                 this.signTx();

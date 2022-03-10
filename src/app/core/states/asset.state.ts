@@ -23,8 +23,10 @@ import { hexstring2str, base642hex } from '@cityofzion/neon-core-neo3/lib/u';
 
 @Injectable()
 export class AssetState {
-    private assetRate: Map<string, {}> = new Map();
-    private neo3AssetRate: Map<string, {}> = new Map();
+    private coinRates;
+    private neo3CoinRates;
+    private fiatRates;
+    private rateRequestTime;
     public rateCurrency: string;
 
     public gasFeeSpeed: GasFeeSpeed;
@@ -45,35 +47,30 @@ export class AssetState {
     ) {
         this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
             this.rateCurrency = res;
-            this.changeRateCurrency(res);
         });
+        this.getLocalRate();
     }
 
-    changeRateCurrency(currency) {
-        this.rateCurrency = currency;
-        let tempStorageName;
-        const isNeo3 = this.neonService.currentWalletChainType === 'Neo3';
-        if (currency === 'CNY') {
-            tempStorageName = isNeo3
-                ? STORAGE_NAME.neo3AssetCNYRate
-                : STORAGE_NAME.assetCNYRate;
-        } else {
-            tempStorageName = isNeo3
-                ? STORAGE_NAME.neo3AssetUSDRate
-                : STORAGE_NAME.assetUSDRate;
-        }
-        this.chrome.getStorage(tempStorageName).subscribe((res) => {
-            if (isNeo3) {
-                this.neo3AssetRate = res;
-            } else {
-                this.assetRate = res;
+    getLocalRate() {
+        const getNeo2CoinsRate = this.chrome.getStorage(STORAGE_NAME.coinsRate);
+        const getN3CoinsRate = this.chrome.getStorage(
+            STORAGE_NAME.neo3CoinsRate
+        );
+        const getFiatRate = this.chrome.getStorage(STORAGE_NAME.fiatRate);
+        forkJoin([getNeo2CoinsRate, getN3CoinsRate, getFiatRate]).subscribe(
+            ([coinRate, neo3CoinRate, fiatRate]) => {
+                this.coinRates = coinRate;
+                this.neo3CoinRates = neo3CoinRate;
+                this.fiatRates = fiatRate;
             }
-        });
+        );
     }
 
     clearCache() {
-        this.assetRate = new Map();
-        this.neo3AssetRate = new Map();
+        this.coinRates = undefined;
+        this.neo3CoinRates = undefined;
+        this.fiatRates = undefined;
+        this.rateRequestTime = undefined;
     }
 
     //#region claim
@@ -130,81 +127,74 @@ export class AssetState {
         return this.http.get(`${this.global.apiDomain}/v1/fiat/rates`);
     }
 
-    public getAssetRate(coins: string): Observable<any> {
+    public async getAssetRate(
+        symbol: string,
+        assetId: string
+    ): Promise<BigNumber | undefined> {
         const isNeo3 = this.neonService.currentWalletChainType === 'Neo3';
         if (
-            !coins ||
             (isNeo3 && this.global.n3Network.network !== NetworkType.MainNet) ||
             (!isNeo3 && this.global.n2Network.network !== NetworkType.MainNet)
         ) {
-            return of({});
+            return undefined;
         }
-        coins = coins.toLowerCase();
-        const rateRes = {};
-        return forkJoin([this.getRate(), this.getFiatRate()]).pipe(
-            map(([rateBalance, fiatData]) => {
-                const targetCoinsAry = coins.split(',');
-                targetCoinsAry.forEach((coin) => {
-                    const tempRate: any = {};
-                    const price =
-                        rateBalance[coin]?.price &&
-                        new BigNumber(rateBalance[coin].price);
-                    const currency = this.rateCurrency.toUpperCase();
-                    const fiat =
-                        fiatData.rates[currency] &&
-                        new BigNumber(fiatData.rates[currency]);
-                    tempRate.rate =
-                        price && fiat
-                            ? new BigNumber(price)
-                                  .times(new BigNumber(fiat))
-                                  .toFixed()
-                            : undefined;
-                    rateRes[coin] = tempRate.rate;
-                    isNeo3
-                        ? this.neo3AssetRate.set(coin, tempRate)
-                        : this.assetRate.set(coin, tempRate);
-                });
-                let tempStorageName;
-                if (this.rateCurrency === 'CNY') {
-                    if (this.neonService.currentWalletChainType === 'Neo3') {
-                        tempStorageName = STORAGE_NAME.neo3AssetCNYRate;
-                    } else {
-                        tempStorageName = STORAGE_NAME.assetCNYRate;
-                    }
-                } else {
-                    if (this.neonService.currentWalletChainType === 'Neo3') {
-                        tempStorageName = STORAGE_NAME.neo3AssetUSDRate;
-                    } else {
-                        tempStorageName = STORAGE_NAME.assetUSDRate;
-                    }
-                }
+        const time = new Date().getTime() / 1000;
+        if (
+            !this.rateRequestTime ||
+            (isNeo3 && JSON.stringify(this.neo3CoinRates) === '{}') ||
+            (!isNeo3 && JSON.stringify(this.coinRates) === '{}') ||
+            (this.rateRequestTime && time - this.rateRequestTime > 300)
+        ) {
+            this.rateRequestTime = time;
+            const coinRateTemp = await this.getRate().toPromise();
+            if (isNeo3 && coinRateTemp) {
+                coinRateTemp.neo.asset_id = NEO3_CONTRACT;
+                this.neo3CoinRates = coinRateTemp;
                 this.chrome.setStorage(
-                    tempStorageName,
-                    isNeo3 ? this.neo3AssetRate : this.assetRate
+                    STORAGE_NAME.neo3CoinsRate,
+                    coinRateTemp
                 );
-                return rateRes;
-            })
-        );
+            }
+            if (!isNeo3 && coinRateTemp) {
+                coinRateTemp.neo.asset_id = NEO;
+                this.coinRates = coinRateTemp;
+                this.chrome.setStorage(STORAGE_NAME.coinsRate, coinRateTemp);
+            }
+            this.fiatRates = await this.getFiatRate().toPromise();
+            this.chrome.setStorage(STORAGE_NAME.fiatRate, this.fiatRates);
+        }
+        symbol = symbol.toLowerCase();
+        let price;
+        if (
+            isNeo3 &&
+            this.neo3CoinRates[symbol] &&
+            assetId.includes(this.neo3CoinRates[symbol].asset_id)
+        ) {
+            price = this.neo3CoinRates[symbol].price;
+        }
+        if (
+            !isNeo3 &&
+            this.coinRates[symbol] &&
+            assetId.includes(this.coinRates[symbol].asset_id)
+        ) {
+            price = this.coinRates[symbol].price;
+        }
+        if (price) {
+            const currency = this.rateCurrency.toUpperCase();
+            const fiat =
+                this.fiatRates.rates[currency] &&
+                this.fiatRates.rates[currency];
+            const rate =
+                price && fiat
+                    ? new BigNumber(price).times(new BigNumber(fiat))
+                    : undefined;
+            return rate;
+        }
+        return undefined;
     }
     //#endregion
 
     //#region other
-    async getMoney(symbol: string, balance: string | number): Promise<string> {
-        let rate: any;
-        try {
-            rate = await this.getAssetRate(symbol).toPromise();
-        } catch (error) {
-            rate = {};
-        }
-        if (symbol.toLowerCase() in rate) {
-            return bignumber(rate[symbol.toLowerCase()])
-                .times(bignumber(balance))
-                .toFixed();
-        } else {
-            return '0';
-        }
-    }
-
     async searchAsset(q: string): Promise<Asset> {
         const data = {
             jsonrpc: '2.0',

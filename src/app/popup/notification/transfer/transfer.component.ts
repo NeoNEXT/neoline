@@ -9,7 +9,7 @@ import {
     TransactionState,
     TransferService,
 } from '@/app/core';
-import { Balance, NEO } from '@/models/models';
+import { Balance, NEO, GAS } from '@/models/models';
 import { tx as tx2, u } from '@cityofzion/neon-js';
 import { Transaction } from '@cityofzion/neon-core/lib/tx';
 import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
@@ -19,6 +19,7 @@ import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import { bignumber } from 'mathjs';
 import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { STORAGE_NAME } from '../../_lib';
+import BigNumber from 'bignumber.js';
 
 @Component({
     templateUrl: 'transfer.component.html',
@@ -356,15 +357,11 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
 
     public async getAssetRate() {
         if (Number(this.fee) > 0) {
-            this.feeMoney = await this.asset.getMoney('GAS', Number(this.fee));
+            const rate = await this.asset.getAssetRate('GAS', GAS);
+            this.feeMoney = new BigNumber(this.fee).times(rate || 0).toFixed();
         }
-        const assetRate = await this.asset
-            .getAssetRate(this.symbol)
-            .toPromise();
-        this.money = await this.asset.getMoney(
-            this.symbol,
-            Number(this.amount)
-        );
+        const assetRate = await this.asset.getAssetRate(this.symbol, this.assetId)
+        this.money = new BigNumber(this.amount).times(assetRate || 0).toFixed();
         this.totalMoney = this.global
             .mathAdd(Number(this.feeMoney), Number(this.money))
             .toString();
@@ -415,9 +412,9 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                         this.feeMoney = '0';
                     } else {
                         this.asset
-                            .getMoney('GAS', Number(this.fee))
-                            .then((feeMoney) => {
-                                this.feeMoney = feeMoney;
+                            .getAssetRate('GAS', GAS)
+                            .then((rate) => {
+                                this.feeMoney = new BigNumber(this.fee).times(rate || 0).toFixed();
                                 this.totalMoney = this.global
                                     .mathAdd(
                                         Number(this.feeMoney),

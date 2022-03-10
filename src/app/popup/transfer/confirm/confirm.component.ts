@@ -14,6 +14,8 @@ import { NEO, GAS } from '@/models/models';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import { forkJoin } from 'rxjs';
 import { bignumber } from 'mathjs';
+import { GAS3_CONTRACT } from '../../_lib';
+import BigNumber from 'bignumber.js';
 
 @Component({
     templateUrl: 'confirm.component.html',
@@ -103,32 +105,22 @@ export class PopupTransferConfirmComponent implements OnInit {
     }
 
     public async getAssetRate() {
-        const getFeeMoney = this.getMoney('GAS', Number(this.data.fee));
-        const getTransferMoney = this.getMoney(this.symbol, Number(this.data.amount));
-        const getSystemFeeMoney = this.getMoney('GAS', this.data.systemFee || 0);
-        const getNetworkFeeMoney = this.getMoney('GAS', this.data.networkFee || 0);
+        const assetId = this.isNeo3 ? GAS3_CONTRACT : GAS;
         this.totalFee = bignumber(this.data.fee).add(this.data.systemFee || 0).add(this.data.networkFee || 0);
-        forkJoin([getFeeMoney, getSystemFeeMoney, getNetworkFeeMoney, getTransferMoney]).subscribe(res => {
-            this.feeMoney = res[0];
-            this.systemFeeMoney = res[1];
-            this.networkFeeMoney = res[2];
-            this.money = res[3];
-            this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
-        });
-    }
-
-    public async getMoney(symbol: string, balance: number): Promise<string> {
-        return new Promise((mResolve) => {
-            if (balance == 0) {
-                mResolve('0');
+        this.assetState.getAssetRate('GAS', assetId).then(rate => {
+            const gasPrice = rate || 0;
+            this.feeMoney = new BigNumber(this.data.fee).times(gasPrice).toFixed();
+            this.systemFeeMoney = new BigNumber(this.data.systemFee).times(gasPrice).toFixed();
+            this.networkFeeMoney = new BigNumber(this.data.networkFee).times(gasPrice).toFixed();
+            if (this.symbol === 'GAS') {
+                this.money = new BigNumber(this.data.amount).times(gasPrice).toFixed();
+                this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
+            } else {
+                this.assetState.getAssetRate(this.symbol, this.data.asset).then(assetRate => {
+                    this.money = new BigNumber(this.data.amount).times(assetRate || 0).toFixed();
+                    this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
+                })
             }
-            this.assetState.getAssetRate(symbol).subscribe(rate => {
-                if (symbol.toLowerCase() in rate) {
-                    mResolve(this.global.mathmul(Number(rate[symbol.toLowerCase()]), Number(balance)).toString());
-                } else {
-                    mResolve('0');
-                }
-            });
         })
     }
 
@@ -142,8 +134,9 @@ export class PopupTransferConfirmComponent implements OnInit {
             if (res !== false) {
                 this.data.fee = res;
                 this.datajson.fee = res;
-                this.assetState.getMoney('GAS', Number(this.data.fee)).then(feeMoney => {
-                    this.feeMoney = feeMoney;
+                const assetId = this.isNeo3 ? GAS3_CONTRACT : GAS;
+                this.assetState.getAssetRate('GAS', assetId).then(rate => {
+                    this.feeMoney = new BigNumber(this.data.fee).times(rate || 0).toFixed();
                     this.totalFee = bignumber(this.data.fee).add(this.data.systemFee || 0).add(this.data.networkFee || 0);
                     this.totalMoney = bignumber(this.feeMoney).add(this.systemFeeMoney).add(this.networkFeeMoney).add(this.money);
                 });

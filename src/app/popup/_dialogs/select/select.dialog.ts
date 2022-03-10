@@ -50,7 +50,7 @@ export class PopupSelectDialogComponent implements OnInit {
                 break;
             case 'currency':
                 this.rateCurrency = this.targetOption;
-                this.assetSer.changeRateCurrency(this.rateCurrency);
+                this.assetSer.rateCurrency = this.rateCurrency;
                 this.chromeSer.setStorage(STORAGE_NAME.rateCurrency, this.rateCurrency);
                 this.dialogRef.close(this.targetOption);
                 break;

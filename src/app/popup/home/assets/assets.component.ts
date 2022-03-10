@@ -7,6 +7,7 @@ import {
     NeonService,
 } from '@/app/core';
 import { forkJoin } from 'rxjs';
+import BigNumber from 'bignumber.js';
 
 @Component({
     selector: 'app-assets',
@@ -62,7 +63,21 @@ export class PopupAssetsComponent implements OnInit {
                 }
             });
             this.myAssets = showAssets;
+            this.getAssetsRate();
             this.isLoading = false;
         });
+    }
+    async getAssetsRate() {
+        for (let i = 0; i < this.myAssets.length; i++) {
+            const item = this.myAssets[i];
+            if (new BigNumber(item.balance).comparedTo(0) > 0) {
+                const rate = await this.asset.getAssetRate(item.symbol, item.asset_id);
+                if (rate) {
+                    item.rateBalance = new BigNumber(item.balance)
+                        .times(rate)
+                        .toFixed();
+                }
+            }
+        }
     }
 }

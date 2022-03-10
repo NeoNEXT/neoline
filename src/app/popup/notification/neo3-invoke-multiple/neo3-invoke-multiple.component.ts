@@ -9,9 +9,10 @@ import { requestTargetN3 } from '@/models/dapi_neo3';
 import { PopupDapiPromptComponent, PopupEditFeeDialogComponent } from '../../_dialogs';
 import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { bignumber } from 'mathjs';
-import { NEO3_CONTRACT, STORAGE_NAME } from '../../_lib';
+import { NEO3_CONTRACT, STORAGE_NAME, GAS3_CONTRACT } from '../../_lib';
 import { Neo3InvokeService } from '../../transfer/neo3-invoke.service';
 import { forkJoin } from 'rxjs';
+import BigNumber from 'bignumber.js';
 
 @Component({
     templateUrl: 'neo3-invoke-multiple.component.html',
@@ -114,25 +115,10 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         };
     }
     public async getAssetRate() {
-        this.assetState.getAssetRate('GAS').subscribe(rates => {
-            const gasPrice = rates.gas || 0;
-            this.totalFee = bignumber(this.systemFee).add(bignumber(this.networkFee)).toFixed();
-            this.totalMoney = bignumber(this.totalFee).times(bignumber(gasPrice)).toFixed();
-        })
-    }
-
-    public async getMoney(symbol: string, balance: number): Promise<string> {
-        return new Promise((mResolve) => {
-            if (balance === 0) {
-                mResolve('0');
-            }
-            this.assetState.getAssetRate(symbol).subscribe(rate => {
-                if (symbol.toLowerCase() in rate) {
-                    mResolve(this.global.mathmul(Number(rate[symbol.toLowerCase()]), Number(balance)).toString());
-                } else {
-                    mResolve('0');
-                }
-            });
+        this.assetState.getAssetRate('gas', GAS3_CONTRACT).then(rate => {
+            const gasPrice = rate || 0;
+            this.totalFee = new BigNumber(this.systemFee).plus(new BigNumber(this.networkFee)).toFixed();
+            this.totalMoney = new BigNumber(this.totalFee).times(gasPrice).toFixed();
         })
     }
 

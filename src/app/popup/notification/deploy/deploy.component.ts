@@ -13,6 +13,7 @@ import { str2hexstring, Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { utf8Encode } from '@angular/compiler/src/util';
+import BigNumber from 'bignumber.js';
 
 @Component({
     templateUrl: 'deploy.component.html',
@@ -66,8 +67,8 @@ export class PopupNoticeDeployComponent implements OnInit {
                 }
             }
             if (Number(this.pramsData.fee) > 0) {
-                this.assetState.getMoney('GAS', Number(this.fee)).then(res => {
-                    this.feeMoney = res;
+                this.assetState.getAssetRate('GAS', GAS).then(rate => {
+                    this.feeMoney = new BigNumber(this.fee).times(rate || 0).toFixed();
                 })
             }
             return;
@@ -274,8 +275,8 @@ export class PopupNoticeDeployComponent implements OnInit {
                 if (res === 0 || res === '0') {
                     this.feeMoney = '0';
                 } else {
-                    this.assetState.getMoney('GAS', Number(this.fee)).then(feeMoney => {
-                        this.feeMoney = feeMoney;
+                    this.assetState.getAssetRate('GAS', GAS).then(rate => {
+                        this.feeMoney = new BigNumber(this.fee).times(rate || 0).toFixed();
                     });
                 }
                 this.signTx();

@@ -269,10 +269,9 @@ export class ChromeService {
 
     //#region reset method
     public clearAssetFile() {
-        this.removeStorage(STORAGE_NAME.assetCNYRate);
-        this.removeStorage(STORAGE_NAME.assetUSDRate);
-        this.removeStorage(STORAGE_NAME.neo3AssetCNYRate);
-        this.removeStorage(STORAGE_NAME.neo3AssetUSDRate);
+        this.removeStorage(STORAGE_NAME.coinsRate);
+        this.removeStorage(STORAGE_NAME.neo3CoinsRate);
+        this.removeStorage(STORAGE_NAME.fiatRate);
     }
 
     public clearStorage() {
