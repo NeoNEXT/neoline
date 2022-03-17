@@ -367,18 +367,18 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     id: 1,
                 };
                 const nep5Data = { ...nativeData, method: 'getnep5balances' };
-                const nativeReq = httpPostPromise(currN2Network.rpcUrl, nativeData).catch(err => err);
-                const nepReq = httpPostPromise(currN2Network.rpcUrl, nep5Data).catch(err => err);
+                const nativeReq = httpPostPromise(currN2Network.rpcUrl, nativeData);
+                const nepReq = httpPostPromise(currN2Network.rpcUrl, nep5Data);
                 nativeBalanceReqs.push(nativeReq);
                 nep5BalanceReqs.push(nepReq);
                 if (item.fetchUTXO) {
                     const utxoData = { ...nativeData, method: 'getunspents' };
-                    const utxoReq = httpPostPromise(currN2Network.rpcUrl, utxoData).catch(err => err);
+                    const utxoReq = httpPostPromise(currN2Network.rpcUrl, utxoData);
                     utxoReqs.push(utxoReq);
                 }
             }
-            try {
-                Promise.all(nativeBalanceReqs.concat(nep5BalanceReqs).concat(utxoReqs)).then(async res => {
+            Promise.all(nativeBalanceReqs.concat(nep5BalanceReqs).concat(utxoReqs)).then(async res => {
+                try {
                     const returnData = {};
                     let i = 0;
                     let j = nativeBalanceReqs.length;
@@ -427,7 +427,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                                 returnData[item.address].push(assetRes);
                             }
                         }
-                        if (res[k].address && res[k].address === item.address) {
+                        if (res[k]?.address && res[k].address === item.address) {
                             res[k].balance.forEach(utxoAsset => {
                                 const assetIndex = returnData[item.address].findIndex(assetItem =>
                                     assetItem.assetID.includes(utxoAsset.asset_hash));
@@ -450,16 +450,24 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         error: null
                     });
                     sendResponse('');
-                })
-            } catch (error) {
+                } catch (error) {
+                    windowCallback({
+                        return: requestTarget.Balance,
+                        data: null,
+                        ID: request.ID,
+                        error: { ...ERRORS.RPC_ERROR, description: error?.error || error }
+                    });
+                    sendResponse('');
+                }
+            }).catch(error => {
                 windowCallback({
                     return: requestTarget.Balance,
                     data: null,
                     ID: request.ID,
-                    error: ERRORS.RPC_ERROR
+                    error: { ...ERRORS.RPC_ERROR, description: error?.error || error }
                 });
                 sendResponse('');
-            }
+            })
             return;
         }
         case requestTarget.Transaction: {
@@ -947,16 +955,16 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     params: [item.address],
                     id: 1,
                 };
-                const tempReq = httpPostPromise(currN3Network.rpcUrl, reqData).catch(err => err);
+                const tempReq = httpPostPromise(currN3Network.rpcUrl, reqData);
                 balanceReqs.push(tempReq);
             }
-            try {
-                Promise.all(balanceReqs).then(async res => {
+            Promise.all(balanceReqs).then(async res => {
+                try {
                     const returnData = {};
                     let i = 0;
                     for (const item of params) {
                         returnData[item.address] = [];
-                        for (const assetId of item?.contracts || []) {
+                        for (const assetId of (item?.contracts || [])) {
                             const res_1 = (res[i]?.balance || []).find(asset_1 => assetId.includes(asset_1.assethash));
                             const symbol = await getAssetSymbol(assetId, currN3Network.rpcUrl);
                             const assetRes = { assetID: assetId, amount: '0', symbol };
@@ -984,8 +992,16 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         error: null
                     });
                     sendResponse('');
-                })
-            } catch (error) {
+                } catch (error) {
+                    windowCallback({
+                        return: requestTargetN3.Balance,
+                        data: null,
+                        ID: request.ID,
+                        error: { ...ERRORS.RPC_ERROR, description: error?.error || error }
+                    });
+                    sendResponse('');
+                }
+            }).catch(error => {
                 windowCallback({
                     return: requestTargetN3.Balance,
                     data: null,
@@ -993,7 +1009,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     error: { ...ERRORS.RPC_ERROR, description: error?.error || error }
                 });
                 sendResponse('');
-            }
+            })
             return;
         }
         case requestTargetN3.Transaction: {

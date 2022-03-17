@@ -33,7 +33,7 @@ export function httpPostPromise(url, data) {
             if (res && res.result) {
                 resolve(res.result);
             } else if (res && res.error) {
-                resolve(res.error);
+                reject(res.error);
             } else {
                 reject(res);
             }
