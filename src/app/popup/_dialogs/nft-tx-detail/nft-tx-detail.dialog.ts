@@ -1,5 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { NftTransaction } from '@/models/models';
 
 @Component({
     templateUrl: 'nft-tx-detail.dialog.html',
@@ -9,7 +10,7 @@ export class PopupNftTxDetailDialogComponent {
     constructor(
         @Inject(MAT_DIALOG_DATA)
         public data: {
-            tx: any;
+            tx: NftTransaction;
             address: string;
         }
     ) {}

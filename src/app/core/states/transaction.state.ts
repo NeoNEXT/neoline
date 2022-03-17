@@ -5,10 +5,9 @@ import { Observable, of, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { NeonService } from '../services/neon.service';
 import { NEO3_CONTRACT, GAS3_CONTRACT, ChainType } from '@popup/_lib';
-import { Transaction, Asset, NEO, GAS } from '@/models/models';
-import { AssetState } from './asset.state';
+import { Transaction, NEO, GAS } from '@/models/models';
 import BigNumber from 'bignumber.js';
-import { hexstring2str, base642hex } from '@cityofzion/neon-core-neo3/lib/u';
+import { UtilServiceState } from '../util/util.service';
 
 @Injectable()
 export class TransactionState {
@@ -16,7 +15,7 @@ export class TransactionState {
         private http: HttpService,
         private global: GlobalService,
         private neonService: NeonService,
-        private assetState: AssetState
+        private util: UtilServiceState
     ) {}
 
     rpcSendRawTransaction(tx) {
@@ -26,7 +25,9 @@ export class TransactionState {
             method: 'sendrawtransaction',
             params: [tx],
         };
-        return this.http.rpcPost(this.global.n2Network.rpcUrl, data).toPromise();
+        return this.http
+            .rpcPost(this.global.n2Network.rpcUrl, data)
+            .toPromise();
     }
 
     async getAllTxs(address: string): Promise<Transaction[]> {
@@ -68,19 +69,24 @@ export class TransactionState {
                     params: [txid, 1],
                     id: 1,
                 };
-                const req = this.http.rpcPost(this.global.n2Network.rpcUrl, data);
+                const req = this.http.rpcPost(
+                    this.global.n2Network.rpcUrl,
+                    data
+                );
                 reqs.push(req);
-            })
-            return forkJoin(reqs).pipe(map((res: any[]) => {
-                const result = [];
-                (res || []).forEach(item => {
-                    console.log(item);
-                    if (item?.blocktime) {
-                        result.push(item.txid);
-                    }
+            });
+            return forkJoin(reqs).pipe(
+                map((res: any[]) => {
+                    const result = [];
+                    (res || []).forEach((item) => {
+                        console.log(item);
+                        if (item?.blocktime) {
+                            result.push(item.txid);
+                        }
+                    });
+                    return result;
                 })
-                return result;
-            }));
+            );
         }
         // neo3
         txids.forEach((txid) => {
@@ -92,17 +98,19 @@ export class TransactionState {
             };
             const req = this.http.rpcPost(this.global.n3Network.rpcUrl, data);
             reqs.push(req);
-        })
-        return forkJoin(reqs).pipe(map((res: any[]) => {
-            const result = [];
-            (res || []).forEach(item => {
-                console.log(item);
-                if (item?.blocktime) {
-                    result.push(item.hash);
-                }
+        });
+        return forkJoin(reqs).pipe(
+            map((res: any[]) => {
+                const result = [];
+                (res || []).forEach((item) => {
+                    console.log(item);
+                    if (item?.blocktime) {
+                        result.push(item.hash);
+                    }
+                });
+                return result;
             })
-            return result;
-        }));
+        );
     }
 
     //#region private function
@@ -178,8 +186,12 @@ export class TransactionState {
         if (asset === NEO || asset === GAS) {
             res = this.handleNeo2NativeTxResponse(res);
         } else {
-            res.received = (res?.received || []).filter((item) => asset.includes(item.asset_hash));
-            res.sent = (res?.sent || []).filter((item) => asset.includes(item.asset_hash));
+            res.received = (res?.received || []).filter((item) =>
+                asset.includes(item.asset_hash)
+            );
+            res.sent = (res?.sent || []).filter((item) =>
+                asset.includes(item.asset_hash)
+            );
             res = await this.handleNeo2TxResponse(res);
         }
         res = res.sort((a, b) => b.block_time - a.block_time);
@@ -207,24 +219,31 @@ export class TransactionState {
                 });
             });
         });
-        (data?.received || []).forEach(({ asset, asset_hash, transactions }) => {
-            transactions.forEach(({ timestamp, txid, amount, block_index }) => {
-                target.push({
-                    value: amount,
-                    txid,
-                    symbol: asset,
-                    asset_id: asset_hash,
-                    block_time: timestamp,
-                    type: 'received',
-                    id: block_index,
-                });
-            });
-        });
+        (data?.received || []).forEach(
+            ({ asset, asset_hash, transactions }) => {
+                transactions.forEach(
+                    ({ timestamp, txid, amount, block_index }) => {
+                        target.push({
+                            value: amount,
+                            txid,
+                            symbol: asset,
+                            asset_id: asset_hash,
+                            block_time: timestamp,
+                            type: 'received',
+                            id: block_index,
+                        });
+                    }
+                );
+            }
+        );
         target.sort((a, b) => a.txid.localeCompare(b.txid));
-        for (let i = 1; i < target.length;) {
+        for (let i = 1; i < target.length; ) {
             if (target[i].txid === target[i - 1].txid) {
-                target[i].value = new BigNumber(target[i].value).plus(new BigNumber(target[i-1].value));
-                target[i].type = target[i].value.comparedTo(0) > 0 ? 'received' : 'sent';
+                target[i].value = new BigNumber(target[i].value).plus(
+                    new BigNumber(target[i - 1].value)
+                );
+                target[i].type =
+                    target[i].value.comparedTo(0) > 0 ? 'received' : 'sent';
                 target[i].value = target[i].value.toFixed();
                 target.splice(i - 1, 1);
             } else {
@@ -233,8 +252,9 @@ export class TransactionState {
         }
         return target;
     }
-    private handleNeo2TxResponse(data): Promise<Transaction[]> {
+    private async handleNeo2TxResponse(data): Promise<Transaction[]> {
         const result: Transaction[] = [];
+        const contracts: Set<string> = new Set();
         (data?.sent || []).forEach(
             ({
                 amount,
@@ -244,6 +264,7 @@ export class TransactionState {
                 tx_hash,
                 block_index,
             }) => {
+                contracts.add(asset_hash);
                 result.push({
                     asset_id: asset_hash,
                     value: `-${amount}`,
@@ -265,6 +286,7 @@ export class TransactionState {
                 tx_hash,
                 block_index,
             }) => {
+                contracts.add(asset_hash);
                 result.push({
                     asset_id: asset_hash,
                     value: amount,
@@ -278,9 +300,18 @@ export class TransactionState {
             }
         );
         // return of(result).toPromise();
-        return this.getNeo2AssetSymbolAndDecimal(result);
+        await this.util.getAssetSymbols(Array.from(contracts), 'Neo2');
+        await this.util.getAssetDecimals(Array.from(contracts), 'Neo2');
+        result.forEach((item, index) => {
+            result[index].symbol = this.util.n2AssetSymbol.get(item.asset_id);
+            const decimals = this.util.n2AssetDecimal.get(item.asset_id);
+            result[index].value = new BigNumber(result[index].value)
+                .shiftedBy(-decimals)
+                .toFixed();
+        });
+        return result;
     }
-    private handleN3TxResponse(data): Promise<Transaction[]> {
+    private async handleN3TxResponse(data): Promise<Transaction[]> {
         const result: Transaction[] = [];
         (data?.sent || []).forEach(
             ({
@@ -301,15 +332,6 @@ export class TransactionState {
                     type: 'sent',
                     id: blockindex,
                 };
-                if (assethash === NEO3_CONTRACT) {
-                    txItem.symbol = 'NEO';
-                }
-                if (assethash === GAS3_CONTRACT) {
-                    txItem.symbol = 'GAS';
-                    txItem.value = new BigNumber(-amount)
-                        .shiftedBy(-8)
-                        .toFixed();
-                }
                 result.push(txItem);
             }
         );
@@ -332,15 +354,6 @@ export class TransactionState {
                     type: 'received',
                     id: blockindex,
                 };
-                if (assethash === NEO3_CONTRACT) {
-                    txItem.symbol = 'NEO';
-                }
-                if (assethash === GAS3_CONTRACT) {
-                    txItem.symbol = 'GAS';
-                    txItem.value = new BigNumber(amount)
-                        .shiftedBy(-8)
-                        .toFixed();
-                }
                 result.push(txItem);
             }
         );
@@ -352,199 +365,34 @@ export class TransactionState {
                 return a.txid.localeCompare(b.txid);
             }
         });
-        for (let i = 1; i < result.length;) {
-            if (result[i].txid === result[i - 1].txid && result[i].asset_id === result[i - 1].asset_id) {
-                result[i].value = new BigNumber(result[i].value).plus(new BigNumber(result[i-1].value));
-                result[i].type = result[i].value.comparedTo(0) > 0 ? 'received' : 'sent';
+        for (let i = 1; i < result.length; ) {
+            if (
+                result[i].txid === result[i - 1].txid &&
+                result[i].asset_id === result[i - 1].asset_id
+            ) {
+                result[i].value = new BigNumber(result[i].value).plus(
+                    new BigNumber(result[i - 1].value)
+                );
+                result[i].type =
+                    result[i].value.comparedTo(0) > 0 ? 'received' : 'sent';
                 result[i].value = result[i].value.toFixed();
                 result.splice(i - 1, 1);
             } else {
                 i++;
             }
         }
-        return this.getN3AssetSymbolAndDecimal(result);
-    }
-    private getNeo2AssetSymbolAndDecimal(
-        target: Transaction[]
-    ): Promise<Transaction[]> {
-        const rpcUrl = this.global.n2Network.rpcUrl;
-        const targetIndexs = [];
-        const rpcAssetDecimalsReqs = [];
-        const rpcAssetSymbolReqs = [];
-        target.forEach(({ asset_id }, index) => {
-            if (asset_id === NEO || asset_id === GAS) {
-                return;
-            }
-            if (this.assetState.n2AssetDetail.has(asset_id) === true) {
-                const decimals =
-                    this.assetState.n2AssetDetail.get(asset_id).decimals;
-                target[index].symbol =
-                    this.assetState.n2AssetDetail.get(asset_id).symbol;
-                target[index].value = new BigNumber(target[index].value)
-                    .shiftedBy(-decimals)
-                    .toFixed();
-            }
-            if (this.assetState.n2AssetDetail.has(asset_id) === false) {
-                const data = {
-                    jsonrpc: '2.0',
-                    id: 1,
-                    method: 'invokefunction',
-                    params: [asset_id, 'decimals'],
-                };
-                const decimalsReq = this.http.rpcPost(rpcUrl, data).toPromise().catch(err => err);
-                const symbolReq = this.http
-                    .rpcPost(rpcUrl, {
-                        ...data,
-                        params: [asset_id, 'symbol'],
-                    })
-                    .toPromise().catch(err => err);
-                targetIndexs.push(index);
-                rpcAssetDecimalsReqs.push(decimalsReq);
-                rpcAssetSymbolReqs.push(symbolReq);
-            }
+        const contracts: Set<string> = new Set();
+        result.forEach((item) => contracts.add(item.asset_id));
+        await this.util.getAssetSymbols(Array.from(contracts), 'Neo3');
+        await this.util.getAssetDecimals(Array.from(contracts), 'Neo3');
+        result.forEach((item, index) => {
+            result[index].symbol = this.util.n3AssetSymbol.get(item.asset_id);
+            const decimals = this.util.n3AssetDecimal.get(item.asset_id);
+            result[index].value = new BigNumber(result[index].value)
+                .shiftedBy(-decimals)
+                .toFixed();
         });
-        if (
-            rpcAssetDecimalsReqs.length === 0 &&
-            rpcAssetSymbolReqs.length === 0
-        ) {
-            return of(target).toPromise();
-        }
-        return Promise.all([
-            ...rpcAssetDecimalsReqs,
-            ...rpcAssetSymbolReqs,
-        ]).then((res) => {
-            targetIndexs.forEach((key, index) => {
-                const id = target[key].asset_id;
-                const assetDetailItem: Asset = { asset_id: id };
-                // decimals
-                if (res[index].stack) {
-                    if (res[index].stack[0].type === 'Integer') {
-                        assetDetailItem.decimals = Number(
-                            res[index].stack[0].value || 0
-                        );
-                    }
-                    if (res[index].stack[0].type === 'ByteArray') {
-                        assetDetailItem.decimals = new BigNumber(
-                            res[index].stack[0].value || 0,
-                            16
-                        ).toNumber();
-                    }
-                }
-                // symbol
-                const symbolIndex = targetIndexs.length + index;
-                if (res[symbolIndex].stack) {
-                    if (res[symbolIndex].stack[0].type === 'ByteArray') {
-                        assetDetailItem.symbol = hexstring2str(
-                            res[symbolIndex].stack[0].value
-                        );
-                    }
-                    if (res[symbolIndex].stack[0].type === 'ByteString') {
-                        assetDetailItem.symbol = hexstring2str(
-                            base642hex(res[symbolIndex].stack[0].value)
-                        );
-                    }
-                }
-                target[targetIndexs[index]].symbol = assetDetailItem.symbol;
-                target[targetIndexs[index]].value = new BigNumber(
-                    target[targetIndexs[index]].value
-                )
-                    .shiftedBy(-assetDetailItem.decimals)
-                    .toFixed();
-                this.assetState.n2AssetDetail.set(id, assetDetailItem);
-            });
-            return target;
-        });
-    }
-    private getN3AssetSymbolAndDecimal(
-        target: Transaction[]
-    ): Promise<Transaction[]> {
-        const rpcUrl = this.global.n3Network.rpcUrl;
-        const targetIndexs = [];
-        const rpcAssetDecimalsReqs = [];
-        const rpcAssetSymbolReqs = [];
-        target.forEach(({ asset_id }, index) => {
-            if (asset_id === NEO3_CONTRACT || asset_id === GAS3_CONTRACT) {
-                return;
-            }
-            if (this.assetState.n3AssetDetail.has(asset_id) === true) {
-                const decimals =
-                    this.assetState.n3AssetDetail.get(asset_id).decimals;
-                target[index].symbol =
-                    this.assetState.n3AssetDetail.get(asset_id).symbol;
-                target[index].value = new BigNumber(target[index].value)
-                    .shiftedBy(-decimals)
-                    .toFixed();
-            }
-            if (this.assetState.n3AssetDetail.has(asset_id) === false) {
-                const data = {
-                    jsonrpc: '2.0',
-                    id: 1,
-                    method: 'invokefunction',
-                    params: [asset_id, 'decimals'],
-                };
-                const decimalsReq = this.http.rpcPost(rpcUrl, data).toPromise().catch(err => err);
-                const symbolReq = this.http
-                    .rpcPost(rpcUrl, {
-                        ...data,
-                        params: [asset_id, 'symbol'],
-                    })
-                    .toPromise().catch(err => err);
-                targetIndexs.push(index);
-                rpcAssetDecimalsReqs.push(decimalsReq);
-                rpcAssetSymbolReqs.push(symbolReq);
-            }
-        });
-        if (
-            rpcAssetDecimalsReqs.length === 0 &&
-            rpcAssetSymbolReqs.length === 0
-        ) {
-            return of(target).toPromise();
-        }
-        return Promise.all([
-            ...rpcAssetDecimalsReqs,
-            ...rpcAssetSymbolReqs,
-        ]).then((res) => {
-            targetIndexs.forEach((key, index) => {
-                const id = target[key].asset_id;
-                const assetDetailItem: Asset = { asset_id: id };
-                // decimals
-                if (res[index].stack) {
-                    if (res[index].stack[0].type === 'Integer') {
-                        assetDetailItem.decimals = Number(
-                            res[index].stack[0].value || 0
-                        );
-                    }
-                    if (res[index].stack[0].type === 'ByteArray') {
-                        assetDetailItem.decimals = new BigNumber(
-                            res[index].stack[0].value || 0,
-                            16
-                        ).toNumber();
-                    }
-                }
-                // symbol
-                const symbolIndex = targetIndexs.length + index;
-                if (res[symbolIndex].stack) {
-                    if (res[symbolIndex].stack[0].type === 'ByteArray') {
-                        assetDetailItem.symbol = hexstring2str(
-                            res[symbolIndex].stack[0].value
-                        );
-                    }
-                    if (res[symbolIndex].stack[0].type === 'ByteString') {
-                        assetDetailItem.symbol = hexstring2str(
-                            base642hex(res[symbolIndex].stack[0].value)
-                        );
-                    }
-                }
-                target[targetIndexs[index]].symbol = assetDetailItem.symbol;
-                target[targetIndexs[index]].value = new BigNumber(
-                    target[targetIndexs[index]].value
-                )
-                    .shiftedBy(-assetDetailItem.decimals)
-                    .toFixed();
-                this.assetState.n3AssetDetail.set(id, assetDetailItem);
-            });
-            return target;
-        });
+        return result;
     }
     private handleNeo2TxDetailResponse(data) {
         data.vin = data.vin.reduce((prev, element) => {

@@ -39,7 +39,7 @@ export class PopupAddNftComponent implements OnInit {
             (res) => {
                 this.searchNft = res;
                 const index = this.watch.findIndex(
-                    (item) => item.contract === res.contract
+                    (item) => item.assethash === res.assethash
                 );
                 if (index >= 0) {
                     this.searchNft.watching = this.watch[index].watching;
@@ -58,7 +58,7 @@ export class PopupAddNftComponent implements OnInit {
     addNft() {
         this.searchNft.watching = true;
         const index = this.watch.findIndex(
-            (w) => w.contract === this.searchNft.contract
+            (w) => w.assethash === this.searchNft.contract
         );
         if (index >= 0) {
             this.watch[index].watching = true;

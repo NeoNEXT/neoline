@@ -8,7 +8,7 @@ import {
 } from '@angular/material/dialog';
 
 import {
-    ChromeService, AssetState, NeonService, GlobalService,
+    UtilServiceState, AssetState, NeonService, GlobalService,
 } from '@app/core';
 import { NEO, GAS } from '@/models/models';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
@@ -41,7 +41,7 @@ export class PopupTransferConfirmComponent implements OnInit {
         private dialogRef: MatDialogRef<PopupTransferConfirmComponent>,
         private neon: NeonService,
         private assetState: AssetState,
-        private global: GlobalService,
+        private util: UtilServiceState,
         @Inject(MAT_DIALOG_DATA) public data: {
             fromAddress: string ,
             toAddress: string,
@@ -98,7 +98,8 @@ export class PopupTransferConfirmComponent implements OnInit {
             return
         }
         if(this.data.symbol === '') {
-            this.symbol = (await this.assetState.getAssetSymbol(this.data.asset).toPromise());
+            const symbols = (await this.util.getAssetSymbols([this.data.asset], this.neon.currentWalletChainType));
+            this.symbol = symbols[0];
         } else {
             this.symbol = this.data.symbol;
         }

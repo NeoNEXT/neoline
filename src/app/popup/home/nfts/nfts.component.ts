@@ -1,6 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { GlobalService, NftState, NeonService, ChromeService } from '@/app/core';
-import { forkJoin } from 'rxjs';
+import {
+    GlobalService,
+    NftState,
+    NeonService,
+    ChromeService,
+} from '@/app/core';
 import { NftAsset } from '@/models/models';
 
 @Component({
@@ -9,24 +13,29 @@ import { NftAsset } from '@/models/models';
     styleUrls: ['nfts.component.scss'],
 })
 export class PopupNftsComponent implements OnInit {
-    nfts;
+    nfts: NftAsset[];
 
     constructor(
         public global: GlobalService,
         private nftState: NftState,
         private neonService: NeonService,
-        private chrome: ChromeService,
+        private chrome: ChromeService
     ) {}
 
     ngOnInit(): void {
-        const getWatch = this.chrome.getNftWatch(this.neonService.address, this.neonService.currentWalletChainType, this.global.n3Network.network);
-        const getNfts = this.nftState.getNfts(this.neonService.address)
-        forkJoin([getNfts, getWatch]).subscribe(res => {
-            const [moneyAssets, watch] = [...res];
+        const getWatch = this.chrome
+            .getNftWatch(
+                this.neonService.address,
+                this.neonService.currentWalletChainType,
+                this.global.n3Network.network
+            )
+            .toPromise();
+        const getNfts = this.nftState.getAddressNfts(this.neonService.address);
+        Promise.all([getNfts, getWatch]).then(([moneyAssets, watch]) => {
             let showAssets = [...moneyAssets];
             watch.forEach((item) => {
                 const index = showAssets.findIndex(
-                    (m) => m.contract === item.contract
+                    (m) => m.assethash === item.assethash
                 );
                 if (index >= 0) {
                     if (item.watching === false) {

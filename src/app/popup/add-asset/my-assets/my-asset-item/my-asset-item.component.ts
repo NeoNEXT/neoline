@@ -1,7 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { NEO, GAS, EXT, EDS, Asset } from '@/models/models';
+import { NEO, GAS, Asset } from '@/models/models';
 import { GlobalService } from '@/app/core';
-import { bignumber } from 'mathjs';
 import { NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
 
 @Component({

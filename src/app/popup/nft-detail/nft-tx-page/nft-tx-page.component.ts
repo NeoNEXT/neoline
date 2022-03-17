@@ -5,9 +5,9 @@ import {
     NftState,
     ChromeService,
     HttpService,
-    TransactionState
+    TransactionState,
 } from '@/app/core';
-import { Transaction } from '@/models/models';
+import { NftTransaction } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupNftTxDetailDialogComponent } from '@/app/popup/_dialogs';
 import { forkJoin } from 'rxjs';
@@ -25,7 +25,7 @@ export class PopupNftTxPageComponent implements OnInit, OnDestroy {
     public show = false;
     public network: NetworkType;
     public address: string;
-    public inTransaction: Array<Transaction>;
+    public inTransaction: Array<NftTransaction>;
     public txData: Array<any> = [];
     public currentPage = 0;
     public loading = false;
@@ -37,7 +37,7 @@ export class PopupNftTxPageComponent implements OnInit, OnDestroy {
         private nftState: NftState,
         private chrome: ChromeService,
         private http: HttpService,
-        private txState: TransactionState,
+        private txState: TransactionState
     ) {}
     ngOnInit(): void {
         this.network = this.global.n3Network.network;
@@ -57,86 +57,100 @@ export class PopupNftTxPageComponent implements OnInit, OnDestroy {
             this.currentPage = page;
         }
         this.loading = true;
-        let maxId = -1;
-        maxId = page > 1 ? this.txData[this.txData.length - 1].id - 1 : -1;
         const httpReq1 = this.nftState.getNftTransactions(
             this.neon.address,
-            this.nftContract,
-            maxId
+            this.nftContract
         );
         if (page === 1) {
-            this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((inTxData) => {
-                if (
-                    inTxData[this.network] === undefined ||
-                    inTxData[this.network][this.address] === undefined ||
-                    inTxData[this.network][this.address][this.nftContract] ===
-                        undefined
-                ) {
-                    this.inTransaction = [];
-                } else {
-                    this.inTransaction =
-                        inTxData[this.network][this.address][this.nftContract];
-                }
-                const txIdArray = [];
-                this.inTransaction = this.inTransaction.filter(
-                    (item) =>
-                        new Date().getTime() / 1000 - item.block_time <= 7200
-                );
-                this.inTransaction.forEach((item) => {
-                    txIdArray.push(item.txid);
-                });
-                let httpReq2;
-                if (txIdArray.length === 0) {
-                    httpReq2 = new Promise<any>((mResolve) => {
-                        mResolve([]);
-                    });
-                } else {
-                    httpReq2 = this.txState.getTxsValid(txIdArray, 'Neo3');
-                }
-                forkJoin([httpReq1, httpReq2]).subscribe((result: any) => {
-                    let txData = result[0] || [];
-                    const txConfirm = result[1] || [];
-                    txConfirm.forEach((item) => {
-                        const tempIndex = this.inTransaction.findIndex(
-                            (e) => e.txid === item
-                        );
-                        if (tempIndex >= 0) {
-                            this.inTransaction.splice(tempIndex, 1);
-                        }
-                    });
-                    if (inTxData[this.network] === undefined) {
-                        inTxData[this.network] = {};
-                    } else if (inTxData[this.network][this.address] === undefined) {
-                        inTxData[this.network][this.address] = {};
-                    } else if (
-                        inTxData[this.network][this.address][this.nftContract] ===
-                        undefined
+            this.chrome
+                .getStorage(STORAGE_NAME.transaction)
+                .subscribe((inTxData) => {
+                    if (
+                        inTxData[this.network] === undefined ||
+                        inTxData[this.network][this.address] === undefined ||
+                        inTxData[this.network][this.address][
+                            this.nftContract
+                        ] === undefined
                     ) {
-                        inTxData[this.network][this.address][this.nftContract] = [];
+                        this.inTransaction = [];
                     } else {
-                        inTxData[this.network][this.address][this.nftContract] =
-                            this.inTransaction;
+                        this.inTransaction =
+                            inTxData[this.network][this.address][
+                                this.nftContract
+                            ];
                     }
-                    this.chrome.setStorage(STORAGE_NAME.transaction, inTxData);
-                    this.inTransaction = this.handleLocalTxs(this.inTransaction);
-                    if (this.nftContract !== '') {
-                        if (txData.length === 0) {
-                            this.noMoreData = true;
-                        }
-                        txData = this.inTransaction.concat(txData);
-                        this.txData = txData;
+                    const txIdArray = [];
+                    this.inTransaction = this.inTransaction.filter(
+                        (item) =>
+                            new Date().getTime() / 1000 - item.block_time <=
+                            7200
+                    );
+                    this.inTransaction.forEach((item) => {
+                        txIdArray.push(item.txid);
+                    });
+                    let httpReq2;
+                    if (txIdArray.length === 0) {
+                        httpReq2 = new Promise<any>((mResolve) => {
+                            mResolve([]);
+                        });
                     } else {
-                        if (txData.length === 0) {
-                            this.noMoreData = true;
-                        }
-                        txData = this.inTransaction.concat(txData);
-                        this.txData = txData;
+                        httpReq2 = this.txState.getTxsValid(txIdArray, 'Neo3').toPromise();
                     }
-                    this.loading = false;
+                    Promise.all([httpReq1, httpReq2]).then((result: any) => {
+                        let txData = result[0] || [];
+                        const txConfirm = result[1] || [];
+                        txConfirm.forEach((item) => {
+                            const tempIndex = this.inTransaction.findIndex(
+                                (e) => e.txid === item
+                            );
+                            if (tempIndex >= 0) {
+                                this.inTransaction.splice(tempIndex, 1);
+                            }
+                        });
+                        if (inTxData[this.network] === undefined) {
+                            inTxData[this.network] = {};
+                        } else if (
+                            inTxData[this.network][this.address] === undefined
+                        ) {
+                            inTxData[this.network][this.address] = {};
+                        } else if (
+                            inTxData[this.network][this.address][
+                                this.nftContract
+                            ] === undefined
+                        ) {
+                            inTxData[this.network][this.address][
+                                this.nftContract
+                            ] = [];
+                        } else {
+                            inTxData[this.network][this.address][
+                                this.nftContract
+                            ] = this.inTransaction;
+                        }
+                        this.chrome.setStorage(
+                            STORAGE_NAME.transaction,
+                            inTxData
+                        );
+                        this.inTransaction = this.handleLocalTxs(
+                            this.inTransaction
+                        );
+                        if (this.nftContract !== '') {
+                            if (txData.length === 0) {
+                                this.noMoreData = true;
+                            }
+                            txData = this.inTransaction.concat(txData);
+                            this.txData = txData;
+                        } else {
+                            if (txData.length === 0) {
+                                this.noMoreData = true;
+                            }
+                            txData = this.inTransaction.concat(txData);
+                            this.txData = txData;
+                        }
+                        this.loading = false;
+                    });
                 });
-            });
         } else {
-            httpReq1.subscribe((res) => {
+            httpReq1.then((res) => {
                 const resultData = res || [];
                 this.txData = this.txData.concat(resultData);
                 if (resultData.length === 0) {
@@ -148,11 +162,11 @@ export class PopupNftTxPageComponent implements OnInit, OnDestroy {
     }
 
     handleLocalTxs(txs: any[]): any[] {
-        return txs.map(({ txid, block_time, value, token_id }) => ({
+        return txs.map(({ txid, block_time, value, tokenid }) => ({
             hash: txid,
             amount: value,
             block_time,
-            token_id,
+            tokenid,
         }));
     }
 

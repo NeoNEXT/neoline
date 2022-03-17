@@ -15,11 +15,11 @@
 <div class="container" *ngIf="data.isNft">
     <div class="asset-item" matRipple *ngFor="let item of data.nftTokens;let i = index" (click)="select(i)">
         <div class="logo-box">
-            <img [src]="item?.info?.image" appErrorSrc alt="">
+            <img [src]="item?.image_url" appErrorSrc alt="">
         </div>
         <div class="asset-info-box">
-            <p>{{ item?.info?.name || item?.symbol }} #{{ item?.token_id | nftTokenId }}</p>
-            <p>{{ 'balance' | translate | async }}&nbsp;&nbsp;{{ item?.balance }}</p>
+            <p>{{ item?.name || item?.tokenid }} #{{ item?.tokenid | nftTokenId }}</p>
+            <p>{{ 'balance' | translate | async }}&nbsp;&nbsp;{{ item?.amount }}</p>
         </div>
         <img class="selected" src="/assets/images/dialog/selected.png" alt="" [hidden]="i !== data.selected">
     </div>

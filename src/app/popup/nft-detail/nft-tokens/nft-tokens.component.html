@@ -1,11 +1,11 @@
 <div class="asset-item" *ngFor="let token of nftTokens" (click)="showDetail(token)">
     <div class="avatar-box">
-        <img [src]="token?.info?.image" alt="" appErrorSrc>
+        <img [src]="token?.image_url" alt="" appErrorSrc>
     </div>
-    <span class="name">{{ token?.info?.name || nftName }}</span>
+    <span class="name">{{ token?.name || token?.tokenid }}</span>
     <div class="right">
         <div class="amount">
-            #{{ token?.token_id }}
+            #{{ token?.tokenid }}
         </div>
     </div>
 </div>

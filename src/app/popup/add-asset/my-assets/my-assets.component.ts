@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { PageData, Balance, Asset } from '@/models/models';
+import { Asset } from '@/models/models';
 import {
     AssetState,
     ChromeService,

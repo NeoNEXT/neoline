@@ -9,7 +9,7 @@ import {
     TransactionState,
     TransferService,
 } from '@/app/core';
-import { Balance, NEO, GAS } from '@/models/models';
+import { NEO, GAS, Asset } from '@/models/models';
 import { tx as tx2, u } from '@cityofzion/neon-js';
 import { Transaction } from '@cityofzion/neon-core/lib/tx';
 import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
@@ -35,7 +35,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public feeMoney = '0';
     public totalMoney = '';
 
-    public balance: Balance;
+    public balance: Asset;
     public creating = false;
     public fromAddress: string = '';
     public toAddress: string = '';
@@ -131,7 +131,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             if (this.assetId !== undefined && this.assetId !== '') {
                 this.asset
                     .getAssetDetail(this.neon.address, this.assetId)
-                    .then((res: Balance) => {
+                    .then((res: Asset) => {
                         this.init = true;
                         this.symbol = res.symbol;
                         this.balance = res;
@@ -182,7 +182,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         this.creating = true;
         this.asset
             .getAssetDetail(this.neon.address, this.assetId)
-            .then((res: Balance) => {
+            .then((res: Asset) => {
                 this.loading = false;
                 this.loadingMsg = '';
                 this.balance = res;

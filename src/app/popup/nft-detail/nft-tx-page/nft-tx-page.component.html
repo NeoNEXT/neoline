@@ -1,26 +1,26 @@
 <div class="popup-home-tx-page">
     <div class="tx-item" *ngFor="let item of txData;let i = index" (click)="showDetail(item)">
         <div class="head">
-            <span class="time">{{ item.block_time | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+            <span class="time">{{ item.block_time * 1000 | date:'yyyy-MM-dd HH:mm:ss' }}</span>
             <img class="more-info-btn" src="/assets/images/home/arrow.png" alt=""
                 (click)="$event.stopPropagation();show = !show" [ngClass]="{'active': show}">
         </div>
         <div class="content">
             <img class="tx-type-icon"
-                [src]="item.amount > 0 ? '/assets/images/home/receive.png': '/assets/images/home/send_black.png' "
+                [src]="item.value > 0 ? '/assets/images/home/receive.png': '/assets/images/home/send_black.png' "
                 alt="">
             <div class="status-box">
                 <p class="tx-type">
-                    {{ item.amount < 0 ? ('sent' | translate | async) : ('received' | translate | async) }} #{{ item.token_id | nftTokenId }}
+                    {{ item.value < 0 ? ('sent' | translate | async) : ('received' | translate | async) }} #{{ item.tokenid | nftTokenId }}
                 </p>
                 <p class="status" [ngClass]="{'wait': item.id === -1}">
                     {{ item.id === -1 || item.id === undefined ? ('confirming' | translate | async): ('confirmed' | translate | async) }}·
-                    <span>TxID: {{ item.hash }}</span>
+                    <span>TxID: {{ item.txid }}</span>
                 </p>
             </div>
             <div class="amount-box">
-                <p class="asset-amount" [class]="{receive: item.amount > 0, send: item.amount <= 0}">
-                    {{ item.amount }}
+                <p class="asset-amount" [class]="{receive: item.value > 0, send: item.value <= 0}">
+                    {{ item.value }}
                 </p>
             </div>
         </div>

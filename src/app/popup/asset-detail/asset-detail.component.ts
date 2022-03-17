@@ -6,7 +6,7 @@ import {
     GlobalService,
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { NEO, Balance, GAS, Asset } from '@/models/models';
+import { NEO, GAS, Asset } from '@/models/models';
 import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.component';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
@@ -19,7 +19,7 @@ import { NetworkType } from '../_lib';
     styleUrls: ['asset-detail.component.scss'],
 })
 export class PopupAssetDetailComponent implements OnInit {
-    balance: Balance;
+    balance: Asset;
     assetId: string;
     rateCurrency: string;
     // Transaction Record
@@ -64,7 +64,7 @@ export class PopupAssetDetailComponent implements OnInit {
         });
     }
 
-    handlerBalance(balanceRes: Balance[]) {
+    handlerBalance(balanceRes: Asset[]) {
         this.chrome
             .getWatch(this.neon.address, this.neon.currentWalletChainType, this.network)
             .subscribe((watching) => {

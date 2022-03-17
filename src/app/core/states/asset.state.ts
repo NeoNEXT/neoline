@@ -19,7 +19,7 @@ import {
     NetworkType,
 } from '@popup/_lib';
 import BigNumber from 'bignumber.js';
-import { hexstring2str, base642hex } from '@cityofzion/neon-core-neo3/lib/u';
+import { UtilServiceState } from '../util/util.service';
 
 @Injectable()
 export class AssetState {
@@ -36,14 +36,12 @@ export class AssetState {
         fast_price: '0.2',
     };
 
-    public n2AssetDetail: Map<string, Asset> = new Map();
-    public n3AssetDetail: Map<string, Asset> = new Map();
-
     constructor(
         private http: HttpService,
         private global: GlobalService,
         private chrome: ChromeService,
-        private neonService: NeonService
+        private neonService: NeonService,
+        private util: UtilServiceState
     ) {
         this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
             this.rateCurrency = res;
@@ -207,13 +205,19 @@ export class AssetState {
             ? this.global.n3Network.rpcUrl
             : this.global.n2Network.rpcUrl;
         const res = await this.http.rpcPost(rpcUrl, data).toPromise();
-        const symbol = await this.getAssetSymbol(res.hash).toPromise();
-        const decimals = await this.getAssetDecimal(res.hash).toPromise();
+        const symbols = await this.util.getAssetSymbols(
+            [res.hash],
+            this.neonService.currentWalletChainType
+        );
+        const decimals = await this.util.getAssetDecimals(
+            [res.hash],
+            this.neonService.currentWalletChainType
+        );
         const asset: Asset = {
             name: isN3 ? res?.manifest?.name : res?.name,
             asset_id: res?.hash,
-            symbol,
-            decimals,
+            symbol: symbols[0],
+            decimals: decimals[0],
         };
         return asset;
     }
@@ -244,39 +248,6 @@ export class AssetState {
                         asset_id: res.balance[1].asset_hash,
                     }));
                 }
-            })
-        );
-    }
-
-    getAssetSymbol(assetId: string): Observable<string> {
-        const isN3 = this.neonService.currentWalletChainType === 'Neo3';
-        if (!isN3 && this.n2AssetDetail.has(assetId) === true) {
-            return of(this.n2AssetDetail.get(assetId).symbol);
-        }
-        if (isN3 && this.n3AssetDetail.has(assetId) === true) {
-            return of(this.n3AssetDetail.get(assetId).symbol);
-        }
-        const data = {
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'invokefunction',
-            params: [assetId, 'symbol'],
-        };
-        const rpcUrl = isN3
-            ? this.global.n3Network.rpcUrl
-            : this.global.n2Network.rpcUrl;
-        return this.http.rpcPost(rpcUrl, data).pipe(
-            map((res) => {
-                let symbol = res.stack[0].value;
-                if (res.stack) {
-                    if (res.stack[0].type === 'ByteArray') {
-                        symbol = hexstring2str(res.stack[0].value);
-                    }
-                    if (res.stack[0].type === 'ByteString') {
-                        symbol = hexstring2str(base642hex(res.stack[0].value));
-                    }
-                }
-                return symbol;
             })
         );
     }
@@ -389,279 +360,57 @@ export class AssetState {
         });
         return target;
     }
-    private handleNeo2BalancesResponse(data): Promise<Asset[]> {
+    private async handleNeo2BalancesResponse(data): Promise<Asset[]> {
         const result: Asset[] = [];
+        const contracts = [];
         (data?.balance || []).forEach(({ amount, asset_hash }) => {
+            contracts.push(asset_hash);
             result.push({
                 balance: amount,
                 asset_id: asset_hash,
             });
         });
-        // return of(result).toPromise();
-        return this.getNeo2AssetSymbolAndDecimal(result);
+        const symbols = await this.util.getAssetSymbols(contracts, 'Neo2');
+        const decimals = await this.util.getAssetDecimals(contracts, 'Neo2');
+        result.forEach((item, index) => {
+            result[index].symbol = symbols[index];
+            result[index].decimals = decimals[index];
+            result[index].balance = new BigNumber(result[index].balance)
+                .shiftedBy(-decimals[index])
+                .toFixed();
+        });
+        return result;
     }
-    private handleN3BalancesResponse(data): Promise<Asset[]> {
-        const result: Asset[] = [];
-        let hasNeo = false;
-        let hasGas = false;
+    private async handleN3BalancesResponse(data): Promise<Asset[]> {
+        const result: Asset[] = [
+            DEFAULT_NEO3_ASSETS.NEO,
+            DEFAULT_NEO3_ASSETS.GAS,
+        ];
+        const contracts = [NEO3_CONTRACT, GAS3_CONTRACT];
         (data?.balance || []).forEach(({ amount, assethash }) => {
-            const assetItem: Asset = {
-                balance: amount,
-                asset_id: assethash,
-            };
             if (assethash === NEO3_CONTRACT) {
-                hasNeo = true;
-                assetItem.symbol = DEFAULT_NEO3_ASSETS.NEO.symbol;
-                assetItem.decimals = DEFAULT_NEO3_ASSETS.NEO.decimals;
-                result.unshift(assetItem);
+                result[0].balance = amount;
             } else if (assethash === GAS3_CONTRACT) {
-                hasGas = true;
-                assetItem.symbol = DEFAULT_NEO3_ASSETS.GAS.symbol;
-                assetItem.decimals = DEFAULT_NEO3_ASSETS.GAS.decimals;
-                assetItem.balance = new BigNumber(amount)
-                    .shiftedBy(-8)
-                    .toFixed();
-                result.unshift(assetItem);
+                result[1].balance = amount;
             } else {
+                const assetItem: Asset = {
+                    balance: amount,
+                    asset_id: assethash,
+                };
                 result.push(assetItem);
+                contracts.push(assethash);
             }
         });
-        if (hasGas && hasNeo && result[1].asset_id === NEO3_CONTRACT) {
-            const temp = result[0];
-            result[0] = result[1];
-            result[1] = temp;
-        }
-        if (hasGas === false) {
-            result.unshift(DEFAULT_NEO3_ASSETS.GAS);
-        }
-        if (hasNeo === false) {
-            result.unshift(DEFAULT_NEO3_ASSETS.NEO);
-        }
-        // return of(result).toPromise();
-        return this.getN3AssetSymbolAndDecimal(result);
-    }
-    private getNeo2AssetSymbolAndDecimal(target: Asset[]): Promise<Asset[]> {
-        const rpcUrl = this.global.n2Network.rpcUrl;
-        const targetIndexs = [];
-        const rpcAssetDecimalsReqs = [];
-        const rpcAssetSymbolReqs = [];
-        target.forEach(({ asset_id }, index) => {
-            if (asset_id === NEO || asset_id === GAS) {
-                return;
-            }
-            if (this.n2AssetDetail.has(asset_id) === true) {
-                target[index].decimals =
-                    this.n2AssetDetail.get(asset_id).decimals;
-                target[index].symbol = this.n2AssetDetail.get(asset_id).symbol;
-                target[index].balance = new BigNumber(target[index].balance)
-                    .shiftedBy(-target[index].decimals)
-                    .toFixed();
-            }
-            if (this.n2AssetDetail.has(asset_id) === false) {
-                const data = {
-                    jsonrpc: '2.0',
-                    id: 1,
-                    method: 'invokefunction',
-                    params: [asset_id, 'decimals'],
-                };
-                const decimalsReq = this.http
-                    .rpcPost(rpcUrl, data)
-                    .toPromise()
-                    .catch((err) => err);
-                const symbolReq = this.http
-                    .rpcPost(rpcUrl, {
-                        ...data,
-                        params: [asset_id, 'symbol'],
-                    })
-                    .toPromise()
-                    .catch((err) => err);
-                targetIndexs.push(index);
-                rpcAssetDecimalsReqs.push(decimalsReq);
-                rpcAssetSymbolReqs.push(symbolReq);
-            }
+        const symbols = await this.util.getAssetSymbols(contracts, 'Neo3');
+        const decimals = await this.util.getAssetDecimals(contracts, 'Neo3');
+        result.forEach((item, index) => {
+            result[index].symbol = symbols[index];
+            result[index].decimals = decimals[index];
+            result[index].balance = new BigNumber(result[index].balance)
+                .shiftedBy(-decimals[index])
+                .toFixed();
         });
-        if (
-            rpcAssetDecimalsReqs.length === 0 &&
-            rpcAssetSymbolReqs.length === 0
-        ) {
-            return of(target).toPromise();
-        }
-        return Promise.all([
-            ...rpcAssetDecimalsReqs,
-            ...rpcAssetSymbolReqs,
-        ]).then((res) => {
-            targetIndexs.forEach((key, index) => {
-                const id = target[key].asset_id;
-                const assetDetailItem: Asset = { asset_id: id };
-                // decimals
-                if (res[index].stack) {
-                    if (res[index].stack[0].type === 'Integer') {
-                        assetDetailItem.decimals = Number(
-                            res[index].stack[0].value || 0
-                        );
-                    }
-                    if (res[index].stack[0].type === 'ByteArray') {
-                        assetDetailItem.decimals = new BigNumber(
-                            res[index].stack[0].value || 0,
-                            16
-                        ).toNumber();
-                    }
-                }
-                // symbol
-                const symbolIndex = targetIndexs.length + index;
-                if (res[symbolIndex].stack) {
-                    if (res[symbolIndex].stack[0].type === 'ByteArray') {
-                        assetDetailItem.symbol = hexstring2str(
-                            res[symbolIndex].stack[0].value
-                        );
-                    }
-                    if (res[symbolIndex].stack[0].type === 'ByteString') {
-                        assetDetailItem.symbol = hexstring2str(
-                            base642hex(res[symbolIndex].stack[0].value)
-                        );
-                    }
-                }
-                target[targetIndexs[index]].decimals = assetDetailItem.decimals;
-                target[targetIndexs[index]].symbol = assetDetailItem.symbol;
-                target[targetIndexs[index]].balance = new BigNumber(
-                    target[targetIndexs[index]].balance
-                )
-                    .shiftedBy(-assetDetailItem.decimals)
-                    .toFixed();
-                this.n2AssetDetail.set(id, assetDetailItem);
-            });
-            console.log(this.n2AssetDetail);
-            return target;
-        });
-    }
-    private getN3AssetSymbolAndDecimal(target: Asset[]): Promise<Asset[]> {
-        const rpcUrl = this.global.n3Network.rpcUrl;
-        const targetIndexs = [];
-        const rpcAssetDecimalsReqs = [];
-        const rpcAssetSymbolReqs = [];
-        target.forEach(({ asset_id }, index) => {
-            if (asset_id === NEO3_CONTRACT || asset_id === GAS3_CONTRACT) {
-                return;
-            }
-            if (this.n3AssetDetail.has(asset_id) === true) {
-                target[index].decimals =
-                    this.n3AssetDetail.get(asset_id).decimals;
-                target[index].symbol = this.n3AssetDetail.get(asset_id).symbol;
-                target[index].balance = new BigNumber(target[index].balance)
-                    .shiftedBy(-target[index].decimals)
-                    .toFixed();
-            }
-            if (this.n3AssetDetail.has(asset_id) === false) {
-                const data = {
-                    jsonrpc: '2.0',
-                    id: 1,
-                    method: 'invokefunction',
-                    params: [asset_id, 'decimals'],
-                };
-                const decimalsReq = this.http
-                    .rpcPost(rpcUrl, data)
-                    .toPromise()
-                    .catch((err) => err);
-                const symbolReq = this.http
-                    .rpcPost(rpcUrl, {
-                        ...data,
-                        params: [asset_id, 'symbol'],
-                    })
-                    .toPromise()
-                    .catch((err) => err);
-                targetIndexs.push(index);
-                rpcAssetDecimalsReqs.push(decimalsReq);
-                rpcAssetSymbolReqs.push(symbolReq);
-            }
-        });
-        if (
-            rpcAssetDecimalsReqs.length === 0 &&
-            rpcAssetSymbolReqs.length === 0
-        ) {
-            return of(target).toPromise();
-        }
-        return Promise.all([
-            ...rpcAssetDecimalsReqs,
-            ...rpcAssetSymbolReqs,
-        ]).then((res) => {
-            targetIndexs.forEach((key, index) => {
-                const id = target[key].asset_id;
-                const assetDetailItem: Asset = { asset_id: id };
-                // decimals
-                if (res[index].stack) {
-                    if (res[index].stack[0].type === 'Integer') {
-                        assetDetailItem.decimals = Number(
-                            res[index].stack[0].value || 0
-                        );
-                    }
-                    if (res[index].stack[0].type === 'ByteArray') {
-                        assetDetailItem.decimals = new BigNumber(
-                            res[index].stack[0].value || 0,
-                            16
-                        ).toNumber();
-                    }
-                }
-                // symbol
-                const symbolIndex = targetIndexs.length + index;
-                if (res[symbolIndex].stack) {
-                    if (res[symbolIndex].stack[0].type === 'ByteArray') {
-                        assetDetailItem.symbol = hexstring2str(
-                            res[symbolIndex].stack[0].value
-                        );
-                    }
-                    if (res[symbolIndex].stack[0].type === 'ByteString') {
-                        assetDetailItem.symbol = hexstring2str(
-                            base642hex(res[symbolIndex].stack[0].value)
-                        );
-                    }
-                }
-                target[targetIndexs[index]].decimals = assetDetailItem.decimals;
-                target[targetIndexs[index]].symbol = assetDetailItem.symbol;
-                target[targetIndexs[index]].balance = new BigNumber(
-                    target[targetIndexs[index]].balance
-                )
-                    .shiftedBy(-assetDetailItem.decimals)
-                    .toFixed();
-                this.n3AssetDetail.set(id, assetDetailItem);
-            });
-            console.log(this.n2AssetDetail);
-            return target;
-        });
-    }
-    private getAssetDecimal(assetId: string): Observable<number> {
-        const isN3 = this.neonService.currentWalletChainType === 'Neo3';
-        if (!isN3 && this.n2AssetDetail.has(assetId) === true) {
-            return of(this.n2AssetDetail.get(assetId).decimals);
-        }
-        if (isN3 && this.n3AssetDetail.has(assetId) === true) {
-            return of(this.n3AssetDetail.get(assetId).decimals);
-        }
-        const data = {
-            jsonrpc: '2.0',
-            id: 1,
-            method: 'invokefunction',
-            params: [assetId, 'decimals'],
-        };
-        const rpcUrl = isN3
-            ? this.global.n3Network.rpcUrl
-            : this.global.n2Network.rpcUrl;
-        return this.http.rpcPost(rpcUrl, data).pipe(
-            map((res) => {
-                let decimals = res.stack[0].value;
-                if (res.stack) {
-                    if (res.stack[0].type === 'Integer') {
-                        decimals = Number(res.stack[0].value || 0);
-                    }
-                    if (res.stack[0].type === 'ByteArray') {
-                        decimals = new BigNumber(
-                            res.stack[0].value || 0,
-                            16
-                        ).toNumber();
-                    }
-                }
-                return decimals;
-            })
-        );
+        return result;
     }
     //#endregion
 }

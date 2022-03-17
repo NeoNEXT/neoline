@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { Balance, NEO, GAS, Asset } from '@/models/models';
+import { GAS, Asset, NftToken } from '@/models/models';
 import {
     AssetState,
     NeonService,
@@ -52,8 +52,8 @@ export class TransferCreateComponent implements OnInit {
     istransferAll = false;
 
     nftContract: string;
-    nftTokens: any[];
-    chooseNftToken;
+    nftTokens: NftToken[];
+    chooseNftToken: NftToken;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -119,10 +119,10 @@ export class TransferCreateComponent implements OnInit {
     getNftTokens() {
         this.nftState
             .getNftTokens(this.neon.address, this.nftContract)
-            .subscribe((res) => {
-                this.nftTokens = res;
-                this.chooseNftToken = res[0];
-                this.assetId = this.chooseNftToken.contract;
+            .then((res) => {
+                this.nftTokens = res.tokens;
+                this.chooseNftToken = this.nftTokens[0];
+                this.assetId = this.chooseNftToken.tokenid;
             });
     }
 
@@ -209,12 +209,12 @@ export class TransferCreateComponent implements OnInit {
             .create(
                 this.fromAddress,
                 this.toAddress,
-                this.chooseNftToken.contract,
-                this.chooseNftToken.balance,
+                this.nftContract,
+                this.chooseNftToken.amount,
                 this.fee || 0,
                 0,
                 false,
-                this.chooseNftToken.token_id
+                this.chooseNftToken.tokenid
             )
             .subscribe(
                 (res) => {
@@ -249,9 +249,9 @@ export class TransferCreateComponent implements OnInit {
             const diaglogData: any = {
                 fromAddress: this.fromAddress,
                 toAddress: this.toAddress,
-                asset: this.chooseNftToken.contract,
+                asset: this.nftContract,
                 symbol: this.chooseNftToken.symbol,
-                amount: this.chooseNftToken.balance,
+                amount: this.chooseNftToken.amount,
                 fee: this.fee || '0',
                 network: this.network,
                 txSerialize: tx.serialize(true),
@@ -282,11 +282,12 @@ export class TransferCreateComponent implements OnInit {
                                 .create(
                                     this.fromAddress,
                                     this.toAddress,
-                                    this.chooseNftToken.contract,
+                                    this.nftContract,
                                     this.amount,
                                     this.fee || 0,
-                                    this.chooseAsset.decimals,
-                                    this.chooseNftToken.token_id
+                                    this.chooseAsset.decimals || 0,
+                                    false,
+                                    this.chooseNftToken.tokenid
                                 )
                                 .subscribe(
                                     (res) => {
@@ -530,9 +531,9 @@ export class TransferCreateComponent implements OnInit {
             if (this.fromAddress !== this.toAddress) {
                 const txTarget = {
                     txid,
-                    value: -this.chooseNftToken.balance,
+                    value: -this.chooseNftToken.amount,
                     block_time: new Date().getTime(),
-                    token_id: this.chooseNftToken.token_id
+                    token_id: this.chooseNftToken.tokenid
                 };
                 this.pushTransaction(txTarget);
             }
@@ -630,7 +631,7 @@ export class TransferCreateComponent implements OnInit {
                         nftTokens: this.nftTokens,
                         selected: this.nftTokens.findIndex(
                             (item) =>
-                                item.token_id === this.chooseNftToken.token_id
+                                item.tokenid === this.chooseNftToken.tokenid
                         ),
                     },
                     maxHeight: 500,
@@ -642,7 +643,7 @@ export class TransferCreateComponent implements OnInit {
                         return;
                     }
                     this.chooseNftToken = this.nftTokens[index];
-                    this.assetId = this.chooseNftToken.contract;
+                    this.assetId = this.nftContract;
                 });
         }
     }

@@ -35,12 +35,12 @@
         </div>
         <div class="asset-box box" *ngIf="nftContract" matRipple (click)="selectNftAsset()">
             <div class="asset-logo">
-                <img [src]="chooseNftToken?.info?.image" appErrorSrc alt="">
+                <img [src]="chooseNftToken?.image_url" appErrorSrc alt="">
             </div>
             <div class="asset-info">
-                <p>#{{ chooseNftToken?.token_id | nftTokenId }}</p>
-                <p>{{ 'balancecolon' | translate | async }}{{ chooseNftToken?.balance | numberFixed }}
-                    {{ chooseNftToken?.info?.name || chooseNftToken?.symbol }}</p>
+                <p>#{{ chooseNftToken?.tokenid | nftTokenId }}</p>
+                <p>{{ 'balancecolon' | translate | async }}{{ chooseNftToken?.amount | numberFixed }}
+                    {{ chooseNftToken?.name || chooseNftToken?.tokenid }}</p>
             </div>
             <img class="drop" src="/assets/images/transaction/drop.png" alt="">
         </div>

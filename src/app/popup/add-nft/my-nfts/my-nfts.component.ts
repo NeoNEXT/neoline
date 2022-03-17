@@ -35,13 +35,13 @@ export class PopupMyNftsComponent implements OnInit {
             this.neon.address,
             this.neon.currentWalletChainType,
             this.global.n3Network.network
-        );
-        const getNfts = this.nftState.getNfts(this.neon.address);
-        forkJoin([getNfts, getWatch]).subscribe((res) => {
+        ).toPromise();
+        const getNfts = this.nftState.getAddressNfts(this.neon.address);
+        Promise.all([getNfts, getWatch]).then(res => {
             this.watchNfts = res[1];
             const target = [...res[0]];
             res[1].forEach((item) => {
-                const index = target.findIndex((m) => m.contract === item.contract)
+                const index = target.findIndex((m) => m.assethash === item.assethash)
                 if (index >= 0) {
                     if (item.watching === false) {
                         target[index].watching = false;
@@ -59,7 +59,7 @@ export class PopupMyNftsComponent implements OnInit {
 
     addAsset(index: number) {
         const asset = { ...this.nfts[index], watching: true };
-        const i = this.watchNfts.findIndex((m) => m.contract === asset.contract);
+        const i = this.watchNfts.findIndex((m) => m.assethash === asset.assethash);
         if (i >= 0) {
             this.watchNfts[i].watching = true;
         } else {
@@ -77,7 +77,7 @@ export class PopupMyNftsComponent implements OnInit {
 
     removeAsset(index: number) {
         const asset = { ...this.nfts[index], watching: false };
-        const i = this.watchNfts.findIndex((m) => m.contract === asset.contract);
+        const i = this.watchNfts.findIndex((m) => m.assethash === asset.assethash);
         if (i >= 0) {
             this.watchNfts[i].watching = false;
         } else {

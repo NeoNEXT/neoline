@@ -1,15 +1,15 @@
-<div class="asset-item" *ngFor="let asset of nfts" [routerLink]="['/popup/nfts', asset.contract]">
+<div class="asset-item" *ngFor="let asset of nfts" [routerLink]="['/popup/nfts', asset.assethash]">
     <div class="avatar-box">
-        <img [assetId]="asset?.contract" appErrorSrc alt="">
+        <img [assetId]="asset?.assethash" appErrorSrc alt="">
     </div>
     <div class="item-middle">
         <div class="asset-name">
             <span class="long">{{asset.name}}</span>
             (<span class="short">{{ asset.symbol }}</span>)
         </div>
-        <p class="asset-id">{{asset?.contract}}</p>
+        <p class="asset-id">{{asset?.assethash}}</p>
     </div>
-    <div class="balance">{{ asset?.balance || 0 }}</div>
+    <div class="balance">{{ asset?.tokens?.length || 0 }}</div>
 </div>
 
 <p *ngIf="!nfts || nfts?.length===0" class="no-data">

@@ -13,7 +13,7 @@ import {
     HttpService,
     AssetState,
 } from '@/app/core';
-import { Transaction, PageData } from '@/models/models';
+import { Transaction } from '@/models/models';
 import { forkJoin } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupTxDetailDialogComponent } from '@/app/popup/_dialogs';

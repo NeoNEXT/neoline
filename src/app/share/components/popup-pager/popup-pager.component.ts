@@ -6,8 +6,6 @@ import {
     EventEmitter
 } from '@angular/core';
 
-import { PageData } from '@/models/models';
-
 @Component({
     selector: 'app-popup-pager',
     templateUrl: 'popup-pager.component.html',

@@ -1,23 +1,23 @@
 <div class="title">
-    <span>{{ data.tx.amount < 0 ? ('sent' | translate | async) : ('received' | translate | async) }}
-        {{ data.tx?.info?.name || data.tx.symbol }}</span>
+    <span>{{ data.tx.value < 0 ? ('sent' | translate | async) : ('received' | translate | async) }}
+        {{ data.tx.symbol }}</span>
     <mat-icon class="close" [mat-dialog-close]="false">close</mat-icon>
 </div>
 <div class="item row">
     <span class="name">TxID</span>
-    <span class="value txid">{{ data.tx.hash }}</span>
+    <span class="value txid">{{ data.tx.txid }}</span>
 </div>
 <div class="item row">
     <span class="name">{{ 'Contract' | translate | async }}</span>
-    <span class="value txid">{{ data.tx.contract }}</span>
+    <span class="value txid">{{ data.tx.asset_id }}</span>
 </div>
 <div class="item row">
     <span class="name">Token ID</span>
-    <span class="value txid">{{ data.tx.token_id }}</span>
+    <span class="value txid">{{ data.tx.tokenid }}</span>
 </div>
 <div class="item row">
     <span class="name">{{ 'amount' | translate | async }}</span>
-    <span class="value">{{ data.tx.amount }}</span>
+    <span class="value">{{ data.tx.value }}</span>
 </div>
 <div class="item row">
     <span class="name">{{ 'time' | translate | async }}</span>

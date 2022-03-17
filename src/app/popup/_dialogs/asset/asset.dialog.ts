@@ -7,7 +7,7 @@ import {
     MatDialogRef, MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
 
-import { Asset } from '@/models/models';
+import { Asset, NftToken } from '@/models/models';
 
 @Component({
     templateUrl: 'asset.dialog.html',
@@ -20,7 +20,7 @@ export class PopupAssetDialogComponent implements OnInit {
             balances?: Array<Asset>,
             selected: number,
             isNft?: boolean,
-            nftTokens?: any[],
+            nftTokens?: NftToken[],
         }
     ) { }
 
