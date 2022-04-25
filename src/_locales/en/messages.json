@@ -757,5 +757,8 @@
     },
     "myNft": {
         "message": "My NEP11"
+    },
+    "unlockWallet": {
+        "message": "You need to enter the password of the account to unlock the wallet"
     }
 }

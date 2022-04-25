@@ -757,5 +757,8 @@
     },
     "myNft": {
         "message": "我的 NEP11"
+    },
+    "unlockWallet": {
+        "message": "您需要输入该账户的密码来解锁该钱包"
     }
 }

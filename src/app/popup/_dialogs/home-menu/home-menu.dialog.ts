@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 import { EVENT } from '@/models/dapi';
 import { PopupSelectDialogComponent } from '../select/select.dialog';
 import { ChainTypeGroups, ChainType, STORAGE_NAME } from '@popup/_lib';
+import { PopupPasswordDialogComponent } from '../password/password.dialog';
 
 @Component({
     templateUrl: 'home-menu.dialog.html',
@@ -14,7 +15,10 @@ import { ChainTypeGroups, ChainType, STORAGE_NAME } from '@popup/_lib';
 })
 export class PopupHomeMenuDialogComponent {
     @ViewChild('walletContainer') private walletContainer: ElementRef;
-    public walletArr: { Neo2: Array<Wallet2 | Wallet3>; Neo3: Array<Wallet2 | Wallet3> } = {
+    public walletArr: {
+        Neo2: Array<Wallet2 | Wallet3>;
+        Neo3: Array<Wallet2 | Wallet3>;
+    } = {
         Neo2: [],
         Neo3: [],
     };
@@ -54,10 +58,20 @@ export class PopupHomeMenuDialogComponent {
     }
 
     public selectAccount(w: Wallet2 | Wallet3) {
-        this.wallet = this.neon.parseWallet(w);
-        this.chrome.setWallet(this.wallet.export());
-        location.href = `index.html#popup`;
-        this.chrome.setHaveBackupTip(null);
+        this.dialog
+            .open(PopupPasswordDialogComponent, {
+                data: { account: w },
+                panelClass: 'custom-dialog-panel',
+            })
+            .afterClosed()
+            .subscribe((res) => {
+                if (res) {
+                    this.wallet = this.neon.parseWallet(w);
+                    this.chrome.setWallet(this.wallet.export());
+                    location.href = `index.html#popup`;
+                    this.chrome.setHaveBackupTip(null);
+                }
+            });
     }
 
     public lock() {
@@ -92,7 +106,10 @@ export class PopupHomeMenuDialogComponent {
     public exportWallet() {
         const sJson = JSON.stringify(this.neon.wallet.export());
         const element = document.createElement('a');
-        element.setAttribute('href', 'data:text/json;charset=UTF-8,' + encodeURIComponent(sJson));
+        element.setAttribute(
+            'href',
+            'data:text/json;charset=UTF-8,' + encodeURIComponent(sJson)
+        );
         element.setAttribute('download', `${this.neon.wallet.name}.json`);
         element.style.display = 'none';
         document.body.appendChild(element);
