@@ -51,8 +51,8 @@ export class UtilServiceState {
         this.n3AssetSymbol.set(GAS3_CONTRACT, DEFAULT_NEO3_ASSETS.GAS.symbol);
     }
 
-    getNeo3Account() {
-        const account = this.neon.wallet.accounts[0];
+    getNeo3Account(sourceAccount?) {
+        const account = sourceAccount ?? this.neon.wallet.accounts[0];
         const accountJson = account.export();
         const index = this.neon.walletArr.findIndex(
             (item) => item.accounts[0].address === account.address

@@ -1,9 +1,9 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { GlobalService } from '@app/core';
-import { WalletInitConstant } from '@popup/_lib/constant';
+import { GlobalService, UtilServiceState } from '@app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { ChainType } from '../../_lib';
 
 @Component({
     templateUrl: './password.dialog.html',
@@ -16,9 +16,11 @@ export class PopupPasswordDialogComponent implements OnInit {
     constructor(
         private dialogRef: MatDialogRef<PopupPasswordDialogComponent>,
         private global: GlobalService,
+        private util: UtilServiceState,
         @Inject(MAT_DIALOG_DATA)
         public data: {
-            account: any;
+            account: Wallet2 | Wallet3;
+            chainType: ChainType;
         }
     ) {}
 
@@ -32,9 +34,13 @@ export class PopupPasswordDialogComponent implements OnInit {
     }
 
     verify() {
-        this.data.account.accounts[0]
+        const account =
+            this.data.chainType === 'Neo2'
+                ? this.data.account.accounts[0]
+                : this.util.getNeo3Account(this.data.account.accounts[0]);
+        account
             .decrypt(this.pwd)
-            .then((res) => {
+            .then(() => {
                 this.dialogRef.close(true);
             })
             .catch((err) => {

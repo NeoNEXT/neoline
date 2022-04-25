@@ -60,7 +60,7 @@ export class PopupHomeMenuDialogComponent {
     public selectAccount(w: Wallet2 | Wallet3) {
         this.dialog
             .open(PopupPasswordDialogComponent, {
-                data: { account: w },
+                data: { account: w, chainType: this.tabType },
                 panelClass: 'custom-dialog-panel',
             })
             .afterClosed()
