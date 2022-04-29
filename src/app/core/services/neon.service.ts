@@ -81,6 +81,10 @@ export class NeonService {
         return this._walletArr3 || null;
     }
 
+    public get neo3WIFArr(): Array<string> {
+        return this._WIFArr3 || null;
+    }
+
     /**
      * Address of currently opened wallet, return null if unexists.
      * 当前打开的钱包中的地址 不存在则返回null

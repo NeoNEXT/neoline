@@ -54,10 +54,10 @@ export class UtilServiceState {
     getNeo3Account(sourceAccount?) {
         const account = sourceAccount ?? this.neon.wallet.accounts[0];
         const accountJson = account.export();
-        const index = this.neon.walletArr.findIndex(
+        const index = this.neon.neo3WalletArr.findIndex(
             (item) => item.accounts[0].address === account.address
         );
-        const wif = this.neon.WIFArr[index];
+        const wif = this.neon.neo3WIFArr[index];
         const preview5Account = new walletPr5.Account(
             walletPr5.getPrivateKeyFromWIF(wif)
         );
@@ -81,7 +81,7 @@ export class UtilServiceState {
         // console.log(base642hex(rc1Account.contract.script)); // base64
         // console.log(base642hex(latestAccount.contract.script)); // base64
 
-        if (this.neon.address === latestAccount.address) {
+        if (accountJson.address === latestAccount.address) {
             if (
                 account.contract.script ===
                     hex2base64(preview5Account.contract.script) ||
