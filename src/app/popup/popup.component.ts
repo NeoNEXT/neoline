@@ -88,13 +88,15 @@ export class PopupComponent implements OnInit {
         this.dialog
             .open(PopupHomeMenuDialogComponent, {
                 position: {
-                    top: '65px',
-                    right: '10px',
+                    top: '48px',
+                    right: '0px',
+                    left: '0px',
+                    bottom: '0px',
                 },
                 autoFocus: false,
-                width: '315px',
+                width: '375px',
                 maxWidth: 375,
-                maxHeight: 500,
+                // maxHeight: 500,
             })
             .afterClosed()
             .subscribe((res) => {

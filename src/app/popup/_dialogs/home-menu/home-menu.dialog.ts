@@ -1,4 +1,4 @@
-import { Component, ViewChild, ElementRef } from '@angular/core';
+import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
 import { MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
@@ -8,22 +8,25 @@ import { EVENT } from '@/models/dapi';
 import { PopupSelectDialogComponent } from '../select/select.dialog';
 import { ChainTypeGroups, ChainType, STORAGE_NAME } from '@popup/_lib';
 import { PopupPasswordDialogComponent } from '../password/password.dialog';
+import Sortable from 'sortablejs';
 
 @Component({
     templateUrl: 'home-menu.dialog.html',
     styleUrls: ['home-menu.dialog.scss'],
 })
-export class PopupHomeMenuDialogComponent {
+export class PopupHomeMenuDialogComponent implements OnInit {
     @ViewChild('walletContainer') private walletContainer: ElementRef;
-    public walletArr: {
+    private walletArr: {
         Neo2: Array<Wallet2 | Wallet3>;
         Neo3: Array<Wallet2 | Wallet3>;
     } = {
         Neo2: [],
         Neo3: [],
     };
+    public displayWalletArr: Array<Wallet2 | Wallet3> = [];
     public wallet: Wallet2 | Wallet3;
     public tabType: ChainType;
+    isSearching = false;
     constructor(
         private router: Router,
         private chrome: ChromeService,
@@ -36,6 +39,18 @@ export class PopupHomeMenuDialogComponent {
         this.walletArr.Neo3 = this.neon.neo3WalletArr;
         this.wallet = this.neon.wallet;
         this.tabType = this.neon.currentWalletChainType;
+        this.displayWalletArr = this.walletArr[this.tabType];
+    }
+    ngOnInit(): void {
+        this.dragSort();
+    }
+    dragSort() {
+        const el = document.getElementsByClassName('address-list')[0];
+        Sortable.create(el, {
+            onEnd: (/**Event*/evt) => {
+                this.neon.sortWallet(this.tabType, evt.oldIndex, evt.newIndex);
+            },
+        });
     }
     public isActivityWallet(w: Wallet2 | Wallet3) {
         if (w.accounts[0].address === this.wallet.accounts[0].address) {
@@ -43,14 +58,6 @@ export class PopupHomeMenuDialogComponent {
         } else {
             return false;
         }
-    }
-    public scrollToBottom() {
-        try {
-            this.walletContainer.nativeElement.scrollTo(
-                0,
-                this.walletContainer.nativeElement.scrollHeight
-            );
-        } catch (err) {}
     }
 
     public dismiss() {
@@ -82,6 +89,7 @@ export class PopupHomeMenuDialogComponent {
     }
 
     to(type: 'create' | 'import') {
+        this.dismiss();
         this.dialog
             .open(PopupSelectDialogComponent, {
                 data: {
@@ -115,5 +123,24 @@ export class PopupHomeMenuDialogComponent {
         document.body.appendChild(element);
         element.click();
         document.body.removeChild(element);
+    }
+
+    changeTabType(type: ChainType) {
+        this.tabType = type;
+        this.displayWalletArr = this.walletArr[type];
+    }
+
+    searchWallet($event) {
+        let value: string = $event.target.value;
+        value = value.trim().toLowerCase();
+        if (value === '') {
+            this.isSearching = false;
+            this.displayWalletArr = this.walletArr[this.tabType];
+            return;
+        }
+        this.isSearching = true;
+        this.displayWalletArr = this.walletArr[this.tabType].filter((item) =>
+            item.name.toLowerCase().includes(value)
+        );
     }
 }

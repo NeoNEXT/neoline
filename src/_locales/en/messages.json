@@ -15,7 +15,7 @@
         "message": "Assets"
     },
     "setting": {
-        "message": "Settings"
+        "message": "SETTINGS"
     },
     "mainNet": {
         "message": "MainNet"
@@ -510,7 +510,7 @@
         "message": "System settings"
     },
     "lock": {
-        "message": "Lock"
+        "message": "LOCK"
     },
     "noMoreData": {
         "message": "No more data"
@@ -760,5 +760,29 @@
     },
     "unlockWallet": {
         "message": "You need to enter the password of the account to unlock the wallet"
+    },
+    "ABOUT US": {
+        "message": "ABOUT US"
+    },
+    "NEW": {
+        "message": "NEW"
+    },
+    "IMPORT": {
+        "message": "IMPORT"
+    },
+    "EXPORT": {
+        "message": "EXPORT"
+    },
+    "Active": {
+        "message": "Active"
+    },
+    "Sort": {
+        "message": "Sort"
+    },
+    "Search...": {
+        "message": "Search..."
+    },
+    "Network": {
+        "message": "Network"
     }
 }

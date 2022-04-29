@@ -54,6 +54,7 @@
         "mathjs": "^7.0.1",
         "minimist": "^1.2.5",
         "npm-registry-fetch": "^4.0.5",
+        "sortablejs": "^1.15.0",
         "tslib": "^2.0.0",
         "webpack-subresource-integrity": "^1.5.1",
         "websocket-extensions": "^0.1.4",

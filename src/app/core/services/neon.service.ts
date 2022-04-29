@@ -96,6 +96,36 @@ export class NeonService {
 
     constructor(private chrome: ChromeService, private global: GlobalService) {}
 
+    sortWallet(chainType: ChainType, oldIndex: number, newIndex: number) {
+        if (chainType === 'Neo2') {
+            const tempWallet = this._walletArr2[oldIndex];
+            this._walletArr2.splice(oldIndex, 1);
+            this._walletArr2.splice(newIndex, 0, tempWallet);
+            const tempWif = this._WIFArr2[oldIndex];
+            this._WIFArr2.splice(oldIndex, 1);
+            this._WIFArr2.splice(newIndex, 0, tempWif);
+            if (this.currentWalletChainType === 'Neo2') {
+                this._walletArr = this._walletArr2;
+                this._WIFArr = this._WIFArr2;
+            }
+            this.chrome.setStorage(STORAGE_NAME.walletArr, this.getWalletArrayJSON(this._walletArr2));
+            this.chrome.setStorage(STORAGE_NAME.WIFArr, this._WIFArr2);
+        } else {
+            const tempWallet = this._walletArr3[oldIndex];
+            this._walletArr3.splice(oldIndex, 1);
+            this._walletArr3.splice(newIndex, 0, tempWallet);
+            const tempWif = this._WIFArr3[oldIndex];
+            this._WIFArr3.splice(oldIndex, 1);
+            this._WIFArr3.splice(newIndex, 0, tempWif);
+            if (this.currentWalletChainType === 'Neo3') {
+                this._walletArr = this._walletArr3;
+                this._WIFArr = this._WIFArr3;
+            }
+            this.chrome.setStorage(STORAGE_NAME['walletArr-Neo3'], this.getWalletArrayJSON(this._walletArr3));
+            this.chrome.setStorage(STORAGE_NAME['WIFArr-Neo3'], this._WIFArr3);
+        }
+    }
+
     //#region reset
     public clearCache() {
         this._wallet =

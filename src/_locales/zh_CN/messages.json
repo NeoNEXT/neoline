@@ -760,5 +760,29 @@
     },
     "unlockWallet": {
         "message": "您需要输入该账户的密码来解锁该钱包"
+    },
+    "ABOUT US": {
+        "message": "关于我们"
+    },
+    "NEW": {
+        "message": "新建"
+    },
+    "IMPORT": {
+        "message": "导入"
+    },
+    "EXPORT": {
+        "message": "导出"
+    },
+    "Active": {
+        "message": "状态"
+    },
+    "Sort": {
+        "message": "排序"
+    },
+    "Search...": {
+        "message": "搜索..."
+    },
+    "Network": {
+        "message": "网络"
     }
 }
