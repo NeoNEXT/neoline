@@ -1,12 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { GlobalService, NeonService, ChromeService } from '@app/core';
+import { GlobalService, NeonService } from '@app/core';
 import { Router, RouterEvent, NavigationEnd } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import {
     PopupHomeMenuDialogComponent,
-    PopupSetPrivateNetDialogComponent,
+    PopupN3NetworkDialogComponent,
 } from './_dialogs';
-import { RpcNetwork, STORAGE_NAME, NetworkType } from './_lib';
+import { RpcNetwork } from './_lib';
 
 @Component({
     templateUrl: 'popup.component.html',
@@ -26,8 +26,7 @@ export class PopupComponent implements OnInit {
         private global: GlobalService,
         private neon: NeonService,
         private router: Router,
-        private dialog: MatDialog,
-        private chromeSer: ChromeService
+        private dialog: MatDialog
     ) {
         this.walletIsOpen = false;
         this.isLogin = false;
@@ -106,47 +105,19 @@ export class PopupComponent implements OnInit {
             });
     }
 
-    public modifyNet(index: number) {
-        if (index === this.selectedNetworkIndex) {
-            return;
-        }
-        if (
-            this.neon.currentWalletChainType === 'Neo2' &&
-            !this.global.n2Networks[index].rpcUrl
-        ) {
-            this.setPrivateNet();
-            return;
-        }
-        if (
-            this.neon.currentWalletChainType === 'Neo3' &&
-            !this.global.n3Networks[index].rpcUrl
-        ) {
-            this.setPrivateNet();
-            return;
-        }
-        this.selectedNetworkIndex = index;
-        if (this.neon.currentWalletChainType === 'Neo2') {
-            this.chromeSer.setStorage(
-                STORAGE_NAME.n2SelectedNetworkIndex,
-                index
-            );
-        } else {
-            this.chromeSer.setStorage(
-                STORAGE_NAME.n3SelectedNetworkIndex,
-                index
-            );
-        }
-        location.reload();
-    }
-
-    setPrivateNet(e?) {
-        e && e.stopPropagation();
-        this.dialog.open(PopupSetPrivateNetDialogComponent, {
-            panelClass: 'custom-dialog-panel',
-            data:
-                this.neon.currentWalletChainType === 'Neo2'
-                    ? this.global.n2Networks[2]
-                    : this.global.n3Networks[2],
-        });
+    openNetwork() {
+        this.dialog
+            .open(PopupN3NetworkDialogComponent, {
+                position: {
+                    top: '65px',
+                    right: '10px',
+                },
+                autoFocus: false,
+                width: '315px',
+                maxWidth: 375,
+                maxHeight: 500,
+            })
+            .afterClosed()
+            .subscribe(() => {});
     }
 }

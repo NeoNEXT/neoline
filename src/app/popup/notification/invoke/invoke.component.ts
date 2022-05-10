@@ -266,8 +266,8 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     ID: this.messageID
                 });
                 const setData = {};
-                setData[`${this.n2Network.network}TxArr`] = await this.chrome.getLocalStorage(`${this.n2Network.network}TxArr`) || [];
-                setData[`${this.n2Network.network}TxArr`].push('0x' + transaction.hash);
+                setData[`TxArr_${this.n2Network.id}`] = await this.chrome.getLocalStorage(`TxArr_${this.n2Network.id}`) || [];
+                setData[`TxArr_${this.n2Network.id}`].push('0x' + transaction.hash);
                 this.chrome.setLocalStorage(setData);
                 this.router.navigate([{
                     outlets: {

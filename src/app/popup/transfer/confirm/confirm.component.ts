@@ -14,7 +14,7 @@ import { NEO, GAS } from '@/models/models';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import { forkJoin } from 'rxjs';
 import { bignumber } from 'mathjs';
-import { GAS3_CONTRACT } from '../../_lib';
+import { GAS3_CONTRACT, RpcNetwork } from '../../_lib';
 import BigNumber from 'bignumber.js';
 
 @Component({
@@ -23,7 +23,7 @@ import BigNumber from 'bignumber.js';
 })
 export class PopupTransferConfirmComponent implements OnInit {
     public logoUrlArr = [];
-    public net = '';
+    public network: RpcNetwork;
     public fromName: string = '';
     public datajson: any = {};
     public symbol = ''
@@ -42,6 +42,7 @@ export class PopupTransferConfirmComponent implements OnInit {
         private neon: NeonService,
         private assetState: AssetState,
         private util: UtilServiceState,
+        private global: GlobalService,
         @Inject(MAT_DIALOG_DATA) public data: {
             fromAddress: string ,
             toAddress: string,
@@ -52,7 +53,7 @@ export class PopupTransferConfirmComponent implements OnInit {
             fee: string,
             networkFee?: any,
             systemFee?: any,
-            network: string,
+            networkId: number,
             broadcastOverride: boolean,
             txSerialize: string
         } = {
@@ -63,7 +64,7 @@ export class PopupTransferConfirmComponent implements OnInit {
             amount: '0',
             remark: '',
             fee: '0',
-            network: '',
+            networkId: undefined,
             broadcastOverride: false,
             txSerialize: '',
             networkFee: 0,
@@ -76,6 +77,7 @@ export class PopupTransferConfirmComponent implements OnInit {
     }
 
     async ngOnInit() {
+        this.network = this.isNeo3 ? this.global.n3Network : this.global.n2Network;
         const wallet = this.neon.wallet;
         this.fromName = wallet.name;
         this.rateCurrency = this.assetState.rateCurrency;

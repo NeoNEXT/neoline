@@ -47,7 +47,7 @@ export class TransferCreateComponent implements OnInit {
 
     public balances: Array<Asset> = [];
     public assetId: string;
-    public network: NetworkType;
+    public networkId: number;
 
     istransferAll = false;
 
@@ -70,10 +70,10 @@ export class TransferCreateComponent implements OnInit {
     ) {
         switch (this.neon.currentWalletChainType) {
             case 'Neo2':
-                this.network = this.global.n2Network.network;
+                this.networkId = this.global.n2Network.id;
                 break;
             case 'Neo3':
-                this.network = this.global.n3Network.network;
+                this.networkId = this.global.n3Network.id;
                 break;
         }
     }
@@ -253,7 +253,7 @@ export class TransferCreateComponent implements OnInit {
                 symbol: this.chooseNftToken.symbol,
                 amount: this.chooseNftToken.amount,
                 fee: this.fee || '0',
-                network: this.network,
+                networkId: this.networkId,
                 txSerialize: tx.serialize(true),
             };
             diaglogData.systemFee = (tx as Transaction3).systemFee.toString();
@@ -300,7 +300,8 @@ export class TransferCreateComponent implements OnInit {
                                             case 'Neo3':
                                                 res.sign(
                                                     wif,
-                                                    this.global.n3Network.magicNumber
+                                                    this.global.n3Network
+                                                        .magicNumber
                                                 );
                                                 break;
                                         }
@@ -364,7 +365,7 @@ export class TransferCreateComponent implements OnInit {
                 symbol: this.chooseAsset.symbol,
                 amount: this.amount,
                 fee: this.fee || '0',
-                network: this.network,
+                networkId: this.networkId,
                 txSerialize: tx.serialize(true),
             };
             if (this.neon.currentWalletChainType === 'Neo3') {
@@ -413,7 +414,8 @@ export class TransferCreateComponent implements OnInit {
                                             case 'Neo3':
                                                 res.sign(
                                                     wif,
-                                                    this.global.n3Network.magicNumber
+                                                    this.global.n3Network
+                                                        .magicNumber
                                                 );
                                                 break;
                                         }
@@ -518,9 +520,7 @@ export class TransferCreateComponent implements OnInit {
         try {
             let res;
             let txid: string;
-            res = await this.neo3Transfer.sendNeo3Tx(
-                tx as Transaction3
-            );
+            res = await this.neo3Transfer.sendNeo3Tx(tx as Transaction3);
             if (!res) {
                 throw {
                     msg: 'Transaction rejected by RPC node.',
@@ -533,7 +533,7 @@ export class TransferCreateComponent implements OnInit {
                     txid,
                     value: -this.chooseNftToken.amount,
                     block_time: new Date().getTime(),
-                    token_id: this.chooseNftToken.tokenid
+                    token_id: this.chooseNftToken.tokenid,
                 };
                 this.pushTransaction(txTarget);
             }
@@ -559,30 +559,34 @@ export class TransferCreateComponent implements OnInit {
     }
 
     public pushTransaction(transaction: any) {
-        const net = this.network;
+        const networkId = this.networkId;
         const address = this.fromAddress;
         const assetId = this.assetId;
-        this.chrome.getStorage(STORAGE_NAME.transaction).subscribe(async res => {
-            if (res === null || res === undefined) {
-                res = {};
-            }
-            if (res[net] === undefined) {
-                res[net] = {};
-            }
-            if (res[net][address] === undefined) {
-                res[net][address] = {};
-            }
-            if (res[net][address][assetId] === undefined) {
-                res[net][address][assetId] = [];
-            }
-            res[net][address][assetId].unshift(transaction);
-            this.chrome.setStorage(STORAGE_NAME.transaction, res);
-            const setData = {};
-            setData[`${this.network}TxArr`] =
-                (await this.chrome.getLocalStorage(`${this.network}TxArr`)) || [];
-            setData[`${this.network}TxArr`].push(transaction.txid);
-            this.chrome.setLocalStorage(setData);
-        });
+        this.chrome
+            .getStorage(STORAGE_NAME.transaction)
+            .subscribe(async (res) => {
+                if (res === null || res === undefined) {
+                    res = {};
+                }
+                if (res[networkId] === undefined) {
+                    res[networkId] = {};
+                }
+                if (res[networkId][address] === undefined) {
+                    res[networkId][address] = {};
+                }
+                if (res[networkId][address][assetId] === undefined) {
+                    res[networkId][address][assetId] = [];
+                }
+                res[networkId][address][assetId].unshift(transaction);
+                this.chrome.setStorage(STORAGE_NAME.transaction, res);
+                const setData = {};
+                setData[`TxArr_${networkId}`] =
+                    (await this.chrome.getLocalStorage(
+                        `TxArr_${networkId}`
+                    )) || [];
+                setData[`TxArr_${networkId}`].push(transaction.txid);
+                this.chrome.setLocalStorage(setData);
+            });
     }
 
     public selectToAddress() {

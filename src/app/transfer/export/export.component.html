@@ -12,7 +12,7 @@
 <p class="title">{{ 'displayWIF' | translate | async}}</p>
 <p class="title-pwd" *ngIf="!verified">{{ 'password' | translate | async}}</p>
 <p class="title-pwd" *ngIf="verified">{{ 'wif' | translate | async}}</p>
-<input type="password" placeholder="{{ 'verifyPassword' | translate | async}}" *ngIf="!verified" [(ngModel)]="pwd"
+<input type="password" [placeholder]="'verifyPassword' | translate | async" *ngIf="!verified" [(ngModel)]="pwd"
     (keyup.enter)="verify()" class="pwd" />
 <p class="wif" *ngIf="verified" (click)="copy(wif)">{{wif}}</p>
 <p class="tip">

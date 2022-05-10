@@ -12,7 +12,6 @@ import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
-import { NetworkType } from '../_lib';
 
 @Component({
     templateUrl: 'asset-detail.component.html',
@@ -30,7 +29,7 @@ export class PopupAssetDetailComponent implements OnInit {
     showMenu = false;
     watch: Asset[]; // User-added assets
     canHideBalance = false;
-    network: NetworkType;
+    networkId: number;
 
     constructor(
         private assetState: AssetState,
@@ -45,7 +44,10 @@ export class PopupAssetDetailComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.network = this.neon.currentWalletChainType === 'Neo2' ? this.global.n2Network.network : this.global.n3Network.network;
+        this.networkId =
+            this.neon.currentWalletChainType === 'Neo2'
+                ? this.global.n2Network.id
+                : this.global.n3Network.id;
         this.aRouter.params.subscribe(async (params: any) => {
             this.assetId = params.assetId || NEO;
             // 获取资产信息
@@ -55,7 +57,7 @@ export class PopupAssetDetailComponent implements OnInit {
                     this.handlerBalance(balanceArr);
                 });
             this.chrome
-                .getWatch(this.neon.address, this.neon.currentWalletChainType, this.network)
+                .getWatch(this.networkId, this.neon.address)
                 .subscribe((res) => {
                     this.watch = res;
                     this.canHideBalance =
@@ -66,7 +68,7 @@ export class PopupAssetDetailComponent implements OnInit {
 
     handlerBalance(balanceRes: Asset[]) {
         this.chrome
-            .getWatch(this.neon.address, this.neon.currentWalletChainType, this.network)
+            .getWatch(this.networkId, this.neon.address)
             .subscribe((watching) => {
                 this.findBalance(balanceRes, watching);
                 // 获取资产汇率
@@ -90,7 +92,10 @@ export class PopupAssetDetailComponent implements OnInit {
             this.assetState
                 .getAssetRate(this.balance.symbol, this.balance.asset_id)
                 .then((rate) => {
-                    this.balance.rateBalance = new BigNumber(this.balance.balance).times(rate || 0).toFixed() || '0';
+                    this.balance.rateBalance =
+                        new BigNumber(this.balance.balance)
+                            .times(rate || 0)
+                            .toFixed() || '0';
                 });
         } else {
             this.balance.rateBalance = '0';
@@ -112,10 +117,9 @@ export class PopupAssetDetailComponent implements OnInit {
                     if (i >= 0) {
                         this.watch.splice(i, 1);
                         this.chrome.setWatch(
+                            this.networkId,
                             this.neon.address,
-                            this.watch,
-                            this.neon.currentWalletChainType,
-                            this.network
+                            this.watch
                         );
                         this.global.snackBarTip('hiddenSucc');
                         this.router.navigateByUrl('/popup/home');
@@ -130,12 +134,18 @@ export class PopupAssetDetailComponent implements OnInit {
         switch (this.neon.currentWalletChainType) {
             case 'Neo2':
                 if (this.global.n2Network.explorer) {
-                    window.open(`${this.global.n2Network.explorer}${isNep5 ? 'nep5' : 'asset'}/${this.assetId}/page/1`)
+                    window.open(
+                        `${this.global.n2Network.explorer}${
+                            isNep5 ? 'nep5' : 'asset'
+                        }/${this.assetId}/page/1`
+                    );
                 }
                 break;
             case 'Neo3':
                 if (this.global.n3Network.explorer) {
-                    window.open(`${this.global.n3Network.explorer}tokens/nep17/${this.assetId}`)
+                    window.open(
+                        `${this.global.n3Network.explorer}tokens/nep17/${this.assetId}`
+                    );
                 }
                 break;
         }

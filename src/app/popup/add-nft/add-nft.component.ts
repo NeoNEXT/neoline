@@ -13,6 +13,7 @@ import { NftAsset } from '@/models/models';
 })
 export class PopupAddNftComponent implements OnInit {
     public watch: NftAsset[] = []; // 用户添加的资产
+    private moneyNft: NftAsset[] = [];
 
     public isLoading = false;
     public searchValue: string = '';
@@ -27,10 +28,13 @@ export class PopupAddNftComponent implements OnInit {
 
     ngOnInit(): void {
         this.chrome
-            .getNftWatch(this.neon.address, this.neon.currentWalletChainType, this.global.n3Network.network)
+            .getNftWatch(this.global.n3Network.id, this.neon.address)
             .subscribe((res) => {
                 this.watch = res;
             });
+        this.nftState
+            .getAddressNfts(this.neon.address)
+            .then((res) => (this.moneyNft = res));
     }
 
     public searchCurrency() {
@@ -38,13 +42,19 @@ export class PopupAddNftComponent implements OnInit {
         this.nftState.searchNft(this.searchValue).then(
             (res) => {
                 this.searchNft = res;
+                console.log(res);
+                const moneyIndex = this.moneyNft.findIndex(
+                    (w) =>
+                        w.assethash.includes(res.assethash) ||
+                        res.assethash.includes(w.assethash)
+                );
                 const index = this.watch.findIndex(
                     (item) => item.assethash === res.assethash
                 );
                 if (index >= 0) {
                     this.searchNft.watching = this.watch[index].watching;
                 } else {
-                    this.searchNft.watching = false;
+                    this.searchNft.watching = moneyIndex >= 0 ? true : false;
                 }
                 this.isLoading = false;
             },
@@ -58,7 +68,7 @@ export class PopupAddNftComponent implements OnInit {
     addNft() {
         this.searchNft.watching = true;
         const index = this.watch.findIndex(
-            (w) => w.assethash === this.searchNft.contract
+            (w) => w.assethash === this.searchNft.assethash
         );
         if (index >= 0) {
             this.watch[index].watching = true;
@@ -66,10 +76,9 @@ export class PopupAddNftComponent implements OnInit {
             this.watch.push(this.searchNft);
         }
         this.chrome.setNftWatch(
+            this.global.n3Network.id,
             this.neon.address,
-            this.watch,
-            this.neon.currentWalletChainType,
-            this.global.n3Network.network
+            this.watch
         );
         this.global.snackBarTip('addSucc');
     }

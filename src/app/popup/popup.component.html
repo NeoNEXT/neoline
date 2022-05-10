@@ -11,16 +11,10 @@
             <span class="popup-nav-logo">
                 <span class="popup-nav-logo-img"></span>
             </span>
-            <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
-                {{ networks[selectedNetworkIndex]?.name }}
+            <button mat-stroked-button class="popup-nav-network" (click)="openNetwork()">
+                <span class="network-name">{{ networks[selectedNetworkIndex]?.name }}</span>
                 <span class="popup-nav-network-icon"></span>
             </button>
-            <mat-menu #menu="matMenu">
-                <button mat-menu-item *ngFor="let network of networks; index as index" (click)="modifyNet(index)">
-                    {{ network.name }}
-                    <span class="set-net" (click)="setPrivateNet($event)" *ngIf="network.network==='PrivateNet'">设置</span>
-                </button>
-            </mat-menu>
             <span class="popup-nav-menu" (click)="topMenu()" *ngIf="walletIsOpen && !isLogin">
                 <img [avatar]="address" />
             </span>
@@ -34,11 +28,11 @@
                 <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
             </span>
             <button mat-stroked-button class="popup-nav-network" [matMenuTriggerFor]="menu">
-                {{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}
+                {{ networks[selectedNetworkIndex]?.name }}
                 <span class="popup-nav-network-icon"></span>
             </button>
             <mat-menu #menu="matMenu">
-                <button mat-menu-item>{{ (net == 'MainNet' ? 'mainNet' : 'testNet') | translate | async }}</button>
+                <button mat-menu-item>{{ networks[selectedNetworkIndex]?.name }}</button>
                 <!-- <button mat-menu-item (click)="modifyNetThird('test')">{{ 'testNet' | translate | async }}</button> -->
             </mat-menu>
         </mat-toolbar>

@@ -17,7 +17,7 @@ import BigNumber from 'bignumber.js';
 export class PopupAssetsComponent implements OnInit {
     @Input() public rateCurrency: string;
     myAssets: Asset[];
-    private network;
+    private networkId: number;
     isLoading = false;
 
     constructor(
@@ -28,10 +28,10 @@ export class PopupAssetsComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
-        this.network =
+        this.networkId =
             this.neon.currentWalletChainType === 'Neo2'
-                ? this.global.n2Network.network
-                : this.global.n3Network.network;
+                ? this.global.n2Network.id
+                : this.global.n3Network.id;
         this.getAssets();
     }
 
@@ -41,9 +41,8 @@ export class PopupAssetsComponent implements OnInit {
             this.neon.address
         );
         const getWatch = this.chrome.getWatch(
-            this.neon.address,
-            this.neon.currentWalletChainType,
-            this.network
+            this.networkId,
+            this.neon.address
         );
         forkJoin([getMoneyBalance, getWatch]).subscribe((res) => {
             const [moneyAssets, watch] = [...res];
@@ -71,7 +70,10 @@ export class PopupAssetsComponent implements OnInit {
         for (let i = 0; i < this.myAssets.length; i++) {
             const item = this.myAssets[i];
             if (new BigNumber(item.balance).comparedTo(0) > 0) {
-                const rate = await this.asset.getAssetRate(item.symbol, item.asset_id);
+                const rate = await this.asset.getAssetRate(
+                    item.symbol,
+                    item.asset_id
+                );
                 if (rate) {
                     item.rateBalance = new BigNumber(item.balance)
                         .times(rate)

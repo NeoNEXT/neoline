@@ -15,7 +15,7 @@
                     <img src="/assets/images/home-menu/setting.svg" alt="">{{ 'setting' | translate | async }}
                 </span>
                 <span [routerLink]="['/popup/about']" (click)="dismiss()">
-                    <img src="/assets/images/home-menu/about-us.svg" alt="">{{ 'ABOUT US' | translate | async }}
+                    <img src="/assets/images/home-menu/about-us.svg" alt="">{{ 'ABOUT_US' | translate | async }}
                 </span>
             </p>
         </div>
@@ -34,15 +34,16 @@
             </span>
         </div>
         <div class="chain-list">
-            {{ 'Network' | translate | async }}:
-            <button [matMenuTriggerFor]="menu">{{ tabType === 'Neo2' ?  'Neo Legacy' : 'Neo N3' }}<img
+            {{ 'Networks' | translate | async }}:
+            <button [matMenuTriggerFor]="menu"><span class="network-type"
+                    [ngClass]="'id' + selectedNetwork.id"></span>{{ selectedNetwork.name }}<img
                     src="/assets/images/home-menu/dropdown-arrow.svg" alt=""></button>
         </div>
         <mat-menu #menu="matMenu">
-            <button mat-menu-item (click)="changeTabType('Neo2')">{{ 'Neo Legacy'  }}</button>
-            <button mat-menu-item (click)="changeTabType('Neo3')">{{ 'Neo N3' }}</button>
+            <button mat-menu-item *ngFor="let item of networks" (click)="changeTabType(item)"><span class="network-type"
+                    [ngClass]="'id' + item.id"></span>{{ item.name }}</button>
         </mat-menu>
-        <input [placeholder]="'Search...' | translate | async" (input)="searchWallet($event)" class="search"
+        <input [placeholder]="'Search' | translate | async" (input)="searchWallet($event)" class="search"
             type="text">
         <ul class="row row-head">
             <li class="avatar"></li>

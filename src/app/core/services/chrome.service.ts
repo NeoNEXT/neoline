@@ -5,11 +5,9 @@ import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { Asset, NftAsset } from '@/models/models';
 import { EVENT } from '@/models/dapi';
 import {
-    ChainType,
     STORAGE_NAME,
     STORAGE_VALUE_TYPE,
     STORAGE_VALUE_MESSAGE,
-    NetworkType,
 } from '@/app/popup/_lib';
 
 declare var chrome: any;
@@ -63,18 +61,14 @@ export class ChromeService {
     }
 
     //#region watch, NFT watch
-    public getWatch(
-        address: string,
-        chainType: ChainType,
-        network: NetworkType
-    ): Observable<Asset[]> {
-        const storageName = `watch_${network.toLowerCase()}-${chainType}`;
+    public getWatch(networkId: number, address: string): Observable<Asset[]> {
+        const storageName = `watch`;
         if (!this.check) {
             try {
                 let rs =
-                    (JSON.parse(localStorage.getItem(storageName)) || {})[
-                        address
-                    ] || [];
+                    (JSON.parse(localStorage.getItem(storageName)) || {})?.[
+                        networkId
+                    ]?.[address] || [];
                 if (!Array.isArray(rs)) {
                     rs = [];
                 }
@@ -90,7 +84,7 @@ export class ChromeService {
                 new Promise<Asset[]>((resolve, reject) => {
                     try {
                         this.crx.getLocalStorage(storageName, (res) => {
-                            res = (res || {})[address] || [];
+                            res = (res || {})?.[networkId]?.[address] || [];
                             if (!Array.isArray(res)) {
                                 res = [];
                             }
@@ -104,11 +98,8 @@ export class ChromeService {
             );
         }
     }
-    public getAllWatch(
-        chainType: ChainType,
-        network: NetworkType
-    ): Observable<object> {
-        const storageName = `watch_${network.toLowerCase()}-${chainType}`;
+    private getAllWatch(): Observable<object> {
+        const storageName = `watch`;
         if (!this.check) {
             try {
                 const rs = JSON.parse(localStorage.getItem(storageName)) || {};
@@ -133,17 +124,21 @@ export class ChromeService {
             );
         }
     }
-    public setWatch(
-        address: string,
-        watch: Asset[],
-        chainType: ChainType,
-        network: NetworkType
-    ) {
-        watch.forEach((item) => delete item.balance);
-        const storageName = `watch_${network.toLowerCase()}-${chainType}`;
-        this.getAllWatch(chainType, network).subscribe((watchObject) => {
+    public setWatch(networkId: number, address?: string, watch?: Asset[]) {
+        if (watch) {
+            watch.forEach((item) => delete item.balance);
+        }
+        const storageName = `watch`;
+        this.getAllWatch().subscribe((watchObject) => {
             const saveWatch = watchObject || {};
-            saveWatch[address] = watch;
+            if (!saveWatch?.[networkId]) {
+                saveWatch[networkId] = {};
+            }
+            if (address) {
+                saveWatch[networkId][address] = watch;
+            } else {
+                saveWatch[networkId] = {}; // reset this networkId data
+            }
             if (!this.check) {
                 localStorage.setItem(storageName, JSON.stringify(saveWatch));
                 return;
@@ -158,17 +153,16 @@ export class ChromeService {
         });
     }
     public getNftWatch(
-        address: string,
-        chainType: ChainType,
-        network: NetworkType
+        networkId: number,
+        address: string
     ): Observable<NftAsset[]> {
-        const storageName = `nft_watch_${network.toLowerCase()}-${chainType}`;
+        const storageName = `nft_watch`;
         if (!this.check) {
             try {
                 let rs =
-                    (JSON.parse(localStorage.getItem(storageName)) || {})[
-                        address
-                    ] || [];
+                    (JSON.parse(localStorage.getItem(storageName)) || {})?.[
+                        networkId
+                    ]?.[address] || [];
                 if (!Array.isArray(rs)) {
                     rs = [];
                 }
@@ -183,7 +177,7 @@ export class ChromeService {
                 new Promise<NftAsset[]>((resolve, reject) => {
                     try {
                         this.crx.getLocalStorage(storageName, (res) => {
-                            res = (res || {})[address] || [];
+                            res = (res || {})?.[networkId]?.[address] || [];
                             if (!Array.isArray(res)) {
                                 res = [];
                             }
@@ -196,11 +190,8 @@ export class ChromeService {
             );
         }
     }
-    private getAllNftWatch(
-        chainType: ChainType,
-        network: NetworkType
-    ): Observable<object> {
-        const storageName = `nft_watch_${network.toLowerCase()}-${chainType}`;
+    private getAllNftWatch(): Observable<object> {
+        const storageName = `nft_watch`;
         if (!this.check) {
             try {
                 const rs = JSON.parse(localStorage.getItem(storageName)) || {};
@@ -226,15 +217,21 @@ export class ChromeService {
         }
     }
     public setNftWatch(
-        address: string,
-        watch: NftAsset[],
-        chainType: ChainType,
-        network: NetworkType
+        networkId: number,
+        address?: string,
+        watch?: NftAsset[]
     ) {
-        const storageName = `nft_watch_${network.toLowerCase()}-${chainType}`;
-        this.getAllNftWatch(chainType, network).subscribe((watchObject) => {
+        const storageName = `nft_watch`;
+        this.getAllNftWatch().subscribe((watchObject) => {
             const saveWatch = watchObject || {};
-            saveWatch[address] = watch;
+            if (!saveWatch?.[networkId]) {
+                saveWatch[networkId] = {};
+            }
+            if (address) {
+                saveWatch[networkId][address] = watch;
+            } else {
+                saveWatch[networkId] = {}; // reset this networkId data
+            }
             if (!this.check) {
                 localStorage.setItem(storageName, JSON.stringify(saveWatch));
                 return;
@@ -248,22 +245,9 @@ export class ChromeService {
             }
         });
     }
-    resetWatch(chainType: ChainType, network: NetworkType) {
-        const storageName = `watch_${network.toLowerCase()}-${chainType}`;
-        const nftStorageName = `nft_watch_${network.toLowerCase()}-${chainType}`;
-        if (!this.check) {
-            localStorage.setItem(storageName, JSON.stringify({}));
-            localStorage.setItem(nftStorageName, JSON.stringify({}));
-            return;
-        }
-        try {
-            const saveData = {};
-            saveData[storageName] = {};
-            saveData[nftStorageName] = {};
-            this.crx.setLocalStorage(saveData);
-        } catch (e) {
-            console.log('set watch failed', e);
-        }
+    resetWatch(networkId: number) {
+        this.setWatch(networkId);
+        this.setNftWatch(networkId);
     }
     //#endregion
 

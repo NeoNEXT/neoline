@@ -1,6 +1,6 @@
-@import 'src/styles/popup-default';
-@import 'src/styles/theme-default';
-@import 'src/app/popup/transfer/common-scss/common.scss';
+@import "src/styles/popup-default";
+@import "src/styles/theme-default";
+@import "src/app/popup/transfer/common-scss/common.scss";
 .loading-box {
     background: rgba(0, 0, 0, 0.1);
     position: fixed;
@@ -16,13 +16,12 @@
     }
 
     mat-spinner {
-        margin: 0 auto；
+        margin: 0 auto；;
     }
 
     h3 {
         margin-top: 15px;
     }
-
 }
 
 .transfer-confirm-container {
@@ -46,11 +45,18 @@
             }
 
             .popup-nav-network {
-                width: 107px;
+                width: 127px;
                 height: 30px;
                 line-height: 30px;
                 border-radius: 30px;
                 font-size: 12px;
+                .network-name {
+                    display: inline-block;
+                    max-width: 100px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    margin-right: 3px;
+                }
                 .popup-nav-network-icon {
                     width: 5px;
                     height: 3px;
@@ -64,7 +70,6 @@
                 margin-top: 10px;
                 margin-left: 15px;
             }
-
         }
     }
     .no-third-party-toolbar {
@@ -91,9 +96,9 @@
         .mat-toolbar {
             height: 55px;
             border-radius: 15px 15px 0 0;
-            background: #F8FBF9;
+            background: #f8fbf9;
             padding: 0px;
-            >div {
+            > div {
                 width: 50%;
                 flex: 1 1 auto;
                 display: inline-flex;
@@ -128,7 +133,7 @@
                 margin-top: 10px;
             }
             .type-box {
-                border: 0.5px solid #B0B6BE;
+                border: 0.5px solid #b0b6be;
                 text-align: center;
                 line-height: 25px;
                 padding: 0px 8px;
@@ -142,10 +147,10 @@
                         height: 6px;
                         width: 6px;
                         border-radius: 50%;
-                        background-color: #B0B6BE;
+                        background-color: #b0b6be;
                     }
                     &:nth-child(2) {
-                        color: #808A94;
+                        color: #808a94;
                         font-size: 14px;
                         margin-left: 4px;
                     }
@@ -160,7 +165,7 @@
                     display: inline-block;
                     height: 50px;
                     padding: 10px;
-                    border: 0.5px solid #EFEFEF;
+                    border: 0.5px solid #efefef;
                     border-radius: 50%;
                     margin-left: 24px;
                     img {
@@ -179,7 +184,7 @@
                             font-size: 24px;
                         }
                         &:nth-child(2) {
-                            color: #A0A8BE;
+                            color: #a0a8be;
                             font-size: 14px;
                             margin-top: 4px;
                         }
@@ -195,7 +200,7 @@
     height: calc(100% - 210px);
     hr {
         border: none;
-        border-top: 0.5px solid #EFEFEF;
+        border-top: 0.5px solid #efefef;
         margin: 0px 20px;
     }
     .detail-item {
@@ -218,16 +223,16 @@
             flex-direction: column;
             p {
                 &.edit {
-                    color:  map-get($neo-line-default, 500);
+                    color: map-get($neo-line-default, 500);
                     font-size: 12px;
-                    padding: 5px
+                    padding: 5px;
                 }
                 &.fee {
                     color: #303434;
                     font-size: 18px;
                 }
                 &.fee-money {
-                    color: #707C82;
+                    color: #707c82;
                     font-size: 12px;
                 }
             }
@@ -238,12 +243,13 @@
             align-items: flex-end;
             flex-direction: column;
             p {
-                &.edit, &.fee-money {
-                    color: #707C82;
+                &.edit,
+                &.fee-money {
+                    color: #707c82;
                     font-size: 12px;
                 }
                 &.fee {
-                    color:  map-get($neo-line-default, 500);;
+                    color: map-get($neo-line-default, 500);
                     font-size: 18px;
                 }
             }
@@ -261,7 +267,7 @@
                 }
                 .value {
                     margin-top: 3px;
-                    color: #707C82;
+                    color: #707c82;
                     word-break: break-all;
                 }
             }
@@ -271,8 +277,8 @@
             margin: 14px 25px;
             border-radius: 5px;
             padding: 18px;
-            background-color: #F8F8F8;
-            color: #808A94;
+            background-color: #f8f8f8;
+            color: #808a94;
             pre {
                 white-space: pre-wrap;
                 word-wrap: break-word;
@@ -283,7 +289,7 @@
             }
         }
         .hex-label {
-            color: #B0B6BE;
+            color: #b0b6be;
             font-size: 15px;
             margin-top: 25px;
             margin-left: 20px;
@@ -293,7 +299,7 @@
 
 hr {
     border: none;
-    border-top: 0.5px solid #EFEFEF;
+    border-top: 0.5px solid #efefef;
 }
 
 .btn-box {
@@ -304,7 +310,7 @@ hr {
     justify-content: center;
     button {
         &:nth-child(1) {
-            background: #ECFBF1;
+            background: #ecfbf1;
             color: map-get($neo-line-default, 500);
         }
 
@@ -315,7 +321,6 @@ hr {
     }
 }
 
-
 ::ng-deep {
     .transfer-confirm-container {
         .mat-tab-group {
@@ -325,10 +330,10 @@ hr {
                 border: none;
                 .mat-tab-label {
                     width: 50%;
-                    color: #B0B6BE;
+                    color: #b0b6be;
                     font-size: 18px;
                     &.mat-tab-label-active {
-                        color: #07CCAB;
+                        color: #07ccab;
                     }
                 }
             }
@@ -339,7 +344,6 @@ hr {
                 height: 100%;
                 flex-grow: 1;
             }
-
         }
     }
 }

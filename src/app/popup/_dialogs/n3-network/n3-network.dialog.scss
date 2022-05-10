@@ -1,0 +1,91 @@
+@import "src/styles/theme-default";
+
+.container {
+    max-height: 500px;
+
+    .triangle {
+        width: 0;
+        height: 0;
+        border-left: 6px solid transparent;
+        border-right: 6px solid transparent;
+        border-bottom: 7px solid white;
+        margin-left: 62%;
+    }
+
+    .menu-body {
+        width: 315px;
+        overflow: auto;
+        background-color: white;
+        border-radius: 15px;
+        padding: 25px 20px;
+        .title {
+            font-size: 16px;
+            font-family: "Regular";
+            font-weight: 400;
+            color: #434543;
+            padding-left: 2px;
+        }
+        ul.network-list {
+            margin-top: 25px;
+            height: 300px;
+            overflow: scroll;
+            li {
+                height: 55px;
+                line-height: 55px;
+                background: #ffffff;
+                border: 1px solid #e0e0e0;
+                border-radius: 6px;
+                margin-bottom: 5px;
+                padding: 0 20px;
+                font-size: 17px;
+                font-family: "Medium";
+                font-weight: 500;
+                color: #434543;
+                position: relative;
+                &:hover img.delete {
+                    display: inline-block;
+                }
+                span {
+                    display: inline-block;
+                    width: 15px;
+                    height: 15px;
+                    border-radius: 50%;
+                    margin-right: 10px;
+                    background: #8e9c98;
+                }
+                img {
+                    width: 14px;
+                    position: absolute;
+                    right: 20px;
+                    top: 22px;
+                }
+                img.delete {
+                    display: none;
+                    cursor: pointer;
+                }
+                &.active {
+                    color: #06ccab;
+                }
+            }
+        }
+        button.add {
+            margin-top: 20px;
+            width: 100%;
+            height: 50px;
+            border: none;
+            background: #ecfbf1;
+            border-radius: 5px;
+            font-size: 15px;
+            color: #06ccab;
+            font-family: "Regular";
+        }
+    }
+}
+
+::ng-deep {
+    .mat-dialog-container {
+        background: transparent;
+        box-shadow: none;
+        padding: 0px;
+    }
+}

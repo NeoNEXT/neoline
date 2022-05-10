@@ -4,9 +4,8 @@ import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { NeonService, ChromeService, GlobalService } from '@/app/core';
 import { Router } from '@angular/router';
-import { EVENT } from '@/models/dapi';
 import { PopupSelectDialogComponent } from '../select/select.dialog';
-import { ChainTypeGroups, ChainType, STORAGE_NAME } from '@popup/_lib';
+import { ChainTypeGroups, ChainType, RpcNetwork } from '@popup/_lib';
 import { PopupPasswordDialogComponent } from '../password/password.dialog';
 import Sortable from 'sortablejs';
 
@@ -25,8 +24,11 @@ export class PopupHomeMenuDialogComponent implements OnInit {
     };
     public displayWalletArr: Array<Wallet2 | Wallet3> = [];
     public wallet: Wallet2 | Wallet3;
-    public tabType: ChainType;
+    public chainType: ChainType;
     isSearching = false;
+    public networks: RpcNetwork[];
+    selectedNetwork;
+
     constructor(
         private router: Router,
         private chrome: ChromeService,
@@ -38,8 +40,13 @@ export class PopupHomeMenuDialogComponent implements OnInit {
         this.walletArr.Neo2 = this.neon.neo2WalletArr;
         this.walletArr.Neo3 = this.neon.neo3WalletArr;
         this.wallet = this.neon.wallet;
-        this.tabType = this.neon.currentWalletChainType;
-        this.displayWalletArr = this.walletArr[this.tabType];
+        this.networks = this.global.n2Networks.concat(this.global.n3Networks);
+        this.chainType = this.neon.currentWalletChainType;
+        this.displayWalletArr = this.walletArr[this.chainType];
+        this.selectedNetwork =
+            this.chainType === 'Neo2'
+                ? this.global.n2Networks[this.global.n2SelectedNetworkIndex]
+                : this.global.n3Networks[this.global.n3SelectedNetworkIndex];
     }
     ngOnInit(): void {
         this.dragSort();
@@ -47,8 +54,12 @@ export class PopupHomeMenuDialogComponent implements OnInit {
     dragSort() {
         const el = document.getElementsByClassName('address-list')[0];
         Sortable.create(el, {
-            onEnd: (/**Event*/evt) => {
-                this.neon.sortWallet(this.tabType, evt.oldIndex, evt.newIndex);
+            onEnd: (/**Event*/ evt) => {
+                this.neon.sortWallet(
+                    this.chainType,
+                    evt.oldIndex,
+                    evt.newIndex
+                );
             },
         });
     }
@@ -67,7 +78,7 @@ export class PopupHomeMenuDialogComponent implements OnInit {
     public selectAccount(w: Wallet2 | Wallet3) {
         this.dialog
             .open(PopupPasswordDialogComponent, {
-                data: { account: w, chainType: this.tabType },
+                data: { account: w, chainType: this.chainType },
                 panelClass: 'custom-dialog-panel',
             })
             .afterClosed()
@@ -89,7 +100,6 @@ export class PopupHomeMenuDialogComponent implements OnInit {
     }
 
     to(type: 'create' | 'import') {
-        this.dismiss();
         this.dialog
             .open(PopupSelectDialogComponent, {
                 data: {
@@ -103,6 +113,7 @@ export class PopupHomeMenuDialogComponent implements OnInit {
                 if (!chain) {
                     return;
                 }
+                this.dismiss();
                 if (type === 'create') {
                     this.router.navigateByUrl('/popup/wallet/create');
                 } else {
@@ -125,9 +136,10 @@ export class PopupHomeMenuDialogComponent implements OnInit {
         document.body.removeChild(element);
     }
 
-    changeTabType(type: ChainType) {
-        this.tabType = type;
-        this.displayWalletArr = this.walletArr[type];
+    changeTabType(network: RpcNetwork) {
+        this.selectedNetwork = network;
+        this.chainType = network.chainId <= 2 ? 'Neo2' : 'Neo3';
+        this.displayWalletArr = this.walletArr[this.chainType];
     }
 
     searchWallet($event) {
@@ -135,11 +147,11 @@ export class PopupHomeMenuDialogComponent implements OnInit {
         value = value.trim().toLowerCase();
         if (value === '') {
             this.isSearching = false;
-            this.displayWalletArr = this.walletArr[this.tabType];
+            this.displayWalletArr = this.walletArr[this.chainType];
             return;
         }
         this.isSearching = true;
-        this.displayWalletArr = this.walletArr[this.tabType].filter((item) =>
+        this.displayWalletArr = this.walletArr[this.chainType].filter((item) =>
             item.name.toLowerCase().includes(value)
         );
     }

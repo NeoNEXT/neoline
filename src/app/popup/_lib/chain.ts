@@ -20,5 +20,7 @@ export const ChainTypeGroups: SelectItem[] = [
 export enum NetworkType {
     MainNet = 'MainNet',
     TestNet = 'TestNet',
-    PrivateNet = 'PrivateNet'
+    N3MainNet = 'N3MainNet',
+    N3TestNet = 'N3TestNet',
+    N3PrivateNet = 'N3PrivateNet'
 }

@@ -24,11 +24,7 @@ export class PopupNftsComponent implements OnInit {
 
     ngOnInit(): void {
         const getWatch = this.chrome
-            .getNftWatch(
-                this.neonService.address,
-                this.neonService.currentWalletChainType,
-                this.global.n3Network.network
-            )
+            .getNftWatch(this.global.n3Network.id, this.neonService.address)
             .toPromise();
         const getNfts = this.nftState.getAddressNfts(this.neonService.address);
         Promise.all([getNfts, getWatch]).then(([moneyAssets, watch]) => {

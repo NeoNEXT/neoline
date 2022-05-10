@@ -180,8 +180,8 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 ID: this.messageID
             });
             const setData = {};
-            setData[`N3${this.n3Network.network}TxArr`] = await this.chrome.getLocalStorage(`N3${this.n3Network.network}TxArr`) || [];
-            setData[`N3${this.n3Network.network}TxArr`].push(txHash);
+            setData[`TxArr_${this.n3Network.id}`] = await this.chrome.getLocalStorage(`TxArr_${this.n3Network.id}`) || [];
+            setData[`TxArr_${this.n3Network.id}`].push(txHash);
             this.chrome.setLocalStorage(setData);
             this.router.navigate([{
                 outlets: {

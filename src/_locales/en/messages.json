@@ -761,7 +761,7 @@
     "unlockWallet": {
         "message": "You need to enter the password of the account to unlock the wallet"
     },
-    "ABOUT US": {
+    "ABOUT_US": {
         "message": "ABOUT US"
     },
     "NEW": {
@@ -779,10 +779,22 @@
     "Sort": {
         "message": "Sort"
     },
-    "Search...": {
+    "Search": {
         "message": "Search..."
     },
-    "Network": {
-        "message": "Network"
+    "Networks": {
+        "message": "Networks"
+    },
+    "AddNetwork": {
+        "message": "Add Network"
+    },
+    "NetworkName": {
+        "message": "Network Name"
+    },
+    "New_RPC_URL": {
+        "message": "New RPC URL"
+    },
+    "Explorer_URL": {
+        "message": "Block Explorer URL(Optional)"
     }
 }

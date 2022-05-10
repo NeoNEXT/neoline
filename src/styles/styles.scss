@@ -98,3 +98,17 @@ li {
         border-radius: 0;
     }
 }
+
+$network-list: (
+    id1: #50bfb6,
+    id2: #bf9c50,
+    id3: #17994d,
+    id4: #7056bf,
+    id6: #5072bf,
+);
+
+@each $network, $color in $network-list {
+    .#{$network}.network-type {
+        background: $color !important;
+    }
+}

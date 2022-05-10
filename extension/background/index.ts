@@ -76,16 +76,16 @@ export function expand() {
             chainType = await getWalletType();
         };
         let rpcUrl;
-        let network;
+        let networkId;
         if (chainType === ChainType.Neo2) {
-            network = n2Networks[n2SelectedNetworkIndex].network;
+            networkId = n2Networks[n2SelectedNetworkIndex].id;
             rpcUrl = n2Networks[n2SelectedNetworkIndex].rpcUrl;
         } else if (chainType === ChainType.Neo3) {
-            network = n3Networks[n3SelectedNetworkIndex].network;
+            networkId = n3Networks[n3SelectedNetworkIndex].id;
             rpcUrl = n3Networks[n3SelectedNetworkIndex].rpcUrl;
         }
         setTimeout(async () => {
-            let oldHeight = await getLocalStorage(`${chainType}_${network}BlockHeight`, () => { }) || 0;
+            let oldHeight = await getLocalStorage(`BlockHeight_${networkId}`, () => { }) || 0;
             httpPost(rpcUrl, {
                 jsonrpc: '2.0',
                 method: 'getblockcount',
@@ -124,7 +124,7 @@ export function expand() {
                                 }
                                 if (newHeight - reqHeight <= 1) {
                                     const setData = {};
-                                    setData[`${chainType}_${network}BlockHeight`] = newHeight;
+                                    setData[`BlockHeight_${networkId}`] = newHeight;
                                     setLocalStorage(setData);
                                     clearTimeout(timer);
                                 }
@@ -135,7 +135,7 @@ export function expand() {
             }, '*')
         }, 0);
         if(chainType === ChainType.Neo2) {
-            const txArr = await getLocalStorage(`${currN2Network.network}TxArr`, () => { }) || [];
+            const txArr = await getLocalStorage(`TxArr_${networkId}`, () => { }) || [];
             if (txArr.length === 0) {
                 return;
             }
@@ -160,13 +160,13 @@ export function expand() {
                         });
                         const setData = {};
                         tempTxArr = tempTxArr.filter(item => item !== txid);
-                        setData[`${currN2Network.network}TxArr`] = tempTxArr;
+                        setData[`TxArr_${networkId}`] = tempTxArr;
                         setLocalStorage(setData);
                     }
                 })
             })
         } else if(chainType === ChainType.Neo3) {
-            const txArr = await getLocalStorage(`${currN3Network.network}TxArr`, () => { }) || [];
+            const txArr = await getLocalStorage(`TxArr_${networkId}`, () => { }) || [];
             if (txArr.length === 0) {
                 return;
             }
@@ -191,7 +191,7 @@ export function expand() {
                         });
                         const setData = {};
                         tempTxArr = tempTxArr.filter(item => item !== txid);
-                        setData[`${currN3Network.network}TxArr`] = tempTxArr;
+                        setData[`TxArr_${networkId}`] = tempTxArr;
                         setLocalStorage(setData);
                     }
                 })

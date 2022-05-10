@@ -22,7 +22,7 @@ export class PopupMyAssetsComponent implements OnInit {
 
     sourceScrollHeight = 0;
 
-    private network;
+    private networkId: number;
 
     constructor(
         private asset: AssetState,
@@ -31,10 +31,10 @@ export class PopupMyAssetsComponent implements OnInit {
         private dialog: MatDialog,
         private global: GlobalService
     ) {
-        this.network =
+        this.networkId =
             this.neon.currentWalletChainType === 'Neo2'
-                ? this.global.n2Network.network
-                : this.global.n3Network.network;
+                ? this.global.n2Network.id
+                : this.global.n3Network.id;
     }
 
     ngOnInit(): void {
@@ -42,9 +42,8 @@ export class PopupMyAssetsComponent implements OnInit {
             this.neon.address
         );
         const getWatch = this.chrome.getWatch(
-            this.neon.address,
-            this.neon.currentWalletChainType,
-            this.network
+            this.networkId,
+            this.neon.address
         );
         forkJoin([getMoneyBalance, getWatch]).subscribe((res) => {
             [this.moneyAssets, this.watch] = [...res];
@@ -76,12 +75,7 @@ export class PopupMyAssetsComponent implements OnInit {
         } else {
             this.watch.push(asset);
         }
-        this.chrome.setWatch(
-            this.neon.address,
-            this.watch,
-            this.neon.currentWalletChainType,
-            this.network
-        );
+        this.chrome.setWatch(this.networkId, this.neon.address, this.watch);
         this.myAssets[index].watching = true;
         this.global.snackBarTip('addSucc');
     }
@@ -94,12 +88,7 @@ export class PopupMyAssetsComponent implements OnInit {
         } else {
             this.watch.push(asset);
         }
-        this.chrome.setWatch(
-            this.neon.address,
-            this.watch,
-            this.neon.currentWalletChainType,
-            this.network
-        );
+        this.chrome.setWatch(this.networkId, this.neon.address, this.watch);
         this.myAssets[index].watching = false;
         this.global.snackBarTip('hiddenSucc');
     }

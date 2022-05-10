@@ -131,7 +131,8 @@ export class AssetState {
     ): Promise<BigNumber | undefined> {
         const isNeo3 = this.neonService.currentWalletChainType === 'Neo3';
         if (
-            (isNeo3 && this.global.n3Network.network !== NetworkType.MainNet) ||
+            (isNeo3 &&
+                this.global.n3Network.network !== NetworkType.N3MainNet) ||
             (!isNeo3 && this.global.n2Network.network !== NetworkType.MainNet)
         ) {
             return undefined;
@@ -256,11 +257,10 @@ export class AssetState {
         const balance = await this.getAddressBalances(address);
         const watching = await this.chrome
             .getWatch(
-                address,
-                this.neonService.currentWalletChainType,
                 this.neonService.currentWalletChainType === 'Neo2'
-                    ? this.global.n2Network.network
-                    : this.global.n3Network.network
+                    ? this.global.n2Network.id
+                    : this.global.n3Network.id,
+                address
             )
             .toPromise();
         return (

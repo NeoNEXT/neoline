@@ -93,6 +93,15 @@
             border: none;
             padding: 0 20px;
             text-align: left;
+            .network-type {
+                display: inline-block;
+                width: 15px;
+                height: 15px;
+                border-radius: 50%;
+                margin-right: 10px;
+                background: #8e9c98;
+                vertical-align: sub;
+            }
             img {
                 position: absolute;
                 right: 15px;
@@ -195,5 +204,15 @@
     }
     .mat-menu-panel {
         width: 275px;
+        max-height: 300px !important;
+    }
+    .network-type {
+        display: inline-block;
+        width: 15px;
+        height: 15px;
+        border-radius: 50%;
+        margin-right: 10px;
+        background: #8e9c98;
+        vertical-align: sub;
     }
 }

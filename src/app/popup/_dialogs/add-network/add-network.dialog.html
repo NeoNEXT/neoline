@@ -1,0 +1,20 @@
+<div class="title">
+    {{ 'AddNetwork' | translate | async }}
+    <mat-icon class="close" [mat-dialog-close]="false">close</mat-icon>
+</div>
+
+<section class="container">
+    <div class="item">
+        <p class="label">{{ 'NetworkName' | translate | async }}</p>
+        <input type="text" [(ngModel)]="privateNet.name">
+    </div>
+    <div class="item">
+        <p class="label">{{ 'New_RPC_URL' | translate | async }}</p>
+        <input type="text" [(ngModel)]="privateNet.rpcUrl">
+    </div>
+    <div class="item">
+        <p class="label">{{ 'Explorer_URL' | translate | async }}</p>
+        <input type="text" [(ngModel)]="privateNet.explorer">
+    </div>
+    <button mat-button (click)="confirm()" color="primary">{{ 'yes' | translate | async}}</button>
+</section>

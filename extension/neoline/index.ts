@@ -67,7 +67,7 @@ window.addEventListener('message', async (e) => {
                             const returnData = {
                                 chainId: n2Network.chainId,
                                 networks: DEFAULT_NETWORKS,
-                                defaultNetwork: n2Network.name
+                                defaultNetwork: n2Network.network
                             };
                             window.postMessage({
                                 return: requestTarget.Networks,
@@ -83,7 +83,7 @@ window.addEventListener('message', async (e) => {
                             const returnData = {
                                 chainId: n3Network.chainId,
                                 networks: DEFAULT_NETWORKS,
-                                defaultNetwork: n3Network.name
+                                defaultNetwork: n3Network.network
                             };
                             window.postMessage({
                                 return: requestTarget.Networks,

@@ -306,11 +306,11 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                     ID: this.messageID,
                 });
                 const setData = {};
-                setData[`${this.n2Network.network}TxArr`] =
+                setData[`TxArr_${this.n2Network.id}`] =
                     (await this.chrome.getLocalStorage(
-                        `${this.n2Network.network}TxArr`
+                        `TxArr_${this.n2Network.id}`
                     )) || [];
-                setData[`${this.n2Network.network}TxArr`].push('0x' + tx.hash);
+                setData[`TxArr_${this.n2Network.id}`].push('0x' + tx.hash);
                 this.chrome.setLocalStorage(setData);
                 this.router.navigate([
                     {
@@ -334,23 +334,23 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     }
 
     public pushTransaction(transaction: object) {
-        const net = this.n2Network.network;
+        const networkId = this.n2Network.id;
         const address = this.fromAddress;
         const assetId = this.assetId;
         this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((res) => {
             if (res === null || res === undefined) {
                 res = {};
             }
-            if (res[net] === undefined) {
-                res[net] = {};
+            if (res[networkId] === undefined) {
+                res[networkId] = {};
             }
-            if (res[net][address] === undefined) {
-                res[net][address] = {};
+            if (res[networkId][address] === undefined) {
+                res[networkId][address] = {};
             }
-            if (res[net][address][assetId] === undefined) {
-                res[net][address][assetId] = [];
+            if (res[networkId][address][assetId] === undefined) {
+                res[networkId][address][assetId] = [];
             }
-            res[net][address][assetId].unshift(transaction);
+            res[networkId][address][assetId].unshift(transaction);
             this.chrome.setStorage(STORAGE_NAME.transaction, res);
         });
     }

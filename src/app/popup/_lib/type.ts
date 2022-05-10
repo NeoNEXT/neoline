@@ -18,55 +18,54 @@ export interface RpcNetwork {
     explorer?: string;
     magicNumber?: number;
     chainId: number;
+    id: number;
 }
 
 export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
     {
         rpcUrl: 'http://seed7.ngd.network:10332',
-        name: 'N2 Mainnet',
+        name: 'N2 MAINNET',
         explorer: 'https://neotube.io/',
         network: NetworkType.MainNet,
         chainId: 1,
+        id: 1,
     },
     {
         rpcUrl: 'http://seed5.ngd.network:20332',
-        name: 'N2 Testnet',
+        name: 'N2 TESTNET',
         explorer: 'https://testnet.neotube.io/',
         network: NetworkType.TestNet,
         chainId: 2,
-    },
-    {
-        rpcUrl: '',
-        name: 'N2 PrivateNet',
-        explorer: '',
-        network: NetworkType.PrivateNet,
-        chainId: 5,
+        id: 2,
     },
 ];
 
 export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
     {
         rpcUrl: 'https://n3seed2.ngd.network:10332',
-        name: 'N3 Mainnet',
+        name: 'N3 MAINNET',
         magicNumber: 860833102,
         explorer: 'https://neo3.neotube.io/',
-        network: NetworkType.MainNet,
+        network: NetworkType.N3MainNet,
         chainId: 3,
+        id: 3,
     },
     {
         rpcUrl: 'http://seed3t4.neo.org:20332',
-        name: 'N3 Testnet',
+        name: 'TESTNET(N3T4)',
         magicNumber: 877933390,
-        explorer: 'https://neo3.testnet.neotube.io/',
-        network: NetworkType.TestNet,
+        explorer: 'https://n3t4.neotube.io/',
+        network: NetworkType.N3TestNet,
         chainId: 4,
+        id: 4,
     },
     {
-        rpcUrl: '',
-        name: 'N3 PrivateNet',
-        magicNumber: undefined,
-        explorer: '',
-        network: NetworkType.PrivateNet,
+        rpcUrl: 'http://seed3t4.neo.org:20332',
+        name: 'TESTNET(N3T5)',
+        magicNumber: 894710606,
+        explorer: 'https://n3t5.neotube.io/',
+        network: NetworkType.N3TestNet,
         chainId: 6,
+        id: 6,
     },
 ];

@@ -1,10 +1,4 @@
-import {
-    Component,
-    OnInit,
-    Input,
-    OnDestroy,
-    ɵclearResolutionOfComponentResourcesQueue,
-} from '@angular/core';
+import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import {
     GlobalService,
     TransactionState,
@@ -30,7 +24,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
     @Input() rateCurrency: string;
 
     public show = false;
-    public network: NetworkType;
+    public networkId: number;
     public address: string;
     public inTransaction: Array<Transaction>;
     public txData: Array<any> = [];
@@ -45,10 +39,10 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
         private dialog: MatDialog
     ) {}
     ngOnInit(): void {
-        this.network =
+        this.networkId =
             this.neon.currentWalletChainType === 'Neo2'
-                ? this.global.n2Network.network
-                : this.global.n3Network.network;
+                ? this.global.n2Network.id
+                : this.global.n3Network.id;
         this.address = this.neon.address;
         this.txData = [];
         this.getInTransactions();
@@ -74,15 +68,17 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                 .getStorage(STORAGE_NAME.transaction)
                 .subscribe((inTxData) => {
                     if (
-                        inTxData[this.network] === undefined ||
-                        inTxData[this.network][this.address] === undefined ||
-                        inTxData[this.network][this.address][this.assetId] ===
+                        inTxData[this.networkId] === undefined ||
+                        inTxData[this.networkId][this.address] === undefined ||
+                        inTxData[this.networkId][this.address][this.assetId] ===
                             undefined
                     ) {
                         this.inTransaction = [];
                     } else {
                         this.inTransaction =
-                            inTxData[this.network][this.address][this.assetId];
+                            inTxData[this.networkId][this.address][
+                                this.assetId
+                            ];
                     }
                     const txIdArray = [];
                     this.inTransaction = this.inTransaction.filter(
@@ -115,22 +111,24 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
                                 this.inTransaction.splice(tempIndex, 1);
                             }
                         });
-                        if (inTxData[this.network] === undefined) {
-                            inTxData[this.network] = {};
+                        if (inTxData[this.networkId] === undefined) {
+                            inTxData[this.networkId] = {};
                         } else if (
-                            inTxData[this.network][this.address] === undefined
+                            inTxData[this.networkId][this.address] === undefined
                         ) {
-                            inTxData[this.network][this.address] = {};
+                            inTxData[this.networkId][this.address] = {};
                         } else if (
-                            inTxData[this.network][this.address][
+                            inTxData[this.networkId][this.address][
                                 this.assetId
                             ] === undefined
                         ) {
-                            inTxData[this.network][this.address][this.assetId] =
-                                [];
+                            inTxData[this.networkId][this.address][
+                                this.assetId
+                            ] = [];
                         } else {
-                            inTxData[this.network][this.address][this.assetId] =
-                                this.inTransaction;
+                            inTxData[this.networkId][this.address][
+                                this.assetId
+                            ] = this.inTransaction;
                         }
                         this.chrome.setStorage(
                             STORAGE_NAME.transaction,

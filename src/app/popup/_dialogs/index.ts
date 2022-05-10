@@ -13,5 +13,6 @@ export { PopupAuthorizationListDialogComponent } from './authorization-list/auth
 export { PopupDapiPromptComponent } from './dapi-Prompt/dapi-Prompt.component';
 export { PopupNftTxDetailDialogComponent } from './nft-tx-detail/nft-tx-detail.dialog';
 export { PopupNftTokenDetailDialogComponent } from './nft-token-detail/nft-token-detail.dialog';
-export { PopupSetPrivateNetDialogComponent } from './set-private-net/set-private-net.dialog';
+export { PopupAddNetworkDialogComponent } from './add-network/add-network.dialog';
 export { PopupPasswordDialogComponent } from './password/password.dialog';
+export { PopupN3NetworkDialogComponent } from './n3-network/n3-network.dialog';

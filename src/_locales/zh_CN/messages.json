@@ -761,7 +761,7 @@
     "unlockWallet": {
         "message": "您需要输入该账户的密码来解锁该钱包"
     },
-    "ABOUT US": {
+    "ABOUT_US": {
         "message": "关于我们"
     },
     "NEW": {
@@ -779,10 +779,22 @@
     "Sort": {
         "message": "排序"
     },
-    "Search...": {
+    "Search": {
         "message": "搜索..."
     },
-    "Network": {
+    "Networks": {
         "message": "网络"
+    },
+    "AddNetwork": {
+        "message": "添加网络"
+    },
+    "NetworkName": {
+        "message": "网络名称"
+    },
+    "New_RPC_URL": {
+        "message": "新增 RPC URL"
+    },
+    "Explorer_URL": {
+        "message": "区块浏览器(选填)"
     }
 }

@@ -1,0 +1,18 @@
+<div class="container">
+    <p class="triangle"></p>
+    <div class="menu-body">
+        <p class="title">{{ 'Networks' | translate | async }}</p>
+        <ul class="network-list">
+            <li *ngFor="let item of networks; index as index" [ngClass]="{active: index===selectedNetworkIndex}"
+                (click)="changeNetwork(index)">
+                <span class="network-type" [ngClass]="'id' + item.id"></span>{{ item.name }}
+                <img *ngIf="index===selectedNetworkIndex" src="/assets/images/dialog/selected.png" alt="">
+                <img class="delete" *ngIf="index!==selectedNetworkIndex && item.id>6"
+                    (click)="$event.stopPropagation();deleteNetwork(index)" src="/assets/images/home-menu/close.svg"
+                    alt="">
+            </li>
+        </ul>
+        <button *ngIf="showAddNetwork" class="add"
+            (click)="addNetwork()">{{ 'AddNetwork' | translate | async }}</button>
+    </div>
+</div>

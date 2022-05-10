@@ -7,6 +7,7 @@
             <span class="long">{{asset.name}}</span>
             (<span class="short">{{ asset.symbol }}</span>)
         </div>
+        <p class="asset-id">{{asset?.assethash}}</p>
     </div>
     <button mat-raised-button *ngIf="asset?.watching===false" class="unadd"
         (click)="addAsset(index)">{{ 'add' | translate | async}}</button>

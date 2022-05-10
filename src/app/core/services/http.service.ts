@@ -16,12 +16,13 @@ export class HttpService {
     ) {}
 
     public get(url: string): Observable<any> {
-        let network =
+        const network =
             this.neon.currentWalletChainType === 'Neo2'
-                ? this.global.n2Network.network.toLowerCase()
-                : this.global.n3Network.network.toLowerCase();
-        if (network === 'privatenet') {
-            network = 'testnet';
+                ? this.global.n2Network
+                : this.global.n3Network;
+        let networkStr = 'testnet';
+        if (network.chainId === 1 || network.chainId === 3) {
+            networkStr = 'mainnet';
         }
         if (this.chrome.check) {
             return from(
@@ -45,7 +46,7 @@ export class HttpService {
         return this.http
             .get(url, {
                 headers: {
-                    Network: network,
+                    Network: networkStr,
                 },
             })
             .pipe(

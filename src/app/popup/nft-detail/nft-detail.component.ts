@@ -45,9 +45,8 @@ export class PopupNftDetailComponent implements OnInit {
                 if (!this.nft) {
                     this.chrome
                         .getNftWatch(
-                            this.neonService.address,
-                            this.neonService.currentWalletChainType,
-                            this.global.n3Network.network
+                            this.global.n3Network.id,
+                            this.neonService.address
                         )
                         .subscribe((res2) => {
                             this.nft = res2.find(

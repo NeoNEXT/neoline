@@ -41,11 +41,18 @@
         }
 
         .popup-nav-network {
-            width: 107px;
+            width: 127px;
             height: 30px;
             line-height: 30px;
             border-radius: 30px;
             font-size: 12px;
+            .network-name {
+                display: inline-block;
+                max-width: 100px;
+                overflow: hidden;
+                text-overflow: ellipsis;
+                margin-right: 3px;
+            }
             .popup-nav-network-icon {
                 width: 5px;
                 height: 3px;
