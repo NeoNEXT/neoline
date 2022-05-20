@@ -300,7 +300,7 @@ export class UtilServiceState {
                     properties.name = item.name;
                     properties.image = item.image;
                 } else if (item.name) {
-                    properties.name = item;
+                    properties = item;
                 }
                 this.n3NftProperties[contract][tokenids[index]] = properties;
                 propertiesRes.push(properties);

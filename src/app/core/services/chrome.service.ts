@@ -435,18 +435,22 @@ export class ChromeService {
         if (!this.check) {
             switch (STORAGE_VALUE_MESSAGE[storageName].type) {
                 case STORAGE_VALUE_TYPE.object:
-                    targetValue = value ? JSON.parse(value) : {};
+                    targetValue =
+                        value && value !== 'undefined' ? JSON.parse(value) : {};
                     break;
                 case STORAGE_VALUE_TYPE.array:
-                    targetValue = value ? JSON.parse(value) : [];
+                    targetValue =
+                        value && value !== 'undefined' ? JSON.parse(value) : [];
                     break;
                 case STORAGE_VALUE_TYPE.map:
-                    targetValue = value
-                        ? new Map(JSON.parse(value))
-                        : new Map();
+                    targetValue =
+                        value && value !== 'undefined'
+                            ? new Map(JSON.parse(value))
+                            : new Map();
                     break;
                 case STORAGE_VALUE_TYPE.number:
-                    targetValue = value ? Number(value) : 0;
+                    targetValue =
+                        value && value !== 'undefined' ? Number(value) : 0;
                     break;
                 case STORAGE_VALUE_TYPE.boolean:
                     targetValue = value === 'true' ? true : false;
@@ -531,7 +535,7 @@ export class ChromeService {
     //#region wallet
     public setWallet(w: any) {
         const currChainType = wallet3.isAddress(
-            w?.accounts[0].address || '',
+            w?.accounts[0]?.address || '',
             53
         )
             ? 'Neo3'
@@ -541,8 +545,8 @@ export class ChromeService {
         if (this.check) {
             this.windowCallback({
                 data: {
-                    address: w.accounts[0].address,
-                    label: w.name,
+                    address: w?.accounts[0]?.address,
+                    label: w?.name,
                 },
                 return: EVENT.ACCOUNT_CHANGED,
             });

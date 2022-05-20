@@ -37,7 +37,7 @@ export class HttpService {
                             }
                         },
                         {
-                            Network: network,
+                            Network: networkStr,
                         }
                     );
                 })

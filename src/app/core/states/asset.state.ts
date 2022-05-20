@@ -349,7 +349,10 @@ export class AssetState {
         return this.handleN3BalancesResponse(n3Res);
     }
     private handleNeo2NativeBalanceResponse(data) {
-        const target = [DEFAULT_NEO2_ASSETS.NEO, DEFAULT_NEO2_ASSETS.GAS];
+        const target = [
+            { ...DEFAULT_NEO2_ASSETS.NEO },
+            { ...DEFAULT_NEO2_ASSETS.GAS },
+        ];
         (data?.balances || []).forEach((item) => {
             if (item.asset === NEO) {
                 target[0].balance = item.value;
@@ -383,8 +386,8 @@ export class AssetState {
     }
     private async handleN3BalancesResponse(data): Promise<Asset[]> {
         const result: Asset[] = [
-            DEFAULT_NEO3_ASSETS.NEO,
-            DEFAULT_NEO3_ASSETS.GAS,
+            { ...DEFAULT_NEO3_ASSETS.NEO },
+            { ...DEFAULT_NEO3_ASSETS.GAS },
         ];
         const contracts = [NEO3_CONTRACT, GAS3_CONTRACT];
         (data?.balance || []).forEach(({ amount, assethash }) => {

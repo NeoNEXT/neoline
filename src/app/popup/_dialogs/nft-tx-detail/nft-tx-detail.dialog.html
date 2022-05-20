@@ -21,7 +21,7 @@
 </div>
 <div class="item row">
     <span class="name">{{ 'time' | translate | async }}</span>
-    <span class="value">{{ data.tx.block_time | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+    <span class="value">{{ data.tx.block_time * 1000 | date:'yyyy-MM-dd HH:mm:ss' }}</span>
 </div>
 <div class="item column">
     <p class="name">{{ 'from' | translate | async }}</p>

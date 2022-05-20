@@ -1,4 +1,4 @@
-@import 'src/styles/theme-default';
+@import "src/styles/theme-default";
 
 .popup-home-tx-page {
     .tx-item {
@@ -17,7 +17,7 @@
 
             .time {
                 font-size: 12px;
-                color: #B0B6BE;
+                color: #b0b6be;
             }
 
             .more-info-btn {
@@ -59,11 +59,11 @@
                     margin-top: 4px;
 
                     &.wait {
-                        color: #F89266;
+                        color: #f89266;
                     }
 
                     &.fail {
-                        color: #07CCAB;
+                        color: #07ccab;
                     }
 
                     span {
@@ -72,7 +72,7 @@
                         white-space: nowrap;
                         overflow: hidden;
                         display: inline-block;
-                        color: #808A94;
+                        color: #808a94;
                         font-size: 12px;
                         width: 60%;
                     }
@@ -97,7 +97,7 @@
                     }
 
                     &.receive {
-                        color: #07CCAB;
+                        color: #07ccab;
                     }
                 }
 
@@ -105,7 +105,7 @@
                     font-size: 12px;
                     color: #9fa8bd;
                     margin-top: 4px;
-                    color: #808A94;
+                    color: #808a94;
                 }
             }
         }
@@ -113,7 +113,7 @@
         hr {
             border: none;
             width: 100%;
-            border-top: 0.5px solid #F2F2F2;
+            border-top: 0.5px solid #f2f2f2;
             position: absolute;
             bottom: 0px;
         }
@@ -121,9 +121,9 @@
 
     .no-data,
     .loading {
-        margin-top: 40px;
+        margin-top: 20px;
         text-align: center;
-        font-size: 15px;
+        font-size: 12px;
         color: #b0b6be;
         margin-bottom: 40px;
     }

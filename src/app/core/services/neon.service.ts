@@ -279,11 +279,15 @@ export class NeonService {
      * @param w 钱包地址
      */
     public verifyWallet(w: Wallet2 | Wallet3): boolean {
-        if (this._walletArr === []) {
+        let walletArr = this._walletArr2;
+        if (wallet3.isAddress(w.accounts[0].address, 53)) {
+            walletArr = this._walletArr3;
+        }
+        if (walletArr === []) {
             return true;
         } else {
             if (
-                this._walletArr.findIndex(
+                walletArr.findIndex(
                     (item) => item.accounts[0].address === w.accounts[0].address
                 ) >= 0
             ) {

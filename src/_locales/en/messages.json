@@ -796,5 +796,11 @@
     },
     "Explorer_URL": {
         "message": "Block Explorer URL(Optional)"
+    },
+    "Invalid_RPC_URL": {
+        "message": "Invalid RPC URL"
+    },
+    "oneMonthTxs": {
+        "message": "Only show transactions from the most recent month"
     }
 }

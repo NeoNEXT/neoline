@@ -1,5 +1,5 @@
-import { Component, OnInit, Input } from '@angular/core';
-import { Asset } from '@/models/models';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Asset, NEO } from '@/models/models';
 import {
     GlobalService,
     AssetState,
@@ -8,6 +8,7 @@ import {
 } from '@/app/core';
 import { forkJoin } from 'rxjs';
 import BigNumber from 'bignumber.js';
+import { NEO3_CONTRACT } from '../../_lib';
 
 @Component({
     selector: 'app-assets',
@@ -16,6 +17,7 @@ import BigNumber from 'bignumber.js';
 })
 export class PopupAssetsComponent implements OnInit {
     @Input() public rateCurrency: string;
+    @Output() backAsset = new EventEmitter();
     myAssets: Asset[];
     private networkId: number;
     isLoading = false;
@@ -63,6 +65,15 @@ export class PopupAssetsComponent implements OnInit {
             });
             this.myAssets = showAssets;
             this.getAssetsRate();
+            let neoAsset;
+            if (this.neon.currentWalletChainType === 'Neo2') {
+                neoAsset = this.myAssets.find((m) => m.asset_id === NEO);
+            } else {
+                neoAsset = this.myAssets.find(
+                    (m) => m.asset_id === NEO3_CONTRACT
+                );
+            }
+            this.backAsset.emit(neoAsset);
             this.isLoading = false;
         });
     }

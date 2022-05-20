@@ -40,6 +40,7 @@ export class NotificationService {
         InsufficientNetworkFee: 'Insufficient network fee',
         InsufficientGas: 'Insufficient GAS to pay for fees',
         SystemFeeHasChanged: 'Note: system fee has changed, please confirm again.',
+        Invalid_RPC_URL: 'Invalid RPC URL',
     };
     private CN = {
         close: '关闭',
@@ -76,6 +77,7 @@ export class NotificationService {
         InsufficientNetworkFee: '网络费不足',
         InsufficientGas: 'GAS 不足以支付费用',
         SystemFeeHasChanged: '注意：系统费用已发生变化，请再次确认。',
+        Invalid_RPC_URL: '无效的 RPC URL',
     };
     constructor(public chrome: ChromeService) {
         this.content = this.EN;

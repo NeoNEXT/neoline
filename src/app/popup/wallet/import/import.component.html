@@ -67,9 +67,31 @@
     </form>
     <mat-error class="error" *ngIf="confirmPassword.value != WIFpassword.value && confirmPassword.value != ''">
         {{ 'confirmError' | translate | async }}</mat-error>
+    <div class="import-nep6-file" [hidden]="importType !== '1'">
+        <button mat-stroked-button>
+            {{ 'chooseNep6File' | translate | async }}
+            <input class="choose-nep6-input" (change)="onFileSelected($event)" type="file">
+        </button>
+        <p class="name">{{ nep6Name }}</p>
+        <form #nep6Form="ngForm">
+            <mat-form-field class="popup-wallet-input-body" appearance="fill" focused="true">
+                <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
+                <mat-label>{{ 'enterPassword' | translate | async }}</mat-label>
+                <input matInput [(ngModel)]="walletNep6Import.password" name="password" #password="ngModel" required
+                    [type]="hideNep6Pwd ? 'password' : 'text'" />
+                <button tabindex="-1" mat-button matSuffix mat-icon-button type="button"
+                    (click)="hideNep6Pwd = !hideNep6Pwd">
+                    <span [class]="hideNep6Pwd ? 'hide-pwd' : ''"></span>
+                </button>
+                <mat-error *ngIf="password.errors?.required">{{ 'passwordRequired' | translate | async }}
+                </mat-error>
+            </mat-form-field>
+        </form>
+    </div>
 
     <button class="popup-wallet-body-submit" mat-flat-button color="primary" [disabled]="isInit
-        || (importType === '0' && (walletImportForm.invalid || confirmPassword.value != WIFpassword.value || !isWIF)) || loading" (click)="submitImport()">
+        || (importType === '0' && (walletImportForm.invalid || confirmPassword.value != WIFpassword.value || !isWIF)) || loading
+        || ((nep6Json == null || nep6Form.invalid) && importType === '1')" (click)="submitImport()">
         <ng-container *ngIf="!loading">{{ 'import' | translate | async }}</ng-container>
         <ng-container *ngIf="loading">{{ 'importing' | translate | async }}</ng-container>
     </button>

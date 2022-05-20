@@ -106,18 +106,26 @@ export class PopupHomeComponent implements OnInit {
         }
     }
 
+    initNeo($event) {
+        this.balance = $event;
+    }
+
     //#region user click function
     toWeb() {
         this.showMenu = false;
         switch (this.neon.currentWalletChainType) {
             case 'Neo2':
                 if (this.global.n2Network.explorer) {
-                    window.open(`${this.global.n2Network.explorer}address/${this.neon.address}/page/1`)
+                    window.open(
+                        `${this.global.n2Network.explorer}address/${this.neon.address}/page/1`
+                    );
                 }
                 break;
             case 'Neo3':
                 if (this.global.n3Network.explorer) {
-                    window.open(`${this.global.n3Network.explorer}address/${this.neon.address}`)
+                    window.open(
+                        `${this.global.n3Network.explorer}address/${this.neon.address}`
+                    );
                 }
                 break;
         }
@@ -146,7 +154,10 @@ export class PopupHomeComponent implements OnInit {
     }
 
     toAdd() {
-        if (this.neon.currentWalletChainType === 'Neo3' && this.selectedIndex === 1) {
+        if (
+            this.neon.currentWalletChainType === 'Neo3' &&
+            this.selectedIndex === 1
+        ) {
             this.router.navigateByUrl('/popup/add-nft');
         } else {
             this.router.navigateByUrl('/popup/add-asset');
@@ -170,9 +181,9 @@ export class PopupHomeComponent implements OnInit {
             this.neon.claimGAS(this.claimsData).subscribe((tx) => {
                 tx.forEach((item) => {
                     try {
-                        rpc.Query.sendRawTransaction(item.serialize(true)).execute(
-                            this.global.n2Network.rpcUrl
-                        );
+                        rpc.Query.sendRawTransaction(
+                            item.serialize(true)
+                        ).execute(this.global.n2Network.rpcUrl);
                     } catch (error) {
                         this.loading = false;
                     }
@@ -192,39 +203,40 @@ export class PopupHomeComponent implements OnInit {
                 amount: 0,
                 networkFee: 0,
                 decimals: 0,
-            }
+            };
             const wif =
-            this.neon.WIFArr[
-                this.neon.walletArr.findIndex(
-                    (item) => item.accounts[0].address === this.neon.address
-                )
-            ];
-            this.neo3TransferService.createNeo3Tx(params).subscribe(tx => {
-                tx.sign(
-                    wif,
-                    this.global.n3Network.magicNumber
-                );
+                this.neon.WIFArr[
+                    this.neon.walletArr.findIndex(
+                        (item) => item.accounts[0].address === this.neon.address
+                    )
+                ];
+            this.neo3TransferService.createNeo3Tx(params).subscribe((tx) => {
+                tx.sign(wif, this.global.n3Network.magicNumber);
                 this.neo3TransferService.sendNeo3Tx(tx).then((hash) => {
                     this.homeService.claimGasHash = hash;
                     this.getTxStatus();
-                })
+                });
             });
         }
     }
 
     getTxStatus() {
-        const queryTxInterval = interval(5000).pipe(take(5)).subscribe(() => {
-            this.homeService.getN3RawTransaction(this.homeService.claimGasHash).then((res) => {
-                if (res.blocktime) {
-                    queryTxInterval.unsubscribe();
-                    this.loading = false;
-                    this.claimStatus = this.status.success;
-                    setTimeout(() => {
-                        this.initClaim();
-                    }, 3000);
-                }
-            })
-        })
+        const queryTxInterval = interval(5000)
+            .pipe(take(5))
+            .subscribe(() => {
+                this.homeService
+                    .getN3RawTransaction(this.homeService.claimGasHash)
+                    .then((res) => {
+                        if (res.blocktime) {
+                            queryTxInterval.unsubscribe();
+                            this.loading = false;
+                            this.claimStatus = this.status.success;
+                            setTimeout(() => {
+                                this.initClaim();
+                            }, 3000);
+                        }
+                    });
+            });
     }
     //#endregion
 
@@ -292,23 +304,28 @@ export class PopupHomeComponent implements OnInit {
     }
     private initClaim() {
         if (this.neon.currentWalletChainType === 'Neo2') {
-            this.assetState.fetchClaim(this.neon.address).subscribe((res: any) => {
-                this.claimsData = res.claimable;
-                if (res.available > 0) {
-                    this.claimNumber = res.available;
-                    this.showClaim = true;
-                } else if (res.unavailable > 0) {
-                    this.claimNumber = res.unavailable;
-                    this.claimStatus = this.status.estimated;
-                    this.showClaim = true;
-                } else {
-                    this.showClaim = false;
-                }
-                this.init = true;
-                this.loading = false;
-            });
+            this.assetState
+                .fetchClaim(this.neon.address)
+                .subscribe((res: any) => {
+                    this.claimsData = res.claimable;
+                    if (res.available > 0) {
+                        this.claimNumber = res.available;
+                        this.showClaim = true;
+                    } else if (res.unavailable > 0) {
+                        this.claimNumber = res.unavailable;
+                        this.claimStatus = this.status.estimated;
+                        this.showClaim = true;
+                    } else {
+                        this.showClaim = false;
+                    }
+                    this.init = true;
+                    this.loading = false;
+                });
         } else {
-            if (this.loading && new Date().getTime() - this.homeService.claimTxTime < 20000) {
+            if (
+                this.loading &&
+                new Date().getTime() - this.homeService.claimTxTime < 20000
+            ) {
                 return;
             }
             this.getN3UnclaimedGas();
@@ -322,9 +339,11 @@ export class PopupHomeComponent implements OnInit {
     }
 
     getN3UnclaimedGas() {
-        this.assetState.getUnclaimedGas(this.neon.address).subscribe(res => {
+        this.assetState.getUnclaimedGas(this.neon.address).subscribe((res) => {
             if (res?.unclaimed && res?.unclaimed !== '0') {
-                this.claimNumber = new BigNumber(res?.unclaimed).shiftedBy(-8).toNumber();
+                this.claimNumber = new BigNumber(res?.unclaimed)
+                    .shiftedBy(-8)
+                    .toNumber();
                 this.claimStatus = this.status.confirmed;
                 this.showClaim = true;
             } else {
@@ -333,7 +352,7 @@ export class PopupHomeComponent implements OnInit {
             }
             this.init = true;
             this.loading = false;
-        })
+        });
     }
 
     private initInterval() {

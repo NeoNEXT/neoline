@@ -91,19 +91,19 @@ export const STORAGE_VALUE_MESSAGE = {
         isLocal: true,
     },
     walletArr: {
-        type: STORAGE_VALUE_TYPE.object,
+        type: STORAGE_VALUE_TYPE.array,
         isLocal: true,
     },
     'walletArr-Neo3': {
-        type: STORAGE_VALUE_TYPE.object,
+        type: STORAGE_VALUE_TYPE.array,
         isLocal: true,
     },
     WIFArr: {
-        type: STORAGE_VALUE_TYPE.object,
+        type: STORAGE_VALUE_TYPE.array,
         isLocal: true,
     },
     'WIFArr-Neo3': {
-        type: STORAGE_VALUE_TYPE.object,
+        type: STORAGE_VALUE_TYPE.array,
         isLocal: true,
     },
     chainType: {

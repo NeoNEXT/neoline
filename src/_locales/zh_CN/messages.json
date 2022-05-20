@@ -796,5 +796,11 @@
     },
     "Explorer_URL": {
         "message": "区块浏览器(选填)"
+    },
+    "Invalid_RPC_URL": {
+        "message": "无效的 RPC URL"
+    },
+    "oneMonthTxs": {
+        "message": "只显示最近一个月的交易"
     }
 }

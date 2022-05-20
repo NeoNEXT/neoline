@@ -5,7 +5,12 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { NeonService, ChromeService, GlobalService } from '@/app/core';
 import { Router } from '@angular/router';
 import { PopupSelectDialogComponent } from '../select/select.dialog';
-import { ChainTypeGroups, ChainType, RpcNetwork } from '@popup/_lib';
+import {
+    ChainTypeGroups,
+    ChainType,
+    RpcNetwork,
+    STORAGE_NAME,
+} from '@popup/_lib';
 import { PopupPasswordDialogComponent } from '../password/password.dialog';
 import Sortable from 'sortablejs';
 
@@ -84,6 +89,23 @@ export class PopupHomeMenuDialogComponent implements OnInit {
             .afterClosed()
             .subscribe((res) => {
                 if (res) {
+                    if (this.chainType === 'Neo2') {
+                        const networkIndex = this.global.n2Networks.findIndex(
+                            (m) => m.id === this.selectedNetwork.id
+                        );
+                        this.chrome.setStorage(
+                            STORAGE_NAME.n2SelectedNetworkIndex,
+                            networkIndex
+                        );
+                    } else {
+                        const networkIndex = this.global.n3Networks.findIndex(
+                            (m) => m.id === this.selectedNetwork.id
+                        );
+                        this.chrome.setStorage(
+                            STORAGE_NAME.n3SelectedNetworkIndex,
+                            networkIndex
+                        );
+                    }
                     this.wallet = this.neon.parseWallet(w);
                     this.chrome.setWallet(this.wallet.export());
                     location.href = `index.html#popup`;

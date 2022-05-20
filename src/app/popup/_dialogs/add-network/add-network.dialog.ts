@@ -17,6 +17,9 @@ export class PopupAddNetworkDialogComponent implements OnInit {
         magicNumber: undefined,
         id: undefined,
     };
+    loading = false;
+    getMagicReq;
+    isInvalidRpcUrl = false;
 
     constructor(
         private homeSer: HomeService,
@@ -26,26 +29,55 @@ export class PopupAddNetworkDialogComponent implements OnInit {
 
     ngOnInit() {
         this.privateNet.id =
-            this.global.n3Networks[this.global.n3Networks.length - 1 - 1].id + 1;
+            this.global.n3Networks[this.global.n3Networks.length - 1].id +
+            1;
     }
 
     confirm() {
         if (!this.privateNet.rpcUrl || this.privateNet.name.trim() === '') {
             return;
         }
+        this.loading = true;
         this.homeSer.getRpcUrlMessage(this.privateNet.rpcUrl).subscribe(
             (res) => {
                 console.log(res);
                 if (res.protocol.addressversion === 53) {
                     this.addNetwork(res);
                 } else {
-                    this.global.snackBarTip('请输入正确的地址');
+                    this.global.snackBarTip('Invalid_RPC_URL');
                 }
+                this.loading = false;
             },
             () => {
-                this.global.snackBarTip('请输入正确的地址');
+                this.loading = false;
+                this.global.snackBarTip('Invalid_RPC_URL');
             }
         );
+    }
+
+    getMagicNumber() {
+        this.privateNet.magicNumber = undefined;
+        if (!this.privateNet.rpcUrl) {
+            return;
+        }
+        if (this.getMagicReq) {
+            this.getMagicReq.unsubscribe();
+        }
+        this.getMagicReq = this.homeSer
+            .getRpcUrlMessage(this.privateNet.rpcUrl)
+            .subscribe(
+                (res) => {
+                    if (res?.protocol?.addressversion !== 53) {
+                        this.isInvalidRpcUrl = true;
+                    } else {
+                        this.privateNet.magicNumber = res.protocol.network;
+                        this.isInvalidRpcUrl = false;
+                    }
+                },
+                () => {
+                    this.isInvalidRpcUrl = true;
+                }
+            );
     }
 
     async addNetwork(response?) {
