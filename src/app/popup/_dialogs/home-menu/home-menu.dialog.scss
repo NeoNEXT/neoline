@@ -10,10 +10,33 @@
         display: flex;
         padding: 16px 20px 13px 15px;
         border-bottom: 2px solid #00000026;
-        img.avatar {
-            width: 60px;
-            height: 60px;
+        .avatar-content {
             margin-right: 7px;
+            position: relative;
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            &.ledger {
+                background: linear-gradient(
+                    180deg,
+                    rgba(6, 204, 171, 0.65) 0%,
+                    rgba(5, 201, 176, 0.72) 55%,
+                    rgba(1, 191, 191, 0.86) 100%
+                );
+            }
+            img.avatar {
+                width: 60px;
+                height: 60px;
+                position: absolute;
+                left: 2px;
+                top: 2px;
+            }
+            img.usb {
+                position: absolute;
+                width: 20px;
+                left: 22px;
+                bottom: 0px;
+            }
         }
         .right {
             flex: 1;
@@ -65,9 +88,6 @@
         display: flex;
         align-items: center;
         justify-content: space-between;
-        span.my-accounts {
-            padding-right: 8px;
-        }
         span.item {
             font-size: 14px;
             color: #707070;
@@ -120,7 +140,7 @@
         border: none;
     }
     ul.row {
-        height: 34px;
+        height: 36px;
         display: flex;
         justify-content: space-between;
         align-items: center;
@@ -130,7 +150,7 @@
             display: inline-block;
         }
         li.avatar {
-            width: 34px;
+            width: 36px;
         }
         li.wallet {
             width: 200px;
@@ -153,11 +173,32 @@
     ul.row-item {
         font-size: 13px;
         margin-bottom: 11px;
-        .avatar {
+        .avatar-content {
             display: inline-flex;
-            img {
+            position: relative;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            &.ledger {
+                background: linear-gradient(
+                    180deg,
+                    rgba(6, 204, 171, 0.65) 0%,
+                    rgba(5, 201, 176, 0.72) 55%,
+                    rgba(1, 191, 191, 0.86) 100%
+                );
+            }
+            img.avatar {
                 width: 34px;
                 height: 34px;
+                position: absolute;
+                left: 1px;
+                top: 1px;
+            }
+            img.usb {
+                position: absolute;
+                width: 15px;
+                left: 10px;
+                bottom: 0px;
             }
         }
         .name,

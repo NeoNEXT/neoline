@@ -14,6 +14,6 @@
     <div class="address" (click)="copy(address)">{{ address }}</div>
     <p class="address-title">{{ 'PublicKey' | translate | async }}</p>
     <div class="address" (click)="copy(publicKey)">{{ publicKey }}</div>
-    <button mat-button class="key" (click)="wif()">{{ 'displayWIF' | translate | async}}</button>
+    <button *ngIf="!isLedger" mat-button class="key" (click)="wif()">{{ 'displayWIF' | translate | async}}</button>
     <button mat-button class="link" (click)="toWeb()">{{ 'viewOnNeoTube' | translate | async }}</button>
 </div>

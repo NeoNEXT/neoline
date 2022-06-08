@@ -1,5 +1,5 @@
-@import 'src/styles/theme-default';
-@import 'src/styles/popup-default';
+@import "src/styles/theme-default";
+@import "src/styles/popup-default";
 
 .popup-login-logo {
     width: 100%;
@@ -25,7 +25,7 @@
         background: map-get($neo-line-default, 500);
         position: relative;
         &::before {
-            content: '';
+            content: "";
             position: absolute;
             height: 60%;
             width: 100%;
@@ -57,11 +57,33 @@
     }
 }
 
-img.avatar {
-    height: 20px;
-    width: 20px;
+.avatar-content {
+    position: relative;
     margin-right: 6px;
-    vertical-align: middle;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    &.ledger {
+        background: linear-gradient(
+            180deg,
+            rgba(6, 204, 171, 0.65) 0%,
+            rgba(5, 201, 176, 0.72) 55%,
+            rgba(1, 191, 191, 0.86) 100%
+        );
+    }
+    img.avatar {
+        width: 20px;
+        height: 20px;
+        position: absolute;
+        left: 1px;
+        top: 1px;
+    }
+    img.usb {
+        position: absolute;
+        width: 10px;
+        left: 6px;
+        bottom: 0px;
+    }
 }
 
 .popup-login-input {
@@ -111,7 +133,7 @@ img.avatar {
 ::ng-deep {
     .popup-login-logo {
         .mat-form-field-label {
-            color: #CDD1D9;
+            color: #cdd1d9;
         }
         .mat-form-field-underline {
             display: none;
@@ -121,12 +143,16 @@ img.avatar {
         }
         .popup-login-logo .mat-form-field-appearance-fill .mat-form-field-flex {
             border-radius: 10px;
-            background: #F9F9F9;
+            background: #f9f9f9;
         }
         .popup-login-input {
             button {
                 top: -8px;
             }
         }
+    }
+    .mat-option-text {
+        display: flex !important;
+        align-items: center;
     }
 }

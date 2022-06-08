@@ -172,7 +172,7 @@ export class Neo3InvokeService {
                         item.accounts[0].address ===
                         this.neon.wallet.accounts[0].address
                 )
-            ];
+            ] || 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
         txClone.sign(wif, this.globalService.n3Network.magicNumber);
         if (txn.signers.length === 2) {
             txClone.witnesses.unshift(new Witness({verificationScript: '', invocationScript: ''}))

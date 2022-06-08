@@ -87,6 +87,9 @@ export class PopupHomeComponent implements OnInit {
         }
         this.initClaim();
         this.showBackup = this.chrome.getHaveBackupTip();
+        if (this.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+            this.showBackup = false;
+        }
         if (this.showBackup === null) {
             this.chrome.getWalletStatus(this.neon.address).subscribe((res) => {
                 this.showBackup = !res;

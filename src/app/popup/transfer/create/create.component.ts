@@ -9,6 +9,7 @@ import {
     ChromeService,
     TransactionState,
     NftState,
+    LedgerService,
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TransferService } from '../transfer.service';
@@ -16,7 +17,6 @@ import { Transaction } from '@cityofzion/neon-core/lib/tx';
 import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { wallet as wallet2 } from '@cityofzion/neon-core';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
-import { rpc } from '@cityofzion/neon-js';
 import {
     PopupAddressDialogComponent,
     PopupAssetDialogComponent,
@@ -27,7 +27,8 @@ import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
 import { bignumber } from 'mathjs';
 import { GasFeeSpeed } from '../../_lib/type';
 import { Neo3TransferService } from '../neo3-transfer.service';
-import { GAS3_CONTRACT, STORAGE_NAME, NetworkType } from '../../_lib';
+import { GAS3_CONTRACT, STORAGE_NAME, LedgerStatuses } from '../../_lib';
+import { interval } from 'rxjs';
 
 @Component({
     templateUrl: 'create.component.html',
@@ -54,6 +55,7 @@ export class TransferCreateComponent implements OnInit {
     nftContract: string;
     nftTokens: NftToken[];
     chooseNftToken: NftToken;
+    getStatusInterval;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -66,7 +68,8 @@ export class TransferCreateComponent implements OnInit {
         private chrome: ChromeService,
         private txState: TransactionState,
         private neo3Transfer: Neo3TransferService,
-        private nftState: NftState
+        private nftState: NftState,
+        private ledger: LedgerService
     ) {
         switch (this.neon.currentWalletChainType) {
             case 'Neo2':
@@ -339,25 +342,74 @@ export class TransferCreateComponent implements OnInit {
         }
     }
 
-    private resolveSign(tx: Transaction | Transaction3) {
+    private getLedgerStatus(tx) {
+        this.ledger
+            .getDeviceStatus(this.neon.currentWalletChainType)
+            .then(async (res) => {
+                this.loadingMsg =
+                    this.neon.currentWalletChainType === 'Neo2'
+                        ? LedgerStatuses[res].msg
+                        : LedgerStatuses[res].msgNeo3 ||
+                          LedgerStatuses[res].msg;
+                if (LedgerStatuses[res] === LedgerStatuses.READY) {
+                    this.getStatusInterval.unsubscribe();
+                    this.loadingMsg = 'signTheTransaction';
+                    this.ledger
+                        .getLedgerSignedTx(
+                            tx,
+                            this.neon.wallet,
+                            this.neon.currentWalletChainType,
+                            this.global.n3Network.magicNumber
+                        )
+                        .then((tx) => {
+                            this.loading = false;
+                            this.loadingMsg = '';
+                            this.resolveSend(tx);
+                        })
+                        .catch((error) => {
+                            this.loading = false;
+                            this.loadingMsg = '';
+                            this.global.snackBarTip(
+                                'TransactionDeniedByUser',
+                                error
+                            );
+                        });
+                }
+            });
+    }
+
+    private getSignTx(tx: Transaction | Transaction3) {
+        this.loading = true;
+        if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+            this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
+            this.getLedgerStatus(tx);
+            this.getStatusInterval = interval(5000).subscribe(() => {
+                this.getLedgerStatus(tx);
+            });
+            return;
+        }
+        const wif =
+            this.neon.WIFArr[
+                this.neon.walletArr.findIndex(
+                    (item) =>
+                        item.accounts[0].address ===
+                        this.neon.wallet.accounts[0].address
+                )
+            ];
+        switch (this.neon.currentWalletChainType) {
+            case 'Neo2':
+                tx.sign(wif);
+                break;
+            case 'Neo3':
+                tx.sign(wif, this.global.n3Network.magicNumber);
+                break;
+        }
+        this.resolveSend(tx);
+    }
+
+    private async resolveSign(tx: Transaction | Transaction3) {
         try {
-            const wif =
-                this.neon.WIFArr[
-                    this.neon.walletArr.findIndex(
-                        (item) =>
-                            item.accounts[0].address ===
-                            this.neon.wallet.accounts[0].address
-                    )
-                ];
-            switch (this.neon.currentWalletChainType) {
-                case 'Neo2':
-                    tx.sign(wif);
-                    break;
-                case 'Neo3':
-                    tx.sign(wif, this.global.n3Network.magicNumber);
-                    break;
-            }
-            this.global.log('signed tx', tx);
+            this.global.log('unsigned tx', tx.export());
             const diaglogData: any = {
                 fromAddress: this.fromAddress,
                 toAddress: this.toAddress,
@@ -366,7 +418,7 @@ export class TransferCreateComponent implements OnInit {
                 amount: this.amount,
                 fee: this.fee || '0',
                 networkId: this.networkId,
-                txSerialize: tx.serialize(true),
+                txSerialize: tx.serialize(false),
             };
             if (this.neon.currentWalletChainType === 'Neo3') {
                 diaglogData.systemFee = (
@@ -389,7 +441,7 @@ export class TransferCreateComponent implements OnInit {
                     data: diaglogData,
                 })
                 .afterClosed()
-                .subscribe((isConfirm) => {
+                .subscribe(async (isConfirm) => {
                     this.creating = false;
                     if (isConfirm !== false) {
                         if (this.fee != isConfirm) {
@@ -404,22 +456,8 @@ export class TransferCreateComponent implements OnInit {
                                     this.chooseAsset.decimals
                                 )
                                 .subscribe(
-                                    (res) => {
-                                        switch (
-                                            this.neon.currentWalletChainType
-                                        ) {
-                                            case 'Neo2':
-                                                res.sign(wif);
-                                                break;
-                                            case 'Neo3':
-                                                res.sign(
-                                                    wif,
-                                                    this.global.n3Network
-                                                        .magicNumber
-                                                );
-                                                break;
-                                        }
-                                        this.resolveSend(res);
+                                    async (res) => {
+                                        this.getSignTx(res);
                                     },
                                     (err) => {
                                         console.log(err);
@@ -442,7 +480,7 @@ export class TransferCreateComponent implements OnInit {
                                     }
                                 );
                         } else {
-                            this.resolveSend(tx);
+                            this.getSignTx(tx);
                         }
                     }
                 });
@@ -581,9 +619,8 @@ export class TransferCreateComponent implements OnInit {
                 this.chrome.setStorage(STORAGE_NAME.transaction, res);
                 const setData = {};
                 setData[`TxArr_${networkId}`] =
-                    (await this.chrome.getLocalStorage(
-                        `TxArr_${networkId}`
-                    )) || [];
+                    (await this.chrome.getLocalStorage(`TxArr_${networkId}`)) ||
+                    [];
                 setData[`TxArr_${networkId}`].push(transaction.txid);
                 this.chrome.setLocalStorage(setData);
             });

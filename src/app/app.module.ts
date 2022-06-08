@@ -10,6 +10,7 @@ import { N404Module } from './404';
 import { CoreModule } from './core';
 import { PopupNotificationModule } from './popup/notification/notification.module';
 import { TransferModule } from './transfer/transfer.module';
+import { LedgerModule } from './ledger/ledger.module';
 
 @NgModule({
     declarations: [AppComponent],
@@ -21,6 +22,7 @@ import { TransferModule } from './transfer/transfer.module';
         ShareModule,
         PopupModule,
         TransferModule,
+        LedgerModule,
         PopupNotificationModule,
         N404Module,
     ],

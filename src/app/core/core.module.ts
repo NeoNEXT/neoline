@@ -22,6 +22,7 @@ import { NftState } from './states/nft.state';
 import { UtilServiceState } from './util/util.service';
 import { TransferService } from './services/transfer.service';
 import { HomeService } from './services/home.service';
+import { LedgerService } from './services/ledger.service';
 
 @NgModule({
     declarations: [],
@@ -50,6 +51,7 @@ import { HomeService } from './services/home.service';
         UtilServiceState,
         TransferService,
         HomeService,
+        LedgerService,
     ],
     entryComponents: [],
 })

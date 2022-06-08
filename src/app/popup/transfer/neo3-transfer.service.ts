@@ -125,7 +125,9 @@ export class Neo3TransferService {
          * signatures) and also the cost of running the verification of signatures.
          */
         async function checkNetworkFee() {
-            const networkFeeEstimate = await neo3This.calculateNetworkFee(vars.tx);
+            const networkFeeEstimate = await neo3This.calculateNetworkFee(
+                vars.tx
+            );
 
             vars.tx.networkFee = u.Fixed8.fromRawNumber(
                 networkFeeEstimate.toString()
@@ -292,7 +294,9 @@ export class Neo3TransferService {
 
     async calculateNetworkFee(txn) {
         let txClone = txn.export();
-        txClone.systemFee = new BigNumber(txn.systemFee).shiftedBy(8).toFixed(0) as any;
+        txClone.systemFee = new BigNumber(txn.systemFee)
+            .shiftedBy(8)
+            .toFixed(0) as any;
         txClone = new tx.Transaction(txClone);
         const wif =
             this.neon.WIFArr[
@@ -301,7 +305,7 @@ export class Neo3TransferService {
                         item.accounts[0].address ===
                         this.neon.wallet.accounts[0].address
                 )
-            ];
+            ] || 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
         txClone.sign(wif, this.globalService.n3Network.magicNumber);
         const fee = await this.rpcClient.calculateNetworkFee(txClone);
         return fee;

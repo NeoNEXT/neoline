@@ -1,0 +1,36 @@
+section.main {
+    width: 100vw;
+    height: 100vh;
+    background: #ebf2f1;
+    font-weight: 400;
+    .header {
+        width: 80%;
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px 10px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        img.logo {
+            height: 25px;
+        }
+        .right {
+            display: inline-flex;
+            align-items: center;
+            button {
+                min-width: 108px;
+                height: 30px;
+                padding: 0 10px;
+                background: none;
+                border-radius: 15px;
+                border: 1px solid #434543;
+                margin-right: 18px;
+                font-size: 13px;
+                color: #434543;
+            }
+            img {
+                width: 40px;
+            }
+        }
+    }
+}

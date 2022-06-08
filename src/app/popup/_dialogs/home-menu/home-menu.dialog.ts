@@ -13,6 +13,7 @@ import {
 } from '@popup/_lib';
 import { PopupPasswordDialogComponent } from '../password/password.dialog';
 import Sortable from 'sortablejs';
+declare var chrome: any;
 
 @Component({
     templateUrl: 'home-menu.dialog.html',
@@ -81,6 +82,10 @@ export class PopupHomeMenuDialogComponent implements OnInit {
     }
 
     public selectAccount(w: Wallet2 | Wallet3) {
+        if (w.accounts[0]?.extra?.ledgerSLIP44) {
+            this.changeAccount(w);
+            return;
+        }
         this.dialog
             .open(PopupPasswordDialogComponent, {
                 data: { account: w, chainType: this.chainType },
@@ -89,29 +94,33 @@ export class PopupHomeMenuDialogComponent implements OnInit {
             .afterClosed()
             .subscribe((res) => {
                 if (res) {
-                    if (this.chainType === 'Neo2') {
-                        const networkIndex = this.global.n2Networks.findIndex(
-                            (m) => m.id === this.selectedNetwork.id
-                        );
-                        this.chrome.setStorage(
-                            STORAGE_NAME.n2SelectedNetworkIndex,
-                            networkIndex
-                        );
-                    } else {
-                        const networkIndex = this.global.n3Networks.findIndex(
-                            (m) => m.id === this.selectedNetwork.id
-                        );
-                        this.chrome.setStorage(
-                            STORAGE_NAME.n3SelectedNetworkIndex,
-                            networkIndex
-                        );
-                    }
-                    this.wallet = this.neon.parseWallet(w);
-                    this.chrome.setWallet(this.wallet.export());
-                    location.href = `index.html#popup`;
-                    this.chrome.setHaveBackupTip(null);
+                    this.changeAccount(w);
                 }
             });
+    }
+
+    private changeAccount(w) {
+        if (this.chainType === 'Neo2') {
+            const networkIndex = this.global.n2Networks.findIndex(
+                (m) => m.id === this.selectedNetwork.id
+            );
+            this.chrome.setStorage(
+                STORAGE_NAME.n2SelectedNetworkIndex,
+                networkIndex
+            );
+        } else {
+            const networkIndex = this.global.n3Networks.findIndex(
+                (m) => m.id === this.selectedNetwork.id
+            );
+            this.chrome.setStorage(
+                STORAGE_NAME.n3SelectedNetworkIndex,
+                networkIndex
+            );
+        }
+        this.wallet = this.neon.parseWallet(w);
+        this.chrome.setWallet(this.wallet.export());
+        location.href = `index.html#popup`;
+        this.chrome.setHaveBackupTip(null);
     }
 
     public lock() {
@@ -176,5 +185,16 @@ export class PopupHomeMenuDialogComponent implements OnInit {
         this.displayWalletArr = this.walletArr[this.chainType].filter((item) =>
             item.name.toLowerCase().includes(value)
         );
+    }
+
+    importLedger() {
+        if (chrome.runtime) {
+            const extensionUrl = chrome.runtime.getURL('');
+            const ledgerUrl = extensionUrl + '#/ledger';
+            chrome.tabs.create({ url: ledgerUrl });
+        } else {
+            this.router.navigateByUrl('/ledger');
+            this.dismiss();
+        }
     }
 }

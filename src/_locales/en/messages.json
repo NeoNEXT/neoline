@@ -802,5 +802,47 @@
     },
     "oneMonthTxs": {
         "message": "Only show transactions from the most recent month"
+    },
+    "LEDGER": {
+        "message": "LEDGER"
+    },
+    "LedgerNotSupportComputer": {
+        "message": "Ledger not supported on this computer."
+    },
+    "connectLedgerDevice": {
+        "message": "Please connect your Ledger device"
+    },
+    "openNeoAppOnLedger": {
+        "message": "Please open the NEO app on your Ledger device."
+    },
+    "openNeo3AppOnLedger": {
+        "message": "Please open the NEO N3 app on your Ledger device."
+    },
+    "LedgerConnectedNeoReady": {
+        "message": "Ledger connected, NEO app open, ready for use."
+    },
+    "LedgerConnectedNeo3Ready": {
+        "message": "Ledger connected, NEO N3 app open, ready for use."
+    },
+    "TransactionDeniedByUser": {
+        "message": "Transaction denied by user."
+    },
+    "TransactionTooLarge": {
+        "message": "Transaction too large for Ledger to sign."
+    },
+    "errorLedgerOpen": {
+        "message": "There was an error parsing this transaction. Please make sure you have the correct Ledger app open."
+    },
+    "LedgerInstallNeoApp": {
+        "message": "Note: Please ensure your Ledger has the latest NEO apps installed."
+    },
+    "LedgerInstallNeo3App": {
+        "message": "Note: Please ensure your Ledger has the latest NEO N3 app installed."
+    },
+    "signTheTransaction": {
+        "message": "Please sign the transaction on your ledger."
+    },
+    "Wait": {
+        "message": "Wait"
     }
 }

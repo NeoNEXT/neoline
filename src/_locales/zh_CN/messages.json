@@ -802,5 +802,44 @@
     },
     "oneMonthTxs": {
         "message": "只显示最近一个月的交易"
+    },
+    "LedgerNotSupportComputer": {
+        "message": "此计算机不支持硬件钱包。"
+    },
+    "connectLedgerDevice": {
+        "message": "请连接您的硬件设备"
+    },
+    "openNeoAppOnLedger": {
+        "message": "请在您的硬件设备上打开NEO应用。"
+    },
+    "openNeo3AppOnLedger": {
+        "message": "请在您的硬件设备上打开NEO N3应用。"
+    },
+    "LedgerConnectedNeoReady": {
+        "message": "已连接硬件，NEO应用程序已打开，可以使用。"
+    },
+    "LedgerConnectedNeo3Ready": {
+        "message": "已连接硬件，NEO N3应用程序已打开，可以使用。"
+    },
+    "TransactionDeniedByUser": {
+        "message": "交易被用户拒绝。"
+    },
+    "TransactionTooLarge": {
+        "message": "交易太大，硬件无法签署。"
+    },
+    "errorLedgerOpen": {
+        "message": "解析此事务时出错。 请确保您打开了正确的硬件应用程序。"
+    },
+    "LedgerInstallNeoApp": {
+        "message": "注意：请确保您的硬件已安装最新的 NEO 应用。"
+    },
+    "LedgerInstallNeo3App": {
+        "message": "注意：请确保您的硬件已安装最新的 NEO N3 应用。"
+    },
+    "signTheTransaction": {
+        "message": "请在您的硬件上签名交易。"
+    },
+    "Wait": {
+        "message": "Wait"
     }
 }

@@ -1,0 +1,50 @@
+<section class="main">
+    <div class="header">
+        <p>导入硬件钱包</p>
+    </div>
+    <div class="content loading" *ngIf="!isReady">
+        <mat-spinner strokeWidth="10"></mat-spinner>
+        <p class="tip" *ngIf="chainType === 'Neo2'">{{ status.msg | translate | async }}</p>
+        <p class="tip" *ngIf="chainType === 'Neo3'">{{ (status.msgNeo3 || status.msg) | translate | async }}</p>
+        <p class="note">
+            {{ (chainType === 'Neo2' ? 'LedgerInstallNeoApp' : 'LedgerInstallNeo3App') | translate | async }}
+        </p>
+    </div>
+    <div class="content address" *ngIf="isReady">
+        <div class="title">
+            <span>Select an Account</span>
+            <div class="page">
+                <span class="pre" (click)="prePage()">&lt;</span>
+                <span class="next" (click)="nextPage()">&gt;</span>
+            </div>
+        </div>
+        <div class="loading-account" *ngIf="isLoadingAccount">
+            <mat-spinner diameter="34" strokeWidth="4"></mat-spinner>
+        </div>
+        <ul *ngIf="isReady && !isLoadingAccount">
+            <li *ngFor="let item of accounts; index as index" (click)="chooseAccount(index)"
+                [ngClass]="{imported: savedAddressesObj[item?.address], selected: selectedAccount?.address===item?.address}">
+                <span><img src="/assets/images/dialog/selected.png" alt=""></span>
+                {{ item?.address.slice(0, 8) + '...' + item?.address.slice(-8) }}
+            </li>
+        </ul>
+        <div class="line"></div>
+        <div class="bottom">
+            <div class="balance-content" *ngIf="selectedAccount">
+                <p class="title">Wallet Address</p>
+                <div class="middle">
+                    <p class="address">{{ selectedAccount?.address }}</p>
+                    <div class="balance">
+                        <p *ngFor="let asset of accountBalance">
+                            <img [assetId]="asset?.asset_id" [chain]="chainType" appErrorSrc alt="">
+                            {{ asset?.balance }}
+                        </p>
+                    </div>
+                    <p class="tip">Creating/importing a wallet confirms I have read and agree to the tivacy Polivy &
+                        Terms of Service.</p>
+                </div>
+            </div>
+            <button (click)="selectWallet()">Impore this wallet</button>
+        </div>
+    </div>
+</section>

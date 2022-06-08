@@ -341,13 +341,17 @@ export class ChromeService {
 
     //#region crx method
     public getLocalStorage(key): Promise<any> {
-        return this.crx.getLocalStorage(key, (res) => {
-            return res;
-        });
+        if (this.check) {
+            return this.crx.getLocalStorage(key, (res) => {
+                return res;
+            });
+        }
     }
 
     public setLocalStorage(data) {
-        this.crx.setLocalStorage(data);
+        if (this.check) {
+            this.crx.setLocalStorage(data);
+        }
     }
 
     public windowCallback(data: any) {

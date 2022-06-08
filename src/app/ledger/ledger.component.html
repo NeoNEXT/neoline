@@ -1,0 +1,22 @@
+<section class="main">
+    <div class="header">
+        <img class="logo" src="/assets/images/logo_title.png" alt="">
+        <div class="right">
+            <button>{{ networks[selectedNetworkIndex]?.name }}</button>
+            <img [avatar]="address" />
+        </div>
+    </div>
+    <div class="content">
+        <app-ledger-chain *ngIf="status===STATUS_ENUM.CHAIN_PICK" (selectChain)="selectChain($event)">
+        </app-ledger-chain>
+
+        <app-address-selector *ngIf="status===STATUS_ENUM.ADDRESS_SELECTOR" [chainType]="chainType"
+            (selectThisAccount)="selectAccount($event)"></app-address-selector>
+
+        <app-account-name *ngIf="status===STATUS_ENUM.ACCOUNT_NAME" [accountData]="selectAccountData"
+            [chainType]="chainType" (importSuccess)="status=STATUS_ENUM.IMPORT_SUCCESS">
+        </app-account-name>
+
+        <app-import-success *ngIf="status===STATUS_ENUM.IMPORT_SUCCESS"></app-import-success>
+    </div>
+</section>

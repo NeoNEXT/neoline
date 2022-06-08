@@ -1,6 +1,10 @@
 <div class="dialog-home-menu-container">
     <div class="header">
-        <img class="avatar" [avatar]="wallet.accounts[0].address" />
+        <div class="avatar-content" [ngClass]="{ledger: wallet.accounts[0]?.extra?.ledgerSLIP44}">
+            <img class="avatar" [avatar]="wallet.accounts[0].address" />
+            <img *ngIf="wallet.accounts[0]?.extra?.ledgerSLIP44" class="usb"
+                src="/assets/images/ledger/ledger-avatar.png" alt="">
+        </div>
         <div class="right">
             <p class="name">
                 <span>{{ wallet.name }}</span>
@@ -22,7 +26,9 @@
     </div>
     <div class="bottom">
         <div class="account">
-            <span class="my-accounts">{{ 'myAccounts' | translate | async }}</span>
+            <span class="item" (click)="importLedger()">
+                <img src="/assets/images/ledger/ledger.svg" alt="">{{ 'LEDGER' | translate | async }}
+            </span>
             <span class="item" (click)="to('create')">
                 <img src="/assets/images/home-menu/create.svg" alt="">{{ 'NEW' | translate | async }}
             </span>
@@ -43,8 +49,7 @@
             <button mat-menu-item *ngFor="let item of networks" (click)="changeTabType(item)"><span class="network-type"
                     [ngClass]="'id' + item.id"></span>{{ item.name }}</button>
         </mat-menu>
-        <input [placeholder]="'Search' | translate | async" (input)="searchWallet($event)" class="search"
-            type="text">
+        <input [placeholder]="'Search' | translate | async" (input)="searchWallet($event)" class="search" type="text">
         <ul class="row row-head">
             <li class="avatar"></li>
             <li class="wallet">{{ 'account' | translate | async }}</li>
@@ -54,8 +59,10 @@
         <div class="address-list">
             <ul class="row row-item" *ngFor="let item of displayWalletArr" (click)="selectAccount(item)"
                 [ngClass]="{active: isActivityWallet(item)}">
-                <li class="avatar">
-                    <img [avatar]="item.accounts[0].address" />
+                <li class="avatar-content" [ngClass]="{ledger: item.accounts[0]?.extra?.ledgerSLIP44}">
+                    <img class="avatar" [avatar]="item.accounts[0].address" />
+                    <img *ngIf="item.accounts[0]?.extra?.ledgerSLIP44" class="usb"
+                        src="/assets/images/ledger/ledger-avatar.png" alt="">
                 </li>
                 <li class="wallet">
                     <p class="name">{{ item.name }}</p>

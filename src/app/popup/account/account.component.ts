@@ -11,12 +11,13 @@ import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 
 @Component({
     templateUrl: 'account.component.html',
-    styleUrls: ['account.component.scss']
+    styleUrls: ['account.component.scss'],
 })
 export class PopupAccountComponent implements OnInit {
     public address: string;
     public walletName: string;
     publicKey: string;
+    isLedger = false;
 
     constructor(
         private router: Router,
@@ -33,6 +34,7 @@ export class PopupAccountComponent implements OnInit {
         this.neon.walletSub().subscribe(() => {
             this.walletName = this.neon.wallet.name;
         });
+        this.isLedger = !!this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44;
         this.getPublicKey();
     }
 
@@ -43,30 +45,35 @@ export class PopupAccountComponent implements OnInit {
                     (item) => item.accounts[0].address === this.address
                 )
             ];
-        const walletThis = this.neon.currentWalletChainType === 'Neo2' ? wallet : wallet3;
-        const privateKey = walletThis.getPrivateKeyFromWIF(wif);
-        this.publicKey = walletThis.getPublicKeyFromPrivateKey(privateKey);
+        const walletThis =
+            this.neon.currentWalletChainType === 'Neo2' ? wallet : wallet3;
+        if (this.isLedger) {
+            this.publicKey = this.neon.wallet.accounts[0]?.extra?.publicKey;
+        } else {
+            const privateKey = walletThis.getPrivateKeyFromWIF(wif);
+            this.publicKey = walletThis.getPublicKeyFromPrivateKey(privateKey);
+        }
     }
 
     public wif() {
         this.router.navigate([
             {
                 outlets: {
-                    transfer: ['transfer', 'export']
-                }
-            }
+                    transfer: ['transfer', 'export'],
+                },
+            },
         ]);
     }
 
     public qrcode() {
         return this.dialog.open(PopupQRCodeDialogComponent, {
-            data: this.address
+            data: this.address,
         });
     }
 
     public updateName() {
         return this.dialog.open(PopupNameDialogComponent, {
-            panelClass: 'custom-dialog-panel'
+            panelClass: 'custom-dialog-panel',
         });
     }
 
@@ -74,12 +81,16 @@ export class PopupAccountComponent implements OnInit {
         switch (this.neon.currentWalletChainType) {
             case 'Neo2':
                 if (this.global.n2Network.explorer) {
-                    window.open(`${this.global.n2Network.explorer}address/${this.neon.address}/page/1`)
+                    window.open(
+                        `${this.global.n2Network.explorer}address/${this.neon.address}/page/1`
+                    );
                 }
                 break;
             case 'Neo3':
                 if (this.global.n3Network.explorer) {
-                    window.open(`${this.global.n3Network.explorer}address/${this.neon.address}`)
+                    window.open(
+                        `${this.global.n3Network.explorer}address/${this.neon.address}`
+                    );
                 }
                 break;
         }

@@ -41,6 +41,7 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
 
     public allWallet = [];
     public selectedWalletIndex;
+    public isLedger = false;
 
     constructor(
         private route: ActivatedRoute,
@@ -61,6 +62,9 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
 
     ngOnInit(): void {
         this.accountWallet = this.neon.wallet;
+        if (this.accountWallet?.accounts[0]?.extra && this.accountWallet?.accounts[0]?.extra?.ledgerSLIP44) {
+            this.isLedger = true;
+        }
         window.onbeforeunload = () => {
             this.chrome.windowCallback({
                 data: ERRORS.CANCELLED,
@@ -76,6 +80,13 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
     }
 
     public login() {
+        if (this.accountWallet.accounts[0]?.extra?.ledgerSLIP44) {
+            this.chrome.setLogin(false);
+            this.global.$wallet.next('open');
+            const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
+            this.router.navigateByUrl(returnUrl);
+            return;
+        }
         this.loading = true;
         const account: any =
             this.neon.currentWalletChainType === 'Neo3'

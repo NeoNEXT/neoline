@@ -1,0 +1,16 @@
+<section class="main">
+    <div class="header">
+        <p class="title">导入硬件钱包</p>
+        <img class="logo" src="/assets/images/popup_logo.png" alt="">
+        <img class="logo-bg" src="/assets/images/popup_login_bg.png" alt="">
+        <div class="bottom"></div>
+    </div>
+    <div class="content">
+        <p class="title">选择链</p>
+        <ul>
+            <li (click)="chain='Neo2'" [ngClass]="{active: chain==='Neo2'}">Neo Legacy</li>
+            <li (click)="chain='Neo3'" [ngClass]="{active: chain==='Neo3'}">Neo N3</li>
+        </ul>
+        <button class="next" (click)="select()">Next</button>
+    </div>
+</section>

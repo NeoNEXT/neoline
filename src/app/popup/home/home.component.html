@@ -3,7 +3,10 @@
         <mat-toolbar>
             <div class="wallet-info">
                 <p class="name">{{ wallet?.name || '' }}</p>
-                <p class="address">{{ wallet?.accounts[0].address || '' }}</p>
+                <p class="address">
+                    <img class="usb" *ngIf="wallet.accounts[0]?.extra?.ledgerSLIP44" src="/assets/images/ledger/usb.svg" alt="">
+                    {{ wallet?.accounts[0].address || '' }}
+                </p>
             </div>
             <img class="menu" src="/assets/images/home/menu.png" (click)="showMenu=!showMenu" alt="">
             <section class="veil" *ngIf="showMenu" (click)="showMenu=false"></section>
