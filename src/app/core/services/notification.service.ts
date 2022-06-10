@@ -42,6 +42,7 @@ export class NotificationService {
         SystemFeeHasChanged: 'Note: system fee has changed, please confirm again.',
         Invalid_RPC_URL: 'Invalid RPC URL',
         TransactionDeniedByUser: 'Transaction denied by user.',
+        LedgerUnSupportSignError: `error: 'There was an error signing this transaction. Ledger does not support this method.`,
     };
     private CN = {
         close: '关闭',
@@ -80,6 +81,7 @@ export class NotificationService {
         SystemFeeHasChanged: '注意：系统费用已发生变化，请再次确认。',
         Invalid_RPC_URL: '无效的 RPC URL',
         TransactionDeniedByUser: '交易被用户拒绝。',
+        LedgerUnSupportSignError: '签名此交易时出错。硬件不支持该方法。',
     };
     constructor(public chrome: ChromeService) {
         this.content = this.EN;

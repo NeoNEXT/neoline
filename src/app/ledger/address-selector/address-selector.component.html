@@ -1,9 +1,9 @@
 <section class="main">
     <div class="header">
-        <p>导入硬件钱包</p>
+        <p>{{ 'ImportLedgerWallet' | translate | async }}</p>
     </div>
     <div class="content loading" *ngIf="!isReady">
-        <mat-spinner strokeWidth="10"></mat-spinner>
+        <img src="/assets/images/ledger/loading.gif" alt="">
         <p class="tip" *ngIf="chainType === 'Neo2'">{{ status.msg | translate | async }}</p>
         <p class="tip" *ngIf="chainType === 'Neo3'">{{ (status.msgNeo3 || status.msg) | translate | async }}</p>
         <p class="note">
@@ -12,7 +12,7 @@
     </div>
     <div class="content address" *ngIf="isReady">
         <div class="title">
-            <span>Select an Account</span>
+            <span>{{ 'selectAccountConnect' | translate | async }}</span>
             <div class="page">
                 <span class="pre" (click)="prePage()">&lt;</span>
                 <span class="next" (click)="nextPage()">&gt;</span>
@@ -31,7 +31,7 @@
         <div class="line"></div>
         <div class="bottom">
             <div class="balance-content" *ngIf="selectedAccount">
-                <p class="title">Wallet Address</p>
+                <p class="title">{{ 'WalletAddress' | translate | async }}</p>
                 <div class="middle">
                     <p class="address">{{ selectedAccount?.address }}</p>
                     <div class="balance">
@@ -40,11 +40,10 @@
                             {{ asset?.balance }}
                         </p>
                     </div>
-                    <p class="tip">Creating/importing a wallet confirms I have read and agree to the tivacy Polivy &
-                        Terms of Service.</p>
+                    <p class="tip">{{ 'CreatingImportingWallet' | translate | async }}</p>
                 </div>
             </div>
-            <button (click)="selectWallet()">Impore this wallet</button>
+            <button (click)="selectWallet()">{{ 'ImportThisAccount' | translate | async }}</button>
         </div>
     </div>
 </section>

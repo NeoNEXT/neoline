@@ -322,11 +322,15 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 const WIFArr = await getLocalStorage(`WIFArr${key}`, () => { });
                 const data: AccountPublicKey = { address: '', publicKey: '' };
                 if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-                    const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
-                        item.accounts[0].address === currWallet.accounts[0].address)]
-                    );
+                    if (currWallet.accounts[0]?.extra?.ledgerSLIP44) {
+                        data.publicKey = currWallet.accounts[0].extra.publicKey;
+                    } else {
+                        const privateKey = getPrivateKeyFromWIF(WIFArr[walletArr.findIndex(item =>
+                            item.accounts[0].address === currWallet.accounts[0].address)]
+                            );
+                        data.publicKey = getPublicKeyFromPrivateKey(privateKey);
+                    }
                     data.address = currWallet.accounts[0].address;
-                    data.publicKey = getPublicKeyFromPrivateKey(privateKey);
                 }
                 windowCallback({
                     return: requestTarget.AccountPublicKey,

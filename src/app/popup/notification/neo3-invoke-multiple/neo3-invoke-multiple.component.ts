@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { GlobalService, NeonService, ChromeService, AssetState, NotificationService } from '@/app/core';
+import { GlobalService, NeonService, ChromeService, AssetState, NotificationService, LedgerService } from '@/app/core';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { tx } from '@cityofzion/neon-js-neo3';
 import { MatDialog } from '@angular/material/dialog';
@@ -13,6 +13,8 @@ import { NEO3_CONTRACT, STORAGE_NAME, GAS3_CONTRACT } from '../../_lib';
 import { Neo3InvokeService } from '../../transfer/neo3-invoke.service';
 import { forkJoin } from 'rxjs';
 import BigNumber from 'bignumber.js';
+import { LedgerStatuses } from '../../_lib';
+import { interval } from 'rxjs';
 
 @Component({
     templateUrl: 'neo3-invoke-multiple.component.html',
@@ -45,6 +47,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
     public canSend = false;
 
     public signAddress;
+    getStatusInterval;
 
     constructor(
         private aRoute: ActivatedRoute,
@@ -55,7 +58,8 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         private chrome: ChromeService,
         private assetState: AssetState,
         private neo3Invoke: Neo3InvokeService,
-        private notification: NotificationService
+        private notification: NotificationService,
+        private ledger: LedgerService
     ) {
         this.signAddress = this.neon.address;
         this.n3Network = this.global.n3Network;
@@ -120,39 +124,6 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             this.totalFee = new BigNumber(this.systemFee).plus(new BigNumber(this.networkFee)).toFixed();
             this.totalMoney = new BigNumber(this.totalFee).times(gasPrice).toFixed();
         })
-    }
-
-    private async resolveSign(sendNow = false) {
-        this.loading = true;
-        this.loadingMsg = 'Wait';
-        if (this.tx === null) {
-            return;
-        }
-        try {
-            const wif = this.neon.WIFArr[
-                this.neon.walletArr.findIndex(item => item.accounts[0].address === this.neon.wallet.accounts[0].address)
-            ]
-            try {
-                this.tx = this.tx.sign(wif, this.global.n3Network.magicNumber);
-            } catch (error) {
-                console.log(error);
-            }
-            this.txSerialize = this.tx.serialize(true);
-            this.loading = false
-            if (sendNow) {
-                this.resolveSend();
-            }
-        } catch (error) {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.global.snackBarTip('verifyFailed', error);
-            this.chrome.windowCallback({
-                error: { ...ERRORS.DEFAULT, description: error?.message || error },
-                return: requestTargetN3.InvokeMultiple,
-                ID: this.messageID
-            });
-            window.close();
-        }
     }
 
     private async resolveSend() {
@@ -228,7 +199,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             this.signTx();
             window.close();
         } else {
-            this.signTx(true);
+            this.getSignTx();
         }
         const saveData = this.invokeArgsArray.filter(item => item.messageID !== this.messageID);
         this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, saveData);
@@ -254,7 +225,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         })
     }
 
-    private signTx(sendNow = false) {
+    private signTx() {
         setTimeout(() => {
             this.loading = true;
             this.neo3Invoke.createNeo3Tx({
@@ -267,15 +238,14 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 this.systemFee = unSignTx.systemFee.toString();
                 this.networkFee = unSignTx.networkFee.toString();
                 this.tx = unSignTx;
+                this.txSerialize = this.tx.serialize(false);
                 this.getAssetRate();
                 const isEnoughFee = await this.neo3Invoke.isEnoughFee(this.neon.address, unSignTx.systemFee, unSignTx.networkFee);
                 if (isEnoughFee) {
                     this.canSend = true;
-                    if (sendNow && hasChangeFee) {
+                    if (hasChangeFee) {
                         this.loading = false;
                         this.global.snackBarTip('SystemFeeHasChanged');
-                    } else {
-                        this.resolveSign(sendNow);
                     }
                 } else {
                     this.loading = false;
@@ -314,5 +284,61 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 }
             }).afterClosed().subscribe(() => {});
         }
+    }
+
+
+    private getLedgerStatus() {
+        this.ledger
+            .getDeviceStatus(this.neon.currentWalletChainType)
+            .then(async (res) => {
+                this.loadingMsg = LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
+                if (LedgerStatuses[res] === LedgerStatuses.READY) {
+                    this.getStatusInterval.unsubscribe();
+                    this.loadingMsg = 'signTheTransaction';
+                    this.ledger
+                        .getLedgerSignedTx(
+                            this.tx,
+                            this.neon.wallet,
+                            this.neon.currentWalletChainType,
+                            this.global.n3Network.magicNumber
+                        )
+                        .then((tx) => {
+                            this.loading = false;
+                            this.loadingMsg = '';
+                            this.tx = tx;
+                            this.resolveSend();
+                        })
+                        .catch((error) => {
+                            this.loading = false;
+                            this.loadingMsg = '';
+                            this.global.snackBarTip(
+                                'TransactionDeniedByUser',
+                                error
+                            );
+                        });
+                }
+            });
+    }
+
+    public getSignTx() {
+        if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+            this.loading = true;
+            this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
+            this.getLedgerStatus();
+            this.getStatusInterval = interval(5000).subscribe(() => {
+                this.getLedgerStatus();
+            });
+            return;
+        }
+        const wif =
+            this.neon.WIFArr[
+                this.neon.walletArr.findIndex(
+                    (item) =>
+                        item.accounts[0].address ===
+                        this.neon.wallet.accounts[0].address
+                )
+            ];
+        this.tx.sign(wif, this.global.n3Network.magicNumber);
+        this.resolveSend();
     }
 }

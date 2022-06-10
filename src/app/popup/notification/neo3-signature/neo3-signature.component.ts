@@ -49,6 +49,18 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
     }
 
     public signature() {
+        if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+            this.global.snackBarTip('LedgerUnSupportSignError');
+            this.chrome.windowCallback({
+                error: {
+                    ...ERRORS.DEFAULT,
+                    description: `error: 'There was an error signing this transaction. Ledger does not support this method.`,
+                },
+                return: requestTargetN3.SignMessage,
+                ID: this.messageID,
+            });
+            return;
+        }
         const wif =
             this.neon.WIFArr[
                 this.neon.walletArr.findIndex(
@@ -70,7 +82,6 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
             salt: randomSalt,
             message: this.message,
         };
-        console.log(data);
         this.chrome.windowCallback({
             return: requestTargetN3.SignMessage,
             data,

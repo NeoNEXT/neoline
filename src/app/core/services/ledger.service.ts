@@ -127,14 +127,22 @@ export class LedgerService {
     }
 
     getLedgerSignedTx(
-        tx: Transaction2 | Transaction3,
+        unsignedTx: Transaction2 | Transaction3 | string,
         wallet: Wallet2 | Wallet3,
         chainType: ChainType,
-        magicNumber?: number
+        magicNumber?: number,
+        signOnly = false
     ): Promise<any> {
-        const serTx = tx.serialize(false);
+        const txIsString = typeof unsignedTx === 'string';
+        const serTx = txIsString ? unsignedTx : (unsignedTx as any).serialize(false);
         const extra = wallet.accounts[0].extra;
         if (chainType === 'Neo2') {
+            if (signOnly) {
+                return this.getNeo2Signature({
+                    data: serTx,
+                    addressIndex: extra.ledgerAddressIndex,
+                });
+            }
             const verificationScript =
                 wallet2.getVerificationScriptFromPublicKey(extra.publicKey);
             return this.getNeo2Signature({
@@ -143,15 +151,22 @@ export class LedgerService {
             })
                 .then((res) => `40${res}`)
                 .then((invocationScript) => {
-                    (tx as Transaction2).addWitness(
+                    (unsignedTx as Transaction2).addWitness(
                         new tx2.Witness({
                             invocationScript,
                             verificationScript,
                         })
                     );
-                    return tx;
+                    return unsignedTx;
                 });
         } else {
+            if (signOnly) {
+                return this.getNeo3Signature({
+                    data: serTx,
+                    magicNumber,
+                    addressIndex: extra.ledgerAddressIndex,
+                });
+            }
             const verificationScript =
                 wallet3.getVerificationScriptFromPublicKey(extra.publicKey);
             return this.getNeo3Signature({
@@ -161,13 +176,13 @@ export class LedgerService {
             })
                 .then((res) => `0c40${res}`)
                 .then((invocationScript) => {
-                    (tx as Transaction3).addWitness(
+                    (unsignedTx as Transaction3).addWitness(
                         new tx3.Witness({
                             invocationScript,
                             verificationScript,
                         })
                     );
-                    return tx;
+                    return unsignedTx;
                 });
         }
     }

@@ -65,6 +65,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
 
     selectWallet() {
         if (this.selectedAccount) {
+            console.log(this.selectedAccount);
             this.selectThisAccount.emit({
                 account: this.selectedAccount,
                 index: this.selectedIndex,

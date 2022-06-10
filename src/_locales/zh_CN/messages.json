@@ -803,6 +803,9 @@
     "oneMonthTxs": {
         "message": "只显示最近一个月的交易"
     },
+    "LEDGER": {
+        "message": "硬件钱包"
+    },
     "LedgerNotSupportComputer": {
         "message": "此计算机不支持硬件钱包。"
     },
@@ -810,16 +813,16 @@
         "message": "请连接您的硬件设备"
     },
     "openNeoAppOnLedger": {
-        "message": "请在您的硬件设备上打开NEO应用。"
+        "message": "请在您的硬件设备上打开 NEO 应用。"
     },
     "openNeo3AppOnLedger": {
-        "message": "请在您的硬件设备上打开NEO N3应用。"
+        "message": "请在您的硬件设备上打开 NEO N3 应用。"
     },
     "LedgerConnectedNeoReady": {
-        "message": "已连接硬件，NEO应用程序已打开，可以使用。"
+        "message": "已连接硬件，NEO 应用程序已打开，可以使用。"
     },
     "LedgerConnectedNeo3Ready": {
-        "message": "已连接硬件，NEO N3应用程序已打开，可以使用。"
+        "message": "已连接硬件，NEO N3 应用程序已打开，可以使用。"
     },
     "TransactionDeniedByUser": {
         "message": "交易被用户拒绝。"
@@ -841,5 +844,32 @@
     },
     "Wait": {
         "message": "Wait"
+    },
+    "ImportLedgerWallet": {
+        "message": "导入硬件钱包"
+    },
+    "Next": {
+        "message": "下一步"
+    },
+    "selectAccountConnect": {
+        "message": "选择一个帐户"
+    },
+    "WalletAddress": {
+        "message": "钱包地址"
+    },
+    "CreatingImportingWallet": {
+        "message": "创建/导入钱包代表我已阅读并同意隐私政策和服务条款"
+    },
+    "ImportThisAccount": {
+        "message": "导入这个账户"
+    },
+    "Confirm": {
+        "message": "确认"
+    },
+    "ImportSuccessful": {
+        "message": "导入成功，请在 NeoLine 插件查看"
+    },
+    "PleaseEnterWalletName": {
+        "message": "请输入钱包名"
     }
 }

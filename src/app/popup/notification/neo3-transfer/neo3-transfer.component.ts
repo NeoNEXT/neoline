@@ -7,6 +7,7 @@ import {
     GlobalService,
     ChromeService,
     TransactionState,
+    LedgerService,
 } from '@/app/core';
 import { NEO } from '@/models/models';
 import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
@@ -21,6 +22,8 @@ import { STORAGE_NAME, GAS3_CONTRACT } from '../../_lib';
 import { Neo3TransferService } from '../../transfer/neo3-transfer.service';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
+import { LedgerStatuses } from '../../_lib';
+import { interval } from 'rxjs';
 
 @Component({
     templateUrl: 'neo3-transfer.component.html',
@@ -60,6 +63,8 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
 
     public n3Network: RpcNetwork;
     public canSend = false;
+    getStatusInterval;
+
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -72,7 +77,8 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
         private txState: TransactionState,
         private dialog: MatDialog,
         private neo3Transfer: Neo3TransferService,
-        private globalService: GlobalService
+        private globalService: GlobalService,
+        private ledger: LedgerService
     ) {
         this.rpcClient = new rpc.RPCClient(this.globalService.n3Network.rpcUrl);
         this.n3Network = this.global.n3Network;
@@ -182,39 +188,9 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
     }
 
     private resolveSign(transaction) {
-        this.loading = true;
-        this.loadingMsg = 'Wait';
-        try {
-            const wif =
-                this.neon.WIFArr[
-                    this.neon.walletArr.findIndex(
-                        (item) =>
-                            item.accounts[0].address ===
-                            this.neon.wallet.accounts[0].address
-                    )
-                ];
-            try {
-                transaction.sign(wif, this.global.n3Network.magicNumber);
-            } catch (error) {
-                console.log(error);
-            }
-            this.tx = transaction;
-            this.txSerialize = this.tx.serialize(true);
-            this.loading = false;
-            this.loadingMsg = '';
-            this.creating = false;
-        } catch (error) {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.creating = false;
-            this.global.snackBarTip('verifyFailed', error);
-            this.chrome.windowCallback({
-                error: { ...ERRORS.DEFAULT, description: error?.message || error },
-                return: requestTargetN3.Send,
-                ID: this.messageID,
-            });
-            window.close();
-        }
+        this.creating = false;
+        this.tx = transaction;
+        this.txSerialize = this.tx.serialize(false);
     }
 
     private resolveSend(tx: Transaction3) {
@@ -344,7 +320,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
             });
             window.close();
         } else {
-            this.resolveSend(this.tx);
+            this.getSignTx(this.tx);
         }
     }
     public editFee() {
@@ -384,5 +360,61 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
             address.length - 4,
             address.length - 1
         )} `;
+    }
+
+    private getLedgerStatus(tx) {
+        this.ledger
+            .getDeviceStatus(this.neon.currentWalletChainType)
+            .then(async (res) => {
+                this.loadingMsg = LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
+                if (LedgerStatuses[res] === LedgerStatuses.READY) {
+                    this.getStatusInterval.unsubscribe();
+                    this.loadingMsg = 'signTheTransaction';
+                    this.ledger
+                        .getLedgerSignedTx(
+                            tx,
+                            this.neon.wallet,
+                            this.neon.currentWalletChainType,
+                            this.global.n3Network.magicNumber
+                        )
+                        .then((tx) => {
+                            this.loading = false;
+                            this.loadingMsg = '';
+                            this.tx = tx;
+                            this.resolveSend(tx);
+                        })
+                        .catch((error) => {
+                            this.loading = false;
+                            this.loadingMsg = '';
+                            this.global.snackBarTip(
+                                'TransactionDeniedByUser',
+                                error
+                            );
+                        });
+                }
+            });
+    }
+
+    private getSignTx(tx: Transaction3) {
+        if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+            this.loading = true;
+            this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
+            this.getLedgerStatus(tx);
+            this.getStatusInterval = interval(5000).subscribe(() => {
+                this.getLedgerStatus(tx);
+            });
+            return;
+        }
+        const wif =
+            this.neon.WIFArr[
+                this.neon.walletArr.findIndex(
+                    (item) =>
+                        item.accounts[0].address ===
+                        this.neon.wallet.accounts[0].address
+                )
+            ];
+        tx.sign(wif, this.global.n3Network.magicNumber);
+        this.tx = tx;
+        this.resolveSend(tx);
     }
 }

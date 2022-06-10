@@ -1,3 +1,9 @@
+<div class="loading-box" *ngIf="loading">
+    <div>
+        <mat-spinner strokeWidth="10"></mat-spinner>
+    </div>
+    <h3 *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</h3>
+</div>
 <div class="transfer-confirm-container">
     <div class="container">
         <div class="mat-toolbar-fixed no-third-party-toolbar">
@@ -40,7 +46,7 @@
                 <hr>
                 <div class="btn-box">
                     <button mat-flat-button (click)="cancel()">{{ 'cancel' | translate | async}}</button>
-                    <button mat-flat-button (click)="signature()"
+                    <button mat-flat-button (click)="getSignTx()"
                         color="primary">{{ 'yes' | translate | async}}</button>
                 </div>
             </div>

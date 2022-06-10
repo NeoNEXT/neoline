@@ -8,6 +8,7 @@ import {
     ChromeService,
     TransactionState,
     TransferService,
+    LedgerService,
 } from '@/app/core';
 import { NEO, GAS, Asset } from '@/models/models';
 import { tx as tx2, u } from '@cityofzion/neon-js';
@@ -20,6 +21,8 @@ import { bignumber } from 'mathjs';
 import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { STORAGE_NAME } from '../../_lib';
 import BigNumber from 'bignumber.js';
+import { LedgerStatuses } from '../../_lib';
+import { interval } from 'rxjs';
 
 @Component({
     templateUrl: 'transfer.component.html',
@@ -53,6 +56,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     public init = false;
     private broadcastOverride = false;
     private messageID = 0;
+    getStatusInterval;
 
     constructor(
         private router: Router,
@@ -64,7 +68,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         private global: GlobalService,
         private chrome: ChromeService,
         private txState: TransactionState,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private ledger: LedgerService
     ) {}
 
     ngOnInit(): void {
@@ -238,39 +243,9 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     }
 
     private resolveSign(transaction: Transaction) {
-        this.loading = true;
-        this.loadingMsg = 'Wait';
-        try {
-            const wif =
-                this.neon.WIFArr[
-                    this.neon.walletArr.findIndex(
-                        (item) =>
-                            item.accounts[0].address ===
-                            this.neon.wallet.accounts[0].address
-                    )
-                ];
-            try {
-                transaction.sign(wif);
-            } catch (error) {
-                console.log(error);
-            }
-            this.tx = transaction;
-            this.txSerialize = this.tx.serialize(true);
-            this.loading = false;
-            this.loadingMsg = '';
-            this.creating = false;
-        } catch (error) {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.creating = false;
-            this.global.snackBarTip('verifyFailed', error);
-            this.chrome.windowCallback({
-                error: { ...ERRORS.DEFAULT, description: error?.message || error },
-                return: requestTarget.Invoke,
-                ID: this.messageID,
-            });
-            window.close();
-        }
+        this.creating = false;
+        this.tx = transaction;
+        this.txSerialize = this.tx.serialize(false);
     }
 
     private resolveSend(tx: Transaction) {
@@ -393,7 +368,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             });
             window.close();
         } else {
-            this.resolveSend(this.tx);
+            this.getSignTx(this.tx);
         }
     }
     public editFee() {
@@ -433,5 +408,59 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             address.length - 4,
             address.length - 1
         )} `;
+    }
+    private getLedgerStatus(tx) {
+        this.ledger
+            .getDeviceStatus(this.neon.currentWalletChainType)
+            .then(async (res) => {
+                this.loadingMsg = LedgerStatuses[res].msg;
+                if (LedgerStatuses[res] === LedgerStatuses.READY) {
+                    this.getStatusInterval.unsubscribe();
+                    this.loadingMsg = 'signTheTransaction';
+                    this.ledger
+                        .getLedgerSignedTx(
+                            tx,
+                            this.neon.wallet,
+                            this.neon.currentWalletChainType
+                        )
+                        .then((tx) => {
+                            this.loading = false;
+                            this.loadingMsg = '';
+                            this.tx = tx;
+                            this.resolveSend(tx);
+                        })
+                        .catch((error) => {
+                            this.loading = false;
+                            this.loadingMsg = '';
+                            this.global.snackBarTip(
+                                'TransactionDeniedByUser',
+                                error
+                            );
+                        });
+                }
+            });
+    }
+
+    private getSignTx(tx: Transaction) {
+        if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+            this.loading = true;
+            this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
+            this.getLedgerStatus(tx);
+            this.getStatusInterval = interval(5000).subscribe(() => {
+                this.getLedgerStatus(tx);
+            });
+            return;
+        }
+        const wif =
+            this.neon.WIFArr[
+                this.neon.walletArr.findIndex(
+                    (item) =>
+                        item.accounts[0].address ===
+                        this.neon.wallet.accounts[0].address
+                )
+            ];
+        tx.sign(wif);
+        this.tx = tx;
+        this.resolveSend(tx);
     }
 }

@@ -207,6 +207,9 @@ export class NeonService {
                     res[4].length > 0
                 ) {
                     res[4].forEach((item, index) => {
+                        if (item.accounts[0]?.extra?.ledgerSLIP44) {
+                            return;
+                        }
                         const account = new wallet3.Account(
                             wallet3.getPrivateKeyFromWIF(res[2][index])
                         );
@@ -409,7 +412,7 @@ export class NeonService {
                     claims: item,
                 });
                 newTx.addIntent('GAS', valueArr[index], this.address);
-                newTx.sign(wif);
+                wif && newTx.sign(wif);
                 txArr.push(newTx);
             });
             observer.next(txArr);

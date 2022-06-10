@@ -239,16 +239,6 @@ export class TransferCreateComponent implements OnInit {
 
     private resolveNftSign(tx: Transaction | Transaction3) {
         try {
-            const wif =
-                this.neon.WIFArr[
-                    this.neon.walletArr.findIndex(
-                        (item) =>
-                            item.accounts[0].address ===
-                            this.neon.wallet.accounts[0].address
-                    )
-                ];
-            tx.sign(wif, this.global.n3Network.magicNumber);
-            this.global.log('signed tx', tx);
             const diaglogData: any = {
                 fromAddress: this.fromAddress,
                 toAddress: this.toAddress,
@@ -257,7 +247,7 @@ export class TransferCreateComponent implements OnInit {
                 amount: this.chooseNftToken.amount,
                 fee: this.fee || '0',
                 networkId: this.networkId,
-                txSerialize: tx.serialize(true),
+                txSerialize: tx.serialize(false),
             };
             diaglogData.systemFee = (tx as Transaction3).systemFee.toString();
             diaglogData.networkFee = bignumber(
@@ -294,21 +284,7 @@ export class TransferCreateComponent implements OnInit {
                                 )
                                 .subscribe(
                                     (res) => {
-                                        switch (
-                                            this.neon.currentWalletChainType
-                                        ) {
-                                            case 'Neo2':
-                                                res.sign(wif);
-                                                break;
-                                            case 'Neo3':
-                                                res.sign(
-                                                    wif,
-                                                    this.global.n3Network
-                                                        .magicNumber
-                                                );
-                                                break;
-                                        }
-                                        this.resolveNftSend(res);
+                                        this.getSignTx(res, true);
                                     },
                                     (err) => {
                                         console.log(err);
@@ -331,7 +307,7 @@ export class TransferCreateComponent implements OnInit {
                                     }
                                 );
                         } else {
-                            this.resolveNftSend(tx);
+                            this.getSignTx(tx, true);
                         }
                     }
                 });
@@ -342,7 +318,7 @@ export class TransferCreateComponent implements OnInit {
         }
     }
 
-    private getLedgerStatus(tx) {
+    private getLedgerStatus(tx, isNft = false) {
         this.ledger
             .getDeviceStatus(this.neon.currentWalletChainType)
             .then(async (res) => {
@@ -364,7 +340,9 @@ export class TransferCreateComponent implements OnInit {
                         .then((tx) => {
                             this.loading = false;
                             this.loadingMsg = '';
-                            this.resolveSend(tx);
+                            isNft
+                                ? this.resolveNftSend(tx)
+                                : this.resolveSend(tx);
                         })
                         .catch((error) => {
                             this.loading = false;
@@ -378,13 +356,13 @@ export class TransferCreateComponent implements OnInit {
             });
     }
 
-    private getSignTx(tx: Transaction | Transaction3) {
-        this.loading = true;
+    private getSignTx(tx: Transaction | Transaction3, isNft = false) {
         if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+            this.loading = true;
             this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-            this.getLedgerStatus(tx);
+            this.getLedgerStatus(tx, isNft);
             this.getStatusInterval = interval(5000).subscribe(() => {
-                this.getLedgerStatus(tx);
+                this.getLedgerStatus(tx, isNft);
             });
             return;
         }
@@ -404,7 +382,7 @@ export class TransferCreateComponent implements OnInit {
                 tx.sign(wif, this.global.n3Network.magicNumber);
                 break;
         }
-        this.resolveSend(tx);
+        isNft ? this.resolveNftSend(tx) : this.resolveSend(tx);
     }
 
     private async resolveSign(tx: Transaction | Transaction3) {

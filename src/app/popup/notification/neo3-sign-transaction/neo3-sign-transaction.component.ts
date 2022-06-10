@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NeonService, ChromeService, GlobalService } from '@/app/core';
+import { NeonService, ChromeService, GlobalService, LedgerService } from '@/app/core';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { ERRORS } from '@/models/dapi';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { RpcNetwork } from '../../_lib';
+import { LedgerStatuses } from '../../_lib';
+import { interval } from 'rxjs';
 
 @Component({
     templateUrl: './neo3-sign-transaction.component.html',
@@ -19,12 +21,16 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
     public magicNumber;
 
     public n3Network: RpcNetwork;
+    getStatusInterval;
+    loading = false;
+    loadingMsg = '';
 
     constructor(
         private aRouter: ActivatedRoute,
         private neon: NeonService,
         private chrome: ChromeService,
-        private global: GlobalService
+        private global: GlobalService,
+        private ledger: LedgerService
     ) {
         this.n3Network = this.global.n3Network;
     }
@@ -70,7 +76,58 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
         window.close();
     }
 
-    public signature() {
+    private sendMessage() {
+        this.chrome.windowCallback({
+            return: requestTargetN3.SignTransaction,
+            data: this.tx.export(),
+            ID: this.messageID,
+        });
+        window.close();
+    }
+
+    private getLedgerStatus() {
+        this.ledger
+            .getDeviceStatus(this.neon.currentWalletChainType)
+            .then(async (res) => {
+                this.loadingMsg = LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
+                if (LedgerStatuses[res] === LedgerStatuses.READY) {
+                    this.getStatusInterval.unsubscribe();
+                    this.loadingMsg = 'signTheTransaction';
+                    this.ledger
+                        .getLedgerSignedTx(
+                            this.tx,
+                            this.neon.wallet,
+                            this.neon.currentWalletChainType,
+                            this.global.n3Network.magicNumber
+                        )
+                        .then((tx) => {
+                            this.loading = false;
+                            this.loadingMsg = '';
+                            this.tx = tx;
+                            this.sendMessage();
+                        })
+                        .catch((error) => {
+                            this.loading = false;
+                            this.loadingMsg = '';
+                            this.global.snackBarTip(
+                                'TransactionDeniedByUser',
+                                error
+                            );
+                        });
+                }
+            });
+    }
+
+    public getSignTx() {
+        if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+            this.loading = true;
+            this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
+            this.getLedgerStatus();
+            this.getStatusInterval = interval(5000).subscribe(() => {
+                this.getLedgerStatus();
+            });
+            return;
+        }
         const wif =
             this.neon.WIFArr[
                 this.neon.walletArr.findIndex(
@@ -80,11 +137,6 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
                 )
             ];
         this.tx.sign(wif, this.global.n3Network.magicNumber);
-        this.chrome.windowCallback({
-            return: requestTargetN3.SignTransaction,
-            data: this.tx.export(),
-            ID: this.messageID,
-        });
-        window.close();
+        this.sendMessage();
     }
 }
