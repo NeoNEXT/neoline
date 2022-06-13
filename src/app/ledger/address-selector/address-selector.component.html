@@ -14,8 +14,12 @@
         <div class="title">
             <span>{{ 'selectAccountConnect' | translate | async }}</span>
             <div class="page">
-                <span class="pre" (click)="prePage()">&lt;</span>
-                <span class="next" (click)="nextPage()">&gt;</span>
+                <span class="pre" [ngClass]="{disabled: accountPage===1}" (click)="prePage()">
+                    <img src="/assets/images/ledger/arrow-left.svg" alt="">
+                </span>
+                <span class="next" (click)="nextPage()">
+                    <img src="/assets/images/ledger/arrow-left.svg" alt="">
+                </span>
             </div>
         </div>
         <div class="loading-account" *ngIf="isLoadingAccount">
@@ -24,8 +28,11 @@
         <ul *ngIf="isReady && !isLoadingAccount">
             <li *ngFor="let item of accounts; index as index" (click)="chooseAccount(index)"
                 [ngClass]="{imported: savedAddressesObj[item?.address], selected: selectedAccount?.address===item?.address}">
-                <span><img src="/assets/images/dialog/selected.png" alt=""></span>
                 {{ item?.address.slice(0, 8) + '...' + item?.address.slice(-8) }}
+                <span>
+                    <img src="/assets/images/dialog/selected.png" alt="">
+                    {{ 'Imported' | translate | async }}
+                </span>
             </li>
         </ul>
         <div class="line"></div>

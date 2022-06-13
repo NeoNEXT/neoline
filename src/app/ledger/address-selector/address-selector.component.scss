@@ -49,17 +49,30 @@ section.main {
                 .page {
                     margin-right: 5px;
                     span {
-                        display: inline-block;
+                        display: inline-flex;
+                        align-items: center;
+                        justify-content: center;
                         width: 20px;
                         height: 20px;
                         background: #06ccab;
                         border-radius: 4px 4px 4px 4px;
                         opacity: 1;
                         color: #fff;
-                        text-align: center;
                         cursor: pointer;
+                        img {
+                            cursor: pointer;
+                            width: 13px;
+                        }
                         &.pre {
                             margin-right: 57px;
+                        }
+                        &.next img {
+                            transform: rotate(180deg);
+                        }
+                        &.disabled {
+                            opacity: 0.4;
+                            pointer-events: none;
+                            cursor: not-allowed;
                         }
                     }
                 }
@@ -81,33 +94,23 @@ section.main {
                     height: 60px;
                     font-size: 17px;
                     display: inline-flex;
-                    color: #01bfbf;
+                    color: #303433;
                     align-items: center;
+                    justify-content: space-between;
+                    padding: 0 10px;
                     border-bottom: 1px solid #efefef;
                     cursor: pointer;
                     span {
-                        display: inline-flex;
-                        align-items: center;
-                        justify-content: center;
-                        width: 20px;
-                        height: 20px;
-                        border-radius: 4px 4px 4px 4px;
-                        border: 1px solid #e5e5e5;
-                        margin-right: 55px;
-                        img {
-                            width: 12px;
-                            display: none;
-                        }
+                        display: none;
                     }
                     &.imported {
                         color: #06ccab;
                         pointer-events: none;
                         cursor: default;
                         span {
-                            background: #ecfbf1;
-                            border: none;
+                            display: block;
                             img {
-                                display: block;
+                                width: 15px;
                             }
                         }
                     }

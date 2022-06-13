@@ -182,8 +182,10 @@ export class PopupHomeMenuDialogComponent implements OnInit {
             return;
         }
         this.isSearching = true;
-        this.displayWalletArr = this.walletArr[this.chainType].filter((item) =>
-            item.name.toLowerCase().includes(value)
+        this.displayWalletArr = this.walletArr[this.chainType].filter(
+            (item) =>
+                item.name.toLowerCase().includes(value) ||
+                item.accounts[0].address.toLowerCase().includes(value)
         );
     }
 

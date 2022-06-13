@@ -871,5 +871,8 @@
     },
     "PleaseEnterWalletName": {
         "message": "Please enter wallet name"
+    },
+    "Imported": {
+        "message": "Imported"
     }
 }

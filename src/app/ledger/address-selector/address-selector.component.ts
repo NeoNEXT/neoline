@@ -74,13 +74,16 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
     }
 
     prePage() {
-        if (this.accountPage <= 1) {
+        if (this.accountPage <= 1 || this.isLoadingAccount) {
             return;
         }
         this.fetchAccounts(--this.accountPage);
     }
 
     nextPage() {
+        if (this.isLoadingAccount) {
+            return;
+        }
         this.fetchAccounts(++this.accountPage);
     }
 

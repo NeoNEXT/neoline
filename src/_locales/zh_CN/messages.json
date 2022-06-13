@@ -871,5 +871,8 @@
     },
     "PleaseEnterWalletName": {
         "message": "请输入钱包名"
+    },
+    "Imported": {
+        "message": "已导入"
     }
 }

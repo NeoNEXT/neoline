@@ -169,6 +169,11 @@
     .address-list {
         height: 280px;
         overflow-y: scroll;
+        .no-data {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 13px;
+        }
     }
     ul.row-item {
         font-size: 13px;

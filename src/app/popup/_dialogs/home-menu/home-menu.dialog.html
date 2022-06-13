@@ -57,6 +57,7 @@
             <li class="sort" *ngIf="isSearching===false">{{ 'Sort' | translate | async }}</li>
         </ul>
         <div class="address-list">
+            <p class="no-data" *ngIf="displayWalletArr.length <= 0">{{ 'noMoreData' | translate | async }}</p>
             <ul class="row row-item" *ngFor="let item of displayWalletArr" (click)="selectAccount(item)"
                 [ngClass]="{active: isActivityWallet(item)}">
                 <li class="avatar-content" [ngClass]="{ledger: item.accounts[0]?.extra?.ledgerSLIP44}">
