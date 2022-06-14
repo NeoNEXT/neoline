@@ -55,6 +55,7 @@ let currN3Network: RpcNetwork = DEFAULT_N3_RPC_NETWORK[0];
 let tabCurr: any;
 export let password = null;
 export let shouldLogin: boolean = true;
+export let hasLoginAddress = {};
 
 export let haveBackupTip: boolean = null;
 
@@ -245,9 +246,11 @@ getLocalStorage('startTime', (time) => {
             startTime: chrome.csi().startE
         });
         shouldLogin = true;
+        hasLoginAddress = {};
     } else {
         if (time !== chrome.csi().startE) {
             shouldLogin = true;
+            hasLoginAddress = {};
             setLocalStorage({
                 startTime: chrome.csi().startE
             });
@@ -259,6 +262,7 @@ chrome.windows.onRemoved.addListener(() => {
     chrome.tabs.query({}, (res) => {
         if (res.length === 0) { // All browsers are closed
             shouldLogin = true;
+            hasLoginAddress = {};
         }
     });
 });

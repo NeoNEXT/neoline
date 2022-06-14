@@ -302,6 +302,35 @@ export class ChromeService {
             } else {
                 this.crx.shouldLogin = status;
             }
+            if (status) {
+                if (!this.check) {
+                    sessionStorage.removeItem('hasLoginAddress');
+                } else {
+                    this.crx.hasLoginAddress = {};
+                }
+            }
+        }
+    }
+    public getHasLoginAddress() {
+        if (!this.check) {
+            return JSON.parse(
+                sessionStorage.getItem('hasLoginAddress') || '{}'
+            );
+        } else {
+            return this.crx.hasLoginAddress;
+        }
+    }
+
+    public setHasLoginAddress(address) {
+        const hasLoginAddress = this.getHasLoginAddress();
+        hasLoginAddress[address] = true;
+        if (!this.check) {
+            sessionStorage.setItem(
+                'hasLoginAddress',
+                JSON.stringify(hasLoginAddress)
+            );
+        } else {
+            this.crx.shouldLogin = hasLoginAddress;
         }
     }
     //#endregion

@@ -82,7 +82,8 @@ export class PopupHomeMenuDialogComponent implements OnInit {
     }
 
     public selectAccount(w: Wallet2 | Wallet3) {
-        if (w.accounts[0]?.extra?.ledgerSLIP44) {
+        const hasLoginAddress = this.chrome.getHasLoginAddress();
+        if (w.accounts[0]?.extra?.ledgerSLIP44 || hasLoginAddress[w.accounts[0].address]) {
             this.changeAccount(w);
             return;
         }
@@ -94,6 +95,7 @@ export class PopupHomeMenuDialogComponent implements OnInit {
             .afterClosed()
             .subscribe((res) => {
                 if (res) {
+                    this.chrome.setHasLoginAddress(w.accounts[0].address);
                     this.changeAccount(w);
                 }
             });

@@ -80,7 +80,8 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
     }
 
     public login() {
-        if (this.accountWallet.accounts[0]?.extra?.ledgerSLIP44) {
+        const hasLoginAddress = this.chrome.getHasLoginAddress();
+        if (this.accountWallet.accounts[0]?.extra?.ledgerSLIP44 || hasLoginAddress[this.accountWallet.accounts[0].address]) {
             this.chrome.setLogin(false);
             this.global.$wallet.next('open');
             const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
@@ -101,6 +102,7 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
                 window.close()
             }
             this.loading = false;
+            this.chrome.setHasLoginAddress(this.accountWallet.accounts[0].address);
             this.chrome.setLogin(false);
             this.global.$wallet.next('open');
             const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';

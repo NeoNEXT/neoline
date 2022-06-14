@@ -66,6 +66,7 @@ export class PopupWalletComponent implements OnInit {
             );
             return;
         }
+        this.chrome.setHasLoginAddress(data.accounts[0].address);
         this.chrome.setWallet(data.export());
         this.global.$wallet.next('open');
         if (type === 0) {
