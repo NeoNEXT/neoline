@@ -25,6 +25,7 @@ interface CreateNeo3TxInput {
     signers: SignerLike[];
     networkFee: string;
     systemFee?: any;
+    overrideSystemFee?: any,
 }
 
 @Injectable()
@@ -109,6 +110,10 @@ export class Neo3InvokeService {
          * can easily get this number by using invokeScript with the appropriate signers.
          */
         async function checkSystemFee() {
+            if (params.overrideSystemFee) {
+                vars.tx.systemFee = u.Fixed8.fromRawNumber(new BigNumber(params.overrideSystemFee).shiftedBy(8).toFixed(0));
+                return;
+            }
             const invokeFunctionResponse = await neo3This.util.n3InvokeScript(
                 u.HexString.fromHex(script).toBase64(),
                 signerJson

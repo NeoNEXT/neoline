@@ -232,7 +232,8 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 invokeArgs: this.invokeArgs,
                 signers: this.signers,
                 networkFee: this.fee,
-                systemFee: this.pramsData.extraSystemFee
+                systemFee: this.pramsData.extraSystemFee,
+                overrideSystemFee: this.pramsData.overrideSystemFee,
             }).subscribe(async (unSignTx: Transaction)  => {
                 const hasChangeFee = unSignTx.systemFee.toString() !== this.systemFee || unSignTx.networkFee.toString() !== this.networkFee;
                 this.systemFee = unSignTx.systemFee.toString();
