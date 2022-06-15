@@ -858,7 +858,16 @@
         "message": "钱包地址"
     },
     "CreatingImportingWallet": {
-        "message": "创建/导入钱包代表我已阅读并同意隐私政策和服务条款"
+        "message": "创建/导入钱包代表我已阅读并同意"
+    },
+    "and": {
+        "message": "和"
+    },
+    "PrivacyPolicy": {
+        "message": "隐私政策"
+    },
+    "TermsOfService": {
+        "message": "服务条款"
     },
     "ImportThisAccount": {
         "message": "导入这个账户"
@@ -874,5 +883,11 @@
     },
     "Imported": {
         "message": "已导入"
+    },
+    "plugInLedgerWallet": {
+        "message": "插入 Ledger 钱包"
+    },
+    "plugInLedgerWalletTip": {
+        "message": "将您的钱包直接连接到电脑。解锁 Ledger 并打开 Neo/Neo N3 应用程序。"
     }
 }

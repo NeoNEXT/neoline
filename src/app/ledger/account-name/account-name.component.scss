@@ -3,6 +3,7 @@ section.main {
     height: 600px;
     margin: 0 auto;
     background: linear-gradient(168deg, #06ccab 0%, #01bfbf 100%);
+    box-shadow: 0px 0px 15px 1px rgba(42, 57, 55, 0.16);
     .header {
         height: 83px;
         font-size: 20px;
@@ -19,7 +20,7 @@ section.main {
         padding: 25px 20px;
         .title {
             font-size: 14px;
-            color: #7f8993;
+            color: #434543;
             &.name {
                 margin-top: 35px;
             }

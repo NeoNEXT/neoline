@@ -47,7 +47,12 @@
                             {{ asset?.balance }}
                         </p>
                     </div>
-                    <p class="tip">{{ 'CreatingImportingWallet' | translate | async }}</p>
+                    <p class="tip">
+                        {{ 'CreatingImportingWallet' | translate | async }}<a href="https://neoline.io/en/privacy/"
+                            target="_blank">{{ 'PrivacyPolicy' | translate | async }}</a>{{ 'and' | translate | async }}<a
+                            href="https://neoline.io/en/agreement/"
+                            target="_blank">{{ 'TermsOfService' | translate | async }}</a>
+                    </p>
                 </div>
             </div>
             <button (click)="selectWallet()">{{ 'ImportThisAccount' | translate | async }}</button>

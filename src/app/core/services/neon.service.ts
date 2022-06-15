@@ -213,7 +213,7 @@ export class NeonService {
                         const account = new wallet3.Account(
                             wallet3.getPrivateKeyFromWIF(res[2][index])
                         );
-                        item.accounts[0].address = account.label;
+                        item.accounts[0].address = account.address;
                         item.accounts[0].label = account.label;
                         if (item.accounts[0].key === res[0].accounts[0].key) {
                             res[0].accounts[0].address =

@@ -858,7 +858,16 @@
         "message": "Wallet address"
     },
     "CreatingImportingWallet": {
-        "message": "Creating/importing a wallet confirms I have read and agree to the Privacy Policy & Terms of Service."
+        "message": "Creating/importing a wallet confirms I have read and agree to the "
+    },
+    "PrivacyPolicy": {
+        "message": "Privacy Policy"
+    },
+    "and": {
+        "message": " & "
+    },
+    "TermsOfService": {
+        "message": "Terms of Service"
     },
     "ImportThisAccount": {
         "message": "Import this Account"
@@ -874,5 +883,11 @@
     },
     "Imported": {
         "message": "Imported"
+    },
+    "plugInLedgerWallet": {
+        "message": "Plug in Ledger wallet"
+    },
+    "plugInLedgerWalletTip": {
+        "message": "Connect your wallet directly to your computer. Unlock your Ledger and open the Neo/Neo N3 app."
     }
 }

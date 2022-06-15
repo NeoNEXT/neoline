@@ -3,30 +3,31 @@ section.main {
     height: 600px;
     margin: 0 auto;
     background: linear-gradient(168deg, #06ccab 0%, #01bfbf 100%);
+    box-shadow: 0px 0px 15px 1px rgba(42, 57, 55, 0.16);
     .header {
-        height: 178px;
+        height: 157px;
         position: relative;
         overflow: hidden;
         .title {
             position: absolute;
             left: 20px;
-            bottom: 50px;
+            top: 79px;
             font-size: 20px;
             font-weight: 400;
             color: #fff;
         }
         img.logo {
             position: absolute;
-            top: 51px;
-            right: 37px;
-            width: 132px;
+            top: 41px;
+            right: 49px;
+            width: 107px;
         }
         img.logo-bg {
             position: absolute;
             bottom: -27px;
             left: 0;
             width: 100%;
-            z-index: 0;
+            opacity: 0.6;
         }
         .bottom {
             position: absolute;
@@ -38,32 +39,59 @@ section.main {
         }
     }
     .content {
-        height: 447px;
+        height: 468px;
         background: #ffffff;
-        padding: 0 20px;
-        .title {
-            font-size: 14px;
-            color: #7f8993;
-        }
+        padding: 10px 20px;
+        color: #434543;
+        font-size: 14px;
         ul {
-            margin-top: 15px;
+            margin-top: 20px;
             li {
+                display: inline-block;
+                width: 48%;
                 height: 90px;
                 line-height: 90px;
+                background: #f8fbf9;
+                border-radius: 10px;
+                border: 1px solid #f2f2f2;
                 font-size: 17px;
-                color: #434543;
-                border-bottom: 1px solid #efefef;
-                padding: 0 20px;
+                text-align: center;
                 cursor: pointer;
+                &:first-child {
+                    margin-right: 4%;
+                }
                 &.active {
-                    background: #f8fbf9;
-                    border-radius: 10px;
                     border: 1px solid #06ccab;
                 }
             }
         }
+        .title.ledger {
+            margin-top: 30px;
+        }
+        .tip {
+            font-size: 12px;
+            color: #afb6be;
+            margin-top: 15px;
+            line-height: 20px;
+        }
+        .tip-imgs {
+            margin-top: 22px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            img.ledger {
+                width: 70px;
+            }
+            img.arrow {
+                width: 24px;
+                margin: 0 20px;
+            }
+            img.pc {
+                width: 90px;
+            }
+        }
         button.next {
-            margin-top: 57px;
+            margin-top: 45px;
             width: 100%;
             height: 50px;
             background: #06ccab;
