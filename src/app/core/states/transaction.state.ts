@@ -79,7 +79,6 @@ export class TransactionState {
                 map((res: any[]) => {
                     const result = [];
                     (res || []).forEach((item) => {
-                        console.log(item);
                         if (item?.blocktime) {
                             result.push(item.txid);
                         }
@@ -103,7 +102,6 @@ export class TransactionState {
             map((res: any[]) => {
                 const result = [];
                 (res || []).forEach((item) => {
-                    console.log(item);
                     if (item?.blocktime) {
                         result.push(item.hash);
                     }

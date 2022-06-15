@@ -62,7 +62,6 @@ export class PopupMyAssetsComponent implements OnInit {
                     }
                 }
             });
-            console.log(showAssets);
             this.myAssets = showAssets;
         });
     }

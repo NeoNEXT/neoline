@@ -42,7 +42,6 @@ export class PopupAddNftComponent implements OnInit {
         this.nftState.searchNft(this.searchValue).then(
             (res) => {
                 this.searchNft = res;
-                console.log(res);
                 const moneyIndex = this.moneyNft.findIndex(
                     (w) =>
                         w.assethash.includes(res.assethash) ||

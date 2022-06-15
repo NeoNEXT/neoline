@@ -105,7 +105,6 @@ export class PopupNoticeSignComponent implements OnInit {
                             true
                         )
                         .then((tx) => {
-                            console.log(tx);
                             this.loading = false;
                             this.loadingMsg = '';
                             this.sendMessage(tx);

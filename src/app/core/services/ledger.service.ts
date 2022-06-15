@@ -348,7 +348,6 @@ export class LedgerService {
         }
         this.deviceInstance = await TransportWebHID.create();
         this.deviceInstance.on('disconnect', () => {
-            console.log('disconnect-----');
             this.closeDevice();
         });
         if (this.deviceInstance) {

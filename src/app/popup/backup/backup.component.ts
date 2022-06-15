@@ -68,7 +68,6 @@ export class PopupBackupComponent implements OnInit {
 
     updateWalletStatus() {
         this.chrome.setHaveBackupTip(false);
-        console.log(this.neon.address);
         this.chrome.setWalletsStatus(this.neon.address);
     }
 }

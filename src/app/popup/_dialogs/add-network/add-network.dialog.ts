@@ -40,7 +40,6 @@ export class PopupAddNetworkDialogComponent implements OnInit {
         this.loading = true;
         this.homeSer.getRpcUrlMessage(this.privateNet.rpcUrl).subscribe(
             (res) => {
-                console.log(res);
                 if (res.protocol.addressversion === 53) {
                     this.addNetwork(res);
                 } else {

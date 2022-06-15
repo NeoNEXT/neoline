@@ -29,8 +29,6 @@ export class AccountNameComponent implements OnInit {
             return;
         }
         const { account, index } = this.accountData;
-        console.log(account);
-        console.log(this.chainType);
         const accountLike = account.export();
         accountLike.extra = {
             publicKey: account.publicKey,
