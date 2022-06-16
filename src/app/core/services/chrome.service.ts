@@ -330,7 +330,7 @@ export class ChromeService {
                 JSON.stringify(hasLoginAddress)
             );
         } else {
-            this.crx.shouldLogin = hasLoginAddress;
+            this.crx.hasLoginAddress = hasLoginAddress;
         }
     }
     //#endregion
