@@ -12,7 +12,8 @@
             <li (click)="chain='Neo3'" [ngClass]="{active: chain==='Neo3'}">Neo N3</li>
         </ul>
         <p class="title ledger">{{ 'plugInLedgerWallet' | translate | async }}</p>
-        <p class="tip">{{ 'plugInLedgerWalletTip' | translate | async }}</p>
+        <p class="tip">{{ 'plugInLedgerWalletTip' | translate | async }}<a href=""
+                target="_blank">{{ 'clickHere' | translate | async }}</a></p>
         <div class="tip-imgs">
             <img class="ledger" src="/assets/images/ledger/plug-ledger.png" alt="">
             <img class="arrow" src="/assets/images/ledger/plug-arrow.png" alt="">

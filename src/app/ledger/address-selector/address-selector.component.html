@@ -9,6 +9,7 @@
         <p class="note">
             {{ (chainType === 'Neo2' ? 'LedgerInstallNeoApp' : 'LedgerInstallNeo3App') | translate | async }}
         </p>
+        <p class="note reconnect">{{ 'reconnectLedger' | translate | async }}</p>
     </div>
     <div class="content address" *ngIf="isReady">
         <div class="title">

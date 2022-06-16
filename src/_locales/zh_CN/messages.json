@@ -888,6 +888,12 @@
         "message": "插入 Ledger 钱包"
     },
     "plugInLedgerWalletTip": {
-        "message": "将您的钱包直接连接到电脑。解锁 Ledger 并打开 Neo/Neo N3 应用程序。"
+        "message": "将您的钱包直接连接到电脑。解锁 Ledger 并打开 Neo/Neo N3 应用程序。关于使用您的硬件钱包设备的更多，"
+    },
+    "clickHere": {
+        "message": "点击这里。"
+    },
+    "reconnectLedger": {
+        "message": "如果 Ledger 长时间没反应，请尝试重新连接 Ledger"
     }
 }

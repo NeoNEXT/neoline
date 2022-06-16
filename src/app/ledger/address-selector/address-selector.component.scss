@@ -36,6 +36,9 @@ section.main {
                 font-size: 13px;
                 line-height: 15px;
                 margin-top: 20px;
+                &.reconnect {
+                    margin-top: 10px;
+                }
             }
         }
         &.address {
