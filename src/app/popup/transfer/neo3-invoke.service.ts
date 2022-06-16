@@ -179,8 +179,11 @@ export class Neo3InvokeService {
                 )
             ] || 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
         txClone.sign(wif, this.globalService.n3Network.magicNumber);
-        if (txn.signers.length === 2) {
-            txClone.witnesses.unshift(new Witness({verificationScript: '', invocationScript: ''}))
+        if (txn.signers.length > 1) {
+            const addressSign = txClone.witnesses[0];
+            const addressIndex = txn.signers.findIndex(item => item.account.toString().includes(wallet3.getScriptHashFromAddress(this.neon.wallet.accounts[0].address)));
+            (txClone as Transaction).witnesses = new Array(txn.signers.length).fill(new Witness({verificationScript: '', invocationScript: ''}));
+            txClone.witnesses[addressIndex] = addressSign;
         }
         const fee = await this.rpcClient.calculateNetworkFee(txClone);
         return fee;

@@ -234,7 +234,6 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 systemFee: this.pramsData.extraSystemFee,
                 overrideSystemFee: this.pramsData.overrideSystemFee,
             }).subscribe(async (unSignTx: Transaction) => {
-                const hasChangeFee = unSignTx.systemFee.toString() !== this.systemFee || unSignTx.networkFee.toString() !== this.networkFee;
                 this.systemFee = unSignTx.systemFee.toString();
                 this.networkFee = unSignTx.networkFee.toString();
                 this.getAssetRate();
@@ -246,14 +245,11 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                     checkAddress = wallet.getAddressFromScriptHash(scriptHash);
                 }
                 const isEnoughFee = await this.neo3Invoke.isEnoughFee(checkAddress, unSignTx.systemFee, unSignTx.networkFee);
+                this.loading = false;
                 if (isEnoughFee) {
                     this.canSend = true;
-                    if (hasChangeFee) {
-                        this.loading = false;
-                        this.global.snackBarTip('SystemFeeHasChanged');
-                    }
+
                 } else {
-                    this.loading = false;
                     this.canSend = false;
                     this.global.snackBarTip('InsufficientGas');
                 }
@@ -324,8 +320,11 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                             this.loading = false;
                             this.loadingMsg = '';
                             this.tx = tx;
-                            if (this.signers.length === 2) {
-                                this.tx.witnesses.unshift(new Witness({verificationScript: '', invocationScript: ''}))
+                            if (this.signers.length > 1) {
+                                const addressSign = this.tx.witnesses[0];
+                                const addressIndex = this.tx.signers.findIndex(item => item.account.toString().includes(wallet.getScriptHashFromAddress(this.neon.wallet.accounts[0].address)));
+                                this.tx.witnesses = new Array(this.tx.signers.length).fill(new Witness({verificationScript: '', invocationScript: ''}));
+                                this.tx.witnesses[addressIndex] = addressSign;
                             }
                             this.resolveSend();
                         })
@@ -360,8 +359,11 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 )
             ];
         this.tx.sign(wif, this.global.n3Network.magicNumber);
-        if (this.signers.length === 2) {
-            this.tx.witnesses.unshift(new Witness({verificationScript: '', invocationScript: ''}))
+        if (this.signers.length > 1) {
+            const addressSign = this.tx.witnesses[0];
+            const addressIndex = this.signers.findIndex(item => item.account.toString().includes(wallet.getScriptHashFromAddress(this.neon.wallet.accounts[0].address)));
+            this.tx.witnesses = new Array(this.signers.length).fill(new Witness({verificationScript: '', invocationScript: ''}));
+            this.tx.witnesses[addressIndex] = addressSign;
         }
         this.resolveSend();
     }
