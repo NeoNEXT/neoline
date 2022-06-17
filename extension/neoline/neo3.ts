@@ -92,7 +92,11 @@ window.addEventListener('message', async (e) => {
                         getLocalStorage('n3Networks', (n3Networks) => {
                             getLocalStorage('n3SelectedNetworkIndex', (n3SelectedNetworkIndex) => {
                                 const n3Network = (n3Networks || DEFAULT_N3_RPC_NETWORK)[n3SelectedNetworkIndex || 0];
-                                e.data.parameter.network = n3Network.network;
+                                if (!(e.data as Object).hasOwnProperty('parameter')) {
+                                    e.data.parameter = {};
+                                }
+                                let network = e.data?.parameter?.network;
+                                e.data.parameter.network = network || n3Network.network;
                                 e.data.nodeUrl = n3Network.rpcUrl;
                                 chrome.runtime.sendMessage(e.data, (response) => {
                                     return Promise.resolve('Dummy response to keep the console quiet');

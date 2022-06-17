@@ -142,15 +142,8 @@ export class Init {
         }
     }
 
-
     public getBalance(parameter: N3BalanceArgs): Promise<N3BalanceResults> {
-        if (parameter === undefined || parameter.params === undefined) {
-            return new Promise((_, reject) => {
-                reject(ERRORS.MALFORMED_INPUT);
-            });
-        } else {
-            return sendMessage(requestTargetN3.Balance, parameter);
-        }
+        return sendMessage(requestTargetN3.Balance, parameter);
     }
 
     public getTransaction(parameter: N3TransactionArgs): Promise<N3TransactionDetails> {

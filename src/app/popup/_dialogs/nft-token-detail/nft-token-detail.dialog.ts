@@ -13,4 +13,8 @@ export class PopupNftTokenDetailDialogComponent {
             nftToken: NftToken;
         }
     ) {}
+
+    openImg(url: string) {
+        window.open(url);
+    }
 }

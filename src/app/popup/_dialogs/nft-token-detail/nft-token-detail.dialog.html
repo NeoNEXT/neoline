@@ -1,5 +1,5 @@
 <div class="title">
-    <img class="logo" [src]="data.nftToken?.image_url" appErrorSrc alt="">
+    <img class="logo" (click)="openImg(data.nftToken?.image_url)" [src]="data.nftToken?.image_url" appErrorSrc alt="">
     <mat-icon class="close" [mat-dialog-close]="false">close</mat-icon>
 </div>
 <div class="item row">

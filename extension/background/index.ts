@@ -398,17 +398,17 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                             const res_2 = (res[j]?.balance || []).find(asset_2 => assetId.includes(asset_2.asset_hash));
                             const assetRes = { assetID: assetId, amount: '0', symbol: '' };
                             let symbol = '';
+                            if (assetId === NEO) {
+                                symbol = 'NEO';
+                            } else if (assetId === GAS) {
+                                symbol = 'GAS';
+                            } else {
+                                symbol = await getAssetSymbol(assetId, currN2Network.rpcUrl);
+                            }
                             if (res_1) {
-                                if (assetId === NEO) {
-                                    symbol = 'NEO';
-                                }
-                                if (assetId === GAS) {
-                                    symbol = 'GAS';
-                                }
                                 assetRes.amount = res_1.value;
                             }
                             if (res_2) {
-                                symbol = await getAssetSymbol(assetId, currN2Network.rpcUrl);
                                 const decimal = await getAssetDecimal(assetId, currN2Network.rpcUrl);
                                 assetRes.amount = new BigNumber(res_2.amount).shiftedBy(-decimal).toFixed();
                             }
@@ -946,7 +946,16 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         // neo3 dapi method
         case requestTargetN3.Balance: {
             const parameter = request.parameter as N3BalanceArgs;
-            const params = parameter.params;
+            let params;
+            if (parameter.params) {
+                params = parameter.params;
+            } else {
+                const currWallet = await getLocalStorage('wallet', () => { });
+                if (!wallet3.isAddress(currWallet.accounts[0].address, 53)) {
+                    return;
+                };
+                params = [{address: currWallet.accounts[0].address, contracts: []}]
+            }
             const balanceReqs = [];
             for (const item of params) {
                 (item.contracts || []).forEach((asset: string, index) => {
@@ -975,7 +984,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         for (const assetId of (item?.contracts || [])) {
                             const res_1 = (res[i]?.balance || []).find(asset_1 => assetId.includes(asset_1.assethash));
                             const symbol = await getAssetSymbol(assetId, currN3Network.rpcUrl);
-                            const assetRes = { assetID: assetId, amount: '0', symbol };
+                            const assetRes = { contract: assetId, amount: '0', symbol };
                             if (res_1) {
                                 const decimal = await getAssetDecimal(assetId, currN3Network.rpcUrl);
                                 assetRes.amount = new BigNumber(res_1.amount).shiftedBy(-decimal).toFixed();
@@ -987,7 +996,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                                 const symbol = await getAssetSymbol(res_1.assethash, currN3Network.rpcUrl);
                                 const decimal = await getAssetDecimal(res_1.assethash, currN3Network.rpcUrl);
                                 const amount = new BigNumber(res_1.amount).shiftedBy(-decimal).toFixed();
-                                const assetRes = { assetID: res_1.assethash, amount, symbol }
+                                const assetRes = { contract: res_1.assethash, amount, symbol }
                                 returnData[item.address].push(assetRes);
                             }
                         }

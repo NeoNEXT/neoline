@@ -170,16 +170,20 @@ window.addEventListener('message', async (e) => {
                         currChainType = await getWalletType();
                     };
                     if (currChainType === 'Neo2') {
-                        getStorage('net', (result: string) => {
-                            let network = e.data.parameter.network;
-                            if (network !== 'MainNet' && network !== 'TestNet') {
-                                network = result || 'MainNet';
-                            }
-                            e.data.parameter.network = network;
-                            chrome.runtime.sendMessage(e.data, (response) => {
-                                return Promise.resolve('Dummy response to keep the console quiet');
-                            });
-                        });
+                        getLocalStorage('n2Networks', (n2Networks) => {
+                            getLocalStorage('n2SelectedNetworkIndex', (n2SelectedNetworkIndex) => {
+                                const n2Network = (n2Networks || DEFAULT_N2_RPC_NETWORK)[n2SelectedNetworkIndex || 0];
+                                if (!(e.data as Object).hasOwnProperty('parameter')) {
+                                    e.data.parameter = {};
+                                }
+                                let network = e.data?.parameter?.network;
+                                e.data.parameter.network = network || n2Network.network;
+                                e.data.nodeUrl = n2Network.rpcUrl;
+                                chrome.runtime.sendMessage(e.data, (response) => {
+                                    return Promise.resolve('Dummy response to keep the console quiet');
+                                });
+                            })
+                        })
                         return;
                     } else {
                         window.postMessage({
