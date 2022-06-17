@@ -386,10 +386,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
                         .catch((error) => {
                             this.loading = false;
                             this.loadingMsg = '';
-                            this.global.snackBarTip(
-                                'TransactionDeniedByUser',
-                                error
-                            );
+                            this.ledger.handleLedgerError(error);
                         });
                 }
             });

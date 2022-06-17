@@ -416,10 +416,7 @@ export class PopupHomeComponent implements OnInit {
                             this.loading = false;
                             this.ledgerSignLoading = false;
                             this.loadingMsg = '';
-                            this.global.snackBarTip(
-                                'TransactionDeniedByUser',
-                                error
-                            );
+                            this.ledger.handleLedgerError(error);
                         });
                 }
             });

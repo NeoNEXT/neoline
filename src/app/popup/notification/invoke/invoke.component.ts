@@ -571,10 +571,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         .catch((error) => {
                             this.loading = false;
                             this.loadingMsg = '';
-                            this.global.snackBarTip(
-                                'TransactionDeniedByUser',
-                                error
-                            );
+                            this.ledger.handleLedgerError(error);
                         });
                 }
             });

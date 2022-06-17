@@ -187,6 +187,16 @@ export class LedgerService {
         }
     }
 
+    handleLedgerError(error) {
+        console.log(error);
+        let snackError = 'TransactionDeniedByUser';
+        if (error && error.message) {
+            snackError = error.message;
+        }
+        console.log(snackError);
+        this.global.snackBarTip(snackError);
+    }
+
     //#region private function
     private getNeo2Signature({ data, addressIndex }) {
         try {
