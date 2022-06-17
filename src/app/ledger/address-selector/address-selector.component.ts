@@ -11,8 +11,9 @@ import {
     LedgerStatus,
     LedgerStatuses,
     LEDGER_PAGE_SIZE,
+    STORAGE_NAME,
 } from '@/app/popup/_lib';
-import { LedgerService, NeonService } from '@/app/core';
+import { LedgerService, NeonService, ChromeService } from '@/app/core';
 import { interval } from 'rxjs';
 
 @Component({
@@ -37,7 +38,11 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
     accountBalance = [];
     getBalanceReq;
 
-    constructor(private ledger: LedgerService, private neon: NeonService) {}
+    constructor(
+        private ledger: LedgerService,
+        private neon: NeonService,
+        private chrome: ChromeService
+    ) {}
 
     ngOnInit(): void {
         this.getLedgerStatus();
@@ -127,5 +132,22 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
             .catch(() => {
                 this.isLoadingAccount = false;
             });
+    }
+
+    public async jumbToWeb(type: 'privacy' | 'agreement') {
+        let lang = await this.chrome.getStorage(STORAGE_NAME.lang).toPromise();
+        if (lang !== 'en') {
+            lang = '';
+        } else {
+            lang = '/en';
+        }
+        switch (type) {
+            case 'privacy':
+                window.open(`https://neoline.io${lang}/privacy`);
+                break;
+            case 'agreement':
+                window.open(`https://neoline.io${lang}/agreement`);
+                break;
+        }
     }
 }

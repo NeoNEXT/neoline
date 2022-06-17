@@ -161,9 +161,10 @@ section.main {
                             line-height: 15px;
                             font-weight: 500;
                             color: #afb6be;
-                            a {
+                            .link {
                                 color: #afb6be;
                                 cursor: pointer;
+                                text-decoration: underline;
                             }
                         }
                     }
