@@ -7,7 +7,7 @@ import { Asset, NEO, GAS, UTXO } from 'src/models/models';
 import { map } from 'rxjs/operators';
 import { GasFeeSpeed } from '@popup/_lib/type';
 import { bignumber } from 'mathjs';
-import { rpc } from '@cityofzion/neon-js';
+import { rpc, wallet as wallet2 } from '@cityofzion/neon-js';
 import { NeonService } from '../services/neon.service';
 import {
     NEO3_CONTRACT,
@@ -20,6 +20,7 @@ import {
 } from '@popup/_lib';
 import BigNumber from 'bignumber.js';
 import { UtilServiceState } from '../util/util.service';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 
 @Injectable()
 export class AssetState {
@@ -281,6 +282,45 @@ export class AssetState {
             return this.getN3AddressBalances(address);
         }
         return this.getNeo2AddressBalances(address);
+    }
+
+    async getAddressAssetBalance(
+        address: string,
+        assetId: string,
+        chainType: ChainType
+    ) {
+        const addressHash =
+            chainType === 'Neo2'
+                ? wallet2.getScriptHashFromAddress(address)
+                : wallet3.getScriptHashFromAddress(address);
+        const data = {
+            jsonrpc: '2.0',
+            method: 'invokefunction',
+            params: [
+                assetId,
+                'balanceOf',
+                [{ type: 'Hash160', value: addressHash }],
+            ],
+            id: 1,
+        };
+        const rpcUrl =
+            chainType === 'Neo2'
+                ? this.global.n2Network.rpcUrl
+                : this.global.n3Network.rpcUrl;
+        const balanceRes = await this.http.rpcPost(rpcUrl, data).toPromise();
+        let balance = '0';
+        if (balanceRes?.stack) {
+            if (balanceRes.stack[0].type === 'Integer') {
+                balance = balanceRes.stack[0].value;
+            }
+            if (balanceRes.stack[0].type === 'ByteArray') {
+                balance = new BigNumber(
+                    balanceRes.stack[0].value || 0,
+                    16
+                ).toFixed();
+            }
+        }
+        return balance;
     }
     //#endregion
 

@@ -9,6 +9,7 @@ import {
     TransactionState,
     TransferService,
     LedgerService,
+    UtilServiceState,
 } from '@/app/core';
 import { NEO, GAS, Asset } from '@/models/models';
 import { tx as tx2, u } from '@cityofzion/neon-js';
@@ -69,7 +70,8 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         private chrome: ChromeService,
         private txState: TransactionState,
         private dialog: MatDialog,
-        private ledger: LedgerService
+        private ledger: LedgerService,
+        private util: UtilServiceState
     ) {}
 
     ngOnInit(): void {
@@ -144,26 +146,44 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                         this.getAssetRate();
                     });
             } else {
-                this.asset.getAddressBalances(this.neon.address).then((res) => {
-                    const filterAsset = res.filter(
-                        (item) => item.asset_id === params.asset
-                    );
-                    if (filterAsset.length > 0) {
-                        this.init = true;
-                        this.symbol = filterAsset[0].symbol;
-                        this.balance = filterAsset[0];
-                    } else {
-                        this.global.snackBarTip('balanceLack');
-                        return;
-                    }
-                    this.submit();
-                    this.getAssetRate();
-                });
+                this.getAssetDetail();
             }
         });
     }
 
     ngAfterViewInit(): void {}
+
+    async getAssetDetail() {
+        const symbols = await this.util.getAssetSymbols(
+            [this.assetId],
+            this.neon.currentWalletChainType
+        );
+        this.symbol = symbols[0];
+        const balance = await this.asset.getAddressAssetBalance(
+            this.neon.address,
+            this.assetId,
+            this.neon.currentWalletChainType
+        );
+        if (new BigNumber(balance).comparedTo(0) > 0) {
+            const decimals = await this.util.getAssetDecimals(
+                [this.assetId],
+                this.neon.currentWalletChainType
+            );
+            this.balance = {
+                asset_id: this.assetId,
+                balance: new BigNumber(balance)
+                    .shiftedBy(-decimals[0])
+                    .toFixed(),
+                symbol: symbols[0],
+                decimals: decimals[0],
+            };
+            this.init = true;
+            this.submit();
+            this.getAssetRate();
+        } else {
+            this.global.snackBarTip('balanceLack');
+        }
+    }
 
     public submit() {
         this.loading = true;
@@ -254,9 +274,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         return this.txState
             .rpcSendRawTransaction(tx.serialize(true))
             .then(async (res) => {
-                if (
-                    !res
-                ) {
+                if (!res) {
                     throw {
                         msg: 'Transaction rejected by RPC node.',
                     };
@@ -335,7 +353,10 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             const rate = await this.asset.getAssetRate('GAS', GAS);
             this.feeMoney = new BigNumber(this.fee).times(rate || 0).toFixed();
         }
-        const assetRate = await this.asset.getAssetRate(this.symbol, this.assetId)
+        const assetRate = await this.asset.getAssetRate(
+            this.symbol,
+            this.assetId
+        );
         this.money = new BigNumber(this.amount).times(assetRate || 0).toFixed();
         this.totalMoney = this.global
             .mathAdd(Number(this.feeMoney), Number(this.money))
@@ -386,17 +407,17 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                     if (res === 0 || res === '0') {
                         this.feeMoney = '0';
                     } else {
-                        this.asset
-                            .getAssetRate('GAS', GAS)
-                            .then((rate) => {
-                                this.feeMoney = new BigNumber(this.fee).times(rate || 0).toFixed();
-                                this.totalMoney = this.global
-                                    .mathAdd(
-                                        Number(this.feeMoney),
-                                        Number(this.money)
-                                    )
-                                    .toString();
-                            });
+                        this.asset.getAssetRate('GAS', GAS).then((rate) => {
+                            this.feeMoney = new BigNumber(this.fee)
+                                .times(rate || 0)
+                                .toFixed();
+                            this.totalMoney = this.global
+                                .mathAdd(
+                                    Number(this.feeMoney),
+                                    Number(this.money)
+                                )
+                                .toString();
+                        });
                     }
                     this.submit();
                 }

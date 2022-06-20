@@ -4,6 +4,7 @@ import {
     NeonService,
     ChromeService,
     GlobalService,
+    UtilServiceState,
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NEO, GAS, Asset } from '@/models/models';
@@ -12,6 +13,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
+import { NEO3_CONTRACT, GAS3_CONTRACT } from '../_lib';
 
 @Component({
     templateUrl: 'asset-detail.component.html',
@@ -38,7 +40,8 @@ export class PopupAssetDetailComponent implements OnInit {
         private neon: NeonService,
         private dialog: MatDialog,
         private global: GlobalService,
-        private router: Router
+        private router: Router,
+        private util: UtilServiceState
     ) {
         this.rateCurrency = this.assetState.rateCurrency;
     }
@@ -50,38 +53,53 @@ export class PopupAssetDetailComponent implements OnInit {
                 : this.global.n3Network.id;
         this.aRouter.params.subscribe(async (params: any) => {
             this.assetId = params.assetId || NEO;
-            // 获取资产信息
-            this.assetState
-                .getAddressBalances(this.neon.address)
-                .then((balanceArr) => {
-                    this.handlerBalance(balanceArr);
-                });
+            this.getAssetDetail();
+            this.getCanHide();
             this.chrome
                 .getWatch(this.networkId, this.neon.address)
                 .subscribe((res) => {
                     this.watch = res;
-                    this.canHideBalance =
-                        res.findIndex((w) => w.asset_id === this.assetId) >= 0;
                 });
         });
     }
 
-    handlerBalance(balanceRes: Asset[]) {
-        this.chrome
-            .getWatch(this.networkId, this.neon.address)
-            .subscribe((watching) => {
-                this.findBalance(balanceRes, watching);
-                // 获取资产汇率
-                this.getAssetRate();
-            });
+    getCanHide() {
+        if (this.neon.currentWalletChainType === 'Neo2') {
+            if (this.assetId !== NEO && this.assetId !== GAS) {
+                this.canHideBalance = true;
+            }
+        }
+        if (this.neon.currentWalletChainType === 'Neo3') {
+            if (
+                this.assetId !== NEO3_CONTRACT &&
+                this.assetId !== GAS3_CONTRACT
+            ) {
+                this.canHideBalance = true;
+            }
+        }
     }
 
-    findBalance(balanceRes, watching) {
-        const balance =
-            balanceRes.find((b) => b.asset_id === this.assetId) ||
-            watching.find((w) => w.asset_id === this.assetId);
-        balance.balance = Number(balance.balance);
-        this.balance = balance;
+    async getAssetDetail() {
+        const balance = await this.assetState.getAddressAssetBalance(
+            this.neon.address,
+            this.assetId,
+            this.neon.currentWalletChainType
+        );
+        const symbols = await this.util.getAssetSymbols(
+            [this.assetId],
+            this.neon.currentWalletChainType
+        );
+        const decimals = await this.util.getAssetDecimals(
+            [this.assetId],
+            this.neon.currentWalletChainType
+        );
+        this.balance = {
+            asset_id: this.assetId,
+            balance: new BigNumber(balance).shiftedBy(-decimals[0]).toFixed(),
+            symbol: symbols[0],
+            decimals: decimals[0],
+        };
+        this.getAssetRate();
     }
 
     getAssetRate() {
@@ -116,14 +134,17 @@ export class PopupAssetDetailComponent implements OnInit {
                     );
                     if (i >= 0) {
                         this.watch.splice(i, 1);
-                        this.chrome.setWatch(
-                            this.networkId,
-                            this.neon.address,
-                            this.watch
-                        );
-                        this.global.snackBarTip('hiddenSucc');
-                        this.router.navigateByUrl('/popup/home');
+                    } else {
+                        this.balance.watching = false;
+                        this.watch.push(this.balance);
                     }
+                    this.chrome.setWatch(
+                        this.networkId,
+                        this.neon.address,
+                        this.watch
+                    );
+                    this.global.snackBarTip('hiddenSucc');
+                    this.router.navigateByUrl('/popup/home');
                 }
             });
     }

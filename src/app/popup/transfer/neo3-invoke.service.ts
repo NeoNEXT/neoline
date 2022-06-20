@@ -214,16 +214,11 @@ export class Neo3InvokeService {
         systemFee,
         networkFee
     ): Promise<boolean> {
-        const balanceResponse = await this.assetState
-            .getAddressBalances(fromAddress, 'Neo3');
-        const gasAsset: Asset = balanceResponse.find(
-            (item) => item.asset_id === GAS3_CONTRACT
-        );
-        const gasAmount = gasAsset ? gasAsset.balance : 0;
+        const gasAmount = await this.assetState.getAddressAssetBalance(fromAddress, GAS3_CONTRACT, 'Neo3');
         const requireGasAmount = new BigNumber(systemFee.toString()).plus(
             new BigNumber(networkFee.toString())
         );
-        if (requireGasAmount.comparedTo(new BigNumber(gasAmount)) > 0) {
+        if (requireGasAmount.comparedTo(new BigNumber(gasAmount).shiftedBy(-8)) > 0) {
             return false;
         }
         return true;

@@ -8,6 +8,7 @@ import {
     ChromeService,
     TransactionState,
     LedgerService,
+    UtilServiceState
 } from '@/app/core';
 import { NEO } from '@/models/models';
 import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
@@ -78,7 +79,8 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
         private dialog: MatDialog,
         private neo3Transfer: Neo3TransferService,
         private globalService: GlobalService,
-        private ledger: LedgerService
+        private ledger: LedgerService,
+        private util: UtilServiceState
     ) {
         this.rpcClient = new rpc.RPCClient(this.globalService.n3Network.rpcUrl);
         this.n3Network = this.global.n3Network;
@@ -140,23 +142,42 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
                 }
             }
             this.remark = params.remark || '';
-            this.asset
-                .getAddressBalances(this.neon.address, 'Neo3')
-                .then((res) => {
-                    const filterAsset = res.filter(
-                        (item) => item.asset_id === params.asset
-                    );
-                    if (filterAsset.length > 0) {
-                        this.init = true;
-                        this.symbol = filterAsset[0].symbol;
-                        this.balance = filterAsset[0];
-                        this.submit();
-                    }
-                });
+            this.getAssetDetail();
         });
     }
 
     ngAfterViewInit(): void {}
+
+    async getAssetDetail() {
+        const symbols = await this.util.getAssetSymbols(
+            [this.assetId],
+            this.neon.currentWalletChainType
+        );
+        this.symbol = symbols[0];
+        const balance = await this.asset.getAddressAssetBalance(
+            this.neon.address,
+            this.assetId,
+            this.neon.currentWalletChainType
+        );
+        if (new BigNumber(balance).comparedTo(0) > 0) {
+            const decimals = await this.util.getAssetDecimals(
+                [this.assetId],
+                this.neon.currentWalletChainType
+            );
+            this.balance = {
+                asset_id: this.assetId,
+                balance: new BigNumber(balance)
+                    .shiftedBy(-decimals[0])
+                    .toFixed(),
+                symbol: symbols[0],
+                decimals: decimals[0],
+            };
+            this.init = true;
+            this.submit();
+        } else {
+            this.global.snackBarTip('balanceLack');
+        }
+    }
 
     public submit() {
         this.loading = true;

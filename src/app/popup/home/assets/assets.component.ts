@@ -5,6 +5,7 @@ import {
     AssetState,
     ChromeService,
     NeonService,
+    UtilServiceState,
 } from '@/app/core';
 import { forkJoin } from 'rxjs';
 import BigNumber from 'bignumber.js';
@@ -26,7 +27,8 @@ export class PopupAssetsComponent implements OnInit {
         private asset: AssetState,
         private chrome: ChromeService,
         private neon: NeonService,
-        private global: GlobalService
+        private global: GlobalService,
+        private util: UtilServiceState
     ) {}
 
     ngOnInit(): void {
@@ -49,7 +51,7 @@ export class PopupAssetsComponent implements OnInit {
         forkJoin([getMoneyBalance, getWatch]).subscribe((res) => {
             const [moneyAssets, watch] = [...res];
             let showAssets = [...moneyAssets];
-            watch.forEach((item) => {
+            watch.forEach(async (item) => {
                 const index = showAssets.findIndex(
                     (m) => m.asset_id === item.asset_id
                 );
@@ -59,6 +61,20 @@ export class PopupAssetsComponent implements OnInit {
                     }
                 } else {
                     if (item.watching === true) {
+                        const balance = await this.asset.getAddressAssetBalance(
+                            this.neon.address,
+                            item.asset_id,
+                            this.neon.currentWalletChainType
+                        );
+                        if (new BigNumber(balance).comparedTo(0) > 0) {
+                            const decimals = await this.util.getAssetDecimals(
+                                [item.asset_id],
+                                this.neon.currentWalletChainType
+                                );
+                            item.balance = new BigNumber(balance)
+                                .shiftedBy(-decimals[0])
+                                .toFixed();
+                        }
                         showAssets.push(item);
                     }
                 }

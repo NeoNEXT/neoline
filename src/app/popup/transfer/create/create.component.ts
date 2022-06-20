@@ -10,6 +10,7 @@ import {
     TransactionState,
     NftState,
     LedgerService,
+    UtilServiceState
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TransferService } from '../transfer.service';
@@ -28,7 +29,8 @@ import { bignumber } from 'mathjs';
 import { GasFeeSpeed } from '../../_lib/type';
 import { Neo3TransferService } from '../neo3-transfer.service';
 import { GAS3_CONTRACT, STORAGE_NAME, LedgerStatuses } from '../../_lib';
-import { interval } from 'rxjs';
+import { interval, forkJoin } from 'rxjs';
+import BigNumber from 'bignumber.js';
 
 @Component({
     templateUrl: 'create.component.html',
@@ -69,7 +71,8 @@ export class TransferCreateComponent implements OnInit {
         private txState: TransactionState,
         private neo3Transfer: Neo3TransferService,
         private nftState: NftState,
-        private ledger: LedgerService
+        private ledger: LedgerService,
+        private util: UtilServiceState
     ) {
         switch (this.neon.currentWalletChainType) {
             case 'Neo2':
@@ -97,15 +100,7 @@ export class TransferCreateComponent implements OnInit {
                             this.assetId = res.asset_id;
                         });
                 }
-                this.asset
-                    .getAddressBalances(this.neon.address)
-                    .then(async (balanceArr) => {
-                        this.balances = balanceArr;
-                        if (!params.id) {
-                            this.assetId = this.balances[0].asset_id;
-                            this.chooseAsset = this.balances[0];
-                        }
-                    });
+                this.getAddressAllBalances(params);
             }
         });
         if (this.asset.gasFeeSpeed) {
@@ -117,6 +112,48 @@ export class TransferCreateComponent implements OnInit {
                 this.fee = res.propose_price;
             });
         }
+    }
+
+    async getAddressAllBalances(params) {
+        const getMoneyBalance = this.asset.getAddressBalances(
+            this.neon.address
+        );
+        const getWatch = this.chrome.getWatch(
+            this.networkId,
+            this.neon.address
+        );
+        forkJoin([getMoneyBalance, getWatch]).subscribe((res) => {
+            const [moneyAssets, watch] = [...res];
+            let showAssets = [...moneyAssets];
+            watch.forEach(async (item) => {
+                const index = moneyAssets.findIndex(
+                    (m) => m.asset_id === item.asset_id
+                );
+                if (index >= 0) {
+                    if (item.watching === false) {
+                        showAssets.splice(index, 1);
+                    }
+                } else {
+                    if (item.watching === true) {
+                        const balance = await this.asset.getAddressAssetBalance(
+                            this.neon.address,
+                            item.asset_id,
+                            this.neon.currentWalletChainType
+                        );
+                        if (new BigNumber(balance).comparedTo(0) > 0) {
+                            const decimals = await this.util.getAssetDecimals([item.asset_id], this.neon.currentWalletChainType);
+                            item.balance = new BigNumber(balance).shiftedBy(-decimals[0]).toFixed();
+                            showAssets.push(item);
+                        }
+                    }
+                }
+            });
+            this.balances = showAssets;
+            if (!params.id) {
+                this.assetId = this.balances[0].asset_id;
+                this.chooseAsset = this.balances[0];
+            }
+        });
     }
 
     getNftTokens() {

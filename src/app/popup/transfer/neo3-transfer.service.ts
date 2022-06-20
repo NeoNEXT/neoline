@@ -10,6 +10,7 @@ import {
 } from '@app/core';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
+import { GAS3_CONTRACT } from '../_lib';
 
 interface CreateNeo3TxInput {
     addressFrom: string;
@@ -182,29 +183,17 @@ export class Neo3TransferService {
          * For this, we rely on the NEP5Tracker plugin. Hopefully, the node we select has the plugin installed.
          */
         async function checkBalance() {
-            let balanceResponse;
-            try {
-                balanceResponse = await assetStateTemp.getAddressBalances(
-                    inputs.fromAccountAddress
-                );
-            } catch (e) {
-                console.log(
-                    '\u001b[31m  ✗ Unable to get balances as plugin was not available. \u001b[0m'
-                );
-                return;
-            }
             // Check for gas funds for fees
-            const gasRequirements = new u.Fixed8(vars.tx.networkFee).plus(
-                vars.tx.systemFee
+            const gasRequirements = new BigNumber(vars.tx.networkFee).plus(
+                new BigNumber(vars.tx.systemFee)
             );
-            const gasBalance = balanceResponse.filter((bal) =>
-                bal.asset_id.includes(NEW_GAS)
+            let gasAmount = await assetStateTemp.getAddressAssetBalance(
+                inputs.fromAccountAddress,
+                GAS3_CONTRACT,
+                'Neo3'
             );
-            const gasAmount =
-                gasBalance.length === 0
-                    ? new u.Fixed8(0)
-                    : new u.Fixed8(gasBalance[0].balance);
-            if (gasAmount.lt(gasRequirements)) {
+            gasAmount = new BigNumber(gasAmount).shiftedBy(-8).toFixed();
+            if (new BigNumber(gasAmount).comparedTo(gasRequirements) < 0) {
                 throw {
                     msg: `${
                         notificationTemp.content.insufficientBalance
@@ -219,21 +208,21 @@ export class Neo3TransferService {
             }
             if (!params.nftTokenId) {
                 // Check for token funds
-                const balances = balanceResponse.filter((bal) =>
-                    bal.asset_id.includes(inputs.tokenScriptHash)
+                const balanceAmountInt = await assetStateTemp.getAddressAssetBalance(
+                    inputs.fromAccountAddress,
+                    inputs.tokenScriptHash,
+                    'Neo3'
                 );
-                const sourceBalanceAmount =
-                    balances.length === 0 ? 0 : balances[0].balance;
-                const balanceAmount = bignumber(sourceBalanceAmount).mul(
-                    bignumber(10).pow(params.decimals)
-                );
+                const balanceAmount = new BigNumber(balanceAmountInt)
+                    .shiftedBy(-params.decimals)
+                    .toFixed();
                 if (
-                    balanceAmount.comparedTo(
-                        bignumber(inputs.amountToTransfer)
+                    new BigNumber(balanceAmountInt).comparedTo(
+                        new BigNumber(inputs.amountToTransfer)
                     ) < 0
                 ) {
                     throw {
-                        msg: `${notificationTemp.content.insufficientSystemFee} ${sourceBalanceAmount}`,
+                        msg: `${notificationTemp.content.balanceLack} ${balanceAmount}`,
                     };
                 } else {
                     console.log('\u001b[32m  ✓ Token funds found \u001b[0m');
@@ -241,15 +230,10 @@ export class Neo3TransferService {
 
                 // 如果转的是 gas
                 if (inputs.tokenScriptHash.indexOf(NEW_GAS) >= 0) {
-                    const gasRequirements8 = bignumber(
-                        gasRequirements.toNumber()
-                    ).mul(bignumber(10).pow(params.decimals));
-                    const totalRequirements = bignumber(
-                        inputs.amountToTransfer
-                    ).add(gasRequirements8);
-                    if (balanceAmount.comparedTo(totalRequirements) < 0) {
+                    const totalRequirements = new BigNumber(inputs.amountToTransfer).shiftedBy(-8).plus(gasRequirements);
+                    if (new BigNumber(balanceAmount).comparedTo(totalRequirements) < 0) {
                         throw {
-                            msg: `${notificationTemp.content.insufficientSystemFee} ${sourceBalanceAmount}`,
+                            msg: `${notificationTemp.content.insufficientSystemFee} ${balanceAmount}`,
                         };
                     }
                 }
