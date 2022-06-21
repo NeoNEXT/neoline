@@ -19,7 +19,14 @@ import {
     WalletJSON as WalletJSON3,
 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Observable, from, Observer, of, Subject, forkJoin } from 'rxjs';
-import { map, catchError, startWith, publish, refCount } from 'rxjs/operators';
+import {
+    map,
+    catchError,
+    startWith,
+    publish,
+    refCount,
+    timeout,
+} from 'rxjs/operators';
 import { ChromeService } from './chrome.service';
 import { GlobalService } from './global.service';
 import { Transaction, TransactionInput } from '@cityofzion/neon-core/lib/tx';
@@ -28,8 +35,9 @@ import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { sc, u } from '@cityofzion/neon-core';
 import { EVENT, TxHashAttribute } from '@/models/dapi';
 import { bignumber } from 'mathjs';
-import { ChainType, STORAGE_NAME } from '@popup/_lib';
+import { ChainType, STORAGE_NAME, RPC_URLS } from '@popup/_lib';
 import { str2hexstring } from '@cityofzion/neon-core-neo3/lib/u';
+import { HttpClient } from '@angular/common/http';
 
 @Injectable()
 export class NeonService {
@@ -98,7 +106,11 @@ export class NeonService {
     }
     //#endregion
 
-    constructor(private chrome: ChromeService, private global: GlobalService) {}
+    constructor(
+        private chrome: ChromeService,
+        private global: GlobalService,
+        private http: HttpClient
+    ) {}
 
     sortWallet(chainType: ChainType, oldIndex: number, newIndex: number) {
         if (chainType === 'Neo2') {
@@ -112,7 +124,10 @@ export class NeonService {
                 this._walletArr = this._walletArr2;
                 this._WIFArr = this._WIFArr2;
             }
-            this.chrome.setStorage(STORAGE_NAME.walletArr, this.getWalletArrayJSON(this._walletArr2));
+            this.chrome.setStorage(
+                STORAGE_NAME.walletArr,
+                this.getWalletArrayJSON(this._walletArr2)
+            );
             this.chrome.setStorage(STORAGE_NAME.WIFArr, this._WIFArr2);
         } else {
             const tempWallet = this._walletArr3[oldIndex];
@@ -125,7 +140,10 @@ export class NeonService {
                 this._walletArr = this._walletArr3;
                 this._WIFArr = this._WIFArr3;
             }
-            this.chrome.setStorage(STORAGE_NAME['walletArr-Neo3'], this.getWalletArrayJSON(this._walletArr3));
+            this.chrome.setStorage(
+                STORAGE_NAME['walletArr-Neo3'],
+                this.getWalletArrayJSON(this._walletArr3)
+            );
             this.chrome.setStorage(STORAGE_NAME['WIFArr-Neo3'], this._WIFArr3);
         }
     }
@@ -198,6 +216,7 @@ export class NeonService {
                 this.global.n3SelectedNetworkIndex = res[9];
                 this.global.n2Network = res[6][res[7]];
                 this.global.n3Network = res[8][res[9]];
+                this.getFastRpcUrl();
                 //#endregion
                 if (
                     !res[5] &&
@@ -277,6 +296,67 @@ export class NeonService {
             })
         );
     }
+
+    getFastRpcUrl() {
+        const data = {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getversion',
+            params: [],
+        };
+        const n2Reqs = [];
+        const n2ChainId = this.global.n2Network.chainId;
+        RPC_URLS[n2ChainId].forEach((item) => {
+            const req = this.http.post(item, data).pipe(
+                timeout(3000),
+                catchError(() => of(`Request timed out`))
+            );
+            n2Reqs.push(req);
+        });
+        forkJoin(n2Reqs).subscribe((responses) => {
+            const index = responses.findIndex(
+                (item) => item !== 'Request timed out'
+            );
+            if (index < 0) {
+                return;
+            }
+            this.global.n2Network.rpcUrl = RPC_URLS[n2ChainId][index];
+            this.global.n2Networks[this.global.n2SelectedNetworkIndex].rpcUrl =
+                RPC_URLS[n2ChainId][index];
+            this.chrome.setStorage(
+                STORAGE_NAME.n2Networks,
+                this.global.n2Networks
+            );
+        });
+        if (this.global.n3Network.id > 6) {
+            return;
+        }
+        const n3Reqs = [];
+        const n3ChainId = this.global.n3Network.chainId;
+        RPC_URLS[n3ChainId].forEach((item) => {
+            const req = this.http.post(item, data).pipe(
+                timeout(3000),
+                catchError(() => of(`Request timed out`))
+            );
+            n3Reqs.push(req);
+        });
+        forkJoin(n3Reqs).subscribe((responses) => {
+            const index = responses.findIndex(
+                (item) => item !== 'Request timed out'
+            );
+            if (index < 0) {
+                return;
+            }
+            this.global.n3Network.rpcUrl = RPC_URLS[n3ChainId][index];
+            this.global.n3Networks[this.global.n3SelectedNetworkIndex].rpcUrl =
+                RPC_URLS[n3ChainId][index];
+            this.chrome.setStorage(
+                STORAGE_NAME.n3Networks,
+                this.global.n3Networks
+            );
+        });
+    }
+
     /**
      * 判断钱包地址是否存在
      * @param w 钱包地址
