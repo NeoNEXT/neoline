@@ -110,6 +110,7 @@ export class PopupHomeMenuDialogComponent implements OnInit {
                 STORAGE_NAME.n2SelectedNetworkIndex,
                 networkIndex
             );
+            this.chrome.networkChangeEvent(this.global.n2Networks[networkIndex]);
         } else {
             const networkIndex = this.global.n3Networks.findIndex(
                 (m) => m.id === this.selectedNetwork.id
@@ -118,6 +119,7 @@ export class PopupHomeMenuDialogComponent implements OnInit {
                 STORAGE_NAME.n3SelectedNetworkIndex,
                 networkIndex
             );
+            this.chrome.networkChangeEvent(this.global.n3Networks[networkIndex]);
         }
         this.wallet = this.neon.parseWallet(w);
         this.chrome.setWallet(this.wallet.export());

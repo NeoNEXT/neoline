@@ -3,6 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { NeonService, ChromeService, GlobalService } from '@/app/core';
 import { FormControl } from '@angular/forms';
 import { STORAGE_NAME } from '../_lib';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 @Component({
     templateUrl: 'wallet.component.html',
     styleUrls: ['wallet.component.scss'],
@@ -45,6 +46,15 @@ export class PopupWalletComponent implements OnInit {
     }
 
     public updateLocalWallet(data: any, type: number) {
+        const newChainType = wallet3.isAddress(
+            data.accounts[0].address,
+            53
+        )
+            ? 'Neo3'
+            : 'Neo2';
+        if (newChainType !== this.neon.currentWalletChainType) {
+            this.chrome.networkChangeEvent(newChainType === 'Neo2' ? this.global.n2Network : this.global.n3Network);
+        }
         this.neon.pushWIFArray(data.accounts[0].wif);
         this.chrome.setStorage(
             this.neon.selectedChainType === 'Neo3'

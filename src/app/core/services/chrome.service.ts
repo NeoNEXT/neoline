@@ -8,6 +8,8 @@ import {
     STORAGE_NAME,
     STORAGE_VALUE_TYPE,
     STORAGE_VALUE_MESSAGE,
+    RpcNetwork,
+    DEFAULT_NETWORKS,
 } from '@/app/popup/_lib';
 
 declare var chrome: any;
@@ -582,6 +584,18 @@ export class ChromeService {
                     label: w?.name,
                 },
                 return: EVENT.ACCOUNT_CHANGED,
+            });
+        }
+    }
+    public networkChangeEvent(network: RpcNetwork) {
+        if (this.check) {
+            this.windowCallback({
+                data: {
+                    chainId: network.chainId,
+                    networks: DEFAULT_NETWORKS,
+                    defaultNetwork: network.network
+                },
+                return: EVENT.NETWORK_CHANGED,
             });
         }
     }

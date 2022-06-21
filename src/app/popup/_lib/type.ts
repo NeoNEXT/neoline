@@ -21,6 +21,14 @@ export interface RpcNetwork {
     id: number;
 }
 
+export const DEFAULT_NETWORKS = [
+    'MainNet',
+    'TestNet',
+    'N3MainNet',
+    'N3TestNet',
+    'N3PrivateNet',
+];
+
 export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
     {
         rpcUrl: 'https://neo2-mainnet.neoline.io',

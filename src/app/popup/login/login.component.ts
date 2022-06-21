@@ -25,6 +25,7 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '../_dialogs';
 import { ERRORS, requestTarget } from '@/models/dapi';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 
 
 @Component({
@@ -133,6 +134,15 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
     public selectAccount(w: Wallet2 | Wallet3) {
         if (w.accounts[0].address === this.neon.wallet.accounts[0].address) {
             return;
+        }
+        const newChainType = wallet3.isAddress(
+            w?.accounts[0]?.address || '',
+            53
+        )
+            ? 'Neo3'
+            : 'Neo2';
+        if (newChainType !== this.neon.currentWalletChainType) {
+            this.chrome.networkChangeEvent(newChainType === 'Neo2' ? this.global.n2Network : this.global.n3Network);
         }
         const wallet = this.neon.parseWallet(w);
         this.chrome.setWallet(wallet.export());

@@ -42,11 +42,13 @@ export class PopupN3NetworkDialogComponent implements OnInit {
                 STORAGE_NAME.n2SelectedNetworkIndex,
                 index
             );
+            this.chromeSer.networkChangeEvent(this.global.n2Networks[index]);
         } else {
             this.chromeSer.setStorage(
                 STORAGE_NAME.n3SelectedNetworkIndex,
                 index
             );
+            this.chromeSer.networkChangeEvent(this.global.n3Networks[index]);
         }
         location.reload();
     }
