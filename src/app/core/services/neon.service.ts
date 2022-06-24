@@ -306,23 +306,29 @@ export class NeonService {
         };
         const n2Reqs = [];
         const n2ChainId = this.global.n2Network.chainId;
-        RPC_URLS[n2ChainId].forEach((item) => {
+        const startTime = new Date().getTime();
+        let spendTiem = [];
+        RPC_URLS[n2ChainId].forEach((item, index) => {
             const req = this.http.post(item, data).pipe(
-                timeout(3000),
-                catchError(() => of(`Request timed out`))
+                timeout(5000),
+                catchError(() => of(`Request timed out`)),
+                map((res) => {
+                    spendTiem[index] = new Date().getTime() - startTime;
+                    return res;
+                })
             );
             n2Reqs.push(req);
         });
-        forkJoin(n2Reqs).subscribe((responses) => {
-            const index = responses.findIndex(
-                (item) => item !== 'Request timed out'
-            );
-            if (index < 0) {
-                return;
-            }
-            this.global.n2Network.rpcUrl = RPC_URLS[n2ChainId][index];
+        let fastIndex = 0;
+        forkJoin(n2Reqs).subscribe(() => {
+            spendTiem.forEach((time, index) => {
+                if (time < spendTiem[fastIndex]) {
+                    fastIndex = index;
+                }
+            });
+            this.global.n2Network.rpcUrl = RPC_URLS[n2ChainId][fastIndex];
             this.global.n2Networks[this.global.n2SelectedNetworkIndex].rpcUrl =
-                RPC_URLS[n2ChainId][index];
+                RPC_URLS[n2ChainId][fastIndex];
             this.chrome.setStorage(
                 STORAGE_NAME.n2Networks,
                 this.global.n2Networks
@@ -333,23 +339,28 @@ export class NeonService {
         }
         const n3Reqs = [];
         const n3ChainId = this.global.n3Network.chainId;
-        RPC_URLS[n3ChainId].forEach((item) => {
+        let n3SpendTiem = [];
+        RPC_URLS[n3ChainId].forEach((item, index) => {
             const req = this.http.post(item, data).pipe(
-                timeout(3000),
-                catchError(() => of(`Request timed out`))
+                timeout(5000),
+                catchError(() => of(`Request timed out`)),
+                map((res) => {
+                    n3SpendTiem[index] = new Date().getTime() - startTime;
+                    return res;
+                })
             );
             n3Reqs.push(req);
         });
-        forkJoin(n3Reqs).subscribe((responses) => {
-            const index = responses.findIndex(
-                (item) => item !== 'Request timed out'
-            );
-            if (index < 0) {
-                return;
-            }
-            this.global.n3Network.rpcUrl = RPC_URLS[n3ChainId][index];
+        let n3FastIndex = 0;
+        forkJoin(n3Reqs).subscribe(() => {
+            n3SpendTiem.forEach((time, index) => {
+                if (time < n3SpendTiem[n3FastIndex]) {
+                    n3FastIndex = index;
+                }
+            });
+            this.global.n3Network.rpcUrl = RPC_URLS[n3ChainId][n3FastIndex];
             this.global.n3Networks[this.global.n3SelectedNetworkIndex].rpcUrl =
-                RPC_URLS[n3ChainId][index];
+                RPC_URLS[n3ChainId][n3FastIndex];
             this.chrome.setStorage(
                 STORAGE_NAME.n3Networks,
                 this.global.n3Networks
