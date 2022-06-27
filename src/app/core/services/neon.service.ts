@@ -63,6 +63,7 @@ export class NeonService {
 
     private _wallet: Wallet2 | Wallet3;
     private $wallet: Subject<Wallet2 | Wallet3> = new Subject();
+    hasGetFastRpc = false;
 
     //#region wallet parameter
     /**
@@ -298,6 +299,10 @@ export class NeonService {
     }
 
     getFastRpcUrl() {
+        if (this.hasGetFastRpc) {
+            return;
+        }
+        this.hasGetFastRpc = true;
         const data = {
             jsonrpc: '2.0',
             id: 1,
