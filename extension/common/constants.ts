@@ -45,7 +45,7 @@ export interface RpcNetwork {
 
 export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
     {
-        rpcUrl: 'https://neo2-mainnet.neoline.io',
+        rpcUrl: 'http://seed1.ngd.network:10332',
         name: 'N2 MAINNET',
         explorer: 'https://neotube.io/',
         network: NetworkType.MainNet,
@@ -64,7 +64,7 @@ export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
 
 export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
     {
-        rpcUrl: 'https://neo3-mainnet.neoline.vip',
+        rpcUrl: 'http://seed1.neo.org:10332',
         name: 'N3 MAINNET',
         magicNumber: 860833102,
         explorer: 'https://neo3.neotube.io/',

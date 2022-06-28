@@ -31,7 +31,7 @@ export const DEFAULT_NETWORKS = [
 
 export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
     {
-        rpcUrl: 'https://neo2-mainnet.neoline.io',
+        rpcUrl: 'http://seed1.ngd.network:10332',
         name: 'N2 MAINNET',
         explorer: 'https://neotube.io/',
         network: NetworkType.MainNet,
@@ -50,7 +50,7 @@ export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
 
 export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
     {
-        rpcUrl: 'https://neo3-mainnet.neoline.vip',
+        rpcUrl: 'http://seed1.neo.org:10332',
         name: 'N3 MAINNET',
         magicNumber: 860833102,
         explorer: 'https://neo3.neotube.io/',
@@ -80,41 +80,42 @@ export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
 
 export const RPC_URLS = {
     1: [
-        'https://neo2-mainnet.neoline.io',
+        'http://seed1.ngd.network:10332',
         'http://seed6.ngd.network:10332',
         'http://seed7.ngd.network:10332',
         'http://seed8.ngd.network:10332',
-        'http://seed1.ngd.network:10332',
+        'https://neo2-mainnet.neoline.io',
     ],
     2: [
-        'http://seed5.ngd.network:20332',
-        'http://seed4.ngd.network:20332',
-        'http://seed3.ngd.network:20332',
-        'http://seed8.ngd.network:20332',
-        'http://seed7.ngd.network:20332',
         'http://seed1.ngd.network:20332',
+        'http://seed3.ngd.network:20332',
+        'http://seed4.ngd.network:20332',
+        'http://seed5.ngd.network:20332',
+        'http://seed7.ngd.network:20332',
+        'http://seed8.ngd.network:20332',
     ],
     3: [
-        'https://neo3-mainnet.neoline.vip',
+        'http://seed1.neo.org:10332',
+        'http://seed2.neo.org:10332',
         'http://seed3.neo.org:10332',
         'http://seed4.neo.org:10332',
+        'http://seed5.neo.org:10332',
         'https://n3seed1.ngd.network:10332',
-        'http://neo3.edgeofneo.com:10332',
-        'https://mainnet5.neo.coz.io:443',
+        'https://n3seed2.ngd.network:10332',
+        'https://neo3-mainnet.neoline.vip',
     ],
     4: [
-        'http://seed2t4.neo.org:20332',
-        'https://testnet2.neo.coz.io:443',
-        'http://seed4t4.neo.org:20332',
         'http://seed1t4.neo.org:20332',
+        'http://seed2t4.neo.org:20332',
         'http://seed3t4.neo.org:20332',
+        'http://seed4t4.neo.org:20332',
         'http://seed5t4.neo.org:20332',
     ],
     6: [
-        'http://seed3t5.neo.org:20332',
-        'http://seed2t5.neo.org:20332',
-        'http://seed4t5.neo.org:20332',
         'http://seed1t5.neo.org:20332',
+        'http://seed2t5.neo.org:20332',
+        'http://seed3t5.neo.org:20332',
+        'http://seed4t5.neo.org:20332',
         'http://seed5t5.neo.org:20332',
     ],
 };
