@@ -44,7 +44,7 @@
 
             <div class="claim-container" *ngIf="showClaim">
                 <div class="gas-logo-box">
-                    <img class="gas-logo" [assetId]="GAS" appErrorSrc alt="">
+                    <img class="gas-logo" [assetId]="currentWalletIsN3 ? GAS3_CONTRACT : GAS" appErrorSrc alt="">
                 </div>
                 <div class="claim-status-box">
                     <p class="number">{{ claimNumber | numberFixed }} GAS</p>

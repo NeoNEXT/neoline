@@ -17,7 +17,7 @@ import { PopupConfirmDialogComponent } from '../_dialogs';
 import { Router } from '@angular/router';
 import { rpc } from '@cityofzion/neon-core';
 import { bignumber } from 'mathjs';
-import { NEO3_CONTRACT, NetworkType, LedgerStatuses } from '../_lib';
+import { NEO3_CONTRACT, NetworkType, LedgerStatuses, GAS3_CONTRACT } from '../_lib';
 import BigNumber from 'bignumber.js';
 import { Neo3TransferService } from '../transfer/neo3-transfer.service';
 import { interval } from 'rxjs';
@@ -38,6 +38,7 @@ export class PopupHomeComponent implements OnInit {
     rateCurrency: string;
 
     GAS = GAS;
+    GAS3_CONTRACT = GAS3_CONTRACT;
 
     private status = {
         confirmed: 'confirmed',
