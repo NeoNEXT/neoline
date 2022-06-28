@@ -10,8 +10,6 @@ module.exports = [{
     output: {
         filename: "[name].js",
         path: path.resolve(__dirname, '../dist'),
-        libraryTarget: 'window',
-        library: 'NEOLineBackground'
     },
     devtool: false,
     resolve: {

@@ -24,13 +24,14 @@ export class WalletGuard implements CanActivate {
                     this.chrome.setLogin(false);
                     this.router.navigateByUrl('/wallet');
                 } else {
-                    const shouldLogin= this.chrome.getLogin();
-                    if (shouldLogin) {
-                        this.router.navigateByUrl('/login');
-                        this.global.log('Wallet should login.');
-                    } else {
-                        resolve(res);
-                    }
+                    this.chrome.getLogin().subscribe(shouldLogin => {
+                        if (shouldLogin) {
+                            this.router.navigateByUrl('/login');
+                            this.global.log('Wallet should login.');
+                        } else {
+                            resolve(res);
+                        }
+                    })
                 }
             });
         });
@@ -54,12 +55,13 @@ export class PopupLoginGuard implements CanActivate {
                     this.chrome.setLogin(false);
                     this.router.navigateByUrl('/popup/wallet/new-guide');
                 } else {
-                    const shouldLogin= this.chrome.getLogin();
-                    if (shouldLogin) {
-                        resolve(true);
-                    } else {
-                        resolve(false);
-                    }
+                    this.chrome.getLogin().subscribe(shouldLogin => {
+                        if (shouldLogin) {
+                            resolve(true);
+                        } else {
+                            resolve(false);
+                        }
+                    })
                 }
             });
         });
@@ -81,12 +83,13 @@ export class LoginGuard implements CanActivate {
                     this.chrome.setLogin(false);
                     this.router.navigateByUrl('/wallet');
                 } else {
-                    const shouldLogin= this.chrome.getLogin();
-                    if (shouldLogin) {
-                        resolve(true);
-                    } else {
-                        resolve(false);
-                    }
+                    this.chrome.getLogin().subscribe(shouldLogin => {
+                        if (shouldLogin) {
+                            resolve(true);
+                        } else {
+                            resolve(false);
+                        }
+                    })
                 }
             });
         });
@@ -110,12 +113,13 @@ export class OpenedWalletGuard implements CanActivate {
                     this.chrome.setLogin(false);
                     resolve(true);
                 } else {
-                    const shouldLogin= this.chrome.getLogin();
-                    if (shouldLogin) {
-                        this.router.navigate(['/popup/login'], { queryParams: { returnUrl: state.url }});
-                    } else {
-                        resolve(true);
-                    }
+                    this.chrome.getLogin().subscribe(shouldLogin => {
+                        if (shouldLogin) {
+                            this.router.navigate(['/popup/login'], { queryParams: { returnUrl: state.url }});
+                        } else {
+                            resolve(true);
+                        }
+                    })
                 }
             });
         });
@@ -143,13 +147,14 @@ export class PopupWalletGuard implements CanActivate {
                     this.router.navigate(['/popup/wallet/new-guide'], { queryParams: { returnUrl: state.url }});
 
                 } else {
-                    const shouldLogin= this.chrome.getLogin();
-                    if (shouldLogin) {
-                        this.router.navigate(['/popup/login'], { queryParams: { returnUrl: state.url }});
-                        this.global.log('Wallet should login.');
-                    } else {
-                        resolve(res);
-                    }
+                    this.chrome.getLogin().subscribe(shouldLogin => {
+                        if (shouldLogin) {
+                            this.router.navigate(['/popup/login'], { queryParams: { returnUrl: state.url }});
+                            this.global.log('Wallet should login.');
+                        } else {
+                            resolve(res);
+                        }
+                    })
                 }
             });
         });

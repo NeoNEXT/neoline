@@ -35,7 +35,7 @@ import {
     N3InvokeReadArgs, N3SendArgs , N3TransactionArgs,
     N3VerifyMessageArgs, requestTargetN3, N3BalanceArgs
 } from '../common/data_module_neo3';
-import { base64Encode, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getScriptHashFromAddress, getWalletType, hexstring2str, str2hexstring } from '../common/utils';
+import { base64Encode, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getScriptHashFromAddress, getWalletType, hexstring2str, str2hexstring, verify } from '../common/utils';
 import {
     u as u3,
     wallet as wallet3
@@ -49,21 +49,11 @@ import BigNumber from 'bignumber.js';
  */
 declare var chrome;
 
-let currLang = 'en';
 let currN2Network: RpcNetwork = DEFAULT_N2_RPC_NETWORK[0];
 let currN3Network: RpcNetwork = DEFAULT_N3_RPC_NETWORK[0];
 let tabCurr: any;
-export let password = null;
-export let shouldLogin: boolean = true;
-export let hasLoginAddress = {};
+// export let shouldLogin: boolean = true;
 
-export let haveBackupTip: boolean = null;
-
-export const version = chrome.runtime.getManifest().version;
-
-export function expand() {
-    window.open('index.html#asset', '_blank');
-}
 (function init() {
     setInterval(async () => {
         let chainType = await getLocalStorage('chainType', () => { });
@@ -200,83 +190,44 @@ export function expand() {
         }
     }, 8000);
 
-    if (navigator.language === 'zh-CN') {
+    if (chrome.runtime.getManifest().current_locale === 'zh_CN') {
         getStorage('lang', res => {
             if (res === undefined) {
-                currLang = 'zh_CN';
-                setStorage({ lang: currLang });
+                setStorage({ lang: 'zh_CN' });
             }
         });
     }
-    chrome.webRequest.onBeforeRequest.addListener(
-        (details: any) => {
-            if (details.url.indexOf(chrome.runtime.getURL('/index.html') < 0)) {
-                return {
-                    redirectUrl: details.url.replace(chrome.runtime.getURL(''), chrome.runtime.getURL('/index.html'))
-                };
-            } else {
-                return {
-                    redirectUrl: details.url
-                };
-            }
-        }, {
-        urls: [
-            chrome.runtime.getURL('')
-        ],
-        types: ['main_frame']
-    },
-        ['blocking']
-    );
+
+    // chrome.webRequest.onBeforeRequest.addListener(
+    //     (details: any) => {
+    //         if (details.url.indexOf(chrome.runtime.getURL('/index.html') < 0)) {
+    //             return {
+    //                 redirectUrl: details.url.replace(chrome.runtime.getURL(''), chrome.runtime.getURL('/index.html'))
+    //             };
+    //         } else {
+    //             return {
+    //                 redirectUrl: details.url
+    //             };
+    //         }
+    //     }, {
+    //     urls: [
+    //         chrome.runtime.getURL('')
+    //     ],
+    //     types: ['main_frame']
+    // },
+    //     ['blocking']
+    // );
 })();
 
-export function setPopup(lang) {
-    switch (lang) {
-        case 'zh_CN':
-            currLang = 'zh_CN';
-            break;
-        case 'en':
-            currLang = 'en';
-            break;
-    }
-}
-
-getLocalStorage('startTime', (time) => {
-    if (time === undefined) {
-        setLocalStorage({
-            startTime: chrome.csi().startE
-        });
-        shouldLogin = true;
-        hasLoginAddress = {};
-    } else {
-        if (time !== chrome.csi().startE) {
-            shouldLogin = true;
-            hasLoginAddress = {};
-            setLocalStorage({
-                startTime: chrome.csi().startE
-            });
-        }
-    }
-});
-
-chrome.windows.onRemoved.addListener(() => {
-    chrome.tabs.query({}, (res) => {
-        if (res.length === 0) { // All browsers are closed
-            shouldLogin = true;
-            hasLoginAddress = {};
-        }
-    });
-});
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     switch (request.target) {
         case requestTarget.PickAddress: {
-            window.open(`/index.html#popup/notification/pick-address?hostname=${request.parameter.hostname}&chainType=Neo2&messageID=${request.ID}`, '_blank',
-                'height=620, width=386, resizable=no, top=0, left=0');
+            chrome.windows.create({url: `/index.html#popup/notification/pick-address?hostname=${request.parameter.hostname}&chainType=Neo2&messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
             return true;
         }
         case requestTargetN3.PickAddress: {
-            window.open(`/index.html#popup/notification/pick-address?hostname=${request.parameter.hostname}&chainType=Neo3&messageID=${request.ID}`, '_blank',
-                'height=620, width=386, resizable=no, top=0, left=0');
+            chrome.windows.create({url: `/index.html#popup/notification/pick-address?hostname=${request.parameter.hostname}&chainType=Neo3&messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
             return true;
         }
         case requestTarget.Connect:
@@ -298,23 +249,24 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         });
                         notification(`${chrome.i18n.getMessage('from')}: ${request.hostname}`, chrome.i18n.getMessage('connectedTip'));
                     } else {
-                        window.open(`/index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`, '_blank',
-                            'height=620, width=386, resizable=no, top=0, left=0');
+                        chrome.windows.create({url: `/index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
                     }
                 sendResponse('');
                 });
                 return true;
             }
         case requestTarget.Login: {
-            if (shouldLogin === false) {
-                windowCallback({
-                    return: requestTarget.Login,
-                    data: true
-                });
-            } else {
-                window.open('/index.html#popup/login?notification=true', '_blank',
-                    'height=620, width=386, resizable=no, top=0, left=0');
-            }
+            getLocalStorage('shouldLogin', (shouldLogin) => {
+                if (shouldLogin === false) {
+                    windowCallback({
+                        return: requestTarget.Login,
+                        data: true
+                    });
+                } else {
+                    chrome.windows.create({url: `/index.html#popup/login?notification=true`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
+                }
+                sendResponse('');
+            })
             return true;
         }
         case requestTarget.AccountPublicKey: {
@@ -630,7 +582,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                                 return: requestTarget.InvokeRead,
                                 ID: request.ID
                             });
-                            window.close();
+                            // window.close();
                         }
                     }
                 }
@@ -688,7 +640,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                                         return: requestTarget.InvokeReadMulti,
                                         ID: request.ID
                                     });
-                                    window.close();
+                                    // window.close();
                                 }
                             }
                         }
@@ -736,7 +688,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             windowCallback({
                 return: requestTarget.VerifyMessage,
                 data: {
-                    result: wallet2.verify(serializedTransaction, parameter.data, parameter.publicKey)
+                    result: verify(serializedTransaction, parameter.data, parameter.publicKey)
                 },
                 ID: request.ID
             });
@@ -759,8 +711,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         queryString += `${key}=${value}&`;
                     }
                 }
-                window.open(`index.html#popup/notification/signature?${queryString}messageID=${request.ID}`,
-                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                chrome.windows.create({url: `index.html#popup/notification/signature?${queryString}messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
             });
             sendResponse('');
             return;
@@ -783,8 +734,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         queryString += `${key}=${value}&`;
                     }
                 }
-                window.open(`index.html#popup/notification/invoke?${queryString}messageID=${request.ID}`,
-                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                chrome.windows.create({url: `index.html#popup/notification/invoke?${queryString}messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
             });
             sendResponse('');
             return;
@@ -807,8 +757,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         queryString += `${key}=${value}&`;
                     }
                 }
-                window.open(`index.html#popup/notification/invoke-multi?${queryString}messageID=${request.ID}`,
-                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                chrome.windows.create({url: `index.html#popup/notification/invoke-multi?${queryString}messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
             });
             sendResponse('');
             return;
@@ -904,8 +853,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                                 ID: request.ID
                             });
                         } else {
-                            window.open(`index.html#popup/notification/transfer?${queryString}messageID=${request.ID}`,
-                                '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                            chrome.windows.create({url: `index.html#popup/notification/transfer?${queryString}messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
                         }
                     });
                 } else {
@@ -936,8 +884,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         queryString += `${key}=${value}&`;
                     }
                 }
-                window.open(`index.html#popup/notification/deploy?${queryString}messageID=${request.ID}`,
-                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                chrome.windows.create({url: `index.html#popup/notification/deploy?${queryString}messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
             });
             sendResponse('');
             return;
@@ -1129,7 +1076,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 httpPost(request.nodeUrl, {
                     jsonrpc: '2.0',
                     method: 'getstorage',
-                    params: [parameter.scriptHash, base64Encode(parameter.key)],
+                    params: [parameter.scriptHash, str2hexstring(parameter.key)],
                     id: 1
                 }, (response) => {
                     windowCallback({
@@ -1187,7 +1134,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                                 return: requestTargetN3.InvokeRead,
                                 ID: request.ID
                             });
-                            window.close();
+                            // window.close();
                         }
                     }
                 }
@@ -1250,7 +1197,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                                         return: requestTargetN3.InvokeReadMulti,
                                         ID: request.ID
                                     });
-                                    window.close();
+                                    // window.close();
                                 }
                             }
                         }
@@ -1288,11 +1235,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         case requestTargetN3.VerifyMessage: {
             const parameter = request.parameter as N3VerifyMessageArgs;
-            const parameterHexString = u3.str2hexstring(parameter.message);
+            const parameterHexString = str2hexstring(parameter.message);
             const lengthHex = u3.num2VarInt(parameterHexString.length / 2);
             const concatenatedString = lengthHex + parameterHexString;
             const messageHex = '010001f0' + concatenatedString + '0000';
-            const result = wallet3.verify(messageHex, parameter.data, parameter.publicKey);
+            const result = verify(messageHex, parameter.data, parameter.publicKey);
             windowCallback({
                 return: requestTargetN3.VerifyMessage,
                 data: {
@@ -1319,8 +1266,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         queryString += `${key}=${value}&`;
                     }
                 }
-                window.open(`index.html#popup/notification/neo3-signature?${queryString}messageID=${request.ID}`,
-                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                chrome.windows.create({url: `index.html#popup/notification/neo3-signature?${queryString}messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
             });
             sendResponse('');
             return;
@@ -1341,8 +1287,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         queryString += `${key}=${value}&`;
                     }
                 }
-                window.open(`index.html#popup/notification/neo3-sign-transaction?${queryString}messageID=${request.ID}`,
-                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                chrome.windows.create({url: `index.html#popup/notification/neo3-sign-transaction?${queryString}messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
             });
             sendResponse('');
             return;
@@ -1356,7 +1301,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             });
             const params = request.parameter as N3InvokeArgs;
             const currWallet = await getLocalStorage('wallet', () => { });
-            const tempScriptHash = wallet3.getScriptHashFromAddress(
+            const tempScriptHash = getScriptHashFromAddress(
                 currWallet.accounts[0].address
             );
             if (!params.signers) {
@@ -1382,8 +1327,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 }
                 saveData[storageName] = [data, ...invokeArgsArray];
                 setLocalStorage(saveData);
-                window.open(`index.html#popup/notification/neo3-invoke?messageID=${request.ID}`,
-                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                chrome.windows.create({url: `index.html#popup/notification/neo3-invoke?messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
             });
             sendResponse('');
             return;
@@ -1397,7 +1341,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             });
             const params = request.parameter as N3InvokeMultipleArgs;
             const currWallet = await getLocalStorage('wallet', () => { });
-            const tempScriptHash = wallet3.getScriptHashFromAddress(
+            const tempScriptHash = getScriptHashFromAddress(
                 currWallet.accounts[0].address
             );
             if (!params.signers) {
@@ -1431,8 +1375,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 }
                 saveData[storageName] = [data, ...invokeArgsArray];
                 setLocalStorage(saveData);
-                window.open(`index.html#popup/notification/neo3-invoke-multiple?messageID=${request.ID}`,
-                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                chrome.windows.create({url: `index.html#popup/notification/neo3-invoke-multiple?messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
             });
             sendResponse('');
             return;
@@ -1512,8 +1455,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                                 });
                                 sendResponse('');
                             } else {
-                                window.open(`index.html#popup/notification/neo3-transfer?${queryString}messageID=${request.ID}`,
-                                    '_blank', 'height=620, width=386, resizable=no, top=0, left=0');
+                                chrome.windows.create({url: `index.html#popup/notification/neo3-transfer?${queryString}messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
                             }
                         });
                     } else {
@@ -1530,7 +1472,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             return true;
         }
         case requestTargetN3.AddressToScriptHash: {
-            const scriptHash = wallet3.getScriptHashFromAddress(request.parameter.address);
+            const scriptHash = getScriptHashFromAddress(request.parameter.address);
             windowCallback({
                 data: { scriptHash },
                 return: requestTargetN3.AddressToScriptHash,

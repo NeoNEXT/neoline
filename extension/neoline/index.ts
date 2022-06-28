@@ -23,7 +23,7 @@ declare var chrome: any;
 const dapi = window.document.createElement('script');
 dapi.setAttribute('type', 'text/javascript');
 dapi.async = true;
-dapi.src = chrome.extension.getURL('dapi.js');
+dapi.src = chrome.runtime.getURL('dapi.js');
 dapi.onload = () => {
     dapi.parentNode.removeChild(dapi);
     console.log('NeoLine configured.');

@@ -13,7 +13,6 @@ import {
 } from '@popup/_lib';
 import { PopupPasswordDialogComponent } from '../password/password.dialog';
 import Sortable from 'sortablejs';
-declare var chrome: any;
 
 @Component({
     templateUrl: 'home-menu.dialog.html',
@@ -81,8 +80,8 @@ export class PopupHomeMenuDialogComponent implements OnInit {
         this.dialogRef.close();
     }
 
-    public selectAccount(w: Wallet2 | Wallet3) {
-        const hasLoginAddress = this.chrome.getHasLoginAddress();
+    public async selectAccount(w: Wallet2 | Wallet3) {
+        const hasLoginAddress = await this.chrome.getHasLoginAddress().toPromise();
         if (w.accounts[0]?.extra?.ledgerSLIP44 || hasLoginAddress[w.accounts[0].address]) {
             this.changeAccount(w);
             return;
@@ -195,7 +194,7 @@ export class PopupHomeMenuDialogComponent implements OnInit {
 
     importLedger() {
         if (chrome.runtime) {
-            const extensionUrl = chrome.runtime.getURL('');
+            const extensionUrl = chrome.runtime.getURL('/index.html');
             const ledgerUrl = extensionUrl + '#/ledger';
             chrome.tabs.create({ url: ledgerUrl });
         } else {

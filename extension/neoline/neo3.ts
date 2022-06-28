@@ -26,7 +26,7 @@ const dapiN3 = window.document.createElement('script');
 setTimeout(() => {
     dapiN3.setAttribute('type', 'text/javascript');
     dapiN3.async = true;
-    dapiN3.src = chrome.extension.getURL('dapiN3.js');
+    dapiN3.src = chrome.runtime.getURL('dapiN3.js');
     dapiN3.onload = () => {
         dapiN3.parentNode.removeChild(dapiN3);
         console.log('NeoLineN3 configured.');

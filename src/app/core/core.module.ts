@@ -23,6 +23,7 @@ import { UtilServiceState } from './util/util.service';
 import { TransferService } from './services/transfer.service';
 import { HomeService } from './services/home.service';
 import { LedgerService } from './services/ledger.service';
+import { ExtensionService } from './util/extension.service';
 
 @NgModule({
     declarations: [],
@@ -52,6 +53,7 @@ import { LedgerService } from './services/ledger.service';
         TransferService,
         HomeService,
         LedgerService,
+        ExtensionService,
     ],
     entryComponents: [],
 })

@@ -1,30 +1,13 @@
-import { base642hex } from '@cityofzion/neon-core-neo3/lib/u';
+import { base642hex, hexstring2str } from '@cityofzion/neon-core-neo3/lib/u';
 import BigNumber from 'bignumber.js';
-import { hexstring2str } from './utils';
 
 declare var chrome: any;
 export function httpGet(url, callback, headers?) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    if (headers) {
-        for (const key in headers) {
-            if (key !== undefined) {
-                xhr.setRequestHeader(key, headers[key]);
-            }
-        }
-    }
-    xhr.onreadystatechange = () => {
-        if (xhr.readyState === 4) {
-            // JSON.parse does not evaluate the attacker's scripts.
-            try {
-                const resp = JSON.parse(xhr.responseText);
-                callback(resp);
-            } catch (e) {
-                callback('parse failed');
-            }
-        }
-    };
-    xhr.send();
+    fetch(url, { headers })
+        .then((response) => response.json())
+        .then((data) => {
+            callback(data);
+        });
 }
 
 export function httpPostPromise(url, data) {
@@ -38,32 +21,19 @@ export function httpPostPromise(url, data) {
                 reject(res);
             }
         });
-    })
+    });
 }
 
 export function httpPost(url, data, callback, headers?) {
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', url, true);
-    xhr.setRequestHeader('Content-Type', 'application/json;charset=UTF-8');
-    if (headers) {
-        for (const key in headers) {
-            if (key !== undefined) {
-                xhr.setRequestHeader(key, headers[key]);
-            }
-        }
-    }
-    xhr.onreadystatechange = () => {
-        if (xhr.readyState === 4) {
-            // JSON.parse does not evaluate the attacker's scripts.
-            try {
-                const resp = JSON.parse(xhr.responseText);
-                callback(resp);
-            } catch (e) {
-                callback('parse failed');
-            }
-        }
-    };
-    xhr.send(JSON.stringify(data));
+    fetch(url, {
+        method: 'POST',
+        headers: { ...headers, 'Content-Type': 'application/json;charset=UTF-8' },
+        body: JSON.stringify(data),
+    })
+        .then((response) => response.json())
+        .then((data) => {
+            callback(data);
+        });
 }
 
 export function getStorage(key, callback) {
@@ -85,10 +55,8 @@ export function clearStorage() {
     chrome.storage.sync.clear();
 }
 
-
-
 export function getLocalStorage(key, callback): Promise<any> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
         chrome.storage.local.get([key], (result) => {
             callback(result[key]);
             resolve(result[key]);
@@ -109,13 +77,12 @@ export function clearLocalStorage() {
     chrome.storage.local.clear();
 }
 
-
 export function notification(title = '', msg = '') {
     chrome.notifications.create(null, {
         type: 'basic',
         iconUrl: '/assets/images/logo_square.png',
         title,
-        message: msg
+        message: msg,
     });
 }
 
@@ -150,9 +117,7 @@ export async function getAssetDecimal(assetId: string, rpcUrl: string) {
     let decimal = decimalRes.stack[0].value;
     if (decimalRes.stack) {
         if (decimalRes.stack[0].type === 'Integer') {
-            decimal = Number(
-                decimalRes.stack[0].value || 0
-            );
+            decimal = Number(decimalRes.stack[0].value || 0);
         }
         if (decimalRes.stack[0].type === 'ByteArray') {
             decimal = new BigNumber(

@@ -37,6 +37,9 @@ export enum STORAGE_NAME {
     authAddress = 'authAddress',
     InvokeArgsArray = 'InvokeArgsArray',
     walletsStatus = 'walletsStatus',
+    haveBackupTip = 'haveBackupTip',
+    shouldLogin = 'shouldLogin',
+    hasLoginAddress = 'hasLoginAddress',
 }
 
 export enum STORAGE_VALUE_TYPE {
@@ -136,6 +139,18 @@ export const STORAGE_VALUE_MESSAGE = {
         isLocal: true,
     },
     walletsStatus: {
+        type: STORAGE_VALUE_TYPE.object,
+        isLocal: true,
+    },
+    haveBackupTip: {
+        type: STORAGE_VALUE_TYPE.boolean,
+        isLocal: true,
+    },
+    shouldLogin: {
+        type: STORAGE_VALUE_TYPE.boolean,
+        isLocal: true,
+    },
+    hasLoginAddress: {
         type: STORAGE_VALUE_TYPE.object,
         isLocal: true,
     },

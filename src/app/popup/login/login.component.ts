@@ -27,7 +27,6 @@ import { PopupConfirmDialogComponent } from '../_dialogs';
 import { ERRORS, requestTarget } from '@/models/dapi';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 
-
 @Component({
     templateUrl: 'login.component.html',
     styleUrls: ['login.component.scss']
@@ -80,8 +79,8 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
         });
     }
 
-    public login() {
-        const hasLoginAddress = this.chrome.getHasLoginAddress();
+    public async login() {
+        const hasLoginAddress = await this.chrome.getHasLoginAddress().toPromise();
         if (this.accountWallet.accounts[0]?.extra?.ledgerSLIP44 || hasLoginAddress[this.accountWallet.accounts[0].address]) {
             this.chrome.setLogin(false);
             this.global.$wallet.next('open');
