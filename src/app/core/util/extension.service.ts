@@ -1,4 +1,5 @@
 import { Injectable } from '@angular/core';
+declare var chrome: any;
 
 @Injectable()
 export class ExtensionService {

@@ -13,6 +13,7 @@ import {
 } from '@popup/_lib';
 import { PopupPasswordDialogComponent } from '../password/password.dialog';
 import Sortable from 'sortablejs';
+declare var chrome: any;
 
 @Component({
     templateUrl: 'home-menu.dialog.html',
