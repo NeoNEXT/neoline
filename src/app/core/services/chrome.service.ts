@@ -480,6 +480,7 @@ export class ChromeService {
                 (storageName === STORAGE_NAME.transaction ||
                     storageName === STORAGE_NAME.connectedWebsites ||
                     storageName === STORAGE_NAME.walletsStatus ||
+                    storageName === STORAGE_NAME.hasLoginAddress ||
                     storageName === STORAGE_NAME.authAddress) &&
                 !value
             ) {
