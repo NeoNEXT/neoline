@@ -187,9 +187,8 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
                 },
                 return: requestTargetN3.Invoke,
                 ID: this.messageID
-            });
+            }, true);
             this.signTx();
-            window.close();
         } else {
             this.getSignTx();
         }
@@ -220,8 +219,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
             error: ERRORS.CANCELLED,
             return: requestTargetN3.Invoke,
             ID: this.messageID
-        });
-        window.close();
+        }, true);
     }
 
     private signTx() {

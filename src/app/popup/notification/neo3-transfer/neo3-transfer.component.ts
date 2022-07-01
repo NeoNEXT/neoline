@@ -204,8 +204,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
             error: ERRORS.CANCELLED,
             return: requestTargetN3.Send,
             ID: this.messageID,
-        });
-        window.close();
+        }, true);
     }
 
     private resolveSign(transaction) {
@@ -320,8 +319,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
             error: ERRORS.CANCELLED,
             return: requestTargetN3.Send,
             ID: this.messageID,
-        });
-        window.close();
+        }, true);
     }
 
     public confirm() {
@@ -338,8 +336,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
                 },
                 return: requestTargetN3.Send,
                 ID: this.messageID,
-            });
-            window.close();
+            }, true);
         } else {
             this.getSignTx(this.tx);
         }

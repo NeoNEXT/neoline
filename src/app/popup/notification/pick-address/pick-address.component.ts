@@ -98,8 +98,7 @@ export class PopupPickAddressComponent implements OnInit {
             error: ERRORS.CANCELLED,
             ID: this.messageID,
             return: this.tabType === 'Neo2' ? requestTarget.PickAddress : requestTargetN3.PickAddress
-        });
-        window.close();
+        }, true);
     }
     public confirm() {
         this.allAuthWalletArr[this.hostname] = this.selectedWalletArr;
@@ -109,15 +108,13 @@ export class PopupPickAddressComponent implements OnInit {
                 data: this.tabType === 'Neo2' ? this.selectedWalletArr.Neo2 : this.selectedWalletArr.Neo3,
                 ID: this.messageID,
                 return: this.tabType === 'Neo2' ? requestTarget.PickAddress : requestTargetN3.PickAddress
-            });
-            window.close();
+            }, true);
         } else {
             this.chrome.windowCallback({
                 error: ERRORS.CANCELLED,
                 ID: this.messageID,
                 return: this.tabType === 'Neo2' ? requestTarget.PickAddress : requestTargetN3.PickAddress
-            });
-            window.close();
+            }, true);
         }
     }
 

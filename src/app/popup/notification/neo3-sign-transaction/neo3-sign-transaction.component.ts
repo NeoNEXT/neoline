@@ -54,8 +54,7 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
                     },
                     return: requestTargetN3.SignTransaction,
                     ID: this.messageID,
-                });
-                window.close();
+                }, true);
             }
             window.onbeforeunload = () => {
                 this.chrome.windowCallback({
@@ -72,8 +71,7 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
             error: ERRORS.CANCELLED,
             return: requestTargetN3.SignTransaction,
             ID: this.messageID,
-        });
-        window.close();
+        }, true);
     }
 
     private sendMessage() {
@@ -81,8 +79,7 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
             return: requestTargetN3.SignTransaction,
             data: this.tx.export(),
             ID: this.messageID,
-        });
-        window.close();
+        }, true);
     }
 
     private getLedgerStatus() {

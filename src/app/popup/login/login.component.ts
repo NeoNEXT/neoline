@@ -98,8 +98,7 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
                 this.chrome.windowCallback({
                     data: true,
                     return: requestTarget.Login
-                });
-                window.close()
+                }, true);
             }
             this.loading = false;
             this.chrome.setHasLoginAddress(this.accountWallet.accounts[0].address);

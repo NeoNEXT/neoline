@@ -176,8 +176,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             error: ERRORS.CANCELLED,
             return: requestTargetN3.InvokeMultiple,
             ID: this.messageID
-        });
-        window.close();
+        }, true);
     }
 
     public confirm() {
@@ -195,9 +194,8 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                 },
                 return: requestTargetN3.InvokeMultiple,
                 ID: this.messageID
-            });
+            }, true);
             this.signTx();
-            window.close();
         } else {
             this.getSignTx();
         }

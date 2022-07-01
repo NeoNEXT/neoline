@@ -119,8 +119,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                                     error: ERRORS.MALFORMED_INPUT,
                                     return: requestTarget.Invoke,
                                     ID: this.messageID
-                                });
-                                window.close();
+                                }, true);
                             }
                         }
                     } else if (item.type === 'Integer') {
@@ -231,22 +230,13 @@ export class PopupNoticeInvokeComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             if (res.error !== undefined) {
+                this.global.handlePrcError(res.error, 'Neo2');
                 this.chrome.windowCallback({
                     error: { ...ERRORS.RPC_ERROR, description: res?.error },
                     return: requestTarget.Invoke,
                     ID: this.messageID
-                });
-                window.close();
-                this.global.handlePrcError(res.error, 'Neo2');
+                }, true);
             } else {
-                this.chrome.windowCallback({
-                    data: {
-                        txid: transaction.hash,
-                        nodeUrl: `${this.global.n2Network.rpcUrl}`
-                    },
-                    return: requestTarget.Invoke,
-                    ID: this.messageID
-                });
                 const setData = {};
                 setData[`TxArr_${this.n2Network.id}`] = await this.chrome.getLocalStorage(`TxArr_${this.n2Network.id}`) || [];
                 setData[`TxArr_${this.n2Network.id}`].push('0x' + transaction.hash);
@@ -256,7 +246,14 @@ export class PopupNoticeInvokeComponent implements OnInit {
                         transfer: ['transfer', 'result']
                     }
                 }]);
-                window.close();
+                this.chrome.windowCallback({
+                    data: {
+                        txid: transaction.hash,
+                        nodeUrl: `${this.global.n2Network.rpcUrl}`
+                    },
+                    return: requestTarget.Invoke,
+                    ID: this.messageID
+                }, true);
             }
         }).catch(err => {
             console.log(err);
@@ -278,14 +275,13 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 ? this.scriptHash.substring(2) : this.scriptHash;
             let newTx = new tx.InvocationTransaction();
             if (this.scriptHash.length !== 42 && this.scriptHash.length !== 40) {
+                this.loading = false;
+                this.loadingMsg = '';
                 this.chrome.windowCallback({
                     error: ERRORS.MALFORMED_INPUT,
                     return: requestTarget.Invoke,
                     ID: this.messageID
-                });
-                this.loading = false;
-                this.loadingMsg = '';
-                window.close();
+                }, true);
                 return null;
             }
             try {
@@ -308,8 +304,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                                 error: { ...ERRORS.INSUFFICIENT_FUNDS, description: error },
                                 return: requestTarget.Invoke,
                                 ID: this.messageID
-                            });
-                            window.close();
+                            }, true);
                         }
                     }
                     if (this.attachedAssets.GAS) {
@@ -483,8 +478,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
             error: ERRORS.CANCELLED,
             return: requestTarget.Invoke,
             ID: this.messageID
-        });
-        window.close();
+        }, true);
     }
 
     public confirm() {
@@ -498,8 +492,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                 },
                 return: requestTarget.Invoke,
                 ID: this.messageID
-            });
-            window.close();
+            }, true);
         } else {
             this.getSignTx(this.tx);
         }
@@ -542,8 +535,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
                     error: { ...ERRORS.MALFORMED_INPUT, description: err?.message || err },
                     return: requestTarget.Invoke,
                     ID: this.messageID
-                });
-                window.close();
+                }, true);
             });
         }, 0);
     }

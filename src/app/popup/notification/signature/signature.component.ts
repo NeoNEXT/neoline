@@ -58,8 +58,7 @@ export class PopupNoticeSignComponent implements OnInit {
             error: ERRORS.CANCELLED,
             return: requestTarget.SignMessage,
             ID: this.messageID,
-        });
-        window.close();
+        }, true);
     }
 
     public signature() {
@@ -84,8 +83,7 @@ export class PopupNoticeSignComponent implements OnInit {
             return: requestTarget.SignMessage,
             data,
             ID: this.messageID,
-        });
-        window.close();
+        }, true);
     }
 
     private getLedgerStatus(tx) {

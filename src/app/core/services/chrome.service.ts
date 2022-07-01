@@ -357,9 +357,9 @@ export class ChromeService {
         }
     }
 
-    public windowCallback(data: any) {
+    public windowCallback(data: any, isCloseWindow = false) {
         if (this.check) {
-            this.crx.windowCallback(data);
+            this.crx.windowCallback(data, isCloseWindow);
         }
     }
 

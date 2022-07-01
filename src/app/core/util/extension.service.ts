@@ -13,7 +13,7 @@ export class ExtensionService {
         return chrome.runtime.getManifest().version;
     }
 
-    windowCallback(data) {
+    windowCallback(data, isCloseWindow= false) {
         chrome.tabs.query({}, (tabs) => {
             if (tabs.length > 0) {
                 tabs.forEach((item) => {
@@ -21,6 +21,9 @@ export class ExtensionService {
                         // tabCurr = null;
                     });
                 });
+            }
+            if (isCloseWindow) {
+                window.close();
             }
         });
     }

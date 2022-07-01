@@ -44,8 +44,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
             error: ERRORS.CANCELLED,
             return: requestTargetN3.SignMessage,
             ID: this.messageID,
-        });
-        window.close();
+        }, true);
     }
 
     public signature() {
@@ -86,7 +85,6 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
             return: requestTargetN3.SignMessage,
             data,
             ID: this.messageID,
-        });
-        window.close();
+        }, true);
     }
 }

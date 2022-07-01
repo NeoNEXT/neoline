@@ -88,8 +88,7 @@ export class PopupNoticeAuthComponent implements OnInit {
             this.chrome.windowCallback({
                 data: false,
                 return: requestTarget.Connect
-            });
-            window.close();
+            }, true);
         });
     }
     public connect() {
@@ -146,8 +145,7 @@ export class PopupNoticeAuthComponent implements OnInit {
                     label: this.neon.wallet.name || ''
                 },
                 return: EVENT.CONNECTED
-            });
-            window.close();
+            }, true);
         });
     }
 }
