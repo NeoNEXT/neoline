@@ -46,7 +46,7 @@ export class Neo3InvokeService {
         const signerJson = params.signers.map((signerItem) => {
             return {
                 account: signerItem.account,
-                scopes: signerItem.scopes,
+                scopes: isNaN(Number(signerItem.scopes)) ? signerItem.scopes : tx.WitnessScope[signerItem.scopes],
                 allowedcontracts:
                     signerItem?.allowedContracts?.map((item) =>
                         item.toString()
