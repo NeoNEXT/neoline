@@ -49,11 +49,6 @@ import BigNumber from 'bignumber.js';
  */
 declare var chrome;
 
-let currN2Network: RpcNetwork = DEFAULT_N2_RPC_NETWORK[0];
-let currN3Network: RpcNetwork = DEFAULT_N3_RPC_NETWORK[0];
-let tabCurr: any;
-// export let shouldLogin: boolean = true;
-
 (function init() {
     setInterval(async () => {
         let chainType = await getLocalStorage('chainType', () => { });
@@ -61,8 +56,8 @@ let tabCurr: any;
         const n3Networks = (await getLocalStorage('n3Networks', () => { })) || DEFAULT_N3_RPC_NETWORK;
         const n2SelectedNetworkIndex = (await getLocalStorage('n2SelectedNetworkIndex', () => { })) || 0;
         const n3SelectedNetworkIndex = (await getLocalStorage('n3SelectedNetworkIndex', () => { })) || 0;
-        currN2Network = n2Networks[n2SelectedNetworkIndex];
-        currN3Network = n3Networks[n3SelectedNetworkIndex];
+        const currN2Network = n2Networks[n2SelectedNetworkIndex];
+        const currN3Network = n3Networks[n3SelectedNetworkIndex];
         if (!chainType) {
             chainType = await getWalletType();
         };
@@ -197,26 +192,6 @@ let tabCurr: any;
             }
         });
     }
-
-    // chrome.webRequest.onBeforeRequest.addListener(
-    //     (details: any) => {
-    //         if (details.url.indexOf(chrome.runtime.getURL('/index.html') < 0)) {
-    //             return {
-    //                 redirectUrl: details.url.replace(chrome.runtime.getURL(''), chrome.runtime.getURL('/index.html'))
-    //             };
-    //         } else {
-    //             return {
-    //                 redirectUrl: details.url
-    //             };
-    //         }
-    //     }, {
-    //     urls: [
-    //         chrome.runtime.getURL('')
-    //     ],
-    //     types: ['main_frame']
-    // },
-    //     ['blocking']
-    // );
 })();
 
 chrome.windows.onRemoved.addListener(() => {
@@ -231,6 +206,12 @@ chrome.windows.onRemoved.addListener(() => {
 });
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
+    const n2Networks = (await getLocalStorage('n2Networks', () => { })) || DEFAULT_N2_RPC_NETWORK;
+    const n3Networks = (await getLocalStorage('n3Networks', () => { })) || DEFAULT_N3_RPC_NETWORK;
+    const n2SelectedNetworkIndex = (await getLocalStorage('n2SelectedNetworkIndex', () => { })) || 0;
+    const n3SelectedNetworkIndex = (await getLocalStorage('n3SelectedNetworkIndex', () => { })) || 0;
+    const currN2Network = n2Networks[n2SelectedNetworkIndex];
+    const currN3Network = n3Networks[n3SelectedNetworkIndex];
     switch (request.target) {
         case requestTarget.PickAddress: {
             chrome.windows.create({url: `/index.html#popup/notification/pick-address?hostname=${request.parameter.hostname}&chainType=Neo2&messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
@@ -706,12 +687,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             return;
         }
         case requestTarget.SignMessage: {
-            chrome.tabs.query({
-                active: true,
-                currentWindow: true
-            }, (tabs) => {
-                tabCurr = tabs;
-            });
             const params = request.parameter;
             getStorage('connectedWebsites', () => {
                 let queryString = '';
@@ -727,12 +702,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             return;
         }
         case requestTarget.Invoke: {
-            chrome.tabs.query({
-                active: true,
-                currentWindow: true
-            }, (tabs) => {
-                tabCurr = tabs;
-            });
             const params = request.parameter;
             getStorage('connectedWebsites', () => {
                 let queryString = '';
@@ -750,12 +719,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             return;
         }
         case requestTarget.InvokeMulti: {
-            chrome.tabs.query({
-                active: true,
-                currentWindow: true
-            }, (tabs) => {
-                tabCurr = tabs;
-            });
             const params = request.parameter;
             getStorage('connectedWebsites', () => {
                 let queryString = '';
@@ -849,12 +812,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                             queryString += `${key}=${value}&`;
                         }
                     }
-                    chrome.tabs.query({
-                        active: true,
-                        currentWindow: true
-                    }, (tabs) => {
-                        tabCurr = tabs;
-                    });
                     getLocalStorage('wallet', (wallet) => {
                         if (wallet !== undefined && wallet.accounts[0].address !== parameter.fromAddress) {
                             windowCallback({
@@ -879,12 +836,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             return true;
         }
         case requestTarget.Deploy: {
-            chrome.tabs.query({
-                active: true,
-                currentWindow: true
-            }, (tabs) => {
-                tabCurr = tabs;
-            });
             const params = request.parameter;
             getStorage('connectedWebsites', () => {
                 let queryString = '';
@@ -1261,12 +1212,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             return;
         }
         case requestTargetN3.SignMessage: {
-            chrome.tabs.query({
-                active: true,
-                currentWindow: true
-            }, (tabs) => {
-                tabCurr = tabs;
-            });
             const params = request.parameter;
             getStorage('connectedWebsites', () => {
                 let queryString = '';
@@ -1282,12 +1227,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             return;
         }
         case requestTargetN3.SignTransaction: {
-            chrome.tabs.query({
-                active: true,
-                currentWindow: true
-            }, (tabs) => {
-                tabCurr = tabs;
-            });
             const params = request.parameter;
             getStorage('connectedWebsites', (res) => {
                 let queryString = '';
@@ -1303,12 +1242,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             return;
         }
         case requestTargetN3.Invoke: {
-            chrome.tabs.query({
-                active: true,
-                currentWindow: true
-            }, (tabs) => {
-                tabCurr = tabs;
-            });
             const params = request.parameter as N3InvokeArgs;
             const currWallet = await getLocalStorage('wallet', () => { });
             const tempScriptHash = getScriptHashFromAddress(
@@ -1343,12 +1276,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             return;
         }
         case requestTargetN3.InvokeMultiple: {
-            chrome.tabs.query({
-                active: true,
-                currentWindow: true
-            }, (tabs) => {
-                tabCurr = tabs;
-            });
             const params = request.parameter as N3InvokeMultipleArgs;
             const currWallet = await getLocalStorage('wallet', () => { });
             const tempScriptHash = getScriptHashFromAddress(
@@ -1450,12 +1377,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                                 queryString += `${key}=${value}&`;
                             }
                         }
-                        chrome.tabs.query({
-                            active: true,
-                            currentWindow: true
-                        }, (tabs) => {
-                            tabCurr = tabs;
-                        });
                         getLocalStorage('wallet', (wallet) => {
                             if (wallet !== undefined && wallet.accounts[0].address !== parameter.fromAddress) {
                                 windowCallback({
