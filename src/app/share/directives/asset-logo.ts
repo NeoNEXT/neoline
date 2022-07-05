@@ -16,7 +16,7 @@ export class AssetLogoDirective implements OnChanges {
         if (changes.assetId && changes.assetId.currentValue != changes.assetId.previousValue) {
             const assetId = changes.assetId.currentValue as string;
             const chain = this.chain ? this.chain.toLowerCase() : this.neon.currentWalletChainType.toLowerCase();
-            this.src = `https://img.neoline.io/logo/${chain}/${assetId}.png`;
+            this.src = `https://cdn.neoline.io/logo/${chain}/${assetId}.png`;
         }
     }
 }
