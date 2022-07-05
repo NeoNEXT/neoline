@@ -219,6 +219,16 @@ let tabCurr: any;
     // );
 })();
 
+chrome.windows.onRemoved.addListener(() => {
+    chrome.tabs.query({}, (res) => {
+        if (res.length === 0) { // All browsers are closed
+            setLocalStorage({
+                shouldLogin: true,
+                hasLoginAddress: {}
+            })
+        }
+    });
+});
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     switch (request.target) {
