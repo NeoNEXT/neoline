@@ -7,10 +7,27 @@ import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { ShareModule } from './share';
 import { PopupModule } from './popup';
 import { N404Module } from './404';
-import { CoreModule } from './core';
+import { CoreModule, StartupService } from './core';
 import { PopupNotificationModule } from './popup/notification/notification.module';
 import { TransferModule } from './transfer/transfer.module';
 import { LedgerModule } from './ledger/ledger.module';
+
+// #region Startup Service
+import { APP_INITIALIZER } from '@angular/core';
+
+export function StartupServiceFactory(startupService: StartupService) {
+    return () => startupService.load();
+}
+const APPINIT_PROVIDES = [
+    StartupService,
+    {
+        provide: APP_INITIALIZER,
+        useFactory: StartupServiceFactory,
+        deps: [StartupService],
+        multi: true
+    }
+];
+// #endregion
 
 @NgModule({
     declarations: [AppComponent],
@@ -26,7 +43,7 @@ import { LedgerModule } from './ledger/ledger.module';
         PopupNotificationModule,
         N404Module,
     ],
-    providers: [],
+    providers: [...APPINIT_PROVIDES],
     bootstrap: [AppComponent],
     entryComponents: [],
 })

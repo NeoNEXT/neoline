@@ -78,7 +78,7 @@ export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
     },
 ];
 
-export const RPC_URLS = {
+export const DEFAULT_RPC_URLS = {
     1: [
         'http://seed1.ngd.network:10332',
         'http://seed6.ngd.network:10332',
