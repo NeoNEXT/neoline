@@ -23,10 +23,15 @@ export class StartupService {
             params: [],
         };
         return new Promise(async (resolve) => {
-            const responseRpcUrl = await this.httpClient
-                .get(this.getRpcUrlAPi)
-                .toPromise();
-            const RPC_URLS = responseRpcUrl || DEFAULT_RPC_URLS;
+            let RPC_URLS;
+            try {
+                const responseRpcUrl = await this.httpClient
+                    .get(this.getRpcUrlAPi)
+                    .toPromise();
+                RPC_URLS = responseRpcUrl;
+            } catch (error) {
+                RPC_URLS = DEFAULT_RPC_URLS;
+            }
             const startTime = new Date().getTime();
             const netReqs = { 1: [], 2: [], 3: [], 4: [], 6: [] };
             const spendTiems = { 1: [], 2: [], 3: [], 4: [], 6: [] };
