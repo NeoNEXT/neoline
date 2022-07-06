@@ -56,6 +56,7 @@ let tabCurr: any;
 export let password = null;
 export let shouldLogin: boolean = true;
 export let hasLoginAddress = {};
+export let shouldFindNode = true;
 
 export let haveBackupTip: boolean = null;
 

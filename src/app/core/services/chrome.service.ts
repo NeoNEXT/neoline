@@ -42,6 +42,20 @@ export class ChromeService {
         }
     }
 
+    public getShouldFindNode(): boolean {
+        if (this.check) {
+            return this.crx.shouldFindNode;
+        } else {
+            return true;
+        }
+    }
+
+    public setShouldFindNode(value: boolean) {
+        if (this.check) {
+            this.crx.shouldFindNode = value;
+        }
+    }
+
     /**
      * expand method to open full page from popup
      * currently open to /asset by default
@@ -593,7 +607,7 @@ export class ChromeService {
                 data: {
                     chainId: network.chainId,
                     networks: DEFAULT_NETWORKS,
-                    defaultNetwork: network.network
+                    defaultNetwork: network.network,
                 },
                 return: EVENT.NETWORK_CHANGED,
             });
