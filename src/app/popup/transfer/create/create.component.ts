@@ -44,6 +44,7 @@ export class TransferCreateComponent implements OnInit {
     gasFeeSpeed: GasFeeSpeed;
     public fromAddress: string;
     public toAddress: string;
+    nnsAddress: string;
     public creating: boolean = false;
 
     public chooseAsset: Asset;
@@ -175,15 +176,6 @@ export class TransferCreateComponent implements OnInit {
             return;
         }
 
-        if (
-            this.neon.currentWalletChainType === 'Neo2'
-                ? wallet2.isAddress(this.toAddress) === false
-                : wallet3.isAddress(this.toAddress, 53) === false
-        ) {
-            this.global.snackBarTip('wrongAddress');
-            return;
-        }
-
         if (this.nftContract) {
             this.nftSubmit();
             return;
@@ -218,7 +210,7 @@ export class TransferCreateComponent implements OnInit {
         this.transfer
             .create(
                 this.fromAddress,
-                this.toAddress,
+                this.nnsAddress || this.toAddress,
                 this.chooseAsset.asset_id,
                 this.amount,
                 this.fee || 0,
@@ -248,7 +240,7 @@ export class TransferCreateComponent implements OnInit {
         this.transfer
             .create(
                 this.fromAddress,
-                this.toAddress,
+                this.nnsAddress || this.toAddress,
                 this.nftContract,
                 this.chooseNftToken.amount,
                 this.fee || 0,
@@ -311,7 +303,7 @@ export class TransferCreateComponent implements OnInit {
                             this.transfer
                                 .create(
                                     this.fromAddress,
-                                    this.toAddress,
+                                    this.nnsAddress || this.toAddress,
                                     this.nftContract,
                                     this.amount,
                                     this.fee || 0,
@@ -461,7 +453,7 @@ export class TransferCreateComponent implements OnInit {
                             this.transfer
                                 .create(
                                     this.fromAddress,
-                                    this.toAddress,
+                                    this.nnsAddress || this.toAddress,
                                     this.chooseAsset.asset_id,
                                     this.amount,
                                     this.fee || 0,
@@ -646,8 +638,15 @@ export class TransferCreateComponent implements OnInit {
                 panelClass: 'custom-dialog-panel',
             })
             .afterClosed()
-            .subscribe((address: string) => {
-                this.toAddress = address;
+            .subscribe((res) => {
+                if (typeof res === 'string') {
+                    this.toAddress = res;
+                    this.nnsAddress = null;
+                }
+                if (typeof res === 'object') {
+                    this.toAddress = res.address;
+                    this.nnsAddress = res.nnsAddress;
+                }
             });
     }
 
@@ -712,7 +711,7 @@ export class TransferCreateComponent implements OnInit {
                 this.toAddress.length - 1
             )} `;
         } else {
-            return '';
+            return this.toAddress;
         }
     }
 
@@ -777,7 +776,7 @@ export class TransferCreateComponent implements OnInit {
         // neo3 的GAS
         const param = {
             addressFrom: this.fromAddress,
-            addressTo: this.toAddress || this.fromAddress,
+            addressTo: this.fromAddress,
             tokenScriptHash: this.chooseAsset.asset_id,
             amount: tempAmount,
             networkFee: fee,

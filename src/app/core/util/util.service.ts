@@ -16,8 +16,10 @@ import {
     NEO3_CONTRACT,
     GAS3_CONTRACT,
     DEFAULT_NEO3_ASSETS,
+    NNS_CONTRACT,
 } from '@/app/popup/_lib';
 import { of } from 'rxjs';
+import { map } from 'rxjs/operators';
 import BigNumber from 'bignumber.js';
 import { NEO, GAS } from '@/models/models';
 
@@ -307,5 +309,44 @@ export class UtilServiceState {
             });
             return propertiesRes;
         });
+    }
+
+    getN3NnsAddress(domain: string, chainId: number) {
+        const data = {
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'invokefunction',
+            params: [
+                NNS_CONTRACT[chainId],
+                'resolve',
+                [
+                    {
+                        type: 'String',
+                        value: domain,
+                    },
+                    {
+                        type: 'Integer',
+                        value: '16',
+                    },
+                ],
+            ],
+        };
+        return this.http.rpcPost(this.global.n3Network.rpcUrl, data).pipe(
+            map((res) => {
+                let address = '';
+                if (res.stack) {
+                    address = res.stack[0]?.value;
+                    if (res.stack[0]?.type === 'ByteArray') {
+                        address = hexstring2str(res.stack[0]?.value);
+                    }
+                    if (res.stack[0]?.type === 'ByteString') {
+                        address = hexstring2str(
+                            base642hex(res.stack[0]?.value)
+                        );
+                    }
+                }
+                return address;
+            })
+        );
     }
 }
