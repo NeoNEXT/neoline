@@ -82,14 +82,12 @@ export const DEFAULT_RPC_URLS = {
     lastModified: null,
     nodes: {
         1: [
-            'http://seed1.ngd.network:10332',
             'http://seed6.ngd.network:10332',
             'http://seed7.ngd.network:10332',
             'http://seed8.ngd.network:10332',
             'https://neo2-mainnet.neoline.io',
         ],
         2: [
-            'http://seed1.ngd.network:20332',
             'http://seed3.ngd.network:20332',
             'http://seed4.ngd.network:20332',
             'http://seed5.ngd.network:20332',
@@ -109,9 +107,8 @@ export const DEFAULT_RPC_URLS = {
         4: [
             'http://seed1t4.neo.org:20332',
             'http://seed2t4.neo.org:20332',
-            'http://seed3t4.neo.org:20332',
             'http://seed4t4.neo.org:20332',
-            'http://seed5t4.neo.org:20332',
+            'https://neo3-testnet.neoline.vip',
         ],
         6: [
             'http://seed1t5.neo.org:20332',
