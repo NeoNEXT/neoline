@@ -896,7 +896,13 @@
     "reconnectLedger": {
         "message": "如果 Ledger 长时间没反应，请尝试重新连接 Ledger"
     },
-    "inputAddressTip": {
-        "message": "N3 地址或 NeoNS 名称"
+    "inputNeo2AddressTip": {
+        "message": "Neo Legacy 地址"
+    },
+    "inputN3NNSAddressTip": {
+        "message": "N3 地址 or NeoNS 名称"
+    },
+    "inputN3AddressTip": {
+        "message": "N3 地址"
     }
 }
