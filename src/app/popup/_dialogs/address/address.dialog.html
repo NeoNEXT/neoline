@@ -2,7 +2,7 @@
 <div class="container">
     <div class="search-box">
         <img src="/assets/images/search.png" alt="">
-        <input type="text" [(ngModel)]="address" (keyup.enter)="checkAddress()">
+        <input type="text" (paste)="pasteAddress($event)" [(ngModel)]="address" (keyup.enter)="checkAddress()">
     </div>
     <p class="account-title">{{ 'personalAccount' | translate | async }}</p>
     <div class="account-box">

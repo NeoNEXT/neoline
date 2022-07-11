@@ -41,13 +41,22 @@ export class PopupAddressDialogComponent implements OnInit {
         });
     }
 
-    public checkAddress() {
+    pasteAddress($event) {
+        const data = (
+            $event.clipboardData || (window as any).clipboardData
+        ).getData('text');
+        this.checkAddress(data);
+    }
+
+    public checkAddress(value?: string) {
+        const address = value || this.address;
         if (
             this.neonService.currentWalletChainType === 'Neo2'
-                ? wallet2.isAddress(this.address)
-                : wallet3.isAddress(this.address, 53)
+                ? wallet2.isAddress(address)
+                : wallet3.isAddress(address, 53)
         ) {
-            this.dialogRef.close(this.address);
+            this.dialogRef.close(address);
+            return;
         }
         if (
             this.neonService.currentWalletChainType === 'Neo3' &&
@@ -56,13 +65,10 @@ export class PopupAddressDialogComponent implements OnInit {
         ) {
             this.getNnsAddressReq?.unsubscribe();
             this.getNnsAddressReq = this.util
-                .getN3NnsAddress(this.address, this.global.n3Network.chainId)
+                .getN3NnsAddress(address, this.global.n3Network.chainId)
                 .subscribe((nnsAddress) => {
                     if (wallet3.isAddress(nnsAddress, 53)) {
-                        this.dialogRef.close({
-                            address: this.address,
-                            nnsAddress,
-                        });
+                        this.dialogRef.close({ address, nnsAddress });
                     } else {
                         this.global.snackBarTip('wrongAddress');
                     }
