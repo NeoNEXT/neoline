@@ -44,9 +44,13 @@ export class Neo3InvokeService {
         const neo3This = this;
         const rpcClientTemp = this.rpcClient;
         const signerJson = params.signers.map((signerItem) => {
+            let scopes = signerItem.scopes;
+            if (isNaN(Number(signerItem.scopes)) === false && tx.WitnessScope[signerItem.scopes]) {
+                scopes = tx.WitnessScope[signerItem.scopes];
+            }
             return {
                 account: signerItem.account,
-                scopes: isNaN(Number(signerItem.scopes)) ? signerItem.scopes : tx.WitnessScope[signerItem.scopes],
+                scopes,
                 allowedcontracts:
                     signerItem?.allowedContracts?.map((item) =>
                         item.toString()
