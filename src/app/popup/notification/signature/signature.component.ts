@@ -5,6 +5,7 @@ import {
     ChromeService,
     GlobalService,
     LedgerService,
+    UtilServiceState,
 } from '@/app/core';
 import { ERRORS, requestTarget } from '@/models/dapi';
 import { wallet, u } from '@cityofzion/neon-js';
@@ -33,7 +34,8 @@ export class PopupNoticeSignComponent implements OnInit {
         private neon: NeonService,
         private chrome: ChromeService,
         private global: GlobalService,
-        private ledger: LedgerService
+        private ledger: LedgerService,
+        private utilServiceState: UtilServiceState
     ) {
         this.n2Network = this.global.n2Network;
     }
@@ -41,8 +43,9 @@ export class PopupNoticeSignComponent implements OnInit {
     ngOnInit() {
         this.address = this.neon.address;
         this.aRouter.queryParams.subscribe((params: any) => {
-            this.messageID = params.messageID;
-            this.message = params.message;
+            const query = this.utilServiceState.parseUrl(location.hash);
+            this.messageID = query.messageID;
+            this.message = query.message;
             window.onbeforeunload = () => {
                 this.chrome.windowCallback({
                     error: ERRORS.CANCELLED,
