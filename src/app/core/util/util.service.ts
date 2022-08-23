@@ -59,7 +59,7 @@ export class UtilServiceState {
         const target = {};
         pairs.forEach((p) => {
             const temp = p.split('=');
-            target[temp[0]] = decodeURI(temp[1]);
+            target[temp[0]] = decodeURIComponent(temp[1]);
         });
         return target;
     }

@@ -756,7 +756,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 let queryString = '';
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
-                        const value = params[key];
+                        const value = encodeURIComponent(params[key]);
                         queryString += `${key}=${value}&`;
                     }
                 }
@@ -1316,7 +1316,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 let queryString = '';
                 for (const key in params) {
                     if (params.hasOwnProperty(key)) {
-                        const value = params[key];
+                        const value = encodeURIComponent(params[key]);
                         queryString += `${key}=${value}&`;
                     }
                 }
