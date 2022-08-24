@@ -392,21 +392,17 @@ export class NeonService {
                     }
                 });
             });
-            const n2Networks = [...DEFAULT_N2_RPC_NETWORK];
-            const n3Networks = [...DEFAULT_N3_RPC_NETWORK];
-            n2Networks[0].rpcUrl = rpcUrls[1][fastIndex[1]];
-            n2Networks[1].rpcUrl = rpcUrls[2][fastIndex[2]];
-            n3Networks[0].rpcUrl = rpcUrls[3][fastIndex[3]];
-            n3Networks[1].rpcUrl = rpcUrls[4][fastIndex[4]];
-            n3Networks[2].rpcUrl = rpcUrls[6][fastIndex[6]];
-            this.global.n2Networks = n2Networks;
-            this.global.n3Networks = n3Networks;
+            this.global.n2Networks[0].rpcUrl = rpcUrls[1][fastIndex[1]];
+            this.global.n2Networks[1].rpcUrl = rpcUrls[2][fastIndex[2]];
+            this.global.n3Networks[0].rpcUrl = rpcUrls[3][fastIndex[3]];
+            this.global.n3Networks[1].rpcUrl = rpcUrls[4][fastIndex[4]];
+            this.global.n3Networks[2].rpcUrl = rpcUrls[6][fastIndex[6]];
             this.global.n2Network =
-                n2Networks[this.global.n2SelectedNetworkIndex];
+                this.global.n2Networks[this.global.n2SelectedNetworkIndex];
             this.global.n3Network =
-                n3Networks[this.global.n3SelectedNetworkIndex];
-            this.chrome.setStorage(STORAGE_NAME.n2Networks, n2Networks);
-            this.chrome.setStorage(STORAGE_NAME.n3Networks, n3Networks);
+                this.global.n3Networks[this.global.n3SelectedNetworkIndex];
+            this.chrome.setStorage(STORAGE_NAME.n2Networks, this.global.n2Networks);
+            this.chrome.setStorage(STORAGE_NAME.n3Networks, this.global.n3Networks);
             this.loadingGetFastRpc = false;
             this.hasGetFastRpc = true;
             this.chrome.setShouldFindNode(false);
