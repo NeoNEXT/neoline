@@ -815,7 +815,7 @@ export class TransferCreateComponent implements OnInit {
         if (this.neon.currentWalletChainType === 'Neo2') {
             return 'inputNeo2AddressTip';
         } else {
-            if (this.networkId === 4 || this.networkId === 6) {
+            if (this.networkId === 6) {
                 return 'inputN3NNSAddressTip';
             }
             return 'inputN3AddressTip';

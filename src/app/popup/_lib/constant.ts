@@ -42,6 +42,7 @@ export enum STORAGE_NAME {
     InvokeArgsArray = 'InvokeArgsArray',
     walletsStatus = 'walletsStatus',
     rpcUrls = 'rpcUrls',
+    neo3RemoveT4Flag = 'neo3RemoveT4Flag',
 }
 
 export enum STORAGE_VALUE_TYPE {
@@ -148,6 +149,10 @@ export const STORAGE_VALUE_MESSAGE = {
         type: STORAGE_VALUE_TYPE.object,
         isLocal: true,
         default: DEFAULT_RPC_URLS,
+    },
+    neo3RemoveT4Flag: {
+        type: STORAGE_VALUE_TYPE.boolean,
+        isLocal: true,
     },
 };
 
