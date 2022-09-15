@@ -3,6 +3,7 @@ import { HttpService } from '../services/http.service';
 import { GlobalService } from '../services/global.service';
 import { ChromeService } from '../services/chrome.service';
 import { Observable, from, of, forkJoin } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Asset, NEO, GAS, UTXO } from 'src/models/models';
 import { map } from 'rxjs/operators';
 import { GasFeeSpeed } from '@popup/_lib/type';
@@ -333,24 +334,28 @@ export class AssetState {
             map((res: any) => {
                 this.gasFeeSpeed = res || this.gasFeeDefaultSpeed;
                 return res || this.gasFeeDefaultSpeed;
-            })
+            }),
+            catchError(() => of(this.gasFeeDefaultSpeed))
         );
     }
 
     fetchNeo3GasFee(): Observable<any> {
         return this.http.get(`${this.global.apiDomain}/v1/neo3/fees`).pipe(
             map((res: any) => {
-                res.slow_price = bignumber(res.slow_price)
-                    .dividedBy(bignumber(10).pow(8))
-                    .toFixed();
-                res.propose_price = bignumber(res.propose_price)
-                    .dividedBy(bignumber(10).pow(8))
-                    .toFixed();
-                res.fast_price = bignumber(res.fast_price)
-                    .dividedBy(bignumber(10).pow(8))
-                    .toFixed();
+                if (res) {
+                    res.slow_price = bignumber(res.slow_price)
+                        .dividedBy(bignumber(10).pow(8))
+                        .toFixed();
+                    res.propose_price = bignumber(res.propose_price)
+                        .dividedBy(bignumber(10).pow(8))
+                        .toFixed();
+                    res.fast_price = bignumber(res.fast_price)
+                        .dividedBy(bignumber(10).pow(8))
+                        .toFixed();
+                }
                 return res || this.gasFeeDefaultSpeed;
-            })
+            }),
+            catchError(() => of(this.gasFeeDefaultSpeed))
         );
     }
     //#endregion
