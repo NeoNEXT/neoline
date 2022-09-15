@@ -59,6 +59,7 @@ export class TransferCreateComponent implements OnInit {
     nftTokens: NftToken[];
     chooseNftToken: NftToken;
     getStatusInterval;
+    showInputAddressTip = false;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -81,6 +82,9 @@ export class TransferCreateComponent implements OnInit {
                 break;
             case 'Neo3':
                 this.networkId = this.global.n3Network.id;
+                if (this.networkId === 4 || this.networkId === 6) {
+                    this.showInputAddressTip = true;
+                }
                 break;
         }
     }

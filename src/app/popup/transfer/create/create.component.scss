@@ -1,6 +1,6 @@
-@import 'src/styles/theme-default';
-@import 'src/styles/theme-default';
-@import 'src/app/popup/transfer/common-scss/common.scss';
+@import "src/styles/theme-default";
+@import "src/styles/theme-default";
+@import "src/app/popup/transfer/common-scss/common.scss";
 
 .transfer-body {
     .container {
@@ -15,7 +15,7 @@
         width: 60px;
         word-wrap: break-word;
         font-size: 12px;
-        color: #808A94;
+        color: #808a94;
         text-align: center;
         margin-left: 18px;
         margin-right: 15px;
@@ -26,7 +26,7 @@
         flex: 1 1 auto;
         max-width: 275px;
         align-items: center;
-        background-color: #FAFAFA;
+        background-color: #fafafa;
         border-radius: 10px;
         min-height: 60px;
         margin-right: 20px;
@@ -34,7 +34,7 @@
 
     hr {
         border: none;
-        border-top: 0.5px solid #EFEFEF;
+        border-top: 0.5px solid #efefef;
         margin-top: 44px;
     }
 
@@ -45,7 +45,10 @@
             color: map-get($neo-line-default, 500);
             margin-left: 20px;
         }
-
+        .address-tip {
+            color: #808a94;
+            font-size: 13px;
+        }
     }
 
     .asset-box {
@@ -81,7 +84,7 @@
                     width: 80%;
                     overflow: auto;
                     margin-top: 8px;
-                    color: #808A94;
+                    color: #808a94;
                     font-size: 14px;
                     white-space: nowrap;
                     margin-right: 20px;
@@ -135,14 +138,13 @@
     }
 }
 
-
 .btn-box {
     display: inline-block;
     margin: 20px auto;
 
     button {
         &:nth-child(1) {
-            background: #ECFBF1;
+            background: #ecfbf1;
             color: map-get($neo-line-default, 500);
         }
 
