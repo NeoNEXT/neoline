@@ -65,10 +65,10 @@ export class PopupAddressDialogComponent implements OnInit {
         ) {
             this.getNnsAddressReq?.unsubscribe();
             this.getNnsAddressReq = this.util
-                .getN3NnsAddress(address, this.global.n3Network.chainId)
+                .getN3NnsAddress(address.toLowerCase(), this.global.n3Network.chainId)
                 .subscribe((nnsAddress) => {
                     if (wallet3.isAddress(nnsAddress, 53)) {
-                        this.dialogRef.close({ address, nnsAddress });
+                        this.dialogRef.close({ address: address.toLowerCase(), nnsAddress });
                     } else {
                         this.global.snackBarTip('wrongAddress');
                     }
