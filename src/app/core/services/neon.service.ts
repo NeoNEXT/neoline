@@ -230,7 +230,12 @@ export class NeonService {
                 if (!res[10]) {
                     this.getFastRpcUrl(true);
                     this.global.n3SelectedNetworkIndex = 0;
+                    if (this.global.n3Networks[1].chainId === 4) {
+                        this.global.n3Networks[2].name = 'N3 TESTNET';
+                        this.global.n3Networks.splice(1, 1);
+                    }
                     this.chrome.setStorage(STORAGE_NAME.n3SelectedNetworkIndex, 0);
+                    this.chrome.setStorage(STORAGE_NAME.n3Networks, this.global.n3Networks);
                     this.chrome.setStorage(STORAGE_NAME.neo3RemoveT4Flag, true);
                 } else {
                     this.getFastRpcUrl();
