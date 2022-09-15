@@ -896,7 +896,13 @@
     "reconnectLedger": {
         "message": "If the Ledger does not respond for a long time, please try to reconnect the Ledger"
     },
-    "inputAddressTip": {
+    "inputNeo2AddressTip": {
+        "message": "Neo Legacy address"
+    },
+    "inputN3NNSAddressTip": {
         "message": "N3 address or NeoNS Name"
+    },
+    "inputN3AddressTip": {
+        "message": "N3 address"
     }
 }

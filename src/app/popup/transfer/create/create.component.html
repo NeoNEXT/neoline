@@ -16,8 +16,11 @@
     <div class="to-container container">
         <span class="label">{{ 'transgerTo' | translate | async }}</span>
         <div class="to-box box" matRipple (click)="selectToAddress()">
-            <p class="address" *ngIf="!showInputAddressTip||toAddress">{{ getAddresSub() }}</p>
-            <p class="address-tip" *ngIf="showInputAddressTip&&!toAddress">{{ 'inputAddressTip' | translate | async }}</p>
+            <div class="address">
+                <p *ngIf="toAddress">{{ getAddresSub() }}</p>
+                <p *ngIf="nnsAddress">{{ nnsAddress.slice(0, 6) + '...' + nnsAddress.slice(-6) }}</p>
+                <p class="address-tip" *ngIf="!toAddress">{{ getInputAddressTip() | translate | async }}</p>
+            </div>
             <img class="drop" src="/assets/images/transaction/drop.png" alt="">
         </div>
     </div>

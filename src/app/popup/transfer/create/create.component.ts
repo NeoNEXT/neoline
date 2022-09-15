@@ -10,7 +10,7 @@ import {
     TransactionState,
     NftState,
     LedgerService,
-    UtilServiceState
+    UtilServiceState,
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import { TransferService } from '../transfer.service';
@@ -59,7 +59,6 @@ export class TransferCreateComponent implements OnInit {
     nftTokens: NftToken[];
     chooseNftToken: NftToken;
     getStatusInterval;
-    showInputAddressTip = false;
     constructor(
         private router: Router,
         private aRoute: ActivatedRoute,
@@ -82,9 +81,6 @@ export class TransferCreateComponent implements OnInit {
                 break;
             case 'Neo3':
                 this.networkId = this.global.n3Network.id;
-                if (this.networkId === 4 || this.networkId === 6) {
-                    this.showInputAddressTip = true;
-                }
                 break;
         }
     }
@@ -146,8 +142,13 @@ export class TransferCreateComponent implements OnInit {
                             this.neon.currentWalletChainType
                         );
                         if (new BigNumber(balance).comparedTo(0) > 0) {
-                            const decimals = await this.util.getAssetDecimals([item.asset_id], this.neon.currentWalletChainType);
-                            item.balance = new BigNumber(balance).shiftedBy(-decimals[0]).toFixed();
+                            const decimals = await this.util.getAssetDecimals(
+                                [item.asset_id],
+                                this.neon.currentWalletChainType
+                            );
+                            item.balance = new BigNumber(balance)
+                                .shiftedBy(-decimals[0])
+                                .toFixed();
                             showAssets.push(item);
                         }
                     }
@@ -274,7 +275,7 @@ export class TransferCreateComponent implements OnInit {
         try {
             const diaglogData: any = {
                 fromAddress: this.fromAddress,
-                toAddress: this.toAddress,
+                toAddress: this.nnsAddress || this.toAddress,
                 asset: this.nftContract,
                 symbol: this.chooseNftToken.symbol,
                 amount: this.chooseNftToken.amount,
@@ -282,6 +283,9 @@ export class TransferCreateComponent implements OnInit {
                 networkId: this.networkId,
                 txSerialize: tx.serialize(false),
             };
+            if (this.nnsAddress) {
+                diaglogData.NeoNSName = this.toAddress;
+            }
             diaglogData.systemFee = (tx as Transaction3).systemFee.toString();
             diaglogData.networkFee = bignumber(
                 (tx as Transaction3).networkFee.toString()
@@ -420,7 +424,7 @@ export class TransferCreateComponent implements OnInit {
             this.global.log('unsigned tx', tx.export());
             const diaglogData: any = {
                 fromAddress: this.fromAddress,
-                toAddress: this.toAddress,
+                toAddress: this.nnsAddress || this.toAddress,
                 asset: this.assetId,
                 symbol: this.chooseAsset.symbol,
                 amount: this.amount,
@@ -428,6 +432,9 @@ export class TransferCreateComponent implements OnInit {
                 networkId: this.networkId,
                 txSerialize: tx.serialize(false),
             };
+            if (this.nnsAddress) {
+                diaglogData.NeoNSName = this.toAddress;
+            }
             if (this.neon.currentWalletChainType === 'Neo3') {
                 diaglogData.systemFee = (
                     tx as Transaction3
@@ -802,5 +809,16 @@ export class TransferCreateComponent implements OnInit {
                 this.istransferAll = false;
             }
         );
+    }
+
+    getInputAddressTip() {
+        if (this.neon.currentWalletChainType === 'Neo2') {
+            return 'inputNeo2AddressTip';
+        } else {
+            if (this.networkId === 4 || this.networkId === 6) {
+                return 'inputN3NNSAddressTip';
+            }
+            return 'inputN3AddressTip';
+        }
     }
 }
