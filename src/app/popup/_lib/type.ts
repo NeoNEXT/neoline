@@ -33,7 +33,7 @@ export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
     {
         rpcUrl: 'http://seed1.ngd.network:10332',
         name: 'N2 MAINNET',
-        explorer: 'https://neotube.io/',
+        explorer: 'https://neo2.neotube.io/',
         network: NetworkType.MainNet,
         chainId: 1,
         id: 1,
@@ -41,7 +41,7 @@ export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
     {
         rpcUrl: 'http://seed5.ngd.network:20332',
         name: 'N2 TESTNET',
-        explorer: 'https://testnet.neotube.io/',
+        explorer: '',
         network: NetworkType.TestNet,
         chainId: 2,
         id: 2,
@@ -53,7 +53,7 @@ export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
         rpcUrl: 'http://seed1.neo.org:10332',
         name: 'N3 MAINNET',
         magicNumber: 860833102,
-        explorer: 'https://neo3.neotube.io/',
+        explorer: 'https://neotube.io/',
         network: NetworkType.N3MainNet,
         chainId: 3,
         id: 3,
@@ -73,14 +73,12 @@ export const DEFAULT_RPC_URLS = {
     lastModified: null,
     nodes: {
         1: [
-            'http://seed1.ngd.network:10332',
             'http://seed6.ngd.network:10332',
             'http://seed7.ngd.network:10332',
             'http://seed8.ngd.network:10332',
             'https://neo2-mainnet.neoline.io',
         ],
         2: [
-            'http://seed1.ngd.network:20332',
             'http://seed3.ngd.network:20332',
             'http://seed4.ngd.network:20332',
             'http://seed5.ngd.network:20332',
