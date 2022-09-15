@@ -350,7 +350,8 @@ export class NeonService {
                 .toPromise();
             return responseRpcUrl;
         } catch (error) {
-            if (this.chrome.getShouldFindNode() || force) {
+            const shouldFindNode = await this.chrome.getShouldFindNode().toPromise();
+            if (shouldFindNode || force) {
                 return defaultRpcUrls.nodes;
             }
             return null;
