@@ -303,8 +303,8 @@ export class NeonService {
             })
         );
     }
-    private async getRpcUrls() {
-        if (this.hasGetFastRpc) {
+    private async getRpcUrls(force = false) {
+        if (this.hasGetFastRpc && !force) {
             return null;
         }
         const defaultRpcUrls = await this.chrome
@@ -333,19 +333,19 @@ export class NeonService {
                 .toPromise();
             return responseRpcUrl;
         } catch (error) {
-            if (this.chrome.getShouldFindNode()) {
+            if (this.chrome.getShouldFindNode() || force) {
                 return defaultRpcUrls.nodes;
             }
             return null;
         }
     }
 
-    async getFastRpcUrl() {
-        if (this.loadingGetFastRpc) {
+    async getFastRpcUrl(force = false) {
+        if (this.loadingGetFastRpc && !force) {
             return;
         }
         this.loadingGetFastRpc = true;
-        const rpcUrls = await this.getRpcUrls();
+        const rpcUrls = await this.getRpcUrls(force);
         if (rpcUrls === null) {
             this.loadingGetFastRpc = false;
             return;

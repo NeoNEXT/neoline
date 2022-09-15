@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, from } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, from, of } from 'rxjs';
+import { map, timeout, catchError, retry } from 'rxjs/operators';
 import { ChromeService } from './chrome.service';
 import { GlobalService } from './global.service';
 import { NeonService } from './neon.service';
@@ -105,48 +105,33 @@ export class HttpService {
     // }
 
     public rpcPost(url: string, data: any): Observable<any> {
-        if (this.chrome.check) {
-            return from(
-                new Promise((resolve, reject) => {
-                    this.chrome.httpPost(url, data, (res) => {
-                        if (res && res.result) {
-                            resolve(res.result);
-                        } else {
-                            reject(res.error);
-                        }
-                    });
-                })
-            );
-        }
         return this.http.post(url, data).pipe(
+            timeout(5000),
+            catchError(() => of('Request timed out')),
             map((res: any) => {
+                if (res === 'Request timed out') {
+                    this.neon.getFastRpcUrl(true);
+                    throw 'Error!';
+                }
                 if (res && res.result) {
                     return res.result;
                 } else {
                     throw res.error;
                 }
-            })
+            }),
+            retry(3)
         );
     }
 
     public n3RpcPost(url: string, data: any): Observable<any> {
-        if (this.chrome.check) {
-            return from(
-                new Promise((resolve, reject) => {
-                    this.chrome.httpPost(url, data, (res) => {
-                        if (res && res.result) {
-                            resolve(res.result);
-                        } else if (res && res.error) {
-                            resolve(res.error);
-                        } else {
-                            reject(res);
-                        }
-                    });
-                })
-            );
-        }
         return this.http.post(url, data).pipe(
+            timeout(5000),
+            catchError(() => of(`Request timed out`)),
             map((res: any) => {
+                if (res === 'Request timed out') {
+                    this.neon.getFastRpcUrl(true);
+                    throw 'Error!';
+                }
                 if (res && res.result) {
                     return res.result;
                 } else if (res && res.error) {
@@ -154,7 +139,8 @@ export class HttpService {
                 } else {
                     throw res;
                 }
-            })
+            }),
+            retry(3)
         );
     }
 }
