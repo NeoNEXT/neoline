@@ -192,6 +192,9 @@ export class NeonService {
         const Neo3AddressFlag = this.chrome.getStorage(
             STORAGE_NAME.neo3AddressFlag
         );
+        const Neo3RemoveT4Flag = this.chrome.getStorage(
+            STORAGE_NAME.neo3RemoveT4Flag
+        );
 
         //#region networks
         const getN2Networks = this.chrome.getStorage(STORAGE_NAME.n2Networks);
@@ -214,6 +217,7 @@ export class NeonService {
             getN2SelectedNetworkIndex,
             getN3Networks,
             getN3SelectedNetworkIndex,
+            Neo3RemoveT4Flag,
         ]).pipe(
             map((res) => {
                 //#region networks
@@ -223,7 +227,14 @@ export class NeonService {
                 this.global.n3SelectedNetworkIndex = res[9];
                 this.global.n2Network = res[6][res[7]];
                 this.global.n3Network = res[8][res[9]];
-                this.getFastRpcUrl();
+                if (!res[10]) {
+                    this.getFastRpcUrl(true);
+                    this.global.n3SelectedNetworkIndex = 0;
+                    this.chrome.setStorage(STORAGE_NAME.n3SelectedNetworkIndex, 0);
+                    this.chrome.setStorage(STORAGE_NAME.neo3RemoveT4Flag, true);
+                } else {
+                    this.getFastRpcUrl();
+                }
                 //#endregion
                 if (
                     !res[5] &&
@@ -303,6 +314,7 @@ export class NeonService {
             })
         );
     }
+
     private async getRpcUrls(force = false) {
         if (this.hasGetFastRpc && !force) {
             return null;
@@ -381,7 +393,6 @@ export class NeonService {
             ...netReqs[1],
             ...netReqs[2],
             ...netReqs[3],
-            ...netReqs[4],
             ...netReqs[6],
         ]).subscribe(() => {
             Object.keys(spendTiems).forEach((key) => {
@@ -394,8 +405,7 @@ export class NeonService {
             this.global.n2Networks[0].rpcUrl = rpcUrls[1][fastIndex[1]];
             this.global.n2Networks[1].rpcUrl = rpcUrls[2][fastIndex[2]];
             this.global.n3Networks[0].rpcUrl = rpcUrls[3][fastIndex[3]];
-            this.global.n3Networks[1].rpcUrl = rpcUrls[4][fastIndex[4]];
-            this.global.n3Networks[2].rpcUrl = rpcUrls[6][fastIndex[6]];
+            this.global.n3Networks[1].rpcUrl = rpcUrls[6][fastIndex[6]];
             this.global.n2Network =
                 this.global.n2Networks[this.global.n2SelectedNetworkIndex];
             this.global.n3Network =

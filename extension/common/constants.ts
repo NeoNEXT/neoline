@@ -73,17 +73,8 @@ export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
         id: 3,
     },
     {
-        rpcUrl: 'http://seed2t4.neo.org:20332',
-        name: 'TESTNET(N3T4)',
-        magicNumber: 877933390,
-        explorer: 'https://n3t4.neotube.io/',
-        network: NetworkType.N3TestNet,
-        chainId: 4,
-        id: 4,
-    },
-    {
         rpcUrl: 'http://seed3t5.neo.org:20332',
-        name: 'TESTNET(N3T5)',
+        name: 'N3 TESTNET',
         magicNumber: 894710606,
         explorer: 'https://n3t5.neotube.io/',
         network: NetworkType.N3TestNet,
