@@ -119,7 +119,7 @@ export class AssetState {
         const chain =
             this.neonService.currentWalletChainType === 'Neo3' ? 'neo3' : 'neo';
         return this.http.get(
-            `${this.global.apiDomain}/v1/coin/rates?chain=${chain}`
+            `${this.global.apiDomain}/v2/coin/rates?chain=${chain}`
         );
     }
 
@@ -149,7 +149,6 @@ export class AssetState {
             this.rateRequestTime = time;
             const coinRateTemp = await this.getRate().toPromise();
             if (isNeo3 && coinRateTemp) {
-                coinRateTemp.neo.asset_id = NEO3_CONTRACT;
                 this.neo3CoinRates = coinRateTemp;
                 this.chrome.setStorage(
                     STORAGE_NAME.neo3CoinsRate,
@@ -157,28 +156,25 @@ export class AssetState {
                 );
             }
             if (!isNeo3 && coinRateTemp) {
-                coinRateTemp.neo.asset_id = NEO;
                 this.coinRates = coinRateTemp;
                 this.chrome.setStorage(STORAGE_NAME.coinsRate, coinRateTemp);
             }
             this.fiatRates = await this.getFiatRate().toPromise();
             this.chrome.setStorage(STORAGE_NAME.fiatRate, this.fiatRates);
         }
-        symbol = symbol.toLowerCase();
+        assetId = assetId.startsWith('0x') ? assetId.slice(2) : assetId;
         let price;
         if (
             isNeo3 &&
-            this.neo3CoinRates[symbol] &&
-            assetId.includes(this.neo3CoinRates[symbol].asset_id)
+            this.neo3CoinRates[assetId]
         ) {
-            price = this.neo3CoinRates[symbol].price;
+            price = this.neo3CoinRates[assetId];
         }
         if (
             !isNeo3 &&
-            this.coinRates[symbol] &&
-            assetId.includes(this.coinRates[symbol].asset_id)
+            this.coinRates[assetId]
         ) {
-            price = this.coinRates[symbol].price;
+            price = this.coinRates[assetId];
         }
         if (price) {
             const currency = this.rateCurrency.toUpperCase();
