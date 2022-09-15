@@ -253,8 +253,8 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
                     description = this.notification.content.checkInput;
                     this.global.snackBarTip('checkInput');
                 } else {
-                    description = error.error.message || this.notification.content.rpcError;
-                    this.global.snackBarTip(error.error.message || 'rpcError');
+                    description = error.error.message || error.error.exception || this.notification.content.rpcError;
+                    this.global.snackBarTip(error.error.message || error.error.exception || 'rpcError');
                 }
                 this.loading = false;
                 this.chrome.windowCallback({
