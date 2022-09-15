@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NeonService, ChromeService, GlobalService } from '@/app/core';
+import { NeonService, ChromeService, GlobalService, UtilServiceState } from '@/app/core';
 import { randomBytes } from 'crypto';
 import { wallet, u } from '@cityofzion/neon-core-neo3';
 import { requestTargetN3 } from '@/models/dapi_neo3';
@@ -20,15 +20,17 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
         private aRouter: ActivatedRoute,
         private neon: NeonService,
         private chrome: ChromeService,
-        private global: GlobalService
+        private global: GlobalService,
+        private utilServiceState: UtilServiceState
     ) {}
 
     ngOnInit() {
         this.n3Network = this.global.n3Network;
         this.address = this.neon.address;
         this.aRouter.queryParams.subscribe((params: any) => {
-            this.messageID = params.messageID;
-            this.message = params.message;
+            const query = this.utilServiceState.parseUrl(location.hash);
+            this.messageID = query.messageID;
+            this.message = query.message;
             window.onbeforeunload = () => {
                 this.chrome.windowCallback({
                     error: ERRORS.CANCELLED,

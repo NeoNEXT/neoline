@@ -53,6 +53,17 @@ export class UtilServiceState {
         this.n3AssetSymbol.set(GAS3_CONTRACT, DEFAULT_NEO3_ASSETS.GAS.symbol);
     }
 
+    parseUrl(url: string): any {
+        const query = url.slice(url.indexOf('?') + 1);
+        const pairs = query.split('&');
+        const target = {};
+        pairs.forEach((p) => {
+            const temp = p.split('=');
+            target[temp[0]] = decodeURI(temp[1]);
+        });
+        return target;
+    }
+
     getNeo3Account(sourceAccount?) {
         const account = sourceAccount ?? this.neon.wallet.accounts[0];
         const accountJson = account.export();
