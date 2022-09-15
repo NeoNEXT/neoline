@@ -35,7 +35,12 @@ import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { sc, u } from '@cityofzion/neon-core';
 import { EVENT, TxHashAttribute } from '@/models/dapi';
 import { bignumber } from 'mathjs';
-import { ChainType, STORAGE_NAME, RPC_URLS } from '@popup/_lib';
+import {
+    ChainType,
+    STORAGE_NAME,
+    DEFAULT_N2_RPC_NETWORK,
+    DEFAULT_N3_RPC_NETWORK,
+} from '@popup/_lib';
 import { str2hexstring } from '@cityofzion/neon-core-neo3/lib/u';
 import { HttpClient } from '@angular/common/http';
 
@@ -64,6 +69,7 @@ export class NeonService {
     private _wallet: Wallet2 | Wallet3;
     private $wallet: Subject<Wallet2 | Wallet3> = new Subject();
     hasGetFastRpc = false;
+    loadingGetFastRpc = false;
 
     //#region wallet parameter
     /**
@@ -297,79 +303,112 @@ export class NeonService {
             })
         );
     }
-
-    getFastRpcUrl() {
+    private async getRpcUrls() {
         if (this.hasGetFastRpc) {
+            return null;
+        }
+        const defaultRpcUrls = await this.chrome
+            .getStorage(STORAGE_NAME.rpcUrls)
+            .toPromise();
+        const headers = {};
+        if (defaultRpcUrls.lastModified) {
+            headers['If-Modified-Since'] = defaultRpcUrls.lastModified;
+        }
+        try {
+            const responseRpcUrl = await this.http
+                .get('https://cdn.neoline.io/nodelist.json', {
+                    headers,
+                    observe: 'response',
+                })
+                .pipe(
+                    map((res) => {
+                        const lastModified = res.headers.get('Last-Modified');
+                        this.chrome.setStorage(STORAGE_NAME.rpcUrls, {
+                            nodes: res.body,
+                            lastModified,
+                        });
+                        return res.body;
+                    })
+                )
+                .toPromise();
+            return responseRpcUrl;
+        } catch (error) {
+            if (this.chrome.getShouldFindNode()) {
+                return defaultRpcUrls.nodes;
+            }
+            return null;
+        }
+    }
+
+    async getFastRpcUrl() {
+        if (this.loadingGetFastRpc) {
             return;
         }
-        this.hasGetFastRpc = true;
+        this.loadingGetFastRpc = true;
+        const rpcUrls = await this.getRpcUrls();
+        if (rpcUrls === null) {
+            this.loadingGetFastRpc = false;
+            return;
+        }
         const data = {
             jsonrpc: '2.0',
             id: 1,
             method: 'getversion',
             params: [],
         };
-        const n2Reqs = [];
-        const n2ChainId = this.global.n2Network.chainId;
         const startTime = new Date().getTime();
-        let spendTiem = [];
-        RPC_URLS[n2ChainId].forEach((item, index) => {
-            const req = this.http.post(item, data).pipe(
-                timeout(5000),
-                catchError(() => of(`Request timed out`)),
-                map((res) => {
-                    spendTiem[index] = new Date().getTime() - startTime;
-                    return res;
-                })
-            );
-            n2Reqs.push(req);
-        });
-        let fastIndex = 0;
-        forkJoin(n2Reqs).subscribe(() => {
-            spendTiem.forEach((time, index) => {
-                if (time < spendTiem[fastIndex]) {
-                    fastIndex = index;
-                }
+        const netReqs = { 1: [], 2: [], 3: [], 4: [], 6: [] };
+        const spendTiems = { 1: [], 2: [], 3: [], 4: [], 6: [] };
+        const fastIndex = { 1: 0, 2: 0, 3: 0, 4: 0, 6: 0 };
+        Object.keys(rpcUrls).forEach((key) => {
+            netReqs[key] = [];
+            spendTiems[key] = [];
+            fastIndex[key] = 0;
+            rpcUrls[key].forEach((item, index) => {
+                const req = this.http.post(item, data).pipe(
+                    timeout(5000),
+                    catchError(() => of(`Request timed out`)),
+                    map((res) => {
+                        spendTiems[key][index] =
+                            new Date().getTime() - startTime;
+                        return res;
+                    })
+                );
+                netReqs[key].push(req);
             });
-            this.global.n2Network.rpcUrl = RPC_URLS[n2ChainId][fastIndex];
-            this.global.n2Networks[this.global.n2SelectedNetworkIndex].rpcUrl =
-                RPC_URLS[n2ChainId][fastIndex];
-            this.chrome.setStorage(
-                STORAGE_NAME.n2Networks,
-                this.global.n2Networks
-            );
         });
-        if (this.global.n3Network.id > 6) {
-            return;
-        }
-        const n3Reqs = [];
-        const n3ChainId = this.global.n3Network.chainId;
-        let n3SpendTiem = [];
-        RPC_URLS[n3ChainId].forEach((item, index) => {
-            const req = this.http.post(item, data).pipe(
-                timeout(5000),
-                catchError(() => of(`Request timed out`)),
-                map((res) => {
-                    n3SpendTiem[index] = new Date().getTime() - startTime;
-                    return res;
-                })
-            );
-            n3Reqs.push(req);
-        });
-        let n3FastIndex = 0;
-        forkJoin(n3Reqs).subscribe(() => {
-            n3SpendTiem.forEach((time, index) => {
-                if (time < n3SpendTiem[n3FastIndex]) {
-                    n3FastIndex = index;
-                }
+        forkJoin([
+            ...netReqs[1],
+            ...netReqs[2],
+            ...netReqs[3],
+            ...netReqs[4],
+            ...netReqs[6],
+        ]).subscribe(() => {
+            Object.keys(spendTiems).forEach((key) => {
+                spendTiems[key].forEach((time, index) => {
+                    if (time < spendTiems[key][fastIndex[key]]) {
+                        fastIndex[key] = index;
+                    }
+                });
             });
-            this.global.n3Network.rpcUrl = RPC_URLS[n3ChainId][n3FastIndex];
-            this.global.n3Networks[this.global.n3SelectedNetworkIndex].rpcUrl =
-                RPC_URLS[n3ChainId][n3FastIndex];
-            this.chrome.setStorage(
-                STORAGE_NAME.n3Networks,
-                this.global.n3Networks
-            );
+            const n2Networks = [...DEFAULT_N2_RPC_NETWORK];
+            const n3Networks = [...DEFAULT_N3_RPC_NETWORK];
+            n2Networks[0].rpcUrl = rpcUrls[1][fastIndex[1]];
+            n2Networks[1].rpcUrl = rpcUrls[2][fastIndex[2]];
+            n3Networks[0].rpcUrl = rpcUrls[3][fastIndex[3]];
+            n3Networks[1].rpcUrl = rpcUrls[4][fastIndex[4]];
+            n3Networks[2].rpcUrl = rpcUrls[6][fastIndex[6]];
+            this.global.n2Networks = n2Networks;
+            this.global.n3Networks = n3Networks;
+            this.global.n2Network =
+                n2Networks[this.global.n2SelectedNetworkIndex];
+            this.global.n3Network =
+                n3Networks[this.global.n3SelectedNetworkIndex];
+            this.chrome.setStorage(STORAGE_NAME.n2Networks, n2Networks);
+            this.chrome.setStorage(STORAGE_NAME.n3Networks, n3Networks);
+            this.loadingGetFastRpc = false;
+            this.hasGetFastRpc = true;
+            this.chrome.setShouldFindNode(false);
         });
     }
 

@@ -284,6 +284,31 @@ export class ChromeService {
             }
         }
     }
+
+    public getShouldFindNode(): Observable<boolean> {
+        if (!this.check) {
+            return of(sessionStorage.getItem('shouldFindNode') === 'true');
+        } else {
+            return this.getStorage(STORAGE_NAME.shouldFindNode);
+        }
+    }
+
+    public setShouldFindNode(status: boolean) {
+        if (status === null) {
+            if (!this.check) {
+                sessionStorage.removeItem('shouldFindNode');
+            } else {
+                this.setStorage(STORAGE_NAME.shouldFindNode, true);
+            }
+        } else {
+            if (!this.check) {
+                sessionStorage.setItem('shouldFindNode', status.toString());
+            } else {
+                this.setStorage(STORAGE_NAME.shouldFindNode, status);
+            }
+        }
+    }
+
     public getHasLoginAddress(): Observable<any> {
         if (!this.check) {
             return of(

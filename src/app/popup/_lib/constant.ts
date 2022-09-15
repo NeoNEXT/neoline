@@ -1,6 +1,6 @@
 import { Asset, NEO, GAS } from '@/models/models';
 import { NEO3_CONTRACT, GAS3_CONTRACT } from './neo3';
-import { DEFAULT_N2_RPC_NETWORK, DEFAULT_N3_RPC_NETWORK } from './type';
+import { DEFAULT_N2_RPC_NETWORK, DEFAULT_N3_RPC_NETWORK, DEFAULT_RPC_URLS } from './type';
 
 const nameLimitation = [1, 32];
 const passwordLimitation = [8, 128];
@@ -40,6 +40,8 @@ export enum STORAGE_NAME {
     haveBackupTip = 'haveBackupTip',
     shouldLogin = 'shouldLogin',
     hasLoginAddress = 'hasLoginAddress',
+    shouldFindNode = 'shouldFindNode',
+    rpcUrls = 'rpcUrls',
 }
 
 export enum STORAGE_VALUE_TYPE {
@@ -153,6 +155,15 @@ export const STORAGE_VALUE_MESSAGE = {
     hasLoginAddress: {
         type: STORAGE_VALUE_TYPE.object,
         isLocal: true,
+    },
+    shouldFindNode: {
+        type: STORAGE_VALUE_TYPE.boolean,
+        isLocal: true,
+    },
+    rpcUrls: {
+        type: STORAGE_VALUE_TYPE.object,
+        isLocal: true,
+        default: DEFAULT_RPC_URLS,
     },
 };
 

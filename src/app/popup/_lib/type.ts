@@ -78,44 +78,47 @@ export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
     },
 ];
 
-export const RPC_URLS = {
-    1: [
-        'http://seed1.ngd.network:10332',
-        'http://seed6.ngd.network:10332',
-        'http://seed7.ngd.network:10332',
-        'http://seed8.ngd.network:10332',
-        'https://neo2-mainnet.neoline.io',
-    ],
-    2: [
-        'http://seed1.ngd.network:20332',
-        'http://seed3.ngd.network:20332',
-        'http://seed4.ngd.network:20332',
-        'http://seed5.ngd.network:20332',
-        'http://seed7.ngd.network:20332',
-        'http://seed8.ngd.network:20332',
-    ],
-    3: [
-        'http://seed1.neo.org:10332',
-        'http://seed2.neo.org:10332',
-        'http://seed3.neo.org:10332',
-        'http://seed4.neo.org:10332',
-        'http://seed5.neo.org:10332',
-        'https://n3seed1.ngd.network:10332',
-        'https://n3seed2.ngd.network:10332',
-        'https://neo3-mainnet.neoline.vip',
-    ],
-    4: [
-        'http://seed1t4.neo.org:20332',
-        'http://seed2t4.neo.org:20332',
-        'http://seed3t4.neo.org:20332',
-        'http://seed4t4.neo.org:20332',
-        'http://seed5t4.neo.org:20332',
-    ],
-    6: [
-        'http://seed1t5.neo.org:20332',
-        'http://seed2t5.neo.org:20332',
-        'http://seed3t5.neo.org:20332',
-        'http://seed4t5.neo.org:20332',
-        'http://seed5t5.neo.org:20332',
-    ],
+export const DEFAULT_RPC_URLS = {
+    lastModified: null,
+    nodes: {
+        1: [
+            'http://seed1.ngd.network:10332',
+            'http://seed6.ngd.network:10332',
+            'http://seed7.ngd.network:10332',
+            'http://seed8.ngd.network:10332',
+            'https://neo2-mainnet.neoline.io',
+        ],
+        2: [
+            'http://seed1.ngd.network:20332',
+            'http://seed3.ngd.network:20332',
+            'http://seed4.ngd.network:20332',
+            'http://seed5.ngd.network:20332',
+            'http://seed7.ngd.network:20332',
+            'http://seed8.ngd.network:20332',
+        ],
+        3: [
+            'http://seed1.neo.org:10332',
+            'http://seed2.neo.org:10332',
+            'http://seed3.neo.org:10332',
+            'http://seed4.neo.org:10332',
+            'http://seed5.neo.org:10332',
+            'https://n3seed1.ngd.network:10332',
+            'https://n3seed2.ngd.network:10332',
+            'https://neo3-mainnet.neoline.vip',
+        ],
+        4: [
+            'http://seed1t4.neo.org:20332',
+            'http://seed2t4.neo.org:20332',
+            'http://seed3t4.neo.org:20332',
+            'http://seed4t4.neo.org:20332',
+            'http://seed5t4.neo.org:20332',
+        ],
+        6: [
+            'http://seed1t5.neo.org:20332',
+            'http://seed2t5.neo.org:20332',
+            'http://seed3t5.neo.org:20332',
+            'http://seed4t5.neo.org:20332',
+            'http://seed5t5.neo.org:20332',
+        ],
+    },
 };
