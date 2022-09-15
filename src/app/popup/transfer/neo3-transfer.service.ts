@@ -149,7 +149,7 @@ export class Neo3TransferService {
                 [
                     {
                         account: inputs.scriptHash,
-                        scopes: tx.WitnessScope.CalledByEntry.toString(),
+                        scopes: tx.WitnessScope[tx.WitnessScope.CalledByEntry],
                     },
                 ]
             );
