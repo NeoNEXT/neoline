@@ -17,7 +17,7 @@
     </ul>
 </div>
 
-<div class="container" appScroll (scrollChange)="onScrolltaChange($event)">
+<div class="container">
     <p class="asset-balance">{{ (nft?.tokens?.length || 0) | numberFixed }} {{ nft?.symbol }}</p>
     <div class="transaction-btn-container">
         <button class="receive-btn" mat-stroked-button color="primary" [routerLink]="['/popup/transfer/receive']">
@@ -43,7 +43,7 @@
                 <app-nft-tokens [nftTokens]="nft?.tokens"></app-nft-tokens>
             </div>
             <div class="tab-transaction-container" [hidden]="selectedIndex == 0">
-                <app-nft-tx-page [nftContract]="nftContract" #txPage></app-nft-tx-page>
+                <app-nft-tx-page [nftContract]="nftContract"></app-nft-tx-page>
             </div>
         </div>
     </div>

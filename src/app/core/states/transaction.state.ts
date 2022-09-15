@@ -145,7 +145,7 @@ export class TransactionState {
         return n2Res;
     }
     private async getN3AllTxs(address: string): Promise<Transaction[]> {
-        const time = Math.floor(new Date().getTime() / 1000) - 30 * 24 * 3600;
+        const time = Math.floor(new Date().getTime()) - 30 * 24 * 3600 * 1000;
         const data = {
             jsonrpc: '2.0',
             method: 'getnep17transfers',

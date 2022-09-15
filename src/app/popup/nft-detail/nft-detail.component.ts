@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import {
     GlobalService,
     NftState,
@@ -6,7 +6,6 @@ import {
     ChromeService,
 } from '@/app/core';
 import { ActivatedRoute } from '@angular/router';
-import { PopupNftTxPageComponent } from './nft-tx-page/nft-tx-page.component';
 import { NftAsset } from '@/models/models';
 
 @Component({
@@ -14,8 +13,6 @@ import { NftAsset } from '@/models/models';
     styleUrls: ['nft-detail.component.scss'],
 })
 export class PopupNftDetailComponent implements OnInit {
-    @ViewChild('txPage') txPageComponent: PopupNftTxPageComponent;
-    currentTxPage = 1;
     nftContract: string;
     nft: NftAsset;
     selectedIndex = 0;
@@ -63,16 +60,6 @@ export class PopupNftDetailComponent implements OnInit {
             window.open(
                 `${this.global.n3Network.explorer}tokens/nft/${this.nftContract}`
             );
-        }
-    }
-    onScrolltaChange(el: Element) {
-        const tabGroup = el.children[el.children.length - 1];
-        if (
-            tabGroup.clientHeight - el.scrollTop < 350 &&
-            !this.txPageComponent.loading &&
-            !this.txPageComponent.noMoreData
-        ) {
-            this.txPageComponent.getInTransactions(++this.currentTxPage);
         }
     }
 }

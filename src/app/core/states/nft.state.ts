@@ -76,7 +76,7 @@ export class NftState {
     }
 
     async getNftTransactions(address: string, contract: string): Promise<NftTransaction[]> {
-        const time = Math.floor(new Date().getTime() / 1000) - 30 * 24 * 3600;
+        const time = Math.floor(new Date().getTime()) - 30 * 24 * 3600 * 1000;
         const data = {
             jsonrpc: '2.0',
             method: 'getnep11transfers',
