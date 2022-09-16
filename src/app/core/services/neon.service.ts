@@ -234,8 +234,14 @@ export class NeonService {
                         this.global.n3Networks[2].name = 'N3 TESTNET';
                         this.global.n3Networks.splice(1, 1);
                     }
-                    this.chrome.setStorage(STORAGE_NAME.n3SelectedNetworkIndex, 0);
-                    this.chrome.setStorage(STORAGE_NAME.n3Networks, this.global.n3Networks);
+                    this.chrome.setStorage(
+                        STORAGE_NAME.n3SelectedNetworkIndex,
+                        0
+                    );
+                    this.chrome.setStorage(
+                        STORAGE_NAME.n3Networks,
+                        this.global.n3Networks
+                    );
                     this.chrome.setStorage(STORAGE_NAME.neo3RemoveT4Flag, true);
                 } else {
                     this.getFastRpcUrl();
@@ -350,8 +356,10 @@ export class NeonService {
                 .toPromise();
             return responseRpcUrl;
         } catch (error) {
-            const shouldFindNode = await this.chrome.getShouldFindNode().toPromise();
-            if (shouldFindNode || force) {
+            const shouldFindNode = await this.chrome
+                .getShouldFindNode()
+                .toPromise();
+            if (shouldFindNode !== false || force) {
                 return defaultRpcUrls.nodes;
             }
             return null;
@@ -384,11 +392,13 @@ export class NeonService {
             fastIndex[key] = 0;
             rpcUrls[key].forEach((item, index) => {
                 const req = this.http.post(item, data).pipe(
+                    catchError(() => of(null)),
                     timeout(5000),
-                    catchError(() => of(`Request timed out`)),
+                    catchError(() => of(null)),
                     map((res) => {
-                        spendTiems[key][index] =
-                            new Date().getTime() - startTime;
+                        spendTiems[key][index] = res
+                            ? new Date().getTime() - startTime
+                            : -1;
                         return res;
                     })
                 );
@@ -403,7 +413,7 @@ export class NeonService {
         ]).subscribe(() => {
             Object.keys(spendTiems).forEach((key) => {
                 spendTiems[key].forEach((time, index) => {
-                    if (time < spendTiems[key][fastIndex[key]]) {
+                    if (time !== -1 && time < spendTiems[key][fastIndex[key]]) {
                         fastIndex[key] = index;
                     }
                 });
@@ -416,8 +426,14 @@ export class NeonService {
                 this.global.n2Networks[this.global.n2SelectedNetworkIndex];
             this.global.n3Network =
                 this.global.n3Networks[this.global.n3SelectedNetworkIndex];
-            this.chrome.setStorage(STORAGE_NAME.n2Networks, this.global.n2Networks);
-            this.chrome.setStorage(STORAGE_NAME.n3Networks, this.global.n3Networks);
+            this.chrome.setStorage(
+                STORAGE_NAME.n2Networks,
+                this.global.n2Networks
+            );
+            this.chrome.setStorage(
+                STORAGE_NAME.n3Networks,
+                this.global.n3Networks
+            );
             this.loadingGetFastRpc = false;
             this.hasGetFastRpc = true;
             this.chrome.setShouldFindNode(false);

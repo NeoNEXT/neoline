@@ -160,7 +160,6 @@ export const STORAGE_VALUE_MESSAGE = {
     shouldFindNode: {
         type: STORAGE_VALUE_TYPE.boolean,
         isLocal: true,
-        default: true,
     },
     rpcUrls: {
         type: STORAGE_VALUE_TYPE.object,

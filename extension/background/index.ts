@@ -199,6 +199,7 @@ chrome.windows.onRemoved.addListener(() => {
         if (res.length === 0) { // All browsers are closed
             setLocalStorage({
                 shouldLogin: true,
+                shouldFindNode: true,
                 hasLoginAddress: {}
             })
         }

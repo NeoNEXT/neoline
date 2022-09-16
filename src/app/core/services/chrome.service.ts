@@ -287,25 +287,21 @@ export class ChromeService {
 
     public getShouldFindNode(): Observable<boolean> {
         if (!this.check) {
-            return of(sessionStorage.getItem('shouldFindNode') === 'true');
+            return of(
+                sessionStorage.getItem('shouldFindNode') === 'false'
+                    ? false
+                    : true
+            );
         } else {
             return this.getStorage(STORAGE_NAME.shouldFindNode);
         }
     }
 
     public setShouldFindNode(status: boolean) {
-        if (status === null) {
-            if (!this.check) {
-                sessionStorage.removeItem('shouldFindNode');
-            } else {
-                this.setStorage(STORAGE_NAME.shouldFindNode, true);
-            }
+        if (!this.check) {
+            sessionStorage.setItem('shouldFindNode', status.toString());
         } else {
-            if (!this.check) {
-                sessionStorage.setItem('shouldFindNode', status.toString());
-            } else {
-                this.setStorage(STORAGE_NAME.shouldFindNode, status);
-            }
+            this.setStorage(STORAGE_NAME.shouldFindNode, status);
         }
     }
 
@@ -591,7 +587,7 @@ export class ChromeService {
                 data: {
                     chainId: network.chainId,
                     networks: DEFAULT_NETWORKS,
-                    defaultNetwork: network.network
+                    defaultNetwork: network.network,
                 },
                 return: EVENT.NETWORK_CHANGED,
             });
