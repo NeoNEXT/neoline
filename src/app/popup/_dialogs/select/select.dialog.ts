@@ -46,7 +46,7 @@ export class PopupSelectDialogComponent implements OnInit {
             case 'lang':
                 this.chromeSer.setStorage(STORAGE_NAME.lang, this.targetOption);
                 this.global.snackBarTip('langSetSucc');
-                location.href = `index.html#popup/setting`;
+                location.reload();
                 break;
             case 'currency':
                 this.rateCurrency = this.targetOption;

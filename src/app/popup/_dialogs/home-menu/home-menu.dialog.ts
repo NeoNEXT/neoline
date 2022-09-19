@@ -123,7 +123,7 @@ export class PopupHomeMenuDialogComponent implements OnInit {
         }
         this.wallet = this.neon.parseWallet(w);
         this.chrome.setWallet(this.wallet.export());
-        location.href = `index.html#popup`;
+        location.href = `index.html`;
         this.chrome.setHaveBackupTip(null);
     }
 
