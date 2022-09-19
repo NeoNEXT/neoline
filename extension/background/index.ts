@@ -194,16 +194,28 @@ declare var chrome;
     }
 })();
 
-chrome.windows.onRemoved.addListener(() => {
-    chrome.tabs.query({}, (res) => {
-        if (res.length === 0) { // All browsers are closed
-            setLocalStorage({
-                shouldLogin: true,
-                shouldFindNode: true,
-                hasLoginAddress: {}
-            })
-        }
-    });
+chrome.runtime.onRestartRequired.addListener(() => {
+    setLocalStorage({
+        shouldLogin: true,
+        shouldFindNode: true,
+        hasLoginAddress: {}
+    })
+});
+
+chrome.runtime.onInstalled.addListener(() => {
+    setLocalStorage({
+        shouldLogin: true,
+        shouldFindNode: true,
+        hasLoginAddress: {}
+    })
+});
+
+chrome.runtime.onStartup.addListener(() => {
+    setLocalStorage({
+        shouldLogin: true,
+        shouldFindNode: true,
+        hasLoginAddress: {}
+    })
 });
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
