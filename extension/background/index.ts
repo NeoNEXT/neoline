@@ -904,20 +904,20 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                         returnData[item.address] = [];
                         for (const assetId of (item?.contracts || [])) {
                             const res_1 = (res[i]?.balance || []).find(asset_1 => assetId.includes(asset_1.assethash));
-                            const symbol = await getAssetSymbol(assetId, currN3Network.rpcUrl);
-                            const assetRes = { contract: assetId, amount: '0', symbol };
+                            const assetRes = { contract: assetId, amount: '0', symbol: '' };
                             if (res_1) {
-                                const decimal = await getAssetDecimal(assetId, currN3Network.rpcUrl);
-                                assetRes.amount = new BigNumber(res_1.amount).shiftedBy(-decimal).toFixed();
+                                assetRes.symbol = res_1.symbol;
+                                assetRes.amount = new BigNumber(res_1.amount).shiftedBy(-res_1.decimals).toFixed();
+                            } else {
+                                const symbol = await getAssetSymbol(assetId, currN3Network.rpcUrl);
+                                assetRes.symbol = symbol;
                             }
                             returnData[item.address].push(assetRes);
                         }
                         if (!item.contracts || item.contracts.length === 0) {
                             for (const res_1 of (res[i]?.balance || [])) {
-                                const symbol = await getAssetSymbol(res_1.assethash, currN3Network.rpcUrl);
-                                const decimal = await getAssetDecimal(res_1.assethash, currN3Network.rpcUrl);
-                                const amount = new BigNumber(res_1.amount).shiftedBy(-decimal).toFixed();
-                                const assetRes = { contract: res_1.assethash, amount, symbol }
+                                const amount = new BigNumber(res_1.amount).shiftedBy(-res_1.decimals).toFixed();
+                                const assetRes = { contract: res_1.assethash, amount, symbol: res_1.symbol }
                                 returnData[item.address].push(assetRes);
                             }
                         }

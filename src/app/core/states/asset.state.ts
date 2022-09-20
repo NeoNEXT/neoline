@@ -430,29 +430,20 @@ export class AssetState {
             { ...DEFAULT_NEO3_ASSETS.NEO },
             { ...DEFAULT_NEO3_ASSETS.GAS },
         ];
-        const contracts = [NEO3_CONTRACT, GAS3_CONTRACT];
-        (data?.balance || []).forEach(({ amount, assethash }) => {
+        (data?.balance || []).forEach(({ amount, assethash, symbol, decimals }) => {
             if (assethash === NEO3_CONTRACT) {
                 result[0].balance = amount;
             } else if (assethash === GAS3_CONTRACT) {
-                result[1].balance = amount;
+                result[1].balance = new BigNumber(amount).shiftedBy(-decimals).toFixed();
             } else {
                 const assetItem: Asset = {
-                    balance: amount,
+                    balance: new BigNumber(amount).shiftedBy(-decimals).toFixed(),
                     asset_id: assethash,
+                    symbol,
+                    decimals
                 };
                 result.push(assetItem);
-                contracts.push(assethash);
             }
-        });
-        const symbols = await this.util.getAssetSymbols(contracts, 'Neo3');
-        const decimals = await this.util.getAssetDecimals(contracts, 'Neo3');
-        result.forEach((item, index) => {
-            result[index].symbol = symbols[index];
-            result[index].decimals = decimals[index];
-            result[index].balance = new BigNumber(result[index].balance)
-                .shiftedBy(-decimals[index])
-                .toFixed();
         });
         return result;
     }
