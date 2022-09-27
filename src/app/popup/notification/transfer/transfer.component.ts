@@ -367,8 +367,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             error: ERRORS.CANCELLED,
             return: requestTarget.Send,
             ID: this.messageID,
-        });
-        // window.close();
+        }, true);
     }
 
     public confirm() {
@@ -385,8 +384,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
                 },
                 return: requestTarget.Send,
                 ID: this.messageID,
-            });
-            // window.close();
+            }, true);
         } else {
             this.getSignTx(this.tx);
         }
