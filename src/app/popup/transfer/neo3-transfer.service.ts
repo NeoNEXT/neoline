@@ -262,20 +262,6 @@ export class Neo3TransferService {
         );
     }
 
-    public async getFeeInformation(client) {
-        const policyScript = new sc.ScriptBuilder()
-            .emitContractCall(sc.PolicyContract.INSTANCE.getFeePerByte())
-            .emitContractCall(sc.PolicyContract.INSTANCE.getExecFeeFactor())
-            .build();
-        const res = await client.invokeScript(
-            u.HexString.fromHex(policyScript)
-        );
-        const [feePerByte, executionFeeFactor] = res.stack.map((s) =>
-            u.BigInteger.fromNumber(s.value)
-        );
-        return { feePerByte, executionFeeFactor };
-    }
-
     async calculateNetworkFee(txn) {
         let txClone = txn.export();
         txClone.systemFee = new BigNumber(txn.systemFee)
