@@ -60,7 +60,8 @@ export class PopupAddressDialogComponent implements OnInit {
         }
         if (
             this.neonService.currentWalletChainType === 'Neo3' &&
-            this.global.n3Network.chainId === 6
+            (this.global.n3Network.chainId === 6 ||
+                this.global.n3Network.chainId === 3)
         ) {
             this.getNnsAddressReq?.unsubscribe();
             this.getNnsAddressReq = this.util
