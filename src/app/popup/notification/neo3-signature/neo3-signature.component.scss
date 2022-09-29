@@ -15,10 +15,8 @@
     }
     .item-value {
         margin-top: 10px;
-        display: flex;
-        align-items: center;
         width: 100%;
-        min-height: 50px;
+        max-height: 200px;
         line-height: 18px;
         background: #fafafa;
         border-radius: 10px;
@@ -27,5 +25,6 @@
         padding: 10px 16px;
         color: #434543;
         word-break: break-word;
+        overflow: scroll;
     }
 }
