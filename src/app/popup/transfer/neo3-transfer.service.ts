@@ -155,7 +155,11 @@ export class Neo3TransferService {
             );
             if (invokeFunctionResponse.state !== 'HALT') {
                 throw {
-                    msg: 'Transfer script errored out! You might not have sufficient funds for this transfer.',
+                    msg:
+                        invokeFunctionResponse?.error ||
+                        invokeFunctionResponse?.message ||
+                        invokeFunctionResponse?.exception ||
+                        'Transfer script errored out! You might not have sufficient funds for this transfer.',
                 };
             }
             const requiredSystemFee = u.Fixed8.fromRawNumber(
@@ -208,11 +212,12 @@ export class Neo3TransferService {
             }
             if (!params.nftTokenId) {
                 // Check for token funds
-                const balanceAmountInt = await assetStateTemp.getAddressAssetBalance(
-                    inputs.fromAccountAddress,
-                    inputs.tokenScriptHash,
-                    'Neo3'
-                );
+                const balanceAmountInt =
+                    await assetStateTemp.getAddressAssetBalance(
+                        inputs.fromAccountAddress,
+                        inputs.tokenScriptHash,
+                        'Neo3'
+                    );
                 const balanceAmount = new BigNumber(balanceAmountInt)
                     .shiftedBy(-params.decimals)
                     .toFixed();
@@ -230,8 +235,16 @@ export class Neo3TransferService {
 
                 // 如果转的是 gas
                 if (inputs.tokenScriptHash.indexOf(NEW_GAS) >= 0) {
-                    const totalRequirements = new BigNumber(inputs.amountToTransfer).shiftedBy(-8).plus(gasRequirements);
-                    if (new BigNumber(balanceAmount).comparedTo(totalRequirements) < 0) {
+                    const totalRequirements = new BigNumber(
+                        inputs.amountToTransfer
+                    )
+                        .shiftedBy(-8)
+                        .plus(gasRequirements);
+                    if (
+                        new BigNumber(balanceAmount).comparedTo(
+                            totalRequirements
+                        ) < 0
+                    ) {
                         throw {
                             msg: `${notificationTemp.content.insufficientSystemFee} ${balanceAmount}`,
                         };
