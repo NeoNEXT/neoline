@@ -57,7 +57,7 @@
         </div>
     </div>
     <div class="fee-container container">
-        <span class="label">{{ 'priorityFee' | translate | async }}</span>
+        <span class="label">{{ 'priorityFee' | translate | async }}<br>( GAS )</span>
         <div class="fee-box box" (click)="editFee()">
             <div class="fee-left">
                 <span *ngIf="gasFeeSpeed && fee == gasFeeSpeed?.slow_price">{{ 'slow' | translate |async }}</span>

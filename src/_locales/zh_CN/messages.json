@@ -471,7 +471,7 @@
         "message": "北京时间"
     },
     "priorityFee": {
-        "message": "优先处理费( GAS )"
+        "message": "优先处理费"
     },
     "priorityFeeTip": {
         "message": "选填"

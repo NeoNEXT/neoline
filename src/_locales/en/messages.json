@@ -471,7 +471,7 @@
         "message": "China Standard Time"
     },
     "priorityFee": {
-        "message": "Priority Fee( GAS )"
+        "message": "Priority Fee"
     },
     "priorityFeeTip": {
         "message": "Optional"
