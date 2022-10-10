@@ -1,7 +1,13 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
-import { ChromeService, GlobalService, AssetState, NeonService } from '@app/core';
+import {
+    ChromeService,
+    GlobalService,
+    AssetState,
+    NeonService,
+    SettingState,
+} from '@app/core';
 import { Router } from '@angular/router';
 import { ChainType, SelectItem, STORAGE_NAME } from '@popup/_lib';
 
@@ -20,6 +26,7 @@ export class PopupSelectDialogComponent implements OnInit {
         private router: Router,
         private assetSer: AssetState,
         private neonService: NeonService,
+        private settingState: SettingState,
         @Inject(MAT_DIALOG_DATA)
         public data: {
             optionGroup: SelectItem[];
@@ -44,18 +51,24 @@ export class PopupSelectDialogComponent implements OnInit {
         }
         switch (this.data.type) {
             case 'lang':
+                this.settingState.changLang(this.targetOption);
                 this.chromeSer.setStorage(STORAGE_NAME.lang, this.targetOption);
                 this.global.snackBarTip('langSetSucc');
-                location.reload();
+                this.dialogRef.close();
                 break;
             case 'currency':
                 this.rateCurrency = this.targetOption;
                 this.assetSer.rateCurrency = this.rateCurrency;
-                this.chromeSer.setStorage(STORAGE_NAME.rateCurrency, this.rateCurrency);
+                this.chromeSer.setStorage(
+                    STORAGE_NAME.rateCurrency,
+                    this.rateCurrency
+                );
                 this.dialogRef.close(this.targetOption);
                 break;
             case 'chain':
-                this.neonService.selectChainType(this.targetOption as ChainType);
+                this.neonService.selectChainType(
+                    this.targetOption as ChainType
+                );
                 this.dialogRef.close(this.targetOption);
         }
     }

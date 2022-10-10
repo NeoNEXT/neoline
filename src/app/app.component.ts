@@ -1,10 +1,15 @@
 import { Component, OnDestroy } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
-import { ChromeService, GlobalService, NeonService, AssetState } from './core';
+import {
+    ChromeService,
+    GlobalService,
+    NeonService,
+    AssetState,
+    SettingState,
+} from './core';
 import { MatDialog } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
-import { HttpClient } from '@angular/common/http';
 import { EVENT } from '@/models/dapi';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
 import { STORAGE_NAME } from './popup/_lib';
@@ -30,15 +35,11 @@ export class AppComponent {
         private neon: NeonService,
         private dialog: MatDialog,
         private assetSer: AssetState,
-        private http: HttpClient,
-        private neonService: NeonService
+        private neonService: NeonService,
+        private settingState: SettingState
     ) {
         this.chrome.getStorage(STORAGE_NAME.lang).subscribe((res) => {
-            this.http
-                .get(`/_locales/${res}/messages.json`)
-                .subscribe((temp) => {
-                    this.global.languageJson = temp;
-                });
+            this.settingState.changLang(res);
         });
         this.router.events.subscribe((event) => {
             this.hideNav404 = false;
@@ -78,9 +79,7 @@ export class AppComponent {
         }
     }
 
-    public modifyNet(net: string) {
-
-    }
+    public modifyNet(net: string) {}
 
     public isActivityWallet(w: Wallet2 | Wallet3) {
         if (w.accounts[0].address === this.wallet.accounts[0].address) {

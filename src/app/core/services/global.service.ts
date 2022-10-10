@@ -13,7 +13,6 @@ import { ChainType, RpcNetwork } from '@/app/popup/_lib';
 export class GlobalService {
     public apiDomain: string;
     public $wallet: Subject<string>;
-    public languageJson: any = null;
     public debug = false;
     private source404 = new Subject<string>();
     public $404 = this.source404.asObservable();

@@ -1,6 +1,6 @@
 import { Component, OnInit, Output, EventEmitter } from '@angular/core';
-import { ChainType, STORAGE_NAME } from '@/app/popup/_lib';
-import { ChromeService } from '@/app/core';
+import { ChainType } from '@/app/popup/_lib';
+import { SettingState } from '@/app/core';
 
 @Component({
     selector: 'app-ledger-chain',
@@ -10,7 +10,7 @@ import { ChromeService } from '@/app/core';
 export class LedgerChainComponent implements OnInit {
     @Output() selectChain = new EventEmitter<ChainType>();
     chain: ChainType = 'Neo2';
-    constructor(private chrome: ChromeService) {}
+    constructor(private settingState: SettingState) {}
 
     ngOnInit(): void {}
 
@@ -19,7 +19,7 @@ export class LedgerChainComponent implements OnInit {
     }
 
     public async jumbToWeb() {
-        let lang = await this.chrome.getStorage(STORAGE_NAME.lang).toPromise();
+        let lang = await this.settingState.langSub.toPromise();
         if (lang !== 'en') {
             lang = '';
             window.open(

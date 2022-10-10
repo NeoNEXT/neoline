@@ -12,6 +12,24 @@ import { PopupNotificationModule } from './popup/notification/notification.modul
 import { TransferModule } from './transfer/transfer.module';
 import { LedgerModule } from './ledger/ledger.module';
 
+// #region Startup Service
+import { StartupService } from './core';
+import { APP_INITIALIZER } from '@angular/core';
+
+function StartupServiceFactory(startupService: StartupService) {
+    return () => startupService.load();
+}
+const APPINIT_PROVIDES = [
+    StartupService,
+    {
+        provide: APP_INITIALIZER,
+        useFactory: StartupServiceFactory,
+        deps: [StartupService],
+        multi: true
+    }
+];
+// #endregion
+
 @NgModule({
     declarations: [AppComponent],
     imports: [
@@ -26,7 +44,7 @@ import { LedgerModule } from './ledger/ledger.module';
         PopupNotificationModule,
         N404Module,
     ],
-    providers: [],
+    providers: [...APPINIT_PROVIDES],
     bootstrap: [AppComponent],
     entryComponents: [],
 })

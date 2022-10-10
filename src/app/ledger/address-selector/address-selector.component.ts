@@ -11,9 +11,8 @@ import {
     LedgerStatus,
     LedgerStatuses,
     LEDGER_PAGE_SIZE,
-    STORAGE_NAME,
 } from '@/app/popup/_lib';
-import { LedgerService, NeonService, ChromeService } from '@/app/core';
+import { LedgerService, NeonService, SettingState } from '@/app/core';
 import { interval } from 'rxjs';
 
 @Component({
@@ -41,7 +40,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
     constructor(
         private ledger: LedgerService,
         private neon: NeonService,
-        private chrome: ChromeService
+        private settingState: SettingState
     ) {}
 
     ngOnInit(): void {
@@ -135,7 +134,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
     }
 
     public async jumbToWeb(type: 'privacy' | 'agreement') {
-        let lang = await this.chrome.getStorage(STORAGE_NAME.lang).toPromise();
+        let lang = await this.settingState.langSub.toPromise();
         if (lang !== 'en') {
             lang = '';
         } else {

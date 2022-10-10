@@ -40,15 +40,9 @@ export class PopupSettingComponent implements OnInit {
     }
 
     async ngOnInit(): Promise<void> {
-        this.chrome.getStorage(STORAGE_NAME.lang).subscribe(
-            (res) => {
-                this.lang = res;
-            },
-            (err) => {
-                this.global.log('get lang setting failed', err);
-                this.lang = '';
-            }
-        );
+        this.setting.langSub.subscribe(res => {
+            this.lang = res;
+        })
         this.asset.getRate().subscribe((rateBalance) => {
             const tempRateObj = rateBalance.result;
             if (JSON.stringify(tempRateObj) === '{}') {

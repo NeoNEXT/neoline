@@ -1,47 +1,18 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { Observable, from } from 'rxjs';
-import { ChromeService } from '@/app/core/services/chrome.service';
-import { GlobalService } from '@/app/core';
-import { STORAGE_NAME } from '@/app/popup/_lib';
-
+import { map } from 'rxjs/operators';
+import { SettingState } from '@/app/core';
 
 @Pipe({
-    name: 'translate'
+    name: 'translate',
 })
 export class TranslatePipe implements PipeTransform {
-    public messageJson: any = null;
-    constructor(
-        private chrome: ChromeService,
-        private global: GlobalService
-    ) {}
-    public fetchLocale(): Observable<any> {
-        return from(new Promise((resolve, reject) => {
-            try {
-                this.chrome.getStorage(STORAGE_NAME.lang).subscribe(res => {
-                    fetch(`/_locales/${res}/messages.json`).then(resJson => {
-                        return resolve(resJson.json());
-                    });
-                });
-            } catch (e) {
-                reject('failed');
-            }
-        }));
-    }
-    public transform(value: string): Promise<string> {
-        return new Promise( resolve => {
-            setTimeout(() => {
-                if (this.global.languageJson == null) {
-                    try {
-                        this.fetchLocale().subscribe((res) => {
-                            this.global.languageJson = res;
-                            resolve(res[value].message);
-                        });
-                    } catch (e) {
-                    }
-                } else {
-                    return resolve(this.global.languageJson[value].message);
-                }
-            }, 0);
-        });
+    constructor(private settingState: SettingState) {}
+
+    public transform(value: string) {
+        return this.settingState.langSub.pipe(
+            map((res) => {
+                return this.settingState.langJson[res][value].message;
+            })
+        );
     }
 }

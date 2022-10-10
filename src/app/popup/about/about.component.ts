@@ -1,27 +1,27 @@
 import { Component, OnInit } from '@angular/core';
-import { ChromeService } from '@/app/core';
-import { STORAGE_NAME } from '../_lib';
+import { ChromeService, SettingState } from '@/app/core';
 
 @Component({
     templateUrl: 'about.component.html',
-    styleUrls: ['about.component.scss']
+    styleUrls: ['about.component.scss'],
 })
 export class PopupAboutComponent implements OnInit {
     public version = '';
     constructor(
-        private chrome: ChromeService
-    ) { }
+        private chrome: ChromeService,
+        private settingState: SettingState
+    ) {}
 
     ngOnInit(): void {
         this.version = this.chrome.getVersion();
     }
 
     public async jumbToWeb(type: number) {
-        let lang = await this.chrome.getStorage(STORAGE_NAME.lang).toPromise()
+        let lang = await this.settingState.langSub.toPromise();
         if (lang !== 'en') {
-            lang = ''
+            lang = '';
         } else {
-            lang = '/en'
+            lang = '/en';
         }
         switch (type) {
             case 0:

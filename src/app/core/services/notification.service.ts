@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
-import { ChromeService } from './chrome.service';
-import { STORAGE_NAME } from '@/app/popup/_lib';
+import { SettingState } from '../states/setting.state';
 
 @Injectable()
 export class NotificationService {
@@ -81,12 +80,10 @@ export class NotificationService {
         TransactionDeniedByUser: '交易被用户拒绝。',
         LedgerUnSupportSignError: '签名此交易时出错。硬件不支持该方法。',
     };
-    constructor(public chrome: ChromeService) {
+    constructor(private settingState: SettingState) {
         this.content = this.EN;
-        this.chrome.getStorage(STORAGE_NAME.lang).subscribe((res) => {
-            if (res === 'zh_CN') {
-                this.content = this.CN;
-            }
+        this.settingState.langSub.subscribe(res => {
+            this.content = res === 'zh_CN' ? this.CN : this.EN;
         });
     }
 }
