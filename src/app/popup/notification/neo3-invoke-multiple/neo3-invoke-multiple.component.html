@@ -100,6 +100,9 @@
                                             <p *ngIf="item?.allowedGroups">
                                                 allowedGroups - <span *ngFor="let publicKey of item?.allowedGroups">{{ publicKey }}, </span>
                                             </p>
+                                            <p *ngIf="item?.rules">
+                                                rules - <span>{{ item.rules | json }}</span>
+                                            </p>
                                         </div>
                                     </div>
                                 </div>

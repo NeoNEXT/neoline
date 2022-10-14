@@ -58,6 +58,7 @@ export class Neo3InvokeService {
                 allowedgroups:
                     signerItem?.allowedGroups?.map((item) => item.toString()) ||
                     [],
+                rules: signerItem?.rules
             };
         });
         const vars: any = {};
@@ -156,9 +157,13 @@ export class Neo3InvokeService {
         return result;
     }
 
-    async calculateNetworkFee(txn) {
-        let txClone = txn.export();
-        txClone.systemFee = new BigNumber(txn.systemFee).shiftedBy(8).toFixed(0) as any;
+    async calculateNetworkFee(txn: tx.Transaction) {
+        let txClone = new tx.Transaction({
+            signers: txn.signers,
+            validUntilBlock: txn.validUntilBlock,
+            systemFee: new BigNumber(txn.systemFee.toString()).shiftedBy(8).toFixed(0),
+            script: txn.script
+        });
         txClone = new tx.Transaction(txClone);
         const wif =
             this.neon.WIFArr[
