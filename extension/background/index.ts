@@ -198,7 +198,8 @@ chrome.runtime.onRestartRequired.addListener(() => {
     setLocalStorage({
         shouldLogin: true,
         shouldFindNode: true,
-        hasLoginAddress: {}
+        hasLoginAddress: {},
+        InvokeArgsArray: []
     })
 });
 
@@ -206,7 +207,8 @@ chrome.runtime.onInstalled.addListener(() => {
     setLocalStorage({
         shouldLogin: true,
         shouldFindNode: true,
-        hasLoginAddress: {}
+        hasLoginAddress: {},
+        InvokeArgsArray: []
     })
 });
 
@@ -214,7 +216,8 @@ chrome.runtime.onStartup.addListener(() => {
     setLocalStorage({
         shouldLogin: true,
         shouldFindNode: true,
-        hasLoginAddress: {}
+        hasLoginAddress: {},
+        InvokeArgsArray: []
     })
 });
 

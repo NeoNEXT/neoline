@@ -112,6 +112,8 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
             });
         });
         window.onbeforeunload = () => {
+            const saveData = this.invokeArgsArray.filter(item => item.messageID !== this.messageID);
+            this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, saveData);
             this.chrome.windowCallback({
                 error: ERRORS.CANCELLED,
                 return: requestTargetN3.Invoke,
