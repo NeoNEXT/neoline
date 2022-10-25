@@ -134,19 +134,20 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
     }
 
     public async jumbToWeb(type: 'privacy' | 'agreement') {
-        let lang = await this.settingState.langSub.toPromise();
-        if (lang !== 'en') {
-            lang = '';
-        } else {
-            lang = '/en';
-        }
-        switch (type) {
-            case 'privacy':
-                window.open(`https://neoline.io${lang}/privacy`);
-                break;
-            case 'agreement':
-                window.open(`https://neoline.io${lang}/agreement`);
-                break;
-        }
+        this.settingState.langSub.subscribe(lang => {
+            if (lang !== 'en') {
+                lang = '';
+            } else {
+                lang = '/en';
+            }
+            switch (type) {
+                case 'privacy':
+                    window.open(`https://neoline.io${lang}/privacy`);
+                    break;
+                case 'agreement':
+                    window.open(`https://neoline.io${lang}/agreement`);
+                    break;
+            }
+        });
     }
 }

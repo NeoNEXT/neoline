@@ -19,16 +19,15 @@ export class LedgerChainComponent implements OnInit {
     }
 
     public async jumbToWeb() {
-        let lang = await this.settingState.langSub.toPromise();
-        if (lang !== 'en') {
-            lang = '';
-            window.open(
-                `https://tutorial.neoline.io/ledgerhardwarewallet`
-            );
-        } else {
-            window.open(
-                `https://tutorial.neoline.io/v/1/ledger-hardware-wallet`
-            );
-        }
+        this.settingState.langSub.subscribe((lang) => {
+            if (lang !== 'en') {
+                lang = '';
+                window.open(`https://tutorial.neoline.io/ledgerhardwarewallet`);
+            } else {
+                window.open(
+                    `https://tutorial.neoline.io/v/1/ledger-hardware-wallet`
+                );
+            }
+        });
     }
 }
