@@ -336,7 +336,7 @@ export class NeonService {
         }
         try {
             const responseRpcUrl = await this.http
-                .get('https://cdn.neoline.io/nodelist.json', {
+                .get('/nodelist.json', {
                     headers,
                     observe: 'response',
                 })

@@ -72,7 +72,8 @@
             "browserTarget": "neoline:build",
             "customWebpackConfig": {
               "path": "./webpack.config.js"
-            }
+            },
+            "proxyConfig": "proxy.conf.js"
           },
           "configurations": {
             "production": {
