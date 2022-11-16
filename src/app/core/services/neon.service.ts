@@ -53,9 +53,6 @@ export class NeonService {
     private _neonWallet: any = wallet2;
     private _neonTx: any = tx2;
     private _neonRpc: any = rpc2;
-    // 创建导入钱包的链
-    private _selectedNeon: any = Neon2;
-    private _selectedNeonWallet: any = wallet2;
     // 当前钱包所在链的钱包数组
     private _walletArr: Array<Wallet2 | Wallet3> = [];
     private _WIFArr: string[] = [];
@@ -593,9 +590,9 @@ export class NeonService {
     public createWallet(key: string, name: string = null): Observable<any> {
         this.selectChainType();
         if (this.selectedChainType === 'Neo2') {
-            const privateKey = this._selectedNeonWallet.generatePrivateKey();
-            const account = new this._selectedNeonWallet.Account(privateKey);
-            const w = this._selectedNeon.create.wallet({
+            const privateKey = wallet2.generatePrivateKey();
+            const account = new wallet2.Account(privateKey);
+            const w = Neon2.create.wallet({
                 name: name || 'NeoLineUser',
             } as any);
             w.addAccount(account);
@@ -607,9 +604,9 @@ export class NeonService {
                 })
             );
         } else if (this.selectedChainType === 'Neo3') {
-            const account = new this._selectedNeonWallet.Account();
+            const account = new wallet3.Account();
             const wif = account.WIF;
-            const w = new this._selectedNeonWallet.Wallet({
+            const w = new wallet3.Wallet({
                 name: name || 'NeoLineUser',
             } as any);
             w.addAccount(account);
@@ -730,8 +727,8 @@ export class NeonService {
     ): Observable<Wallet2 | Wallet3> {
         this.selectChainType();
         if (this.selectedChainType === 'Neo2') {
-            const account = new this._selectedNeonWallet.Account(privKey);
-            const w = this._selectedNeon.create.wallet({
+            const account = new wallet2.Account(privKey);
+            const w = Neon2.create.wallet({
                 name: name || 'NeoLineUser',
             } as any);
             w.addAccount(account);
@@ -744,8 +741,8 @@ export class NeonService {
                 })
             );
         } else if (this.selectedChainType === 'Neo3') {
-            const account = new this._selectedNeonWallet.Account(privKey);
-            const w = new this._selectedNeonWallet.Wallet({
+            const account = new wallet3.Account(privKey);
+            const w = new wallet3.Wallet({
                 name: name || 'NeoLineUser',
             } as any);
             w.addAccount(account);
@@ -772,10 +769,10 @@ export class NeonService {
     ): Observable<Wallet2 | Wallet3> {
         this.selectChainType();
         if (this.selectedChainType === 'Neo2') {
-            const account = new this._selectedNeonWallet.Account(
-                this._selectedNeonWallet.getPrivateKeyFromWIF(wif)
+            const account = new wallet2.Account(
+                wallet2.getPrivateKeyFromWIF(wif)
             );
-            const w = this._selectedNeon.create.wallet({
+            const w = Neon2.create.wallet({
                 name: name || 'NeoLineUser',
             } as any);
             w.addAccount(account);
@@ -787,10 +784,10 @@ export class NeonService {
                 })
             );
         } else if (this.selectedChainType === 'Neo3') {
-            const account = new this._selectedNeonWallet.Account(
-                this._selectedNeonWallet.getPrivateKeyFromWIF(wif)
+            const account = new wallet3.Account(
+                wallet3.getPrivateKeyFromWIF(wif)
             );
-            const w = new this._selectedNeonWallet.Wallet({
+            const w = new wallet3.Wallet({
                 name: name || 'NeoLineUser',
             } as any);
             w.addAccount(account);
@@ -817,17 +814,17 @@ export class NeonService {
         this.selectChainType();
         return new Observable((observer: Observer<Wallet2 | Wallet3>) => {
             if (this.selectedChainType === 'Neo2') {
-                const w = this._selectedNeon.create.wallet({
+                const w = Neon2.create.wallet({
                     name: name || 'NeoLineUser',
                 } as any);
-                w.addAccount(new this._selectedNeonWallet.Account(encKey));
-                this._selectedNeonWallet
+                w.addAccount(new wallet2.Account(encKey));
+                wallet2
                     .decrypt(encKey, key)
                     .then((wif) => {
-                        const account = new this._selectedNeonWallet.Account(
-                            this._selectedNeonWallet.getPrivateKeyFromWIF(wif)
+                        const account = new wallet2.Account(
+                            wallet2.getPrivateKeyFromWIF(wif)
                         );
-                        const returnRes = this._selectedNeon.create.wallet({
+                        const returnRes = Neon2.create.wallet({
                             name: name || 'NeoLineUser',
                         } as any);
                         returnRes.addAccount(account);
@@ -841,17 +838,17 @@ export class NeonService {
                         observer.error('Wrong password');
                     });
             } else if (this.selectedChainType === 'Neo3') {
-                const w = new this._selectedNeonWallet.Wallet({
+                const w = new wallet3.Wallet({
                     name: name || 'NeoLineUser',
                 } as any);
-                w.addAccount(new this._selectedNeonWallet.Account(encKey));
-                this._selectedNeonWallet
+                w.addAccount(new wallet3.Account(encKey));
+                wallet3
                     .decrypt(encKey, key)
                     .then((wif) => {
-                        const account = new this._selectedNeonWallet.Account(
-                            this._selectedNeonWallet.getPrivateKeyFromWIF(wif)
+                        const account = new wallet3.Account(
+                            wallet3.getPrivateKeyFromWIF(wif)
                         );
-                        const returnRes = new this._selectedNeonWallet.Wallet({
+                        const returnRes = new wallet3.Wallet({
                             name: name || 'NeoLineUser',
                         } as any);
                         returnRes.addAccount(account);
@@ -1099,16 +1096,6 @@ export class NeonService {
 
     selectChainType(chain: ChainType = this.selectedChainType) {
         this.selectedChainType = chain;
-        switch (chain) {
-            case 'Neo2':
-                this._selectedNeon = Neon2;
-                this._selectedNeonWallet = wallet2;
-                break;
-            case 'Neo3':
-                this._selectedNeon = Neon3;
-                this._selectedNeonWallet = wallet3;
-                break;
-        }
     }
     //#endregion
 }
