@@ -1,13 +1,6 @@
 <mat-sidenav-container class="side-nav">
     <div class="mat-toolbar-fixed no-third-party-toolbar" *ngIf="!isThirdParty">
         <mat-toolbar color="primary">
-            <!-- <img class="popup-nav-icon" (click)="sidenav?.toggle()" *ngIf="walletIsOpen && !isLogin"
-                src="/assets/images/nav_icon_white.png" alt="">
-            <span class="popup-nav-menu" (click)="sidenav?.toggle()" *ngIf="walletIsOpen && !isLogin">
-                <img [avatar]="address" />
-            </span>
-            <img class="btn-back" src="/assets/images/back.png" routerLink="/popup/wallet/new-guide" routerLinkActive="active" *ngIf="!walletIsOpen" alt=""> -->
-
             <span class="popup-nav-logo">
                 <span class="popup-nav-logo-img"></span>
             </span>
@@ -15,7 +8,7 @@
                 <span class="network-name">{{ networks[selectedNetworkIndex]?.name }}</span>
                 <span class="popup-nav-network-icon"></span>
             </button>
-            <span class="popup-nav-menu" (click)="topMenu()" *ngIf="walletIsOpen && !isLogin">
+            <span class="popup-nav-menu" (click)="topMenu()" *ngIf="getShowAvatar()">
                 <img [avatar]="address" />
             </span>
         </mat-toolbar>

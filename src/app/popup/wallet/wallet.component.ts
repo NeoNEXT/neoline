@@ -79,7 +79,6 @@ export class PopupWalletComponent implements OnInit {
         this.chrome.setHasLoginAddress(data.accounts[0].address);
         this.chrome.setWallet(data.export());
         this.chrome.setLogin(false);
-        this.global.$wallet.next('open');
         if (type === 0) {
             this.chrome.setHaveBackupTip(true);
         } else {

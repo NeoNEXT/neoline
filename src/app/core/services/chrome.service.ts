@@ -263,24 +263,16 @@ export class ChromeService {
     }
 
     public setLogin(status: boolean) {
-        if (status === null) {
-            if (!this.check) {
-                sessionStorage.removeItem('shouldLogin');
-            } else {
-                this.setStorage(STORAGE_NAME.shouldLogin, true);
-            }
+        if (!this.check) {
+            sessionStorage.setItem('shouldLogin', status.toString());
         } else {
+            this.setStorage(STORAGE_NAME.shouldLogin, status);
+        }
+        if (status) {
             if (!this.check) {
-                sessionStorage.setItem('shouldLogin', status.toString());
+                sessionStorage.removeItem('hasLoginAddress');
             } else {
-                this.setStorage(STORAGE_NAME.shouldLogin, status);
-            }
-            if (status) {
-                if (!this.check) {
-                    sessionStorage.removeItem('hasLoginAddress');
-                } else {
-                    this.setStorage(STORAGE_NAME.hasLoginAddress, {});
-                }
+                this.setStorage(STORAGE_NAME.hasLoginAddress, {});
             }
         }
     }

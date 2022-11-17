@@ -83,7 +83,6 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
         const hasLoginAddress = await this.chrome.getHasLoginAddress().toPromise();
         if (this.accountWallet.accounts[0]?.extra?.ledgerSLIP44 || hasLoginAddress[this.accountWallet.accounts[0].address]) {
             this.chrome.setLogin(false);
-            this.global.$wallet.next('open');
             const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
             this.router.navigateByUrl(returnUrl);
             return;
@@ -103,7 +102,6 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
             this.loading = false;
             this.chrome.setHasLoginAddress(this.accountWallet.accounts[0].address);
             this.chrome.setLogin(false);
-            this.global.$wallet.next('open');
             const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
             this.router.navigateByUrl(returnUrl);
         }).catch((err) => {

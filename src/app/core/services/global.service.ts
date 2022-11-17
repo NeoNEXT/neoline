@@ -12,7 +12,6 @@ import { ChainType, RpcNetwork } from '@/app/popup/_lib';
 @Injectable()
 export class GlobalService {
     public apiDomain: string;
-    public $wallet: Subject<string>;
     public debug = false;
     private source404 = new Subject<string>();
     public $404 = this.source404.asObservable();
@@ -30,7 +29,6 @@ export class GlobalService {
         private notification: NotificationService
     ) {
         this.apiDomain = environment.mainApiBase;
-        this.$wallet = new Subject<string>();
     }
 
     public push404(error: string) {
@@ -41,12 +39,6 @@ export class GlobalService {
         if (this.debug) {
             console.log(...params);
         }
-    }
-    /**
-     * Use to listen wallet open/close.
-     */
-    public walletListen(): Observable<string> {
-        return this.$wallet.pipe(publish(), refCount());
     }
 
     public handlePrcError(error, chain: ChainType) {

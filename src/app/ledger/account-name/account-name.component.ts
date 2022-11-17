@@ -49,7 +49,6 @@ export class AccountNameComponent implements OnInit {
                     this.neon.getWalletArrayJSON()
                 );
                 this.chrome.setWallet(w.export());
-                this.global.$wallet.next('open');
                 this.importSuccess.emit();
             } else {
                 this.global.snackBarTip('existingWallet');
@@ -71,7 +70,6 @@ export class AccountNameComponent implements OnInit {
                     this.neon.getWalletArrayJSON()
                 );
                 this.chrome.setWallet(w.export());
-                this.global.$wallet.next('open');
                 this.importSuccess.emit();
             } else {
                 this.global.snackBarTip('existingWallet');

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { GlobalService, NeonService } from '@app/core';
+import { GlobalService, NeonService, ChromeService } from '@app/core';
 import { Router, RouterEvent, NavigationEnd } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import {
@@ -13,12 +13,10 @@ import { RpcNetwork } from './_lib';
     styleUrls: ['popup.component.scss'],
 })
 export class PopupComponent implements OnInit {
-    public walletIsOpen = false;
     public isThirdParty: boolean = false;
     public isNotificationComfirm: boolean = false;
     public address: string;
-    public isLogin = false;
-    public currentUrl: string = this.router.url;
+    private currentUrl = this.router.url;
     public networks: RpcNetwork[];
     public selectedNetworkIndex: number;
 
@@ -26,10 +24,9 @@ export class PopupComponent implements OnInit {
         private global: GlobalService,
         private neon: NeonService,
         private router: Router,
-        private dialog: MatDialog
+        private dialog: MatDialog,
+        private chrome: ChromeService
     ) {
-        this.walletIsOpen = false;
-        this.isLogin = false;
         this.address = this.neon.address;
         this.networks =
             this.neon.currentWalletChainType === 'Neo2'
@@ -59,65 +56,52 @@ export class PopupComponent implements OnInit {
                 this.isNotificationComfirm = true;
             }
         }
-        if (
-            this.router.url.indexOf('/login') >= 0 ||
-            this.router.url.indexOf('/wallet/new-guide') >= 0
-        ) {
-            this.isLogin = true;
-        }
         this.router.events.subscribe((res: RouterEvent) => {
             if (res instanceof NavigationEnd) {
                 if (res.url.indexOf('/notification') >= 0) {
                     this.isThirdParty = true;
                 }
-                this.isLogin = res.url.indexOf('login') >= 0;
                 this.currentUrl = res.url;
             }
         });
-        this.global.walletListen().subscribe((res: any) => {
-            this.walletIsOpen = res === 'open' ? true : false;
-        });
+    }
 
-        this.neon.walletIsOpen().subscribe((res: any) => {
-            this.global.$wallet.next(res ? 'open' : 'close');
-        });
+    getShowAvatar() {
+        if (
+            !this.address ||
+            this.currentUrl.indexOf('/login') >= 0 ||
+            this.currentUrl.indexOf('/wallet/new-guide') >= 0
+        ) {
+            return false;
+        }
+        return true;
     }
 
     public topMenu() {
-        this.dialog
-            .open(PopupHomeMenuDialogComponent, {
-                position: {
-                    top: '48px',
-                    right: '0px',
-                    left: '0px',
-                    bottom: '0px',
-                },
-                autoFocus: false,
-                width: '375px',
-                maxWidth: 375,
-                // maxHeight: 500,
-            })
-            .afterClosed()
-            .subscribe((res) => {
-                if (res === 'lock') {
-                    this.isLogin = false;
-                }
-            });
+        this.dialog.open(PopupHomeMenuDialogComponent, {
+            position: {
+                top: '48px',
+                right: '0px',
+                left: '0px',
+                bottom: '0px',
+            },
+            autoFocus: false,
+            width: '375px',
+            maxWidth: 375,
+            // maxHeight: 500,
+        });
     }
 
     openNetwork() {
-        this.dialog
-            .open(PopupN3NetworkDialogComponent, {
-                position: {
-                    top: '65px',
-                    right: '10px',
-                },
-                autoFocus: false,
-                width: '315px',
-                maxWidth: 375,
-                maxHeight: 500,
-            })
-            .afterClosed()
-            .subscribe(() => {});
+        this.dialog.open(PopupN3NetworkDialogComponent, {
+            position: {
+                top: '65px',
+                right: '10px',
+            },
+            autoFocus: false,
+            width: '315px',
+            maxWidth: 375,
+            maxHeight: 500,
+        });
     }
 }

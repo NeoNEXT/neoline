@@ -128,7 +128,6 @@ export class PopupHomeMenuDialogComponent implements OnInit {
     }
 
     public lock() {
-        this.global.$wallet.next('close');
         this.dialogRef.close('lock');
         this.chrome.setLogin(true);
         this.router.navigateByUrl('/popup/login');
