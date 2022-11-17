@@ -7,11 +7,9 @@ import { NotificationService } from './services/notification.service';
 import { HttpClientModule } from '@angular/common/http';
 import { HttpService } from './services/http.service';
 import {
-    WalletGuard,
     PopupWalletGuard,
     OpenedWalletGuard,
     PopupLoginGuard,
-    LoginGuard,
 } from './guards/wallet.guard';
 import { AssetState } from './states/asset.state';
 import { TransactionState } from './states/transaction.state';
@@ -39,11 +37,9 @@ import { ExtensionService } from './util/extension.service';
         NeonService,
         ChromeService,
         HttpService,
-        WalletGuard,
         PopupWalletGuard,
         OpenedWalletGuard,
         PopupLoginGuard,
-        LoginGuard,
         AssetState,
         TransactionState,
         NotificationService,

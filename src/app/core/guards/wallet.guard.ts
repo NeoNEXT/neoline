@@ -4,39 +4,6 @@ import { Observable } from 'rxjs';
 import { NeonService } from '../services/neon.service';
 import { GlobalService } from '../services/global.service';
 import { ChromeService } from '../services/chrome.service';
-import { STORAGE_NAME } from '@/app/popup/_lib';
-
-@Injectable()
-export class WalletGuard implements CanActivate {
-    constructor(
-        private neon: NeonService,
-        private router: Router,
-        private global: GlobalService,
-        private chrome: ChromeService
-    ) { }
-    canActivate(
-        route: ActivatedRouteSnapshot,
-        state: RouterStateSnapshot
-    ): Observable<boolean> | Promise<boolean> | boolean {
-        return new Promise(resolve => {
-            this.neon.walletIsOpen().subscribe((res: any) => {
-                if (!res) {
-                    this.chrome.setLogin(false);
-                    this.router.navigateByUrl('/wallet');
-                } else {
-                    this.chrome.getLogin().subscribe(shouldLogin => {
-                        if (shouldLogin) {
-                            this.router.navigateByUrl('/login');
-                            this.global.log('Wallet should login.');
-                        } else {
-                            resolve(res);
-                        }
-                    })
-                }
-            });
-        });
-    }
-}
 
 @Injectable()
 export class PopupLoginGuard implements CanActivate {
@@ -54,34 +21,6 @@ export class PopupLoginGuard implements CanActivate {
                 if (!res) {
                     this.chrome.setLogin(false);
                     this.router.navigateByUrl('/popup/wallet/new-guide');
-                } else {
-                    this.chrome.getLogin().subscribe(shouldLogin => {
-                        if (shouldLogin) {
-                            resolve(true);
-                        } else {
-                            resolve(false);
-                        }
-                    })
-                }
-            });
-        });
-    }
-}
-
-@Injectable()
-export class LoginGuard implements CanActivate {
-    constructor(
-        private neon: NeonService,
-        private router: Router,
-        private chrome: ChromeService
-    ) { }
-    canActivate(
-    ): Observable<boolean> | Promise<boolean> | boolean {
-        return new Promise(resolve => {
-            this.neon.walletIsOpen().subscribe((res: any) => {
-                if (!res) {
-                    this.chrome.setLogin(false);
-                    this.router.navigateByUrl('/wallet');
                 } else {
                     this.chrome.getLogin().subscribe(shouldLogin => {
                         if (shouldLogin) {
