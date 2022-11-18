@@ -9,8 +9,25 @@
     text-align: center;
 }
 
+.search-box {
+    border: 0.5px solid #DFDFDF;
+    height: 50px;
+    width: calc(100% -40px);
+    margin: 20px 20px 0px 20px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    input {
+        height: 100%;
+        padding-left: 15px;
+        background: transparent;
+        border: none;
+    }
+}
+
 .container {
-    max-height: 440px;
+    height: 370px;
     overflow: auto;
     .asset-item {
         height: 80px;

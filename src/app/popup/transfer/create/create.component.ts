@@ -667,9 +667,7 @@ export class TransferCreateComponent implements OnInit {
                 .open(PopupAssetDialogComponent, {
                     data: {
                         balances: this.balances,
-                        selected: this.balances.findIndex(
-                            (item) => item.asset_id === this.assetId
-                        ),
+                        selectedId: this.assetId,
                     },
                     maxHeight: 500,
                     panelClass: 'custom-dialog-panel',
@@ -692,10 +690,7 @@ export class TransferCreateComponent implements OnInit {
                     data: {
                         isNft: true,
                         nftTokens: this.nftTokens,
-                        selected: this.nftTokens.findIndex(
-                            (item) =>
-                                item.tokenid === this.chooseNftToken.tokenid
-                        ),
+                        selectedId: this.chooseNftToken.tokenid,
                     },
                     maxHeight: 500,
                     panelClass: 'custom-dialog-panel',
