@@ -1,11 +1,20 @@
-<P class="title">{{ 'modifyNameTitle' | translate | async}}</P>
+<p class="title">{{ 'modifyNameTitle' | translate | async}}</p>
 
 <div class="input-name">
-    <input [(ngModel)]="name" [maxlength]="limit?.nameLimitation[1]" [minlength]="limit?.nameLimitation[0]"
-        [placeholder]="'modifyNameInput' | translate | async" (keyup.enter)="updateName()">
+  <input
+    [(ngModel)]="name"
+    [maxlength]="limit?.nameLimitation[1]"
+    [minlength]="limit?.nameLimitation[0]"
+    [placeholder]="'modifyNameInput' | translate | async"
+    (keyup.enter)="updateName()"
+  />
 </div>
 
 <div class="choose-group">
-    <div class="cancel item" (click)="cancel()">{{ 'cancel' | translate | async}}</div>
-    <div class="ok item" (click)="updateName()">{{ 'yes' | translate | async}}</div>
+  <div class="cancel item" (click)="cancel()">
+    {{ 'cancel' | translate | async}}
+  </div>
+  <div class="ok item" (click)="updateName()">
+    {{ 'yes' | translate | async}}
+  </div>
 </div>

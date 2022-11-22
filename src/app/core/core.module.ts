@@ -7,9 +7,9 @@ import { NotificationService } from './services/notification.service';
 import { HttpClientModule } from '@angular/common/http';
 import { HttpService } from './services/http.service';
 import {
-    PopupWalletGuard,
-    OpenedWalletGuard,
-    PopupLoginGuard,
+  PopupWalletGuard,
+  OpenedWalletGuard,
+  PopupLoginGuard,
 } from './guards/wallet.guard';
 import { AssetState } from './states/asset.state';
 import { TransactionState } from './states/transaction.state';
@@ -24,33 +24,33 @@ import { LedgerService } from './services/ledger.service';
 import { ExtensionService } from './util/extension.service';
 
 @NgModule({
-    declarations: [],
-    imports: [
-        CommonModule,
-        HttpClientModule,
-        MatProgressSpinnerModule,
-        MatDialogModule,
-    ],
-    exports: [],
-    providers: [
-        GlobalService,
-        NeonService,
-        ChromeService,
-        HttpService,
-        PopupWalletGuard,
-        OpenedWalletGuard,
-        PopupLoginGuard,
-        AssetState,
-        TransactionState,
-        NotificationService,
-        SettingState,
-        NftState,
-        UtilServiceState,
-        TransferService,
-        HomeService,
-        LedgerService,
-        ExtensionService,
-    ],
-    entryComponents: [],
+  declarations: [],
+  imports: [
+    CommonModule,
+    HttpClientModule,
+    MatProgressSpinnerModule,
+    MatDialogModule,
+  ],
+  exports: [],
+  providers: [
+    GlobalService,
+    NeonService,
+    ChromeService,
+    HttpService,
+    PopupWalletGuard,
+    OpenedWalletGuard,
+    PopupLoginGuard,
+    AssetState,
+    TransactionState,
+    NotificationService,
+    SettingState,
+    NftState,
+    UtilServiceState,
+    TransferService,
+    HomeService,
+    LedgerService,
+    ExtensionService,
+  ],
+  entryComponents: [],
 })
 export class CoreModule {}

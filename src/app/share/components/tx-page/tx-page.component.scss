@@ -1,130 +1,130 @@
 @import "src/styles/theme-default";
 
 .popup-home-tx-page {
-    .tx-item {
-        position: relative;
-        height: 100px;
+  .tx-item {
+    position: relative;
+    height: 100px;
 
-        &:hover {
-            cursor: pointer;
-            background: lightgray;
-        }
-
-        .head {
-            margin-left: 20px;
-            margin-right: 20px;
-            padding-top: 10px;
-
-            .time {
-                font-size: 12px;
-                color: #b0b6be;
-            }
-
-            .more-info-btn {
-                width: 18px;
-                height: 18px;
-                padding: 5px;
-                float: right;
-            }
-        }
-
-        .content {
-            margin-left: 20px;
-            margin-right: 20px;
-            display: flex;
-            flex-direction: row;
-            align-items: center;
-
-            .tx-type-icon {
-                width: 17px;
-                height: 17px;
-            }
-
-            .status-box {
-                margin-top: 10px;
-                width: 60%;
-                margin-left: 25px;
-
-                .tx-type {
-                    font-size: 14px;
-                    color: #333333;
-                }
-
-                .status {
-                    font-size: 12px;
-                    color: #6ad982;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                    overflow: hidden;
-                    margin-top: 4px;
-
-                    &.wait {
-                        color: #f89266;
-                    }
-
-                    &.fail {
-                        color: #07ccab;
-                    }
-
-                    span {
-                        vertical-align: middle;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                        overflow: hidden;
-                        display: inline-block;
-                        color: #808a94;
-                        font-size: 12px;
-                        width: 60%;
-                    }
-                }
-            }
-
-            .amount-box {
-                flex-grow: 1;
-                text-align: right;
-                padding-right: 15px;
-
-                .asset-amount {
-                    font-size: 15px;
-                    color: #333333;
-
-                    &.activity {
-                        color: #71dbc4;
-                    }
-
-                    &.send {
-                        color: #444644;
-                    }
-
-                    &.receive {
-                        color: #07ccab;
-                    }
-                }
-
-                .money-amount {
-                    font-size: 12px;
-                    color: #9fa8bd;
-                    margin-top: 4px;
-                    color: #808a94;
-                }
-            }
-        }
-
-        hr {
-            border: none;
-            width: 100%;
-            border-top: 0.5px solid #f2f2f2;
-            position: absolute;
-            bottom: 0px;
-        }
+    &:hover {
+      cursor: pointer;
+      background: lightgray;
     }
 
-    .no-data,
-    .loading {
-        margin-top: 20px;
-        text-align: center;
+    .head {
+      margin-left: 20px;
+      margin-right: 20px;
+      padding-top: 10px;
+
+      .time {
         font-size: 12px;
         color: #b0b6be;
-        margin-bottom: 40px;
+      }
+
+      .more-info-btn {
+        width: 18px;
+        height: 18px;
+        padding: 5px;
+        float: right;
+      }
     }
+
+    .content {
+      margin-left: 20px;
+      margin-right: 20px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      .tx-type-icon {
+        width: 17px;
+        height: 17px;
+      }
+
+      .status-box {
+        margin-top: 10px;
+        width: 60%;
+        margin-left: 25px;
+
+        .tx-type {
+          font-size: 14px;
+          color: #333333;
+        }
+
+        .status {
+          font-size: 12px;
+          color: #6ad982;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          overflow: hidden;
+          margin-top: 4px;
+
+          &.wait {
+            color: #f89266;
+          }
+
+          &.fail {
+            color: #07ccab;
+          }
+
+          span {
+            vertical-align: middle;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            overflow: hidden;
+            display: inline-block;
+            color: #808a94;
+            font-size: 12px;
+            width: 60%;
+          }
+        }
+      }
+
+      .amount-box {
+        flex-grow: 1;
+        text-align: right;
+        padding-right: 15px;
+
+        .asset-amount {
+          font-size: 15px;
+          color: #333333;
+
+          &.activity {
+            color: #71dbc4;
+          }
+
+          &.send {
+            color: #444644;
+          }
+
+          &.receive {
+            color: #07ccab;
+          }
+        }
+
+        .money-amount {
+          font-size: 12px;
+          color: #9fa8bd;
+          margin-top: 4px;
+          color: #808a94;
+        }
+      }
+    }
+
+    hr {
+      border: none;
+      width: 100%;
+      border-top: 0.5px solid #f2f2f2;
+      position: absolute;
+      bottom: 0px;
+    }
+  }
+
+  .no-data,
+  .loading {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: #b0b6be;
+    margin-bottom: 40px;
+  }
 }

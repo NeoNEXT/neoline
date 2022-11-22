@@ -3,154 +3,154 @@
 @import "src/app/popup/transfer/common-scss/common.scss";
 
 .transfer-body {
-    .container {
-        display: flex;
-        align-items: center;
-        margin-top: 20px;
-    }
+  .container {
+    display: flex;
+    align-items: center;
+    margin-top: 20px;
+  }
 
-    .label {
-        display: inline-block;
-        vertical-align: middle;
-        width: 60px;
-        word-wrap: break-word;
-        font-size: 12px;
+  .label {
+    display: inline-block;
+    vertical-align: middle;
+    width: 60px;
+    word-wrap: break-word;
+    font-size: 12px;
+    color: #808a94;
+    text-align: center;
+    margin-left: 18px;
+    margin-right: 15px;
+  }
+
+  .box {
+    display: inline-flex;
+    flex: 1 1 auto;
+    max-width: 275px;
+    align-items: center;
+    background-color: #fafafa;
+    border-radius: 10px;
+    min-height: 60px;
+    margin-right: 20px;
+  }
+
+  hr {
+    border: none;
+    border-top: 0.5px solid #efefef;
+    margin-top: 44px;
+  }
+
+  .to-container {
+    .address {
+      flex: 1 1 auto;
+      font-size: 16px;
+      color: map-get($neo-line-default, 500);
+      margin-left: 20px;
+      .address-tip {
         color: #808a94;
-        text-align: center;
-        margin-left: 18px;
-        margin-right: 15px;
+        font-size: 13px;
+      }
+    }
+  }
+
+  .asset-box {
+    padding-top: 10px;
+    padding-bottom: 10px;
+
+    .asset-logo {
+      width: 50px;
+      height: 50px;
+      margin-left: 20px;
+      padding: 10px;
+      background: white;
+      border-radius: 50%;
+
+      img {
+        width: 30px;
+        height: 30px;
+      }
     }
 
-    .box {
-        display: inline-flex;
-        flex: 1 1 auto;
-        max-width: 275px;
-        align-items: center;
-        background-color: #fafafa;
-        border-radius: 10px;
-        min-height: 60px;
-        margin-right: 20px;
-    }
+    .asset-info {
+      flex: 1 1 auto;
+      max-width: 150px;
+      margin-left: 16px;
 
-    hr {
-        border: none;
-        border-top: 0.5px solid #efefef;
-        margin-top: 44px;
-    }
-
-    .to-container {
-        .address {
-            flex: 1 1 auto;
-            font-size: 16px;
-            color: map-get($neo-line-default, 500);
-            margin-left: 20px;
-            .address-tip {
-                color: #808a94;
-                font-size: 13px;
-            }
-        }
-    }
-
-    .asset-box {
-        padding-top: 10px;
-        padding-bottom: 10px;
-
-        .asset-logo {
-            width: 50px;
-            height: 50px;
-            margin-left: 20px;
-            padding: 10px;
-            background: white;
-            border-radius: 50%;
-
-            img {
-                width: 30px;
-                height: 30px;
-            }
+      p {
+        &:nth-child(1) {
+          font-size: 16px;
+          color: #444644;
         }
 
-        .asset-info {
-            flex: 1 1 auto;
-            max-width: 150px;
-            margin-left: 16px;
-
-            p {
-                &:nth-child(1) {
-                    font-size: 16px;
-                    color: #444644;
-                }
-
-                &:nth-child(2) {
-                    width: 80%;
-                    overflow: auto;
-                    margin-top: 8px;
-                    color: #808a94;
-                    font-size: 14px;
-                    white-space: nowrap;
-                    margin-right: 20px;
-                }
-            }
+        &:nth-child(2) {
+          width: 80%;
+          overflow: auto;
+          margin-top: 8px;
+          color: #808a94;
+          font-size: 14px;
+          white-space: nowrap;
+          margin-right: 20px;
         }
+      }
+    }
+  }
+
+  .amount-box {
+    input {
+      min-width: 100px;
+      border: none;
+      flex: 1 1 auto;
+      height: 60px;
+      display: inline-block;
+      color: #303433;
+      font-size: 18px;
+      padding-left: 25px;
+      background: transparent;
+      max-width: 200px;
     }
 
-    .amount-box {
-        input {
-            min-width: 100px;
-            border: none;
-            flex: 1 1 auto;
-            height: 60px;
-            display: inline-block;
-            color: #303433;
-            font-size: 18px;
-            padding-left: 25px;
-            background: transparent;
-            max-width: 200px;
-        }
-
-        button {
-            display: inline;
-        }
+    button {
+      display: inline;
     }
+  }
 
-    .fee-box {
-        display: flex;
-        justify-content: space-between;
-        padding: 0 15px 0 25px;
-        .fee-left {
-            .desc {
-                font-size: 17px;
-                color: #202224;
-            }
-            .value {
-                font-size: 15px;
-                color: #707c82;
-            }
-        }
-        img.arrow {
-            height: 11px;
-        }
+  .fee-box {
+    display: flex;
+    justify-content: space-between;
+    padding: 0 15px 0 25px;
+    .fee-left {
+      .desc {
+        font-size: 17px;
+        color: #202224;
+      }
+      .value {
+        font-size: 15px;
+        color: #707c82;
+      }
     }
+    img.arrow {
+      height: 11px;
+    }
+  }
 
-    .drop {
-        width: 7.5px;
-        height: 4px;
-        margin-right: 25px;
-    }
+  .drop {
+    width: 7.5px;
+    height: 4px;
+    margin-right: 25px;
+  }
 }
 
 .btn-box {
-    display: inline-block;
-    margin: 20px auto;
+  display: inline-block;
+  margin: 20px auto;
 
-    button {
-        &:nth-child(1) {
-            background: #ecfbf1;
-            color: map-get($neo-line-default, 500);
-        }
-
-        margin-left: 15px;
-        border-radius: 25px;
-        height: 50px;
-        width: 160px;
+  button {
+    &:nth-child(1) {
+      background: #ecfbf1;
+      color: map-get($neo-line-default, 500);
     }
+
+    margin-left: 15px;
+    border-radius: 25px;
+    height: 50px;
+    width: 160px;
+  }
 }

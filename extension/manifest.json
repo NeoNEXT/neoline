@@ -1,51 +1,47 @@
 {
-    "name": "NeoLine",
-    "description": "NEO thin wallet for chrome extension",
-    "version": "3.6.2",
-    "manifest_version": 3,
-    "action": {
-        "default_popup": "index.html#popup",
-        "default_icon": "assets/logo128.png"
-    },
-    "default_locale": "en",
-    "commands": {
-        "_execute_browser_action": {
-            "suggested_key": {
-                "default": "Ctrl+Shift+F",
-                "mac": "MacCtrl+Shift+F"
-            },
-            "description": "Opens neoline"
-        }
-    },
-    "icons": {
-        "16": "assets/logo16.png",
-        "48": "assets/logo48.png",
-        "128": "assets/logo128.png"
-    },
-
-    "content_scripts": [
-        {
-            "matches": ["*://*/*"],
-            "js": ["neoline.js", "neolineN3.js"]
-        }
-    ],
-    "web_accessible_resources": [
-        {
-            "resources": ["dapi.js", "dapiN3.js"],
-            "matches": ["http://*/*", "https://*/*"],
-            "extension_ids": []
-        }
-    ],
-    "permissions": [
-        "storage",
-        "notifications",
-        "activeTab"
-    ],
-    "background": {
-        "service_worker": "background.js"
-    },
-    "externally_connectable": {
-        "matches": ["https://neoline.cn/*"],
-        "ids": ["*"]
+  "name": "NeoLine",
+  "description": "NEO thin wallet for chrome extension",
+  "version": "3.6.2",
+  "manifest_version": 3,
+  "action": {
+    "default_popup": "index.html#popup",
+    "default_icon": "assets/logo128.png"
+  },
+  "default_locale": "en",
+  "commands": {
+    "_execute_browser_action": {
+      "suggested_key": {
+        "default": "Ctrl+Shift+F",
+        "mac": "MacCtrl+Shift+F"
+      },
+      "description": "Opens neoline"
     }
+  },
+  "icons": {
+    "16": "assets/logo16.png",
+    "48": "assets/logo48.png",
+    "128": "assets/logo128.png"
+  },
+
+  "content_scripts": [
+    {
+      "matches": ["*://*/*"],
+      "js": ["neoline.js", "neolineN3.js"]
+    }
+  ],
+  "web_accessible_resources": [
+    {
+      "resources": ["dapi.js", "dapiN3.js"],
+      "matches": ["http://*/*", "https://*/*"],
+      "extension_ids": []
+    }
+  ],
+  "permissions": ["storage", "notifications", "activeTab"],
+  "background": {
+    "service_worker": "background.js"
+  },
+  "externally_connectable": {
+    "matches": ["https://neoline.cn/*"],
+    "ids": ["*"]
+  }
 }

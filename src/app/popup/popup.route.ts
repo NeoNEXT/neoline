@@ -13,68 +13,68 @@ import { PopupNewWalletGuideComponent } from './new-wallet-guide/new-wallet-guid
 import { PopupSettingComponent } from './setting/setting.component';
 
 import {
-    PopupLoginGuard,
-    OpenedWalletGuard,
-    PopupWalletGuard,
+  PopupLoginGuard,
+  OpenedWalletGuard,
+  PopupWalletGuard,
 } from '@app/core';
 
 const routes: Routes = [
-    {
-        path: 'popup',
-        component: PopupComponent,
-        children: [
-            { path: '', redirectTo: `/popup/home`, pathMatch: 'full' },
-            {
-                path: 'about',
-                canActivate: [PopupWalletGuard],
-                component: PopupAboutComponent,
-            },
-            {
-                path: 'account',
-                canActivate: [PopupWalletGuard],
-                component: PopupAccountComponent,
-            },
-            {
-                path: 'asset/:assetId',
-                canActivate: [PopupWalletGuard],
-                component: PopupAssetDetailComponent,
-            },
-            {
-                path: 'nfts/:contract',
-                canActivate: [PopupWalletGuard],
-                component: PopupNftDetailComponent,
-            },
-            {
-                path: 'backup',
-                canActivate: [PopupWalletGuard],
-                component: PopupBackupComponent,
-            },
-            {
-                path: 'home',
-                canActivate: [PopupWalletGuard],
-                component: PopupHomeComponent,
-            },
-            {
-                canActivate: [PopupLoginGuard],
-                path: 'login',
-                component: PopupLoginComponent,
-            },
-            {
-                canActivate: [OpenedWalletGuard],
-                path: 'wallet/new-guide',
-                component: PopupNewWalletGuideComponent,
-            },
-            {
-                path: 'setting',
-                canActivate: [PopupWalletGuard],
-                component: PopupSettingComponent,
-            },
-        ],
-    },
+  {
+    path: 'popup',
+    component: PopupComponent,
+    children: [
+      { path: '', redirectTo: `/popup/home`, pathMatch: 'full' },
+      {
+        path: 'about',
+        canActivate: [PopupWalletGuard],
+        component: PopupAboutComponent,
+      },
+      {
+        path: 'account',
+        canActivate: [PopupWalletGuard],
+        component: PopupAccountComponent,
+      },
+      {
+        path: 'asset/:assetId',
+        canActivate: [PopupWalletGuard],
+        component: PopupAssetDetailComponent,
+      },
+      {
+        path: 'nfts/:contract',
+        canActivate: [PopupWalletGuard],
+        component: PopupNftDetailComponent,
+      },
+      {
+        path: 'backup',
+        canActivate: [PopupWalletGuard],
+        component: PopupBackupComponent,
+      },
+      {
+        path: 'home',
+        canActivate: [PopupWalletGuard],
+        component: PopupHomeComponent,
+      },
+      {
+        canActivate: [PopupLoginGuard],
+        path: 'login',
+        component: PopupLoginComponent,
+      },
+      {
+        canActivate: [OpenedWalletGuard],
+        path: 'wallet/new-guide',
+        component: PopupNewWalletGuideComponent,
+      },
+      {
+        path: 'setting',
+        canActivate: [PopupWalletGuard],
+        component: PopupSettingComponent,
+      },
+    ],
+  },
 ];
 
 @NgModule({
-    imports: [RouterModule.forChild(routes)],
-    exports: [RouterModule],
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule],
 })
 export class PopupRoutingModule {}

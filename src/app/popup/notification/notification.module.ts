@@ -21,29 +21,29 @@ import { PopupNoticeNeo3SignComponent } from './neo3-signature/neo3-signature.co
 import { PopupNoticeNeo3SignTransactionComponent } from './neo3-sign-transaction/neo3-sign-transaction.component';
 
 @NgModule({
-    declarations: [
-        PopupNotificationComponent,
-        PopupNoticeTransferComponent,
-        PopupNoticeSignComponent,
-        PopupNoticeTokenComponent,
-        PopupNoticeAuthComponent,
-        PopupNoticeInvokeComponent,
-        PopupNoticeInvokeMultiComponent,
-        PopupNoticeDeployComponent,
-        PopupNoticeNeo3TransferComponent,
-        PopupNoticeNeo3InvokeComponent,
-        PopupNoticeNeo3InvokeMultipleComponent,
-        PopupPickAddressComponent,
-        PopupNoticeNeo3SignComponent,
-        PopupNoticeNeo3SignTransactionComponent
-    ],
-    imports: [
-        CommonModule,
-        ShareModule,
-        PopupNotificationRoutingModule,
-        BrowserAnimationsModule
-    ],
-    exports: [],
-    providers: [],
+  declarations: [
+    PopupNotificationComponent,
+    PopupNoticeTransferComponent,
+    PopupNoticeSignComponent,
+    PopupNoticeTokenComponent,
+    PopupNoticeAuthComponent,
+    PopupNoticeInvokeComponent,
+    PopupNoticeInvokeMultiComponent,
+    PopupNoticeDeployComponent,
+    PopupNoticeNeo3TransferComponent,
+    PopupNoticeNeo3InvokeComponent,
+    PopupNoticeNeo3InvokeMultipleComponent,
+    PopupPickAddressComponent,
+    PopupNoticeNeo3SignComponent,
+    PopupNoticeNeo3SignTransactionComponent,
+  ],
+  imports: [
+    CommonModule,
+    ShareModule,
+    PopupNotificationRoutingModule,
+    BrowserAnimationsModule,
+  ],
+  exports: [],
+  providers: [],
 })
 export class PopupNotificationModule {}

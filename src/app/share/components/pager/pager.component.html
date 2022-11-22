@@ -1,11 +1,18 @@
 <button mat-icon-button [disabled]="page <= 1 || pages <= 1" (click)="prev()">
-    <mat-icon aria-label="Previous">navigate_before</mat-icon>
+  <mat-icon aria-label="Previous">navigate_before</mat-icon>
 </button>
 <button mat-icon-button *ngIf="groupBase > 1" (click)="groupPrev()">···</button>
-<button mat-icon-button *ngFor="let item of list"
-(click)="jump(item)"
- [ngClass]="{active: page==item}">{{item}}</button>
-<button mat-icon-button *ngIf="groupBase < maxGroup" (click)="groupNext()">···</button>
+<button
+  mat-icon-button
+  *ngFor="let item of list"
+  (click)="jump(item)"
+  [ngClass]="{ active: page == item }"
+>
+  {{ item }}
+</button>
+<button mat-icon-button *ngIf="groupBase < maxGroup" (click)="groupNext()">
+  ···
+</button>
 <button mat-icon-button [disabled]="page >= pages" (click)="next()">
-    <mat-icon aria-label="Previous">navigate_next</mat-icon>
+  <mat-icon aria-label="Previous">navigate_next</mat-icon>
 </button>

@@ -1,120 +1,120 @@
-@import 'src/styles/popup-default';
-@import 'src/styles/theme-default';
+@import "src/styles/popup-default";
+@import "src/styles/theme-default";
 
 .mat-toolbar-fixed {
-    width: 100%;
-    // height: auto;
-    position: fixed;
-    left: 0;
-    top: 0;
-    z-index: 99999999;
+  width: 100%;
+  // height: auto;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 99999999;
 
-    .mat-toolbar {
-        height: 64px;
-        .popup-nav-menu {
-            width: 34px;
-            height: 34px;
-            border-radius: 50%;
-            overflow: hidden;
-            margin-left: 20px;
-            margin-top: 10px;
-            &.is-login {
-                display: none;
-            }
-            &:hover {
-                cursor: pointer;
-            }
+  .mat-toolbar {
+    height: 64px;
+    .popup-nav-menu {
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      overflow: hidden;
+      margin-left: 20px;
+      margin-top: 10px;
+      &.is-login {
+        display: none;
+      }
+      &:hover {
+        cursor: pointer;
+      }
 
-            img {
-                width: inherit;
-                height: inherit;
-            }
-        }
-
-        .popup-nav-logo {
-            flex: auto;
-            .popup-nav-logo-img {
-                height: 20px;
-                display: inline-block;
-                vertical-align: middle;
-            }
-        }
-
-        .popup-nav-network {
-            width: 127px;
-            height: 30px;
-            line-height: 30px;
-            border-radius: 30px;
-            font-size: 12px;
-            .network-name {
-                display: inline-block;
-                max-width: 100px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                margin-right: 3px;
-            }
-            .popup-nav-network-icon {
-                width: 5px;
-                height: 3px;
-                display: inline-block;
-            }
-        }
+      img {
+        width: inherit;
+        height: inherit;
+      }
     }
+
+    .popup-nav-logo {
+      flex: auto;
+      .popup-nav-logo-img {
+        height: 20px;
+        display: inline-block;
+        vertical-align: middle;
+      }
+    }
+
+    .popup-nav-network {
+      width: 127px;
+      height: 30px;
+      line-height: 30px;
+      border-radius: 30px;
+      font-size: 12px;
+      .network-name {
+        display: inline-block;
+        max-width: 100px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        margin-right: 3px;
+      }
+      .popup-nav-network-icon {
+        width: 5px;
+        height: 3px;
+        display: inline-block;
+      }
+    }
+  }
 }
 
 .popup {
-    width: 100%;
-    height: calc(100% - 64px);
-    position: fixed;
-    top: 64px;
-    left: 0;
-    z-index: map-get($z-indexes, max);
-    overflow-y: auto;
-    overflow-x: hidden;
-    background-color: map-get($neo-line-default, 50);
-    &.isConfirm {
-        height: 100%;
-        top: 0;
-    }
+  width: 100%;
+  height: calc(100% - 64px);
+  position: fixed;
+  top: 64px;
+  left: 0;
+  z-index: map-get($z-indexes, max);
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: map-get($neo-line-default, 50);
+  &.isConfirm {
+    height: 100%;
+    top: 0;
+  }
 }
 
 .no-third-party-toolbar {
-    height: auto;
-    .popup-nav-logo-img {
-        width: 84px;
-        @include bg($img-login-logo);
+  height: auto;
+  .popup-nav-logo-img {
+    width: 84px;
+    @include bg($img-login-logo);
+  }
+  .popup-nav-network {
+    border-color: map-get($colors, f7f7f7);
+    margin-top: 10px;
+    .popup-nav-network-icon {
+      @include bg($img-net-dropdown);
     }
-    .popup-nav-network {
-        border-color: map-get($colors, f7f7f7);
-        margin-top: 10px;
-        .popup-nav-network-icon {
-            @include bg($img-net-dropdown);
-        }
-    }
+  }
 }
 
 .is-third-party-toolbar {
-    .mat-toolbar {
-        background-color: map-get($neo-line-default, 50);
-        border-bottom: 1px solid #f1f1f1;
+  .mat-toolbar {
+    background-color: map-get($neo-line-default, 50);
+    border-bottom: 1px solid #f1f1f1;
 
-        .popup-nav-logo-title-img {
-            width: 84px;
-            @include bg($img-logo-title);
-        }
-
-        .popup-nav-network {
-            border-color: map-get($colors, f7f7f7);
-            color: map-get($colors, 666666);
-
-            .popup-nav-network-icon {
-                @include bg($img-tp-net-dropdown);
-            }
-        }
+    .popup-nav-logo-title-img {
+      width: 84px;
+      @include bg($img-logo-title);
     }
+
+    .popup-nav-network {
+      border-color: map-get($colors, f7f7f7);
+      color: map-get($colors, 666666);
+
+      .popup-nav-network-icon {
+        @include bg($img-tp-net-dropdown);
+      }
+    }
+  }
 }
 
 span.set-net {
-    margin-left: 5px;
-    color: map-get($neo-line-default, 500);
+  margin-left: 5px;
+  color: map-get($neo-line-default, 500);
 }

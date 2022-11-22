@@ -1,29 +1,23 @@
-import {
-    Component,
-    OnInit,
-    Input,
-    Output,
-    EventEmitter
-} from '@angular/core';
+import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 
 @Component({
-    selector: 'app-popup-pager',
-    templateUrl: 'popup-pager.component.html',
-    styleUrls: ['popup-pager.component.scss']
+  selector: 'app-popup-pager',
+  templateUrl: 'popup-pager.component.html',
+  styleUrls: ['popup-pager.component.scss'],
 })
 export class PopupPagerComponent implements OnInit {
-    @Input() currentPage = 1;
-    @Input() totalPageCount = 0;
-    @Input() totalItemCount = 0;
+  @Input() currentPage = 1;
+  @Input() totalPageCount = 0;
+  @Input() totalItemCount = 0;
 
-    // tslint:disable-next-line:no-output-on-prefix
-    @Output() onPage = new EventEmitter<any>();
+  // tslint:disable-next-line:no-output-on-prefix
+  @Output() onPage = new EventEmitter<any>();
 
-    constructor() { }
+  constructor() {}
 
-    ngOnInit(): void { }
+  ngOnInit(): void {}
 
-    public page(currentPage: any) {
-        this.onPage.emit(currentPage);
-    }
+  public page(currentPage: any) {
+    this.onPage.emit(currentPage);
+  }
 }

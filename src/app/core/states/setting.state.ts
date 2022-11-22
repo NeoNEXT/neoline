@@ -5,26 +5,25 @@ import { BehaviorSubject } from 'rxjs';
 
 @Injectable()
 export class SettingState {
-    public rateCurrencys: Array<SelectItem> = RateCurrencysType;
-    public theme = 'light-theme';
-    langSub = new BehaviorSubject<string>('en');
-    langJson = { en: undefined, zh_CN: undefined };
+  public rateCurrencys: Array<SelectItem> = RateCurrencysType;
+  public theme = 'light-theme';
+  langSub = new BehaviorSubject<string>('en');
+  langJson = { en: undefined, zh_CN: undefined };
 
-    constructor(
-    ) {
-        if (localStorage.getItem('theme')) {
-            this.theme = localStorage.getItem('theme');
-        }
+  constructor() {
+    if (localStorage.getItem('theme')) {
+      this.theme = localStorage.getItem('theme');
     }
+  }
 
-    changeTheme(theme) {
-        this.theme = theme;
-        localStorage.setItem('theme', theme);
-        const body = document.getElementsByTagName('body')[0];
-        body.setAttribute('data-theme-style', theme);
-    }
+  changeTheme(theme) {
+    this.theme = theme;
+    localStorage.setItem('theme', theme);
+    const body = document.getElementsByTagName('body')[0];
+    body.setAttribute('data-theme-style', theme);
+  }
 
-    changLang(lang: string) {
-        this.langSub.next(lang);
-    }
+  changLang(lang: string) {
+    this.langSub.next(lang);
+  }
 }

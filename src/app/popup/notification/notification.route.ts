@@ -20,37 +20,46 @@ import { PopupNoticeNeo3SignComponent } from './neo3-signature/neo3-signature.co
 import { PopupNoticeNeo3SignTransactionComponent } from './neo3-sign-transaction/neo3-sign-transaction.component';
 
 const routes: Routes = [
-    {
-        path: 'popup',
-        component: PopupComponent,
+  {
+    path: 'popup',
+    component: PopupComponent,
+    children: [
+      {
+        path: 'notification',
+        component: PopupNotificationComponent,
+        canActivate: [PopupWalletGuard],
         children: [
-            {
-                path: 'notification',
-                component: PopupNotificationComponent,
-                canActivate: [ PopupWalletGuard ],
-                children: [
-                    { path: '', component: PopupNoticeTransferComponent },
-                    { path: 'transfer', component: PopupNoticeTransferComponent},
-                    { path: 'signature', component: PopupNoticeSignComponent},
-                    { path: 'token', component: PopupNoticeTokenComponent},
-                    { path: 'authorization', component: PopupNoticeAuthComponent},
-                    { path: 'invoke', component: PopupNoticeInvokeComponent},
-                    { path: 'invoke-multi', component: PopupNoticeInvokeMultiComponent},
-                    { path: 'deploy', component: PopupNoticeDeployComponent},
-                    { path: 'neo3-transfer', component: PopupNoticeNeo3TransferComponent},
-                    { path: 'neo3-invoke', component: PopupNoticeNeo3InvokeComponent},
-                    { path: 'neo3-invoke-multiple', component: PopupNoticeNeo3InvokeMultipleComponent},
-                    { path: 'neo3-signature', component: PopupNoticeNeo3SignComponent},
-                    { path: 'neo3-sign-transaction', component: PopupNoticeNeo3SignTransactionComponent},
-                    { path: 'pick-address', component: PopupPickAddressComponent},
-                ]
-            },
-        ]
-    }
+          { path: '', component: PopupNoticeTransferComponent },
+          { path: 'transfer', component: PopupNoticeTransferComponent },
+          { path: 'signature', component: PopupNoticeSignComponent },
+          { path: 'token', component: PopupNoticeTokenComponent },
+          { path: 'authorization', component: PopupNoticeAuthComponent },
+          { path: 'invoke', component: PopupNoticeInvokeComponent },
+          { path: 'invoke-multi', component: PopupNoticeInvokeMultiComponent },
+          { path: 'deploy', component: PopupNoticeDeployComponent },
+          {
+            path: 'neo3-transfer',
+            component: PopupNoticeNeo3TransferComponent,
+          },
+          { path: 'neo3-invoke', component: PopupNoticeNeo3InvokeComponent },
+          {
+            path: 'neo3-invoke-multiple',
+            component: PopupNoticeNeo3InvokeMultipleComponent,
+          },
+          { path: 'neo3-signature', component: PopupNoticeNeo3SignComponent },
+          {
+            path: 'neo3-sign-transaction',
+            component: PopupNoticeNeo3SignTransactionComponent,
+          },
+          { path: 'pick-address', component: PopupPickAddressComponent },
+        ],
+      },
+    ],
+  },
 ];
 
 @NgModule({
-    imports: [RouterModule.forChild(routes)],
-    exports: [RouterModule]
+  imports: [RouterModule.forChild(routes)],
+  exports: [RouterModule],
 })
-export class PopupNotificationRoutingModule { }
+export class PopupNotificationRoutingModule {}

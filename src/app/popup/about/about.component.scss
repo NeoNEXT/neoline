@@ -1,82 +1,82 @@
 @import "src/styles/popup-default";
 
 .nav {
-    height: 65px;
-    background-color: #06ccab;
-    position: relative;
+  height: 65px;
+  background-color: #06ccab;
+  position: relative;
 
-    .content {
-        height: 30px;
-        padding-top: 5px;
-        font-size: 20px;
-        font-weight: 500;
-        color: #ffffff;
-        display: flex;
-        align-items: center;
+  .content {
+    height: 30px;
+    padding-top: 5px;
+    font-size: 20px;
+    font-weight: 500;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
 
-        img {
-            height: 30px;
-            margin-right: 11px;
-            cursor: pointer;
-        }
+    img {
+      height: 30px;
+      margin-right: 11px;
+      cursor: pointer;
     }
+  }
 
-    .divide {
-        position: absolute;
-        bottom: 0;
-        width: 100%;
-        height: 15px;
-        background: #ffffff;
-        border-radius: 15px 15px 0px 0px;
-    }
+  .divide {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    height: 15px;
+    background: #ffffff;
+    border-radius: 15px 15px 0px 0px;
+  }
 }
 
 .popup-about-logo {
-    text-align: center;
-    margin-top: 25px;
+  text-align: center;
+  margin-top: 25px;
 
-    img {
-        height: 30px;
-    }
+  img {
+    height: 30px;
+  }
 }
 
 .popup-about-version {
-    text-align: center;
-    margin-top: 2px;
-    // color: map-get($colors, 9fa8bd);
-    font-size: 15px;
-    font-weight: 400;
-    color: #afb6be;
+  text-align: center;
+  margin-top: 2px;
+  // color: map-get($colors, 9fa8bd);
+  font-size: 15px;
+  font-weight: 400;
+  color: #afb6be;
 }
 
 .popup-about {
-    margin-top: 50px;
-    padding: 0 20px;
+  margin-top: 50px;
+  padding: 0 20px;
 
-    .about-item {
-        height: 65px;
-        background: #f8f8f8;
-        border-radius: 10px;
-        font-size: 17px;
-        font-weight: 400;
-        color: #434543;
-        padding: 0 18px 0 26px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
+  .about-item {
+    height: 65px;
+    background: #f8f8f8;
+    border-radius: 10px;
+    font-size: 17px;
+    font-weight: 400;
+    color: #434543;
+    padding: 0 18px 0 26px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 
-        &:not(:last-of-type) {
-            margin-bottom: 15px;
-        }
-
-        img {
-            height: 11px;
-        }
+    &:not(:last-of-type) {
+      margin-bottom: 15px;
     }
 
-    a {
-        display: block;
-        margin-top: 15px;
-        text-decoration: none;
+    img {
+      height: 11px;
     }
+  }
+
+  a {
+    display: block;
+    margin-top: 15px;
+    text-decoration: none;
+  }
 }

@@ -1,214 +1,218 @@
-@import 'src/styles/theme-default';
-@import 'src/styles/popup-default';
+@import "src/styles/theme-default";
+@import "src/styles/popup-default";
 
 .content {
-    font-weight: bold;
-    padding: 20px 15px 0 15px;
-    text-align: center;
-    width: 100%;
-    height: calc(100% - 100px);
+  font-weight: bold;
+  padding: 20px 15px 0 15px;
+  text-align: center;
+  width: 100%;
+  height: calc(100% - 100px);
+  position: relative;
+  overflow: scroll;
+  .title {
+    line-height: 80px;
+  }
+
+  .avatar {
+    height: 133px;
     position: relative;
-    overflow: scroll;
-    .title {
-        line-height: 80px;
+
+    .dashed-hori-line {
+      width: 146px;
+      height: 32px;
+      position: absolute;
+      top: 0;
+      left: 50%;
+      margin-left: -73px;
+      border-bottom: 1px dashed map-get($colors, 8dd9d2);
     }
 
-    .avatar {
-        height: 133px;
-        position: relative;
-
-        .dashed-hori-line {
-            width: 146px;
-            height: 32px;
-            position: absolute;
-            top: 0;
-            left: 50%;
-            margin-left: -73px;
-            border-bottom: 1px dashed map-get($colors, 8dd9d2);
-        }
-
-        .dashed-vert-line {
-            height: 101px;
-            width: 0;
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            border-right: 1px dashed map-get($colors, 8dd9d2);
-        }
-
-        .avatar-group {
-            width: 100%;
-            height: 64px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 5px;
-
-            img {
-                width: 64px;
-                height: 64px;
-                display: inline-block;
-            }
-
-            img.avatar {
-                width: 64px;
-                height: 64px;
-                border-radius: 32px;
-                background: rgba(73, 73, 73, 1);
-            }
-
-            img.middle {
-                z-index: 999999;
-                width: 36px;
-                height: 36px;
-                margin: 0 55px;
-            }
-        }
-
-        .name-group {
-            span {
-                font-size: 14px;
-                position: absolute;
-                width: 134px;
-                color: map-get($colors, 333333);
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-            .left {
-                left: 67px;
-                margin-left: -67px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-            .right {
-                right: 67px;
-                margin-right: -67px;
-            }
-        }
-
-        .address {
-            position: absolute;
-            left: 67px;
-            top: 90px;
-            width: 176px;
-            margin-left: -88px;
-            font-size: 11px;
-            color: map-get($colors, 999999);
-        }
-
-        .dot {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            margin-left: -4px;
-            background: rgba(122, 135, 169, 1);
-        }
+    .dashed-vert-line {
+      height: 101px;
+      width: 0;
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      border-right: 1px dashed map-get($colors, 8dd9d2);
     }
-    .detail-en {
-        font-size: 21px;
-        line-height: 27px;
-        margin-top: 25px;
-        padding: 0 50px;
-        color: map-get($colors, 484e6d);
-    }
-    .detail-cn {
-        margin-top: 25px;
-        font-size: 13px;
-        line-height: 18px;
-        padding: 0 25px;
-        color: map-get($colors, 484e6d);
-    }
-    a.more {
-        font-size: 12px;
-        margin-top: 15px;
-        text-decoration: none;
+
+    .avatar-group {
+      width: 100%;
+      height: 64px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin-bottom: 5px;
+
+      img {
+        width: 64px;
+        height: 64px;
         display: inline-block;
-        color: map-get($neo-line-default, 500);
+      }
+
+      img.avatar {
+        width: 64px;
+        height: 64px;
+        border-radius: 32px;
+        background: rgba(73, 73, 73, 1);
+      }
+
+      img.middle {
+        z-index: 999999;
+        width: 36px;
+        height: 36px;
+        margin: 0 55px;
+      }
     }
-    .choose-auth-rule {
-        margin-top: 20px;
-        .select-radio {
-            height: 12px;
-            width: 12px;
-            display: inline-block;
-            border-radius: 50%;
-            vertical-align: middle;
-            background: rgba(229, 229, 229, 1);
-            border: 1px solid rgba(153, 153, 153, 1);
-            &.selected {
-                border: none;
-                @include bg($img-authorization-rule-selected);
-            }
-        }
-        .auth-rule-select {
-            padding: 5px 10px;
-            font-size: 10px;
-            margin-left: 5px;
-            border: 1px solid #e5e5e5;
-            color: #666666;
-        }
+
+    .name-group {
+      span {
+        font-size: 14px;
+        position: absolute;
+        width: 134px;
+        color: map-get($colors, 333333);
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .left {
+        left: 67px;
+        margin-left: -67px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .right {
+        right: 67px;
+        margin-right: -67px;
+      }
     }
-    .secure {
-        width: 100%;
-        padding-bottom: 10px;
-        margin-top: 36px;
-        border-bottom: 1px solid map-get($colors, e5e5e5);
-        img {
-            display: inline-block;
-            width: 71px;
-            height: 23px;
-        }
+
+    .address {
+      position: absolute;
+      left: 67px;
+      top: 90px;
+      width: 176px;
+      margin-left: -88px;
+      font-size: 11px;
+      color: map-get($colors, 999999);
     }
+
+    .dot {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      margin-left: -4px;
+      background: rgba(122, 135, 169, 1);
+    }
+  }
+  .detail-en {
+    font-size: 21px;
+    line-height: 27px;
+    margin-top: 25px;
+    padding: 0 50px;
+    color: map-get($colors, 484e6d);
+  }
+  .detail-cn {
+    margin-top: 25px;
+    font-size: 13px;
+    line-height: 18px;
+    padding: 0 25px;
+    color: map-get($colors, 484e6d);
+  }
+  a.more {
+    font-size: 12px;
+    margin-top: 15px;
+    text-decoration: none;
+    display: inline-block;
+    color: map-get($neo-line-default, 500);
+  }
+  .choose-auth-rule {
+    margin-top: 20px;
+    .select-radio {
+      height: 12px;
+      width: 12px;
+      display: inline-block;
+      border-radius: 50%;
+      vertical-align: middle;
+      background: rgba(229, 229, 229, 1);
+      border: 1px solid rgba(153, 153, 153, 1);
+      &.selected {
+        border: none;
+        @include bg($img-authorization-rule-selected);
+      }
+    }
+    .auth-rule-select {
+      padding: 5px 10px;
+      font-size: 10px;
+      margin-left: 5px;
+      border: 1px solid #e5e5e5;
+      color: #666666;
+    }
+  }
+  .secure {
+    width: 100%;
+    padding-bottom: 10px;
+    margin-top: 36px;
+    border-bottom: 1px solid map-get($colors, e5e5e5);
+    img {
+      display: inline-block;
+      width: 71px;
+      height: 23px;
+    }
+  }
 }
 
 .submit-group {
-    min-height: 40px;
+  min-height: 40px;
+  width: 100%;
+  padding: 0 27px;
+  margin: 30px 0;
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+
+  .button-group {
+    display: flex;
     width: 100%;
-    padding: 0 27px;
-    margin: 30px 0;
-    position: fixed;
-    bottom: 0;
-    left: 0;
+    position: relative;
+  }
+
+  button {
+    width: 150px;
+    height: 40px;
+    border-radius: 4px;
+  }
+
+  button.refuse {
+    box-shadow: 0px 2px 8px 0px map-get($neo-line-default, 300);
+    color: map-get($neo-line-default, 500);
+    &:disabled {
+      background: #f2f2f2;
+      box-shadow: none;
+      color: #999999;
+    }
+  }
+
+  button.confirm {
+    position: absolute;
     right: 0;
-
-    .button-group {
-        display: flex;
-        width: 100%;
-        position: relative;
+    box-shadow: 0px 5px 8px 0px map-get($neo-line-default, 300);
+    background: linear-gradient(
+      0deg,
+      rgba(6, 204, 171, 1),
+      rgba(140, 216, 210, 1)
+    );
+    color: map-get($neo-line-default, 50);
+    &:disabled {
+      background: #8dd9d2;
+      box-shadow: none;
+      color: #ffffff;
     }
-
-    button {
-        width: 150px;
-        height: 40px;
-        border-radius: 4px;
-    }
-
-    button.refuse {
-        box-shadow: 0px 2px 8px 0px map-get($neo-line-default, 300);
-        color: map-get($neo-line-default, 500);
-        &:disabled {
-            background: #f2f2f2;
-            box-shadow: none;
-            color: #999999;
-        }
-    }
-
-    button.confirm {
-        position: absolute;
-        right: 0;
-        box-shadow: 0px 5px 8px 0px map-get($neo-line-default, 300);
-        background: linear-gradient(0deg, rgba(6, 204, 171, 1), rgba(140, 216, 210, 1));
-        color: map-get($neo-line-default, 50);
-        &:disabled {
-            background: #8dd9d2;
-            box-shadow: none;
-            color: #ffffff;
-        }
-    }
+  }
 }

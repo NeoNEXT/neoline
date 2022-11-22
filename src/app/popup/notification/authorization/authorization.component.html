@@ -1,38 +1,64 @@
 <section class="content">
-    <!-- <p class="title">{{ 'thAuthTitle' | translate | async}}</p> -->
-    <div class="avatar">
-        <div class="dashed-hori-line"></div>
-        <div class="dashed-vert-line"></div>
-        <div class="avatar-group">
-            <img class="left avatar" [src]="iconSrc" alt="">
-            <img class="middle" src="/assets/images/third-party/auth-select.png" alt="">
-            <img class="right" [avatar]="address" alt="">
-        </div>
-        <div class="name-group">
-            <span class="left">{{ title }}</span>
-            <span class="right">{{ accountName }}</span>
-        </div>
-        <p class="address">{{ hostname }}</p>
-        <span class="dot"></span>
+  <!-- <p class="title">{{ 'thAuthTitle' | translate | async}}</p> -->
+  <div class="avatar">
+    <div class="dashed-hori-line"></div>
+    <div class="dashed-vert-line"></div>
+    <div class="avatar-group">
+      <img class="left avatar" [src]="iconSrc" alt="" />
+      <img
+        class="middle"
+        src="/assets/images/third-party/auth-select.png"
+        alt=""
+      />
+      <img class="right" [avatar]="address" alt="" />
     </div>
-    <p class="detail-en">{{ title }} {{ 'thAuthTip' | translate | async}}</p>
-    <p class="detail-cn">{{ 'thAuthDetail' | translate | async}}</p>
-    <!-- <a class="more" href="">{{ 'thAuthMore' | translate | async}}></a> -->
-    <div class="choose-auth-rule">
-        <span class="select-radio" [ngClass]="{'selected': ruleCheck }" (click)="ruleCheck = !ruleCheck"></span>
-        <select class="auth-rule-select" [(ngModel)]="ruleSelected">
-            <option value="true">{{ 'connectChooseAllow' | translate | async }}</option>
-            <option value="false">{{ 'connectChooseNotAllow' | translate | async }}</option>
-        </select>
+    <div class="name-group">
+      <span class="left">{{ title }}</span>
+      <span class="right">{{ accountName }}</span>
     </div>
-    <div class="secure">
-        <img src="/assets/images/third-party/auth-secure.png" alt="">
-    </div>
+    <p class="address">{{ hostname }}</p>
+    <span class="dot"></span>
+  </div>
+  <p class="detail-en">{{ title }} {{ "thAuthTip" | translate | async }}</p>
+  <p class="detail-cn">{{ "thAuthDetail" | translate | async }}</p>
+  <!-- <a class="more" href="">{{ 'thAuthMore' | translate | async}}></a> -->
+  <div class="choose-auth-rule">
+    <span
+      class="select-radio"
+      [ngClass]="{ selected: ruleCheck }"
+      (click)="ruleCheck = !ruleCheck"
+    ></span>
+    <select class="auth-rule-select" [(ngModel)]="ruleSelected">
+      <option value="true">
+        {{ "connectChooseAllow" | translate | async }}
+      </option>
+      <option value="false">
+        {{ "connectChooseNotAllow" | translate | async }}
+      </option>
+    </select>
+  </div>
+  <div class="secure">
+    <img src="/assets/images/third-party/auth-secure.png" alt="" />
+  </div>
 </section>
 
 <section class="submit-group">
-    <div class="button-group">
-        <button mat-button class="refuse" [disabled]="ruleCheck && ruleSelected == 'true'"  (click)="refuse()">{{ 'refuse' | translate | async}}</button>
-        <button mat-button class="confirm" [disabled]="ruleCheck && ruleSelected == 'false'" (click)="connect()">{{ 'connect' | translate | async}}</button>
-    </div>
+  <div class="button-group">
+    <button
+      mat-button
+      class="refuse"
+      [disabled]="ruleCheck && ruleSelected == 'true'"
+      (click)="refuse()"
+    >
+      {{ "refuse" | translate | async }}
+    </button>
+    <button
+      mat-button
+      class="confirm"
+      [disabled]="ruleCheck && ruleSelected == 'false'"
+      (click)="connect()"
+    >
+      {{ "connect" | translate | async }}
+    </button>
+  </div>
 </section>

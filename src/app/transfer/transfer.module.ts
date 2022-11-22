@@ -7,14 +7,14 @@ import { ShareModule } from '../share';
 import { TransferExportComponent } from './export/export.component';
 
 @NgModule({
-    declarations: [
-        TransferComponent,
-        TransferResultComponent,
-        TransferExportComponent,
-    ],
-    imports: [CommonModule, TransferRoutingModule, ShareModule],
-    exports: [],
-    providers: [],
-    entryComponents: [],
+  declarations: [
+    TransferComponent,
+    TransferResultComponent,
+    TransferExportComponent,
+  ],
+  imports: [CommonModule, TransferRoutingModule, ShareModule],
+  exports: [],
+  providers: [],
+  entryComponents: [],
 })
 export class TransferModule {}

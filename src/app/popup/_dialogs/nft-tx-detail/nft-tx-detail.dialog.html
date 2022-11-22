@@ -1,37 +1,41 @@
 <div class="title">
-    <span>{{ data.tx.value < 0 ? ('sent' | translate | async) : ('received' | translate | async) }}
-        {{ data.tx.symbol }}</span>
-    <mat-icon class="close" [mat-dialog-close]="false">close</mat-icon>
+  <span
+    >{{ data.tx.value < 0 ? ('sent' | translate | async) : ('received' |
+    translate | async) }} {{ data.tx.symbol }}</span
+  >
+  <mat-icon class="close" [mat-dialog-close]="false">close</mat-icon>
 </div>
 <div class="item row">
-    <span class="name">TxID</span>
-    <span class="value txid">{{ data.tx.txid }}</span>
+  <span class="name">TxID</span>
+  <span class="value txid">{{ data.tx.txid }}</span>
 </div>
 <div class="item row">
-    <span class="name">{{ 'Contract' | translate | async }}</span>
-    <span class="value txid">{{ data.tx.asset_id }}</span>
+  <span class="name">{{ 'Contract' | translate | async }}</span>
+  <span class="value txid">{{ data.tx.asset_id }}</span>
 </div>
 <div class="item row">
-    <span class="name">Token ID</span>
-    <span class="value txid">{{ data.tx.tokenid }}</span>
+  <span class="name">Token ID</span>
+  <span class="value txid">{{ data.tx.tokenid }}</span>
 </div>
 <div class="item row">
-    <span class="name">{{ 'amount' | translate | async }}</span>
-    <span class="value">{{ data.tx.value }}</span>
+  <span class="name">{{ 'amount' | translate | async }}</span>
+  <span class="value">{{ data.tx.value }}</span>
 </div>
 <div class="item row">
-    <span class="name">{{ 'time' | translate | async }}</span>
-    <span class="value">{{ data.tx.block_time * 1000 | date:'yyyy-MM-dd HH:mm:ss' }}</span>
+  <span class="name">{{ 'time' | translate | async }}</span>
+  <span class="value"
+    >{{ data.tx.block_time * 1000 | date:'yyyy-MM-dd HH:mm:ss' }}</span
+  >
 </div>
 <div class="item column">
-    <p class="name">{{ 'from' | translate | async }}</p>
-    <div class="address-group">
-        <p>{{ data.tx.from }}</p>
-    </div>
+  <p class="name">{{ 'from' | translate | async }}</p>
+  <div class="address-group">
+    <p>{{ data.tx.from }}</p>
+  </div>
 </div>
 <div class="item column">
-    <p class="name">{{ 'to' | translate | async }}</p>
-    <div class="address-group">
-        <p>{{ data.tx.to }}</p>
-    </div>
+  <p class="name">{{ 'to' | translate | async }}</p>
+  <div class="address-group">
+    <p>{{ data.tx.to }}</p>
+  </div>
 </div>

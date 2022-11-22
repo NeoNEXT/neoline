@@ -1,54 +1,54 @@
-@import 'src/styles/theme-default';
-@import 'src/app/popup/transfer/common-scss/common.scss';
+@import "src/styles/theme-default";
+@import "src/app/popup/transfer/common-scss/common.scss";
 
 #receive-qrcode {
-    width: 170px;
-    height: 170px;
-    margin: 35px auto;
-    display: block;
-    margin-bottom: 0px;
+  width: 170px;
+  height: 170px;
+  margin: 35px auto;
+  display: block;
+  margin-bottom: 0px;
 }
 
 .tips {
-    font-size: 14px;
-    margin-top: 15px;
-    text-align: center;
-    color: #444644;
+  font-size: 14px;
+  margin-top: 15px;
+  text-align: center;
+  color: #444644;
 }
 
 .address {
-    width: 285px;
-    padding: 20px;
-    word-wrap: break-word;
-    background-color: #fafafa;
-    color: #808A94;
-    font-size: 12px;
-    margin: 0 auto;
-    margin-top: 30px;
-    border-radius: 5px;
+  width: 285px;
+  padding: 20px;
+  word-wrap: break-word;
+  background-color: #fafafa;
+  color: #808a94;
+  font-size: 12px;
+  margin: 0 auto;
+  margin-top: 30px;
+  border-radius: 5px;
 }
 
 .copy {
-    width: calc(100% - 90px);
-    height: 45px;
-    background-color: #ECFBF1;
-    color: #07CCAB;
-    font-size: 15px;
-    border-radius: 22px;
-    margin: 18px 45px;
+  width: calc(100% - 90px);
+  height: 45px;
+  background-color: #ecfbf1;
+  color: #07ccab;
+  font-size: 15px;
+  border-radius: 22px;
+  margin: 18px 45px;
 }
 
 textarea {
-    text-align: center;
-    font-size: 12px;
-    padding: $space/2;
-    margin: $space 0;
-    resize: none;
-    display: block;
-    width: 100%;
-    border-radius: 4px;
-    position: absolute;
-    opacity: 0;
-    color: #484E6D;
-    border: 1px solid #E4E7EC;
+  text-align: center;
+  font-size: 12px;
+  padding: $space/2;
+  margin: $space 0;
+  resize: none;
+  display: block;
+  width: 100%;
+  border-radius: 4px;
+  position: absolute;
+  opacity: 0;
+  color: #484e6d;
+  border: 1px solid #e4e7ec;
 }

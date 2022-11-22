@@ -1,293 +1,293 @@
-@import 'src/styles/theme-default';
-@import 'src/styles/popup-default';
+@import "src/styles/theme-default";
+@import "src/styles/popup-default";
 
 .loading-box {
-    background: rgb(255 255 255 / 50%);
-    position: fixed;
-    height: 100%;
-    width: 100%;
-    z-index: 99999;
-    padding-top: 50%;
-    text-align: center;
-    div {
-        display: inline-block;
-        margin: auto;
-    }
-    mat-spinner {
-        margin: 0 auto；
-    }
-    h3 {
-        margin: 15px;
-    }
+  background: rgb(255 255 255 / 50%);
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  z-index: 99999;
+  padding-top: 50%;
+  text-align: center;
+  div {
+    display: inline-block;
+    margin: auto;
+  }
+  mat-spinner {
+    margin: 0 auto；;
+  }
+  h3 {
+    margin: 15px;
+  }
 }
 
 .veil {
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: 0;
-    bottom: 0;
-    background: transparent;
-    z-index: 999;
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 999;
 }
 
 .popup-home {
+  height: 100%;
+  background: map-get($neo-line-default, 500);
+  .container {
     height: 100%;
-    background: map-get($neo-line-default, 500);
-    .container {
-        height: 100%;
-        background: white;
-        border-radius: 15px 15px 0px 0px;
+    background: white;
+    border-radius: 15px 15px 0px 0px;
+  }
+
+  mat-toolbar {
+    height: 62px;
+    background: #f7fbf9;
+    border-radius: 15px 15px 0px 0px;
+    text-align: center;
+    position: relative;
+    .wallet-info {
+      width: 100%;
+      position: absolute;
+      left: 0px;
+      top: 0px;
+      padding: 10px 70px;
+      p {
+        width: 100%;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        overflow: hidden;
+      }
+    }
+    .name {
+      font-size: 17px;
+      color: #2f3333;
+      line-height: 18px;
+    }
+    .address {
+      font-size: 13px;
+      color: #7f8993;
+      line-height: 14px;
+      margin-top: 8px;
+      img.usb {
+        width: 15px;
+        vertical-align: bottom;
+      }
+    }
+    .menu {
+      height: 18px;
+      width: 18px;
+      margin-right: 20px;
+      position: absolute;
+      right: 0px;
+      cursor: pointer;
+    }
+    .sub-menu {
+      position: absolute;
+      right: 10px;
+      top: 55px;
+      width: 220px;
+      background: #ffffff;
+      box-shadow: 1px 4px 9px 1px rgba(0, 0, 0, 0.14);
+      border-radius: 10px;
+      padding: 10px 0;
+      z-index: 999999;
+      li {
+        padding: 10px 30px;
+        font-size: 16px;
+        color: #444644;
+        font-weight: normal;
+        text-align: left;
+        list-style: none;
+        cursor: pointer;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        word-break: break-all;
+        &:hover {
+          color: #07ccab;
+        }
+      }
+    }
+  }
+  .popup-home-body {
+    height: calc(100% - 62px);
+    position: relative;
+    overflow: auto;
+    .asset-logo-box {
+      width: 50px;
+      height: 50px;
+      padding: 10px;
+      border: 0.5px solid #efefef;
+      border-radius: 50%;
+      margin: 17px auto;
+      .asset-logo {
+        height: 30px;
+        width: 30px;
+      }
+    }
+    .asset-balance {
+      font-size: 30px;
+      color: #444644;
+      text-align: center;
+      width: 100%;
+      padding: 0px 20px;
+      line-height: 30px;
+      overflow-wrap: break-word;
+    }
+    .asset-money {
+      font-size: 16px;
+      color: #a0a8be;
+      text-align: center;
+      width: 100%;
+      padding: 0px 20px;
+      margin-top: 14px;
+      overflow-wrap: break-word;
+    }
+    .transaction-btn-container {
+      text-align: center;
+      margin-top: 20px;
+      margin-bottom: 10px;
+      button {
+        width: 120px;
+        height: 45px;
+        border-radius: 22px;
+        img {
+          height: 18px;
+          width: 18px;
+          margin-right: 10px;
+        }
+        &:nth-child(1) {
+          border-color: map-get($neo-line-default, 500);
+        }
+        &:nth-child(2) {
+          margin-left: 20px;
+        }
+      }
     }
 
-    mat-toolbar {
-        height: 62px;
-        background: #f7fbf9;
-        border-radius: 15px 15px 0px 0px;
+    .claim-container {
+      height: 80px;
+      display: flex;
+      align-items: center;
+      padding: 0 25px;
+      .gas-logo-box {
+        width: 40px;
+        height: 40px;
+        padding: 5px;
+        border: 0.5px solid #efefef;
+        border-radius: 50%;
+        .gas-logo {
+          height: 30px;
+          width: 30px;
+        }
+      }
+      .claim-status-box {
+        margin-left: 13px;
+        flex: 1 1 auto;
+        .number {
+          font-size: 16px;
+          color: #444644;
+        }
+        .status {
+          font-size: 13px;
+          color: #b0b6be;
+        }
+      }
+      button {
+        background: #ecfbf1;
+        height: 35px;
+        border-radius: 18px;
+        cursor: pointer;
+        color: map-get($neo-line-default, 500);
+        mat-spinner {
+          margin: auto;
+        }
+        img {
+          width: 15px;
+          height: 15px;
+          margin: auto;
+        }
+      }
+    }
+    .claim-line {
+      border: none;
+      border-top: 6px solid #f7f7f7;
+    }
+    .tabs-container {
+      height: 55px;
+      display: flex;
+      align-items: center;
+      background: white;
+      position: sticky;
+      top: -2px;
+      z-index: 100;
+      p {
+        display: inline-block;
+        min-width: 72px;
+        height: 55px;
+        line-height: 55px;
+        padding-top: 4px;
         text-align: center;
-        position: relative;
-        .wallet-info {
-            width: 100%;
-            position: absolute;
-            left: 0px;
-            top: 0px;
-            padding: 10px 70px;
-            p {
-                width: 100%;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                overflow: hidden;
-            }
+        font-size: 17px;
+        color: #b0b6be;
+        cursor: pointer;
+        &.selected {
+          color: map-get($neo-line-default, 500);
+          border-bottom: 1.5px solid map-get($neo-line-default, 500);
         }
-        .name {
-            font-size: 17px;
-            color: #2f3333;
-            line-height: 18px;
-        }
-        .address {
-            font-size: 13px;
-            color: #7f8993;
-            line-height: 14px;
-            margin-top: 8px;
-            img.usb {
-                width: 15px;
-                vertical-align: bottom;
-            }
-        }
-        .menu {
-            height: 18px;
-            width: 18px;
-            margin-right: 20px;
-            position: absolute;
-            right: 0px;
-            cursor: pointer;
-        }
-        .sub-menu {
-            position: absolute;
-            right: 10px;
-            top: 55px;
-            width: 220px;
-            background: #ffffff;
-            box-shadow: 1px 4px 9px 1px rgba(0, 0, 0, 0.14);
-            border-radius: 10px;
-            padding: 10px 0;
-            z-index: 999999;
-            li {
-                padding: 10px 30px;
-                font-size: 16px;
-                color: #444644;
-                font-weight: normal;
-                text-align: left;
-                list-style: none;
-                cursor: pointer;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                word-break: break-all;
-                &:hover {
-                    color: #07ccab;
-                }
-            }
-        }
+      }
+      img {
+        width: 60px;
+        height: 30px;
+        position: absolute;
+        right: 25px;
+        top: 15px;
+        cursor: pointer;
+      }
     }
-    .popup-home-body {
-        height: calc(100% - 62px);
-        position: relative;
-        overflow: auto;
-        .asset-logo-box {
-            width: 50px;
-            height: 50px;
-            padding: 10px;
-            border: 0.5px solid #efefef;
-            border-radius: 50%;
-            margin: 17px auto;
-            .asset-logo {
-                height: 30px;
-                width: 30px;
-            }
-        }
-        .asset-balance {
-            font-size: 30px;
-            color: #444644;
-            text-align: center;
-            width: 100%;
-            padding: 0px 20px;
-            line-height: 30px;
-            overflow-wrap: break-word;
-        }
-        .asset-money {
-            font-size: 16px;
-            color: #a0a8be;
-            text-align: center;
-            width: 100%;
-            padding: 0px 20px;
-            margin-top: 14px;
-            overflow-wrap: break-word;
-        }
-        .transaction-btn-container {
-            text-align: center;
-            margin-top: 20px;
-            margin-bottom: 10px;
-            button {
-                width: 120px;
-                height: 45px;
-                border-radius: 22px;
-                img {
-                    height: 18px;
-                    width: 18px;
-                    margin-right: 10px;
-                }
-                &:nth-child(1) {
-                    border-color: map-get($neo-line-default, 500);
-                }
-                &:nth-child(2) {
-                    margin-left: 20px;
-                }
-            }
-        }
-
-        .claim-container {
-            height: 80px;
-            display: flex;
-            align-items: center;
-            padding: 0 25px;
-            .gas-logo-box {
-                width: 40px;
-                height: 40px;
-                padding: 5px;
-                border: 0.5px solid #efefef;
-                border-radius: 50%;
-                .gas-logo {
-                    height: 30px;
-                    width: 30px;
-                }
-            }
-            .claim-status-box {
-                margin-left: 13px;
-                flex: 1 1 auto;
-                .number {
-                    font-size: 16px;
-                    color: #444644;
-                }
-                .status {
-                    font-size: 13px;
-                    color: #b0b6be;
-                }
-            }
-            button {
-                background: #ecfbf1;
-                height: 35px;
-                border-radius: 18px;
-                cursor: pointer;
-                color: map-get($neo-line-default, 500);
-                mat-spinner {
-                    margin: auto;
-                }
-                img {
-                    width: 15px;
-                    height: 15px;
-                    margin: auto;
-                }
-            }
-        }
-        .claim-line {
-            border: none;
-            border-top: 6px solid #f7f7f7;
-        }
-        .tabs-container {
-            height: 55px;
-            display: flex;
-            align-items: center;
-            background: white;
-            position: sticky;
-            top: -2px;
-            z-index: 100;
-            p {
-                display: inline-block;
-                min-width: 72px;
-                height: 55px;
-                line-height: 55px;
-                padding-top: 4px;
-                text-align: center;
-                font-size: 17px;
-                color: #b0b6be;
-                cursor: pointer;
-                &.selected {
-                    color: map-get($neo-line-default, 500);
-                    border-bottom: 1.5px solid map-get($neo-line-default, 500);
-                }
-            }
-            img {
-                width: 60px;
-                height: 30px;
-                position: absolute;
-                right: 25px;
-                top: 15px;
-                cursor: pointer;
-            }
-        }
-    }
+  }
 }
 
 .backup-tip {
-    position: fixed;
-    bottom: 20px;
-    left: 4%;
-    width: 92%;
-    background: #303434;
-    opacity: 0.9;
-    border-radius: 10px;
-    padding: 20px 25px;
-    z-index: 9999999;
-    .title {
-        font-size: 18px;
-        font-weight: 500;
-        color: #06ccac;
-        text-align: center;
+  position: fixed;
+  bottom: 20px;
+  left: 4%;
+  width: 92%;
+  background: #303434;
+  opacity: 0.9;
+  border-radius: 10px;
+  padding: 20px 25px;
+  z-index: 9999999;
+  .title {
+    font-size: 18px;
+    font-weight: 500;
+    color: #06ccac;
+    text-align: center;
+  }
+  .desc {
+    font-size: 13px;
+    color: #ffffff;
+    line-height: 18px;
+    margin-top: 20px;
+  }
+  .btn-group {
+    margin-top: 15px;
+    font-size: 15px;
+    button {
+      width: 48%;
+      height: 35px;
+      line-height: 35px;
+      border-radius: 5px;
+      color: #fff;
+      &.cancel {
+        border: 1px solid #ffffff;
+        margin-right: 4%;
+        background: none;
+      }
+      &.yes {
+        background: #6a6d6c;
+      }
     }
-    .desc {
-        font-size: 13px;
-        color: #ffffff;
-        line-height: 18px;
-        margin-top: 20px;
-    }
-    .btn-group {
-        margin-top: 15px;
-        font-size: 15px;
-        button {
-            width: 48%;
-            height: 35px;
-            line-height: 35px;
-            border-radius: 5px;
-            color: #fff;
-            &.cancel {
-                border: 1px solid #ffffff;
-                margin-right: 4%;
-                background: none;
-            }
-            &.yes {
-                background: #6a6d6c;
-            }
-        }
-    }
+  }
 }

@@ -1,14 +1,29 @@
 <div class="asset-item">
-    <div class="avatar-box">
-        <img [src]="asset?.image_url" appErrorSrc alt="">
+  <div class="avatar-box">
+    <img [src]="asset?.image_url" appErrorSrc alt="" />
+  </div>
+  <div class="item-middle">
+    <div class="asset-name">
+      <span class="long">{{ asset.name }}</span>
+      (<span class="short">{{ asset.symbol }}</span
+      >)
     </div>
-    <div class="item-middle">
-        <div class="asset-name">
-            <span class="long">{{asset.name}}</span>
-            (<span class="short">{{ asset.symbol }}</span>)
-        </div>
-        <p class="asset-id">{{asset?.assethash}}</p>
-    </div>
-    <button mat-raised-button *ngIf="asset.watching" class="added" (click)="addAsset()">{{ 'added' | translate | async}}</button>
-    <button mat-raised-button *ngIf="!asset.watching" class="unadd" (click)="addAsset()" >{{ 'add' | translate | async}}</button>
+    <p class="asset-id">{{ asset?.assethash }}</p>
+  </div>
+  <button
+    mat-raised-button
+    *ngIf="asset.watching"
+    class="added"
+    (click)="addAsset()"
+  >
+    {{ "added" | translate | async }}
+  </button>
+  <button
+    mat-raised-button
+    *ngIf="!asset.watching"
+    class="unadd"
+    (click)="addAsset()"
+  >
+    {{ "add" | translate | async }}
+  </button>
 </div>

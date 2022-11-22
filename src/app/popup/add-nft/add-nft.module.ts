@@ -11,14 +11,14 @@ import { PopupMyNftsComponent } from './my-nfts/my-nfts.component';
 import { PopupMyNftItemComponent } from './my-nfts/my-nft-item/my-nft-item.component';
 
 @NgModule({
-    declarations: [PopupAssetItemComponent, PopupAddNftComponent, PopupMyNftsComponent, PopupMyNftItemComponent],
-    imports: [
-        CommonModule,
-        ShareModule,
-        PopupAddNftRoutingModule,
-        MatMenuModule
-    ],
-    exports: [],
-    providers: []
+  declarations: [
+    PopupAssetItemComponent,
+    PopupAddNftComponent,
+    PopupMyNftsComponent,
+    PopupMyNftItemComponent,
+  ],
+  imports: [CommonModule, ShareModule, PopupAddNftRoutingModule, MatMenuModule],
+  exports: [],
+  providers: [],
 })
 export class PopupAddNftModule {}

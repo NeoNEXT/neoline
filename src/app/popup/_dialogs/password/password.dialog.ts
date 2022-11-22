@@ -6,45 +6,45 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { ChainType } from '../../_lib';
 
 @Component({
-    templateUrl: './password.dialog.html',
-    styleUrls: ['./password.dialog.scss'],
+  templateUrl: './password.dialog.html',
+  styleUrls: ['./password.dialog.scss'],
 })
 export class PopupPasswordDialogComponent implements OnInit {
-    pwd = '';
-    showAddress = '';
+  pwd = '';
+  showAddress = '';
 
-    constructor(
-        private dialogRef: MatDialogRef<PopupPasswordDialogComponent>,
-        private global: GlobalService,
-        private util: UtilServiceState,
-        @Inject(MAT_DIALOG_DATA)
-        public data: {
-            account: Wallet2 | Wallet3;
-            chainType: ChainType;
-        }
-    ) {}
-
-    ngOnInit() {
-        const address: string = this.data.account.accounts[0].address;
-        this.showAddress = address.slice(0, 6) + '...' + address.slice(-6);
+  constructor(
+    private dialogRef: MatDialogRef<PopupPasswordDialogComponent>,
+    private global: GlobalService,
+    private util: UtilServiceState,
+    @Inject(MAT_DIALOG_DATA)
+    public data: {
+      account: Wallet2 | Wallet3;
+      chainType: ChainType;
     }
+  ) {}
 
-    public cancel() {
-        this.dialogRef.close();
-    }
+  ngOnInit() {
+    const address: string = this.data.account.accounts[0].address;
+    this.showAddress = address.slice(0, 6) + '...' + address.slice(-6);
+  }
 
-    verify() {
-        const account =
-            this.data.chainType === 'Neo2'
-                ? this.data.account.accounts[0]
-                : this.util.getNeo3Account(this.data.account.accounts[0]);
-        account
-            .decrypt(this.pwd)
-            .then(() => {
-                this.dialogRef.close(true);
-            })
-            .catch((err) => {
-                this.global.snackBarTip('verifyFailed', err);
-            });
-    }
+  public cancel() {
+    this.dialogRef.close();
+  }
+
+  verify() {
+    const account =
+      this.data.chainType === 'Neo2'
+        ? this.data.account.accounts[0]
+        : this.util.getNeo3Account(this.data.account.accounts[0]);
+    account
+      .decrypt(this.pwd)
+      .then(() => {
+        this.dialogRef.close(true);
+      })
+      .catch((err) => {
+        this.global.snackBarTip('verifyFailed', err);
+      });
+  }
 }

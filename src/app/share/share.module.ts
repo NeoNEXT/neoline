@@ -5,30 +5,14 @@ import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCheckboxModule } from '@angular/material/checkbox';
 import { MatTabsModule } from '@angular/material/tabs';
-import {
-    MatSnackBarModule
-} from '@angular/material/snack-bar';
-import {
-    MatProgressSpinnerModule
-} from '@angular/material/progress-spinner';
-import {
-    MatIconModule
-} from '@angular/material/icon';
-import {
-    MatDialogModule
-} from '@angular/material/dialog';
-import {
-    MatRadioModule
-} from '@angular/material/radio';
-import {
-    MatMenuModule
-} from '@angular/material/menu';
-import {
-    MatSlideToggleModule
-} from '@angular/material/slide-toggle';
-import {
-    MatTooltipModule
-} from '@angular/material/tooltip';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatIconModule } from '@angular/material/icon';
+import { MatDialogModule } from '@angular/material/dialog';
+import { MatRadioModule } from '@angular/material/radio';
+import { MatMenuModule } from '@angular/material/menu';
+import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { MatSelectModule } from '@angular/material/select';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
 
@@ -51,59 +35,59 @@ import { NumberFixedPipe } from './pipes/number-fixed.pipe';
 import { NftTokenIdPipe } from './pipes/nft-tokenid.pipe';
 
 @NgModule({
-    declarations: [
-        PagerComponent,
-        PopupPagerComponent,
-        PopupTxPageComponent,
-        LimitStrPipe,
-        LimitPageStringPipe,
-        LanguageNamePipe,
-        TranslatePipe,
-        NumberFixedPipe,
-        NftTokenIdPipe,
-        CopyDirective,
-        NumberDirective,
-        AvatarDirective,
-        AssetLogoDirective,
-        ScrollDirective,
-        ErrSrcDirective
-    ],
-    imports: [CommonModule, MatIconModule, MatButtonModule],
-    exports: [
-        FormsModule,
-        LimitPageStringPipe,
-        LimitStrPipe,
-        LanguageNamePipe,
-        TranslatePipe,
-        NumberFixedPipe,
-        NftTokenIdPipe,
-        NumberDirective,
-        CopyDirective,
-        ScrollDirective,
-        AvatarDirective,
-        AssetLogoDirective,
-        ErrSrcDirective,
-        MatButtonModule,
-        MatCheckboxModule,
-        MatSelectModule,
-        MatDialogModule,
-        MatIconModule,
-        MatInputModule,
-        MatMenuModule,
-        MatProgressSpinnerModule,
-        MatRadioModule,
-        MatSlideToggleModule,
-        MatSnackBarModule,
-        MatTabsModule,
-        MatToolbarModule,
-        MatRippleModule,
-        MatTooltipModule,
-        PagerComponent,
-        PopupPagerComponent,
-        PopupTxPageComponent,
-        ReactiveFormsModule,
-    ],
-    providers: [],
-    entryComponents: []
+  declarations: [
+    PagerComponent,
+    PopupPagerComponent,
+    PopupTxPageComponent,
+    LimitStrPipe,
+    LimitPageStringPipe,
+    LanguageNamePipe,
+    TranslatePipe,
+    NumberFixedPipe,
+    NftTokenIdPipe,
+    CopyDirective,
+    NumberDirective,
+    AvatarDirective,
+    AssetLogoDirective,
+    ScrollDirective,
+    ErrSrcDirective,
+  ],
+  imports: [CommonModule, MatIconModule, MatButtonModule],
+  exports: [
+    FormsModule,
+    LimitPageStringPipe,
+    LimitStrPipe,
+    LanguageNamePipe,
+    TranslatePipe,
+    NumberFixedPipe,
+    NftTokenIdPipe,
+    NumberDirective,
+    CopyDirective,
+    ScrollDirective,
+    AvatarDirective,
+    AssetLogoDirective,
+    ErrSrcDirective,
+    MatButtonModule,
+    MatCheckboxModule,
+    MatSelectModule,
+    MatDialogModule,
+    MatIconModule,
+    MatInputModule,
+    MatMenuModule,
+    MatProgressSpinnerModule,
+    MatRadioModule,
+    MatSlideToggleModule,
+    MatSnackBarModule,
+    MatTabsModule,
+    MatToolbarModule,
+    MatRippleModule,
+    MatTooltipModule,
+    PagerComponent,
+    PopupPagerComponent,
+    PopupTxPageComponent,
+    ReactiveFormsModule,
+  ],
+  providers: [],
+  entryComponents: [],
 })
-export class ShareModule { }
+export class ShareModule {}

@@ -9,16 +9,16 @@ import { ImportSuccessComponent } from './import-success/import-success.componen
 import { AccountNameComponent } from './account-name/account-name.component';
 
 @NgModule({
-    declarations: [
-        LedgerComponent,
-        LedgerChainComponent,
-        AddressSelectorComponent,
-        ImportSuccessComponent,
-        AccountNameComponent,
-    ],
-    imports: [CommonModule, LedgerRoutingModule, ShareModule],
-    exports: [],
-    providers: [],
-    entryComponents: [],
+  declarations: [
+    LedgerComponent,
+    LedgerChainComponent,
+    AddressSelectorComponent,
+    ImportSuccessComponent,
+    AccountNameComponent,
+  ],
+  imports: [CommonModule, LedgerRoutingModule, ShareModule],
+  exports: [],
+  providers: [],
+  entryComponents: [],
 })
 export class LedgerModule {}

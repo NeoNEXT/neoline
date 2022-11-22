@@ -1,134 +1,135 @@
-@import 'src/styles/popup-default';
-@import 'src/styles/theme-default';
+@import "src/styles/popup-default";
+@import "src/styles/theme-default";
 
 .tab-container {
-    width: 100%;
-    height: calc(100% - 8px);
-    background-color: white;
-    border-radius: 20px 20px 0px 0px;
-    padding-top: 35px;
-    overflow: auto;
+  width: 100%;
+  height: calc(100% - 8px);
+  background-color: white;
+  border-radius: 20px 20px 0px 0px;
+  padding-top: 35px;
+  overflow: auto;
 
-    .title {
-        margin-left: 30px;
-        margin-bottom: 12px;
-        color: #434543;
-    }
+  .title {
+    margin-left: 30px;
+    margin-bottom: 12px;
+    color: #434543;
+  }
 
-    .popup-wallet-input-body {
-        width: calc(100% - 40px);
-        border-radius: 10px;
-        margin-left: 20px;
-        margin-right: 20px;
-        font-size: 15px;
-    }
-
-    img {
-        margin-right: 20px;
-        top: -5px;
-        margin-left: 10px;
-    }
-
-    button {
-        span {
-            display: inline-block;
-            width: 17px;
-            height: 17px;
-            margin-top: -3px;
-            @include bg($img-show-pwd);
-        }
-
-        span.hide-pwd {
-            @include bg($img-hide-pwd);
-        }
-    }
-
-}
-
-@mixin button-common {
+  .popup-wallet-input-body {
     width: calc(100% - 40px);
-    height: 50px;
-    border-radius: 20px;
+    border-radius: 10px;
     margin-left: 20px;
     margin-right: 20px;
     font-size: 15px;
-    font-weight: 500;
+  }
+
+  img {
+    margin-right: 20px;
+    top: -5px;
+    margin-left: 10px;
+  }
+
+  button {
+    span {
+      display: inline-block;
+      width: 17px;
+      height: 17px;
+      margin-top: -3px;
+      @include bg($img-show-pwd);
+    }
+
+    span.hide-pwd {
+      @include bg($img-hide-pwd);
+    }
+  }
+}
+
+@mixin button-common {
+  width: calc(100% - 40px);
+  height: 50px;
+  border-radius: 20px;
+  margin-left: 20px;
+  margin-right: 20px;
+  font-size: 15px;
+  font-weight: 500;
 }
 
 .popup-wallet-body-submit {
-    margin-top: 15px;
-    margin-bottom: 15px;
-    @include button-common;
+  margin-top: 15px;
+  margin-bottom: 15px;
+  @include button-common;
 }
 
 .popup-wallet-body-cancel {
-    @include button-common;
-    background: map-get($neo-line-default, 200);
-    color: map-get($neo-line-default, 500);
+  @include button-common;
+  background: map-get($neo-line-default, 200);
+  color: map-get($neo-line-default, 500);
 }
 
 .error {
-    margin-top: -18px;
-    font-size: 12px;
-    margin-left: 20px;
+  margin-top: -18px;
+  font-size: 12px;
+  margin-left: 20px;
 }
-
 
 ::ng-deep {
-    .popup-wallet {
-        .mat-form-field-underline {
-            display: none;
-        }
-
-        .mat-tab-group {
-            width: 100%;
-            height: 100%;
-            position: absolute;
-
-            .mat-tab-header {
-                border: none;
-
-                .mat-tab-label {
-                    width: 50%;
-                    color: white;
-                    opacity: 0.8;
-                    font-size: 18px;
-
-                    &.mat-tab-label-active {
-                        opacity: 1;
-                    }
-                }
-            }
-
-            .mat-tab-body-wrapper {
-                height: 100%;
-                flex-grow: 1;
-
-                .mat-form-field-label {
-                    color: #CDD1D9;
-                }
-
-                .mat-form-field-prefix {
-                    top: -5px;
-                }
-
-                .mat-form-field-appearance-fill .mat-form-field-flex {
-                    border-radius: 10px;
-                    background: #F9F9F9;
-                }
-
-                .popup-wallet-input-body {
-                    button {
-                        top: -8px;
-                    }
-                }
-            }
-        }
-
-        .mat-tab-group .mat-tab-body-wrapper .popup-wallet-import-type-box .mat-form-field-appearance-fill .mat-form-field-flex {
-            background: white;
-            border: 0.5px solid #E0E0E0;
-        }
+  .popup-wallet {
+    .mat-form-field-underline {
+      display: none;
     }
-}
 
+    .mat-tab-group {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+
+      .mat-tab-header {
+        border: none;
+
+        .mat-tab-label {
+          width: 50%;
+          color: white;
+          opacity: 0.8;
+          font-size: 18px;
+
+          &.mat-tab-label-active {
+            opacity: 1;
+          }
+        }
+      }
+
+      .mat-tab-body-wrapper {
+        height: 100%;
+        flex-grow: 1;
+
+        .mat-form-field-label {
+          color: #cdd1d9;
+        }
+
+        .mat-form-field-prefix {
+          top: -5px;
+        }
+
+        .mat-form-field-appearance-fill .mat-form-field-flex {
+          border-radius: 10px;
+          background: #f9f9f9;
+        }
+
+        .popup-wallet-input-body {
+          button {
+            top: -8px;
+          }
+        }
+      }
+    }
+
+    .mat-tab-group
+      .mat-tab-body-wrapper
+      .popup-wallet-import-type-box
+      .mat-form-field-appearance-fill
+      .mat-form-field-flex {
+      background: white;
+      border: 0.5px solid #e0e0e0;
+    }
+  }
+}

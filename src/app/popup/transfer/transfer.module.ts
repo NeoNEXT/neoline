@@ -11,15 +11,15 @@ import { Neo3TransferService } from './neo3-transfer.service';
 import { Neo3InvokeService } from './neo3-invoke.service';
 
 @NgModule({
-    declarations: [
-        TransferComponent,
-        TransferReceiveComponent,
-        TransferCreateComponent,
-        PopupTransferConfirmComponent
-    ],
-    imports: [CommonModule, TransferRoutingModule, ShareModule],
-    exports: [],
-    providers: [TransferService, Neo3TransferService, Neo3InvokeService],
-    entryComponents: []
+  declarations: [
+    TransferComponent,
+    TransferReceiveComponent,
+    TransferCreateComponent,
+    PopupTransferConfirmComponent,
+  ],
+  imports: [CommonModule, TransferRoutingModule, ShareModule],
+  exports: [],
+  providers: [TransferService, Neo3TransferService, Neo3InvokeService],
+  entryComponents: [],
 })
-export class TransferModule { }
+export class TransferModule {}

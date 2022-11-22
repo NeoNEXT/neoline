@@ -11,18 +11,18 @@ import { PopupWalletCreateComponent } from './create/create.component';
 import { PopupWalletImportComponent } from './import/import.component';
 
 @NgModule({
-    declarations: [
-        PopupWalletComponent,
-        PopupWalletCreateComponent,
-        PopupWalletImportComponent
-    ],
-    imports: [
-        CommonModule,
-        ShareModule,
-        PopupWalletRoutingModule,
-        BrowserAnimationsModule
-    ],
-    exports: [],
-    providers: [],
+  declarations: [
+    PopupWalletComponent,
+    PopupWalletCreateComponent,
+    PopupWalletImportComponent,
+  ],
+  imports: [
+    CommonModule,
+    ShareModule,
+    PopupWalletRoutingModule,
+    BrowserAnimationsModule,
+  ],
+  exports: [],
+  providers: [],
 })
 export class PopupWalletModule {}

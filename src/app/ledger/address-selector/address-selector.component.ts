@@ -1,153 +1,153 @@
 import {
-    Component,
-    OnInit,
-    Input,
-    OnDestroy,
-    EventEmitter,
-    Output,
+  Component,
+  OnInit,
+  Input,
+  OnDestroy,
+  EventEmitter,
+  Output,
 } from '@angular/core';
 import {
-    ChainType,
-    LedgerStatus,
-    LedgerStatuses,
-    LEDGER_PAGE_SIZE,
+  ChainType,
+  LedgerStatus,
+  LedgerStatuses,
+  LEDGER_PAGE_SIZE,
 } from '@/app/popup/_lib';
 import { LedgerService, NeonService, SettingState } from '@/app/core';
 import { interval } from 'rxjs';
 
 @Component({
-    selector: 'app-address-selector',
-    templateUrl: 'address-selector.component.html',
-    styleUrls: ['address-selector.component.scss'],
+  selector: 'app-address-selector',
+  templateUrl: 'address-selector.component.html',
+  styleUrls: ['address-selector.component.scss'],
 })
 export class AddressSelectorComponent implements OnInit, OnDestroy {
-    @Input() chainType: ChainType;
-    @Output() selectThisAccount = new EventEmitter();
-    getStatusInterval;
-    isReady = false;
-    status: LedgerStatus = LedgerStatuses.DISCONNECTED;
-    savedAddressesObj = {};
+  @Input() chainType: ChainType;
+  @Output() selectThisAccount = new EventEmitter();
+  getStatusInterval;
+  isReady = false;
+  status: LedgerStatus = LedgerStatuses.DISCONNECTED;
+  savedAddressesObj = {};
 
-    selectedAccount;
-    selectedIndex;
+  selectedAccount;
+  selectedIndex;
 
-    accounts = [];
-    accountPage = 1;
-    isLoadingAccount = false;
-    accountBalance = [];
-    getBalanceReq;
+  accounts = [];
+  accountPage = 1;
+  isLoadingAccount = false;
+  accountBalance = [];
+  getBalanceReq;
 
-    constructor(
-        private ledger: LedgerService,
-        private neon: NeonService,
-        private settingState: SettingState
-    ) {}
+  constructor(
+    private ledger: LedgerService,
+    private neon: NeonService,
+    private settingState: SettingState
+  ) {}
 
-    ngOnInit(): void {
-        this.getLedgerStatus();
-        this.getStatusInterval = interval(5000).subscribe(() => {
-            this.getLedgerStatus();
-        });
-        this.getSavedAddress();
+  ngOnInit(): void {
+    this.getLedgerStatus();
+    this.getStatusInterval = interval(5000).subscribe(() => {
+      this.getLedgerStatus();
+    });
+    this.getSavedAddress();
+  }
+
+  ngOnDestroy(): void {
+    this.getStatusInterval?.unsubscribe();
+  }
+
+  chooseAccount(index: number) {
+    this.selectedAccount = this.accounts[index];
+    this.selectedIndex = (this.accountPage - 1) * LEDGER_PAGE_SIZE + index;
+    this.getBalanceReq?.unsubscribe();
+    this.accountBalance = [];
+    this.getBalanceReq = this.ledger
+      .getLedgerBalance(this.selectedAccount.address, this.chainType)
+      .subscribe((res) => {
+        this.accountBalance = res;
+      });
+  }
+
+  selectWallet() {
+    if (this.selectedAccount) {
+      this.selectThisAccount.emit({
+        account: this.selectedAccount,
+        index: this.selectedIndex,
+      });
     }
+  }
 
-    ngOnDestroy(): void {
-        this.getStatusInterval?.unsubscribe();
+  prePage() {
+    if (this.accountPage <= 1 || this.isLoadingAccount) {
+      return;
     }
+    this.fetchAccounts(--this.accountPage);
+  }
 
-    chooseAccount(index: number) {
-        this.selectedAccount = this.accounts[index];
-        this.selectedIndex = (this.accountPage - 1) * LEDGER_PAGE_SIZE + index;
-        this.getBalanceReq?.unsubscribe();
-        this.accountBalance = [];
-        this.getBalanceReq = this.ledger
-            .getLedgerBalance(this.selectedAccount.address, this.chainType)
-            .subscribe((res) => {
-                this.accountBalance = res;
-            });
+  nextPage() {
+    if (this.isLoadingAccount) {
+      return;
     }
+    this.fetchAccounts(++this.accountPage);
+  }
 
-    selectWallet() {
-        if (this.selectedAccount) {
-            this.selectThisAccount.emit({
-                account: this.selectedAccount,
-                index: this.selectedIndex,
-            });
+  private getSavedAddress() {
+    if (this.chainType === 'Neo2') {
+      this.neon.neo2WalletArr.forEach((item) => {
+        this.savedAddressesObj[item.accounts[0].address] = true;
+      });
+    } else {
+      this.neon.neo3WalletArr.forEach((item) => {
+        this.savedAddressesObj[item.accounts[0].address] = true;
+      });
+    }
+  }
+
+  private getLedgerStatus() {
+    this.ledger.getDeviceStatus(this.chainType).then((res) => {
+      if (LedgerStatuses[res]) {
+        this.status = LedgerStatuses[res];
+        this.isReady = this.status === LedgerStatuses.READY;
+        if (this.isReady && this.accounts.length === 0) {
+          this.fetchAccounts(1);
         }
-    }
-
-    prePage() {
-        if (this.accountPage <= 1 || this.isLoadingAccount) {
-            return;
+        if (!this.isReady) {
+          this.accounts = [];
         }
-        this.fetchAccounts(--this.accountPage);
-    }
+      }
+    });
+  }
 
-    nextPage() {
-        if (this.isLoadingAccount) {
-            return;
-        }
-        this.fetchAccounts(++this.accountPage);
+  private fetchAccounts(index: number) {
+    if (this.isLoadingAccount) {
+      return;
     }
+    this.isLoadingAccount = true;
+    this.ledger
+      .fetchAccounts(index, this.chainType)
+      .then((accounts) => {
+        this.accounts = accounts;
+        this.isLoadingAccount = false;
+      })
+      .catch(() => {
+        this.isLoadingAccount = false;
+      });
+  }
 
-    private getSavedAddress() {
-        if (this.chainType === 'Neo2') {
-            this.neon.neo2WalletArr.forEach((item) => {
-                this.savedAddressesObj[item.accounts[0].address] = true;
-            });
-        } else {
-            this.neon.neo3WalletArr.forEach((item) => {
-                this.savedAddressesObj[item.accounts[0].address] = true;
-            });
-        }
-    }
-
-    private getLedgerStatus() {
-        this.ledger.getDeviceStatus(this.chainType).then((res) => {
-            if (LedgerStatuses[res]) {
-                this.status = LedgerStatuses[res];
-                this.isReady = this.status === LedgerStatuses.READY;
-                if (this.isReady && this.accounts.length === 0) {
-                    this.fetchAccounts(1);
-                }
-                if (!this.isReady) {
-                    this.accounts = [];
-                }
-            }
-        });
-    }
-
-    private fetchAccounts(index: number) {
-        if (this.isLoadingAccount) {
-            return;
-        }
-        this.isLoadingAccount = true;
-        this.ledger
-            .fetchAccounts(index, this.chainType)
-            .then((accounts) => {
-                this.accounts = accounts;
-                this.isLoadingAccount = false;
-            })
-            .catch(() => {
-                this.isLoadingAccount = false;
-            });
-    }
-
-    public async jumbToWeb(type: 'privacy' | 'agreement') {
-        this.settingState.langSub.subscribe(lang => {
-            if (lang !== 'en') {
-                lang = '';
-            } else {
-                lang = '/en';
-            }
-            switch (type) {
-                case 'privacy':
-                    window.open(`https://neoline.io${lang}/privacy`);
-                    break;
-                case 'agreement':
-                    window.open(`https://neoline.io${lang}/agreement`);
-                    break;
-            }
-        });
-    }
+  public async jumbToWeb(type: 'privacy' | 'agreement') {
+    this.settingState.langSub.subscribe((lang) => {
+      if (lang !== 'en') {
+        lang = '';
+      } else {
+        lang = '/en';
+      }
+      switch (type) {
+        case 'privacy':
+          window.open(`https://neoline.io${lang}/privacy`);
+          break;
+        case 'agreement':
+          window.open(`https://neoline.io${lang}/agreement`);
+          break;
+      }
+    });
+  }
 }

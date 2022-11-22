@@ -1,21 +1,21 @@
 <div class="nav">
-    <div class="content">
-        <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="">
-        {{ 'generalSettings' | translate | async }}
-    </div>
-    <div class="divide"></div>
+  <div class="content">
+    <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="" />
+    {{ "generalSettings" | translate | async }}
+  </div>
+  <div class="divide"></div>
 </div>
 
 <div class="popup-setting-menu">
-    <div class="popup-setting-item" (click)="language()">
-        <div class="popup-setting-language-logo"></div>
-        <div>{{ 'language' | translate | async}}</div>
-        <div class="popup-setting-language-current">
-            {{ lang | languageName }}
-            <img src="/assets/images/arrow-right.png" alt="">
-        </div>
+  <div class="popup-setting-item" (click)="language()">
+    <div class="popup-setting-language-logo"></div>
+    <div>{{ "language" | translate | async }}</div>
+    <div class="popup-setting-language-current">
+      {{ lang | languageName }}
+      <img src="/assets/images/arrow-right.png" alt="" />
     </div>
-    <!-- <div class="popup-setting-item">
+  </div>
+  <!-- <div class="popup-setting-item">
         <div class="popup-setting-theme-logo"></div>
         <div>{{ 'darkMode' | translate | async}}</div>
         <div class="popup-setting-language-current">
@@ -25,28 +25,37 @@
 </div>
 
 <div class="popup-setting-cache">
-    <div></div>
-    <div class="popup-setting-cache-tip">
-        <div>{{ 'clearCache' | translate | async}}</div>
-        <div>{{ 'clearCacheTip' | translate | async}}</div>
-    </div>
-    <div class="popup-setting-cache-btn" (click)="clearCache()">{{ 'clearCacheBtn' | translate | async}}</div>
+  <div></div>
+  <div class="popup-setting-cache-tip">
+    <div>{{ "clearCache" | translate | async }}</div>
+    <div>{{ "clearCacheTip" | translate | async }}</div>
+  </div>
+  <div class="popup-setting-cache-btn" (click)="clearCache()">
+    {{ "clearCacheBtn" | translate | async }}
+  </div>
 </div>
-<div class="popup-setting-menu setting-asset-rate" (click)="modifyRateCurrency()">
-    <div class="current-currency">
-        <span class="title">{{ 'currencyUnit' | translate | async}}</span>
-        <div>
-            <span class="value">{{ rateCurrency }}</span>
-            <img src="/assets/images/arrow-right.png" alt="">
-        </div>
+<div
+  class="popup-setting-menu setting-asset-rate"
+  (click)="modifyRateCurrency()"
+>
+  <div class="current-currency">
+    <span class="title">{{ "currencyUnit" | translate | async }}</span>
+    <div>
+      <span class="value">{{ rateCurrency }}</span>
+      <img src="/assets/images/arrow-right.png" alt="" />
     </div>
-    <p class="update-time" *ngIf="rateTime">{{ 'updateTime' | translate | async}} {{rateTime * 1000 | date: 'M月d日 y年 HH:mm'}} {{'beijingTime' | translate | async}}</p>
+  </div>
+  <p class="update-time" *ngIf="rateTime">
+    {{ "updateTime" | translate | async }}
+    {{ rateTime * 1000 | date: "M月d日 y年 HH:mm" }}
+    {{ "beijingTime" | translate | async }}
+  </p>
 </div>
 <div class="popup-setting-authorization" (click)="viewAllAuth()">
-    <div class="popup-setting-authorization-head">
-        <span class="title">{{ 'authorizationManage' | translate | async}}</span>
-        <img src="/assets/images/arrow-right.png" alt="">
-        <!-- <span class="view-all">{{ 'viewAll' | translate | async}} ></span> -->
-    </div>
-    <span class="tip">{{ 'authorizationManageTips' | translate | async }}</span>
+  <div class="popup-setting-authorization-head">
+    <span class="title">{{ "authorizationManage" | translate | async }}</span>
+    <img src="/assets/images/arrow-right.png" alt="" />
+    <!-- <span class="view-all">{{ 'viewAll' | translate | async}} ></span> -->
+  </div>
+  <span class="tip">{{ "authorizationManageTips" | translate | async }}</span>
 </div>

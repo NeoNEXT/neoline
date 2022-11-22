@@ -4,51 +4,50 @@ import { ChromeService, NeonService, GlobalService } from '@app/core';
 import { WalletInitConstant, STORAGE_NAME } from '@popup/_lib/constant';
 
 @Component({
-    templateUrl: './name.dialog.html',
-    styleUrls: ['./name.dialog.scss'],
+  templateUrl: './name.dialog.html',
+  styleUrls: ['./name.dialog.scss'],
 })
 export class PopupNameDialogComponent implements OnInit {
-    public name = '';
-    public limit = WalletInitConstant;
+  public name = '';
+  public limit = WalletInitConstant;
 
-    constructor(
-        private dialogRef: MatDialogRef<PopupNameDialogComponent>,
-        private chrome: ChromeService,
-        private global: GlobalService,
-        private neon: NeonService,
-        @Inject(MAT_DIALOG_DATA) private chooseWallet: any
-    ) {}
+  constructor(
+    private dialogRef: MatDialogRef<PopupNameDialogComponent>,
+    private chrome: ChromeService,
+    private global: GlobalService,
+    private neon: NeonService,
+    @Inject(MAT_DIALOG_DATA) private chooseWallet: any
+  ) {}
 
-    ngOnInit() {}
+  ngOnInit() {}
 
-    public cancel() {
-        this.dialogRef.close();
+  public cancel() {
+    this.dialogRef.close();
+  }
+
+  public updateName() {
+    if (this.name.trim() === '') {
+      return;
     }
-
-    public updateName() {
-        if (this.name.trim() === '') {
-            return;
-        }
-        this.neon.updateWalletName(this.name, this.chooseWallet).subscribe(
-            (res: any) => {
-                this.chrome.setWallet(res.export());
-                this.neon.walletArr.find(
-                    (item) =>
-                        item.accounts[0].address === res.accounts[0].address
-                ).name = this.name;
-                this.chrome.setStorage(
-                    this.neon.currentWalletChainType === 'Neo3'
-                        ? STORAGE_NAME['walletArr-Neo3']
-                        : STORAGE_NAME.walletArr,
-                    this.neon.getWalletArrayJSON()
-                );
-                this.dialogRef.close();
-                this.global.snackBarTip('nameModifySucc');
-            },
-            (err: any) => {
-                this.global.log('update wallet name faild', err);
-                this.global.snackBarTip('nameModifyFailed');
-            }
+    this.neon.updateWalletName(this.name, this.chooseWallet).subscribe(
+      (res: any) => {
+        this.chrome.setWallet(res.export());
+        this.neon.walletArr.find(
+          (item) => item.accounts[0].address === res.accounts[0].address
+        ).name = this.name;
+        this.chrome.setStorage(
+          this.neon.currentWalletChainType === 'Neo3'
+            ? STORAGE_NAME['walletArr-Neo3']
+            : STORAGE_NAME.walletArr,
+          this.neon.getWalletArrayJSON()
         );
-    }
+        this.dialogRef.close();
+        this.global.snackBarTip('nameModifySucc');
+      },
+      (err: any) => {
+        this.global.log('update wallet name faild', err);
+        this.global.snackBarTip('nameModifyFailed');
+      }
+    );
+  }
 }

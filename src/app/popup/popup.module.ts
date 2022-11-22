@@ -14,12 +14,12 @@ import { MatDialogModule } from '@angular/material/dialog';
 import { MatSliderModule } from '@angular/material/slider';
 
 const THIRD_MODULES = [
-    MatMenuModule,
-    MatSnackBarModule,
-    MatDialogModule,
-    MatSliderModule,
-    MatSidenavModule,
-    MatListModule,
+  MatMenuModule,
+  MatSnackBarModule,
+  MatDialogModule,
+  MatSliderModule,
+  MatSidenavModule,
+  MatListModule,
 ];
 //#endregion
 
@@ -31,11 +31,11 @@ import { PopupWalletModule } from './wallet/wallet.module';
 import { PopupAddNftModule } from './add-nft/add-nft.module';
 
 const POPUP_MODULES = [
-    PopupAddAssetModule,
-    PopupNotificationModule,
-    TransferModule,
-    PopupWalletModule,
-    PopupAddNftModule,
+  PopupAddAssetModule,
+  PopupNotificationModule,
+  TransferModule,
+  PopupWalletModule,
+  PopupAddNftModule,
 ];
 //#endregion
 
@@ -47,9 +47,9 @@ import { PopupAssetDetailComponent } from './asset-detail/asset-detail.component
 import { PopupNftDetailComponent } from './nft-detail/nft-detail.component';
 import { PopupBackupComponent } from './backup/backup.component';
 import {
-    PopupAssetsComponent,
-    PopupHomeComponent,
-    PopupNftsComponent,
+  PopupAssetsComponent,
+  PopupHomeComponent,
+  PopupNftsComponent,
 } from './home';
 import { PopupLoginComponent } from './login/login.component';
 import { PopupNewWalletGuideComponent } from './new-wallet-guide/new-wallet-guide.component';
@@ -58,79 +58,79 @@ import { PopupNftTokensComponent } from './nft-detail/nft-tokens/nft-tokens.comp
 import { PopupNftTxPageComponent } from './nft-detail/nft-tx-page/nft-tx-page.component';
 
 const POPUP_COMPONENTS = [
-    PopupComponent,
-    PopupAboutComponent,
-    PopupAccountComponent,
-    PopupAssetDetailComponent,
-    PopupNftDetailComponent,
-    PopupBackupComponent,
-    PopupAssetsComponent,
-    PopupHomeComponent,
-    PopupNftsComponent,
-    PopupNftTokensComponent,
-    PopupNftTxPageComponent,
-    PopupLoginComponent,
-    PopupNewWalletGuideComponent,
-    PopupSettingComponent,
+  PopupComponent,
+  PopupAboutComponent,
+  PopupAccountComponent,
+  PopupAssetDetailComponent,
+  PopupNftDetailComponent,
+  PopupBackupComponent,
+  PopupAssetsComponent,
+  PopupHomeComponent,
+  PopupNftsComponent,
+  PopupNftTokensComponent,
+  PopupNftTxPageComponent,
+  PopupLoginComponent,
+  PopupNewWalletGuideComponent,
+  PopupSettingComponent,
 ];
 //#endregion
 
 //#region dialogs
 import {
-    PopupConfirmDialogComponent,
-    PopupHomeMenuDialogComponent,
-    PopupAddressDialogComponent,
-    PopupAssetDialogComponent,
-    PopupTxDetailDialogComponent,
-    PopupTransferSuccessDialogComponent,
-    PopupEditFeeDialogComponent,
-    PopupBackupTipDialogComponent,
-    PopupAuthorizationListDialogComponent,
-    PopupQRCodeDialogComponent,
-    PopupSelectDialogComponent,
-    PopupNameDialogComponent,
-    PopupDapiPromptComponent,
-    PopupNftTxDetailDialogComponent,
-    PopupNftTokenDetailDialogComponent,
-    PopupAddNetworkDialogComponent,
-    PopupPasswordDialogComponent,
-    PopupN3NetworkDialogComponent,
+  PopupConfirmDialogComponent,
+  PopupHomeMenuDialogComponent,
+  PopupAddressDialogComponent,
+  PopupAssetDialogComponent,
+  PopupTxDetailDialogComponent,
+  PopupTransferSuccessDialogComponent,
+  PopupEditFeeDialogComponent,
+  PopupBackupTipDialogComponent,
+  PopupAuthorizationListDialogComponent,
+  PopupQRCodeDialogComponent,
+  PopupSelectDialogComponent,
+  PopupNameDialogComponent,
+  PopupDapiPromptComponent,
+  PopupNftTxDetailDialogComponent,
+  PopupNftTokenDetailDialogComponent,
+  PopupAddNetworkDialogComponent,
+  PopupPasswordDialogComponent,
+  PopupN3NetworkDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
-    PopupConfirmDialogComponent,
-    PopupHomeMenuDialogComponent,
-    PopupAddressDialogComponent,
-    PopupAssetDialogComponent,
-    PopupTxDetailDialogComponent,
-    PopupTransferSuccessDialogComponent,
-    PopupEditFeeDialogComponent,
-    PopupBackupTipDialogComponent,
-    PopupAuthorizationListDialogComponent,
-    PopupQRCodeDialogComponent,
-    PopupSelectDialogComponent,
-    PopupNameDialogComponent,
-    PopupDapiPromptComponent,
-    PopupNftTxDetailDialogComponent,
-    PopupNftTokenDetailDialogComponent,
-    PopupAddNetworkDialogComponent,
-    PopupPasswordDialogComponent,
-    PopupN3NetworkDialogComponent,
+  PopupConfirmDialogComponent,
+  PopupHomeMenuDialogComponent,
+  PopupAddressDialogComponent,
+  PopupAssetDialogComponent,
+  PopupTxDetailDialogComponent,
+  PopupTransferSuccessDialogComponent,
+  PopupEditFeeDialogComponent,
+  PopupBackupTipDialogComponent,
+  PopupAuthorizationListDialogComponent,
+  PopupQRCodeDialogComponent,
+  PopupSelectDialogComponent,
+  PopupNameDialogComponent,
+  PopupDapiPromptComponent,
+  PopupNftTxDetailDialogComponent,
+  PopupNftTokenDetailDialogComponent,
+  PopupAddNetworkDialogComponent,
+  PopupPasswordDialogComponent,
+  PopupN3NetworkDialogComponent,
 ];
 
 //#endregion
 
 @NgModule({
-    declarations: [...POPUP_DIALOGS, ...POPUP_COMPONENTS],
-    imports: [
-        FormsModule,
-        CommonModule,
-        PopupRoutingModule,
-        ShareModule,
-        ...THIRD_MODULES,
-        ...POPUP_MODULES,
-    ],
-    exports: [],
-    entryComponents: [...POPUP_DIALOGS],
+  declarations: [...POPUP_DIALOGS, ...POPUP_COMPONENTS],
+  imports: [
+    FormsModule,
+    CommonModule,
+    PopupRoutingModule,
+    ShareModule,
+    ...THIRD_MODULES,
+    ...POPUP_MODULES,
+  ],
+  exports: [],
+  entryComponents: [...POPUP_DIALOGS],
 })
 export class PopupModule {}

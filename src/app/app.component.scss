@@ -2,14 +2,14 @@
 @import "src/styles/popup-default";
 
 :host {
-    overflow: auto;
+  overflow: auto;
 }
 
 .body {
-    width: 100%;
-    height: 100%;
-    margin: 0;
-    transform: none;
-    background-color: #fff;
-    z-index: 10;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  transform: none;
+  background-color: #fff;
+  z-index: 10;
 }

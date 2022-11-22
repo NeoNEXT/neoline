@@ -3,7 +3,7 @@
  * @param neo3TestRPC Custom configuration for node path.
  */
 export const environment = {
-    production: true,
-    name: 'default',
-    mainApiBase: 'https://api.neoline.io',
+  production: true,
+  name: 'default',
+  mainApiBase: 'https://api.neoline.io',
 };

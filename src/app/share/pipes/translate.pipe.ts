@@ -3,16 +3,16 @@ import { map } from 'rxjs/operators';
 import { SettingState } from '@/app/core';
 
 @Pipe({
-    name: 'translate',
+  name: 'translate',
 })
 export class TranslatePipe implements PipeTransform {
-    constructor(private settingState: SettingState) {}
+  constructor(private settingState: SettingState) {}
 
-    public transform(value: string) {
-        return this.settingState.langSub.pipe(
-            map((res) => {
-                return this.settingState.langJson[res][value].message;
-            })
-        );
-    }
+  public transform(value: string) {
+    return this.settingState.langSub.pipe(
+      map((res) => {
+        return this.settingState.langJson[res][value].message;
+      })
+    );
+  }
 }

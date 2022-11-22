@@ -1,90 +1,109 @@
 <div class="loading-box" *ngIf="loading">
-    <div>
-        <mat-spinner strokeWidth="10"></mat-spinner>
-    </div>
-    <h3 *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</h3>
+  <div>
+    <mat-spinner strokeWidth="10"></mat-spinner>
+  </div>
+  <h3 *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</h3>
 </div>
 <div class="transfer-confirm-container">
-    <div class="container">
-        <div class="mat-toolbar-fixed no-third-party-toolbar" >
-            <mat-toolbar color="primary">
-                <span class="popup-nav-logo">
-                    <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
-                </span>
-                <button mat-stroked-button class="popup-nav-network">
-                    <span class="network-name">{{ n2Network.name }}</span>
-                    <span class="popup-nav-network-icon"></span>
-                </button>
-                <img class="close" (click)="exit()" src="/assets/images/dialog/close.png" alt="">
-            </mat-toolbar>
-        </div>
-        <div class="transfer-confirm-body">
-            <mat-toolbar>
-                <div>
-                    <img class="avatar" [avatar]="fromAddress">
-                    <span>{{ getAddressSub(fromAddress)  }}</span>
-                </div>
-
-                <img class="arrow" src="/assets/images/dialog/transfer_arrow.png" alt="">
-                <div>
-                    <img class="avatar" [avatar]="toAddress">
-                    <span>{{ getAddressSub(toAddress) }}</span>
-                </div>
-            </mat-toolbar>
-            <div class="transfer-detail-container">
-                <div class="type-box">
-                    <span></span>
-                    <span>TRANSFER</span>
-                </div>
-                <div class="asset-info-box">
-                    <div class="logo-box">
-                        <img [assetId]="NEO" chain="Neo2" appErrorSrc alt="">
-                    </div>
-                    <div class="asset-amount-box">
-                        <p>-{{ amount }} {{ symbol }}</p>
-                        <p>-{{ money | numberFixed:2 }} {{ rateCurrency }}</p>
-                    </div>
-                </div>
-                <div class="detail-tab-content">
-                    <mat-tab-group mat-align-tabs="center" >
-                        <mat-tab [label]="'details' | translate | async">
-                            <div class="fee-box detail-item">
-                                <p class="label">GAS FEE</p>
-                                <div class="fee-info">
-                                    <p class="edit" (click)="editFee()">{{ 'edit' | translate | async }}</p>
-                                    <p class="fee">{{ fee }} GAS</p>
-                                    <p class="fee-money">{{ feeMoney | numberFixed:2 }} {{ rateCurrency }}</p>
-                                </div>
-                            </div>
-                            <hr>
-                            <div class="total-box detail-item">
-                                <p  class="label">TOTAL</p>
-                                <div class="total-info">
-                                    <p class="edit">Amount+GAS FEE</p>
-                                    <p class="fee">{{ amount }} {{ symbol }} + {{ fee }}GAS</p>
-                                    <p class="fee-money">{{ totalMoney | numberFixed:2 }} {{ rateCurrency }}</p>
-                                </div>
-                            </div>
-                        </mat-tab>
-                        <mat-tab [label]="'data' | translate | async">
-                            <div class="data-detail-box">
-                                <div class="json-box">
-                                    <pre>{{ dataJson | json }}</pre>
-                                </div>
-                                <p class="hex-label">HEX</p>
-                                <p class="json-box serialize">
-                                    {{ txSerialize }}
-                                </p>
-                            </div>
-                        </mat-tab>
-                    </mat-tab-group>
-                </div>
-                <hr>
-                <div class="btn-box">
-                    <button mat-flat-button (click)="exit()">{{ 'cancel' | translate | async}}</button>
-                    <button mat-flat-button (click)="confirm()"  color="primary">{{ 'yes' | translate | async}}</button>
-                </div>
-            </div>
-        </div>
+  <div class="container">
+    <div class="mat-toolbar-fixed no-third-party-toolbar">
+      <mat-toolbar color="primary">
+        <span class="popup-nav-logo">
+          <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
+        </span>
+        <button mat-stroked-button class="popup-nav-network">
+          <span class="network-name">{{ n2Network.name }}</span>
+          <span class="popup-nav-network-icon"></span>
+        </button>
+        <img
+          class="close"
+          (click)="exit()"
+          src="/assets/images/dialog/close.png"
+          alt=""
+        />
+      </mat-toolbar>
     </div>
+    <div class="transfer-confirm-body">
+      <mat-toolbar>
+        <div>
+          <img class="avatar" [avatar]="fromAddress" />
+          <span>{{ getAddressSub(fromAddress) }}</span>
+        </div>
+
+        <img
+          class="arrow"
+          src="/assets/images/dialog/transfer_arrow.png"
+          alt=""
+        />
+        <div>
+          <img class="avatar" [avatar]="toAddress" />
+          <span>{{ getAddressSub(toAddress) }}</span>
+        </div>
+      </mat-toolbar>
+      <div class="transfer-detail-container">
+        <div class="type-box">
+          <span></span>
+          <span>TRANSFER</span>
+        </div>
+        <div class="asset-info-box">
+          <div class="logo-box">
+            <img [assetId]="NEO" chain="Neo2" appErrorSrc alt="" />
+          </div>
+          <div class="asset-amount-box">
+            <p>-{{ amount }} {{ symbol }}</p>
+            <p>-{{ money | numberFixed: 2 }} {{ rateCurrency }}</p>
+          </div>
+        </div>
+        <div class="detail-tab-content">
+          <mat-tab-group mat-align-tabs="center">
+            <mat-tab [label]="'details' | translate | async">
+              <div class="fee-box detail-item">
+                <p class="label">GAS FEE</p>
+                <div class="fee-info">
+                  <p class="edit" (click)="editFee()">
+                    {{ "edit" | translate | async }}
+                  </p>
+                  <p class="fee">{{ fee }} GAS</p>
+                  <p class="fee-money">
+                    {{ feeMoney | numberFixed: 2 }} {{ rateCurrency }}
+                  </p>
+                </div>
+              </div>
+              <hr />
+              <div class="total-box detail-item">
+                <p class="label">TOTAL</p>
+                <div class="total-info">
+                  <p class="edit">Amount+GAS FEE</p>
+                  <p class="fee">{{ amount }} {{ symbol }} + {{ fee }}GAS</p>
+                  <p class="fee-money">
+                    {{ totalMoney | numberFixed: 2 }} {{ rateCurrency }}
+                  </p>
+                </div>
+              </div>
+            </mat-tab>
+            <mat-tab [label]="'data' | translate | async">
+              <div class="data-detail-box">
+                <div class="json-box">
+                  <pre>{{ dataJson | json }}</pre>
+                </div>
+                <p class="hex-label">HEX</p>
+                <p class="json-box serialize">
+                  {{ txSerialize }}
+                </p>
+              </div>
+            </mat-tab>
+          </mat-tab-group>
+        </div>
+        <hr />
+        <div class="btn-box">
+          <button mat-flat-button (click)="exit()">
+            {{ "cancel" | translate | async }}
+          </button>
+          <button mat-flat-button (click)="confirm()" color="primary">
+            {{ "yes" | translate | async }}
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>

@@ -1,62 +1,91 @@
 <section class="main">
-    <div class="header">
-        <p>{{ 'ImportLedgerWallet' | translate | async }}</p>
+  <div class="header">
+    <p>{{ "ImportLedgerWallet" | translate | async }}</p>
+  </div>
+  <div class="content loading" *ngIf="!isReady">
+    <img src="/assets/images/ledger/loading.gif" alt="" />
+    <p class="tip" *ngIf="chainType === 'Neo2'">
+      {{ status.msg | translate | async }}
+    </p>
+    <p class="tip" *ngIf="chainType === 'Neo3'">
+      {{ status.msgNeo3 || status.msg | translate | async }}
+    </p>
+    <p class="note">
+      {{
+        (chainType === "Neo2" ? "LedgerInstallNeoApp" : "LedgerInstallNeo3App")
+          | translate
+          | async
+      }}
+    </p>
+    <p class="note reconnect">{{ "reconnectLedger" | translate | async }}</p>
+  </div>
+  <div class="content address" *ngIf="isReady">
+    <div class="title">
+      <span>{{ "selectAccountConnect" | translate | async }}</span>
+      <div class="page">
+        <span
+          class="pre"
+          [ngClass]="{ disabled: accountPage === 1 }"
+          (click)="prePage()"
+        >
+          <img src="/assets/images/ledger/arrow-left.svg" alt="" />
+        </span>
+        <span class="next" (click)="nextPage()">
+          <img src="/assets/images/ledger/arrow-left.svg" alt="" />
+        </span>
+      </div>
     </div>
-    <div class="content loading" *ngIf="!isReady">
-        <img src="/assets/images/ledger/loading.gif" alt="">
-        <p class="tip" *ngIf="chainType === 'Neo2'">{{ status.msg | translate | async }}</p>
-        <p class="tip" *ngIf="chainType === 'Neo3'">{{ (status.msgNeo3 || status.msg) | translate | async }}</p>
-        <p class="note">
-            {{ (chainType === 'Neo2' ? 'LedgerInstallNeoApp' : 'LedgerInstallNeo3App') | translate | async }}
-        </p>
-        <p class="note reconnect">{{ 'reconnectLedger' | translate | async }}</p>
+    <div class="loading-account" *ngIf="isLoadingAccount">
+      <mat-spinner diameter="34" strokeWidth="4"></mat-spinner>
     </div>
-    <div class="content address" *ngIf="isReady">
-        <div class="title">
-            <span>{{ 'selectAccountConnect' | translate | async }}</span>
-            <div class="page">
-                <span class="pre" [ngClass]="{disabled: accountPage===1}" (click)="prePage()">
-                    <img src="/assets/images/ledger/arrow-left.svg" alt="">
-                </span>
-                <span class="next" (click)="nextPage()">
-                    <img src="/assets/images/ledger/arrow-left.svg" alt="">
-                </span>
-            </div>
+    <ul *ngIf="isReady && !isLoadingAccount">
+      <li
+        *ngFor="let item of accounts; index as index"
+        (click)="chooseAccount(index)"
+        [ngClass]="{
+          imported: savedAddressesObj[item?.address],
+          selected: selectedAccount?.address === item?.address
+        }"
+      >
+        {{ item?.address.slice(0, 8) + "..." + item?.address.slice(-8) }}
+        <span>
+          <img src="/assets/images/dialog/selected.png" alt="" />
+          {{ "Imported" | translate | async }}
+        </span>
+      </li>
+    </ul>
+    <div class="line"></div>
+    <div class="bottom">
+      <div class="balance-content" *ngIf="selectedAccount">
+        <p class="title">{{ "WalletAddress" | translate | async }}</p>
+        <div class="middle">
+          <p class="address">{{ selectedAccount?.address }}</p>
+          <div class="balance">
+            <p *ngFor="let asset of accountBalance">
+              <img
+                [assetId]="asset?.asset_id"
+                [chain]="chainType"
+                appErrorSrc
+                alt=""
+              />
+              {{ asset?.balance }}
+            </p>
+          </div>
+          <p class="tip">
+            {{ "CreatingImportingWallet" | translate | async
+            }}<span class="link" (click)="jumbToWeb('privacy')">{{
+              "PrivacyPolicy" | translate | async
+            }}</span
+            >{{ "and" | translate | async
+            }}<span class="link" (click)="jumbToWeb('agreement')">{{
+              "TermsOfService" | translate | async
+            }}</span>
+          </p>
         </div>
-        <div class="loading-account" *ngIf="isLoadingAccount">
-            <mat-spinner diameter="34" strokeWidth="4"></mat-spinner>
-        </div>
-        <ul *ngIf="isReady && !isLoadingAccount">
-            <li *ngFor="let item of accounts; index as index" (click)="chooseAccount(index)"
-                [ngClass]="{imported: savedAddressesObj[item?.address], selected: selectedAccount?.address===item?.address}">
-                {{ item?.address.slice(0, 8) + '...' + item?.address.slice(-8) }}
-                <span>
-                    <img src="/assets/images/dialog/selected.png" alt="">
-                    {{ 'Imported' | translate | async }}
-                </span>
-            </li>
-        </ul>
-        <div class="line"></div>
-        <div class="bottom">
-            <div class="balance-content" *ngIf="selectedAccount">
-                <p class="title">{{ 'WalletAddress' | translate | async }}</p>
-                <div class="middle">
-                    <p class="address">{{ selectedAccount?.address }}</p>
-                    <div class="balance">
-                        <p *ngFor="let asset of accountBalance">
-                            <img [assetId]="asset?.asset_id" [chain]="chainType" appErrorSrc alt="">
-                            {{ asset?.balance }}
-                        </p>
-                    </div>
-                    <p class="tip">
-                        {{ 'CreatingImportingWallet' | translate | async }}<span class="link"
-                            (click)="jumbToWeb('privacy')">{{ 'PrivacyPolicy' | translate | async }}</span>{{ 'and' | translate | async }}<span
-                            class="link"
-                            (click)="jumbToWeb('agreement')">{{ 'TermsOfService' | translate | async }}</span>
-                    </p>
-                </div>
-            </div>
-            <button (click)="selectWallet()">{{ 'ImportThisAccount' | translate | async }}</button>
-        </div>
+      </div>
+      <button (click)="selectWallet()">
+        {{ "ImportThisAccount" | translate | async }}
+      </button>
     </div>
+  </div>
 </section>

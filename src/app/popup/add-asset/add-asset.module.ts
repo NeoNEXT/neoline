@@ -11,19 +11,19 @@ import { PopupMyAssetsComponent } from './my-assets/my-assets.component';
 import { PopupMyAssetItemComponent } from './my-assets/my-asset-item/my-asset-item.component';
 
 @NgModule({
-    declarations: [
-        PopupAddAssetComponent,
-        PopupAssetItemComponent,
-        PopupMyAssetsComponent,
-        PopupMyAssetItemComponent,
-    ],
-    imports: [
-        CommonModule,
-        ShareModule,
-        PopupAddAssetRoutingModule,
-        MatMenuModule,
-    ],
-    exports: [],
-    providers: [],
+  declarations: [
+    PopupAddAssetComponent,
+    PopupAssetItemComponent,
+    PopupMyAssetsComponent,
+    PopupMyAssetItemComponent,
+  ],
+  imports: [
+    CommonModule,
+    ShareModule,
+    PopupAddAssetRoutingModule,
+    MatMenuModule,
+  ],
+  exports: [],
+  providers: [],
 })
 export class PopupAddAssetModule {}

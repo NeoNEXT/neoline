@@ -1,22 +1,15 @@
-import {
-    Component,
-    OnInit
-} from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 
 @Component({
-    templateUrl: './token.component.html',
-    styleUrls: ['./token.component.scss']
+  templateUrl: './token.component.html',
+  styleUrls: ['./token.component.scss'],
 })
 export class PopupNoticeTokenComponent implements OnInit {
+  constructor() {}
 
-    constructor() {}
+  ngOnInit() {}
 
-    ngOnInit() {}
+  public submit() {}
 
-    public submit(){
-
-    }
-
-    public cancel() {}
-
+  public cancel() {}
 }

@@ -1,12 +1,18 @@
 <section class="main">
-    <div class="header">
-        <p>{{ 'ImportLedgerWallet' | translate | async }}</p>
-    </div>
-    <div class="content">
-        <p class="title">{{ 'WalletAddress' | translate | async }}</p>
-        <p class="address">{{ accountData?.account?.address }}</p>
-        <p class="title name">{{ 'Name' | translate | async }}</p>
-        <input [placeholder]="'PleaseEnterWalletName' | translate | async" [(ngModel)]="name" type="text">
-        <button (click)="importLedgerWallet()">{{ 'Confirm' | translate | async }}</button>
-    </div>
+  <div class="header">
+    <p>{{ "ImportLedgerWallet" | translate | async }}</p>
+  </div>
+  <div class="content">
+    <p class="title">{{ "WalletAddress" | translate | async }}</p>
+    <p class="address">{{ accountData?.account?.address }}</p>
+    <p class="title name">{{ "Name" | translate | async }}</p>
+    <input
+      [placeholder]="'PleaseEnterWalletName' | translate | async"
+      [(ngModel)]="name"
+      type="text"
+    />
+    <button (click)="importLedgerWallet()">
+      {{ "Confirm" | translate | async }}
+    </button>
+  </div>
 </section>
