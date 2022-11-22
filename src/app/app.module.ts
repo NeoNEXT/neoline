@@ -4,6 +4,8 @@ import { NgModule } from '@angular/core';
 import { AppRoutingModule } from './app.route';
 import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
+import { StoreModule } from '@ngrx/store';
+import rootReducer from './reduers';
 import { ShareModule } from './share';
 import { PopupModule } from './popup';
 import { N404Module } from './404';
@@ -17,35 +19,41 @@ import { StartupService } from './core';
 import { APP_INITIALIZER } from '@angular/core';
 
 function StartupServiceFactory(startupService: StartupService) {
-    return () => startupService.load();
+  return () => startupService.load();
 }
 const APPINIT_PROVIDES = [
-    StartupService,
-    {
-        provide: APP_INITIALIZER,
-        useFactory: StartupServiceFactory,
-        deps: [StartupService],
-        multi: true
-    }
+  StartupService,
+  {
+    provide: APP_INITIALIZER,
+    useFactory: StartupServiceFactory,
+    deps: [StartupService],
+    multi: true,
+  },
 ];
 // #endregion
 
 @NgModule({
-    declarations: [AppComponent],
-    imports: [
-        BrowserModule,
-        AppRoutingModule,
-        BrowserAnimationsModule,
-        CoreModule,
-        ShareModule,
-        PopupModule,
-        TransferModule,
-        LedgerModule,
-        PopupNotificationModule,
-        N404Module,
-    ],
-    providers: [...APPINIT_PROVIDES],
-    bootstrap: [AppComponent],
-    entryComponents: [],
+  declarations: [AppComponent],
+  imports: [
+    BrowserModule,
+    AppRoutingModule,
+    BrowserAnimationsModule,
+    CoreModule,
+    ShareModule,
+    PopupModule,
+    TransferModule,
+    LedgerModule,
+    PopupNotificationModule,
+    N404Module,
+    StoreModule.forRoot(rootReducer, {
+      runtimeChecks: {
+        strictActionImmutability: false,
+        strictStateImmutability: false,
+      },
+    }),
+  ],
+  providers: [...APPINIT_PROVIDES],
+  bootstrap: [AppComponent],
+  entryComponents: [],
 })
 export class AppModule {}
