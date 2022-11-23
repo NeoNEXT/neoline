@@ -16,10 +16,8 @@ import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '../_dialogs';
 import { Router } from '@angular/router';
 import { rpc } from '@cityofzion/neon-core';
-import { bignumber } from 'mathjs';
 import {
   NEO3_CONTRACT,
-  NetworkType,
   LedgerStatuses,
   GAS3_CONTRACT,
   ChainType,
@@ -41,7 +39,6 @@ import { Unsubscribable } from 'rxjs';
 export class PopupHomeComponent implements OnInit, OnDestroy {
   @ViewChild('txPage') txPageComponent: PopupTxPageComponent;
   selectedIndex = 0; // asset tab or transaction tab
-  private assetId: string;
   balance: Asset;
   rateCurrency: string;
 
@@ -64,8 +61,6 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
 
   showBackup: boolean = null;
 
-  currentWalletIsN3;
-
   // 菜单
   showMenu = false;
   ledgerSignLoading = false;
@@ -73,6 +68,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   getStatusInterval;
 
   private accountSub: Unsubscribable;
+  currentWalletIsN3: boolean;
   currentWallet: Wallet2 | Wallet3;
   address: string;
   private chainType: ChainType;
@@ -103,14 +99,30 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       this.currentWalletArr =
         this.chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
       this.currentWalletIsN3 = this.chainType === 'Neo3';
-      this.assetId = this.chainType === 'Neo2' ? NEO : NEO3_CONTRACT;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.initData();
     });
-    this.rateCurrency = this.assetState.rateCurrency;
   }
 
   ngOnInit(): void {
+    this.rateCurrency = this.assetState.rateCurrency;
+  }
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
+    if (this.intervalN3Claim) {
+      clearInterval(this.intervalN3Claim);
+    }
+    if (this.chainType === 'Neo3') {
+      this.homeService.claimTxTime = new Date().getTime();
+      this.homeService.claimNumber = this.claimNumber;
+      this.homeService.showClaim = this.showClaim;
+      this.homeService.loading = this.loading;
+    }
+  }
+
+  initData() {
     if (
       this.chainType === 'Neo3' &&
       this.homeService.loading &&
@@ -133,19 +145,6 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         });
       }
     });
-  }
-
-  ngOnDestroy(): void {
-    this.accountSub?.unsubscribe();
-    if (this.intervalN3Claim) {
-      clearInterval(this.intervalN3Claim);
-    }
-    if (this.chainType === 'Neo3') {
-      this.homeService.claimTxTime = new Date().getTime();
-      this.homeService.claimNumber = this.claimNumber;
-      this.homeService.showClaim = this.showClaim;
-      this.homeService.loading = this.loading;
-    }
   }
 
   initNeo($event) {

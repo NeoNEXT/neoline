@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { ChromeService } from '@/app/core';
 import {
   RpcNetwork,
@@ -28,7 +28,8 @@ export class PopupN3NetworkDialogComponent implements OnInit, OnDestroy {
   constructor(
     private dialog: MatDialog,
     private chromeSer: ChromeService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private dialogRef: MatDialogRef<any>
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -60,7 +61,7 @@ export class PopupN3NetworkDialogComponent implements OnInit, OnDestroy {
       this.store.dispatch({ type: UPDATE_NEO3_NETWORK_INDEX, data: index });
       this.chromeSer.networkChangeEvent(this.n3Networks[index]);
     }
-    location.reload();
+    this.dialogRef.close();
   }
 
   addNetwork() {
