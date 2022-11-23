@@ -1,38 +1,50 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import {
-  NeonService,
-  ChromeService,
-  GlobalService,
-  UtilServiceState,
-} from '@/app/core';
+import { ChromeService, GlobalService, UtilServiceState } from '@/app/core';
 import { randomBytes } from 'crypto';
 import { wallet, u } from '@cityofzion/neon-core-neo3';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { ERRORS } from '@/models/dapi';
-import { RpcNetwork } from '../../_lib';
+import { RpcNetwork, ChainType } from '../../_lib';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
   templateUrl: './neo3-signature.component.html',
   styleUrls: ['./neo3-signature.component.scss'],
 })
 export class PopupNoticeNeo3SignComponent implements OnInit {
-  public address: string;
-  public n3Network: RpcNetwork;
   public message: string;
   private messageID = 0;
+
+  private accountSub: Unsubscribable;
+  public address: string;
+  public n3Network: RpcNetwork;
+  private currentWallet: Wallet2 | Wallet3;
+  private neo3WIFArr: string[];
+  private neo3WalletArr: Wallet3[];
   constructor(
     private aRouter: ActivatedRoute,
-    private neon: NeonService,
     private chrome: ChromeService,
     private global: GlobalService,
-    private utilServiceState: UtilServiceState
-  ) {}
+    private utilServiceState: UtilServiceState,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.currentWallet = state.currentWallet;
+      this.address = state.currentWallet.accounts[0].address;
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.neo3WIFArr = state.neo3WIFArr;
+      this.neo3WalletArr = state.neo3WalletArr;
+    });
+  }
 
   ngOnInit() {
-    this.n3Network = this.global.n3Network;
-    this.address = this.neon.address;
-    this.aRouter.queryParams.subscribe((params: any) => {
+    this.aRouter.queryParams.subscribe(() => {
       const query = this.utilServiceState.parseUrl(location.hash);
       this.messageID = query.messageID;
       this.message = query.message;
@@ -58,7 +70,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
   }
 
   public signature() {
-    if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+    if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
       this.global.snackBarTip('LedgerUnSupportSignError');
       this.chrome.windowCallback({
         error: {
@@ -71,10 +83,9 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
       return;
     }
     const wif =
-      this.neon.WIFArr[
-        this.neon.walletArr.findIndex(
-          (item) =>
-            item.accounts[0].address === this.neon.wallet.accounts[0].address
+      this.neo3WIFArr[
+        this.neo3WalletArr.findIndex(
+          (item) => item.accounts[0].address === this.address
         )
       ];
     const privateKey = wallet.getPrivateKeyFromWIF(wif);

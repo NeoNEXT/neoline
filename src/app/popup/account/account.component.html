@@ -14,7 +14,7 @@
     alt=""
   />
   <img class="avatar" [avatar]="address" />
-  <div class="name" (click)="updateName()">{{ walletName }}</div>
+  <div class="name" (click)="updateName()">{{ currentWallet.name }}</div>
   <p class="address-title">{{ "address" | translate | async }}</p>
   <div class="address" (click)="copy(address)">{{ address }}</div>
   <p class="address-title">{{ "PublicKey" | translate | async }}</p>

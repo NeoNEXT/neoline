@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
 import {
   AssetState,
   NeonService,
@@ -22,6 +22,8 @@ import {
   NetworkType,
   LedgerStatuses,
   GAS3_CONTRACT,
+  ChainType,
+  RpcNetwork,
 } from '../_lib';
 import BigNumber from 'bignumber.js';
 import { Neo3TransferService } from '../transfer/neo3-transfer.service';
@@ -29,16 +31,17 @@ import { interval } from 'rxjs';
 import { take } from 'rxjs/operators';
 import { Transaction } from '@cityofzion/neon-core/lib/tx';
 import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
-
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
 @Component({
   templateUrl: 'home.component.html',
   styleUrls: ['home.component.scss'],
 })
-export class PopupHomeComponent implements OnInit {
+export class PopupHomeComponent implements OnInit, OnDestroy {
   @ViewChild('txPage') txPageComponent: PopupTxPageComponent;
   selectedIndex = 0; // asset tab or transaction tab
   private assetId: string;
-  wallet: Wallet2 | Wallet3;
   balance: Asset;
   rateCurrency: string;
 
@@ -68,6 +71,15 @@ export class PopupHomeComponent implements OnInit {
   ledgerSignLoading = false;
   loadingMsg = '';
   getStatusInterval;
+
+  private accountSub: Unsubscribable;
+  currentWallet: Wallet2 | Wallet3;
+  address: string;
+  private chainType: ChainType;
+  private currentWalletArr: Array<Wallet2 | Wallet3>;
+  private currentWIFArr: string[];
+  private n2Network: RpcNetwork;
+  private n3Network: RpcNetwork;
   constructor(
     private assetState: AssetState,
     private neon: NeonService,
@@ -78,18 +90,29 @@ export class PopupHomeComponent implements OnInit {
     private router: Router,
     private neo3TransferService: Neo3TransferService,
     private homeService: HomeService,
-    private ledger: LedgerService
+    private ledger: LedgerService,
+    private store: Store<AppState>
   ) {
-    this.wallet = this.neon.wallet;
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.currentWallet = state.currentWallet;
+      this.address = state.currentWallet.accounts[0].address;
+      this.currentWIFArr =
+        this.chainType === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;
+      this.currentWalletArr =
+        this.chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
+      this.currentWalletIsN3 = this.chainType === 'Neo3';
+      this.assetId = this.chainType === 'Neo2' ? NEO : NEO3_CONTRACT;
+      this.n2Network = state.n2Networks[state.n2NetworkIndex];
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+    });
     this.rateCurrency = this.assetState.rateCurrency;
-    this.assetId =
-      this.neon.currentWalletChainType === 'Neo2' ? NEO : NEO3_CONTRACT;
-    this.currentWalletIsN3 = this.neon.currentWalletChainType === 'Neo3';
   }
 
   ngOnInit(): void {
     if (
-      this.neon.currentWalletChainType === 'Neo3' &&
+      this.chainType === 'Neo3' &&
       this.homeService.loading &&
       new Date().getTime() - this.homeService.claimTxTime < 20000
     ) {
@@ -101,11 +124,11 @@ export class PopupHomeComponent implements OnInit {
     this.initClaim();
     this.chrome.getHaveBackupTip().subscribe((res) => {
       this.showBackup = res;
-      if (this.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+      if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
         this.showBackup = false;
       }
       if (this.showBackup === null) {
-        this.chrome.getWalletStatus(this.neon.address).subscribe((res) => {
+        this.chrome.getWalletStatus(this.address).subscribe((res) => {
           this.showBackup = !res;
         });
       }
@@ -113,10 +136,11 @@ export class PopupHomeComponent implements OnInit {
   }
 
   ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
     if (this.intervalN3Claim) {
       clearInterval(this.intervalN3Claim);
     }
-    if (this.neon.currentWalletChainType === 'Neo3') {
+    if (this.chainType === 'Neo3') {
       this.homeService.claimTxTime = new Date().getTime();
       this.homeService.claimNumber = this.claimNumber;
       this.homeService.showClaim = this.showClaim;
@@ -131,19 +155,17 @@ export class PopupHomeComponent implements OnInit {
   //#region user click function
   toWeb() {
     this.showMenu = false;
-    switch (this.neon.currentWalletChainType) {
+    switch (this.chainType) {
       case 'Neo2':
-        if (this.global.n2Network.explorer) {
+        if (this.n2Network.explorer) {
           window.open(
-            `${this.global.n2Network.explorer}address/${this.neon.address}/page/1`
+            `${this.n2Network.explorer}address/${this.address}/page/1`
           );
         }
         break;
       case 'Neo3':
-        if (this.global.n3Network.explorer) {
-          window.open(
-            `${this.global.n3Network.explorer}address/${this.neon.address}`
-          );
+        if (this.n3Network.explorer) {
+          window.open(`${this.n3Network.explorer}address/${this.address}`);
         }
         break;
     }
@@ -158,8 +180,8 @@ export class PopupHomeComponent implements OnInit {
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
-          this.neon.delWallet(this.wallet).subscribe(() => {
-            if (this.neon.walletArr.length === 0) {
+          this.neon.delWallet(this.currentWallet).subscribe(() => {
+            if (this.currentWalletArr.length === 0) {
               this.router.navigateByUrl('/popup/wallet/new-guide');
             } else {
               location.reload();
@@ -170,10 +192,7 @@ export class PopupHomeComponent implements OnInit {
   }
 
   toAdd() {
-    if (
-      this.neon.currentWalletChainType === 'Neo3' &&
-      this.selectedIndex === 1
-    ) {
+    if (this.chainType === 'Neo3' && this.selectedIndex === 1) {
       this.router.navigateByUrl('/popup/add-nft');
     } else {
       this.router.navigateByUrl('/popup/add-asset');
@@ -193,15 +212,15 @@ export class PopupHomeComponent implements OnInit {
       this.syncNow();
       return;
     }
-    if (this.neon.currentWalletChainType === 'Neo2') {
+    if (this.chainType === 'Neo2') {
       this.neon.claimGAS(this.claimsData).subscribe((tx) => {
-        if (this.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+        if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
           this.getSignTx(tx[0], 'claimNeo2');
         } else {
           tx.forEach((item) => {
             try {
               rpc.Query.sendRawTransaction(item.serialize(true)).execute(
-                this.global.n2Network.rpcUrl
+                this.n2Network.rpcUrl
               );
             } catch (error) {
               this.loading = false;
@@ -217,8 +236,8 @@ export class PopupHomeComponent implements OnInit {
         clearInterval(this.intervalN3Claim);
       }
       const params = {
-        addressFrom: this.neon.address,
-        addressTo: this.neon.address,
+        addressFrom: this.address,
+        addressTo: this.address,
         tokenScriptHash: NEO3_CONTRACT,
         amount: 0,
         networkFee: 0,
@@ -257,25 +276,23 @@ export class PopupHomeComponent implements OnInit {
 
   //#region claim
   private syncNow() {
-    this.transfer
-      .create(this.neon.address, this.neon.address, NEO, '1')
-      .subscribe(
-        async (res) => {
-          this.getSignTx(res, 'syncNow');
-        },
-        (err) => {
-          if (this.neon.currentWalletChainType === 'Neo3' && err) {
-            this.global.snackBarTip('wentWrong', err, 10000);
-          } else {
-            this.global.snackBarTip('wentWrong', err);
-          }
+    this.transfer.create(this.address, this.address, NEO, '1').subscribe(
+      async (res) => {
+        this.getSignTx(res, 'syncNow');
+      },
+      (err) => {
+        if (this.chainType === 'Neo3' && err) {
+          this.global.snackBarTip('wentWrong', err, 10000);
+        } else {
+          this.global.snackBarTip('wentWrong', err);
         }
-      );
+      }
+    );
   }
 
   private initClaim() {
-    if (this.neon.currentWalletChainType === 'Neo2') {
-      this.assetState.fetchClaim(this.neon.address).subscribe((res: any) => {
+    if (this.chainType === 'Neo2') {
+      this.assetState.fetchClaim(this.address).subscribe((res: any) => {
         this.claimsData = res.claimable;
         if (res.available > 0) {
           this.claimNumber = res.available;
@@ -308,7 +325,7 @@ export class PopupHomeComponent implements OnInit {
   }
 
   getN3UnclaimedGas() {
-    this.assetState.getUnclaimedGas(this.neon.address).subscribe((res) => {
+    this.assetState.getUnclaimedGas(this.address).subscribe((res) => {
       if (res?.unclaimed && res?.unclaimed !== '0') {
         this.claimNumber = new BigNumber(res?.unclaimed)
           .shiftedBy(-8)
@@ -326,17 +343,15 @@ export class PopupHomeComponent implements OnInit {
 
   private initInterval() {
     this.intervalClaim = setInterval(() => {
-      this.assetState
-        .fetchClaim(this.neon.address)
-        .subscribe((claimRes: any) => {
-          if (Number(claimRes.available) === 0) {
-            this.loading = false;
-            this.claimNumber = claimRes.unavailable;
-            clearInterval(this.intervalClaim);
-            this.intervalClaim = null;
-            this.claimStatus = this.status.success;
-          }
-        });
+      this.assetState.fetchClaim(this.address).subscribe((claimRes: any) => {
+        if (Number(claimRes.available) === 0) {
+          this.loading = false;
+          this.claimNumber = claimRes.unavailable;
+          clearInterval(this.intervalClaim);
+          this.intervalClaim = null;
+          this.claimStatus = this.status.success;
+        }
+      });
     }, 10000);
   }
 
@@ -347,7 +362,7 @@ export class PopupHomeComponent implements OnInit {
     switch (type) {
       case 'claimNeo2':
         rpc.Query.sendRawTransaction(tx.serialize(true)).execute(
-          this.global.n2Network.rpcUrl
+          this.n2Network.rpcUrl
         );
         break;
       case 'claimNeo3':
@@ -360,12 +375,12 @@ export class PopupHomeComponent implements OnInit {
         try {
           const result = await rpc.Query.sendRawTransaction(
             tx.serialize(true)
-          ).execute(this.global.n2Network.rpcUrl);
+          ).execute(this.n2Network.rpcUrl);
           if (result.error === undefined || result.error === null) {
             if (this.intervalClaim === null) {
               this.intervalClaim = setInterval(() => {
                 this.assetState
-                  .fetchClaim(this.neon.address)
+                  .fetchClaim(this.address)
                   .subscribe((claimRes: any) => {
                     if (Number(claimRes.available) !== 0) {
                       this.loading = false;
@@ -388,43 +403,41 @@ export class PopupHomeComponent implements OnInit {
     }
   }
   private getLedgerStatus(tx, type: 'claimNeo3' | 'claimNeo2' | 'syncNow') {
-    this.ledger
-      .getDeviceStatus(this.neon.currentWalletChainType)
-      .then(async (res) => {
-        this.loadingMsg =
-          this.neon.currentWalletChainType === 'Neo2'
-            ? LedgerStatuses[res].msg
-            : LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
-        if (LedgerStatuses[res] === LedgerStatuses.READY) {
-          this.getStatusInterval.unsubscribe();
-          this.loadingMsg = 'signTheTransaction';
-          this.ledger
-            .getLedgerSignedTx(
-              tx,
-              this.neon.wallet,
-              this.neon.currentWalletChainType,
-              this.global.n3Network.magicNumber
-            )
-            .then((tx) => {
-              this.ledgerSignLoading = false;
-              this.loadingMsg = '';
-              this.handleSignedTx(tx, type);
-            })
-            .catch((error) => {
-              this.loading = false;
-              this.ledgerSignLoading = false;
-              this.loadingMsg = '';
-              this.ledger.handleLedgerError(error);
-            });
-        }
-      });
+    this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
+      this.loadingMsg =
+        this.chainType === 'Neo2'
+          ? LedgerStatuses[res].msg
+          : LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
+      if (LedgerStatuses[res] === LedgerStatuses.READY) {
+        this.getStatusInterval.unsubscribe();
+        this.loadingMsg = 'signTheTransaction';
+        this.ledger
+          .getLedgerSignedTx(
+            tx,
+            this.currentWallet,
+            this.chainType,
+            this.n3Network.magicNumber
+          )
+          .then((tx) => {
+            this.ledgerSignLoading = false;
+            this.loadingMsg = '';
+            this.handleSignedTx(tx, type);
+          })
+          .catch((error) => {
+            this.loading = false;
+            this.ledgerSignLoading = false;
+            this.loadingMsg = '';
+            this.ledger.handleLedgerError(error);
+          });
+      }
+    });
   }
 
   private getSignTx(
     tx: Transaction | Transaction3,
     type: 'claimNeo3' | 'claimNeo2' | 'syncNow'
   ) {
-    if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+    if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
       this.ledgerSignLoading = true;
       this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
       this.getLedgerStatus(tx, type);
@@ -434,18 +447,17 @@ export class PopupHomeComponent implements OnInit {
       return;
     }
     const wif =
-      this.neon.WIFArr[
-        this.neon.walletArr.findIndex(
-          (item) =>
-            item.accounts[0].address === this.neon.wallet.accounts[0].address
+      this.currentWIFArr[
+        this.currentWalletArr.findIndex(
+          (item) => item.accounts[0].address === this.address
         )
       ];
-    switch (this.neon.currentWalletChainType) {
+    switch (this.chainType) {
       case 'Neo2':
         tx.sign(wif);
         break;
       case 'Neo3':
-        tx.sign(wif, this.global.n3Network.magicNumber);
+        tx.sign(wif, this.n3Network.magicNumber);
         break;
     }
     this.handleSignedTx(tx, type);

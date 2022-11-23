@@ -1,13 +1,20 @@
-import { Component, OnInit } from '@angular/core';
-import { RpcNetwork, STORAGE_NAME, NetworkType } from '../../_lib';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import {
+  RpcNetwork,
+  STORAGE_NAME,
+  NetworkType,
+  UPDATE_NEO3_NETWORKS,
+  UPDATE_NEO3_NETWORK_INDEX,
+} from '../../_lib';
 import { HomeService, GlobalService, ChromeService } from '@/app/core';
-import { wallet } from '@cityofzion/neon-core-neo3';
-
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
 @Component({
   templateUrl: 'add-network.dialog.html',
   styleUrls: ['add-network.dialog.scss'],
 })
-export class PopupAddNetworkDialogComponent implements OnInit {
+export class PopupAddNetworkDialogComponent implements OnInit, OnDestroy {
   privateNet: RpcNetwork = {
     name: '',
     rpcUrl: '',
@@ -21,15 +28,27 @@ export class PopupAddNetworkDialogComponent implements OnInit {
   getMagicReq;
   isInvalidRpcUrl = false;
 
+  private accountSub: Unsubscribable;
+  private n3Networks: RpcNetwork[];
+  private n3NetworkIndex: number;
   constructor(
     private homeSer: HomeService,
     private global: GlobalService,
-    private chrome: ChromeService
-  ) {}
+    private chrome: ChromeService,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.n3Networks = state.n3Networks;
+      this.n3NetworkIndex = state.n3NetworkIndex;
+      this.privateNet.id = this.n3Networks[this.n3Networks.length - 1].id + 1;
+    });
+  }
 
-  ngOnInit() {
-    this.privateNet.id =
-      this.global.n3Networks[this.global.n3Networks.length - 1].id + 1;
+  ngOnInit() {}
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
   }
 
   confirm() {
@@ -78,7 +97,7 @@ export class PopupAddNetworkDialogComponent implements OnInit {
       );
   }
 
-  async addNetwork(response?) {
+  private async addNetwork(response?) {
     this.privateNet.magicNumber = response.protocol.network;
     if (response.protocol.network === 860833102) {
       this.privateNet.network = NetworkType.N3MainNet;
@@ -101,14 +120,13 @@ export class PopupAddNetworkDialogComponent implements OnInit {
         this.privateNet.chainId = 0;
         break;
     }
-    this.global.n3Networks.push(this.privateNet);
-    this.chrome.setStorage(STORAGE_NAME.n3Networks, this.global.n3Networks);
-    this.chrome.setStorage(
-      STORAGE_NAME.n3SelectedNetworkIndex,
-      this.global.n3Networks.length - 1
-    );
-    this.global.n3SelectedNetworkIndex = this.global.n3Networks.length - 1;
-    this.global.n3Network = this.privateNet;
+    this.n3Networks.push(this.privateNet);
+    this.n3NetworkIndex = this.n3Networks.length - 1;
+    this.store.dispatch({ type: UPDATE_NEO3_NETWORKS, data: this.n3Networks });
+    this.store.dispatch({
+      type: UPDATE_NEO3_NETWORK_INDEX,
+      data: this.n3NetworkIndex,
+    });
     this.chrome.resetWatch(this.privateNet.id);
     const transactions = await this.chrome
       .getStorage(STORAGE_NAME.transaction)

@@ -1,51 +1,68 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { Asset, NEO } from '@/models/models';
 import {
-  GlobalService,
-  AssetState,
-  ChromeService,
-  NeonService,
-  UtilServiceState,
-} from '@/app/core';
+  Component,
+  OnInit,
+  Input,
+  Output,
+  EventEmitter,
+  OnDestroy,
+} from '@angular/core';
+import { Asset, NEO } from '@/models/models';
+import { AssetState, ChromeService, UtilServiceState } from '@/app/core';
 import { forkJoin } from 'rxjs';
 import BigNumber from 'bignumber.js';
-import { NEO3_CONTRACT } from '../../_lib';
+import { NEO3_CONTRACT, ChainType } from '../../_lib';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
   selector: 'app-assets',
   templateUrl: 'assets.component.html',
   styleUrls: ['assets.component.scss'],
 })
-export class PopupAssetsComponent implements OnInit {
+export class PopupAssetsComponent implements OnInit, OnDestroy {
   @Input() public rateCurrency: string;
   @Output() backAsset = new EventEmitter();
   myAssets: Asset[];
-  private networkId: number;
   isLoading = false;
 
+  private accountSub: Unsubscribable;
+  private chainType: ChainType;
+  private address: string;
+  private networkId: number;
   constructor(
     private asset: AssetState,
     private chrome: ChromeService,
-    private neon: NeonService,
-    private global: GlobalService,
-    private util: UtilServiceState
-  ) {}
+    private util: UtilServiceState,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.address = state.currentWallet.accounts[0].address;
+      const network =
+        this.chainType === 'Neo2'
+          ? state.n2Networks[state.n2NetworkIndex]
+          : state.n3Networks[state.n3NetworkIndex];
+      this.networkId = network.id;
+    });
+  }
 
   ngOnInit(): void {
-    this.networkId =
-      this.neon.currentWalletChainType === 'Neo2'
-        ? this.global.n2Network.id
-        : this.global.n3Network.id;
     this.getAssets();
+  }
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
   }
 
   getAssets() {
     this.isLoading = true;
-    const getMoneyBalance = this.asset.getAddressBalances(this.neon.address);
-    const getWatch = this.chrome.getWatch(this.networkId, this.neon.address);
+    const getMoneyBalance = this.asset.getAddressBalances(this.address);
+    const getWatch = this.chrome.getWatch(this.networkId, this.address);
     forkJoin([getMoneyBalance, getWatch]).subscribe((res) => {
       const [moneyAssets, watch] = [...res];
-      let showAssets = [...moneyAssets];
+      const showAssets = [...moneyAssets];
       watch.forEach(async (item) => {
         const index = showAssets.findIndex((m) => m.asset_id === item.asset_id);
         if (index >= 0) {
@@ -55,14 +72,14 @@ export class PopupAssetsComponent implements OnInit {
         } else {
           if (item.watching === true) {
             const balance = await this.asset.getAddressAssetBalance(
-              this.neon.address,
+              this.address,
               item.asset_id,
-              this.neon.currentWalletChainType
+              this.chainType
             );
             if (new BigNumber(balance).comparedTo(0) > 0) {
               const decimals = await this.util.getAssetDecimals(
                 [item.asset_id],
-                this.neon.currentWalletChainType
+                this.chainType
               );
               item.balance = new BigNumber(balance)
                 .shiftedBy(-decimals[0])
@@ -75,7 +92,7 @@ export class PopupAssetsComponent implements OnInit {
       this.myAssets = showAssets;
       this.getAssetsRate();
       let neoAsset;
-      if (this.neon.currentWalletChainType === 'Neo2') {
+      if (this.chainType === 'Neo2') {
         neoAsset = this.myAssets.find((m) => m.asset_id === NEO);
       } else {
         neoAsset = this.myAssets.find((m) => m.asset_id === NEO3_CONTRACT);

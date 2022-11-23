@@ -2,7 +2,6 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   GlobalService,
-  NeonService,
   ChromeService,
   AssetState,
   NotificationService,
@@ -17,14 +16,18 @@ import {
   PopupDapiPromptComponent,
   PopupEditFeeDialogComponent,
 } from '../../_dialogs';
-import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
+import { RpcNetwork } from '../../_lib/type';
 import { bignumber } from 'mathjs';
-import { NEO3_CONTRACT, STORAGE_NAME, GAS3_CONTRACT } from '../../_lib';
+import { STORAGE_NAME, GAS3_CONTRACT, ChainType } from '../../_lib';
 import { Neo3InvokeService } from '../../transfer/neo3-invoke.service';
-import { forkJoin } from 'rxjs';
 import BigNumber from 'bignumber.js';
 import { LedgerStatuses } from '../../_lib';
 import { interval } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
   templateUrl: 'neo3-invoke.component.html',
@@ -58,24 +61,36 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
 
   public canSend = false;
 
-  public signAddress;
-  public n3Network: RpcNetwork;
   getStatusInterval;
 
+  private accountSub: Unsubscribable;
+  public signAddress: string;
+  public n3Network: RpcNetwork;
+  private currentWallet: Wallet2 | Wallet3;
+  private chainType: ChainType;
+  private neo3WIFArr: string[];
+  private neo3WalletArr: Wallet3[];
   constructor(
     private aRoute: ActivatedRoute,
     private router: Router,
     private global: GlobalService,
-    private neon: NeonService,
     private dialog: MatDialog,
     private chrome: ChromeService,
     private assetState: AssetState,
     private neo3Invoke: Neo3InvokeService,
     private notification: NotificationService,
-    private ledger: LedgerService
+    private ledger: LedgerService,
+    private store: Store<AppState>
   ) {
-    this.signAddress = this.neon.address;
-    this.n3Network = this.global.n3Network;
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.currentWallet = state.currentWallet;
+      this.signAddress = state.currentWallet.accounts[0].address;
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.neo3WIFArr = state.neo3WIFArr;
+      this.neo3WalletArr = state.neo3WalletArr;
+    });
   }
 
   ngOnInit(): void {
@@ -172,17 +187,16 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
         this.chrome.windowCallback({
           data: {
             txid: txHash,
-            nodeUrl: `${this.global.n3Network.rpcUrl}`,
+            nodeUrl: `${this.n3Network.rpcUrl}`,
           },
           return: requestTargetN3.Invoke,
           ID: this.messageID,
         });
         const setData = {};
-        setData[`TxArr_${this.global.n3Network.id}`] =
-          (await this.chrome.getLocalStorage(
-            `TxArr_${this.global.n3Network.id}`
-          )) || [];
-        setData[`TxArr_${this.global.n3Network.id}`].push(txHash);
+        setData[`TxArr_${this.n3Network.id}`] =
+          (await this.chrome.getLocalStorage(`TxArr_${this.n3Network.id}`)) ||
+          [];
+        setData[`TxArr_${this.n3Network.id}`].push(txHash);
         this.chrome.setLocalStorage(setData);
         this.router.navigate([
           {
@@ -283,7 +297,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
             this.getAssetRate();
             this.tx = unSignTx;
             this.txSerialize = this.tx.serialize(false);
-            let checkAddress = this.neon.address;
+            let checkAddress = this.signAddress;
             if (this.signers.length > 1) {
               const scriptHash = this.signers[0].account.startsWith('0x')
                 ? this.signers[0].account.substr(2)
@@ -364,54 +378,47 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
   }
 
   private getLedgerStatus() {
-    this.ledger
-      .getDeviceStatus(this.neon.currentWalletChainType)
-      .then(async (res) => {
-        this.loadingMsg =
-          LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
-        if (LedgerStatuses[res] === LedgerStatuses.READY) {
-          this.getStatusInterval.unsubscribe();
-          this.loadingMsg = 'signTheTransaction';
-          this.ledger
-            .getLedgerSignedTx(
-              this.tx,
-              this.neon.wallet,
-              this.neon.currentWalletChainType,
-              this.global.n3Network.magicNumber
-            )
-            .then((tx) => {
-              this.loading = false;
-              this.loadingMsg = '';
-              this.tx = tx;
-              if (this.signers.length > 1) {
-                const addressSign = this.tx.witnesses[0];
-                const addressIndex = this.tx.signers.findIndex((item) =>
-                  item.account
-                    .toString()
-                    .includes(
-                      wallet.getScriptHashFromAddress(
-                        this.neon.wallet.accounts[0].address
-                      )
-                    )
-                );
-                this.tx.witnesses = new Array(this.tx.signers.length).fill(
-                  new Witness({ verificationScript: '', invocationScript: '' })
-                );
-                this.tx.witnesses[addressIndex] = addressSign;
-              }
-              this.resolveSend();
-            })
-            .catch((error) => {
-              this.loading = false;
-              this.loadingMsg = '';
-              this.ledger.handleLedgerError(error);
-            });
-        }
-      });
+    this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
+      this.loadingMsg = LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
+      if (LedgerStatuses[res] === LedgerStatuses.READY) {
+        this.getStatusInterval.unsubscribe();
+        this.loadingMsg = 'signTheTransaction';
+        this.ledger
+          .getLedgerSignedTx(
+            this.tx,
+            this.currentWallet,
+            this.chainType,
+            this.n3Network.magicNumber
+          )
+          .then((tx) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.tx = tx;
+            if (this.signers.length > 1) {
+              const addressSign = this.tx.witnesses[0];
+              const addressIndex = this.tx.signers.findIndex((item) =>
+                item.account
+                  .toString()
+                  .includes(wallet.getScriptHashFromAddress(this.signAddress))
+              );
+              this.tx.witnesses = new Array(this.tx.signers.length).fill(
+                new Witness({ verificationScript: '', invocationScript: '' })
+              );
+              this.tx.witnesses[addressIndex] = addressSign;
+            }
+            this.resolveSend();
+          })
+          .catch((error) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.ledger.handleLedgerError(error);
+          });
+      }
+    });
   }
 
   public getSignTx() {
-    if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+    if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
       this.loading = true;
       this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
       this.getLedgerStatus();
@@ -421,23 +428,18 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
       return;
     }
     const wif =
-      this.neon.WIFArr[
-        this.neon.walletArr.findIndex(
-          (item) =>
-            item.accounts[0].address === this.neon.wallet.accounts[0].address
+      this.neo3WIFArr[
+        this.neo3WalletArr.findIndex(
+          (item) => item.accounts[0].address === this.signAddress
         )
       ];
-    this.tx.sign(wif, this.global.n3Network.magicNumber);
+    this.tx.sign(wif, this.n3Network.magicNumber);
     if (this.signers.length > 1) {
       const addressSign = this.tx.witnesses[0];
       const addressIndex = this.signers.findIndex((item) =>
         item.account
           .toString()
-          .includes(
-            wallet.getScriptHashFromAddress(
-              this.neon.wallet.accounts[0].address
-            )
-          )
+          .includes(wallet.getScriptHashFromAddress(this.signAddress))
       );
       this.tx.witnesses = new Array(this.signers.length).fill(
         new Witness({ verificationScript: '', invocationScript: '' })

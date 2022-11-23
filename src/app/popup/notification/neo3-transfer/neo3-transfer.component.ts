@@ -2,11 +2,8 @@ import { Component, OnInit, AfterViewInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   AssetState,
-  NeonService,
-  HttpService,
   GlobalService,
   ChromeService,
-  TransactionState,
   LedgerService,
   UtilServiceState,
 } from '@/app/core';
@@ -19,12 +16,16 @@ import { rpc } from '@cityofzion/neon-core-neo3/lib';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
-import { STORAGE_NAME, GAS3_CONTRACT } from '../../_lib';
+import { STORAGE_NAME, GAS3_CONTRACT, ChainType } from '../../_lib';
 import { Neo3TransferService } from '../../transfer/neo3-transfer.service';
-import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
 import { LedgerStatuses } from '../../_lib';
 import { interval } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
   templateUrl: 'neo3-transfer.component.html',
@@ -43,7 +44,6 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
 
   public balance: any;
   public creating = false;
-  public fromAddress: string = '';
   public toAddress: string = '';
   public assetId: string = '';
   public symbol: string = '';
@@ -51,7 +51,6 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
   public remark: string = '';
   public loading = false;
   public loadingMsg: string;
-  public wallet: any;
 
   public fee: number;
   public init = false;
@@ -62,34 +61,43 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
   public systemFeeMoney;
   public networkFeeMoney;
 
-  public n3Network: RpcNetwork;
   public canSend = false;
   getStatusInterval;
 
+  private accountSub: Unsubscribable;
+  public fromAddress: string;
+  public n3Network: RpcNetwork;
+  private currentWallet: Wallet2 | Wallet3;
+  private chainType: ChainType;
+  private neo3WIFArr: string[];
+  private neo3WalletArr: Wallet3[];
   constructor(
     private router: Router,
     private aRoute: ActivatedRoute,
     private asset: AssetState,
     private transfer: TransferService,
-    private neon: NeonService,
-    private http: HttpService,
     private global: GlobalService,
     private chrome: ChromeService,
-    private txState: TransactionState,
     private dialog: MatDialog,
     private neo3Transfer: Neo3TransferService,
-    private globalService: GlobalService,
     private ledger: LedgerService,
-    private util: UtilServiceState
+    private util: UtilServiceState,
+    private store: Store<AppState>
   ) {
-    this.rpcClient = new rpc.RPCClient(this.globalService.n3Network.rpcUrl);
-    this.n3Network = this.global.n3Network;
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.currentWallet = state.currentWallet;
+      this.fromAddress = state.currentWallet.accounts[0].address;
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.neo3WIFArr = state.neo3WIFArr;
+      this.neo3WalletArr = state.neo3WalletArr;
+      this.rpcClient = new rpc.RPCClient(this.n3Network.rpcUrl);
+    });
   }
 
   ngOnInit(): void {
     this.rateCurrency = this.asset.rateCurrency;
-    this.fromAddress = this.neon.address;
-    this.wallet = this.neon.wallet;
     this.aRoute.queryParams.subscribe(async (params: any) => {
       const pramsData = JSON.parse(JSON.stringify(params));
       this.dataJson = JSON.stringify(params);
@@ -149,18 +157,18 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
   async getAssetDetail() {
     const symbols = await this.util.getAssetSymbols(
       [this.assetId],
-      this.neon.currentWalletChainType
+      this.chainType
     );
     this.symbol = symbols[0];
     const balance = await this.asset.getAddressAssetBalance(
-      this.neon.address,
+      this.fromAddress,
       this.assetId,
-      this.neon.currentWalletChainType
+      this.chainType
     );
     if (new BigNumber(balance).comparedTo(0) > 0) {
       const decimals = await this.util.getAssetDecimals(
         [this.assetId],
-        this.neon.currentWalletChainType
+        this.chainType
       );
       this.balance = {
         asset_id: this.assetId,
@@ -249,7 +257,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
         this.chrome.windowCallback({
           data: {
             txid: TxHash,
-            nodeUrl: `${this.global.n3Network.rpcUrl}`,
+            nodeUrl: `${this.n3Network.rpcUrl}`,
           },
           return: requestTargetN3.Send,
           ID: this.messageID,
@@ -396,38 +404,35 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
   }
 
   private getLedgerStatus(tx) {
-    this.ledger
-      .getDeviceStatus(this.neon.currentWalletChainType)
-      .then(async (res) => {
-        this.loadingMsg =
-          LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
-        if (LedgerStatuses[res] === LedgerStatuses.READY) {
-          this.getStatusInterval.unsubscribe();
-          this.loadingMsg = 'signTheTransaction';
-          this.ledger
-            .getLedgerSignedTx(
-              tx,
-              this.neon.wallet,
-              this.neon.currentWalletChainType,
-              this.global.n3Network.magicNumber
-            )
-            .then((tx) => {
-              this.loading = false;
-              this.loadingMsg = '';
-              this.tx = tx;
-              this.resolveSend(tx);
-            })
-            .catch((error) => {
-              this.loading = false;
-              this.loadingMsg = '';
-              this.ledger.handleLedgerError(error);
-            });
-        }
-      });
+    this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
+      this.loadingMsg = LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
+      if (LedgerStatuses[res] === LedgerStatuses.READY) {
+        this.getStatusInterval.unsubscribe();
+        this.loadingMsg = 'signTheTransaction';
+        this.ledger
+          .getLedgerSignedTx(
+            tx,
+            this.currentWallet,
+            this.chainType,
+            this.n3Network.magicNumber
+          )
+          .then((tx) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.tx = tx;
+            this.resolveSend(tx);
+          })
+          .catch((error) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.ledger.handleLedgerError(error);
+          });
+      }
+    });
   }
 
   private getSignTx(tx: Transaction3) {
-    if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+    if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
       this.loading = true;
       this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
       this.getLedgerStatus(tx);
@@ -437,13 +442,12 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
       return;
     }
     const wif =
-      this.neon.WIFArr[
-        this.neon.walletArr.findIndex(
-          (item) =>
-            item.accounts[0].address === this.neon.wallet.accounts[0].address
+      this.neo3WIFArr[
+        this.neo3WalletArr.findIndex(
+          (item) => item.accounts[0].address === this.fromAddress
         )
       ];
-    tx.sign(wif, this.global.n3Network.magicNumber);
+    tx.sign(wif, this.n3Network.magicNumber);
     this.tx = tx;
     this.resolveSend(tx);
   }

@@ -1,27 +1,30 @@
 import { Injectable } from '@angular/core';
 import { Transaction, TransactionInput } from '@cityofzion/neon-core/lib/tx';
 import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
-import { Observable, of } from 'rxjs';
-import { map, delay } from 'rxjs/operators';
-import { UTXO, GAS } from '@/models/models';
+import { Observable } from 'rxjs';
+import { GAS } from '@/models/models';
 import { wallet } from '@cityofzion/neon-core';
-import {
-  NeonService,
-  HttpService,
-  GlobalService,
-  AssetState,
-} from '@/app/core';
+import { NeonService, GlobalService, AssetState } from '@/app/core';
 import { Neo3TransferService } from './neo3-transfer.service';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { ChainType } from '../_lib';
 
 @Injectable()
 export class TransferService {
+  private chainType: ChainType;
   constructor(
     private neon: NeonService,
-    private http: HttpService,
     private global: GlobalService,
     private neo3TransferService: Neo3TransferService,
-    private assetState: AssetState
-  ) {}
+    private assetState: AssetState,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+    });
+  }
   public create(
     from: string,
     to: string,
@@ -32,7 +35,7 @@ export class TransferService {
     broadcastOverride: boolean = false,
     nftTokenId?: string
   ): Observable<Transaction | Transaction3> {
-    if (this.neon.currentWalletChainType === 'Neo3') {
+    if (this.chainType === 'Neo3') {
       return new Observable((observer) => {
         this.neo3TransferService
           .createNeo3Tx({

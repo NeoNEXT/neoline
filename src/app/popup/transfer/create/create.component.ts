@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { GAS, Asset, NftToken } from '@/models/models';
 import {
@@ -26,23 +26,32 @@ import {
 } from '../../_dialogs';
 import { PopupTransferConfirmComponent } from '../confirm/confirm.component';
 import { bignumber } from 'mathjs';
-import { GasFeeSpeed } from '../../_lib/type';
+import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { Neo3TransferService } from '../neo3-transfer.service';
-import { GAS3_CONTRACT, STORAGE_NAME, LedgerStatuses } from '../../_lib';
+import {
+  GAS3_CONTRACT,
+  STORAGE_NAME,
+  LedgerStatuses,
+  ChainType,
+} from '../../_lib';
 import { interval, forkJoin } from 'rxjs';
 import BigNumber from 'bignumber.js';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
   templateUrl: 'create.component.html',
   styleUrls: ['create.component.scss'],
 })
-export class TransferCreateComponent implements OnInit {
+export class TransferCreateComponent implements OnInit, OnDestroy {
   public amount: string;
   public fee: any;
   public loading = false;
   public loadingMsg: string;
   gasFeeSpeed: GasFeeSpeed;
-  public fromAddress: string;
   public toAddress: string;
   nnsAddress: string;
   public creating: boolean = false;
@@ -51,7 +60,6 @@ export class TransferCreateComponent implements OnInit {
 
   public balances: Array<Asset> = [];
   public assetId: string;
-  public networkId: number;
 
   istransferAll = false;
 
@@ -59,12 +67,21 @@ export class TransferCreateComponent implements OnInit {
   nftTokens: NftToken[];
   chooseNftToken: NftToken;
   getStatusInterval;
+
+  private accountSub: Unsubscribable;
+  public fromAddress: string;
+  private chainType: ChainType;
+  private currentWallet: Wallet2 | Wallet3;
+  private currentWIFArr: string[];
+  private currentWalletArr: Array<Wallet2 | Wallet3>;
+  private currentNetwork: RpcNetwork;
+  private n3Network: RpcNetwork;
   constructor(
     private router: Router,
     private aRoute: ActivatedRoute,
     private asset: AssetState,
     private transfer: TransferService,
-    private neon: NeonService,
+    // private neon: NeonService,
     private dialog: MatDialog,
     private global: GlobalService,
     private http: HttpService,
@@ -73,20 +90,28 @@ export class TransferCreateComponent implements OnInit {
     private neo3Transfer: Neo3TransferService,
     private nftState: NftState,
     private ledger: LedgerService,
-    private util: UtilServiceState
+    private util: UtilServiceState,
+    private store: Store<AppState>
   ) {
-    switch (this.neon.currentWalletChainType) {
-      case 'Neo2':
-        this.networkId = this.global.n2Network.id;
-        break;
-      case 'Neo3':
-        this.networkId = this.global.n3Network.id;
-        break;
-    }
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.currentWallet = state.currentWallet;
+      this.fromAddress = state.currentWallet.accounts[0].address;
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.currentWIFArr =
+        this.chainType === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;
+      this.currentWalletArr =
+        this.chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
+      this.currentNetwork =
+        this.chainType === 'Neo2'
+          ? state.n2Networks[state.n2NetworkIndex]
+          : state.n3Networks[state.n3NetworkIndex];
+    });
   }
 
   ngOnInit(): void {
-    this.fromAddress = this.neon.address;
+    this.fromAddress = this.fromAddress;
     this.aRoute.params.subscribe((params) => {
       if (params.nftContract) {
         this.nftContract = params.nftContract;
@@ -94,7 +119,7 @@ export class TransferCreateComponent implements OnInit {
       } else {
         if (params.id) {
           this.asset
-            .getAssetDetail(this.neon.address, params.id)
+            .getAssetDetail(this.fromAddress, params.id)
             .then(async (res: Asset) => {
               res.balance = bignumber(res.balance).toFixed();
               this.chooseAsset = res;
@@ -115,9 +140,16 @@ export class TransferCreateComponent implements OnInit {
     }
   }
 
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
+  }
+
   async getAddressAllBalances(params) {
-    const getMoneyBalance = this.asset.getAddressBalances(this.neon.address);
-    const getWatch = this.chrome.getWatch(this.networkId, this.neon.address);
+    const getMoneyBalance = this.asset.getAddressBalances(this.fromAddress);
+    const getWatch = this.chrome.getWatch(
+      this.currentNetwork.id,
+      this.fromAddress
+    );
     forkJoin([getMoneyBalance, getWatch]).subscribe((res) => {
       const [moneyAssets, watch] = [...res];
       let showAssets = [...moneyAssets];
@@ -132,14 +164,14 @@ export class TransferCreateComponent implements OnInit {
         } else {
           if (item.watching === true) {
             const balance = await this.asset.getAddressAssetBalance(
-              this.neon.address,
+              this.fromAddress,
               item.asset_id,
-              this.neon.currentWalletChainType
+              this.chainType
             );
             if (new BigNumber(balance).comparedTo(0) > 0) {
               const decimals = await this.util.getAssetDecimals(
                 [item.asset_id],
-                this.neon.currentWalletChainType
+                this.chainType
               );
               item.balance = new BigNumber(balance)
                 .shiftedBy(-decimals[0])
@@ -159,7 +191,7 @@ export class TransferCreateComponent implements OnInit {
 
   getNftTokens() {
     this.nftState
-      .getNftTokens(this.neon.address, this.nftContract)
+      .getNftTokens(this.fromAddress, this.nftContract)
       .then((res) => {
         this.nftTokens = res.tokens;
         this.chooseNftToken = this.nftTokens[0];
@@ -225,7 +257,7 @@ export class TransferCreateComponent implements OnInit {
         (err) => {
           this.creating = false;
           this.loading = false;
-          if (this.neon.currentWalletChainType === 'Neo3' && err) {
+          if (this.chainType === 'Neo3' && err) {
             this.global.snackBarTip('wentWrong', err, 10000);
           } else {
             this.global.snackBarTip('wentWrong', err);
@@ -275,7 +307,7 @@ export class TransferCreateComponent implements OnInit {
         symbol: this.chooseNftToken.symbol,
         amount: this.chooseNftToken.amount,
         fee: this.fee || '0',
-        networkId: this.networkId,
+        networkId: this.currentNetwork.id,
         txSerialize: tx.serialize(false),
       };
       if (this.nnsAddress) {
@@ -320,7 +352,7 @@ export class TransferCreateComponent implements OnInit {
                   },
                   (err) => {
                     console.log(err);
-                    if (this.neon.currentWalletChainType === 'Neo3' && err) {
+                    if (this.chainType === 'Neo3' && err) {
                       this.global.snackBarTip('wentWrong', err, 10000);
                     } else {
                       this.global.snackBarTip('wentWrong', err);
@@ -340,39 +372,37 @@ export class TransferCreateComponent implements OnInit {
   }
 
   private getLedgerStatus(tx, isNft = false) {
-    this.ledger
-      .getDeviceStatus(this.neon.currentWalletChainType)
-      .then(async (res) => {
-        this.loadingMsg =
-          this.neon.currentWalletChainType === 'Neo2'
-            ? LedgerStatuses[res].msg
-            : LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
-        if (LedgerStatuses[res] === LedgerStatuses.READY) {
-          this.getStatusInterval.unsubscribe();
-          this.loadingMsg = 'signTheTransaction';
-          this.ledger
-            .getLedgerSignedTx(
-              tx,
-              this.neon.wallet,
-              this.neon.currentWalletChainType,
-              this.global.n3Network.magicNumber
-            )
-            .then((tx) => {
-              this.loading = false;
-              this.loadingMsg = '';
-              isNft ? this.resolveNftSend(tx) : this.resolveSend(tx);
-            })
-            .catch((error) => {
-              this.loading = false;
-              this.loadingMsg = '';
-              this.ledger.handleLedgerError(error);
-            });
-        }
-      });
+    this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
+      this.loadingMsg =
+        this.chainType === 'Neo2'
+          ? LedgerStatuses[res].msg
+          : LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
+      if (LedgerStatuses[res] === LedgerStatuses.READY) {
+        this.getStatusInterval.unsubscribe();
+        this.loadingMsg = 'signTheTransaction';
+        this.ledger
+          .getLedgerSignedTx(
+            tx,
+            this.currentWallet,
+            this.chainType,
+            this.n3Network.magicNumber
+          )
+          .then((tx) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            isNft ? this.resolveNftSend(tx) : this.resolveSend(tx);
+          })
+          .catch((error) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.ledger.handleLedgerError(error);
+          });
+      }
+    });
   }
 
   private getSignTx(tx: Transaction | Transaction3, isNft = false) {
-    if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+    if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
       this.loading = true;
       this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
       this.getLedgerStatus(tx, isNft);
@@ -382,18 +412,17 @@ export class TransferCreateComponent implements OnInit {
       return;
     }
     const wif =
-      this.neon.WIFArr[
-        this.neon.walletArr.findIndex(
-          (item) =>
-            item.accounts[0].address === this.neon.wallet.accounts[0].address
+      this.currentWIFArr[
+        this.currentWalletArr.findIndex(
+          (item) => item.accounts[0].address === this.fromAddress
         )
       ];
-    switch (this.neon.currentWalletChainType) {
+    switch (this.chainType) {
       case 'Neo2':
         tx.sign(wif);
         break;
       case 'Neo3':
-        tx.sign(wif, this.global.n3Network.magicNumber);
+        tx.sign(wif, this.n3Network.magicNumber);
         break;
     }
     isNft ? this.resolveNftSend(tx) : this.resolveSend(tx);
@@ -409,13 +438,13 @@ export class TransferCreateComponent implements OnInit {
         symbol: this.chooseAsset.symbol,
         amount: this.amount,
         fee: this.fee || '0',
-        networkId: this.networkId,
+        networkId: this.currentNetwork.id,
         txSerialize: tx.serialize(false),
       };
       if (this.nnsAddress) {
         diaglogData.NeoNSName = this.toAddress;
       }
-      if (this.neon.currentWalletChainType === 'Neo3') {
+      if (this.chainType === 'Neo3') {
         diaglogData.systemFee = (tx as Transaction3).systemFee.toString();
         diaglogData.networkFee = bignumber(
           (tx as Transaction3).networkFee.toString()
@@ -454,7 +483,7 @@ export class TransferCreateComponent implements OnInit {
                   },
                   (err) => {
                     console.log(err);
-                    if (this.neon.currentWalletChainType === 'Neo3' && err) {
+                    if (this.chainType === 'Neo3' && err) {
                       this.global.snackBarTip('wentWrong', err, 10000);
                     } else {
                       this.global.snackBarTip('wentWrong', err);
@@ -478,7 +507,7 @@ export class TransferCreateComponent implements OnInit {
     try {
       let res;
       let txid: string;
-      switch (this.neon.currentWalletChainType) {
+      switch (this.chainType) {
         case 'Neo2':
           try {
             res = await this.txState.rpcSendRawTransaction(tx.serialize(true));
@@ -575,7 +604,7 @@ export class TransferCreateComponent implements OnInit {
   }
 
   public pushTransaction(transaction: any) {
-    const networkId = this.networkId;
+    const networkId = this.currentNetwork.id;
     const address = this.fromAddress;
     const assetId = this.assetId;
     this.chrome.getStorage(STORAGE_NAME.transaction).subscribe(async (res) => {
@@ -668,7 +697,7 @@ export class TransferCreateComponent implements OnInit {
 
   public getAddresSub() {
     if (
-      this.neon.currentWalletChainType === 'Neo2'
+      this.chainType === 'Neo2'
         ? wallet2.isAddress(this.toAddress)
         : wallet3.isAddress(this.toAddress, 53)
     ) {
@@ -767,10 +796,10 @@ export class TransferCreateComponent implements OnInit {
   }
 
   getInputAddressTip() {
-    if (this.neon.currentWalletChainType === 'Neo2') {
+    if (this.chainType === 'Neo2') {
       return 'inputNeo2AddressTip';
     } else {
-      if (this.networkId === 6 || this.networkId === 3) {
+      if (this.currentNetwork.id === 6 || this.currentNetwork.id === 3) {
         return 'inputN3NNSAddressTip';
       }
       return 'inputN3AddressTip';

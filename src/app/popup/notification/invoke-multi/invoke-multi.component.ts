@@ -5,7 +5,6 @@ import {
   NeonService,
   ChromeService,
   AssetState,
-  HttpService,
   TransactionState,
   LedgerService,
 } from '@/app/core';
@@ -14,28 +13,31 @@ import {
   TransactionInput,
   InvocationTransaction,
 } from '@cityofzion/neon-core/lib/tx';
-import { wallet, tx, sc, u, rpc } from '@cityofzion/neon-core';
+import { wallet, tx, sc, u } from '@cityofzion/neon-core';
 
 import { MatDialog } from '@angular/material/dialog';
 import { NEO, UTXO, GAS } from '@/models/models';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
-import { map } from 'rxjs/operators';
 import { ERRORS, requestTarget, Invoke, TxHashAttribute } from '@/models/dapi';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import Neon from '@cityofzion/neon-js';
-import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
-import { bignumber, min } from 'mathjs';
-import { NetworkType } from '../../_lib';
+import { RpcNetwork } from '../../_lib/type';
+import { bignumber } from 'mathjs';
+import { ChainType } from '../../_lib';
 import { BigNumber } from 'bignumber.js';
 import { LedgerStatuses } from '../../_lib';
 import { interval } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
   templateUrl: 'invoke-multi.component.html',
   styleUrls: ['invoke-multi.component.scss'],
 })
 export class PopupNoticeInvokeMultiComponent implements OnInit {
-  public n2Network: RpcNetwork;
   public dataJson: any = {};
   public feeMoney = '0';
   public rateCurrency = '';
@@ -57,23 +59,36 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
 
   private extraWitness: [] = [];
 
-  public signAddress;
   getStatusInterval;
 
+  private accountSub: Unsubscribable;
+  public signAddress: string;
+  public n2Network: RpcNetwork;
+  private currentWallet: Wallet2 | Wallet3;
+  private chainType: ChainType;
+  private neo2WIFArr: string[];
+  private neo2WalletArr: Array<Wallet2 | Wallet3>;
   constructor(
     private aRoute: ActivatedRoute,
     private router: Router,
     private global: GlobalService,
     private neon: NeonService,
     private dialog: MatDialog,
-    private http: HttpService,
     private chrome: ChromeService,
     private assetState: AssetState,
     private txState: TransactionState,
-    private ledger: LedgerService
+    private ledger: LedgerService,
+    private store: Store<AppState>
   ) {
-    this.signAddress = this.neon.address;
-    this.n2Network = this.global.n2Network;
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.currentWallet = state.currentWallet;
+      this.signAddress = state.currentWallet.accounts[0].address;
+      this.n2Network = state.n2Networks[state.n2NetworkIndex];
+      this.neo2WIFArr = state.neo2WIFArr;
+      this.neo2WalletArr = state.neo2WalletArr;
+    });
   }
 
   ngOnInit(): void {
@@ -242,7 +257,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     new Promise((myResolve) => {
       myResolve(true);
     })
-      .then((res) => {
+      .then(() => {
         const triggerContracts = Object.keys(
           this.invokeArgs.reduce(
             (accum, { scriptHash, triggerContractVerification }) => {
@@ -317,7 +332,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 {
                   data: {
                     txid: transaction.hash,
-                    nodeUrl: `${this.global.n2Network.rpcUrl}`,
+                    nodeUrl: `${this.n2Network.rpcUrl}`,
                   },
                   return: requestTarget.InvokeMulti,
                   ID: this.messageID,
@@ -341,7 +356,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
 
   private createTxForNEP5(): Promise<Transaction> {
     return new Promise(async (mResolve, reject) => {
-      const fromScript = wallet.getScriptHashFromAddress(this.neon.address);
+      const fromScript = wallet.getScriptHashFromAddress(this.signAddress);
       let newTx = new tx.InvocationTransaction();
       let script = '';
       let NEOAmount = 0;
@@ -475,11 +490,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         }
         if (this.fee > 0 && GASAmount === 0) {
           try {
-            newTx = await this.addFee(
-              this.neon.wallet.accounts[0].address,
-              newTx,
-              this.fee
-            );
+            newTx = await this.addFee(this.signAddress, newTx, this.fee);
           } catch (error) {}
         }
       } else {
@@ -514,11 +525,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         });
         if (this.fee > 0 && this.showFeeEdit) {
           try {
-            newTx = await this.addFee(
-              this.neon.wallet.accounts[0].address,
-              newTx,
-              this.fee
-            );
+            newTx = await this.addFee(this.signAddress, newTx, this.fee);
           } catch (error) {
             console.log(error);
           }
@@ -531,7 +538,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
   private async addAttributes(
     transaction: InvocationTransaction
   ): Promise<InvocationTransaction> {
-    const fromScript = wallet.getScriptHashFromAddress(this.neon.address);
+    const fromScript = wallet.getScriptHashFromAddress(this.signAddress);
     if (this.txHashAttributes !== null) {
       this.txHashAttributes.forEach((item, index) => {
         this.txHashAttributes[index] = this.neon.parseTxHashAttr(
@@ -559,10 +566,10 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
       this.assetIntentOverrides.inputs.length
     ) {
       this.utxos = this.utxos.concat(
-        await this.assetState.getNeo2Utxo(this.neon.address, NEO).toPromise()
+        await this.assetState.getNeo2Utxo(this.signAddress, NEO).toPromise()
       );
       this.utxos = this.utxos.concat(
-        await this.assetState.getNeo2Utxo(this.neon.address, GAS).toPromise()
+        await this.assetState.getNeo2Utxo(this.signAddress, GAS).toPromise()
       );
     }
     if (addScriptHash !== '') {
@@ -604,7 +611,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
   ): Promise<InvocationTransaction> {
     return new Promise((mResolve, reject) => {
       this.assetState
-        .getNeo2Utxo(this.neon.address, assetid)
+        .getNeo2Utxo(this.signAddress, assetid)
         .subscribe((balances: any) => {
           if (balances.length === 0) {
             reject('no balance');
@@ -653,7 +660,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     newTx: InvocationTransaction,
     fee: number = 0
   ): Promise<InvocationTransaction> {
-    return new Promise((mResolve, reject) => {
+    return new Promise((mResolve) => {
       this.assetState.getNeo2Utxo(from, GAS).subscribe((res) => {
         let curr = 0.0;
         for (const item of res) {
@@ -786,36 +793,30 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
   }
 
   private getLedgerStatus(tx) {
-    this.ledger
-      .getDeviceStatus(this.neon.currentWalletChainType)
-      .then(async (res) => {
-        this.loadingMsg = LedgerStatuses[res].msg;
-        if (LedgerStatuses[res] === LedgerStatuses.READY) {
-          this.getStatusInterval.unsubscribe();
-          this.loadingMsg = 'signTheTransaction';
-          this.ledger
-            .getLedgerSignedTx(
-              tx,
-              this.neon.wallet,
-              this.neon.currentWalletChainType
-            )
-            .then((tx) => {
-              this.loading = false;
-              this.loadingMsg = '';
-              this.tx = tx;
-              this.resolveSend(tx);
-            })
-            .catch((error) => {
-              this.loading = false;
-              this.loadingMsg = '';
-              this.ledger.handleLedgerError(error);
-            });
-        }
-      });
+    this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
+      this.loadingMsg = LedgerStatuses[res].msg;
+      if (LedgerStatuses[res] === LedgerStatuses.READY) {
+        this.getStatusInterval.unsubscribe();
+        this.loadingMsg = 'signTheTransaction';
+        this.ledger
+          .getLedgerSignedTx(tx, this.currentWallet, this.chainType)
+          .then((tx) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.tx = tx;
+            this.resolveSend(tx);
+          })
+          .catch((error) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.ledger.handleLedgerError(error);
+          });
+      }
+    });
   }
 
   private getSignTx(tx: Transaction) {
-    if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+    if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
       this.loading = true;
       this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
       this.getLedgerStatus(tx);
@@ -825,10 +826,9 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
       return;
     }
     const wif =
-      this.neon.WIFArr[
-        this.neon.walletArr.findIndex(
-          (item) =>
-            item.accounts[0].address === this.neon.wallet.accounts[0].address
+      this.neo2WIFArr[
+        this.neo2WalletArr.findIndex(
+          (item) => item.accounts[0].address === this.signAddress
         )
       ];
     tx.sign(wif);

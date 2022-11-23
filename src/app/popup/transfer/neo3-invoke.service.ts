@@ -12,17 +12,13 @@ import {
   Witness,
 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from, throwError } from 'rxjs';
-import {
-  AssetState,
-  NotificationService,
-  GlobalService,
-  NeonService,
-  UtilServiceState,
-} from '@app/core';
+import { AssetState, NotificationService, UtilServiceState } from '@app/core';
 import BigNumber from 'bignumber.js';
 import { ContractCall, ContractParam } from '@cityofzion/neon-core-neo3/lib/sc';
-import { Asset } from '@/models/models';
-import { GAS3_CONTRACT } from '../_lib';
+import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 interface CreateNeo3TxInput {
   invokeArgs: ContractCall[];
@@ -35,14 +31,25 @@ interface CreateNeo3TxInput {
 @Injectable()
 export class Neo3InvokeService {
   rpcClient;
+
+  private address: string;
+  private neo3WIFArr: string[];
+  private neo3WalletArr: Wallet3[];
+  private n3Network: RpcNetwork;
   constructor(
     public assetState: AssetState,
     public notification: NotificationService,
-    private globalService: GlobalService,
-    private neon: NeonService,
-    private util: UtilServiceState
+    private util: UtilServiceState,
+    private store: Store<AppState>
   ) {
-    this.rpcClient = new rpc.RPCClient(this.globalService.n3Network.rpcUrl);
+    const account$ = this.store.select('account');
+    account$.subscribe((state) => {
+      this.address = state.currentWallet.accounts[0].address;
+      this.neo3WIFArr = state.neo3WIFArr;
+      this.neo3WalletArr = state.neo3WalletArr;
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.rpcClient = new rpc.RPCClient(this.n3Network.rpcUrl);
+    });
   }
   createNeo3Tx(params: CreateNeo3TxInput): Observable<Transaction> {
     const neo3This = this;
@@ -174,23 +181,18 @@ export class Neo3InvokeService {
     });
     txClone = new tx.Transaction(txClone);
     const wif =
-      this.neon.WIFArr[
-        this.neon.walletArr.findIndex(
-          (item) =>
-            item.accounts[0].address === this.neon.wallet.accounts[0].address
+      this.neo3WIFArr[
+        this.neo3WalletArr.findIndex(
+          (item) => item.accounts[0].address === this.address
         )
       ] || 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
-    txClone.sign(wif, this.globalService.n3Network.magicNumber);
+    txClone.sign(wif, this.n3Network.magicNumber);
     if (txn.signers.length > 1) {
       const addressSign = txClone.witnesses[0];
       const addressIndex = txn.signers.findIndex((item) =>
         item.account
           .toString()
-          .includes(
-            wallet3.getScriptHashFromAddress(
-              this.neon.wallet.accounts[0].address
-            )
-          )
+          .includes(wallet3.getScriptHashFromAddress(this.address))
       );
       (txClone as Transaction).witnesses = new Array(txn.signers.length).fill(
         new Witness({ verificationScript: '', invocationScript: '' })

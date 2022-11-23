@@ -1,22 +1,31 @@
 import { Injectable } from '@angular/core';
 import { HttpService } from '../services/http.service';
-import { GlobalService } from '../services/global.service';
-import { Observable, of, forkJoin } from 'rxjs';
+import { Observable, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { NeonService } from '../services/neon.service';
-import { NEO3_CONTRACT, GAS3_CONTRACT, ChainType } from '@popup/_lib';
+import { ChainType, RpcNetwork } from '@popup/_lib';
 import { Transaction, NEO, GAS } from '@/models/models';
 import BigNumber from 'bignumber.js';
 import { UtilServiceState } from '../util/util.service';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
 
 @Injectable()
 export class TransactionState {
+  private chainType: ChainType;
+  private n2Network: RpcNetwork;
+  private n3Network: RpcNetwork;
   constructor(
     private http: HttpService,
-    private global: GlobalService,
-    private neonService: NeonService,
-    private util: UtilServiceState
-  ) {}
+    private util: UtilServiceState,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.n2Network = state.n2Networks[state.n2NetworkIndex];
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+    });
+  }
 
   rpcSendRawTransaction(tx) {
     const data = {
@@ -25,18 +34,18 @@ export class TransactionState {
       method: 'sendrawtransaction',
       params: [tx],
     };
-    return this.http.rpcPost(this.global.n2Network.rpcUrl, data).toPromise();
+    return this.http.rpcPost(this.n2Network.rpcUrl, data).toPromise();
   }
 
   async getAllTxs(address: string): Promise<Transaction[]> {
-    if (this.neonService.currentWalletChainType === 'Neo3') {
+    if (this.chainType === 'Neo3') {
       return this.getN3AllTxs(address);
     }
     return this.getNeo2AllTxs(address);
   }
 
   async getAssetTxs(address: string, asset: string): Promise<Transaction[]> {
-    if (this.neonService.currentWalletChainType === 'Neo3') {
+    if (this.chainType === 'Neo3') {
       return this.getN3AssetTxs(address, asset);
     }
     return this.getNeo2AssetTxs(address, asset);
@@ -49,7 +58,7 @@ export class TransactionState {
       params: [txid, true],
       id: 1,
     };
-    return this.http.rpcPost(this.global.n2Network.rpcUrl, data).pipe(
+    return this.http.rpcPost(this.n2Network.rpcUrl, data).pipe(
       map((res) => {
         return this.handleNeo2TxDetailResponse(res);
       })
@@ -67,7 +76,7 @@ export class TransactionState {
           params: [txid, 1],
           id: 1,
         };
-        const req = this.http.rpcPost(this.global.n2Network.rpcUrl, data);
+        const req = this.http.rpcPost(this.n2Network.rpcUrl, data);
         reqs.push(req);
       });
       return forkJoin(reqs).pipe(
@@ -90,7 +99,7 @@ export class TransactionState {
         params: [txid, true],
         id: 1,
       };
-      const req = this.http.rpcPost(this.global.n3Network.rpcUrl, data);
+      const req = this.http.rpcPost(this.n3Network.rpcUrl, data);
       reqs.push(req);
     });
     return forkJoin(reqs).pipe(
@@ -116,17 +125,17 @@ export class TransactionState {
       id: 1,
     };
     let nep5Res = await this.http
-      .rpcPost(this.global.n2Network.rpcUrl, data)
+      .rpcPost(this.n2Network.rpcUrl, data)
       .toPromise();
     let neoRes = await this.http
-      .rpcPost(this.global.n2Network.rpcUrl, {
+      .rpcPost(this.n2Network.rpcUrl, {
         ...data,
         method: 'getutxotransfers',
         params: [address, 'NEO', time],
       })
       .toPromise();
     let gasRes = await this.http
-      .rpcPost(this.global.n2Network.rpcUrl, {
+      .rpcPost(this.n2Network.rpcUrl, {
         ...data,
         method: 'getutxotransfers',
         params: [address, 'GAS', time],
@@ -148,7 +157,7 @@ export class TransactionState {
       id: 1,
     };
     let n3Res = await this.http
-      .rpcPost(this.global.n3Network.rpcUrl, data)
+      .rpcPost(this.n3Network.rpcUrl, data)
       .toPromise();
     n3Res = await this.handleN3TxResponse(n3Res);
     n3Res = n3Res.sort((a, b) => b.block_time - a.block_time);
@@ -173,9 +182,7 @@ export class TransactionState {
       data.method = 'getutxotransfers';
       data.params = [address, 'GAS', time];
     }
-    let res = await this.http
-      .rpcPost(this.global.n2Network.rpcUrl, data)
-      .toPromise();
+    let res = await this.http.rpcPost(this.n2Network.rpcUrl, data).toPromise();
     if (asset === NEO || asset === GAS) {
       res = this.handleNeo2NativeTxResponse(res);
     } else {

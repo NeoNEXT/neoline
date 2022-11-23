@@ -11,15 +11,15 @@
   <div class="container">
     <mat-toolbar>
       <div class="wallet-info">
-        <p class="name">{{ wallet?.name || "" }}</p>
+        <p class="name">{{ currentWallet?.name || "" }}</p>
         <p class="address">
           <img
             class="usb"
-            *ngIf="wallet.accounts[0]?.extra?.ledgerSLIP44"
+            *ngIf="currentWallet.accounts[0]?.extra?.ledgerSLIP44"
             src="/assets/images/ledger/usb.svg"
             alt=""
           />
-          {{ wallet?.accounts[0].address || "" }}
+          {{ address || "" }}
         </p>
       </div>
       <img

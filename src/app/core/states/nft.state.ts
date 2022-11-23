@@ -1,16 +1,24 @@
 import { Injectable } from '@angular/core';
 import { HttpService } from '../services/http.service';
-import { GlobalService } from '../services/global.service';
 import { NftAsset, NftTransaction } from '@/models/models';
 import { UtilServiceState } from '../util/util.service';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { RpcNetwork } from '@/app/popup/_lib';
 
 @Injectable()
 export class NftState {
+  private n3Network: RpcNetwork;
   constructor(
     private http: HttpService,
-    private global: GlobalService,
-    private util: UtilServiceState
-  ) {}
+    private util: UtilServiceState,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    account$.subscribe((state) => {
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+    });
+  }
 
   async getAddressNfts(address: string): Promise<NftAsset[]> {
     const data = {
@@ -20,7 +28,7 @@ export class NftState {
       params: [address],
     };
     const res = await this.http
-      .rpcPost(this.global.n3Network.rpcUrl, data)
+      .rpcPost(this.n3Network.rpcUrl, data)
       .toPromise();
     const contracts = [];
     const resData = res.balance;
@@ -42,7 +50,7 @@ export class NftState {
       params: [address],
     };
     const res = await this.http
-      .rpcPost(this.global.n3Network.rpcUrl, data)
+      .rpcPost(this.n3Network.rpcUrl, data)
       .toPromise();
     let nftAsset: NftAsset = res.balance.find((m) => m.assethash === contract);
     const symbols = await this.util.getAssetSymbols([contract], 'Neo3');
@@ -85,7 +93,7 @@ export class NftState {
       id: 1,
     };
     let n3Res = await this.http
-      .rpcPost(this.global.n3Network.rpcUrl, data)
+      .rpcPost(this.n3Network.rpcUrl, data)
       .toPromise();
     n3Res = await this.handleNftTxResponse(n3Res, contract);
     n3Res = n3Res.sort((a, b) => b.block_time - a.block_time);
@@ -162,7 +170,7 @@ export class NftState {
       params: [q],
     };
     const res = await this.http
-      .rpcPost(this.global.n3Network.rpcUrl, data)
+      .rpcPost(this.n3Network.rpcUrl, data)
       .toPromise();
     if ((res?.manifest?.supportedstandards || []).includes('NEP-11')) {
       const symbols = await this.util.getAssetSymbols([res?.hash], 'Neo3');

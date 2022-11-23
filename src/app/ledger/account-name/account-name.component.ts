@@ -1,8 +1,16 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { SLIP44, ChainType, STORAGE_NAME } from '@/app/popup/_lib';
+import {
+  SLIP44,
+  ChainType,
+  ADD_NEO2_WALLET,
+  UPDATE_WALLET,
+  ADD_NEO3_WALLET,
+} from '@/app/popup/_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
-import { NeonService, ChromeService, GlobalService } from '@/app/core';
+import { NeonService, GlobalService } from '@/app/core';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
 
 @Component({
   selector: 'app-account-name',
@@ -18,8 +26,8 @@ export class AccountNameComponent implements OnInit {
 
   constructor(
     private neon: NeonService,
-    private chrome: ChromeService,
-    private global: GlobalService
+    private global: GlobalService,
+    private store: Store<AppState>
   ) {}
 
   ngOnInit(): void {}
@@ -40,15 +48,11 @@ export class AccountNameComponent implements OnInit {
       w.addAccount(accountLike);
       const isEfficient = this.neon.verifyWallet(w);
       if (isEfficient) {
-        this.neon.selectChainType('Neo2');
-        this.neon.pushWIFArray('');
-        this.chrome.setStorage(STORAGE_NAME.WIFArr, this.neon.WIFArr);
-        this.neon.pushWalletArray(w.export());
-        this.chrome.setStorage(
-          STORAGE_NAME.walletArr,
-          this.neon.getWalletArrayJSON()
-        );
-        this.chrome.setWallet(w.export());
+        this.store.dispatch({
+          type: ADD_NEO2_WALLET,
+          data: { wallet: w, wif: '' },
+        });
+        this.store.dispatch({ type: UPDATE_WALLET, data: w });
         this.importSuccess.emit();
       } else {
         this.global.snackBarTip('existingWallet');
@@ -58,15 +62,11 @@ export class AccountNameComponent implements OnInit {
       w.addAccount(accountLike);
       const isEfficient = this.neon.verifyWallet(w);
       if (isEfficient) {
-        this.neon.selectChainType('Neo3');
-        this.neon.pushWIFArray('');
-        this.chrome.setStorage(STORAGE_NAME['WIFArr-Neo3'], this.neon.WIFArr);
-        this.neon.pushWalletArray(w.export());
-        this.chrome.setStorage(
-          STORAGE_NAME['walletArr-Neo3'],
-          this.neon.getWalletArrayJSON()
-        );
-        this.chrome.setWallet(w.export());
+        this.store.dispatch({
+          type: ADD_NEO3_WALLET,
+          data: { wallet: w, wif: '' },
+        });
+        this.store.dispatch({ type: UPDATE_WALLET, data: w });
         this.importSuccess.emit();
       } else {
         this.global.snackBarTip('existingWallet');

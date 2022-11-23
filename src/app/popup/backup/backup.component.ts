@@ -1,7 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupBackupTipDialogComponent } from '../_dialogs';
-import { NeonService, GlobalService, ChromeService } from '@/app/core';
+import { GlobalService, ChromeService } from '@/app/core';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
 
 declare var QRCode: any;
 
@@ -9,25 +12,38 @@ declare var QRCode: any;
   templateUrl: 'backup.component.html',
   styleUrls: ['backup.component.scss'],
 })
-export class PopupBackupComponent implements OnInit {
+export class PopupBackupComponent implements OnInit, OnDestroy {
   showKey = false;
   WIF = '';
-
+  private accountSub: Unsubscribable;
+  private address: string;
   constructor(
-    private neon: NeonService,
     private global: GlobalService,
     private dialog: MatDialog,
-    private chrome: ChromeService
-  ) {}
+    private chrome: ChromeService,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.address = state.currentWallet.accounts[0].address;
+      const chain = state.currentChainType;
+      const currentWIFArr =
+        chain === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;
+      const currentWalletArr =
+        chain === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
+      this.WIF =
+        currentWIFArr[
+          currentWalletArr.findIndex(
+            (item) => item.accounts[0].address === this.address
+          )
+        ];
+    });
+  }
 
-  ngOnInit(): void {
-    this.WIF =
-      this.neon.WIFArr[
-        this.neon.walletArr.findIndex(
-          (item) =>
-            item.accounts[0].address === this.neon.wallet.accounts[0].address
-        )
-      ];
+  ngOnInit(): void {}
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
   }
 
   backup() {
@@ -76,6 +92,6 @@ export class PopupBackupComponent implements OnInit {
 
   updateWalletStatus() {
     this.chrome.setHaveBackupTip(false);
-    this.chrome.setWalletsStatus(this.neon.address);
+    this.chrome.setWalletsStatus(this.address);
   }
 }

@@ -1,16 +1,12 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
-import {
-  GlobalService,
-  NeonService,
-  NftState,
-  ChromeService,
-  HttpService,
-  TransactionState,
-} from '@/app/core';
+import { NftState, ChromeService, TransactionState } from '@/app/core';
 import { NftTransaction } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupNftTxDetailDialogComponent } from '@/app/popup/_dialogs';
 import { STORAGE_NAME } from '../../_lib';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
   selector: 'app-nft-tx-page',
@@ -22,37 +18,40 @@ export class PopupNftTxPageComponent implements OnInit, OnDestroy {
   @Input() symbol = '';
 
   public show = false;
-  public networkId: number;
-  public address: string;
   public inTransaction: Array<NftTransaction>;
   public txData: Array<any> = [];
   public currentPage = 0;
   public loading = false;
   public noMoreData: boolean = false;
+
+  private accountSub: Unsubscribable;
+  public networkId: number;
+  public address: string;
   constructor(
-    private global: GlobalService,
-    private neon: NeonService,
     private dialog: MatDialog,
     private nftState: NftState,
     private chrome: ChromeService,
-    private http: HttpService,
-    private txState: TransactionState
-  ) {}
-  ngOnInit(): void {
-    this.networkId = this.global.n3Network.id;
-    this.address = this.neon.address;
-    this.txData = [];
-    this.getInTransactions();
+    private txState: TransactionState,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.address = state.currentWallet.accounts[0].address;
+      this.networkId = state.n3Networks[state.n3NetworkIndex].id;
+      this.getInTransactions();
+    });
   }
+  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.txData = [];
+    this.accountSub?.unsubscribe();
   }
 
   public getInTransactions() {
     this.loading = true;
     const httpReq1 = this.nftState.getNftTransactions(
-      this.neon.address,
+      this.address,
       this.nftContract
     );
     this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((inTxData) => {

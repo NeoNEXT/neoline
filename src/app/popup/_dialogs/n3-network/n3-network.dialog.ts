@@ -1,35 +1,51 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
-import { NeonService, ChromeService, GlobalService } from '@/app/core';
-import { STORAGE_NAME, RpcNetwork } from '@popup/_lib';
+import { ChromeService } from '@/app/core';
+import {
+  RpcNetwork,
+  ChainType,
+  UPDATE_NEO2_NETWORK_INDEX,
+  UPDATE_NEO3_NETWORK_INDEX,
+  UPDATE_NEO3_NETWORKS,
+} from '@popup/_lib';
 import { PopupAddNetworkDialogComponent } from '../add-network/add-network.dialog';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
   templateUrl: 'n3-network.dialog.html',
   styleUrls: ['n3-network.dialog.scss'],
 })
-export class PopupN3NetworkDialogComponent implements OnInit {
+export class PopupN3NetworkDialogComponent implements OnInit, OnDestroy {
+  private accountSub: Unsubscribable;
+  chainType: ChainType;
   public networks: RpcNetwork[];
   public selectedNetworkIndex: number;
-  showAddNetwork = false;
-
+  private n2Networks: RpcNetwork[];
+  private n3Networks: RpcNetwork[];
+  private n3NetworkIndex: number;
   constructor(
-    private global: GlobalService,
     private dialog: MatDialog,
-    private neon: NeonService,
-    private chromeSer: ChromeService
+    private chromeSer: ChromeService,
+    private store: Store<AppState>
   ) {
-    this.networks =
-      this.neon.currentWalletChainType === 'Neo2'
-        ? this.global.n2Networks
-        : this.global.n3Networks;
-    this.selectedNetworkIndex =
-      this.neon.currentWalletChainType === 'Neo2'
-        ? this.global.n2SelectedNetworkIndex
-        : this.global.n3SelectedNetworkIndex;
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.n2Networks = state.n2Networks;
+      this.n3Networks = state.n3Networks;
+      this.n3NetworkIndex = state.n3NetworkIndex;
+      this.networks =
+        this.chainType === 'Neo2' ? state.n2Networks : state.n3Networks;
+      this.selectedNetworkIndex =
+        this.chainType === 'Neo2' ? state.n2NetworkIndex : state.n3NetworkIndex;
+    });
   }
-  ngOnInit(): void {
-    this.showAddNetwork = this.neon.currentWalletChainType === 'Neo3';
+  ngOnInit(): void {}
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
   }
 
   public changeNetwork(index: number) {
@@ -37,12 +53,12 @@ export class PopupN3NetworkDialogComponent implements OnInit {
       return;
     }
     this.selectedNetworkIndex = index;
-    if (this.neon.currentWalletChainType === 'Neo2') {
-      this.chromeSer.setStorage(STORAGE_NAME.n2SelectedNetworkIndex, index);
-      this.chromeSer.networkChangeEvent(this.global.n2Networks[index]);
+    if (this.chainType === 'Neo2') {
+      this.store.dispatch({ type: UPDATE_NEO2_NETWORK_INDEX, data: index });
+      this.chromeSer.networkChangeEvent(this.n2Networks[index]);
     } else {
-      this.chromeSer.setStorage(STORAGE_NAME.n3SelectedNetworkIndex, index);
-      this.chromeSer.networkChangeEvent(this.global.n3Networks[index]);
+      this.store.dispatch({ type: UPDATE_NEO3_NETWORK_INDEX, data: index });
+      this.chromeSer.networkChangeEvent(this.n3Networks[index]);
     }
     location.reload();
   }
@@ -56,13 +72,13 @@ export class PopupN3NetworkDialogComponent implements OnInit {
   deleteNetwork(index: number) {
     if (this.selectedNetworkIndex > index) {
       this.selectedNetworkIndex--;
-      this.global.n3SelectedNetworkIndex--;
-      this.chromeSer.setStorage(
-        STORAGE_NAME.n3SelectedNetworkIndex,
-        this.selectedNetworkIndex
-      );
+      this.n3NetworkIndex--;
+      this.store.dispatch({
+        type: UPDATE_NEO3_NETWORK_INDEX,
+        data: this.n3NetworkIndex,
+      });
     }
-    this.global.n3Networks.splice(index, 1);
-    this.chromeSer.setStorage(STORAGE_NAME.n3Networks, this.global.n3Networks);
+    this.n3Networks.splice(index, 1);
+    this.store.dispatch({ type: UPDATE_NEO3_NETWORKS, data: this.n3Networks });
   }
 }

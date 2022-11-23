@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { NeonService, GlobalService } from '@app/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ChainType, RpcNetwork } from '../popup/_lib';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
 
 enum STATUS_ENUM {
   CHAIN_PICK,
@@ -8,33 +10,36 @@ enum STATUS_ENUM {
   ACCOUNT_NAME,
   IMPORT_SUCCESS,
 }
-
 @Component({
   templateUrl: 'ledger.component.html',
   styleUrls: ['ledger.component.scss'],
 })
-export class LedgerComponent implements OnInit {
+export class LedgerComponent implements OnInit, OnDestroy {
   STATUS_ENUM = STATUS_ENUM;
   status = STATUS_ENUM.CHAIN_PICK;
   chainType: ChainType;
   selectAccountData;
 
+  private accountSub: Unsubscribable;
   public address: string;
   public networks: RpcNetwork[];
   public selectedNetworkIndex: number;
-  constructor(private neon: NeonService, private global: GlobalService) {
-    this.address = this.neon.address;
-    this.networks =
-      this.neon.currentWalletChainType === 'Neo2'
-        ? this.global.n2Networks
-        : this.global.n3Networks;
-    this.selectedNetworkIndex =
-      this.neon.currentWalletChainType === 'Neo2'
-        ? this.global.n2SelectedNetworkIndex
-        : this.global.n3SelectedNetworkIndex;
+  constructor(private store: Store<AppState>) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      const chain = state.currentChainType;
+      this.address = state.currentWallet.accounts[0].address;
+      this.networks = chain === 'Neo2' ? state.n2Networks : state.n3Networks;
+      this.selectedNetworkIndex =
+        chain === 'Neo2' ? state.n2NetworkIndex : state.n3NetworkIndex;
+    });
   }
 
   ngOnInit(): void {}
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
+  }
 
   selectChain(chainType: ChainType) {
     this.chainType = chainType;

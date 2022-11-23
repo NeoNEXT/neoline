@@ -1,8 +1,14 @@
-import { Component, ViewChild, ElementRef, OnInit } from '@angular/core';
+import {
+  Component,
+  ViewChild,
+  ElementRef,
+  OnInit,
+  OnDestroy,
+} from '@angular/core';
 import { MatDialogRef, MatDialog } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
-import { NeonService, ChromeService, GlobalService } from '@/app/core';
+import { NeonService, ChromeService } from '@/app/core';
 import { Router } from '@angular/router';
 import { PopupSelectDialogComponent } from '../select/select.dialog';
 import {
@@ -13,14 +19,22 @@ import {
 } from '@popup/_lib';
 import { PopupPasswordDialogComponent } from '../password/password.dialog';
 import Sortable from 'sortablejs';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
 declare var chrome: any;
 
 @Component({
   templateUrl: 'home-menu.dialog.html',
   styleUrls: ['home-menu.dialog.scss'],
 })
-export class PopupHomeMenuDialogComponent implements OnInit {
+export class PopupHomeMenuDialogComponent implements OnInit, OnDestroy {
   @ViewChild('walletContainer') private walletContainer: ElementRef;
+  isSearching = false;
+
+  private accountSub: Unsubscribable;
+  private n2Networks: RpcNetwork[];
+  private n3Networks: RpcNetwork[];
   private walletArr: {
     Neo2: Array<Wallet2 | Wallet3>;
     Neo3: Array<Wallet2 | Wallet3>;
@@ -31,39 +45,46 @@ export class PopupHomeMenuDialogComponent implements OnInit {
   public displayWalletArr: Array<Wallet2 | Wallet3> = [];
   public wallet: Wallet2 | Wallet3;
   public chainType: ChainType;
-  isSearching = false;
   public networks: RpcNetwork[];
-  selectedNetwork;
-
+  selectedNetwork: RpcNetwork;
   constructor(
     private router: Router,
-    private chrome: ChromeService,
+    private chromeSrc: ChromeService,
     private dialogRef: MatDialogRef<PopupHomeMenuDialogComponent>,
     private neon: NeonService,
-    private global: GlobalService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private store: Store<AppState>
   ) {
-    this.walletArr.Neo2 = this.neon.neo2WalletArr;
-    this.walletArr.Neo3 = this.neon.neo3WalletArr;
-    this.wallet = this.neon.wallet;
-    this.networks = this.global.n2Networks.concat(this.global.n3Networks);
-    this.chainType = this.neon.currentWalletChainType;
-    this.displayWalletArr = this.walletArr[this.chainType];
-    this.selectedNetwork =
-      this.chainType === 'Neo2'
-        ? this.global.n2Networks[this.global.n2SelectedNetworkIndex]
-        : this.global.n3Networks[this.global.n3SelectedNetworkIndex];
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.walletArr.Neo2 = state.neo2WalletArr;
+      this.walletArr.Neo3 = state.neo3WalletArr;
+      this.wallet = state.currentWallet;
+      this.n2Networks = state.n2Networks;
+      this.n3Networks = state.n3Networks;
+      this.networks = state.n2Networks.concat(state.n3Networks);
+      this.chainType = state.currentChainType;
+      this.displayWalletArr = this.walletArr[this.chainType];
+      this.selectedNetwork =
+        this.chainType === 'Neo2'
+          ? state.n2Networks[state.n2NetworkIndex]
+          : state.n3Networks[state.n3NetworkIndex];
+    });
   }
   ngOnInit(): void {
     this.dragSort();
   }
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
+  }
   dragSort() {
-    const el = document.getElementsByClassName('address-list')[0];
-    Sortable.create(el, {
-      onEnd: (/**Event*/ evt) => {
-        this.neon.sortWallet(this.chainType, evt.oldIndex, evt.newIndex);
-      },
-    });
+    // const el = document.getElementsByClassName('address-list')[0];
+    // Sortable.create(el, {
+    //   onEnd: (/**Event*/ evt) => {
+    //     this.neon.sortWallet(this.chainType, evt.oldIndex, evt.newIndex);
+    //   },
+    // });
   }
   public isActivityWallet(w: Wallet2 | Wallet3) {
     if (w.accounts[0].address === this.wallet.accounts[0].address) {
@@ -78,7 +99,9 @@ export class PopupHomeMenuDialogComponent implements OnInit {
   }
 
   public async selectAccount(w: Wallet2 | Wallet3) {
-    const hasLoginAddress = await this.chrome.getHasLoginAddress().toPromise();
+    const hasLoginAddress = await this.chromeSrc
+      .getHasLoginAddress()
+      .toPromise();
     if (
       w.accounts[0]?.extra?.ledgerSLIP44 ||
       hasLoginAddress[w.accounts[0].address]
@@ -94,7 +117,7 @@ export class PopupHomeMenuDialogComponent implements OnInit {
       .afterClosed()
       .subscribe((res) => {
         if (res) {
-          this.chrome.setHasLoginAddress(w.accounts[0].address);
+          this.chromeSrc.setHasLoginAddress(w.accounts[0].address);
           this.changeAccount(w);
         }
       });
@@ -102,27 +125,33 @@ export class PopupHomeMenuDialogComponent implements OnInit {
 
   private changeAccount(w) {
     if (this.chainType === 'Neo2') {
-      const networkIndex = this.global.n2Networks.findIndex(
+      const networkIndex = this.n2Networks.findIndex(
         (m) => m.id === this.selectedNetwork.id
       );
-      this.chrome.setStorage(STORAGE_NAME.n2SelectedNetworkIndex, networkIndex);
-      this.chrome.networkChangeEvent(this.global.n2Networks[networkIndex]);
+      this.chromeSrc.setStorage(
+        STORAGE_NAME.n2SelectedNetworkIndex,
+        networkIndex
+      );
+      this.chromeSrc.networkChangeEvent(this.n2Networks[networkIndex]);
     } else {
-      const networkIndex = this.global.n3Networks.findIndex(
+      const networkIndex = this.n3Networks.findIndex(
         (m) => m.id === this.selectedNetwork.id
       );
-      this.chrome.setStorage(STORAGE_NAME.n3SelectedNetworkIndex, networkIndex);
-      this.chrome.networkChangeEvent(this.global.n3Networks[networkIndex]);
+      this.chromeSrc.setStorage(
+        STORAGE_NAME.n3SelectedNetworkIndex,
+        networkIndex
+      );
+      this.chromeSrc.networkChangeEvent(this.n3Networks[networkIndex]);
     }
     this.wallet = this.neon.parseWallet(w);
-    this.chrome.setWallet(this.wallet.export());
+    this.chromeSrc.setWallet(this.wallet.export());
     location.href = `index.html`;
-    this.chrome.setHaveBackupTip(null);
+    this.chromeSrc.setHaveBackupTip(null);
   }
 
   public lock() {
     this.dialogRef.close('lock');
-    this.chrome.setLogin(true);
+    this.chromeSrc.setLogin(true);
     this.router.navigateByUrl('/popup/login');
   }
 
@@ -150,13 +179,13 @@ export class PopupHomeMenuDialogComponent implements OnInit {
   }
 
   public exportWallet() {
-    const sJson = JSON.stringify(this.neon.wallet.export());
+    const sJson = JSON.stringify(this.wallet.export());
     const element = document.createElement('a');
     element.setAttribute(
       'href',
       'data:text/json;charset=UTF-8,' + encodeURIComponent(sJson)
     );
-    element.setAttribute('download', `${this.neon.wallet.name}.json`);
+    element.setAttribute('download', `${this.wallet.name}.json`);
     element.style.display = 'none';
     document.body.appendChild(element);
     element.click();

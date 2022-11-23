@@ -24,7 +24,7 @@
         />
       </li>
     </ul>
-    <button *ngIf="showAddNetwork" class="add" (click)="addNetwork()">
+    <button *ngIf="chainType==='Neo3'" class="add" (click)="addNetwork()">
       {{ 'AddNetwork' | translate | async }}
     </button>
   </div>

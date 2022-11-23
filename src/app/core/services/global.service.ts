@@ -1,13 +1,12 @@
 import { Injectable } from '@angular/core';
-import { Subject, Observable } from 'rxjs';
-import { publish, refCount } from 'rxjs/operators';
+import { Subject } from 'rxjs';
 
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { environment } from '@/environments/environment';
 import { NotificationService } from './notification.service';
 import { add, subtract, multiply, bignumber } from 'mathjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import { ChainType, RpcNetwork } from '@/app/popup/_lib';
+import { ChainType } from '@/app/popup/_lib';
 
 @Injectable()
 export class GlobalService {
@@ -15,14 +14,6 @@ export class GlobalService {
   public debug = false;
   private source404 = new Subject<string>();
   public $404 = this.source404.asObservable();
-
-  public n3Networks: RpcNetwork[];
-  public n3Network: RpcNetwork;
-  public n3SelectedNetworkIndex: number;
-
-  public n2Networks: RpcNetwork[];
-  public n2Network: RpcNetwork;
-  public n2SelectedNetworkIndex: number;
 
   constructor(
     private snackBar: MatSnackBar,

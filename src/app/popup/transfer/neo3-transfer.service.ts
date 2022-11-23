@@ -1,16 +1,14 @@
 import { Injectable } from '@angular/core';
-import { CONST, rpc, sc, tx, u, wallet } from '@cityofzion/neon-core-neo3/lib';
+import { rpc, sc, tx, u, wallet } from '@cityofzion/neon-core-neo3/lib';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from } from 'rxjs';
-import {
-  AssetState,
-  NotificationService,
-  GlobalService,
-  NeonService,
-} from '@app/core';
+import { AssetState, NotificationService } from '@app/core';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
-import { GAS3_CONTRACT } from '../_lib';
+import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 interface CreateNeo3TxInput {
   addressFrom: string;
@@ -25,13 +23,24 @@ interface CreateNeo3TxInput {
 @Injectable()
 export class Neo3TransferService {
   rpcClient;
+
+  private address: string;
+  private neo3WIFArr: string[];
+  private neo3WalletArr: Wallet3[];
+  private n3Network: RpcNetwork;
   constructor(
     public assetState: AssetState,
     public notification: NotificationService,
-    private globalService: GlobalService,
-    private neon: NeonService
+    private store: Store<AppState>
   ) {
-    this.rpcClient = new rpc.RPCClient(this.globalService.n3Network.rpcUrl);
+    const account$ = this.store.select('account');
+    account$.subscribe((state) => {
+      this.address = state.currentWallet.accounts[0].address;
+      this.neo3WIFArr = state.neo3WIFArr;
+      this.neo3WalletArr = state.neo3WalletArr;
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.rpcClient = new rpc.RPCClient(this.n3Network.rpcUrl);
+    });
   }
   createNeo3Tx(
     params: CreateNeo3TxInput,
@@ -56,7 +65,6 @@ export class Neo3TransferService {
       networkFee: bignumber(params.networkFee).toFixed() || 0,
     };
     const vars: any = {};
-    const NEW_POLICY_CONTRACT = '0xcc5e4edd9f5f8dba8bb65734541df7a1c081c67b';
     const NEW_GAS = '0xd2a4cff31913016155e38e474a2c06d08be276cf';
 
     /**
@@ -270,13 +278,12 @@ export class Neo3TransferService {
       .toFixed(0) as any;
     txClone = new tx.Transaction(txClone);
     const wif =
-      this.neon.WIFArr[
-        this.neon.walletArr.findIndex(
-          (item) =>
-            item.accounts[0].address === this.neon.wallet.accounts[0].address
+      this.neo3WIFArr[
+        this.neo3WalletArr.findIndex(
+          (item) => item.accounts[0].address === this.address
         )
       ] || 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
-    txClone.sign(wif, this.globalService.n3Network.magicNumber);
+    txClone.sign(wif, this.n3Network.magicNumber);
     const fee = await this.rpcClient.calculateNetworkFee(txClone);
     return fee;
   }

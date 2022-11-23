@@ -1,31 +1,29 @@
-import { Component, OnInit, Inject } from '@angular/core';
+import { Component, OnInit, Inject, OnDestroy } from '@angular/core';
 import {
   MatDialogRef,
   MAT_DIALOG_DATA,
   MatDialog,
 } from '@angular/material/dialog';
 
-import {
-  UtilServiceState,
-  AssetState,
-  NeonService,
-  GlobalService,
-} from '@app/core';
+import { UtilServiceState, AssetState } from '@app/core';
 import { NEO, GAS } from '@/models/models';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
-import { forkJoin } from 'rxjs';
 import { bignumber } from 'mathjs';
-import { GAS3_CONTRACT, RpcNetwork } from '../../_lib';
+import { GAS3_CONTRACT, RpcNetwork, ChainType } from '../../_lib';
 import BigNumber from 'bignumber.js';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
   templateUrl: 'confirm.component.html',
   styleUrls: ['confirm.component.scss'],
 })
-export class PopupTransferConfirmComponent implements OnInit {
+export class PopupTransferConfirmComponent implements OnInit, OnDestroy {
   public logoUrlArr = [];
   public network: RpcNetwork;
-  public fromName: string = '';
   public datajson: any = {};
   public symbol = '';
   public money;
@@ -36,14 +34,15 @@ export class PopupTransferConfirmComponent implements OnInit {
   public totalFee;
   public rateCurrency = '';
 
+  private accountSub: Unsubscribable;
   isNeo3 = false;
+  currentWallet: Wallet2 | Wallet3;
+  private chainType: ChainType;
   constructor(
     private dialog: MatDialog,
     private dialogRef: MatDialogRef<PopupTransferConfirmComponent>,
-    private neon: NeonService,
     private assetState: AssetState,
     private util: UtilServiceState,
-    private global: GlobalService,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       fromAddress: string;
@@ -71,17 +70,21 @@ export class PopupTransferConfirmComponent implements OnInit {
       txSerialize: '',
       networkFee: 0,
       systemFee: 0,
-    }
+    },
+    private store: Store<AppState>
   ) {
-    if (this.neon.currentWalletChainType === 'Neo3') {
-      this.isNeo3 = true;
-    }
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.currentWallet = state.currentWallet;
+      this.isNeo3 = this.chainType === 'Neo3' ? true : false;
+      this.network = this.isNeo3
+        ? state.n3Networks[state.n3NetworkIndex]
+        : state.n2Networks[state.n2NetworkIndex];
+    });
   }
 
   async ngOnInit() {
-    this.network = this.isNeo3 ? this.global.n3Network : this.global.n2Network;
-    const wallet = this.neon.wallet;
-    this.fromName = wallet.name;
     this.rateCurrency = this.assetState.rateCurrency;
     for (const key in this.data) {
       if (this.data[key] !== '' && key !== 'txSerialize') {
@@ -90,6 +93,10 @@ export class PopupTransferConfirmComponent implements OnInit {
     }
     this.getSymbol();
     this.getAssetRate();
+  }
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
   }
 
   private async getSymbol() {
@@ -104,7 +111,7 @@ export class PopupTransferConfirmComponent implements OnInit {
     if (this.data.symbol === '') {
       const symbols = await this.util.getAssetSymbols(
         [this.data.asset],
-        this.neon.currentWalletChainType
+        this.chainType
       );
       this.symbol = symbols[0];
     } else {

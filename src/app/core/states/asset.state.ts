@@ -6,10 +6,9 @@ import { Observable, from, of, forkJoin } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Asset, NEO, GAS, UTXO } from 'src/models/models';
 import { map } from 'rxjs/operators';
-import { GasFeeSpeed } from '@popup/_lib/type';
+import { GasFeeSpeed, RpcNetwork } from '@popup/_lib/type';
 import { bignumber } from 'mathjs';
 import { rpc, wallet as wallet2 } from '@cityofzion/neon-js';
-import { NeonService } from '../services/neon.service';
 import {
   NEO3_CONTRACT,
   GAS3_CONTRACT,
@@ -22,6 +21,8 @@ import {
 import BigNumber from 'bignumber.js';
 import { UtilServiceState } from '../util/util.service';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
 
 @Injectable()
 export class AssetState {
@@ -38,17 +39,26 @@ export class AssetState {
     fast_price: '0.2',
   };
 
+  private chainType: ChainType;
+  private n2Network: RpcNetwork;
+  private n3Network: RpcNetwork;
   constructor(
     private http: HttpService,
     private global: GlobalService,
     private chrome: ChromeService,
-    private neonService: NeonService,
-    private util: UtilServiceState
+    private util: UtilServiceState,
+    private store: Store<AppState>
   ) {
     this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
       this.rateCurrency = res;
     });
     this.getLocalRate();
+    const account$ = this.store.select('account');
+    account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.n2Network = state.n2Networks[state.n2NetworkIndex];
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+    });
   }
 
   getLocalRate() {
@@ -75,10 +85,10 @@ export class AssetState {
   // neo2
   public fetchClaim(address: string): Observable<any> {
     const getClaimable = from(
-      rpc.Query.getClaimable(address).execute(this.global.n2Network.rpcUrl)
+      rpc.Query.getClaimable(address).execute(this.n2Network.rpcUrl)
     );
     const getUnclaimed = from(
-      rpc.Query.getUnclaimed(address).execute(this.global.n2Network.rpcUrl)
+      rpc.Query.getUnclaimed(address).execute(this.n2Network.rpcUrl)
     );
     return forkJoin([getClaimable, getUnclaimed]).pipe(
       map((res) => {
@@ -104,14 +114,13 @@ export class AssetState {
       method: 'getunclaimedgas',
       params: [address],
     };
-    return this.http.rpcPost(this.global.n3Network.rpcUrl, data);
+    return this.http.rpcPost(this.n3Network.rpcUrl, data);
   }
   //#endregion
 
   //#region rate
   public getRate(): Observable<any> {
-    const chain =
-      this.neonService.currentWalletChainType === 'Neo3' ? 'neo3' : 'neo';
+    const chain = this.chainType === 'Neo3' ? 'neo3' : 'neo';
     return this.http.get(
       `${this.global.apiDomain}/v2/coin/rates?chain=${chain}`
     );
@@ -125,10 +134,10 @@ export class AssetState {
     symbol: string,
     assetId: string
   ): Promise<BigNumber | undefined> {
-    const isNeo3 = this.neonService.currentWalletChainType === 'Neo3';
+    const isNeo3 = this.chainType === 'Neo3';
     if (
-      (isNeo3 && this.global.n3Network.network !== NetworkType.N3MainNet) ||
-      (!isNeo3 && this.global.n2Network.network !== NetworkType.MainNet)
+      (isNeo3 && this.n3Network.network !== NetworkType.N3MainNet) ||
+      (!isNeo3 && this.n2Network.network !== NetworkType.MainNet)
     ) {
       return undefined;
     }
@@ -182,18 +191,13 @@ export class AssetState {
       method: 'getcontractstate',
       params: [q],
     };
-    const isN3 = this.neonService.currentWalletChainType === 'Neo3';
-    const rpcUrl = isN3
-      ? this.global.n3Network.rpcUrl
-      : this.global.n2Network.rpcUrl;
+    const isN3 = this.chainType === 'Neo3';
+    const rpcUrl = isN3 ? this.n3Network.rpcUrl : this.n2Network.rpcUrl;
     const res = await this.http.rpcPost(rpcUrl, data).toPromise();
-    const symbols = await this.util.getAssetSymbols(
-      [res.hash],
-      this.neonService.currentWalletChainType
-    );
+    const symbols = await this.util.getAssetSymbols([res.hash], this.chainType);
     const decimals = await this.util.getAssetDecimals(
       [res.hash],
-      this.neonService.currentWalletChainType
+      this.chainType
     );
     const asset: Asset = {
       name: isN3 ? res?.manifest?.name : res?.name,
@@ -211,7 +215,7 @@ export class AssetState {
       method: 'getunspents',
       params: [address],
     };
-    const rpcUrl = this.global.n2Network.rpcUrl;
+    const rpcUrl = this.n2Network.rpcUrl;
     return this.http.rpcPost(rpcUrl, data).pipe(
       map((res) => {
         if (assetId.includes(res.balance[0].asset_hash)) {
@@ -238,9 +242,7 @@ export class AssetState {
     const balance = await this.getAddressBalances(address);
     const watching = await this.chrome
       .getWatch(
-        this.neonService.currentWalletChainType === 'Neo2'
-          ? this.global.n2Network.id
-          : this.global.n3Network.id,
+        this.chainType === 'Neo2' ? this.n2Network.id : this.n3Network.id,
         address
       )
       .toPromise();
@@ -254,11 +256,7 @@ export class AssetState {
     address: string,
     chain?: ChainType
   ): Promise<Asset[]> {
-    if (
-      chain
-        ? chain === 'Neo3'
-        : this.neonService.currentWalletChainType === 'Neo3'
-    ) {
+    if (chain ? chain === 'Neo3' : this.chainType === 'Neo3') {
       return this.getN3AddressBalances(address);
     }
     return this.getNeo2AddressBalances(address);
@@ -280,9 +278,7 @@ export class AssetState {
       id: 1,
     };
     const rpcUrl =
-      chainType === 'Neo2'
-        ? this.global.n2Network.rpcUrl
-        : this.global.n3Network.rpcUrl;
+      chainType === 'Neo2' ? this.n2Network.rpcUrl : this.n3Network.rpcUrl;
     const balanceRes = await this.http.rpcPost(rpcUrl, data).toPromise();
     let balance = '0';
     if (balanceRes?.stack) {
@@ -299,7 +295,7 @@ export class AssetState {
 
   //#region gas fee
   getGasFee(): Observable<any> {
-    if (this.neonService.currentWalletChainType === 'Neo3') {
+    if (this.chainType === 'Neo3') {
       return this.fetchNeo3GasFee();
     }
     return this.http.get(`${this.global.apiDomain}/v1/neo2/fees`).pipe(
@@ -341,13 +337,13 @@ export class AssetState {
       id: 1,
     };
     const nativeRes = await this.http
-      .rpcPost(this.global.n2Network.rpcUrl, {
+      .rpcPost(this.n2Network.rpcUrl, {
         ...data,
         method: 'getaccountstate',
       })
       .toPromise();
     const nep5Res = await this.http
-      .rpcPost(this.global.n2Network.rpcUrl, data)
+      .rpcPost(this.n2Network.rpcUrl, data)
       .toPromise();
     const nativeTarget = this.handleNeo2NativeBalanceResponse(nativeRes);
     const nep5Target = await this.handleNeo2BalancesResponse(nep5Res);
@@ -361,7 +357,7 @@ export class AssetState {
       id: 1,
     };
     const n3Res = await this.http
-      .rpcPost(this.global.n3Network.rpcUrl, data)
+      .rpcPost(this.n3Network.rpcUrl, data)
       .toPromise();
     return this.handleN3BalancesResponse(n3Res);
   }

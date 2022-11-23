@@ -1,17 +1,13 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
-import {
-  GlobalService,
-  TransactionState,
-  NeonService,
-  ChromeService,
-  HttpService,
-  AssetState,
-} from '@/app/core';
+import { TransactionState, ChromeService } from '@/app/core';
 import { Transaction } from '@/models/models';
 import { forkJoin } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupTxDetailDialogComponent } from '@/app/popup/_dialogs';
-import { STORAGE_NAME, NetworkType } from '@/app/popup/_lib';
+import { STORAGE_NAME, ChainType } from '@/app/popup/_lib';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
   selector: 'app-tx-page',
@@ -24,40 +20,45 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
   @Input() rateCurrency: string;
 
   public show = false;
-  public networkId: number;
-  public address: string;
   public inTransaction: Array<Transaction>;
   public txData: Array<any> = [];
   public loading = false;
+
+  private accountSub: Unsubscribable;
+  private chainType: ChainType;
+  private address: string;
+  private networkId: number;
   constructor(
-    private asset: AssetState,
-    private global: GlobalService,
     private chrome: ChromeService,
-    private neon: NeonService,
     private txState: TransactionState,
-    private http: HttpService,
-    private dialog: MatDialog
-  ) {}
-  ngOnInit(): void {
-    this.networkId =
-      this.neon.currentWalletChainType === 'Neo2'
-        ? this.global.n2Network.id
-        : this.global.n3Network.id;
-    this.address = this.neon.address;
-    this.txData = [];
-    this.getInTransactions();
+    private dialog: MatDialog,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.address = state.currentWallet.accounts[0].address;
+      const network =
+        this.chainType === 'Neo2'
+          ? state.n2Networks[state.n2NetworkIndex]
+          : state.n3Networks[state.n3NetworkIndex];
+      this.networkId = network.id;
+      this.getInTransactions();
+    });
   }
+  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.txData = [];
+    this.accountSub?.unsubscribe();
   }
 
   public getInTransactions() {
     this.loading = true;
     const httpReq1 =
       this.assetId !== ''
-        ? this.txState.getAssetTxs(this.neon.address, this.assetId)
-        : this.txState.getAllTxs(this.neon.address);
+        ? this.txState.getAssetTxs(this.address, this.assetId)
+        : this.txState.getAllTxs(this.address);
     if (this.assetId === '') {
       httpReq1.then((res) => {
         this.txData = res || [];
@@ -88,10 +89,7 @@ export class PopupTxPageComponent implements OnInit, OnDestroy {
             mResolve([]);
           });
         } else {
-          httpReq2 = this.txState.getTxsValid(
-            txIdArray,
-            this.neon.currentWalletChainType
-          );
+          httpReq2 = this.txState.getTxsValid(txIdArray, this.chainType);
         }
         forkJoin([httpReq1, httpReq2]).subscribe((result: any) => {
           let txData = result[0] || [];

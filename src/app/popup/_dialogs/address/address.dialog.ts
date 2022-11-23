@@ -1,44 +1,46 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { MatDialogRef } from '@angular/material/dialog';
 
-import {
-  ChromeService,
-  NeonService,
-  UtilServiceState,
-  GlobalService,
-} from '@app/core';
-import { WalletJSON as WalletJSON2 } from '@cityofzion/neon-core/lib/wallet';
-import { WalletJSON as WalletJSON3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { UtilServiceState, GlobalService } from '@app/core';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
-import { STORAGE_NAME } from '../../_lib';
+import { ChainType, RpcNetwork } from '../../_lib';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 @Component({
   templateUrl: 'address.dialog.html',
   styleUrls: ['address.dialog.scss'],
 })
-export class PopupAddressDialogComponent implements OnInit {
+export class PopupAddressDialogComponent implements OnInit, OnDestroy {
   public address: string = '';
+  private getNnsAddressReq;
 
-  public addressArr: Array<WalletJSON2 | WalletJSON3> = [];
-
-  getNnsAddressReq;
-
+  private accountSub: Unsubscribable;
+  private chainType: ChainType;
+  private n3Network: RpcNetwork;
+  public addressArr: Array<Wallet2 | Wallet3> = [];
   constructor(
     private dialogRef: MatDialogRef<PopupAddressDialogComponent>,
-    private chromeSer: ChromeService,
-    private neonService: NeonService,
     private util: UtilServiceState,
-    private global: GlobalService
-  ) {}
-
-  ngOnInit() {
-    const storageName =
-      this.neonService.currentWalletChainType === 'Neo3'
-        ? STORAGE_NAME['walletArr-Neo3']
-        : STORAGE_NAME.walletArr;
-    this.chromeSer.getStorage(storageName).subscribe((res) => {
-      this.addressArr = res;
+    private global: GlobalService,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.addressArr =
+        this.chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
     });
+  }
+
+  ngOnInit() {}
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
   }
 
   pasteAddress($event) {
@@ -51,7 +53,7 @@ export class PopupAddressDialogComponent implements OnInit {
   public checkAddress(value?: string) {
     const address = value || this.address;
     if (
-      this.neonService.currentWalletChainType === 'Neo2'
+      this.chainType === 'Neo2'
         ? wallet2.isAddress(address)
         : wallet3.isAddress(address, 53)
     ) {
@@ -59,13 +61,12 @@ export class PopupAddressDialogComponent implements OnInit {
       return;
     }
     if (
-      this.neonService.currentWalletChainType === 'Neo3' &&
-      (this.global.n3Network.chainId === 6 ||
-        this.global.n3Network.chainId === 3)
+      this.chainType === 'Neo3' &&
+      (this.n3Network.chainId === 6 || this.n3Network.chainId === 3)
     ) {
       this.getNnsAddressReq?.unsubscribe();
       this.getNnsAddressReq = this.util
-        .getN3NnsAddress(address.toLowerCase(), this.global.n3Network.chainId)
+        .getN3NnsAddress(address.toLowerCase(), this.n3Network.chainId)
         .subscribe((nnsAddress) => {
           if (wallet3.isAddress(nnsAddress, 53)) {
             this.dialogRef.close({

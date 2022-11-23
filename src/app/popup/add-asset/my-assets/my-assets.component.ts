@@ -1,19 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Asset } from '@/models/models';
-import {
-  AssetState,
-  ChromeService,
-  NeonService,
-  GlobalService,
-} from '@/app/core';
-import { MatDialog } from '@angular/material/dialog';
+import { AssetState, ChromeService, GlobalService } from '@/app/core';
 import { forkJoin } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
   templateUrl: 'my-assets.component.html',
   styleUrls: ['my-assets.component.scss'],
 })
-export class PopupMyAssetsComponent implements OnInit {
+export class PopupMyAssetsComponent implements OnInit, OnDestroy {
   public myAssets: Array<Asset> = []; // 所有的资产
   public watch: Asset[] = []; // 用户添加的资产
   public moneyAssets: Asset[] = []; // 有钱的资产
@@ -22,24 +19,30 @@ export class PopupMyAssetsComponent implements OnInit {
 
   sourceScrollHeight = 0;
 
+  private accountSub: Unsubscribable;
   private networkId: number;
-
+  private address: string;
   constructor(
     private asset: AssetState,
     private chrome: ChromeService,
-    private neon: NeonService,
-    private dialog: MatDialog,
-    private global: GlobalService
+    private global: GlobalService,
+    private store: Store<AppState>
   ) {
-    this.networkId =
-      this.neon.currentWalletChainType === 'Neo2'
-        ? this.global.n2Network.id
-        : this.global.n3Network.id;
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      const chain = state.currentChainType;
+      this.address = state.currentWallet.accounts[0].address;
+      const network =
+        chain === 'Neo2'
+          ? state.n2Networks[state.n2NetworkIndex]
+          : state.n3Networks[state.n3NetworkIndex];
+      this.networkId = network.id;
+    });
   }
 
   ngOnInit(): void {
-    const getMoneyBalance = this.asset.getAddressBalances(this.neon.address);
-    const getWatch = this.chrome.getWatch(this.networkId, this.neon.address);
+    const getMoneyBalance = this.asset.getAddressBalances(this.address);
+    const getWatch = this.chrome.getWatch(this.networkId, this.address);
     forkJoin([getMoneyBalance, getWatch]).subscribe((res) => {
       [this.moneyAssets, this.watch] = [...res];
       let showAssets = [...this.moneyAssets];
@@ -59,6 +62,10 @@ export class PopupMyAssetsComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
+  }
+
   public addAsset(index: number) {
     const asset = { ...this.myAssets[index], watching: true };
     const i = this.watch.findIndex((m) => m.asset_id === asset.asset_id);
@@ -67,7 +74,7 @@ export class PopupMyAssetsComponent implements OnInit {
     } else {
       this.watch.push(asset);
     }
-    this.chrome.setWatch(this.networkId, this.neon.address, this.watch);
+    this.chrome.setWatch(this.networkId, this.address, this.watch);
     this.myAssets[index].watching = true;
     this.global.snackBarTip('addSucc');
   }
@@ -80,7 +87,7 @@ export class PopupMyAssetsComponent implements OnInit {
     } else {
       this.watch.push(asset);
     }
-    this.chrome.setWatch(this.networkId, this.neon.address, this.watch);
+    this.chrome.setWatch(this.networkId, this.address, this.watch);
     this.myAssets[index].watching = false;
     this.global.snackBarTip('hiddenSucc');
   }

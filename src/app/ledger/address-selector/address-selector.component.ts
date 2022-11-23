@@ -12,8 +12,13 @@ import {
   LedgerStatuses,
   LEDGER_PAGE_SIZE,
 } from '@/app/popup/_lib';
-import { LedgerService, NeonService, SettingState } from '@/app/core';
+import { LedgerService, SettingState } from '@/app/core';
 import { interval } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
   selector: 'app-address-selector',
@@ -37,11 +42,20 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   accountBalance = [];
   getBalanceReq;
 
+  private accountSub: Unsubscribable;
+  private neo2WalletArr: Wallet2[];
+  private neo3WalletArr: Wallet3[];
   constructor(
     private ledger: LedgerService,
-    private neon: NeonService,
-    private settingState: SettingState
-  ) {}
+    private settingState: SettingState,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.neo2WalletArr = state.neo2WalletArr;
+      this.neo3WalletArr = state.neo3WalletArr;
+    });
+  }
 
   ngOnInit(): void {
     this.getLedgerStatus();
@@ -52,6 +66,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   }
 
   ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
     this.getStatusInterval?.unsubscribe();
   }
 
@@ -92,11 +107,11 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
 
   private getSavedAddress() {
     if (this.chainType === 'Neo2') {
-      this.neon.neo2WalletArr.forEach((item) => {
+      this.neo2WalletArr.forEach((item) => {
         this.savedAddressesObj[item.accounts[0].address] = true;
       });
     } else {
-      this.neon.neo3WalletArr.forEach((item) => {
+      this.neo3WalletArr.forEach((item) => {
         this.savedAddressesObj[item.accounts[0].address] = true;
       });
     }

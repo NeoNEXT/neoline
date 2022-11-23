@@ -18,6 +18,7 @@ import {
   INIT_ACCOUNT,
   UPDATE_NEO3_NETWORKS,
   UPDATE_NEO3_WALLETS,
+  UPDATE_NEO2_WALLETS,
 } from '@/app/popup/_lib';
 
 export interface AccountState {
@@ -81,10 +82,15 @@ export default function account(
         ...state,
         ...removeNeo3Wallet(action.data, state.neo3WalletArr, state.neo3WIFArr),
       };
+    case UPDATE_NEO2_WALLETS:
+      return {
+        ...state,
+        neo2WalletArr: updateWalletArr(action.data, 'Neo2'),
+      };
     case UPDATE_NEO3_WALLETS:
       return {
         ...state,
-        neo3WalletArr: updateNeo3Wallet(action.data),
+        neo3WalletArr: updateWalletArr(action.data, 'Neo3'),
       };
     case ADD_NEO3_NETWORK:
       return {
@@ -120,8 +126,12 @@ function updateWallet(data: Wallet2 | Wallet3) {
   return { currentWallet: data, currentChainType: chainType };
 }
 
-function updateNeo3Wallet(data: Wallet3[]) {
-  this.chrome.setStorage(STORAGE_NAME['walletArr-Neo3'], data);
+function updateWalletArr(data: any, chainType: ChainType) {
+  if (chainType === 'Neo2') {
+    this.chrome.setStorage(STORAGE_NAME.walletArr, data);
+  } else {
+    this.chrome.setStorage(STORAGE_NAME['walletArr-Neo3'], data);
+  }
   return data;
 }
 
@@ -210,6 +220,6 @@ function updateNetworkIndex(index: number, chainType: ChainType) {
 }
 //#endregion
 function handleInitData(data) {
-  console.log(data)
-  return data.currentWallet
+  console.log(data);
+  return data.currentWallet;
 }

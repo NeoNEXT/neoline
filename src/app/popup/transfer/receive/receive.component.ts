@@ -1,6 +1,8 @@
-import { Component, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { NeonService, GlobalService } from '@/app/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { GlobalService } from '@/app/core';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
 
 declare var QRCode: any;
 
@@ -8,28 +10,24 @@ declare var QRCode: any;
   templateUrl: 'receive.component.html',
   styleUrls: ['receive.component.scss'],
 })
-export class TransferReceiveComponent implements OnInit {
-  public address: string;
-  constructor(
-    private router: Router,
-    private neon: NeonService,
-    private global: GlobalService
-  ) {}
+export class TransferReceiveComponent implements OnInit, OnDestroy {
+  private accountSub: Unsubscribable;
+  address: string;
+  constructor(private global: GlobalService, private store: Store<AppState>) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.address = state.currentWallet.accounts[0].address;
+    });
+  }
 
   ngOnInit(): void {
-    this.address = this.neon.address;
     if (QRCode) {
-      setTimeout(() => {
-        const qrcode = new QRCode('receive-qrcode', {
-          text: this.address,
-          width: 170,
-          height: 170,
-          colorDark: '#333333',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.H,
-        });
-      }, 0);
+      setTimeout(() => {}, 0);
     }
+  }
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
   }
 
   public copied() {

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import {
   GlobalService,
   NftState,
@@ -6,27 +6,47 @@ import {
   ChromeService,
 } from '@/app/core';
 import { NftAsset } from '@/models/models';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { RpcNetwork } from '../../_lib';
 
 @Component({
   selector: 'app-nfts',
   templateUrl: 'nfts.component.html',
   styleUrls: ['nfts.component.scss'],
 })
-export class PopupNftsComponent implements OnInit {
+export class PopupNftsComponent implements OnInit, OnDestroy {
   nfts: NftAsset[];
 
+  private accountSub: Unsubscribable;
+  private address: string;
+  private n3Network: RpcNetwork;
   constructor(
     public global: GlobalService,
     private nftState: NftState,
-    private neonService: NeonService,
-    private chrome: ChromeService
-  ) {}
+    private chrome: ChromeService,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.address = state.currentWallet.accounts[0].address;
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.init();
+    });
+  }
 
-  ngOnInit(): void {
+  ngOnInit(): void {}
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
+  }
+
+  init() {
     const getWatch = this.chrome
-      .getNftWatch(this.global.n3Network.id, this.neonService.address)
+      .getNftWatch(this.n3Network.id, this.address)
       .toPromise();
-    const getNfts = this.nftState.getAddressNfts(this.neonService.address);
+    const getNfts = this.nftState.getAddressNfts(this.address);
     Promise.all([getNfts, getWatch]).then(([moneyAssets, watch]) => {
       let showAssets = [...moneyAssets];
       watch.forEach((item) => {

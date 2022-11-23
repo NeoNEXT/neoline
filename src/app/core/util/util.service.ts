@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import { NeonService } from '../services/neon.service';
 import { wallet } from '@cityofzion/neon-core-neo3';
 import { wallet as walletPr5 } from '@cityofzion/neon-core-neo3-pr5';
 import { wallet as walletRc1 } from '@cityofzion/neon-core-neo3-rc1';
@@ -9,7 +8,6 @@ import {
   hexstring2str,
 } from '@cityofzion/neon-core-neo3/lib/u';
 import { HttpService } from '../services/http.service';
-import { GlobalService } from '../services/global.service';
 import {
   ChainType,
   DEFAULT_NEO2_ASSETS,
@@ -17,11 +15,16 @@ import {
   GAS3_CONTRACT,
   DEFAULT_NEO3_ASSETS,
   NNS_CONTRACT,
+  RpcNetwork,
 } from '@/app/popup/_lib';
 import { of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import BigNumber from 'bignumber.js';
 import { NEO, GAS } from '@/models/models';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Injectable()
 export class UtilServiceState {
@@ -32,11 +35,12 @@ export class UtilServiceState {
   public n3AssetName: Map<string, string> = new Map();
   public n3NftProperties = {};
 
-  constructor(
-    private neon: NeonService,
-    private http: HttpService,
-    private global: GlobalService
-  ) {
+  private currentWallet: Wallet2 | Wallet3;
+  private neo3WIFArr: string[];
+  private neo3WalletArr: Wallet3[];
+  private n2Network: RpcNetwork;
+  private n3Network: RpcNetwork;
+  constructor(private http: HttpService, private store: Store<AppState>) {
     this.n2AssetDecimal.set(NEO, DEFAULT_NEO2_ASSETS.NEO.decimals);
     this.n2AssetSymbol.set(NEO, DEFAULT_NEO2_ASSETS.NEO.symbol);
     this.n2AssetDecimal.set(GAS, DEFAULT_NEO2_ASSETS.GAS.decimals);
@@ -45,6 +49,14 @@ export class UtilServiceState {
     this.n3AssetSymbol.set(NEO3_CONTRACT, DEFAULT_NEO3_ASSETS.NEO.symbol);
     this.n3AssetDecimal.set(GAS3_CONTRACT, DEFAULT_NEO3_ASSETS.GAS.decimals);
     this.n3AssetSymbol.set(GAS3_CONTRACT, DEFAULT_NEO3_ASSETS.GAS.symbol);
+    const account$ = this.store.select('account');
+    account$.subscribe((state) => {
+      this.currentWallet = state.currentWallet;
+      this.neo3WIFArr = state.neo3WIFArr;
+      this.neo3WalletArr = state.neo3WalletArr;
+      this.n2Network = state.n2Networks[state.n2NetworkIndex];
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+    });
   }
 
   parseUrl(url: string): any {
@@ -59,12 +71,12 @@ export class UtilServiceState {
   }
 
   getNeo3Account(sourceAccount?) {
-    const account = sourceAccount ?? this.neon.wallet.accounts[0];
+    const account = sourceAccount ?? this.currentWallet.accounts[0];
     const accountJson = account.export();
-    const index = this.neon.neo3WalletArr.findIndex(
+    const index = this.neo3WalletArr.findIndex(
       (item) => item.accounts[0].address === account.address
     );
-    const wif = this.neon.neo3WIFArr[index];
+    const wif = this.neo3WIFArr[index];
     const preview5Account = new walletPr5.Account(
       walletPr5.getPrivateKeyFromWIF(wif)
     );
@@ -117,7 +129,7 @@ export class UtilServiceState {
       method: 'invokescript',
       params: [script, signers],
     };
-    return this.http.n3RpcPost(this.global.n3Network.rpcUrl, data).toPromise();
+    return this.http.n3RpcPost(this.n3Network.rpcUrl, data).toPromise();
   }
 
   getAssetSymbols(
@@ -125,9 +137,7 @@ export class UtilServiceState {
     chainType: ChainType
   ): Promise<string[]> {
     const rpcUrl =
-      chainType === 'Neo2'
-        ? this.global.n2Network.rpcUrl
-        : this.global.n3Network.rpcUrl;
+      chainType === 'Neo2' ? this.n2Network.rpcUrl : this.n3Network.rpcUrl;
     const requests = [];
     contracts.forEach((assetId) => {
       let tempReq;
@@ -178,9 +188,7 @@ export class UtilServiceState {
     chainType: ChainType
   ): Promise<number[]> {
     const rpcUrl =
-      chainType === 'Neo2'
-        ? this.global.n2Network.rpcUrl
-        : this.global.n3Network.rpcUrl;
+      chainType === 'Neo2' ? this.n2Network.rpcUrl : this.n3Network.rpcUrl;
     const requests = [];
     contracts.forEach((assetId) => {
       let tempReq;
@@ -239,9 +247,7 @@ export class UtilServiceState {
           method: 'getcontractstate',
           params: [assetId],
         };
-        tempReq = this.http
-          .rpcPost(this.global.n3Network.rpcUrl, data)
-          .toPromise();
+        tempReq = this.http.rpcPost(this.n3Network.rpcUrl, data).toPromise();
       }
       requests.push(tempReq);
     });
@@ -279,7 +285,7 @@ export class UtilServiceState {
           params: [contract, id],
         };
         tempReq = this.http
-          .rpcPost(this.global.n3Network.rpcUrl, data)
+          .rpcPost(this.n3Network.rpcUrl, data)
           .toPromise()
           .catch((err) => err);
       }
@@ -322,7 +328,7 @@ export class UtilServiceState {
         ],
       ],
     };
-    return this.http.rpcPost(this.global.n3Network.rpcUrl, data).pipe(
+    return this.http.rpcPost(this.n3Network.rpcUrl, data).pipe(
       map((res) => {
         let address = '';
         if (res.stack) {

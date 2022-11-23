@@ -1,31 +1,38 @@
-import { Component, OnInit } from '@angular/core';
-import {
-  GlobalService,
-  NftState,
-  NeonService,
-  ChromeService,
-} from '@/app/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { NftState, ChromeService } from '@/app/core';
 import { ActivatedRoute } from '@angular/router';
 import { NftAsset } from '@/models/models';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { RpcNetwork } from '../_lib';
 
 @Component({
   templateUrl: 'nft-detail.component.html',
   styleUrls: ['nft-detail.component.scss'],
 })
-export class PopupNftDetailComponent implements OnInit {
+export class PopupNftDetailComponent implements OnInit, OnDestroy {
   nftContract: string;
   nft: NftAsset;
   selectedIndex = 0;
   // 菜单
   showMenu = false;
 
+  private accountSub: Unsubscribable;
+  private address: string;
+  private n3Network: RpcNetwork;
   constructor(
     private aRouter: ActivatedRoute,
-    private global: GlobalService,
     private nftState: NftState,
-    private neonService: NeonService,
-    private chrome: ChromeService
-  ) {}
+    private chrome: ChromeService,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.address = state.currentWallet.accounts[0].address;
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+    });
+  }
 
   ngOnInit(): void {
     this.aRouter.params.subscribe(async (params: any) => {
@@ -34,27 +41,27 @@ export class PopupNftDetailComponent implements OnInit {
     });
   }
 
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
+  }
+
   getData() {
-    this.nftState
-      .getNftTokens(this.neonService.address, this.nftContract)
-      .then((res) => {
-        this.nft = res;
-        if (!this.nft) {
-          this.chrome
-            .getNftWatch(this.global.n3Network.id, this.neonService.address)
-            .subscribe((res2) => {
-              this.nft = res2.find((m) => m.assethash === this.nftContract);
-            });
-        }
-      });
+    this.nftState.getNftTokens(this.address, this.nftContract).then((res) => {
+      this.nft = res;
+      if (!this.nft) {
+        this.chrome
+          .getNftWatch(this.n3Network.id, this.address)
+          .subscribe((res2) => {
+            this.nft = res2.find((m) => m.assethash === this.nftContract);
+          });
+      }
+    });
   }
 
   toWeb() {
     this.showMenu = false;
-    if (this.global.n3Network.explorer) {
-      window.open(
-        `${this.global.n3Network.explorer}tokens/nft/${this.nftContract}`
-      );
+    if (this.n3Network.explorer) {
+      window.open(`${this.n3Network.explorer}tokens/nft/${this.nftContract}`);
     }
   }
 }

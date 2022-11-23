@@ -1,47 +1,45 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import {
-  ChromeService,
-  NeonService,
-  NotificationService,
-  GlobalService,
-} from '@/app/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ChromeService } from '@/app/core';
+import { ActivatedRoute } from '@angular/router';
 import { ERRORS, EVENT, requestTarget, Account } from '@/models/dapi';
 import { STORAGE_NAME } from '../../_lib';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
   templateUrl: './authorization.component.html',
   styleUrls: ['./authorization.component.scss'],
 })
-export class PopupNoticeAuthComponent implements OnInit {
+export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
   public iconSrc = '';
   public hostname = '';
   public title = '';
-  public wallet;
-  public address = '';
-  public accountName = '';
   public selectedWalletArr: { Neo2: Array<Account>; Neo3: Array<Account> } = {
     Neo2: [],
     Neo3: [],
   };
   public allAuthWalletArr = {};
-  private paramsData: any;
 
   public ruleCheck = false;
   public ruleSelected = 'true';
+
+  private accountSub: Unsubscribable;
+  public address = '';
+  public wallet: Wallet2 | Wallet3;
   constructor(
     private chrome: ChromeService,
     private aRouter: ActivatedRoute,
-    private neon: NeonService,
-    private router: Router,
-    private notificationI18n: NotificationService,
-    private global: GlobalService
+    private store: Store<AppState>
   ) {
-    this.wallet = this.neon.wallet;
-    this.address = this.wallet.accounts[0].address;
-    this.accountName = this.wallet.name;
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.wallet = state.currentWallet;
+      this.address = state.currentWallet.accounts[0].address;
+    });
     this.aRouter.queryParams.subscribe((params: any) => {
-      this.paramsData = params;
       this.hostname = params.hostname;
       if (params === undefined || params.icon === undefined) {
         this.iconSrc = '/assets/images/default_asset_logo.jpg';
@@ -70,13 +68,18 @@ export class PopupNoticeAuthComponent implements OnInit {
       });
     };
   }
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
+  }
+
   public refuse() {
     this.chrome.getStorage(STORAGE_NAME.connectedWebsites).subscribe((res) => {
       if (this.ruleCheck) {
-        if (res[this.neon.wallet.accounts[0].address] === undefined) {
-          res[this.neon.wallet.accounts[0].address] = [];
+        if (res[this.address] === undefined) {
+          res[this.address] = [];
         }
-        res[this.neon.wallet.accounts[0].address].push({
+        res[this.address].push({
           hostname: this.hostname,
           icon: this.iconSrc,
           title: this.title,
@@ -126,10 +129,10 @@ export class PopupNoticeAuthComponent implements OnInit {
     // });
     this.chrome.getStorage(STORAGE_NAME.connectedWebsites).subscribe((res) => {
       if (this.ruleCheck) {
-        if (res[this.neon.wallet.accounts[0].address] === undefined) {
-          res[this.neon.wallet.accounts[0].address] = [];
+        if (res[this.address] === undefined) {
+          res[this.address] = [];
         }
-        res[this.neon.wallet.accounts[0].address].push({
+        res[this.address].push({
           hostname: this.hostname,
           icon: this.iconSrc,
           title: this.title,
@@ -144,8 +147,8 @@ export class PopupNoticeAuthComponent implements OnInit {
       this.chrome.windowCallback(
         {
           data: {
-            address: this.neon.address || '',
-            label: this.neon.wallet.name || '',
+            address: this.address || '',
+            label: this.wallet.name || '',
           },
           return: EVENT.CONNECTED,
         },

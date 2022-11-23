@@ -1,17 +1,15 @@
-import { Component, OnInit } from '@angular/core';
-import {
-  NftState,
-  ChromeService,
-  NeonService,
-  GlobalService,
-} from '@/app/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { NftState, ChromeService, GlobalService } from '@/app/core';
 import { NftAsset } from '@/models/models';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
   templateUrl: 'add-nft.component.html',
   styleUrls: ['add-nft.component.scss'],
 })
-export class PopupAddNftComponent implements OnInit {
+export class PopupAddNftComponent implements OnInit, OnDestroy {
   public watch: NftAsset[] = []; // 用户添加的资产
   private moneyNft: NftAsset[] = [];
 
@@ -19,22 +17,34 @@ export class PopupAddNftComponent implements OnInit {
   public searchValue: string = '';
   public searchNft;
 
+  private accountSub: Unsubscribable;
+  private address: string;
+  private n3NetworkId: number;
   constructor(
     private nftState: NftState,
     private chrome: ChromeService,
-    private neon: NeonService,
-    private global: GlobalService
-  ) {}
+    private global: GlobalService,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.address = state.currentWallet.accounts[0].address;
+      this.n3NetworkId = state.n3Networks[state.n3NetworkIndex].id;
+      this.chrome
+        .getNftWatch(this.n3NetworkId, this.address)
+        .subscribe((res) => {
+          this.watch = res;
+        });
+      this.nftState
+        .getAddressNfts(this.address)
+        .then((res) => (this.moneyNft = res));
+    });
+  }
 
-  ngOnInit(): void {
-    this.chrome
-      .getNftWatch(this.global.n3Network.id, this.neon.address)
-      .subscribe((res) => {
-        this.watch = res;
-      });
-    this.nftState
-      .getAddressNfts(this.neon.address)
-      .then((res) => (this.moneyNft = res));
+  ngOnInit(): void {}
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
   }
 
   public searchCurrency() {
@@ -74,11 +84,7 @@ export class PopupAddNftComponent implements OnInit {
     } else {
       this.watch.push(this.searchNft);
     }
-    this.chrome.setNftWatch(
-      this.global.n3Network.id,
-      this.neon.address,
-      this.watch
-    );
+    this.chrome.setNftWatch(this.n3NetworkId, this.address, this.watch);
     this.global.snackBarTip('addSucc');
   }
 }

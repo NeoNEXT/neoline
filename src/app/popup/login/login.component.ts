@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterContentInit } from '@angular/core';
+import { Component, OnInit, AfterContentInit, OnDestroy } from '@angular/core';
 import { WalletCreation } from '../_lib/models';
 import { WalletInitConstant, STORAGE_NAME } from '../_lib/constant';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
@@ -10,23 +10,32 @@ import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '../_dialogs';
 import { ERRORS, requestTarget } from '@/models/dapi';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { ChainType, RpcNetwork } from '../_lib';
 
 @Component({
   templateUrl: 'login.component.html',
   styleUrls: ['login.component.scss'],
 })
-export class PopupLoginComponent implements OnInit, AfterContentInit {
-  public wallet: WalletCreation;
-  public limit: any;
-  public hidePwd: boolean;
+export class PopupLoginComponent
+  implements OnInit, AfterContentInit, OnDestroy
+{
+  public wallet: WalletCreation = new WalletCreation();
+  public limit: any = WalletInitConstant;
+  public hidePwd: boolean = true;
   public loading = false;
-  public isInit: boolean;
-  public accountWallet: Wallet2 | Wallet3;
-
-  public allWallet = [];
-  public selectedWalletIndex;
+  public isInit: boolean = true;
   public isLedger = false;
 
+  private accountSub: Unsubscribable;
+  public accountWallet: Wallet2 | Wallet3;
+  public allWallet = [];
+  public selectedWalletIndex;
+  private chainType: ChainType;
+  private n2Network: RpcNetwork;
+  private n3Network: RpcNetwork;
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -34,33 +43,40 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
     private chrome: ChromeService,
     private global: GlobalService,
     private dialog: MatDialog,
-    private util: UtilServiceState
+    private util: UtilServiceState,
+    private store: Store<AppState>
   ) {
-    this.hidePwd = true;
-    this.wallet = new WalletCreation();
-    this.limit = WalletInitConstant;
-    this.isInit = true;
-    this.allWallet = this.neon.neo2WalletArr.concat(this.neon.neo3WalletArr);
-    this.selectedWalletIndex = this.allWallet.findIndex(
-      (item) =>
-        item.accounts[0].address === this.neon.wallet.accounts[0].address
-    );
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.n2Network = state.n2Networks[state.n2NetworkIndex];
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.chainType = state.currentChainType;
+      this.accountWallet = state.currentWallet;
+      this.allWallet = (state.neo2WalletArr as any).concat(state.neo3WalletArr);
+      this.selectedWalletIndex = this.allWallet.findIndex(
+        (item) =>
+          item.accounts[0].address === state.currentWallet.accounts[0].address
+      );
+      if (
+        this.accountWallet?.accounts[0]?.extra &&
+        this.accountWallet?.accounts[0]?.extra?.ledgerSLIP44
+      ) {
+        this.isLedger = true;
+      }
+    });
   }
 
   ngOnInit(): void {
-    this.accountWallet = this.neon.wallet;
-    if (
-      this.accountWallet?.accounts[0]?.extra &&
-      this.accountWallet?.accounts[0]?.extra?.ledgerSLIP44
-    ) {
-      this.isLedger = true;
-    }
     window.onbeforeunload = () => {
       this.chrome.windowCallback({
         data: ERRORS.CANCELLED,
         return: requestTarget.Login,
       });
     };
+  }
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
   }
 
   ngAfterContentInit(): void {
@@ -82,7 +98,7 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
     }
     this.loading = true;
     const account: any =
-      this.neon.currentWalletChainType === 'Neo3'
+      this.chainType === 'Neo3'
         ? this.util.getNeo3Account()
         : this.accountWallet.accounts[0];
     account
@@ -130,15 +146,15 @@ export class PopupLoginComponent implements OnInit, AfterContentInit {
   }
 
   public selectAccount(w: Wallet2 | Wallet3) {
-    if (w.accounts[0].address === this.neon.wallet.accounts[0].address) {
+    if (w.accounts[0].address === this.accountWallet.accounts[0].address) {
       return;
     }
     const newChainType = wallet3.isAddress(w?.accounts[0]?.address || '', 53)
       ? 'Neo3'
       : 'Neo2';
-    if (newChainType !== this.neon.currentWalletChainType) {
+    if (newChainType !== this.chainType) {
       this.chrome.networkChangeEvent(
-        newChainType === 'Neo2' ? this.global.n2Network : this.global.n3Network
+        newChainType === 'Neo2' ? this.n2Network : this.n3Network
       );
     }
     const wallet = this.neon.parseWallet(w);

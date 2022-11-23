@@ -7,6 +7,7 @@ import {
   DEFAULT_NEO3_ASSETS,
   NEO3_CONTRACT,
   GAS3_CONTRACT,
+  RpcNetwork,
 } from '@/app/popup/_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-core';
 import { wallet as wallet3, u } from '@cityofzion/neon-core-neo3/lib';
@@ -21,6 +22,8 @@ import { GlobalService } from './global.service';
 import { NEO, GAS, Asset } from '@/models/models';
 import { map } from 'rxjs/operators';
 import BigNumber from 'bignumber.js';
+import { AppState } from '@/app/reduers';
+import { Store } from '@ngrx/store';
 
 export const LedgerStatuses = {
   UNSUPPORTED: 'UNSUPPORTED',
@@ -38,7 +41,19 @@ export class LedgerService {
   sendQueue = [];
   ledgerInUse = false;
 
-  constructor(private http: HttpService, private global: GlobalService) {}
+  private n2Network: RpcNetwork;
+  private n3Network: RpcNetwork;
+  constructor(
+    private http: HttpService,
+    private global: GlobalService,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    account$.subscribe((state) => {
+      this.n2Network = state.n2Networks[state.n2NetworkIndex];
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+    });
+  }
 
   getLedgerBalance(address: string, chain: ChainType) {
     if (chain === 'Neo2') {
@@ -49,7 +64,7 @@ export class LedgerService {
         id: 1,
       };
       return this.http
-        .rpcPost(this.global.n2Network.rpcUrl, {
+        .rpcPost(this.n2Network.rpcUrl, {
           ...data,
           method: 'getaccountstate',
         })
@@ -77,7 +92,7 @@ export class LedgerService {
       params: [address],
       id: 1,
     };
-    return this.http.rpcPost(this.global.n3Network.rpcUrl, data).pipe(
+    return this.http.rpcPost(this.n3Network.rpcUrl, data).pipe(
       map((n3Res) => {
         const result: Asset[] = [
           { ...DEFAULT_NEO3_ASSETS.NEO },

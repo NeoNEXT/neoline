@@ -3,25 +3,33 @@ import { HttpClient } from '@angular/common/http';
 import { Observable, from, of } from 'rxjs';
 import { map, timeout, catchError, retry } from 'rxjs/operators';
 import { ChromeService } from './chrome.service';
-import { GlobalService } from './global.service';
 import { NeonService } from './neon.service';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { ChainType, RpcNetwork } from '@/app/popup/_lib';
 
 @Injectable()
 export class HttpService {
+  private network: RpcNetwork;
   constructor(
     private http: HttpClient,
     private chrome: ChromeService,
-    private global: GlobalService,
-    private neon: NeonService
-  ) {}
+    private neon: NeonService,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    account$.subscribe((state) => {
+      const chainType = state.currentChainType;
+      this.network =
+        chainType === 'Neo2'
+          ? state.n2Networks[state.n2NetworkIndex]
+          : state.n3Networks[state.n3NetworkIndex];
+    });
+  }
 
   public get(url: string): Observable<any> {
-    const network =
-      this.neon.currentWalletChainType === 'Neo2'
-        ? this.global.n2Network
-        : this.global.n3Network;
     let networkStr = 'testnet';
-    if (network.chainId === 1 || network.chainId === 3) {
+    if (this.network.chainId === 1 || this.network.chainId === 3) {
       networkStr = 'mainnet';
     }
     if (this.chrome.check) {
@@ -59,50 +67,6 @@ export class HttpService {
         })
       );
   }
-  // public post(url: string, data: any): Observable<any> {
-  //     let network =
-  //         this.neon.currentWalletChainType === 'Neo2'
-  //             ? this.global.n2Network.network.toLowerCase()
-  //             : this.global.n3Network.network.toLowerCase();
-  //     if (network === 'privatenet') {
-  //         network = 'testnet';
-  //     }
-  //     if (this.chrome.check) {
-  //         return from(
-  //             new Promise((resolve, reject) => {
-  //                 this.chrome.httpPost(
-  //                     url,
-  //                     data,
-  //                     (res) => {
-  //                         if (res && res.status === 'success') {
-  //                             resolve(res.data);
-  //                         } else {
-  //                             reject((res && res.msg) || res);
-  //                         }
-  //                     },
-  //                     {
-  //                         Network: network,
-  //                     }
-  //                 );
-  //             })
-  //         );
-  //     }
-  //     return this.http
-  //         .post(url, data, {
-  //             headers: {
-  //                 Network: network,
-  //             },
-  //         })
-  //         .pipe(
-  //             map((res: any) => {
-  //                 if (res && res.status === 'success') {
-  //                     return res.data;
-  //                 } else {
-  //                     throw (res && res.msg) || res;
-  //                 }
-  //             })
-  //         );
-  // }
 
   public rpcPost(url: string, data: any): Observable<any> {
     return this.http.post(url, data).pipe(

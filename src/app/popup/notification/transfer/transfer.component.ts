@@ -3,7 +3,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import {
   AssetState,
   NeonService,
-  HttpService,
   GlobalService,
   ChromeService,
   TransactionState,
@@ -15,15 +14,19 @@ import { NEO, GAS, Asset } from '@/models/models';
 import { tx as tx2, u } from '@cityofzion/neon-js';
 import { Transaction } from '@cityofzion/neon-core/lib/tx';
 import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
-import { rpc } from '@cityofzion/neon-js';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupEditFeeDialogComponent } from '../../_dialogs';
 import { bignumber } from 'mathjs';
 import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
-import { STORAGE_NAME } from '../../_lib';
+import { STORAGE_NAME, ChainType } from '../../_lib';
 import BigNumber from 'bignumber.js';
 import { LedgerStatuses } from '../../_lib';
 import { interval } from 'rxjs';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
   templateUrl: 'transfer.component.html',
@@ -41,16 +44,13 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
 
   public balance: Asset;
   public creating = false;
-  public fromAddress: string = '';
   public toAddress: string = '';
   public assetId: string = '';
   public symbol: string = '';
   public amount: string = '0';
   public remark: string = '';
-  public n2Network: RpcNetwork;
   public loading = false;
   public loadingMsg: string;
-  public wallet: any;
   private txHashAttributes: TxHashAttribute[] = null;
 
   public fee: number;
@@ -59,26 +59,40 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
   private messageID = 0;
   getStatusInterval;
 
+  private accountSub: Unsubscribable;
+  public fromAddress: string;
+  public n2Network: RpcNetwork;
+  private currentWallet: Wallet2 | Wallet3;
+  private chainType: ChainType;
+  private neo2WIFArr: string[];
+  private neo2WalletArr: Wallet2[];
   constructor(
     private router: Router,
     private aRoute: ActivatedRoute,
     private asset: AssetState,
     private transfer: TransferService,
     private neon: NeonService,
-    private http: HttpService,
     private global: GlobalService,
     private chrome: ChromeService,
     private txState: TransactionState,
     private dialog: MatDialog,
     private ledger: LedgerService,
-    private util: UtilServiceState
-  ) {}
+    private util: UtilServiceState,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.currentWallet = state.currentWallet;
+      this.fromAddress = state.currentWallet.accounts[0].address;
+      this.n2Network = state.n2Networks[state.n2NetworkIndex];
+      this.neo2WIFArr = state.neo2WIFArr;
+      this.neo2WalletArr = state.neo2WalletArr;
+    });
+  }
 
   ngOnInit(): void {
-    this.n2Network = this.global.n2Network;
     this.rateCurrency = this.asset.rateCurrency;
-    this.fromAddress = this.neon.address;
-    this.wallet = this.neon.wallet;
     this.aRoute.queryParams.subscribe((params: any) => {
       const pramsData = JSON.parse(JSON.stringify(params));
       this.dataJson = JSON.stringify(params);
@@ -137,7 +151,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
       this.remark = params.remark || '';
       if (this.assetId !== undefined && this.assetId !== '') {
         this.asset
-          .getAssetDetail(this.neon.address, this.assetId)
+          .getAssetDetail(this.fromAddress, this.assetId)
           .then((res: Asset) => {
             this.init = true;
             this.symbol = res.symbol;
@@ -156,18 +170,18 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
   async getAssetDetail() {
     const symbols = await this.util.getAssetSymbols(
       [this.assetId],
-      this.neon.currentWalletChainType
+      this.chainType
     );
     this.symbol = symbols[0];
     const balance = await this.asset.getAddressAssetBalance(
-      this.neon.address,
+      this.fromAddress,
       this.assetId,
-      this.neon.currentWalletChainType
+      this.chainType
     );
     if (new BigNumber(balance).comparedTo(0) > 0) {
       const decimals = await this.util.getAssetDecimals(
         [this.assetId],
-        this.neon.currentWalletChainType
+        this.chainType
       );
       this.balance = {
         asset_id: this.assetId,
@@ -204,7 +218,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     }
     this.creating = true;
     this.asset
-      .getAssetDetail(this.neon.address, this.assetId)
+      .getAssetDetail(this.fromAddress, this.assetId)
       .then((res: Asset) => {
         this.loading = false;
         this.loadingMsg = '';
@@ -243,7 +257,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
               }
               this.resolveSign(tx);
             },
-            (err) => {
+            () => {
               this.creating = false;
               this.global.snackBarTip('wentWrong');
             }
@@ -293,7 +307,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
         this.chrome.windowCallback({
           data: {
             txid: tx.hash,
-            nodeUrl: `${this.global.n2Network.rpcUrl}`,
+            nodeUrl: `${this.n2Network.rpcUrl}`,
           },
           return: requestTarget.Send,
           ID: this.messageID,
@@ -428,36 +442,30 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     )} `;
   }
   private getLedgerStatus(tx) {
-    this.ledger
-      .getDeviceStatus(this.neon.currentWalletChainType)
-      .then(async (res) => {
-        this.loadingMsg = LedgerStatuses[res].msg;
-        if (LedgerStatuses[res] === LedgerStatuses.READY) {
-          this.getStatusInterval.unsubscribe();
-          this.loadingMsg = 'signTheTransaction';
-          this.ledger
-            .getLedgerSignedTx(
-              tx,
-              this.neon.wallet,
-              this.neon.currentWalletChainType
-            )
-            .then((tx) => {
-              this.loading = false;
-              this.loadingMsg = '';
-              this.tx = tx;
-              this.resolveSend(tx);
-            })
-            .catch((error) => {
-              this.loading = false;
-              this.loadingMsg = '';
-              this.ledger.handleLedgerError(error);
-            });
-        }
-      });
+    this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
+      this.loadingMsg = LedgerStatuses[res].msg;
+      if (LedgerStatuses[res] === LedgerStatuses.READY) {
+        this.getStatusInterval.unsubscribe();
+        this.loadingMsg = 'signTheTransaction';
+        this.ledger
+          .getLedgerSignedTx(tx, this.currentWallet, this.chainType)
+          .then((tx) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.tx = tx;
+            this.resolveSend(tx);
+          })
+          .catch((error) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.ledger.handleLedgerError(error);
+          });
+      }
+    });
   }
 
   private getSignTx(tx: Transaction) {
-    if (this.neon.wallet.accounts[0]?.extra?.ledgerSLIP44) {
+    if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
       this.loading = true;
       this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
       this.getLedgerStatus(tx);
@@ -467,10 +475,10 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
       return;
     }
     const wif =
-      this.neon.WIFArr[
-        this.neon.walletArr.findIndex(
+      this.neo2WIFArr[
+        this.neo2WalletArr.findIndex(
           (item) =>
-            item.accounts[0].address === this.neon.wallet.accounts[0].address
+            item.accounts[0].address === this.currentWallet.accounts[0].address
         )
       ];
     tx.sign(wif);

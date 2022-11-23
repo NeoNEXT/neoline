@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { GlobalService, NeonService } from '@app/core';
 import { Router, RouterEvent, NavigationEnd } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import {
@@ -27,8 +26,6 @@ export class PopupComponent implements OnInit {
 
   constructor(
     private store: Store<AppState>,
-    private global: GlobalService,
-    private neon: NeonService,
     private router: Router,
     private dialog: MatDialog
   ) {

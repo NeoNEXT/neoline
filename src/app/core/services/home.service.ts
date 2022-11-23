@@ -1,8 +1,9 @@
 import { Injectable } from '@angular/core';
 import { HttpService } from './http.service';
-import { GlobalService } from './global.service';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
+import { AppState } from '@/app/reduers';
+import { Store } from '@ngrx/store';
 
 @Injectable()
 export class HomeService {
@@ -11,7 +12,14 @@ export class HomeService {
   claimNumber = 0;
   claimGasHash: string;
   claimTxTime;
-  constructor(private http: HttpService, private global: GlobalService) {}
+
+  private n3Network;
+  constructor(private http: HttpService, private store: Store<AppState>) {
+    const account$ = this.store.select('account');
+    account$.subscribe((state) => {
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+    });
+  }
 
   getN3RawTransaction(txHash: string) {
     const data = {
@@ -20,7 +28,7 @@ export class HomeService {
       method: 'getrawtransaction',
       params: [txHash, true],
     };
-    const rpcHost = this.global.n3Network.rpcUrl;
+    const rpcHost = this.n3Network.rpcUrl;
     return this.http.rpcPost(rpcHost, data).toPromise();
   }
 

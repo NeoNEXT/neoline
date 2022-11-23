@@ -1,30 +1,44 @@
-import { Component, OnInit, AfterContentInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { NeonService, ChromeService, GlobalService } from '@/app/core';
+import { NeonService, ChromeService } from '@/app/core';
 import { FormControl } from '@angular/forms';
-import { STORAGE_NAME } from '../_lib';
+import { STORAGE_NAME, RpcNetwork, ChainType } from '../_lib';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
 @Component({
   templateUrl: 'wallet.component.html',
   styleUrls: ['wallet.component.scss'],
 })
-export class PopupWalletComponent implements OnInit {
+export class PopupWalletComponent implements OnInit, OnDestroy {
   public createStatus = 'hibernate';
   public importStatus = '';
   public type: 'dapi' = null;
   public hostname: string;
-  public chainType: string;
   public messageID: string;
-
   public selected = new FormControl(2);
 
+  private accountSub: Unsubscribable;
+  private n2Network: RpcNetwork;
+  private n3Network: RpcNetwork;
+  private chainType: ChainType;
+  private currentWIFArr: string[];
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private neon: NeonService,
     private chrome: ChromeService,
-    private global: GlobalService
+    private store: Store<AppState>
   ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.n2Network = state.n2Networks[state.n2NetworkIndex];
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.currentWIFArr =
+        this.chainType === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;
+    });
     this.initOperate(router.url);
     this.route.queryParams.subscribe((params: any) => {
       this.type = params.type;
@@ -32,6 +46,10 @@ export class PopupWalletComponent implements OnInit {
       this.chainType = params.chainType;
       this.messageID = params.messageID;
     });
+  }
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
   }
 
   public initOperate(url: string) {
@@ -49,9 +67,9 @@ export class PopupWalletComponent implements OnInit {
     const newChainType = wallet3.isAddress(data.accounts[0].address, 53)
       ? 'Neo3'
       : 'Neo2';
-    if (newChainType !== this.neon.currentWalletChainType) {
+    if (newChainType !== this.chainType) {
       this.chrome.networkChangeEvent(
-        newChainType === 'Neo2' ? this.global.n2Network : this.global.n3Network
+        newChainType === 'Neo2' ? this.n2Network : this.n3Network
       );
     }
     this.neon.pushWIFArray(data.accounts[0].wif);
@@ -59,7 +77,7 @@ export class PopupWalletComponent implements OnInit {
       this.neon.selectedChainType === 'Neo3'
         ? STORAGE_NAME['WIFArr-Neo3']
         : STORAGE_NAME.WIFArr,
-      this.neon.WIFArr
+      this.currentWIFArr
     );
     this.neon.pushWalletArray(data.export());
     this.chrome.setStorage(

@@ -1,32 +1,48 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router } from '@angular/router';
-import { NeonService, GlobalService, UtilServiceState } from '@/app/core';
-import { Wallet } from '@cityofzion/neon-core/lib/wallet';
+import { GlobalService, UtilServiceState } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupNameDialogComponent } from '@/app/popup/_dialogs';
+import { Store } from '@ngrx/store';
+import { AppState } from '@/app/reduers';
+import { Unsubscribable } from 'rxjs';
+import { ChainType } from '@/app/popup/_lib';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
   templateUrl: 'export.component.html',
   styleUrls: ['export.component.scss'],
 })
-export class TransferExportComponent implements OnInit {
-  public wallet;
-  public address: string;
+export class TransferExportComponent implements OnInit, OnDestroy {
   public verified = false;
   public loading = false;
   public pwd = '';
   public wif: string;
+
+  private accountSub: Unsubscribable;
+  wallet: Wallet2 | Wallet3;
+  address: string;
+  private chainType: ChainType;
   constructor(
     private router: Router,
-    private neon: NeonService,
     private global: GlobalService,
     private dialog: MatDialog,
-    private util: UtilServiceState
-  ) {}
+    private util: UtilServiceState,
+    private store: Store<AppState>
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.wallet = state.currentWallet;
+      this.address = state.currentWallet.accounts[0].address;
+    });
+  }
 
-  ngOnInit(): void {
-    this.wallet = this.neon.wallet;
-    this.address = this.neon.address;
+  ngOnInit(): void {}
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
   }
 
   public verify() {
@@ -39,7 +55,7 @@ export class TransferExportComponent implements OnInit {
     }
     this.loading = true;
     const account =
-      this.neon.currentWalletChainType === 'Neo3'
+      this.chainType === 'Neo3'
         ? this.util.getNeo3Account()
         : this.wallet.accounts[0];
     account
