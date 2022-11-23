@@ -26,7 +26,7 @@ export class TransferService {
     if (this.neon.isAsset(asset)) {
       return new Observable((observer) => {
         this.assetState.getNeo2Utxo(from, asset).subscribe((balance) => {
-          const newTx = this.neon.createTx(from, to, balance, amount, fee);
+          const newTx = this.neon.createNeo2Tx(from, to, balance, amount, fee);
           if (fee > 0 && asset !== GAS) {
             this.addFee(from, newTx, fee).subscribe((res) => {
               observer.next(res);
@@ -40,7 +40,7 @@ export class TransferService {
       });
     } else {
       return new Observable((observer) => {
-        const newTx = this.neon.createTxForNEP5(
+        const newTx = this.neon.createNeo2TxForNEP5(
           from,
           to,
           asset,

@@ -2,7 +2,12 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { NeonService, ChromeService } from '@/app/core';
 import { FormControl } from '@angular/forms';
-import { STORAGE_NAME, RpcNetwork, ChainType } from '../_lib';
+import {
+  RpcNetwork,
+  ChainType,
+  ADD_NEO2_WALLET,
+  ADD_NEO3_WALLET,
+} from '../_lib';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -23,7 +28,6 @@ export class PopupWalletComponent implements OnInit, OnDestroy {
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
   private chainType: ChainType;
-  private currentWIFArr: string[];
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -36,8 +40,6 @@ export class PopupWalletComponent implements OnInit, OnDestroy {
       this.chainType = state.currentChainType;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
-      this.currentWIFArr =
-        this.chainType === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;
     });
     this.initOperate(router.url);
     this.route.queryParams.subscribe((params: any) => {
@@ -72,20 +74,17 @@ export class PopupWalletComponent implements OnInit, OnDestroy {
         newChainType === 'Neo2' ? this.n2Network : this.n3Network
       );
     }
-    this.neon.pushWIFArray(data.accounts[0].wif);
-    this.chrome.setStorage(
-      this.neon.selectedChainType === 'Neo3'
-        ? STORAGE_NAME['WIFArr-Neo3']
-        : STORAGE_NAME.WIFArr,
-      this.currentWIFArr
-    );
-    this.neon.pushWalletArray(data.export());
-    this.chrome.setStorage(
-      this.neon.selectedChainType === 'Neo3'
-        ? STORAGE_NAME['walletArr-Neo3']
-        : STORAGE_NAME.walletArr,
-      this.neon.getWalletArrayJSON()
-    );
+    if (this.neon.selectedChainType === 'Neo2') {
+      this.store.dispatch({
+        type: ADD_NEO2_WALLET,
+        data: { wallet: data, wif: data.accounts[0].wif },
+      });
+    } else {
+      this.store.dispatch({
+        type: ADD_NEO3_WALLET,
+        data: { wallet: data, wif: data.accounts[0].wif },
+      });
+    }
     if (this.type === 'dapi') {
       const params = `type=dapi&hostname=${this.hostname}&chainType=${this.chainType}&messageID=${this.messageID}`;
       this.router.navigateByUrl(`/popup/notification/pick-address?${params}`);

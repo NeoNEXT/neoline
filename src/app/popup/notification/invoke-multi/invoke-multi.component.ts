@@ -271,7 +271,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         );
         return Promise.all(
           triggerContracts.map((scriptHash) =>
-            this.neon.getVerificationSignatureForSmartContract(scriptHash)
+            this.neon.getNeo2VerificationSignatureForSmartContract(scriptHash)
           )
         );
       })
@@ -541,7 +541,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     const fromScript = wallet.getScriptHashFromAddress(this.signAddress);
     if (this.txHashAttributes !== null) {
       this.txHashAttributes.forEach((item, index) => {
-        this.txHashAttributes[index] = this.neon.parseTxHashAttr(
+        this.txHashAttributes[index] = this.neon.parseNeo2TxHashAttr(
           this.txHashAttributes[index]
         );
         const info = this.txHashAttributes[index];

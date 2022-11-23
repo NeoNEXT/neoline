@@ -13,7 +13,7 @@ import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { ChainType, RpcNetwork } from '../_lib';
+import { ChainType, RpcNetwork, RESET_ACCOUNT } from '../_lib';
 
 @Component({
   templateUrl: 'login.component.html',
@@ -138,7 +138,7 @@ export class PopupLoginComponent
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
-          this.neon.reset();
+          this.store.dispatch({ type: RESET_ACCOUNT });
           this.chrome.resetWallet();
           this.router.navigateByUrl('/popup/wallet/new-guide');
         }

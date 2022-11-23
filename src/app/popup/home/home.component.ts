@@ -180,8 +180,8 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
-          this.neon.delWallet(this.currentWallet).subscribe(() => {
-            if (this.currentWalletArr.length === 0) {
+          this.neon.delCurrentWallet().subscribe((w) => {
+            if (!w) {
               this.router.navigateByUrl('/popup/wallet/new-guide');
             } else {
               location.reload();
@@ -213,7 +213,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       return;
     }
     if (this.chainType === 'Neo2') {
-      this.neon.claimGAS(this.claimsData).subscribe((tx) => {
+      this.neon.claimNeo2GAS(this.claimsData).subscribe((tx) => {
         if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
           this.getSignTx(tx[0], 'claimNeo2');
         } else {

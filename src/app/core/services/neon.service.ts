@@ -4,29 +4,11 @@ import Neon2, {
   tx as tx2,
   rpc as rpc2,
 } from '@cityofzion/neon-js';
-import Neon3 from '@cityofzion/neon-js-neo3';
-import {
-  wallet as wallet3,
-  tx as tx3,
-  rpc as rpc3,
-} from '@cityofzion/neon-core-neo3/lib';
-import {
-  Wallet as Wallet2,
-  WalletJSON as WalletJSON2,
-} from '@cityofzion/neon-core/lib/wallet';
-import {
-  Wallet as Wallet3,
-  WalletJSON as WalletJSON3,
-} from '@cityofzion/neon-core-neo3/lib/wallet';
-import { Observable, from, Observer, of, Subject, forkJoin } from 'rxjs';
-import {
-  map,
-  catchError,
-  startWith,
-  publish,
-  refCount,
-  timeout,
-} from 'rxjs/operators';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Observable, from, Observer, of, forkJoin } from 'rxjs';
+import { map, catchError, timeout } from 'rxjs/operators';
 import { ChromeService } from './chrome.service';
 import { GlobalService } from './global.service';
 import { Transaction, TransactionInput } from '@cityofzion/neon-core/lib/tx';
@@ -38,88 +20,37 @@ import { bignumber } from 'mathjs';
 import {
   ChainType,
   STORAGE_NAME,
-  DEFAULT_N2_RPC_NETWORK,
-  DEFAULT_N3_RPC_NETWORK,
   INIT_ACCOUNT,
   UPDATE_NEO3_NETWORKS,
   UPDATE_NEO3_NETWORK_INDEX,
   UPDATE_WALLET,
   UPDATE_NEO3_WALLETS,
+  RpcNetwork,
+  UPDATE_NEO2_NETWORKS,
+  UPDATE_NEO2_WIFS,
+  UPDATE_NEO2_WALLETS,
+  UPDATE_NEO3_WIFS,
 } from '@popup/_lib';
 import { str2hexstring } from '@cityofzion/neon-core-neo3/lib/u';
 import { HttpClient } from '@angular/common/http';
 import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
-import { Unsubscribable } from 'rxjs';
 
 @Injectable()
 export class NeonService {
-  currentWalletChainType: ChainType;
   selectedChainType: ChainType;
-  // 当前钱包的链
-  private _neon: any = Neon2;
-  private _neonWallet: any = wallet2;
-  private _neonTx: any = tx2;
-  private _neonRpc: any = rpc2;
-  // 当前钱包所在链的钱包数组
-  private _walletArr: Array<Wallet2 | Wallet3> = [];
-  private _WIFArr: string[] = [];
-  // neo2
-  private _walletArr2: Array<Wallet2 | Wallet3> = [];
-  private _WIFArr2: string[] = [];
-  // neo3
-  private _walletArr3: Array<Wallet2 | Wallet3> = [];
-  private _WIFArr3: string[] = [];
+  private hasGetFastRpc = false;
+  private loadingGetFastRpc = false;
 
-  private _wallet: Wallet2 | Wallet3;
-  private $wallet: Subject<Wallet2 | Wallet3> = new Subject();
-  hasGetFastRpc = false;
-  loadingGetFastRpc = false;
-
-  accountSub: Unsubscribable;
-
-  //#region wallet parameter
-  /**
-   * Currently opened wallet, return null if unexists.
-   * 获取当前打开的钱包 不存在则返回null
-   */
-  public get wallet(): Wallet2 | Wallet3 {
-    return this._wallet || null;
-  }
-
-  public get walletArr(): Array<Wallet2 | Wallet3> {
-    return this._walletArr || null;
-  }
-
-  public get WIFArr(): string[] {
-    return this._WIFArr || null;
-  }
-
-  public get neo2WalletArr(): Array<Wallet2 | Wallet3> {
-    return this._walletArr2 || null;
-  }
-
-  public get neo3WalletArr(): Array<Wallet2 | Wallet3> {
-    return this._walletArr3 || null;
-  }
-
-  public get neo3WIFArr(): Array<string> {
-    return this._WIFArr3 || null;
-  }
-
-  /**
-   * Address of currently opened wallet, return null if unexists.
-   * 当前打开的钱包中的地址 不存在则返回null
-   */
-  public get address(): string {
-    return (
-      this._wallet &&
-      this._wallet.accounts[0] &&
-      this._wallet.accounts[0].address
-    );
-  }
-  //#endregion
-
+  private currentWallet: Wallet2 | Wallet3;
+  private currentChainType: ChainType;
+  private neo2WalletArr: Wallet2[];
+  private neo3WalletArr: Wallet3[];
+  private neo2WIFArr: string[];
+  private neo3WIFArr: string[];
+  private n2Networks: RpcNetwork[];
+  private n2NetworkIndex: number;
+  private n3Networks: RpcNetwork[];
   constructor(
     private chrome: ChromeService,
     private global: GlobalService,
@@ -127,69 +58,18 @@ export class NeonService {
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
-    this.accountSub = account$.subscribe((state) => {
-      this._wallet = state.currentWallet;
+    account$.subscribe((state) => {
+      this.currentWallet = state.currentWallet;
+      this.n2Networks = state.n2Networks;
+      this.n3Networks = state.n3Networks;
+      this.n2NetworkIndex = state.n2NetworkIndex;
+      this.neo2WalletArr = state.neo2WalletArr;
+      this.neo3WalletArr = state.neo3WalletArr;
+      this.neo2WIFArr = state.neo2WIFArr;
     });
   }
 
-  sortWallet(chainType: ChainType, oldIndex: number, newIndex: number) {
-    if (chainType === 'Neo2') {
-      const tempWallet = this._walletArr2[oldIndex];
-      this._walletArr2.splice(oldIndex, 1);
-      this._walletArr2.splice(newIndex, 0, tempWallet);
-      const tempWif = this._WIFArr2[oldIndex];
-      this._WIFArr2.splice(oldIndex, 1);
-      this._WIFArr2.splice(newIndex, 0, tempWif);
-      if (this.currentWalletChainType === 'Neo2') {
-        this._walletArr = this._walletArr2;
-        this._WIFArr = this._WIFArr2;
-      }
-      this.chrome.setStorage(
-        STORAGE_NAME.walletArr,
-        this.getWalletArrayJSON(this._walletArr2)
-      );
-      this.chrome.setStorage(STORAGE_NAME.WIFArr, this._WIFArr2);
-    } else {
-      const tempWallet = this._walletArr3[oldIndex];
-      this._walletArr3.splice(oldIndex, 1);
-      this._walletArr3.splice(newIndex, 0, tempWallet);
-      const tempWif = this._WIFArr3[oldIndex];
-      this._WIFArr3.splice(oldIndex, 1);
-      this._WIFArr3.splice(newIndex, 0, tempWif);
-      if (this.currentWalletChainType === 'Neo3') {
-        this._walletArr = this._walletArr3;
-        this._WIFArr = this._WIFArr3;
-      }
-      this.chrome.setStorage(
-        STORAGE_NAME['walletArr-Neo3'],
-        this.getWalletArrayJSON(this._walletArr3)
-      );
-      this.chrome.setStorage(STORAGE_NAME['WIFArr-Neo3'], this._WIFArr3);
-    }
-  }
-
-  //#region reset
-  public clearCache() {
-    this._wallet =
-      this.currentWalletChainType === 'Neo2' ? new Wallet2() : new Wallet3();
-    this._walletArr = [];
-    this._walletArr2 = [];
-    this._walletArr3 = [];
-    this.$wallet = new Subject();
-  }
-
-  public reset() {
-    this._wallet = null;
-    this._walletArr = [];
-    this._walletArr2 = [];
-    this._walletArr3 = [];
-    this._WIFArr = [];
-    this._WIFArr2 = [];
-    this._WIFArr3 = [];
-  }
-  //#endregion
-
-  //#region wallet
+  //#region init
   public walletIsOpen(): Observable<boolean> {
     return this.chrome.getStorage(STORAGE_NAME.wallet).pipe(
       map((res) => {
@@ -198,7 +78,6 @@ export class NeonService {
     );
   }
   public initData() {
-    console.log('--------');
     const getWallet = this.chrome.getStorage(STORAGE_NAME.wallet);
     const getNeo2WIFArr = this.chrome.getStorage(STORAGE_NAME.WIFArr);
     const getNeo3WIFArr = this.chrome.getStorage(STORAGE_NAME['WIFArr-Neo3']);
@@ -248,8 +127,6 @@ export class NeonService {
         n3NetworkIndexRes,
         Neo3RemoveT4FlagRes,
       ]) => {
-        console.log('walletRes');
-        console.log(walletRes);
         // wallet
         walletRes = this.parseWallet(walletRes);
         // neo2 walletArr
@@ -334,7 +211,6 @@ export class NeonService {
       }
     );
   }
-
   private async getRpcUrls(force = false) {
     if (this.hasGetFastRpc && !force) {
       return null;
@@ -372,7 +248,6 @@ export class NeonService {
       return null;
     }
   }
-
   async getFastRpcUrl(force = false) {
     if (this.loadingGetFastRpc && !force) {
       return;
@@ -425,30 +300,34 @@ export class NeonService {
           }
         });
       });
-      this.global.n2Networks[0].rpcUrl = rpcUrls[1][fastIndex[1]];
-      this.global.n2Networks[1].rpcUrl = rpcUrls[2][fastIndex[2]];
-      this.global.n3Networks[0].rpcUrl = rpcUrls[3][fastIndex[3]];
-      this.global.n3Networks[1].rpcUrl = rpcUrls[6][fastIndex[6]];
-      this.global.n2Network =
-        this.global.n2Networks[this.global.n2SelectedNetworkIndex];
-      this.global.n3Network =
-        this.global.n3Networks[this.global.n3SelectedNetworkIndex];
-      this.chrome.setStorage(STORAGE_NAME.n2Networks, this.global.n2Networks);
-      this.chrome.setStorage(STORAGE_NAME.n3Networks, this.global.n3Networks);
+      this.n2Networks[0].rpcUrl = rpcUrls[1][fastIndex[1]];
+      this.n2Networks[1].rpcUrl = rpcUrls[2][fastIndex[2]];
+      this.n3Networks[0].rpcUrl = rpcUrls[3][fastIndex[3]];
+      this.n3Networks[1].rpcUrl = rpcUrls[6][fastIndex[6]];
+      this.store.dispatch({
+        type: UPDATE_NEO3_NETWORKS,
+        data: this.n3Networks,
+      });
+      this.store.dispatch({
+        type: UPDATE_NEO2_NETWORKS,
+        data: this.n3Networks,
+      });
       this.loadingGetFastRpc = false;
       this.hasGetFastRpc = true;
       this.chrome.setShouldFindNode(false);
     });
   }
+  //#endregion
 
+  //#region wallet
   /**
    * 判断钱包地址是否存在
    * @param w 钱包地址
    */
   public verifyWallet(w: Wallet2 | Wallet3): boolean {
-    let walletArr = this._walletArr2;
+    let walletArr: Array<Wallet2 | Wallet3> = this.neo2WalletArr;
     if (wallet3.isAddress(w.accounts[0].address, 53)) {
-      walletArr = this._walletArr3;
+      walletArr = this.neo3WalletArr;
     }
     if (walletArr === []) {
       return true;
@@ -463,37 +342,6 @@ export class NeonService {
         return true;
       }
     }
-  }
-  public pushWalletArray(w: WalletJSON2 | WalletJSON3) {
-    this.changeChainType(this.selectedChainType);
-    this._walletArr.push(this.parseWallet(w));
-  }
-  public pushWIFArray(WIF: string) {
-    this.changeChainType(this.selectedChainType);
-    this._WIFArr.push(WIF);
-  }
-  /**
-   * 修改钱包名称时，web 头部名称跟着修改
-   */
-  public walletSub(): Observable<Wallet2 | Wallet3> {
-    return this._wallet
-      ? this.$wallet.pipe(startWith(this._wallet), publish(), refCount())
-      : this.$wallet.pipe(publish(), refCount());
-  }
-  public getWalletArrayJSON(
-    walletArr: Array<Wallet2 | Wallet3> = null
-  ): Array<WalletJSON2 | WalletJSON3> {
-    const res = [];
-    if (walletArr === null) {
-      this._walletArr.forEach((item) => {
-        res.push(item.export());
-      });
-    } else {
-      walletArr.forEach((item) => {
-        res.push(item.export());
-      });
-    }
-    return res;
   }
   public parseWallet(src: any): Wallet2 | Wallet3 {
     try {
@@ -512,26 +360,10 @@ export class NeonService {
   }
   //#endregion
 
-  //#region update wallet name, claim gas
-  /**
-   * 修改钱包的账户名
-   * @param name name of wallet
-   */
-  public updateWalletName(
-    name: string,
-    w: Wallet2 | Wallet3
-  ): Observable<Wallet2 | Wallet3> {
-    if (w === this._wallet || w === null) {
-      this._wallet.name = name;
-      this.$wallet.next(this._wallet);
-      return of(this._wallet);
-    } else {
-      w.name = name;
-      return of(w);
-    }
-  }
-  public claimGAS(claims: Array<ClaimItem>): Observable<Array<Transaction>> {
-    this.changeChainType();
+  //#region claim gas
+  public claimNeo2GAS(
+    claims: Array<ClaimItem>
+  ): Observable<Array<Transaction>> {
     return new Observable((observer) => {
       const claimArr = [[]];
       const valueArr = [];
@@ -557,18 +389,23 @@ export class NeonService {
         valueArr.push(itemValue);
       }
       const wif =
-        this.WIFArr[
-          this._walletArr.findIndex(
+        this.neo2WIFArr[
+          this.neo2WalletArr.findIndex(
             (item) =>
-              item.accounts[0].address === this._wallet.accounts[0].address
+              item.accounts[0].address ===
+              this.currentWallet.accounts[0].address
           )
         ];
       const txArr = [];
       claimArr.forEach((item, index) => {
-        const newTx = new this._neonTx.ClaimTransaction({
+        const newTx = new tx2.ClaimTransaction({
           claims: item,
         });
-        newTx.addIntent('GAS', valueArr[index], this.address);
+        newTx.addIntent(
+          'GAS',
+          valueArr[index],
+          this.currentWallet.accounts[0].address
+        );
         wif && newTx.sign(wif);
         txArr.push(newTx);
       });
@@ -585,7 +422,6 @@ export class NeonService {
    * @param key encrypt password for new address
    */
   public createWallet(key: string, name: string = null): Observable<any> {
-    this.selectChainType();
     if (this.selectedChainType === 'Neo2') {
       const privateKey = wallet2.generatePrivateKey();
       const account = new wallet2.Account(privateKey);
@@ -615,98 +451,61 @@ export class NeonService {
       );
     }
   }
-
-  public delWallet(w: Wallet2 | Wallet3): Observable<boolean> {
-    this.changeChainType(this.currentWalletChainType);
-    const index = this._walletArr.findIndex(
-      (item) => item.accounts[0].address === w.accounts[0].address
-    );
-    if (
-      w.accounts[0].address === this._wallet.accounts[0].address ||
-      w === null
-    ) {
-      if (this.walletArr.length === 1) {
-        this._walletArr.splice(index, 1);
-        if (this._WIFArr.length > index) {
-          this._WIFArr.splice(index, 1);
-        }
-        this.chrome.setStorage(
-          this.currentWalletChainType === 'Neo3'
-            ? STORAGE_NAME['walletArr-Neo3']
-            : STORAGE_NAME.walletArr,
-          this.getWalletArrayJSON()
-        );
-        this.chrome.setStorage(
-          this.currentWalletChainType === 'Neo3'
-            ? STORAGE_NAME['WIFArr-Neo3']
-            : STORAGE_NAME.WIFArr,
-          this._WIFArr
-        );
-        const otherChainWalletArr =
-          this.currentWalletChainType === 'Neo2'
-            ? this._walletArr3
-            : this._walletArr2;
-        if (otherChainWalletArr.length <= 0) {
-          // 另一条链也没有钱包
-          this.chrome.removeStorage(STORAGE_NAME.wallet);
-          this.chrome.windowCallback({
-            data: {
-              address: this.wallet.accounts[0].address || '',
-              label: this.wallet.name || '',
-            },
-            return: EVENT.DISCONNECTED,
-          });
-        } else {
-          // 另一条链还有钱包，切换到另一条链
-          this._wallet = otherChainWalletArr[0];
-          this.changeChainType(
-            wallet3.isAddress(this.address, 53) ? 'Neo3' : 'Neo2'
-          );
-          this.chrome.setWallet(this._wallet.export());
-        }
-      } else {
-        this._walletArr.splice(index, 1);
-        if (this._WIFArr.length > index) {
-          this._WIFArr.splice(index, 1);
-        }
-        this._wallet = this._walletArr[0];
-        this.changeChainType(
-          wallet3.isAddress(this.address, 53) ? 'Neo3' : 'Neo2'
-        );
-        this.chrome.setWallet(this._wallet.export());
-        this.chrome.setStorage(
-          this.currentWalletChainType === 'Neo3'
-            ? STORAGE_NAME['walletArr-Neo3']
-            : STORAGE_NAME.walletArr,
-          this.getWalletArrayJSON()
-        );
-        this.chrome.setStorage(
-          this.currentWalletChainType === 'Neo3'
-            ? STORAGE_NAME['WIFArr-Neo3']
-            : STORAGE_NAME.WIFArr,
-          this._WIFArr
-        );
-      }
-      return of(true);
-    } else {
-      if (this._WIFArr.length > index) {
-        this._WIFArr.splice(index, 1);
-      }
-      this._walletArr.splice(index, 1);
-      this.chrome.setStorage(
-        this.currentWalletChainType === 'Neo3'
-          ? STORAGE_NAME['walletArr-Neo3']
-          : STORAGE_NAME.walletArr,
-        this.getWalletArrayJSON()
-      );
-      this.chrome.setStorage(
-        this.currentWalletChainType === 'Neo3'
-          ? STORAGE_NAME['WIFArr-Neo3']
-          : STORAGE_NAME.WIFArr,
-        this._WIFArr
-      );
-      return of(false);
+  public delCurrentWallet() {
+    if (this.neo2WalletArr.length + this.neo3WalletArr.length <= 1) {
+      this.chrome.windowCallback({
+        data: {
+          address: this.currentWallet.accounts[0].address || '',
+          label: this.currentWallet.name || '',
+        },
+        return: EVENT.DISCONNECTED,
+      });
     }
+    if (this.currentChainType === 'Neo2') {
+      const index = this.neo2WalletArr.findIndex(
+        (item) =>
+          item.accounts[0].address === this.currentWallet.accounts[0].address
+      );
+      this.neo2WalletArr.splice(index, 1);
+      this.neo2WIFArr.splice(index, 1);
+      this.store.dispatch({
+        type: UPDATE_NEO2_WALLETS,
+        data: this.neo2WalletArr,
+      });
+      this.store.dispatch({ type: UPDATE_NEO2_WIFS, data: this.neo2WalletArr });
+      if (this.neo2WalletArr.length > 0) {
+        this.currentWallet = this.neo2WalletArr[0];
+      } else {
+        if (this.neo3WalletArr.length > 0) {
+          this.currentWallet = this.neo3WalletArr[0];
+        } else {
+          this.currentWallet = undefined;
+        }
+      }
+    } else {
+      const index = this.neo3WalletArr.findIndex(
+        (item) =>
+          item.accounts[0].address === this.currentWallet.accounts[0].address
+      );
+      this.neo3WalletArr.splice(index, 1);
+      this.neo3WIFArr.splice(index, 1);
+      this.store.dispatch({
+        type: UPDATE_NEO3_WALLETS,
+        data: this.neo3WalletArr,
+      });
+      this.store.dispatch({ type: UPDATE_NEO3_WIFS, data: this.neo3WalletArr });
+      if (this.neo3WalletArr.length > 0) {
+        this.currentWallet = this.neo3WalletArr[0];
+      } else {
+        if (this.neo2WalletArr.length > 0) {
+          this.currentWallet = this.neo2WalletArr[0];
+        } else {
+          this.currentWallet = undefined;
+        }
+      }
+    }
+    this.store.dispatch({ type: UPDATE_WALLET, data: this.currentWallet });
+    return of(this.currentWallet);
   }
   //#endregion
 
@@ -722,7 +521,6 @@ export class NeonService {
     key: string,
     name: string = null
   ): Observable<Wallet2 | Wallet3> {
-    this.selectChainType();
     if (this.selectedChainType === 'Neo2') {
       const account = new wallet2.Account(privKey);
       const w = Neon2.create.wallet({
@@ -764,7 +562,6 @@ export class NeonService {
     key: string,
     name: string = null
   ): Observable<Wallet2 | Wallet3> {
-    this.selectChainType();
     if (this.selectedChainType === 'Neo2') {
       const account = new wallet2.Account(wallet2.getPrivateKeyFromWIF(wif));
       const w = Neon2.create.wallet({
@@ -804,7 +601,6 @@ export class NeonService {
     key: string,
     name: string
   ): Observable<Wallet2 | Wallet3> {
-    this.selectChainType();
     return new Observable((observer: Observer<Wallet2 | Wallet3>) => {
       if (this.selectedChainType === 'Neo2') {
         const w = Neon2.create.wallet({
@@ -822,12 +618,12 @@ export class NeonService {
             } as any);
             returnRes.addAccount(account);
             returnRes.encrypt(0, key);
-            returnRes.accounts[0].encrypt(key).then((res) => {
+            returnRes.accounts[0].encrypt(key).then(() => {
               (returnRes.accounts[0] as any).wif = wif;
               observer.next(returnRes);
             });
           })
-          .catch((err) => {
+          .catch(() => {
             observer.error('Wrong password');
           });
       } else if (this.selectedChainType === 'Neo3') {
@@ -846,30 +642,28 @@ export class NeonService {
             } as any);
             returnRes.addAccount(account);
             returnRes.encrypt(0, key);
-            returnRes.accounts[0].encrypt(key).then((res) => {
+            returnRes.accounts[0].encrypt(key).then(() => {
               (returnRes.accounts[0] as any).wif = wif;
               observer.next(returnRes);
             });
           })
-          .catch((err) => {
+          .catch(() => {
             observer.error('Wrong password');
           });
       }
     });
   }
   //#endregion
-
-  //#region create tx
-  public createTx(
+  //#region neo2 create tx
+  public createNeo2Tx(
     fromAddress: string,
     to: string,
     balances: UTXO[],
     amount: string,
     fee: number = 0
   ): Transaction {
-    this.changeChainType();
-    const fromScript = this._neonWallet.getScriptHashFromAddress(fromAddress);
-    const toScript = this._neonWallet.getScriptHashFromAddress(to);
+    const fromScript = wallet2.getScriptHashFromAddress(fromAddress);
+    const toScript = wallet2.getScriptHashFromAddress(to);
     if (fromScript.length !== 40 || toScript.length !== 40) {
       throw new Error('target address error');
     }
@@ -880,7 +674,7 @@ export class NeonService {
     if (assetId.startsWith('0x') && assetId.length === 66) {
       assetId = assetId.substring(2);
     }
-    const newTx = new this._neonTx.ContractTransaction();
+    const newTx = new tx2.ContractTransaction();
 
     newTx.addOutput({
       assetId,
@@ -913,18 +707,15 @@ export class NeonService {
     if (payback.comparedTo(bignumber(0)) > 0) {
       newTx.addOutput({
         assetId,
-        value: payback.toFixed(),
+        value: payback.toFixed() as any,
         scriptHash: fromScript,
       });
     }
     const remark = 'From NeoLine';
-    newTx.addAttribute(
-      this._neonTx.TxAttrUsage.Remark1,
-      u.str2hexstring(remark)
-    );
+    newTx.addAttribute(tx2.TxAttrUsage.Remark1, u.str2hexstring(remark));
     return newTx;
   }
-  public createTxForNEP5(
+  public createNeo2TxForNEP5(
     fraomAddress: string,
     to: string,
     scriptHash: string,
@@ -932,13 +723,12 @@ export class NeonService {
     decimals: number,
     broadcastOverride: boolean = false
   ): Transaction {
-    this.changeChainType();
-    const fromScript = this._neonWallet.getScriptHashFromAddress(fraomAddress);
-    const toScript = this._neonWallet.getScriptHashFromAddress(to);
+    const fromScript = wallet2.getScriptHashFromAddress(fraomAddress);
+    const toScript = wallet2.getScriptHashFromAddress(to);
     if (fromScript.length !== 40 || toScript.length !== 40) {
       throw new Error('target address error');
     }
-    const newTx = new this._neonTx.InvocationTransaction();
+    const newTx = new tx2.InvocationTransaction();
     const amountBigNumber = bignumber(amount).mul(bignumber(10).pow(decimals));
     newTx.script = sc.createScript({
       scriptHash:
@@ -949,20 +739,14 @@ export class NeonService {
       args: [
         u.reverseHex(fromScript),
         u.reverseHex(toScript),
-        this._neon.create.contractParam('Integer', amountBigNumber.toFixed()),
+        Neon2.create.contractParam('Integer', amountBigNumber.toFixed()),
       ],
     });
-    newTx.addAttribute(
-      this._neonTx.TxAttrUsage.Script,
-      u.reverseHex(fromScript)
-    );
+    newTx.addAttribute(tx2.TxAttrUsage.Script, u.reverseHex(fromScript));
     const remark = broadcastOverride
       ? 'From NeoLine'
       : `From NeoLine at ${new Date().getTime()}`;
-    newTx.addAttribute(
-      this._neonTx.TxAttrUsage.Remark1,
-      u.str2hexstring(remark)
-    );
+    newTx.addAttribute(tx2.TxAttrUsage.Remark1, u.str2hexstring(remark));
     return newTx;
   }
   //#endregion
@@ -986,11 +770,10 @@ export class NeonService {
 
     return zero.repeat(length - input.length) + input;
   }
-  public parseTxHashAttr(
+  public parseNeo2TxHashAttr(
     { type, value, txAttrUsage }: TxHashAttribute,
     isAddressToHex = false
   ): TxHashAttribute {
-    this.changeChainType();
     let parsedValue = this.zeroPad(value, 64, true);
     switch (type) {
       case 'Boolean':
@@ -1002,7 +785,7 @@ export class NeonService {
         break;
       case 'Address':
         parsedValue = this.zeroPad(
-          u.reverseHex(this._neonWallet.getScriptHashFromAddress(value)),
+          u.reverseHex(wallet2.getScriptHashFromAddress(value)),
           64,
           true
         );
@@ -1035,15 +818,14 @@ export class NeonService {
       ? assetId.length === 66
       : assetId.length === 64;
   }
-  public getVerificationSignatureForSmartContract(
+  public getNeo2VerificationSignatureForSmartContract(
     ScriptHash: string
   ): Promise<any> {
-    this.changeChainType();
-    return this._neonRpc.Query.getContractState(ScriptHash)
-      .execute(this.global.n2Network.rpcUrl)
+    return rpc2.Query.getContractState(ScriptHash)
+      .execute(this.n2Networks[this.n2NetworkIndex].rpcUrl)
       .then(({ result }) => {
         const { parameters } = result;
-        return new this._neonTx.Witness({
+        return new tx2.Witness({
           invocationScript: '00'.repeat(parameters.length),
           verificationScript: '',
         });
@@ -1052,29 +834,7 @@ export class NeonService {
   //#endregion
 
   //#region chain type
-  changeChainType(chain: ChainType = this.currentWalletChainType) {
-    this.currentWalletChainType = chain;
-    switch (chain) {
-      case 'Neo2':
-        this._neon = Neon2;
-        this._neonWallet = wallet2;
-        this._neonTx = tx2;
-        this._neonRpc = rpc2;
-        this._WIFArr = this._WIFArr2;
-        this._walletArr = this._walletArr2;
-        break;
-      case 'Neo3':
-        this._neon = Neon3;
-        this._neonWallet = wallet3;
-        this._neonTx = tx3;
-        this._neonRpc = rpc3;
-        this._WIFArr = this._WIFArr3;
-        this._walletArr = this._walletArr3;
-        break;
-    }
-  }
-
-  selectChainType(chain: ChainType = this.selectedChainType) {
+  selectChainType(chain: ChainType) {
     this.selectedChainType = chain;
   }
   //#endregion

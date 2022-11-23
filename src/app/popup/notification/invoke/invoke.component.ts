@@ -237,7 +237,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
     this.loadingMsg = 'Wait';
     if (this.triggerContractVerification) {
       transaction.scripts = [
-        await this.neon.getVerificationSignatureForSmartContract(
+        await this.neon.getNeo2VerificationSignatureForSmartContract(
           this.scriptHash
         ),
         ...transaction.scripts,
@@ -478,7 +478,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
     const fromScript = wallet.getScriptHashFromAddress(this.signAddress);
     if (this.txHashAttributes !== null) {
       this.txHashAttributes.forEach((item, index) => {
-        this.txHashAttributes[index] = this.neon.parseTxHashAttr(
+        this.txHashAttributes[index] = this.neon.parseNeo2TxHashAttr(
           this.txHashAttributes[index]
         );
         const info = this.txHashAttributes[index];

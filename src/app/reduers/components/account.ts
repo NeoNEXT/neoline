@@ -19,7 +19,14 @@ import {
   UPDATE_NEO3_NETWORKS,
   UPDATE_NEO3_WALLETS,
   UPDATE_NEO2_WALLETS,
+  RESET_ACCOUNT,
+  UPDATE_NEO2_NETWORKS,
+  UPDATE_NEO2_WIFS,
+  UPDATE_NEO3_WIFS,
+  STORAGE_VALUE_MESSAGE,
+  STORAGE_VALUE_TYPE,
 } from '@/app/popup/_lib';
+declare var chrome: any;
 
 export interface AccountState {
   currentWallet: Wallet2 | Wallet3;
@@ -55,8 +62,19 @@ export default function account(
     case INIT_ACCOUNT:
       return {
         ...state,
-        currentWallet: handleInitData(action.data),
+        ...action.data,
       };
+    case RESET_ACCOUNT: {
+      return {
+        ...state,
+        currentWallet: undefined,
+        currentChainType: 'Neo3',
+        neo2WalletArr: [],
+        neo3WalletArr: [],
+        neo2WIFArr: [],
+        neo3WIFArr: [],
+      };
+    }
     case UPDATE_WALLET:
       return {
         ...state,
@@ -92,15 +110,30 @@ export default function account(
         ...state,
         neo3WalletArr: updateWalletArr(action.data, 'Neo3'),
       };
+    case UPDATE_NEO2_WIFS:
+      return {
+        ...state,
+        neo2WIFArr: updateWIFArr(action.data, 'Neo2'),
+      };
+    case UPDATE_NEO3_WIFS:
+      return {
+        ...state,
+        neo3WIFArr: updateWIFArr(action.data, 'Neo3'),
+      };
     case ADD_NEO3_NETWORK:
       return {
         ...state,
         n3Networks: addN3Network(action.data, state.n3Networks),
       };
+    case UPDATE_NEO2_NETWORKS:
+      return {
+        ...state,
+        n2Networks: updateNetworks(action.data, 'Neo2'),
+      };
     case UPDATE_NEO3_NETWORKS:
       return {
         ...state,
-        n3Networks: updateN3Network(action.data),
+        n3Networks: updateNetworks(action.data, 'Neo3'),
       };
     case UPDATE_NEO2_NETWORK_INDEX:
       return {
@@ -119,18 +152,29 @@ export default function account(
 
 //#region wallet
 function updateWallet(data: Wallet2 | Wallet3) {
-  const address = data.accounts[0].address;
-  const chainType: ChainType = wallet3.isAddress(address, 53) ? 'Neo3' : 'Neo2';
-  this.chrome.setStorage(STORAGE_NAME.wallet, data);
-  this.chrome.setStorage(STORAGE_NAME.chainType, chainType);
+  const address = data?.accounts[0]?.address;
+  const chainType: ChainType = wallet3.isAddress(address || '', 53)
+    ? 'Neo3'
+    : 'Neo2';
+  updteLoaclStorage(STORAGE_NAME.wallet, data);
+  updteLoaclStorage(STORAGE_NAME.chainType, chainType);
   return { currentWallet: data, currentChainType: chainType };
 }
 
 function updateWalletArr(data: any, chainType: ChainType) {
   if (chainType === 'Neo2') {
-    this.chrome.setStorage(STORAGE_NAME.walletArr, data);
+    updteLoaclStorage(STORAGE_NAME.walletArr, data);
   } else {
-    this.chrome.setStorage(STORAGE_NAME['walletArr-Neo3'], data);
+    updteLoaclStorage(STORAGE_NAME['walletArr-Neo3'], data);
+  }
+  return data;
+}
+
+function updateWIFArr(data: any, chainType: ChainType) {
+  if (chainType === 'Neo2') {
+    updteLoaclStorage(STORAGE_NAME.WIFArr, data);
+  } else {
+    updteLoaclStorage(STORAGE_NAME['WIFArr-Neo3'], data);
   }
   return data;
 }
@@ -144,8 +188,8 @@ function addNeo2Wallet(
   const targetWIFArr = [...sourceWIF];
   targetWalletArr.push(data.wallet);
   targetWIFArr.push(data.wif);
-  this.chrome.setStorage(STORAGE_NAME.walletArr, targetWalletArr);
-  this.chrome.setStorage(STORAGE_NAME.WIFArr, targetWIFArr);
+  updteLoaclStorage(STORAGE_NAME.walletArr, targetWalletArr);
+  updteLoaclStorage(STORAGE_NAME.WIFArr, targetWIFArr);
   return { neo2WalletArr: targetWalletArr, neo2WIFArr: targetWIFArr };
 }
 
@@ -158,8 +202,8 @@ function addNeo3Wallet(
   const targetWIFArr = [...sourceWIF];
   targetWalletArr.push(data.wallet);
   targetWIFArr.push(data.wif);
-  this.chrome.setStorage(STORAGE_NAME['walletArr-Neo3'], targetWalletArr);
-  this.chrome.setStorage(STORAGE_NAME['WIFArr-Neo3'], targetWIFArr);
+  updteLoaclStorage(STORAGE_NAME['walletArr-Neo3'], targetWalletArr);
+  updteLoaclStorage(STORAGE_NAME['WIFArr-Neo3'], targetWIFArr);
   return { neo3WalletArr: targetWalletArr, neo3WIFArr: targetWIFArr };
 }
 
@@ -175,8 +219,8 @@ function removeNeo2Wallet(
   const targetWIFArr = [...sourceWIFArr];
   targetWalletArr.splice(index, 1);
   targetWIFArr.splice(index, 1);
-  this.chrome.setStorage(STORAGE_NAME.walletArr, targetWalletArr);
-  this.chrome.setStorage(STORAGE_NAME.WIFArr, targetWIFArr);
+  updteLoaclStorage(STORAGE_NAME.walletArr, targetWalletArr);
+  updteLoaclStorage(STORAGE_NAME.WIFArr, targetWIFArr);
   return { neo2WalletArr: targetWalletArr, neo2WIFArr: targetWIFArr };
 }
 
@@ -192,8 +236,8 @@ function removeNeo3Wallet(
   const targetWIFArr = [...sourceWIFArr];
   targetWalletArr.splice(index, 1);
   targetWIFArr.splice(index, 1);
-  this.chrome.setStorage(STORAGE_NAME['walletArr-Neo3'], targetWalletArr);
-  this.chrome.setStorage(STORAGE_NAME['WIFArr-Neo3'], targetWIFArr);
+  updteLoaclStorage(STORAGE_NAME['walletArr-Neo3'], targetWalletArr);
+  updteLoaclStorage(STORAGE_NAME['WIFArr-Neo3'], targetWIFArr);
   return { neo3WalletArr: targetWalletArr, neo3WIFArr: targetWIFArr };
 }
 //#endregion
@@ -201,25 +245,54 @@ function removeNeo3Wallet(
 //#region network
 function addN3Network(network: RpcNetwork, source: RpcNetwork[]) {
   const target = [...source, network];
-  this.chrome.setStorage(STORAGE_NAME.n3Networks, target);
+  updteLoaclStorage(STORAGE_NAME.n3Networks, target);
   return target;
 }
 
-function updateN3Network(data: RpcNetwork[]) {
-  this.chrome.setStorage(STORAGE_NAME.n3Networks, data);
+function updateNetworks(data: RpcNetwork[], chainType: ChainType) {
+  if (chainType === 'Neo2') {
+    updteLoaclStorage(STORAGE_NAME.n2Networks, data);
+  } else {
+    updteLoaclStorage(STORAGE_NAME.n3Networks, data);
+  }
   return data;
 }
 
 function updateNetworkIndex(index: number, chainType: ChainType) {
   if (chainType === 'Neo2') {
-    this.chrome.setStorage(STORAGE_NAME.n2SelectedNetworkIndex, index);
+    updteLoaclStorage(STORAGE_NAME.n2SelectedNetworkIndex, index);
   } else {
-    this.chrome.setStorage(STORAGE_NAME.n3SelectedNetworkIndex, index);
+    updteLoaclStorage(STORAGE_NAME.n3SelectedNetworkIndex, index);
   }
   return index;
 }
 //#endregion
-function handleInitData(data) {
-  console.log(data);
-  return data.currentWallet;
+
+function updteLoaclStorage(storageName: STORAGE_NAME, value: any) {
+  let storageValue = value;
+  if (chrome?.runtime) {
+    const saveData = {};
+    saveData[storageName] = storageValue;
+    if (STORAGE_VALUE_MESSAGE[storageName].isLocal) {
+      chrome.storage.local.set(value, () => {
+        console.log('Set local storage', value);
+      });
+    } else {
+      chrome.storage.sync.set(value, () => {
+        console.log('Set storage', value);
+      });
+    }
+  } else {
+    switch (STORAGE_VALUE_MESSAGE[storageName].type) {
+      case STORAGE_VALUE_TYPE.object:
+      case STORAGE_VALUE_TYPE.array:
+        storageValue = JSON.stringify(value);
+        break;
+      case STORAGE_VALUE_TYPE.number:
+      case STORAGE_VALUE_TYPE.boolean:
+        storageValue = String(value);
+        break;
+    }
+    localStorage.setItem(storageName, storageValue);
+  }
 }
