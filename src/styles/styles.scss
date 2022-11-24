@@ -8,6 +8,7 @@
   box-sizing: border-box;
   outline: none;
   font-family: "Microsoft Yahei", "Arial Narrow Bold", sans-serif;
+  line-height: 1;
 }
 
 *:not(input, button):hover {
@@ -37,9 +38,6 @@ body {
   background: #f8f8f8;
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
-  &[data-theme-style="dark-theme"] {
-    background-color: $bg-base-dark;
-  }
 }
 li {
   list-style: none;

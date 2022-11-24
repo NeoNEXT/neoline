@@ -15,15 +15,13 @@ import { Unsubscribable } from 'rxjs';
   styleUrls: ['popup.component.scss'],
 })
 export class PopupComponent implements OnInit {
-  public isThirdParty: boolean = false;
-  public isNotificationComfirm: boolean = false;
-  public address: string;
+  private isThirdParty: boolean = false;
+  private isNotificationComfirm: boolean = false;
   private currentUrl = this.router.url;
-  public networks: RpcNetwork[];
-  public selectedNetworkIndex: number;
 
-  accountSub: Unsubscribable;
-
+  private accountSub: Unsubscribable;
+  public address: string;
+  public currentNetwork: RpcNetwork;
   constructor(
     private store: Store<AppState>,
     private router: Router,
@@ -36,10 +34,11 @@ export class PopupComponent implements OnInit {
         this.address = wallet.accounts[0].address;
       }
       const chainType = state.currentChainType;
-      this.networks =
+      const networks =
         chainType === 'Neo2' ? state.n2Networks : state.n3Networks;
-      this.selectedNetworkIndex =
+      const selectedNetworkIndex =
         chainType === 'Neo2' ? state.n2NetworkIndex : state.n3NetworkIndex;
+      this.currentNetwork = networks[selectedNetworkIndex];
     });
   }
 

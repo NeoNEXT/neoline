@@ -1,120 +1,52 @@
 @import "src/styles/popup-default";
-@import "src/styles/theme-default";
 
-.mat-toolbar-fixed {
-  width: 100%;
-  // height: auto;
-  position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 99999999;
-
-  .mat-toolbar {
-    height: 64px;
-    .popup-nav-menu {
-      width: 34px;
-      height: 34px;
-      border-radius: 50%;
-      overflow: hidden;
-      margin-left: 20px;
-      margin-top: 10px;
-      &.is-login {
-        display: none;
-      }
-      &:hover {
-        cursor: pointer;
-      }
-
+header {
+  height: 74px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 16px;
+  background: $background-color;
+  img.logo {
+    height: 20px;
+    margin-right: 25px;
+  }
+  button.network {
+    min-width: 140px;
+    height: 32px;
+    line-height: 32px;
+    padding: 0 10px;
+    border-radius: 19px;
+    border: 1px solid $sub-title-color;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    cursor: pointer;
+    &:hover {
+      border: 1px solid $theme-color;
+      box-shadow: 0px 8px 15px -8px rgba(6, 204, 171, 0.5);
       img {
-        width: inherit;
-        height: inherit;
+        filter: drop-shadow(1000px 0 0 $theme-color);
+        transform: translate(-1000px);
       }
     }
-
-    .popup-nav-logo {
-      flex: auto;
-      .popup-nav-logo-img {
-        height: 20px;
-        display: inline-block;
-        vertical-align: middle;
-      }
+    img {
+      margin-left: 10px;
     }
-
-    .popup-nav-network {
-      width: 127px;
-      height: 30px;
-      line-height: 30px;
-      border-radius: 30px;
-      font-size: 12px;
-      .network-name {
-        display: inline-block;
-        max-width: 100px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        margin-right: 3px;
-      }
-      .popup-nav-network-icon {
-        width: 5px;
-        height: 3px;
-        display: inline-block;
-      }
+  }
+  .avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    img {
+      width: 100%;
+      height: 100%;
     }
   }
 }
-
 .popup {
   width: 100%;
-  height: calc(100% - 64px);
-  position: fixed;
-  top: 64px;
-  left: 0;
-  z-index: map-get($z-indexes, max);
-  overflow-y: auto;
-  overflow-x: hidden;
-  background-color: map-get($neo-line-default, 50);
-  &.isConfirm {
-    height: 100%;
-    top: 0;
-  }
-}
-
-.no-third-party-toolbar {
-  height: auto;
-  .popup-nav-logo-img {
-    width: 84px;
-    @include bg($img-login-logo);
-  }
-  .popup-nav-network {
-    border-color: map-get($colors, f7f7f7);
-    margin-top: 10px;
-    .popup-nav-network-icon {
-      @include bg($img-net-dropdown);
-    }
-  }
-}
-
-.is-third-party-toolbar {
-  .mat-toolbar {
-    background-color: map-get($neo-line-default, 50);
-    border-bottom: 1px solid #f1f1f1;
-
-    .popup-nav-logo-title-img {
-      width: 84px;
-      @include bg($img-logo-title);
-    }
-
-    .popup-nav-network {
-      border-color: map-get($colors, f7f7f7);
-      color: map-get($colors, 666666);
-
-      .popup-nav-network-icon {
-        @include bg($img-tp-net-dropdown);
-      }
-    }
-  }
-}
-
-span.set-net {
-  margin-left: 5px;
-  color: map-get($neo-line-default, 500);
+  height: calc(100% - 74px);
 }

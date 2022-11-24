@@ -1,5 +1,16 @@
 @import "src/styles/fonts";
 
+$theme-color: #06ccab;
+$warn-color: #ff8142;
+$error-color: #fa5555;
+$title-color: #303334;
+$sub-title-color: #738993;
+$tip-color: #afb6be;
+$box-color: #fafafa;
+$line-color: #f4f4f4;
+$hover-color: #f5f9f9;
+$background-color: #e7efef;
+
 $img-all: "/assets/images/all.png";
 $img-back: "/assets/images/back.png";
 $img-omi: "/assets/images/omi.png";
@@ -99,20 +110,6 @@ $colors: (
     content: " ";
   }
 }
-
-$theme-color-dark: #06ccab;
-$title-dark: #fff;
-$font-color-light-dark: #9fa8bd;
-$font-color-middle-dark: #9494a1;
-$font-color-weight-dark: #797a8d;
-$font-color-outstanding-dark: #f96c6c;
-$bg-outstanding-dark: #71dbc4;
-$bg-main-dark: #39394e;
-$bg-auxiliary-dark: #2c2c42;
-$bg-base-dark: #232338;
-$line-light-dark: #e5e5e5;
-$line-middle-dark: #494959;
-$line-weight-dark: #45455d;
 
 @mixin font-color($light-color, $dark-color) {
   :host-context([data-theme-style="dark-theme"]) & {

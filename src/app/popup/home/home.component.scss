@@ -1,4 +1,3 @@
-@import "src/styles/theme-default";
 @import "src/styles/popup-default";
 
 .loading-box {
@@ -33,53 +32,48 @@
 
 .popup-home {
   height: 100%;
-  background: map-get($neo-line-default, 500);
-  .container {
-    height: 100%;
-    background: white;
-    border-radius: 15px 15px 0px 0px;
-  }
-
-  mat-toolbar {
-    height: 62px;
-    background: #f7fbf9;
-    border-radius: 15px 15px 0px 0px;
+  .header {
+    height: 67px;
     text-align: center;
     position: relative;
+    border-bottom: 1px solid $line-color;
     .wallet-info {
       width: 100%;
-      position: absolute;
-      left: 0px;
-      top: 0px;
-      padding: 10px 70px;
-      p {
-        width: 100%;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        overflow: hidden;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      .name {
+        font-family: NeverMind-Medium;
+        font-size: 18px;
+        color: #3d3d3d;
       }
-    }
-    .name {
-      font-size: 17px;
-      color: #2f3333;
-      line-height: 18px;
-    }
-    .address {
-      font-size: 13px;
-      color: #7f8993;
-      line-height: 14px;
-      margin-top: 8px;
-      img.usb {
-        width: 15px;
-        vertical-align: bottom;
+      .address {
+        display: inline-block;
+        height: 30px;
+        line-height: 30px;
+        padding: 0 16px;
+        border-radius: 14px;
+        font-family: NeverMind-Regular;
+        font-size: 12px;
+        color: $title-color;
+        cursor: pointer;
+        &:hover {
+          background: $hover-color;
+        }
+        img.usb {
+          width: 15px;
+        }
+        span {
+          margin: 0 8px;
+        }
       }
     }
     .menu {
-      height: 18px;
-      width: 18px;
-      margin-right: 20px;
       position: absolute;
-      right: 0px;
+      right: 16px;
+      bottom: 20px;
       cursor: pointer;
     }
     .sub-menu {
@@ -111,95 +105,123 @@
     }
   }
   .popup-home-body {
-    height: calc(100% - 62px);
+    height: calc(100% - 67px);
     position: relative;
     overflow: auto;
     .asset-logo-box {
-      width: 50px;
-      height: 50px;
-      padding: 10px;
-      border: 0.5px solid #efefef;
+      width: 48px;
+      height: 48px;
+      padding: 9px;
+      border: 1px solid $background-color;
       border-radius: 50%;
-      margin: 17px auto;
+      margin: 16px auto;
       .asset-logo {
         height: 30px;
         width: 30px;
       }
     }
     .asset-balance {
-      font-size: 30px;
-      color: #444644;
+      font-family: NeverMind-DemiBold;
+      font-size: 24px;
+      line-height: 20px;
+      color: $title-color;
       text-align: center;
-      width: 100%;
       padding: 0px 20px;
-      line-height: 30px;
       overflow-wrap: break-word;
     }
     .asset-money {
-      font-size: 16px;
-      color: #a0a8be;
+      font-family: NeverMind-Medium;
+      font-size: 14px;
+      color: $sub-title-color;
       text-align: center;
-      width: 100%;
       padding: 0px 20px;
-      margin-top: 14px;
+      margin-top: 8px;
       overflow-wrap: break-word;
     }
     .transaction-btn-container {
-      text-align: center;
-      margin-top: 20px;
-      margin-bottom: 10px;
-      button {
-        width: 120px;
-        height: 45px;
-        border-radius: 22px;
+      margin-top: 26px;
+      padding: 0 51px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      .item {
+        display: inline-flex;
+        align-items: center;
+        font-family: NeverMind-Medium;
+        font-size: 14px;
+        color: $title-color;
+        cursor: pointer;
+        &.transfer {
+          color: $theme-color;
+        }
         img {
-          height: 18px;
-          width: 18px;
-          margin-right: 10px;
+          margin-right: 8px;
+          border-radius: 50%;
         }
-        &:nth-child(1) {
-          border-color: map-get($neo-line-default, 500);
+        &.receive {
+          img {
+            background: $title-color;
+          }
+          &:hover img {
+            box-shadow: 0px 6px 10px -2px rgba(48, 52, 51, 0.5);
+          }
         }
-        &:nth-child(2) {
-          margin-left: 20px;
+        &.transfer {
+          img {
+            background: $theme-color;
+          }
+          &:hover img {
+            box-shadow: 0px 6px 10px -2px rgba(6, 204, 171, 0.5);
+          }
         }
       }
     }
 
     .claim-container {
-      height: 80px;
+      height: 48px;
+      margin: 24px;
+      padding: 0 6px;
+      border-radius: 24px;
+      background: #fafafa;
       display: flex;
       align-items: center;
-      padding: 0 25px;
       .gas-logo-box {
-        width: 40px;
-        height: 40px;
-        padding: 5px;
-        border: 0.5px solid #efefef;
+        width: 36px;
+        height: 36px;
+        padding: 7px;
+        border: 0.5px solid $background-color;
         border-radius: 50%;
         .gas-logo {
-          height: 30px;
-          width: 30px;
+          height: 22px;
+          width: 22px;
         }
       }
       .claim-status-box {
-        margin-left: 13px;
+        margin-left: 12px;
         flex: 1 1 auto;
         .number {
-          font-size: 16px;
-          color: #444644;
+          font-size: 12px;
+          line-height: 12px;
+          font-family: NeverMind-Medium;
+          color: $title-color;
         }
         .status {
-          font-size: 13px;
-          color: #b0b6be;
+          font-size: 10px;
+          line-height: 12px;
+          font-family: NeverMind-Regular;
+          color: $tip-color;
+          margin-top: 2px;
         }
       }
-      button {
-        background: #ecfbf1;
-        height: 35px;
+      button.claim-btn {
+        width: 67px;
+        height: 36px;
         border-radius: 18px;
+        background: #ffffff;
+        font-family: NeverMind-Regular;
+        font-size: 14px;
+        color: $theme-color;
         cursor: pointer;
-        color: map-get($neo-line-default, 500);
         mat-spinner {
           margin: auto;
         }
@@ -207,43 +229,63 @@
           width: 15px;
           height: 15px;
           margin: auto;
+          filter: drop-shadow(1000px 0 0 $theme-color);
+          transform: translate(-1000px);
         }
       }
     }
     .claim-line {
+      margin-top: 24px;
       border: none;
-      border-top: 6px solid #f7f7f7;
+      border-top: 4px solid $line-color;
     }
     .tabs-container {
-      height: 55px;
+      padding-top: 8px;
+      margin-bottom: 3px;
+      background: #fff;
       display: flex;
       align-items: center;
-      background: white;
       position: sticky;
-      top: -2px;
+      top: 0;
       z-index: 100;
-      p {
+      span {
         display: inline-block;
-        min-width: 72px;
-        height: 55px;
-        line-height: 55px;
-        padding-top: 4px;
-        text-align: center;
-        font-size: 17px;
-        color: #b0b6be;
+        height: 32px;
+        line-height: 32px;
+        margin-left: 24px;
+        font-family: NeverMind-Regular;
+        font-size: 16px;
+        color: $sub-title-color;
         cursor: pointer;
-        &.selected {
-          color: map-get($neo-line-default, 500);
-          border-bottom: 1.5px solid map-get($neo-line-default, 500);
+        position: relative;
+        &::after {
+          content: "";
+          width: 16px;
+          height: 3px;
+          border-radius: 2px;
+          background-color: $title-color;
+          position: absolute;
+          left: 50%;
+          margin-left: -8px;
+          display: none;
+        }
+        &.selected,
+        &:hover {
+          color: $title-color;
+          &::after {
+            display: block;
+          }
         }
       }
-      img {
-        width: 60px;
-        height: 30px;
+      img.asset-add {
         position: absolute;
-        right: 25px;
-        top: 15px;
+        right: 24px;
         cursor: pointer;
+        border-radius: 50%;
+        background: $theme-color;
+        &:hover {
+          box-shadow: 0px 5px 10px -2px rgba(6, 204, 171, 0.5);
+        }
       }
     }
   }

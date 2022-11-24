@@ -1,3 +1,5 @@
+@import "src/styles/popup-default";
+
 .loading {
   margin-top: 40px;
   text-align: center;
@@ -8,47 +10,45 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  color: #444644;
-  padding: 25px 20px;
+  color: $title-color;
+  padding: 16px 24px;
   cursor: pointer;
   position: relative;
-  &::before {
+  &::after {
     content: "";
     position: absolute;
-    left: 20px;
-    right: 20px;
+    left: 24px;
+    right: 24px;
     bottom: 0;
     height: 1px;
-    background: #efefef;
+    background: $line-color;
   }
   &:hover {
-    background: lightgray;
+    background: $hover-color;
   }
   .avatar-box {
-    width: 40px;
-    height: 40px;
-    border: 0.5px solid #efefef;
+    width: 34px;
+    height: 34px;
+    padding: 6px;
+    border: 0.5px solid $background-color;
     border-radius: 50%;
-    margin-left: 5px;
-    margin-right: 15px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     img {
-      height: 25px;
-      max-width: 25px;
+      height: 22px;
+      width: 22px;
     }
   }
   .name {
+    font-family: NeverMind-Medium;
+    font-size: 14px;
+    color: $title-color;
     flex: 1;
-    font-size: 18px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
+    margin-left: 12px;
   }
   .right {
     max-width: 150px;
-    margin-right: 5px;
     padding-left: 10px;
     text-align: right;
     .amount,
@@ -57,9 +57,16 @@
       text-overflow: ellipsis;
       white-space: nowrap;
     }
+    .amount {
+      font-family: NeverMind-Medium;
+      font-size: 16px;
+      color: $title-color;
+    }
     .rate {
-      font-size: 15px;
-      color: #808a94;
+      margin-top: 6px;
+      font-family: NeverMind-Regular;
+      font-size: 12px;
+      color: $tip-color;
     }
   }
 }

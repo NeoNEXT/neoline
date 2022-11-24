@@ -1,111 +1,64 @@
-@import "src/styles/theme-default";
+@import "src/styles/popup-default.scss";
 
 .popup-home-tx-page {
   .tx-item {
+    padding: 16px 24px;
+    cursor: pointer;
     position: relative;
-    height: 100px;
-
     &:hover {
-      cursor: pointer;
-      background: lightgray;
+      background: $hover-color;
     }
-
     .head {
-      margin-left: 20px;
-      margin-right: 20px;
-      padding-top: 10px;
-
+      font-family: NeverMind-Regular;
       .time {
         font-size: 12px;
-        color: #b0b6be;
+        color: $tip-color;
       }
-
+      .status {
+        display: inline-block;
+        height: 15px;
+        line-height: 15px;
+        margin-left: 12px;
+        font-size: 10px;
+        border-radius: 8px;
+        background: #daf8f3;
+        color: $theme-color;
+        padding: 0 8px;
+        &.wait {
+          background: #ff8142;
+          color: #ff8142;
+        }
+      }
       .more-info-btn {
-        width: 18px;
-        height: 18px;
-        padding: 5px;
         float: right;
       }
     }
 
     .content {
-      margin-left: 20px;
-      margin-right: 20px;
+      margin-top: 17px;
       display: flex;
       flex-direction: row;
       align-items: center;
-
-      .tx-type-icon {
-        width: 17px;
-        height: 17px;
+      font-size: 14px;
+      color: $title-color;
+      .txid {
+        margin-left: 12px;
+        font-family: NeverMind-Regular;
       }
-
-      .status-box {
-        margin-top: 10px;
-        width: 60%;
-        margin-left: 25px;
-
-        .tx-type {
-          font-size: 14px;
-          color: #333333;
-        }
-
-        .status {
-          font-size: 12px;
-          color: #6ad982;
-          text-overflow: ellipsis;
-          white-space: nowrap;
-          overflow: hidden;
-          margin-top: 4px;
-
-          &.wait {
-            color: #f89266;
-          }
-
-          &.fail {
-            color: #07ccab;
-          }
-
-          span {
-            vertical-align: middle;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            overflow: hidden;
-            display: inline-block;
-            color: #808a94;
-            font-size: 12px;
-            width: 60%;
-          }
-        }
-      }
-
       .amount-box {
         flex-grow: 1;
         text-align: right;
-        padding-right: 15px;
-
         .asset-amount {
-          font-size: 15px;
-          color: #333333;
-
-          &.activity {
-            color: #71dbc4;
-          }
-
+          font-family: NeverMind-Medium;
           &.send {
-            color: #444644;
-          }
-
-          &.receive {
-            color: #07ccab;
+            color: $theme-color;
           }
         }
-
         .money-amount {
+          font-family: NeverMind-Regular;
           font-size: 12px;
-          color: #9fa8bd;
-          margin-top: 4px;
-          color: #808a94;
+          color: $sub-title-color;
+          margin-top: 8px;
         }
       }
     }
@@ -113,9 +66,12 @@
     hr {
       border: none;
       width: 100%;
-      border-top: 0.5px solid #f2f2f2;
+      height: 1px;
+      border-top: 1px solid $line-color;
       position: absolute;
       bottom: 0px;
+      left: 24px;
+      right: 24px;
     }
   }
 
@@ -124,7 +80,7 @@
     margin-top: 20px;
     text-align: center;
     font-size: 12px;
-    color: #b0b6be;
+    color: $tip-color;
     margin-bottom: 40px;
   }
 }

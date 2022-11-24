@@ -131,15 +131,19 @@ export class NeonService {
         walletRes = this.parseWallet(walletRes);
         // neo2 walletArr
         if (neo2WalletArrRes && neo2WalletArrRes.length > 0) {
+          const tempArr = [];
           neo2WalletArrRes.forEach((item) => {
-            item = this.parseWallet(item);
+            tempArr.push(this.parseWallet(item));
           });
+          neo2WalletArrRes = tempArr;
         }
         // neo3 walletArr
         if (neo3WalletArrRes && neo3WalletArrRes.length > 0) {
+          const tempArr = [];
           neo3WalletArrRes.forEach((item) => {
-            item = this.parseWallet(item);
+            tempArr.push(this.parseWallet(item));
           });
+          neo3WalletArrRes = tempArr;
         }
         const chainType: ChainType = wallet3.isAddress(
           walletRes.accounts[0].address,
@@ -212,6 +216,7 @@ export class NeonService {
     );
   }
   private async getRpcUrls(force = false) {
+    console.log('-----------getRpcUrls');
     if (this.hasGetFastRpc && !force) {
       return null;
     }
@@ -310,7 +315,7 @@ export class NeonService {
       });
       this.store.dispatch({
         type: UPDATE_NEO2_NETWORKS,
-        data: this.n3Networks,
+        data: this.n2Networks,
       });
       this.loadingGetFastRpc = false;
       this.hasGetFastRpc = true;
