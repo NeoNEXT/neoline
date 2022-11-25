@@ -53,6 +53,24 @@ export class UtilServiceState {
         this.n3AssetSymbol.set(GAS3_CONTRACT, DEFAULT_NEO3_ASSETS.GAS.symbol);
     }
 
+    strToHexstring(str: string) {
+        let result = '';
+        for (let i = 0; i < str.length; i++) {
+            const hex = str.charCodeAt(i).toString(16);
+            result += ('000' + hex).slice(-4);
+        }
+        return result;
+    }
+
+    hexstringToStr(hex: string) {
+        const hexes = hex.match(/.{1,4}/g) || [];
+        let back = '';
+        for (const item of hexes) {
+            back += String.fromCharCode(parseInt(item, 16));
+        }
+        return back;
+    }
+
     parseUrl(url: string): any {
         const query = url.slice(url.indexOf('?') + 1);
         const pairs = query.split('&');

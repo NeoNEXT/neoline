@@ -1,6 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { NeonService, ChromeService, GlobalService, UtilServiceState } from '@/app/core';
+import {
+    NeonService,
+    ChromeService,
+    GlobalService,
+    UtilServiceState,
+} from '@/app/core';
 import { randomBytes } from 'crypto';
 import { wallet, u } from '@cityofzion/neon-core-neo3';
 import { requestTargetN3 } from '@/models/dapi_neo3';
@@ -16,6 +21,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
     public n3Network: RpcNetwork;
     public message: string;
     private messageID = 0;
+    isSign = false;
     constructor(
         private aRouter: ActivatedRoute,
         private neon: NeonService,
@@ -31,10 +37,13 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
             const query = this.utilServiceState.parseUrl(location.hash);
             this.messageID = query.messageID;
             this.message = query.message;
+            this.isSign = query?.sign === '1' ? true : false;
             window.onbeforeunload = () => {
                 this.chrome.windowCallback({
                     error: ERRORS.CANCELLED,
-                    return: requestTargetN3.SignMessage,
+                    return: this.isSign
+                        ? requestTargetN3.Sign
+                        : requestTargetN3.SignMessage,
                     ID: this.messageID,
                 });
             };
@@ -42,11 +51,16 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
     }
 
     public cancel() {
-        this.chrome.windowCallback({
-            error: ERRORS.CANCELLED,
-            return: requestTargetN3.SignMessage,
-            ID: this.messageID,
-        }, true);
+        this.chrome.windowCallback(
+            {
+                error: ERRORS.CANCELLED,
+                return: this.isSign
+                    ? requestTargetN3.Sign
+                    : requestTargetN3.SignMessage,
+                ID: this.messageID,
+            },
+            true
+        );
     }
 
     public signature() {
@@ -57,7 +71,9 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
                     ...ERRORS.DEFAULT,
                     description: `error: 'There was an error signing this transaction. Ledger does not support this method.`,
                 },
-                return: requestTargetN3.SignMessage,
+                return: this.isSign
+                    ? requestTargetN3.Sign
+                    : requestTargetN3.SignMessage,
                 ID: this.messageID,
             });
             return;
@@ -73,7 +89,8 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
         const privateKey = wallet.getPrivateKeyFromWIF(wif);
         const randomSalt = randomBytes(16).toString('hex');
         const publicKey = wallet.getPublicKeyFromPrivateKey(privateKey);
-        const parameterHexString = u.str2hexstring(randomSalt + this.message);
+        const str = this.isSign ? this.message : randomSalt + this.message;
+        const parameterHexString = this.utilServiceState.strToHexstring(str);
         const lengthHex = u.num2VarInt(parameterHexString.length / 2);
         const concatenatedString = lengthHex + parameterHexString;
         const serializedTransaction = '010001f0' + concatenatedString + '0000';
@@ -83,10 +100,18 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
             salt: randomSalt,
             message: this.message,
         };
-        this.chrome.windowCallback({
-            return: requestTargetN3.SignMessage,
-            data,
-            ID: this.messageID,
-        }, true);
+        if (this.isSign) {
+            delete data.salt;
+        }
+        this.chrome.windowCallback(
+            {
+                return: this.isSign
+                    ? requestTargetN3.Sign
+                    : requestTargetN3.SignMessage,
+                data,
+                ID: this.messageID,
+            },
+            true
+        );
     }
 }

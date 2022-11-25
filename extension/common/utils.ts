@@ -158,6 +158,15 @@ export function str2hexstring(str) {
     return ab2hexstring(str2ab(str));
 }
 
+export function SignStrToHexstring(str: string) {
+    let result = '';
+    for (let i = 0; i < str.length; i++) {
+        const hex = str.charCodeAt(i).toString(16);
+        result += ('000' + hex).slice(-4);
+    }
+    return result;
+}
+
 /**
  * @param str HEX string
 // tslint:disable-next-line: jsdoc-format

@@ -57,16 +57,21 @@ export class PopupNoticeSignComponent implements OnInit {
     }
 
     public cancel() {
-        this.chrome.windowCallback({
-            error: ERRORS.CANCELLED,
-            return: requestTarget.SignMessage,
-            ID: this.messageID,
-        }, true);
+        this.chrome.windowCallback(
+            {
+                error: ERRORS.CANCELLED,
+                return: requestTarget.SignMessage,
+                ID: this.messageID,
+            },
+            true
+        );
     }
 
     public signature() {
         this.randomSalt = randomBytes(16).toString('hex');
-        const parameterHexString = u.str2hexstring(this.randomSalt + this.message);
+        const parameterHexString = this.utilServiceState.strToHexstring(
+            this.randomSalt + this.message
+        );
         const lengthHex = (parameterHexString.length / 2)
             .toString(16)
             .padStart(2, '0');
@@ -82,11 +87,14 @@ export class PopupNoticeSignComponent implements OnInit {
             salt: this.randomSalt,
             message: this.message,
         };
-        this.chrome.windowCallback({
-            return: requestTarget.SignMessage,
-            data,
-            ID: this.messageID,
-        }, true);
+        this.chrome.windowCallback(
+            {
+                return: requestTarget.SignMessage,
+                data,
+                ID: this.messageID,
+            },
+            true
+        );
     }
 
     private getLedgerStatus(tx) {

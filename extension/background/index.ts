@@ -35,7 +35,7 @@ import {
     N3InvokeReadArgs, N3SendArgs , N3TransactionArgs,
     N3VerifyMessageArgs, requestTargetN3, N3BalanceArgs
 } from '../common/data_module_neo3';
-import { base64Encode, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getScriptHashFromAddress, getWalletType, hexstring2str, str2hexstring, verify } from '../common/utils';
+import { base64Encode, getPrivateKeyFromWIF, getPublicKeyFromPrivateKey, getScriptHashFromAddress, getWalletType, hexstring2str, str2hexstring, verify, SignStrToHexstring } from '../common/utils';
 import {
     u as u3,
     wallet as wallet3
@@ -688,7 +688,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         case requestTarget.VerifyMessage: {
             const parameter = request.parameter as VerifyMessageArgs;
-            const parameterHexString = str2hexstring(parameter.message);
+            const parameterHexString = SignStrToHexstring(parameter.message);
             const lengthHex = (parameterHexString.length / 2).toString(16).padStart(2, '0');
             const messageHex = lengthHex + parameterHexString;
             const serializedTransaction = '010001f0' + messageHex + '0000';
@@ -1212,7 +1212,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         case requestTargetN3.VerifyMessage: {
             const parameter = request.parameter as N3VerifyMessageArgs;
-            const parameterHexString = str2hexstring(parameter.message);
+            const parameterHexString = SignStrToHexstring(parameter.message);
             const lengthHex = u3.num2VarInt(parameterHexString.length / 2);
             const concatenatedString = lengthHex + parameterHexString;
             const messageHex = '010001f0' + concatenatedString + '0000';
@@ -1238,6 +1238,21 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                     }
                 }
                 chrome.windows.create({url: `index.html#popup/notification/neo3-signature?${queryString}messageID=${request.ID}`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
+            });
+            sendResponse('');
+            return;
+        }
+        case requestTargetN3.Sign: {
+            const params = request.parameter;
+            getStorage('connectedWebsites', () => {
+                let queryString = '';
+                for (const key in params) {
+                    if (params.hasOwnProperty(key)) {
+                        const value = encodeURIComponent(params[key]);
+                        queryString += `${key}=${value}&`;
+                    }
+                }
+                chrome.windows.create({url: `index.html#popup/notification/neo3-signature?${queryString}messageID=${request.ID}&sign=1`, focused: true, width: 386, height: 620, left: 0, top: 0, type: 'popup'});
             });
             sendResponse('');
             return;

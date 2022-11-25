@@ -15,6 +15,7 @@ export enum requestTargetN3 {
     ApplicationLog = 'neoline.target_application_log_n3',
     Invoke = 'neoline.target_invoke_n3',
     InvokeMulti = 'neoline.target_invoke_multi_n3',
+    Sign = 'neoline.target_sign_n3',
     SignMessage = 'neoline.target_sign_message_n3',
     SignTransaction = 'neoline.target_sign_transaction_n3',
     Deploy = 'neoline.target_deploy_n3',

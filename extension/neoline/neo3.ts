@@ -80,6 +80,7 @@ window.addEventListener('message', async (e) => {
         case requestTargetN3.InvokeMultiple:
         case requestTargetN3.Send:
         case requestTargetN3.VerifyMessage:
+        case requestTargetN3.Sign:
         case requestTargetN3.SignMessage:
         case requestTargetN3.SignTransaction:
             {
