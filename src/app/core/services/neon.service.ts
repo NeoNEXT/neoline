@@ -73,7 +73,8 @@ export class NeonService {
   public walletIsOpen(): Observable<boolean> {
     return this.chrome.getStorage(STORAGE_NAME.wallet).pipe(
       map((res) => {
-        return res ? true : false;
+        const w = this.parseWallet(res);
+        return w ? true : false;
       })
     );
   }
@@ -129,6 +130,9 @@ export class NeonService {
       ]) => {
         // wallet
         walletRes = this.parseWallet(walletRes);
+        if (!walletRes) {
+          return;
+        }
         // neo2 walletArr
         if (neo2WalletArrRes && neo2WalletArrRes.length > 0) {
           const tempArr = [];

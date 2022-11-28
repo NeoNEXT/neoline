@@ -4,9 +4,9 @@ import { Pipe, PipeTransform } from '@angular/core';
   name: 'longStr',
 })
 export class LongStrPipe implements PipeTransform {
-  public transform(value: string) {
+  public transform(value: string, len = 6) {
     if (value) {
-      return value.slice(0, 6) + '...' + value.slice(-6);
+      return value.slice(0, len) + '...' + value.slice(-len);
     }
   }
 }

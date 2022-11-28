@@ -7,6 +7,21 @@ header {
   justify-content: space-between;
   padding: 0 16px;
   background: $background-color;
+  &.theme-bg {
+    img.logo {
+      filter: drop-shadow(1000px 0 0 #fff);
+      transform: translate(-1000px);
+    }
+    button.network {
+      border-color: #fff;
+      color: #fff;
+      pointer-events: none;
+      img {
+        filter: drop-shadow(1000px 0 0 #fff);
+        transform: translate(-1000px);
+      }
+    }
+  }
   img.logo {
     height: 20px;
     margin-right: 25px;

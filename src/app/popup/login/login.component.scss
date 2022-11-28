@@ -1,158 +1,114 @@
-@import "src/styles/theme-default";
 @import "src/styles/popup-default";
+@import "src/styles/mat";
 
-.popup-login-logo {
-  width: 100%;
-  overflow: visible;
-  border-top: 1px solid map-get($neo-line-default, 500);
-  .popup-login-welcome {
-    height: 159px;
-    padding: 36px 42px;
-    background: map-get($neo-line-default, 500);
-    font-size: 30px;
-    font-weight: bold;
-    color: #fff;
+section {
+  height: calc(100% + 74px);
+  margin-top: -74px;
+  background: linear-gradient(180deg, #06ccab -12%, #ece5fd 118%);
+  .welcome {
+    height: 239px;
+    padding-top: 94px;
     position: relative;
-    img.bg-logo {
+    img {
+      width: 107px;
       position: absolute;
-      bottom: -38px;
-      right: 27px;
-      width: 110px;
-      z-index: 9999;
+      top: 82px;
+      left: 50%;
+      transform: translateX(-50%);
     }
-  }
-  .popup-login-tip {
-    background: map-get($neo-line-default, 500);
-    position: relative;
-    &::before {
-      content: "";
-      position: absolute;
-      height: 60%;
-      width: 100%;
-      bottom: 0;
-      border-radius: 20px 20px 0 0;
-      background-color: #fff;
-    }
-    img.bg {
-      width: 100%;
-    }
-    .tip-content {
-      position: absolute;
-      bottom: 6px;
-      left: 42px;
-      font-size: 14px;
-      color: #434543;
-      font-weight: 400;
+    .title {
+      font-family: NeverMind-DemiBold;
+      font-size: 36px;
+      line-height: 44px;
+      text-align: center;
+      color: #fcfdff;
     }
   }
   .wallet-list {
-    width: calc(100% - 40px);
-    background: #0000000a;
-    height: 40px;
-    line-height: 40px;
-    border-radius: 4px;
-    margin: 0 auto;
-    margin-top: 10px;
-    padding: 0 20px;
-  }
-}
-
-.avatar-content {
-  position: relative;
-  margin-right: 6px;
-  width: 22px;
-  height: 22px;
-  border-radius: 50%;
-  &.ledger {
-    background: linear-gradient(
-      180deg,
-      rgba(6, 204, 171, 0.65) 0%,
-      rgba(5, 201, 176, 0.72) 55%,
-      rgba(1, 191, 191, 0.86) 100%
-    );
-  }
-  img.avatar {
-    width: 20px;
-    height: 20px;
-    position: absolute;
-    left: 1px;
-    top: 1px;
-  }
-  img.usb {
-    position: absolute;
-    width: 10px;
-    left: 6px;
-    bottom: 0px;
-  }
-}
-
-.popup-login-input {
-  width: calc(100% - 40px);
-  margin-top: 25px;
-  margin-left: 20px;
-  margin-right: 20px;
-  font-size: 15px;
-
-  img {
-    margin-right: 20px;
-    top: -5px;
-    margin-left: 10px;
-  }
-
-  button {
-    span {
-      display: inline-block;
-      width: 17px;
-      height: 17px;
-      margin-top: -3px;
-      @include bg($img-show-pwd);
+    height: calc(100% - 239px);
+    background: #fff;
+    padding: 24px;
+    position: relative;
+    z-index: 1;
+    &::before {
+      content: "";
+      position: absolute;
+      left: -10px;
+      top: -18px;
+      width: 100%;
+      height: 100px;
+      transform: rotate(-7deg);
+      border-radius: 40px;
+      opacity: 0.48;
+      background: #ffffff;
+      z-index: -1;
     }
-    span.hide-pwd {
-      @include bg($img-hide-pwd);
+    .title {
+      font-family: NeverMind-Medium;
+      font-size: 16px;
+      color: $title-color;
     }
-  }
-}
-
-.popup-login {
-  width: calc(100% - 40px);
-  height: 50px;
-  border-radius: 20px;
-  margin-left: 20px;
-  margin-right: 25px;
-  font-size: 15px;
-  font-weight: 500;
-  margin-top: 20px;
-}
-
-.popup-login-reset {
-  float: right;
-  margin-top: 0px;
-  margin-right: 15px;
-}
-
-::ng-deep {
-  .popup-login-logo {
-    .mat-form-field-label {
-      color: #cdd1d9;
-    }
-    .mat-form-field-underline {
-      display: none;
-    }
-    .mat-form-field-prefix {
-      top: -5px;
-    }
-    .popup-login-logo .mat-form-field-appearance-fill .mat-form-field-flex {
-      border-radius: 10px;
-      background: #f9f9f9;
-    }
-    .popup-login-input {
-      button {
-        top: -8px;
+    .wallet {
+      height: 70px;
+      border-radius: 4px;
+      background: #fafafa;
+      margin-top: 20px;
+      padding: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border: 1.5px solid #fafafa;
+      cursor: pointer;
+      &:hover {
+        background: #f8fbf9;
+        border-color: $theme-color;
+        img.arrow {
+          transform: rotate(270deg) translate(-1000px);
+        }
+      }
+      img.avatar {
+        width: 30px;
+        margin-right: 12px;
+      }
+      .account {
+        flex: 1;
+        .name {
+          font-family: NeverMind-Medium;
+          font-size: 16px;
+          color: $theme-color;
+        }
+        .address {
+          font-family: NeverMind-Regular;
+          font-size: 12px;
+          color: $title-color;
+          margin-top: 8px;
+        }
+      }
+      img.arrow {
+        filter: drop-shadow(1000px 0 0 $theme-color);
+        transform: rotate(90deg) translate(-1000px);
+        transition: all .3s;
       }
     }
-  }
-  .mat-option-text {
-    display: flex !important;
-    align-items: center;
+    .popup-login-input {
+      width: 100%;
+      margin-top: 16px;
+    }
+    .reset {
+      font-family: NeverMind-Regular;
+      font-size: 14px;
+      color: $theme-color;
+      margin-top: 24px;
+      text-align: right;
+      span {
+        cursor: pointer;
+      }
+    }
+    button.confirm {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      right: 24px;
+    }
   }
 }

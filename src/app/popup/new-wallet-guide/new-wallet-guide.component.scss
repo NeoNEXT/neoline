@@ -1,54 +1,31 @@
-@import "src/styles/theme-default";
+@import "src/styles/popup-default.scss";
 
 section {
   width: 100%;
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  padding-top: 60px;
-  background: linear-gradient(0deg, #00bdc3, #05cbab);
-}
-
-.bg-img {
-  position: absolute;
-  top: 100px;
-  left: 58px;
-}
-
-.title {
-  font-weight: bold;
-  font-size: 30px;
-  color: #fff;
-  z-index: 0;
-}
-
-.button-box {
-  width: 100%;
-  height: 280px;
-  position: absolute;
-  bottom: 0;
+  height: calc(100% + 74px);
+  margin-top: -74px;
+  background: linear-gradient(180deg, #06ccab -29%, #ece5fd 118%);
   text-align: center;
-  background: white;
-  border-radius: 20px 20px 0px 0px;
-}
-
-button {
-  width: calc(100% - 60px);
-  height: 50px;
-  border-radius: 22px;
-  font-size: 15px;
-  font-weight: 500;
-  cursor: pointer;
-  color: map-get($neo-line-default, 500);
-}
-
-.create {
-  margin-top: 50px;
-  color: map-get($neo-line-default, 50);
-}
-.import {
-  margin-top: 15px;
-  background: map-get($neo-line-default, 200);
-  color: map-get($neo-line-default, 500);
+  padding-top: 94px;
+  .title {
+    font-family: NeverMind-DemiBold;
+    font-size: 30px;
+    line-height: 44px;
+    text-align: center;
+    color: #fcfdff;
+  }
+  img.bg {
+    margin-top: 8px;
+  }
+  .button-box {
+    margin-top: 54px;
+    padding: 0 24px;
+    button {
+      width: 100%;
+      &.import {
+        background: #ecfbf1;
+        margin-top: 16px;
+      }
+    }
+  }
 }

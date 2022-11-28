@@ -1,7 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
 @import "src/styles/fonts";
 @import "./popup-default";
+@import "./button";
 
+// init
 * {
   margin: 0;
   padding: 0;
@@ -11,23 +13,8 @@
   line-height: 1;
 }
 
-*:not(input, button):hover {
-  cursor: default;
-}
-
 *:active {
   outline: none;
-}
-
-::-webkit-scrollbar {
-  display: none;
-}
-::-webkit-scrollbar-track {
-  background: none;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 6px;
-  background-color: #ccc;
 }
 
 html,
@@ -35,12 +22,40 @@ body {
   height: 100%;
 }
 body {
-  background: #f8f8f8;
   margin: 0;
   font-family: Roboto, "Helvetica Neue", sans-serif;
 }
+address,
+dl,
+ol,
+p,
+pre,
+ul {
+  margin: 0;
+}
+button {
+  outline: none;
+  border: none;
+  background: none;
+}
+
+input {
+  outline: none;
+  background: none;
+  border: none;
+}
+
+a {
+  text-decoration: none;
+}
+
 li {
   list-style: none;
+}
+
+input:focus,
+textarea:focus {
+  outline: none;
 }
 .custom-dialog-container .mat-dialog-container {
   padding: 0;
@@ -105,4 +120,16 @@ $network-list: (
   .#{$network}.network-type {
     background: $color !important;
   }
+}
+
+// scroll
+::-webkit-scrollbar {
+  display: none;
+}
+::-webkit-scrollbar-track {
+  background: none;
+}
+::-webkit-scrollbar-thumb {
+  border-radius: 6px;
+  background-color: #ccc;
 }

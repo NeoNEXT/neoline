@@ -1,7 +1,8 @@
-<header>
+<header [ngClass]="{ 'theme-bg': headerIsThemeBg }">
   <img src="assets/images/logo-word.svg" class="logo" alt="" />
   <button class="network" (click)="openNetwork()">
-    {{ currentNetwork?.name }}<img src="assets/images/common/triangle-fill.svg" />
+    {{ currentNetwork?.name }}
+    <img src="assets/images/common/triangle-fill.svg" />
   </button>
   <div class="avatar" (click)="topMenu()" *ngIf="getShowAvatar()">
     <img [avatar]="address" alt="" />

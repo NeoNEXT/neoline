@@ -1,48 +1,24 @@
-<div class="popup-login-logo">
-  <div class="popup-login-welcome">
-    {{ "welcomeBack" | translate | async }}
-    <img src="/assets/images/popup_logo.png" class="bg-logo" alt="" />
+<section class="login">
+  <div class="welcome">
+    <img class="neo-logo" src="assets/images/login/neo-bg.png" alt="" />
+    <p class="title">WELCOME TO</p>
+    <p class="title">NeoLine!</p>
   </div>
-  <div class="popup-login-tip">
-    <img src="/assets/images/popup_login_bg.png" class="bg" alt="" />
-    <div class="tip-content">{{ "loginTip" | translate | async }}：</div>
-  </div>
-
   <div class="wallet-list">
-    <mat-select [(value)]="selectedWalletIndex" color="white">
-      <mat-option
-        *ngFor="let item of allWallet; index as index"
-        [value]="index"
-        (click)="selectAccount(item)"
-      >
-        <span
-          class="avatar-content"
-          [ngClass]="{ ledger: item.accounts[0]?.extra?.ledgerSLIP44 }"
-        >
-          <img class="avatar" [avatar]="item.accounts[0].address" />
-          <img
-            *ngIf="item.accounts[0]?.extra?.ledgerSLIP44"
-            class="usb"
-            src="/assets/images/ledger/ledger-avatar.png"
-            alt=""
-          />
-        </span>
-        {{
-          item.name +
-            "(" +
-            item.accounts[0].address.slice(0, 6) +
-            "..." +
-            item.accounts[0].address.slice(-6) +
-            ")"
-        }}
-      </mat-option>
-    </mat-select>
-  </div>
-
-  <div *ngIf="!isLedger">
+    <p class="title">{{ "loginTip" | translate | async }}:</p>
+    <div class="wallet">
+      <img class="avatar" [avatar]="accountWallet.accounts[0].address" alt="" />
+      <div class="account">
+        <p class="name">{{ accountWallet.name }}</p>
+        <p class="address">
+          {{ accountWallet.accounts[0].address | longStr: 14 }}
+        </p>
+      </div>
+      <img class="arrow" src="assets/images/common/arrow.svg" alt="" />
+    </div>
     <form #loginForm="ngForm">
       <mat-form-field class="popup-login-input" appearance="fill">
-        <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
+        <img class="prefix" matPrefix src="/assets/images/login/lock.svg" />
         <mat-label>{{ "pwdInput" | translate | async }}</mat-label>
         <input
           matInput
@@ -55,66 +31,28 @@
             !isInit && !loginForm.invalid && !loading ? login() : null
           "
         />
-        <button
-          mat-button
-          matSuffix
-          mat-icon-button
-          type="button"
+        <img
+          class="suffix"
           (click)="togglePwd()"
-        >
-          <span [class]="hidePwd ? 'hide-pwd' : ''"></span>
-        </button>
-        <mat-error *ngIf="password.errors?.required">{{
-          "passwordRequired" | translate | async
-        }}</mat-error>
+          matSuffix
+          [src]="
+            hidePwd
+              ? 'assets/images/login/eye-hide.svg'
+              : 'assets/images/login/eye-view.svg'
+          "
+        />
+        <mat-error *ngIf="password.errors?.required">
+          {{ "passwordRequired" | translate | async }}
+        </mat-error>
       </mat-form-field>
     </form>
-    <button
-      mat-button
-      color="primary"
-      class="popup-login-reset"
-      (click)="resetWallet()"
-    >
-      {{ "resetWallet" | translate | async }}
-    </button>
-    <button
-      mat-flat-button
-      color="primary"
-      class="popup-login"
-      [disabled]="isInit || loginForm.invalid || loading"
-      (click)="login()"
-    >
-      <ng-container *ngIf="!loading">{{
-        "login" | translate | async
-      }}</ng-container>
-      <ng-container *ngIf="loading">{{
-        "logining" | translate | async
-      }}</ng-container>
+    <p class="reset">
+      <span (click)="resetWallet()">
+        {{ "resetWallet" | translate | async }}
+      </span>
+    </p>
+    <button class="confirm" (click)="login()">
+      {{ (loading ? "logining" : "login") | translate | async }}
     </button>
   </div>
-  <div *ngIf="isLedger">
-    <button
-      mat-button
-      color="primary"
-      class="popup-login-reset"
-      (click)="resetWallet()"
-    >
-      {{ "resetWallet" | translate | async }}
-    </button>
-    <button
-      mat-flat-button
-      color="primary"
-      class="popup-login"
-      [disabled]="isInit || loading"
-      (click)="login()"
-    >
-      <ng-container *ngIf="!loading">{{
-        "login" | translate | async
-      }}</ng-container>
-      <ng-container *ngIf="loading">{{
-        "logining" | translate | async
-      }}</ng-container>
-    </button>
-  </div>
-</div>
-<!-- <img src="../../../assets/images/popup_login_bg.png" alt=""> -->
+</section>

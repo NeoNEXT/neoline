@@ -15,9 +15,8 @@ import { Unsubscribable } from 'rxjs';
   styleUrls: ['popup.component.scss'],
 })
 export class PopupComponent implements OnInit {
-  private isThirdParty: boolean = false;
-  private isNotificationComfirm: boolean = false;
   private currentUrl = this.router.url;
+  headerIsThemeBg = false;
 
   private accountSub: Unsubscribable;
   public address: string;
@@ -43,27 +42,19 @@ export class PopupComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.router.url.indexOf('/notification') >= 0) {
-      this.isThirdParty = true;
-      if (
-        this.router.url.indexOf('/deploy') >= 0 ||
-        this.router.url.indexOf('/invoke') >= 0 ||
-        this.router.url.indexOf('/invoke-multi') >= 0 ||
-        this.router.url.indexOf('/transfer') >= 0 ||
-        this.router.url.indexOf('/signature') >= 0 ||
-        this.router.url.indexOf('/neo3-transfer') >= 0 ||
-        this.router.url.indexOf('/neo3-invoke-multi') >= 0 ||
-        this.router.url.indexOf('/neo3-invoke') >= 0 ||
-        this.router.url.indexOf('/neo3-signature') >= 0 ||
-        this.router.url.indexOf('/neo3-sign-transaction') >= 0
-      ) {
-        this.isNotificationComfirm = true;
-      }
+    if (
+      this.router.url.indexOf('popup/wallet/new-guide') >= 0 ||
+      this.router.url.indexOf('popup/login') >= 0
+    ) {
+      this.headerIsThemeBg = true;
     }
     this.router.events.subscribe((res: RouterEvent) => {
       if (res instanceof NavigationEnd) {
-        if (res.url.indexOf('/notification') >= 0) {
-          this.isThirdParty = true;
+        if (
+          res.url.indexOf('popup/wallet/new-guide') >= 0 ||
+          this.router.url.indexOf('popup/login') >= 0
+        ) {
+          this.headerIsThemeBg = true;
         }
         this.currentUrl = res.url;
       }
