@@ -90,7 +90,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
         const randomSalt = randomBytes(16).toString('hex');
         const publicKey = wallet.getPublicKeyFromPrivateKey(privateKey);
         const str = this.isSign ? this.message : randomSalt + this.message;
-        const parameterHexString = this.utilServiceState.strToHexstring(str);
+        const parameterHexString = this.utilServiceState.utf8ToHex(str);
         const lengthHex = u.num2VarInt(parameterHexString.length / 2);
         const concatenatedString = lengthHex + parameterHexString;
         const serializedTransaction = '010001f0' + concatenatedString + '0000';
