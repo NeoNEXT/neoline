@@ -13,7 +13,7 @@ import { Observable, of } from 'rxjs';
 @Component({
   selector: 'wallet-create',
   templateUrl: 'create.component.html',
-  styleUrls: ['create.component.scss'],
+  styleUrls: ['../common.scss'],
 })
 export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
   public wallet: WalletCreation;

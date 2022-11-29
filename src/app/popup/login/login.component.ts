@@ -125,10 +125,6 @@ export class PopupLoginComponent
       });
   }
 
-  public togglePwd() {
-    this.hidePwd = !this.hidePwd;
-  }
-
   public resetWallet() {
     this.dialog
       .open(PopupConfirmDialogComponent, {

@@ -1,8 +1,8 @@
-<div class="create-container tab-container">
+<section>
   <p class="title">{{ "welcomeCreate" | translate | async }}</p>
   <form #walletForm="ngForm">
-    <mat-form-field class="popup-wallet-input-body" appearance="fill">
-      <img matPrefix src="/assets/images/wallet/wallet_icon.png" alt="" />
+    <mat-form-field class="form-field" appearance="fill">
+      <img matPrefix src="/assets/images/login/wallet.svg" alt="" />
       <mat-label>{{ "enterWalletName" | translate | async }}</mat-label>
       <input
         matInput
@@ -21,13 +21,8 @@
         {{ limit?.nameLimitation[0] }}-{{ limit?.nameLimitation[1] }}
       </mat-error>
     </mat-form-field>
-
-    <mat-form-field
-      class="popup-wallet-input-body"
-      appearance="fill"
-      focused="true"
-    >
-      <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
+    <mat-form-field class="form-field" appearance="fill" focused="true">
+      <img matPrefix src="/assets/images/login/lock.svg" alt="" />
       <mat-label>{{ "enterPassword" | translate | async }}</mat-label>
       <input
         matInput
@@ -40,16 +35,16 @@
         [pattern]="limit?.pattern"
         [type]="hidePwd ? 'password' : 'text'"
       />
-      <button
-        tabindex="-1"
-        mat-button
-        matSuffix
-        mat-icon-button
-        type="button"
+      <img
+        class="suffix"
         (click)="hidePwd = !hidePwd"
-      >
-        <span [class]="hidePwd ? 'hide-pwd' : ''"></span>
-      </button>
+        matSuffix
+        [src]="
+          hidePwd
+            ? 'assets/images/login/eye-hide.svg'
+            : 'assets/images/login/eye-view.svg'
+        "
+      />
       <mat-error *ngIf="password.errors?.required"
         >{{ "passwordRequired" | translate | async }}
       </mat-error>
@@ -61,12 +56,8 @@
                 {{ 'onlySupport' | translate | async}}: 0-9 A-Z a-z _-+=,.:!
             </mat-error> -->
     </mat-form-field>
-    <mat-form-field
-      class="popup-wallet-input-body"
-      appearance="fill"
-      focused="true"
-    >
-      <img matPrefix src="/assets/images/wallet/wallet_lock.png" />
+    <mat-form-field class="form-field" appearance="fill" focused="true">
+      <img matPrefix src="/assets/images/login/lock.svg" />
       <mat-label>{{ "enterConfirmPassword" | translate | async }}</mat-label>
       <input
         matInput
@@ -87,46 +78,41 @@
             : null
         "
       />
-      <button
-        tabindex="-1"
-        mat-button
-        matSuffix
-        mat-icon-button
-        type="button"
+      <img
+        class="suffix"
         (click)="hideConfirmPwd = !hideConfirmPwd"
+        matSuffix
+        [src]="
+          hideConfirmPwd
+            ? 'assets/images/login/eye-hide.svg'
+            : 'assets/images/login/eye-view.svg'
+        "
+      />
+      <mat-error
+        *ngIf="
+          confirmPassword.value != password.value && confirmPassword.value != ''
+        "
       >
-        <span [class]="hideConfirmPwd ? 'hide-pwd' : ''"></span>
-      </button>
+        {{ "confirmError" | translate | async }}</mat-error
+      >
     </mat-form-field>
-    <mat-error
-      class="error"
-      *ngIf="
-        confirmPassword.value != password.value && confirmPassword.value != ''
-      "
-    >
-      {{ "confirmError" | translate | async }}</mat-error
-    >
   </form>
-  <button
-    class="popup-wallet-body-submit"
-    mat-flat-button
-    color="primary"
-    [disabled]="
-      isInit ||
-      walletForm.invalid ||
-      loading ||
-      confirmPassword.value != password.value
-    "
-    (click)="submitCreate()"
-  >
-    <ng-container *ngIf="!loading">{{
-      "create" | translate | async
-    }}</ng-container>
-    <ng-container *ngIf="loading">{{
-      "creating" | translate | async
-    }}</ng-container>
-  </button>
-  <button class="popup-wallet-body-cancel" mat-flat-button (click)="cancel()">
-    <ng-container>{{ "cancel" | translate | async }}</ng-container>
-  </button>
-</div>
+  <div class="btn-group">
+    <button
+      class="confirm"
+      (click)="submitCreate()"
+      [ngClass]="{
+        disabled:
+          isInit ||
+          walletForm.invalid ||
+          loading ||
+          confirmPassword.value != password.value
+      }"
+    >
+      {{ (loading ? "creating" : "create") | translate | async }}
+    </button>
+    <button class="cancel" (click)="cancel()">
+      {{ "cancel" | translate | async }}
+    </button>
+  </div>
+</section>

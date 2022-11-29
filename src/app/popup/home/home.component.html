@@ -28,16 +28,22 @@
       (click)="showMenu = !showMenu"
       alt=""
     />
-    <section class="veil" *ngIf="showMenu" (click)="showMenu = false"></section>
-    <ul class="sub-menu" *ngIf="showMenu">
+    <section class="pop-ups-veil" *ngIf="showMenu" (click)="showMenu = false"></section>
+    <ul class="pop-ups-menu" *ngIf="showMenu">
       <li routerLink="/popup/account">
-        {{ "accountDetails" | translate | async }}
+        <img src="assets/images/account/account-detail.svg" alt="" />{{
+          "accountDetails" | translate | async
+        }}
       </li>
       <li (click)="toWeb()">
-        {{ "viewOnNeoTube" | translate | async }}
+        <img src="assets/images/account/explorer.svg" alt="" />{{
+          "viewOnNeoTube" | translate | async
+        }}
       </li>
       <li (click)="removeAccount()">
-        {{ "removeAccount" | translate | async }}
+        <img src="assets/images/account/delete.svg" alt="" />{{
+          "removeAccount" | translate | async
+        }}
       </li>
     </ul>
   </div>

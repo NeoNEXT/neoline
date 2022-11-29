@@ -1,4 +1,5 @@
 @import "src/styles/popup-default";
+@import "src/styles/pop-ups-menu.scss";
 
 .loading-box {
   background: rgb(255 255 255 / 50%);
@@ -18,16 +19,6 @@
   h3 {
     margin: 15px;
   }
-}
-
-.veil {
-  position: fixed;
-  left: 0;
-  right: 0;
-  top: 0;
-  bottom: 0;
-  background: transparent;
-  z-index: 999;
 }
 
 .popup-home {
@@ -76,32 +67,11 @@
       bottom: 20px;
       cursor: pointer;
     }
-    .sub-menu {
+    .pop-ups-menu {
+      width: 234px;
       position: absolute;
-      right: 10px;
-      top: 55px;
-      width: 220px;
-      background: #ffffff;
-      box-shadow: 1px 4px 9px 1px rgba(0, 0, 0, 0.14);
-      border-radius: 10px;
-      padding: 10px 0;
-      z-index: 999999;
-      li {
-        padding: 10px 30px;
-        font-size: 16px;
-        color: #444644;
-        font-weight: normal;
-        text-align: left;
-        list-style: none;
-        cursor: pointer;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        word-break: break-all;
-        &:hover {
-          color: #07ccab;
-        }
-      }
+      right: 16px;
+      top: 64px;
     }
   }
   .popup-home-body {

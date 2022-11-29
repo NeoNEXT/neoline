@@ -1,24 +1,18 @@
-<div class="popup-wallet">
-  <!-- <div class="back-btn" routerLink="/popup/setting" *ngIf="address != ''"></div> -->
-  <mat-tab-group
-    mat-align-tabs="center"
-    animationDuration="0ms"
-    [selectedIndex]="selected.value"
-    (selectedIndexChange)="selected.setValue($event)"
-  >
-    <mat-tab label="{{ 'create' | translate | async }}">
-      <div class="triangle wallet-create"></div>
-      <wallet-create
-        #create
-        (submit)="updateLocalWallet($event, 0)"
-      ></wallet-create>
-    </mat-tab>
-    <mat-tab label="{{ 'import' | translate | async }}">
-      <div class="triangle wallet-import"></div>
-      <wallet-import
-        #import
-        (submit)="updateLocalWallet($event, 1)"
-      ></wallet-import>
-    </mat-tab>
-  </mat-tab-group>
-</div>
+<section>
+  <div class="tab">
+    <span
+      [ngClass]="{ active: tabType === 'create' }"
+      (click)="tabType = 'create'"
+      >{{ "create" | translate | async }}</span
+    >
+    <span
+      [ngClass]="{ active: tabType === 'import' }"
+      (click)="tabType = 'import'"
+      >{{ "import" | translate | async }}</span
+    >
+  </div>
+  <div class="content">
+    <wallet-create *ngIf="tabType === 'create'"></wallet-create>
+    <wallet-import *ngIf="tabType === 'import'"></wallet-import>
+  </div>
+</section>

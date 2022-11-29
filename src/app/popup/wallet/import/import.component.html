@@ -1,23 +1,41 @@
-<div class="import-container tab-container">
+<section>
   <p class="title">{{ "welcomeImport" | translate | async }}</p>
-  <div class="popup-wallet-import-type-box">
-    <span>{{ "importMethod" | translate | async }}</span>
-    <mat-form-field
-      class="popup-wallet-import-type-select-box"
-      appearance="fill"
+  <div class="import-type">
+    <div
+      class="import-method"
+      (click)="showImportTypeMenu = !showImportTypeMenu"
     >
-      <mat-label>{{ "importMethod" | translate | async }}</mat-label>
-      <mat-select *ngIf="importType" [(value)]="importType" color="white">
-        <mat-option value="0">{{ "importKey" | translate | async }}</mat-option>
-        <mat-option value="1">{{
-          "importFile" | translate | async
-        }}</mat-option>
-      </mat-select>
-    </mat-form-field>
+      <p class="label">{{ "importMethod" | translate | async }}</p>
+      <p class="value">
+        {{
+          (importType === "key" ? "importKey" : "importFile")
+            | translate
+            | async
+        }}
+      </p>
+      <img src="assets/images/common/triangle-fill.svg" alt="" />
+    </div>
+    <section
+      class="pop-ups-veil"
+      *ngIf="showImportTypeMenu"
+      (click)="showImportTypeMenu = false"
+    ></section>
+    <ul
+      class="pop-ups-menu"
+      *ngIf="showImportTypeMenu"
+      (click)="showImportTypeMenu = false"
+    >
+      <li (click)="importType = 'key'">
+        {{ "importKey" | translate | async }}
+      </li>
+      <li (click)="importType = 'file'">
+        {{ "importFile" | translate | async }}
+      </li>
+    </ul>
   </div>
-  <form [hidden]="importType !== '0'" #walletImportForm="ngForm">
-    <mat-form-field class="popup-wallet-input-body" appearance="fill">
-      <img matPrefix src="/assets/images/wallet/wallet_icon.png" alt="" />
+  <form [hidden]="importType !== 'key'" #walletImportForm="ngForm">
+    <mat-form-field class="form-field" appearance="fill">
+      <img matPrefix src="/assets/images/login/wallet.svg" alt="" />
       <mat-label>{{ "enterWalletName" | translate | async }}</mat-label>
       <input
         matInput
@@ -36,9 +54,8 @@
         {{ limit?.nameLimitation[0] }}-{{ limit?.nameLimitation[1] }}
       </mat-error>
     </mat-form-field>
-
-    <mat-form-field class="popup-wallet-input-body" appearance="fill">
-      <img matPrefix src="/assets/images/wallet/wallet_key.png" alt="" />
+    <mat-form-field class="form-field" appearance="fill">
+      <img matPrefix src="/assets/images/login/key.svg" alt="" />
       <mat-label>{{ "enterWIF" | translate | async }}</mat-label>
       <input
         matInput
@@ -54,29 +71,25 @@
             : null
         "
       />
-      <button
-        tabindex="-1"
-        mat-button
-        matSuffix
-        mat-icon-button
-        type="button"
+      <img
+        class="suffix"
         (click)="hideWIF = !hideWIF"
-      >
-        <span [class]="hideWIF ? 'hide-pwd' : ''"></span>
-      </button>
+        matSuffix
+        [src]="
+          hideWIF
+            ? 'assets/images/login/eye-hide.svg'
+            : 'assets/images/login/eye-view.svg'
+        "
+      />
       <mat-error *ngIf="WIF.errors?.required">{{
         "WIFRequired" | translate | async
       }}</mat-error>
+      <mat-error *ngIf="isWIF == false"
+        >{{ "WIFPattern" | translate | async }}
+      </mat-error>
     </mat-form-field>
-    <mat-error class="error" *ngIf="isWIF == false"
-      >{{ "WIFPattern" | translate | async }}
-    </mat-error>
-    <mat-form-field
-      class="popup-wallet-input-body"
-      appearance="fill"
-      focused="true"
-    >
-      <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
+    <mat-form-field class="form-field" appearance="fill" focused="true">
+      <img matPrefix src="/assets/images/login/lock.svg" alt="" />
       <mat-label>{{ "enterPassword" | translate | async }}</mat-label>
       <input
         matInput
@@ -89,16 +102,16 @@
         [pattern]="limit?.pattern"
         [type]="hideImportPwd ? 'password' : 'text'"
       />
-      <button
-        tabindex="-1"
-        mat-button
-        matSuffix
-        mat-icon-button
-        type="button"
+      <img
+        class="suffix"
         (click)="hideImportPwd = !hideImportPwd"
-      >
-        <span [class]="hideImportPwd ? 'hide-pwd' : ''"></span>
-      </button>
+        matSuffix
+        [src]="
+          hideImportPwd
+            ? 'assets/images/login/eye-hide.svg'
+            : 'assets/images/login/eye-view.svg'
+        "
+      />
       <mat-error *ngIf="WIFpassword.errors?.required"
         >{{ "passwordRequired" | translate | async }}
       </mat-error>
@@ -110,13 +123,8 @@
                 {{ 'onlySupport' | translate | async}}: 0-9 A-Z a-z _-+=,.:!
             </mat-error> -->
     </mat-form-field>
-
-    <mat-form-field
-      class="popup-wallet-input-body"
-      appearance="fill"
-      focused="true"
-    >
-      <img matPrefix src="/assets/images/wallet/wallet_lock.png" />
+    <mat-form-field class="form-field" appearance="fill" focused="true">
+      <img matPrefix src="/assets/images/login/lock.svg" />
       <mat-label>{{ "enterConfirmPassword" | translate | async }}</mat-label>
       <input
         matInput
@@ -126,43 +134,35 @@
         required
         [type]="hideConfirmPwd ? 'password' : 'text'"
       />
-      <button
-        tabindex="-1"
-        mat-button
-        matSuffix
-        mat-icon-button
-        type="button"
+      <img
+        class="suffix"
         (click)="hideConfirmPwd = !hideConfirmPwd"
+        matSuffix
+        [src]="
+          hideConfirmPwd
+            ? 'assets/images/login/eye-hide.svg'
+            : 'assets/images/login/eye-view.svg'
+        "
+      />
+      <mat-error
+        *ngIf="
+          confirmPassword.value != WIFpassword.value &&
+          confirmPassword.value != ''
+        "
       >
-        <span [class]="hideConfirmPwd ? 'hide-pwd' : ''"></span>
-      </button>
+        {{ "confirmError" | translate | async }}</mat-error
+      >
     </mat-form-field>
   </form>
-  <mat-error
-    class="error"
-    *ngIf="
-      confirmPassword.value != WIFpassword.value && confirmPassword.value != ''
-    "
-  >
-    {{ "confirmError" | translate | async }}</mat-error
-  >
-  <div class="import-nep6-file" [hidden]="importType !== '1'">
-    <button mat-stroked-button>
+  <div [hidden]="importType !== 'file'" class="import-nep6-file">
+    <button class="confirm pop-ups choose-file">
       {{ "chooseNep6File" | translate | async }}
-      <input
-        class="choose-nep6-input"
-        (change)="onFileSelected($event)"
-        type="file"
-      />
+      <input (change)="onFileSelected($event)" type="file" />
     </button>
     <p class="name">{{ nep6Name }}</p>
     <form #nep6Form="ngForm">
-      <mat-form-field
-        class="popup-wallet-input-body"
-        appearance="fill"
-        focused="true"
-      >
-        <img matPrefix src="/assets/images/wallet/wallet_lock.png" alt="" />
+      <mat-form-field class="form-field" appearance="fill" focused="true">
+        <img matPrefix src="/assets/images/login/lock.svg" alt="" />
         <mat-label>{{ "enterPassword" | translate | async }}</mat-label>
         <input
           matInput
@@ -172,47 +172,47 @@
           required
           [type]="hideNep6Pwd ? 'password' : 'text'"
         />
-        <button
-          tabindex="-1"
-          mat-button
-          matSuffix
-          mat-icon-button
-          type="button"
+        <img
+          class="suffix"
           (click)="hideNep6Pwd = !hideNep6Pwd"
-        >
-          <span [class]="hideNep6Pwd ? 'hide-pwd' : ''"></span>
-        </button>
+          matSuffix
+          [src]="
+            hideNep6Pwd
+              ? 'assets/images/login/eye-hide.svg'
+              : 'assets/images/login/eye-view.svg'
+          "
+        />
         <mat-error *ngIf="password.errors?.required"
           >{{ "passwordRequired" | translate | async }}
         </mat-error>
       </mat-form-field>
     </form>
   </div>
-
-  <button
-    class="popup-wallet-body-submit"
-    mat-flat-button
-    color="primary"
-    [disabled]="
-      isInit ||
-      (importType === '0' &&
-        (walletImportForm.invalid ||
-          confirmPassword.value != WIFpassword.value ||
-          !isWIF)) ||
-      loading ||
-      ((nep6Json == null || nep6Form.invalid) && importType === '1')
-    "
-    (click)="submitImport()"
-  >
-    <ng-container *ngIf="!loading">{{
-      "import" | translate | async
-    }}</ng-container>
-    <ng-container *ngIf="loading">{{
-      "importing" | translate | async
-    }}</ng-container>
-  </button>
-
-  <button class="popup-wallet-body-cancel" mat-flat-button (click)="cancel()">
-    <ng-container>{{ "cancel" | translate | async }}</ng-container>
-  </button>
-</div>
+  <div class="btn-group" [ngClass]="{ 'import-key': importType === 'key' }">
+    <button
+      class="confirm"
+      *ngIf="importType === 'key'"
+      (click)="submitImport()"
+      [disabled]="
+        isInit ||
+        loading ||
+        walletImportForm.invalid ||
+        confirmPassword.value != WIFpassword.value ||
+        !isWIF
+      "
+    >
+      {{ (loading ? "importing" : "import") | translate | async }}
+    </button>
+    <button
+      class="confirm"
+      *ngIf="importType === 'file'"
+      (click)="submitImport()"
+      [disabled]="isInit || loading || nep6Json == null || nep6Form.invalid"
+    >
+      {{ (loading ? "importing" : "import") | translate | async }}
+    </button>
+    <button class="cancel" (click)="cancel()">
+      {{ "cancel" | translate | async }}
+    </button>
+  </div>
+</section>

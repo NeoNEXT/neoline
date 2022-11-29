@@ -1,126 +1,42 @@
-@import "src/app/popup/wallet/common-scss/common.scss";
+@import "src/styles/popup-default.scss";
 
-.popup-wallet {
-  width: 100%;
-  min-height: 100%;
-  padding-bottom: 30px;
-  background: map-get($neo-line-default, 500);
-
-  .triangle {
-    width: 0;
-    height: 0;
-    border-left: 6px solid transparent;
-    border-right: 6px solid transparent;
-    border-bottom: 8px solid white;
-
-    &.wallet-create {
-      margin-left: calc(25% - 12px);
-    }
-
-    &.wallet-import {
-      margin-left: calc(75% - 12px);
-    }
-  }
-
-  .tab-container {
-    width: 100%;
-    height: calc(100% - 8px);
-    background-color: white;
-    border-radius: 20px 20px 0px 0px;
-    padding-top: 35px;
-    overflow: auto;
-
-    .title {
-      margin-left: 30px;
-      margin-bottom: 12px;
-      color: #434543;
-    }
-
-    .popup-wallet-input-body {
-      width: calc(100% - 40px);
-      border-radius: 10px;
-      margin-left: 20px;
-      margin-right: 20px;
-      margin-top: 8px;
-      font-size: 15px;
-    }
-
-    img {
-      margin-right: 20px;
-      top: -5px;
-      margin-left: 10px;
-    }
-
-    button {
-      span {
-        display: inline-block;
-        width: 17px;
-        height: 17px;
-        margin-top: -3px;
-        @include bg($img-show-pwd);
+section {
+  height: 100%;
+  .tab {
+    background: #e7efef;
+    span {
+      display: inline-block;
+      width: 50%;
+      height: 44px;
+      line-height: 44px;
+      font-family: NeverMind-Medium;
+      font-size: 16px;
+      color: $sub-title-color;
+      text-align: center;
+      cursor: pointer;
+      position: relative;
+      &::after {
+        content: "";
+        position: absolute;
+        bottom: 0;
+        left: 50%;
+        margin-left: -8px;
+        width: 16px;
+        height: 3px;
+        border-radius: 2px;
+        background: $title-color;
+        display: none;
       }
-
-      span.hide-pwd {
-        @include bg($img-hide-pwd);
-      }
-    }
-
-    .popup-wallet-import-type-box {
-      width: calc(100% - 40px);
-      margin-left: 20px;
-      margin-right: 20px;
-      margin-top: 8px;
-      font-size: 15px;
-      display: flex;
-      align-items: center;
-
-      > span {
-        margin-left: 10px;
-        margin-bottom: 15px;
-      }
-
-      .popup-wallet-import-type-select-box {
-        margin-left: 20px;
-        flex: 1 1 auto;
-
-        .mat-form-field-flex {
-          background: white;
+      &.active {
+        color: $title-color;
+        &::after {
+          display: block;
         }
       }
     }
-
-    .import-nep6-file {
-      text-align: center;
-
-      .name {
-        text-align: center;
-        padding-left: 15px;
-        padding-right: 15px;
-        color: #7f8993;
-        margin-top: 10px;
-        font-size: 14px;
-      }
-
-      > button {
-        height: 35px;
-        background: #e0e0e0;
-        border: 0.5px solid #868686;
-        color: #434543;
-        margin: auto;
-      }
-
-      .choose-nep6-input {
-        position: absolute;
-        left: 0;
-        height: 100%;
-        width: 100%;
-        opacity: 0;
-      }
-
-      .wallet-name-box {
-        text-align: center;
-        font-size: 14px;
-      }
-    }
+  }
+  .content {
+    height: calc(100% - 44px);
+    overflow: scroll;
   }
 }

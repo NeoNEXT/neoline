@@ -16,6 +16,8 @@ import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
+type ImportType = 'key' | 'file';
+
 @Component({
   selector: 'wallet-import',
   templateUrl: 'import.component.html',
@@ -27,21 +29,22 @@ export class PopupWalletImportComponent
   neonWallet: any = wallet2;
 
   public loading = false;
-  public isInit: boolean;
-  public limit: any;
+  public isInit = true;
+  public limit = WalletInitConstant;
 
-  public importType = '0';
-  public walletImport: WalletImport;
-  public hideImportPwd: boolean;
-  public hideConfirmPwd: boolean;
-  public hideWIF: boolean;
+  public importType: ImportType = 'key';
+  public walletImport = new WalletImport();
+  public hideImportPwd = true;
+  public hideConfirmPwd = true;
+  public hideWIF = true;
   public isWIF = true;
 
-  public walletNep6Import: WalletImport;
+  public walletNep6Import = new WalletImport();
   public nep6File: any;
   public nep6Json: Wallet2 | Wallet3 = null;
   public nep6Name = '';
-  public hideNep6Pwd: boolean;
+  public hideNep6Pwd = true;
+  showImportTypeMenu = false;
 
   @Output() submit = new EventEmitter<any>();
 
@@ -51,16 +54,6 @@ export class PopupWalletImportComponent
     private chrome: ChromeService,
     private cdref: ChangeDetectorRef
   ) {
-    this.isInit = true;
-    this.limit = WalletInitConstant;
-
-    this.walletImport = new WalletImport();
-    this.hideImportPwd = true;
-    this.hideWIF = true;
-    this.hideConfirmPwd = true;
-
-    this.walletNep6Import = new WalletImport();
-    this.hideNep6Pwd = true;
     switch (this.neon.selectedChainType) {
       case 'Neo2':
         this.neonWallet = wallet2;
@@ -119,7 +112,7 @@ export class PopupWalletImportComponent
   }
 
   public submitImport(): void {
-    if (this.importType === '0') {
+    if (this.importType === 'key') {
       if (
         !this.neonWallet.isWIF(this.walletImport.WIF) &&
         !this.neonWallet.isPrivateKey(this.walletImport.WIF)

@@ -1,0 +1,36 @@
+.pop-ups-veil {
+  position: fixed;
+  left: 0;
+  right: 0;
+  top: 0;
+  bottom: 0;
+  background: transparent;
+  z-index: 999;
+}
+.pop-ups-menu {
+  border-radius: 4px;
+  background: #ffffff;
+  box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.16);
+  z-index: 999999;
+  li {
+    display: flex;
+    align-items: center;
+    height: 48px;
+    font-family: NeverMind-Medium;
+    font-size: 16px;
+    color: #3d3d3d;
+    padding: 0 16px;
+    cursor: pointer;
+    img {
+      margin-right: 12px;
+    }
+    &:hover {
+      background: #f5f9f9;
+      color: $theme-color;
+      img {
+        filter: drop-shadow(1000px 0 0 $theme-color);
+        transform: translate(-1000px);
+      }
+    }
+  }
+}
