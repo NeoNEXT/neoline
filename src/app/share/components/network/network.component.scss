@@ -1,0 +1,63 @@
+@import "src/styles/popup-default.scss";
+
+.content {
+  position: absolute;
+  left: 17px;
+  top: 65px;
+  width: 343px;
+  z-index: 999999;
+  border-radius: 4px;
+  background: #ffffff;
+  box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.16);
+  .title {
+    height: 48px;
+    line-height: 48px;
+    padding: 0 16px;
+    font-family: NeverMind-Medium;
+    font-size: 16px;
+    color: $sub-title-color;
+    border-bottom: 1px solid $line-color;
+  }
+  ul li {
+    height: 66px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 16px;
+    font-family: NeverMind-Medium;
+    font-size: 14px;
+    color: $title-color;
+    cursor: pointer;
+    &:hover {
+      background: $hover-color;
+      img.delete {
+        display: block;
+      }
+    }
+    span.select {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border-radius: 4px;
+      border: 1px solid #afb6be;
+      margin-right: 12px;
+      &.active {
+        border: none;
+        background: url("/assets/images/common/selected-account.svg") center
+          center no-repeat;
+      }
+    }
+    img.delete {
+      display: none;
+    }
+  }
+  .btn-group {
+    padding: 12px 16px 20px 16px;
+    button {
+      width: 100%;
+      &:not(:first-child) {
+        margin-top: 16px;
+      }
+    }
+  }
+}

@@ -1,7 +1,7 @@
 <header [ngClass]="{ 'theme-bg': headerIsThemeBg }">
   <img src="assets/images/logo-word.svg" class="logo" alt="" />
-  <button class="network" (click)="openNetwork()">
-    {{ currentNetwork?.name }}
+  <button class="network" (click)="showNetworkList = true">
+    {{ networks[networkIndex]?.name }}
     <img src="assets/images/common/triangle-fill.svg" />
   </button>
   <div class="avatar" (click)="topMenu()" *ngIf="getShowAvatar()">
@@ -12,3 +12,11 @@
 <div class="popup">
   <router-outlet></router-outlet>
 </div>
+
+<network
+  *ngIf="showNetworkList"
+  [networks]="networks"
+  [chainType]="chainType"
+  [networkIndex]="networkIndex"
+  (closeEvent)="showNetworkList = false"
+></network>

@@ -3,9 +3,8 @@ import { Router, RouterEvent, NavigationEnd } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 import {
   PopupHomeMenuDialogComponent,
-  PopupN3NetworkDialogComponent,
 } from './_dialogs';
-import { RpcNetwork } from './_lib';
+import { RpcNetwork, ChainType } from './_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -17,10 +16,13 @@ import { Unsubscribable } from 'rxjs';
 export class PopupComponent implements OnInit {
   private currentUrl = this.router.url;
   headerIsThemeBg = false;
+  showNetworkList = false;
 
   private accountSub: Unsubscribable;
-  public address: string;
-  public currentNetwork: RpcNetwork;
+  address: string;
+  networks: RpcNetwork[];
+  networkIndex: number;
+  chainType: ChainType;
   constructor(
     private store: Store<AppState>,
     private router: Router,
@@ -32,12 +34,11 @@ export class PopupComponent implements OnInit {
         const wallet = state.currentWallet;
         this.address = wallet.accounts[0].address;
       }
-      const chainType = state.currentChainType;
-      const networks =
-        chainType === 'Neo2' ? state.n2Networks : state.n3Networks;
-      const selectedNetworkIndex =
-        chainType === 'Neo2' ? state.n2NetworkIndex : state.n3NetworkIndex;
-      this.currentNetwork = networks[selectedNetworkIndex];
+      this.chainType = state.currentChainType;
+      this.networks =
+        this.chainType === 'Neo2' ? state.n2Networks : state.n3Networks;
+      this.networkIndex =
+        this.chainType === 'Neo2' ? state.n2NetworkIndex : state.n3NetworkIndex;
     });
   }
 
@@ -84,19 +85,6 @@ export class PopupComponent implements OnInit {
       width: '375px',
       maxWidth: 375,
       // maxHeight: 500,
-    });
-  }
-
-  openNetwork() {
-    this.dialog.open(PopupN3NetworkDialogComponent, {
-      position: {
-        top: '65px',
-        right: '10px',
-      },
-      autoFocus: false,
-      width: '315px',
-      maxWidth: 375,
-      maxHeight: 500,
     });
   }
 }

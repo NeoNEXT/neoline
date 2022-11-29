@@ -1,0 +1,33 @@
+<div class="pop-ups-veil" (click)="close()"></div>
+<div class="content">
+  <p class="title">{{ "Networks" | translate | async }}</p>
+  <ul>
+    <li *ngFor="let item of networks; index as index" (click)="changeNetwork()">
+      <span class="select"
+        [ngClass]="{ active: networks[networkIndex].id === item.id }"
+      ></span>
+      <span class="flex-1">{{ item.name }}</span>
+      <img
+        class="delete"
+        *ngIf="index !== networkIndex && item.id > 6"
+        (click)="$event.stopPropagation(); deleteNetwork(index)"
+        src="/assets/images/common/close.svg"
+        alt=""
+      />
+    </li>
+  </ul>
+  <div class="btn-group">
+    <button
+      *ngIf="chainType === 'Neo3'"
+      class="confirm pop-ups"
+      (click)="addNetwork()"
+    >
+      {{ "AddNetwork" | translate | async }}
+    </button>
+    <button class="cancel pop-ups" (click)="changeChain()">
+      {{
+        chainType === "Neo2" ? "Switch to N3 MainNet" : "Switch to N2 MainNet"
+      }}
+    </button>
+  </div>
+</div>

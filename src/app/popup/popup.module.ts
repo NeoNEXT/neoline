@@ -94,7 +94,6 @@ import {
   PopupNftTokenDetailDialogComponent,
   PopupAddNetworkDialogComponent,
   PopupPasswordDialogComponent,
-  PopupN3NetworkDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -115,7 +114,6 @@ const POPUP_DIALOGS = [
   PopupNftTokenDetailDialogComponent,
   PopupAddNetworkDialogComponent,
   PopupPasswordDialogComponent,
-  PopupN3NetworkDialogComponent,
 ];
 
 //#endregion

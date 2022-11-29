@@ -15,4 +15,3 @@ export { PopupNftTxDetailDialogComponent } from './nft-tx-detail/nft-tx-detail.d
 export { PopupNftTokenDetailDialogComponent } from './nft-token-detail/nft-token-detail.dialog';
 export { PopupAddNetworkDialogComponent } from './add-network/add-network.dialog';
 export { PopupPasswordDialogComponent } from './password/password.dialog';
-export { PopupN3NetworkDialogComponent } from './n3-network/n3-network.dialog';

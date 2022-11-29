@@ -16,7 +16,7 @@
       margin-right: 12px;
     }
     &:hover {
-      background: #f5f9f9;
+      background: $hover-color;
       color: $theme-color;
       img {
         filter: drop-shadow(1000px 0 0 $theme-color);

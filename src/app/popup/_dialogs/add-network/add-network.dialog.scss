@@ -1,5 +1,4 @@
 @import "src/styles/popup-default";
-@import "src/styles/theme-default";
 
 .loading-box {
   background: rgb(255 255 255 / 50%);
@@ -26,65 +25,56 @@
 }
 
 .title {
-  height: 60px;
-  line-height: 60px;
-  background: #fafafa;
-  font-size: 18px;
-  font-weight: 400;
-  color: #434543;
-  border-radius: 15px 15px 0 0;
-  text-align: center;
+  padding: 0 24px;
+  height: 63px;
+  line-height: 63px;
+  font-family: NeverMind-Medium;
+  font-size: 16px;
+  color: $sub-title-color;
+  border-bottom: 1px solid $line-color;
   position: relative;
-  .close {
+  img.close {
     position: absolute;
-    right: 15px;
-    top: 15px;
-    color: #999;
+    right: 24px;
+    top: 24px;
     cursor: pointer;
   }
 }
 
 section.container {
-  padding: 25px;
-  font-size: 15px;
-  font-weight: 500;
-  color: #434543;
+  padding: 16px 24px 24px;
   .item {
-    margin-bottom: 20px;
+    font-size: 14px;
+    color: $title-color;
+    font-family: NeverMind-Medium;
+    &:not(:first-child) {
+      margin-top: 24px;
+    }
     input {
-      margin-top: 11px;
       width: 100%;
-      height: 45px;
-      background: #ffffff;
-      border: 1px solid #e0e0e0;
-      border-radius: 10px;
-      padding-left: 20px;
-      font-size: 15px;
-      color: #444644;
-      font-weight: 500;
-      &:-moz-placeholder {
-        font-weight: 400;
-        color: #afb6be;
-      }
+      height: 44px;
+      margin-top: 12px;
+      background: #fafafa;
+      border-radius: 4px;
+      padding: 0 16px;
       &.disabled {
-        color: #afb6be;
+        color: $tip-color;
+        cursor: not-allowed;
+      }
+      &:focus {
+        border: 1px solid $title-color;
       }
     }
     .error {
       position: absolute;
-      color: #f44336;
+      color: $error-color;
       font-size: 12px;
       margin-top: 3px;
-      font-weight: 400;
+      font-family: NeverMind-Regular;
     }
   }
   button {
     width: 100%;
-    height: 50px;
-    background: #06ccab;
-    border-radius: 5px;
-    font-size: 15px;
-    font-weight: 400;
-    color: #ffffff;
+    margin-top: 32px;
   }
 }
