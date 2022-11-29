@@ -1,9 +1,9 @@
 /* You can add global styles to this file, and also import other style files */
 @import "src/styles/fonts";
 @import "./popup-default";
+@import "./common";
 @import "./button";
 
-// init
 * {
   margin: 0;
   padding: 0;
@@ -11,10 +11,6 @@
   outline: none;
   font-family: "Microsoft Yahei", "Arial Narrow Bold", sans-serif;
   line-height: 1;
-}
-
-*:active {
-  outline: none;
 }
 
 html,
@@ -38,98 +34,18 @@ button {
   border: none;
   background: none;
 }
-
 input {
   outline: none;
   background: none;
   border: none;
 }
-
 a {
   text-decoration: none;
 }
-
 li {
   list-style: none;
 }
-
 input:focus,
 textarea:focus {
   outline: none;
-}
-.custom-dialog-container .mat-dialog-container {
-  padding: 0;
-}
-.flex-1 {
-  flex: 1;
-}
-.flex {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: flex;
-}
-.flex-y {
-  display: -webkit-box;
-  display: -webkit-flex;
-  display: flex;
-  flex-flow: column;
-}
-
-.cdk-global-scrollblock {
-  position: unset;
-  overflow: hidden;
-}
-.dialog-transparent .mat-dialog-container {
-  min-width: 120px;
-  box-shadow: none;
-  background: none;
-}
-
-.custom-dialog-panel {
-  width: 92vw;
-  max-width: 92vw !important;
-  background: #fff;
-  border-radius: 15px;
-  .mat-dialog-container {
-    box-shadow: none;
-    background: none;
-    padding: 0;
-    border-radius: 0;
-  }
-}
-
-.custom-dialog-panel-full {
-  background: #fff;
-  .mat-dialog-container {
-    box-shadow: none;
-    background: none;
-    padding: 0;
-    border-radius: 0;
-  }
-}
-
-$network-list: (
-  id1: #50bfb6,
-  id2: #bf9c50,
-  id3: #17994d,
-  id4: #7056bf,
-  id6: #5072bf,
-);
-
-@each $network, $color in $network-list {
-  .#{$network}.network-type {
-    background: $color !important;
-  }
-}
-
-// scroll
-::-webkit-scrollbar {
-  display: none;
-}
-::-webkit-scrollbar-track {
-  background: none;
-}
-::-webkit-scrollbar-thumb {
-  border-radius: 6px;
-  background-color: #ccc;
 }
