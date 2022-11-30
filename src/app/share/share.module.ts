@@ -10,7 +10,9 @@ import { MatTabsModule } from '@angular/material/tabs';
 import { MatIconModule } from '@angular/material/icon';
 import { MatDialogModule } from '@angular/material/dialog';
 import { MatMenuModule } from '@angular/material/menu';
+import { MatSliderModule } from '@angular/material/slider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
+import { MatSnackBarModule } from '@angular/material/snack-bar';
 const MATMODULES = [
   MatToolbarModule,
   MatInputModule,
@@ -19,7 +21,9 @@ const MATMODULES = [
   MatIconModule,
   MatDialogModule,
   MatMenuModule,
+  MatSliderModule,
   MatSlideToggleModule,
+  MatSnackBarModule,
 ];
 //#endregion
 
