@@ -7,6 +7,28 @@ import { ChromeService, SettingState } from '@/app/core';
 })
 export class PopupAboutComponent implements OnInit {
   public version = '';
+  links = [
+    {
+      name: 'privacyPolicy',
+      enUrl: 'https://neoline.io/en/privacy',
+      zhUrl: 'https://neoline.io/privacy',
+    },
+    {
+      name: 'termsOfUse',
+      enUrl: 'https://neoline.io/en/agreemen',
+      zhUrl: 'https://neoline.io/agreemen',
+    },
+    {
+      name: 'companyWebsite',
+      enUrl: 'https://neoline.io/',
+      zhUrl: 'https://neoline.io/en',
+    },
+    {
+      name: 'contactUs',
+      enUrl: 'mailto:support@neoline.io',
+      zhUrl: 'mailto:support@neoline.io',
+    },
+  ];
   constructor(
     private chrome: ChromeService,
     private settingState: SettingState
@@ -16,26 +38,12 @@ export class PopupAboutComponent implements OnInit {
     this.version = this.chrome.getVersion();
   }
 
-  public async jumbToWeb(type: number) {
+  public async jumbToWeb(index: number) {
     this.settingState.langSub.subscribe((lang) => {
       if (lang !== 'en') {
-        lang = '';
+        window.open(this.links[index].enUrl);
       } else {
-        lang = '/en';
-      }
-      switch (type) {
-        case 0:
-          window.open(`https://neoline.io${lang}/privacy`);
-          break;
-        case 1:
-          window.open(`https://neoline.io${lang}/agreement`);
-          break;
-        case 2:
-          window.open(`https://neoline.io${lang}`);
-          break;
-        case 3:
-          window.open(`mailto:support@neoline.io`);
-          break;
+        window.open(this.links[index].zhUrl);
       }
     });
   }

@@ -1,0 +1,18 @@
+@import "src/styles/popup-default.scss";
+
+.nav {
+  height: 44px;
+  line-height: 44px;
+  font-family: Objectivity-Medium;
+  font-size: 16px;
+  text-align: center;
+  color: $title-color;
+  background: $background-color;
+  position: relative;
+  img.back {
+    position: absolute;
+    left: 24px;
+    top: 15px;
+    cursor: pointer;
+  }
+}
