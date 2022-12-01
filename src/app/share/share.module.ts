@@ -33,12 +33,14 @@ import { PopupPagerComponent } from './components/popup-pager/popup-pager.compon
 import { PopupTxPageComponent } from './components/tx-page/tx-page.component';
 import { PopupNetworkComponent } from './components/network/network.component';
 import { NavComponent } from './components/nav/nav.component';
+import { LoadingComponent } from './components/loading/loading.component';
 const COMPONENTS = [
   PagerComponent,
   PopupPagerComponent,
   PopupTxPageComponent,
   PopupNetworkComponent,
   NavComponent,
+  LoadingComponent,
 ];
 //#endregion
 

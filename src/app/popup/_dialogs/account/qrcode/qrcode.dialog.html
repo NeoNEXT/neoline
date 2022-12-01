@@ -1,0 +1,14 @@
+<div class="content">
+  <div class="pop-ups-title">
+    {{ 'myAccountQRCode' | translate | async }}
+    <img
+      class="close"
+      [mat-dialog-close]="false"
+      src="assets/images/common/close.svg"
+      alt=""
+    />
+  </div>
+  <div class="code">
+    <div id="popup-address-qrcode"></div>
+  </div>
+</div>

@@ -24,23 +24,6 @@
   }
 }
 
-.title {
-  padding: 0 24px;
-  height: 63px;
-  line-height: 63px;
-  font-family: NeverMind-Medium;
-  font-size: 16px;
-  color: $sub-title-color;
-  border-bottom: 1px solid $line-color;
-  position: relative;
-  img.close {
-    position: absolute;
-    right: 24px;
-    top: 24px;
-    cursor: pointer;
-  }
-}
-
 section.container {
   padding: 16px 24px 24px;
   .item {

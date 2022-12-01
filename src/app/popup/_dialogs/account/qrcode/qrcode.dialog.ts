@@ -17,8 +17,8 @@ export class PopupQRCodeDialogComponent implements OnInit {
     if (QRCode) {
       var qrcode = new QRCode('popup-address-qrcode', {
         text: this.address,
-        width: 200,
-        height: 200,
+        width: 214,
+        height: 214,
         colorDark: '#333333',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.H,

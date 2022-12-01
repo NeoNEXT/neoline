@@ -1,28 +1,44 @@
-<div class="nav">
-  <div class="content">
-    <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="" />
-    {{ "accountDetails" | translate | async }}
-  </div>
-  <div class="divide"></div>
-</div>
+<nav title="accountDetails"></nav>
 
 <div class="container">
   <img
     class="qrcode"
     (click)="qrcode()"
-    src="/assets/images/qrcode.png"
+    src="/assets/images/account/detail-qr-code.svg"
     alt=""
   />
   <img class="avatar" [avatar]="address" />
-  <div class="name" (click)="updateName()">{{ currentWallet.name }}</div>
-  <p class="address-title">{{ "address" | translate | async }}</p>
-  <div class="address" (click)="copy(address)">{{ address }}</div>
-  <p class="address-title">{{ "PublicKey" | translate | async }}</p>
-  <div class="address" (click)="copy(publicKey)">{{ publicKey }}</div>
-  <button *ngIf="!isLedger" mat-button class="key" (click)="wif()">
+  <div class="name" *ngIf="showEditName === false">
+    {{ currentWallet.name
+    }}<img (click)="editName()" src="assets/images/account/detail-edit.svg" />
+  </div>
+  <div class="edit" *ngIf="showEditName">
+    <input
+      #inputDom
+      type="text"
+      [(ngModel)]="inputName"
+      [ngClass]="{ warn: inputName.trim() === '' }"
+      (keyup.enter)="updateName()"
+    />
+    <img (click)="updateName()" src="assets/images/common/selected.svg" />
+  </div>
+
+  <p class="label">{{ "address" | translate | async }}</p>
+  <div class="value">
+    <span>{{ address }}</span
+    ><img (click)="copy(address)" src="assets/images/common/copy.svg" />
+  </div>
+
+  <p class="label">{{ "PublicKey" | translate | async }}</p>
+  <div class="value">
+    <span>{{ publicKey }}</span
+    ><img (click)="copy(publicKey)" src="assets/images/common/copy.svg" />
+  </div>
+
+  <button *ngIf="!isLedger" class="confirm key" (click)="wif()">
     {{ "displayWIF" | translate | async }}
   </button>
-  <button mat-button class="link" (click)="toWeb()">
+  <button class="cancel link" (click)="toWeb()">
     {{ "viewOnNeoTube" | translate | async }}
   </button>
 </div>

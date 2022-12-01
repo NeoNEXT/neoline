@@ -1,6 +1,4 @@
 export { PopupSelectDialogComponent } from './select/select.dialog';
-export { PopupNameDialogComponent } from './name/name.dialog';
-export { PopupQRCodeDialogComponent } from './qrcode/qrcode.dialog';
 export { PopupConfirmDialogComponent } from './confirm/confirm.dialog';
 export { PopupHomeMenuDialogComponent } from './home-menu/home-menu.dialog';
 export { PopupAddressDialogComponent } from './address/address.dialog';
@@ -15,3 +13,5 @@ export { PopupNftTxDetailDialogComponent } from './nft-tx-detail/nft-tx-detail.d
 export { PopupNftTokenDetailDialogComponent } from './nft-token-detail/nft-token-detail.dialog';
 export { PopupAddNetworkDialogComponent } from './add-network/add-network.dialog';
 export { PopupPasswordDialogComponent } from './password/password.dialog';
+export { PopupQRCodeDialogComponent } from './account/qrcode/qrcode.dialog';
+export { PopupPrivateKeyComponent } from './account/private-key/private-key.dialog';

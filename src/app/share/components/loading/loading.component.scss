@@ -1,0 +1,18 @@
+@import "src/styles/popup-default.scss";
+
+img {
+  animation: loading .8s linear infinite;
+  &.theme-color {
+    filter: drop-shadow(1000px 0 0 $theme-color);
+    transform: translate(-1000px);
+  }
+}
+
+@keyframes loading {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}

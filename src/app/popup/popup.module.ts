@@ -70,12 +70,12 @@ import {
   PopupAuthorizationListDialogComponent,
   PopupQRCodeDialogComponent,
   PopupSelectDialogComponent,
-  PopupNameDialogComponent,
   PopupDapiPromptComponent,
   PopupNftTxDetailDialogComponent,
   PopupNftTokenDetailDialogComponent,
   PopupAddNetworkDialogComponent,
   PopupPasswordDialogComponent,
+  PopupPrivateKeyComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -90,12 +90,12 @@ const POPUP_DIALOGS = [
   PopupAuthorizationListDialogComponent,
   PopupQRCodeDialogComponent,
   PopupSelectDialogComponent,
-  PopupNameDialogComponent,
   PopupDapiPromptComponent,
   PopupNftTxDetailDialogComponent,
   PopupNftTokenDetailDialogComponent,
   PopupAddNetworkDialogComponent,
   PopupPasswordDialogComponent,
+  PopupPrivateKeyComponent,
 ];
 
 //#endregion

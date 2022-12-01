@@ -1,0 +1,45 @@
+<section class="container">
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    src="assets/images/common/close.svg"
+    alt=""
+  />
+  <img class="avatar" [avatar]="address" />
+  <div class="account">
+    <p class="title">{{ walletName }}</p>
+    <div class="address">{{ address }}</div>
+  </div>
+  <div class="content">
+    <p class="title">{{ "displayWIF" | translate | async }}</p>
+    <p class="label">
+      {{ (verified ? 'wif' : "password") | translate | async }}
+    </p>
+    <input
+      *ngIf="!verified"
+      type="password"
+      [placeholder]="'verifyPassword' | translate | async"
+      [(ngModel)]="pwd"
+      (keyup.enter)="verify()"
+      class="pwd"
+    />
+    <div class="wif" *ngIf="verified" (click)="copy(wif)">{{ wif }}</div>
+
+    <div class="tip">
+      {{ "caution" | translate | async }}: {{ "transferExportTip" | translate |
+      async }}
+    </div>
+    <div class="btns">
+      <button class="cancel pop-ups half" *ngIf="!verified" (click)="close()">
+        {{ "cancel" | translate | async }}
+      </button>
+      <button class="confirm pop-ups half" *ngIf="!verified" (click)="verify()">
+        <span *ngIf="!loading">{{ "verify" | translate | async }}</span>
+        <loading *ngIf="loading"></loading>
+      </button>
+      <button class="confirm pop-ups" *ngIf="verified" (click)="close()">
+        {{ "done" | translate | async }}
+      </button>
+    </div>
+  </div>
+</section>

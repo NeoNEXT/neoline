@@ -1,4 +1,4 @@
-import { GlobalService, NeonService, ChromeService } from '@/app/core';
+import { GlobalService, NeonService } from '@/app/core';
 import {
   AfterContentInit,
   Component,
@@ -9,8 +9,7 @@ import {
   AfterContentChecked,
 } from '@angular/core';
 import { WalletInitConstant } from '../../_lib/constant';
-import { WalletCreation, WalletImport } from '../../_lib/models';
-import { Observable, of } from 'rxjs';
+import { WalletImport } from '../../_lib/models';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
@@ -51,7 +50,6 @@ export class PopupWalletImportComponent
   constructor(
     private global: GlobalService,
     private neon: NeonService,
-    private chrome: ChromeService,
     private cdref: ChangeDetectorRef
   ) {
     switch (this.neon.selectedChainType) {
@@ -105,7 +103,7 @@ export class PopupWalletImportComponent
           this.nep6Json.accounts[0] as any
         ).key;
       };
-      reader.onerror = (evt) => {
+      reader.onerror = () => {
         console.log('error reading file');
       };
     }

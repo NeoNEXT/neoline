@@ -26,6 +26,7 @@
     padding: 0;
     border-radius: 0;
     box-shadow: 0px 4px 16px 0px rgb(0 0 0 / 16%);
+    overflow: visible;
   }
 }
 .custom-dialog-panel-full {
@@ -73,4 +74,22 @@ $network-list: (
   bottom: 0;
   background: transparent;
   z-index: 999;
+}
+
+// pop-ups
+.pop-ups-title {
+  padding: 0 24px;
+  height: 63px;
+  line-height: 63px;
+  font-family: NeverMind-Medium;
+  font-size: 16px;
+  color: $sub-title-color;
+  border-bottom: 1px solid $line-color;
+  position: relative;
+  img.close {
+    position: absolute;
+    right: 24px;
+    top: 24px;
+    cursor: pointer;
+  }
 }

@@ -12,7 +12,13 @@
     >
   </div>
   <div class="content">
-    <wallet-create *ngIf="tabType === 'create'"></wallet-create>
-    <wallet-import *ngIf="tabType === 'import'"></wallet-import>
+    <wallet-create
+      *ngIf="tabType === 'create'"
+      (submit)="updateLocalWallet($event, 0)"
+    ></wallet-create>
+    <wallet-import
+      *ngIf="tabType === 'import'"
+      (submit)="updateLocalWallet($event, 1)"
+    ></wallet-import>
   </div>
 </section>

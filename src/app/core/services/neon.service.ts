@@ -38,7 +38,7 @@ import { Store } from '@ngrx/store';
 
 @Injectable()
 export class NeonService {
-  selectedChainType: ChainType;
+  selectedChainType: ChainType = 'Neo3';
   private hasGetFastRpc = false;
   private loadingGetFastRpc = false;
 
