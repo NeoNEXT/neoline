@@ -28,15 +28,11 @@ const MATMODULES = [
 //#endregion
 
 //#region components
-import { PagerComponent } from './components/pager/pager.component';
-import { PopupPagerComponent } from './components/popup-pager/popup-pager.component';
 import { PopupTxPageComponent } from './components/tx-page/tx-page.component';
 import { PopupNetworkComponent } from './components/network/network.component';
 import { NavComponent } from './components/nav/nav.component';
 import { LoadingComponent } from './components/loading/loading.component';
 const COMPONENTS = [
-  PagerComponent,
-  PopupPagerComponent,
   PopupTxPageComponent,
   PopupNetworkComponent,
   NavComponent,
@@ -45,16 +41,12 @@ const COMPONENTS = [
 //#endregion
 
 //#region pipes
-import { LimitStrPipe } from './pipes/limit-str.pipe';
-import { LimitPageStringPipe } from './pipes/limit-page-string.pipe';
 import { LanguageNamePipe } from './pipes/language-name.pipe';
 import { TranslatePipe } from './pipes/translate.pipe';
 import { NumberFixedPipe } from './pipes/number-fixed.pipe';
 import { LongStrPipe } from './pipes/long-str.pipe';
 import { NftTokenIdPipe } from './pipes/nft-tokenid.pipe';
 const PIPES = [
-  LimitPageStringPipe,
-  LimitStrPipe,
   LanguageNamePipe,
   TranslatePipe,
   NumberFixedPipe,
@@ -64,20 +56,10 @@ const PIPES = [
 //#endregion
 
 //#region directive
-import { CopyDirective } from './directives/copy';
 import { AvatarDirective } from './directives/avatar';
 import { AssetLogoDirective } from './directives/asset-logo';
 import { ErrSrcDirective } from './directives/err-src.directive';
-import { NumberDirective } from './directives/number';
-import { ScrollDirective } from './directives/scroll';
-const DIRECTIVE = [
-  CopyDirective,
-  AvatarDirective,
-  AssetLogoDirective,
-  ErrSrcDirective,
-  NumberDirective,
-  ScrollDirective,
-];
+const DIRECTIVE = [AvatarDirective, AssetLogoDirective, ErrSrcDirective];
 //#endregion
 
 @NgModule({
