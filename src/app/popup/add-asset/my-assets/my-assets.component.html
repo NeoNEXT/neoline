@@ -1,26 +1,37 @@
-<div class="nav">
-  <div class="content">
-    <img
-      src="/assets/images/nav-back.png"
-      routerLink="/popup/add-asset"
-      alt=""
-    />
-    <span class="title">{{ "myAssets" | translate | async }}</span>
-    <!-- <span class="save">{{ 'saveChanges' | translate | async }}</span> -->
+<section class="container">
+  <nav title="myAssets" backUrl="/popup/add-asset"></nav>
+  <div class="popup-assets-list">
+    <div class="asset-item" *ngFor="let asset of myAssets; index as index">
+      <div class="asset-logo-box normal">
+        <img [assetId]="asset?.asset_id" appErrorSrc alt="" />
+      </div>
+      <div class="item-middle flex-1">
+        <div class="asset-name">
+          <span>{{ asset.name }}</span>
+          (<span>{{ asset.symbol }}</span
+          >)
+        </div>
+        <p class="asset-id">{{ asset?.asset_id }}</p>
+      </div>
+      <div class="operate" *ngIf="showOperate(asset)">
+        <img
+          class="add"
+          *ngIf="asset?.watching === false"
+          src="/assets/images/asset/add.svg"
+          alt=""
+          (click)="addAsset(index)"
+        />
+        <img
+          class="delete"
+          *ngIf="asset?.watching !== false"
+          src="/assets/images/asset/remove.svg"
+          alt=""
+          (click)="removeAsset(index)"
+        />
+      </div>
+    </div>
+    <div class="loading" *ngIf="isLoading">
+      {{ "loading" | translate | async }}
+    </div>
   </div>
-  <div class="divide"></div>
-</div>
-
-<div class="popup-assets-list">
-  <app-my-asset-item
-    *ngFor="let asset of myAssets; index as index"
-    [asset]="asset"
-    [index]="index"
-    (onAddAsset)="addAsset($event)"
-    (removeAssetOutput)="removeAsset($event)"
-  >
-  </app-my-asset-item>
-  <div class="loading" *ngIf="isLoading">
-    {{ "loading" | translate | async }}
-  </div>
-</div>
+</section>

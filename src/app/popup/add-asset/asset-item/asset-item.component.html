@@ -1,29 +1,23 @@
 <div class="asset-item">
-  <div class="avatar-box">
+  <div class="asset-logo-box normal">
     <img [assetId]="asset?.asset_id" appErrorSrc alt="" />
   </div>
-  <div class="item-middle">
+  <div class="item-middle flex-1">
     <div class="asset-name">
-      <span class="long">{{ asset.name }}</span>
-      (<span class="short">{{ asset.symbol }}</span
+      <span>{{ asset.name }}</span>
+      (<span>{{ asset.symbol }}</span
       >)
     </div>
     <p class="asset-id">{{ asset?.asset_id }}</p>
   </div>
-  <button
-    mat-raised-button
-    *ngIf="asset.watching || fixed()"
-    disabled
-    class="added"
-  >
-    {{ "added" | translate | async }}
+  <button class="added" *ngIf="asset.watching || fixed()" disabled>
+    <img src="assets/images/common/selected.svg" alt="" />
   </button>
   <button
-    mat-raised-button
-    *ngIf="!asset.watching && !fixed()"
     class="unadd"
+    *ngIf="!asset.watching && !fixed()"
     (click)="addAsset()"
   >
-    {{ "add" | translate | async }}
+    <img src="assets/images/asset/plus.svg" alt="" />
   </button>
 </div>

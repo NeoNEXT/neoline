@@ -9,16 +9,14 @@ import { Unsubscribable } from 'rxjs';
   styleUrls: ['add-asset.component.scss'],
 })
 export class PopupAddAssetComponent implements OnInit, OnDestroy {
-  public searchAsset: Asset; // Searched asset
-  public watch: Asset[] = []; // User-added assets
-  public moneyBalance: Asset[] = [];
-  public isLoading = false;
-  public searchValue: string = '';
-
-  sourceScrollHeight = 0;
+  searchAsset: Asset; // Searched asset
+  private watch: Asset[] = []; // User-added assets
+  private moneyBalance: Asset[] = [];
+  isLoading = false;
+  searchValue: string = '';
 
   private accountSub: Unsubscribable;
-  networkId: number;
+  private networkId: number;
   private address: string;
   constructor(
     private asset: AssetState,
@@ -50,7 +48,7 @@ export class PopupAddAssetComponent implements OnInit, OnDestroy {
     this.accountSub?.unsubscribe();
   }
 
-  public addAsset() {
+  addAsset() {
     this.searchAsset.watching = true;
     const index = this.watch.findIndex(
       (w) => w.asset_id === this.searchAsset.asset_id
@@ -64,7 +62,7 @@ export class PopupAddAssetComponent implements OnInit, OnDestroy {
     this.global.snackBarTip('addSucc');
   }
 
-  public searchCurrency() {
+  searchCurrency() {
     if (!this.searchValue) {
       return;
     }

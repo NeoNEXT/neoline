@@ -79,16 +79,7 @@
     position: relative;
     overflow: auto;
     .asset-logo-box {
-      width: 48px;
-      height: 48px;
-      padding: 9px;
-      border: 1px solid $background-color;
-      border-radius: 50%;
       margin: 16px auto;
-      .asset-logo {
-        height: 30px;
-        width: 30px;
-      }
     }
     .asset-balance {
       font-family: NeverMind-DemiBold;
