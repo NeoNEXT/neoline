@@ -5,7 +5,6 @@ import {
   ViewChild,
   ElementRef,
 } from '@angular/core';
-import { Router } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
 
 import {
@@ -23,8 +22,8 @@ import {
   ChainType,
   RpcNetwork,
   UPDATE_WALLET,
-  UPDATE_NEO2_WALLETS,
-  UPDATE_NEO3_WALLETS,
+  UPDATE_NEO2_WALLET_NAME,
+  UPDATE_NEO3_WALLET_NAME,
 } from '../_lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
@@ -46,12 +45,8 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
   private chainType: ChainType;
   private currentWIFArr: string[];
   private currentWalletArr: Array<Wallet2 | Wallet3>;
-  private n2Network: RpcNetwork;
-  private n3Network: RpcNetwork;
-  private neo2WalletArr: Wallet2[];
-  private neo3WalletArr: Wallet3[];
+  private network: RpcNetwork;
   constructor(
-    private router: Router,
     private global: GlobalService,
     private dialog: MatDialog,
     private chrome: ChromeService,
@@ -61,18 +56,17 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
-      this.inputName = this.currentWallet.name;
-      this.address = state.currentWallet.accounts[0].address;
-      this.n2Network = state.n2Networks[state.n2NetworkIndex];
-      this.n3Network = state.n3Networks[state.n3NetworkIndex];
-      this.isLedger = !!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44;
+      this.network =
+        state.currentChainType === 'Neo2'
+          ? state.n2Networks[state.n2NetworkIndex]
+          : state.n3Networks[state.n3NetworkIndex];
       this.currentWIFArr =
-        this.chainType === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;
+        state.currentChainType === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;
       this.currentWalletArr =
-        this.chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
-      this.neo2WalletArr = state.neo2WalletArr;
-      this.neo3WalletArr = state.neo3WalletArr;
-      this.getPublicKey();
+        state.currentChainType === 'Neo2'
+          ? state.neo2WalletArr
+          : state.neo3WalletArr;
+      this.initData();
     });
   }
 
@@ -82,17 +76,20 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
     this.accountSub?.unsubscribe();
   }
 
-  getPublicKey() {
+  initData() {
+    this.address = this.currentWallet.accounts[0].address;
+    this.inputName = this.currentWallet.name;
+    this.isLedger = !!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44;
     const wif =
       this.currentWIFArr[
         this.currentWalletArr.findIndex(
           (item) => item.accounts[0].address === this.address
         )
       ];
-    const walletThis = this.chainType === 'Neo2' ? wallet : wallet3;
     if (this.isLedger) {
       this.publicKey = this.currentWallet.accounts[0]?.extra?.publicKey;
     } else {
+      const walletThis = this.chainType === 'Neo2' ? wallet : wallet3;
       const privateKey = walletThis.getPrivateKeyFromWIF(wif);
       this.publicKey = walletThis.getPublicKeyFromPrivateKey(privateKey);
     }
@@ -129,23 +126,19 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
     }
     this.currentWallet.name = this.inputName;
     this.store.dispatch({ type: UPDATE_WALLET, data: this.currentWallet });
+    const data = {
+      address: this.currentWallet.accounts[0].address,
+      name: this.inputName,
+    };
     if (this.chainType === 'Neo2') {
-      this.neo2WalletArr.find(
-        (item) =>
-          item.accounts[0].address === this.currentWallet.accounts[0].address
-      ).name = this.inputName;
       this.store.dispatch({
-        type: UPDATE_NEO2_WALLETS,
-        data: this.neo2WalletArr,
+        type: UPDATE_NEO2_WALLET_NAME,
+        data,
       });
     } else {
-      this.neo3WalletArr.find(
-        (item) =>
-          item.accounts[0].address === this.currentWallet.accounts[0].address
-      ).name = this.inputName;
       this.store.dispatch({
-        type: UPDATE_NEO3_WALLETS,
-        data: this.neo3WalletArr,
+        type: UPDATE_NEO3_WALLET_NAME,
+        data,
       });
     }
     this.chrome.setWallet(this.currentWallet.export());
@@ -156,15 +149,13 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
   toWeb() {
     switch (this.chainType) {
       case 'Neo2':
-        if (this.n2Network.explorer) {
-          window.open(
-            `${this.n2Network.explorer}address/${this.address}/page/1`
-          );
+        if (this.network.explorer) {
+          window.open(`${this.network.explorer}address/${this.address}/page/1`);
         }
         break;
       case 'Neo3':
-        if (this.n3Network.explorer) {
-          window.open(`${this.n3Network.explorer}address/${this.address}`);
+        if (this.network.explorer) {
+          window.open(`${this.network.explorer}address/${this.address}`);
         }
         break;
     }

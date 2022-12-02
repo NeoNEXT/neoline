@@ -1,9 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterEvent, NavigationEnd } from '@angular/router';
 import { MatDialog } from '@angular/material/dialog';
-import {
-  PopupHomeMenuDialogComponent,
-} from './_dialogs';
+import { PopupHomeMenuDialogComponent } from './_dialogs';
 import { RpcNetwork, ChainType } from './_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/reduers';
@@ -53,9 +51,11 @@ export class PopupComponent implements OnInit {
       if (res instanceof NavigationEnd) {
         if (
           res.url.indexOf('popup/wallet/new-guide') >= 0 ||
-          this.router.url.indexOf('popup/login') >= 0
+          res.url.indexOf('popup/login') >= 0
         ) {
           this.headerIsThemeBg = true;
+        } else {
+          this.headerIsThemeBg = false;
         }
         this.currentUrl = res.url;
       }

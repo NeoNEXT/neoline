@@ -1,12 +1,14 @@
 import { Component } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { NeonService, ChromeService } from '@/app/core';
+import { ChromeService } from '@/app/core';
 import {
   RpcNetwork,
   ChainType,
   ADD_NEO2_WALLET,
   ADD_NEO3_WALLET,
+  UPDATE_WALLET,
 } from '../_lib';
+import { wallet as wallet2 } from '@cityofzion/neon-core';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -33,7 +35,6 @@ export class PopupWalletComponent {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private neon: NeonService,
     private chrome: ChromeService,
     private store: Store<AppState>
   ) {
@@ -53,24 +54,30 @@ export class PopupWalletComponent {
     });
   }
 
-  public updateLocalWallet(data: any, type: number) {
-    const newChainType = wallet3.isAddress(data.accounts[0].address, 53)
+  public updateLocalWallet(newWallet: any, type: number) {
+    const newChainType = wallet3.isAddress(newWallet.accounts[0].address, 53)
       ? 'Neo3'
       : 'Neo2';
+    const wif = newWallet.accounts[0].wif;
+    newWallet =
+      newChainType === 'Neo2'
+        ? new wallet2.Wallet(newWallet.export())
+        : new wallet3.Wallet(newWallet.export());
     if (newChainType !== this.chainType) {
       this.chrome.networkChangeEvent(
         newChainType === 'Neo2' ? this.n2Network : this.n3Network
       );
     }
-    if (this.neon.selectedChainType === 'Neo2') {
+    this.store.dispatch({ type: UPDATE_WALLET, data: newWallet });
+    if (newChainType === 'Neo2') {
       this.store.dispatch({
         type: ADD_NEO2_WALLET,
-        data: { wallet: data, wif: data.accounts[0].wif },
+        data: { wallet: newWallet, wif },
       });
     } else {
       this.store.dispatch({
         type: ADD_NEO3_WALLET,
-        data: { wallet: data, wif: data.accounts[0].wif },
+        data: { wallet: newWallet, wif },
       });
     }
     if (this.dapiData.type === 'dapi') {
@@ -78,13 +85,13 @@ export class PopupWalletComponent {
       this.router.navigateByUrl(`/popup/notification/pick-address?${params}`);
       return;
     }
-    this.chrome.setHasLoginAddress(data.accounts[0].address);
-    this.chrome.setWallet(data.export());
+    this.chrome.setHasLoginAddress(newWallet.accounts[0].address);
+    this.chrome.setWallet(newWallet.export());
     this.chrome.setLogin(false);
     if (type === 0) {
       this.chrome.setHaveBackupTip(true);
     } else {
-      this.chrome.setWalletsStatus(data.accounts[0].address);
+      this.chrome.setWalletsStatus(newWallet.accounts[0].address);
       this.chrome.setHaveBackupTip(false);
     }
     const returnUrl =

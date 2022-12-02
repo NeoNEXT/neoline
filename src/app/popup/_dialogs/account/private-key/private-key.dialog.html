@@ -15,15 +15,17 @@
     <p class="label">
       {{ (verified ? 'wif' : "password") | translate | async }}
     </p>
-    <input
-      *ngIf="!verified"
-      type="password"
-      [placeholder]="'verifyPassword' | translate | async"
-      [(ngModel)]="pwd"
-      (keyup.enter)="verify()"
-      class="pwd"
-    />
-    <div class="wif" *ngIf="verified" (click)="copy(wif)">{{ wif }}</div>
+    <div class="pwd-wif">
+      <input
+        *ngIf="!verified"
+        type="password"
+        [placeholder]="'verifyPassword' | translate | async"
+        [(ngModel)]="pwd"
+        (keyup.enter)="verify()"
+        class="pwd"
+      />
+      <div class="wif" *ngIf="verified" (click)="copy(wif)">{{ wif }}</div>
+    </div>
 
     <div class="tip">
       {{ "caution" | translate | async }}: {{ "transferExportTip" | translate |

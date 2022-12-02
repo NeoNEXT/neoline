@@ -24,12 +24,11 @@ import {
   UPDATE_NEO3_NETWORKS,
   UPDATE_NEO3_NETWORK_INDEX,
   UPDATE_WALLET,
-  UPDATE_NEO3_WALLETS,
   RpcNetwork,
   UPDATE_NEO2_NETWORKS,
-  UPDATE_NEO2_WIFS,
-  UPDATE_NEO2_WALLETS,
-  UPDATE_NEO3_WIFS,
+  REMOVE_NEO2_WALLET,
+  REMOVE_NEO3_WALLET,
+  UPDATE_NEO3_WALLETS_ADDRESS,
 } from '@popup/_lib';
 import { str2hexstring } from '@cityofzion/neon-core-neo3/lib/u';
 import { HttpClient } from '@angular/common/http';
@@ -47,7 +46,6 @@ export class NeonService {
   private neo2WalletArr: Wallet2[];
   private neo3WalletArr: Wallet3[];
   private neo2WIFArr: string[];
-  private neo3WIFArr: string[];
   private n2Networks: RpcNetwork[];
   private n2NetworkIndex: number;
   private n3Networks: RpcNetwork[];
@@ -172,7 +170,6 @@ export class NeonService {
         });
         //#region networks
         if (!Neo3RemoveT4FlagRes) {
-          this.getFastRpcUrl(true);
           n3NetworkIndexRes = 0;
           if (n3NetworksRes[1].chainId === 4) {
             n3NetworksRes[2].name = 'N3 TESTNET';
@@ -184,6 +181,7 @@ export class NeonService {
             data: n3NetworksRes,
           });
           this.chrome.setStorage(STORAGE_NAME.neo3RemoveT4Flag, true);
+          this.getFastRpcUrl(true);
         } else {
           this.getFastRpcUrl();
         }
@@ -202,16 +200,25 @@ export class NeonService {
             const account = new wallet3.Account(
               wallet3.getPrivateKeyFromWIF(neo3WIFArrRes[index])
             );
+            Object.defineProperties(item.accounts[0], {
+              address: { writable: true, readonly: false },
+            });
             item.accounts[0].address = account.address;
             item.accounts[0].label = account.label;
-            if (item.accounts[0].key === walletRes.accounts[0].key) {
+            if (
+              item.accounts[0].contract.script ===
+              walletRes.accounts[0].contract.script
+            ) {
+              Object.defineProperties(walletRes.accounts[0], {
+                address: { writable: true, readonly: false },
+              });
               walletRes.accounts[0].address = item.accounts[0].address;
               walletRes.accounts[0].label = item.accounts[0].label;
               this.store.dispatch({ type: UPDATE_WALLET, data: walletRes });
             }
           });
           this.store.dispatch({
-            type: UPDATE_NEO3_WALLETS,
+            type: UPDATE_NEO3_WALLETS_ADDRESS,
             data: neo3WalletArrRes,
           });
           this.chrome.setStorage(STORAGE_NAME.neo3AddressFlag, true);
@@ -355,6 +362,9 @@ export class NeonService {
   public parseWallet(src: any): Wallet2 | Wallet3 {
     try {
       let isNeo3 = false;
+      if (!src.accounts[0].address) {
+        return null;
+      }
       if (wallet3.isAddress(src.accounts[0].address, 53)) {
         isNeo3 = true;
       }
@@ -476,12 +486,10 @@ export class NeonService {
           item.accounts[0].address === this.currentWallet.accounts[0].address
       );
       this.neo2WalletArr.splice(index, 1);
-      this.neo2WIFArr.splice(index, 1);
       this.store.dispatch({
-        type: UPDATE_NEO2_WALLETS,
-        data: this.neo2WalletArr,
+        type: REMOVE_NEO2_WALLET,
+        data: this.currentWallet,
       });
-      this.store.dispatch({ type: UPDATE_NEO2_WIFS, data: this.neo2WalletArr });
       if (this.neo2WalletArr.length > 0) {
         this.currentWallet = this.neo2WalletArr[0];
       } else {
@@ -497,12 +505,10 @@ export class NeonService {
           item.accounts[0].address === this.currentWallet.accounts[0].address
       );
       this.neo3WalletArr.splice(index, 1);
-      this.neo3WIFArr.splice(index, 1);
       this.store.dispatch({
-        type: UPDATE_NEO3_WALLETS,
-        data: this.neo3WalletArr,
+        type: REMOVE_NEO3_WALLET,
+        data: this.currentWallet,
       });
-      this.store.dispatch({ type: UPDATE_NEO3_WIFS, data: this.neo3WalletArr });
       if (this.neo3WalletArr.length > 0) {
         this.currentWallet = this.neo3WalletArr[0];
       } else {
