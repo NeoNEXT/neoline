@@ -8,14 +8,12 @@ import { ShareModule } from '@app/share';
 import { PopupAssetItemComponent } from './asset-item/asset-item.component';
 import { PopupAddNftComponent } from './add-nft.component';
 import { PopupMyNftsComponent } from './my-nfts/my-nfts.component';
-import { PopupMyNftItemComponent } from './my-nfts/my-nft-item/my-nft-item.component';
 
 @NgModule({
   declarations: [
     PopupAssetItemComponent,
     PopupAddNftComponent,
     PopupMyNftsComponent,
-    PopupMyNftItemComponent,
   ],
   imports: [CommonModule, ShareModule, PopupAddNftRoutingModule, MatMenuModule],
   exports: [],

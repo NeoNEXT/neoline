@@ -1,5 +1,5 @@
 @import "src/styles/popup-default";
-@import '../common';
+@import "src/styles/asset-item";
 
 .asset-item button {
   width: 44px;
@@ -16,6 +16,7 @@
   }
   &.added {
     background: $line-color;
+    cursor: not-allowed;
     img {
       width: 10px;
     }

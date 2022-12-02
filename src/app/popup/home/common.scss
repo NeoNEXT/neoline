@@ -1,0 +1,28 @@
+@import "src/styles/popup-default";
+@import "src/styles/asset-item";
+
+.asset-item {
+  padding: 0 24px;
+  cursor: pointer;
+  position: relative;
+  border-bottom: none;
+  &::after {
+    content: "";
+    position: absolute;
+    left: 24px;
+    right: 24px;
+    bottom: 0;
+    height: 1px;
+    background: $line-color;
+  }
+  &:hover {
+    background: $hover-color;
+  }
+}
+
+.loading,
+.no-data {
+  margin: 40px 0;
+  text-align: center;
+  color: $tip-color;
+}

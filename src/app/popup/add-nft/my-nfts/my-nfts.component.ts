@@ -7,7 +7,7 @@ import { Unsubscribable } from 'rxjs';
 
 @Component({
   templateUrl: 'my-nfts.component.html',
-  styleUrls: ['my-nfts.component.scss'],
+  styleUrls: ['../../add-asset/my-assets/my-assets.component.scss'],
 })
 export class PopupMyNftsComponent implements OnInit, OnDestroy {
   nfts: NftAsset[];

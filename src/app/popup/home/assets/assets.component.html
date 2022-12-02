@@ -4,17 +4,14 @@
   *ngFor="let asset of myAssets"
   [routerLink]="['/popup/asset', asset.asset_id]"
 >
-  <div class="avatar-box">
+  <div class="asset-logo">
     <img [assetId]="asset?.asset_id" appErrorSrc alt="" />
   </div>
-  <span class="name">{{ asset?.symbol }}</span>
-  <div class="right">
-    <div class="amount">
-      {{ asset?.balance || "0" }}
-      <!-- &nbsp;{{ asset?.symbol }} -->
-    </div>
-    <div class="rate" *ngIf="asset?.rateBalance && asset?.rateBalance != 0">
-      {{ asset?.rateBalance | numberFixed: 2 }}&nbsp;{{ rateCurrency }}
-    </div>
+  <div class="item-middle">{{ asset?.symbol }}</div>
+  <div class="item-right">
+    <p class="balance">{{ asset?.balance || "0" }}</p>
+    <p class="rate" *ngIf="asset?.rateBalance && asset?.rateBalance != 0">
+      {{ asset?.rateBalance | numberFixed : 2 }}&nbsp;{{ rateCurrency }}
+    </p>
   </div>
 </div>

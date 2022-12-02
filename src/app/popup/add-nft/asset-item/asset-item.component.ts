@@ -5,7 +5,7 @@ import { GlobalService } from '@/app/core';
 @Component({
   selector: 'app-asset-item',
   templateUrl: './asset-item.component.html',
-  styleUrls: ['./asset-item.component.scss'],
+  styleUrls: ['../../add-asset/asset-item/asset-item.component.scss'],
 })
 export class PopupAssetItemComponent implements OnInit {
   @Input() asset: NftAsset;

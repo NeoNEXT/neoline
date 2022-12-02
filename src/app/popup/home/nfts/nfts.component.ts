@@ -14,9 +14,10 @@ import { RpcNetwork } from '../../_lib';
 @Component({
   selector: 'app-nfts',
   templateUrl: 'nfts.component.html',
-  styleUrls: ['nfts.component.scss'],
+  styleUrls: ['../common.scss'],
 })
 export class PopupNftsComponent implements OnInit, OnDestroy {
+  isLoading = false;
   nfts: NftAsset[];
 
   private accountSub: Unsubscribable;
@@ -43,6 +44,7 @@ export class PopupNftsComponent implements OnInit, OnDestroy {
   }
 
   init() {
+    this.isLoading = true;
     const getWatch = this.chrome
       .getNftWatch(this.n3Network.id, this.address)
       .toPromise();
@@ -64,6 +66,7 @@ export class PopupNftsComponent implements OnInit, OnDestroy {
         }
       });
       this.nfts = showAssets;
+      this.isLoading = false;
     });
   }
 }

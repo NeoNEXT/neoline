@@ -18,7 +18,7 @@ import { Unsubscribable } from 'rxjs';
 @Component({
   selector: 'app-assets',
   templateUrl: 'assets.component.html',
-  styleUrls: ['assets.component.scss'],
+  styleUrls: ['../common.scss'],
 })
 export class PopupAssetsComponent implements OnInit, OnDestroy {
   @Input() public rateCurrency: string;

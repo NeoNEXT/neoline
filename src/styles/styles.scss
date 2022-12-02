@@ -9,17 +9,15 @@
   padding: 0;
   box-sizing: border-box;
   outline: none;
-  font-family: "Microsoft Yahei", "Arial Narrow Bold", sans-serif;
   line-height: 1;
 }
 
 html,
 body {
   height: 100%;
-}
-body {
-  margin: 0;
-  font-family: Roboto, "Helvetica Neue", sans-serif;
+  color: $title-color;
+  font-size: 14px;
+  font-family: NeverMind-Medium;
 }
 address,
 dl,

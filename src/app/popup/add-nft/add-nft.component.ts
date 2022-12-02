@@ -7,7 +7,7 @@ import { Unsubscribable } from 'rxjs';
 
 @Component({
   templateUrl: 'add-nft.component.html',
-  styleUrls: ['add-nft.component.scss'],
+  styleUrls: ['../add-asset/add-asset.component.scss'],
 })
 export class PopupAddNftComponent implements OnInit, OnDestroy {
   public watch: NftAsset[] = []; // 用户添加的资产

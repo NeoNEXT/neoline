@@ -1,22 +1,25 @@
+<div class="loading" *ngIf="isLoading">{{ "loading" | translate | async }}</div>
 <div
   class="asset-item"
   *ngFor="let asset of nfts"
   [routerLink]="['/popup/nfts', asset.assethash]"
 >
-  <div class="avatar-box">
+  <div class="asset-logo">
     <img [assetId]="asset?.assethash" appErrorSrc alt="" />
   </div>
   <div class="item-middle">
     <div class="asset-name">
-      <span class="long">{{ asset.name }}</span>
-      (<span class="short">{{ asset.symbol }}</span
+      <span>{{ asset.name }}</span>
+      (<span>{{ asset.symbol }}</span
       >)
     </div>
     <p class="asset-id">{{ asset?.assethash }}</p>
   </div>
-  <div class="balance">{{ asset?.tokens?.length || 0 }}</div>
+  <div class="item-right">
+    <div class="balance">{{ asset?.tokens?.length || 0 }}</div>
+  </div>
 </div>
 
-<p *ngIf="!nfts || nfts?.length === 0" class="no-data">
+<p *ngIf="!isLoading && (!nfts || nfts?.length === 0)" class="no-data">
   {{ "noData" | translate | async }}
 </p>
