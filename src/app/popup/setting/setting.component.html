@@ -1,61 +1,43 @@
-<div class="nav">
-  <div class="content">
-    <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="" />
-    {{ "generalSettings" | translate | async }}
-  </div>
-  <div class="divide"></div>
-</div>
-
-<div class="popup-setting-menu">
-  <div class="popup-setting-item" (click)="language()">
-    <div class="popup-setting-language-logo"></div>
-    <div>{{ "language" | translate | async }}</div>
-    <div class="popup-setting-language-current">
-      {{ lang | languageName }}
-      <img src="/assets/images/arrow-right.png" alt="" />
+<nav title="generalSettings"></nav>
+<ul class="content">
+  <li class="hover-bg" (click)="language()">
+    <img src="assets/images/setting/language.svg" alt="" />
+    <div class="middle">{{ "language" | translate | async }}</div>
+    <span class="right"
+      >{{ lang | languageName
+      }}<img src="assets/images/common/arrow.svg" alt=""
+    /></span>
+  </li>
+  <li>
+    <img src="assets/images/setting/clear-cache.svg" alt="" />
+    <div class="middle">
+      <p>{{ "clearCache" | translate | async }}</p>
+      <p class="tip">{{ "clearCacheTip" | translate | async }}</p>
     </div>
-  </div>
-  <!-- <div class="popup-setting-item">
-        <div class="popup-setting-theme-logo"></div>
-        <div>{{ 'darkMode' | translate | async}}</div>
-        <div class="popup-setting-language-current">
-            <mat-slide-toggle color="primary" (change)="changeTheme($event)" [checked]="isDark"></mat-slide-toggle>
-        </div>
-    </div> -->
-</div>
-
-<div class="popup-setting-cache">
-  <div></div>
-  <div class="popup-setting-cache-tip">
-    <div>{{ "clearCache" | translate | async }}</div>
-    <div>{{ "clearCacheTip" | translate | async }}</div>
-  </div>
-  <div class="popup-setting-cache-btn" (click)="clearCache()">
-    {{ "clearCacheBtn" | translate | async }}
-  </div>
-</div>
-<div
-  class="popup-setting-menu setting-asset-rate"
-  (click)="modifyRateCurrency()"
->
-  <div class="current-currency">
-    <span class="title">{{ "currencyUnit" | translate | async }}</span>
-    <div>
-      <span class="value">{{ rateCurrency }}</span>
-      <img src="/assets/images/arrow-right.png" alt="" />
+    <button class="clear" (click)="clearCache()">
+      {{ "clearCacheBtn" | translate | async }}
+    </button>
+  </li>
+  <li class="hover-bg" (click)="modifyRateCurrency()">
+    <img src="assets/images/setting/currency-unit.svg" alt="" />
+    <div class="middle">
+      <p>{{ "currencyUnit" | translate | async }}</p>
+      <p class="tip" *ngIf="rateTime">
+        {{ "updateTime" | translate | async }}
+        {{ rateTime * 1000 | date : "M月d日 y年 HH:mm" }}
+        {{ "beijingTime" | translate | async }}
+      </p>
     </div>
-  </div>
-  <p class="update-time" *ngIf="rateTime">
-    {{ "updateTime" | translate | async }}
-    {{ rateTime * 1000 | date: "M月d日 y年 HH:mm" }}
-    {{ "beijingTime" | translate | async }}
-  </p>
-</div>
-<div class="popup-setting-authorization" (click)="viewAllAuth()">
-  <div class="popup-setting-authorization-head">
-    <span class="title">{{ "authorizationManage" | translate | async }}</span>
-    <img src="/assets/images/arrow-right.png" alt="" />
-    <!-- <span class="view-all">{{ 'viewAll' | translate | async}} ></span> -->
-  </div>
-  <span class="tip">{{ "authorizationManageTips" | translate | async }}</span>
-</div>
+    <span class="right"
+      >{{ rateCurrency }}<img src="assets/images/common/arrow.svg" alt=""
+    /></span>
+  </li>
+  <li class="hover-bg" (click)="viewAllAuth()">
+    <img src="assets/images/setting/auth-manage.svg" alt="" />
+    <div class="middle">
+      <p>{{ "authorizationManage" | translate | async }}</p>
+      <p class="tip">{{ "authorizationManageTips" | translate | async }}</p>
+    </div>
+    <img src="assets/images/common/arrow.svg" alt="" />
+  </li>
+</ul>
