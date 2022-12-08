@@ -1,64 +1,58 @@
-<div class="nav">
-  <div class="content">
-    <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="" />
-    {{ balance?.name }}
+<section class="container">
+  <div class="asset-detail">
+    <div class="top">
+      <img routerLink="/popup/home" src="/assets/images/common/nav-arrow.svg" />
+      <div class="asset-logo-box big">
+        <img
+          class="asset-logo"
+          [assetId]="balance?.asset_id"
+          appErrorSrc
+          alt=""
+        />
+      </div>
+      <div class="more" (click)="showMenu = !showMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <section
+        class="pop-ups-veil"
+        *ngIf="showMenu"
+        (click)="showMenu = false"
+      ></section>
+      <ul class="pop-ups-menu" *ngIf="showMenu">
+        <li *ngIf="canHideBalance" (click)="hideBalance()">
+          <img src="assets/images/asset/hide-asset.svg" alt="" />{{
+            "hidden" | translate | async
+          }}{{ " " + balance?.symbol }}
+        </li>
+        <li (click)="toWeb()">
+          <img src="assets/images/account/home-explorer.svg" alt="" />{{
+            "viewOnNeoTube" | translate | async
+          }}
+        </li>
+      </ul>
+    </div>
+    <p class="asset-balance">
+      {{ balance?.balance || 0 | numberFixed }} {{ balance?.symbol }}
+    </p>
+    <p class="asset-money">
+      {{ balance?.rateBalance | numberFixed : 2 }} {{ rateCurrency }}
+    </p>
+    <div class="transaction-btn-container">
+      <div class="item receive" [routerLink]="['/popup/transfer/receive']">
+        <img src="assets/images/transfer/receive.svg" alt="" />
+        {{ "receive" | translate | async }}
+      </div>
+      <div class="item transfer" [routerLink]="['/popup/transfer/create']">
+        <img src="assets/images/transfer/transfer.svg" alt="" />
+        {{ "transfer" | translate | async }}
+      </div>
+    </div>
   </div>
-  <div class="divide"></div>
-</div>
-
-<div class="sub-nav">
-  <div class="asset-logo-box">
-    <img class="asset-logo" [assetId]="balance?.asset_id" appErrorSrc alt="" />
+  <div class="txs">
+    <p class="title">{{ "transaction" | translate | async }}</p>
+    <app-tx-page [rateCurrency]="rateCurrency" [symbol]="balance?.symbol">
+    </app-tx-page>
   </div>
-  <img
-    src="/assets/images/asset-detail/nav.png"
-    (click)="showMenu = !showMenu"
-    class="nav-img"
-    alt=""
-  />
-  <section class="veil" *ngIf="showMenu" (click)="showMenu = false"></section>
-  <ul class="sub-menu" *ngIf="showMenu">
-    <li matRipple *ngIf="canHideBalance" (click)="hideBalance()">
-      {{ "hidden" | translate | async }}{{ " " + balance?.symbol }}
-    </li>
-    <li matRipple (click)="toWeb()">
-      {{ "viewOnNeoTube" | translate | async }}
-    </li>
-  </ul>
-</div>
-
-<div class="container">
-  <p class="asset-balance">
-    {{ balance?.balance || 0 | numberFixed }} {{ balance?.symbol }}
-  </p>
-  <p class="asset-money">
-    {{ balance?.rateBalance | numberFixed: 2 }} {{ rateCurrency }}
-  </p>
-  <div class="transaction-btn-container">
-    <button
-      class="receive-btn"
-      mat-stroked-button
-      color="primary"
-      [routerLink]="['/popup/transfer/receive']"
-    >
-      <img src="/assets/images/home/receive.png" alt="" />
-      <span>{{ "receive" | translate | async }}</span>
-    </button>
-    <button
-      class="transfer-btn"
-      mat-flat-button
-      color="primary"
-      [routerLink]="['/popup/transfer/create/' + assetId]"
-    >
-      <img src="/assets/images/home/send.png" alt="" />
-      <span>{{ "transfer" | translate | async }}</span>
-    </button>
-  </div>
-  <p class="tx-title">{{ "transaction" | translate | async }}</p>
-  <app-tx-page
-    [assetId]="assetId"
-    [rateCurrency]="rateCurrency"
-    [symbol]="balance?.symbol"
-    #txPage
-  ></app-tx-page>
-</div>
+</section>

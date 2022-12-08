@@ -64,7 +64,7 @@
       {{ balance?.balance || 0 | numberFixed }} {{ balance?.symbol }}
     </p>
     <p class="asset-money">
-      {{ balance?.rateBalance | numberFixed: 2 }} {{ rateCurrency }}
+      {{ balance?.rateBalance | numberFixed : 2 }} {{ rateCurrency }}
     </p>
     <div class="transaction-btn-container">
       <div class="item receive" [routerLink]="['/popup/transfer/receive']">
@@ -79,12 +79,7 @@
 
     <div class="claim-container" *ngIf="showClaim">
       <div class="gas-logo-box">
-        <img
-          class="gas-logo"
-          [assetId]="currentWalletIsN3 ? GAS3_CONTRACT : GAS"
-          appErrorSrc
-          alt=""
-        />
+        <img class="gas-logo" [assetId]="claimAssetId" appErrorSrc alt="" />
       </div>
       <div class="claim-status-box">
         <p class="number">{{ claimNumber | numberFixed }} GAS</p>
@@ -157,11 +152,7 @@
           *ngIf="currentWalletIsN3 === false"
           [hidden]="selectedIndex == 0"
         >
-          <app-tx-page
-            [rateCurrency]="rateCurrency"
-            [symbol]="balance?.symbol"
-            #txPage
-          >
+          <app-tx-page [rateCurrency]="rateCurrency" [symbol]="balance?.symbol">
           </app-tx-page>
         </div>
       </div>

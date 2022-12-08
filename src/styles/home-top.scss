@@ -1,0 +1,56 @@
+.asset-balance {
+  font-family: NeverMind-DemiBold;
+  font-size: 24px;
+  line-height: 20px;
+  color: $title-color;
+  text-align: center;
+  padding: 0px 20px;
+  overflow-wrap: break-word;
+}
+.asset-money {
+  font-family: NeverMind-Medium;
+  font-size: 14px;
+  color: $sub-title-color;
+  text-align: center;
+  padding: 0px 20px;
+  margin-top: 8px;
+  overflow-wrap: break-word;
+}
+.transaction-btn-container {
+  margin-top: 26px;
+  padding: 0 51px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .item {
+    display: inline-flex;
+    align-items: center;
+    font-family: NeverMind-Medium;
+    font-size: 14px;
+    color: $title-color;
+    cursor: pointer;
+    &.transfer {
+      color: $theme-color;
+    }
+    img {
+      margin-right: 8px;
+      border-radius: 50%;
+    }
+    &.receive {
+      img {
+        background: $title-color;
+      }
+      &:hover img {
+        box-shadow: 0px 6px 10px -2px rgba(48, 52, 51, 0.5);
+      }
+    }
+    &.transfer {
+      img {
+        background: $theme-color;
+      }
+      &:hover img {
+        box-shadow: 0px 6px 10px -2px rgba(6, 204, 171, 0.5);
+      }
+    }
+  }
+}

@@ -1,4 +1,4 @@
-import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import {
   AssetState,
   ChromeService,
@@ -7,7 +7,6 @@ import {
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NEO, GAS, Asset } from '@/models/models';
-import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.component';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
 import { bignumber } from 'mathjs';
@@ -22,20 +21,16 @@ import { Unsubscribable } from 'rxjs';
   styleUrls: ['asset-detail.component.scss'],
 })
 export class PopupAssetDetailComponent implements OnInit, OnDestroy {
+  private assetId: string;
   balance: Asset;
-  assetId: string;
   rateCurrency: string;
-  // Transaction Record
-  @ViewChild('txPage') txPageComponent: PopupTxPageComponent;
-  sourceScrollHeight = 0;
-  currentTxPage = 1;
 
   showMenu = false;
-  watch: Asset[]; // User-added assets
   canHideBalance = false;
+  private watch: Asset[]; // User-added assets
 
   private accountSub: Unsubscribable;
-  networkId: number;
+  private networkId: number;
   private address;
   private chainType: ChainType;
   private n2Network: RpcNetwork;
@@ -58,35 +53,34 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.networkId =
         this.chainType === 'Neo2' ? this.n2Network.id : this.n3Network.id;
+      this.initData();
     });
     this.rateCurrency = this.assetState.rateCurrency;
   }
 
-  ngOnInit(): void {
+  initData() {
     this.aRouter.params.subscribe(async (params: any) => {
       this.assetId = params.assetId || NEO;
       this.getAssetDetail();
       this.getCanHide();
-      this.chrome.getWatch(this.networkId, this.address).subscribe((res) => {
-        this.watch = res;
-      });
     });
   }
+
+  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
   }
 
   getCanHide() {
-    if (this.chainType === 'Neo2') {
-      if (this.assetId !== NEO && this.assetId !== GAS) {
-        this.canHideBalance = true;
-      }
-    }
-    if (this.chainType === 'Neo3') {
-      if (this.assetId !== NEO3_CONTRACT && this.assetId !== GAS3_CONTRACT) {
-        this.canHideBalance = true;
-      }
+    const index = [NEO, GAS, NEO3_CONTRACT, GAS3_CONTRACT].indexOf(
+      this.assetId
+    );
+    this.canHideBalance = index >= 0 ? false : true;
+    if (this.canHideBalance) {
+      this.chrome.getWatch(this.networkId, this.address).subscribe((res) => {
+        this.watch = res;
+      });
     }
   }
 
@@ -155,9 +149,9 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
 
   toWeb() {
     this.showMenu = false;
-    const isNep5 = this.assetId !== NEO && this.assetId !== GAS;
     switch (this.chainType) {
       case 'Neo2':
+        const isNep5 = this.assetId !== NEO && this.assetId !== GAS;
         if (this.n2Network.explorer) {
           window.open(
             `${this.n2Network.explorer}${isNep5 ? 'nep5' : 'asset'}/${

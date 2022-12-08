@@ -37,14 +37,11 @@ import { Unsubscribable } from 'rxjs';
   styleUrls: ['home.component.scss'],
 })
 export class PopupHomeComponent implements OnInit, OnDestroy {
-  @ViewChild('txPage') txPageComponent: PopupTxPageComponent;
   selectedIndex = 0; // asset tab or transaction tab
   balance: Asset;
   rateCurrency: string;
 
-  GAS = GAS;
-  GAS3_CONTRACT = GAS3_CONTRACT;
-
+  claimAssetId = GAS3_CONTRACT;
   private status = {
     confirmed: 'confirmed',
     estimated: 'estimated',
@@ -123,6 +120,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   }
 
   initData() {
+    this.claimAssetId = this.chainType === 'Neo2' ? GAS : GAS3_CONTRACT;
     if (
       this.chainType === 'Neo3' &&
       this.homeService.loading &&

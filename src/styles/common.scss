@@ -110,4 +110,15 @@ $network-list: (
     height: 30px;
     width: 30px;
   }
+  &.big {
+    width: 56px;
+    height: 56px;
+    padding: 12px;
+    background: #ffffff;
+    border: none;
+    img {
+      width: 32px;
+      height: 32px;
+    }
+  }
 }
