@@ -55,14 +55,15 @@ $network-list: (
 
 // scroll
 ::-webkit-scrollbar {
+  width: 4px;
   display: none;
 }
 ::-webkit-scrollbar-track {
   background: none;
 }
 ::-webkit-scrollbar-thumb {
-  border-radius: 6px;
-  background-color: #ccc;
+  border-radius: 2px;
+  background-color: $tip-color;
 }
 
 // input

@@ -1,7 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterEvent, NavigationEnd } from '@angular/router';
-import { MatDialog } from '@angular/material/dialog';
-import { PopupHomeMenuDialogComponent } from './_dialogs';
 import { RpcNetwork, ChainType } from './_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/reduers';
@@ -15,17 +13,14 @@ export class PopupComponent implements OnInit {
   private currentUrl = this.router.url;
   headerIsThemeBg = false;
   showNetworkList = false;
+  showAvatarMenu = false;
 
   private accountSub: Unsubscribable;
   address: string;
   networks: RpcNetwork[];
   networkIndex: number;
   chainType: ChainType;
-  constructor(
-    private store: Store<AppState>,
-    private router: Router,
-    private dialog: MatDialog
-  ) {
+  constructor(private store: Store<AppState>, private router: Router) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       if (state.currentWallet) {
@@ -71,20 +66,5 @@ export class PopupComponent implements OnInit {
       return false;
     }
     return true;
-  }
-
-  public topMenu() {
-    this.dialog.open(PopupHomeMenuDialogComponent, {
-      position: {
-        top: '48px',
-        right: '0px',
-        left: '0px',
-        bottom: '0px',
-      },
-      autoFocus: false,
-      width: '375px',
-      maxWidth: 375,
-      // maxHeight: 500,
-    });
   }
 }

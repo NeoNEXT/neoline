@@ -15,39 +15,49 @@
   img.avatar {
     width: 56px;
   }
-  .name {
+  .name-content {
     height: 63px;
-    font-family: NeverMind-Medium;
-    font-size: 18px;
-    color: $title-color;
-    padding-top: 16px;
-    img {
-      margin-left: 12px;
-      cursor: pointer;
-    }
-  }
-  .edit {
-    width: 279px;
-    height: 63px;
-    padding-top: 8px;
-    position: relative;
-    input {
-      width: 100%;
-      height: 32px;
-      border-radius: 2px;
-      border: 1px solid $tip-color;
+    .name {
       font-family: NeverMind-Medium;
+      font-size: 18px;
       color: $title-color;
-      text-align: center;
-      &.warn {
-        border-color: $warn-color;
+      padding-top: 16px;
+      display: flex;
+      align-items: center;
+      span {
+        display: inline-block;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      img {
+        margin-left: 12px;
+        cursor: pointer;
       }
     }
-    img {
-      width: 14px;
-      position: absolute;
-      top: 19px;
-      right: -24px;
+    .edit {
+      width: 279px;
+      padding-top: 8px;
+      position: relative;
+      input {
+        width: 100%;
+        height: 32px;
+        border-radius: 2px;
+        border: 1px solid $tip-color;
+        font-family: NeverMind-Medium;
+        color: $title-color;
+        text-align: center;
+        &.warn {
+          border-color: $warn-color;
+        }
+      }
+      img {
+        width: 14px;
+        position: absolute;
+        top: 19px;
+        right: -24px;
+      }
     }
   }
   .label {

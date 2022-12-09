@@ -40,11 +40,15 @@
         font-family: NeverMind-Medium;
         font-size: 18px;
         color: #3d3d3d;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
       }
       .address {
-        display: inline-block;
+        display: inline-flex;
+        align-items: center;
         height: 30px;
-        line-height: 30px;
         padding: 0 16px;
         border-radius: 14px;
         font-family: NeverMind-Regular;

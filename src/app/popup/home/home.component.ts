@@ -11,7 +11,6 @@ import {
 import { NEO, GAS, Asset } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
-import { PopupTxPageComponent } from '@share/components/tx-page/tx-page.component';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '../_dialogs';
 import { Router } from '@angular/router';

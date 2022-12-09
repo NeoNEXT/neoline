@@ -2,7 +2,7 @@
 
 .content {
   position: absolute;
-  left: 17px;
+  right: 17px;
   top: 65px;
   width: 343px;
   z-index: 999999;
@@ -39,7 +39,7 @@
       width: 18px;
       height: 18px;
       border-radius: 4px;
-      border: 1px solid #afb6be;
+      border: 1px solid $tip-color;
       margin-right: 12px;
       &.active {
         border: none;

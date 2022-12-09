@@ -28,15 +28,17 @@ const MATMODULES = [
 //#endregion
 
 //#region components
-import { PopupTxPageComponent } from './components/tx-page/tx-page.component';
-import { PopupNetworkComponent } from './components/network/network.component';
+import { TxPageComponent } from './components/tx-page/tx-page.component';
 import { NavComponent } from './components/nav/nav.component';
 import { LoadingComponent } from './components/loading/loading.component';
+import { PopupNetworkComponent } from './components/network/network.component';
+import { PopupAvatarMenuComponent } from './components/avatar-menu/avatar-menu.component';
 const COMPONENTS = [
-  PopupTxPageComponent,
+  TxPageComponent,
   PopupNetworkComponent,
   NavComponent,
   LoadingComponent,
+  PopupAvatarMenuComponent,
 ];
 //#endregion
 
@@ -64,7 +66,7 @@ const DIRECTIVE = [AvatarDirective, AssetLogoDirective, ErrSrcDirective];
 
 @NgModule({
   declarations: [...PIPES, ...DIRECTIVE, ...COMPONENTS],
-  imports: [CommonModule, MatIconModule, MatButtonModule],
+  imports: [FormsModule, CommonModule, MatIconModule, MatButtonModule],
   exports: [
     FormsModule,
     ReactiveFormsModule,

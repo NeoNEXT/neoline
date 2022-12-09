@@ -8,19 +8,21 @@
     alt=""
   />
   <img class="avatar" [avatar]="address" />
-  <div class="name" *ngIf="showEditName === false">
-    {{ currentWallet.name
-    }}<img (click)="editName()" src="assets/images/account/detail-edit.svg" />
-  </div>
-  <div class="edit" *ngIf="showEditName">
-    <input
-      #inputDom
-      type="text"
-      [(ngModel)]="inputName"
-      [ngClass]="{ warn: inputName.trim() === '' }"
-      (keyup.enter)="updateName()"
-    />
-    <img (click)="updateName()" src="assets/images/common/selected.svg" />
+  <div class="name-content">
+    <div class="name" *ngIf="showEditName === false">
+      <span>{{ currentWallet.name }}</span
+      ><img (click)="editName()" src="assets/images/account/detail-edit.svg" />
+    </div>
+    <div class="edit" *ngIf="showEditName">
+      <input
+        #inputDom
+        type="text"
+        [(ngModel)]="inputName"
+        [ngClass]="{ warn: inputName.trim() === '' }"
+        (keyup.enter)="updateName()"
+      />
+      <img (click)="updateName()" src="assets/images/common/selected.svg" />
+    </div>
   </div>
 
   <p class="label">{{ "address" | translate | async }}</p>

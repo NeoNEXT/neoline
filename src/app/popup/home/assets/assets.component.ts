@@ -45,12 +45,11 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
           ? state.n2Networks[state.n2NetworkIndex]
           : state.n3Networks[state.n3NetworkIndex];
       this.networkId = network.id;
+      this.getAssets();
     });
   }
 
-  ngOnInit(): void {
-    this.getAssets();
-  }
+  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

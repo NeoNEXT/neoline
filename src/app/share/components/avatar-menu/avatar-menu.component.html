@@ -1,0 +1,67 @@
+<section class="pop-ups-veil" (click)="close()"></section>
+<div class="content">
+  <div class="my-account">
+    <span>{{ "myAccount" | translate | async }}</span>
+    <span class="right">
+      <img (click)="lock()" src="assets/images/avatar-menu/lock.svg" alt="" />
+      <img
+        (click)="navigate('/popup/setting')"
+        src="assets/images/avatar-menu/setting.svg"
+      />
+      <img
+        (click)="navigate('/popup/about')"
+        src="assets/images/avatar-menu/about-us.svg"
+      />
+    </span>
+  </div>
+  <div class="account-list">
+    <button class="search">
+      <img class="search" src="assets/images/common/search.svg" />
+      <input
+        [placeholder]="'Search' | translate | async"
+        (input)="searchWallet($event)"
+        type="text"
+      />
+    </button>
+    <ul>
+      <li
+        *ngFor="let item of displayWalletArr"
+        (click)="selectAccount(item)"
+        [ngClass]="{
+          active: wallet.accounts[0].address === item.accounts[0].address
+        }"
+      >
+        <span class="select"></span
+        ><img class="avatar" [avatar]="item.accounts[0].address" />
+        <div>
+          <p class="name">{{ item.name }}</p>
+          <p class="balance">
+            {{ addressBalances[item.accounts[0].address] }} NEO
+          </p>
+        </div>
+      </li>
+    </ul>
+  </div>
+  <ul class="wallet">
+    <li (click)="importLedger()">
+      <img src="assets/images/avatar-menu/wallet-ledger.svg" alt="" />{{
+        "LEDGER" | translate | async
+      }}
+    </li>
+    <li (click)="to('create')">
+      <img src="assets/images/avatar-menu/wallet-create.svg" alt="" />{{
+        "createWallet" | translate | async
+      }}
+    </li>
+    <li (click)="to('import')">
+      <img src="assets/images/avatar-menu/wallet-import.svg" alt="" />{{
+        "importWallet" | translate | async
+      }}
+    </li>
+    <li (click)="exportWallet()">
+      <img src="assets/images/avatar-menu/wallet-export.svg" alt="" />{{
+        "exportWallet" | translate | async
+      }}
+    </li>
+  </ul>
+</div>

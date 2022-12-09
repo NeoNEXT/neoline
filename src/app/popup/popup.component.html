@@ -4,7 +4,7 @@
     {{ networks[networkIndex]?.name }}
     <img src="assets/images/common/triangle-fill.svg" />
   </button>
-  <div class="avatar" (click)="topMenu()" *ngIf="getShowAvatar()">
+  <div class="avatar" (click)="showAvatarMenu = true" *ngIf="getShowAvatar()">
     <img [avatar]="address" alt="" />
   </div>
 </header>
@@ -20,3 +20,8 @@
   [networkIndex]="networkIndex"
   (closeEvent)="showNetworkList = false"
 ></network>
+
+<avatar-menu
+  *ngIf="showAvatarMenu"
+  (closeEvent)="showAvatarMenu = false"
+></avatar-menu>

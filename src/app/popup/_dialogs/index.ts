@@ -1,6 +1,5 @@
 export { PopupSelectDialogComponent } from './select/select.dialog';
 export { PopupConfirmDialogComponent } from './confirm/confirm.dialog';
-export { PopupHomeMenuDialogComponent } from './home-menu/home-menu.dialog';
 export { PopupAddressDialogComponent } from './address/address.dialog';
 export { PopupAssetDialogComponent } from './asset/asset.dialog';
 export { PopupTxDetailDialogComponent } from './tx-detail/tx-detail.dialog';

@@ -60,7 +60,6 @@ const POPUP_COMPONENTS = [
 //#region dialogs
 import {
   PopupConfirmDialogComponent,
-  PopupHomeMenuDialogComponent,
   PopupAddressDialogComponent,
   PopupAssetDialogComponent,
   PopupTxDetailDialogComponent,
@@ -80,7 +79,6 @@ import {
 
 const POPUP_DIALOGS = [
   PopupConfirmDialogComponent,
-  PopupHomeMenuDialogComponent,
   PopupAddressDialogComponent,
   PopupAssetDialogComponent,
   PopupTxDetailDialogComponent,

@@ -1,0 +1,131 @@
+@import "src/styles/popup-default.scss";
+
+.content {
+  position: absolute;
+  top: 65px;
+  right: 16px;
+  width: 343px;
+  border-radius: 4px;
+  background: #ffffff;
+  box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.16);
+  z-index: 999999;
+  .my-account {
+    height: 48px;
+    color: $sub-title-color;
+    padding-left: 16px;
+    padding-right: 19px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid $line-color;
+    .right {
+      img {
+        cursor: pointer;
+      }
+      img:not(:last-child) {
+        margin-right: 25px;
+      }
+    }
+  }
+  .account-list {
+    border-bottom: 3px solid $line-color;
+    button.search {
+      width: calc(100% - 32px);
+      height: 34px;
+      margin: 12px 16px;
+      border-radius: 4px;
+      background: $box-color;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 16px;
+      img.search {
+        margin-right: 12px;
+        cursor: pointer;
+      }
+      input {
+        flex: 1;
+        color: $title-color;
+        font-family: NeverMind-Medium;
+        font-size: 14px;
+      }
+      img.clear {
+        margin-left: 12px;
+        cursor: pointer;
+      }
+    }
+    ul {
+      max-height: 192px;
+      overflow-y: scroll;
+      li {
+        width: 100%;
+        height: 64px;
+        cursor: pointer;
+        padding-left: 16px;
+        display: flex;
+        align-items: center;
+        &.active {
+          .select {
+            border: none;
+            background: url("/assets/images/common/selected-account.svg") center
+              center no-repeat;
+          }
+        }
+        &:hover {
+          background: $hover-color;
+        }
+        .select {
+          display: inline-block;
+          width: 18px;
+          height: 18px;
+          border-radius: 4px;
+          border: 1px solid $tip-color;
+          margin-right: 12px;
+        }
+        img.avatar {
+          width: 24px;
+          height: 24px;
+          margin-right: 8px;
+        }
+        .name {
+          max-width: 240px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        .balance {
+          font-family: NeverMind-Regular;
+          font-size: 12px;
+          color: $sub-title-color;
+          margin-top: 4px;
+        }
+      }
+    }
+  }
+  ul.wallet {
+    li {
+      display: flex;
+      align-items: center;
+      height: 48px;
+      font-family: NeverMind-Medium;
+      font-size: 16px;
+      color: #3d3d3d;
+      padding: 0 16px;
+      cursor: pointer;
+      img {
+        margin-right: 12px;
+      }
+      &:hover {
+        background: $hover-color;
+        color: $theme-color;
+        img {
+          filter: drop-shadow(1000px 0 0 $theme-color);
+          transform: translate(-1000px);
+        }
+      }
+    }
+  }
+}
+
+::-webkit-scrollbar {
+  display: block;
+}

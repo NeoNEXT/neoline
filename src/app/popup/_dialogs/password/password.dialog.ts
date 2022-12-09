@@ -11,7 +11,7 @@ import { ChainType } from '../../_lib';
 })
 export class PopupPasswordDialogComponent implements OnInit {
   pwd = '';
-  showAddress = '';
+  address = '';
 
   constructor(
     private dialogRef: MatDialogRef<PopupPasswordDialogComponent>,
@@ -25,8 +25,7 @@ export class PopupPasswordDialogComponent implements OnInit {
   ) {}
 
   ngOnInit() {
-    const address: string = this.data.account.accounts[0].address;
-    this.showAddress = address.slice(0, 6) + '...' + address.slice(-6);
+    this.address = this.data.account.accounts[0].address;
   }
 
   public cancel() {

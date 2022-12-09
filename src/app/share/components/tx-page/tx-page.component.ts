@@ -14,7 +14,7 @@ import { Unsubscribable } from 'rxjs';
   templateUrl: 'tx-page.component.html',
   styleUrls: ['tx-page.component.scss'],
 })
-export class PopupTxPageComponent implements OnInit, OnDestroy {
+export class TxPageComponent implements OnInit, OnDestroy {
   @Input() assetId = '';
   @Input() symbol = '';
   @Input() rateCurrency: string;
