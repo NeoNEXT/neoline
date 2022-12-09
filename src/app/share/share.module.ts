@@ -28,13 +28,15 @@ const MATMODULES = [
 //#endregion
 
 //#region components
-import { TxPageComponent } from './components/tx-page/tx-page.component';
+import { AssetTxPageComponent } from './components/tx-page/asset-tx-page/asset-tx-page.component';
+import { NftTxPageComponent } from './components/tx-page/nft-tx-page/nft-tx-page.component';
 import { NavComponent } from './components/nav/nav.component';
 import { LoadingComponent } from './components/loading/loading.component';
 import { PopupNetworkComponent } from './components/network/network.component';
 import { PopupAvatarMenuComponent } from './components/avatar-menu/avatar-menu.component';
 const COMPONENTS = [
-  TxPageComponent,
+  AssetTxPageComponent,
+  NftTxPageComponent,
   PopupNetworkComponent,
   NavComponent,
   LoadingComponent,

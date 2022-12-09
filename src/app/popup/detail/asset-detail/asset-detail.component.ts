@@ -11,7 +11,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
-import { NEO3_CONTRACT, GAS3_CONTRACT, ChainType, RpcNetwork } from '../_lib';
+import { NEO3_CONTRACT, GAS3_CONTRACT, ChainType, RpcNetwork } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';

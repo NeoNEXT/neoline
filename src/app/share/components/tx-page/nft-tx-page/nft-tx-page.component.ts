@@ -3,7 +3,7 @@ import { NftState, ChromeService, TransactionState } from '@/app/core';
 import { NftTransaction } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupNftTxDetailDialogComponent } from '@/app/popup/_dialogs';
-import { STORAGE_NAME } from '../../_lib';
+import { STORAGE_NAME } from '../../../../popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -11,9 +11,9 @@ import { Unsubscribable } from 'rxjs';
 @Component({
   selector: 'app-nft-tx-page',
   templateUrl: 'nft-tx-page.component.html',
-  styleUrls: ['nft-tx-page.component.scss'],
+  styleUrls: ['../tx-page.scss'],
 })
-export class PopupNftTxPageComponent implements OnInit, OnDestroy {
+export class NftTxPageComponent implements OnInit, OnDestroy {
   @Input() nftContract: string;
 
   public show = false;

@@ -1,29 +1,23 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
-import { NEO, GAS, Asset } from '@/models/models';
-import { NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
+import { NftAsset } from '@/models/models';
+import { GlobalService } from '@/app/core';
 
 @Component({
   selector: 'app-asset-item',
   templateUrl: './asset-item.component.html',
-  styleUrls: ['./asset-item.component.scss'],
+  styleUrls: ['../../asset-item.scss'],
 })
 export class PopupAssetItemComponent implements OnInit {
-  @Input() asset: Asset;
+  @Input() asset: NftAsset;
 
   // tslint:disable-next-line:no-output-on-prefix
   @Output() onAddAsset = new EventEmitter<any>();
 
-  constructor() {}
+  constructor(public global: GlobalService) {}
 
   ngOnInit(): void {}
 
-  fixed() {
-    return (
-      [NEO, GAS, NEO3_CONTRACT, GAS3_CONTRACT].indexOf(this.asset.asset_id) >= 0
-    );
-  }
-
-  addAsset() {
+  public addAsset() {
     this.onAddAsset.emit();
   }
 }

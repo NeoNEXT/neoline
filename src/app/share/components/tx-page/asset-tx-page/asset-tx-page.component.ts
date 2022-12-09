@@ -10,11 +10,11 @@ import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 
 @Component({
-  selector: 'app-tx-page',
-  templateUrl: 'tx-page.component.html',
-  styleUrls: ['tx-page.component.scss'],
+  selector: 'app-asset-tx-page',
+  templateUrl: 'asset-tx-page.component.html',
+  styleUrls: ['../tx-page.scss'],
 })
-export class TxPageComponent implements OnInit, OnDestroy {
+export class AssetTxPageComponent implements OnInit, OnDestroy {
   @Input() assetId = '';
   @Input() symbol = '';
   @Input() rateCurrency: string;

@@ -5,7 +5,7 @@ import { NftAsset } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { RpcNetwork } from '../_lib';
+import { RpcNetwork } from '../../_lib';
 
 @Component({
   templateUrl: 'nft-detail.component.html',

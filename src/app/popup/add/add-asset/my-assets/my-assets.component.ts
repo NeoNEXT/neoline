@@ -5,11 +5,11 @@ import { forkJoin } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { NEO3_CONTRACT, GAS3_CONTRACT } from '../../_lib';
+import { NEO3_CONTRACT, GAS3_CONTRACT } from '../../../_lib';
 
 @Component({
   templateUrl: 'my-assets.component.html',
-  styleUrls: ['my-assets.component.scss'],
+  styleUrls: ['../../my-assets.scss'],
 })
 export class PopupMyAssetsComponent implements OnInit, OnDestroy {
   myAssets: Array<Asset> = []; // 所有的资产

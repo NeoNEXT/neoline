@@ -138,12 +138,12 @@
     </ng-container>
     <ng-container *ngIf="selectedIndex === 1">
       <app-nfts *ngIf="currentWalletIsN3 === true"></app-nfts>
-      <app-tx-page
+      <app-asset-tx-page
         *ngIf="currentWalletIsN3 === false"
         [rateCurrency]="rateCurrency"
         [symbol]="balance?.symbol"
       >
-      </app-tx-page>
+      </app-asset-tx-page>
     </ng-container>
   </div>
 </div>

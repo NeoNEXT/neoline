@@ -1,6 +1,6 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { GlobalService } from '@/app/core';
-import { PopupNftTokenDetailDialogComponent } from '../../_dialogs';
+import { PopupNftTokenDetailDialogComponent } from '../../../_dialogs';
 import { MatDialog } from '@angular/material/dialog';
 import { NftToken } from '@/models/models';
 

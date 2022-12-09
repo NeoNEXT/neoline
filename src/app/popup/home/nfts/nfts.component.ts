@@ -14,7 +14,7 @@ import { RpcNetwork } from '../../_lib';
 @Component({
   selector: 'app-nfts',
   templateUrl: 'nfts.component.html',
-  styleUrls: ['../common.scss'],
+  styleUrls: ['../asset-item.scss'],
 })
 export class PopupNftsComponent implements OnInit, OnDestroy {
   isLoading = false;

@@ -52,7 +52,7 @@
   </div>
   <div class="txs">
     <p class="title">{{ "transaction" | translate | async }}</p>
-    <app-tx-page [rateCurrency]="rateCurrency" [symbol]="balance?.symbol">
-    </app-tx-page>
+    <app-asset-tx-page [rateCurrency]="rateCurrency" [symbol]="balance?.symbol">
+    </app-asset-tx-page>
   </div>
 </section>

@@ -6,7 +6,7 @@ import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 @Component({
   templateUrl: 'add-asset.component.html',
-  styleUrls: ['add-asset.component.scss'],
+  styleUrls: ['../add-asset.scss'],
 })
 export class PopupAddAssetComponent implements OnInit, OnDestroy {
   searchAsset: Asset; // Searched asset
