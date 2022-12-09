@@ -1,0 +1,37 @@
+@import "src/styles/popup-default";
+@import "src/styles/pop-ups-menu.scss";
+@import "src/styles/home-top.scss";
+
+section.container {
+  height: 100%;
+  overflow: scroll;
+  .asset-detail {
+    background: #e7efef;
+    padding-bottom: 24px;
+    .top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 5px 24px;
+      margin-bottom: 25px;
+      position: relative;
+      .more {
+        cursor: pointer;
+        span {
+          display: block;
+          width: 4px;
+          height: 4px;
+          background: $title-color;
+          border-radius: 50%;
+          margin: 2px;
+        }
+      }
+      .pop-ups-menu {
+        width: 234px;
+        position: absolute;
+        right: 16px;
+        top: 32px;
+      }
+    }
+  }
+}

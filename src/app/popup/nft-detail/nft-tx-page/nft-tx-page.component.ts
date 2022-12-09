@@ -15,7 +15,6 @@ import { Unsubscribable } from 'rxjs';
 })
 export class PopupNftTxPageComponent implements OnInit, OnDestroy {
   @Input() nftContract: string;
-  @Input() symbol = '';
 
   public show = false;
   public inTransaction: Array<NftTransaction>;
@@ -33,7 +32,9 @@ export class PopupNftTxPageComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private txState: TransactionState,
     private store: Store<AppState>
-  ) {
+  ) {}
+
+  ngOnInit(): void {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet.accounts[0].address;
@@ -41,7 +42,6 @@ export class PopupNftTxPageComponent implements OnInit, OnDestroy {
       this.getInTransactions();
     });
   }
-  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.txData = [];

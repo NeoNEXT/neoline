@@ -46,6 +46,7 @@
     text-align: right;
     .balance,
     .rate {
+      max-width: 120px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;

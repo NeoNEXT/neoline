@@ -2,7 +2,7 @@
 <div class="content">
   <p class="title">{{ "Networks" | translate | async }}</p>
   <ul>
-    <li *ngFor="let item of networks; index as index" (click)="changeNetwork()">
+    <li *ngFor="let item of networks; index as index" (click)="changeNetwork(index)">
       <span class="select"
         [ngClass]="{ active: networks[networkIndex].id === item.id }"
       ></span>

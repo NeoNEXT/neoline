@@ -3,12 +3,14 @@
   *ngFor="let token of nftTokens"
   (click)="showDetail(token)"
 >
-  <div class="avatar-box">
+  <div class="asset-logo">
     <img [src]="token?.image_url" alt="" appErrorSrc />
   </div>
-  <span class="name">{{ token?.name || token?.tokenid }}</span>
-  <div class="right">
-    <div class="amount">#{{ token?.tokenid }}</div>
+  <div class="item-middle">
+    <span>{{ token?.name || token?.tokenid }}</span>
+  </div>
+  <div class="item-right">
+    <div class="balance">#{{ token?.tokenid }}</div>
   </div>
 </div>
 <p *ngIf="nftTokens?.length <= 0" class="no-data">

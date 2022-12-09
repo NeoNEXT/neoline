@@ -6,50 +6,29 @@
   >
     <div class="head">
       <span class="time">{{
-        item.block_time * 1000 | date: "yyyy-MM-dd HH:mm:ss"
+        item.block_time * 1000 | date : "yyyy-MM-dd HH:mm:ss"
       }}</span>
-      <img
-        class="more-info-btn"
-        src="/assets/images/home/arrow.png"
-        alt=""
-        (click)="$event.stopPropagation(); show = !show"
-        [ngClass]="{ active: show }"
-      />
+      <span class="status" *ngIf="item.id && item.id !== -1">
+        {{ "confirmed" | translate | async }}
+      </span>
+      <span class="status wait" *ngIf="item.id === -1 || item.id === undefined">
+        {{ "confirming" | translate | async }}
+      </span>
+      <img class="more-info-btn" src="/assets/images/common/arrow.svg" alt="" />
     </div>
     <div class="content">
       <img
-        class="tx-type-icon"
         [src]="
-          item.value > 0
-            ? '/assets/images/home/receive.png'
-            : '/assets/images/home/send_black.png'
+          item.type === 'received'
+            ? '/assets/images/txs/receive.svg'
+            : '/assets/images/txs/send.svg'
         "
         alt=""
       />
-      <div class="status-box">
-        <p class="tx-type">
-          {{
-            item.value < 0
-              ? ("sent" | translate | async)
-              : ("received" | translate | async)
-          }}
-          #{{ item.tokenid | nftTokenId }}
-        </p>
-        <p class="status" [ngClass]="{ wait: item.id === -1 }">
-          {{
-            item.id === -1 || item.id === undefined
-              ? ("confirming" | translate | async)
-              : ("confirmed" | translate | async)
-          }}·
-          <span>TxID: {{ item.txid }}</span>
-        </p>
-      </div>
+      <p class="txid">{{ item.txid | longStr }}</p>
       <div class="amount-box">
-        <p
-          class="asset-amount"
-          [class]="{ receive: item.value > 0, send: item.value <= 0 }"
-        >
-          {{ item.value }}
+        <p class="asset-amount" [class]="{ send: item.type !== 'received' }">
+          {{ item.value }} #{{ item.tokenid | nftTokenId }}
         </p>
       </div>
     </div>

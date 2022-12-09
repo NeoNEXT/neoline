@@ -1,6 +1,7 @@
 @import "src/styles/popup-default";
 @import "src/styles/pop-ups-menu.scss";
 @import "src/styles/home-top.scss";
+@import './tab-container.scss';
 
 .loading-box {
   background: rgb(255 255 255 / 50%);
@@ -150,43 +151,6 @@
       border-top: 4px solid $line-color;
     }
     .tabs-container {
-      padding-top: 8px;
-      margin-bottom: 3px;
-      background: #fff;
-      display: flex;
-      align-items: center;
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      span {
-        display: inline-block;
-        height: 32px;
-        line-height: 32px;
-        margin-left: 24px;
-        font-family: NeverMind-Regular;
-        font-size: 16px;
-        color: $sub-title-color;
-        cursor: pointer;
-        position: relative;
-        &::after {
-          content: "";
-          width: 16px;
-          height: 3px;
-          border-radius: 2px;
-          background-color: $title-color;
-          position: absolute;
-          left: 50%;
-          margin-left: -8px;
-          display: none;
-        }
-        &.selected,
-        &:hover {
-          color: $title-color;
-          &::after {
-            display: block;
-          }
-        }
-      }
       img.asset-add {
         position: absolute;
         right: 24px;

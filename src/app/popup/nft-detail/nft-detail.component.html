@@ -1,79 +1,65 @@
-<div class="nav">
-  <div class="content">
-    <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="" />
-    {{ nft?.name }}
-  </div>
-  <div class="divide"></div>
-</div>
-
-<div class="sub-nav">
-  <div class="asset-logo-box">
-    <img class="asset-logo" [src]="nft?.image_url" appErrorSrc alt="" />
-  </div>
-  <img
-    src="/assets/images/asset-detail/nav.png"
-    (click)="showMenu = !showMenu"
-    class="nav-img"
-    alt=""
-  />
-  <section class="veil" *ngIf="showMenu" (click)="showMenu = false"></section>
-  <ul class="sub-menu" *ngIf="showMenu">
-    <li matRipple (click)="toWeb()">
-      {{ "viewOnNeoTube" | translate | async }}
-    </li>
-  </ul>
-</div>
-
-<div class="container">
-  <p class="asset-balance">
-    {{ nft?.tokens?.length || 0 | numberFixed }} {{ nft?.symbol }}
-  </p>
-  <div class="transaction-btn-container">
-    <button
-      class="receive-btn"
-      mat-stroked-button
-      color="primary"
-      [routerLink]="['/popup/transfer/receive']"
-    >
-      <img src="/assets/images/home/receive.png" alt="" />
-      <span>{{ "receive" | translate | async }}</span>
-    </button>
-    <button
-      *ngIf="nft?.tokens?.length"
-      class="transfer-btn"
-      mat-flat-button
-      color="primary"
-      [routerLink]="['/popup/transfer/create/nft/' + nftContract]"
-    >
-      <img src="/assets/images/home/send.png" alt="" />
-      <span>{{ "transfer" | translate | async }}</span>
-    </button>
-  </div>
-  <hr class="claim-line" />
-  <div class="tabs-group">
-    <div class="tabs-container">
-      <p
-        matRipple
-        [class]="{ selected: selectedIndex == 0 }"
-        (click)="selectedIndex = 0"
-      >
-        {{ "Tokens" }}
-      </p>
-      <p
-        matRipple
-        [class]="{ selected: selectedIndex == 1 }"
-        (click)="selectedIndex = 1"
-      >
-        {{ "transaction" | translate | async }}
-      </p>
-    </div>
-    <div class="tab-content-container">
-      <div class="tab-assets-container" [hidden]="selectedIndex == 1">
-        <app-nft-tokens [nftTokens]="nft?.tokens"></app-nft-tokens>
+<section class="container">
+  <div class="asset-detail">
+    <div class="top">
+      <img routerLink="/popup/home" src="/assets/images/common/nav-arrow.svg" />
+      <div class="asset-logo-box big">
+        <img class="asset-logo" [assetId]="nft?.image_url" appErrorSrc alt="" />
       </div>
-      <div class="tab-transaction-container" [hidden]="selectedIndex == 0">
-        <app-nft-tx-page [nftContract]="nftContract"></app-nft-tx-page>
+      <div class="more" (click)="showMenu = !showMenu">
+        <span></span>
+        <span></span>
+        <span></span>
+      </div>
+      <section
+        class="pop-ups-veil"
+        *ngIf="showMenu"
+        (click)="showMenu = false"
+      ></section>
+      <ul class="pop-ups-menu" *ngIf="showMenu">
+        <li (click)="toWeb()">
+          <img src="assets/images/account/home-explorer.svg" alt="" />{{
+            "viewOnNeoTube" | translate | async
+          }}
+        </li>
+      </ul>
+    </div>
+    <p class="asset-balance">
+      {{ nft?.tokens?.length || 0 | numberFixed }} {{ nft?.symbol }}
+    </p>
+    <div class="transaction-btn-container">
+      <div class="item receive" [routerLink]="['/popup/transfer/receive']">
+        <img src="assets/images/transfer/receive.svg" alt="" />
+        {{ "receive" | translate | async }}
+      </div>
+      <div
+        class="item transfer"
+        [routerLink]="['/popup/transfer/create/nft/' + nftContract]"
+      >
+        <img src="assets/images/transfer/transfer.svg" alt="" />
+        {{ "transfer" | translate | async }}
       </div>
     </div>
   </div>
-</div>
+  <div class="tabs-container">
+    <span
+      [class]="{ selected: selectedIndex == 0 }"
+      (click)="selectedIndex = 0"
+    >
+      {{ "Tokens" }}
+    </span>
+    <span
+      [class]="{ selected: selectedIndex == 1 }"
+      (click)="selectedIndex = 1"
+    >
+      {{ "transaction" | translate | async }}
+    </span>
+  </div>
+  <app-nft-tokens
+    *ngIf="selectedIndex === 0"
+    [nftTokens]="nft?.tokens"
+  ></app-nft-tokens>
+  <app-nft-tx-page
+    *ngIf="selectedIndex === 1"
+    [nftContract]="nftContract"
+  ></app-nft-tx-page>
+</section>
