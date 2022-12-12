@@ -1,7 +1,33 @@
-// $Akrobat-Bold: "~@fonts/Akrobat-Bold.ttf";
-$Akrobat-Bold: "/assets/fonts/Akrobat-Bold.ttf";
+@font-face {
+  font-family: NeverMind-Bold;
+  src: url("/assets/fonts/NeverMind-Bold.ttf") format("truetype");
+}
+@font-face {
+  font-family: NeverMind-DemiBold;
+  src: url("/assets/fonts/NeverMind-DemiBold.ttf") format("truetype");
+}
 
 @font-face {
-  font-family: AkrobatBold;
-  src: url($Akrobat-Bold);
+  font-family: NeverMind-ExtraLight;
+  src: url("/assets/fonts/NeverMind-ExtraLight.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: NeverMind-Light;
+  src: url("/assets/fonts/NeverMind-Light.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: NeverMind-Medium;
+  src: url("/assets/fonts/NeverMind-Medium.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: NeverMind-Regular;
+  src: url("/assets/fonts/NeverMind-Regular.ttf") format("truetype");
+}
+
+@font-face {
+  font-family: NeverMind-Thin;
+  src: url("/assets/fonts/NeverMind-Thin.ttf") format("truetype");
 }
