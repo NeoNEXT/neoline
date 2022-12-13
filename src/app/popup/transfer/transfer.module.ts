@@ -1,20 +1,22 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { TransferRoutingModule } from './transfer.route';
-import { TransferComponent } from './transfer.component';
-import { TransferReceiveComponent } from './receive/receive.component';
 import { ShareModule } from '@/app/share';
+import { TransferRoutingModule } from './transfer.route';
+
 import { TransferService } from './transfer.service';
-import { TransferCreateComponent } from './create/create.component';
-import { PopupTransferConfirmComponent } from './confirm/confirm.component';
 import { Neo3TransferService } from './neo3-transfer.service';
 import { Neo3InvokeService } from './neo3-invoke.service';
 
+import { TransferReceiveComponent } from './receive/receive.component';
+import { TransferCreateComponent } from './create/create.component';
+import { TransferCreateAddressComponent } from './create/create-address/create-address.component';
+import { PopupTransferConfirmComponent } from './confirm/confirm.component';
+
 @NgModule({
   declarations: [
-    TransferComponent,
     TransferReceiveComponent,
     TransferCreateComponent,
+    TransferCreateAddressComponent,
     PopupTransferConfirmComponent,
   ],
   imports: [CommonModule, TransferRoutingModule, ShareModule],

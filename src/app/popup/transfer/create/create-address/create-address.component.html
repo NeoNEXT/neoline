@@ -1,0 +1,42 @@
+<section class="container">
+  <div class="header">
+    <button class="address search" *ngIf="!transferTo?.address">
+      <img src="/assets/images/common/search.svg" alt="" />
+      <input
+        class="flex-1"
+        [placeholder]="getInputAddressTip() | translate | async"
+        type="text"
+        (input)="search($event)"
+      />
+    </button>
+    <button class="address selected" *ngIf="transferTo?.address">
+      <img
+        class="left"
+        src="/assets/images/common/selected-account.svg"
+        alt=""
+      />
+      <div class="flex-1">
+        <p class="label" *ngIf="transferTo?.name">{{ transferTo?.name }}</p>
+        <p class="value">{{ transferTo?.address | longStr : 8 }}</p>
+      </div>
+      <img
+        (click)="clearAccount()"
+        class="close"
+        src="/assets/images/common/close.svg"
+        alt=""
+      />
+    </button>
+  </div>
+  <div class="personal-accounts" *ngIf="!transferTo?.address">
+    <p class="title">Personal Account</p>
+    <ul>
+      <li *ngFor="let item of walletArr" (click)="selecteAccount(item)">
+        <img [avatar]="item.accounts[0].address" alt="" />
+        <div>
+          <p class="label">{{ item.name }}</p>
+          <p class="value">{{ item.accounts[0].address | longStr : 8 }}</p>
+        </div>
+      </li>
+    </ul>
+  </div>
+</section>

@@ -15,6 +15,9 @@ section.container {
       padding: 5px 24px;
       margin-bottom: 25px;
       position: relative;
+      img.back {
+        cursor: pointer;
+      }
       .more {
         cursor: pointer;
         span {

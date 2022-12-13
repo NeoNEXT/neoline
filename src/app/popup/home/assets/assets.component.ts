@@ -35,7 +35,9 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private util: UtilServiceState,
     private store: Store<AppState>
-  ) {
+  ) {}
+
+  ngOnInit(): void {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
@@ -48,8 +50,6 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
       this.getAssets();
     });
   }
-
-  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

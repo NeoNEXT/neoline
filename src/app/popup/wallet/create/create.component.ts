@@ -1,4 +1,4 @@
-import { GlobalService, NeonService, ChromeService } from '@/app/core';
+import { GlobalService, NeonService } from '@/app/core';
 import {
   AfterContentInit,
   Component,
@@ -8,7 +8,6 @@ import {
 } from '@angular/core';
 import { WalletInitConstant } from '../../_lib/constant';
 import { WalletCreation } from '../../_lib/models';
-import { Observable, of } from 'rxjs';
 
 @Component({
   selector: 'wallet-create',
@@ -24,11 +23,7 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
   public isInit: boolean;
   @Output() submit = new EventEmitter<any>();
 
-  constructor(
-    private global: GlobalService,
-    private neon: NeonService,
-    private chrome: ChromeService
-  ) {
+  constructor(private global: GlobalService, private neon: NeonService) {
     this.hidePwd = true;
     this.hideConfirmPwd = true;
     this.wallet = new WalletCreation();

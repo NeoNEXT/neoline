@@ -31,15 +31,18 @@ export class PopupNftDetailComponent implements OnInit, OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet.accounts[0].address;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.initData();
     });
   }
 
-  ngOnInit(): void {
+  initData() {
     this.aRouter.params.subscribe(async (params: any) => {
       this.nftContract = params.contract;
       this.getData();
     });
   }
+
+  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

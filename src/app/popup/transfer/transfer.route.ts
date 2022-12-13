@@ -1,7 +1,6 @@
 import { Routes, RouterModule } from '@angular/router';
 import { NgModule } from '@angular/core';
 
-import { TransferComponent } from './transfer.component';
 import { TransferReceiveComponent } from './receive/receive.component';
 import { PopupComponent } from '../popup.component';
 import { TransferCreateComponent } from './create/create.component';
@@ -13,18 +12,24 @@ const routes: Routes = [
     component: PopupComponent,
     children: [
       {
-        path: 'transfer',
-        component: TransferComponent,
+        path: 'transfer/receive',
+        component: TransferReceiveComponent,
         canActivate: [PopupWalletGuard],
-        children: [
-          { path: 'receive', component: TransferReceiveComponent },
-          { path: 'create/:id', component: TransferCreateComponent },
-          {
-            path: 'create/nft/:nftContract',
-            component: TransferCreateComponent,
-          },
-          { path: 'create', component: TransferCreateComponent },
-        ],
+      },
+      {
+        path: 'transfer/create',
+        component: TransferCreateComponent,
+        canActivate: [PopupWalletGuard],
+      },
+      {
+        path: 'transfer/create/:id',
+        component: TransferCreateComponent,
+        canActivate: [PopupWalletGuard],
+      },
+      {
+        path: 'transfer/create/nft/:nftContract',
+        component: TransferCreateComponent,
+        canActivate: [PopupWalletGuard],
       },
     ],
   },

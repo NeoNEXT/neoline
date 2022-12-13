@@ -19,7 +19,7 @@ export class PopupQRCodeDialogComponent implements OnInit {
         text: this.address,
         width: 214,
         height: 214,
-        colorDark: '#333333',
+        colorDark: '#000',
         colorLight: '#ffffff',
         correctLevel: QRCode.CorrectLevel.H,
       });

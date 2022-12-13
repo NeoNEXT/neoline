@@ -17,14 +17,26 @@ export class TransferReceiveComponent implements OnInit, OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet.accounts[0].address;
+      this.initData();
     });
   }
 
-  ngOnInit(): void {
+  initData() {
     if (QRCode) {
-      setTimeout(() => {}, 0);
+      setTimeout(() => {
+        const qrcode = new QRCode('receive-qrcode', {
+          text: this.address,
+          width: 170,
+          height: 170,
+          colorDark: '#000',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H,
+        });
+      }, 0);
     }
   }
+
+  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

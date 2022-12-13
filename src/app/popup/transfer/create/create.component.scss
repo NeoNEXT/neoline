@@ -1,156 +1,99 @@
-@import "src/styles/theme-default";
-@import "src/styles/theme-default";
-@import "src/app/popup/transfer/common-scss/common.scss";
+@import "src/styles/popup-default.scss";
 
-.transfer-body {
-  .container {
-    display: flex;
-    align-items: center;
-    margin-top: 20px;
-  }
-
-  .label {
-    display: inline-block;
-    vertical-align: middle;
-    width: 60px;
-    word-wrap: break-word;
-    font-size: 12px;
-    color: #808a94;
-    text-align: center;
-    margin-left: 18px;
-    margin-right: 15px;
-  }
-
-  .box {
-    display: inline-flex;
-    flex: 1 1 auto;
-    max-width: 275px;
-    align-items: center;
-    background-color: #fafafa;
-    border-radius: 10px;
-    min-height: 60px;
-    margin-right: 20px;
-  }
-
-  hr {
-    border: none;
-    border-top: 0.5px solid #efefef;
-    margin-top: 44px;
-  }
-
-  .to-container {
-    .address {
-      flex: 1 1 auto;
-      font-size: 16px;
-      color: map-get($neo-line-default, 500);
-      margin-left: 20px;
-      .address-tip {
-        color: #808a94;
-        font-size: 13px;
-      }
-    }
-  }
-
-  .asset-box {
-    padding-top: 10px;
-    padding-bottom: 10px;
-
-    .asset-logo {
-      width: 50px;
-      height: 50px;
-      margin-left: 20px;
-      padding: 10px;
-      background: white;
-      border-radius: 50%;
-
-      img {
-        width: 30px;
-        height: 30px;
-      }
-    }
-
-    .asset-info {
-      flex: 1 1 auto;
-      max-width: 150px;
-      margin-left: 16px;
-
-      p {
-        &:nth-child(1) {
-          font-size: 16px;
-          color: #444644;
-        }
-
-        &:nth-child(2) {
-          width: 80%;
-          overflow: auto;
-          margin-top: 8px;
-          color: #808a94;
-          font-size: 14px;
-          white-space: nowrap;
-          margin-right: 20px;
-        }
-      }
-    }
-  }
-
-  .amount-box {
-    input {
-      min-width: 100px;
-      border: none;
-      flex: 1 1 auto;
-      height: 60px;
-      display: inline-block;
-      color: #303433;
-      font-size: 18px;
-      padding-left: 25px;
-      background: transparent;
-      max-width: 200px;
-    }
-
-    button {
-      display: inline;
-    }
-  }
-
-  .fee-box {
-    display: flex;
-    justify-content: space-between;
-    padding: 0 15px 0 25px;
-    .fee-left {
-      .desc {
-        font-size: 17px;
-        color: #202224;
+section.container {
+  height: 100%;
+  .content {
+    padding: 0 24px;
+    .item {
+      .label {
+        font-family: NeverMind-Regular;
+        color: $sub-title-color;
+        margin-top: 24px;
       }
       .value {
-        font-size: 15px;
-        color: #707c82;
+        height: 52px;
+        padding: 0 16px;
+        border-radius: 4px;
+        background: $box-color;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 12px;
+      }
+      &.currencies {
+        .label {
+          margin-top: 8px;
+        }
+        .value {
+          cursor: pointer;
+          .asset-logo-box {
+            margin-right: 12px;
+          }
+          .symbol {
+            font-family: NeverMind-Regular;
+          }
+          .balance {
+            line-height: 12px;
+            color: $sub-title-color;
+            margin-top: 4px;
+          }
+          img.arrow-down {
+            transform: rotate(90deg);
+          }
+        }
+      }
+      &.amount {
+        .value {
+          height: 48px;
+          position: relative;
+        }
+        input {
+          font-family: NeverMind-Medium;
+          font-size: 18px;
+          color: #303433;
+          flex: 1;
+          padding-right: 60px;
+        }
+        .all {
+          position: absolute;
+          right: 0;
+          top: 12px;
+          display: inline-block;
+          width: 50px;
+          height: 24px;
+          line-height: 24px;
+          text-align: center;
+          border-radius: 4px 0px 0px 4px;
+          font-family: NeverMind-Regular;
+          color: $theme-color;
+          cursor: pointer;
+          &:hover {
+            background: #daf8f3;
+          }
+        }
+      }
+      &.priority-fee {
+        .value {
+          cursor: pointer;
+          .fee-desc {
+            font-family: NeverMind-Regular;
+            font-size: 12px;
+          }
+          .fee {
+            color: $sub-title-color;
+            margin-top: 5px;
+          }
+        }
       }
     }
-    img.arrow {
-      height: 11px;
+    .btn-group {
+      margin-top: 37px;
+      button {
+        width: calc(50% - 8px);
+        &:first-child {
+          margin-right: 16px;
+        }
+      }
     }
-  }
-
-  .drop {
-    width: 7.5px;
-    height: 4px;
-    margin-right: 25px;
-  }
-}
-
-.btn-box {
-  display: inline-block;
-  margin: 20px auto;
-
-  button {
-    &:nth-child(1) {
-      background: #ecfbf1;
-      color: map-get($neo-line-default, 500);
-    }
-
-    margin-left: 15px;
-    border-radius: 25px;
-    height: 50px;
-    width: 160px;
   }
 }

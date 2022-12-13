@@ -3,7 +3,6 @@ button {
   border-radius: 24px;
   font-family: NeverMind-Medium;
   font-size: 14px;
-  cursor: pointer;
   &.pop-ups {
     border-radius: 4px;
   }
@@ -11,6 +10,7 @@ button {
     background: #fff;
     color: $theme-color;
     border: 1px solid $theme-color;
+    cursor: pointer;
     &:hover {
       box-shadow: 0px 10px 25px -12px rgba(6, 204, 171, 0.5);
       background: #f5f9f9;
@@ -19,6 +19,7 @@ button {
   &.confirm {
     color: #ffffff;
     background: $theme-color;
+    cursor: pointer;
     &.disabled {
       opacity: 0.3;
     }

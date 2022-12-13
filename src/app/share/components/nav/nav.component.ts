@@ -1,5 +1,4 @@
 import { Component, Input } from '@angular/core';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'nav',
@@ -8,11 +7,10 @@ import { Router } from '@angular/router';
 })
 export class NavComponent {
   @Input() title: string;
-  @Input() backUrl = '/popup/home';
 
-  constructor(private router: Router) {}
+  constructor() {}
 
   back() {
-    this.router.navigateByUrl(this.backUrl);
+    history.go(-1);
   }
 }

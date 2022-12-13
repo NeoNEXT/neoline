@@ -69,7 +69,7 @@ export class PopupBackupComponent implements OnInit, OnDestroy {
           text: this.WIF,
           width: 140,
           height: 140,
-          colorDark: '#333333',
+          colorDark: '#000',
           colorLight: '#ffffff',
           correctLevel: QRCode.CorrectLevel.H,
         });

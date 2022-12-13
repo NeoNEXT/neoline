@@ -28,7 +28,9 @@ export class PopupNftsComponent implements OnInit, OnDestroy {
     private nftState: NftState,
     private chrome: ChromeService,
     private store: Store<AppState>
-  ) {
+  ) {}
+
+  ngOnInit(): void {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet.accounts[0].address;
@@ -36,8 +38,6 @@ export class PopupNftsComponent implements OnInit, OnDestroy {
       this.init();
     });
   }
-
-  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
