@@ -14,8 +14,8 @@ interface CreateNeo3TxInput {
   addressFrom: string;
   addressTo: string;
   tokenScriptHash: string;
-  amount: any;
-  networkFee: number;
+  amount: string | number;
+  networkFee: string | number;
   decimals: number;
   nftTokenId?: any;
 }

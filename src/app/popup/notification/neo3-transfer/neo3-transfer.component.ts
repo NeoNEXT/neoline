@@ -52,7 +52,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
   public loading = false;
   public loadingMsg: string;
 
-  public fee: number;
+  public fee: string;
   public init = false;
   private broadcastOverride = false;
   private messageID = 0;
@@ -137,13 +137,13 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
       this.symbol = params.symbol || '';
       this.fee = params.fee || 0;
       if (params.fee) {
-        this.fee = parseFloat(params.fee);
+        this.fee = params.fee;
       } else {
         if (this.asset.gasFeeSpeed) {
-          this.fee = Number(this.asset.gasFeeSpeed.propose_price);
+          this.fee = this.asset.gasFeeSpeed.propose_price;
         } else {
           this.asset.fetchNeo3GasFee().subscribe((res: GasFeeSpeed) => {
-            this.fee = Number(res.propose_price);
+            this.fee = res.propose_price;
           });
         }
       }

@@ -30,7 +30,7 @@ export class TransferService {
     to: string,
     asset: string,
     amount: string,
-    fee: number = 0,
+    fee: number | string = 0,
     decimals: number = 0,
     broadcastOverride: boolean = false,
     nftTokenId?: string
@@ -68,10 +68,10 @@ export class TransferService {
               to,
               balance,
               amount,
-              fee
+              fee as number
             );
             if (fee > 0 && asset !== GAS) {
-              this.addFee(from, newTx, fee).subscribe(
+              this.addFee(from, newTx, fee as number).subscribe(
                 (res) => {
                   observer.next(res);
                   observer.complete();
@@ -100,7 +100,7 @@ export class TransferService {
           broadcastOverride
         );
         if (fee > 0 && asset !== GAS) {
-          this.addFee(from, newTx, fee).subscribe(
+          this.addFee(from, newTx, fee as number).subscribe(
             (res) => {
               observer.next(res);
               observer.complete();

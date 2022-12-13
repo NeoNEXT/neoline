@@ -18,7 +18,6 @@ import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SettingState } from './states/setting.state';
 import { NftState } from './states/nft.state';
 import { UtilServiceState } from './util/util.service';
-import { TransferService } from './services/transfer.service';
 import { HomeService } from './services/home.service';
 import { LedgerService } from './services/ledger.service';
 import { ExtensionService } from './util/extension.service';
@@ -46,7 +45,6 @@ import { ExtensionService } from './util/extension.service';
     SettingState,
     NftState,
     UtilServiceState,
-    TransferService,
     HomeService,
     LedgerService,
     ExtensionService,

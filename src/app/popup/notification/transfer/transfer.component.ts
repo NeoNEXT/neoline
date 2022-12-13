@@ -6,7 +6,6 @@ import {
   GlobalService,
   ChromeService,
   TransactionState,
-  TransferService,
   LedgerService,
   UtilServiceState,
 } from '@/app/core';
@@ -27,6 +26,7 @@ import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { TransferService } from '../../transfer/transfer.service';
 
 @Component({
   templateUrl: 'transfer.component.html',
@@ -234,7 +234,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
             this.broadcastOverride
           )
           .subscribe(
-            (tx) => {
+            (tx: Transaction) => {
               if (this.remark !== '') {
                 tx.addAttribute(
                   tx2.TxAttrUsage.Remark2,

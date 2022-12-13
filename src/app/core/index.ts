@@ -10,7 +10,6 @@ export { NotificationService } from './services/notification.service';
 export { SettingState } from './states/setting.state';
 export { NftState } from './states/nft.state';
 export { UtilServiceState } from './util/util.service';
-export { TransferService } from './services/transfer.service';
 export { HomeService } from './services/home.service';
 export { LedgerService } from './services/ledger.service';
 export { StartupService } from './startup/startup.service';

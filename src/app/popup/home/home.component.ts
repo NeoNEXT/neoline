@@ -4,7 +4,6 @@ import {
   NeonService,
   GlobalService,
   ChromeService,
-  TransferService,
   HomeService,
   LedgerService,
 } from '@/app/core';
@@ -31,6 +30,7 @@ import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
+import { TransferService } from '../transfer/transfer.service';
 @Component({
   templateUrl: 'home.component.html',
   styleUrls: ['home.component.scss'],
