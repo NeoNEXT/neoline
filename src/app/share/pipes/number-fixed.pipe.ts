@@ -6,7 +6,7 @@ import { bignumber } from 'mathjs';
 })
 export class NumberFixedPipe implements PipeTransform {
   public transform(value: any, decimal: number = null) {
-    if (!value) {
+    if (!value || value === '') {
       return 0;
     }
     if (decimal != null) {

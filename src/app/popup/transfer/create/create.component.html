@@ -1,75 +1,9 @@
-<section class="container">
-  <nav [title]="transferTo?.address ? 'transfer' : 'transgerTo'"></nav>
-  <transfer-create-address
-    [chainType]="chainType"
-    [currentNetwork]="currentNetwork"
-    [walletArr]="currentWalletArr"
-    (selecteAccountEvent)="selectAccount($event)"
-  ></transfer-create-address>
-  <div class="content" *ngIf="transferTo?.address">
-    <div class="item currencies">
-      <p class="label">{{ "currencies" | translate | async }}</p>
-      <div class="value" *ngIf="!nftContract" (click)="selectAsset()">
-        <div class="asset-logo-box small">
-          <img [assetId]="transferAsset?.asset_id" appErrorSrc alt="" />
-        </div>
-        <div class="flex-1">
-          <p class="symbol">{{ transferAsset?.symbol || "NEO" }}</p>
-          <p class="balance">
-            {{ "balancecolon" | translate | async }}
-            {{ transferAsset?.balance | numberFixed }}
-            {{ transferAsset?.symbol || "NEO" }}
-          </p>
-        </div>
-        <img class="arrow-down" src="assets/images/common/arrow.svg" alt="" />
-      </div>
-      <div class="value" *ngIf="nftContract" (click)="selectAsset(true)">
-        <div class="asset-logo-box small">
-          <img [src]="transferNFT?.image_url" appErrorSrc alt="" />
-        </div>
-        <div class="flex-1">
-          <p class="symbol">#{{ transferNFT?.tokenid | nftTokenId }}</p>
-          <p class="balance">
-            {{ "balancecolon" | translate | async }}
-            {{ transferNFT?.amount | numberFixed }}
-            {{ transferNFT?.name || transferNFT?.tokenid }}
-          </p>
-        </div>
-        <img class="arrow-down" src="assets/images/common/arrow.svg" alt="" />
-      </div>
-    </div>
-    <div class="item amount" *ngIf="!nftContract">
-      <p class="label">{{ "amount" | translate | async }}</p>
-      <div class="value">
-        <input
-          type="text"
-          min="0"
-          placeholder="0"
-          [(ngModel)]="transferAmount"
-          (keypress)="checkTransferAmount($event)"
-        />
-        <span class="all" (click)="transferAll()">{{
-          "allTransfer" | translate | async
-        }}</span>
-      </div>
-    </div>
-    <div class="item priority-fee">
-      <p class="label">{{ "priorityFee" | translate | async }}</p>
-      <div class="value">
-        <div>
-          <p class="fee-desc">{{ getPriorityFeeDesc() | translate | async }}</p>
-          <p class="fee">{{ priorityFee | numberFixed }} GAS</p>
-        </div>
-        <img src="assets/images/common/arrow.svg" alt="" />
-      </div>
-    </div>
-    <div class="btn-group">
-      <button class="cancel" (click)="cancel()">
-        {{ "cancel" | translate | async }}
-      </button>
-      <button class="confirm" (click)="submit()">
-        {{ "yes" | translate | async }}
-      </button>
-    </div>
-  </div>
-</section>
+<transfer-create-amount
+  [hidden]="showConfirmPage === true"
+  (closeEvent)="toConfirmPage($event)"
+></transfer-create-amount>
+<transfer-create-confirm
+  *ngIf="showConfirmPage"
+  [data]="transferData"
+  (backAmount)="showConfirmPage = false"
+></transfer-create-confirm>

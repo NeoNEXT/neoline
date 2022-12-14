@@ -10,14 +10,16 @@ import { Neo3InvokeService } from './neo3-invoke.service';
 import { TransferReceiveComponent } from './receive/receive.component';
 import { TransferCreateComponent } from './create/create.component';
 import { TransferCreateAddressComponent } from './create/create-address/create-address.component';
-import { PopupTransferConfirmComponent } from './confirm/confirm.component';
+import { TransferCreateAmountComponent } from './create/create-amount/create-amount.component';
+import { TransferCreateConfirmComponent } from './create/create-confirm/create-confirm.component';
 
 @NgModule({
   declarations: [
     TransferReceiveComponent,
     TransferCreateComponent,
     TransferCreateAddressComponent,
-    PopupTransferConfirmComponent,
+    TransferCreateAmountComponent,
+    TransferCreateConfirmComponent,
   ],
   imports: [CommonModule, TransferRoutingModule, ShareModule],
   exports: [],

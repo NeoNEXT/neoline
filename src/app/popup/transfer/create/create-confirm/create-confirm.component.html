@@ -1,0 +1,121 @@
+<section class="container">
+  <div class="asset-detail">
+    <img
+      class="back"
+      (click)="back()"
+      src="/assets/images/common/nav-arrow.svg"
+    />
+    <div class="asset-logo-box big">
+      <img
+        class="asset-logo"
+        [assetId]="data?.asset?.asset_id"
+        appErrorSrc
+        alt=""
+      />
+    </div>
+    <p class="asset-balance">
+      {{ data?.amount | numberFixed }} {{ data?.asset?.symbol }}
+    </p>
+    <p class="asset-money" *ngIf="!data?.isNFT">
+      {{ rate?.amount | numberFixed : 2 }}
+      {{ rateCurrency }}
+    </p>
+    <div class="type">TRANSFER</div>
+  </div>
+  <div class="tabs-container">
+    <span
+      [class]="{ selected: tabType === 'details' }"
+      (click)="tabType = 'details'"
+    >
+      {{ "details" | translate | async }}
+    </span>
+    <span [class]="{ selected: tabType === 'data' }" (click)="tabType = 'data'">
+      {{ "data" | translate | async }}
+    </span>
+  </div>
+  <ul class="details-content" *ngIf="tabType === 'details'">
+    <li>
+      <p class="row">
+        <span class="label">{{ "from" | translate | async }}</span>
+        <span class="value">{{ data?.from | longStr : 10 }}</span>
+      </p>
+    </li>
+    <li>
+      <p class="row">
+        <span class="label">{{ "to" | translate | async }}</span>
+        <span class="value">{{ data?.to?.address | longStr : 10 }}</span>
+      </p>
+    </li>
+    <li>
+      <p class="row">
+        <span class="label"
+          >{{
+            (data?.chainType === "Neo3" ? "PRIORITYFEE" : "GASFEE")
+              | translate
+              | async
+          }}<img
+            class="edit"
+            (click)="editFee()"
+            src="assets/images/common/edit.svg"
+        /></span>
+        <span class="value">{{ data?.fee | numberFixed }} GAS</span>
+      </p>
+      <p class="row tip">{{ rate.fee | numberFixed : 2 }} {{ rateCurrency }}</p>
+    </li>
+    <li>
+      <p class="row">
+        <span class="label">{{ "SYSTEMFEE" | translate | async }}</span>
+        <span class="value">{{ systemFee | numberFixed }} GAS</span>
+      </p>
+      <p class="row tip">
+        {{ rate.systemFee | numberFixed : 2 }} {{ rateCurrency }}
+      </p>
+    </li>
+    <li>
+      <p class="row">
+        <span class="label">{{ "NETWORKFEE" | translate | async }}</span>
+        <span class="value">{{ networkFee | numberFixed }} GAS</span>
+      </p>
+      <p class="row tip">
+        {{ rate.networkFee | numberFixed : 2 }} {{ rateCurrency }}
+      </p>
+    </li>
+    <li>
+      <p class="row">
+        <span class="label">{{ "TOTAL" | translate | async }}</span>
+        <span class="value"
+          >{{ data?.amount | numberFixed }} {{ data?.asset?.symbol }} +
+          {{ totalFee | numberFixed }} GAS</span
+        >
+      </p>
+      <p class="row tip column">
+        <span class="label"
+          >{{ "amount" | translate | async }}+{{
+            "GASFEE" | translate | async
+          }}</span
+        >
+        <span class="value"
+          >{{ rate.total | numberFixed : 2 }} {{ rateCurrency }}</span
+        >
+      </p>
+    </li>
+  </ul>
+  <div class="data-content" *ngIf="tabType === 'data'">
+    <p class="title">invoke function: <span class="value">transfer</span></p>
+    <div class="json-box">
+      <pre>{{ datajson | json }}</pre>
+    </div>
+    <p class="title hex">HEX</p>
+    <p class="json-box serialize">
+      {{ txSerialize }}
+    </p>
+  </div>
+  <div class="btn-group">
+    <button class="cancel" (click)="cancel()">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button class="confirm" (click)="confirm()">
+      {{ "yes" | translate | async }}
+    </button>
+  </div>
+</section>

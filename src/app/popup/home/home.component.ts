@@ -235,8 +235,8 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         addressFrom: this.address,
         addressTo: this.address,
         tokenScriptHash: NEO3_CONTRACT,
-        amount: 0,
-        networkFee: 0,
+        amount: '0',
+        networkFee: '0',
         decimals: 0,
       };
       this.neo3TransferService.createNeo3Tx(params).subscribe((tx) => {
