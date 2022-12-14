@@ -21,7 +21,7 @@ import { Unsubscribable } from 'rxjs';
   styleUrls: ['asset-detail.component.scss'],
 })
 export class PopupAssetDetailComponent implements OnInit, OnDestroy {
-  private assetId: string;
+  assetId: string;
   balance: Asset;
   rateCurrency: string;
 

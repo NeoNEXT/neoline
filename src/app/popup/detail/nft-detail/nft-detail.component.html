@@ -64,6 +64,7 @@
   ></app-nft-tokens>
   <app-nft-tx-page
     *ngIf="selectedIndex === 1"
+    [symbol]="nft?.symbol"
     [nftContract]="nftContract"
   ></app-nft-tx-page>
 </section>

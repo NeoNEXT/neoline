@@ -14,17 +14,18 @@ export class PopupTxDetailDialogComponent implements OnInit {
     public data: {
       tx: any;
       symbol: string;
-      address: string;
-      assetId: string;
+      isNFT: boolean;
     }
   ) {}
 
   ngOnInit(): void {
-    if (this.data.assetId === NEO || this.data.assetId === GAS) {
-      this.txState.getNeo2TxDetail(this.data.tx.txid).subscribe((res) => {
-        this.data.tx.from = res.vin;
-        this.data.tx.to = res.vout;
-      });
+    if (this.data.isNFT === false) {
+      if (this.data.tx.assetId === NEO || this.data.tx.assetId === GAS) {
+        this.txState.getNeo2TxDetail(this.data.tx.txid).subscribe((res) => {
+          this.data.tx.from = res.vin;
+          this.data.tx.to = res.vout;
+        });
+      }
     }
   }
 }

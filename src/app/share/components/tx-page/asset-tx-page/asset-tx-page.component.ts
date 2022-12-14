@@ -126,12 +126,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
   showDetail(tx, symbol) {
     this.dialog.open(PopupTxDetailDialogComponent, {
       panelClass: 'custom-dialog-panel',
-      data: {
-        tx,
-        symbol,
-        address: this.address,
-        assetId: tx.asset_id,
-      },
+      data: { tx, symbol, isNFT: false },
     });
   }
 }

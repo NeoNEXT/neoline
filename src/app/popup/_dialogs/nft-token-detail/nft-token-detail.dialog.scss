@@ -1,64 +1,30 @@
-.title {
-  font-size: 18px;
-  font-weight: 500;
-  color: #202224;
-  text-align: left;
-  position: relative;
-  padding-left: 23px;
-  margin-top: 9px;
+@import "src/styles/popup-default.scss";
 
+.content {
+  position: relative;
+  padding: 20px 24px 24px;
+  img.close {
+    position: absolute;
+    right: 20px;
+    top: 20px;
+  }
   img.logo {
-    max-width: 250px;
-    max-height: 250px;
-    cursor: pointer;
+    max-width: 265px;
+    max-height: 324px;
   }
-
-  .close {
-    position: absolute;
-    right: 15px;
-    top: 15px;
-    color: #999;
-    cursor: pointer;
-  }
-}
-
-.item {
-  font-size: 15px;
-  min-height: 55px;
-  padding: 10px 23px;
-  position: relative;
-
-  &:last-child {
-    margin-bottom: 30px;
-  }
-
-  &::before {
-    position: absolute;
-    content: "";
-    left: 15px;
-    right: 15px;
-    bottom: 0;
-    height: 1px;
-    background: #efefef;
-  }
-
-  &.row {
+  ul li {
     display: flex;
+    align-items: flex-start;
     justify-content: space-between;
-    align-items: center;
-  }
-
-  .name {
-    color: #202224;
-  }
-
-  .value {
-    color: #707c82;
-  }
-
-  .value.txid {
-    word-break: break-all;
-    text-align: left;
-    margin-left: 20px;
+    margin-top: 24px;
+    .label {
+      color: $sub-title-color;
+    }
+    .value {
+      line-height: 18px;
+      max-width: 200px;
+      text-align: right;
+      word-break: break-all;
+    }
   }
 }

@@ -2,7 +2,7 @@ import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { NftState, ChromeService, TransactionState } from '@/app/core';
 import { NftTransaction } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupNftTxDetailDialogComponent } from '@/app/popup/_dialogs';
+import { PopupTxDetailDialogComponent } from '@/app/popup/_dialogs';
 import { STORAGE_NAME } from '../../../../popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -15,6 +15,7 @@ import { Unsubscribable } from 'rxjs';
 })
 export class NftTxPageComponent implements OnInit, OnDestroy {
   @Input() nftContract: string;
+  @Input() symbol: string;
 
   public show = false;
   public inTransaction: Array<NftTransaction>;
@@ -122,12 +123,9 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
   }
 
   showDetail(tx) {
-    this.dialog.open(PopupNftTxDetailDialogComponent, {
+    this.dialog.open(PopupTxDetailDialogComponent, {
       panelClass: 'custom-dialog-panel',
-      data: {
-        tx,
-        address: this.address,
-      },
+      data: { tx, symbol: this.symbol, isNFT: true },
     });
   }
 }

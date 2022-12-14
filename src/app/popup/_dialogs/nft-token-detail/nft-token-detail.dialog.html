@@ -1,4 +1,10 @@
-<div class="title">
+<div class="content">
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    src="assets/images/common/close.svg"
+    alt=""
+  />
   <img
     class="logo"
     (click)="openImg(data.nftToken?.image_url)"
@@ -6,17 +12,20 @@
     appErrorSrc
     alt=""
   />
-  <mat-icon class="close" [mat-dialog-close]="false">close</mat-icon>
-</div>
-<div class="item row">
-  <span class="name">{{ 'Name' | translate | async }}</span>
-  <span class="value">{{ data.nftToken?.name || data.nftToken.tokenid }}</span>
-</div>
-<div class="item row">
-  <span class="name">{{ 'Symbol' | translate | async }}</span>
-  <span class="value">{{ data.nftToken.symbol }}</span>
-</div>
-<div class="item row">
-  <span class="name">Token ID</span>
-  <span class="value txid">{{ data.nftToken.tokenid }}</span>
+  <ul>
+    <li>
+      <span class="label">{{ 'Name' | translate | async }}</span>
+      <span class="value"
+        >{{ data.nftToken?.name || data.nftToken.tokenid }}</span
+      >
+    </li>
+    <li>
+      <span class="label">{{ 'Symbol' | translate | async }}</span>
+      <span class="value">{{ data.nftToken.symbol }}</span>
+    </li>
+    <li>
+      <span class="label">Token ID</span>
+      <span class="value">{{ data.nftToken.tokenid }}</span>
+    </li>
+  </ul>
 </div>
