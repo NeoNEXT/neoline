@@ -58,8 +58,7 @@ const POPUP_COMPONENTS = [
 //#region dialogs
 import {
   PopupConfirmDialogComponent,
-  PopupAddressDialogComponent,
-  PopupAssetDialogComponent,
+  PopupAssetListDialogComponent,
   PopupTxDetailDialogComponent,
   PopupTransferSuccessDialogComponent,
   PopupEditFeeDialogComponent,
@@ -72,12 +71,12 @@ import {
   PopupAddNetworkDialogComponent,
   PopupPasswordDialogComponent,
   PopupPrivateKeyComponent,
+  PopupWalletListDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
   PopupConfirmDialogComponent,
-  PopupAddressDialogComponent,
-  PopupAssetDialogComponent,
+  PopupAssetListDialogComponent,
   PopupTxDetailDialogComponent,
   PopupTransferSuccessDialogComponent,
   PopupEditFeeDialogComponent,
@@ -90,6 +89,7 @@ const POPUP_DIALOGS = [
   PopupAddNetworkDialogComponent,
   PopupPasswordDialogComponent,
   PopupPrivateKeyComponent,
+  PopupWalletListDialogComponent,
 ];
 
 //#endregion

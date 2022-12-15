@@ -4,14 +4,14 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Asset, NftToken } from '@/models/models';
 
 @Component({
-  templateUrl: 'asset.dialog.html',
-  styleUrls: ['asset.dialog.scss'],
+  templateUrl: 'asset-list.dialog.html',
+  styleUrls: ['asset-list.dialog.scss'],
 })
-export class PopupAssetDialogComponent implements OnInit {
+export class PopupAssetListDialogComponent implements OnInit {
   searchValue = '';
   showBalances = [];
   constructor(
-    private dialogRef: MatDialogRef<PopupAssetDialogComponent>,
+    private dialogRef: MatDialogRef<PopupAssetListDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       balances?: Asset[] | NftToken[];

@@ -1,7 +1,6 @@
 export { PopupSelectDialogComponent } from './select/select.dialog';
 export { PopupConfirmDialogComponent } from './confirm/confirm.dialog';
-export { PopupAddressDialogComponent } from './address/address.dialog';
-export { PopupAssetDialogComponent } from './asset/asset.dialog';
+export { PopupAssetListDialogComponent } from './asset-list/asset-list.dialog';
 export { PopupTxDetailDialogComponent } from './tx-detail/tx-detail.dialog';
 export { PopupTransferSuccessDialogComponent } from './transfer-success/transfer-success.component';
 export { PopupEditFeeDialogComponent } from './edit-fee/edit-fee.dialog';
@@ -13,3 +12,4 @@ export { PopupAddNetworkDialogComponent } from './add-network/add-network.dialog
 export { PopupPasswordDialogComponent } from './password/password.dialog';
 export { PopupQRCodeDialogComponent } from './account/qrcode/qrcode.dialog';
 export { PopupPrivateKeyComponent } from './account/private-key/private-key.dialog';
+export { PopupWalletListDialogComponent } from './wallet-list/wallet-list.dialog';

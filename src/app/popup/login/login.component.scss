@@ -59,6 +59,7 @@ section {
       justify-content: space-between;
       border: 1.5px solid #fafafa;
       cursor: pointer;
+      overflow: hidden;
       &:hover {
         background: #f8fbf9;
         border-color: $theme-color;
@@ -73,9 +74,12 @@ section {
       .account {
         flex: 1;
         .name {
-          font-family: NeverMind-Medium;
+          max-width: 240px;
           font-size: 16px;
           color: $theme-color;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
         .address {
           font-family: NeverMind-Regular;

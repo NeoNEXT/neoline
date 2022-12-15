@@ -1,0 +1,28 @@
+<div class="pop-ups-title">
+  {{ 'selectAccountConnect' | translate | async }}
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    src="assets/images/common/close.svg"
+    alt=""
+  />
+</div>
+<div class="search-box">
+  <img src="/assets/images/common/search.svg" alt="" />
+  <input type="text" [(ngModel)]="searchValue" (input)="search()" />
+</div>
+
+<div class="container">
+  <div
+    class="item"
+    *ngFor="let item of showWalletArr"
+    (click)="select(item)"
+    [ngClass]="{active: item.accounts[0].address===data.currentAddress}"
+  >
+    <img class="avatar" [avatar]="item.accounts[0].address" alt="" />
+    <div class="account">
+      <p class="name">{{ item.name }}</p>
+      <p class="address">{{ item.accounts[0].address | longStr: 14 }}</p>
+    </div>
+  </div>
+</div>

@@ -16,7 +16,7 @@ import {
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import {
-  PopupAssetDialogComponent,
+  PopupAssetListDialogComponent,
   PopupEditFeeDialogComponent,
 } from '../../../_dialogs';
 import { bignumber } from 'mathjs';
@@ -191,7 +191,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
   // transfer asset
   selectAsset(isNFT = false) {
     this.dialog
-      .open(PopupAssetDialogComponent, {
+      .open(PopupAssetListDialogComponent, {
         data: {
           isNft: isNFT,
           balances: isNFT ? this.nftTokens : this.assetArr,

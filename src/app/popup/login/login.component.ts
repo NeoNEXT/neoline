@@ -1,19 +1,21 @@
 import { Component, OnInit, AfterContentInit, OnDestroy } from '@angular/core';
 import { WalletCreation } from '../_lib/models';
-import { WalletInitConstant, STORAGE_NAME } from '../_lib/constant';
+import { WalletInitConstant } from '../_lib/constant';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Router, ActivatedRoute } from '@angular/router';
-import { NeonService } from '@/app/core/services/neon.service';
 import { ChromeService, GlobalService, UtilServiceState } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupConfirmDialogComponent } from '../_dialogs';
+import {
+  PopupConfirmDialogComponent,
+  PopupWalletListDialogComponent,
+} from '../_dialogs';
 import { ERRORS, requestTarget } from '@/models/dapi';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { ChainType, RpcNetwork, RESET_ACCOUNT } from '../_lib';
+import { ChainType, RpcNetwork, RESET_ACCOUNT, UPDATE_WALLET } from '../_lib';
 
 @Component({
   templateUrl: 'login.component.html',
@@ -22,24 +24,23 @@ import { ChainType, RpcNetwork, RESET_ACCOUNT } from '../_lib';
 export class PopupLoginComponent
   implements OnInit, AfterContentInit, OnDestroy
 {
-  public wallet: WalletCreation = new WalletCreation();
-  public limit: any = WalletInitConstant;
-  public hidePwd: boolean = true;
-  public loading = false;
-  public isInit: boolean = true;
-  public isLedger = false;
+  wallet: WalletCreation = new WalletCreation();
+  limit: any = WalletInitConstant;
+  hidePwd: boolean = true;
+  loading = false;
+  isInit: boolean = true;
+  selectWallet: Wallet2 | Wallet3;
+  selectChainType: ChainType;
 
   private accountSub: Unsubscribable;
-  public accountWallet: Wallet2 | Wallet3;
-  public allWallet = [];
-  public selectedWalletIndex;
-  private chainType: ChainType;
+  private currentWallet: Wallet2 | Wallet3;
+  private allWallet = [];
+  private currentChainType: ChainType;
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private neon: NeonService,
     private chrome: ChromeService,
     private global: GlobalService,
     private dialog: MatDialog,
@@ -50,19 +51,10 @@ export class PopupLoginComponent
     this.accountSub = account$.subscribe((state) => {
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
-      this.chainType = state.currentChainType;
-      this.accountWallet = state.currentWallet;
-      this.allWallet = (state.neo2WalletArr as any).concat(state.neo3WalletArr);
-      this.selectedWalletIndex = this.allWallet.findIndex(
-        (item) =>
-          item.accounts[0].address === state.currentWallet.accounts[0].address
-      );
-      if (
-        this.accountWallet?.accounts[0]?.extra &&
-        this.accountWallet?.accounts[0]?.extra?.ledgerSLIP44
-      ) {
-        this.isLedger = true;
-      }
+      this.currentChainType = state.currentChainType;
+      this.currentWallet = state.currentWallet;
+      this.selectWallet = state.currentWallet;
+      this.allWallet = (state.neo3WalletArr as any).concat(state.neo2WalletArr);
     });
   }
 
@@ -85,25 +77,23 @@ export class PopupLoginComponent
     });
   }
 
-  public async login() {
+  async login() {
     const hasLoginAddress = await this.chrome.getHasLoginAddress().toPromise();
     if (
-      this.accountWallet.accounts[0]?.extra?.ledgerSLIP44 ||
-      hasLoginAddress[this.accountWallet.accounts[0].address]
+      this.checkIsLedger(this.selectWallet) ||
+      hasLoginAddress[this.selectWallet.accounts[0].address]
     ) {
-      this.chrome.setLogin(false);
-      const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
-      this.router.navigateByUrl(returnUrl);
+      this.handleWallet();
       return;
     }
     this.loading = true;
     const account: any =
-      this.chainType === 'Neo3'
+      this.selectChainType === 'Neo3'
         ? this.util.getNeo3Account()
-        : this.accountWallet.accounts[0];
+        : this.selectWallet.accounts[0];
     account
       .decrypt(this.wallet.password)
-      .then((res) => {
+      .then(() => {
         if (this.route.snapshot.queryParams.notification !== undefined) {
           this.chrome.windowCallback(
             {
@@ -114,18 +104,15 @@ export class PopupLoginComponent
           );
         }
         this.loading = false;
-        this.chrome.setHasLoginAddress(this.accountWallet.accounts[0].address);
-        this.chrome.setLogin(false);
-        const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
-        this.router.navigateByUrl(returnUrl);
+        this.handleWallet();
       })
-      .catch((err) => {
+      .catch(() => {
         this.loading = false;
         this.global.snackBarTip('loginFailed');
       });
   }
 
-  public resetWallet() {
+  resetWallet() {
     this.dialog
       .open(PopupConfirmDialogComponent, {
         data: 'resetWalletConfirm',
@@ -141,20 +128,49 @@ export class PopupLoginComponent
       });
   }
 
-  public selectAccount(w: Wallet2 | Wallet3) {
-    if (w.accounts[0].address === this.accountWallet.accounts[0].address) {
-      return;
+  showWalletList() {
+    this.dialog
+      .open(PopupWalletListDialogComponent, {
+        data: {
+          walletArr: this.allWallet,
+          currentAddress: this.selectWallet.accounts[0].address,
+        },
+        panelClass: 'custom-dialog-panel',
+      })
+      .afterClosed()
+      .subscribe((res) => {
+        if (res) {
+          this.selectWallet = res;
+          this.selectChainType = wallet3.isAddress(
+            this.selectWallet.accounts[0].address,
+            53
+          )
+            ? 'Neo3'
+            : 'Neo2';
+        }
+      });
+  }
+
+  checkIsLedger(w: Wallet2 | Wallet3): boolean {
+    return this.selectWallet.accounts[0]?.extra?.ledgerSLIP44 ? true : false;
+  }
+
+  private handleWallet() {
+    if (
+      this.selectWallet.accounts[0].address !==
+      this.currentWallet.accounts[0].address
+    ) {
+      this.store.dispatch({ type: UPDATE_WALLET, data: this.selectWallet });
+      this.chrome.setWallet(this.selectWallet.export());
+      this.chrome.setHasLoginAddress(this.selectWallet.accounts[0].address);
+      if (this.selectChainType !== this.currentChainType) {
+        this.chrome.networkChangeEvent(
+          this.selectChainType === 'Neo2' ? this.n2Network : this.n3Network
+        );
+      }
     }
-    const newChainType = wallet3.isAddress(w?.accounts[0]?.address || '', 53)
-      ? 'Neo3'
-      : 'Neo2';
-    if (newChainType !== this.chainType) {
-      this.chrome.networkChangeEvent(
-        newChainType === 'Neo2' ? this.n2Network : this.n3Network
-      );
-    }
-    const wallet = this.neon.parseWallet(w);
-    this.chrome.setWallet(wallet.export());
-    location.reload();
+    this.chrome.setLogin(false);
+    const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
+    this.router.navigateByUrl(returnUrl);
   }
 }
