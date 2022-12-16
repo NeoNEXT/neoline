@@ -13,11 +13,11 @@
   </div>
   <div class="content">
     <wallet-create
-      *ngIf="tabType === 'create'"
+      [hidden]="tabType === 'import'"
       (submit)="updateLocalWallet($event, 0)"
     ></wallet-create>
     <wallet-import
-      *ngIf="tabType === 'import'"
+      [hidden]="tabType === 'create'"
       (submit)="updateLocalWallet($event, 1)"
     ></wallet-import>
   </div>

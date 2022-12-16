@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ChromeService } from '@/app/core';
 import {
@@ -19,7 +19,7 @@ type TabType = 'create' | 'import';
   templateUrl: 'wallet.component.html',
   styleUrls: ['wallet.component.scss'],
 })
-export class PopupWalletComponent {
+export class PopupWalletComponent implements OnInit {
   tabType: TabType = 'import';
   private dapiData = {
     type: null,
@@ -52,6 +52,14 @@ export class PopupWalletComponent {
         messageID: params.messageID,
       };
     });
+  }
+
+  ngOnInit(): void {
+    if (this.router.url === '/popup/wallet/import') {
+      this.tabType = 'import';
+    } else {
+      this.tabType  ='create';
+    }
   }
 
   public updateLocalWallet(newWallet: any, type: number) {

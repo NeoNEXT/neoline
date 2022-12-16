@@ -33,24 +33,16 @@
       </li>
     </ul>
   </div>
-  <form [hidden]="importType !== 'key'" #walletImportForm="ngForm">
+  <form [hidden]="importType !== 'key'" [formGroup]="importForm">
     <mat-form-field class="form-field" appearance="fill">
       <img matPrefix src="/assets/images/login/wallet.svg" alt="" />
       <mat-label>{{ "enterWalletName" | translate | async }}</mat-label>
-      <input
-        matInput
-        [(ngModel)]="walletImport.walletName"
-        [minlength]="limit?.nameLimitation[0]"
-        [maxlength]="limit?.nameLimitation[1]"
-        name="walletName"
-        #walletName="ngModel"
-        required
-      />
-      <mat-error *ngIf="walletName.errors?.required"
-        >{{ "walletNameIsRequired" | translate | async }}
+      <input matInput required formControlName="name" />
+      <mat-error *ngIf="importForm.get('name').errors?.required">
+        {{ "walletNameIsRequired" | translate | async }}
       </mat-error>
-      <mat-error *ngIf="walletName.errors?.minlength"
-        >{{ "lengthLimit" | translate | async }}:
+      <mat-error *ngIf="importForm.get('name').errors?.pattern">
+        {{ "lengthLimit" | translate | async }}:
         {{ limit?.nameLimitation[0] }}-{{ limit?.nameLimitation[1] }}
       </mat-error>
     </mat-form-field>
@@ -59,16 +51,11 @@
       <mat-label>{{ "enterWIF" | translate | async }}</mat-label>
       <input
         matInput
-        [(ngModel)]="walletImport.WIF"
-        name="WIF"
-        (keyup)="isWIF = true"
-        #WIF="ngModel"
         required
+        formControlName="WIF"
         [type]="hideWIF ? 'password' : 'text'"
         (keyup.enter)="
-          !isInit && !walletImportForm.invalid && !loading
-            ? submitImport()
-            : null
+          !isInit && !importForm.invalid && !loading ? submitImport() : null
         "
       />
       <img
@@ -81,11 +68,11 @@
             : 'assets/images/login/eye-view.svg'
         "
       />
-      <mat-error *ngIf="WIF.errors?.required">{{
-        "WIFRequired" | translate | async
-      }}</mat-error>
-      <mat-error *ngIf="isWIF == false"
-        >{{ "WIFPattern" | translate | async }}
+      <mat-error *ngIf="importForm.get('WIF').errors?.required">
+        {{ "WIFRequired" | translate | async }}
+      </mat-error>
+      <mat-error *ngIf="importForm.get('WIF').errors?.errorWIF">
+        {{ "WIFPattern" | translate | async }}
       </mat-error>
     </mat-form-field>
     <mat-form-field class="form-field" appearance="fill" focused="true">
@@ -93,13 +80,8 @@
       <mat-label>{{ "enterPassword" | translate | async }}</mat-label>
       <input
         matInput
-        [(ngModel)]="walletImport.password"
-        name="password"
-        #WIFpassword="ngModel"
         required
-        [minlength]="limit?.passwordLimitation[0]"
-        [maxlength]="limit?.passwordLimitation[1]"
-        [pattern]="limit?.pattern"
+        formControlName="password"
         [type]="hideImportPwd ? 'password' : 'text'"
       />
       <img
@@ -112,26 +94,22 @@
             : 'assets/images/login/eye-view.svg'
         "
       />
-      <mat-error *ngIf="WIFpassword.errors?.required"
-        >{{ "passwordRequired" | translate | async }}
+      <mat-error *ngIf="importForm.get('password').errors?.required">
+        {{ "passwordRequired" | translate | async }}
       </mat-error>
-      <mat-error *ngIf="WIFpassword.errors?.minlength"
-        >{{ "lengthLimit" | translate | async }}:
+      <mat-error *ngIf="importForm.get('password').errors?.minlength">
+        {{ "lengthLimit" | translate | async }}:
         {{ limit?.passwordLimitation[0] }}-{{ limit?.passwordLimitation[1] }}
       </mat-error>
-      <!-- <mat-error *ngIf="WIFpassword.errors?.pattern">
-                {{ 'onlySupport' | translate | async}}: 0-9 A-Z a-z _-+=,.:!
-            </mat-error> -->
     </mat-form-field>
     <mat-form-field class="form-field" appearance="fill" focused="true">
       <img matPrefix src="/assets/images/login/lock.svg" />
       <mat-label>{{ "enterConfirmPassword" | translate | async }}</mat-label>
       <input
         matInput
-        [(ngModel)]="walletImport.confirmPassword"
-        name="confirmPassword"
-        #confirmPassword="ngModel"
         required
+        formControlName="confirmPassword"
+        [errorStateMatcher]="matcher"
         [type]="hideConfirmPwd ? 'password' : 'text'"
       />
       <img
@@ -144,14 +122,9 @@
             : 'assets/images/login/eye-view.svg'
         "
       />
-      <mat-error
-        *ngIf="
-          confirmPassword.value != WIFpassword.value &&
-          confirmPassword.value != ''
-        "
-      >
-        {{ "confirmError" | translate | async }}</mat-error
-      >
+      <mat-error *ngIf="importForm.hasError('notSame')">
+        {{ "confirmError" | translate | async }}
+      </mat-error>
     </mat-form-field>
   </form>
   <div [hidden]="importType !== 'file'" class="import-nep6-file">
@@ -159,17 +132,15 @@
       {{ "chooseNep6File" | translate | async }}
       <input (change)="onFileSelected($event)" type="file" />
     </button>
-    <p class="name">{{ nep6Name }}</p>
-    <form #nep6Form="ngForm">
+    <p class="name">{{ nep6Form.value.name }}</p>
+    <form [formGroup]="nep6Form">
       <mat-form-field class="form-field" appearance="fill" focused="true">
         <img matPrefix src="/assets/images/login/lock.svg" alt="" />
         <mat-label>{{ "enterPassword" | translate | async }}</mat-label>
         <input
           matInput
-          [(ngModel)]="walletNep6Import.password"
-          name="password"
-          #password="ngModel"
           required
+          formControlName="password"
           [type]="hideNep6Pwd ? 'password' : 'text'"
         />
         <img
@@ -182,8 +153,8 @@
               : 'assets/images/login/eye-view.svg'
           "
         />
-        <mat-error *ngIf="password.errors?.required"
-          >{{ "passwordRequired" | translate | async }}
+        <mat-error *ngIf="nep6Form.get('password').errors?.required">
+          {{ "passwordRequired" | translate | async }}
         </mat-error>
       </mat-form-field>
     </form>
@@ -193,13 +164,7 @@
       class="confirm"
       *ngIf="importType === 'key'"
       (click)="submitImport()"
-      [disabled]="
-        isInit ||
-        loading ||
-        walletImportForm.invalid ||
-        confirmPassword.value != WIFpassword.value ||
-        !isWIF
-      "
+      [ngClass]="{ disabled: isInit || loading || importForm.invalid }"
     >
       {{ (loading ? "importing" : "import") | translate | async }}
     </button>
@@ -207,7 +172,7 @@
       class="confirm"
       *ngIf="importType === 'file'"
       (click)="submitImport()"
-      [disabled]="isInit || loading || nep6Json == null || nep6Form.invalid"
+      [ngClass]="{ disabled: isInit || loading || nep6Form.invalid }"
     >
       {{ (loading ? "importing" : "import") | translate | async }}
     </button>

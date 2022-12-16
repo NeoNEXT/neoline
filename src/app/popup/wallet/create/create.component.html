@@ -1,22 +1,14 @@
 <section class="container">
   <p class="title">{{ "welcomeCreate" | translate | async }}</p>
-  <form #walletForm="ngForm">
+  <form [formGroup]="createForm">
     <mat-form-field class="form-field" appearance="fill">
       <img matPrefix src="/assets/images/login/wallet.svg" alt="" />
       <mat-label>{{ "enterWalletName" | translate | async }}</mat-label>
-      <input
-        matInput
-        [(ngModel)]="wallet.walletName"
-        [minlength]="limit?.nameLimitation[0]"
-        [maxlength]="limit?.nameLimitation[1]"
-        name="walletName"
-        #walletName="ngModel"
-        required
-      />
-      <mat-error *ngIf="walletName.errors?.required"
+      <input matInput required formControlName="name" type="text" />
+      <mat-error *ngIf="createForm.get('name').errors?.required"
         >{{ "walletNameIsRequired" | translate | async }}
       </mat-error>
-      <mat-error *ngIf="walletName.errors?.minlength"
+      <mat-error *ngIf="createForm.get('name').errors?.pattern"
         >{{ "lengthLimit" | translate | async }}:
         {{ limit?.nameLimitation[0] }}-{{ limit?.nameLimitation[1] }}
       </mat-error>
@@ -26,13 +18,8 @@
       <mat-label>{{ "enterPassword" | translate | async }}</mat-label>
       <input
         matInput
-        [(ngModel)]="wallet.password"
-        name="password"
-        #password="ngModel"
         required
-        [minlength]="limit?.passwordLimitation[0]"
-        [maxlength]="limit?.passwordLimitation[1]"
-        [pattern]="limit?.pattern"
+        formControlName="password"
         [type]="hidePwd ? 'password' : 'text'"
       />
       <img
@@ -45,37 +32,25 @@
             : 'assets/images/login/eye-view.svg'
         "
       />
-      <mat-error *ngIf="password.errors?.required"
+      <mat-error *ngIf="createForm.get('password').errors?.required"
         >{{ "passwordRequired" | translate | async }}
       </mat-error>
-      <mat-error *ngIf="password.errors?.minlength"
+      <mat-error *ngIf="createForm.get('password').errors?.pattern"
         >{{ "lengthLimit" | translate | async }}:
         {{ limit?.passwordLimitation[0] }}-{{ limit?.passwordLimitation[1] }}
       </mat-error>
-      <!-- <mat-error *ngIf="password.errors?.pattern">
-                {{ 'onlySupport' | translate | async}}: 0-9 A-Z a-z _-+=,.:!
-            </mat-error> -->
     </mat-form-field>
     <mat-form-field class="form-field" appearance="fill" focused="true">
       <img matPrefix src="/assets/images/login/lock.svg" />
       <mat-label>{{ "enterConfirmPassword" | translate | async }}</mat-label>
       <input
         matInput
-        [(ngModel)]="wallet.confirmPassword"
-        name="confirmPassword"
-        #confirmPassword="ngModel"
         required
-        [minlength]="limit?.passwordLimitation[0]"
-        [maxlength]="limit?.passwordLimitation[1]"
-        [pattern]="limit?.pattern"
+        [errorStateMatcher]="matcher"
+        formControlName="confirmPassword"
         [type]="hideConfirmPwd ? 'password' : 'text'"
         (keyup.enter)="
-          !isInit &&
-          !walletForm.invalid &&
-          !loading &&
-          confirmPassword.value == password.value
-            ? submitCreate()
-            : null
+          !isInit && !createForm.invalid && !loading ? submitCreate() : null
         "
       />
       <img
@@ -88,13 +63,9 @@
             : 'assets/images/login/eye-view.svg'
         "
       />
-      <mat-error
-        *ngIf="
-          confirmPassword.value != password.value && confirmPassword.value != ''
-        "
-      >
-        {{ "confirmError" | translate | async }}</mat-error
-      >
+      <mat-error *ngIf="createForm.hasError('notSame')">
+        {{ "confirmError" | translate | async }}
+      </mat-error>
     </mat-form-field>
   </form>
   <div class="btn-group">
@@ -102,11 +73,7 @@
       class="confirm"
       (click)="submitCreate()"
       [ngClass]="{
-        disabled:
-          isInit ||
-          walletForm.invalid ||
-          loading ||
-          confirmPassword.value != password.value
+        disabled: isInit || createForm.invalid || loading
       }"
     >
       {{ (loading ? "creating" : "create") | translate | async }}

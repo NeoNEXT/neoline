@@ -9,13 +9,39 @@ import {
   AfterContentChecked,
 } from '@angular/core';
 import { WalletInitConstant } from '../../_lib/constant';
-import { WalletImport } from '../../_lib/models';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
-import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import {
+  FormGroup,
+  FormBuilder,
+  Validators,
+  ValidatorFn,
+  AbstractControl,
+} from '@angular/forms';
+import { checkPasswords, MyErrorStateMatcher } from '../confirm-password';
+import { ChainType } from '../../_lib';
 
 type ImportType = 'key' | 'file';
+
+function checkWIF(chainType: ChainType): ValidatorFn {
+  return (control: AbstractControl): { [key: string]: any } | null => {
+    const wif = control.value;
+    if (!wif) {
+      return null;
+    }
+    let valid = false;
+    if (chainType === 'Neo2') {
+      if (wallet2.isWIF(wif) || wallet2.isPrivateKey(wif)) {
+        valid = true;
+      }
+    } else {
+      if (wallet3.isWIF(wif) || wallet3.isPrivateKey(wif)) {
+        valid = true;
+      }
+    }
+    return valid === false ? { errorWIF: { value: control.value } } : null;
+  };
+}
 
 @Component({
   selector: 'wallet-import',
@@ -25,32 +51,29 @@ type ImportType = 'key' | 'file';
 export class PopupWalletImportComponent
   implements OnInit, AfterContentInit, AfterContentChecked
 {
-  neonWallet: any = wallet2;
+  private neonWallet: any = wallet2;
 
-  public loading = false;
-  public isInit = true;
-  public limit = WalletInitConstant;
+  loading = false;
+  isInit = true;
+  limit = WalletInitConstant;
 
-  public importType: ImportType = 'key';
-  public walletImport = new WalletImport();
-  public hideImportPwd = true;
-  public hideConfirmPwd = true;
-  public hideWIF = true;
-  public isWIF = true;
+  importType: ImportType = 'key';
+  importForm: FormGroup;
+  hideImportPwd = true;
+  hideConfirmPwd = true;
+  hideWIF = true;
 
-  public walletNep6Import = new WalletImport();
-  public nep6File: any;
-  public nep6Json: Wallet2 | Wallet3 = null;
-  public nep6Name = '';
-  public hideNep6Pwd = true;
+  nep6Form: FormGroup;
+  hideNep6Pwd = true;
   showImportTypeMenu = false;
 
   @Output() submit = new EventEmitter<any>();
-
+  matcher = new MyErrorStateMatcher();
   constructor(
     private global: GlobalService,
     private neon: NeonService,
-    private cdref: ChangeDetectorRef
+    private cdref: ChangeDetectorRef,
+    private fb: FormBuilder
   ) {
     switch (this.neon.selectedChainType) {
       case 'Neo2':
@@ -62,7 +85,22 @@ export class PopupWalletImportComponent
     }
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.importForm = this.fb.group(
+      {
+        name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
+        WIF: ['', [Validators.required, checkWIF(this.neon.selectedChainType)]],
+        password: ['', [Validators.required, Validators.pattern(/^.{8,128}$/)]],
+        confirmPassword: ['', [Validators.required]],
+      },
+      { validators: checkPasswords }
+    );
+    this.nep6Form = this.fb.group({
+      name: ['', [Validators.required]],
+      EncrpytedKey: ['', [Validators.required]],
+      password: ['', [Validators.required]],
+    });
+  }
 
   ngAfterContentInit(): void {
     setTimeout(() => {
@@ -75,33 +113,31 @@ export class PopupWalletImportComponent
   }
 
   public onFileSelected(event: any) {
-    this.nep6File = event.target.files[0];
-    if (this.nep6File) {
+    const nep6File = event.target.files[0];
+    if (nep6File) {
       const reader = new FileReader();
-      reader.readAsText(this.nep6File, 'UTF-8');
+      reader.readAsText(nep6File, 'UTF-8');
       reader.onload = (evt: any) => {
-        this.nep6Json = JSON.parse(evt.target.result);
+        let nep6Json = JSON.parse(evt.target.result);
         if (
-          this.nep6Json.accounts === undefined ||
-          this.nep6Json.accounts[0] === undefined ||
+          nep6Json.accounts === undefined ||
+          nep6Json.accounts[0] === undefined ||
           !this.neonWallet.isNEP2(
-            (this.nep6Json.accounts[0] as any).key ||
-              this.nep6Json.name === undefined ||
-              this.nep6Json.name === ''
+            (nep6Json.accounts[0] as any).key ||
+              nep6Json.name === undefined ||
+              nep6Json.name === ''
           )
         ) {
           this.global.snackBarTip('nep6Wrong');
-          this.nep6Json = null;
-          this.nep6Name = '';
-          this.walletNep6Import.walletName = '';
+          nep6Json = null;
+          this.nep6Form.controls.name.setValue('');
         }
-        if (this.nep6Json.name !== undefined) {
-          this.nep6Name = this.nep6Json.name;
-          this.walletNep6Import.walletName = this.nep6Json.name;
+        if (nep6Json.name !== undefined) {
+          this.nep6Form.controls.name.setValue(nep6Json.name);
         }
-        this.walletNep6Import.EncrpytedKey = (
-          this.nep6Json.accounts[0] as any
-        ).key;
+        this.nep6Form.controls.EncrpytedKey.setValue(
+          (nep6Json.accounts[0] as any).key
+        );
       };
       reader.onerror = () => {
         console.log('error reading file');
@@ -111,20 +147,13 @@ export class PopupWalletImportComponent
 
   public submitImport(): void {
     if (this.importType === 'key') {
-      if (
-        !this.neonWallet.isWIF(this.walletImport.WIF) &&
-        !this.neonWallet.isPrivateKey(this.walletImport.WIF)
-      ) {
-        this.isWIF = false;
-        return;
-      }
       this.loading = true;
-      if (this.neonWallet.isPrivateKey(this.walletImport.WIF)) {
+      if (this.neonWallet.isPrivateKey(this.importForm.value.WIF)) {
         this.neon
           .importPrivateKey(
-            this.walletImport.WIF,
-            this.walletImport.password,
-            this.walletImport.walletName
+            this.importForm.value.WIF,
+            this.importForm.value.password,
+            this.importForm.value.name
           )
           .subscribe((res: any) => {
             this.loading = false;
@@ -137,9 +166,9 @@ export class PopupWalletImportComponent
       } else {
         this.neon
           .importWIF(
-            this.walletImport.WIF,
-            this.walletImport.password,
-            this.walletImport.walletName
+            this.importForm.value.WIF,
+            this.importForm.value.password,
+            this.importForm.value.name
           )
           .subscribe(
             (res: any) => {
@@ -158,15 +187,15 @@ export class PopupWalletImportComponent
           );
       }
     } else {
-      if (!this.neonWallet.isNEP2(this.walletNep6Import.EncrpytedKey)) {
+      if (!this.neonWallet.isNEP2(this.nep6Form.value.EncrpytedKey)) {
         return;
       }
       this.loading = true;
       this.neon
         .importEncryptKey(
-          this.walletNep6Import.EncrpytedKey,
-          this.walletNep6Import.password,
-          this.walletNep6Import.walletName
+          this.nep6Form.value.EncrpytedKey,
+          this.nep6Form.value.password,
+          this.nep6Form.value.name
         )
         .subscribe(
           (res: any) => {

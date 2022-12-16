@@ -16,20 +16,16 @@
       </div>
       <img class="arrow" src="assets/images/common/arrow.svg" alt="" />
     </div>
-    <form #loginForm="ngForm" *ngIf="checkIsLedger(selectWallet) === false">
+    <form [formGroup]="loginForm" [hidden]="checkIsLedger(selectWallet)">
       <mat-form-field class="popup-login-input" appearance="fill">
         <img class="prefix" matPrefix src="/assets/images/login/lock.svg" />
         <mat-label>{{ "pwdInput" | translate | async }}</mat-label>
         <input
           matInput
-          name="password"
-          #password="ngModel"
           required
-          [(ngModel)]="wallet.password"
+          formControlName="password"
           [type]="hidePwd ? 'password' : 'text'"
-          (keyup.enter)="
-            !isInit && !loginForm.invalid && !loading ? login() : null
-          "
+          (keyup.enter)="login()"
         />
         <img
           class="suffix"
@@ -41,7 +37,7 @@
               : 'assets/images/login/eye-view.svg'
           "
         />
-        <mat-error *ngIf="password.errors?.required">
+        <mat-error *ngIf="loginForm.get('password').errors?.required">
           {{ "passwordRequired" | translate | async }}
         </mat-error>
       </mat-form-field>

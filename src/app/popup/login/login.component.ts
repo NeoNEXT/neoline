@@ -1,6 +1,4 @@
 import { Component, OnInit, AfterContentInit, OnDestroy } from '@angular/core';
-import { WalletCreation } from '../_lib/models';
-import { WalletInitConstant } from '../_lib/constant';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Router, ActivatedRoute } from '@angular/router';
@@ -16,6 +14,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { ChainType, RpcNetwork, RESET_ACCOUNT, UPDATE_WALLET } from '../_lib';
+import { FormGroup, Validators, FormBuilder } from '@angular/forms';
 
 @Component({
   templateUrl: 'login.component.html',
@@ -24,8 +23,7 @@ import { ChainType, RpcNetwork, RESET_ACCOUNT, UPDATE_WALLET } from '../_lib';
 export class PopupLoginComponent
   implements OnInit, AfterContentInit, OnDestroy
 {
-  wallet: WalletCreation = new WalletCreation();
-  limit: any = WalletInitConstant;
+  loginForm: FormGroup;
   hidePwd: boolean = true;
   loading = false;
   isInit: boolean = true;
@@ -45,6 +43,7 @@ export class PopupLoginComponent
     private global: GlobalService,
     private dialog: MatDialog,
     private util: UtilServiceState,
+    private fb: FormBuilder,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -59,6 +58,9 @@ export class PopupLoginComponent
   }
 
   ngOnInit(): void {
+    this.loginForm = this.fb.group({
+      password: ['', [Validators.required]],
+    });
     window.onbeforeunload = () => {
       this.chrome.windowCallback({
         data: ERRORS.CANCELLED,
@@ -78,6 +80,9 @@ export class PopupLoginComponent
   }
 
   async login() {
+    if (this.loading || this.isInit) {
+      return;
+    }
     const hasLoginAddress = await this.chrome.getHasLoginAddress().toPromise();
     if (
       this.checkIsLedger(this.selectWallet) ||
@@ -86,13 +91,16 @@ export class PopupLoginComponent
       this.handleWallet();
       return;
     }
+    if (this.loginForm.invalid) {
+      return;
+    }
     this.loading = true;
     const account: any =
       this.selectChainType === 'Neo3'
-        ? this.util.getNeo3Account()
+        ? this.util.getNeo3Account(this.selectWallet.accounts[0])
         : this.selectWallet.accounts[0];
     account
-      .decrypt(this.wallet.password)
+      .decrypt(this.loginForm.value.password)
       .then(() => {
         if (this.route.snapshot.queryParams.notification !== undefined) {
           this.chrome.windowCallback(
@@ -152,7 +160,7 @@ export class PopupLoginComponent
   }
 
   checkIsLedger(w: Wallet2 | Wallet3): boolean {
-    return this.selectWallet.accounts[0]?.extra?.ledgerSLIP44 ? true : false;
+    return w.accounts[0]?.extra?.ledgerSLIP44 ? true : false;
   }
 
   private handleWallet() {
