@@ -13,7 +13,6 @@ export class PopupEditFeeDialogComponent {
   minFee = 0;
   fee: any = 0;
   gasFeeSpeed: GasFeeSpeed;
-  level = 1;
   constructor(
     private dialogRef: MatDialogRef<PopupEditFeeDialogComponent>,
     private assetState: AssetState,
@@ -29,7 +28,6 @@ export class PopupEditFeeDialogComponent {
     if (this.data.speedFee) {
       this.gasFeeSpeed = this.data.speedFee;
       this.updateGasFeeSpeed();
-      this.updateLevel();
     } else {
       this.getGasFee();
     }
@@ -38,17 +36,10 @@ export class PopupEditFeeDialogComponent {
   getGasFee() {
     if (this.assetState.gasFeeSpeed) {
       this.gasFeeSpeed = this.assetState.gasFeeSpeed;
-      if (Number(this.gasFeeSpeed.slow_price) === 0) {
-        this.updateGasFeeSpeed();
-      }
-      this.updateLevel();
-    } else {
-      this.gasFeeSpeed = this.assetState.gasFeeDefaultSpeed;
-      this.updateLevel();
       this.updateGasFeeSpeed();
+    } else {
       this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
         this.gasFeeSpeed = res;
-        this.updateLevel();
         this.updateGasFeeSpeed();
       });
     }
@@ -66,22 +57,8 @@ export class PopupEditFeeDialogComponent {
       .toFixed();
   }
 
-  updateLevel() {
-    const slow = bignumber(this.gasFeeSpeed.slow_price);
-    const middle = bignumber(this.gasFeeSpeed.propose_price);
-    const fast = bignumber(this.gasFeeSpeed.fast_price);
-    const current = bignumber(this.fee);
-    if (current.comparedTo(slow) <= 0) {
-      this.level = 0;
-    } else if (current.comparedTo(slow) > 0 && current.comparedTo(fast) < 0) {
-      this.level = 1;
-    } else {
-      this.level = 2;
-    }
-  }
-
-  updateFee() {
-    switch (this.level) {
+  updateFee(level: number) {
+    switch (level) {
       case 0:
         this.fee = bignumber(
           (this.gasFeeSpeed && this.gasFeeSpeed.slow_price) || this.fee

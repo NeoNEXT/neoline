@@ -1,35 +1,54 @@
-<div class="title">
-  <span>GAS FEE</span>
-  <mat-icon class="close" [mat-dialog-close]="false">close</mat-icon>
+<div class="pop-ups-title">
+  GAS FEE
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    src="assets/images/common/close.svg"
+    alt=""
+  />
 </div>
 
 <div class="content">
   <p class="value">{{ fee | numberFixed }} GAS</p>
-  <mat-slider
-    color="primary"
-    [min]="0"
-    (click)="showCustom ? showCustom = !showCustom : {}"
-    [disabled]="showCustom"
-    [max]="2"
-    [step]="1"
-    [(ngModel)]="level"
-    (ngModelChange)="updateFee()"
-  >
-  </mat-slider>
   <div class="speed">
-    <span>{{ 'slow' | translate |async }}</span>
-    <span>{{ 'medium' | translate |async }}</span>
-    <span>{{ 'fast' | translate |async }}</span>
+    <span class="line left"></span>
+    <span class="line middle"></span>
+    <span class="line right"></span>
+    <span
+      class="circle left"
+      (click)="updateFee(0)"
+      [ngClass]="{active: fee==gasFeeSpeed.slow_price}"
+    ></span>
+    <span
+      class="circle middle"
+      (click)="updateFee(1)"
+      [ngClass]="{active: fee==gasFeeSpeed.propose_price}"
+    ></span>
+    <span
+      class="circle right"
+      (click)="updateFee(2)"
+      [ngClass]="{active: fee==gasFeeSpeed.fast_price}"
+    ></span>
+    <span class="desc left" (click)="updateFee(0)">
+      {{ 'slow' | translate |async }}
+    </span>
+    <span class="desc middle" (click)="updateFee(1)">
+      {{ 'medium' | translate |async }}
+    </span>
+    <span class="desc right" (click)="updateFee(2)">
+      {{ 'fast' | translate |async }}
+    </span>
   </div>
   <div class="custom">
     <span (click)="showCustom = !showCustom"
       >{{ 'customize' | translate | async }}<img
         [ngClass]="{'active': showCustom}"
-        src="/assets/images/transfer/dropdown.png"
+        src="/assets/images/common/arrow.svg"
         alt=""
     /></span>
   </div>
-  <div class="custom-input" *ngIf="showCustom">
+  <div class="custom-input" [ngClass]="{show: showCustom}">
+    <span class="tip">GAS</span>
     <input
       type="number"
       [min]="minFee"
@@ -37,9 +56,8 @@
       pattern="[0-9]*\.?[0-9]{0,8}"
       [(ngModel)]="fee"
     />
-    <span>GAS</span>
   </div>
-  <button mat-button class="ok-btn" (click)="ok()">
+  <button class="confirm pop-ups" (click)="ok()">
     {{ 'yes' | translate | async }}
   </button>
 </div>

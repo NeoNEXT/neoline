@@ -1,10 +1,10 @@
 <div class="title">{{ msg | translate | async}}</div>
 
 <div class="choose-group">
-  <div class="cancel item" matRipple [mat-dialog-close]="false">
+  <button class="cancel pop-ups" [mat-dialog-close]="false">
     {{ 'cancel' | translate | async}}
-  </div>
-  <div class="ok item" matRipple [mat-dialog-close]="true">
+  </button>
+  <button class="confirm pop-ups" [mat-dialog-close]="true">
     {{ 'yes' | translate | async}}
-  </div>
+  </button>
 </div>

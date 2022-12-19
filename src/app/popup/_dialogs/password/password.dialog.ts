@@ -28,10 +28,6 @@ export class PopupPasswordDialogComponent implements OnInit {
     this.address = this.data.account.accounts[0].address;
   }
 
-  public cancel() {
-    this.dialogRef.close();
-  }
-
   verify() {
     const account =
       this.data.chainType === 'Neo2'

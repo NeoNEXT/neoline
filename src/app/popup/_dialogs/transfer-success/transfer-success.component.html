@@ -1,6 +1,8 @@
-<img src="/assets/images/dialog/transfer_success.png" />
-<p>{{ "tranSubmit" | translate | async }}</p>
-<p class="tip">{{ "waitConfirm" | translate | async }}</p>
-<button mat-flat-button color="primary" (click)="close()">
-  {{ "done" | translate | async }}
-</button>
+<div class="content">
+  <img src="/assets/images/transfer/success.svg" />
+  <p class="title">{{ "tranSubmit" | translate | async }}</p>
+  <p class="tip">{{ "waitConfirm" | translate | async }}</p>
+  <button class="confirm pop-ups" (click)="close()">
+    {{ "done" | translate | async }}
+  </button>
+</div>
