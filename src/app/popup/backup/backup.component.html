@@ -1,33 +1,16 @@
-<div class="nav">
-  <div class="content">
-    <img src="/assets/images/nav-back.png" routerLink="/popup/home" alt="" />
-    {{ "backUp" | translate | async }}
-  </div>
-  <div class="divide"></div>
-</div>
+<nav title="backUp"></nav>
 
-<div class="container" *ngIf="showKey === false">
+<div class="container">
+  <img class="backup" src="/assets/images/account/backup.svg" alt="" />
   <p class="title">{{ "backUpTip" | translate | async }}</p>
-  <img class="backup" src="/assets/images/backup/backup.png" alt="" />
   <p class="desc">{{ "backUpDesc1" | translate | async }}</p>
   <p class="desc">{{ "backUpDesc2" | translate | async }}</p>
-  <button mat-button class="yes" (click)="backup()">
-    {{ "backUpNow" | translate | async }}
-  </button>
-  <p class="back" routerLink="/popup/home">
-    {{ "backUpLater" | translate | async }}
-  </p>
-</div>
-
-<div class="container key" *ngIf="showKey === true">
-  <p class="title">{{ "youPrivateKey" | translate | async }}</p>
-  <div id="key-qrcode"></div>
-  <div class="copy-key">
-    <div class="key">{{ WIF }}</div>
-    <img src="/assets/images/backup/copy.png" (click)="copy()" alt="" />
+  <div class="btn-group">
+    <button class="confirm" (click)="backup()">
+      {{ "backUpNow" | translate | async }}
+    </button>
+    <button class="cancel" routerLink="/popup/home">
+      {{ "backUpLater" | translate | async }}
+    </button>
   </div>
-  <p class="tip">{{ "privateKeyTip" | translate | async }}</p>
-  <button mat-button class="yes" routerLink="/popup/home">
-    {{ "complete" | translate | async }}
-  </button>
 </div>

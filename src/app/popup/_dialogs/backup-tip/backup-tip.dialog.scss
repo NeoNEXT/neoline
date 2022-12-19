@@ -1,30 +1,20 @@
-.container {
-  padding: 30px 30px 25px 30px;
-}
-.title {
-  font-size: 20px;
-  color: #444644;
-  font-weight: bold;
-  display: flex;
-  align-items: center;
-  img {
-    width: 20px;
-    margin-right: 10px;
-  }
-}
-.desc {
-  color: #444644;
-  font-size: 15px;
-  margin-top: 20px;
-  line-height: 22px;
-}
+@import "src/styles/popup-default.scss";
 
-button.yes {
-  width: 100%;
-  height: 45px;
-  border-radius: 5px;
-  font-size: 15px;
-  background: #fa5656;
-  color: #ffffff;
-  margin-top: 25px;
+.container {
+  padding: 24px;
+  text-align: center;
+  .title {
+    font-size: 16px;
+    margin-top: 12px;
+  }
+  .desc {
+    font-family: NeverMind-Regular;
+    font-size: 12px;
+    line-height: 18px;
+    margin-top: 12px;
+  }
+  button {
+    width: 100%;
+    margin-top: 24px;
+  }
 }

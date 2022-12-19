@@ -1,10 +1,8 @@
 <div class="container">
-  <div class="title">
-    <img src="/assets/images/backup/warn.png" alt="" />
-    {{ 'donotScreenshot' | translate | async }}
-  </div>
+  <img src="/assets/images/account/capture.svg" alt="" />
+  <div class="title">{{ 'donotScreenshot' | translate | async }}</div>
   <p class="desc">{{ 'donotScreenshotTip' | translate | async }}</p>
-  <button mat-button class="yes" [mat-dialog-close]="true">
+  <button class="warn pop-ups" [mat-dialog-close]="true">
     {{ 'iKonw' | translate | async }}
   </button>
 </div>

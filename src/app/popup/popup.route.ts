@@ -7,6 +7,7 @@ import { PopupAccountComponent } from './account/account.component';
 import { PopupAssetDetailComponent } from './detail/asset-detail/asset-detail.component';
 import { PopupNftDetailComponent } from './detail/nft-detail/nft-detail.component';
 import { PopupBackupComponent } from './backup/backup.component';
+import { PopupBackupKeyComponent } from './backup/backup-key/backup-key.component';
 import { PopupHomeComponent } from './home';
 import { PopupLoginComponent } from './login/login.component';
 import { PopupNewWalletGuideComponent } from './new-wallet-guide/new-wallet-guide.component';
@@ -48,6 +49,11 @@ const routes: Routes = [
         path: 'backup',
         canActivate: [PopupWalletGuard],
         component: PopupBackupComponent,
+      },
+      {
+        path: 'backup/key',
+        canActivate: [PopupWalletGuard],
+        component: PopupBackupKeyComponent,
       },
       {
         path: 'home',

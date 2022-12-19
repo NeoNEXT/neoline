@@ -1,0 +1,17 @@
+<nav title="youPrivateKey"></nav>
+
+<div class="container">
+  <div class="qrcode-content">
+    <div id="key-qrcode"></div>
+  </div>
+  <div class="copy-key">
+    <span class="key">{{ WIF }}</span>
+    <img src="/assets/images/common/copy-color.svg" (click)="copy()" alt="" />
+  </div>
+  <p class="tip">{{ "privateKeyTip" | translate | async }}</p>
+  <div class="btn-group">
+    <button class="confirm" routerLink="/popup/home">
+      {{ "complete" | translate | async }}
+    </button>
+  </div>
+</div>

@@ -1,117 +1,43 @@
 @import "src/styles/popup-default";
-@import "src/styles/theme-default";
-
-.nav {
-  height: 65px;
-  background-color: #06ccab;
-  position: relative;
-  .content {
-    height: 30px;
-    padding-top: 5px;
-    font-size: 20px;
-    font-weight: 500;
-    color: #ffffff;
-    display: flex;
-    align-items: center;
-
-    img {
-      height: 30px;
-      margin-right: 11px;
-      cursor: pointer;
-    }
-  }
-  .divide {
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    height: 15px;
-    background: #ffffff;
-    border-radius: 15px 15px 0px 0px;
-  }
-}
 
 .container {
-  font-size: 15px;
-  padding: 15px 20px;
+  height: calc(100% - 44px);
+  padding: 30px 24px 24px;
+  text-align: center;
+  position: relative;
   .title {
-    color: #303434;
-    font-size: 20px;
-    font-weight: bold;
-    margin-left: 6px;
-  }
-  img.backup {
-    width: 100px;
-    display: block;
-    position: relative;
-    left: 50%;
-    margin-left: -50px;
-    margin-top: 32px;
-    margin-bottom: 22px;
+    font-size: 16px;
+    margin-top: 8px;
+    margin-bottom: 16px;
   }
   .desc {
-    color: #808a94;
-    line-height: 25px;
-    margin-left: 6px;
-  }
-  button.yes {
-    width: 100%;
-    height: 50px;
-    border-radius: 25px;
-    font-size: 15px;
-    font-weight: 400;
-    background: #06ccab;
-    color: #ffffff;
-    margin-top: 30px;
-  }
-  .back {
-    color: #06ccac;
-    text-align: center;
-    margin-top: 20px;
-    cursor: pointer;
-  }
-  &.key {
-    #key-qrcode {
-      margin: 0 auto;
-      margin-top: 40px;
-      width: 140px;
+    font-family: NeverMind-Regular;
+    font-size: 12px;
+    line-height: 18px;
+    color: $sub-title-color;
+    margin-top: 8px;
+    padding-left: 17px;
+    text-align: left;
+    position: relative;
+    &::before {
+      content: "";
+      position: absolute;
+      top: 8px;
+      left: 0;
+      width: 5px;
+      height: 5px;
+      border-radius: 50%;
+      background: $tip-color;
     }
-    .copy-key {
-      background: #f8f8f8;
-      border-radius: 5px;
-      padding: 15px 20px;
-      color: #808a94;
-      line-height: 18px;
-      font-weight: bold;
-      margin-top: 25px;
-      display: flex;
-      align-items: center;
-      position: relative;
-      .key {
-        width: 228px;
-        word-break: break-all;
-        position: relative;
-        &::before {
-          content: "";
-          position: absolute;
-          right: -30px;
-          top: 50%;
-          margin-top: -7px;
-          width: 1px;
-          height: 15px;
-          background: #e0e0e0;
-        }
-      }
-      img {
-        position: absolute;
-        right: 20px;
-        height: 17px;
-        cursor: pointer;
-      }
-    }
-    .tip {
-      color: #808a94;
-      margin: 0 10px;
-      margin-top: 15px;
+  }
+  .btn-group {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    right: 24px;
+    button {
+      width: 100%;
+      margin-top: 16px;
     }
   }
 }
