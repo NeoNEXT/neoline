@@ -1,5 +1,7 @@
-<p>{{ "Scope" | translate | async }}: {{ scopesType }}</p>
-<p class="tip">{{ scopesType | translate | async }}</p>
-<button mat-flat-button color="primary" (click)="close()">
-  {{ "done" | translate | async }}
-</button>
+<div class="container">
+  <div class="title">{{ "Scope" | translate | async }}: {{ scopesType }}</div>
+  <p class="desc">{{ scopesType | translate | async }}</p>
+  <button class="warn pop-ups" [mat-dialog-close]="true">
+    {{ "done" | translate | async }}
+  </button>
+</div>

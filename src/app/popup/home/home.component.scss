@@ -1,7 +1,7 @@
 @import "src/styles/popup-default";
 @import "src/styles/pop-ups-menu.scss";
 @import "src/styles/home-top.scss";
-@import './tab-container.scss';
+@import "./tab-container.scss";
 
 .loading-box {
   background: rgb(255 255 255 / 50%);
@@ -167,42 +167,36 @@
 
 .backup-tip {
   position: fixed;
-  bottom: 20px;
-  left: 4%;
-  width: 92%;
-  background: #303434;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  background: $title-color;
   opacity: 0.9;
-  border-radius: 10px;
-  padding: 20px 25px;
+  border-radius: 4px;
+  padding: 24px;
   z-index: 9999999;
   .title {
     font-size: 18px;
-    font-weight: 500;
-    color: #06ccac;
+    color: $theme-color;
     text-align: center;
   }
   .desc {
-    font-size: 13px;
-    color: #ffffff;
+    font-family: NeverMind-Regular;
     line-height: 18px;
-    margin-top: 20px;
+    color: #ffffff;
+    margin-top: 16px;
   }
   .btn-group {
-    margin-top: 15px;
-    font-size: 15px;
+    margin-top: 32px;
     button {
-      width: 48%;
-      height: 35px;
-      line-height: 35px;
-      border-radius: 5px;
+      width: calc(50% - 12px);
       color: #fff;
-      &.cancel {
-        border: 1px solid #ffffff;
-        margin-right: 4%;
-        background: none;
+      &.later {
+        margin-right: 24px;
+        border: 1px solid #fff;
       }
-      &.yes {
-        background: #6a6d6c;
+      &.now {
+        background: #fff3;
       }
     }
   }

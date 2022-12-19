@@ -6,7 +6,7 @@ export { PopupTransferSuccessDialogComponent } from './transfer-success/transfer
 export { PopupEditFeeDialogComponent } from './edit-fee/edit-fee.dialog';
 export { PopupBackupTipDialogComponent } from './backup-tip/backup-tip.dialog';
 export { PopupAuthorizationListDialogComponent } from './authorization-list/authorization-list.dialog';
-export { PopupDapiPromptComponent } from './dapi-Prompt/dapi-Prompt.component';
+export { PopupDapiPromptComponent } from './dapi-prompt/dapi-rompt.component';
 export { PopupNftTokenDetailDialogComponent } from './nft-token-detail/nft-token-detail.dialog';
 export { PopupAddNetworkDialogComponent } from './add-network/add-network.dialog';
 export { PopupPasswordDialogComponent } from './password/password.dialog';

@@ -1,110 +1,97 @@
 @import "src/styles/popup-default";
-@import "src/styles/theme-default";
 
-.title {
-  height: 60px;
-  line-height: 60px;
-  background: #fafafa;
-  font-size: 18px;
-  font-weight: 400;
-  color: #434543;
-  border-radius: 15px 15px 0 0;
-  text-align: center;
-  position: relative;
-  .close {
-    position: absolute;
-    right: 15px;
-    top: 15px;
-    color: #999;
-    cursor: pointer;
-  }
+::-webkit-scrollbar {
+  display: block;
 }
 
-.popup-authorization-list-content {
-  .authorization-container {
-    height: 320px;
-    overflow: scroll;
-  }
+.content {
+  padding: 0 24px 24px;
   .empty {
+    margin-top: 40px;
     text-align: center;
-    margin-top: 100px;
-    font-size: 12px;
-    color: #999999;
+    color: $tip-color;
   }
-  .authorization-item {
-    display: flex;
-    flex-direction: row;
-    padding: 23px 0;
-    margin: 0 20px;
-    align-items: center;
-    border-bottom: 1px solid #efefef;
-    .icon {
-      height: 35px;
-      width: 35px;
-    }
-    .info-box {
-      margin-left: 17px;
-      flex-grow: 1;
-      .top {
-        .websit-title {
-          font-size: 17px;
-          font-weight: 500;
-          color: #434543;
-          white-space: nowrap;
-          overflow: hidden;
-          text-overflow: ellipsis;
-          max-width: 135px;
-          display: inline-block;
-          vertical-align: middle;
+  ul {
+    height: 280px;
+    overflow-y: scroll;
+    li {
+      height: 82px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid $line-color;
+      img.icon {
+        width: 34px;
+        height: 34px;
+        border-radius: 50%;
+      }
+      .info-box {
+        flex: 1;
+        margin-left: 12px;
+        .title {
+          color: #3d3d3d;
+          font-size: 16px;
           margin-right: 8px;
         }
-        .websit-status {
-          padding: 3px 6px;
-          padding-left: 16px;
-          border-radius: 11px;
+        .status {
+          display: inline-block;
+          height: 15px;
+          line-height: 15px;
+          padding-left: 13px;
+          padding-right: 8px;
+          border-radius: 8px;
+          background: #daf8f3;
+          font-family: NeverMind-Regular;
           font-size: 10px;
-          &.success {
-            color: #06ccab;
-            background: #ecfbf1 url($img-authorization-success) no-repeat 6px;
-            background-size: 8px;
+          color: $theme-color;
+          position: relative;
+          &::before {
+            content: "";
+            position: absolute;
+            left: 6px;
+            top: 6px;
+            width: 3px;
+            height: 3px;
+            border-radius: 50%;
+            background: $theme-color;
           }
           &.fail {
-            color: #7f8993;
-            background: #f2f2f2 url($img-authorization-fail) no-repeat 6px;
-            background-size: 8px;
+            background: $line-color;
+            color: $sub-title-color;
+            &::before {
+              background: $sub-title-color;
+            }
           }
         }
+        .url {
+          font-size: 12px;
+          color: $sub-title-color;
+          margin-top: 5px;
+        }
       }
-      .websit-url {
-        font-size: 15px;
-        color: #7f8993;
-        max-width: 200px;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+      .remove-btn {
+        height: 24px;
+        line-height: 24px;
+        padding: 0 6px;
+        border-radius: 4px;
+        background: #feeeee;
+        color: $error-color;
+        font-size: 12px;
+        cursor: pointer;
+        &:hover {
+          box-shadow: 0px 5px 15px -5px rgba(250, 85, 85, 0.5);
+        }
       }
-    }
-    .remove-btn {
-      width: 50px;
-      height: 30px;
-      line-height: 30px;
-      background: #fa5555;
-      border-radius: 15px;
-      font-size: 14px;
-      color: #ffffff;
-      text-align: center;
-      cursor: pointer;
     }
   }
-  .clear-all {
-    margin: 40px 20px 30px 20px;
-    height: 50px;
-    line-height: 50px;
-    background: #fbf8f8;
-    border-radius: 5px;
-    font-size: 15px;
-    color: #fa5555;
-    text-align: center;
+  button.clear-all {
+    width: 100%;
+    margin-top: 20px;
+    border: 1px solid $error-color;
+    color: $error-color;
     cursor: pointer;
+    &:hover {
+      box-shadow: 0px 10px 25px -12px rgba(250, 85, 85, 0.47);
+    }
   }
 }

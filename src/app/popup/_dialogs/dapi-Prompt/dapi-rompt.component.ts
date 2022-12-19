@@ -1,20 +1,16 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { Router } from '@angular/router';
-import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { tx } from '@cityofzion/neon-core-neo3';
 import { AuthType } from '@/models/dapi_neo3';
 
 @Component({
-  templateUrl: './dapi-Prompt.component.html',
-  styleUrls: ['./dapi-Prompt.component.scss'],
+  templateUrl: './dapi-prompt.component.html',
+  styleUrls: ['./dapi-prompt.component.scss'],
 })
 export class PopupDapiPromptComponent implements OnInit {
   scopes: number;
   scopesType: string;
-  constructor(
-    private dialogRef: MatDialogRef<PopupDapiPromptComponent>,
-    @Inject(MAT_DIALOG_DATA) public data
-  ) {
+  constructor(@Inject(MAT_DIALOG_DATA) public data) {
     this.scopes = this.data.scopes;
     switch (this.scopes) {
       case tx.WitnessScope.None:
@@ -39,8 +35,4 @@ export class PopupDapiPromptComponent implements OnInit {
   }
 
   ngOnInit(): void {}
-
-  public close() {
-    this.dialogRef.close();
-  }
 }
