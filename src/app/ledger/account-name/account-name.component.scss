@@ -1,54 +1,42 @@
+@import "src/styles/popup-default";
+
 section.main {
-  width: 375px;
-  height: 600px;
-  margin: 0 auto;
-  background: linear-gradient(168deg, #06ccab 0%, #01bfbf 100%);
-  box-shadow: 0px 0px 15px 1px rgba(42, 57, 55, 0.16);
   .header {
-    height: 83px;
+    height: 84px;
+    line-height: 84px;
     font-size: 20px;
     color: #ffffff;
-    padding-left: 20px;
-    padding-top: 30px;
-    font-weight: 400;
+    padding-left: 24px;
   }
   .content {
-    min-height: 517px;
+    min-height: 516px;
     background: #ffffff;
     font-weight: 400;
-    border-radius: 16px 16px 0px 0px;
-    padding: 25px 20px;
+    padding: 24px;
+    position: relative;
     .title {
-      font-size: 14px;
-      color: #434543;
+      color: $sub-title-color;
       &.name {
-        margin-top: 35px;
+        margin-top: 32px;
       }
     }
     .address {
-      font-size: 16px;
-      color: #303433;
-      margin-top: 20px;
+      margin-top: 16px;
     }
     input {
       width: 100%;
       height: 50px;
-      background: #fafafa;
+      background: $box-color;
       border-radius: 10px;
       border: none;
-      margin-top: 15px;
-      padding: 0 20px;
+      margin-top: 12px;
+      padding: 0 16px;
     }
     button {
-      width: 100%;
-      height: 50px;
-      background: #06ccab;
-      border-radius: 25px;
-      margin-top: 160px;
-      color: #fff;
-      font-size: 17px;
-      border: none;
-      cursor: pointer;
+      width: calc(100% - 48px);
+      position: absolute;
+      left: 24px;
+      bottom: 30px;
     }
   }
 }

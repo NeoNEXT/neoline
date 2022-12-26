@@ -1,22 +1,16 @@
+@import "src/styles/popup-default";
+
 section.main {
-  width: 375px;
-  height: 600px;
-  margin: 0 auto;
-  background: linear-gradient(168deg, #06ccab 0%, #01bfbf 100%);
-  box-shadow: 0px 0px 15px 1px rgba(42, 57, 55, 0.16);
   .header {
-    height: 83px;
+    height: 84px;
+    line-height: 84px;
     font-size: 20px;
     color: #ffffff;
-    padding-left: 20px;
-    padding-top: 30px;
-    font-weight: 400;
+    padding-left: 24px;
   }
   .content {
-    min-height: 517px;
+    min-height: 516px;
     background: #ffffff;
-    font-weight: 400;
-    border-radius: 16px 16px 0px 0px;
     &.loading {
       padding: 0 40px;
       padding-top: 140px;
@@ -25,15 +19,13 @@ section.main {
       flex-direction: column;
       text-align: center;
       .tip {
-        margin-top: 40px;
+        margin-top: 32px;
         font-size: 15px;
-        font-weight: 500;
         line-height: 25px;
-        color: #303433;
       }
       .note {
-        color: #afb6be;
-        font-size: 13px;
+        font-family: NeverMind-Regular;
+        color: $tip-color;
         line-height: 15px;
         margin-top: 20px;
         &.reconnect {
@@ -42,11 +34,10 @@ section.main {
       }
     }
     &.address {
-      padding-top: 25px;
       & > .title {
-        padding: 0 20px;
-        font-size: 14px;
-        color: #434543;
+        height: 60px;
+        padding: 0 24px;
+        color: $sub-title-color;
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -58,7 +49,7 @@ section.main {
             justify-content: center;
             width: 20px;
             height: 20px;
-            background: #06ccab;
+            background: $theme-color;
             border-radius: 4px 4px 4px 4px;
             opacity: 1;
             color: #fff;
@@ -67,8 +58,11 @@ section.main {
               cursor: pointer;
               width: 13px;
             }
+            &:hover {
+              box-shadow: 0px 5px 10px -2px rgba(6, 204, 171, 0.5);
+            }
             &.pre {
-              margin-right: 57px;
+              margin-right: 48px;
             }
             &.next img {
               transform: rotate(180deg);
@@ -82,23 +76,25 @@ section.main {
         }
       }
       .loading-account {
-        height: 301px;
-        margin: 15px 20px 25px 20px;
+        height: 300px;
+        margin: 0 24px;
+        margin-bottom: 23px;
         padding-top: 30px;
-        border-top: 1px solid #efefef;
+        border-top: 1px solid $line-color;
         display: flex;
         justify-content: center;
       }
       ul {
-        height: 301px;
-        margin: 15px 20px 25px 20px;
-        border-top: 1px solid #efefef;
+        height: 300px;
+        margin: 0 24px;
+        margin-bottom: 23px;
+        border-top: 1px solid $line-color;
         li {
           width: 100%;
           height: 60px;
           font-size: 17px;
           display: inline-flex;
-          color: #303433;
+          color: $title-color;
           align-items: center;
           justify-content: space-between;
           padding: 0 10px;
@@ -108,7 +104,7 @@ section.main {
             display: none;
           }
           &.imported {
-            color: #06ccab;
+            color: $theme-color;
             pointer-events: none;
             cursor: default;
             span {
@@ -119,7 +115,7 @@ section.main {
             }
           }
           &.selected {
-            color: #f79165;
+            color: $warn-color;
           }
         }
       }
@@ -128,24 +124,23 @@ section.main {
         background: #f8f8f8;
       }
       .bottom {
-        padding: 25px 20px;
+        padding: 24px;
         .balance-content {
           .title {
-            font-size: 14px;
-            color: #434543;
+            color: $sub-title-color;
           }
           .middle {
-            margin-top: 15px;
-            height: 137px;
-            background: #fafafa;
+            margin-top: 16px;
+            height: 140px;
+            background: $box-color;
             border-radius: 10px;
             padding: 15px 12px;
-            font-size: 15px;
-            color: #303433;
+            font-size: 14px;
+            color: $title-color;
             .balance {
               height: 24px;
-              font-size: 17px;
-              margin-top: 15px;
+              font-size: 18px;
+              margin-top: 18px;
               p {
                 width: 50%;
                 display: inline-block;
@@ -156,29 +151,21 @@ section.main {
               }
             }
             .tip {
-              margin-top: 15px;
+              margin-top: 16px;
               font-size: 12px;
-              line-height: 15px;
-              font-weight: 500;
-              color: #afb6be;
+              line-height: 18px;
+              color: $tip-color;
+              font-family: NeverMind-Regular;
               .link {
-                color: #afb6be;
                 cursor: pointer;
                 text-decoration: underline;
               }
             }
           }
         }
-        button {
+        button.confirm {
           width: 100%;
-          height: 50px;
-          margin-top: 45px;
-          background: #06ccab;
-          border: none;
-          border-radius: 25px;
-          font-size: 17px;
-          color: #fff;
-          cursor: pointer;
+          margin-top: 44px;
         }
       }
     }

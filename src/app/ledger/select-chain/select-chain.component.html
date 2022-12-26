@@ -1,9 +1,7 @@
 <section class="main">
   <div class="header">
     <p class="title">{{ "ImportLedgerWallet" | translate | async }}</p>
-    <img class="logo" src="/assets/images/popup_logo.png" alt="" />
-    <img class="logo-bg" src="/assets/images/popup_login_bg.png" alt="" />
-    <div class="bottom"></div>
+    <img class="logo" src="/assets/images/login/neo-bg.png" alt="" />
   </div>
   <div class="content">
     <p class="title">{{ "selectAChain" | translate | async }}</p>
@@ -27,7 +25,7 @@
       <img class="arrow" src="/assets/images/ledger/plug-arrow.png" alt="" />
       <img class="pc" src="/assets/images/ledger/plug-pc.png" alt="" />
     </div>
-    <button class="next" (click)="select()">
+    <button class="confirm" (click)="select()">
       {{ "Next" | translate | async }}
     </button>
   </div>

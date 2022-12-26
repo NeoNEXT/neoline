@@ -14,7 +14,6 @@ import {
 import { AssetState } from './states/asset.state';
 import { TransactionState } from './states/transaction.state';
 import { MatDialogModule } from '@angular/material/dialog';
-import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { SettingState } from './states/setting.state';
 import { NftState } from './states/nft.state';
 import { UtilServiceState } from './util/util.service';
@@ -27,7 +26,6 @@ import { ExtensionService } from './util/extension.service';
   imports: [
     CommonModule,
     HttpClientModule,
-    MatProgressSpinnerModule,
     MatDialogModule,
   ],
   exports: [],

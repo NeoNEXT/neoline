@@ -1,3 +1,5 @@
+@import "src/styles/popup-default";
+
 section.main {
   width: 100vw;
   height: 100vh;
@@ -11,26 +13,33 @@ section.main {
     display: flex;
     align-items: center;
     justify-content: space-between;
-    img.logo {
-      height: 25px;
-    }
     .right {
       display: inline-flex;
       align-items: center;
       button {
-        min-width: 108px;
-        height: 30px;
+        min-width: 140px;
+        height: 32px;
+        line-height: 32px;
         padding: 0 10px;
-        background: none;
-        border-radius: 15px;
-        border: 1px solid #434543;
-        margin-right: 18px;
-        font-size: 13px;
-        color: #434543;
+        border-radius: 19px;
+        border: 1px solid $sub-title-color;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        background: transparent;
+        margin-right: 25px;
       }
       img {
-        width: 40px;
+        width: 32px;
+        height: 32px;
       }
     }
+  }
+  .content {
+    width: 375px;
+    min-height: 600px;
+    margin: 0 auto;
+    background: linear-gradient(172deg, #06ccab 3%, #01bfbf 57%);
+    box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.16);
   }
 }

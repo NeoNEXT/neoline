@@ -11,7 +11,7 @@ import { Component, Input } from '@angular/core';
 })
 export class LoadingComponent {
   @Input() color: string;
-  @Input() widtd: number;
+  @Input() width: number;
 
   constructor() {}
 }

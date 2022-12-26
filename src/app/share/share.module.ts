@@ -13,6 +13,7 @@ import { MatMenuModule } from '@angular/material/menu';
 import { MatSliderModule } from '@angular/material/slider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 const MATMODULES = [
   MatToolbarModule,
   MatInputModule,
@@ -24,6 +25,7 @@ const MATMODULES = [
   MatSliderModule,
   MatSlideToggleModule,
   MatSnackBarModule,
+  MatProgressSpinnerModule,
 ];
 //#endregion
 
