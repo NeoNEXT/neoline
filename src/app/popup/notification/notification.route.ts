@@ -6,7 +6,6 @@ import { PopupComponent } from '@popup/popup.component';
 import { PopupNotificationComponent } from './notification.component';
 import { PopupNoticeTransferComponent } from './transfer/transfer.component';
 import { PopupNoticeSignComponent } from './signature/signature.component';
-import { PopupNoticeTokenComponent } from './token/token.component';
 import { PopupNoticeAuthComponent } from './authorization/authorization.component';
 import { PopupWalletGuard } from '@/app/core';
 import { PopupNoticeInvokeComponent } from './invoke/invoke.component';
@@ -32,7 +31,6 @@ const routes: Routes = [
           { path: '', component: PopupNoticeTransferComponent },
           { path: 'transfer', component: PopupNoticeTransferComponent },
           { path: 'signature', component: PopupNoticeSignComponent },
-          { path: 'token', component: PopupNoticeTokenComponent },
           { path: 'authorization', component: PopupNoticeAuthComponent },
           { path: 'invoke', component: PopupNoticeInvokeComponent },
           { path: 'invoke-multi', component: PopupNoticeInvokeMultiComponent },

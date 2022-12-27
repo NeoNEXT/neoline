@@ -8,7 +8,6 @@ import { PopupNotificationComponent } from './notification.component';
 import { PopupNotificationRoutingModule } from './notification.route';
 import { PopupNoticeTransferComponent } from './transfer/transfer.component';
 import { PopupNoticeSignComponent } from './signature/signature.component';
-import { PopupNoticeTokenComponent } from './token/token.component';
 import { PopupNoticeAuthComponent } from './authorization/authorization.component';
 import { PopupNoticeInvokeComponent } from './invoke/invoke.component';
 import { PopupNoticeDeployComponent } from './deploy/deploy.component';
@@ -25,7 +24,6 @@ import { PopupNoticeNeo3SignTransactionComponent } from './neo3-sign-transaction
     PopupNotificationComponent,
     PopupNoticeTransferComponent,
     PopupNoticeSignComponent,
-    PopupNoticeTokenComponent,
     PopupNoticeAuthComponent,
     PopupNoticeInvokeComponent,
     PopupNoticeInvokeMultiComponent,
