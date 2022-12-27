@@ -6,7 +6,6 @@ export class NotificationService {
   public content: any;
   private EN = {
     close: 'Close',
-    copied: 'Copied!',
     hiddenSucc: 'Hidden success!',
     clearSuccess: 'Clear success!',
     addSucc: 'Add success!',
@@ -44,7 +43,6 @@ export class NotificationService {
   };
   private CN = {
     close: '关闭',
-    copied: '已复制!',
     hiddenSucc: '隐藏成功!',
     clearSuccess: '清除成功',
     addSucc: '添加成功!',

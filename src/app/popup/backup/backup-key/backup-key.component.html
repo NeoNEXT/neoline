@@ -4,10 +4,12 @@
   <div class="qrcode-content">
     <div id="key-qrcode"></div>
   </div>
-  <div class="copy-key">
-    <span class="key">{{ WIF }}</span>
-    <img src="/assets/images/common/copy-color.svg" (click)="copy()" alt="" />
-  </div>
+  <copy [value]="WIF">
+    <div class="copy-key">
+      <span class="key">{{ WIF }}</span>
+      <img src="/assets/images/common/copy-color.svg" alt="" />
+    </div>
+  </copy>
   <p class="tip">{{ "privateKeyTip" | translate | async }}</p>
   <div class="btn-group">
     <button class="confirm" routerLink="/popup/home">

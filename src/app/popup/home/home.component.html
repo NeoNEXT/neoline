@@ -11,16 +11,18 @@
   <div class="header">
     <div class="wallet-info">
       <p class="name">{{ currentWallet?.name || "" }}</p>
-      <p class="address">
-        <img
-          class="usb"
-          *ngIf="currentWallet.accounts[0]?.extra?.ledgerSLIP44"
-          src="/assets/images/ledger/usb.svg"
-          alt=""
-        />
-        <span>{{ address | longStr }}</span>
-        <img class="copy" src="assets/images/common/copy.svg" alt="" />
-      </p>
+      <copy [value]="address">
+        <p class="address">
+          <img
+            class="usb"
+            *ngIf="currentWallet.accounts[0]?.extra?.ledgerSLIP44"
+            src="/assets/images/ledger/usb.svg"
+            alt=""
+          />
+          <span>{{ address | longStr }}</span>
+          <img class="copy" src="assets/images/common/copy.svg" alt="" />
+        </p>
+      </copy>
     </div>
     <img
       class="menu"

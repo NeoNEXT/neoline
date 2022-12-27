@@ -81,6 +81,7 @@
     background: $hover-color;
     margin-top: 10px;
     padding: 10px 24px 10px 16px;
+    cursor: pointer;
     span {
       width: 260px;
       display: inline-block;
@@ -89,9 +90,6 @@
       color: $title-color;
       font-size: 12px;
       word-break: break-all;
-    }
-    img {
-      cursor: pointer;
     }
   }
   button {

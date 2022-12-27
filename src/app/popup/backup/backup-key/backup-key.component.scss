@@ -21,6 +21,7 @@
     background: $box-color;
     margin-top: 30px;
     padding: 15px 16px;
+    cursor: pointer;
     .key {
       width: 260px;
       display: inline-block;
@@ -29,9 +30,6 @@
       color: $title-color;
       font-size: 12px;
       word-break: break-all;
-    }
-    img {
-      cursor: pointer;
     }
   }
   .tip {

@@ -1,0 +1,11 @@
+<div
+  class="content"
+  (click)="copy()"
+  (mouseenter)="showPopup()"
+  (mouseleave)="hiddenPopup()"
+>
+  <ng-content></ng-content>
+  <span class="tip" *ngIf="isShowPopup">{{
+    (hasCopied ? "Copied" : "Copy to clipboard") | translate | async
+  }}</span>
+</div>

@@ -904,5 +904,11 @@
   },
   "inputN3AddressTip": {
     "message": "N3 地址"
+  },
+  "Copied": {
+    "message": "已复制！"
+  },
+  "Copy to clipboard": {
+    "message": "复制到剪贴板"
   }
 }

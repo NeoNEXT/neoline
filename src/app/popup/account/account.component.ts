@@ -160,17 +160,4 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
         break;
     }
   }
-
-  copy(message: string) {
-    const input = document.createElement('input');
-    input.setAttribute('readonly', 'readonly');
-    input.setAttribute('value', message);
-    document.body.appendChild(input);
-    input.select();
-    if (document.execCommand('copy')) {
-      document.execCommand('copy');
-      this.global.snackBarTip('copied');
-    }
-    document.body.removeChild(input);
-  }
 }

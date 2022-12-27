@@ -904,5 +904,11 @@
   },
   "inputN3AddressTip": {
     "message": "N3 address"
+  },
+  "Copied": {
+    "message": "Copied!"
+  },
+  "Copy to clipboard": {
+    "message": "Copy to clipboard"
   }
 }

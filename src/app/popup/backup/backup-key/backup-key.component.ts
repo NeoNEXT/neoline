@@ -59,18 +59,6 @@ export class PopupBackupKeyComponent implements OnInit, OnDestroy {
     }
   }
 
-  copy() {
-    const input = document.createElement('input');
-    input.setAttribute('readonly', 'readonly');
-    input.setAttribute('value', this.WIF);
-    document.body.appendChild(input);
-    input.select();
-    if (document.execCommand('copy')) {
-      document.execCommand('copy');
-      this.global.snackBarTip('copied');
-    }
-    document.body.removeChild(input);
-  }
 
   private updateWalletStatus() {
     this.chrome.setHaveBackupTip(false);

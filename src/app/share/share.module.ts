@@ -36,6 +36,7 @@ import { NavComponent } from './components/nav/nav.component';
 import { LoadingComponent } from './components/loading/loading.component';
 import { PopupNetworkComponent } from './components/network/network.component';
 import { PopupAvatarMenuComponent } from './components/avatar-menu/avatar-menu.component';
+import { CopyComponent } from './components/copy/copy.component';
 const COMPONENTS = [
   AssetTxPageComponent,
   NftTxPageComponent,
@@ -43,6 +44,7 @@ const COMPONENTS = [
   NavComponent,
   LoadingComponent,
   PopupAvatarMenuComponent,
+  CopyComponent,
 ];
 //#endregion
 

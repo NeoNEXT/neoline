@@ -26,16 +26,20 @@
   </div>
 
   <p class="label">{{ "address" | translate | async }}</p>
-  <div class="value">
-    <span>{{ address }}</span
-    ><img (click)="copy(address)" src="assets/images/common/copy.svg" />
-  </div>
+  <copy [value]="address">
+    <div class="value">
+      <span>{{ address }}</span
+      ><img src="assets/images/common/copy.svg" />
+    </div>
+  </copy>
 
   <p class="label">{{ "PublicKey" | translate | async }}</p>
-  <div class="value">
-    <span>{{ publicKey }}</span
-    ><img (click)="copy(publicKey)" src="assets/images/common/copy.svg" />
-  </div>
+  <copy [value]="publicKey">
+    <div class="value">
+      <span>{{ publicKey }}</span
+      ><img src="assets/images/common/copy.svg" />
+    </div>
+  </copy>
 
   <button *ngIf="!isLedger" class="confirm key" (click)="wif()">
     {{ "displayWIF" | translate | async }}

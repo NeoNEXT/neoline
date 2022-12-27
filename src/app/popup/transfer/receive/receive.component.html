@@ -4,7 +4,9 @@
     <div id="receive-qrcode"></div>
   </div>
   <div class="address">{{ address }}</div>
-  <button class="confirm">
-    {{ "copyAddress" | translate | async }}
-  </button>
+  <copy [value]="address">
+    <button class="confirm">
+      {{ "copyAddress" | translate | async }}
+    </button>
+  </copy>
 </div>
