@@ -75,7 +75,6 @@ export const DEFAULT_RPC_URLS = {
         1: [
             'http://seed6.ngd.network:10332',
             'http://seed8.ngd.network:10332',
-            'https://neo2-mainnet.neoline.io',
         ],
         2: [
             'http://seed3.ngd.network:20332',
