@@ -11,6 +11,10 @@ button {
     color: $theme-color;
     border: 1px solid $theme-color;
     cursor: pointer;
+    &.disabled {
+      opacity: 0.3;
+      pointer-events: none;
+    }
     &:hover {
       box-shadow: 0px 10px 25px -12px rgba(6, 204, 171, 0.5);
       background: #f5f9f9;

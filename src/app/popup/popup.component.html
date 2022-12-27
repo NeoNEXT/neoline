@@ -1,4 +1,6 @@
-<header [ngClass]="{ 'theme-bg': headerIsThemeBg }">
+<header
+  [ngClass]="{ 'theme-bg': headerIsThemeBg, 'third-party': isThirdParty }"
+>
   <img src="assets/images/logo-word.svg" class="logo" alt="" />
   <button class="network" (click)="showNetworkList = true">
     {{ networks[networkIndex]?.name }}

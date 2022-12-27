@@ -7,7 +7,7 @@
       <img class="left avatar" [src]="iconSrc" alt="" />
       <img
         class="middle"
-        src="/assets/images/third-party/auth-select.png"
+        src="/assets/images/common/selected-account.svg"
         alt=""
       />
       <img class="right" [avatar]="address" alt="" />
@@ -38,27 +38,23 @@
     </select>
   </div>
   <div class="secure">
-    <img src="/assets/images/third-party/auth-secure.png" alt="" />
+    <img src="/assets/images/third-party/auth-secure.svg" alt="" />
   </div>
 </section>
 
 <section class="submit-group">
-  <div class="button-group">
-    <button
-      mat-button
-      class="refuse"
-      [disabled]="ruleCheck && ruleSelected == 'true'"
-      (click)="refuse()"
-    >
-      {{ "refuse" | translate | async }}
-    </button>
-    <button
-      mat-button
-      class="confirm"
-      [disabled]="ruleCheck && ruleSelected == 'false'"
-      (click)="connect()"
-    >
-      {{ "connect" | translate | async }}
-    </button>
-  </div>
+  <button
+    class="cancel"
+    [ngClass]="{ disabled: ruleCheck && ruleSelected == 'true' }"
+    (click)="refuse()"
+  >
+    {{ "refuse" | translate | async }}
+  </button>
+  <button
+    class="confirm"
+    [ngClass]="{ disabled: ruleCheck && ruleSelected == 'false' }"
+    (click)="connect()"
+  >
+    {{ "connect" | translate | async }}
+  </button>
 </section>

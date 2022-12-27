@@ -12,6 +12,7 @@ import { Unsubscribable } from 'rxjs';
 export class PopupComponent implements OnInit {
   private currentUrl = this.router.url;
   headerIsThemeBg = false;
+  isThirdParty = false;
   showNetworkList = false;
   showAvatarMenu = false;
 
@@ -42,6 +43,9 @@ export class PopupComponent implements OnInit {
     ) {
       this.headerIsThemeBg = true;
     }
+    if (this.router.url.indexOf('/notification') >= 0) {
+      this.isThirdParty = true;
+    }
     this.router.events.subscribe((res: RouterEvent) => {
       if (res instanceof NavigationEnd) {
         if (
@@ -51,6 +55,11 @@ export class PopupComponent implements OnInit {
           this.headerIsThemeBg = true;
         } else {
           this.headerIsThemeBg = false;
+        }
+        if (this.router.url.indexOf('/notification') >= 0) {
+          this.isThirdParty = true;
+        } else {
+          this.isThirdParty = false;
         }
         this.currentUrl = res.url;
       }
