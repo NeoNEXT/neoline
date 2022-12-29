@@ -1,6 +1,6 @@
 <div class="loading-box" *ngIf="loading">
   <div>
-      <mat-spinner strokeWidth="10"></mat-spinner>
+    <mat-spinner strokeWidth="10"></mat-spinner>
   </div>
   <h3 *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</h3>
 </div>
@@ -112,9 +112,7 @@
       <pre>{{ datajson | json }}</pre>
     </div>
     <p class="title hex">HEX</p>
-    <p class="json-box serialize">
-      {{ txSerialize }}
-    </p>
+    <p class="json-box">{{ txSerialize }}</p>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="cancel()">

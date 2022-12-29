@@ -4,39 +4,31 @@
   </div>
   <h3 *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</h3>
 </div>
-<div class="transfer-confirm-body">
-  <mat-toolbar>
-    <div>
-      <img class="avatar" [avatar]="address" />
-      <span>{{ address }}</span>
+<div class="container">
+  <div class="header">
+    <div class="invoke-type">· SIGNTRANSACTION</div>
+    <p class="title">{{ "thSignTxTitle" | translate | async }}</p>
+  </div>
+  <div class="content data">
+    <ul *ngIf="magicNumber">
+      <li>
+        <p class="label">Magic Number</p>
+        <p class="value">{{ magicNumber }}</p>
+      </li>
+    </ul>
+    <p class="hex-label">{{ "transaction" | translate | async }}</p>
+    <div class="json-box">
+      <pre>{{ txJson | json }}</pre>
     </div>
-  </mat-toolbar>
-  <div class="transfer-detail-container">
-    <div class="type-box">
-      <span></span>
-      <span>SIGNTRANSACTION</span>
-    </div>
-    <div class="asset-info-box">
-      {{ "thSignTxTitle" | translate | async }}
-    </div>
-    <div class="detail-tab-content">
-      <p class="item-tip" *ngIf="magicNumber">Magic Number</p>
-      <p class="json" *ngIf="magicNumber">{{ magicNumber }}</p>
-      <p class="item-tip">{{ "transaction" | translate | async }}</p>
-      <div class="item-value">
-        <pre>{{ txJson | json }}</pre>
-      </div>
-      <p class="item-tip">HEX</p>
-      <p class="json">{{ serializeTx }}</p>
-    </div>
-    <hr />
-    <div class="btn-box">
-      <button mat-flat-button (click)="cancel()">
-        {{ "cancel" | translate | async }}
-      </button>
-      <button mat-flat-button (click)="getSignTx()" color="primary">
-        {{ "yes" | translate | async }}
-      </button>
-    </div>
+    <p class="hex-label">HEX</p>
+    <p class="json-box">{{ serializeTx }}</p>
+  </div>
+  <div class="btn-group">
+    <button class="cancel" (click)="cancel()">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button class="confirm" (click)="getSignTx()">
+      {{ "yes" | translate | async }}
+    </button>
   </div>
 </div>

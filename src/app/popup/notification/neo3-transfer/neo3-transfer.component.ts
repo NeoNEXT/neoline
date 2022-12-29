@@ -27,11 +27,14 @@ import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
+type TabType = 'details' | 'data';
+
 @Component({
   templateUrl: 'neo3-transfer.component.html',
   styleUrls: ['neo3-transfer.component.scss'],
 })
 export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
+  tabType: TabType = 'details';
   NEO = NEO;
   public rpcClient;
   public dataJson: any = {};

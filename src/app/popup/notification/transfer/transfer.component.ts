@@ -28,11 +28,14 @@ import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { TransferService } from '../../transfer/transfer.service';
 
+type TabType = 'details' | 'data';
+
 @Component({
   templateUrl: 'transfer.component.html',
   styleUrls: ['transfer.component.scss'],
 })
 export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
+  tabType: TabType = 'details';
   NEO = NEO;
   public dataJson: any = {};
   public rateCurrency = '';
@@ -435,12 +438,6 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
       });
   }
 
-  public getAddressSub(address: string) {
-    return `${address.substr(0, 3)}...${address.substr(
-      address.length - 4,
-      address.length - 1
-    )} `;
-  }
   private getLedgerStatus(tx) {
     this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
       this.loadingMsg = LedgerStatuses[res].msg;

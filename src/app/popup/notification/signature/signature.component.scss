@@ -1,30 +1,8 @@
-@import "src/app/popup/notification/common-scss/common.scss";
+@import "../common-scss/invoke.scss";
 
-.asset-info-box {
-  padding: 0 25px;
-  font-size: 20px;
-  font-weight: 500;
-  color: #333333;
-}
-.detail-tab-content {
-  padding: 0 25px;
-  .item-tip {
-    font-size: 14px;
-    font-weight: 500;
-    color: #7f8993;
-  }
-  .item-value {
-    margin-top: 10px;
-    width: 100%;
-    max-height: 200px;
-    line-height: 18px;
-    background: #fafafa;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 400;
-    padding: 10px 16px;
-    color: #434543;
-    word-break: break-word;
-    overflow: scroll;
+.container .content {
+  height: 370px;
+  .hex-label {
+    margin-top: 0;
   }
 }

@@ -1,1 +1,5 @@
-@import 'src/app/popup/notification/common-scss/common.scss';
+@import "../common-scss/invoke.scss";
+
+.container .content {
+  height: 210px;
+}

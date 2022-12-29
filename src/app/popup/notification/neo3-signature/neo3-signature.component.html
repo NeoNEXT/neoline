@@ -1,30 +1,18 @@
-<div class="transfer-confirm-body">
-  <mat-toolbar>
-    <div>
-      <img class="avatar" [avatar]="address" />
-      <span>{{ address }}</span>
-    </div>
-  </mat-toolbar>
-  <div class="transfer-detail-container">
-    <div class="type-box">
-      <span></span>
-      <span>SIGNMESSAGE</span>
-    </div>
-    <div class="asset-info-box">
-      {{ "thSignTitle" | translate | async }}
-    </div>
-    <div class="detail-tab-content">
-      <p class="item-tip">{{ "message" | translate | async }}</p>
-      <p class="item-value">{{ message }}</p>
-    </div>
-    <hr />
-    <div class="btn-box">
-      <button mat-flat-button (click)="cancel()">
-        {{ "cancel" | translate | async }}
-      </button>
-      <button mat-flat-button (click)="signature()" color="primary">
-        {{ "yes" | translate | async }}
-      </button>
-    </div>
+<div class="container">
+  <div class="header">
+    <div class="invoke-type">· SIGNMESSAGE</div>
+    <p class="title">{{ "thSignTitle" | translate | async }}</p>
+  </div>
+  <div class="content">
+    <p class="hex-label">{{ "message" | translate | async }}</p>
+    <p class="json-box">{{ message }}</p>
+  </div>
+  <div class="btn-group">
+    <button class="cancel" (click)="cancel()">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button class="confirm" (click)="signature()">
+      {{ "yes" | translate | async }}
+    </button>
   </div>
 </div>

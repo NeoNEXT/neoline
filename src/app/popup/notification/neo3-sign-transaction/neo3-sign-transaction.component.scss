@@ -1,49 +1,11 @@
-@import "src/app/popup/notification/common-scss/common.scss";
+@import "../common-scss/invoke.scss";
 
-.asset-info-box {
-  padding: 0 25px;
-  font-size: 20px;
-  font-weight: 500;
-  color: #333333;
-}
-.detail-tab-content {
-  padding: 0 15px;
-  padding-bottom: 20px;
-  height: auto;
-  .item-tip {
-    margin-top: 10px;
-    font-size: 14px;
-    font-weight: 500;
-    color: #7f8993;
+.container .content {
+  height: 370px;
+  ul {
+    margin-bottom: 30px;
   }
-  .item-value {
-    margin-top: 10px;
-    display: flex;
-    align-items: center;
-    width: 100%;
-    min-height: 50px;
-    line-height: 18px;
-    background: #fafafa;
-    border-radius: 10px;
-    font-size: 14px;
-    font-weight: 400;
-    padding: 10px 16px;
-    color: #434543;
-    word-break: break-word;
-    pre {
-      white-space: pre-wrap;
-      word-wrap: break-word;
-    }
+  .hex-label:first-child {
+    margin-top: 0;
   }
-  .json {
-    white-space: pre-wrap;
-    word-wrap: break-word;
-    color: #434543;
-    font-size: 13px;
-    margin-top: 10px;
-  }
-}
-
-.btn-box {
-  padding-bottom: 20px;
 }

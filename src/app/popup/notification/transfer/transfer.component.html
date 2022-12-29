@@ -4,85 +4,77 @@
   </div>
   <h3 *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</h3>
 </div>
-<div class="transfer-confirm-body">
-  <mat-toolbar>
-    <div>
-      <img class="avatar" [avatar]="fromAddress" />
-      <span>{{ getAddressSub(fromAddress) }}</span>
-    </div>
 
-    <img
-      class="arrow"
-      src="/assets/images/dialog/transfer_arrow.png"
-      alt=""
-    />
-    <div>
-      <img class="avatar" [avatar]="toAddress" />
-      <span>{{ getAddressSub(toAddress) }}</span>
+<div class="container">
+  <div class="header transfer">
+    <div class="invoke-type">· TRANSFER</div>
+    <div class="asset-logo-box big">
+      <img [assetId]="NEO" chain="Neo2" appErrorSrc alt="" />
     </div>
-  </mat-toolbar>
-  <div class="transfer-detail-container">
-    <div class="type-box">
-      <span></span>
-      <span>TRANSFER</span>
-    </div>
-    <div class="asset-info-box">
-      <div class="logo-box">
-        <img [assetId]="NEO" chain="Neo2" appErrorSrc alt="" />
+    <p class="amount">-{{ amount }} {{ symbol }}</p>
+    <p class="rate">-{{ money | numberFixed : 2 }} {{ rateCurrency }}</p>
+    <div class="address-group">
+      <div class="item">
+        <img class="avatar" [avatar]="fromAddress" />
+        <span>{{ fromAddress | longStr:4 }}</span>
       </div>
-      <div class="asset-amount-box">
-        <p>-{{ amount }} {{ symbol }}</p>
-        <p>-{{ money | numberFixed: 2 }} {{ rateCurrency }}</p>
+      <img src="assets/images/third-party/transfer-arrow.svg" alt="" />
+      <div class="item">
+        <img class="avatar" [avatar]="toAddress" />
+        <span>{{ toAddress | longStr:4 }}</span>
       </div>
     </div>
-    <div class="detail-tab-content">
-      <mat-tab-group mat-align-tabs="center">
-        <mat-tab [label]="'details' | translate | async">
-          <div class="fee-box detail-item">
-            <p class="label">GAS FEE</p>
-            <div class="fee-info">
-              <p class="edit" (click)="editFee()">
-                {{ "edit" | translate | async }}
-              </p>
-              <p class="fee">{{ fee }} GAS</p>
-              <p class="fee-money">
-                {{ feeMoney | numberFixed: 2 }} {{ rateCurrency }}
-              </p>
-            </div>
-          </div>
-          <hr />
-          <div class="total-box detail-item">
-            <p class="label">TOTAL</p>
-            <div class="total-info">
-              <p class="edit">Amount+GAS FEE</p>
-              <p class="fee">{{ amount }} {{ symbol }} + {{ fee }}GAS</p>
-              <p class="fee-money">
-                {{ totalMoney | numberFixed: 2 }} {{ rateCurrency }}
-              </p>
-            </div>
-          </div>
-        </mat-tab>
-        <mat-tab [label]="'data' | translate | async">
-          <div class="data-detail-box">
-            <div class="json-box">
-              <pre>{{ dataJson | json }}</pre>
-            </div>
-            <p class="hex-label">HEX</p>
-            <p class="json-box serialize">
-              {{ txSerialize }}
-            </p>
-          </div>
-        </mat-tab>
-      </mat-tab-group>
+  </div>
+  <div class="tabs-container">
+    <span
+      [class]="{ selected: tabType === 'details' }"
+      (click)="tabType = 'details'"
+    >
+      {{ "details" | translate | async }}
+    </span>
+    <span [class]="{ selected: tabType === 'data' }" (click)="tabType = 'data'">
+      {{ "data" | translate | async }}
+    </span>
+  </div>
+  <ul class="content details" *ngIf="tabType === 'details'">
+    <li>
+      <p class="row">
+        <span class="label"
+          >GAS FEE<img
+            class="edit"
+            (click)="editFee()"
+            src="assets/images/common/edit.svg"
+        /></span>
+        <span class="value">{{ fee }} GAS</span>
+      </p>
+      <p class="row tip">{{ feeMoney | numberFixed : 2 }} {{ rateCurrency }}</p>
+    </li>
+    <li>
+      <p class="row">
+        <span class="label">TOTAL</span>
+        <span class="value">{{ amount }} {{ symbol }} + {{ fee }} GAS</span>
+      </p>
+      <p class="row tip column">
+        <span class="label">Amount+GAS FEE</span>
+        <span class="value">
+          {{ totalMoney | numberFixed : 2 }} {{ rateCurrency }}
+        </span>
+      </p>
+    </li>
+  </ul>
+  <div class="content data" *ngIf="tabType === 'data'">
+    <div class="json-box">
+      <pre>{{ dataJson | json }}</pre>
     </div>
-    <hr />
-    <div class="btn-box">
-      <button mat-flat-button (click)="exit()">
-        {{ "cancel" | translate | async }}
-      </button>
-      <button mat-flat-button (click)="confirm()" color="primary">
-        {{ "yes" | translate | async }}
-      </button>
-    </div>
+    <p class="hex-label">HEX</p>
+    <p class="json-box">{{ txSerialize }}</p>
+  </div>
+  <div class="btn-group">
+    <button class="cancel" (click)="exit()">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button class="confirm" (click)="confirm()">
+      {{ "yes" | translate | async }}
+    </button>
   </div>
 </div>
