@@ -1,10 +1,10 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ChromeService } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { Account, ERRORS, requestTarget } from '@/models/dapi';
+import { ERRORS, requestTarget } from '@/models/dapi';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { ChainType, ChainTypeGroups, STORAGE_NAME } from '../../_lib';
+import { ChainType, STORAGE_NAME } from '../../_lib';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupSelectDialogComponent } from '../../_dialogs';
@@ -14,25 +14,16 @@ import { PopupSelectDialogComponent } from '../../_dialogs';
   styleUrls: ['./pick-address.component.scss'],
 })
 export class PopupPickAddressComponent implements OnInit {
-  @ViewChild('walletContainer') private walletContainer: ElementRef;
-  public walletArr: Array<Wallet2> = [];
-  public selectedWalletArr: { Neo2: Account; Neo3: Account } = {
-    Neo2: {
-      address: '',
-      label: '',
-    },
-    Neo3: {
-      address: '',
-      label: '',
-    },
+  walletArr: Array<Wallet2 | Wallet3> = [];
+  selectedWallet: { address: string; label: string } = {
+    address: '',
+    label: '',
   };
-  public allAuthWalletArr = {};
-  public tabType: ChainType = 'Neo2';
-  public hostname = '';
-  public messageID = '';
+  chainType: ChainType = 'Neo2';
+  private authAddresses = {};
+  private hostname = '';
+  private messageID = '';
 
-  public ruleCheck = false;
-  public ruleSelected = 'true';
   constructor(
     private chrome: ChromeService,
     private aRouter: ActivatedRoute,
@@ -42,17 +33,16 @@ export class PopupPickAddressComponent implements OnInit {
     this.aRouter.queryParams.subscribe((params: any) => {
       this.hostname = params.hostname;
       this.messageID = params.messageID;
-      this.tabType = params.chainType;
+      this.chainType = params.chainType;
     });
-    this.chrome
-      .getStorage(STORAGE_NAME.authAddress)
-      .subscribe((selectedWalletArr) => {
-        this.selectedWalletArr =
-          selectedWalletArr[this.hostname] || this.selectedWalletArr;
-        this.allAuthWalletArr = selectedWalletArr || {};
-      });
+    this.chrome.getStorage(STORAGE_NAME.authAddress).subscribe((res) => {
+      this.authAddresses = res;
+      if (res[this.hostname] && res[this.hostname][this.chainType]) {
+        this.selectedWallet = res[this.hostname][this.chainType];
+      }
+    });
     const storageName =
-      this.tabType === 'Neo3'
+      this.chainType === 'Neo3'
         ? STORAGE_NAME['walletArr-Neo3']
         : STORAGE_NAME.walletArr;
     this.chrome
@@ -66,7 +56,7 @@ export class PopupPickAddressComponent implements OnInit {
         error: ERRORS.CANCELLED,
         ID: this.messageID,
         return:
-          this.tabType === 'Neo2'
+          this.chainType === 'Neo2'
             ? requestTarget.PickAddress
             : requestTargetN3.PickAddress,
       });
@@ -74,37 +64,26 @@ export class PopupPickAddressComponent implements OnInit {
   }
 
   public handleSelectWallet(wallet: Wallet2 | Wallet3) {
-    if (
-      this.selectedWalletArr[this.tabType].address ===
-      wallet.accounts[0].address
-    ) {
-      this.selectedWalletArr[this.tabType] = {
+    if (this.selectedWallet.address === wallet.accounts[0].address) {
+      this.selectedWallet = {
         label: '',
         address: '',
       };
     } else {
-      this.selectedWalletArr[this.tabType] = {
+      this.selectedWallet = {
         label: wallet.name,
         address: wallet.accounts[0].address,
       };
     }
   }
 
-  public scrollToBottom() {
-    try {
-      this.walletContainer.nativeElement.scrollTo(
-        0,
-        this.walletContainer.nativeElement.scrollHeight
-      );
-    } catch (err) {}
-  }
   public refuse() {
     this.chrome.windowCallback(
       {
         error: ERRORS.CANCELLED,
         ID: this.messageID,
         return:
-          this.tabType === 'Neo2'
+          this.chainType === 'Neo2'
             ? requestTarget.PickAddress
             : requestTargetN3.PickAddress,
       },
@@ -112,21 +91,18 @@ export class PopupPickAddressComponent implements OnInit {
     );
   }
   public confirm() {
-    this.allAuthWalletArr[this.hostname] = this.selectedWalletArr;
-    this.chrome.setStorage(STORAGE_NAME.authAddress, this.allAuthWalletArr);
-    if (
-      this.selectedWalletArr.Neo2.address ||
-      this.selectedWalletArr.Neo3.address
-    ) {
+    if (!this.authAddresses[this.hostname]) {
+      this.authAddresses[this.hostname] = {};
+    }
+    this.authAddresses[this.hostname][this.chainType] = this.selectedWallet;
+    this.chrome.setStorage(STORAGE_NAME.authAddress, this.authAddresses);
+    if (this.selectedWallet.address) {
       this.chrome.windowCallback(
         {
-          data:
-            this.tabType === 'Neo2'
-              ? this.selectedWalletArr.Neo2
-              : this.selectedWalletArr.Neo3,
+          data: this.selectedWallet,
           ID: this.messageID,
           return:
-            this.tabType === 'Neo2'
+            this.chainType === 'Neo2'
               ? requestTarget.PickAddress
               : requestTargetN3.PickAddress,
         },
@@ -138,7 +114,7 @@ export class PopupPickAddressComponent implements OnInit {
           error: ERRORS.CANCELLED,
           ID: this.messageID,
           return:
-            this.tabType === 'Neo2'
+            this.chainType === 'Neo2'
               ? requestTarget.PickAddress
               : requestTargetN3.PickAddress,
         },
@@ -148,14 +124,14 @@ export class PopupPickAddressComponent implements OnInit {
   }
 
   to(type: 'create' | 'import') {
-    const params = `type=dapi&hostname=${this.hostname}&chainType=${this.tabType}&messageID=${this.messageID}`;
+    const params = `type=dapi&hostname=${this.hostname}&chainType=${this.chainType}&messageID=${this.messageID}`;
     this.dialog
       .open(PopupSelectDialogComponent, {
         data: {
           optionGroup: [
             {
-              name: this.tabType === 'Neo3' ? 'Neo N3' : 'Neo Legacy',
-              type: this.tabType,
+              name: this.chainType === 'Neo3' ? 'Neo N3' : 'Neo Legacy',
+              type: this.chainType,
             },
           ],
           type: 'chain',

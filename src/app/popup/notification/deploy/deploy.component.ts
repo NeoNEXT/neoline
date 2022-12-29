@@ -30,11 +30,14 @@ import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
+type TabType = 'details' | 'data';
+
 @Component({
   templateUrl: 'deploy.component.html',
   styleUrls: ['deploy.component.scss'],
 })
 export class PopupNoticeDeployComponent implements OnInit {
+  tabType: TabType = 'details';
   NEO = NEO;
   public dataJson: any = {};
   public feeMoney = '0';
