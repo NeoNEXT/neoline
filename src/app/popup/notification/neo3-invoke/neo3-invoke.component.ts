@@ -29,11 +29,14 @@ import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
+type TabType = 'details' | 'data';
+
 @Component({
   templateUrl: 'neo3-invoke.component.html',
   styleUrls: ['neo3-invoke.component.scss'],
 })
 export class PopupNoticeNeo3InvokeComponent implements OnInit {
+  tabType: TabType = 'details';
   public dataJson: any = {};
   public rateCurrency = '';
   public txSerialize = '';

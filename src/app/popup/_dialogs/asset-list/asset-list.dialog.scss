@@ -1,9 +1,5 @@
 @import "src/styles/popup-default.scss";
 
-::-webkit-scrollbar {
-  display: block;
-}
-
 .search-box {
   width: calc(100% - 32px);
   height: 34px;

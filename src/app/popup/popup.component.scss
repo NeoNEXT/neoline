@@ -22,26 +22,6 @@ header {
       }
     }
   }
-  &.third-party {
-    background: #fff;
-    border-bottom: 1px solid $line-color;
-    img.logo {
-      filter: drop-shadow(1000px 0 0 $theme-color);
-      transform: translate(-1000px);
-    }
-    button.network {
-      border-color: $tip-color;
-      color: $sub-title-color;
-      pointer-events: none;
-      img {
-        filter: drop-shadow(1000px 0 0 $tip-color);
-        transform: translate(-1000px);
-      }
-    }
-    .avatar {
-      display: none;
-    }
-  }
   img.logo {
     height: 20px;
     margin-right: 25px;

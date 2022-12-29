@@ -136,10 +136,12 @@ export class TransferCreateConfirmComponent implements OnInit {
             this.data.network.magicNumber
           )
           .then((tx) => {
+            this.loading = false;
             this.unsignedTx = tx;
             this.resolveSend();
           })
           .catch((error) => {
+            this.loading = false;
             this.loadingMsg = '';
             this.ledger.handleLedgerError(error);
           });

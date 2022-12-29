@@ -33,11 +33,14 @@ import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
+type TabType = 'details' | 'data';
+
 @Component({
   templateUrl: 'invoke-multi.component.html',
   styleUrls: ['invoke-multi.component.scss'],
 })
 export class PopupNoticeInvokeMultiComponent implements OnInit {
+  tabType: TabType = 'details';
   public dataJson: any = {};
   public feeMoney = '0';
   public rateCurrency = '';

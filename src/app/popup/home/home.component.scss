@@ -1,7 +1,7 @@
 @import "src/styles/popup-default";
 @import "src/styles/pop-ups-menu.scss";
 @import "src/styles/home-top.scss";
-@import "./tab-container.scss";
+@import "src/styles/tab-container.scss";
 
 .loading-box {
   background: rgb(255 255 255 / 50%);
@@ -84,6 +84,9 @@
     height: calc(100% - 67px);
     position: relative;
     overflow: auto;
+    &::-webkit-scrollbar {
+      display: none;
+    }
     .asset-logo-box {
       margin: 16px auto;
     }

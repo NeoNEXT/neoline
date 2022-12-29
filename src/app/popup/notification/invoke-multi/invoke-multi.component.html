@@ -4,168 +4,123 @@
   </div>
   <h3 *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</h3>
 </div>
-<div class="transfer-confirm-container">
-  <div class="container">
-    <div class="mat-toolbar-fixed no-third-party-toolbar">
-      <mat-toolbar color="primary">
-        <span class="popup-nav-logo">
-          <span class="popup-nav-logo-img popup-nav-logo-title-img"></span>
-        </span>
-        <button mat-stroked-button class="popup-nav-network">
-          <span class="network-name">{{ n2Network.name }}</span>
-          <span class="popup-nav-network-icon"></span>
-        </button>
-        <img
-          class="close"
-          (click)="exit()"
-          src="/assets/images/dialog/close.png"
-          alt=""
-        />
-      </mat-toolbar>
-    </div>
-    <div class="transfer-confirm-body">
-      <div class="transfer-detail-container">
-        <div class="type-box">
-          <span></span>
-          <span>INVOKE-MULTI</span>
-        </div>
-        <div class="invoke-title">
-          NEO {{ n2Network.network }}
-          {{ "ChainSmartContractDeploy" | translate | async }}
-        </div>
-        <div class="detail-tab-content">
-          <mat-tab-group mat-align-tabs="center">
-            <mat-tab [label]="'details' | translate | async">
-              <div class="fee-box detail-item">
-                <p class="label">GAS FEE</p>
-                <div class="fee-info">
-                  <p class="edit" (click)="editFee()" *ngIf="showFeeEdit">
-                    {{ "edit" | translate | async }}
-                  </p>
-                  <p class="fee">
-                    {{ (showFeeEdit ? fee : 0) | numberFixed }} GAS
-                  </p>
-                  <p class="fee-money">
-                    {{ (showFeeEdit ? feeMoney : 0) | numberFixed: 2 }}
-                    {{ rateCurrency }}
-                  </p>
-                </div>
-              </div>
-              <hr />
-            </mat-tab>
-            <mat-tab [label]="'data' | translate | async">
-              <div class="data-detail-box">
-                <div class="invoke-details">
-                  <div class="row">
-                    <p class="name">
-                      {{ "YourSigningAddress" | translate | async }}
-                    </p>
-                    <p class="value">{{ signAddress }}</p>
-                  </div>
-                  <div *ngFor="let invokeItem of dataJson.invokeArgs">
-                    <div class="row">
-                      <p class="name">
-                        {{ "ContractScriptHash" | translate | async }}
-                      </p>
-                      <p class="value">{{ invokeItem.scriptHash }}</p>
-                    </div>
-                    <div class="row">
-                      <p class="name">{{ "Operation" | translate | async }}</p>
-                      <p class="value">{{ invokeItem.operation }}</p>
-                    </div>
-                    <div class="row">
-                      <p class="name">
-                        {{ "InvocationArguments" | translate | async }}
-                      </p>
-                      <div class="value" *ngFor="let item of invokeItem.args">
-                        <p>{{ item.type }} - {{ item.value }}</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div class="row" *ngIf="dataJson?.fee !== undefined">
-                    <p class="name">{{ "Fee" | translate | async }}</p>
-                    <p class="value">{{ dataJson?.fee }}</p>
-                  </div>
-                  <div
-                    class="row"
-                    *ngIf="dataJson?.assetIntentOverrides !== undefined"
-                  >
-                    <p class="name">
-                      {{ "AssetIntentOverrideInputs" | translate | async }}
-                    </p>
-                    <div
-                      class="value"
-                      *ngFor="let item of dataJson.assetIntentOverrides.inputs"
-                    >
-                      <p>txid - {{ item.txid }}</p>
-                      <p>index - {{ item.index }}</p>
-                    </div>
-                    <p class="name">
-                      {{ "AssetIntentOverrideOutputs" | translate | async }}
-                    </p>
-                    <div
-                      class="value"
-                      *ngFor="let item of dataJson.assetIntentOverrides.outputs"
-                    >
-                      <p>
-                        {{ "asset" | translate | async }} - {{ item.asset }}
-                      </p>
-                      <p>
-                        {{ "address" | translate | async }} - {{ item.address }}
-                      </p>
-                      <p>
-                        {{ "amount" | translate | async }} - {{ item.value }}
-                      </p>
-                    </div>
-                  </div>
-                  <div
-                    class="row"
-                    *ngIf="dataJson?.txHashAttributes !== undefined"
-                  >
-                    <p class="name">
-                      {{ "TransactionAttributes" | translate | async }}
-                    </p>
-                    <div
-                      class="value"
-                      *ngFor="let item of dataJson.txHashAttributes"
-                    >
-                      <p>{{ item.txAttrUsage }} - {{ item.value }}</p>
-                    </div>
-                  </div>
-                  <div
-                    class="row"
-                    *ngIf="dataJson?.broadcastOverride !== undefined"
-                  >
-                    <p class="name">
-                      {{ "broadcastOverride" | translate | async }}
-                    </p>
-                    <p class="value">
-                      {{
-                        dataJson.broadcastOverride
-                          ? ("Yes" | translate | async)
-                          : ("No" | translate | async)
-                      }}
-                    </p>
-                  </div>
-                </div>
-                <p class="hex-label">HEX</p>
-                <p class="json-box serialize">
-                  {{ txSerialize }}
-                </p>
-              </div>
-            </mat-tab>
-          </mat-tab-group>
-        </div>
-        <hr />
-        <div class="btn-box">
-          <button mat-flat-button (click)="exit()">
-            {{ "cancel" | translate | async }}
-          </button>
-          <button mat-flat-button (click)="confirm()" color="primary">
-            {{ "yes" | translate | async }}
-          </button>
-        </div>
-      </div>
-    </div>
+
+<div class="container">
+  <div class="header">
+    <div class="invoke-type">· INVOKE-MULTI</div>
+    <p class="title">
+      NEO {{ n2Network.network }}
+      {{ "ChainSmartContractDeploy" | translate | async }}
+    </p>
+  </div>
+  <div class="tabs-container">
+    <span
+      [class]="{ selected: tabType === 'details' }"
+      (click)="tabType = 'details'"
+    >
+      {{ "details" | translate | async }}
+    </span>
+    <span [class]="{ selected: tabType === 'data' }" (click)="tabType = 'data'">
+      {{ "data" | translate | async }}
+    </span>
+  </div>
+  <ul class="content details" *ngIf="tabType === 'details'">
+    <li>
+      <p class="row">
+        <span class="label"
+          >GAS FEE<img
+            class="edit"
+            (click)="editFee()"
+            src="assets/images/common/edit.svg"
+        /></span>
+        <span class="value"
+          >{{ (showFeeEdit ? fee : 0) | numberFixed }} GAS</span
+        >
+      </p>
+      <p class="row tip">
+        {{ (showFeeEdit ? feeMoney : 0) | numberFixed : 2 }} {{ rateCurrency }}
+      </p>
+    </li>
+  </ul>
+  <div class="content data" *ngIf="tabType === 'data'">
+    <ul>
+      <li>
+        <p class="label">{{ "YourSigningAddress" | translate | async }}</p>
+        <p class="value">{{ signAddress }}</p>
+      </li>
+      <ng-container *ngFor="let invokeItem of dataJson.invokeArgs">
+        <li>
+          <p class="label">{{ "ContractScriptHash" | translate | async }}</p>
+          <p class="value">{{ invokeItem.scriptHash }}</p>
+        </li>
+        <li>
+          <p class="label">{{ "Operation" | translate | async }}</p>
+          <p class="value">{{ invokeItem.operation }}</p>
+        </li>
+        <li>
+          <p class="label">{{ "InvocationArguments" | translate | async }}</p>
+          <div class="value" *ngFor="let item of invokeItem.args">
+            <p *ngIf="item?.type">{{ item.type }} - {{ item.value }}</p>
+            <p *ngIf="!item?.type">{{ item }}</p>
+          </div>
+        </li>
+      </ng-container>
+      <li *ngIf="dataJson?.fee !== undefined">
+        <p class="label">{{ "Fee" | translate | async }}</p>
+        <p class="value">{{ dataJson?.fee }}</p>
+      </li>
+      <li *ngIf="dataJson?.assetIntentOverrides !== undefined">
+        <p class="label">
+          {{ "AssetIntentOverrideInputs" | translate | async }}
+        </p>
+        <ng-container *ngFor="let item of dataJson.assetIntentOverrides.inputs">
+          <p class="value">txid - {{ item.txid }}</p>
+          <p class="value">index - {{ item.index }}</p>
+        </ng-container>
+      </li>
+      <li *ngIf="dataJson?.assetIntentOverrides !== undefined">
+        <p class="label">
+          {{ "AssetIntentOverrideOutputs" | translate | async }}
+        </p>
+        <ng-container
+          *ngFor="let item of dataJson.assetIntentOverrides.outputs"
+        >
+          <p class="value">
+            {{ "asset" | translate | async }} - {{ item.asset }}
+          </p>
+          <p class="value">
+            {{ "address" | translate | async }} - {{ item.address }}
+          </p>
+          <p class="value">
+            {{ "amount" | translate | async }} - {{ item.value }}
+          </p>
+        </ng-container>
+      </li>
+      <li *ngIf="dataJson?.txHashAttributes !== undefined">
+        <p class="label">{{ "TransactionAttributes" | translate | async }}</p>
+        <p class="value" *ngFor="let item of dataJson.txHashAttributes">
+          {{ item.txAttrUsage }} - {{ item.value }}
+        </p>
+      </li>
+
+      <li *ngIf="dataJson?.broadcastOverride !== undefined">
+        <p class="label">{{ "broadcastOverride" | translate | async }}</p>
+        <p class="value">
+          {{ (dataJson.broadcastOverride ? "Yes" : "No") | translate | async }}
+        </p>
+      </li>
+    </ul>
+    <p class="hex-label">HEX</p>
+    <p class="json-box serialize">
+      {{ txSerialize }}
+    </p>
+  </div>
+  <div class="btn-group">
+    <button class="cancel" (click)="exit()">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button class="confirm" (click)="confirm()">
+      {{ "yes" | translate | async }}
+    </button>
   </div>
 </div>

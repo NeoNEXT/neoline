@@ -1,12 +1,15 @@
-<header
-  [ngClass]="{ 'theme-bg': headerIsThemeBg, 'third-party': isThirdParty }"
->
+<header [ngClass]="{ 'theme-bg': headerIsThemeBg }">
   <img src="assets/images/logo-word.svg" class="logo" alt="" />
   <button class="network" (click)="showNetworkList = true">
     {{ networks[networkIndex]?.name }}
     <img src="assets/images/common/triangle-fill.svg" />
   </button>
-  <div class="avatar" (click)="showAvatarMenu = true" *ngIf="getShowAvatar()">
+  <div
+    [hidden]="isThirdParty"
+    class="avatar"
+    (click)="showAvatarMenu = true"
+    *ngIf="getShowAvatar()"
+  >
     <img [avatar]="address" alt="" />
   </div>
 </header>
