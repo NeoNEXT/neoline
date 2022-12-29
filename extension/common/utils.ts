@@ -9,8 +9,6 @@ import { getLocalStorage } from '../common';
 import { tx, wallet as wallet3} from '@cityofzion/neon-core-neo3';
 
 const curve = new ec('p256');
-const utf8 = require('utf8');
-
 
 const hexRegex = /^([0-9A-Fa-f]{2})*$/;
 
@@ -157,23 +155,6 @@ export function ab2hexstring(arr) {
  */
 export function str2hexstring(str) {
     return ab2hexstring(str2ab(str));
-}
-
-export function SignStrToHexstring(str: string) {
-    str = utf8.encode(str);
-    let hex = '';
-    // remove \u0000 padding from either side
-    str = str.replace(/^(?:\u0000)*/, '');
-    str = str.split('').reverse().join('');
-    str = str.replace(/^(?:\u0000)*/, '');
-    str = str.split('').reverse().join('');
-
-    for (let i = 0; i < str.length; i++) {
-        const code = str.charCodeAt(i);
-        const n = code.toString(16);
-        hex += n.length < 2 ? '0' + n : n;
-    }
-    return hex;
 }
 
 /**

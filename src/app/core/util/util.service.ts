@@ -22,7 +22,6 @@ import { of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import BigNumber from 'bignumber.js';
 import { NEO, GAS } from '@/models/models';
-const utf8 = require('utf8');
 
 @Injectable()
 export class UtilServiceState {
@@ -52,43 +51,6 @@ export class UtilServiceState {
             DEFAULT_NEO3_ASSETS.GAS.decimals
         );
         this.n3AssetSymbol.set(GAS3_CONTRACT, DEFAULT_NEO3_ASSETS.GAS.symbol);
-    }
-    utf8ToHex(str: string) {
-        str = utf8.encode(str);
-        let hex = '';
-        // remove \u0000 padding from either side
-        str = str.replace(/^(?:\u0000)*/, '');
-        str = str.split('').reverse().join('');
-        str = str.replace(/^(?:\u0000)*/, '');
-        str = str.split('').reverse().join('');
-
-        for (let i = 0; i < str.length; i++) {
-            const code = str.charCodeAt(i);
-            const n = code.toString(16);
-            hex += n.length < 2 ? '0' + n : n;
-        }
-        return hex;
-    }
-
-    hexToUtf8(hex) {
-        let str = '';
-        let code = 0;
-        hex = hex.replace(/^0x/i, '');
-
-        // remove 00 padding from either side
-        hex = hex.replace(/^(?:00)*/, '');
-        hex = hex.split('').reverse().join('');
-        hex = hex.replace(/^(?:00)*/, '');
-        hex = hex.split('').reverse().join('');
-
-        const l = hex.length;
-
-        for (let i = 0; i < l; i += 2) {
-            code = parseInt(hex.substr(i, 2), 16);
-            str += String.fromCharCode(code);
-        }
-
-        return utf8.decode(str);
     }
 
     parseUrl(url: string): any {

@@ -349,13 +349,13 @@ export class Init {
     }
 
 
-    public sign(parameter: { message: string }): Promise<any> {
+    public signMessageWithoutSalt(parameter: { message: string }): Promise<any> {
         if (parameter.message === undefined) {
             return new Promise((_, reject) => {
                 reject(ERRORS.MALFORMED_INPUT);
             });
         } else {
-            return sendMessage(requestTargetN3.Sign, parameter);
+            return sendMessage(requestTargetN3.SignMessageWithoutSalt, parameter);
         }
     }
 

@@ -42,7 +42,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
                 this.chrome.windowCallback({
                     error: ERRORS.CANCELLED,
                     return: this.isSign
-                        ? requestTargetN3.Sign
+                        ? requestTargetN3.SignMessageWithoutSalt
                         : requestTargetN3.SignMessage,
                     ID: this.messageID,
                 });
@@ -55,7 +55,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
             {
                 error: ERRORS.CANCELLED,
                 return: this.isSign
-                    ? requestTargetN3.Sign
+                    ? requestTargetN3.SignMessageWithoutSalt
                     : requestTargetN3.SignMessage,
                 ID: this.messageID,
             },
@@ -72,7 +72,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
                     description: `error: 'There was an error signing this transaction. Ledger does not support this method.`,
                 },
                 return: this.isSign
-                    ? requestTargetN3.Sign
+                    ? requestTargetN3.SignMessageWithoutSalt
                     : requestTargetN3.SignMessage,
                 ID: this.messageID,
             });
@@ -90,7 +90,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
         const randomSalt = randomBytes(16).toString('hex');
         const publicKey = wallet.getPublicKeyFromPrivateKey(privateKey);
         const str = this.isSign ? this.message : randomSalt + this.message;
-        const parameterHexString = this.utilServiceState.utf8ToHex(str);
+        const parameterHexString = Buffer.from(str).toString('hex');
         const lengthHex = u.num2VarInt(parameterHexString.length / 2);
         const concatenatedString = lengthHex + parameterHexString;
         const serializedTransaction = '010001f0' + concatenatedString + '0000';
@@ -106,7 +106,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
         this.chrome.windowCallback(
             {
                 return: this.isSign
-                    ? requestTargetN3.Sign
+                    ? requestTargetN3.SignMessageWithoutSalt
                     : requestTargetN3.SignMessage,
                 data,
                 ID: this.messageID,
