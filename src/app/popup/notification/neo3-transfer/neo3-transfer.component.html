@@ -1,7 +1,5 @@
 <div class="loading-box" *ngIf="loading">
-  <div>
-    <mat-spinner strokeWidth="10"></mat-spinner>
-  </div>
+  <mat-spinner strokeWidth="10"></mat-spinner>
   <h3 *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</h3>
 </div>
 
@@ -16,12 +14,12 @@
     <div class="address-group">
       <div class="item">
         <img class="avatar" [avatar]="fromAddress" />
-        <span>{{ fromAddress | longStr:4 }}</span>
+        <span>{{ fromAddress | longStr : 4 }}</span>
       </div>
       <img src="assets/images/third-party/transfer-arrow.svg" alt="" />
       <div class="item">
         <img class="avatar" [avatar]="toAddress" />
-        <span>{{ toAddress | longStr:4 }}</span>
+        <span>{{ toAddress | longStr : 4 }}</span>
       </div>
     </div>
   </div>
@@ -73,7 +71,7 @@
       <pre>{{ dataJson | json }}</pre>
     </div>
     <p class="hex-label">HEX</p>
-    <p class="json-box">{{ txSerialize }}</p>
+    <p class="json-box serialize">{{ txSerialize }}</p>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="exit()">

@@ -291,12 +291,12 @@ function updteLoaclStorage(storageName: STORAGE_NAME, value: any) {
     const saveData = {};
     saveData[storageName] = storageValue;
     if (STORAGE_VALUE_MESSAGE[storageName].isLocal) {
-      chrome.storage.local.set(value, () => {
-        console.log('Set local storage', value);
+      chrome.storage.local.set(saveData, () => {
+        console.log('Set local storage', saveData);
       });
     } else {
-      chrome.storage.sync.set(value, () => {
-        console.log('Set storage', value);
+      chrome.storage.sync.set(saveData, () => {
+        console.log('Set storage', saveData);
       });
     }
   } else {

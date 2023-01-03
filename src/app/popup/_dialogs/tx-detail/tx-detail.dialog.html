@@ -11,19 +11,19 @@
 <ul>
   <li>
     <span class="label">TxID</span>
-    <span class="value">{{ data.tx.txid }}</span>
+    <span class="value break-all">{{ data.tx.txid }}</span>
   </li>
   <li>
     <span class="label">{{ 'Contract' | translate | async }}</span>
-    <span class="value">{{ data.tx.asset_id }}</span>
+    <span class="value break-all">{{ data.tx.asset_id }}</span>
   </li>
   <li *ngIf="data.isNFT">
     <span class="label">Token ID</span>
-    <span class="value">{{ data.tx.tokenid }}</span>
+    <span class="value break-all">{{ data.tx.tokenid }}</span>
   </li>
   <li>
     <span class="label">{{ 'amount' | translate | async }}</span>
-    <span class="value">{{ data.tx.value + ' ' + data.symbol }}</span>
+    <span class="value break-all">{{ data.tx.value + ' ' + data.symbol }}</span>
   </li>
   <li>
     <span class="label">{{ 'time' | translate | async }}</span>

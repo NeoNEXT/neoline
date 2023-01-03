@@ -44,7 +44,7 @@ section.container {
     }
     .popup-assets-list {
       height: calc(100% - 80px);
-      overflow: scroll;
+      overflow-y: scroll;
       margin-top: 8px;
       &::-webkit-scrollbar {
         display: none;

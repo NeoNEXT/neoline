@@ -4,7 +4,10 @@
 
 section.container {
   height: 100%;
-  overflow: scroll;
+  overflow-y: scroll;
+  &::-webkit-scrollbar {
+    display: none;
+  }
   .asset-detail {
     background: #e7efef;
     padding-bottom: 24px;

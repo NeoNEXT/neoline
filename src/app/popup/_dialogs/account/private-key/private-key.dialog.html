@@ -24,7 +24,9 @@
         (keyup.enter)="verify()"
         class="pwd"
       />
-      <div class="wif" *ngIf="verified" (click)="copy(wif)">{{ wif }}</div>
+      <copy [value]="wif" *ngIf="verified">
+        <div class="wif">{{ wif }}</div>
+      </copy>
     </div>
 
     <div class="tip">

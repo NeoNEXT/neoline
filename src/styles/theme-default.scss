@@ -59,13 +59,3 @@ $default-app-theme: mat-light-theme(
 // Alternatively, you can import and @include the theme mixins for each component
 // that you are using.
 @include angular-material-theme($default-app-theme);
-
-$space-sm: 10px;
-$space: 15px;
-$space-lg: 20px;
-$space-xl: 30px;
-
-.light.mat-progress-spinner circle,
-.light.mat-spinner circle {
-  stroke: #f7fbf9 !important;
-}

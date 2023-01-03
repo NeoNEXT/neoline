@@ -15,9 +15,11 @@ ul {
       color: $sub-title-color;
     }
     .value {
-      max-width: 200px;
       text-align: right;
-      word-break: break-all;
+      &.break-all {
+        max-width: 200px;
+        word-break: break-all;
+      }
     }
   }
 }

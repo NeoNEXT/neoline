@@ -3,26 +3,6 @@
 @import "src/styles/home-top.scss";
 @import "src/styles/tab-container.scss";
 
-.loading-box {
-  background: rgb(255 255 255 / 50%);
-  position: fixed;
-  height: 100%;
-  width: 100%;
-  z-index: 99999;
-  padding-top: 50%;
-  text-align: center;
-  div {
-    display: inline-block;
-    margin: auto;
-  }
-  mat-spinner {
-    margin: 0 auto；;
-  }
-  h3 {
-    margin: 15px;
-  }
-}
-
 .popup-home {
   height: 100%;
   .header {

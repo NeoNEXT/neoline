@@ -134,3 +134,22 @@ $network-list: (
     }
   }
 }
+
+// loading
+.loading-box {
+  background: rgb(255 255 255 / 50%);
+  position: fixed;
+  height: 100%;
+  width: 100%;
+  z-index: 99999;
+  padding-top: 30%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  h3 {
+    margin: 15px;
+  }
+  button {
+    margin-top: 15px;
+  }
+}

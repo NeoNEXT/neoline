@@ -7,7 +7,7 @@
   width: 100%;
   height: calc(100% - 100px);
   position: relative;
-  overflow: scroll;
+  overflow-y: scroll;
 
   .avatar {
     height: 133px;
