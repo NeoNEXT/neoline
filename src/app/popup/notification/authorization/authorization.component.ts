@@ -37,7 +37,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.wallet = state.currentWallet;
-      this.address = state.currentWallet.accounts[0].address;
+      this.address = state.currentWallet?.accounts[0]?.address;
     });
     this.aRouter.queryParams.subscribe((params: any) => {
       this.hostname = params.hostname;

@@ -480,23 +480,20 @@ export class NeonService {
         return: EVENT.DISCONNECTED,
       });
     }
+    let newWallet;
     if (this.currentChainType === 'Neo2') {
       const index = this.neo2WalletArr.findIndex(
         (item) =>
           item.accounts[0].address === this.currentWallet.accounts[0].address
       );
       this.neo2WalletArr.splice(index, 1);
-      this.store.dispatch({
-        type: REMOVE_NEO2_WALLET,
-        data: this.currentWallet,
-      });
       if (this.neo2WalletArr.length > 0) {
-        this.currentWallet = this.neo2WalletArr[0];
+        newWallet = this.neo2WalletArr[0];
       } else {
         if (this.neo3WalletArr.length > 0) {
-          this.currentWallet = this.neo3WalletArr[0];
+          newWallet = this.neo3WalletArr[0];
         } else {
-          this.currentWallet = undefined;
+          newWallet = undefined;
         }
       }
     } else {
@@ -505,21 +502,24 @@ export class NeonService {
           item.accounts[0].address === this.currentWallet.accounts[0].address
       );
       this.neo3WalletArr.splice(index, 1);
-      this.store.dispatch({
-        type: REMOVE_NEO3_WALLET,
-        data: this.currentWallet,
-      });
       if (this.neo3WalletArr.length > 0) {
-        this.currentWallet = this.neo3WalletArr[0];
+        newWallet = this.neo3WalletArr[0];
       } else {
         if (this.neo2WalletArr.length > 0) {
-          this.currentWallet = this.neo2WalletArr[0];
+          newWallet = this.neo2WalletArr[0];
         } else {
-          this.currentWallet = undefined;
+          newWallet = undefined;
         }
       }
     }
-    this.store.dispatch({ type: UPDATE_WALLET, data: this.currentWallet });
+    this.store.dispatch({ type: UPDATE_WALLET, data: newWallet });
+    this.store.dispatch({
+      type:
+        this.currentChainType === 'Neo2'
+          ? REMOVE_NEO2_WALLET
+          : REMOVE_NEO3_WALLET,
+      data: this.currentWallet,
+    });
     return of(this.currentWallet);
   }
   //#endregion

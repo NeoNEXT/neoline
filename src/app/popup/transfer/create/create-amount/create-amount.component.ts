@@ -80,7 +80,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
-      this.fromAddress = state.currentWallet.accounts[0].address;
+      this.fromAddress = state.currentWallet?.accounts[0]?.address;
       this.currentWalletArr =
         this.chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
       this.currentNetwork =

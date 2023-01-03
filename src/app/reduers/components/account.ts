@@ -154,11 +154,12 @@ export default function account(
 
 //#region wallet
 function updateWallet(data: Wallet2 | Wallet3) {
-  const address = data?.accounts[0]?.address;
-  const chainType: ChainType = wallet3.isAddress(address || '', 53)
-    ? 'Neo3'
-    : 'Neo2';
-  updteLoaclStorage(STORAGE_NAME.wallet, data.export());
+  let chainType: ChainType = 'Neo3';
+  if (data) {
+    const address = data?.accounts[0]?.address;
+    chainType = wallet3.isAddress(address || '', 53) ? 'Neo3' : 'Neo2';
+  }
+  updteLoaclStorage(STORAGE_NAME.wallet, data ? data.export() : data);
   updteLoaclStorage(STORAGE_NAME.chainType, chainType);
   return { currentWallet: data, currentChainType: chainType };
 }

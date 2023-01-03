@@ -89,7 +89,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
-      this.address = state.currentWallet.accounts[0].address;
+      this.address = state.currentWallet?.accounts[0]?.address;
       this.currentWIFArr =
         this.chainType === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;
       this.currentWalletArr =
@@ -133,7 +133,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     this.initClaim();
     this.chrome.getHaveBackupTip().subscribe((res) => {
       this.showBackup = res;
-      if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
+      if (this.currentWallet?.accounts[0]?.extra?.ledgerSLIP44) {
         this.showBackup = false;
       }
       if (this.showBackup === null) {
@@ -179,8 +179,6 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
           this.neon.delCurrentWallet().subscribe((w) => {
             if (!w) {
               this.router.navigateByUrl('/popup/wallet/new-guide');
-            } else {
-              location.reload();
             }
           });
         }

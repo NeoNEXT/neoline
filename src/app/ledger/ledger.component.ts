@@ -28,7 +28,7 @@ export class LedgerComponent implements OnInit, OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       const chain = state.currentChainType;
-      this.address = state.currentWallet.accounts[0].address;
+      this.address = state.currentWallet?.accounts[0]?.address;
       this.networks = chain === 'Neo2' ? state.n2Networks : state.n3Networks;
       this.selectedNetworkIndex =
         chain === 'Neo2' ? state.n2NetworkIndex : state.n3NetworkIndex;

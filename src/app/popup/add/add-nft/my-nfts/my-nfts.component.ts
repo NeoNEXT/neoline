@@ -25,7 +25,7 @@ export class PopupMyNftsComponent implements OnInit, OnDestroy {
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
-      this.address = state.currentWallet.accounts[0].address;
+      this.address = state.currentWallet?.accounts[0]?.address;
       this.n3NetworkId = state.n3Networks[state.n3NetworkIndex].id;
       this.getNfts();
     });

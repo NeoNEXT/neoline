@@ -21,7 +21,7 @@ export class PopupBackupKeyComponent implements OnInit, OnDestroy {
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
-      this.address = state.currentWallet.accounts[0].address;
+      this.address = state.currentWallet?.accounts[0]?.address;
       const chain = state.currentChainType;
       const currentWIFArr =
         chain === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;

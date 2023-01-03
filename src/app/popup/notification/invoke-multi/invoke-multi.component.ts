@@ -90,7 +90,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
-      this.signAddress = state.currentWallet.accounts[0].address;
+      this.signAddress = state.currentWallet?.accounts[0]?.address;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.neo2WIFArr = state.neo2WIFArr;
       this.neo2WalletArr = state.neo2WalletArr;

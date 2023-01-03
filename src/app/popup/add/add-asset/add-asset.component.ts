@@ -32,7 +32,7 @@ export class PopupAddAssetComponent implements OnInit, OnDestroy {
           ? state.n2Networks[state.n2NetworkIndex]
           : state.n3Networks[state.n3NetworkIndex];
       this.networkId = network.id;
-      this.address = state.currentWallet.accounts[0].address;
+      this.address = state.currentWallet?.accounts[0]?.address;
       this.asset
         .getAddressBalances(this.address)
         .then((res) => (this.moneyBalance = res));

@@ -45,7 +45,7 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
-      this.address = state.currentWallet.accounts[0].address;
+      this.address = state.currentWallet?.accounts[0]?.address;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neo3WIFArr = state.neo3WIFArr;
       this.neo3WalletArr = state.neo3WalletArr;

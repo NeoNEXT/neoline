@@ -90,7 +90,7 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
-      this.fromAddress = state.currentWallet.accounts[0].address;
+      this.fromAddress = state.currentWallet?.accounts[0]?.address;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.neo2WIFArr = state.neo2WIFArr;
       this.neo2WalletArr = state.neo2WalletArr;

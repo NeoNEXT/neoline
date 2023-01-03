@@ -15,7 +15,7 @@ export class TransferReceiveComponent implements OnInit, OnDestroy {
   constructor(private store: Store<AppState>) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
-      this.address = state.currentWallet.accounts[0].address;
+      this.address = state.currentWallet?.accounts[0]?.address;
       this.initData();
     });
   }

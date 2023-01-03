@@ -10,6 +10,7 @@ import { HomeService, GlobalService, ChromeService } from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
+import { MatDialogRef } from '@angular/material/dialog';
 @Component({
   templateUrl: 'add-network.dialog.html',
   styleUrls: ['add-network.dialog.scss'],
@@ -32,6 +33,7 @@ export class PopupAddNetworkDialogComponent implements OnInit, OnDestroy {
   private n3Networks: RpcNetwork[];
   private n3NetworkIndex: number;
   constructor(
+    private dialogRef: MatDialogRef<PopupAddNetworkDialogComponent>,
     private homeSer: HomeService,
     private global: GlobalService,
     private chrome: ChromeService,
@@ -122,11 +124,12 @@ export class PopupAddNetworkDialogComponent implements OnInit, OnDestroy {
     }
     this.n3Networks.push(this.privateNet);
     this.n3NetworkIndex = this.n3Networks.length - 1;
-    this.store.dispatch({ type: UPDATE_NEO3_NETWORKS, data: this.n3Networks });
     this.store.dispatch({
       type: UPDATE_NEO3_NETWORK_INDEX,
       data: this.n3NetworkIndex,
     });
+    this.store.dispatch({ type: UPDATE_NEO3_NETWORKS, data: this.n3Networks });
+    this.chrome.networkChangeEvent(this.privateNet);
     this.chrome.resetWatch(this.privateNet.id);
     const transactions = await this.chrome
       .getStorage(STORAGE_NAME.transaction)
@@ -136,6 +139,6 @@ export class PopupAddNetworkDialogComponent implements OnInit, OnDestroy {
       transactions[this.privateNet.id] = {};
     }
     this.chrome.setStorage(STORAGE_NAME.transaction, transactions);
-    location.reload();
+    this.dialogRef.close();
   }
 }

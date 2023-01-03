@@ -94,7 +94,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
-      this.fromAddress = state.currentWallet.accounts[0].address;
+      this.fromAddress = state.currentWallet?.accounts[0]?.address;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neo3WIFArr = state.neo3WIFArr;
       this.neo3WalletArr = state.neo3WalletArr;

@@ -97,7 +97,7 @@
       <mat-error *ngIf="importForm.get('password').errors?.required">
         {{ "passwordRequired" | translate | async }}
       </mat-error>
-      <mat-error *ngIf="importForm.get('password').errors?.minlength">
+      <mat-error *ngIf="importForm.get('password').errors?.pattern">
         {{ "lengthLimit" | translate | async }}:
         {{ limit?.passwordLimitation[0] }}-{{ limit?.passwordLimitation[1] }}
       </mat-error>

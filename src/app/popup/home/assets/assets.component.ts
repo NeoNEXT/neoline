@@ -41,7 +41,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
-      this.address = state.currentWallet.accounts[0].address;
+      this.address = state.currentWallet?.accounts[0]?.address;
       const network =
         this.chainType === 'Neo2'
           ? state.n2Networks[state.n2NetworkIndex]

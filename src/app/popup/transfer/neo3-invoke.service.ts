@@ -44,7 +44,7 @@ export class Neo3InvokeService {
   ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
-      this.address = state.currentWallet.accounts[0].address;
+      this.address = state.currentWallet?.accounts[0]?.address;
       this.neo3WIFArr = state.neo3WIFArr;
       this.neo3WalletArr = state.neo3WalletArr;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
