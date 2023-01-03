@@ -908,7 +908,7 @@
   "Copied": {
     "message": "已复制！"
   },
-  "Copy to clipboard": {
+  "CopyToClipboard": {
     "message": "复制到剪贴板"
   }
 }
