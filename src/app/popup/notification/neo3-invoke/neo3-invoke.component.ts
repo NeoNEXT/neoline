@@ -15,6 +15,7 @@ import { requestTargetN3 } from '@/models/dapi_neo3';
 import {
   PopupDapiPromptComponent,
   PopupEditFeeDialogComponent,
+  PopupTransferSuccessDialogComponent,
 } from '../../_dialogs';
 import { RpcNetwork } from '../../_lib/type';
 import { bignumber } from 'mathjs';
@@ -201,13 +202,9 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
           [];
         setData[`TxArr_${this.n3Network.id}`].push(txHash);
         this.chrome.setLocalStorage(setData);
-        this.router.navigate([
-          {
-            outlets: {
-              transfer: ['transfer', 'result'],
-            },
-          },
-        ]);
+        this.dialog.open(PopupTransferSuccessDialogComponent, {
+          panelClass: 'custom-dialog-panel',
+        });
       })
       .catch((err) => {
         this.loading = false;

@@ -11,7 +11,6 @@ import { PopupModule } from './popup';
 import { N404Module } from './404';
 import { CoreModule } from './core';
 import { PopupNotificationModule } from './popup/notification/notification.module';
-import { TransferModule } from './transfer/transfer.module';
 import { LedgerModule } from './ledger/ledger.module';
 
 // #region Startup Service
@@ -41,7 +40,6 @@ const APPINIT_PROVIDES = [
     CoreModule,
     ShareModule,
     PopupModule,
-    TransferModule,
     LedgerModule,
     PopupNotificationModule,
     N404Module,

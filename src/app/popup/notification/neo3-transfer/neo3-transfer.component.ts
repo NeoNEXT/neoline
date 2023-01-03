@@ -14,7 +14,10 @@ import { ERRORS } from '@/models/dapi';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { rpc } from '@cityofzion/neon-core-neo3/lib';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupEditFeeDialogComponent } from '../../_dialogs';
+import {
+  PopupEditFeeDialogComponent,
+  PopupTransferSuccessDialogComponent,
+} from '../../_dialogs';
 import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { STORAGE_NAME, GAS3_CONTRACT, ChainType } from '../../_lib';
 import { Neo3TransferService } from '../../transfer/neo3-transfer.service';
@@ -271,13 +274,9 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
           [];
         setData[`TxArr_${this.n3Network.id}`].push(TxHash);
         this.chrome.setLocalStorage(setData);
-        this.router.navigate([
-          {
-            outlets: {
-              transfer: ['transfer', 'result'],
-            },
-          },
-        ]);
+        this.dialog.open(PopupTransferSuccessDialogComponent, {
+          panelClass: 'custom-dialog-panel',
+        });
       })
       .catch((err) => {
         console.log(err);

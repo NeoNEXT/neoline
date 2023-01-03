@@ -14,7 +14,10 @@ import { tx as tx2, u } from '@cityofzion/neon-js';
 import { Transaction } from '@cityofzion/neon-core/lib/tx';
 import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupEditFeeDialogComponent } from '../../_dialogs';
+import {
+  PopupEditFeeDialogComponent,
+  PopupTransferSuccessDialogComponent,
+} from '../../_dialogs';
 import { bignumber } from 'mathjs';
 import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { STORAGE_NAME, ChainType } from '../../_lib';
@@ -321,13 +324,9 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
           [];
         setData[`TxArr_${this.n2Network.id}`].push('0x' + tx.hash);
         this.chrome.setLocalStorage(setData);
-        this.router.navigate([
-          {
-            outlets: {
-              transfer: ['transfer', 'result'],
-            },
-          },
-        ]);
+        this.dialog.open(PopupTransferSuccessDialogComponent, {
+          panelClass: 'custom-dialog-panel',
+        });
       })
       .catch((err) => {
         this.loading = false;

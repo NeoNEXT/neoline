@@ -18,7 +18,10 @@ import { ERRORS, GAS, requestTarget } from '@/models/dapi';
 import { ScriptBuilder } from '@cityofzion/neon-core/lib/sc';
 import { NEO } from '@/models/models';
 import { str2hexstring, Fixed8 } from '@cityofzion/neon-core/lib/u';
-import { PopupEditFeeDialogComponent } from '../../_dialogs';
+import {
+  PopupEditFeeDialogComponent,
+  PopupTransferSuccessDialogComponent,
+} from '../../_dialogs';
 import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { utf8Encode } from '@angular/compiler/src/util';
 import BigNumber from 'bignumber.js';
@@ -161,13 +164,9 @@ export class PopupNoticeDeployComponent implements OnInit {
             [];
           setData[`TxArr_${this.n2Network.id}`].push('0x' + transaction.hash);
           this.chrome.setLocalStorage(setData);
-          this.router.navigate([
-            {
-              outlets: {
-                transfer: ['transfer', 'result'],
-              },
-            },
-          ]);
+          this.dialog.open(PopupTransferSuccessDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+          });
         }
       })
       .catch((err) => {

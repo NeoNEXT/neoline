@@ -19,7 +19,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { NEO, UTXO, GAS } from '@/models/models';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { ERRORS, requestTarget, Invoke, TxHashAttribute } from '@/models/dapi';
-import { PopupEditFeeDialogComponent } from '../../_dialogs';
+import {
+  PopupEditFeeDialogComponent,
+  PopupTransferSuccessDialogComponent,
+} from '../../_dialogs';
 import Neon from '@cityofzion/neon-js';
 import { RpcNetwork } from '../../_lib/type';
 import { bignumber } from 'mathjs';
@@ -324,13 +327,9 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
                 '0x' + transaction.hash
               );
               this.chrome.setLocalStorage(setData);
-              this.router.navigate([
-                {
-                  outlets: {
-                    transfer: ['transfer', 'result'],
-                  },
-                },
-              ]);
+              this.dialog.open(PopupTransferSuccessDialogComponent, {
+                panelClass: 'custom-dialog-panel',
+              });
               this.chrome.windowCallback(
                 {
                   data: {

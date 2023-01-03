@@ -19,7 +19,10 @@ import { MatDialog } from '@angular/material/dialog';
 import { NEO, UTXO, GAS } from '@/models/models';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { ERRORS, requestTarget, TxHashAttribute } from '@/models/dapi';
-import { PopupEditFeeDialogComponent } from '../../_dialogs';
+import {
+  PopupEditFeeDialogComponent,
+  PopupTransferSuccessDialogComponent,
+} from '../../_dialogs';
 import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
@@ -313,13 +316,9 @@ export class PopupNoticeInvokeComponent implements OnInit {
             [];
           setData[`TxArr_${this.n2Network.id}`].push('0x' + transaction.hash);
           this.chrome.setLocalStorage(setData);
-          this.router.navigate([
-            {
-              outlets: {
-                transfer: ['transfer', 'result'],
-              },
-            },
-          ]);
+          this.dialog.open(PopupTransferSuccessDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+          });
           this.chrome.windowCallback(
             {
               data: {
