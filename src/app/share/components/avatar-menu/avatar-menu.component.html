@@ -31,8 +31,19 @@
           active: wallet.accounts[0].address === item.accounts[0].address
         }"
       >
-        <span class="select"></span
-        ><img class="avatar" [avatar]="item.accounts[0].address" />
+        <span class="select"></span>
+        <div
+          class="avatar-box"
+          [ngClass]="{ ledger: item.accounts[0]?.extra?.ledgerSLIP44 }"
+        >
+          <img class="avatar" [avatar]="item.accounts[0].address" />
+          <img
+            *ngIf="item.accounts[0]?.extra?.ledgerSLIP44"
+            class="usb"
+            src="/assets/images/ledger/ledger-avatar.png"
+            alt=""
+          />
+        </div>
         <div>
           <p class="name">{{ item.name }}</p>
           <p class="balance">

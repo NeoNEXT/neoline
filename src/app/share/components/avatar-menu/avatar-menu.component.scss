@@ -81,10 +81,27 @@
           border: 1px solid $tip-color;
           margin-right: 12px;
         }
-        img.avatar {
-          width: 24px;
-          height: 24px;
+        .avatar-box {
+          width: 26px;
+          height: 26px;
+          border-radius: 50%;
           margin-right: 8px;
+          border: 1px solid transparent;
+          position: relative;
+          &.ledger {
+            border-color: $theme-color;
+          }
+          img.avatar {
+            width: 24px;
+            height: 24px;
+          }
+          img.usb {
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            margin-left: -5px;
+            width: 10px;
+          }
         }
         .name {
           max-width: 240px;
