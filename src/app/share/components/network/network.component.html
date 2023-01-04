@@ -2,8 +2,12 @@
 <div class="content">
   <p class="title">{{ "Networks" | translate | async }}</p>
   <ul>
-    <li *ngFor="let item of networks; index as index" (click)="changeNetwork(index)">
-      <span class="select"
+    <li
+      *ngFor="let item of networks; index as index"
+      (click)="changeNetwork(index)"
+    >
+      <span
+        class="select"
         [ngClass]="{ active: networks[networkIndex].id === item.id }"
       ></span>
       <span class="flex-1">{{ item.name }}</span>
@@ -25,9 +29,9 @@
       {{ "AddNetwork" | translate | async }}
     </button>
     <button class="cancel pop-ups" (click)="changeChain()">
-      {{
-        chainType === "Neo2" ? "Switch to N3 MainNet" : "Switch to N2 MainNet"
-      }}
+      {{ "SwitchTo" | translate | async }}
+      {{ chainType === "Neo2" ? "N3" : "N2" }}
+      {{ "Network" | translate | async }}
     </button>
   </div>
 </div>

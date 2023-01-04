@@ -4,6 +4,8 @@ import { RpcNetwork, ChainType } from './_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/reduers';
 import { Unsubscribable } from 'rxjs';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
   templateUrl: 'popup.component.html',
@@ -21,6 +23,7 @@ export class PopupComponent implements OnInit {
   networks: RpcNetwork[];
   networkIndex: number;
   chainType: ChainType;
+  switchChainWallet: Wallet2 | Wallet3;
   constructor(private store: Store<AppState>, private router: Router) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -33,6 +36,10 @@ export class PopupComponent implements OnInit {
         this.chainType === 'Neo2' ? state.n2Networks : state.n3Networks;
       this.networkIndex =
         this.chainType === 'Neo2' ? state.n2NetworkIndex : state.n3NetworkIndex;
+      this.switchChainWallet =
+        this.chainType === 'Neo2'
+          ? state.neo3WalletArr[0]
+          : state.neo2WalletArr[0];
     });
   }
 

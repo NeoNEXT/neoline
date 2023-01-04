@@ -910,5 +910,17 @@
   },
   "CopyToClipboard": {
     "message": "复制到剪贴板"
+  },
+  "SwitchTo": {
+    "message": "切换到"
+  },
+  "Network": {
+    "message": "网络"
+  },
+  "createOrImportNeo2First": {
+    "message": "请先创建或导入一个 Neo Legacy 账户"
+  },
+  "createOrImportNeo3First": {
+    "message": "请先创建或导入一个 Neo N3 账户"
   }
 }

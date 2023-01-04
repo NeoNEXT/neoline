@@ -910,5 +910,17 @@
   },
   "CopyToClipboard": {
     "message": "Copy to clipboard"
+  },
+  "SwitchTo": {
+    "message": "Switch to"
+  },
+  "Network": {
+    "message": "Network"
+  },
+  "createOrImportNeo2First": {
+    "message": "Please create or import a Neo Legacy account first"
+  },
+  "createOrImportNeo3First": {
+    "message": "Please create or import a Neo N3 account first"
   }
 }

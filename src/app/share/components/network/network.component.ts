@@ -5,12 +5,19 @@ import {
   UPDATE_NEO2_NETWORK_INDEX,
   UPDATE_NEO3_NETWORK_INDEX,
   UPDATE_NEO3_NETWORKS,
+  UPDATE_WALLET,
 } from '@/app/popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { ChromeService } from '@/app/core';
-import { PopupAddNetworkDialogComponent } from '@/app/popup/_dialogs';
+import { ChromeService, NeonService } from '@/app/core';
+import {
+  PopupAddNetworkDialogComponent,
+  PopupConfirmDialogComponent,
+} from '@/app/popup/_dialogs';
 import { MatDialog } from '@angular/material/dialog';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'network',
@@ -21,12 +28,15 @@ export class PopupNetworkComponent {
   @Input() networks: RpcNetwork[];
   @Input() chainType: ChainType;
   @Input() networkIndex: number;
+  @Input() switchChainWallet: Wallet2 | Wallet3;
   @Output() closeEvent = new EventEmitter();
 
   constructor(
     private store: Store<AppState>,
     private chromeSer: ChromeService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private router: Router,
+    private neon: NeonService
   ) {}
 
   close() {
@@ -67,5 +77,29 @@ export class PopupNetworkComponent {
     this.store.dispatch({ type: UPDATE_NEO3_NETWORKS, data: this.networks });
   }
 
-  changeChain() {}
+  changeChain() {
+    if (!this.switchChainWallet) {
+      this.close();
+      this.dialog
+        .open(PopupConfirmDialogComponent, {
+          data:
+            this.chainType === 'Neo2'
+              ? 'createOrImportNeo3First'
+              : 'createOrImportNeo2First',
+          panelClass: 'custom-dialog-panel',
+        })
+        .afterClosed()
+        .subscribe((confirm) => {
+          if (confirm) {
+            this.neon.selectChainType(
+              this.chainType === 'Neo2' ? 'Neo3' : 'Neo2'
+            );
+            this.router.navigateByUrl('/popup/wallet/create');
+          }
+        });
+      return;
+    }
+    this.store.dispatch({ type: UPDATE_WALLET, data: this.switchChainWallet });
+    this.close();
+  }
 }
