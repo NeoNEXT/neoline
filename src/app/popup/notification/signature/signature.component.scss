@@ -1,8 +1,5 @@
 @import "../common-scss/common.scss";
 
-.container .content {
-  height: 370px;
-  .hex-label {
-    margin-top: 0;
-  }
+.container .content .hex-label {
+  margin-top: 0;
 }

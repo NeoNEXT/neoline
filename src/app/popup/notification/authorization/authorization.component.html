@@ -28,14 +28,28 @@
       [ngClass]="{ selected: ruleCheck }"
       (click)="ruleCheck = !ruleCheck"
     ></span>
-    <select class="auth-rule-select" [(ngModel)]="ruleSelected">
-      <option value="true">
-        {{ "connectChooseAllow" | translate | async }}
-      </option>
-      <option value="false">
-        {{ "connectChooseNotAllow" | translate | async }}
-      </option>
-    </select>
+    <div class="rule-select">
+      <span class="rule-value" (click)="showRuleOptions = !showRuleOptions">
+        {{
+          (ruleSelected === "true"
+            ? "connectChooseAllow"
+            : "connectChooseNotAllow"
+          )
+            | translate
+            | async
+        }}<img src="/assets/images/common/triangle-fill.svg" alt="" />
+      </span>
+      <div *ngIf="showRuleOptions" class="rule-option" (click)="changeRule()">
+        {{
+          (ruleSelected === "true"
+            ? "connectChooseNotAllow"
+            : "connectChooseAllow"
+          )
+            | translate
+            | async
+        }}
+      </div>
+    </div>
   </div>
   <div class="secure">
     <img src="/assets/images/third-party/auth-secure.svg" alt="" />

@@ -1,6 +1,8 @@
 <div class="loading-box" *ngIf="loading">
-  <mat-spinner strokeWidth="10"></mat-spinner>
-  <h3>Wait</h3>
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+    <p class="tip">Wait</p>
+  </div>
 </div>
 <div class="pop-ups-title">
   {{ 'AddNetwork' | translate | async }}

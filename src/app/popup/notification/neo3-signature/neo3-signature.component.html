@@ -2,6 +2,7 @@
   <div class="header">
     <div class="invoke-type">· SIGNMESSAGE</div>
     <p class="title">{{ "thSignTitle" | translate | async }}</p>
+    <p class="account"><img [avatar]="address" />{{ address | longStr : 10 }}</p>
   </div>
   <div class="content">
     <p class="hex-label">{{ "message" | translate | async }}</p>

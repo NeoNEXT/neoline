@@ -25,6 +25,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
 
   public ruleCheck = false;
   public ruleSelected = 'true';
+  showRuleOptions = false;
 
   private accountSub: Unsubscribable;
   public address = '';
@@ -71,6 +72,11 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
+  }
+
+  changeRule() {
+    this.showRuleOptions = false;
+    this.ruleSelected = this.ruleSelected === 'true' ? 'false' : 'true';
   }
 
   public refuse() {
