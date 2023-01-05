@@ -18,6 +18,9 @@
 .container {
   height: 390px;
   overflow-y: scroll;
+  &::-webkit-scrollbar {
+    display: block;
+  }
   .asset-item {
     height: 78px;
     width: 100%;

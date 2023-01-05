@@ -21,6 +21,9 @@
   ul {
     max-height: 264px;
     overflow-y: scroll;
+    &::-webkit-scrollbar {
+      display: block;
+    }
     li {
       height: 66px;
       display: flex;

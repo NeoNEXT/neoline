@@ -56,7 +56,8 @@ $network-list: (
 // scroll
 ::-webkit-scrollbar {
   width: 4px;
-  // display: none;
+  height: 4px;
+  display: none;
 }
 ::-webkit-scrollbar-track {
   background: none;

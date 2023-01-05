@@ -8,6 +8,9 @@ section.container {
 .popup-assets-list {
   height: calc(100% - 44px);
   overflow-y: scroll;
+  &::-webkit-scrollbar {
+    display: block;
+  }
   padding: 0 24px;
   .asset-item .operate {
     img {

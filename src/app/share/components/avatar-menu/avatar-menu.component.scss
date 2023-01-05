@@ -56,6 +56,9 @@
     ul {
       max-height: 192px;
       overflow-y: scroll;
+      &::-webkit-scrollbar {
+        display: block;
+      }
       li {
         width: 100%;
         height: 64px;

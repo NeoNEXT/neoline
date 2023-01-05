@@ -19,6 +19,9 @@
   height: 390px;
   padding: 0 16px 16px;
   overflow-y: scroll;
+  &::-webkit-scrollbar {
+    display: block;
+  }
   .item {
     height: 70px;
     border-radius: 4px;

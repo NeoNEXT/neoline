@@ -11,6 +11,9 @@
     height: 400px;
     overflow-y: scroll;
     padding: 24px;
+    &::-webkit-scrollbar {
+      display: block;
+    }
     li {
       display: flex;
       align-items: center;

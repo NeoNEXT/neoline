@@ -64,9 +64,6 @@
     height: calc(100% - 67px);
     position: relative;
     overflow: auto;
-    &::-webkit-scrollbar {
-      display: none;
-    }
     .asset-logo-box {
       margin: 16px auto;
     }

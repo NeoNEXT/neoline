@@ -49,6 +49,9 @@ section.container {
       height: 365px;
       overflow-y: scroll;
       margin-top: 12px;
+      &::-webkit-scrollbar {
+        display: block;
+      }
       li {
         height: 66px;
         display: flex;

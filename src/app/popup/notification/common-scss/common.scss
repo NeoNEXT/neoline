@@ -69,6 +69,9 @@
     height: 330px;
     overflow-y: scroll;
     padding: 16px 24px;
+    &::-webkit-scrollbar {
+      display: block;
+    }
     &.details {
       li {
         margin-top: 30px;
@@ -134,7 +137,7 @@
       }
       pre {
         white-space: pre-wrap;
-        word-wrap: break-word;
+        word-break: break-all;
       }
     }
   }

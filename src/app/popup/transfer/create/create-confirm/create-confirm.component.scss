@@ -5,10 +5,6 @@
   border-bottom: 1px solid $line-color;
 }
 
-::-webkit-scrollbar {
-  display: block;
-}
-
 section.container {
   height: 100%;
   .asset-detail {
@@ -65,6 +61,9 @@ section.container {
   ul.details-content {
     height: 220px;
     overflow-y: scroll;
+    &::-webkit-scrollbar {
+      display: block;
+    }
     padding: 16px 24px;
     li {
       margin-top: 30px;
@@ -98,6 +97,9 @@ section.container {
     height: 220px;
     overflow-y: scroll;
     padding: 16px 24px;
+    &::-webkit-scrollbar {
+      display: block;
+    }
     .title {
       color: $sub-title-color;
       &.hex {
@@ -120,7 +122,7 @@ section.container {
       }
       pre {
         white-space: pre-wrap;
-        word-wrap: break-word;
+        word-break: break-all;
         font-size: 14px;
       }
     }
