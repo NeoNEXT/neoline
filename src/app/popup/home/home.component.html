@@ -148,15 +148,4 @@
   </div>
 </div>
 
-<div class="backup-tip" *ngIf="showBackup">
-  <p class="title">{{ "backUpsafeTip" | translate | async }}</p>
-  <p class="desc">{{ "backUpSafeDesc" | translate | async }}</p>
-  <div class="btn-group">
-    <button class="pop-ups later" (click)="backupLater()">
-      {{ "backUpTipLater" | translate | async }}
-    </button>
-    <button class="pop-ups now" routerLink="/popup/backup">
-      {{ "backUpNow" | translate | async }}
-    </button>
-  </div>
-</div>
+<app-home-backup [currentWallet]="currentWallet"></app-home-backup>

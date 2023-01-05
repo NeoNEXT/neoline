@@ -1,9 +1,8 @@
-import { Component, OnInit, ViewChild, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import {
   AssetState,
   NeonService,
   GlobalService,
-  ChromeService,
   HomeService,
   LedgerService,
 } from '@/app/core';
@@ -54,14 +53,12 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   private intervalN3Claim = null;
   showClaim = false;
   init = false;
-
-  showBackup: boolean = null;
-
-  // 菜单
-  showMenu = false;
   ledgerSignLoading = false;
   loadingMsg = '';
   getStatusInterval;
+
+  // 菜单
+  showMenu = false;
 
   private accountSub: Unsubscribable;
   currentWalletIsN3: boolean;
@@ -77,7 +74,6 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     private neon: NeonService,
     private global: GlobalService,
     private transfer: TransferService,
-    private chrome: ChromeService,
     private dialog: MatDialog,
     private router: Router,
     private neo3TransferService: Neo3TransferService,
@@ -131,17 +127,6 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       this.getTxStatus();
     }
     this.initClaim();
-    this.chrome.getHaveBackupTip().subscribe((res) => {
-      this.showBackup = res;
-      if (this.currentWallet?.accounts[0]?.extra?.ledgerSLIP44) {
-        this.showBackup = false;
-      }
-      if (this.showBackup === null) {
-        this.chrome.getWalletStatus(this.address).subscribe((res) => {
-          this.showBackup = !res;
-        });
-      }
-    });
   }
 
   initNeo($event) {
@@ -191,10 +176,6 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     } else {
       this.router.navigateByUrl('/popup/add-asset');
     }
-  }
-  backupLater() {
-    this.chrome.setHaveBackupTip(false);
-    this.showBackup = false;
   }
   claim() {
     this.loading = true;

@@ -1,0 +1,40 @@
+
+@import "src/styles/popup-default";
+
+.backup-tip {
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  background: $title-color;
+  opacity: 0.9;
+  border-radius: 4px;
+  padding: 24px;
+  z-index: 9999999;
+  .title {
+    font-size: 18px;
+    color: $theme-color;
+    text-align: center;
+  }
+  .desc {
+    font-family: NeverMind-Regular;
+    line-height: 18px;
+    color: #ffffff;
+    margin-top: 16px;
+  }
+  .btn-group {
+    margin-top: 32px;
+    button {
+      width: calc(50% - 12px);
+      color: #fff;
+      cursor: pointer;
+      &.later {
+        margin-right: 24px;
+        border: 1px solid #fff;
+      }
+      &.now {
+        background: #fff3;
+      }
+    }
+  }
+}
