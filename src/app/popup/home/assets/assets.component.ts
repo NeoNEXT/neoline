@@ -56,6 +56,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
   }
 
   getAssets() {
+    this.myAssets = [];
     this.isLoading = true;
     const getMoneyBalance = this.asset.getAddressBalances(this.address);
     const getWatch = this.chrome.getWatch(this.networkId, this.address);

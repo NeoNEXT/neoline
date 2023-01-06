@@ -44,6 +44,7 @@ export class PopupNftsComponent implements OnInit, OnDestroy {
   }
 
   init() {
+    this.nfts = [];
     this.isLoading = true;
     const getWatch = this.chrome
       .getNftWatch(this.n3Network.id, this.address)

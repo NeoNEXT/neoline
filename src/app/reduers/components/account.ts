@@ -206,8 +206,10 @@ function removeNeo2Wallet(
   );
   const targetWalletArr = [...sourceWalletArr];
   const targetWIFArr = [...sourceWIFArr];
-  targetWalletArr.splice(index, 1);
-  targetWIFArr.splice(index, 1);
+  if (index >= 0) {
+    targetWalletArr.splice(index, 1);
+    targetWIFArr.splice(index, 1);
+  }
   updteLoaclStorage(STORAGE_NAME.walletArr, getWalletJsons(targetWalletArr));
   updteLoaclStorage(STORAGE_NAME.WIFArr, targetWIFArr);
   return { neo2WalletArr: targetWalletArr, neo2WIFArr: targetWIFArr };
@@ -223,8 +225,10 @@ function removeNeo3Wallet(
   );
   const targetWalletArr = [...sourceWalletArr];
   const targetWIFArr = [...sourceWIFArr];
-  targetWalletArr.splice(index, 1);
-  targetWIFArr.splice(index, 1);
+  if (index >= 0) {
+    targetWalletArr.splice(index, 1);
+    targetWIFArr.splice(index, 1);
+  }
   updteLoaclStorage(
     STORAGE_NAME['walletArr-Neo3'],
     getWalletJsons(targetWalletArr)

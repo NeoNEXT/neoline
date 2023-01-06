@@ -305,16 +305,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTarget.Connect:
     case requestTarget.AuthState: {
+      const currWallet = await getLocalStorage('wallet', () => {});
+      const currAddress = currWallet.accounts[0].address;
       getStorage('connectedWebsites', (res: any) => {
-        if (
-          (res !== undefined && res[request.hostname] !== undefined) ||
-          request.connect === 'true'
-        ) {
-          if (
-            res !== undefined &&
-            res[request.hostname] !== undefined &&
-            res[request.hostname].status === 'false'
-          ) {
+        const existHost = (res?.[currAddress] || []).find(
+          (item) => item.hostname === request.hostname
+        );
+        if (existHost || request.connect === 'true') {
+          if (existHost && existHost.status === 'false') {
             notification(
               chrome.i18n.getMessage('rejected'),
               chrome.i18n.getMessage('rejectedTip')

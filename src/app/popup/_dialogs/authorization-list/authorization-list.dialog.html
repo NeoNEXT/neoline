@@ -18,8 +18,9 @@
       <div class="info-box">
         <div class="top">
           <span class="title">{{ item.title }}</span>
-          <span class="status" [ngClass]="{'fail': !item.status }">
-            {{ (item.status ? 'authorized' : 'rejected') | translate | async }}
+          <span class="status" [ngClass]="{'fail': item.status !== 'true' }">
+            {{ (item.status === 'true' ? 'authorized' : 'rejected') | translate
+            | async }}
           </span>
         </div>
         <p class="url">{{ item.hostname }}</p>

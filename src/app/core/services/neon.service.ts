@@ -58,6 +58,7 @@ export class NeonService {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.currentWallet = state.currentWallet;
+      this.currentChainType = state.currentChainType;
       this.n2Networks = state.n2Networks;
       this.n3Networks = state.n3Networks;
       this.n2NetworkIndex = state.n2NetworkIndex;
@@ -486,9 +487,8 @@ export class NeonService {
         (item) =>
           item.accounts[0].address === this.currentWallet.accounts[0].address
       );
-      this.neo2WalletArr.splice(index, 1);
-      if (this.neo2WalletArr.length > 0) {
-        newWallet = this.neo2WalletArr[0];
+      if (this.neo2WalletArr.length > 1) {
+        newWallet = index === 0 ? this.neo2WalletArr[1] : this.neo2WalletArr[0];
       } else {
         if (this.neo3WalletArr.length > 0) {
           newWallet = this.neo3WalletArr[0];
@@ -501,9 +501,8 @@ export class NeonService {
         (item) =>
           item.accounts[0].address === this.currentWallet.accounts[0].address
       );
-      this.neo3WalletArr.splice(index, 1);
-      if (this.neo3WalletArr.length > 0) {
-        newWallet = this.neo3WalletArr[0];
+      if (this.neo3WalletArr.length > 1) {
+        newWallet = index === 0 ? this.neo3WalletArr[1] : this.neo3WalletArr[0];
       } else {
         if (this.neo2WalletArr.length > 0) {
           newWallet = this.neo2WalletArr[0];
@@ -512,7 +511,6 @@ export class NeonService {
         }
       }
     }
-    this.store.dispatch({ type: UPDATE_WALLET, data: newWallet });
     this.store.dispatch({
       type:
         this.currentChainType === 'Neo2'
@@ -520,7 +518,8 @@ export class NeonService {
           : REMOVE_NEO3_WALLET,
       data: this.currentWallet,
     });
-    return of(this.currentWallet);
+    this.store.dispatch({ type: UPDATE_WALLET, data: newWallet });
+    return of(newWallet);
   }
   //#endregion
 
