@@ -330,7 +330,6 @@ export class ChromeService {
   }
 
   public setHaveBackupTip(status?: boolean) {
-    const setValue = status === null;
     if (status === null) {
       if (!this.check) {
         sessionStorage.removeItem('haveBackupTip');

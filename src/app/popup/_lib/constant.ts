@@ -47,6 +47,7 @@ export enum STORAGE_NAME {
   shouldFindNode = 'shouldFindNode',
   rpcUrls = 'rpcUrls',
   neo3RemoveT4Flag = 'neo3RemoveT4Flag',
+  onePassword = 'onePassword',
 }
 
 export enum STORAGE_VALUE_TYPE {
@@ -171,6 +172,10 @@ export const STORAGE_VALUE_MESSAGE = {
     default: DEFAULT_RPC_URLS,
   },
   neo3RemoveT4Flag: {
+    type: STORAGE_VALUE_TYPE.boolean,
+    isLocal: true,
+  },
+  onePassword: {
     type: STORAGE_VALUE_TYPE.boolean,
     isLocal: true,
   },

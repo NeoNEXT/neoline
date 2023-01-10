@@ -14,11 +14,11 @@
   <div class="content">
     <wallet-create
       [hidden]="tabType === 'import'"
-      (submit)="updateLocalWallet($event, 0)"
+      (submit)="updateLocalWallet($event, true)"
     ></wallet-create>
     <wallet-import
       [hidden]="tabType === 'create'"
-      (submit)="updateLocalWallet($event, 1)"
+      (submit)="updateLocalWallet($event, false)"
     ></wallet-import>
   </div>
 </section>

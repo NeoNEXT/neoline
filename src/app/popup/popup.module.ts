@@ -39,6 +39,7 @@ import {
 import { PopupLoginComponent } from './login/login.component';
 import { PopupNewWalletGuideComponent } from './new-wallet-guide/new-wallet-guide.component';
 import { PopupSettingComponent } from './setting/setting.component';
+import { PopupOnePasswordComponent } from './one-password/one-password.component';
 
 const POPUP_COMPONENTS = [
   PopupComponent,
@@ -56,6 +57,7 @@ const POPUP_COMPONENTS = [
   PopupLoginComponent,
   PopupNewWalletGuideComponent,
   PopupSettingComponent,
+  PopupOnePasswordComponent,
 ];
 //#endregion
 

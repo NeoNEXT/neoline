@@ -77,7 +77,7 @@ export class AccountNameComponent implements OnInit {
   private checkName() {
     const name = this.name.trim();
     if (name === '') {
-      this.global.snackBarTip('请输入钱包名');
+      this.global.snackBarTip('PleaseEnterWalletName');
       return false;
     }
     return true;

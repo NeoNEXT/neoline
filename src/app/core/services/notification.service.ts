@@ -40,6 +40,8 @@ export class NotificationService {
     Invalid_RPC_URL: 'Invalid RPC URL',
     TransactionDeniedByUser: 'Transaction denied by user.',
     LedgerUnSupportSignError: `error: 'There was an error signing this transaction. Ledger does not support this method.`,
+    switchSucc: 'switch successfully!',
+    PleaseEnterWalletName: 'Please enter wallet name',
   };
   private CN = {
     close: '关闭',
@@ -77,6 +79,8 @@ export class NotificationService {
     Invalid_RPC_URL: '无效的 RPC URL',
     TransactionDeniedByUser: '交易被用户拒绝。',
     LedgerUnSupportSignError: '签名此交易时出错。硬件不支持该方法。',
+    switchSucc: '切换成功！',
+    PleaseEnterWalletName: '请输入钱包名',
   };
   constructor(private settingState: SettingState) {
     this.content = this.EN;

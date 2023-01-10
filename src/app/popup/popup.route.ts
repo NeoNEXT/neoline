@@ -12,6 +12,7 @@ import { PopupHomeComponent } from './home';
 import { PopupLoginComponent } from './login/login.component';
 import { PopupNewWalletGuideComponent } from './new-wallet-guide/new-wallet-guide.component';
 import { PopupSettingComponent } from './setting/setting.component';
+import { PopupOnePasswordComponent } from './one-password/one-password.component';
 
 import {
   PopupLoginGuard,
@@ -74,6 +75,11 @@ const routes: Routes = [
         path: 'setting',
         canActivate: [PopupWalletGuard],
         component: PopupSettingComponent,
+      },
+      {
+        path: 'one-password',
+        canActivate: [PopupWalletGuard],
+        component: PopupOnePasswordComponent,
       },
     ],
   },

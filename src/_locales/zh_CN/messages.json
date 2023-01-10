@@ -922,5 +922,23 @@
   },
   "createOrImportNeo3First": {
     "message": "请先创建或导入一个 Neo N3 账户"
+  },
+  "OnePasswordPattern": {
+    "message": "一个密码模式"
+  },
+  "onePasswordDesc": {
+    "message": "一个密码模式"
+  },
+  "SwitchNow": {
+    "message": "立即切换"
+  },
+  "enterNewPassword": {
+    "message": "输入新密码"
+  },
+  "enterConfirmNewPassword": {
+    "message": "再次输入新密码"
+  },
+  "wrongPassword": {
+    "message": "密码错误"
   }
 }

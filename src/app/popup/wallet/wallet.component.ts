@@ -58,11 +58,11 @@ export class PopupWalletComponent implements OnInit {
     if (this.router.url === '/popup/wallet/import') {
       this.tabType = 'import';
     } else {
-      this.tabType  ='create';
+      this.tabType = 'create';
     }
   }
 
-  public updateLocalWallet(newWallet: any, type: number) {
+  public updateLocalWallet(newWallet: any, isCreate: boolean) {
     const newChainType = wallet3.isAddress(newWallet.accounts[0].address, 53)
       ? 'Neo3'
       : 'Neo2';
@@ -96,7 +96,7 @@ export class PopupWalletComponent implements OnInit {
     this.chrome.setHasLoginAddress(newWallet.accounts[0].address);
     this.chrome.setWallet(newWallet.export());
     this.chrome.setLogin(false);
-    if (type === 0) {
+    if (isCreate) {
       this.chrome.setHaveBackupTip(true);
     } else {
       this.chrome.setWalletsStatus(newWallet.accounts[0].address);
@@ -104,7 +104,7 @@ export class PopupWalletComponent implements OnInit {
     }
     const returnUrl =
       this.route.snapshot.queryParams.returnUrl ||
-      (type === 0 ? '/popup/backup' : '/popup');
+      (isCreate ? '/popup/backup' : '/popup');
     this.router.navigateByUrl(returnUrl);
   }
 }

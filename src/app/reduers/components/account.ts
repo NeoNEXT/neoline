@@ -24,6 +24,7 @@ import {
   UPDATE_NEO2_WALLET_NAME,
   UPDATE_NEO3_WALLET_NAME,
   UPDATE_NEO3_WALLETS_ADDRESS,
+  UPDATE_ALL_WALLETS,
 } from '@/app/popup/_lib';
 declare var chrome: any;
 
@@ -121,6 +122,11 @@ export default function account(
       return {
         ...state,
         neo3WalletArr: action.data,
+      };
+    case UPDATE_ALL_WALLETS:
+      return {
+        ...state,
+        ...updateAllWallets(action.data),
       };
     case ADD_NEO3_NETWORK:
       return {
@@ -255,6 +261,12 @@ function updateWalletName(
     );
   }
   return targetWalletArr;
+}
+function updateAllWallets({ currentWallet, neo2WalletArr, neo3WalletArr }) {
+  updteLoaclStorage(STORAGE_NAME.wallet, currentWallet.export());
+  updteLoaclStorage(STORAGE_NAME.walletArr, neo2WalletArr);
+  updteLoaclStorage(STORAGE_NAME['walletArr-Neo3'], neo3WalletArr);
+  return { currentWallet, neo2WalletArr, neo3WalletArr };
 }
 //#endregion
 

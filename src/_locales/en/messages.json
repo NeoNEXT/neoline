@@ -922,5 +922,23 @@
   },
   "createOrImportNeo3First": {
     "message": "Please create or import a Neo N3 account first"
+  },
+  "OnePasswordPattern": {
+    "message": "One password pattern"
+  },
+  "onePasswordDesc": {
+    "message": "A password pattern"
+  },
+  "SwitchNow": {
+    "message": "Switch Now"
+  },
+  "enterNewPassword": {
+    "message": "Enter a new password"
+  },
+  "enterConfirmNewPassword": {
+    "message": "Enter the new password again"
+  },
+  "wrongPassword": {
+    "message": "Wrong password"
   }
 }
