@@ -1,12 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { ChromeService } from '@/app/core';
+import { ChromeService, NeonService } from '@/app/core';
 import {
   RpcNetwork,
   ChainType,
-  ADD_NEO2_WALLET,
-  ADD_NEO3_WALLET,
+  ADD_NEO2_WALLETS,
+  ADD_NEO3_WALLETS,
   UPDATE_WALLET,
+  STORAGE_NAME,
 } from '../_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-core';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
@@ -27,6 +28,7 @@ export class PopupWalletComponent implements OnInit {
     messageID: '',
     chainType: '',
   };
+  password: string;
 
   private accountSub: Unsubscribable;
   private n2Network: RpcNetwork;
@@ -36,6 +38,7 @@ export class PopupWalletComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private chrome: ChromeService,
+    private neon: NeonService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -55,6 +58,9 @@ export class PopupWalletComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.chrome.getStorage(STORAGE_NAME.password).subscribe(res => {
+      this.password = res;
+    });
     if (this.router.url === '/popup/wallet/import') {
       this.tabType = 'import';
     } else {
@@ -79,13 +85,13 @@ export class PopupWalletComponent implements OnInit {
     this.store.dispatch({ type: UPDATE_WALLET, data: newWallet });
     if (newChainType === 'Neo2') {
       this.store.dispatch({
-        type: ADD_NEO2_WALLET,
-        data: { wallet: newWallet, wif },
+        type: ADD_NEO2_WALLETS,
+        data: { wallet: [newWallet], wif: [wif] },
       });
     } else {
       this.store.dispatch({
-        type: ADD_NEO3_WALLET,
-        data: { wallet: newWallet, wif },
+        type: ADD_NEO3_WALLETS,
+        data: { wallet: [newWallet], wif: [wif] },
       });
     }
     if (this.dapiData.type === 'dapi') {
@@ -105,6 +111,40 @@ export class PopupWalletComponent implements OnInit {
     const returnUrl =
       this.route.snapshot.queryParams.returnUrl ||
       (isCreate ? '/popup/backup' : '/popup');
+    this.router.navigateByUrl(returnUrl);
+  }
+
+  public handleFileWallet({ walletArr, wifArr }) {
+    console.log(walletArr)
+    console.log(wifArr)
+    if (this.neon.selectedChainType !== this.chainType) {
+      this.chrome.networkChangeEvent(
+        this.neon.selectedChainType === 'Neo2' ? this.n2Network : this.n3Network
+      );
+    }
+    const newCurrentWallet = walletArr[walletArr.length - 1];
+    this.store.dispatch({
+      type: UPDATE_WALLET,
+      data: newCurrentWallet,
+    });
+    this.store.dispatch({
+      type:
+        this.neon.selectedChainType === 'Neo2'
+          ? ADD_NEO2_WALLETS
+          : ADD_NEO3_WALLETS,
+      data: { wallet: walletArr, wif: wifArr },
+    });
+    if (this.dapiData.type === 'dapi') {
+      const params = `type=dapi&hostname=${this.dapiData.hostname}&chainType=${this.dapiData.chainType}&messageID=${this.dapiData.messageID}`;
+      this.router.navigateByUrl(`/popup/notification/pick-address?${params}`);
+      return;
+    }
+    this.chrome.setHasLoginAddress(newCurrentWallet.accounts[0].address);
+    this.chrome.setWallet(newCurrentWallet.export());
+    this.chrome.setLogin(false);
+    this.chrome.setWalletsStatus(newCurrentWallet.accounts[0].address);
+    this.chrome.setHaveBackupTip(false);
+    const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
     this.router.navigateByUrl(returnUrl);
   }
 }

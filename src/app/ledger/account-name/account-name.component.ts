@@ -2,9 +2,9 @@ import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import {
   SLIP44,
   ChainType,
-  ADD_NEO2_WALLET,
+  ADD_NEO2_WALLETS,
   UPDATE_WALLET,
-  ADD_NEO3_WALLET,
+  ADD_NEO3_WALLETS,
 } from '@/app/popup/_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
@@ -49,8 +49,8 @@ export class AccountNameComponent implements OnInit {
       const isEfficient = this.neon.verifyWallet(w);
       if (isEfficient) {
         this.store.dispatch({
-          type: ADD_NEO2_WALLET,
-          data: { wallet: w, wif: '' },
+          type: ADD_NEO2_WALLETS,
+          data: { wallet: [w], wif: [''] },
         });
         this.store.dispatch({ type: UPDATE_WALLET, data: w });
         this.importSuccess.emit();
@@ -63,8 +63,8 @@ export class AccountNameComponent implements OnInit {
       const isEfficient = this.neon.verifyWallet(w);
       if (isEfficient) {
         this.store.dispatch({
-          type: ADD_NEO3_WALLET,
-          data: { wallet: w, wif: '' },
+          type: ADD_NEO3_WALLETS,
+          data: { wallet: [w], wif: [''] },
         });
         this.store.dispatch({ type: UPDATE_WALLET, data: w });
         this.importSuccess.emit();

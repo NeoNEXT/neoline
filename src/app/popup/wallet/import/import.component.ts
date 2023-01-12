@@ -7,6 +7,7 @@ import {
   Output,
   ChangeDetectorRef,
   AfterContentChecked,
+  Input,
 } from '@angular/core';
 import { WalletInitConstant } from '../../_lib/constant';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
@@ -64,10 +65,13 @@ export class PopupWalletImportComponent
   hideWIF = true;
 
   nep6Form: FormGroup;
+  nep6Json;
   hideNep6Pwd = true;
   showImportTypeMenu = false;
 
+  @Input() password: string;
   @Output() submit = new EventEmitter<any>();
+  @Output() submitFile = new EventEmitter<any>();
   matcher = new MyErrorStateMatcher();
   constructor(
     private global: GlobalService,
@@ -114,30 +118,19 @@ export class PopupWalletImportComponent
 
   public onFileSelected(event: any) {
     const nep6File = event.target.files[0];
+    this.nep6Form.controls.name.setValue(nep6File.name);
     if (nep6File) {
       const reader = new FileReader();
       reader.readAsText(nep6File, 'UTF-8');
       reader.onload = (evt: any) => {
-        let nep6Json = JSON.parse(evt.target.result);
-        if (
-          nep6Json.accounts === undefined ||
-          nep6Json.accounts[0] === undefined ||
-          !this.neonWallet.isNEP2(
-            (nep6Json.accounts[0] as any).key ||
-              nep6Json.name === undefined ||
-              nep6Json.name === ''
-          )
-        ) {
+        this.nep6Json = JSON.parse(evt.target.result);
+        const firstAccount = this.nep6Json?.accounts?.[0];
+        if (this.neonWallet.isNEP2(firstAccount?.key) && firstAccount?.label) {
+          this.nep6Form.controls.EncrpytedKey.setValue(firstAccount.key);
+        } else {
           this.global.snackBarTip('nep6Wrong');
-          nep6Json = null;
-          this.nep6Form.controls.name.setValue('');
+          this.nep6Json = null;
         }
-        if (nep6Json.name !== undefined) {
-          this.nep6Form.controls.name.setValue(nep6Json.name);
-        }
-        this.nep6Form.controls.EncrpytedKey.setValue(
-          (nep6Json.accounts[0] as any).key
-        );
       };
       reader.onerror = () => {
         console.log('error reading file');
@@ -190,37 +183,50 @@ export class PopupWalletImportComponent
       if (!this.neonWallet.isNEP2(this.nep6Form.value.EncrpytedKey)) {
         return;
       }
-      this.loading = true;
-      this.neon
-        .importEncryptKey(
-          this.nep6Form.value.EncrpytedKey,
-          this.nep6Form.value.password,
-          this.nep6Form.value.name
-        )
-        .subscribe(
-          (res: any) => {
-            this.loading = false;
-            if (this.neon.verifyWallet(res)) {
-              this.submit.emit(res);
-            } else {
-              this.global.snackBarTip('existingWallet');
-            }
-          },
-          (err: any) => {
-            console.log(err);
-            this.loading = false;
-            this.global.log('import wallet faild', err);
-            if (err === 'Wrong password') {
-              this.global.snackBarTip('wrongPassword', '');
-            } else {
-              this.global.snackBarTip('walletImportFailed', '');
-            }
-          }
-        );
+      this.handleImportFile();
     }
   }
 
   public cancel() {
     history.go(-1);
+  }
+
+  private async handleImportFile() {
+    this.loading = true;
+    const filePwd = this.nep6Form.value.password;
+    const accounts: any[] = this.nep6Json?.accounts || [];
+    const newWalletArr = [];
+    const newWIFArr = [];
+    let isErrorPwd = false;
+    for (const item of accounts) {
+      const newWallet = await this.neon.importEncryptKey(
+        item.key,
+        filePwd,
+        item.label,
+        this.password
+      );
+      if (newWallet !== 'Wrong password') {
+        if (this.neon.verifyWallet(newWallet)) {
+          newWIFArr.push(newWallet.accounts[0].WIF);
+          const pushWallet =
+            this.neon.selectedChainType === 'Neo2'
+              ? new wallet2.Wallet(newWallet.export())
+              : new wallet3.Wallet(newWallet.export());
+          newWalletArr.push(pushWallet);
+        }
+      } else {
+        isErrorPwd = true;
+      }
+    }
+    this.loading = false;
+    if (newWalletArr.length === 0) {
+      if (isErrorPwd) {
+        this.global.snackBarTip('wrongPassword');
+      } else {
+        this.global.snackBarTip('walletImportFailed');
+      }
+    } else {
+      this.submitFile.emit({ walletArr: newWalletArr, wifArr: newWIFArr });
+    }
   }
 }

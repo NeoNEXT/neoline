@@ -7,8 +7,8 @@ import {
   DEFAULT_N2_RPC_NETWORK,
   DEFAULT_N3_RPC_NETWORK,
   UPDATE_WALLET,
-  ADD_NEO2_WALLET,
-  ADD_NEO3_WALLET,
+  ADD_NEO2_WALLETS,
+  ADD_NEO3_WALLETS,
   REMOVE_NEO2_WALLET,
   REMOVE_NEO3_WALLET,
   ADD_NEO3_NETWORK,
@@ -80,12 +80,12 @@ export default function account(
         ...state,
         ...updateWallet(action.data),
       };
-    case ADD_NEO2_WALLET:
+    case ADD_NEO2_WALLETS:
       return {
         ...state,
         ...addNeo2Wallet(action.data, state.neo2WalletArr, state.neo2WIFArr),
       };
-    case ADD_NEO3_WALLET:
+    case ADD_NEO3_WALLETS:
       return {
         ...state,
         ...addNeo3Wallet(action.data, state.neo3WalletArr, state.neo3WIFArr),
@@ -177,8 +177,8 @@ function addNeo2Wallet(
 ) {
   const targetWalletArr = [...sourceWalletArr];
   const targetWIFArr = [...sourceWIF];
-  targetWalletArr.push(data.wallet);
-  targetWIFArr.push(data.wif);
+  targetWalletArr.push(...data.wallet);
+  targetWIFArr.push(...data.wif);
 
   updteLoaclStorage(STORAGE_NAME.walletArr, getWalletJsons(targetWalletArr));
   updteLoaclStorage(STORAGE_NAME.WIFArr, targetWIFArr);
@@ -192,8 +192,8 @@ function addNeo3Wallet(
 ) {
   const targetWalletArr = [...sourceWalletArr];
   const targetWIFArr = [...sourceWIF];
-  targetWalletArr.push(data.wallet);
-  targetWIFArr.push(data.wif);
+  targetWalletArr.push(...data.wallet);
+  targetWIFArr.push(...data.wif);
   updteLoaclStorage(
     STORAGE_NAME['walletArr-Neo3'],
     getWalletJsons(targetWalletArr)

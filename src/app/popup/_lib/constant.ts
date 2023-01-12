@@ -48,6 +48,7 @@ export enum STORAGE_NAME {
   rpcUrls = 'rpcUrls',
   neo3RemoveT4Flag = 'neo3RemoveT4Flag',
   onePassword = 'onePassword',
+  password = 'password',
 }
 
 export enum STORAGE_VALUE_TYPE {
@@ -177,6 +178,10 @@ export const STORAGE_VALUE_MESSAGE = {
   },
   onePassword: {
     type: STORAGE_VALUE_TYPE.boolean,
+    isLocal: true,
+  },
+  password: {
+    type: STORAGE_VALUE_TYPE.string,
     isLocal: true,
   },
 };

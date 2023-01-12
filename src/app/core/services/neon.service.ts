@@ -604,68 +604,38 @@ export class NeonService {
       );
     }
   }
-  /**
-   * Create a new wallet include given encrypted key and try decrypt it by given password.
-   * 创建包含指定已加密私钥的钱包，并尝试解密以校验密码
-   * @param encKey encrypted key to import
-   * @param key encrypt password for this encKey
-   */
-  public importEncryptKey(
+
+  public async importEncryptKey(
     encKey: string,
-    key: string,
-    name: string
-  ): Observable<Wallet2 | Wallet3> {
-    return new Observable((observer: Observer<Wallet2 | Wallet3>) => {
-      if (this.selectedChainType === 'Neo2') {
-        const w = Neon2.create.wallet({
-          name: name || 'NeoLineUser',
-        } as any);
-        w.addAccount(new wallet2.Account(encKey));
-        wallet2
-          .decrypt(encKey, key)
-          .then((wif) => {
-            const account = new wallet2.Account(
-              wallet2.getPrivateKeyFromWIF(wif)
-            );
-            const returnRes = Neon2.create.wallet({
-              name: name || 'NeoLineUser',
-            } as any);
-            returnRes.addAccount(account);
-            returnRes.encrypt(0, key);
-            returnRes.accounts[0].encrypt(key).then(() => {
-              (returnRes.accounts[0] as any).wif = wif;
-              observer.next(returnRes);
-            });
-          })
-          .catch(() => {
-            observer.error('Wrong password');
-          });
-      } else if (this.selectedChainType === 'Neo3') {
-        const w = new wallet3.Wallet({
-          name: name || 'NeoLineUser',
-        } as any);
-        w.addAccount(new wallet3.Account(encKey));
-        wallet3
-          .decrypt(encKey, key)
-          .then((wif) => {
-            const account = new wallet3.Account(
-              wallet3.getPrivateKeyFromWIF(wif)
-            );
-            const returnRes = new wallet3.Wallet({
-              name: name || 'NeoLineUser',
-            } as any);
-            returnRes.addAccount(account);
-            returnRes.encrypt(0, key);
-            returnRes.accounts[0].encrypt(key).then(() => {
-              (returnRes.accounts[0] as any).wif = wif;
-              observer.next(returnRes);
-            });
-          })
-          .catch(() => {
-            observer.error('Wrong password');
-          });
+    oldPwd: string,
+    name: string,
+    newPwd: string
+  ) {
+    if (this.selectedChainType === 'Neo2') {
+      try {
+        const wif = await wallet2.decrypt(encKey, oldPwd);
+        const account = new wallet2.Account(wallet2.getPrivateKeyFromWIF(wif));
+        account.label = name;
+        const newWallet = new wallet2.Wallet({ name: name || 'NeoLineUser' } as any);
+        newWallet.addAccount(account);
+        await newWallet.accounts[0].encrypt(newPwd);
+        return newWallet;
+      } catch (error) {
+        return 'Wrong password';
       }
-    });
+    } else if (this.selectedChainType === 'Neo3') {
+      try {
+        const wif = await wallet3.decrypt(encKey, oldPwd);
+        const account = new wallet3.Account(wallet3.getPrivateKeyFromWIF(wif));
+        account.label = name;
+        const newWallet = new wallet3.Wallet({ name: name || 'NeoLineUser' } as any);
+        newWallet.addAccount(account);
+        await newWallet.accounts[0].encrypt(newPwd);
+        return newWallet;
+      } catch (error) {
+        return 'Wrong password';
+      }
+    }
   }
   //#endregion
   //#region neo2 create tx

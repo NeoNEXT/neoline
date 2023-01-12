@@ -5,6 +5,7 @@ import {
   EventEmitter,
   OnInit,
   Output,
+  Input,
 } from '@angular/core';
 import { FormGroup, Validators, FormBuilder } from '@angular/forms';
 import { checkPasswords, MyErrorStateMatcher } from '../confirm-password';
@@ -21,6 +22,7 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
   hideConfirmPwd = true;
   loading = false;
   isInit: boolean;
+  @Input() password: string;
   @Output() submit = new EventEmitter<any>();
 
   createForm: FormGroup;
