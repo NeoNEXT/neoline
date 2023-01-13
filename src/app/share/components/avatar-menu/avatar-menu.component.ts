@@ -15,6 +15,7 @@ import {
   ChainType,
   UPDATE_WALLET,
   NEO3_CONTRACT,
+  STORAGE_NAME,
 } from '@popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -24,6 +25,8 @@ import {
   PopupSelectDialogComponent,
 } from '../../../popup/_dialogs';
 import { NEO } from '@/models/models';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
+import { wallet as wallet2 } from '@cityofzion/neon-js';
 declare var chrome: any;
 
 @Component({
@@ -36,11 +39,16 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
   isSearching = false;
   displayWalletArr: Array<Wallet2 | Wallet3> = [];
   addressBalances = {};
+  isOnePassword = false;
 
   private accountSub: Unsubscribable;
   private chainType: ChainType;
   wallet: Wallet2 | Wallet3;
   walletArr: Array<Wallet2 | Wallet3>;
+  private neo2WalletArr: Wallet2[];
+  private neo3WalletArr: Wallet3[];
+  private neo2WIFArr: string[];
+  private neo3WIFArr: string[];
   constructor(
     private router: Router,
     private chromeSrc: ChromeService,
@@ -52,13 +60,23 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.wallet = state.currentWallet;
       this.chainType = state.currentChainType;
+      this.neo2WalletArr = state.neo2WalletArr;
+      this.neo3WalletArr = state.neo3WalletArr;
+      this.neo2WIFArr = state.neo2WIFArr;
+      this.neo3WIFArr = state.neo3WIFArr;
       this.walletArr =
         this.chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
       this.displayWalletArr = this.walletArr;
       this.getBalances();
     });
   }
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.chromeSrc.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {
+      if (res === true) {
+        this.isOnePassword = true;
+      }
+    });
+  }
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
@@ -160,14 +178,47 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       });
   }
 
-  exportWallet() {
-    const sJson = JSON.stringify(this.wallet.export());
+  async exportWallet() {
+    if (!this.isOnePassword) {
+      const exportJson = JSON.stringify(this.wallet.export());
+      this.exportWalletJson(exportJson, this.chainType, this.wallet.name);
+      return;
+    }
+    // neo3
+    const neo3ExportWallet = new wallet3.Wallet({ name: 'NeoLineUser' });
+    for (const [index, item] of this.neo3WIFArr.entries()) {
+      if (item) {
+        const account = this.neo3WalletArr[index].accounts[0];
+        account.label = this.neo3WalletArr[index].name;
+        neo3ExportWallet.addAccount(account);
+      }
+    }
+    const neo3ExportJson = JSON.stringify(neo3ExportWallet.export());
+    // neo2
+    const neo2ExportWallet = new wallet2.Wallet({ name: 'NeoLineUser' });
+    for (const [index, item] of this.neo2WIFArr.entries()) {
+      if (item) {
+        const account = this.neo2WalletArr[index].accounts[0];
+        account.label = this.neo2WalletArr[index].name;
+        neo2ExportWallet.addAccount(account);
+      }
+    }
+    const neo2ExportJson = JSON.stringify(neo2ExportWallet.export());
+    this.exportWalletJson(neo3ExportJson, 'Neo3');
+    this.exportWalletJson(neo2ExportJson, 'Neo2');
+  }
+  private exportWalletJson(
+    json: string,
+    chainType: ChainType,
+    exportFileName?: string
+  ) {
     const element = document.createElement('a');
     element.setAttribute(
       'href',
-      'data:text/json;charset=UTF-8,' + encodeURIComponent(sJson)
+      'data:text/json;charset=UTF-8,' + encodeURIComponent(json)
     );
-    element.setAttribute('download', `${this.wallet.name}.json`);
+    const name = chainType === 'Neo2' ? 'neoline_neo_legacy' : 'neoline_neo_n3';
+    element.setAttribute('download', `${exportFileName || name}.json`);
     element.style.display = 'none';
     document.body.appendChild(element);
     element.click();

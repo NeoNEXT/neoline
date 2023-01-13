@@ -15,11 +15,13 @@
     <wallet-create
       [hidden]="tabType === 'import'"
       [password]="password"
+      [hasPwdWallet]="hasPwdWallet"
       (submit)="updateLocalWallet($event, true)"
     ></wallet-create>
     <wallet-import
       [hidden]="tabType === 'create'"
       [password]="password"
+      [hasPwdWallet]="hasPwdWallet"
       (submit)="updateLocalWallet($event, false)"
       (submitFile)="handleFileWallet($event)"
     ></wallet-import>

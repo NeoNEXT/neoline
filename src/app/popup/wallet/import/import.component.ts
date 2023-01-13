@@ -1,4 +1,4 @@
-import { GlobalService, NeonService } from '@/app/core';
+import { GlobalService, NeonService, ChromeService } from '@/app/core';
 import {
   AfterContentInit,
   Component,
@@ -9,7 +9,7 @@ import {
   AfterContentChecked,
   Input,
 } from '@angular/core';
-import { WalletInitConstant } from '../../_lib/constant';
+import { WalletInitConstant, STORAGE_NAME } from '../../_lib/constant';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import {
@@ -70,6 +70,7 @@ export class PopupWalletImportComponent
   showImportTypeMenu = false;
 
   @Input() password: string;
+  @Input() hasPwdWallet: boolean;
   @Output() submit = new EventEmitter<any>();
   @Output() submitFile = new EventEmitter<any>();
   matcher = new MyErrorStateMatcher();
@@ -77,7 +78,8 @@ export class PopupWalletImportComponent
     private global: GlobalService,
     private neon: NeonService,
     private cdref: ChangeDetectorRef,
-    private fb: FormBuilder
+    private fb: FormBuilder,
+    private chrome: ChromeService
   ) {
     switch (this.neon.selectedChainType) {
       case 'Neo2':
@@ -90,15 +92,28 @@ export class PopupWalletImportComponent
   }
 
   ngOnInit() {
-    this.importForm = this.fb.group(
-      {
+    if (this.password) {
+      this.importForm = this.fb.group({
         name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
         WIF: ['', [Validators.required, checkWIF(this.neon.selectedChainType)]],
-        password: ['', [Validators.required, Validators.pattern(/^.{8,128}$/)]],
-        confirmPassword: ['', [Validators.required]],
-      },
-      { validators: checkPasswords }
-    );
+      });
+    } else {
+      this.importForm = this.fb.group(
+        {
+          name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
+          WIF: [
+            '',
+            [Validators.required, checkWIF(this.neon.selectedChainType)],
+          ],
+          password: [
+            '',
+            [Validators.required, Validators.pattern(/^.{8,128}$/)],
+          ],
+          confirmPassword: ['', [Validators.required]],
+        },
+        { validators: checkPasswords }
+      );
+    }
     this.nep6Form = this.fb.group({
       name: ['', [Validators.required]],
       EncrpytedKey: ['', [Validators.required]],
@@ -145,12 +160,13 @@ export class PopupWalletImportComponent
         this.neon
           .importPrivateKey(
             this.importForm.value.WIF,
-            this.importForm.value.password,
+            this.password || this.importForm.value.password,
             this.importForm.value.name
           )
           .subscribe((res: any) => {
             this.loading = false;
             if (this.neon.verifyWallet(res)) {
+              this.setPassword(this.importForm.value.password);
               this.submit.emit(res);
             } else {
               this.global.snackBarTip('existingWallet');
@@ -160,13 +176,14 @@ export class PopupWalletImportComponent
         this.neon
           .importWIF(
             this.importForm.value.WIF,
-            this.importForm.value.password,
+            this.password || this.importForm.value.password,
             this.importForm.value.name
           )
           .subscribe(
             (res: any) => {
               this.loading = false;
               if (this.neon.verifyWallet(res)) {
+                this.setPassword(this.importForm.value.password);
                 this.submit.emit(res);
               } else {
                 this.global.snackBarTip('existingWallet');
@@ -203,7 +220,7 @@ export class PopupWalletImportComponent
         item.key,
         filePwd,
         item.label,
-        this.password
+        this.password || filePwd
       );
       if (newWallet !== 'Wrong password') {
         if (this.neon.verifyWallet(newWallet)) {
@@ -226,7 +243,15 @@ export class PopupWalletImportComponent
         this.global.snackBarTip('walletImportFailed');
       }
     } else {
+      this.setPassword(filePwd);
       this.submitFile.emit({ walletArr: newWalletArr, wifArr: newWIFArr });
+    }
+  }
+
+  setPassword(pwd: string) {
+    if (!this.hasPwdWallet) {
+      this.chrome.setStorage(STORAGE_NAME.onePassword, true);
+      this.chrome.setStorage(STORAGE_NAME.password, pwd);
     }
   }
 }

@@ -29,6 +29,7 @@ export class PopupWalletComponent implements OnInit {
     chainType: '',
   };
   password: string;
+  hasPwdWallet = false;
 
   private accountSub: Unsubscribable;
   private n2Network: RpcNetwork;
@@ -46,6 +47,7 @@ export class PopupWalletComponent implements OnInit {
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.chainType = state.currentChainType;
+      this.checkHasPwdWallet(state.neo2WIFArr.concat(state.neo3WIFArr));
     });
     this.route.queryParams.subscribe((params: any) => {
       this.dapiData = {
@@ -58,7 +60,7 @@ export class PopupWalletComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.password).subscribe(res => {
+    this.chrome.getStorage(STORAGE_NAME.password).subscribe((res) => {
       this.password = res;
     });
     if (this.router.url === '/popup/wallet/import') {
@@ -66,6 +68,11 @@ export class PopupWalletComponent implements OnInit {
     } else {
       this.tabType = 'create';
     }
+  }
+
+  private checkHasPwdWallet(wifArr: string[]) {
+    const index = wifArr.findIndex((wif) => wif !== '');
+    this.hasPwdWallet = index >= 0 ? true : false;
   }
 
   public updateLocalWallet(newWallet: any, isCreate: boolean) {
@@ -115,8 +122,6 @@ export class PopupWalletComponent implements OnInit {
   }
 
   public handleFileWallet({ walletArr, wifArr }) {
-    console.log(walletArr)
-    console.log(wifArr)
     if (this.neon.selectedChainType !== this.chainType) {
       this.chrome.networkChangeEvent(
         this.neon.selectedChainType === 'Neo2' ? this.n2Network : this.n3Network

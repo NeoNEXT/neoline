@@ -75,7 +75,12 @@
         {{ "WIFPattern" | translate | async }}
       </mat-error>
     </mat-form-field>
-    <mat-form-field class="form-field" appearance="fill" focused="true">
+    <mat-form-field
+      *ngIf="!password"
+      class="form-field"
+      appearance="fill"
+      focused="true"
+    >
       <img matPrefix src="/assets/images/login/lock.svg" alt="" />
       <mat-label>{{ "enterPassword" | translate | async }}</mat-label>
       <input
@@ -102,7 +107,12 @@
         {{ limit?.passwordLimitation[0] }}-{{ limit?.passwordLimitation[1] }}
       </mat-error>
     </mat-form-field>
-    <mat-form-field class="form-field" appearance="fill" focused="true">
+    <mat-form-field
+      *ngIf="!password"
+      class="form-field"
+      appearance="fill"
+      focused="true"
+    >
       <img matPrefix src="/assets/images/login/lock.svg" />
       <mat-label>{{ "enterConfirmPassword" | translate | async }}</mat-label>
       <input

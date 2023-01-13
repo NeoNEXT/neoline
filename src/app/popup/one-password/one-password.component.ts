@@ -138,7 +138,6 @@ export class PopupOnePasswordComponent implements OnInit {
   private async handleWalletArr() {
     const newPwd = this.pwdForm.value.password;
     //#region neo3
-    const neo3ExportWallet = new wallet3.Wallet({ name: 'NeoLineUser' });
     const neo3NewWalletArr = [];
     for (const [index, item] of this.neo3WIFArr.entries()) {
       if (item) {
@@ -151,16 +150,12 @@ export class PopupOnePasswordComponent implements OnInit {
         newWallet.addAccount(account);
         newWallet = new wallet3.Wallet(newWallet.export());
         neo3NewWalletArr.push(newWallet);
-        neo3ExportWallet.addAccount(account);
       } else {
         neo3NewWalletArr.push(this.neo3WalletArr[index]);
       }
     }
-    const neo3ExportJson = JSON.stringify(neo3ExportWallet.export());
-    this.exportWalletJson(neo3ExportJson, 'Neo3');
     //#endregion
     //#region neo2
-    const neo2ExportWallet = new wallet2.Wallet({ name: 'NeoLineUser' });
     const neo2NewWalletArr = [];
     for (const [index, item] of this.neo2WIFArr.entries()) {
       if (item) {
@@ -173,13 +168,10 @@ export class PopupOnePasswordComponent implements OnInit {
         newWallet.addAccount(account);
         newWallet = new wallet2.Wallet(newWallet.export());
         neo2NewWalletArr.push(newWallet);
-        neo2ExportWallet.addAccount(account);
       } else {
         neo2NewWalletArr.push(this.neo2WalletArr[index]);
       }
     }
-    const neo2ExportJson = JSON.stringify(neo2ExportWallet.export());
-    this.exportWalletJson(neo2ExportJson, 'Neo2');
     //#endregion
     const newCurrentWallet = (
       this.currentChainType === 'Neo2' ? neo2NewWalletArr : neo3NewWalletArr
@@ -200,18 +192,5 @@ export class PopupOnePasswordComponent implements OnInit {
     this.global.snackBarTip('switchSucc');
     this.loading = false;
     history.go(-1);
-  }
-  private exportWalletJson(json: string, chainType: ChainType) {
-    const element = document.createElement('a');
-    element.setAttribute(
-      'href',
-      'data:text/json;charset=UTF-8,' + encodeURIComponent(json)
-    );
-    const name = chainType === 'Neo2' ? 'neoline_neo_legacy' : 'neoline_neo_n3';
-    element.setAttribute('download', `${name}.json`);
-    element.style.display = 'none';
-    document.body.appendChild(element);
-    element.click();
-    document.body.removeChild(element);
   }
 }
