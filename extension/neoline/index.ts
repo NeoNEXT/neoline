@@ -98,10 +98,13 @@ window.addEventListener('message', async (e) => {
         }
         case requestTarget.Account: {
             getLocalStorage('wallet', (res: any) => {
-                const data: Account = { address: '', label: '' };
+                const data = { address: '', label: '', isLedger: false };
                 if (res !== undefined && res.accounts[0] !== undefined) {
                     data.address = res.accounts[0].address;
                     data.label = res.name;
+                    if (res.accounts[0]?.extra?.ledgerSLIP44) {
+                        data.isLedger = true;
+                    }
                 }
                 window.postMessage({
                     return: requestTarget.Account,
