@@ -29,6 +29,7 @@ export class PopupWalletComponent implements OnInit {
     chainType: '',
   };
   password: string;
+  getPassword = false;
   hasPwdWallet = false;
 
   private accountSub: Unsubscribable;
@@ -61,6 +62,7 @@ export class PopupWalletComponent implements OnInit {
 
   ngOnInit(): void {
     this.chrome.getStorage(STORAGE_NAME.password).subscribe((res) => {
+      this.getPassword = true;
       this.password = res;
     });
     if (this.router.url === '/popup/wallet/import') {

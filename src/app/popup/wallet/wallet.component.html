@@ -13,12 +13,14 @@
   </div>
   <div class="content">
     <wallet-create
+      *ngIf="getPassword"
       [hidden]="tabType === 'import'"
       [password]="password"
       [hasPwdWallet]="hasPwdWallet"
       (submit)="updateLocalWallet($event, true)"
     ></wallet-create>
     <wallet-import
+      *ngIf="getPassword"
       [hidden]="tabType === 'create'"
       [password]="password"
       [hasPwdWallet]="hasPwdWallet"
