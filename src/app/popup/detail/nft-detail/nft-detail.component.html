@@ -63,7 +63,7 @@
     [nftTokens]="nft?.tokens"
   ></app-nft-tokens>
   <app-nft-tx-page
-    *ngIf="selectedIndex === 1"
+    *ngIf="selectedIndex === 1 && nftContract"
     [symbol]="nft?.symbol"
     [nftContract]="nftContract"
   ></app-nft-tx-page>

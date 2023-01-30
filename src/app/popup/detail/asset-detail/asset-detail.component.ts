@@ -11,7 +11,12 @@ import { MatDialog } from '@angular/material/dialog';
 import { PopupConfirmDialogComponent } from '@popup/_dialogs';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
-import { NEO3_CONTRACT, GAS3_CONTRACT, ChainType, RpcNetwork } from '../../_lib';
+import {
+  NEO3_CONTRACT,
+  GAS3_CONTRACT,
+  ChainType,
+  RpcNetwork,
+} from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -59,7 +64,7 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
   }
 
   initData() {
-    this.aRouter.params.subscribe(async (params: any) => {
+    this.aRouter.params.subscribe((params: any) => {
       this.assetId = params.assetId || NEO;
       this.getAssetDetail();
       this.getCanHide();

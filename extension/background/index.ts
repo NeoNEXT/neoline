@@ -171,7 +171,7 @@ declare var chrome;
         return;
       }
       let tempTxArr = [...txArr];
-      txArr.forEach((txid) => {
+      for (const txid of tempTxArr) {
         const data = {
           jsonrpc: '2.0',
           method: 'getrawtransaction',
@@ -180,6 +180,15 @@ declare var chrome;
         };
         httpPost(currN2Network.rpcUrl, data, (res) => {
           if (res?.result?.blocktime) {
+            const explorerUrl = currN2Network.explorer
+              ? `${currN2Network.explorer}transaction/${txid}`
+              : null;
+            const sliceTxid = txid.slice(0, 4) + '...' + txid.slice(-4);
+            notification(
+              explorerUrl,
+              'Confirmed transaction',
+              `Transaction ${sliceTxid} confirmed! View on NeoTube`
+            );
             windowCallback({
               data: {
                 chainId: currN2Network.chainId,
@@ -195,7 +204,7 @@ declare var chrome;
             setLocalStorage(setData);
           }
         });
-      });
+      }
     } else if (chainType === ChainType.Neo3) {
       const txArr =
         (await getLocalStorage(`TxArr_${networkId}`, () => {})) || [];
@@ -203,7 +212,7 @@ declare var chrome;
         return;
       }
       let tempTxArr = [...txArr];
-      txArr.forEach((txid) => {
+      for (const txid of tempTxArr) {
         const data = {
           jsonrpc: '2.0',
           method: 'getrawtransaction',
@@ -212,6 +221,15 @@ declare var chrome;
         };
         httpPost(currN3Network.rpcUrl, data, (res) => {
           if (res?.result?.blocktime) {
+            const explorerUrl = currN3Network.explorer
+              ? `${currN3Network.explorer}transaction/${txid}`
+              : null;
+            const sliceTxid = txid.slice(0, 4) + '...' + txid.slice(-4);
+            notification(
+              explorerUrl,
+              'Confirmed transaction',
+              `Transaction ${sliceTxid} confirmed! View on NeoTube`
+            );
             windowCallback({
               data: {
                 chainId: currN3Network.chainId,
@@ -227,7 +245,7 @@ declare var chrome;
             setLocalStorage(setData);
           }
         });
-      });
+      }
     }
   }, 8000);
 
@@ -1869,3 +1887,11 @@ export function windowCallback(data) {
     }
   });
 }
+
+chrome.notifications.onClicked.addListener((id: string) => {
+  chrome.windows.create({
+    url: id,
+    focused: true,
+    type: 'normal',
+  });
+});

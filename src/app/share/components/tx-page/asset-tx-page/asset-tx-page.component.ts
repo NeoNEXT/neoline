@@ -33,7 +33,8 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
     private txState: TransactionState,
     private dialog: MatDialog,
     private store: Store<AppState>
-  ) {
+  ) {}
+  ngOnInit(): void {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
@@ -46,7 +47,6 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
       this.getInTransactions();
     });
   }
-  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.txData = [];

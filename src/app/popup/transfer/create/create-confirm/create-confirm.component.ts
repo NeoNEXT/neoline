@@ -240,6 +240,7 @@ export class TransferCreateConfirmComponent implements OnInit {
 
   //#region init
   private createTx() {
+    this.loading = true;
     let createTxReq: Observable<Transaction2 | Transaction3>;
     if (this.data.isNFT) {
       createTxReq = this.transfer.create(
@@ -277,8 +278,10 @@ export class TransferCreateConfirmComponent implements OnInit {
           this.rate.systemFee = await this.getGasRate(this.systemFee);
         }
         this.getTotalData();
+        this.loading = false;
       },
       (err) => {
+        this.loading = false;
         this.global.snackBarTip('wentWrong', err, 10000);
       }
     );

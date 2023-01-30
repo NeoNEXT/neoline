@@ -77,10 +77,10 @@ export function clearLocalStorage() {
   chrome.storage.local.clear();
 }
 
-export function notification(title = '', msg = '') {
-  chrome.notifications.create(null, {
+export function notification(id: string, title = '', msg = '') {
+  chrome.notifications.create(id, {
     type: 'basic',
-    iconUrl: '/assets/images/logo_square.png',
+    iconUrl: '/assets/logo128.png',
     title,
     message: msg,
   });
