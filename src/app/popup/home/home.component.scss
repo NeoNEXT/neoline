@@ -9,7 +9,7 @@
     height: 67px;
     text-align: center;
     position: relative;
-    border-bottom: 1px solid $line-color;
+    border-bottom: 1px solid var(--line-color);
     .wallet-info {
       width: 100%;
       height: 100%;
@@ -34,10 +34,10 @@
         border-radius: 14px;
         font-family: NeverMind-Regular;
         font-size: 12px;
-        color: $title-color;
+        color: var(--title-color);
         cursor: pointer;
         &:hover {
-          background: $hover-color;
+          background: var(--hover-color);
         }
         img.usb {
           width: 15px;
@@ -80,7 +80,7 @@
         width: 36px;
         height: 36px;
         padding: 7px;
-        border: 0.5px solid $background-color;
+        border: 0.5px solid var(--background-color);
         border-radius: 50%;
         .gas-logo {
           height: 22px;
@@ -94,13 +94,13 @@
           font-size: 12px;
           line-height: 12px;
           font-family: NeverMind-Medium;
-          color: $title-color;
+          color: var(--title-color);
         }
         .status {
           font-size: 10px;
           line-height: 12px;
           font-family: NeverMind-Regular;
-          color: $tip-color;
+          color: var(--tip-color);
           margin-top: 2px;
         }
       }
@@ -111,7 +111,7 @@
         background: #ffffff;
         font-family: NeverMind-Regular;
         font-size: 14px;
-        color: $theme-color;
+        color: var(--theme-color);
         cursor: pointer;
         mat-spinner {
           margin: auto;
@@ -120,7 +120,7 @@
           width: 15px;
           height: 15px;
           margin: auto;
-          filter: drop-shadow(1000px 0 0 $theme-color);
+          filter: drop-shadow(1000px 0 0 var(--theme-color));
           transform: translate(-1000px);
         }
       }
@@ -128,7 +128,7 @@
     .claim-line {
       margin-top: 24px;
       border: none;
-      border-top: 4px solid $line-color;
+      border-top: 4px solid var(--line-color);
     }
     .tabs-container {
       img.asset-add {
@@ -136,7 +136,7 @@
         right: 24px;
         cursor: pointer;
         border-radius: 50%;
-        background: $theme-color;
+        background: var(--theme-color);
         &:hover {
           box-shadow: 0px 5px 10px -2px rgba(6, 204, 171, 0.5);
         }

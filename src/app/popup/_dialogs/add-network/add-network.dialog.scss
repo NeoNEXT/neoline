@@ -4,7 +4,7 @@ section.container {
   padding: 16px 24px 24px;
   .item {
     font-size: 14px;
-    color: $title-color;
+    color: var(--title-color);
     font-family: NeverMind-Medium;
     &:not(:first-child) {
       margin-top: 24px;
@@ -17,16 +17,16 @@ section.container {
       border-radius: 4px;
       padding: 0 16px;
       &.disabled {
-        color: $tip-color;
+        color: var(--tip-color);
         cursor: not-allowed;
       }
       &:focus {
-        border: 1px solid $title-color;
+        border: 1px solid var(--title-color);
       }
     }
     .error {
       position: absolute;
-      color: $error-color;
+      color: var(--error-color);
       font-size: 12px;
       margin-top: 3px;
       font-family: NeverMind-Regular;

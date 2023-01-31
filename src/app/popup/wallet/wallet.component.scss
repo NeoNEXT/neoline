@@ -11,7 +11,7 @@ section.container {
       line-height: 44px;
       font-family: NeverMind-Medium;
       font-size: 16px;
-      color: $sub-title-color;
+      color: var(--sub-title-color);
       text-align: center;
       cursor: pointer;
       position: relative;
@@ -24,11 +24,11 @@ section.container {
         width: 16px;
         height: 3px;
         border-radius: 2px;
-        background: $title-color;
+        background: var(--title-color);
         display: none;
       }
       &.active {
-        color: $title-color;
+        color: var(--title-color);
         &::after {
           display: block;
         }

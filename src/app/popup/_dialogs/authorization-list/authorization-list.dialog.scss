@@ -5,7 +5,7 @@
   .empty {
     margin-top: 40px;
     text-align: center;
-    color: $tip-color;
+    color: var(--tip-color);
   }
   ul {
     height: 280px;
@@ -15,7 +15,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid $line-color;
+      border-bottom: 1px solid var(--line-color);
       img.icon {
         width: 34px;
         height: 34px;
@@ -39,7 +39,7 @@
           background: #daf8f3;
           font-family: NeverMind-Regular;
           font-size: 10px;
-          color: $theme-color;
+          color: var(--theme-color);
           position: relative;
           &::before {
             content: "";
@@ -49,19 +49,19 @@
             width: 3px;
             height: 3px;
             border-radius: 50%;
-            background: $theme-color;
+            background: var(--theme-color);
           }
           &.fail {
-            background: $line-color;
-            color: $sub-title-color;
+            background: var(--line-color);
+            color: var(--sub-title-color);
             &::before {
-              background: $sub-title-color;
+              background: var(--sub-title-color);
             }
           }
         }
         .url {
           font-size: 12px;
-          color: $sub-title-color;
+          color: var(--sub-title-color);
           margin-top: 5px;
         }
       }
@@ -71,7 +71,7 @@
         padding: 0 6px;
         border-radius: 4px;
         background: #feeeee;
-        color: $error-color;
+        color: var(--error-color);
         font-size: 12px;
         cursor: pointer;
         &:hover {
@@ -83,8 +83,8 @@
   button.clear-all {
     width: 100%;
     margin-top: 20px;
-    border: 1px solid $error-color;
-    color: $error-color;
+    border: 1px solid var(--error-color);
+    color: var(--error-color);
     cursor: pointer;
     &:hover {
       box-shadow: 0px 10px 25px -12px rgba(250, 85, 85, 0.47);

@@ -103,8 +103,9 @@ export class PopupSettingComponent implements OnInit {
     });
   }
 
-  changeTheme($event) {
-    if ($event.checked === true) {
+  changeTheme() {
+    this.isDark = !this.isDark;
+    if (this.isDark) {
       this.setting.changeTheme('dark-theme');
     } else {
       this.setting.changeTheme('light-theme');

@@ -6,20 +6,20 @@
   align-items: center;
   padding-top: 8px;
   padding-bottom: 24px;
-  background: $background-color;
+  background: var(--background-color);
   img.logo {
     height: 60px;
     border-radius: 10px;
   }
   img.logo-word {
-    filter: drop-shadow(1000px 0 0 $theme-color);
+    filter: drop-shadow(1000px 0 0 var(--theme-color));
     transform: translate(-1000px);
     margin-top: 12px;
   }
   .version {
     font-family: NeverMind-Regular;
     font-size: 12px;
-    color: $title-color;
+    color: var(--title-color);
     margin-top: 8px;
   }
 }
@@ -32,7 +32,7 @@ ul.links li {
   justify-content: space-between;
   font-family: NeverMind-Medium;
   font-size: 16px;
-  color: $title-color;
+  color: var(--title-color);
   cursor: pointer;
   position: relative;
   &::after {
@@ -42,9 +42,9 @@ ul.links li {
     right: 24px;
     bottom: 0;
     height: 1px;
-    background: $line-color;
+    background: var(--line-color);
   }
   &:hover {
-    background: $hover-color;
+    background: var(--hover-color);
   }
 }

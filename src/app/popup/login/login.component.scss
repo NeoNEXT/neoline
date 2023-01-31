@@ -46,7 +46,7 @@ section {
     .title {
       font-family: NeverMind-Medium;
       font-size: 16px;
-      color: $title-color;
+      color: var(--title-color);
     }
     .wallet {
       height: 70px;
@@ -62,7 +62,7 @@ section {
       overflow: hidden;
       &:hover {
         background: #f8fbf9;
-        border-color: $theme-color;
+        border-color: var(--theme-color);
         img.arrow {
           transform: rotate(270deg) translate(-1000px);
         }
@@ -76,7 +76,7 @@ section {
         .name {
           max-width: 240px;
           font-size: 16px;
-          color: $theme-color;
+          color: var(--theme-color);
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;
@@ -84,12 +84,12 @@ section {
         .address {
           font-family: NeverMind-Regular;
           font-size: 12px;
-          color: $title-color;
+          color: var(--title-color);
           margin-top: 8px;
         }
       }
       img.arrow {
-        filter: drop-shadow(1000px 0 0 $theme-color);
+        filter: drop-shadow(1000px 0 0 var(--theme-color));
         transform: rotate(90deg) translate(-1000px);
         transition: all .3s;
       }
@@ -101,7 +101,7 @@ section {
     .reset {
       font-family: NeverMind-Regular;
       font-size: 14px;
-      color: $theme-color;
+      color: var(--theme-color);
       margin-top: 24px;
       text-align: right;
       span {

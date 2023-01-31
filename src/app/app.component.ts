@@ -17,7 +17,7 @@ export class AppComponent {
       this.settingState.changLang(res);
     });
     if (localStorage.getItem('theme')) {
-      const body = document.getElementsByTagName('body')[0];
+      const body = document.getElementsByTagName('html')[0];
       body.setAttribute('data-theme-style', localStorage.getItem('theme'));
     }
     this.neon.initData();

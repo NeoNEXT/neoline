@@ -15,7 +15,7 @@
     }
   }
   &.added {
-    background: $line-color;
+    background: var(--line-color);
     cursor: not-allowed;
     img {
       width: 10px;

@@ -6,7 +6,7 @@ header {
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  background: $background-color;
+  background: var(--background-color);
   &.theme-bg {
     img.logo {
       filter: drop-shadow(1000px 0 0 #fff);
@@ -32,17 +32,17 @@ header {
     line-height: 32px;
     padding: 0 10px;
     border-radius: 19px;
-    border: 1px solid $sub-title-color;
+    border: 1px solid var(--sub-title-color);
     display: inline-flex;
     align-items: center;
     justify-content: center;
     background: transparent;
     cursor: pointer;
     &:hover {
-      border: 1px solid $theme-color;
+      border: 1px solid var(--theme-color);
       box-shadow: 0px 8px 15px -8px rgba(6, 204, 171, 0.5);
       img {
-        filter: drop-shadow(1000px 0 0 $theme-color);
+        filter: drop-shadow(1000px 0 0 var(--theme-color));
         transform: translate(-1000px);
       }
     }

@@ -6,8 +6,8 @@
   font-family: Objectivity-Medium;
   font-size: 16px;
   text-align: center;
-  color: $title-color;
-  background: $background-color;
+  color: var(--title-color);
+  background: var(--background-color);
   position: relative;
   img.back {
     position: absolute;

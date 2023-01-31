@@ -40,4 +40,11 @@
     </div>
     <img src="assets/images/common/arrow.svg" alt="" />
   </li>
+  <li>
+    <img src="assets/images/setting/theme.svg" alt="" />
+    <div class="middle">{{ "darkMode" | translate | async }}</div>
+    <div class="slide" [ngClass]="{ active: isDark }" (click)="changeTheme()">
+      <span class="circle"></span>
+    </div>
+  </li>
 </ul>

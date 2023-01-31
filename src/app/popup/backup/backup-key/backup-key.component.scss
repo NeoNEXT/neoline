@@ -18,7 +18,7 @@
     align-items: center;
     justify-content: space-between;
     border-radius: 8px;
-    background: $box-color;
+    background: var(--box-color);
     margin-top: 30px;
     padding: 15px 16px;
     cursor: pointer;
@@ -27,7 +27,7 @@
       display: inline-block;
       line-height: 18px;
       font-family: NeverMind-Regular;
-      color: $title-color;
+      color: var(--title-color);
       font-size: 12px;
       word-break: break-all;
     }

@@ -9,7 +9,7 @@ section.container {
   .title {
     font-family: NeverMind-Medium;
     font-size: 12px;
-    color: $sub-title-color;
+    color: var(--sub-title-color);
     margin-bottom: 12px;
   }
   .form {

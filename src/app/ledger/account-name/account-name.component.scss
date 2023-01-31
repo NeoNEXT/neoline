@@ -15,7 +15,7 @@ section.main {
     padding: 24px;
     position: relative;
     .title {
-      color: $sub-title-color;
+      color: var(--sub-title-color);
       &.name {
         margin-top: 32px;
       }
@@ -26,7 +26,7 @@ section.main {
     input {
       width: 100%;
       height: 50px;
-      background: $box-color;
+      background: var(--box-color);
       border-radius: 10px;
       border: none;
       margin-top: 12px;

@@ -19,7 +19,7 @@ export class SettingState {
   changeTheme(theme) {
     this.theme = theme;
     localStorage.setItem('theme', theme);
-    const body = document.getElementsByTagName('body')[0];
+    const body = document.getElementsByTagName('html')[0];
     body.setAttribute('data-theme-style', theme);
   }
 

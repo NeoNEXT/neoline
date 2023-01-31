@@ -18,7 +18,7 @@ section.container {
       }
       &.selected {
         height: 66px;
-        border: 1px solid $theme-color;
+        border: 1px solid var(--theme-color);
         img.left {
           margin-right: 12px;
         }
@@ -42,7 +42,7 @@ section.container {
   .personal-accounts {
     .title {
       font-family: NeverMind-Regular;
-      color: $sub-title-color;
+      color: var(--sub-title-color);
       padding-left: 24px;
     }
     ul {
@@ -59,7 +59,7 @@ section.container {
         padding: 0 24px;
         cursor: pointer;
         &:hover {
-          background: $hover-color;
+          background: var(--hover-color);
         }
         img {
           width: 30px;

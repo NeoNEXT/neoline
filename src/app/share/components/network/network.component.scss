@@ -15,8 +15,8 @@
     padding: 0 16px;
     font-family: NeverMind-Medium;
     font-size: 16px;
-    color: $sub-title-color;
-    border-bottom: 1px solid $line-color;
+    color: var(--sub-title-color);
+    border-bottom: 1px solid var(--line-color);
   }
   ul {
     max-height: 264px;
@@ -32,10 +32,10 @@
       padding: 0 16px;
       font-family: NeverMind-Medium;
       font-size: 14px;
-      color: $title-color;
+      color: var(--title-color);
       cursor: pointer;
       &:hover {
-        background: $hover-color;
+        background: var(--hover-color);
         img.delete {
           display: block;
         }
@@ -45,7 +45,7 @@
         width: 18px;
         height: 18px;
         border-radius: 4px;
-        border: 1px solid $tip-color;
+        border: 1px solid var(--tip-color);
         margin-right: 12px;
         &.active {
           border: none;

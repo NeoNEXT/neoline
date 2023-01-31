@@ -18,7 +18,7 @@
     justify-content: space-between;
     margin-top: 24px;
     .label {
-      color: $sub-title-color;
+      color: var(--sub-title-color);
     }
     .value {
       line-height: 18px;

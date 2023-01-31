@@ -40,7 +40,7 @@ section.main {
       z-index: -1;
     }
     .title {
-      color: $sub-title-color;
+      color: var(--sub-title-color);
     }
     ul {
       margin-top: 16px;
@@ -49,9 +49,9 @@ section.main {
         width: 48%;
         height: 90px;
         line-height: 90px;
-        background: $box-color;
+        background: var(--box-color);
         border-radius: 10px;
-        border: 1px solid $line-color;
+        border: 1px solid var(--line-color);
         font-size: 16px;
         font-family: NeverMind-Regular;
         text-align: center;
@@ -61,7 +61,7 @@ section.main {
         }
         &.active {
           font-family: NeverMind-Medium;
-          border: 1px solid $theme-color;
+          border: 1px solid var(--theme-color);
         }
       }
     }
@@ -70,12 +70,12 @@ section.main {
     }
     .tip {
       font-size: 12px;
-      color: $tip-color;
+      color: var(--tip-color);
       margin-top: 12px;
       line-height: 18px;
       font-family: NeverMind-Regular;
       .link {
-        color: $theme-color;
+        color: var(--theme-color);
         cursor: pointer;
         text-decoration: none;
       }

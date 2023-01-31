@@ -2,5 +2,5 @@
 @import "src/styles/tab-container.scss";
 
 .tabs-container {
-  border-bottom: 1px solid $line-color;
+  border-bottom: 1px solid var(--line-color);
 }

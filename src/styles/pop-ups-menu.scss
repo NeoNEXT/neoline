@@ -16,10 +16,10 @@
       margin-right: 12px;
     }
     &:hover {
-      background: $hover-color;
-      color: $theme-color;
+      background: var(--hover-color);
+      color: var(--theme-color);
       img {
-        filter: drop-shadow(1000px 0 0 $theme-color);
+        filter: drop-shadow(1000px 0 0 var(--theme-color));
         transform: translate(-1000px);
       }
     }

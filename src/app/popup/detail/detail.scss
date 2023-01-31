@@ -24,7 +24,7 @@ section.container {
           display: block;
           width: 4px;
           height: 4px;
-          background: $title-color;
+          background: var(--title-color);
           border-radius: 50%;
           margin: 2px;
         }

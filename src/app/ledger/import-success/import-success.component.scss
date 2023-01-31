@@ -23,7 +23,7 @@ section.main {
     }
     .tip {
       width: 180px;
-      color: $tip-color;
+      color: var(--tip-color);
       font-size: 14px;
       line-height: 18px;
       margin-top: 32px;

@@ -25,7 +25,7 @@ section.main {
       }
       .note {
         font-family: NeverMind-Regular;
-        color: $tip-color;
+        color: var(--tip-color);
         line-height: 15px;
         margin-top: 20px;
         &.reconnect {
@@ -37,7 +37,7 @@ section.main {
       & > .title {
         height: 60px;
         padding: 0 24px;
-        color: $sub-title-color;
+        color: var(--sub-title-color);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -49,7 +49,7 @@ section.main {
             justify-content: center;
             width: 20px;
             height: 20px;
-            background: $theme-color;
+            background: var(--theme-color);
             border-radius: 4px 4px 4px 4px;
             opacity: 1;
             color: #fff;
@@ -80,7 +80,7 @@ section.main {
         margin: 0 24px;
         margin-bottom: 23px;
         padding-top: 30px;
-        border-top: 1px solid $line-color;
+        border-top: 1px solid var(--line-color);
         display: flex;
         justify-content: center;
       }
@@ -88,13 +88,13 @@ section.main {
         height: 300px;
         margin: 0 24px;
         margin-bottom: 23px;
-        border-top: 1px solid $line-color;
+        border-top: 1px solid var(--line-color);
         li {
           width: 100%;
           height: 60px;
           font-size: 17px;
           display: inline-flex;
-          color: $title-color;
+          color: var(--title-color);
           align-items: center;
           justify-content: space-between;
           padding: 0 10px;
@@ -104,7 +104,7 @@ section.main {
             display: none;
           }
           &.imported {
-            color: $theme-color;
+            color: var(--theme-color);
             pointer-events: none;
             cursor: default;
             span {
@@ -115,7 +115,7 @@ section.main {
             }
           }
           &.selected {
-            color: $warn-color;
+            color: var(--warn-color);
           }
         }
       }
@@ -127,16 +127,16 @@ section.main {
         padding: 24px;
         .balance-content {
           .title {
-            color: $sub-title-color;
+            color: var(--sub-title-color);
           }
           .middle {
             margin-top: 16px;
             height: 140px;
-            background: $box-color;
+            background: var(--box-color);
             border-radius: 10px;
             padding: 15px 12px;
             font-size: 14px;
-            color: $title-color;
+            color: var(--title-color);
             .balance {
               height: 24px;
               font-size: 18px;
@@ -154,7 +154,7 @@ section.main {
               margin-top: 16px;
               font-size: 12px;
               line-height: 18px;
-              color: $tip-color;
+              color: var(--tip-color);
               font-family: NeverMind-Regular;
               .link {
                 cursor: pointer;

@@ -12,7 +12,7 @@ ul {
       margin-top: 0;
     }
     .label {
-      color: $sub-title-color;
+      color: var(--sub-title-color);
     }
     .value {
       text-align: right;

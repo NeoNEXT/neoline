@@ -3,10 +3,10 @@
     height: 52px;
     font-family: NeverMind-Medium;
     font-size: 14px;
-    color: $title-color;
+    color: var(--title-color);
   }
   .mat-form-field-label {
-    color: $tip-color;
+    color: var(--tip-color);
   }
   .mat-form-field-underline {
     display: none;

@@ -3,7 +3,7 @@
 
 .container {
   .header {
-    background: $background-color;
+    background: var(--background-color);
     padding: 3px 16px 16px;
     &.transfer {
       position: relative;
@@ -23,7 +23,7 @@
         margin-top: 12px;
       }
       .rate {
-        color: $sub-title-color;
+        color: var(--sub-title-color);
         margin-top: 8px;
       }
       .address-group {
@@ -53,7 +53,7 @@
       color: #3d3d3d;
     }
     .title {
-      color: $sub-title-color;
+      color: var(--sub-title-color);
       margin-top: 12px;
     }
     .account {
@@ -67,7 +67,7 @@
     }
   }
   .tabs-container {
-    border-bottom: 1px solid $line-color;
+    border-bottom: 1px solid var(--line-color);
     span {
       width: 50%;
       margin-left: 0;
@@ -93,7 +93,7 @@
           justify-content: space-between;
           &.tip {
             justify-content: flex-end;
-            color: $sub-title-color;
+            color: var(--sub-title-color);
             font-family: NeverMind-Regular;
             font-size: 12px;
             margin-top: 6px;
@@ -105,7 +105,7 @@
             margin-left: 12px;
           }
           .label {
-            color: $sub-title-color;
+            color: var(--sub-title-color);
           }
         }
       }
@@ -118,7 +118,7 @@
         }
         .label {
           font-family: NeverMind-Regular;
-          color: $sub-title-color;
+          color: var(--sub-title-color);
         }
         .value {
           line-height: 18px;
@@ -128,16 +128,16 @@
     }
     .hex-label {
       font-family: NeverMind-Regular;
-      color: $sub-title-color;
+      color: var(--sub-title-color);
       margin-top: 30px;
     }
     .json-box {
       border-radius: 4px;
-      background: $line-color;
+      background: var(--line-color);
       font-family: NeverMind-Regular;
       font-size: 12px;
       line-height: 18px;
-      color: $sub-title-color;
+      color: var(--sub-title-color);
       padding: 12px 16px;
       margin-top: 8px;
       &.serialize {

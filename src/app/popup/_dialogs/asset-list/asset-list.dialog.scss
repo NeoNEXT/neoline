@@ -5,7 +5,7 @@
   height: 34px;
   margin: 16px;
   border-radius: 4px;
-  background: $box-color;
+  background: var(--box-color);
   display: flex;
   align-items: center;
   padding: 0 16px;
@@ -29,7 +29,7 @@
     padding: 0 24px;
     cursor: pointer;
     &:hover {
-      background: $hover-color;
+      background: var(--hover-color);
     }
     .asset-info-box {
       flex: 1 1 auto;
@@ -41,7 +41,7 @@
       }
     }
     img.selected {
-      filter: drop-shadow(1000px 0 0 $theme-color);
+      filter: drop-shadow(1000px 0 0 var(--theme-color));
       transform: translate(-1000px);
     }
   }

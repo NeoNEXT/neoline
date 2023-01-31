@@ -12,7 +12,7 @@ ul li {
     background: #f5f9f9;
   }
   img.selected {
-    filter: drop-shadow(1000px 0 0 $theme-color);
+    filter: drop-shadow(1000px 0 0 var(--theme-color));
     transform: translate(-1000px);
   }
 }

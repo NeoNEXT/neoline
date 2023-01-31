@@ -64,12 +64,12 @@ $network-list: (
 }
 ::-webkit-scrollbar-thumb {
   border-radius: 2px;
-  background-color: $tip-color;
+  background-color: var(--tip-color);
 }
 
 // input
 ::-webkit-input-placeholder {
-  color: $tip-color;
+  color: var(--tip-color);
 }
 
 // veil
@@ -90,8 +90,8 @@ $network-list: (
   line-height: 63px;
   font-family: NeverMind-Medium;
   font-size: 16px;
-  color: $sub-title-color;
-  border-bottom: 1px solid $line-color;
+  color: var(--sub-title-color);
+  border-bottom: 1px solid var(--line-color);
   position: relative;
   img.close {
     position: absolute;
@@ -106,7 +106,7 @@ $network-list: (
   width: 48px;
   height: 48px;
   padding: 9px;
-  border: 1px solid $background-color;
+  border: 1px solid var(--background-color);
   border-radius: 50%;
   img {
     height: 30px;

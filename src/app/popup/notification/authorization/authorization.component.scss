@@ -24,7 +24,7 @@
       top: 0;
       left: 50%;
       margin-left: -73px;
-      border-bottom: 1px dashed $theme-color;
+      border-bottom: 1px dashed var(--theme-color);
     }
 
     .dashed-vert-line {
@@ -90,7 +90,7 @@
       top: 90px;
       width: 131px;
       font-size: 12px;
-      color: $sub-title-color;
+      color: var(--sub-title-color);
       font-family: NeverMind-Regular;
     }
 
@@ -117,13 +117,13 @@
     font-family: NeverMind-Regular;
     margin-top: 8px;
     line-height: 20px;
-    color: $sub-title-color;
+    color: var(--sub-title-color);
   }
   .choose-auth-rule {
     margin-top: 24px;
     font-family: NeverMind-Regular;
     font-size: 12px;
-    color: $sub-title-color;
+    color: var(--sub-title-color);
     .select-radio {
       height: 14px;
       width: 14px;
@@ -150,7 +150,7 @@
         align-items: center;
         padding: 0 8px;
         border-radius: 4px;
-        border: 0.5px solid $tip-color;
+        border: 0.5px solid var(--tip-color);
       }
       img {
         width: 6px;
@@ -165,16 +165,16 @@
         padding-left: 8px;
         text-align: left;
         border-radius: 4px;
-        background: $line-color;
+        background: var(--line-color);
       }
     }
     .auth-rule-select {
       padding: 8px;
       font-size: 12px;
       margin-left: 12px;
-      border: 1px solid $tip-color;
+      border: 1px solid var(--tip-color);
       font-family: NeverMind-Regular;
-      color: $sub-title-color;
+      color: var(--sub-title-color);
       border-radius: 4px;
     }
   }

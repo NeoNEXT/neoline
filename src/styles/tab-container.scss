@@ -14,7 +14,7 @@
     margin-left: 24px;
     font-family: NeverMind-Regular;
     font-size: 16px;
-    color: $sub-title-color;
+    color: var(--sub-title-color);
     cursor: pointer;
     position: relative;
     &::after {
@@ -22,7 +22,7 @@
       width: 16px;
       height: 3px;
       border-radius: 2px;
-      background-color: $title-color;
+      background-color: var(--title-color);
       position: absolute;
       bottom: 0;
       left: 50%;
@@ -31,7 +31,7 @@
     }
     &.selected,
     &:hover {
-      color: $title-color;
+      color: var(--title-color);
       &::after {
         display: block;
       }

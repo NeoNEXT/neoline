@@ -11,13 +11,13 @@
   z-index: 999999;
   .my-account {
     height: 48px;
-    color: $sub-title-color;
+    color: var(--sub-title-color);
     padding-left: 16px;
     padding-right: 19px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    border-bottom: 1px solid $line-color;
+    border-bottom: 1px solid var(--line-color);
     .right {
       img {
         cursor: pointer;
@@ -28,13 +28,13 @@
     }
   }
   .account-list {
-    border-bottom: 3px solid $line-color;
+    border-bottom: 3px solid var(--line-color);
     button.search {
       width: calc(100% - 32px);
       height: 34px;
       margin: 12px 16px;
       border-radius: 4px;
-      background: $box-color;
+      background: var(--box-color);
       display: inline-flex;
       align-items: center;
       padding: 0 16px;
@@ -44,7 +44,7 @@
       }
       input {
         flex: 1;
-        color: $title-color;
+        color: var(--title-color);
         font-family: NeverMind-Medium;
         font-size: 14px;
       }
@@ -74,14 +74,14 @@
           }
         }
         &:hover {
-          background: $hover-color;
+          background: var(--hover-color);
         }
         .select {
           display: inline-block;
           width: 18px;
           height: 18px;
           border-radius: 4px;
-          border: 1px solid $tip-color;
+          border: 1px solid var(--tip-color);
           margin-right: 12px;
         }
         .avatar-box {
@@ -92,7 +92,7 @@
           border: 1px solid transparent;
           position: relative;
           &.ledger {
-            border-color: $theme-color;
+            border-color: var(--theme-color);
           }
           img.avatar {
             width: 24px;
@@ -115,7 +115,7 @@
         .balance {
           font-family: NeverMind-Regular;
           font-size: 12px;
-          color: $sub-title-color;
+          color: var(--sub-title-color);
           margin-top: 4px;
         }
       }
@@ -135,10 +135,10 @@
         margin-right: 12px;
       }
       &:hover {
-        background: $hover-color;
-        color: $theme-color;
+        background: var(--hover-color);
+        color: var(--theme-color);
         img {
-          filter: drop-shadow(1000px 0 0 $theme-color);
+          filter: drop-shadow(1000px 0 0 var(--theme-color));
           transform: translate(-1000px);
         }
       }

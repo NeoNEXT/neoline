@@ -13,10 +13,10 @@
     right: 24px;
     bottom: 0;
     height: 1px;
-    background: $line-color;
+    background: var(--line-color);
   }
   &:hover {
-    background: $hover-color;
+    background: var(--hover-color);
   }
 }
 
@@ -24,5 +24,5 @@
 .no-data {
   margin: 40px 0;
   text-align: center;
-  color: $tip-color;
+  color: var(--tip-color);
 }

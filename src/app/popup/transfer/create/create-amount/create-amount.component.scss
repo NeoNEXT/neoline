@@ -7,14 +7,14 @@ section.container {
     .item {
       .label {
         font-family: NeverMind-Regular;
-        color: $sub-title-color;
+        color: var(--sub-title-color);
         margin-top: 24px;
       }
       .value {
         height: 52px;
         padding: 0 16px;
         border-radius: 4px;
-        background: $box-color;
+        background: var(--box-color);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -34,7 +34,7 @@ section.container {
           }
           .balance {
             line-height: 12px;
-            color: $sub-title-color;
+            color: var(--sub-title-color);
             margin-top: 4px;
           }
           img.arrow-down {
@@ -65,7 +65,7 @@ section.container {
           text-align: center;
           border-radius: 4px 0px 0px 4px;
           font-family: NeverMind-Regular;
-          color: $theme-color;
+          color: var(--theme-color);
           cursor: pointer;
           &:hover {
             background: #daf8f3;
@@ -80,7 +80,7 @@ section.container {
             font-size: 12px;
           }
           .fee {
-            color: $sub-title-color;
+            color: var(--sub-title-color);
             margin-top: 5px;
           }
         }
