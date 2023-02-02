@@ -36,12 +36,14 @@ export class PopupSettingComponent implements OnInit {
   ) {
     this.rateCurrencys = this.setting.rateCurrencys;
     this.rateCurrency = this.asset.rateCurrency;
-    this.isDark = this.setting.theme === 'dark-theme' ? true : false;
   }
 
   async ngOnInit(): Promise<void> {
     this.setting.langSub.subscribe((res) => {
       this.lang = res;
+    });
+    this.setting.themeSub.subscribe((res) => {
+      this.isDark = res === 'dark-theme' ? true : false;
     });
     this.asset.getRate().subscribe((rateBalance) => {
       const tempRateObj = rateBalance.result;
@@ -105,10 +107,8 @@ export class PopupSettingComponent implements OnInit {
 
   changeTheme() {
     this.isDark = !this.isDark;
-    if (this.isDark) {
-      this.setting.changeTheme('dark-theme');
-    } else {
-      this.setting.changeTheme('light-theme');
-    }
+    const newTheme = this.isDark ? 'dark-theme' : 'light-theme';
+    this.chrome.setStorage(STORAGE_NAME.theme, newTheme);
+    this.setting.changeTheme(newTheme);
   }
 }

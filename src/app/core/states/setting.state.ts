@@ -6,19 +6,15 @@ import { BehaviorSubject } from 'rxjs';
 @Injectable()
 export class SettingState {
   public rateCurrencys: Array<SelectItem> = RateCurrencysType;
-  public theme = 'light-theme';
+  themeSub = new BehaviorSubject<string>('light-theme');
   langSub = new BehaviorSubject<string>('en');
   langJson = { en: undefined, zh_CN: undefined };
 
   constructor() {
-    if (localStorage.getItem('theme')) {
-      this.theme = localStorage.getItem('theme');
-    }
   }
 
   changeTheme(theme) {
-    this.theme = theme;
-    localStorage.setItem('theme', theme);
+    this.themeSub.next(theme);
     const body = document.getElementsByTagName('html')[0];
     body.setAttribute('data-theme-style', theme);
   }

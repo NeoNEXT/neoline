@@ -49,6 +49,7 @@ export enum STORAGE_NAME {
   neo3RemoveT4Flag = 'neo3RemoveT4Flag',
   onePassword = 'onePassword',
   password = 'password',
+  theme ='theme',
 }
 
 export enum STORAGE_VALUE_TYPE {
@@ -183,6 +184,11 @@ export const STORAGE_VALUE_MESSAGE = {
   password: {
     type: STORAGE_VALUE_TYPE.string,
     isLocal: true,
+  },
+  theme: {
+    type: STORAGE_VALUE_TYPE.string,
+    isLocal: false,
+    default: 'light-theme',
   },
 };
 

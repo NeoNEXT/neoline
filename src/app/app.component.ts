@@ -16,10 +16,9 @@ export class AppComponent {
     this.chrome.getStorage(STORAGE_NAME.lang).subscribe((res) => {
       this.settingState.changLang(res);
     });
-    if (localStorage.getItem('theme')) {
-      const body = document.getElementsByTagName('html')[0];
-      body.setAttribute('data-theme-style', localStorage.getItem('theme'));
-    }
+    this.chrome.getStorage(STORAGE_NAME.theme).subscribe((res) => {
+      this.settingState.changeTheme(res);
+    });
     this.neon.initData();
   }
 }
