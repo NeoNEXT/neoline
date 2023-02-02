@@ -9,6 +9,7 @@
     <img
       class="back"
       (click)="back()"
+      theme
       src="/assets/images/common/nav-arrow.svg"
     />
     <div class="asset-logo-box big">
@@ -31,7 +32,7 @@
         <img class="avatar" [avatar]="data.from" />
         <span>{{ data.from | longStr : 4 }}</span>
       </div>
-      <img src="assets/images/third-party/transfer-arrow.svg" alt="" />
+      <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
       <div class="item">
         <img class="avatar" [avatar]="data?.to?.address" />
         <span>{{ data?.to?.address | longStr : 4 }}</span>
@@ -60,6 +61,7 @@
           }}<img
             class="edit"
             (click)="editFee()"
+            theme
             src="assets/images/common/edit.svg"
         /></span>
         <span class="value">{{ data?.fee | numberFixed }} GAS</span>

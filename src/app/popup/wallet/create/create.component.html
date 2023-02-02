@@ -2,7 +2,7 @@
   <p class="title">{{ "welcomeCreate" | translate | async }}</p>
   <form [formGroup]="createForm">
     <mat-form-field class="form-field" appearance="fill">
-      <img matPrefix src="/assets/images/login/wallet.svg" alt="" />
+      <img matPrefix theme src="/assets/images/login/wallet.svg" alt="" />
       <mat-label>{{ "enterWalletName" | translate | async }}</mat-label>
       <input matInput required formControlName="name" type="text" />
       <mat-error *ngIf="createForm.get('name').errors?.required"
@@ -19,7 +19,7 @@
       appearance="fill"
       focused="true"
     >
-      <img matPrefix src="/assets/images/login/lock.svg" alt="" />
+      <img matPrefix theme src="/assets/images/login/lock.svg" alt="" />
       <mat-label>{{ "enterPassword" | translate | async }}</mat-label>
       <input
         matInput
@@ -31,11 +31,17 @@
         class="suffix"
         (click)="hidePwd = !hidePwd"
         matSuffix
-        [src]="
-          hidePwd
-            ? 'assets/images/login/eye-hide.svg'
-            : 'assets/images/login/eye-view.svg'
-        "
+        theme
+        *ngIf="hidePwd"
+        src="assets/images/login/eye-hide.svg"
+      />
+      <img
+        class="suffix"
+        (click)="hidePwd = !hidePwd"
+        matSuffix
+        theme
+        *ngIf="!hidePwd"
+        src="assets/images/login/eye-view.svg"
       />
       <mat-error *ngIf="createForm.get('password').errors?.required"
         >{{ "passwordRequired" | translate | async }}
@@ -51,7 +57,7 @@
       appearance="fill"
       focused="true"
     >
-      <img matPrefix src="/assets/images/login/lock.svg" />
+      <img matPrefix theme src="/assets/images/login/lock.svg" />
       <mat-label>{{ "enterConfirmPassword" | translate | async }}</mat-label>
       <input
         matInput
@@ -67,11 +73,17 @@
         class="suffix"
         (click)="hideConfirmPwd = !hideConfirmPwd"
         matSuffix
-        [src]="
-          hideConfirmPwd
-            ? 'assets/images/login/eye-hide.svg'
-            : 'assets/images/login/eye-view.svg'
-        "
+        theme
+        *ngIf="hideConfirmPwd"
+        src="assets/images/login/eye-hide.svg"
+      />
+      <img
+        class="suffix"
+        (click)="hideConfirmPwd = !hideConfirmPwd"
+        matSuffix
+        theme
+        *ngIf="!hideConfirmPwd"
+        src="assets/images/login/eye-view.svg"
       />
       <mat-error *ngIf="createForm.hasError('notSame')">
         {{ "confirmError" | translate | async }}

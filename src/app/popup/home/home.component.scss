@@ -20,7 +20,7 @@
       .name {
         font-family: NeverMind-Medium;
         font-size: 18px;
-        color: #3d3d3d;
+        color: var(--important-title-color);
         max-width: 200px;
         overflow: hidden;
         text-overflow: ellipsis;
@@ -38,6 +38,9 @@
         cursor: pointer;
         &:hover {
           background: var(--hover-color);
+          :host-context([data-theme-style="dark-theme"]) & {
+            background: #43464d;
+          }
         }
         img.usb {
           width: 15px;
@@ -76,6 +79,9 @@
       background: #fafafa;
       display: flex;
       align-items: center;
+      :host-context([data-theme-style="dark-theme"]) & {
+        background: #43464d;
+      }
       .gas-logo-box {
         width: 36px;
         height: 36px;
@@ -108,7 +114,7 @@
         width: 67px;
         height: 36px;
         border-radius: 18px;
-        background: #ffffff;
+        background: var(--body-background-color);
         font-family: NeverMind-Regular;
         font-size: 14px;
         color: var(--theme-color);
@@ -138,7 +144,7 @@
         border-radius: 50%;
         background: var(--theme-color);
         &:hover {
-          box-shadow: 0px 5px 10px -2px rgba(6, 204, 171, 0.5);
+          box-shadow: var(--asset-add-box-shadow);
         }
       }
     }

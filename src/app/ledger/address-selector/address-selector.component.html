@@ -3,7 +3,7 @@
     <p>{{ "ImportLedgerWallet" | translate | async }}</p>
   </div>
   <div class="content loading" *ngIf="!isReady">
-    <img src="/assets/images/ledger/loading.gif" alt="" />
+    <img theme src="/assets/images/ledger/loading.gif" alt="" />
     <p class="tip" *ngIf="chainType === 'Neo2'">
       {{ status.msg | translate | async }}
     </p>
@@ -28,10 +28,10 @@
           [ngClass]="{ disabled: accountPage === 1 }"
           (click)="prePage()"
         >
-          <img src="/assets/images/ledger/arrow-left.svg" alt="" />
+          <img theme src="/assets/images/ledger/arrow-left.svg" alt="" />
         </span>
         <span class="next" (click)="nextPage()">
-          <img src="/assets/images/ledger/arrow-left.svg" alt="" />
+          <img theme src="/assets/images/ledger/arrow-left.svg" alt="" />
         </span>
       </div>
     </div>
@@ -49,7 +49,7 @@
       >
         {{ item?.address.slice(0, 8) + "..." + item?.address.slice(-8) }}
         <span>
-          <img src="/assets/images/dialog/selected.png" alt="" />
+          <img theme src="/assets/images/dialog/selected.png" alt="" />
           {{ "Imported" | translate | async }}
         </span>
       </li>

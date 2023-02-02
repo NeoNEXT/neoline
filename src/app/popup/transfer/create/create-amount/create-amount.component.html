@@ -21,7 +21,12 @@
             <!-- {{ transferAsset?.symbol || "NEO" }} -->
           </p>
         </div>
-        <img class="arrow-down" src="assets/images/common/arrow.svg" alt="" />
+        <img
+          class="arrow-down"
+          theme
+          src="assets/images/common/arrow.svg"
+          alt=""
+        />
       </div>
       <div class="value" *ngIf="nftContract" (click)="selectAsset(true)">
         <div class="asset-logo-box small">
@@ -35,7 +40,12 @@
             {{ transferNFT?.name || transferNFT?.tokenid }}
           </p>
         </div>
-        <img class="arrow-down" src="assets/images/common/arrow.svg" alt="" />
+        <img
+          class="arrow-down"
+          theme
+          src="assets/images/common/arrow.svg"
+          alt=""
+        />
       </div>
     </div>
     <div class="item amount" *ngIf="!nftContract">
@@ -60,7 +70,7 @@
           <p class="fee-desc">{{ getPriorityFeeDesc() | translate | async }}</p>
           <p class="fee">{{ priorityFee | numberFixed }} GAS</p>
         </div>
-        <img src="assets/images/common/arrow.svg" alt="" />
+        <img theme src="assets/images/common/arrow.svg" alt="" />
       </div>
     </div>
     <div class="btn-group">

@@ -6,8 +6,8 @@
   right: 16px;
   width: 343px;
   border-radius: 4px;
-  background: #ffffff;
-  box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.16);
+  background: var(--body-background-color);
+  box-shadow: var(--popups-box-shadow);
   z-index: 999999;
   .my-account {
     height: 48px;
@@ -128,7 +128,7 @@
       height: 48px;
       font-family: NeverMind-Medium;
       font-size: 16px;
-      color: #3d3d3d;
+      color: var(--important-title-color);
       padding: 0 16px;
       cursor: pointer;
       img {

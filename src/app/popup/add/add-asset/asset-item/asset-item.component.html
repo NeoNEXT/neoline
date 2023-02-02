@@ -11,13 +11,13 @@
     <p class="asset-id">{{ asset?.asset_id }}</p>
   </div>
   <button class="added" *ngIf="asset.watching || fixed()" disabled>
-    <img src="assets/images/common/selected.svg" alt="" />
+    <img theme src="assets/images/common/selected.svg" alt="" />
   </button>
   <button
     class="unadd"
     *ngIf="!asset.watching && !fixed()"
     (click)="addAsset()"
   >
-    <img src="assets/images/asset/plus.svg" alt="" />
+    <img theme src="assets/images/asset/plus.svg" alt="" />
   </button>
 </div>

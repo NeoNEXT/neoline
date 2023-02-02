@@ -3,12 +3,13 @@
   <img
     class="close"
     [mat-dialog-close]="false"
+    theme
     src="assets/images/common/close.svg"
     alt=""
   />
 </div>
 <div class="search-box">
-  <img src="/assets/images/common/search.svg" alt="" />
+  <img theme src="/assets/images/common/search.svg" alt="" />
   <input type="text" [(ngModel)]="searchValue" (input)="search()" />
 </div>
 
@@ -30,6 +31,7 @@
       </div>
       <img
         class="selected"
+        theme
         src="/assets/images/common/selected.svg"
         alt=""
         [hidden]="item.asset_id !== data.selectedId"
@@ -49,6 +51,7 @@
       </div>
       <img
         class="selected"
+        theme
         src="/assets/images/common/selected.svg"
         alt=""
         [hidden]="item.tokenid !== data.selectedId"

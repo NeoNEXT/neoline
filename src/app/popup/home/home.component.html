@@ -16,16 +16,18 @@
           <img
             class="usb"
             *ngIf="currentWallet.accounts[0]?.extra?.ledgerSLIP44"
+            theme
             src="/assets/images/ledger/usb.svg"
             alt=""
           />
           <span>{{ address | longStr }}</span>
-          <img class="copy" src="assets/images/common/copy.svg" alt="" />
+          <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
         </p>
       </copy>
     </div>
     <img
       class="menu"
+      theme
       src="/assets/images/common/menu.svg"
       (click)="showMenu = !showMenu"
       alt=""
@@ -37,17 +39,19 @@
     ></section>
     <ul class="pop-ups-menu" *ngIf="showMenu">
       <li routerLink="/popup/account">
-        <img src="assets/images/account/home-account-detail.svg" alt="" />{{
-          "accountDetails" | translate | async
-        }}
+        <img
+          theme
+          src="assets/images/account/home-account-detail.svg"
+          alt=""
+        />{{ "accountDetails" | translate | async }}
       </li>
       <li (click)="toWeb()">
-        <img src="assets/images/account/home-explorer.svg" alt="" />{{
+        <img theme src="assets/images/account/home-explorer.svg" alt="" />{{
           "viewOnNeoTube" | translate | async
         }}
       </li>
       <li (click)="removeAccount()">
-        <img src="assets/images/account/home-delete.svg" alt="" />{{
+        <img theme src="assets/images/account/home-delete.svg" alt="" />{{
           "removeAccount" | translate | async
         }}
       </li>
@@ -70,11 +74,11 @@
     </p>
     <div class="transaction-btn-container">
       <div class="item receive" [routerLink]="['/popup/transfer/receive']">
-        <img src="assets/images/transfer/receive.svg" alt="" />
+        <img theme src="assets/images/transfer/receive.svg" alt="" />
         {{ "receive" | translate | async }}
       </div>
       <div class="item transfer" [routerLink]="['/popup/transfer/create']">
-        <img src="assets/images/transfer/transfer.svg" alt="" />
+        <img theme src="assets/images/transfer/transfer.svg" alt="" />
         {{ "transfer" | translate | async }}
       </div>
     </div>
@@ -101,7 +105,7 @@
           }}
         </ng-container>
         <ng-container *ngIf="claimStatus == 'success' && !loading"
-          ><img src="/assets/images/common/selected.svg" alt=""
+          ><img theme src="/assets/images/common/selected.svg" alt=""
         /></ng-container>
         <mat-spinner
           *ngIf="loading"
@@ -127,6 +131,7 @@
       <img
         (click)="toAdd()"
         class="asset-add"
+        theme
         src="/assets/images/asset/add.svg"
         routerLink="/popup/add-asset"
         alt=""

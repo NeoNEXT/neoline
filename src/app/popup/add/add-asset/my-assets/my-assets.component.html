@@ -17,6 +17,7 @@
         <img
           class="add"
           *ngIf="asset?.watching === false"
+          theme
           src="/assets/images/asset/add.svg"
           alt=""
           (click)="addAsset(index)"
@@ -24,6 +25,7 @@
         <img
           class="delete"
           *ngIf="asset?.watching !== false"
+          theme
           src="/assets/images/asset/remove.svg"
           alt=""
           (click)="removeAsset(index)"

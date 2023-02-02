@@ -15,6 +15,7 @@
         class="delete"
         *ngIf="index !== networkIndex && item.id > 6"
         (click)="$event.stopPropagation(); deleteNetwork(index)"
+        theme
         src="/assets/images/common/close.svg"
         alt=""
       />

@@ -11,9 +11,9 @@
     <p class="asset-id">{{ asset?.assethash }}</p>
   </div>
   <button class="added" *ngIf="asset.watching" disabled>
-    <img src="assets/images/common/selected.svg" alt="" />
+    <img theme src="assets/images/common/selected.svg" alt="" />
   </button>
   <button class="unadd" *ngIf="!asset.watching" (click)="addAsset()">
-    <img src="assets/images/asset/plus.svg" alt="" />
+    <img theme src="assets/images/asset/plus.svg" alt="" />
   </button>
 </div>

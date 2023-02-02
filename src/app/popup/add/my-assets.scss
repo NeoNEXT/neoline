@@ -20,7 +20,7 @@ section.container {
     img.add {
       background: var(--theme-color);
       &:hover {
-        box-shadow: 0px 5px 10px -2px rgba(6, 204, 171, 0.5);
+        box-shadow: var(--asset-add-box-shadow);
       }
     }
     img.delete {

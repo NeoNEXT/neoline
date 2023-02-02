@@ -11,6 +11,9 @@ header {
     img.logo {
       filter: drop-shadow(1000px 0 0 #fff);
       transform: translate(-1000px);
+      :host-context([data-theme-style="dark-theme"]) & {
+        filter: drop-shadow(1000px 0 0 #303433);
+      }
     }
     button.network {
       border-color: #fff;
@@ -33,6 +36,7 @@ header {
     padding: 0 10px;
     border-radius: 19px;
     border: 1px solid var(--sub-title-color);
+    color: var(--title-color);
     display: inline-flex;
     align-items: center;
     justify-content: center;

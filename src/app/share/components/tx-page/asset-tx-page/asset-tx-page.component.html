@@ -6,7 +6,7 @@
   >
     <div class="head">
       <span class="time">
-        {{ item.block_time * 1000 | date: "yyyy-MM-dd HH:mm" }}
+        {{ item.block_time * 1000 | date : "yyyy-MM-dd HH:mm" }}
       </span>
       <span class="status" *ngIf="item.id && item.id !== -1">
         {{ "confirmed" | translate | async }}
@@ -14,15 +14,24 @@
       <span class="status wait" *ngIf="item.id === -1 || item.id === undefined">
         {{ "confirming" | translate | async }}
       </span>
-      <img class="more-info-btn" src="/assets/images/common/arrow.svg" alt="" />
+      <img
+        class="more-info-btn"
+        theme
+        src="/assets/images/common/arrow.svg"
+        alt=""
+      />
     </div>
     <div class="content">
       <img
-        [src]="
-          item.type === 'received'
-            ? '/assets/images/txs/receive.svg'
-            : '/assets/images/txs/send.svg'
-        "
+        *ngIf="item.type !== 'received'"
+        theme
+        src="/assets/images/txs/send.svg"
+        alt=""
+      />
+      <img
+        *ngIf="item.type === 'received'"
+        theme
+        src="/assets/images/txs/receive.svg"
         alt=""
       />
       <p class="txid">{{ item.txid | longStr }}</p>

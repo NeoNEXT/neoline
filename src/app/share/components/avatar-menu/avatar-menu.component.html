@@ -3,20 +3,27 @@
   <div class="my-account">
     <span>{{ "myAccount" | translate | async }}</span>
     <span class="right">
-      <img (click)="lock()" src="assets/images/avatar-menu/lock.svg" alt="" />
+      <img
+        (click)="lock()"
+        theme
+        src="assets/images/avatar-menu/lock.svg"
+        alt=""
+      />
       <img
         (click)="navigate('/popup/setting')"
+        theme
         src="assets/images/avatar-menu/setting.svg"
       />
       <img
         (click)="navigate('/popup/about')"
+        theme
         src="assets/images/avatar-menu/about-us.svg"
       />
     </span>
   </div>
   <div class="account-list">
     <button class="search">
-      <img class="search" src="assets/images/common/search.svg" />
+      <img class="search" theme src="assets/images/common/search.svg" />
       <input
         [placeholder]="'Search' | translate | async"
         (input)="searchWallet($event)"
@@ -40,6 +47,7 @@
           <img
             *ngIf="item.accounts[0]?.extra?.ledgerSLIP44"
             class="usb"
+            theme
             src="/assets/images/ledger/ledger-avatar.png"
             alt=""
           />
@@ -55,22 +63,22 @@
   </div>
   <ul class="wallet">
     <li (click)="importLedger()">
-      <img src="assets/images/avatar-menu/wallet-ledger.svg" alt="" />{{
+      <img theme src="assets/images/avatar-menu/wallet-ledger.svg" alt="" />{{
         "LEDGER" | translate | async
       }}
     </li>
     <li (click)="to('create')">
-      <img src="assets/images/avatar-menu/wallet-create.svg" alt="" />{{
+      <img theme src="assets/images/avatar-menu/wallet-create.svg" alt="" />{{
         "createWallet" | translate | async
       }}
     </li>
     <li (click)="to('import')">
-      <img src="assets/images/avatar-menu/wallet-import.svg" alt="" />{{
+      <img theme src="assets/images/avatar-menu/wallet-import.svg" alt="" />{{
         "importWallet" | translate | async
       }}
     </li>
     <li (click)="exportWallet()">
-      <img src="assets/images/avatar-menu/wallet-export.svg" alt="" />{{
+      <img theme src="assets/images/avatar-menu/wallet-export.svg" alt="" />{{
         "exportWallet" | translate | async
       }}
     </li>

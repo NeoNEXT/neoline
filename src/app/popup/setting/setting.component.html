@@ -1,15 +1,15 @@
 <nav title="generalSettings"></nav>
 <ul class="content">
   <li class="hover-bg" (click)="language()">
-    <img src="assets/images/setting/language.svg" alt="" />
+    <img theme src="assets/images/setting/language.svg" alt="" />
     <div class="middle">{{ "language" | translate | async }}</div>
     <span class="right"
       >{{ lang | languageName
-      }}<img src="assets/images/common/arrow.svg" alt=""
+      }}<img theme src="assets/images/common/arrow.svg" alt=""
     /></span>
   </li>
   <li>
-    <img src="assets/images/setting/clear-cache.svg" alt="" />
+    <img theme src="assets/images/setting/clear-cache.svg" alt="" />
     <div class="middle">
       <p>{{ "clearCache" | translate | async }}</p>
       <p class="tip">{{ "clearCacheTip" | translate | async }}</p>
@@ -19,7 +19,7 @@
     </button>
   </li>
   <li class="hover-bg" (click)="modifyRateCurrency()">
-    <img src="assets/images/setting/currency-unit.svg" alt="" />
+    <img theme src="assets/images/setting/currency-unit.svg" alt="" />
     <div class="middle">
       <p>{{ "currencyUnit" | translate | async }}</p>
       <p class="tip" *ngIf="rateTime">
@@ -29,19 +29,19 @@
       </p>
     </div>
     <span class="right"
-      >{{ rateCurrency }}<img src="assets/images/common/arrow.svg" alt=""
+      >{{ rateCurrency }}<img theme src="assets/images/common/arrow.svg" alt=""
     /></span>
   </li>
   <li class="hover-bg" (click)="viewAllAuth()">
-    <img src="assets/images/setting/auth-manage.svg" alt="" />
+    <img theme src="assets/images/setting/auth-manage.svg" alt="" />
     <div class="middle">
       <p>{{ "authorizationManage" | translate | async }}</p>
       <p class="tip">{{ "authorizationManageTips" | translate | async }}</p>
     </div>
-    <img src="assets/images/common/arrow.svg" alt="" />
+    <img theme src="assets/images/common/arrow.svg" alt="" />
   </li>
   <li>
-    <img src="assets/images/setting/theme.svg" alt="" />
+    <img theme src="assets/images/setting/theme.svg" alt="" />
     <div class="middle">{{ "darkMode" | translate | async }}</div>
     <div class="slide" [ngClass]="{ active: isDark }" (click)="changeTheme()">
       <span class="circle"></span>

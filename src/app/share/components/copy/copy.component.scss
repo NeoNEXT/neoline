@@ -12,8 +12,11 @@
     padding: 0 20px;
     border-radius: 4px;
     background: #ffffff;
-    box-shadow: 0px 3px 8px 0px rgba(0, 0, 0, 0.16);
+    box-shadow: var(--small-box-shadow);
     z-index: 999;
     pointer-events: none;
+    :host-context([data-theme-style="dark-theme"]) & {
+      background: #43464d;
+    }
   }
 }

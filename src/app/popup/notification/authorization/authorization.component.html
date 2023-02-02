@@ -7,6 +7,7 @@
       <img class="left avatar" [src]="iconSrc" alt="" />
       <img
         class="middle"
+        theme
         src="/assets/images/common/selected-account.svg"
         alt=""
       />
@@ -37,7 +38,7 @@
           )
             | translate
             | async
-        }}<img src="/assets/images/common/triangle-fill.svg" alt="" />
+        }}<img theme src="/assets/images/common/triangle-fill.svg" alt="" />
       </span>
       <div *ngIf="showRuleOptions" class="rule-option" (click)="changeRule()">
         {{
@@ -52,7 +53,7 @@
     </div>
   </div>
   <div class="secure">
-    <img src="/assets/images/third-party/auth-secure.svg" alt="" />
+    <img theme src="/assets/images/third-party/auth-secure.svg" alt="" />
   </div>
 </section>
 

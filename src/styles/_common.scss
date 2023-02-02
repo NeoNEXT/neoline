@@ -106,7 +106,7 @@ $network-list: (
   width: 48px;
   height: 48px;
   padding: 9px;
-  border: 1px solid var(--background-color);
+  border: 1px solid var(--border-color);
   border-radius: 50%;
   img {
     height: 30px;
@@ -116,7 +116,7 @@ $network-list: (
     width: 30px;
     height: 30px;
     padding: 4px;
-    background: #ffffff;
+    background: var(--body-background-color);
     border: none;
     img {
       width: 22px;
@@ -127,7 +127,7 @@ $network-list: (
     width: 56px;
     height: 56px;
     padding: 12px;
-    background: #ffffff;
+    background: var(--body-background-color);
     border: none;
     img {
       width: 32px;

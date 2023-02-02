@@ -1,6 +1,6 @@
 <section class="login">
   <div class="welcome">
-    <img class="neo-logo" src="assets/images/login/neo-bg.png" alt="" />
+    <img class="neo-logo" theme src="assets/images/login/neo-bg.png" alt="" />
     <p class="title">WELCOME TO</p>
     <p class="title">NeoLine!</p>
   </div>
@@ -14,11 +14,16 @@
           {{ selectWallet.accounts[0].address | longStr : 14 }}
         </p>
       </div>
-      <img class="arrow" src="assets/images/common/arrow.svg" alt="" />
+      <img class="arrow" theme src="assets/images/common/arrow.svg" alt="" />
     </div>
     <form [formGroup]="loginForm" [hidden]="checkIsLedger(selectWallet)">
       <mat-form-field class="popup-login-input" appearance="fill">
-        <img class="prefix" matPrefix src="/assets/images/login/lock.svg" />
+        <img
+          class="prefix"
+          matPrefix
+          theme
+          src="/assets/images/login/lock.svg"
+        />
         <mat-label>{{ "pwdInput" | translate | async }}</mat-label>
         <input
           matInput
@@ -31,11 +36,17 @@
           class="suffix"
           (click)="hidePwd = !hidePwd"
           matSuffix
-          [src]="
-            hidePwd
-              ? 'assets/images/login/eye-hide.svg'
-              : 'assets/images/login/eye-view.svg'
-          "
+          theme
+          *ngIf="hidePwd"
+          src="assets/images/login/eye-hide.svg"
+        />
+        <img
+          class="suffix"
+          (click)="hidePwd = !hidePwd"
+          matSuffix
+          theme
+          *ngIf="!hidePwd"
+          src="assets/images/login/eye-view.svg"
         />
         <mat-error *ngIf="loginForm.get('password').errors?.required">
           {{ "passwordRequired" | translate | async }}

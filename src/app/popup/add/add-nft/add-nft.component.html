@@ -3,6 +3,7 @@
   <img
     class="my-asset"
     routerLink="/popup/my-nfts"
+    theme
     src="assets/images/asset/my-asset.svg"
     alt=""
   />
@@ -10,6 +11,7 @@
     <button class="search">
       <img
         class="search"
+        theme
         src="assets/images/common/search.svg"
         (click)="searchCurrency()"
       />
@@ -23,6 +25,7 @@
       <img
         (click)="searchValue = ''"
         *ngIf="searchValue"
+        theme
         src="/assets/images/common/close.svg"
         class="clear"
         alt=""

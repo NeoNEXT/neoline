@@ -1,7 +1,7 @@
 <section class="container">
   <div class="header">
     <button class="address search" *ngIf="!transferTo?.address">
-      <img src="/assets/images/common/search.svg" alt="" />
+      <img theme src="/assets/images/common/search.svg" alt="" />
       <input
         class="flex-1"
         [placeholder]="getInputAddressTip() | translate | async"
@@ -12,6 +12,7 @@
     <button class="address selected" *ngIf="transferTo?.address">
       <img
         class="left"
+        theme
         src="/assets/images/common/selected-account.svg"
         alt=""
       />
@@ -22,6 +23,7 @@
       <img
         (click)="clearAccount()"
         class="close"
+        theme
         src="/assets/images/common/close.svg"
         alt=""
       />

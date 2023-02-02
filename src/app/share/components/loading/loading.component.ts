@@ -4,6 +4,7 @@ import { Component, Input } from '@angular/core';
   selector: 'loading',
   template: `<img
     [ngClass]="{ 'theme-color': color === 'theme' }"
+    theme
     src="assets/images/common/loading.svg"
     alt=""
   /> `,

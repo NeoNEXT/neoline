@@ -18,7 +18,7 @@
         <img class="avatar" [avatar]="fromAddress" />
         <span>{{ fromAddress | longStr : 4 }}</span>
       </div>
-      <img src="assets/images/third-party/transfer-arrow.svg" alt="" />
+      <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
       <div class="item">
         <img class="avatar" [avatar]="toAddress" />
         <span>{{ toAddress | longStr : 4 }}</span>
@@ -43,6 +43,7 @@
           >GAS FEE<img
             class="edit"
             (click)="editFee()"
+            theme
             src="assets/images/common/edit.svg"
         /></span>
         <span class="value">{{ fee }} GAS</span>

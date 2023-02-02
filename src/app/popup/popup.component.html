@@ -1,8 +1,8 @@
 <header [ngClass]="{ 'theme-bg': headerIsThemeBg }">
-  <img src="assets/images/logo-word.svg" class="logo" alt="" />
+  <img theme src="assets/images/logo-word.svg" class="logo" alt="" />
   <button class="network" (click)="showNetworkList = true">
     {{ networks[networkIndex]?.name }}
-    <img src="assets/images/common/triangle-fill.svg" />
+    <img theme src="assets/images/common/triangle-fill.svg" />
   </button>
   <div
     [hidden]="isThirdParty"

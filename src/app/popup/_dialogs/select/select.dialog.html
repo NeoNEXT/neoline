@@ -5,6 +5,7 @@
       <span>{{item.name | languageName}}</span>
       <img
         class="selected"
+        theme
         src="/assets/images/common/selected.svg"
         *ngIf="data.currentOption === item.type"
         alt=""
@@ -14,6 +15,7 @@
       <span>{{item.name}}</span>
       <img
         class="selected"
+        theme
         src="/assets/images/common/selected.svg"
         *ngIf="data.currentOption === item.type"
         alt=""
@@ -21,7 +23,7 @@
     </ng-container>
     <ng-container *ngIf="data.type==='chain'">
       <span>{{item.name}}</span>
-      <img src="/assets/images/common/arrow.svg" alt="" />
+      <img theme src="/assets/images/common/arrow.svg" alt="" />
     </ng-container>
   </li>
 </ul>

@@ -3,6 +3,7 @@
   <img
     class="close"
     [mat-dialog-close]="false"
+    theme
     src="assets/images/common/close.svg"
     alt=""
   />
@@ -43,6 +44,7 @@
     <span (click)="showCustom = !showCustom"
       >{{ 'customize' | translate | async }}<img
         [ngClass]="{'active': showCustom}"
+        theme
         src="/assets/images/common/arrow.svg"
         alt=""
     /></span>

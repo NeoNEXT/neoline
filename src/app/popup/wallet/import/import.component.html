@@ -13,7 +13,7 @@
             | async
         }}
       </p>
-      <img src="assets/images/common/triangle-fill.svg" alt="" />
+      <img theme src="assets/images/common/triangle-fill.svg" alt="" />
     </div>
     <section
       class="pop-ups-veil"
@@ -35,7 +35,7 @@
   </div>
   <form [hidden]="importType !== 'key'" [formGroup]="importForm">
     <mat-form-field class="form-field" appearance="fill">
-      <img matPrefix src="/assets/images/login/wallet.svg" alt="" />
+      <img matPrefix theme src="/assets/images/login/wallet.svg" alt="" />
       <mat-label>{{ "enterWalletName" | translate | async }}</mat-label>
       <input matInput required formControlName="name" />
       <mat-error *ngIf="importForm.get('name').errors?.required">
@@ -47,7 +47,7 @@
       </mat-error>
     </mat-form-field>
     <mat-form-field class="form-field" appearance="fill">
-      <img matPrefix src="/assets/images/login/key.svg" alt="" />
+      <img matPrefix theme src="/assets/images/login/key.svg" alt="" />
       <mat-label>{{ "enterWIF" | translate | async }}</mat-label>
       <input
         matInput
@@ -62,11 +62,17 @@
         class="suffix"
         (click)="hideWIF = !hideWIF"
         matSuffix
-        [src]="
-          hideWIF
-            ? 'assets/images/login/eye-hide.svg'
-            : 'assets/images/login/eye-view.svg'
-        "
+        theme
+        *ngIf="hideWIF"
+        src="assets/images/login/eye-hide.svg"
+      />
+      <img
+        class="suffix"
+        (click)="hideWIF = !hideWIF"
+        matSuffix
+        theme
+        *ngIf="!hideWIF"
+        src="assets/images/login/eye-view.svg"
       />
       <mat-error *ngIf="importForm.get('WIF').errors?.required">
         {{ "WIFRequired" | translate | async }}
@@ -81,7 +87,7 @@
       appearance="fill"
       focused="true"
     >
-      <img matPrefix src="/assets/images/login/lock.svg" alt="" />
+      <img matPrefix theme src="/assets/images/login/lock.svg" alt="" />
       <mat-label>{{ "enterPassword" | translate | async }}</mat-label>
       <input
         matInput
@@ -93,11 +99,17 @@
         class="suffix"
         (click)="hideImportPwd = !hideImportPwd"
         matSuffix
-        [src]="
-          hideImportPwd
-            ? 'assets/images/login/eye-hide.svg'
-            : 'assets/images/login/eye-view.svg'
-        "
+        theme
+        *ngIf="hideImportPwd"
+        src="assets/images/login/eye-hide.svg"
+      />
+      <img
+        class="suffix"
+        (click)="hideImportPwd = !hideImportPwd"
+        matSuffix
+        theme
+        *ngIf="!hideImportPwd"
+        src="assets/images/login/eye-view.svg"
       />
       <mat-error *ngIf="importForm.get('password').errors?.required">
         {{ "passwordRequired" | translate | async }}
@@ -113,7 +125,7 @@
       appearance="fill"
       focused="true"
     >
-      <img matPrefix src="/assets/images/login/lock.svg" />
+      <img matPrefix theme src="/assets/images/login/lock.svg" />
       <mat-label>{{ "enterConfirmPassword" | translate | async }}</mat-label>
       <input
         matInput
@@ -126,11 +138,17 @@
         class="suffix"
         (click)="hideConfirmPwd = !hideConfirmPwd"
         matSuffix
-        [src]="
-          hideConfirmPwd
-            ? 'assets/images/login/eye-hide.svg'
-            : 'assets/images/login/eye-view.svg'
-        "
+        theme
+        *ngIf="hideConfirmPwd"
+        src="assets/images/login/eye-hide.svg"
+      />
+      <img
+        class="suffix"
+        (click)="hideConfirmPwd = !hideConfirmPwd"
+        matSuffix
+        theme
+        *ngIf="!hideConfirmPwd"
+        src="assets/images/login/eye-view.svg"
       />
       <mat-error *ngIf="importForm.hasError('notSame')">
         {{ "confirmError" | translate | async }}
@@ -145,7 +163,7 @@
     <p class="name">{{ nep6Form.value.name }}</p>
     <form [formGroup]="nep6Form">
       <mat-form-field class="form-field" appearance="fill" focused="true">
-        <img matPrefix src="/assets/images/login/lock.svg" alt="" />
+        <img matPrefix theme src="/assets/images/login/lock.svg" alt="" />
         <mat-label>{{ "enterPassword" | translate | async }}</mat-label>
         <input
           matInput
@@ -157,11 +175,17 @@
           class="suffix"
           (click)="hideNep6Pwd = !hideNep6Pwd"
           matSuffix
-          [src]="
-            hideNep6Pwd
-              ? 'assets/images/login/eye-hide.svg'
-              : 'assets/images/login/eye-view.svg'
-          "
+          theme
+          *ngIf="hideNep6Pwd"
+          src="assets/images/login/eye-hide.svg"
+        />
+        <img
+          class="suffix"
+          (click)="hideNep6Pwd = !hideNep6Pwd"
+          matSuffix
+          theme
+          *ngIf="!hideNep6Pwd"
+          src="assets/images/login/eye-view.svg"
         />
         <mat-error *ngIf="nep6Form.get('password').errors?.required">
           {{ "passwordRequired" | translate | async }}

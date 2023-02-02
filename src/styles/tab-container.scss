@@ -1,7 +1,7 @@
 @import './popup-default';
 
 .tabs-container {
-  background: #fff;
+  background: var(--body-background-color);
   display: flex;
   align-items: center;
   position: sticky;

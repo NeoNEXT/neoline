@@ -67,7 +67,13 @@ const PIPES = [
 import { AvatarDirective } from './directives/avatar';
 import { AssetLogoDirective } from './directives/asset-logo';
 import { ErrSrcDirective } from './directives/err-src.directive';
-const DIRECTIVE = [AvatarDirective, AssetLogoDirective, ErrSrcDirective];
+import { ImgThemeDirective } from './directives/img-theme';
+const DIRECTIVE = [
+  AvatarDirective,
+  AssetLogoDirective,
+  ErrSrcDirective,
+  ImgThemeDirective,
+];
 //#endregion
 
 @NgModule({

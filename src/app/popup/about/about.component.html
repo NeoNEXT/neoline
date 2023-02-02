@@ -2,7 +2,7 @@
 
 <div class="message">
   <img class="logo" src="/assets/logo128.png" alt="" />
-  <img class="logo-word" src="/assets/images/logo-word.svg" alt="" />
+  <img class="logo-word" theme src="/assets/images/logo-word.svg" alt="" />
   <p class="version">{{ "version" | translate | async }}: {{ version }}</p>
 </div>
 
@@ -13,6 +13,6 @@
     class="item"
   >
     <span>{{ item.name | translate | async }}</span>
-    <img src="/assets/images/common/arrow.svg" alt="" />
+    <img theme src="/assets/images/common/arrow.svg" alt="" />
   </li>
 </ul>

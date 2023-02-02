@@ -4,6 +4,7 @@
       <img
         class="back"
         routerLink="/popup/home"
+        theme
         src="/assets/images/common/nav-arrow.svg"
       />
       <div class="asset-logo-box big">
@@ -21,7 +22,7 @@
       ></section>
       <ul class="pop-ups-menu" *ngIf="showMenu">
         <li (click)="toWeb()">
-          <img src="assets/images/account/home-explorer.svg" alt="" />{{
+          <img theme src="assets/images/account/home-explorer.svg" alt="" />{{
             "viewOnNeoTube" | translate | async
           }}
         </li>
@@ -32,14 +33,14 @@
     </p>
     <div class="transaction-btn-container">
       <div class="item receive" [routerLink]="['/popup/transfer/receive']">
-        <img src="assets/images/transfer/receive.svg" alt="" />
+        <img theme src="assets/images/transfer/receive.svg" alt="" />
         {{ "receive" | translate | async }}
       </div>
       <div
         class="item transfer"
         [routerLink]="['/popup/transfer/create/nft/' + nftContract]"
       >
-        <img src="assets/images/transfer/transfer.svg" alt="" />
+        <img theme src="assets/images/transfer/transfer.svg" alt="" />
         {{ "transfer" | translate | async }}
       </div>
     </div>

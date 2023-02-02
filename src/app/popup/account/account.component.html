@@ -4,6 +4,7 @@
   <img
     class="qrcode"
     (click)="qrcode()"
+    theme
     src="/assets/images/account/detail-qr-code.svg"
     alt=""
   />
@@ -11,7 +12,7 @@
   <div class="name-content">
     <div class="name" *ngIf="showEditName === false">
       <span>{{ currentWallet.name }}</span
-      ><img (click)="editName()" src="assets/images/common/edit.svg" />
+      ><img (click)="editName()" theme src="assets/images/common/edit.svg" />
     </div>
     <div class="edit" *ngIf="showEditName">
       <input
@@ -21,7 +22,11 @@
         [ngClass]="{ warn: inputName.trim() === '' }"
         (keyup.enter)="updateName()"
       />
-      <img (click)="updateName()" src="assets/images/common/selected.svg" />
+      <img
+        (click)="updateName()"
+        theme
+        src="assets/images/common/selected.svg"
+      />
     </div>
   </div>
 
@@ -29,7 +34,7 @@
   <copy [value]="address">
     <div class="value">
       <span>{{ address }}</span
-      ><img src="assets/images/common/copy.svg" />
+      ><img theme src="assets/images/common/copy.svg" />
     </div>
   </copy>
 
@@ -37,7 +42,7 @@
   <copy [value]="publicKey">
     <div class="value">
       <span>{{ publicKey }}</span
-      ><img src="assets/images/common/copy.svg" />
+      ><img theme src="assets/images/common/copy.svg" />
     </div>
   </copy>
 
