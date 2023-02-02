@@ -8,7 +8,7 @@
 section.container {
   height: 100%;
   .asset-detail {
-    background: #e7efef;
+    background: var(--background-color);
     padding-bottom: 16px;
     padding-top: 5px;
     position: relative;
@@ -44,7 +44,7 @@ section.container {
     .address-group {
       margin-top: 24px;
       padding: 0 20px;
-      color: #3d3d3d;
+      color: var(--important-title-color);
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -111,7 +111,7 @@ section.container {
     }
     .json-box {
       border-radius: 4px;
-      background: var(--box-color);
+      background: var(--message-box-color);
       line-height: 20px;
       margin-top: 8px;
       padding: 12px 16px;

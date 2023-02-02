@@ -28,7 +28,7 @@
       }
       .address-group {
         margin-top: 24px;
-        color: #3d3d3d;
+        color: var(--important-title-color);
         display: flex;
         align-items: center;
         justify-content: space-between;
@@ -50,7 +50,7 @@
       border-radius: 4px;
       border: 0.5px solid #303433;
       font-family: NeverMind-Regular;
-      color: #3d3d3d;
+      color: var(--important-title-color);
     }
     .title {
       color: var(--sub-title-color);

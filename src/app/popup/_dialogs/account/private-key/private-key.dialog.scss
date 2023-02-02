@@ -1,5 +1,3 @@
-
-
 section.container {
   position: relative;
   img.close {
@@ -33,7 +31,7 @@ section.container {
       height: 42px;
       line-height: 42px;
       border-radius: 4px;
-      background: var(--box-color);
+      background: var(--message-box-color);
       margin-top: 12px;
       font-family: NeverMind-Regular;
       font-size: 12px;
@@ -69,7 +67,7 @@ section.container {
       .wif {
         padding: 14px 36px;
         border-radius: 4px;
-        background: var(--box-color);
+        background: var(--message-box-color);
         margin-top: 12px;
         text-align: center;
         font-size: 14px;

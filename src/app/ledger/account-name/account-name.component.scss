@@ -5,12 +5,12 @@ section.main {
     height: 84px;
     line-height: 84px;
     font-size: 20px;
-    color: #ffffff;
+    color: var(--btn-title-color);
     padding-left: 24px;
   }
   .content {
     min-height: 516px;
-    background: #ffffff;
+    background: var(--body-background-color);
     font-weight: 400;
     padding: 24px;
     position: relative;
@@ -31,6 +31,7 @@ section.main {
       border: none;
       margin-top: 12px;
       padding: 0 16px;
+      color: var(--title-color);
     }
     button {
       width: calc(100% - 48px);

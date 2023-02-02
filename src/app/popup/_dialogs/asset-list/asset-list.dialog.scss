@@ -12,6 +12,7 @@
   input {
     padding-left: 12px;
     flex: 1;
+    color: var(--title-color);
   }
 }
 
@@ -27,6 +28,7 @@
     display: flex;
     align-items: center;
     padding: 0 24px;
+    color: var(--title-color);
     cursor: pointer;
     &:hover {
       background: var(--hover-color);

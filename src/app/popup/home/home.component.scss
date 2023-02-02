@@ -38,9 +38,6 @@
         cursor: pointer;
         &:hover {
           background: var(--hover-color);
-          :host-context([data-theme-style="dark-theme"]) & {
-            background: #43464d;
-          }
         }
         img.usb {
           width: 15px;
@@ -76,12 +73,9 @@
       margin: 24px;
       padding: 0 6px;
       border-radius: 24px;
-      background: #fafafa;
+      background: var(--message-box-color);
       display: flex;
       align-items: center;
-      :host-context([data-theme-style="dark-theme"]) & {
-        background: #43464d;
-      }
       .gas-logo-box {
         width: 36px;
         height: 36px;

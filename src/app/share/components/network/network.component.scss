@@ -7,7 +7,7 @@
   width: 343px;
   z-index: 999999;
   border-radius: 4px;
-  background: #ffffff;
+  background: var(--body-background-color);
   box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.16);
   .title {
     height: 48px;

@@ -6,7 +6,7 @@ section.container {
   height: 100%;
   overflow-y: scroll;
   .asset-detail {
-    background: #e7efef;
+    background: var(--background-color);
     padding-bottom: 24px;
     .top {
       display: flex;

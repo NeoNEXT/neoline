@@ -2,6 +2,7 @@
 
 section.main {
   overflow: hidden;
+  position: relative;
   .header {
     height: 132px;
     position: relative;
@@ -11,7 +12,7 @@ section.main {
       left: 24px;
       bottom: 32px;
       font-size: 20px;
-      color: #fff;
+      color: var(--btn-title-color);
     }
     img.logo {
       position: absolute;
@@ -20,25 +21,22 @@ section.main {
       width: 107px;
     }
   }
+  .bg {
+    position: absolute;
+    left: -10px;
+    top: 114px;
+    width: 100%;
+    height: 100px;
+    transform: rotate(-7deg);
+    border-radius: 40px;
+    opacity: 0.48;
+    background: #ffffff;
+  }
   .content {
     height: 468px;
-    background: #ffffff;
+    background: var(--body-background-color);
     padding: 24px;
     position: relative;
-    z-index: 1;
-    &::before {
-      content: "";
-      position: absolute;
-      left: -10px;
-      top: -18px;
-      width: 100%;
-      height: 100px;
-      transform: rotate(-7deg);
-      border-radius: 40px;
-      opacity: 0.48;
-      background: #ffffff;
-      z-index: -1;
-    }
     .title {
       color: var(--sub-title-color);
     }
@@ -49,7 +47,7 @@ section.main {
         width: 48%;
         height: 90px;
         line-height: 90px;
-        background: var(--box-color);
+        background: var(--message-box-color);
         border-radius: 10px;
         border: 1px solid var(--line-color);
         font-size: 16px;

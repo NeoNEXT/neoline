@@ -1,5 +1,3 @@
-
-
 header {
   height: 74px;
   display: flex;
@@ -19,9 +17,16 @@ header {
       border-color: #fff;
       color: #fff;
       pointer-events: none;
+      :host-context([data-theme-style="dark-theme"]) & {
+        border-color: #303433;
+        color: #303433;
+      }
       img {
         filter: drop-shadow(1000px 0 0 #fff);
         transform: translate(-1000px);
+        :host-context([data-theme-style="dark-theme"]) & {
+          filter: drop-shadow(1000px 0 0 #303433);
+        }
       }
     }
   }

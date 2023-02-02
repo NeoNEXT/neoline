@@ -3,7 +3,7 @@
 section.container {
   height: 100%;
   .tab {
-    background: #e7efef;
+    background: var(--background-color);
     span {
       display: inline-block;
       width: 50%;

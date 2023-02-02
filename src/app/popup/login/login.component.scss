@@ -1,4 +1,3 @@
-
 @import "src/styles/mat";
 
 section {
@@ -22,27 +21,27 @@ section {
       line-height: 44px;
       text-align: center;
       color: #fcfdff;
+      :host-context([data-theme-style="dark-theme"]) & {
+        color: #303334;
+      }
     }
+  }
+  .bg {
+    position: absolute;
+    left: -10px;
+    top: 221px;
+    width: 100%;
+    height: 100px;
+    transform: rotate(-7deg);
+    border-radius: 40px;
+    opacity: 0.48;
+    background: #fff;
   }
   .wallet-list {
     height: calc(100% - 239px);
-    background: #fff;
+    background: var(--body-background-color);
     padding: 24px;
     position: relative;
-    z-index: 1;
-    &::before {
-      content: "";
-      position: absolute;
-      left: -10px;
-      top: -18px;
-      width: 100%;
-      height: 100px;
-      transform: rotate(-7deg);
-      border-radius: 40px;
-      opacity: 0.48;
-      background: #ffffff;
-      z-index: -1;
-    }
     .title {
       font-family: NeverMind-Medium;
       font-size: 16px;
@@ -51,17 +50,16 @@ section {
     .wallet {
       height: 70px;
       border-radius: 4px;
-      background: #fafafa;
+      background: var(--message-box-color);
       margin-top: 20px;
       padding: 16px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border: 1.5px solid #fafafa;
+      border: 1.5px solid var(--message-box-color);
       cursor: pointer;
       overflow: hidden;
       &:hover {
-        background: #f8fbf9;
         border-color: var(--theme-color);
         img.arrow {
           transform: rotate(270deg) translate(-1000px);
@@ -91,7 +89,7 @@ section {
       img.arrow {
         filter: drop-shadow(1000px 0 0 var(--theme-color));
         transform: rotate(90deg) translate(-1000px);
-        transition: all .3s;
+        transition: all 0.3s;
       }
     }
     .popup-login-input {

@@ -10,14 +10,18 @@
   ul {
     height: 400px;
     overflow-y: scroll;
-    padding: 24px;
+    padding-top: 10px;
     &::-webkit-scrollbar {
       display: block;
     }
     li {
       display: flex;
       align-items: center;
-      margin-top: 30px;
+      padding: 15px 24px;
+      cursor: pointer;
+      &:hover {
+        background: var(--hover-color);
+      }
       &:first-child {
         margin-top: 0;
       }

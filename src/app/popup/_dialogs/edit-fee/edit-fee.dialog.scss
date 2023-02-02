@@ -2,6 +2,7 @@
 
 .content {
   padding: 32px 24px 24px;
+  color: var(--title-color);
   .value {
     font-size: 18px;
   }
@@ -102,6 +103,7 @@
       border-radius: 4px;
       background: var(--box-color);
       font-size: 18px;
+      color: var(--title-color);
     }
   }
   button.confirm {

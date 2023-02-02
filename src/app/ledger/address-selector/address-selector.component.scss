@@ -5,12 +5,12 @@ section.main {
     height: 84px;
     line-height: 84px;
     font-size: 20px;
-    color: #ffffff;
+    color: var(--btn-title-color);
     padding-left: 24px;
   }
   .content {
     min-height: 516px;
-    background: #ffffff;
+    background: var(--body-background-color);
     &.loading {
       padding: 0 40px;
       padding-top: 140px;
@@ -97,7 +97,7 @@ section.main {
           align-items: center;
           justify-content: space-between;
           padding: 0 10px;
-          border-bottom: 1px solid #efefef;
+          border-bottom: 1px solid var(--border-color);
           cursor: pointer;
           span {
             display: none;
@@ -120,7 +120,7 @@ section.main {
       }
       .line {
         height: 6px;
-        background: #f8f8f8;
+        background: var(--border-color);
       }
       .bottom {
         padding: 24px;
@@ -131,7 +131,7 @@ section.main {
           .middle {
             margin-top: 16px;
             height: 140px;
-            background: var(--box-color);
+            background: var(--message-box-color);
             border-radius: 10px;
             padding: 15px 12px;
             font-size: 14px;

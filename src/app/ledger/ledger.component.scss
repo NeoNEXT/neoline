@@ -5,6 +5,9 @@ section.main {
   height: 100vh;
   background: #ebf2f1;
   font-weight: 400;
+  :host-context([data-theme-style="dark-theme"]) & {
+    background: #303135;
+  }
   .header {
     width: 80%;
     max-width: 1200px;
@@ -28,6 +31,7 @@ section.main {
         justify-content: center;
         background: transparent;
         margin-right: 25px;
+        color: var(--title-color);
       }
       img {
         width: 32px;

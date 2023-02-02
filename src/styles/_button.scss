@@ -7,7 +7,7 @@ button {
     border-radius: 4px;
   }
   &.cancel {
-    background: #fff;
+    background: var(--btn-title-color);
     color: var(--theme-color);
     border: 1px solid var(--theme-color);
     cursor: pointer;
@@ -17,11 +17,10 @@ button {
     }
     &:hover {
       box-shadow: 0px 10px 25px -12px rgba(6, 204, 171, 0.5);
-      background: #f5f9f9;
     }
   }
   &.confirm {
-    color: #ffffff;
+    color: var(--btn-title-color);
     background: var(--theme-color);
     cursor: pointer;
     &.disabled {
@@ -33,7 +32,7 @@ button {
     }
   }
   &.warn {
-    color: #ffffff;
+    color: var(--btn-title-color);
     background: var(--warn-color);
     cursor: pointer;
     &:hover {

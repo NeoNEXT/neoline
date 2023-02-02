@@ -50,7 +50,7 @@ section.container {
         input {
           font-family: NeverMind-Medium;
           font-size: 18px;
-          color: #303433;
+          color: var(--title-color);
           flex: 1;
           padding-right: 60px;
         }

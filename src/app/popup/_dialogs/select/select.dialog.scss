@@ -3,11 +3,12 @@ ul li {
   height: 62px;
   line-height: 62px;
   cursor: pointer;
+  color: var(--title-color);
   display: flex;
   align-items: center;
   justify-content: space-between;
   &:hover {
-    background: #f5f9f9;
+    background: var(--hover-color);
   }
   img.selected {
     filter: drop-shadow(1000px 0 0 var(--theme-color));

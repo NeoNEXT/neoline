@@ -1,4 +1,3 @@
-
 @import "../common.scss";
 @import "src/styles/pop-ups-menu.scss";
 
@@ -11,7 +10,7 @@ section.container {
       height: 52px;
       padding: 0 16px;
       border-radius: 4px;
-      background: #ffffff;
+      background: var(--body-background-color);
       border: 1px solid var(--sub-title-color);
       cursor: pointer;
       position: relative;
@@ -53,6 +52,11 @@ section.container {
     position: relative;
     padding: 0 16px;
     text-align: left;
+    :host-context([data-theme-style="dark-theme"]) & {
+      background: rgba(6, 204, 171, 0.2);
+      border-color: #4ddcba;
+      color: #fcfdff;
+    }
     input {
       position: absolute;
       left: 0;

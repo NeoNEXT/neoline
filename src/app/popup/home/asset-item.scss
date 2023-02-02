@@ -17,9 +17,6 @@
   }
   &:hover {
     background: var(--hover-color);
-    :host-context([data-theme-style="dark-theme"]) & {
-      background: #43464d;
-    }
   }
 }
 
