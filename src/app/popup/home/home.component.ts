@@ -218,9 +218,15 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         networkFee: '0',
         decimals: 0,
       };
-      this.neo3TransferService.createNeo3Tx(params).subscribe((tx) => {
-        this.getSignTx(tx, 'claimNeo3');
-      });
+      this.neo3TransferService.createNeo3Tx(params).subscribe(
+        (tx) => {
+          this.getSignTx(tx, 'claimNeo3');
+        },
+        (error) => {
+          this.loading = false;
+          this.global.snackBarTip(error.msg);
+        }
+      );
     }
   }
 
