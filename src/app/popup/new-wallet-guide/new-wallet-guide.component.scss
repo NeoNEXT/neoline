@@ -10,10 +10,7 @@ section.container {
     font-size: 30px;
     line-height: 44px;
     text-align: center;
-    color: #fcfdff;
-    :host-context([data-theme-style="dark-theme"]) & {
-      color: #303334;
-    }
+    color: var(--login-title);
   }
   img.bg {
     margin-top: 8px;

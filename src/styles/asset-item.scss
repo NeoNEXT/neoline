@@ -1,5 +1,3 @@
-
-
 .asset-item {
   height: 68px;
   display: flex;
@@ -10,8 +8,11 @@
     width: 34px;
     height: 34px;
     padding: 6px;
-    border: 0.5px solid var(--background-color);
+    border: 0.5px solid #e7efef;
     border-radius: 50%;
+    :host-context([data-theme-style="dark-theme"]) & {
+      border-color: #b9babe;
+    }
     img {
       height: 22px;
       width: 22px;

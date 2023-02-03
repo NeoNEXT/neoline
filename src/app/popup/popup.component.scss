@@ -7,26 +7,16 @@ header {
   background: var(--background-color);
   &.theme-bg {
     img.logo {
-      filter: drop-shadow(1000px 0 0 #fff);
+      filter: drop-shadow(1000px 0 0 var(--network-color));
       transform: translate(-1000px);
-      :host-context([data-theme-style="dark-theme"]) & {
-        filter: drop-shadow(1000px 0 0 #303433);
-      }
     }
     button.network {
-      border-color: #fff;
-      color: #fff;
+      border-color: var(--network-color);
+      color: var(--network-color);
       pointer-events: none;
-      :host-context([data-theme-style="dark-theme"]) & {
-        border-color: #303433;
-        color: #303433;
-      }
       img {
-        filter: drop-shadow(1000px 0 0 #fff);
+        filter: drop-shadow(1000px 0 0 var(--network-color));
         transform: translate(-1000px);
-        :host-context([data-theme-style="dark-theme"]) & {
-          filter: drop-shadow(1000px 0 0 #303433);
-        }
       }
     }
   }
