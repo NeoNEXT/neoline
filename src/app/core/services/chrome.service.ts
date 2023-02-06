@@ -246,6 +246,7 @@ export class ChromeService {
     this.setStorage(STORAGE_NAME.walletArr, []);
     this.setStorage(STORAGE_NAME['walletArr-Neo3'], []);
     this.setWallet(undefined);
+    this.setStorage(STORAGE_NAME.password, '');
   }
   //#endregion
 

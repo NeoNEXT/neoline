@@ -66,7 +66,7 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
     this.neon
       .createWallet(
         this.password || this.createForm.value.password,
-        this.createForm.value.walletName
+        this.createForm.value.name
       )
       .subscribe(
         (res: any) => {

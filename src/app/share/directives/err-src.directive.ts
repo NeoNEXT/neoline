@@ -4,7 +4,7 @@ import { Directive, ElementRef, HostListener, Input } from '@angular/core';
   selector: '[appErrorSrc]',
 })
 export class ErrSrcDirective {
-  defaultSrc = '/assets/images/default_asset_logo.jpg';
+  defaultSrc = '/assets/images/default_asset_logo.png';
 
   constructor(private el: ElementRef) {}
 

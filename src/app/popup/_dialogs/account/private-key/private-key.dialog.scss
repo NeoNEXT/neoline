@@ -48,7 +48,6 @@ section.container {
       margin-top: 24px;
     }
     .pwd-wif {
-      height: 80px;
       input.pwd {
         width: 100%;
         height: 44px;
@@ -85,10 +84,11 @@ section.container {
       font-size: 12px;
       line-height: 18px;
       color: var(--sub-title-color);
+      margin-top: 16px;
     }
     .btns {
       display: flex;
-      margin-top: 58px;
+      margin-top: 48px;
       button {
         width: 100%;
         &.half {

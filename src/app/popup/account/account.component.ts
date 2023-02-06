@@ -104,6 +104,7 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
 
   public qrcode() {
     return this.dialog.open(PopupQRCodeDialogComponent, {
+      width: 'auto',
       panelClass: 'custom-dialog-panel',
       data: this.address,
     });

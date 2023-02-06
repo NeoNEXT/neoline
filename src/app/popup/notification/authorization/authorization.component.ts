@@ -43,7 +43,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
     this.aRouter.queryParams.subscribe((params: any) => {
       this.hostname = params.hostname;
       if (params === undefined || params.icon === undefined) {
-        this.iconSrc = '/assets/images/default_asset_logo.jpg';
+        this.iconSrc = '/assets/images/default_asset_logo.png';
       } else {
         this.iconSrc =
           this.hostname.indexOf('flamingo') >= 0

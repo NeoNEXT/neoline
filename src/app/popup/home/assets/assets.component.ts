@@ -1,7 +1,6 @@
 import {
   Component,
   OnInit,
-  Input,
   Output,
   EventEmitter,
   OnDestroy,
@@ -21,8 +20,8 @@ import { Unsubscribable } from 'rxjs';
   styleUrls: ['../asset-item.scss'],
 })
 export class PopupAssetsComponent implements OnInit, OnDestroy {
-  @Input() public rateCurrency: string;
   @Output() backAsset = new EventEmitter();
+  rateCurrency: string;
   myAssets: Asset[];
   isLoading = false;
 
@@ -38,6 +37,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.rateCurrency = this.asset.rateCurrency;
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;

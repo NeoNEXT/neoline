@@ -138,16 +138,12 @@
       />
     </div>
     <ng-container *ngIf="selectedIndex === 0">
-      <app-assets
-        [rateCurrency]="rateCurrency"
-        (backAsset)="initNeo($event)"
-      ></app-assets>
+      <app-assets (backAsset)="initNeo($event)"></app-assets>
     </ng-container>
     <ng-container *ngIf="selectedIndex === 1">
       <app-nfts *ngIf="currentWalletIsN3 === true"></app-nfts>
       <app-asset-tx-page
         *ngIf="currentWalletIsN3 === false"
-        [rateCurrency]="rateCurrency"
         [symbol]="balance?.symbol"
       >
       </app-asset-tx-page>
