@@ -15,8 +15,8 @@ export class PopupAboutComponent implements OnInit {
     },
     {
       name: 'termsOfUse',
-      enUrl: 'https://neoline.io/en/agreemen',
-      zhUrl: 'https://neoline.io/agreemen',
+      enUrl: 'https://neoline.io/en/agreement',
+      zhUrl: 'https://neoline.io/agreement',
     },
     {
       name: 'companyWebsite',

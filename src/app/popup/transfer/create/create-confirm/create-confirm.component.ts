@@ -39,7 +39,7 @@ export class TransferCreateConfirmComponent implements OnInit {
   totalFee: string;
   gasPrice: BigNumber;
   assetPrice: BigNumber;
-  rate = { amount: '', fee: '', networkFee: '', systemFee: '', total: '' };
+  rate = { amount: '0', fee: '', networkFee: '', systemFee: '', total: '' };
 
   tabType: TabType = 'details';
   datajson: any = {};
@@ -186,8 +186,7 @@ export class TransferCreateConfirmComponent implements OnInit {
           block_time: Math.floor(new Date().getTime() / 1000),
         };
         if (this.data.isNFT) {
-          txTarget.block_time = new Date().getTime();
-          txTarget['token_id'] = this.data.nftToken.tokenid;
+          txTarget['tokenid'] = this.data.nftToken.tokenid;
         }
         this.pushTransaction(txTarget);
       }
@@ -213,7 +212,9 @@ export class TransferCreateConfirmComponent implements OnInit {
   private pushTransaction(transaction: any) {
     const networkId = this.data.network.id;
     const address = this.data.from;
-    const assetId = this.data.asset.asset_id;
+    const assetId = this.data.isNFT
+      ? this.data.nftContract
+      : this.data.asset.asset_id;
     this.chrome.getStorage(STORAGE_NAME.transaction).subscribe(async (res) => {
       if (res === null || res === undefined) {
         res = {};

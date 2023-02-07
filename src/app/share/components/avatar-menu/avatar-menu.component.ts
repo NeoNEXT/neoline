@@ -124,6 +124,11 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       this.changeAccount(w);
       return;
     }
+    if (this.isOnePassword) {
+      this.chromeSrc.setHasLoginAddress(w.accounts[0].address);
+      this.changeAccount(w);
+      return;
+    }
     this.dialog
       .open(PopupPasswordDialogComponent, {
         data: { account: w, chainType: this.chainType },
@@ -184,28 +189,29 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       this.exportWalletJson(exportJson, this.chainType, this.wallet.name);
       return;
     }
-    // neo3
-    const neo3ExportWallet = new wallet3.Wallet({ name: 'NeoLineUser' });
-    for (const [index, item] of this.neo3WIFArr.entries()) {
-      if (item) {
-        const account = this.neo3WalletArr[index].accounts[0];
-        account.label = this.neo3WalletArr[index].name;
-        neo3ExportWallet.addAccount(account);
+    if (this.chainType === 'Neo2') {
+      const neo2ExportWallet = new wallet2.Wallet({ name: 'NeoLineUser' });
+      for (const [index, item] of this.neo2WIFArr.entries()) {
+        if (item) {
+          const account = this.neo2WalletArr[index].accounts[0];
+          account.label = this.neo2WalletArr[index].name;
+          neo2ExportWallet.addAccount(account.export());
+        }
       }
-    }
-    const neo3ExportJson = JSON.stringify(neo3ExportWallet.export());
-    // neo2
-    const neo2ExportWallet = new wallet2.Wallet({ name: 'NeoLineUser' });
-    for (const [index, item] of this.neo2WIFArr.entries()) {
-      if (item) {
-        const account = this.neo2WalletArr[index].accounts[0];
-        account.label = this.neo2WalletArr[index].name;
-        neo2ExportWallet.addAccount(account);
+      const neo2ExportJson = JSON.stringify(neo2ExportWallet.export());
+      this.exportWalletJson(neo2ExportJson, 'Neo2');
+    } else {
+      const neo3ExportWallet = new wallet3.Wallet({ name: 'NeoLineUser' });
+      for (const [index, item] of this.neo3WIFArr.entries()) {
+        if (item) {
+          const account = this.neo3WalletArr[index].accounts[0];
+          account.label = this.neo3WalletArr[index].name;
+          neo3ExportWallet.addAccount(account.export());
+        }
       }
+      const neo3ExportJson = JSON.stringify(neo3ExportWallet.export());
+      this.exportWalletJson(neo3ExportJson, 'Neo3');
     }
-    const neo2ExportJson = JSON.stringify(neo2ExportWallet.export());
-    this.exportWalletJson(neo3ExportJson, 'Neo3');
-    this.exportWalletJson(neo2ExportJson, 'Neo2');
   }
   private exportWalletJson(
     json: string,

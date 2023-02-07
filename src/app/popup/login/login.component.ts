@@ -13,7 +13,7 @@ import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { ChainType, RpcNetwork, RESET_ACCOUNT, UPDATE_WALLET } from '../_lib';
+import { ChainType, RpcNetwork, RESET_ACCOUNT, UPDATE_WALLET, STORAGE_NAME } from '../_lib';
 import { FormGroup, Validators, FormBuilder } from '@angular/forms';
 
 @Component({
@@ -29,6 +29,7 @@ export class PopupLoginComponent
   isInit: boolean = true;
   selectWallet: Wallet2 | Wallet3;
   selectChainType: ChainType;
+  isOnePassword = false;
 
   private accountSub: Unsubscribable;
   private currentWallet: Wallet2 | Wallet3;
@@ -58,6 +59,11 @@ export class PopupLoginComponent
   }
 
   ngOnInit(): void {
+    this.chrome.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {
+      if (res === true) {
+        this.isOnePassword = true;
+      }
+    });
     this.loginForm = this.fb.group({
       password: ['', [Validators.required]],
     });

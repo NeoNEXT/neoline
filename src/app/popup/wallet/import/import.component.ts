@@ -153,17 +153,33 @@ export class PopupWalletImportComponent
     }
   }
 
-  public submitImport(): void {
-    if (this.importType === 'key') {
-      this.loading = true;
-      if (this.neonWallet.isPrivateKey(this.importForm.value.WIF)) {
-        this.neon
-          .importPrivateKey(
-            this.importForm.value.WIF,
-            this.password || this.importForm.value.password,
-            this.importForm.value.name
-          )
-          .subscribe((res: any) => {
+  importKey() {
+    this.loading = true;
+    if (this.neonWallet.isPrivateKey(this.importForm.value.WIF)) {
+      this.neon
+        .importPrivateKey(
+          this.importForm.value.WIF,
+          this.password || this.importForm.value.password,
+          this.importForm.value.name
+        )
+        .subscribe((res: any) => {
+          this.loading = false;
+          if (this.neon.verifyWallet(res)) {
+            this.setPassword(this.importForm.value.password);
+            this.submit.emit(res);
+          } else {
+            this.global.snackBarTip('existingWallet');
+          }
+        });
+    } else {
+      this.neon
+        .importWIF(
+          this.importForm.value.WIF,
+          this.password || this.importForm.value.password,
+          this.importForm.value.name
+        )
+        .subscribe(
+          (res: any) => {
             this.loading = false;
             if (this.neon.verifyWallet(res)) {
               this.setPassword(this.importForm.value.password);
@@ -171,36 +187,13 @@ export class PopupWalletImportComponent
             } else {
               this.global.snackBarTip('existingWallet');
             }
-          });
-      } else {
-        this.neon
-          .importWIF(
-            this.importForm.value.WIF,
-            this.password || this.importForm.value.password,
-            this.importForm.value.name
-          )
-          .subscribe(
-            (res: any) => {
-              this.loading = false;
-              if (this.neon.verifyWallet(res)) {
-                this.setPassword(this.importForm.value.password);
-                this.submit.emit(res);
-              } else {
-                this.global.snackBarTip('existingWallet');
-              }
-            },
-            (err: any) => {
-              this.global.log('import wallet faild', err);
-              this.global.snackBarTip('walletImportFailed');
-              this.loading = false;
-            }
-          );
-      }
-    } else {
-      if (!this.neonWallet.isNEP2(this.nep6Form.value.EncrpytedKey)) {
-        return;
-      }
-      this.handleImportFile();
+          },
+          (err: any) => {
+            this.global.log('import wallet faild', err);
+            this.global.snackBarTip('walletImportFailed');
+            this.loading = false;
+          }
+        );
     }
   }
 
@@ -208,7 +201,10 @@ export class PopupWalletImportComponent
     history.go(-1);
   }
 
-  private async handleImportFile() {
+  async importFile() {
+    if (!this.neonWallet.isNEP2(this.nep6Form.value.EncrpytedKey)) {
+      return;
+    }
     this.loading = true;
     const filePwd = this.nep6Form.value.password;
     const accounts: any[] = this.nep6Json?.accounts || [];

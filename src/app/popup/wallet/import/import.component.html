@@ -55,7 +55,7 @@
         formControlName="WIF"
         [type]="hideWIF ? 'password' : 'text'"
         (keyup.enter)="
-          !isInit && !importForm.invalid && !loading ? submitImport() : null
+          !isInit && !importForm.invalid && !loading ? importKey() : null
         "
       />
       <img
@@ -170,6 +170,9 @@
           required
           formControlName="password"
           [type]="hideNep6Pwd ? 'password' : 'text'"
+          (keyup.enter)="
+            isInit || loading || nep6Form.invalid ? null : importFile()
+          "
         />
         <img
           class="suffix"
@@ -197,7 +200,7 @@
     <button
       class="confirm"
       *ngIf="importType === 'key'"
-      (click)="submitImport()"
+      (click)="importKey()"
       [ngClass]="{ disabled: isInit || loading || importForm.invalid }"
     >
       {{ (loading ? "importing" : "import") | translate | async }}
@@ -205,7 +208,7 @@
     <button
       class="confirm"
       *ngIf="importType === 'file'"
-      (click)="submitImport()"
+      (click)="importFile()"
       [ngClass]="{ disabled: isInit || loading || nep6Form.invalid }"
     >
       {{ (loading ? "importing" : "import") | translate | async }}

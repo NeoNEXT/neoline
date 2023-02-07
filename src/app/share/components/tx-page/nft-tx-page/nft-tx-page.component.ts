@@ -20,9 +20,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
   public show = false;
   public inTransaction: Array<NftTransaction>;
   public txData: Array<any> = [];
-  public currentPage = 0;
   public loading = false;
-  public noMoreData: boolean = false;
 
   private accountSub: Unsubscribable;
   public networkId: number;
@@ -105,21 +103,11 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
             this.inTransaction;
         }
         this.chrome.setStorage(STORAGE_NAME.transaction, inTxData);
-        this.inTransaction = this.handleLocalTxs(this.inTransaction);
         txData = this.inTransaction.concat(txData);
         this.txData = txData;
         this.loading = false;
       });
     });
-  }
-
-  handleLocalTxs(txs: any[]): any[] {
-    return txs.map(({ txid, block_time, value, tokenid }) => ({
-      hash: txid,
-      amount: value,
-      block_time,
-      tokenid,
-    }));
   }
 
   showDetail(tx) {

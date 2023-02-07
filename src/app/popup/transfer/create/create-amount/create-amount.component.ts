@@ -106,6 +106,12 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       if (params.nftContract) {
         this.nftContract = params.nftContract;
         this.getNftTokens();
+        const gasAssetId = this.chainType === 'Neo2' ? GAS : GAS3_CONTRACT;
+        this.asset
+          .getAddressAssetBalance(this.fromAddress, gasAssetId, this.chainType)
+          .then((res) => {
+            this.gasBalance = res;
+          });
       } else {
         if (params.id) {
           this.asset

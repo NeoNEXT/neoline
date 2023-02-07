@@ -7,7 +7,11 @@
   <div class="bg"></div>
   <div class="wallet-list">
     <p class="title">{{ "loginTip" | translate | async }}:</p>
-    <div class="wallet" (click)="showWalletList()">
+    <div
+      class="wallet"
+      (click)="showWalletList()"
+      [ngClass]="{ disabled: isOnePassword }"
+    >
       <img class="avatar" [avatar]="selectWallet.accounts[0].address" alt="" />
       <div class="account">
         <p class="name">{{ selectWallet.name }}</p>

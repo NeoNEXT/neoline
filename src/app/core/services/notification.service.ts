@@ -62,7 +62,7 @@ export class NotificationService {
     nameModifyFailed: '名称修改失败',
     walletCreateFailed: '钱包创建失败',
     walletCreateSucc: '钱包创建成功',
-    walletImportFailed: '钱包创建失败',
+    walletImportFailed: '钱包导入失败',
     existingWallet: '钱包已经存在',
     wrongAddress: '请输入合法地址',
     rejected: '已拒绝',
