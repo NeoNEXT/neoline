@@ -35,7 +35,6 @@ export class PopupHomeBackupComponent implements OnInit {
             this.showBackup = !res;
           });
       }
-      console.log(this.showBackup);
     });
   }
 
