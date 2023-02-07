@@ -85,6 +85,7 @@ window.addEventListener(
       case requestTargetN3.InvokeMultiple:
       case requestTargetN3.Send:
       case requestTargetN3.VerifyMessage:
+      case requestTargetN3.SignMessageWithoutSalt:
       case requestTargetN3.SignMessage:
       case requestTargetN3.SignTransaction: {
         getLocalStorage('chainType', async (res) => {

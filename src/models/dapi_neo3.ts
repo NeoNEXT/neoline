@@ -13,6 +13,7 @@ export enum requestTargetN3 {
   Invoke = 'neoline.target_invoke_n3',
   InvokeMulti = 'neoline.target_invoke_multi_n3',
   SignMessage = 'neoline.target_sign_message_n3',
+  SignMessageWithoutSalt = 'neoline.target_sign_message_without_salt_n3',
   SignTransaction = 'neoline.target_sign_transaction_n3',
   Deploy = 'neoline.target_deploy_n3',
   Send = 'neoline.target_send_n3',

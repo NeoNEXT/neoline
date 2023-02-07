@@ -416,6 +416,16 @@ export class Init {
     }
   }
 
+  public signMessageWithoutSalt(parameter: { message: string }): Promise<any> {
+    if (parameter.message === undefined) {
+      return new Promise((_, reject) => {
+        reject(ERRORS.MALFORMED_INPUT);
+      });
+    } else {
+      return sendMessage(requestTargetN3.SignMessageWithoutSalt, parameter);
+    }
+  }
+
   public signTransaction(parameter): Promise<any> {
     if (parameter.transaction === undefined) {
       return new Promise((_, reject) => {

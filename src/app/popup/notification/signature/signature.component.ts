@@ -80,7 +80,9 @@ export class PopupNoticeSignComponent implements OnInit {
 
   public signature() {
     this.randomSalt = randomBytes(16).toString('hex');
-    const parameterHexString = u.str2hexstring(this.randomSalt + this.message);
+    const parameterHexString = Buffer.from(
+      this.randomSalt + this.message
+    ).toString('hex');
     const lengthHex = (parameterHexString.length / 2)
       .toString(16)
       .padStart(2, '0');

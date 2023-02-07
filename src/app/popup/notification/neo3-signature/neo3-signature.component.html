@@ -1,6 +1,6 @@
 <div class="container">
   <div class="header">
-    <div class="invoke-type">· SIGNMESSAGE</div>
+    <div class="invoke-type">· {{ isSign ? 'SIGNMESSAGEWITHOUTSALT' : 'SIGNMESSAGE' }}</div>
     <p class="title">{{ "thSignTitle" | translate | async }}</p>
     <p class="account"><img [avatar]="address" />{{ address | longStr : 10 }}</p>
   </div>

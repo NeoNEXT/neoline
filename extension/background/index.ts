@@ -904,7 +904,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTarget.VerifyMessage: {
       const parameter = request.parameter as VerifyMessageArgs;
-      const parameterHexString = str2hexstring(parameter.message);
+      const parameterHexString = Buffer.from(parameter.message).toString('hex');
       const lengthHex = (parameterHexString.length / 2)
         .toString(16)
         .padStart(2, '0');
@@ -1588,7 +1588,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTargetN3.VerifyMessage: {
       const parameter = request.parameter as N3VerifyMessageArgs;
-      const parameterHexString = str2hexstring(parameter.message);
+      const parameterHexString = Buffer.from(parameter.message).toString('hex');
       const lengthHex = u3.num2VarInt(parameterHexString.length / 2);
       const concatenatedString = lengthHex + parameterHexString;
       const messageHex = '010001f0' + concatenatedString + '0000';
@@ -1615,6 +1615,29 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
         chrome.windows.create({
           url: `index.html#popup/notification/neo3-signature?${queryString}messageID=${request.ID}`,
+          focused: true,
+          width: 386,
+          height: 620,
+          left: 0,
+          top: 0,
+          type: 'popup',
+        });
+      });
+      sendResponse('');
+      return;
+    }
+    case requestTargetN3.SignMessageWithoutSalt: {
+      const params = request.parameter;
+      getStorage('connectedWebsites', () => {
+        let queryString = '';
+        for (const key in params) {
+          if (params.hasOwnProperty(key)) {
+            const value = encodeURIComponent(params[key]);
+            queryString += `${key}=${value}&`;
+          }
+        }
+        chrome.windows.create({
+          url: `index.html#popup/notification/neo3-signature?${queryString}messageID=${request.ID}&sign=1`,
           focused: true,
           width: 386,
           height: 620,
