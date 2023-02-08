@@ -16,6 +16,7 @@ import {
   GAS3_CONTRACT,
   ChainType,
   RpcNetwork,
+  STORAGE_NAME,
 } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -60,7 +61,6 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
         this.chainType === 'Neo2' ? this.n2Network.id : this.n3Network.id;
       this.initData();
     });
-    this.rateCurrency = this.assetState.rateCurrency;
   }
 
   initData() {
@@ -71,7 +71,11 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
     });
   }
 
-  ngOnInit(): void {}
+  ngOnInit(): void {
+    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+      this.rateCurrency = res;
+    });
+  }
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

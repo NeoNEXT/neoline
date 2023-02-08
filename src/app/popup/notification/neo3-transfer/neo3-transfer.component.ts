@@ -103,7 +103,9 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
   }
 
   ngOnInit(): void {
-    this.rateCurrency = this.asset.rateCurrency;
+    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+      this.rateCurrency = res;
+    });
     this.aRoute.queryParams.subscribe(async (params: any) => {
       const pramsData = JSON.parse(JSON.stringify(params));
       this.dataJson = JSON.stringify(params);

@@ -62,7 +62,9 @@ export class TransferCreateConfirmComponent implements OnInit {
 
   async ngOnInit(): Promise<void> {
     this.getDataJson();
-    this.rateCurrency = this.assetState.rateCurrency;
+    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+      this.rateCurrency = res;
+    });
     this.rate.fee = await this.getGasRate(this.data.fee);
     if (!this.data.isNFT) {
       this.rate.amount = await this.getAssetRate(this.data.amount);

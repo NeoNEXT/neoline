@@ -95,7 +95,9 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.rateCurrency = this.assetState.rateCurrency;
+    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+      this.rateCurrency = res;
+    });
     this.aRoute.queryParams.subscribe(async ({ messageID }) => {
       let params: any;
       this.messageID = messageID;

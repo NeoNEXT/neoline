@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
-import { TransactionState, ChromeService, AssetState } from '@/app/core';
+import { TransactionState, ChromeService } from '@/app/core';
 import { Transaction } from '@/models/models';
 import { forkJoin } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -32,11 +32,12 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private txState: TransactionState,
     private dialog: MatDialog,
-    private assetState: AssetState,
     private store: Store<AppState>
   ) {}
   ngOnInit(): void {
-    this.rateCurrency = this.assetState.rateCurrency;
+    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+      this.rateCurrency = res;
+    });
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;

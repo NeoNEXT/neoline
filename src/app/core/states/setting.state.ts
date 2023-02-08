@@ -10,8 +10,7 @@ export class SettingState {
   langSub = new BehaviorSubject<string>('en');
   langJson = { en: undefined, zh_CN: undefined };
 
-  constructor() {
-  }
+  constructor() {}
 
   changeTheme(theme) {
     this.themeSub.next(theme);

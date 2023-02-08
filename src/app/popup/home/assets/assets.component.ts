@@ -9,7 +9,7 @@ import { Asset, NEO } from '@/models/models';
 import { AssetState, ChromeService, UtilServiceState } from '@/app/core';
 import { forkJoin } from 'rxjs';
 import BigNumber from 'bignumber.js';
-import { NEO3_CONTRACT, ChainType } from '../../_lib';
+import { NEO3_CONTRACT, ChainType, STORAGE_NAME } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -37,7 +37,9 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
-    this.rateCurrency = this.asset.rateCurrency;
+    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+      this.rateCurrency = res;
+    });
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;

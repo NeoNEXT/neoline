@@ -35,10 +35,12 @@ export class PopupSettingComponent implements OnInit {
     private setting: SettingState
   ) {
     this.rateCurrencys = this.setting.rateCurrencys;
-    this.rateCurrency = this.asset.rateCurrency;
   }
 
   async ngOnInit(): Promise<void> {
+    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+      this.rateCurrency = res;
+    });
     this.setting.langSub.subscribe((res) => {
       this.lang = res;
     });
