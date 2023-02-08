@@ -20,7 +20,7 @@ import {
 } from '@popup/_lib';
 import BigNumber from 'bignumber.js';
 import { UtilServiceState } from '../util/util.service';
-import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+import { wallet as wallet3, u } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 
@@ -267,6 +267,23 @@ export class AssetState {
     assetId: string,
     chainType: ChainType
   ) {
+    if (chainType === 'Neo2' && (assetId === NEO || assetId === GAS)) {
+      const nativeData = {
+        jsonrpc: '2.0',
+        method: 'getaccountstate',
+        params: [address],
+        id: 1,
+      };
+      const nativeRes = await this.http
+        .rpcPost(this.n2Network.rpcUrl, nativeData)
+        .toPromise();
+      const nativeTarget = this.handleNeo2NativeBalanceResponse(nativeRes);
+      const targetBalance =
+        assetId === NEO
+          ? nativeTarget[0].balance
+          : new BigNumber(nativeTarget[1].balance).shiftedBy(8).toFixed();
+      return targetBalance;
+    }
     const addressHash =
       chainType === 'Neo2'
         ? wallet2.getScriptHashFromAddress(address)
@@ -286,7 +303,8 @@ export class AssetState {
         balance = balanceRes.stack[0].value;
       }
       if (balanceRes.stack[0].type === 'ByteArray') {
-        balance = new BigNumber(balanceRes.stack[0].value || 0, 16).toFixed();
+        const hexstr = u.reverseHex(balanceRes.stack[0].value);
+        balance = new BigNumber(hexstr || 0, 16).toFixed();
       }
     }
     return balance;

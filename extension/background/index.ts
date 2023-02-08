@@ -67,6 +67,7 @@ import {
   hexstring2str,
   str2hexstring,
   verify,
+  reverseHex,
 } from '../common/utils';
 import { u as u3, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
@@ -1080,10 +1081,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               decimals = Number(decimalsRes?.result.stack[0].value || 0);
             }
             if (decimalsRes?.result.stack[0].type === 'ByteArray') {
-              decimals = new BigNumber(
-                decimalsRes?.result.stack[0].value || 0,
-                16
-              ).toNumber();
+              const hexstr = reverseHex(decimalsRes?.result.stack[0].value);
+              decimals = new BigNumber(hexstr || 0, 16).toNumber();
             }
           }
           assetBalance = new BigNumber(assetBalance).shiftedBy(-decimals);
@@ -1820,10 +1819,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               decimals = Number(decimalsRes?.result.stack[0].value || 0);
             }
             if (decimalsRes?.result.stack[0].type === 'ByteArray') {
-              decimals = new BigNumber(
-                decimalsRes?.result.stack[0].value || 0,
-                16
-              ).toNumber();
+              const hexstr = reverseHex(decimalsRes?.result.stack[0].value);
+              decimals = new BigNumber(hexstr || 0, 16).toNumber();
             }
           }
           assetBalance = new BigNumber(assetBalance).shiftedBy(-decimals);

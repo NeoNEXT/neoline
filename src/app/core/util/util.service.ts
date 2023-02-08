@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { wallet } from '@cityofzion/neon-core-neo3';
+import { wallet, u } from '@cityofzion/neon-core-neo3';
 import { wallet as walletPr5 } from '@cityofzion/neon-core-neo3-pr5';
 import { wallet as walletRc1 } from '@cityofzion/neon-core-neo3-rc1';
 import {
@@ -220,7 +220,8 @@ export class UtilServiceState {
             decimal = Number(item.stack[0].value || 0);
           }
           if (item.stack[0].type === 'ByteArray') {
-            decimal = new BigNumber(item.stack[0].value || 0, 16).toNumber();
+            const hexstr = u.reverseHex(item.stack[0].value);
+            decimal = new BigNumber(hexstr || 0, 16).toNumber();
           }
           if (chainType === 'Neo2') {
             this.n2AssetDecimal.set(contracts[index], decimal);

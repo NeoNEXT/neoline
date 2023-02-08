@@ -1,5 +1,6 @@
 import { base642hex, hexstring2str } from '@cityofzion/neon-core-neo3/lib/u';
 import BigNumber from 'bignumber.js';
+import { reverseHex } from './utils';
 
 declare var chrome: any;
 export function httpGet(url, callback, headers?) {
@@ -120,7 +121,8 @@ export async function getAssetDecimal(assetId: string, rpcUrl: string) {
       decimal = Number(decimalRes.stack[0].value || 0);
     }
     if (decimalRes.stack[0].type === 'ByteArray') {
-      decimal = new BigNumber(decimalRes.stack[0].value || 0, 16).toNumber();
+      const hexstr = reverseHex(decimalRes.stack[0].value);
+      decimal = new BigNumber(hexstr || 0, 16).toNumber();
     }
   }
   return decimal;
