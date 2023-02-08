@@ -55,15 +55,20 @@ window.addEventListener(
           if (res === undefined) {
             res = 'USD';
           }
-          const manifestData = chrome.runtime.getManifest();
-          manifestData.extra = { currency: res, theme: '' };
-          window.postMessage(
-            {
-              return: requestTarget.Provider,
-              data: manifestData,
-            },
-            '*'
-          );
+          getStorage('theme', (theme) => {
+            if (res === undefined) {
+              theme = 'light-theme';
+            }
+            const manifestData = chrome.runtime.getManifest();
+            manifestData.extra = { currency: res, theme };
+            window.postMessage(
+              {
+                return: requestTarget.Provider,
+                data: manifestData,
+              },
+              '*'
+            );
+          });
         });
         return;
       }

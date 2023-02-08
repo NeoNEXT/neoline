@@ -82,8 +82,8 @@ export class HttpService {
         } else {
           throw res.error;
         }
-      }),
-      retry(3)
+      })
+      // retry(3)
     );
   }
 
@@ -103,8 +103,8 @@ export class HttpService {
         } else {
           throw res;
         }
-      }),
-      retry(3)
+      })
+      // retry(3)
     );
   }
 }
