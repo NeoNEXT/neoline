@@ -15,13 +15,13 @@
     <div class="asset-logo-box big">
       <img
         class="asset-logo"
-        [assetId]="data?.asset?.asset_id"
+        [assetId]="datajson?.asset"
         appErrorSrc
         alt=""
       />
     </div>
     <p class="asset-balance">
-      {{ data?.amount | numberFixed }} {{ data?.asset?.symbol }}
+      {{ data?.amount | numberFixed }} {{ datajson?.symbol }}
     </p>
     <p class="asset-money" *ngIf="!data?.isNFT">
       {{ rate?.amount | numberFixed : 2 }}
@@ -90,7 +90,7 @@
       <p class="row">
         <span class="label">{{ "TOTAL" | translate | async }}</span>
         <span class="value"
-          >{{ data?.amount | numberFixed }} {{ data?.asset?.symbol }} +
+          >{{ data?.amount | numberFixed }} {{ datajson?.symbol }} +
           {{ totalFee | numberFixed }} GAS</span
         >
       </p>

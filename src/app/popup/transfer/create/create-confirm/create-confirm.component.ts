@@ -312,6 +312,9 @@ export class TransferCreateConfirmComponent implements OnInit {
     this.datajson.asset = this.data.isNFT
       ? this.data.nftContract
       : this.data.asset.asset_id;
+    if (this.data.isNFT) {
+      this.datajson.tokenId = this.data.nftToken.tokenid;
+    }
     this.datajson.amount = this.data.amount;
     this.datajson.fee = this.data.fee;
     this.datajson.networkFee = this.networkFee;
