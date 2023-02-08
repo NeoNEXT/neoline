@@ -110,7 +110,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
         this.asset
           .getAddressAssetBalance(this.fromAddress, gasAssetId, this.chainType)
           .then((res) => {
-            this.gasBalance = res;
+            this.gasBalance = new BigNumber(res).shiftedBy(-8).toFixed();
           });
       } else {
         if (params.id) {

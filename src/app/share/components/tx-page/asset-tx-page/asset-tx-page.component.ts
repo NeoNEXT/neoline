@@ -17,7 +17,6 @@ import { Unsubscribable } from 'rxjs';
 export class AssetTxPageComponent implements OnInit, OnDestroy {
   @Input() assetId = '';
   @Input() symbol = '';
-  rateCurrency: string;
 
   public show = false;
   public inTransaction: Array<Transaction>;
@@ -35,9 +34,6 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
     private store: Store<AppState>
   ) {}
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
-      this.rateCurrency = res;
-    });
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;

@@ -14,6 +14,7 @@ export class PopupBackupKeyComponent implements OnInit, OnDestroy {
   WIF = '';
   private accountSub: Unsubscribable;
   private address: string;
+  private qrcodeDom;
   constructor(
     private global: GlobalService,
     private chrome: ChromeService,
@@ -47,18 +48,22 @@ export class PopupBackupKeyComponent implements OnInit, OnDestroy {
     this.updateWalletStatus();
     if (QRCode) {
       setTimeout(() => {
-        const qrcode = new QRCode('key-qrcode', {
-          text: this.WIF,
-          width: 170,
-          height: 170,
-          colorDark: '#000',
-          colorLight: '#ffffff',
-          correctLevel: QRCode.CorrectLevel.H,
-        });
+        if (this.qrcodeDom) {
+          this.qrcodeDom.clear();
+          this.qrcodeDom.makeCode(this.WIF);
+        } else {
+          this.qrcodeDom = new QRCode('key-qrcode', {
+            text: this.WIF,
+            width: 170,
+            height: 170,
+            colorDark: '#000',
+            colorLight: '#ffffff',
+            correctLevel: QRCode.CorrectLevel.H,
+          });
+        }
       }, 0);
     }
   }
-
 
   private updateWalletStatus() {
     this.chrome.setHaveBackupTip(false);

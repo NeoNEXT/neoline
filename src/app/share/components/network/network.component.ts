@@ -100,6 +100,23 @@ export class PopupNetworkComponent {
       return;
     }
     this.store.dispatch({ type: UPDATE_WALLET, data: this.switchChainWallet });
+    const backHomeUrls = [
+      '/popup/add-asset',
+      '/popup/add-nft',
+      '/popup/my-nfts',
+      '/popup/transfer/create',
+      '/popup/asset/',
+      '/popup/nfts/',
+    ];
+    let flag = false;
+    backHomeUrls.forEach((item) => {
+      if (location.hash.includes(item)) {
+        flag = true;
+      }
+    });
+    if (flag) {
+      this.router.navigateByUrl('/popup/home');
+    }
     this.close();
   }
 }
