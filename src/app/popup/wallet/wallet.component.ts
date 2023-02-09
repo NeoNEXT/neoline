@@ -87,7 +87,8 @@ export class PopupWalletComponent implements OnInit {
     const newChainType = wallet3.isAddress(newWallet.accounts[0].address, 53)
       ? 'Neo3'
       : 'Neo2';
-    const wif = newWallet.accounts[0].wif;
+    const wif =
+      this.password || !this.hasPwdWallet ? '' : newWallet.accounts[0].wif;
     newWallet =
       newChainType === 'Neo2'
         ? new wallet2.Wallet(newWallet.export())
