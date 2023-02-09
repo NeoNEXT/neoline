@@ -96,10 +96,9 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
 
   //#region init
   private getCurrentWIF(WIFArr: string[]) {
-    const index = this.currentWalletArr.findIndex(
-      (m) => m.accounts[0].address === this.currentWallet.accounts[0].address
-    );
-    this.currentWIF = WIFArr[index];
+    this.util
+      .getWIF(WIFArr, this.currentWalletArr, this.currentWallet)
+      .then((res) => (this.currentWIF = res));
   }
   private initData() {
     this.aRoute.params.subscribe((params) => {

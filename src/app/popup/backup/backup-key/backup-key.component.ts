@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { GlobalService, ChromeService } from '@/app/core';
+import { GlobalService, ChromeService, UtilServiceState } from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -18,6 +18,7 @@ export class PopupBackupKeyComponent implements OnInit, OnDestroy {
   constructor(
     private global: GlobalService,
     private chrome: ChromeService,
+    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -28,13 +29,7 @@ export class PopupBackupKeyComponent implements OnInit, OnDestroy {
         chain === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;
       const currentWalletArr =
         chain === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
-      this.WIF =
-        currentWIFArr[
-          currentWalletArr.findIndex(
-            (item) => item.accounts[0].address === this.address
-          )
-        ];
-      this.showKeyQrCode();
+      this.showKeyQrCode(currentWIFArr, currentWalletArr, state.currentWallet);
     });
   }
 
@@ -44,7 +39,8 @@ export class PopupBackupKeyComponent implements OnInit, OnDestroy {
     this.accountSub?.unsubscribe();
   }
 
-  private showKeyQrCode() {
+  private async showKeyQrCode(WIFArr: string[], walletArr, currentWallet) {
+    this.WIF = await this.util.getWIF(WIFArr, walletArr, currentWallet);
     this.updateWalletStatus();
     if (QRCode) {
       setTimeout(() => {

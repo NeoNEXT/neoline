@@ -14,6 +14,8 @@ import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 type TabType = 'create' | 'import';
 @Component({
@@ -48,7 +50,9 @@ export class PopupWalletComponent implements OnInit {
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.chainType = state.currentChainType;
-      this.checkHasPwdWallet(state.neo2WIFArr.concat(state.neo3WIFArr));
+      this.checkHasPwdWallet(
+        (state.neo2WalletArr as any).concat(state.neo3WalletArr)
+      );
     });
     this.route.queryParams.subscribe((params: any) => {
       this.dapiData = {
@@ -72,8 +76,10 @@ export class PopupWalletComponent implements OnInit {
     }
   }
 
-  private checkHasPwdWallet(wifArr: string[]) {
-    const index = wifArr.findIndex((wif) => wif !== '');
+  private checkHasPwdWallet(walletArr: Array<Wallet2 | Wallet3>) {
+    const index = walletArr.findIndex(
+      (w) => !w.accounts[0]?.extra?.ledgerSLIP44
+    );
     this.hasPwdWallet = index >= 0 ? true : false;
   }
 

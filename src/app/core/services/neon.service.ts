@@ -381,57 +381,59 @@ export class NeonService {
   //#endregion
 
   //#region claim gas
-  public claimNeo2GAS(
+  public async claimNeo2GAS(
     claims: Array<ClaimItem>
-  ): Observable<Array<Transaction>> {
-    return new Observable((observer) => {
-      const claimArr = [[]];
-      const valueArr = [];
-      let count = 0;
-      let txCount = 0;
-      let itemValue = 0;
-      claims.forEach((item) => {
-        count++;
-        claimArr[txCount].push({
-          prevHash: item.txid.length === 66 ? item.txid.slice(2) : item.txid,
-          prevIndex: item.n,
-        });
-        itemValue = this.global.mathAdd(itemValue, Number(item.unclaimed));
-        if (count >= 20) {
-          txCount++;
-          count = 0;
-          claimArr[txCount] = [];
-          valueArr.push(itemValue);
-          itemValue = 0;
-        }
+  ): Promise<Array<Transaction>> {
+    const claimArr = [[]];
+    const valueArr = [];
+    let count = 0;
+    let txCount = 0;
+    let itemValue = 0;
+    claims.forEach((item) => {
+      count++;
+      claimArr[txCount].push({
+        prevHash: item.txid.length === 66 ? item.txid.slice(2) : item.txid,
+        prevIndex: item.n,
       });
-      if (itemValue !== 0) {
+      itemValue = this.global.mathAdd(itemValue, Number(item.unclaimed));
+      if (count >= 20) {
+        txCount++;
+        count = 0;
+        claimArr[txCount] = [];
         valueArr.push(itemValue);
+        itemValue = 0;
       }
-      const wif =
-        this.neo2WIFArr[
-          this.neo2WalletArr.findIndex(
-            (item) =>
-              item.accounts[0].address ===
-              this.currentWallet.accounts[0].address
-          )
-        ];
-      const txArr = [];
-      claimArr.forEach((item, index) => {
-        const newTx = new tx2.ClaimTransaction({
-          claims: item,
-        });
-        newTx.addIntent(
-          'GAS',
-          valueArr[index],
-          this.currentWallet.accounts[0].address
-        );
-        wif && newTx.sign(wif);
-        txArr.push(newTx);
-      });
-      observer.next(txArr);
-      observer.complete();
     });
+    if (itemValue !== 0) {
+      valueArr.push(itemValue);
+    }
+    let wif =
+      this.neo2WIFArr[
+        this.neo2WalletArr.findIndex(
+          (item) =>
+            item.accounts[0].address === this.currentWallet.accounts[0].address
+        )
+      ];
+    if (!wif) {
+      const pwd = await this.chrome
+        .getStorage(STORAGE_NAME.password)
+        .toPromise();
+      wif = (await (this.currentWallet.accounts[0] as any).decrypt(pwd)).WIF;
+    }
+    const txArr = [];
+    claimArr.forEach((item, index) => {
+      const newTx = new tx2.ClaimTransaction({
+        claims: item,
+      });
+      newTx.addIntent(
+        'GAS',
+        valueArr[index],
+        this.currentWallet.accounts[0].address
+      );
+      wif && newTx.sign(wif);
+      txArr.push(newTx);
+    });
+    return txArr;
   }
   //#endregion
 
@@ -616,7 +618,9 @@ export class NeonService {
         const wif = await wallet2.decrypt(encKey, oldPwd);
         const account = new wallet2.Account(wallet2.getPrivateKeyFromWIF(wif));
         account.label = name;
-        const newWallet = new wallet2.Wallet({ name: name || 'NeoLineUser' } as any);
+        const newWallet = new wallet2.Wallet({
+          name: name || 'NeoLineUser',
+        } as any);
         newWallet.addAccount(account);
         await newWallet.accounts[0].encrypt(newPwd);
         return newWallet;
@@ -628,7 +632,9 @@ export class NeonService {
         const wif = await wallet3.decrypt(encKey, oldPwd);
         const account = new wallet3.Account(wallet3.getPrivateKeyFromWIF(wif));
         account.label = name;
-        const newWallet = new wallet3.Wallet({ name: name || 'NeoLineUser' } as any);
+        const newWallet = new wallet3.Wallet({
+          name: name || 'NeoLineUser',
+        } as any);
         newWallet.addAccount(account);
         await newWallet.accounts[0].encrypt(newPwd);
         return newWallet;

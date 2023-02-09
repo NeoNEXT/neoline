@@ -185,6 +185,8 @@ export class PopupOnePasswordComponent implements OnInit {
         currentWallet: newCurrentWallet,
         neo2WalletArr: neo2NewWalletArr,
         neo3WalletArr: neo3NewWalletArr,
+        neo2WIFArr: new Array(neo2NewWalletArr.length).fill(''),
+        neo3WIFArr: new Array(neo3NewWalletArr.length).fill(''),
       },
     });
     this.chrome.setStorage(STORAGE_NAME.onePassword, true);

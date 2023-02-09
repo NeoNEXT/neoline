@@ -472,15 +472,12 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
       });
       return;
     }
-    const wif =
-      this.neo2WIFArr[
-        this.neo2WalletArr.findIndex(
-          (item) =>
-            item.accounts[0].address === this.currentWallet.accounts[0].address
-        )
-      ];
-    tx.sign(wif);
-    this.tx = tx;
-    this.resolveSend(tx);
+    this.util
+      .getWIF(this.neo2WIFArr, this.neo2WalletArr, this.currentWallet)
+      .then((wif) => {
+        tx.sign(wif);
+        this.tx = tx;
+        this.resolveSend(tx);
+      });
   }
 }

@@ -16,6 +16,7 @@ import {
   DEFAULT_NEO3_ASSETS,
   NNS_CONTRACT,
   RpcNetwork,
+  STORAGE_NAME,
 } from '@/app/popup/_lib';
 import { of } from 'rxjs';
 import { map } from 'rxjs/operators';
@@ -25,6 +26,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { ChromeService } from '../services/chrome.service';
 
 @Injectable()
 export class UtilServiceState {
@@ -40,7 +42,11 @@ export class UtilServiceState {
   private neo3WalletArr: Wallet3[];
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
-  constructor(private http: HttpService, private store: Store<AppState>) {
+  constructor(
+    private http: HttpService,
+    private store: Store<AppState>,
+    private chrome: ChromeService
+  ) {
     this.n2AssetDecimal.set(NEO, DEFAULT_NEO2_ASSETS.NEO.decimals);
     this.n2AssetSymbol.set(NEO, DEFAULT_NEO2_ASSETS.NEO.symbol);
     this.n2AssetDecimal.set(GAS, DEFAULT_NEO2_ASSETS.GAS.decimals);
@@ -77,6 +83,9 @@ export class UtilServiceState {
       (item) => item.accounts[0].address === account.address
     );
     const wif = this.neo3WIFArr[index];
+    if (!wif) {
+      return account;
+    }
     const preview5Account = new walletPr5.Account(
       walletPr5.getPrivateKeyFromWIF(wif)
     );
@@ -344,5 +353,23 @@ export class UtilServiceState {
         return address;
       })
     );
+  }
+
+  async getWIF(
+    WIFArr: string[],
+    walletArr: Array<Wallet2 | Wallet3>,
+    currentWallet: Wallet2 | Wallet3
+  ): Promise<string> {
+    const index = walletArr.findIndex(
+      (item) => item.accounts[0].address === currentWallet.accounts[0].address
+    );
+    const wif = WIFArr[index];
+    if (wif) {
+      return wif;
+    }
+    const pwd = await this.chrome.getStorage(STORAGE_NAME.password).toPromise();
+    return (currentWallet.accounts[0] as any).decrypt(pwd).then((res) => {
+      return res.WIF;
+    });
   }
 }

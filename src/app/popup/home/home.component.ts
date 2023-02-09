@@ -6,6 +6,7 @@ import {
   HomeService,
   LedgerService,
   ChromeService,
+  UtilServiceState,
 } from '@/app/core';
 import { NEO, GAS, Asset } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
@@ -82,6 +83,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     private homeService: HomeService,
     private ledger: LedgerService,
     private chrome: ChromeService,
+    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -193,7 +195,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       return;
     }
     if (this.chainType === 'Neo2') {
-      this.neon.claimNeo2GAS(this.claimsData).subscribe((tx) => {
+      this.neon.claimNeo2GAS(this.claimsData).then((tx) => {
         if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
           this.getSignTx(tx[0], 'claimNeo2');
         } else {
@@ -432,21 +434,19 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       });
       return;
     }
-    const wif =
-      this.currentWIFArr[
-        this.currentWalletArr.findIndex(
-          (item) => item.accounts[0].address === this.address
-        )
-      ];
-    switch (this.chainType) {
-      case 'Neo2':
-        tx.sign(wif);
-        break;
-      case 'Neo3':
-        tx.sign(wif, this.n3Network.magicNumber);
-        break;
-    }
-    this.handleSignedTx(tx, type);
+    this.util
+      .getWIF(this.currentWIFArr, this.currentWalletArr, this.currentWallet)
+      .then((wif) => {
+        switch (this.chainType) {
+          case 'Neo2':
+            tx.sign(wif);
+            break;
+          case 'Neo3':
+            tx.sign(wif, this.n3Network.magicNumber);
+            break;
+        }
+        this.handleSignedTx(tx, type);
+      });
   }
   //#endregion
 }

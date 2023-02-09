@@ -262,14 +262,28 @@ function updateWalletName(
   }
   return targetWalletArr;
 }
-function updateAllWallets({ currentWallet, neo2WalletArr, neo3WalletArr }) {
+function updateAllWallets({
+  currentWallet,
+  neo2WalletArr,
+  neo3WalletArr,
+  neo2WIFArr,
+  neo3WIFArr,
+}) {
   updteLoaclStorage(STORAGE_NAME.wallet, currentWallet.export());
   updteLoaclStorage(STORAGE_NAME.walletArr, getWalletJsons(neo2WalletArr));
   updteLoaclStorage(
     STORAGE_NAME['walletArr-Neo3'],
     getWalletJsons(neo3WalletArr)
   );
-  return { currentWallet, neo2WalletArr, neo3WalletArr };
+  updteLoaclStorage(STORAGE_NAME.WIFArr, neo2WIFArr);
+  updteLoaclStorage(STORAGE_NAME['WIFArr-Neo3'], neo3WIFArr);
+  return {
+    currentWallet,
+    neo2WalletArr,
+    neo3WalletArr,
+    neo2WIFArr,
+    neo3WIFArr,
+  };
 }
 //#endregion
 

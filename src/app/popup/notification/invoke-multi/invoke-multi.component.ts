@@ -7,6 +7,7 @@ import {
   AssetState,
   TransactionState,
   LedgerService,
+  UtilServiceState,
 } from '@/app/core';
 import {
   Transaction,
@@ -84,6 +85,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     private assetState: AssetState,
     private txState: TransactionState,
     private ledger: LedgerService,
+    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -827,14 +829,12 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
       });
       return;
     }
-    const wif =
-      this.neo2WIFArr[
-        this.neo2WalletArr.findIndex(
-          (item) => item.accounts[0].address === this.signAddress
-        )
-      ];
-    tx.sign(wif);
-    this.tx = tx;
-    this.resolveSend(tx);
+    this.util
+      .getWIF(this.neo2WIFArr, this.neo2WalletArr, this.currentWallet)
+      .then((wif) => {
+        tx.sign(wif);
+        this.tx = tx;
+        this.resolveSend(tx);
+      });
   }
 }

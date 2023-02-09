@@ -6,6 +6,7 @@ import {
   AssetState,
   NotificationService,
   LedgerService,
+  UtilServiceState,
 } from '@/app/core';
 import { Transaction, Witness } from '@cityofzion/neon-core-neo3/lib/tx';
 import { tx, wallet } from '@cityofzion/neon-js-neo3';
@@ -81,6 +82,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
     private neo3Invoke: Neo3InvokeService,
     private notification: NotificationService,
     private ledger: LedgerService,
+    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -394,7 +396,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
     });
   }
 
-  public getSignTx() {
+  public async getSignTx() {
     if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
       this.loading = true;
       this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
@@ -404,12 +406,11 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
       });
       return;
     }
-    const wif =
-      this.neo3WIFArr[
-        this.neo3WalletArr.findIndex(
-          (item) => item.accounts[0].address === this.signAddress
-        )
-      ];
+    const wif = await this.util.getWIF(
+      this.neo3WIFArr,
+      this.neo3WalletArr,
+      this.currentWallet
+    );
     this.tx.sign(wif, this.n3Network.magicNumber);
     if (this.signers.length > 1) {
       const addressSign = this.tx.witnesses[0];

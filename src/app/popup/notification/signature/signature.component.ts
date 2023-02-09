@@ -147,14 +147,12 @@ export class PopupNoticeSignComponent implements OnInit {
       });
       return;
     }
-    const wif =
-      this.neo2WIFArr[
-        this.neo2WalletArr.findIndex(
-          (item) => item.accounts[0].address === this.address
-        )
-      ];
-    const privateKey = wallet.getPrivateKeyFromWIF(wif);
-    this.publicKey = wallet.getPublicKeyFromPrivateKey(privateKey);
-    this.sendMessage(wallet.sign(tx, privateKey));
+    this.utilServiceState
+      .getWIF(this.neo2WIFArr, this.neo2WalletArr, this.currentWallet)
+      .then((wif) => {
+        const privateKey = wallet.getPrivateKeyFromWIF(wif);
+        this.publicKey = wallet.getPublicKeyFromPrivateKey(privateKey);
+        this.sendMessage(wallet.sign(tx, privateKey));
+      });
   }
 }

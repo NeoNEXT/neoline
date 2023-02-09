@@ -12,7 +12,7 @@ import {
   PopupPrivateKeyComponent,
 } from '@popup/_dialogs';
 
-import { GlobalService, ChromeService } from '@app/core';
+import { GlobalService, ChromeService, UtilServiceState } from '@app/core';
 import { wallet } from '@cityofzion/neon-core';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
@@ -50,6 +50,7 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
     private global: GlobalService,
     private dialog: MatDialog,
     private chrome: ChromeService,
+    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -76,16 +77,15 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
     this.accountSub?.unsubscribe();
   }
 
-  initData() {
+  async initData() {
     this.address = this.currentWallet.accounts[0].address;
     this.inputName = this.currentWallet.name;
     this.isLedger = !!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44;
-    const wif =
-      this.currentWIFArr[
-        this.currentWalletArr.findIndex(
-          (item) => item.accounts[0].address === this.address
-        )
-      ];
+    const wif = await this.util.getWIF(
+      this.currentWIFArr,
+      this.currentWalletArr,
+      this.currentWallet
+    );
     if (this.isLedger) {
       this.publicKey = this.currentWallet.accounts[0]?.extra?.publicKey;
     } else {

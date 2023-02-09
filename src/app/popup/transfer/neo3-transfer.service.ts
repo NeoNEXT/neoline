@@ -25,7 +25,6 @@ export class Neo3TransferService {
   rpcClient;
 
   private address: string;
-  private neo3WIFArr: string[];
   private neo3WalletArr: Wallet3[];
   private n3Network: RpcNetwork;
   constructor(
@@ -36,7 +35,6 @@ export class Neo3TransferService {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.address = state.currentWallet?.accounts[0]?.address;
-      this.neo3WIFArr = state.neo3WIFArr;
       this.neo3WalletArr = state.neo3WalletArr;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.rpcClient = new rpc.RPCClient(this.n3Network.rpcUrl);
@@ -277,12 +275,7 @@ export class Neo3TransferService {
       .shiftedBy(8)
       .toFixed(0) as any;
     txClone = new tx.Transaction(txClone);
-    const wif =
-      this.neo3WIFArr[
-        this.neo3WalletArr.findIndex(
-          (item) => item.accounts[0].address === this.address
-        )
-      ] || 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
+    const wif = 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
     txClone.sign(wif, this.n3Network.magicNumber);
     const fee = await this.rpcClient.calculateNetworkFee(txClone);
     return fee;

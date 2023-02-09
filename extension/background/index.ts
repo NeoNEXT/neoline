@@ -399,14 +399,18 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           if (currWallet.accounts[0]?.extra?.ledgerSLIP44) {
             data.publicKey = currWallet.accounts[0].extra.publicKey;
           } else {
-            const privateKey = getPrivateKeyFromWIF(
+            let wif =
               WIFArr[
                 walletArr.findIndex(
                   (item) =>
                     item.accounts[0].address === currWallet.accounts[0].address
                 )
-              ]
-            );
+              ];
+            if (!wif) {
+              const pwd = await getLocalStorage('password', () => {});
+              wif = (await (currWallet.accounts[0] as any).decrypt(pwd)).WIF;
+            }
+            const privateKey = getPrivateKeyFromWIF(wif);
             data.publicKey = getPublicKeyFromPrivateKey(privateKey);
           }
           data.address = currWallet.accounts[0].address;

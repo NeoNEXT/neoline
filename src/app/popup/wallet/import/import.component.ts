@@ -220,7 +220,7 @@ export class PopupWalletImportComponent
       );
       if (newWallet !== 'Wrong password') {
         if (this.neon.verifyWallet(newWallet)) {
-          newWIFArr.push(newWallet.accounts[0].WIF);
+          newWIFArr.push(this.password ? '' : newWallet.accounts[0].WIF);
           const pushWallet =
             this.neon.selectedChainType === 'Neo2'
               ? new wallet2.Wallet(newWallet.export())

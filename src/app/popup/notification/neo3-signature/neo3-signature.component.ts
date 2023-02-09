@@ -75,7 +75,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
     );
   }
 
-  public signature() {
+  public async signature() {
     if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
       this.global.snackBarTip('LedgerUnSupportSignError');
       this.chrome.windowCallback({
@@ -90,19 +90,16 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
       });
       return;
     }
-    const wif =
-      this.neo3WIFArr[
-        this.neo3WalletArr.findIndex(
-          (item) => item.accounts[0].address === this.address
-        )
-      ];
+    const wif = await this.utilServiceState.getWIF(
+      this.neo3WIFArr,
+      this.neo3WalletArr,
+      this.currentWallet
+    );
     const privateKey = wallet.getPrivateKeyFromWIF(wif);
     const randomSalt = randomBytes(16).toString('hex');
     const publicKey = wallet.getPublicKeyFromPrivateKey(privateKey);
     const str = this.isSign ? this.message : randomSalt + this.message;
-    const parameterHexString = Buffer.from(str).toString(
-      'hex'
-    );
+    const parameterHexString = Buffer.from(str).toString('hex');
     const lengthHex = u.num2VarInt(parameterHexString.length / 2);
     const concatenatedString = lengthHex + parameterHexString;
     const serializedTransaction = '010001f0' + concatenatedString + '0000';

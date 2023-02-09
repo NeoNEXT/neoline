@@ -445,14 +445,12 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
       });
       return;
     }
-    const wif =
-      this.neo3WIFArr[
-        this.neo3WalletArr.findIndex(
-          (item) => item.accounts[0].address === this.fromAddress
-        )
-      ];
-    tx.sign(wif, this.n3Network.magicNumber);
-    this.tx = tx;
-    this.resolveSend(tx);
+    this.util
+      .getWIF(this.neo3WIFArr, this.neo3WalletArr, this.currentWallet)
+      .then((wif) => {
+        tx.sign(wif, this.n3Network.magicNumber);
+        this.tx = tx;
+        this.resolveSend(tx);
+      });
   }
 }

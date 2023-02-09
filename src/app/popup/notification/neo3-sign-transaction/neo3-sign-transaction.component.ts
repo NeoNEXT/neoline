@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ChromeService, LedgerService } from '@/app/core';
+import { ChromeService, LedgerService, UtilServiceState } from '@/app/core';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { ERRORS } from '@/models/dapi';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
@@ -39,6 +39,7 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
     private aRouter: ActivatedRoute,
     private chrome: ChromeService,
     private ledger: LedgerService,
+    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -145,13 +146,11 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
       });
       return;
     }
-    const wif =
-      this.neo3WIFArr[
-        this.neo3WalletArr.findIndex(
-          (item) => item.accounts[0].address === this.address
-        )
-      ];
-    this.tx.sign(wif, this.n3Network.magicNumber);
-    this.sendMessage();
+    this.util
+      .getWIF(this.neo3WIFArr, this.neo3WalletArr, this.currentWallet)
+      .then((wif) => {
+        this.tx.sign(wif, this.n3Network.magicNumber);
+        this.sendMessage();
+      });
   }
 }
