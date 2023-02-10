@@ -414,7 +414,7 @@ export class NeonService {
             item.accounts[0].address === this.currentWallet.accounts[0].address
         )
       ];
-    if (!wif) {
+    if (!wif && !this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
       const pwd = await this.chrome
         .getStorage(STORAGE_NAME.password)
         .toPromise();

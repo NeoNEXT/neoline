@@ -367,6 +367,9 @@ export class UtilServiceState {
     if (wif) {
       return wif;
     }
+    if (currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
+      return '';
+    }
     const pwd = await this.chrome.getStorage(STORAGE_NAME.password).toPromise();
     return (currentWallet.accounts[0] as any).decrypt(pwd).then((res) => {
       return res.WIF;
