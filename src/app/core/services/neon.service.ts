@@ -171,16 +171,16 @@ export class NeonService {
         });
         //#region networks
         if (!Neo3RemoveT4FlagRes) {
-          n3NetworkIndexRes = 0;
           if (n3NetworksRes[1].chainId === 4) {
             n3NetworksRes[2].name = 'N3 TESTNET';
             n3NetworksRes.splice(1, 1);
+            n3NetworkIndexRes = 0;
+            this.store.dispatch({ type: UPDATE_NEO3_NETWORK_INDEX, data: 0 });
+            this.store.dispatch({
+              type: UPDATE_NEO3_NETWORKS,
+              data: n3NetworksRes,
+            });
           }
-          this.store.dispatch({ type: UPDATE_NEO3_NETWORK_INDEX, data: 0 });
-          this.store.dispatch({
-            type: UPDATE_NEO3_NETWORKS,
-            data: n3NetworksRes,
-          });
           this.chrome.setStorage(STORAGE_NAME.neo3RemoveT4Flag, true);
           this.getFastRpcUrl(true);
         } else {
@@ -195,7 +195,10 @@ export class NeonService {
           neo3WalletArrRes.length > 0
         ) {
           neo3WalletArrRes.forEach((item, index) => {
-            if (item.accounts[0]?.extra?.ledgerSLIP44) {
+            if (
+              item.accounts[0]?.extra?.ledgerSLIP44 ||
+              !neo3WIFArrRes[index]
+            ) {
               return;
             }
             const account = new wallet3.Account(

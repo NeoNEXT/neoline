@@ -72,6 +72,8 @@ import {
 import { u as u3, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import BigNumber from 'bignumber.js';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 /**
  * Background methods support.
@@ -392,7 +394,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         const chain = await getLocalStorage(`chainType`, () => {});
         const key = chain === 'Neo2' ? '' : `-${chain}`;
         const walletArr = await getLocalStorage(`walletArr${key}`, () => {});
-        const currWallet = await getLocalStorage('wallet', () => {});
+        let currWallet = await getLocalStorage('wallet', () => {});
+        currWallet =
+          chain === 'Neo2' ? new Wallet2(currWallet) : new Wallet3(currWallet);
         const WIFArr = await getLocalStorage(`WIFArr${key}`, () => {});
         const data: AccountPublicKey = { address: '', publicKey: '' };
         if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {

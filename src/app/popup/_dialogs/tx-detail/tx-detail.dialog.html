@@ -1,6 +1,6 @@
 <div class="pop-ups-title">
   {{ (data.tx.type === 'received'? 'received' : 'sent') | translate | async }}
-  {{ data.symbol }}
+  {{ data?.symbol }}
   <img
     class="close"
     [mat-dialog-close]="false"
@@ -24,7 +24,7 @@
   </li>
   <li>
     <span class="label">{{ 'amount' | translate | async }}</span>
-    <span class="value break-all">{{ data.tx.value + ' ' + data.symbol }}</span>
+    <span class="value break-all">{{ data.tx.value + ' ' + data?.symbol }}</span>
   </li>
   <li>
     <span class="label">{{ 'time' | translate | async }}</span>

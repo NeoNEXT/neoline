@@ -1,5 +1,10 @@
 @import "../common-scss/common.scss";
 
-.container .content .hex-label {
-  margin-top: 0;
+.container .content {
+  .hex-label {
+    margin-top: 0;
+  }
+  .json-box {
+    color: var(--title-color);
+  }
 }

@@ -12,6 +12,9 @@
       NEO {{ n2Network.network }}
       {{ "ChainSmartContractDeploy" | translate | async }}
     </p>
+    <p class="account">
+      <img [avatar]="signAddress" />{{ signAddress | longStr : 10 }}
+    </p>
   </div>
   <div class="tabs-container">
     <span

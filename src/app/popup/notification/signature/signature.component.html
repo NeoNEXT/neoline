@@ -2,7 +2,6 @@
   <div class="content">
     <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
     <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
-    <p class="account"><img [avatar]="address" />{{ address | longStr : 10 }}</p>
   </div>
 </div>
 
@@ -10,6 +9,7 @@
   <div class="header">
     <div class="invoke-type">· SIGNMESSAGE</div>
     <p class="title">{{ "thSignTitle" | translate | async }}</p>
+    <p class="account"><img [avatar]="address" />{{ address | longStr : 10 }}</p>
   </div>
   <div class="content">
     <p class="hex-label">{{ "message" | translate | async }}</p>
