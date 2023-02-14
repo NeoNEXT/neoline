@@ -1,6 +1,11 @@
 <div class="backup-tip" *ngIf="showOnePassword">
   <p class="title">{{ "OnePasswordPattern" | translate | async }}</p>
-  <p class="desc">{{ "onePasswordDesc" | translate | async }}</p>
+  <p class="desc">
+    {{ "onePasswordDesc" | translate | async }}
+    <span class="link" (click)="toOnePwd()">
+      {{ "ClickToLearnMore" | translate | async }}
+    </span>
+  </p>
   <div class="btn-group">
     <button class="pop-ups later" (click)="switchOneLater()">
       {{ "backUpTipLater" | translate | async }}

@@ -924,10 +924,19 @@
     "message": "Please create or import a Neo N3 account first"
   },
   "OnePasswordPattern": {
-    "message": "One password pattern"
+    "message": "One Pass Setting"
   },
   "onePasswordDesc": {
-    "message": "A password pattern"
+    "message": "We have optimized wallet passwords and added password mode switching function, which support users before v3.7.0 to set a general password to manage multiple wallet accounts. Click 'Switch Now' to complete the account security verification and switch to the new password management mode."
+  },
+  "ClickToLearnMore": {
+    "message": "Click to learn more!"
+  },
+  "OnePasswordTitle": {
+    "message": "Password Mode Switch"
+  },
+  "onePasswordTip": {
+    "message": "Please enter the passwords corresponding to all accounts correctly to complete the switch, and ensure that the wallet has been backed up safely."
   },
   "SwitchNow": {
     "message": "Switch Now"

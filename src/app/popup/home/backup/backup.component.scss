@@ -1,6 +1,3 @@
-
-
-
 .backup-tip {
   position: fixed;
   bottom: 16px;
@@ -21,6 +18,9 @@
     line-height: 18px;
     color: #ffffff;
     margin-top: 16px;
+    .link {
+      color: var(--theme-color);
+    }
   }
   .btn-group {
     margin-top: 32px;

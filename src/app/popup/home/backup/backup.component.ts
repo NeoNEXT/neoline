@@ -1,21 +1,30 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
-import { ChromeService } from '@/app/core';
+import { ChromeService, SettingState } from '@/app/core';
 import { STORAGE_NAME } from '../../_lib';
+import { Unsubscribable } from 'rxjs';
 
 @Component({
   selector: 'app-home-backup',
   templateUrl: 'backup.component.html',
   styleUrls: ['./backup.component.scss'],
 })
-export class PopupHomeBackupComponent implements OnInit {
+export class PopupHomeBackupComponent implements OnInit, OnDestroy {
   @Input() currentWallet: Wallet2 | Wallet3;
   showBackup: boolean = null;
 
   showOnePassword: boolean = null;
+  settingStateSub: Unsubscribable;
 
-  constructor(private chrome: ChromeService) {}
+  constructor(
+    private chrome: ChromeService,
+    private settingState: SettingState
+  ) {}
+
+  ngOnDestroy(): void {
+    this.settingStateSub?.unsubscribe();
+  }
 
   ngOnInit(): void {
     this.chrome.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {
@@ -46,5 +55,19 @@ export class PopupHomeBackupComponent implements OnInit {
   switchOneLater() {
     this.chrome.setStorage(STORAGE_NAME.onePassword, false);
     this.showOnePassword = false;
+  }
+
+  toOnePwd() {
+    this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
+      if (lang !== 'en') {
+        window.open(
+          'https://tutorial.neoline.io/neoline-cha-jian-qian-bao-tong-yong-mi-ma-she-zhi'
+        );
+      } else {
+        window.open(
+          'https://tutorial.neoline.io/v/1/one-pass-setting-for-neoline-extension-wallet'
+        );
+      }
+    });
   }
 }

@@ -924,10 +924,19 @@
     "message": "请先创建或导入一个 Neo N3 账户"
   },
   "OnePasswordPattern": {
-    "message": "一个密码模式"
+    "message": "通用密码设置"
   },
   "onePasswordDesc": {
-    "message": "一个密码模式"
+    "message": "优化钱包密码策略，新增密码模式切换功能，支持 v3.7.0 之前的用户设置一个通用密码管理多个钱包账户。点击立即切换，完成账户安全验证切换到新的密码管理模式。"
+  },
+  "ClickToLearnMore": {
+    "message": "前往了解更多！"
+  },
+  "OnePasswordTitle": {
+    "message": "密码模式切换"
+  },
+  "onePasswordTip": {
+    "message": "请正确输入所有账户对应的密码完成切换，并确保已安全备份钱包。"
   },
   "SwitchNow": {
     "message": "立即切换"
