@@ -41,6 +41,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   isLoadingAccount = false;
   accountBalance = [];
   getBalanceReq;
+  settingStateSub: Unsubscribable;
 
   private accountSub: Unsubscribable;
   private neo2WalletArr: Wallet2[];
@@ -68,6 +69,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
     this.getStatusInterval?.unsubscribe();
+    this.settingStateSub?.unsubscribe();
   }
 
   chooseAccount(index: number) {
@@ -149,7 +151,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   }
 
   public async jumbToWeb(type: 'privacy' | 'agreement') {
-    this.settingState.langSub.subscribe((lang) => {
+    this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
       if (lang !== 'en') {
         lang = '';
       } else {
