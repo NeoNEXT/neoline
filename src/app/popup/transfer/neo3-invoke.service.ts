@@ -33,7 +33,6 @@ export class Neo3InvokeService {
   rpcClient;
 
   private address: string;
-  private neo3WalletArr: Wallet3[];
   private n3Network: RpcNetwork;
   constructor(
     public assetState: AssetState,
@@ -44,7 +43,6 @@ export class Neo3InvokeService {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.address = state.currentWallet?.accounts[0]?.address;
-      this.neo3WalletArr = state.neo3WalletArr;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.rpcClient = new rpc.RPCClient(this.n3Network.rpcUrl);
     });

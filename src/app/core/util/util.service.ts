@@ -282,11 +282,12 @@ export class UtilServiceState {
     if (!this.n3NftProperties[contract]) {
       this.n3NftProperties[contract] = {};
     }
-    const requests = [];
-    tokenids.forEach((id) => {
-      let tempReq;
+    const requestData = [];
+    const requestIndexs = [];
+    const propertiesRes = [];
+    tokenids.forEach((id, index) => {
       if (this.n3NftProperties[contract][id]) {
-        tempReq = of(this.n3NftProperties[contract][id]).toPromise();
+        propertiesRes[index] = this.n3NftProperties[contract][id];
       } else {
         const data = {
           jsonrpc: '2.0',
@@ -294,28 +295,29 @@ export class UtilServiceState {
           method: 'getnep11properties',
           params: [contract, id],
         };
-        tempReq = this.http
-          .rpcPost(this.n3Network.rpcUrl, data)
-          .toPromise()
-          .catch((err) => err);
+        requestData.push(data);
+        requestIndexs.push(index);
       }
-      requests.push(tempReq);
     });
-    return Promise.all([...requests]).then((res) => {
-      const propertiesRes = [];
-      res.forEach((item, index) => {
-        let properties = { name: '', image: '' };
-        if (item?.owner) {
-          properties.name = item.name;
-          properties.image = item.image;
-        } else if (item.name) {
-          properties = item;
-        }
-        this.n3NftProperties[contract][tokenids[index]] = properties;
-        propertiesRes.push(properties);
+    if (requestData.length === 0) {
+      return Promise.resolve(propertiesRes);
+    }
+    return this.http
+      .rpcPostReturnAllData(this.n3Network.rpcUrl, requestData)
+      .toPromise()
+      .then((res) => {
+        res.forEach((item, index) => {
+          const properties = { name: '', image: '' };
+          if (item?.result?.owner) {
+            properties.name = item?.result?.name;
+            properties.image = item?.result?.image;
+          }
+          const tokenIdIndex = requestIndexs[index];
+          this.n3NftProperties[contract][tokenids[tokenIdIndex]] = properties;
+          propertiesRes[tokenIdIndex] = properties;
+        });
+        return propertiesRes;
       });
-      return propertiesRes;
-    });
   }
 
   getN3NnsAddress(domain: string, chainId: number) {

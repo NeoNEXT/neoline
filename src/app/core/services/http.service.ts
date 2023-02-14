@@ -68,6 +68,21 @@ export class HttpService {
       );
   }
 
+  public rpcPostReturnAllData(url: string, data: any): Observable<any> {
+    return this.http.post(url, data).pipe(
+      timeout(5000),
+      catchError(() => of('Request timed out')),
+      map((res: any) => {
+        if (res === 'Request timed out') {
+          this.neon.getFastRpcUrl(true);
+          throw 'Error!';
+        }
+        return res;
+      })
+      // retry(3)
+    );
+  }
+
   public rpcPost(url: string, data: any): Observable<any> {
     return this.http.post(url, data).pipe(
       timeout(5000),
