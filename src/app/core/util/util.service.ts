@@ -145,15 +145,17 @@ export class UtilServiceState {
     contracts: string[],
     chainType: ChainType
   ): Promise<string[]> {
+    console.log(contracts);
     const rpcUrl =
       chainType === 'Neo2' ? this.n2Network.rpcUrl : this.n3Network.rpcUrl;
-    const requests = [];
-    contracts.forEach((assetId) => {
-      let tempReq;
+    const requestDatas = [];
+    const requestIndexs = [];
+    const symbolsRes = [];
+    contracts.forEach((assetId, index) => {
       if (chainType === 'Neo2' && this.n2AssetSymbol.has(assetId)) {
-        tempReq = of(this.n2AssetSymbol.get(assetId)).toPromise();
+        symbolsRes[index] = this.n2AssetSymbol.get(assetId);
       } else if (chainType === 'Neo3' && this.n3AssetSymbol.has(assetId)) {
-        tempReq = of(this.n3AssetSymbol.get(assetId)).toPromise();
+        symbolsRes[index] = this.n3AssetSymbol.get(assetId);
       } else {
         const data = {
           jsonrpc: '2.0',
@@ -161,35 +163,40 @@ export class UtilServiceState {
           method: 'invokefunction',
           params: [assetId, 'symbol'],
         };
-        tempReq = this.http.rpcPost(rpcUrl, data).toPromise();
+        requestIndexs.push(index);
+        requestDatas.push(data);
       }
-      requests.push(tempReq);
     });
-    return Promise.all([...requests]).then((res) => {
-      const symbolsRes = [];
-      res.forEach((item, index) => {
-        let symbol: string;
-        if (typeof item === 'string') {
-          symbol = item;
-        }
-        if (item.stack) {
-          symbol = item.stack[0].value;
-          if (item.stack[0].type === 'ByteArray') {
-            symbol = hexstring2str(item.stack[0].value);
+    console.log(this.n2AssetSymbol);
+    console.log(symbolsRes);
+    if (requestDatas.length === 0) {
+      return Promise.resolve(symbolsRes);
+    }
+    return this.http
+      .rpcPostReturnAllData(rpcUrl, requestDatas)
+      .toPromise()
+      .then((res) => {
+        res.forEach((item, index) => {
+          let symbol: string = '';
+          if (item.result.stack) {
+            symbol = item.result.stack[0].value;
+            if (item.result.stack[0].type === 'ByteArray') {
+              symbol = hexstring2str(item.result.stack[0].value);
+            }
+            if (item.result.stack[0].type === 'ByteString') {
+              symbol = hexstring2str(base642hex(item.result.stack[0].value));
+            }
           }
-          if (item.stack[0].type === 'ByteString') {
-            symbol = hexstring2str(base642hex(item.stack[0].value));
-          }
+          const sourceIndex = requestIndexs[index];
           if (chainType === 'Neo2') {
-            this.n2AssetSymbol.set(contracts[index], symbol);
+            this.n2AssetSymbol.set(contracts[sourceIndex], symbol);
           } else {
-            this.n3AssetSymbol.set(contracts[index], symbol);
+            this.n3AssetSymbol.set(contracts[sourceIndex], symbol);
           }
-        }
-        symbolsRes.push(symbol);
+          symbolsRes[sourceIndex] = symbol;
+        });
+        return symbolsRes;
       });
-      return symbolsRes;
-    });
   }
 
   getAssetDecimals(
@@ -307,11 +314,10 @@ export class UtilServiceState {
       .toPromise()
       .then((res) => {
         res.forEach((item, index) => {
-          const properties = { name: '', image: '' };
-          if (item?.result?.owner) {
-            properties.name = item?.result?.name;
-            properties.image = item?.result?.image;
-          }
+          const properties = {
+            name: item?.result?.name || '',
+            image: item?.result?.image || '',
+          };
           const tokenIdIndex = requestIndexs[index];
           this.n3NftProperties[contract][tokenids[tokenIdIndex]] = properties;
           propertiesRes[tokenIdIndex] = properties;

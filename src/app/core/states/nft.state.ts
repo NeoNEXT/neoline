@@ -30,16 +30,7 @@ export class NftState {
     const res = await this.http
       .rpcPost(this.n3Network.rpcUrl, data)
       .toPromise();
-    const contracts = [];
-    const resData = res.balance;
-    resData.forEach((m) => contracts.push(m.assethash));
-    const symbols = await this.util.getAssetSymbols(contracts, 'Neo3');
-    const names = await this.util.getN3NftNames(contracts);
-    resData.forEach((m, index) => {
-      resData[index].symbol = symbols[index];
-      resData[index].name = names[index];
-    });
-    return resData;
+    return res.balance;
   }
 
   async getNftTokens(address: string, contract: string): Promise<NftAsset> {
@@ -52,22 +43,10 @@ export class NftState {
     const res = await this.http
       .rpcPost(this.n3Network.rpcUrl, data)
       .toPromise();
-    let nftAsset: NftAsset = res.balance.find((m) => m.assethash === contract);
-    const symbols = await this.util.getAssetSymbols([contract], 'Neo3');
-    const names = await this.util.getN3NftNames([contract]);
-    if (!nftAsset) {
-      nftAsset = {
-        assethash: contract,
-        name: names[0],
-        symbol: symbols[0],
-        tokens: [],
-      };
-    } else {
-      nftAsset = { ...nftAsset, name: names[0], symbol: symbols[0] };
-    }
+    const nftAsset: NftAsset = res.balance.find((m) => m.assethash === contract);
     const tokenIds = [];
     nftAsset.tokens.forEach((m, index) => {
-      nftAsset.tokens[index].symbol = symbols[0];
+      nftAsset.tokens[index].symbol = nftAsset.symbol;
       tokenIds.push(m.tokenid);
     });
     const propertiesRes = await this.util.getN3NftProperties(
