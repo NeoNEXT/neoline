@@ -110,6 +110,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
+    this.getStatusInterval?.unsubscribe();
     if (this.intervalN3Claim) {
       clearInterval(this.intervalN3Claim);
     }
@@ -131,7 +132,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       this.loading = this.homeService.loading;
       this.showClaim = this.homeService.showClaim;
       this.claimNumber = this.homeService.claimNumber;
-      this.getTxStatus();
+      this.getN3ClaimTxStatus();
     }
     this.initClaim();
   }
@@ -237,7 +238,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     }
   }
 
-  getTxStatus() {
+  getN3ClaimTxStatus() {
     const queryTxInterval = interval(5000)
       .pipe(take(5))
       .subscribe(() => {
@@ -279,6 +280,9 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   }
 
   private initClaim() {
+    if (this.intervalN3Claim) {
+      clearInterval(this.intervalN3Claim);
+    }
     if (this.chainType === 'Neo2') {
       this.assetState.fetchClaim(this.address).subscribe((res: any) => {
         this.claimsData = res.claimable;
@@ -303,9 +307,6 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         return;
       }
       this.getN3UnclaimedGas();
-      if (this.intervalN3Claim) {
-        clearInterval(this.intervalN3Claim);
-      }
       this.intervalN3Claim = setInterval(() => {
         this.getN3UnclaimedGas();
       }, 15000);
@@ -356,7 +357,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       case 'claimNeo3':
         this.neo3TransferService.sendNeo3Tx(tx as Transaction3).then((hash) => {
           this.homeService.claimGasHash = hash;
-          this.getTxStatus();
+          this.getN3ClaimTxStatus();
         });
         break;
       case 'syncNow':

@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   AssetState,
@@ -36,7 +36,7 @@ type TabType = 'details' | 'data';
   templateUrl: 'neo3-transfer.component.html',
   styleUrls: ['neo3-transfer.component.scss'],
 })
-export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
+export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit, OnDestroy {
   tabType: TabType = 'details';
   NEO = NEO;
   public rpcClient;
@@ -100,6 +100,9 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit {
       this.neo3WalletArr = state.neo3WalletArr;
       this.rpcClient = new rpc.RPCClient(this.n3Network.rpcUrl);
     });
+  }
+  ngOnDestroy(): void {
+    this.getStatusInterval?.unsubscribe();
   }
 
   ngOnInit(): void {

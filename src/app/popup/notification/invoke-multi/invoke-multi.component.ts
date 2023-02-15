@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   GlobalService,
@@ -43,7 +43,7 @@ type TabType = 'details' | 'data';
   templateUrl: 'invoke-multi.component.html',
   styleUrls: ['invoke-multi.component.scss'],
 })
-export class PopupNoticeInvokeMultiComponent implements OnInit {
+export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
   tabType: TabType = 'details';
   public dataJson: any = {};
   public feeMoney = '0';
@@ -97,6 +97,9 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
       this.neo2WIFArr = state.neo2WIFArr;
       this.neo2WalletArr = state.neo2WalletArr;
     });
+  }
+  ngOnDestroy(): void {
+    this.getStatusInterval?.unsubscribe();
   }
 
   ngOnInit(): void {

@@ -1,4 +1,4 @@
-import { Component, OnInit, AfterViewInit } from '@angular/core';
+import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   AssetState,
@@ -37,7 +37,7 @@ type TabType = 'details' | 'data';
   templateUrl: 'transfer.component.html',
   styleUrls: ['transfer.component.scss'],
 })
-export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
+export class PopupNoticeTransferComponent implements OnInit, AfterViewInit, OnDestroy {
   tabType: TabType = 'details';
   NEO = NEO;
   public dataJson: any = {};
@@ -95,6 +95,9 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit {
       this.neo2WIFArr = state.neo2WIFArr;
       this.neo2WalletArr = state.neo2WalletArr;
     });
+  }
+  ngOnDestroy(): void {
+    this.getStatusInterval?.unsubscribe();
   }
 
   ngOnInit(): void {

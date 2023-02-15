@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import {
   GlobalService,
@@ -37,7 +37,7 @@ type TabType = 'details' | 'data';
   templateUrl: 'neo3-invoke-multiple.component.html',
   styleUrls: ['neo3-invoke-multiple.component.scss'],
 })
-export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
+export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy {
   tabType: TabType = 'details';
   public dataJson: any = {};
   public rateCurrency = '';
@@ -94,6 +94,9 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
       this.neo3WIFArr = state.neo3WIFArr;
       this.neo3WalletArr = state.neo3WalletArr;
     });
+  }
+  ngOnDestroy(): void {
+    this.getStatusInterval?.unsubscribe();
   }
 
   ngOnInit(): void {

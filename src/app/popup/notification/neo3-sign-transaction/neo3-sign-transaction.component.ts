@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ChromeService, LedgerService, UtilServiceState } from '@/app/core';
 import { requestTargetN3 } from '@/models/dapi_neo3';
@@ -17,7 +17,7 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
   templateUrl: './neo3-sign-transaction.component.html',
   styleUrls: ['./neo3-sign-transaction.component.scss'],
 })
-export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
+export class PopupNoticeNeo3SignTransactionComponent implements OnInit, OnDestroy {
   public tx: Transaction;
   public txJson;
   public serializeTx: string;
@@ -51,6 +51,9 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
       this.neo3WIFArr = state.neo3WIFArr;
       this.neo3WalletArr = state.neo3WalletArr;
     });
+  }
+  ngOnDestroy(): void {
+    this.getStatusInterval?.unsubscribe();
   }
 
   ngOnInit() {

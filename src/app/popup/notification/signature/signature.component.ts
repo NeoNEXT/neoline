@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ChromeService, LedgerService, UtilServiceState } from '@/app/core';
 import { ERRORS, requestTarget } from '@/models/dapi';
@@ -16,7 +16,7 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
   templateUrl: './signature.component.html',
   styleUrls: ['./signature.component.scss'],
 })
-export class PopupNoticeSignComponent implements OnInit {
+export class PopupNoticeSignComponent implements OnInit, OnDestroy {
   public message: string;
   private messageID = 0;
 
@@ -50,6 +50,9 @@ export class PopupNoticeSignComponent implements OnInit {
       this.neo2WIFArr = state.neo2WIFArr;
       this.neo2WalletArr = state.neo2WalletArr;
     });
+  }
+  ngOnDestroy(): void {
+    this.getStatusInterval?.unsubscribe();
   }
 
   ngOnInit() {

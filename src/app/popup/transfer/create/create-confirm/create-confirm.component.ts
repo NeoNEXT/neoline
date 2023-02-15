@@ -1,4 +1,4 @@
-import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
+import { Component, Input, OnInit, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { GAS3_CONTRACT, LedgerStatuses, STORAGE_NAME } from '../../../_lib';
 import { GAS } from '@/models/models';
 import { TransferData } from '../interface';
@@ -29,7 +29,7 @@ type TabType = 'details' | 'data';
   templateUrl: 'create-confirm.component.html',
   styleUrls: ['create-confirm.component.scss'],
 })
-export class TransferCreateConfirmComponent implements OnInit {
+export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   @Input() data: TransferData;
   @Output() backAmount = new EventEmitter();
   rateCurrency = '';
@@ -59,6 +59,9 @@ export class TransferCreateConfirmComponent implements OnInit {
     private neo3Transfer: Neo3TransferService,
     private chrome: ChromeService
   ) {}
+  ngOnDestroy(): void {
+    this.getStatusInterval?.unsubscribe();
+  }
 
   async ngOnInit(): Promise<void> {
     this.getDataJson();
