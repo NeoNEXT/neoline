@@ -65,6 +65,12 @@
   "enterPassword": {
     "message": "输入密码"
   },
+  "enterFilePassword": {
+    "message": "输入文件密码"
+  },
+  "filePasswordRequired": {
+    "message": "文件密码必填"
+  },
   "passwordRequired": {
     "message": "密码必填"
   },

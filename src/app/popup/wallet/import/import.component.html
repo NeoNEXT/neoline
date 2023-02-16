@@ -164,15 +164,49 @@
     <form [formGroup]="nep6Form">
       <mat-form-field class="form-field" appearance="fill" focused="true">
         <img matPrefix theme src="/assets/images/login/lock.svg" alt="" />
+        <mat-label>{{ "enterFilePassword" | translate | async }}</mat-label>
+        <input
+          matInput
+          required
+          formControlName="filePassword"
+          [type]="hideNep6FilePwd ? 'password' : 'text'"
+          (keyup.enter)="
+            isInit || loading || nep6Form.invalid ? null : importFile()
+          "
+        />
+        <img
+          class="suffix"
+          (click)="hideNep6FilePwd = !hideNep6FilePwd"
+          matSuffix
+          theme
+          *ngIf="hideNep6FilePwd"
+          src="assets/images/login/eye-hide.svg"
+        />
+        <img
+          class="suffix"
+          (click)="hideNep6FilePwd = !hideNep6FilePwd"
+          matSuffix
+          theme
+          *ngIf="!hideNep6FilePwd"
+          src="assets/images/login/eye-view.svg"
+        />
+        <mat-error *ngIf="nep6Form.get('filePassword').errors?.required">
+          {{ "filePasswordRequired" | translate | async }}
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field
+        *ngIf="!password"
+        class="form-field"
+        appearance="fill"
+        focused="true"
+      >
+        <img matPrefix theme src="/assets/images/login/lock.svg" alt="" />
         <mat-label>{{ "enterPassword" | translate | async }}</mat-label>
         <input
           matInput
           required
           formControlName="password"
           [type]="hideNep6Pwd ? 'password' : 'text'"
-          (keyup.enter)="
-            isInit || loading || nep6Form.invalid ? null : importFile()
-          "
         />
         <img
           class="suffix"
@@ -193,10 +227,49 @@
         <mat-error *ngIf="nep6Form.get('password').errors?.required">
           {{ "passwordRequired" | translate | async }}
         </mat-error>
+        <mat-error *ngIf="nep6Form.get('password').errors?.pattern">
+          {{ "lengthLimit" | translate | async }}:
+          {{ limit?.passwordLimitation[0] }}-{{ limit?.passwordLimitation[1] }}
+        </mat-error>
+      </mat-form-field>
+      <mat-form-field
+        *ngIf="!password"
+        class="form-field"
+        appearance="fill"
+        focused="true"
+      >
+        <img matPrefix theme src="/assets/images/login/lock.svg" />
+        <mat-label>{{ "enterConfirmPassword" | translate | async }}</mat-label>
+        <input
+          matInput
+          required
+          formControlName="confirmPassword"
+          [errorStateMatcher]="matcher"
+          [type]="hideNep6ConfirmPwd ? 'password' : 'text'"
+        />
+        <img
+          class="suffix"
+          (click)="hideNep6ConfirmPwd = !hideNep6ConfirmPwd"
+          matSuffix
+          theme
+          *ngIf="hideNep6ConfirmPwd"
+          src="assets/images/login/eye-hide.svg"
+        />
+        <img
+          class="suffix"
+          (click)="hideNep6ConfirmPwd = !hideNep6ConfirmPwd"
+          matSuffix
+          theme
+          *ngIf="!hideNep6ConfirmPwd"
+          src="assets/images/login/eye-view.svg"
+        />
+        <mat-error *ngIf="nep6Form.hasError('notSame')">
+          {{ "confirmError" | translate | async }}
+        </mat-error>
       </mat-form-field>
     </form>
   </div>
-  <div class="btn-group" [ngClass]="{ 'import-key': importType === 'key' }">
+  <div class="btn-group">
     <button
       class="confirm"
       *ngIf="importType === 'key'"

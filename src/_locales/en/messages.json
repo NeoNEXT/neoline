@@ -65,6 +65,12 @@
   "enterPassword": {
     "message": "Enter password"
   },
+  "enterFilePassword": {
+    "message": "Enter file password"
+  },
+  "filePasswordRequired": {
+    "message": "File password is required"
+  },
   "passwordRequired": {
     "message": "Password is required"
   },

@@ -66,7 +66,9 @@ export class PopupWalletImportComponent
 
   nep6Form: FormGroup;
   nep6Json;
+  hideNep6FilePwd = true;
   hideNep6Pwd = true;
+  hideNep6ConfirmPwd = true;
   showImportTypeMenu = false;
 
   @Input() password: string;
@@ -97,6 +99,11 @@ export class PopupWalletImportComponent
         name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
         WIF: ['', [Validators.required, checkWIF(this.neon.selectedChainType)]],
       });
+      this.nep6Form = this.fb.group({
+        name: ['', [Validators.required]],
+        EncrpytedKey: ['', [Validators.required]],
+        filePassword: ['', [Validators.required]],
+      });
     } else {
       this.importForm = this.fb.group(
         {
@@ -113,12 +120,20 @@ export class PopupWalletImportComponent
         },
         { validators: checkPasswords }
       );
+      this.nep6Form = this.fb.group(
+        {
+          name: ['', [Validators.required]],
+          EncrpytedKey: ['', [Validators.required]],
+          filePassword: ['', [Validators.required]],
+          password: [
+            '',
+            [Validators.required, Validators.pattern(/^.{8,128}$/)],
+          ],
+          confirmPassword: ['', [Validators.required]],
+        },
+        { validators: checkPasswords }
+      );
     }
-    this.nep6Form = this.fb.group({
-      name: ['', [Validators.required]],
-      EncrpytedKey: ['', [Validators.required]],
-      password: ['', [Validators.required]],
-    });
   }
 
   ngAfterContentInit(): void {
@@ -206,7 +221,8 @@ export class PopupWalletImportComponent
       return;
     }
     this.loading = true;
-    const filePwd = this.nep6Form.value.password;
+    const filePwd = this.nep6Form.value.filePassword;
+    const newPwd = this.nep6Form.value?.password;
     const accounts: any[] = this.nep6Json?.accounts || [];
     const newWalletArr = [];
     const newWIFArr = [];
@@ -216,7 +232,7 @@ export class PopupWalletImportComponent
         item.key,
         filePwd,
         item.label,
-        this.password || filePwd
+        this.password || newPwd
       );
       if (newWallet !== 'Wrong password') {
         if (this.neon.verifyWallet(newWallet)) {
@@ -241,7 +257,9 @@ export class PopupWalletImportComponent
         this.global.snackBarTip('walletImportFailed');
       }
     } else {
-      this.setPassword(filePwd);
+      if (!this.password && newPwd) {
+        this.setPassword(newPwd);
+      }
       this.submitFile.emit({ walletArr: newWalletArr, wifArr: newWIFArr });
     }
   }
