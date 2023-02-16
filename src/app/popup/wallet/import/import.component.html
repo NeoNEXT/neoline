@@ -193,6 +193,9 @@
         <mat-error *ngIf="nep6Form.get('filePassword').errors?.required">
           {{ "filePasswordRequired" | translate | async }}
         </mat-error>
+        <mat-error *ngIf="nep6Form.get('filePassword').errors?.wrong">
+          {{ "wrongPassword" | translate | async }}
+        </mat-error>
       </mat-form-field>
       <mat-form-field
         *ngIf="!password"

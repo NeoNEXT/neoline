@@ -252,7 +252,8 @@ export class PopupWalletImportComponent
     this.loading = false;
     if (newWalletArr.length === 0) {
       if (isErrorPwd) {
-        this.global.snackBarTip('wrongPassword');
+        this.nep6Form.controls[`filePassword`].setErrors({ wrong: true });
+        this.nep6Form.markAsDirty();
       } else {
         this.global.snackBarTip('walletImportFailed');
       }
