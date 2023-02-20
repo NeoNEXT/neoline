@@ -9,21 +9,18 @@ export class CopyComponent {
   @Input() value: string;
 
   isShowPopup = false;
-  showPopupTimeout: any;
+  private showPopupTimeout: any;
   hasCopied = false;
   constructor() {}
 
   copy() {
-    const input = document.createElement('input');
-    input.setAttribute('readonly', 'readonly');
-    input.setAttribute('value', this.value);
-    document.body.appendChild(input);
-    input.select();
-    if (document.execCommand('copy')) {
-      document.execCommand('copy');
+    try {
+      navigator.clipboard.writeText(this.value).then(() => {
+        this.hasCopied = true;
+      });
+    } catch (error) {
+      console.error('Failed to copy: ', error);
     }
-    document.body.removeChild(input);
-    this.hasCopied = true;
   }
 
   showPopup(): void {
