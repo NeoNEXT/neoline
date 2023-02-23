@@ -56,6 +56,9 @@
         <mat-error *ngIf="loginForm.get('password').errors?.required">
           {{ "passwordRequired" | translate | async }}
         </mat-error>
+        <mat-error *ngIf="loginForm.get('password').errors?.wrong">
+          {{ "wrongPassword" | translate | async }}
+        </mat-error>
       </mat-form-field>
     </form>
     <p class="reset">

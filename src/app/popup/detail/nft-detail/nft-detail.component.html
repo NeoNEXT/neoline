@@ -60,11 +60,12 @@
     </span>
   </div>
   <app-nft-tokens
-    *ngIf="selectedIndex === 0"
+    [hidden]="selectedIndex === 1"
     [nftTokens]="nft?.tokens"
   ></app-nft-tokens>
   <app-nft-tx-page
-    *ngIf="selectedIndex === 1 && nftContract"
+    *ngIf="nftContract"
+    [hidden]="selectedIndex === 0"
     [symbol]="nft?.symbol"
     [nftContract]="nftContract"
   ></app-nft-tx-page>

@@ -44,6 +44,9 @@ export class NftState {
       .rpcPost(this.n3Network.rpcUrl, data)
       .toPromise();
     const nftAsset: NftAsset = res.balance.find((m) => m.assethash === contract);
+    if (!nftAsset) {
+      return undefined;
+    }
     const tokenIds = [];
     nftAsset.tokens.forEach((m, index) => {
       nftAsset.tokens[index].symbol = nftAsset.symbol;

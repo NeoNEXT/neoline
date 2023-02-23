@@ -122,7 +122,8 @@ export class PopupLoginComponent
       })
       .catch(() => {
         this.loading = false;
-        this.global.snackBarTip('loginFailed');
+        this.loginForm.controls[`password`].setErrors({wrong: true});
+        this.loginForm.markAsDirty();
       });
   }
 
