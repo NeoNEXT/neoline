@@ -8,15 +8,7 @@
     "default_icon": "assets/logo128.png"
   },
   "default_locale": "en",
-  "commands": {
-    "_execute_browser_action": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+F",
-        "mac": "MacCtrl+Shift+F"
-      },
-      "description": "Opens neoline"
-    }
-  },
+  "commands": {},
   "icons": {
     "16": "assets/logo16.png",
     "48": "assets/logo48.png",
