@@ -3,7 +3,7 @@
 section {
   height: calc(100% + 74px);
   margin-top: -74px;
-  background: linear-gradient(180deg, #06ccab -12%, #ece5fd 118%);
+  background: var(--background-color);
   .welcome {
     height: 239px;
     padding-top: 94px;
@@ -22,17 +22,6 @@ section {
       text-align: center;
       color: var(--login-title);
     }
-  }
-  .bg {
-    position: absolute;
-    left: -10px;
-    top: 221px;
-    width: 100%;
-    height: 100px;
-    transform: rotate(-7deg);
-    border-radius: 40px;
-    opacity: 0.48;
-    background: #fff;
   }
   .wallet-list {
     height: calc(100% - 239px);

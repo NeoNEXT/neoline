@@ -44,10 +44,7 @@ export class PopupComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (
-      this.router.url.indexOf('popup/wallet/new-guide') >= 0 ||
-      this.router.url.indexOf('popup/login') >= 0
-    ) {
+    if (this.router.url.indexOf('popup/wallet/new-guide') >= 0) {
       this.headerIsThemeBg = true;
     }
     if (this.router.url.indexOf('/notification') >= 0) {
@@ -55,10 +52,7 @@ export class PopupComponent implements OnInit {
     }
     this.router.events.subscribe((res: RouterEvent) => {
       if (res instanceof NavigationEnd) {
-        if (
-          res.url.indexOf('popup/wallet/new-guide') >= 0 ||
-          res.url.indexOf('popup/login') >= 0
-        ) {
+        if (res.url.indexOf('popup/wallet/new-guide') >= 0) {
           this.headerIsThemeBg = true;
         } else {
           this.headerIsThemeBg = false;
