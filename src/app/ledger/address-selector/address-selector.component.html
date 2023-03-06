@@ -3,7 +3,7 @@
     <p>{{ "ImportLedgerWallet" | translate | async }}</p>
   </div>
   <div class="content loading" *ngIf="!isReady">
-    <img theme src="/assets/images/ledger/loading.gif" alt="" />
+    <img src="/assets/images/ledger/loading.gif" alt="" />
     <p class="tip" *ngIf="chainType === 'Neo2'">
       {{ status.msg | translate | async }}
     </p>

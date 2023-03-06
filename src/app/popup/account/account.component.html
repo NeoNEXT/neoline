@@ -4,7 +4,6 @@
   <img
     class="qrcode"
     (click)="qrcode()"
-    theme
     src="/assets/images/account/detail-qr-code.svg"
     alt=""
   />
@@ -12,7 +11,7 @@
   <div class="name-content">
     <div class="name" *ngIf="showEditName === false">
       <span>{{ currentWallet.name }}</span
-      ><img (click)="editName()" theme src="assets/images/common/edit.svg" />
+      ><img (click)="editName()" src="assets/images/common/edit.svg" />
     </div>
     <div class="edit" *ngIf="showEditName">
       <input
