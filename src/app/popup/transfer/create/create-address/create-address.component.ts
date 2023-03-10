@@ -5,6 +5,7 @@ import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { GlobalService, UtilServiceState } from '@/app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { timer, Unsubscribable } from 'rxjs';
 
 @Component({
   selector: 'transfer-create-address',
@@ -19,43 +20,47 @@ export class TransferCreateAddressComponent {
 
   transferTo = { address: '', name: '' };
   private getNnsAddressReq;
+  private searchSub: Unsubscribable;
   constructor(private global: GlobalService, private util: UtilServiceState) {}
 
   search($event) {
-    let address = $event.target.value;
-    address = address.trim();
-    if (address === '') {
-      return;
-    }
-    if (this.chainType === 'Neo2') {
-      if (wallet2.isAddress(address)) {
-        this.findAddress(address);
-      } else {
-        this.global.snackBarTip('wrongAddress');
+    this.searchSub?.unsubscribe();
+    this.searchSub = timer(1000).subscribe(() => {
+      let address = $event.target.value;
+      address = address.trim();
+      if (address === '') {
+        return;
       }
-    } else {
-      if (wallet3.isAddress(address, 53)) {
-        this.findAddress(address);
-      } else if (
-        this.currentNetwork.chainId === 6 ||
-        this.currentNetwork.chainId === 3
-      ) {
-        this.getNnsAddressReq?.unsubscribe();
-        this.getNnsAddressReq = this.util
-          .getN3NnsAddress(address.toLowerCase(), this.currentNetwork.chainId)
-          .subscribe((nnsAddress) => {
-            if (wallet3.isAddress(nnsAddress, 53)) {
-              this.transferTo.address = nnsAddress;
-              this.transferTo.name = address;
-              this.selecteAccountEvent.emit(this.transferTo);
-            } else {
-              this.global.snackBarTip('wrongAddress');
-            }
-          });
+      if (this.chainType === 'Neo2') {
+        if (wallet2.isAddress(address)) {
+          this.findAddress(address);
+        } else {
+          this.global.snackBarTip('wrongAddress');
+        }
       } else {
-        this.global.snackBarTip('wrongAddress');
+        if (wallet3.isAddress(address, 53)) {
+          this.findAddress(address);
+        } else if (
+          this.currentNetwork.chainId === 6 ||
+          this.currentNetwork.chainId === 3
+        ) {
+          this.getNnsAddressReq?.unsubscribe();
+          this.getNnsAddressReq = this.util
+            .getN3NnsAddress(address.toLowerCase(), this.currentNetwork.chainId)
+            .subscribe((nnsAddress) => {
+              if (wallet3.isAddress(nnsAddress, 53)) {
+                this.transferTo.address = nnsAddress;
+                this.transferTo.name = address;
+                this.selecteAccountEvent.emit(this.transferTo);
+              } else {
+                this.global.snackBarTip('wrongAddress');
+              }
+            });
+        } else {
+          this.global.snackBarTip('wrongAddress');
+        }
       }
-    }
+    });
   }
 
   getInputAddressTip() {

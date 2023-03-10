@@ -19,7 +19,7 @@ import {
 } from '@popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { Unsubscribable, forkJoin } from 'rxjs';
+import { Unsubscribable, forkJoin, timer } from 'rxjs';
 import {
   PopupPasswordDialogComponent,
   PopupSelectDialogComponent,
@@ -40,6 +40,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
   displayWalletArr: Array<Wallet2 | Wallet3> = [];
   addressBalances = {};
   isOnePassword = false;
+  private searchSub: Unsubscribable;
 
   private accountSub: Unsubscribable;
   private chainType: ChainType;
@@ -93,19 +94,22 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
   }
 
   searchWallet($event) {
-    let value = $event.target.value;
-    value = value.trim().toLowerCase();
-    if (value === '') {
-      this.isSearching = false;
-      this.displayWalletArr = this.walletArr;
-      return;
-    }
-    this.isSearching = true;
-    this.displayWalletArr = this.walletArr.filter(
-      (item) =>
-        item.name.toLowerCase().includes(value) ||
-        item.accounts[0].address.toLowerCase().includes(value)
-    );
+    this.searchSub?.unsubscribe();
+    this.searchSub = timer(500).subscribe(() => {
+      let value = $event.target.value;
+      value = value.trim().toLowerCase();
+      if (value === '') {
+        this.isSearching = false;
+        this.displayWalletArr = this.walletArr;
+        return;
+      }
+      this.isSearching = true;
+      this.displayWalletArr = this.walletArr.filter(
+        (item) =>
+          item.name.toLowerCase().includes(value) ||
+          item.accounts[0].address.toLowerCase().includes(value)
+      );
+    });
   }
 
   async selectAccount(w: Wallet2 | Wallet3) {

@@ -9,7 +9,7 @@ import {
 import { HomeService, GlobalService, ChromeService } from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { Unsubscribable } from 'rxjs';
+import { Unsubscribable, timer } from 'rxjs';
 import { MatDialogRef } from '@angular/material/dialog';
 @Component({
   templateUrl: 'add-network.dialog.html',
@@ -28,6 +28,7 @@ export class PopupAddNetworkDialogComponent implements OnInit, OnDestroy {
   loading = false;
   getMagicReq;
   isInvalidRpcUrl = false;
+  private searchSub: Unsubscribable;
 
   private accountSub: Unsubscribable;
   private n3Networks: RpcNetwork[];
@@ -75,28 +76,31 @@ export class PopupAddNetworkDialogComponent implements OnInit, OnDestroy {
   }
 
   getMagicNumber() {
-    this.privateNet.magicNumber = undefined;
-    if (!this.privateNet.rpcUrl) {
-      return;
-    }
-    if (this.getMagicReq) {
-      this.getMagicReq.unsubscribe();
-    }
-    this.getMagicReq = this.homeSer
-      .getRpcUrlMessage(this.privateNet.rpcUrl)
-      .subscribe(
-        (res) => {
-          if (res?.protocol?.addressversion !== 53) {
+    this.searchSub?.unsubscribe();
+    this.searchSub = timer(1000).subscribe(() => {
+      this.privateNet.magicNumber = undefined;
+      if (!this.privateNet.rpcUrl) {
+        return;
+      }
+      if (this.getMagicReq) {
+        this.getMagicReq.unsubscribe();
+      }
+      this.getMagicReq = this.homeSer
+        .getRpcUrlMessage(this.privateNet.rpcUrl)
+        .subscribe(
+          (res) => {
+            if (res?.protocol?.addressversion !== 53) {
+              this.isInvalidRpcUrl = true;
+            } else {
+              this.privateNet.magicNumber = res.protocol.network;
+              this.isInvalidRpcUrl = false;
+            }
+          },
+          () => {
             this.isInvalidRpcUrl = true;
-          } else {
-            this.privateNet.magicNumber = res.protocol.network;
-            this.isInvalidRpcUrl = false;
           }
-        },
-        () => {
-          this.isInvalidRpcUrl = true;
-        }
-      );
+        );
+    });
   }
 
   private async addNetwork(response?) {
