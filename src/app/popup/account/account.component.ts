@@ -12,7 +12,7 @@ import {
   PopupPrivateKeyComponent,
 } from '@popup/_dialogs';
 
-import { GlobalService, ChromeService, UtilServiceState } from '@app/core';
+import { GlobalService, ChromeService } from '@app/core';
 import { wallet } from '@cityofzion/neon-core';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
@@ -24,6 +24,7 @@ import {
   UPDATE_WALLET,
   UPDATE_NEO2_WALLET_NAME,
   UPDATE_NEO3_WALLET_NAME,
+  STORAGE_NAME,
 } from '../_lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
@@ -50,7 +51,6 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
     private global: GlobalService,
     private dialog: MatDialog,
     private chrome: ChromeService,
-    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -81,17 +81,10 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
     this.address = this.currentWallet.accounts[0].address;
     this.inputName = this.currentWallet.name;
     this.isLedger = !!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44;
-    const wif = await this.util.getWIF(
-      this.currentWIFArr,
-      this.currentWalletArr,
-      this.currentWallet
-    );
     if (this.isLedger) {
       this.publicKey = this.currentWallet.accounts[0]?.extra?.publicKey;
     } else {
-      const walletThis = this.chainType === 'Neo2' ? wallet : wallet3;
-      const privateKey = walletThis.getPrivateKeyFromWIF(wif);
-      this.publicKey = walletThis.getPublicKeyFromPrivateKey(privateKey);
+      this.publicKey = await this.getPublicKey();
     }
   }
 
@@ -160,5 +153,21 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
         }
         break;
     }
+  }
+
+  private async getPublicKey() {
+    const index = this.currentWalletArr.findIndex(
+      (item) => item.accounts[0].address === this.address
+    );
+    const wif = this.currentWIFArr[index];
+    if (wif) {
+      const walletThis = this.chainType === 'Neo2' ? wallet : wallet3;
+      const privateKey = walletThis.getPrivateKeyFromWIF(wif);
+      return walletThis.getPublicKeyFromPrivateKey(privateKey);
+    }
+    const pwd = await this.chrome.getStorage(STORAGE_NAME.password).toPromise();
+    return (this.currentWallet.accounts[0] as any).decrypt(pwd).then((res) => {
+      return res.publicKey;
+    });
   }
 }
