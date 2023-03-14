@@ -100,6 +100,7 @@ export class PopupNetworkComponent {
       return;
     }
     this.store.dispatch({ type: UPDATE_WALLET, data: this.switchChainWallet });
+    this.chromeSer.accountChangeEvent(this.switchChainWallet);
     const backHomeUrls = [
       '/popup/add-asset',
       '/popup/add-nft',

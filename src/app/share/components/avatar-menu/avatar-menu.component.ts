@@ -146,6 +146,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
   private changeAccount(w: Wallet2 | Wallet3) {
     this.wallet = w;
     this.store.dispatch({ type: UPDATE_WALLET, data: w });
+    this.chromeSrc.accountChangeEvent(w);
     this.chromeSrc.setHaveBackupTip(null);
   }
 

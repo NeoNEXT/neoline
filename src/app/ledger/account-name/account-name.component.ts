@@ -8,7 +8,7 @@ import {
 } from '@/app/popup/_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
-import { NeonService, GlobalService } from '@/app/core';
+import { NeonService, GlobalService, ChromeService } from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 
@@ -27,6 +27,7 @@ export class AccountNameComponent implements OnInit {
   constructor(
     private neon: NeonService,
     private global: GlobalService,
+    private chrome: ChromeService,
     private store: Store<AppState>
   ) {}
 
@@ -53,6 +54,7 @@ export class AccountNameComponent implements OnInit {
           data: { wallet: [w], wif: [''] },
         });
         this.store.dispatch({ type: UPDATE_WALLET, data: w });
+        this.chrome.accountChangeEvent(w);
         this.importSuccess.emit();
       } else {
         this.global.snackBarTip('existingWallet');
@@ -67,6 +69,7 @@ export class AccountNameComponent implements OnInit {
           data: { wallet: [w], wif: [''] },
         });
         this.store.dispatch({ type: UPDATE_WALLET, data: w });
+        this.chrome.accountChangeEvent(w);
         this.importSuccess.emit();
       } else {
         this.global.snackBarTip('existingWallet');

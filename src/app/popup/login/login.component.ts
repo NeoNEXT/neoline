@@ -176,7 +176,7 @@ export class PopupLoginComponent
       this.currentWallet.accounts[0].address
     ) {
       this.store.dispatch({ type: UPDATE_WALLET, data: this.selectWallet });
-      this.chrome.setWallet(this.selectWallet.export());
+      this.chrome.accountChangeEvent(this.selectWallet.export());
       this.chrome.setHasLoginAddress(this.selectWallet.accounts[0].address);
       if (this.selectChainType !== this.currentChainType) {
         this.chrome.networkChangeEvent(

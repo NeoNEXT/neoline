@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, throwError, from } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { Asset, NftAsset } from '@/models/models';
 import { EVENT } from '@/models/dapi';
 import {
@@ -245,7 +244,7 @@ export class ChromeService {
     this.setStorage(STORAGE_NAME['WIFArr-Neo3'], []);
     this.setStorage(STORAGE_NAME.walletArr, []);
     this.setStorage(STORAGE_NAME['walletArr-Neo3'], []);
-    this.setWallet(undefined);
+    this.accountChangeEvent(undefined);
     this.setStorage(STORAGE_NAME.password, '');
   }
   //#endregion
@@ -529,12 +528,7 @@ export class ChromeService {
   //#endregion
 
   //#region wallet
-  public setWallet(w: any) {
-    const currChainType = wallet3.isAddress(w?.accounts[0]?.address || '', 53)
-      ? 'Neo3'
-      : 'Neo2';
-    this.setStorage(STORAGE_NAME.wallet, w);
-    this.setStorage(STORAGE_NAME.chainType, currChainType);
+  public accountChangeEvent(w: any) {
     if (this.check) {
       this.windowCallback({
         data: {

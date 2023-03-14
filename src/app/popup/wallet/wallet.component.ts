@@ -116,7 +116,7 @@ export class PopupWalletComponent implements OnInit {
       return;
     }
     this.chrome.setHasLoginAddress(newWallet.accounts[0].address);
-    this.chrome.setWallet(newWallet.export());
+    this.chrome.accountChangeEvent(newWallet.export());
     this.chrome.setLogin(false);
     if (isCreate) {
       this.chrome.setHaveBackupTip(true);
@@ -154,7 +154,7 @@ export class PopupWalletComponent implements OnInit {
       return;
     }
     this.chrome.setHasLoginAddress(newCurrentWallet.accounts[0].address);
-    this.chrome.setWallet(newCurrentWallet.export());
+    this.chrome.accountChangeEvent(newCurrentWallet.export());
     this.chrome.setLogin(false);
     this.chrome.setWalletsStatus(newCurrentWallet.accounts[0].address);
     this.chrome.setHaveBackupTip(false);

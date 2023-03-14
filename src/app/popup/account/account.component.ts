@@ -135,7 +135,7 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
         data,
       });
     }
-    this.chrome.setWallet(this.currentWallet.export());
+    this.chrome.accountChangeEvent(this.currentWallet.export());
     this.showEditName = false;
     this.global.snackBarTip('nameModifySucc');
   }

@@ -219,6 +219,7 @@ export class NeonService {
               walletRes.accounts[0].address = item.accounts[0].address;
               walletRes.accounts[0].label = item.accounts[0].label;
               this.store.dispatch({ type: UPDATE_WALLET, data: walletRes });
+              this.chrome.accountChangeEvent(walletRes);
             }
           });
           this.store.dispatch({
@@ -524,6 +525,7 @@ export class NeonService {
       data: this.currentWallet,
     });
     this.store.dispatch({ type: UPDATE_WALLET, data: newWallet });
+    this.chrome.accountChangeEvent(newWallet);
     return of(newWallet);
   }
   //#endregion
