@@ -23,6 +23,7 @@ export class PopupComponent implements OnInit {
   networks: RpcNetwork[];
   networkIndex: number;
   chainType: ChainType;
+  switchNetwork: RpcNetwork;
   switchChainWallet: Wallet2 | Wallet3;
   constructor(private store: Store<AppState>, private router: Router) {
     const account$ = this.store.select('account');
@@ -36,6 +37,10 @@ export class PopupComponent implements OnInit {
         this.chainType === 'Neo2' ? state.n2Networks : state.n3Networks;
       this.networkIndex =
         this.chainType === 'Neo2' ? state.n2NetworkIndex : state.n3NetworkIndex;
+      this.switchNetwork =
+        this.chainType === 'Neo2'
+          ? state.n3Networks[state.n3NetworkIndex]
+          : state.n2Networks[state.n2NetworkIndex];
       this.switchChainWallet =
         this.chainType === 'Neo2'
           ? state.neo3WalletArr[0]

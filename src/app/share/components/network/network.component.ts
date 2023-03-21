@@ -28,6 +28,7 @@ export class PopupNetworkComponent {
   @Input() networks: RpcNetwork[];
   @Input() chainType: ChainType;
   @Input() networkIndex: number;
+  @Input() switchNetwork: RpcNetwork;
   @Input() switchChainWallet: Wallet2 | Wallet3;
   @Output() closeEvent = new EventEmitter();
 
@@ -101,6 +102,7 @@ export class PopupNetworkComponent {
     }
     this.store.dispatch({ type: UPDATE_WALLET, data: this.switchChainWallet });
     this.chromeSer.accountChangeEvent(this.switchChainWallet);
+    this.chromeSer.networkChangeEvent(this.switchNetwork);
     const backHomeUrls = [
       '/popup/add-asset',
       '/popup/add-nft',

@@ -611,6 +611,9 @@ if (window.dispatchEvent) {
 window.addEventListener('message', (e) => {
   const response = e.data;
   if (response.target) {
+    if (response.target !== EVENT.READY) {
+      return;
+    }
     window.dispatchEvent(
       new CustomEvent(response.target, {
         detail: response.data,
@@ -618,6 +621,9 @@ window.addEventListener('message', (e) => {
     );
   }
   if (response.return) {
+    if (response.return !== EVENT.READY) {
+      return;
+    }
     window.dispatchEvent(
       new CustomEvent(response.return, {
         detail: response.data,

@@ -122,7 +122,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     }
   }
 
-  initData() {
+  private initData() {
     this.claimAssetId = this.chainType === 'Neo2' ? GAS : GAS3_CONTRACT;
     if (
       this.chainType === 'Neo3' &&
@@ -238,7 +238,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     }
   }
 
-  getN3ClaimTxStatus() {
+  private getN3ClaimTxStatus() {
     const queryTxInterval = interval(5000)
       .pipe(take(5))
       .subscribe(() => {
@@ -313,7 +313,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     }
   }
 
-  getN3UnclaimedGas() {
+  private getN3UnclaimedGas() {
     this.assetState.getUnclaimedGas(this.address).subscribe((res) => {
       if (res?.unclaimed && res?.unclaimed !== '0') {
         this.claimNumber = new BigNumber(res?.unclaimed)
