@@ -1,3 +1,5 @@
+import { ChainType } from './constants';
+
 type ArgumentDataType =
   | 'String'
   | 'Boolean'
@@ -83,6 +85,7 @@ export enum requestTarget {
   AuthState = 'neoline.target_auth_state',
   Login = 'neoline.target_login',
   PickAddress = 'neoline.target_pick_address',
+  WalletSwitchNetwork = 'neoline.target_wallet_switch_network',
 }
 
 export interface Provider {
@@ -352,4 +355,11 @@ export interface Neo3InvokeMultiple {
   fee?: string;
   txHashAttributes?: TxHashAttribute[];
   signers: Signers[];
+}
+
+export interface WalletSwitchNetworkArg {
+  chainId: number;
+  hostname?: string;
+  icon?: string;
+  chainType?: ChainType;
 }

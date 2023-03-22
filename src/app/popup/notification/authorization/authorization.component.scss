@@ -1,5 +1,3 @@
-
-
 .content {
   font-weight: bold;
   padding: 24px;
@@ -19,12 +17,19 @@
 
     .dashed-hori-line {
       width: 146px;
-      height: 32px;
+      height: 0;
       position: absolute;
-      top: 0;
+      top: 31px;
       left: 50%;
       margin-left: -73px;
-      border-bottom: 1px dashed var(--theme-color);
+      border-bottom: 1px dashed var(--body-background-color);
+      background: linear-gradient(
+        to right,
+        #ad8df8 0%,
+        #06ccab 50%,
+        #ad8df8 100%
+      );
+      background-origin: border-box;
     }
 
     .dashed-vert-line {

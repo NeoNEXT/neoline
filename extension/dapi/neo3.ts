@@ -6,6 +6,7 @@ import {
   AccountPublicKey,
   ERRORS,
   requestTarget,
+  WalletSwitchNetworkArg,
 } from '../common/data_module_neo2';
 import {
   requestTargetN3,
@@ -30,6 +31,7 @@ import {
   N3ScriptHashToAddress,
 } from '../common/data_module_neo3';
 import { getMessageID } from '../common/utils';
+import { ChainType, ALL_CHAINID } from '../common/constants';
 
 function sendMessage<K>(
   target: requestTarget | requestTargetN3,
@@ -333,17 +335,47 @@ export class Init {
     }
   }
 
-  public verifyMessage(parameter: N3VerifyMessageArgs): Promise<N3Response> {
-    if (
-      parameter.message === undefined ||
-      parameter.data === undefined ||
-      parameter.publicKey === undefined
-    ) {
-      return new Promise((_, reject) => {
-        reject(ERRORS.MALFORMED_INPUT);
-      });
+  public async verifyMessage(
+    parameter: N3VerifyMessageArgs
+  ): Promise<N3Response> {
+    let authState: any;
+    try {
+      authState = (await getAuthState()) || 'NONE';
+    } catch (error) {
+      console.log(error);
+    }
+    if (authState === true || authState === 'NONE') {
+      let connectResult;
+      if (
+        sessionStorage.getItem('connect') !== 'true' &&
+        authState === 'NONE'
+      ) {
+        connectResult = await connect();
+      } else {
+        connectResult = true;
+      }
+      if (connectResult === true) {
+        await login();
+        if (
+          parameter.message === undefined ||
+          parameter.data === undefined ||
+          parameter.publicKey === undefined
+        ) {
+          return new Promise((_, reject) => {
+            reject(ERRORS.MALFORMED_INPUT);
+          });
+        } else {
+          return sendMessage(requestTargetN3.VerifyMessage, parameter);
+        }
+      } else {
+        return new Promise((_, reject) => {
+          reject(ERRORS.CONNECTION_DENIED);
+        });
+      }
     } else {
-      return sendMessage(requestTargetN3.VerifyMessage, parameter);
+      return new Promise((_, reject) => {
+        reject(ERRORS.CONNECTION_DENIED);
+      });
     }
   }
 
@@ -406,33 +438,119 @@ export class Init {
     }
   }
 
-  public signMessage(parameter: { message: string }): Promise<any> {
-    if (parameter.message === undefined) {
-      return new Promise((_, reject) => {
-        reject(ERRORS.MALFORMED_INPUT);
-      });
+  public async signMessage(parameter: { message: string }): Promise<any> {
+    let authState: any;
+    try {
+      authState = (await getAuthState()) || 'NONE';
+    } catch (error) {
+      console.log(error);
+    }
+    if (authState === true || authState === 'NONE') {
+      let connectResult;
+      if (
+        sessionStorage.getItem('connect') !== 'true' &&
+        authState === 'NONE'
+      ) {
+        connectResult = await connect();
+      } else {
+        connectResult = true;
+      }
+      if (connectResult === true) {
+        await login();
+        if (parameter.message === undefined) {
+          return new Promise((_, reject) => {
+            reject(ERRORS.MALFORMED_INPUT);
+          });
+        } else {
+          return sendMessage(requestTargetN3.SignMessage, parameter);
+        }
+      } else {
+        return new Promise((_, reject) => {
+          reject(ERRORS.CONNECTION_DENIED);
+        });
+      }
     } else {
-      return sendMessage(requestTargetN3.SignMessage, parameter);
+      return new Promise((_, reject) => {
+        reject(ERRORS.CONNECTION_DENIED);
+      });
     }
   }
 
-  public signMessageWithoutSalt(parameter: { message: string }): Promise<any> {
-    if (parameter.message === undefined) {
-      return new Promise((_, reject) => {
-        reject(ERRORS.MALFORMED_INPUT);
-      });
+  public async signMessageWithoutSalt(parameter: {
+    message: string;
+  }): Promise<any> {
+    let authState: any;
+    try {
+      authState = (await getAuthState()) || 'NONE';
+    } catch (error) {
+      console.log(error);
+    }
+    if (authState === true || authState === 'NONE') {
+      let connectResult;
+      if (
+        sessionStorage.getItem('connect') !== 'true' &&
+        authState === 'NONE'
+      ) {
+        connectResult = await connect();
+      } else {
+        connectResult = true;
+      }
+      if (connectResult === true) {
+        await login();
+        if (parameter.message === undefined) {
+          return new Promise((_, reject) => {
+            reject(ERRORS.MALFORMED_INPUT);
+          });
+        } else {
+          return sendMessage(requestTargetN3.SignMessageWithoutSalt, parameter);
+        }
+      } else {
+        return new Promise((_, reject) => {
+          reject(ERRORS.CONNECTION_DENIED);
+        });
+      }
     } else {
-      return sendMessage(requestTargetN3.SignMessageWithoutSalt, parameter);
+      return new Promise((_, reject) => {
+        reject(ERRORS.CONNECTION_DENIED);
+      });
     }
   }
 
-  public signTransaction(parameter): Promise<any> {
-    if (parameter.transaction === undefined) {
-      return new Promise((_, reject) => {
-        reject(ERRORS.MALFORMED_INPUT);
-      });
+  public async signTransaction(parameter): Promise<any> {
+    let authState: any;
+    try {
+      authState = (await getAuthState()) || 'NONE';
+    } catch (error) {
+      console.log(error);
+    }
+    if (authState === true || authState === 'NONE') {
+      let connectResult;
+      if (
+        sessionStorage.getItem('connect') !== 'true' &&
+        authState === 'NONE'
+      ) {
+        connectResult = await connect();
+      } else {
+        connectResult = true;
+      }
+      if (connectResult === true) {
+        await login();
+        if (parameter.transaction === undefined) {
+          return new Promise((_, reject) => {
+            reject(ERRORS.MALFORMED_INPUT);
+          });
+        } else {
+          return sendMessage(requestTargetN3.SignTransaction, parameter);
+        }
+      } else {
+        return new Promise((_, reject) => {
+          reject(ERRORS.CONNECTION_DENIED);
+        });
+      }
     } else {
-      return sendMessage(requestTargetN3.SignTransaction, parameter);
+      return new Promise((_, reject) => {
+        reject(ERRORS.CONNECTION_DENIED);
+      });
     }
   }
 
@@ -550,6 +668,51 @@ export class Init {
           reject(ERRORS.CONNECTION_DENIED);
         });
       }
+    }
+  }
+
+  public async walletSwitchNetwork(
+    parameter: WalletSwitchNetworkArg
+  ): Promise<any> {
+    let authState: any;
+    try {
+      authState = (await getAuthState()) || 'NONE';
+    } catch (error) {
+      console.log(error);
+    }
+    if (authState === true || authState === 'NONE') {
+      let connectResult;
+      if (
+        sessionStorage.getItem('connect') !== 'true' &&
+        authState === 'NONE'
+      ) {
+        connectResult = await connect();
+      } else {
+        connectResult = true;
+      }
+      if (connectResult === true) {
+        await login();
+        if (
+          parameter.chainId === undefined ||
+          !ALL_CHAINID.includes(parameter.chainId)
+        ) {
+          return new Promise((_, reject) => {
+            reject(ERRORS.MALFORMED_INPUT);
+          });
+        }
+        parameter.hostname = location.hostname;
+        parameter.icon = getIcon();
+        parameter.chainType = ChainType.Neo3;
+        return sendMessage(requestTargetN3.WalletSwitchNetwork, parameter);
+      } else {
+        return new Promise((_, reject) => {
+          reject(ERRORS.CONNECTION_DENIED);
+        });
+      }
+    } else {
+      return new Promise((_, reject) => {
+        reject(ERRORS.CONNECTION_DENIED);
+      });
     }
   }
 

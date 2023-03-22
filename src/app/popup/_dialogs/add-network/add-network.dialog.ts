@@ -113,10 +113,10 @@ export class PopupAddNetworkDialogComponent implements OnInit, OnDestroy {
         this.privateNet.network = NetworkType.N3MainNet;
         this.privateNet.chainId = 3;
         break;
-      case 877933390:
-        this.privateNet.network = NetworkType.N3TestNet;
-        this.privateNet.chainId = 4;
-        break;
+      // case 877933390:
+      //   this.privateNet.network = NetworkType.N3TestNet;
+      //   this.privateNet.chainId = 4;
+      //   break;
       case 894710606:
         this.privateNet.network = NetworkType.N3TestNet;
         this.privateNet.chainId = 6;

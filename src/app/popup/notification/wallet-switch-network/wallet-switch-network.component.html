@@ -1,0 +1,25 @@
+<div class="container">
+  <button class="host">
+    <img [src]="iconSrc" appErrorSrc alt="" />{{ hostname }}
+  </button>
+  <p class="title">Allow this site to switch the network?</p>
+  <p class="desc">
+    This will switch the selected network within NeoLine to a previously added
+    network:
+  </p>
+  <div class="networks">
+    <span class="network">{{ currentNetworkType }}</span>
+    <span class="arrow">
+      <img src="/assets/images/third-party/wallet-arrow.svg" alt="" />
+    </span>
+    <span class="network">{{ switchNetworkType }}</span>
+  </div>
+  <div class="btn-group">
+    <button class="cancel" (click)="refuse()">
+      {{ "refuse" | translate | async }}
+    </button>
+    <button class="confirm" (click)="confirm()">
+      {{ "done" | translate | async }}
+    </button>
+  </div>
+</div>

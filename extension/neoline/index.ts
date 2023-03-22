@@ -155,26 +155,11 @@ window.addEventListener(
         });
         return;
       }
-      case requestTarget.Connect: {
-        chrome.runtime.sendMessage(e.data, (response) => {
-          return Promise.resolve('Dummy response to keep the console quiet');
-        });
-        return;
-      }
-      case requestTarget.Login: {
-        chrome.runtime.sendMessage(e.data, (response) => {
-          return Promise.resolve('Dummy response to keep the console quiet');
-        });
-        break;
-      }
-      case requestTarget.AccountPublicKey: {
-        chrome.runtime.sendMessage(e.data, (response) => {
-          return Promise.resolve('Dummy response to keep the console quiet');
-        });
-        return;
-      }
-
-      case requestTarget.PickAddress: {
+      case requestTarget.Connect:
+      case requestTarget.Login:
+      case requestTarget.AccountPublicKey:
+      case requestTarget.PickAddress:
+      case requestTarget.WalletSwitchNetwork: {
         chrome.runtime.sendMessage(e.data, (response) => {
           return Promise.resolve('Dummy response to keep the console quiet');
         });

@@ -298,6 +298,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     (await getLocalStorage('n3SelectedNetworkIndex', () => {})) || 0;
   const currN2Network = n2Networks[n2SelectedNetworkIndex];
   const currN3Network = n3Networks[n3SelectedNetworkIndex];
+  const chainType: ChainType = await getLocalStorage('chainType', () => {});
   switch (request.target) {
     case requestTarget.PickAddress: {
       chrome.windows.create({
@@ -1895,6 +1896,51 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         return: requestTargetN3.ScriptHashToAddress,
         ID: request.ID,
       });
+      return;
+    }
+    case requestTarget.WalletSwitchNetwork:
+    case requestTargetN3.WalletSwitchNetwork: {
+      const parameter = request.parameter;
+      const currentChainId =
+        chainType === 'Neo2' ? currN2Network.chainId : currN3Network.chainId;
+      if (currentChainId === parameter.chainId) {
+        windowCallback({
+          return: request.target,
+          data: null,
+          ID: request.ID,
+        });
+        sendResponse('');
+        return;
+      }
+      const tempNetwork = n3Networks.find(
+        (e) => e.chainId === parameter.chainId
+      );
+      if (parameter.chainId === 0 && !tempNetwork) {
+        windowCallback({
+          return: request.target,
+          error: ERRORS.MALFORMED_INPUT,
+          ID: request.ID,
+        });
+        sendResponse('');
+        return;
+      }
+      let queryString = '';
+      for (const key in parameter) {
+        if (parameter.hasOwnProperty(key)) {
+          const value = parameter[key];
+          queryString += `${key}=${value}&`;
+        }
+      }
+      chrome.windows.create({
+        url: `index.html#popup/notification/wallet-switch-network?${queryString}messageID=${request.ID}`,
+        focused: true,
+        width: 386,
+        height: 620,
+        left: 0,
+        top: 0,
+        type: 'popup',
+      });
+      sendResponse('');
       return;
     }
   }

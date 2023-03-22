@@ -23,9 +23,11 @@ import {
   DeployArgs,
   DeployOutput,
   Provider,
+  WalletSwitchNetworkArg,
 } from '../common/data_module_neo2';
 export { EVENT, ERRORS } from '../common/data_module_neo2';
 import { getMessageID } from '../common/utils';
+import { ChainType, ALL_CHAINID } from '../common/constants';
 
 function sendMessage<K>(target: requestTarget, parameter?: any): Promise<K> {
   const ID = getMessageID();
@@ -242,17 +244,45 @@ export class Init {
     }
   }
 
-  public verifyMessage(parameter: VerifyMessageArgs): Promise<Response> {
-    if (
-      parameter.message === undefined ||
-      parameter.data === undefined ||
-      parameter.publicKey === undefined
-    ) {
-      return new Promise((_, reject) => {
-        reject(ERRORS.MALFORMED_INPUT);
-      });
+  public async verifyMessage(parameter: VerifyMessageArgs): Promise<Response> {
+    let authState: any;
+    try {
+      authState = (await getAuthState()) || 'NONE';
+    } catch (error) {
+      console.log(error);
+    }
+    if (authState === true || authState === 'NONE') {
+      let connectResult;
+      if (
+        sessionStorage.getItem('connect') !== 'true' &&
+        authState === 'NONE'
+      ) {
+        connectResult = await connect();
+      } else {
+        connectResult = true;
+      }
+      if (connectResult === true) {
+        await login();
+        if (
+          parameter.message === undefined ||
+          parameter.data === undefined ||
+          parameter.publicKey === undefined
+        ) {
+          return new Promise((_, reject) => {
+            reject(ERRORS.MALFORMED_INPUT);
+          });
+        } else {
+          return sendMessage(requestTarget.VerifyMessage, parameter);
+        }
+      } else {
+        return new Promise((_, reject) => {
+          reject(ERRORS.CONNECTION_DENIED);
+        });
+      }
     } else {
-      return sendMessage(requestTarget.VerifyMessage, parameter);
+      return new Promise((_, reject) => {
+        reject(ERRORS.CONNECTION_DENIED);
+      });
     }
   }
 
@@ -373,13 +403,41 @@ export class Init {
     }
   }
 
-  public signMessage(parameter: { message: string }): Promise<any> {
-    if (parameter.message === undefined) {
-      return new Promise((_, reject) => {
-        reject(ERRORS.MALFORMED_INPUT);
-      });
+  public async signMessage(parameter: { message: string }): Promise<any> {
+    let authState: any;
+    try {
+      authState = (await getAuthState()) || 'NONE';
+    } catch (error) {
+      console.log(error);
+    }
+    if (authState === true || authState === 'NONE') {
+      let connectResult;
+      if (
+        sessionStorage.getItem('connect') !== 'true' &&
+        authState === 'NONE'
+      ) {
+        connectResult = await connect();
+      } else {
+        connectResult = true;
+      }
+      if (connectResult === true) {
+        await login();
+        if (parameter.message === undefined) {
+          return new Promise((_, reject) => {
+            reject(ERRORS.MALFORMED_INPUT);
+          });
+        } else {
+          return sendMessage(requestTarget.SignMessage, parameter);
+        }
+      } else {
+        return new Promise((_, reject) => {
+          reject(ERRORS.CONNECTION_DENIED);
+        });
+      }
     } else {
-      return sendMessage(requestTarget.SignMessage, parameter);
+      return new Promise((_, reject) => {
+        reject(ERRORS.CONNECTION_DENIED);
+      });
     }
   }
 
@@ -517,6 +575,51 @@ export class Init {
       if (connectResult === true) {
         await login();
         return sendMessage(requestTarget.PickAddress, parameter);
+      } else {
+        return new Promise((_, reject) => {
+          reject(ERRORS.CONNECTION_DENIED);
+        });
+      }
+    } else {
+      return new Promise((_, reject) => {
+        reject(ERRORS.CONNECTION_DENIED);
+      });
+    }
+  }
+
+  public async walletSwitchNetwork(
+    parameter: WalletSwitchNetworkArg
+  ): Promise<any> {
+    let authState: any;
+    try {
+      authState = (await getAuthState()) || 'NONE';
+    } catch (error) {
+      console.log(error);
+    }
+    if (authState === true || authState === 'NONE') {
+      let connectResult;
+      if (
+        sessionStorage.getItem('connect') !== 'true' &&
+        authState === 'NONE'
+      ) {
+        connectResult = await connect();
+      } else {
+        connectResult = true;
+      }
+      if (connectResult === true) {
+        await login();
+        if (
+          parameter.chainId === undefined ||
+          !ALL_CHAINID.includes(parameter.chainId)
+        ) {
+          return new Promise((_, reject) => {
+            reject(ERRORS.MALFORMED_INPUT);
+          });
+        }
+        parameter.hostname = location.hostname;
+        parameter.icon = getIcon();
+        parameter.chainType = ChainType.Neo2;
+        return sendMessage(requestTarget.WalletSwitchNetwork, parameter);
       } else {
         return new Promise((_, reject) => {
           reject(ERRORS.CONNECTION_DENIED);
