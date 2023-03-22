@@ -955,5 +955,23 @@
   },
   "wrongPassword": {
     "message": "密码错误"
+  },
+  "switchNetwork": {
+    "message": "切换网络"
+  },
+  "switchNetworkTitle": {
+    "message": "允许此网站切换网络？"
+  },
+  "switchNetworkDesc": {
+    "message": "这将切换 NeoLine 中选定的网络到以前添加的网络"
+  },
+  "switchAccount": {
+    "message": "切换账户"
+  },
+  "switchAccountTitle": {
+    "message": "允许此网站切换账户？"
+  },
+  "switchAccountDesc": {
+    "message": "这将切换 NeoLine 中选定的账户到以前添加的账户"
   }
 }

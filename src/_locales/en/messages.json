@@ -955,5 +955,23 @@
   },
   "wrongPassword": {
     "message": "Wrong password"
+  },
+  "switchNetwork": {
+    "message": "Switch network"
+  },
+  "switchNetworkTitle": {
+    "message": "Allow this site to switch the network?"
+  },
+  "switchNetworkDesc": {
+    "message": "This will switch the selected network within NeoLine to a previously added network:"
+  },
+  "switchAccount": {
+    "message": "Switch account"
+  },
+  "switchAccountTitle": {
+    "message": "Allow this site to switch the account?"
+  },
+  "switchAccountDesc": {
+    "message": "This will switch the selected account within NeoLine to a previously added account:"
   }
 }

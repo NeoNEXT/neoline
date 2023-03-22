@@ -2,11 +2,8 @@
   <button class="host">
     <img [src]="iconSrc" appErrorSrc alt="" />{{ hostname }}
   </button>
-  <p class="title">Allow this site to switch the account?</p>
-  <p class="desc">
-    This will switch the selected account within NeoLine to a previously added
-    account:
-  </p>
+  <p class="title">{{ "switchAccountTitle" | translate | async }}</p>
+  <p class="desc">{{ "switchAccountDesc" | translate | async }}</p>
   <ul>
     <li
       *ngFor="let item of walletArr; let i = index"
@@ -30,7 +27,7 @@
       {{ "refuse" | translate | async }}
     </button>
     <button class="confirm" (click)="confirm()">
-      {{ "done" | translate | async }}
+      {{ "switchAccount" | translate | async }}
     </button>
   </div>
 </div>
