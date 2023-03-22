@@ -159,7 +159,8 @@ window.addEventListener(
       case requestTarget.Login:
       case requestTarget.AccountPublicKey:
       case requestTarget.PickAddress:
-      case requestTarget.WalletSwitchNetwork: {
+      case requestTarget.WalletSwitchNetwork:
+      case requestTarget.WalletSwitchAccount: {
         chrome.runtime.sendMessage(e.data, (response) => {
           return Promise.resolve('Dummy response to keep the console quiet');
         });

@@ -29,7 +29,7 @@ export enum requestTargetN3 {
   AddressToScriptHash = 'neoline.target_address_toScriptHash_n3',
   ScriptHashToAddress = 'neoline.target_scriptHash_toAddress_n3',
   WalletSwitchNetwork = 'neoline.target_wallet_switch_network_n3',
-  // WalletSwitchAccount = 'neoline.target_wallet_switch_account_n3',
+  WalletSwitchAccount = 'neoline.target_wallet_switch_account_n3',
 }
 
 export enum EVENT {

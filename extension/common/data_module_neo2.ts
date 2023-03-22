@@ -86,6 +86,7 @@ export enum requestTarget {
   Login = 'neoline.target_login',
   PickAddress = 'neoline.target_pick_address',
   WalletSwitchNetwork = 'neoline.target_wallet_switch_network',
+  WalletSwitchAccount = 'neoline.target_wallet_switch_account',
 }
 
 export interface Provider {
@@ -359,6 +360,12 @@ export interface Neo3InvokeMultiple {
 
 export interface WalletSwitchNetworkArg {
   chainId: number;
+  hostname?: string;
+  icon?: string;
+  chainType?: ChainType;
+}
+
+export interface WalletSwitchAccountArg {
   hostname?: string;
   icon?: string;
   chainType?: ChainType;

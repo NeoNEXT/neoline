@@ -73,7 +73,8 @@ window.addEventListener(
       case requestTargetN3.PickAddress:
       case requestTargetN3.AddressToScriptHash:
       case requestTargetN3.ScriptHashToAddress:
-      case requestTargetN3.WalletSwitchNetwork: {
+      case requestTargetN3.WalletSwitchNetwork:
+      case requestTargetN3.WalletSwitchAccount: {
         chrome.runtime.sendMessage(e.data, (response) => {
           return Promise.resolve('Dummy response to keep the console quiet');
         });

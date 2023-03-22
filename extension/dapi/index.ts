@@ -24,6 +24,7 @@ import {
   DeployOutput,
   Provider,
   WalletSwitchNetworkArg,
+  WalletSwitchAccountArg,
 } from '../common/data_module_neo2';
 export { EVENT, ERRORS } from '../common/data_module_neo2';
 import { getMessageID } from '../common/utils';
@@ -620,6 +621,43 @@ export class Init {
         parameter.icon = getIcon();
         parameter.chainType = ChainType.Neo2;
         return sendMessage(requestTarget.WalletSwitchNetwork, parameter);
+      } else {
+        return new Promise((_, reject) => {
+          reject(ERRORS.CONNECTION_DENIED);
+        });
+      }
+    } else {
+      return new Promise((_, reject) => {
+        reject(ERRORS.CONNECTION_DENIED);
+      });
+    }
+  }
+
+  public async walletSwitchAccount(): Promise<any> {
+    let authState: any;
+    try {
+      authState = (await getAuthState()) || 'NONE';
+    } catch (error) {
+      console.log(error);
+    }
+    if (authState === true || authState === 'NONE') {
+      let connectResult;
+      if (
+        sessionStorage.getItem('connect') !== 'true' &&
+        authState === 'NONE'
+      ) {
+        connectResult = await connect();
+      } else {
+        connectResult = true;
+      }
+      if (connectResult === true) {
+        await login();
+        const parameter: WalletSwitchAccountArg = {
+          hostname: location.hostname,
+          icon: getIcon(),
+          chainType: ChainType.Neo2,
+        };
+        return sendMessage(requestTarget.WalletSwitchAccount, parameter);
       } else {
         return new Promise((_, reject) => {
           reject(ERRORS.CONNECTION_DENIED);

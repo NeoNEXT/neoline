@@ -79,6 +79,7 @@ export enum requestTarget {
   Login = 'neoline.target_login',
   PickAddress = 'neoline.target_pick_address',
   WalletSwitchNetwork = 'neoline.target_wallet_switch_network',
+  WalletSwitchAccount = 'neoline.target_wallet_switch_account',
 }
 
 export interface Provider {

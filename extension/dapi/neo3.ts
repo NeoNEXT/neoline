@@ -7,6 +7,7 @@ import {
   ERRORS,
   requestTarget,
   WalletSwitchNetworkArg,
+  WalletSwitchAccountArg,
 } from '../common/data_module_neo2';
 import {
   requestTargetN3,
@@ -704,6 +705,43 @@ export class Init {
         parameter.icon = getIcon();
         parameter.chainType = ChainType.Neo3;
         return sendMessage(requestTargetN3.WalletSwitchNetwork, parameter);
+      } else {
+        return new Promise((_, reject) => {
+          reject(ERRORS.CONNECTION_DENIED);
+        });
+      }
+    } else {
+      return new Promise((_, reject) => {
+        reject(ERRORS.CONNECTION_DENIED);
+      });
+    }
+  }
+
+  public async walletSwitchAccount(): Promise<any> {
+    let authState: any;
+    try {
+      authState = (await getAuthState()) || 'NONE';
+    } catch (error) {
+      console.log(error);
+    }
+    if (authState === true || authState === 'NONE') {
+      let connectResult;
+      if (
+        sessionStorage.getItem('connect') !== 'true' &&
+        authState === 'NONE'
+      ) {
+        connectResult = await connect();
+      } else {
+        connectResult = true;
+      }
+      if (connectResult === true) {
+        await login();
+        const parameter: WalletSwitchAccountArg = {
+          hostname: location.hostname,
+          icon: getIcon(),
+          chainType: ChainType.Neo3,
+        };
+        return sendMessage(requestTargetN3.WalletSwitchAccount, parameter);
       } else {
         return new Promise((_, reject) => {
           reject(ERRORS.CONNECTION_DENIED);

@@ -18,6 +18,7 @@ import { PopupPickAddressComponent } from './pick-address/pick-address.component
 import { PopupNoticeNeo3SignComponent } from './neo3-signature/neo3-signature.component';
 import { PopupNoticeNeo3SignTransactionComponent } from './neo3-sign-transaction/neo3-sign-transaction.component';
 import { PopupWalletSwitchNetworkComponent } from './wallet-switch-network/wallet-switch-network.component';
+import { PopupWalletSwitchAccountComponent } from './wallet-switch-accout/wallet-switch-account.component';
 
 const routes: Routes = [
   {
@@ -54,6 +55,10 @@ const routes: Routes = [
           {
             path: 'wallet-switch-network',
             component: PopupWalletSwitchNetworkComponent,
+          },
+          {
+            path: 'wallet-switch-account',
+            component: PopupWalletSwitchAccountComponent,
           },
         ],
       },

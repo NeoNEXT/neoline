@@ -24,6 +24,7 @@ export enum requestTargetN3 {
   InvokeMultiple = 'neoline.target_invoke_multiple_n3',
   PickAddress = 'neoline.target_pick_address_n3',
   WalletSwitchNetwork = 'neoline.target_wallet_switch_network_n3',
+  WalletSwitchAccount = 'neoline.target_wallet_switch_account_n3',
 }
 
 export enum AuthType {

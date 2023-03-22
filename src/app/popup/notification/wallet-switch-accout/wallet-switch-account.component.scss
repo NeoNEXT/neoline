@@ -1,0 +1,101 @@
+.container {
+  height: 100%;
+  padding-top: 24px;
+  text-align: center;
+  position: relative;
+  .host {
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 23px;
+    border: 1px solid #afb6be;
+    padding: 0 16px;
+    font-family: NeverMind-Medium;
+    color: var(--title-color);
+    img {
+      width: 24px;
+      margin-right: 8px;
+    }
+  }
+  .title {
+    margin-top: 24px;
+    padding: 0 50px;
+    font-size: 20px;
+    line-height: 24px;
+    color: var(--title-color);
+    font-family: NeverMind-DemiBold;
+  }
+  .desc {
+    margin-top: 8px;
+    padding: 0 20px;
+    font-size: 14px;
+    line-height: 20px;
+    color: var(--sub-title-color);
+    font-family: NeverMind-Regular;
+  }
+  ul {
+    height: 240px;
+    overflow-y: auto;
+    margin-top: 16px;
+    text-align: left;
+    &::-webkit-scrollbar {
+      display: block;
+    }
+    li {
+      display: flex;
+      align-items: center;
+      padding: 15px 24px;
+      cursor: pointer;
+      &:hover {
+        background: var(--hover-color);
+      }
+      &:first-child {
+        margin-top: 0;
+      }
+      &.active .selected {
+        border: none;
+        background: url("assets/images/common/selected-account.svg") center
+          center no-repeat;
+      }
+      .selected {
+        display: inline-block;
+        width: 18px;
+        height: 18px;
+        border-radius: 4px;
+        border: 1px solid var(--tip-color);
+      }
+      .avatar {
+        width: 40px;
+        height: 40px;
+        margin-left: 16px;
+        margin-right: 12px;
+      }
+      .label {
+        font-size: 16px;
+        max-width: 200px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      .address {
+        font-family: NeverMind-Regular;
+        color: var(--sub-title-color);
+        margin-top: 8px;
+      }
+    }
+  }
+  .btn-group {
+    width: 100%;
+    position: absolute;
+    bottom: 32px;
+    left: 0;
+    padding: 0 24px;
+    padding-top: 16px;
+    button {
+      width: calc(50% - 12px);
+      &.cancel {
+        margin-right: 24px;
+      }
+    }
+  }
+}

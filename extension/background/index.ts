@@ -1943,6 +1943,28 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       sendResponse('');
       return;
     }
+    case requestTarget.WalletSwitchAccount:
+    case requestTargetN3.WalletSwitchAccount: {
+      const parameter = request.parameter;
+      let queryString = '';
+      for (const key in parameter) {
+        if (parameter.hasOwnProperty(key)) {
+          const value = parameter[key];
+          queryString += `${key}=${value}&`;
+        }
+      }
+      chrome.windows.create({
+        url: `index.html#popup/notification/wallet-switch-account?${queryString}messageID=${request.ID}`,
+        focused: true,
+        width: 386,
+        height: 620,
+        left: 0,
+        top: 0,
+        type: 'popup',
+      });
+      sendResponse('');
+      return;
+    }
   }
   return true;
 });

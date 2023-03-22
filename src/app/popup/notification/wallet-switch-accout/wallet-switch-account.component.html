@@ -1,0 +1,36 @@
+<div class="container">
+  <button class="host">
+    <img [src]="iconSrc" appErrorSrc alt="" />{{ hostname }}
+  </button>
+  <p class="title">Allow this site to switch the account?</p>
+  <p class="desc">
+    This will switch the selected account within NeoLine to a previously added
+    account:
+  </p>
+  <ul>
+    <li
+      *ngFor="let item of walletArr; let i = index"
+      [ngClass]="{
+        active: selectedWallet?.accounts[0].address === item.accounts[0].address
+      }"
+      (click)="selectedWallet = item"
+    >
+      <span class="selected"></span>
+      <img class="avatar" [avatar]="item.accounts[0].address" />
+      <div class="account-detail">
+        <p class="label">{{ item.name }}</p>
+        <p class="address">
+          {{ item.accounts[0].address | longStr : 10 }}
+        </p>
+      </div>
+    </li>
+  </ul>
+  <div class="btn-group">
+    <button class="cancel" (click)="refuse()">
+      {{ "refuse" | translate | async }}
+    </button>
+    <button class="confirm" (click)="confirm()">
+      {{ "done" | translate | async }}
+    </button>
+  </div>
+</div>
