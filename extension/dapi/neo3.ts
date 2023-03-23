@@ -672,7 +672,7 @@ export class Init {
     }
   }
 
-  public async walletSwitchNetwork(
+  public async switchWalletNetwork(
     parameter: WalletSwitchNetworkArg
   ): Promise<any> {
     let authState: any;
@@ -717,7 +717,7 @@ export class Init {
     }
   }
 
-  public async walletSwitchAccount(): Promise<any> {
+  public async switchWalletAccount(): Promise<any> {
     let authState: any;
     try {
       authState = (await getAuthState()) || 'NONE';

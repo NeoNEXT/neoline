@@ -102,6 +102,7 @@ export class PopupWalletSwitchAccountComponent implements OnInit {
         data: {
           address: this.selectedWallet.accounts[0].address,
           label: this.selectedWallet.name,
+          isLedger: !!this.selectedWallet.accounts[0]?.extra?.ledgerSLIP44,
         },
         ID: this.messageID,
         return:

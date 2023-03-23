@@ -126,7 +126,7 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
     }
     this.chrome.windowCallback(
       {
-        data: true,
+        data: null,
         ID: this.messageID,
         return:
           this.invokeChainType === 'Neo2'
