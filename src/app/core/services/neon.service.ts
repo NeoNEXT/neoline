@@ -479,6 +479,7 @@ export class NeonService {
   }
   public delCurrentWallet() {
     if (this.neo2WalletArr.length + this.neo3WalletArr.length <= 1) {
+      this.chrome.removeStorage(STORAGE_NAME.wallet);
       this.chrome.windowCallback({
         data: {
           address: this.currentWallet.accounts[0].address || '',
@@ -498,8 +499,6 @@ export class NeonService {
       } else {
         if (this.neo3WalletArr.length > 0) {
           newWallet = this.neo3WalletArr[0];
-        } else {
-          newWallet = undefined;
         }
       }
     } else {
@@ -512,8 +511,6 @@ export class NeonService {
       } else {
         if (this.neo2WalletArr.length > 0) {
           newWallet = this.neo2WalletArr[0];
-        } else {
-          newWallet = undefined;
         }
       }
     }
@@ -524,8 +521,10 @@ export class NeonService {
           : REMOVE_NEO3_WALLET,
       data: this.currentWallet,
     });
-    this.store.dispatch({ type: UPDATE_WALLET, data: newWallet });
-    this.chrome.accountChangeEvent(newWallet);
+    if (newWallet) {
+      this.store.dispatch({ type: UPDATE_WALLET, data: newWallet });
+      this.chrome.accountChangeEvent(newWallet);
+    }
     return of(newWallet);
   }
   //#endregion
