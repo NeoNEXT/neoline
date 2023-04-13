@@ -2,8 +2,8 @@
   "name": "neoline",
   "version": "4.0.0",
   "engines": {
-    "node": "^14.16.0",
-    "npm": "~8.3.0"
+    "node": "^12.13.0",
+    "npm": "~6.12.1"
   },
   "scripts": {
     "ng": "ng",
@@ -35,11 +35,10 @@
     "@cityofzion/neon-core-neo3": "npm:@cityofzion/neon-core@^5.0.0-next.17",
     "@cityofzion/neon-core-neo3-pr5": "npm:@cityofzion/neon-core@^5.0.0-next.4",
     "@cityofzion/neon-core-neo3-rc1": "npm:@cityofzion/neon-core@^5.0.0-next.7",
-    "@cityofzion/neon-js": "^4.8.0",
+    "@cityofzion/neon-js": "npm:@cityofzion/neon-js@^4.8.0",
     "@cityofzion/neon-js-neo3": "npm:@cityofzion/neon-js@^5.0.0-next.17",
-    "@cityofzion/neon-js-neo3-pr5": "npm:@cityofzion/neon-js@^5.0.0-next.4",
-    "@cityofzion/neon-js-neo3-rc1": "npm:@cityofzion/neon-js@^5.0.0-next.7",
     "@ledgerhq/hw-transport-webhid": "^6.27.1",
+    "@ngrx/store": "^9.0.0",
     "@types/crypto-js": "^3.1.47",
     "@types/elliptic": "^6.4.12",
     "@types/mathjs": "^6.0.5",
@@ -59,8 +58,7 @@
     "tslib": "^2.0.0",
     "webpack-subresource-integrity": "^1.5.1",
     "websocket-extensions": "^0.1.4",
-    "zone.js": "~0.10.3",
-    "@ngrx/store": "^9.0.0"
+    "zone.js": "~0.10.3"
   },
   "devDependencies": {
     "@angular-builders/custom-webpack": "^9.1.0",
