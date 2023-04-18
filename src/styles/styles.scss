@@ -11,6 +11,11 @@
   outline: none;
 }
 
+html {
+  position: relative !important;
+  left: auto !important;
+}
+
 html,
 body {
   height: 100%;
