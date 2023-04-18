@@ -13,8 +13,6 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 })
 export class PopupComponent implements OnInit {
   private currentUrl = this.router.url;
-  headerIsThemeBg = false;
-  isThirdParty = false;
   showNetworkList = false;
   showAvatarMenu = false;
 
@@ -49,34 +47,26 @@ export class PopupComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    if (this.router.url.indexOf('popup/wallet/new-guide') >= 0) {
-      this.headerIsThemeBg = true;
-    }
-    if (this.router.url.indexOf('/notification') >= 0) {
-      this.isThirdParty = true;
-    }
     this.router.events.subscribe((res: RouterEvent) => {
       if (res instanceof NavigationEnd) {
-        if (res.url.indexOf('popup/wallet/new-guide') >= 0) {
-          this.headerIsThemeBg = true;
-        } else {
-          this.headerIsThemeBg = false;
-        }
-        if (this.router.url.indexOf('/notification') >= 0) {
-          this.isThirdParty = true;
-        } else {
-          this.isThirdParty = false;
-        }
         this.currentUrl = res.url;
       }
     });
+  }
+
+  checkIsThemeBg() {
+    if (this.currentUrl.indexOf('/wallet/new-guide') >= 0) {
+      return true;
+    }
+    return false;
   }
 
   getShowAvatar() {
     if (
       !this.address ||
       this.currentUrl.indexOf('/login') >= 0 ||
-      this.currentUrl.indexOf('/wallet/new-guide') >= 0
+      this.currentUrl.indexOf('/wallet/new-guide') >= 0 ||
+      this.router.url.indexOf('/notification') >= 0
     ) {
       return false;
     }

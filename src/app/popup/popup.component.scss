@@ -13,7 +13,6 @@ header {
     button.network {
       border-color: var(--network-color);
       color: var(--network-color);
-      pointer-events: none;
       img {
         filter: drop-shadow(1000px 0 0 var(--network-color));
         transform: translate(-1000px);
@@ -44,6 +43,9 @@ header {
         filter: drop-shadow(1000px 0 0 var(--theme-color));
         transform: translate(-1000px);
       }
+    }
+    &.disabled {
+      pointer-events: none;
     }
     img {
       margin-left: 10px;
