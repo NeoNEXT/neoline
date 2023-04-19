@@ -973,5 +973,8 @@
   },
   "switchAccountDesc": {
     "message": "This will switch the selected account within NeoLine to a previously added account:"
+  },
+  "VerificationPassed": {
+    "message": "Verification passed"
   }
 }

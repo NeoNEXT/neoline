@@ -50,6 +50,7 @@ export enum STORAGE_NAME {
   onePassword = 'onePassword',
   password = 'password',
   theme ='theme',
+  onePassCheckAddresses = 'onePassCheckAddresses',
 }
 
 export enum STORAGE_VALUE_TYPE {
@@ -189,6 +190,10 @@ export const STORAGE_VALUE_MESSAGE = {
     type: STORAGE_VALUE_TYPE.string,
     isLocal: false,
     default: 'light-theme',
+  },
+  onePassCheckAddresses: {
+    type: STORAGE_VALUE_TYPE.object,
+    isLocal: true,
   },
 };
 

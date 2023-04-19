@@ -973,5 +973,8 @@
   },
   "switchAccountDesc": {
     "message": "这将切换 NeoLine 中选定的账户到以前添加的账户"
+  },
+  "VerificationPassed": {
+    "message": "验证通过"
   }
 }

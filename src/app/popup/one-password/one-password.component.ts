@@ -37,6 +37,7 @@ export class PopupOnePasswordComponent implements OnInit {
   pwdForm: FormGroup;
   matcher = new MyErrorStateMatcher();
   hideWalletsPwd = [];
+  passCheckAddresses = {};
 
   accountSub: Unsubscribable;
   allWalletArr: Array<Wallet2 | Wallet3>;
@@ -69,7 +70,13 @@ export class PopupOnePasswordComponent implements OnInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.chrome
+      .getStorage(STORAGE_NAME.onePassCheckAddresses)
+      .subscribe((res) => {
+        this.passCheckAddresses = res || {};
+      });
+  }
 
   private handleWallets(list: Array<Wallet2 | Wallet3>) {
     this.allWalletArr = [];
@@ -91,48 +98,44 @@ export class PopupOnePasswordComponent implements OnInit {
     const len = this.allWalletArr.length;
     this.hideWalletsPwd = new Array(len).fill(true);
     for (let i = 0; i < len; i++) {
-      this.pwdForm.addControl(
-        `password${i}`,
-        new FormControl('', [
-          Validators.required,
-          Validators.pattern(/^.{8,128}$/),
-        ])
-      );
+      this.pwdForm.addControl(`password${i}`, new FormControl('', []));
     }
   }
 
-  submit(): void {
-    this.loading = true;
-    const decryptReqs = [];
-    this.allWalletArr.forEach((item, index) => {
-      const chainType: ChainType = wallet3.isAddress(
-        item.accounts[0].address,
-        53
-      )
-        ? 'Neo3'
-        : 'Neo2';
-      const account =
-        chainType === 'Neo2'
-          ? item.accounts[0]
-          : this.util.getNeo3Account(item.accounts[0]);
-      const req = account
-        .decrypt(this.pwdForm.value[`password${index}`])
-        .catch(() => false);
-      decryptReqs.push(req);
-    });
-    Promise.all(decryptReqs).then((resArr) => {
-      resArr.forEach((res, index) => {
-        if (res === false) {
-          this.pwdForm.controls[`password${index}`].setErrors({ wrong: true });
-          this.pwdForm.markAsDirty();
-        }
+  async checkItemPassword(index: number) {
+    const item = this.allWalletArr[index];
+    const chainType: ChainType = wallet3.isAddress(item.accounts[0].address, 53)
+      ? 'Neo3'
+      : 'Neo2';
+    const account =
+      chainType === 'Neo2'
+        ? item.accounts[0]
+        : this.util.getNeo3Account(item.accounts[0]);
+    account
+      .decrypt(this.pwdForm.value[`password${index}`])
+      .then(() => {
+        this.passCheckAddresses[account.address] = true;
+        this.chrome.setStorage(
+          STORAGE_NAME.onePassCheckAddresses,
+          this.passCheckAddresses
+        );
+      })
+      .catch(() => {
+        this.pwdForm.controls[`password${index}`].setErrors({ wrong: true });
+        this.pwdForm.markAsDirty();
       });
-      if (this.pwdForm.valid) {
-        this.handleWalletArr();
-      } else {
-        this.loading = false;
+  }
+
+  submit(): void {
+    let flag = true;
+    this.allWalletArr.forEach((item) => {
+      if (!this.passCheckAddresses[item.accounts[0].address]) {
+        flag = false;
       }
     });
+    if (flag) {
+      this.handleWalletArr();
+    }
   }
 
   private async handleWalletArr() {
@@ -192,6 +195,7 @@ export class PopupOnePasswordComponent implements OnInit {
     this.chrome.setStorage(STORAGE_NAME.onePassword, true);
     this.chrome.setStorage(STORAGE_NAME.password, newPwd);
     this.global.snackBarTip('switchSucc');
+    this.chrome.removeStorage(STORAGE_NAME.onePassCheckAddresses);
     this.loading = false;
     history.go(-1);
   }
