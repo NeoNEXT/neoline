@@ -139,6 +139,7 @@ export class PopupOnePasswordComponent implements OnInit {
   }
 
   private async handleWalletArr() {
+    this.loading = true;
     const newPwd = this.pwdForm.value.password;
     //#region neo3
     const neo3NewWalletArr = [];
