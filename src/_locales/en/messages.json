@@ -258,7 +258,7 @@
     "message": "would like to connect to your wallet"
   },
   "thAuthDetail": {
-    "message": "This site is trying to request access to the NEO API so that it can interact with the NEO blockchain. Before approving your visit, be sure to double check that you are linking to the correct site."
+    "message": "This site is trying to request access to the Neo API so that it can interact with the Neo blockchain. Before approving your visit, be sure to double check that you are linking to the correct site."
   },
   "thAuthMore": {
     "message": "Look more"
