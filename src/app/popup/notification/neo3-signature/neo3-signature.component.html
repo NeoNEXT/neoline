@@ -6,7 +6,8 @@
   </div>
   <div class="content">
     <p class="hex-label">{{ "message" | translate | async }}</p>
-    <p class="json-box serialize">{{ message }}</p>
+    <p class="json-box serialize" *ngIf="jsonMessage">{{ jsonMessage | json }}</p>
+    <p class="json-box serialize" *ngIf="!jsonMessage">{{ message }}</p>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="cancel()">

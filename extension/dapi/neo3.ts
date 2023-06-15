@@ -439,7 +439,10 @@ export class Init {
     }
   }
 
-  public async signMessage(parameter: { message: string }): Promise<any> {
+  public async signMessage(parameter: {
+    message: string;
+    isJsonObject?: boolean;
+  }): Promise<any> {
     let authState: any;
     try {
       authState = (await getAuthState()) || 'NONE';
@@ -479,6 +482,7 @@ export class Init {
 
   public async signMessageWithoutSalt(parameter: {
     message: string;
+    isJsonObject?: boolean;
   }): Promise<any> {
     let authState: any;
     try {

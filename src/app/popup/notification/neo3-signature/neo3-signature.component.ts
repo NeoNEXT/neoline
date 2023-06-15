@@ -20,6 +20,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
   public message: string;
   private messageID = 0;
   isSign = false;
+  jsonMessage;
 
   private accountSub: Unsubscribable;
   public address: string;
@@ -49,6 +50,9 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
       const query = this.utilServiceState.parseUrl(location.hash);
       this.messageID = query.messageID;
       this.message = query.message;
+      if (query?.isJsonObject) {
+        this.jsonMessage = JSON.parse(this.message);
+      }
       this.isSign = query?.sign === '1' ? true : false;
       window.onbeforeunload = () => {
         this.chrome.windowCallback({

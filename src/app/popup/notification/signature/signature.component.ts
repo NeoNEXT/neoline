@@ -19,6 +19,7 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 export class PopupNoticeSignComponent implements OnInit, OnDestroy {
   public message: string;
   private messageID = 0;
+  jsonMessage;
 
   getStatusInterval;
   loading = false;
@@ -60,6 +61,9 @@ export class PopupNoticeSignComponent implements OnInit, OnDestroy {
       const query = this.utilServiceState.parseUrl(location.hash);
       this.messageID = query.messageID;
       this.message = query.message;
+      if (query?.isJsonObject) {
+        this.jsonMessage = JSON.parse(this.message);
+      }
       window.onbeforeunload = () => {
         this.chrome.windowCallback({
           error: ERRORS.CANCELLED,
