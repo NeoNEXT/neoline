@@ -108,6 +108,7 @@ export class PopupLoginComponent
     account
       .decrypt(this.loginForm.value.password)
       .then(() => {
+        this.chrome.setPassword(this.loginForm.value.password);
         if (this.route.snapshot.queryParams.notification !== undefined) {
           this.chrome.windowCallback(
             {
@@ -184,7 +185,6 @@ export class PopupLoginComponent
         );
       }
     }
-    this.chrome.setLogin(false);
     const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
     this.router.navigateByUrl(returnUrl);
   }

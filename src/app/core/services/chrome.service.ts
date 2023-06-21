@@ -9,8 +9,10 @@ import {
   STORAGE_VALUE_MESSAGE,
   RpcNetwork,
   DEFAULT_NETWORKS,
+  SECRET_PASSPHRASE,
 } from '@/app/popup/_lib';
 import { ExtensionService } from '../util/extension.service';
+import CryptoJS from 'crypto-js';
 
 @Injectable()
 export class ChromeService {
@@ -239,32 +241,51 @@ export class ChromeService {
   }
 
   public resetWallet() {
-    this.setLogin(false);
+    this.setPassword('');
     this.setStorage(STORAGE_NAME.WIFArr, []);
     this.setStorage(STORAGE_NAME['WIFArr-Neo3'], []);
     this.setStorage(STORAGE_NAME.walletArr, []);
     this.setStorage(STORAGE_NAME['walletArr-Neo3'], []);
     this.accountChangeEvent(undefined);
-    this.setStorage(STORAGE_NAME.password, '');
   }
   //#endregion
 
   //#region should login
-  public getLogin(): Observable<boolean> {
+  public getPassword(): Observable<string> {
     if (!this.check) {
-      return of(sessionStorage.getItem('shouldLogin') === 'true');
+      const encryptPwd = sessionStorage.getItem('password');
+      if (encryptPwd) {
+        var bytes = CryptoJS.AES.decrypt(encryptPwd, SECRET_PASSPHRASE);
+        var originalText = bytes.toString(CryptoJS.enc.Utf8);
+        return of(originalText);
+      } else {
+        return of(encryptPwd);
+      }
     } else {
-      return this.getStorage(STORAGE_NAME.shouldLogin);
+      return this.getStorage(STORAGE_NAME.password).pipe(
+        map((encryptPwd) => {
+          if (encryptPwd) {
+            var bytes = CryptoJS.AES.decrypt(encryptPwd, SECRET_PASSPHRASE);
+            var originalText = bytes.toString(CryptoJS.enc.Utf8);
+            return originalText;
+          } else {
+            return encryptPwd;
+          }
+        })
+      );
     }
   }
 
-  public setLogin(status: boolean) {
+  public setPassword(pwd: string) {
+    const encryptPwd = pwd
+      ? CryptoJS.AES.encrypt(pwd, SECRET_PASSPHRASE).toString()
+      : pwd;
     if (!this.check) {
-      sessionStorage.setItem('shouldLogin', status.toString());
+      sessionStorage.setItem('password', encryptPwd);
     } else {
-      this.setStorage(STORAGE_NAME.shouldLogin, status);
+      this.setStorage(STORAGE_NAME.password, encryptPwd);
     }
-    if (status) {
+    if (!pwd) {
       if (!this.check) {
         sessionStorage.removeItem('hasLoginAddress');
       } else {

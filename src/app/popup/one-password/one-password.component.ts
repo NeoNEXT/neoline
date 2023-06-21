@@ -194,7 +194,7 @@ export class PopupOnePasswordComponent implements OnInit {
       },
     });
     this.chrome.setStorage(STORAGE_NAME.onePassword, true);
-    this.chrome.setStorage(STORAGE_NAME.password, newPwd);
+    this.chrome.setPassword(newPwd);
     this.global.snackBarTip('switchSucc');
     this.chrome.removeStorage(STORAGE_NAME.onePassCheckAddresses);
     this.loading = false;

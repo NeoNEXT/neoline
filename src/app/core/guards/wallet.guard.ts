@@ -24,11 +24,10 @@ export class PopupLoginGuard implements CanActivate {
     return new Promise((resolve) => {
       this.neon.walletIsOpen().subscribe((res: any) => {
         if (!res) {
-          this.chrome.setLogin(false);
           this.router.navigateByUrl('/popup/wallet/new-guide');
         } else {
-          this.chrome.getLogin().subscribe((shouldLogin) => {
-            if (shouldLogin) {
+          this.chrome.getPassword().subscribe((pwd) => {
+            if (!pwd) {
               resolve(true);
             } else {
               resolve(false);
@@ -54,11 +53,10 @@ export class OpenedWalletGuard implements CanActivate {
     return new Promise((resolve) => {
       this.neon.walletIsOpen().subscribe((res: any) => {
         if (!res) {
-          this.chrome.setLogin(false);
           resolve(true);
         } else {
-          this.chrome.getLogin().subscribe((shouldLogin) => {
-            if (shouldLogin) {
+          this.chrome.getPassword().subscribe((pwd) => {
+            if (!pwd) {
               this.router.navigate(['/popup/login'], {
                 queryParams: { returnUrl: state.url },
               });
@@ -87,14 +85,13 @@ export class PopupWalletGuard implements CanActivate {
     return new Promise((resolve) => {
       this.neon.walletIsOpen().subscribe((res: any) => {
         if (!res) {
-          this.chrome.setLogin(false);
           this.global.log('Wallet has not opened yet.');
           this.router.navigate(['/popup/wallet/new-guide'], {
             queryParams: { returnUrl: state.url },
           });
         } else {
-          this.chrome.getLogin().subscribe((shouldLogin) => {
-            if (shouldLogin) {
+          this.chrome.getPassword().subscribe((pwd) => {
+            if (!pwd) {
               this.router.navigate(['/popup/login'], {
                 queryParams: { returnUrl: state.url },
               });

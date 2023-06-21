@@ -165,7 +165,7 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
       const privateKey = walletThis.getPrivateKeyFromWIF(wif);
       return walletThis.getPublicKeyFromPrivateKey(privateKey);
     }
-    const pwd = await this.chrome.getStorage(STORAGE_NAME.password).toPromise();
+    const pwd = await this.chrome.getPassword().toPromise();
     return (this.currentWallet.accounts[0] as any).decrypt(pwd).then((res) => {
       return res.publicKey;
     });

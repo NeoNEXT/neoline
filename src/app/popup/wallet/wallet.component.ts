@@ -32,6 +32,7 @@ export class PopupWalletComponent implements OnInit {
   };
   password: string;
   getPassword = false;
+  isOnePassword = false;
   hasPwdWallet = false;
 
   private accountSub: Unsubscribable;
@@ -65,9 +66,14 @@ export class PopupWalletComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.password).subscribe((res) => {
-      this.getPassword = true;
-      this.password = res;
+    this.chrome.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {
+      if (res === true) {
+        this.isOnePassword = true;
+      }
+      this.chrome.getPassword().subscribe((res) => {
+        this.getPassword = true;
+        this.password = res;
+      });
     });
     if (this.router.url === '/popup/wallet/import') {
       this.tabType = 'import';
@@ -88,7 +94,7 @@ export class PopupWalletComponent implements OnInit {
       ? 'Neo3'
       : 'Neo2';
     const wif =
-      this.password || !this.hasPwdWallet ? '' : newWallet.accounts[0].wif;
+      this.isOnePassword || !this.hasPwdWallet ? '' : newWallet.accounts[0].wif;
     newWallet =
       newChainType === 'Neo2'
         ? new wallet2.Wallet(newWallet.export())
@@ -117,7 +123,6 @@ export class PopupWalletComponent implements OnInit {
     }
     this.chrome.setHasLoginAddress(newWallet.accounts[0].address);
     this.chrome.accountChangeEvent(newWallet.export());
-    this.chrome.setLogin(false);
     if (isCreate) {
       this.chrome.setHaveBackupTip(true);
     } else {
@@ -155,7 +160,6 @@ export class PopupWalletComponent implements OnInit {
     }
     this.chrome.setHasLoginAddress(newCurrentWallet.accounts[0].address);
     this.chrome.accountChangeEvent(newCurrentWallet.export());
-    this.chrome.setLogin(false);
     this.chrome.setWalletsStatus(newCurrentWallet.accounts[0].address);
     this.chrome.setHaveBackupTip(false);
     const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';

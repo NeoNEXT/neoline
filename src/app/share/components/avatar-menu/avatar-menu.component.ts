@@ -84,7 +84,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
   }
 
   lock() {
-    this.chromeSrc.setLogin(true);
+    this.chromeSrc.setPassword('');
     this.navigate('/popup/login');
   }
 

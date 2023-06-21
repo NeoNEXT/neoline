@@ -16,6 +16,7 @@
       *ngIf="getPassword"
       [hidden]="tabType === 'import'"
       [password]="password"
+      [isOnePassword]="isOnePassword"
       [hasPwdWallet]="hasPwdWallet"
       (submit)="updateLocalWallet($event, true)"
     ></wallet-create>
@@ -23,6 +24,7 @@
       *ngIf="getPassword"
       [hidden]="tabType === 'create'"
       [password]="password"
+      [isOnePassword]="isOnePassword"
       [hasPwdWallet]="hasPwdWallet"
       (submit)="updateLocalWallet($event, false)"
       (submitFile)="handleFileWallet($event)"

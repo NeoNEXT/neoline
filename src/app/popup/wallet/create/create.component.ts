@@ -23,6 +23,7 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
   loading = false;
   isInit: boolean;
   @Input() password: string;
+  @Input() isOnePassword: boolean;
   @Input() hasPwdWallet: boolean;
   @Output() submit = new EventEmitter<any>();
 
@@ -36,7 +37,7 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
   ) {}
 
   ngOnInit() {
-    if (this.password) {
+    if (this.isOnePassword && this.password) {
       this.createForm = this.fb.group({
         name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
       });
@@ -63,9 +64,15 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
 
   public submitCreate(): void {
     this.loading = true;
+    let createPwd;
+    if (this.isOnePassword && this.password) {
+      createPwd = this.password;
+    } else {
+      createPwd = this.createForm.value.password;
+    }
     this.neon
       .createWallet(
-        this.password || this.createForm.value.password,
+        createPwd,
         this.createForm.value.name
       )
       .subscribe(
@@ -73,10 +80,7 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
           if (this.neon.verifyWallet(res)) {
             if (!this.hasPwdWallet) {
               this.chrome.setStorage(STORAGE_NAME.onePassword, true);
-              this.chrome.setStorage(
-                STORAGE_NAME.password,
-                this.createForm.value.password
-              );
+              this.chrome.setPassword(createPwd);
             }
             this.submit.emit(res);
           } else {

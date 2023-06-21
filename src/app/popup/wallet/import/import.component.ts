@@ -72,6 +72,7 @@ export class PopupWalletImportComponent
   showImportTypeMenu = false;
 
   @Input() password: string;
+  @Input() isOnePassword: boolean;
   @Input() hasPwdWallet: boolean;
   @Output() submit = new EventEmitter<any>();
   @Output() submitFile = new EventEmitter<any>();
@@ -94,7 +95,7 @@ export class PopupWalletImportComponent
   }
 
   ngOnInit() {
-    if (this.password) {
+    if (this.isOnePassword && this.password) {
       this.importForm = this.fb.group({
         name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
         WIF: ['', [Validators.required, checkWIF(this.neon.selectedChainType)]],
@@ -170,17 +171,23 @@ export class PopupWalletImportComponent
 
   importKey() {
     this.loading = true;
+    let importPwd;
+    if (this.isOnePassword && this.password) {
+      importPwd = this.password;
+    } else {
+      importPwd = this.importForm.value.password;
+    }
     if (this.neonWallet.isPrivateKey(this.importForm.value.WIF)) {
       this.neon
         .importPrivateKey(
           this.importForm.value.WIF,
-          this.password || this.importForm.value.password,
+          importPwd,
           this.importForm.value.name
         )
         .subscribe((res: any) => {
           this.loading = false;
           if (this.neon.verifyWallet(res)) {
-            this.setPassword(this.importForm.value.password);
+            this.setPassword(importPwd);
             this.submit.emit(res);
           } else {
             this.global.snackBarTip('existingWallet');
@@ -190,14 +197,14 @@ export class PopupWalletImportComponent
       this.neon
         .importWIF(
           this.importForm.value.WIF,
-          this.password || this.importForm.value.password,
+          importPwd,
           this.importForm.value.name
         )
         .subscribe(
           (res: any) => {
             this.loading = false;
             if (this.neon.verifyWallet(res)) {
-              this.setPassword(this.importForm.value.password);
+              this.setPassword(importPwd);
               this.submit.emit(res);
             } else {
               this.global.snackBarTip('existingWallet');
@@ -222,7 +229,12 @@ export class PopupWalletImportComponent
     }
     this.loading = true;
     const filePwd = this.nep6Form.value.filePassword;
-    const newPwd = this.nep6Form.value?.password;
+    let importPwd;
+    if (this.isOnePassword && this.password) {
+      importPwd = this.password;
+    } else {
+      importPwd = this.nep6Form.value?.password;
+    }
     const accounts: any[] = this.nep6Json?.accounts || [];
     const newWalletArr = [];
     const newWIFArr = [];
@@ -232,12 +244,12 @@ export class PopupWalletImportComponent
         item.key,
         filePwd,
         item.label,
-        this.password || newPwd
+        importPwd
       );
       if (newWallet !== 'Wrong password') {
         if (this.neon.verifyWallet(newWallet)) {
           newWIFArr.push(
-            this.password || !this.hasPwdWallet ? '' : newWallet.accounts[0].WIF
+            this.isOnePassword || !this.hasPwdWallet ? '' : newWallet.accounts[0].WIF
           );
           const pushWallet =
             this.neon.selectedChainType === 'Neo2'
@@ -258,9 +270,7 @@ export class PopupWalletImportComponent
         this.global.snackBarTip('walletImportFailed');
       }
     } else {
-      if (!this.password && newPwd) {
-        this.setPassword(newPwd);
-      }
+      this.setPassword(importPwd);
       this.submitFile.emit({ walletArr: newWalletArr, wifArr: newWIFArr });
     }
   }
@@ -268,7 +278,7 @@ export class PopupWalletImportComponent
   setPassword(pwd: string) {
     if (!this.hasPwdWallet) {
       this.chrome.setStorage(STORAGE_NAME.onePassword, true);
-      this.chrome.setStorage(STORAGE_NAME.password, pwd);
+      this.chrome.setPassword(pwd);
     }
   }
 }

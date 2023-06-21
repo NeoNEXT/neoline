@@ -262,7 +262,7 @@ chrome.alarms.onAlarm.addListener(async () => {
 
 chrome.runtime.onRestartRequired.addListener(() => {
   setLocalStorage({
-    shouldLogin: true,
+    password: '',
     shouldFindNode: true,
     hasLoginAddress: {},
     InvokeArgsArray: [],
@@ -271,7 +271,7 @@ chrome.runtime.onRestartRequired.addListener(() => {
 
 chrome.runtime.onInstalled.addListener(() => {
   setLocalStorage({
-    shouldLogin: true,
+    password: '',
     shouldFindNode: true,
     hasLoginAddress: {},
     InvokeArgsArray: [],
@@ -280,7 +280,7 @@ chrome.runtime.onInstalled.addListener(() => {
 
 chrome.runtime.onStartup.addListener(() => {
   setLocalStorage({
-    shouldLogin: true,
+    password: '',
     shouldFindNode: true,
     hasLoginAddress: {},
     InvokeArgsArray: [],
@@ -368,8 +368,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       return true;
     }
     case requestTarget.Login: {
-      getLocalStorage('shouldLogin', (shouldLogin) => {
-        if (shouldLogin === false) {
+      getLocalStorage('password', (pwd) => {
+        if (pwd) {
           windowCallback({
             return: requestTarget.Login,
             data: true,

@@ -19,6 +19,8 @@ export const WalletInitConstant = {
   emailPattern,
 };
 
+export const SECRET_PASSPHRASE = 'secret key neoline';
+
 export enum STORAGE_NAME {
   n2Networks = 'n2Networks',
   n3Networks = 'n3Networks',
@@ -42,7 +44,6 @@ export enum STORAGE_NAME {
   InvokeArgsArray = 'InvokeArgsArray',
   walletsStatus = 'walletsStatus',
   haveBackupTip = 'haveBackupTip',
-  shouldLogin = 'shouldLogin',
   hasLoginAddress = 'hasLoginAddress',
   shouldFindNode = 'shouldFindNode',
   rpcUrls = 'rpcUrls',
@@ -154,10 +155,6 @@ export const STORAGE_VALUE_MESSAGE = {
     isLocal: true,
   },
   haveBackupTip: {
-    type: STORAGE_VALUE_TYPE.boolean,
-    isLocal: true,
-  },
-  shouldLogin: {
     type: STORAGE_VALUE_TYPE.boolean,
     isLocal: true,
   },
