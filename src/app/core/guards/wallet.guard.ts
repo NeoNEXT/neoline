@@ -26,7 +26,7 @@ export class PopupLoginGuard implements CanActivate {
         if (!res) {
           this.router.navigateByUrl('/popup/wallet/new-guide');
         } else {
-          this.chrome.getPassword().subscribe((pwd) => {
+          this.chrome.getPassword().then((pwd) => {
             if (!pwd) {
               resolve(true);
             } else {
@@ -55,7 +55,7 @@ export class OpenedWalletGuard implements CanActivate {
         if (!res) {
           resolve(true);
         } else {
-          this.chrome.getPassword().subscribe((pwd) => {
+          this.chrome.getPassword().then((pwd) => {
             if (!pwd) {
               this.router.navigate(['/popup/login'], {
                 queryParams: { returnUrl: state.url },
@@ -90,7 +90,7 @@ export class PopupWalletGuard implements CanActivate {
             queryParams: { returnUrl: state.url },
           });
         } else {
-          this.chrome.getPassword().subscribe((pwd) => {
+          this.chrome.getPassword().then((pwd) => {
             if (!pwd) {
               this.router.navigate(['/popup/login'], {
                 queryParams: { returnUrl: state.url },

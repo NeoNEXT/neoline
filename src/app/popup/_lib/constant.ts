@@ -44,6 +44,7 @@ export enum STORAGE_NAME {
   InvokeArgsArray = 'InvokeArgsArray',
   walletsStatus = 'walletsStatus',
   haveBackupTip = 'haveBackupTip',
+  hasEncryptPwd = 'hasEncryptPwd',
   hasLoginAddress = 'hasLoginAddress',
   shouldFindNode = 'shouldFindNode',
   rpcUrls = 'rpcUrls',
@@ -155,6 +156,10 @@ export const STORAGE_VALUE_MESSAGE = {
     isLocal: true,
   },
   haveBackupTip: {
+    type: STORAGE_VALUE_TYPE.boolean,
+    isLocal: true,
+  },
+  hasEncryptPwd: {
     type: STORAGE_VALUE_TYPE.boolean,
     isLocal: true,
   },

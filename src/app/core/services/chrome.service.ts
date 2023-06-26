@@ -251,39 +251,44 @@ export class ChromeService {
   //#endregion
 
   //#region should login
-  public getPassword(): Observable<string> {
+  public async getPassword(): Promise<string> {
     if (!this.check) {
       const encryptPwd = sessionStorage.getItem('password');
       if (encryptPwd) {
         var bytes = CryptoJS.AES.decrypt(encryptPwd, SECRET_PASSPHRASE);
         var originalText = bytes.toString(CryptoJS.enc.Utf8);
-        return of(originalText);
+        return originalText;
       } else {
-        return of(encryptPwd);
+        return encryptPwd;
       }
     } else {
-      return this.getStorage(STORAGE_NAME.password).pipe(
-        map((encryptPwd) => {
-          if (encryptPwd) {
-            var bytes = CryptoJS.AES.decrypt(encryptPwd, SECRET_PASSPHRASE);
-            var originalText = bytes.toString(CryptoJS.enc.Utf8);
-            return originalText;
-          } else {
-            return encryptPwd;
-          }
-        })
-      );
+      const pwd = await this.getStorage(STORAGE_NAME.password).toPromise();
+      if (pwd) {
+        const hasEncrypt = await this.getStorage(STORAGE_NAME.hasEncryptPwd).toPromise();
+        if (hasEncrypt !== true) {
+          this.setPassword(pwd);
+          return pwd;
+        } else {
+          var bytes = CryptoJS.AES.decrypt(pwd, SECRET_PASSPHRASE);
+          var originalText = bytes.toString(CryptoJS.enc.Utf8);
+          return originalText;
+        }
+      } else {
+        return pwd;
+      }
     }
   }
 
   public setPassword(pwd: string) {
-    const encryptPwd = pwd
-      ? CryptoJS.AES.encrypt(pwd, SECRET_PASSPHRASE).toString()
-      : pwd;
+    let storagePwd = pwd;
+    if (pwd) {
+      storagePwd = CryptoJS.AES.encrypt(pwd, SECRET_PASSPHRASE).toString();
+      this.setStorage(STORAGE_NAME.hasEncryptPwd, true);
+    }
     if (!this.check) {
-      sessionStorage.setItem('password', encryptPwd);
+      sessionStorage.setItem('password', storagePwd);
     } else {
-      this.setStorage(STORAGE_NAME.password, encryptPwd);
+      this.setStorage(STORAGE_NAME.password, storagePwd);
     }
     if (!pwd) {
       if (!this.check) {

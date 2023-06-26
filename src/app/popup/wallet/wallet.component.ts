@@ -70,7 +70,7 @@ export class PopupWalletComponent implements OnInit {
       if (res === true) {
         this.isOnePassword = true;
       }
-      this.chrome.getPassword().subscribe((res) => {
+      this.chrome.getPassword().then((res) => {
         this.getPassword = true;
         this.password = res;
       });

@@ -419,7 +419,7 @@ export class NeonService {
         )
       ];
     if (!wif && !this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      const pwd = await this.chrome.getPassword().toPromise();
+      const pwd = await this.chrome.getPassword();
       wif = (await (this.currentWallet.accounts[0] as any).decrypt(pwd)).WIF;
     }
     const txArr = [];
