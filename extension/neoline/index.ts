@@ -33,7 +33,7 @@ dapi.onload = () => {
       from: 'NeoLine',
       type: 'dapi_LOADED',
     },
-    '*'
+    window.location.origin
   );
 };
 
@@ -43,194 +43,232 @@ window.addEventListener('load', () => {
   }
 });
 
+const requireConnectRequest = [
+  requestTarget.Account,
+  requestTarget.AccountPublicKey,
+  requestTarget.VerifyMessage,
+  requestTarget.Invoke,
+  requestTarget.InvokeMulti,
+  requestTarget.SignMessage,
+  requestTarget.Deploy,
+  requestTarget.Send,
+  requestTarget.PickAddress,
+  requestTarget.WalletSwitchAccount,
+  requestTarget.WalletSwitchNetwork,
+];
+
 window.addEventListener(
   'message',
   async (e) => {
-    switch (e.data.target) {
-      /**
-       * common dapi methods
-       */
-      case requestTarget.Provider: {
-        getStorage('rateCurrency', (res) => {
-          if (res === undefined) {
-            res = 'USD';
-          }
-          getStorage('theme', (theme) => {
+    getStorage('connectedWebsites', async (allWebsites) => {
+      const currWallet = await getLocalStorage('wallet', () => {});
+      allWebsites = allWebsites || {};
+      const websites = allWebsites[currWallet.accounts[0].address] || [];
+      const existOrigin = websites.find((item) =>
+        e.origin.includes(item.hostname)
+      );
+      if (
+        requireConnectRequest.includes(e.data.target) &&
+        (!existOrigin || (existOrigin && existOrigin.status === 'false'))
+      ) {
+        window.postMessage(
+          {
+            return: e.data.target,
+            error: ERRORS.CONNECTION_DENIED,
+            ID: e.data.ID,
+          },
+          window.location.origin
+        );
+        return;
+      }
+      switch (e.data.target) {
+        /**
+         * common dapi methods
+         */
+        case requestTarget.Provider: {
+          getStorage('rateCurrency', (res) => {
             if (res === undefined) {
-              theme = 'light-theme';
+              res = 'USD';
             }
-            const manifestData = chrome.runtime.getManifest();
-            manifestData.extra = { currency: res, theme };
-            window.postMessage(
-              {
-                return: requestTarget.Provider,
-                data: manifestData,
-              },
-              '*'
-            );
-          });
-        });
-        return;
-      }
-      case requestTarget.Networks: {
-        getLocalStorage('chainType', async (res) => {
-          if (res === 'Neo2') {
-            getLocalStorage('n2Networks', (n2Networks) => {
-              getLocalStorage('n2SelectedNetworkIndex', (index) => {
-                const n2Network = (n2Networks || DEFAULT_N2_RPC_NETWORK)[
-                  index || 0
-                ];
-                const returnData = {
-                  chainId: n2Network.chainId,
-                  networks: DEFAULT_NETWORKS,
-                  defaultNetwork: n2Network.network,
-                };
-                window.postMessage(
-                  {
-                    return: requestTarget.Networks,
-                    data: returnData,
-                    ID: e.data.ID,
-                  },
-                  '*'
-                );
-              });
-            });
-          } else {
-            getLocalStorage('n3Networks', (n3Networks) => {
-              getLocalStorage('n3SelectedNetworkIndex', (index) => {
-                const n3Network = (n3Networks || DEFAULT_N3_RPC_NETWORK)[
-                  index || 0
-                ];
-                const returnData = {
-                  chainId: n3Network.chainId,
-                  networks: DEFAULT_NETWORKS,
-                  defaultNetwork: n3Network.network,
-                };
-                window.postMessage(
-                  {
-                    return: requestTarget.Networks,
-                    data: returnData,
-                    ID: e.data.ID,
-                  },
-                  '*'
-                );
-              });
-            });
-          }
-        });
-        return;
-      }
-      case requestTarget.Account: {
-        getLocalStorage('wallet', (res: any) => {
-          const data = { address: '', label: '', isLedger: false };
-          if (res !== undefined && res.accounts[0] !== undefined) {
-            data.address = res.accounts[0].address;
-            data.label = res.name;
-            if (res.accounts[0]?.extra?.ledgerSLIP44) {
-              data.isLedger = true;
-            }
-          }
-          window.postMessage(
-            {
-              return: requestTarget.Account,
-              data,
-              ID: e.data.ID,
-            },
-            '*'
-          );
-        });
-        return;
-      }
-      case requestTarget.AuthState: {
-        getStorage('connectedWebsites', async (res) => {
-          const currWallet = await getLocalStorage('wallet', () => {});
-          res = res || {};
-          window.postMessage(
-            {
-              return: requestTarget.AuthState,
-              data: currWallet ? res[currWallet.accounts[0].address] || [] : [],
-            },
-            '*'
-          );
-        });
-        return;
-      }
-      case requestTarget.Connect:
-      case requestTarget.Login:
-      case requestTarget.AccountPublicKey:
-      case requestTarget.PickAddress:
-      case requestTarget.WalletSwitchNetwork:
-      case requestTarget.WalletSwitchAccount: {
-        chrome.runtime.sendMessage(e.data, (response) => {
-          return Promise.resolve('Dummy response to keep the console quiet');
-        });
-        return;
-      }
-
-      // neo2 dapi methods
-      case requestTarget.Balance:
-      case requestTarget.Transaction:
-      case requestTarget.Block:
-      case requestTarget.ApplicationLog:
-      case requestTarget.Storage:
-      case requestTarget.InvokeRead:
-      case requestTarget.InvokeReadMulti:
-      case requestTarget.Invoke:
-      case requestTarget.InvokeMulti:
-      case requestTarget.Send:
-      case requestTarget.Deploy:
-
-      case requestTarget.VerifyMessage:
-      case requestTarget.SignMessage: {
-        getLocalStorage('chainType', async (res) => {
-          let currChainType = res;
-          if (!currChainType) {
-            currChainType = await getWalletType();
-          }
-          if (currChainType === 'Neo2') {
-            getLocalStorage('n2Networks', (n2Networks) => {
-              getLocalStorage(
-                'n2SelectedNetworkIndex',
-                (n2SelectedNetworkIndex) => {
-                  const n2Network = (n2Networks || DEFAULT_N2_RPC_NETWORK)[
-                    n2SelectedNetworkIndex || 0
-                  ];
-                  if (!(e.data as Object).hasOwnProperty('parameter')) {
-                    e.data.parameter = {};
-                  }
-                  let network = e.data?.parameter?.network;
-                  e.data.parameter.network = network || n2Network.network;
-                  e.data.nodeUrl = n2Network.rpcUrl;
-                  chrome.runtime.sendMessage(e.data, (response) => {
-                    return Promise.resolve(
-                      'Dummy response to keep the console quiet'
-                    );
-                  });
-                }
+            getStorage('theme', (theme) => {
+              if (res === undefined) {
+                theme = 'light-theme';
+              }
+              const manifestData = chrome.runtime.getManifest();
+              manifestData.extra = { currency: res, theme };
+              window.postMessage(
+                {
+                  return: requestTarget.Provider,
+                  data: manifestData,
+                },
+                window.location.origin
               );
             });
-            return;
-          } else {
+          });
+          return;
+        }
+        case requestTarget.Networks: {
+          getLocalStorage('chainType', async (res) => {
+            if (res === 'Neo2') {
+              getLocalStorage('n2Networks', (n2Networks) => {
+                getLocalStorage('n2SelectedNetworkIndex', (index) => {
+                  const n2Network = (n2Networks || DEFAULT_N2_RPC_NETWORK)[
+                    index || 0
+                  ];
+                  const returnData = {
+                    chainId: n2Network.chainId,
+                    networks: DEFAULT_NETWORKS,
+                    defaultNetwork: n2Network.network,
+                  };
+                  window.postMessage(
+                    {
+                      return: requestTarget.Networks,
+                      data: returnData,
+                      ID: e.data.ID,
+                    },
+                    window.location.origin
+                  );
+                });
+              });
+            } else {
+              getLocalStorage('n3Networks', (n3Networks) => {
+                getLocalStorage('n3SelectedNetworkIndex', (index) => {
+                  const n3Network = (n3Networks || DEFAULT_N3_RPC_NETWORK)[
+                    index || 0
+                  ];
+                  const returnData = {
+                    chainId: n3Network.chainId,
+                    networks: DEFAULT_NETWORKS,
+                    defaultNetwork: n3Network.network,
+                  };
+                  window.postMessage(
+                    {
+                      return: requestTarget.Networks,
+                      data: returnData,
+                      ID: e.data.ID,
+                    },
+                    window.location.origin
+                  );
+                });
+              });
+            }
+          });
+          return;
+        }
+        case requestTarget.Account: {
+          getLocalStorage('wallet', (res: any) => {
+            const data = { address: '', label: '', isLedger: false };
+            if (res !== undefined && res.accounts[0] !== undefined) {
+              data.address = res.accounts[0].address;
+              data.label = res.name;
+              if (res.accounts[0]?.extra?.ledgerSLIP44) {
+                data.isLedger = true;
+              }
+            }
             window.postMessage(
               {
-                return: e.data.target,
-                error: ERRORS.CHAIN_NOT_MATCH,
+                return: requestTarget.Account,
+                data,
                 ID: e.data.ID,
               },
-              '*'
+              window.location.origin
             );
-            return;
-          }
-        });
+          });
+          return;
+        }
+        case requestTarget.AuthState: {
+          getStorage('connectedWebsites', async (res) => {
+            const currWallet = await getLocalStorage('wallet', () => {});
+            res = res || {};
+            window.postMessage(
+              {
+                return: requestTarget.AuthState,
+                data: currWallet
+                  ? res[currWallet.accounts[0].address] || []
+                  : [],
+              },
+              window.location.origin
+            );
+          });
+          return;
+        }
+        case requestTarget.Connect:
+        case requestTarget.Login:
+        case requestTarget.AccountPublicKey:
+        case requestTarget.PickAddress:
+        case requestTarget.WalletSwitchNetwork:
+        case requestTarget.WalletSwitchAccount: {
+          chrome.runtime.sendMessage(e.data, (response) => {
+            return Promise.resolve('Dummy response to keep the console quiet');
+          });
+          return;
+        }
+
+        // neo2 dapi methods
+        case requestTarget.Balance:
+        case requestTarget.Transaction:
+        case requestTarget.Block:
+        case requestTarget.ApplicationLog:
+        case requestTarget.Storage:
+        case requestTarget.InvokeRead:
+        case requestTarget.InvokeReadMulti:
+        case requestTarget.Invoke:
+        case requestTarget.InvokeMulti:
+        case requestTarget.Send:
+        case requestTarget.Deploy:
+
+        case requestTarget.VerifyMessage:
+        case requestTarget.SignMessage: {
+          getLocalStorage('chainType', async (res) => {
+            let currChainType = res;
+            if (!currChainType) {
+              currChainType = await getWalletType();
+            }
+            if (currChainType === 'Neo2') {
+              getLocalStorage('n2Networks', (n2Networks) => {
+                getLocalStorage(
+                  'n2SelectedNetworkIndex',
+                  (n2SelectedNetworkIndex) => {
+                    const n2Network = (n2Networks || DEFAULT_N2_RPC_NETWORK)[
+                      n2SelectedNetworkIndex || 0
+                    ];
+                    if (!(e.data as Object).hasOwnProperty('parameter')) {
+                      e.data.parameter = {};
+                    }
+                    let network = e.data?.parameter?.network;
+                    e.data.parameter.network = network || n2Network.network;
+                    e.data.nodeUrl = n2Network.rpcUrl;
+                    chrome.runtime.sendMessage(e.data, (response) => {
+                      return Promise.resolve(
+                        'Dummy response to keep the console quiet'
+                      );
+                    });
+                  }
+                );
+              });
+              return;
+            } else {
+              window.postMessage(
+                {
+                  return: e.data.target,
+                  error: ERRORS.CHAIN_NOT_MATCH,
+                  ID: e.data.ID,
+                },
+                window.location.origin
+              );
+              return;
+            }
+          });
+        }
       }
-    }
+    });
   },
   false
 );
 
 chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
   if (request != null) {
-    window.postMessage(request, '*');
+    window.postMessage(request, window.location.origin);
     sendResponse('');
     return Promise.resolve('Dummy response to keep the console quiet');
   }

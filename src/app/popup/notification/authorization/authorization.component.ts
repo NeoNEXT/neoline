@@ -77,18 +77,25 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
 
   public refuse() {
     this.chrome.getStorage(STORAGE_NAME.connectedWebsites).subscribe((res) => {
-      if (this.ruleCheck) {
-        if (res[this.address] === undefined) {
-          res[this.address] = [];
-        }
-        res[this.address].push({
-          hostname: this.hostname,
-          icon: this.iconSrc,
-          title: this.title,
-          status: this.ruleSelected,
-        });
-        this.chrome.setStorage(STORAGE_NAME.connectedWebsites, res);
+      if (res[this.address] === undefined) {
+        res[this.address] = [];
       }
+      const index = res[this.address].findIndex(
+        (item) => item.hostname === this.hostname
+      );
+      const setData = {
+        hostname: this.hostname,
+        icon: this.iconSrc,
+        title: this.title,
+        status: 'false',
+        keep: this.ruleCheck ? true : false,
+      };
+      if (index >= 0) {
+        res[this.address][index] = setData;
+      } else {
+        res[this.address].push(setData);
+      }
+      this.chrome.setStorage(STORAGE_NAME.connectedWebsites, res);
       this.chrome.windowCallback(
         {
           data: false,
@@ -130,18 +137,25 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
     //     this.chrome.setAuthorizedAddress(this.allAuthWalletArr);
     // });
     this.chrome.getStorage(STORAGE_NAME.connectedWebsites).subscribe((res) => {
-      if (this.ruleCheck) {
-        if (res[this.address] === undefined) {
-          res[this.address] = [];
-        }
-        res[this.address].push({
-          hostname: this.hostname,
-          icon: this.iconSrc,
-          title: this.title,
-          status: this.ruleSelected,
-        });
-        this.chrome.setStorage(STORAGE_NAME.connectedWebsites, res);
+      if (res[this.address] === undefined) {
+        res[this.address] = [];
       }
+      const index = res[this.address].findIndex(
+        (item) => item.hostname === this.hostname
+      );
+      const setData = {
+        hostname: this.hostname,
+        icon: this.iconSrc,
+        title: this.title,
+        status: 'true',
+        keep: this.ruleCheck ? true : false,
+      };
+      if (index >= 0) {
+        res[this.address][index] = setData;
+      } else {
+        res[this.address].push(setData);
+      }
+      this.chrome.setStorage(STORAGE_NAME.connectedWebsites, res);
       this.chrome.windowCallback({
         data: true,
         return: requestTarget.Connect,

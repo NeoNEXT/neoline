@@ -267,6 +267,12 @@ chrome.runtime.onRestartRequired.addListener(() => {
     hasLoginAddress: {},
     InvokeArgsArray: [],
   });
+  getStorage('connectedWebsites', (res) => {
+    Object.keys(res).forEach((address) => {
+      res[address] = res[address].filter((item) => item.keep === true);
+    });
+    setStorage({ connectedWebsites: res });
+  });
 });
 
 chrome.runtime.onInstalled.addListener(() => {
@@ -276,6 +282,12 @@ chrome.runtime.onInstalled.addListener(() => {
     hasLoginAddress: {},
     InvokeArgsArray: [],
   });
+  getStorage('connectedWebsites', (res) => {
+    Object.keys(res).forEach((address) => {
+      res[address] = res[address].filter((item) => item.keep === true);
+    });
+    setStorage({ connectedWebsites: res });
+  });
 });
 
 chrome.runtime.onStartup.addListener(() => {
@@ -284,6 +296,12 @@ chrome.runtime.onStartup.addListener(() => {
     shouldFindNode: true,
     hasLoginAddress: {},
     InvokeArgsArray: [],
+  });
+  getStorage('connectedWebsites', (res) => {
+    Object.keys(res).forEach((address) => {
+      res[address] = res[address].filter((item) => item.keep === true);
+    });
+    setStorage({ connectedWebsites: res });
   });
 });
 
@@ -332,8 +350,18 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         const existHost = (res?.[currAddress] || []).find(
           (item) => item.hostname === request.hostname
         );
-        if (existHost || request.connect === 'true') {
-          if (existHost && existHost.status === 'false') {
+        if (!existHost || (existHost && existHost.status === 'false' && existHost.keep === false)) {
+          chrome.windows.create({
+            url: `/index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`,
+            focused: true,
+            width: 386,
+            height: 620,
+            left: 0,
+            top: 0,
+            type: 'popup',
+          });
+        } else {
+          if (existHost && existHost.status === 'false' && existHost.keep === true) {
             notification(
               chrome.i18n.getMessage('rejected'),
               chrome.i18n.getMessage('rejectedTip')
@@ -352,16 +380,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             `${chrome.i18n.getMessage('from')}: ${request.hostname}`,
             chrome.i18n.getMessage('connectedTip')
           );
-        } else {
-          chrome.windows.create({
-            url: `/index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`,
-            focused: true,
-            width: 386,
-            height: 620,
-            left: 0,
-            top: 0,
-            type: 'popup',
-          });
         }
         sendResponse('');
       });

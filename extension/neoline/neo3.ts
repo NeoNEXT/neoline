@@ -32,7 +32,7 @@ setTimeout(() => {
         from: 'NeoLineN3',
         type: 'dapi_LOADED',
       },
-      '*'
+      window.location.origin
     );
   };
 }, 0);
@@ -43,100 +43,137 @@ window.addEventListener('load', () => {
   }
 });
 
+const requireConnectRequest = [
+  requestTargetN3.PickAddress,
+  requestTargetN3.VerifyMessage,
+  requestTargetN3.Invoke,
+  requestTargetN3.SignMessage,
+  requestTargetN3.SignMessageWithoutSalt,
+  requestTargetN3.SignTransaction,
+  requestTargetN3.Send,
+  requestTargetN3.InvokeMulti,
+  requestTargetN3.WalletSwitchAccount,
+  requestTargetN3.WalletSwitchNetwork,
+  requestTargetN3.Account,
+  requestTargetN3.AccountPublicKey,
+];
+
 // neo3 dapi method
 window.addEventListener(
   'message',
   async (e) => {
-    switch (e.data.target) {
-      case requestTargetN3.Provider: {
-        getStorage('rateCurrency', (res) => {
-          if (res === undefined) {
-            res = 'USD';
-          }
-          getStorage('theme', (theme) => {
+    getStorage('connectedWebsites', async (allWebsites) => {
+      const currWallet = await getLocalStorage('wallet', () => {});
+      allWebsites = allWebsites || {};
+      const websites = allWebsites[currWallet.accounts[0].address] || [];
+      const existOrigin = websites.find((item) =>
+        e.origin.includes(item.hostname)
+      );
+      if (
+        requireConnectRequest.includes(e.data.target) &&
+        (!existOrigin || (existOrigin && existOrigin.status === 'false'))
+      ) {
+        window.postMessage(
+          {
+            return: e.data.target,
+            error: ERRORS.CONNECTION_DENIED,
+            ID: e.data.ID,
+          },
+          window.location.origin
+        );
+        return;
+      }
+      switch (e.data.target) {
+        case requestTargetN3.Provider: {
+          getStorage('rateCurrency', (res) => {
             if (res === undefined) {
-              theme = 'light-theme';
+              res = 'USD';
             }
-            const manifestData = chrome.runtime.getManifest();
-            manifestData.extra = { currency: res, theme };
-            window.postMessage(
-              {
-                return: requestTargetN3.Provider,
-                data: manifestData,
-              },
-              '*'
-            );
-          });
-        });
-        return;
-      }
-      case requestTargetN3.PickAddress:
-      case requestTargetN3.AddressToScriptHash:
-      case requestTargetN3.ScriptHashToAddress:
-      case requestTargetN3.WalletSwitchNetwork:
-      case requestTargetN3.WalletSwitchAccount: {
-        chrome.runtime.sendMessage(e.data, (response) => {
-          return Promise.resolve('Dummy response to keep the console quiet');
-        });
-        return;
-      }
-      case requestTargetN3.Balance:
-      case requestTargetN3.Transaction:
-
-      case requestTargetN3.Block:
-      case requestTargetN3.ApplicationLog:
-      case requestTargetN3.Storage:
-      case requestTargetN3.InvokeRead:
-      case requestTargetN3.InvokeReadMulti:
-      case requestTargetN3.Invoke:
-      case requestTargetN3.InvokeMultiple:
-      case requestTargetN3.Send:
-      case requestTargetN3.VerifyMessage:
-      case requestTargetN3.SignMessageWithoutSalt:
-      case requestTargetN3.SignMessage:
-      case requestTargetN3.SignTransaction: {
-        getLocalStorage('chainType', async (res) => {
-          let currChainType = res;
-          if (!currChainType) {
-            currChainType = await getWalletType();
-          }
-          if (currChainType === 'Neo3') {
-            getLocalStorage('n3Networks', (n3Networks) => {
-              getLocalStorage(
-                'n3SelectedNetworkIndex',
-                (n3SelectedNetworkIndex) => {
-                  const n3Network = (n3Networks || DEFAULT_N3_RPC_NETWORK)[
-                    n3SelectedNetworkIndex || 0
-                  ];
-                  if (!(e.data as Object).hasOwnProperty('parameter')) {
-                    e.data.parameter = {};
-                  }
-                  let network = e.data?.parameter?.network;
-                  e.data.parameter.network = network || n3Network.network;
-                  e.data.nodeUrl = n3Network.rpcUrl;
-                  chrome.runtime.sendMessage(e.data, (response) => {
-                    return Promise.resolve(
-                      'Dummy response to keep the console quiet'
-                    );
-                  });
-                }
+            getStorage('theme', (theme) => {
+              if (res === undefined) {
+                theme = 'light-theme';
+              }
+              const manifestData = chrome.runtime.getManifest();
+              manifestData.extra = { currency: res, theme };
+              window.postMessage(
+                {
+                  return: requestTargetN3.Provider,
+                  data: manifestData,
+                },
+                window.location.origin
               );
             });
-            return;
-          } else {
-            window.postMessage(
-              {
-                return: e.data.target,
-                error: ERRORS.CHAIN_NOT_MATCH,
-                ID: e.data.ID,
-              },
-              '*'
-            );
-            return;
-          }
-        });
+          });
+          return;
+        }
+        case requestTargetN3.PickAddress:
+        case requestTargetN3.AddressToScriptHash:
+        case requestTargetN3.ScriptHashToAddress:
+        case requestTargetN3.WalletSwitchNetwork:
+        case requestTargetN3.WalletSwitchAccount: {
+          chrome.runtime.sendMessage(e.data, (response) => {
+            return Promise.resolve('Dummy response to keep the console quiet');
+          });
+          return;
+        }
+        case requestTargetN3.Balance:
+        case requestTargetN3.Transaction:
+
+        case requestTargetN3.Block:
+        case requestTargetN3.ApplicationLog:
+        case requestTargetN3.Storage:
+        case requestTargetN3.InvokeRead:
+        case requestTargetN3.InvokeReadMulti:
+        case requestTargetN3.Invoke:
+        case requestTargetN3.InvokeMultiple:
+        case requestTargetN3.Send:
+        case requestTargetN3.VerifyMessage:
+        case requestTargetN3.SignMessageWithoutSalt:
+        case requestTargetN3.SignMessage:
+        case requestTargetN3.SignTransaction: {
+          getLocalStorage('chainType', async (res) => {
+            let currChainType = res;
+            if (!currChainType) {
+              currChainType = await getWalletType();
+            }
+            if (currChainType === 'Neo3') {
+              getLocalStorage('n3Networks', (n3Networks) => {
+                getLocalStorage(
+                  'n3SelectedNetworkIndex',
+                  (n3SelectedNetworkIndex) => {
+                    const n3Network = (n3Networks || DEFAULT_N3_RPC_NETWORK)[
+                      n3SelectedNetworkIndex || 0
+                    ];
+                    if (!(e.data as Object).hasOwnProperty('parameter')) {
+                      e.data.parameter = {};
+                    }
+                    let network = e.data?.parameter?.network;
+                    e.data.parameter.network = network || n3Network.network;
+                    e.data.nodeUrl = n3Network.rpcUrl;
+                    chrome.runtime.sendMessage(e.data, (response) => {
+                      return Promise.resolve(
+                        'Dummy response to keep the console quiet'
+                      );
+                    });
+                  }
+                );
+              });
+              return;
+            } else {
+              window.postMessage(
+                {
+                  return: e.data.target,
+                  error: ERRORS.CHAIN_NOT_MATCH,
+                  ID: e.data.ID,
+                },
+                window.location.origin
+              );
+              return;
+            }
+          });
+        }
       }
-    }
+    });
   },
   false
 );

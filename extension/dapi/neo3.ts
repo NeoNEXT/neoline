@@ -41,7 +41,7 @@ function sendMessage<K>(
   const ID = getMessageID();
   return new Promise((resolveMain, rejectMain) => {
     const request = parameter ? { target, parameter, ID } : { target, ID };
-    window.postMessage(request, '*');
+    window.postMessage(request, window.location.origin);
     const promise = new Promise((resolve, reject) => {
       const callbackFn = (event) => {
         const returnData = event.data;
@@ -100,10 +100,7 @@ export class Init {
     }
     if (authState === true || authState === 'NONE') {
       let connectResult;
-      if (
-        sessionStorage.getItem('connect') !== 'true' &&
-        authState === 'NONE'
-      ) {
+      if (authState === 'NONE') {
         connectResult = await connect();
       } else {
         connectResult = true;
@@ -128,7 +125,7 @@ export class Init {
       {
         target: requestTarget.Account,
       },
-      '*'
+      window.location.origin
     );
     let authState: any;
     try {
@@ -138,10 +135,7 @@ export class Init {
     }
     if (authState === true || authState === 'NONE') {
       let connectResult;
-      if (
-        sessionStorage.getItem('connect') !== 'true' &&
-        authState === 'NONE'
-      ) {
+      if (authState === 'NONE') {
         connectResult = await connect();
       } else {
         connectResult = true;
@@ -243,10 +237,7 @@ export class Init {
     }
     if (authState === true || authState === 'NONE') {
       let connectResult;
-      if (
-        sessionStorage.getItem('connect') !== 'true' &&
-        authState === 'NONE'
-      ) {
+      if (authState === 'NONE') {
         connectResult = await connect();
       } else {
         connectResult = true;
@@ -347,10 +338,7 @@ export class Init {
     }
     if (authState === true || authState === 'NONE') {
       let connectResult;
-      if (
-        sessionStorage.getItem('connect') !== 'true' &&
-        authState === 'NONE'
-      ) {
+      if (authState === 'NONE') {
         connectResult = await connect();
       } else {
         connectResult = true;
@@ -415,10 +403,7 @@ export class Init {
       }
       if (authState === true || authState === 'NONE') {
         let connectResult;
-        if (
-          sessionStorage.getItem('connect') !== 'true' &&
-          authState === 'NONE'
-        ) {
+        if (authState === 'NONE') {
           connectResult = await connect();
         } else {
           connectResult = true;
@@ -451,10 +436,7 @@ export class Init {
     }
     if (authState === true || authState === 'NONE') {
       let connectResult;
-      if (
-        sessionStorage.getItem('connect') !== 'true' &&
-        authState === 'NONE'
-      ) {
+      if (authState === 'NONE') {
         connectResult = await connect();
       } else {
         connectResult = true;
@@ -492,10 +474,7 @@ export class Init {
     }
     if (authState === true || authState === 'NONE') {
       let connectResult;
-      if (
-        sessionStorage.getItem('connect') !== 'true' &&
-        authState === 'NONE'
-      ) {
+      if (authState === 'NONE') {
         connectResult = await connect();
       } else {
         connectResult = true;
@@ -530,10 +509,7 @@ export class Init {
     }
     if (authState === true || authState === 'NONE') {
       let connectResult;
-      if (
-        sessionStorage.getItem('connect') !== 'true' &&
-        authState === 'NONE'
-      ) {
+      if (authState === 'NONE') {
         connectResult = await connect();
       } else {
         connectResult = true;
@@ -579,10 +555,7 @@ export class Init {
       }
       if (authState === true || authState === 'NONE') {
         let connectResult;
-        if (
-          sessionStorage.getItem('connect') !== 'true' &&
-          authState === 'NONE'
-        ) {
+        if (authState === 'NONE') {
           connectResult = await connect();
         } else {
           connectResult = true;
@@ -652,10 +625,7 @@ export class Init {
       }
       if (authState === true || authState === 'NONE') {
         let connectResult;
-        if (
-          sessionStorage.getItem('connect') !== 'true' &&
-          authState === 'NONE'
-        ) {
+        if (authState === 'NONE') {
           connectResult = await connect();
         } else {
           connectResult = true;
@@ -687,10 +657,7 @@ export class Init {
     }
     if (authState === true || authState === 'NONE') {
       let connectResult;
-      if (
-        sessionStorage.getItem('connect') !== 'true' &&
-        authState === 'NONE'
-      ) {
+      if (authState === 'NONE') {
         connectResult = await connect();
       } else {
         connectResult = true;
@@ -730,10 +697,7 @@ export class Init {
     }
     if (authState === true || authState === 'NONE') {
       let connectResult;
-      if (
-        sessionStorage.getItem('connect') !== 'true' &&
-        authState === 'NONE'
-      ) {
+      if (authState === 'NONE') {
         connectResult = await connect();
       } else {
         connectResult = true;
@@ -846,9 +810,8 @@ function connect(open = true): Promise<any> {
           icon: getIcon(),
           hostname: location.hostname,
           title: document.title,
-          connect: sessionStorage.getItem('connect'),
         },
-        '*'
+        window.location.origin
       );
     }
     const promise = new Promise((resolve) => {
@@ -864,17 +827,6 @@ function connect(open = true): Promise<any> {
       window.addEventListener('message', callbackFn);
     });
     promise.then(async (res) => {
-      if (res === true || res === false) {
-        let authState: any;
-        try {
-          authState = (await getAuthState()) || 'NONE';
-          if (authState === 'NONE') {
-            sessionStorage.setItem('connect', res.toString());
-          }
-        } catch (error) {
-          console.log(error);
-        }
-      }
       resolveMain(res);
     });
   });
@@ -887,7 +839,7 @@ function login(open = true): Promise<any> {
         {
           target: requestTarget.Login,
         },
-        '*'
+        window.location.origin
       );
     }
     const promise = new Promise((resolve) => {
@@ -914,7 +866,7 @@ function getAuthState(): Promise<any> {
       {
         target: requestTarget.AuthState,
       },
-      '*'
+      window.location.origin
     );
     const promise = new Promise((resolve) => {
       const callbackFn = (event) => {
@@ -933,11 +885,11 @@ function getAuthState(): Promise<any> {
         (item) => item.hostname === location.hostname
       );
       if (index >= 0) {
-        resolveMain(
-          res[index].status === true || res[index].status === 'true'
-            ? true
-            : false
-        );
+        if (res[index].status === 'false' && res[index].keep === false) {
+          resolveMain('NONE');
+        } else {
+          resolveMain(res[index].status === 'true' ? true : false);
+        }
       } else {
         resolveMain('NONE');
       }
@@ -951,7 +903,7 @@ function getProvider(): Promise<Provider> {
       {
         target: requestTargetN3.Provider,
       },
-      '*'
+      window.location.origin
     );
     const promise = new Promise((resolve) => {
       const callbackFn = (event) => {
