@@ -100,4 +100,19 @@ export class ExtensionService {
   clearLocalStorage() {
     chrome.storage.local.clear();
   }
+
+  getSessionStorage(key, callback): Promise<any> {
+    return new Promise((resolve) => {
+      chrome.storage.session.get([key], (result) => {
+        callback(result[key]);
+        resolve(result[key]);
+      });
+    });
+  }
+
+  setSessionStorage(value) {
+    chrome.storage.session.set(value, () => {
+      console.log('Set session storage', value);
+    });
+  }
 }

@@ -78,6 +78,21 @@ export function clearLocalStorage() {
   chrome.storage.local.clear();
 }
 
+export function getSessionStorage(key, callback): Promise<any> {
+  return new Promise((resolve) => {
+    chrome.storage.session.get([key], (result) => {
+      callback(result[key]);
+      resolve(result[key]);
+    });
+  });
+}
+
+export function setSessionStorage(value) {
+  chrome.storage.session.set(value, () => {
+    console.log('Set session storage', value);
+  });
+}
+
 export function notification(id: string, title = '', msg = '') {
   chrome.notifications.create(id, {
     type: 'basic',

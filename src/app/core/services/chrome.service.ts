@@ -252,43 +252,28 @@ export class ChromeService {
 
   //#region should login
   public async getPassword(): Promise<string> {
+    let storagePwd;
     if (!this.check) {
-      const encryptPwd = sessionStorage.getItem('password');
-      if (encryptPwd) {
-        var bytes = CryptoJS.AES.decrypt(encryptPwd, SECRET_PASSPHRASE);
-        var originalText = bytes.toString(CryptoJS.enc.Utf8);
-        return originalText;
-      } else {
-        return encryptPwd;
-      }
+      storagePwd = sessionStorage.getItem('password');
     } else {
-      const pwd = await this.getStorage(STORAGE_NAME.password).toPromise();
-      if (pwd) {
-        const hasEncrypt = await this.getStorage(STORAGE_NAME.hasEncryptPwd).toPromise();
-        if (hasEncrypt !== true) {
-          this.setPassword(pwd);
-          return pwd;
-        } else {
-          var bytes = CryptoJS.AES.decrypt(pwd, SECRET_PASSPHRASE);
-          var originalText = bytes.toString(CryptoJS.enc.Utf8);
-          return originalText;
-        }
-      } else {
-        return pwd;
-      }
+      storagePwd = await this.crx.getSessionStorage('password', (res) => res);
     }
+    if (storagePwd) {
+      var bytes = CryptoJS.AES.decrypt(storagePwd, SECRET_PASSPHRASE);
+      var originalText = bytes.toString(CryptoJS.enc.Utf8);
+      return originalText;
+    }
+    return storagePwd;
   }
 
   public setPassword(pwd: string) {
-    let storagePwd = pwd;
-    if (pwd) {
-      storagePwd = CryptoJS.AES.encrypt(pwd, SECRET_PASSPHRASE).toString();
-      this.setStorage(STORAGE_NAME.hasEncryptPwd, true);
-    }
+    const storagePwd = pwd
+      ? CryptoJS.AES.encrypt(pwd, SECRET_PASSPHRASE).toString()
+      : pwd;
     if (!this.check) {
       sessionStorage.setItem('password', storagePwd);
     } else {
-      this.setStorage(STORAGE_NAME.password, storagePwd);
+      this.crx.setSessionStorage({ password: storagePwd });
     }
     if (!pwd) {
       if (!this.check) {

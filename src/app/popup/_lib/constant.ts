@@ -44,13 +44,11 @@ export enum STORAGE_NAME {
   InvokeArgsArray = 'InvokeArgsArray',
   walletsStatus = 'walletsStatus',
   haveBackupTip = 'haveBackupTip',
-  hasEncryptPwd = 'hasEncryptPwd',
   hasLoginAddress = 'hasLoginAddress',
   shouldFindNode = 'shouldFindNode',
   rpcUrls = 'rpcUrls',
   neo3RemoveT4Flag = 'neo3RemoveT4Flag',
   onePassword = 'onePassword',
-  password = 'password',
   theme ='theme',
   onePassCheckAddresses = 'onePassCheckAddresses',
 }
@@ -159,10 +157,6 @@ export const STORAGE_VALUE_MESSAGE = {
     type: STORAGE_VALUE_TYPE.boolean,
     isLocal: true,
   },
-  hasEncryptPwd: {
-    type: STORAGE_VALUE_TYPE.boolean,
-    isLocal: true,
-  },
   hasLoginAddress: {
     type: STORAGE_VALUE_TYPE.object,
     isLocal: true,
@@ -182,10 +176,6 @@ export const STORAGE_VALUE_MESSAGE = {
   },
   onePassword: {
     type: STORAGE_VALUE_TYPE.boolean,
-    isLocal: true,
-  },
-  password: {
-    type: STORAGE_VALUE_TYPE.string,
     isLocal: true,
   },
   theme: {

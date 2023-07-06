@@ -21,6 +21,7 @@ import {
   getLocalStorage,
   getAssetSymbol,
   getAssetDecimal,
+  getSessionStorage,
 } from '../common';
 import {
   ChainType,
@@ -386,7 +387,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       return true;
     }
     case requestTarget.Login: {
-      getLocalStorage('password', (pwd) => {
+      getSessionStorage('password', (pwd) => {
         if (pwd) {
           windowCallback({
             return: requestTarget.Login,
@@ -429,7 +430,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 )
               ];
             if (!wif) {
-              const pwd = await getLocalStorage('password', () => {});
+              const pwd = await getSessionStorage('password', () => {});
               wif = (await (currWallet.accounts[0] as any).decrypt(pwd)).WIF;
             }
             const privateKey = getPrivateKeyFromWIF(wif);
