@@ -32,6 +32,11 @@
     "@angular/platform-browser": "^10.2.5",
     "@angular/platform-browser-dynamic": "^10.2.5",
     "@angular/router": "^10.2.5",
+    "@cityofzion/neon-core-neo3": "npm:@cityofzion/neon-core@^5.0.0-next.17",
+    "@cityofzion/neon-core-neo3-pr5": "npm:@cityofzion/neon-core@^5.0.0-next.4",
+    "@cityofzion/neon-core-neo3-rc1": "npm:@cityofzion/neon-core@^5.0.0-next.7",
+    "@cityofzion/neon-js": "npm:@cityofzion/neon-js@^4.8.0",
+    "@cityofzion/neon-js-neo3": "npm:@cityofzion/neon-js@^5.0.0-next.17",
     "@ledgerhq/hw-transport-webhid": "^6.27.1",
     "@ngrx/store": "^10.1.2",
     "@types/crypto-js": "^3.1.47",
@@ -57,7 +62,7 @@
     "zone.js": "~0.10.3"
   },
   "devDependencies": {
-    "@angular-builders/custom-webpack": "^9.1.0",
+    "@angular-builders/custom-webpack": "^10.0.1",
     "@angular-builders/dev-server": "^7.3.1",
     "@angular/cli": "^10.2.4",
     "@angular/compiler-cli": "^10.2.5",

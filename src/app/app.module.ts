@@ -52,6 +52,5 @@ const APPINIT_PROVIDES = [
   ],
   providers: [...APPINIT_PROVIDES],
   bootstrap: [AppComponent],
-  entryComponents: [],
 })
 export class AppModule {}

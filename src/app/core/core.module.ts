@@ -47,6 +47,5 @@ import { ExtensionService } from './util/extension.service';
     LedgerService,
     ExtensionService,
   ],
-  entryComponents: [],
 })
 export class CoreModule {}

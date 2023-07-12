@@ -19,6 +19,5 @@ import { AccountNameComponent } from './account-name/account-name.component';
   imports: [CommonModule, LedgerRoutingModule, ShareModule],
   exports: [],
   providers: [],
-  entryComponents: [],
 })
 export class LedgerModule {}

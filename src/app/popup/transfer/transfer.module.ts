@@ -24,6 +24,5 @@ import { TransferCreateConfirmComponent } from './create/create-confirm/create-c
   imports: [CommonModule, TransferRoutingModule, ShareModule],
   exports: [],
   providers: [TransferService, Neo3TransferService, Neo3InvokeService],
-  entryComponents: [],
 })
 export class TransferModule {}

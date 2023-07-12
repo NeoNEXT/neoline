@@ -88,6 +88,5 @@ const DIRECTIVE = [
     ...MATMODULES,
   ],
   providers: [],
-  entryComponents: [],
 })
 export class ShareModule {}

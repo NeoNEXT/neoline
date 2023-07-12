@@ -110,6 +110,5 @@ const POPUP_DIALOGS = [
     ...POPUP_MODULES,
   ],
   exports: [],
-  entryComponents: [...POPUP_DIALOGS],
 })
 export class PopupModule {}
