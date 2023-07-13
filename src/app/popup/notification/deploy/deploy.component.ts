@@ -200,11 +200,11 @@ export class PopupNoticeDeployComponent implements OnInit, OnDestroy {
         (this.pramsData.dynamicInvoke === 'true' ? 2 : 0) |
         (this.pramsData.isPayable === 'true' ? 4 : 0);
       const sb = new ScriptBuilder();
-      sb.emitPush(str2hexstring(utf8Encode(this.pramsData.description)))
-        .emitPush(str2hexstring(utf8Encode(this.pramsData.email)))
-        .emitPush(str2hexstring(utf8Encode(this.pramsData.author)))
-        .emitPush(str2hexstring(utf8Encode(this.pramsData.version)))
-        .emitPush(str2hexstring(utf8Encode(this.pramsData.name)))
+      sb.emitPush(str2hexstring(this.pramsData.description))
+        .emitPush(str2hexstring(this.pramsData.email))
+        .emitPush(str2hexstring(this.pramsData.author))
+        .emitPush(str2hexstring(this.pramsData.version))
+        .emitPush(str2hexstring(this.pramsData.name))
         .emitPush(num)
         .emitPush(this.pramsData.returnType || 'ff00')
         .emitPush(this.pramsData.parameterList)

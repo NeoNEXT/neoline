@@ -30,6 +30,10 @@ module.exports = [
         patterns: ["extension/manifest.json"],
       }),
     ],
+    performance: {
+      maxEntrypointSize: 2000000,
+      maxAssetSize: 2000000
+    }
   },
   {
     mode: "production",
@@ -61,6 +65,10 @@ module.exports = [
         },
       ],
     },
+    performance: {
+      maxEntrypointSize: 2000000,
+      maxAssetSize: 2000000
+    }
   },
   {
     mode: "production",
@@ -89,5 +97,9 @@ module.exports = [
         },
       ],
     },
+    performance: {
+      maxEntrypointSize: 2000000,
+      maxAssetSize: 2000000
+    }
   },
 ];

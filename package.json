@@ -21,7 +21,6 @@
   },
   "private": true,
   "dependencies": {
-    "@angular-devkit/build-angular": "^0.1102.19",
     "@angular/animations": "^11.2.14",
     "@angular/cdk": "^11.2.13",
     "@angular/common": "^11.2.14",
@@ -32,8 +31,13 @@
     "@angular/platform-browser": "^11.2.14",
     "@angular/platform-browser-dynamic": "^11.2.14",
     "@angular/router": "^11.2.14",
+    "@cityofzion/neon-core-neo3": "npm:@cityofzion/neon-core@^5.0.0-next.17",
+    "@cityofzion/neon-core-neo3-pr5": "npm:@cityofzion/neon-core@^5.0.0-next.4",
+    "@cityofzion/neon-core-neo3-rc1": "npm:@cityofzion/neon-core@^5.0.0-next.7",
+    "@cityofzion/neon-js": "npm:@cityofzion/neon-js@^4.8.0",
+    "@cityofzion/neon-js-neo3": "npm:@cityofzion/neon-js@^5.0.0-next.17",
     "@ledgerhq/hw-transport-webhid": "^6.27.1",
-    "@ngrx/store": "^10.1.2",
+    "@ngrx/store": "^11.1.1",
     "@types/crypto-js": "^3.1.47",
     "@types/elliptic": "^6.4.12",
     "@types/mathjs": "^6.0.5",
@@ -56,7 +60,7 @@
     "zone.js": "~0.10.3"
   },
   "devDependencies": {
-    "@angular-builders/custom-webpack": "^10.0.1",
+    "@angular-builders/custom-webpack": "^11.1.1",
     "@angular-builders/dev-server": "^7.3.1",
     "@angular-devkit/build-angular": "~0.1102.18",
     "@angular/cli": "^11.2.19",
@@ -81,6 +85,7 @@
     "websocket-extensions": "^0.1.4",
     "npm-registry-fetch": "^4.0.5",
     "lodash": "^4.17.19",
-    "webpack-subresource-integrity": "^1.5.1"
+    "webpack-subresource-integrity": "^1.5.1",
+    "webpack": "^5.0.0"
   }
 }

@@ -34,7 +34,27 @@
             "scripts": [],
             "customWebpackConfig": {
               "path": "./webpack.config.js"
-            }
+            },
+            "allowedCommonJsDependencies": [
+              "bignumber.js",
+              "crypto-js",
+              "util",
+              "loglevel",
+              "bn.js",
+              "elliptic",
+              "bs58",
+              "bs58check",
+              "wif",
+              "secure-random",
+              "loglevel-plugin-prefix",
+              "axios",
+              "typed-function",
+              "decimal.js",
+              "fraction.js",
+              "complex.js",
+              "lodash",
+              "crypto"
+            ]
           },
           "configurations": {
             "production": {
@@ -48,7 +68,6 @@
               "optimization": true,
               "outputHashing": "all",
               "sourceMap": false,
-              "extractCss": true,
               "namedChunks": false,
               "aot": true,
               "extractLicenses": true,
@@ -69,9 +88,6 @@
           "builder": "@angular-builders/custom-webpack:dev-server",
           "options": {
             "browserTarget": "neoline:build",
-            "customWebpackConfig": {
-              "path": "./webpack.config.js"
-            },
             "proxyConfig": "proxy.conf.js"
           },
           "configurations": {
