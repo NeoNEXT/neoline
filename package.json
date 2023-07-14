@@ -42,26 +42,18 @@
     "@types/elliptic": "^6.4.12",
     "@types/mathjs": "^6.0.5",
     "@types/wif": "^2.0.1",
-    "acorn": "^7.3.1",
     "asynclist": "^0.0.3",
     "bignumber.js": "^9.0.1",
     "buffer": "^6.0.3",
     "core-js": "^3.6.5",
     "crypto-browserify": "^3.12.0",
     "crypto-js": "^4.1.1",
-    "ecstatic": "^4.1.4",
-    "kind-of": "^6.0.3",
-    "lodash": "^4.17.19",
     "mathjs": "^7.0.1",
-    "minimist": "^1.2.5",
-    "npm-registry-fetch": "^4.0.5",
     "path-browserify": "^1.0.1",
     "sortablejs": "^1.15.0",
     "stream-browserify": "^3.0.0",
     "tslib": "^2.0.0",
     "util": "^0.12.5",
-    "webpack-subresource-integrity": "^1.5.1",
-    "websocket-extensions": "^0.1.4",
     "zone.js": "~0.11.4"
   },
   "devDependencies": {
@@ -75,22 +67,11 @@
     "codelyzer": "^6.0.0",
     "copy-webpack-plugin": "^6.0.2",
     "http-server": "^0.12.3",
-    "ts-loader": "^7.0.5",
+    "ts-loader": "^8.4.0",
     "ts-node": "~8.10.2",
     "tslint": "~6.1.0",
     "typescript": "~4.3.5",
-    "webpack": "^4.43.0",
-    "webpack-cli": "^3.3.12"
-  },
-  "resolutions": {
-    "minimist": "^1.2.5",
-    "acorn": "^7.3.1",
-    "kind-of": "^6.0.3",
-    "ecstatic": "^4.1.4",
-    "websocket-extensions": "^0.1.4",
-    "npm-registry-fetch": "^4.0.5",
-    "lodash": "^4.17.19",
-    "webpack-subresource-integrity": "^1.5.1",
-    "webpack": "^5.0.0"
+    "webpack": "^5.88.1",
+    "webpack-cli": "^5.1.4"
   }
 }

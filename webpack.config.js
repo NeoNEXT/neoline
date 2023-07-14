@@ -3,6 +3,7 @@
 
 const path = require("path");
 const appSrc = "./src";
+const webpack = require('webpack');
 
 module.exports = {
   // optimization: {
@@ -38,12 +39,17 @@ module.exports = {
       "@popup": path.resolve(__dirname, `${appSrc}/app/popup`),
     },
     fallback: {
-      path: require.resolve('path-browserify'),
-      crypto: require.resolve('crypto-browserify'),
-      stream: require.resolve('stream-browserify'),
-      buffer: require.resolve('buffer'),
+      path: require.resolve("path-browserify"),
+      crypto: require.resolve("crypto-browserify"),
+      stream: require.resolve("stream-browserify"),
+      buffer: require.resolve("buffer/"),
       util: require.resolve("util"),
-      fs: false
+      fs: false,
     },
   },
+  plugins: [
+    new webpack.ProvidePlugin({
+      Buffer: ["buffer", "Buffer"],
+    }),
+  ],
 };

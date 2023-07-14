@@ -15,6 +15,10 @@ module.exports = [
     devtool: false,
     resolve: {
       extensions: [".ts", ".js"],
+      fallback: {
+        crypto: require.resolve("crypto-browserify"),
+        stream: require.resolve("stream-browserify"),
+      },
     },
     module: {
       rules: [
@@ -55,6 +59,10 @@ module.exports = [
     devtool: false,
     resolve: {
       extensions: [".ts", ".js"],
+      fallback: {
+        crypto: require.resolve("crypto-browserify"),
+        stream: require.resolve("stream-browserify"),
+      },
     },
     module: {
       rules: [
@@ -87,6 +95,10 @@ module.exports = [
     devtool: false,
     resolve: {
       extensions: [".ts", ".js"],
+      fallback: {
+        crypto: require.resolve("crypto-browserify"),
+        stream: require.resolve("stream-browserify"),
+      },
     },
     module: {
       rules: [
