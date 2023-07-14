@@ -1,6 +1,6 @@
 import { Component, OnInit, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { GlobalService, UtilServiceState } from '@app/core';
+import { ChromeService, GlobalService, UtilServiceState } from '@app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { ChainType } from '../../_lib';
@@ -17,6 +17,7 @@ export class PopupPasswordDialogComponent implements OnInit {
     private dialogRef: MatDialogRef<PopupPasswordDialogComponent>,
     private global: GlobalService,
     private util: UtilServiceState,
+    private chrome: ChromeService,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       account: Wallet2 | Wallet3;
@@ -36,6 +37,7 @@ export class PopupPasswordDialogComponent implements OnInit {
     account
       .decrypt(this.pwd)
       .then(() => {
+        this.chrome.setPassword(this.pwd);
         this.dialogRef.close(true);
       })
       .catch((err) => {

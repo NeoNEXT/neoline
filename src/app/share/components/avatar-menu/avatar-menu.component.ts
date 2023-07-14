@@ -124,7 +124,8 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       this.changeAccount(w);
       return;
     }
-    if (this.isOnePassword) {
+    const pwd = await this.chromeSrc.getPassword();
+    if (this.isOnePassword && pwd) {
       this.chromeSrc.setHasLoginAddress(w.accounts[0].address);
       this.changeAccount(w);
       return;

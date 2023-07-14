@@ -90,6 +90,10 @@ export class PopupWalletGuard implements CanActivate {
             queryParams: { returnUrl: state.url },
           });
         } else {
+          if (res?.accounts[0]?.extra?.ledgerSLIP44) {
+            resolve(true);
+            return;
+          }
           this.chrome.getPassword().then((pwd) => {
             if (!pwd) {
               this.router.navigate(['/popup/login'], {
@@ -97,7 +101,7 @@ export class PopupWalletGuard implements CanActivate {
               });
               this.global.log('Wallet should login.');
             } else {
-              resolve(res);
+              resolve(true);
             }
           });
         }

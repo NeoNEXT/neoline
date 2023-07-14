@@ -69,11 +69,11 @@ export class NeonService {
   }
 
   //#region init
-  public walletIsOpen(): Observable<boolean> {
+  public walletIsOpen(): Observable<Wallet2 | Wallet3> {
     return this.chrome.getStorage(STORAGE_NAME.wallet).pipe(
       map((res) => {
         const w = this.parseWallet(res);
-        return w ? true : false;
+        return w;
       })
     );
   }
