@@ -5,13 +5,6 @@ const path = require("path");
 const appSrc = "./src";
 
 module.exports = {
-  node: {
-    path: true,
-    crypto: true,
-    fs: "empty",
-    stream: true,
-    Buffer: true,
-  },
   // optimization: {
   //     minimize: false
   // },
@@ -43,6 +36,14 @@ module.exports = {
       "@models": path.resolve(__dirname, `${appSrc}/models`),
       "@share": path.resolve(__dirname, `${appSrc}/app/share`),
       "@popup": path.resolve(__dirname, `${appSrc}/app/popup`),
+    },
+    fallback: {
+      path: require.resolve('path-browserify'),
+      crypto: require.resolve('crypto-browserify'),
+      stream: require.resolve('stream-browserify'),
+      buffer: require.resolve('buffer'),
+      util: require.resolve("util"),
+      fs: false
     },
   },
 };
