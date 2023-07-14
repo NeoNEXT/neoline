@@ -1,6 +1,7 @@
 const path = require("path");
 
 const CopyWebpackPlugin = require("copy-webpack-plugin");
+const webpack = require("webpack");
 
 module.exports = [
   {
@@ -33,11 +34,15 @@ module.exports = [
       new CopyWebpackPlugin({
         patterns: ["extension/manifest.json"],
       }),
+      new webpack.ProvidePlugin({
+        Buffer: ["buffer", "Buffer"],
+        process: "process/browser",
+      }),
     ],
     performance: {
       maxEntrypointSize: 2000000,
-      maxAssetSize: 2000000
-    }
+      maxAssetSize: 2000000,
+    },
   },
   {
     mode: "production",
@@ -75,8 +80,8 @@ module.exports = [
     },
     performance: {
       maxEntrypointSize: 2000000,
-      maxAssetSize: 2000000
-    }
+      maxAssetSize: 2000000,
+    },
   },
   {
     mode: "production",
@@ -111,7 +116,7 @@ module.exports = [
     },
     performance: {
       maxEntrypointSize: 2000000,
-      maxAssetSize: 2000000
-    }
+      maxAssetSize: 2000000,
+    },
   },
 ];

@@ -2,8 +2,8 @@
   "name": "neoline",
   "version": "4.0.2",
   "engines": {
-    "node": "^14.20.0",
-    "npm": "~6.14.17"
+    "node": "^16.20.1",
+    "npm": "~8.19.4"
   },
   "scripts": {
     "ng": "ng",
@@ -34,7 +34,7 @@
     "@cityofzion/neon-core-neo3": "npm:@cityofzion/neon-core@^5.0.0-next.17",
     "@cityofzion/neon-core-neo3-pr5": "npm:@cityofzion/neon-core@^5.0.0-next.4",
     "@cityofzion/neon-core-neo3-rc1": "npm:@cityofzion/neon-core@^5.0.0-next.7",
-    "@cityofzion/neon-js": "npm:@cityofzion/neon-js@^4.8.0",
+    "@cityofzion/neon-js": "^4.8.0",
     "@cityofzion/neon-js-neo3": "npm:@cityofzion/neon-js@^5.0.0-next.17",
     "@ledgerhq/hw-transport-webhid": "^6.27.1",
     "@ngrx/store": "^13.2.0",
@@ -50,6 +50,7 @@
     "crypto-js": "^4.1.1",
     "mathjs": "^7.0.1",
     "path-browserify": "^1.0.1",
+    "process": "^0.11.10",
     "sortablejs": "^1.15.0",
     "stream-browserify": "^3.0.0",
     "tslib": "^2.0.0",
