@@ -14,7 +14,7 @@ enum STATUS_ENUM {
   templateUrl: 'ledger.component.html',
   styleUrls: ['ledger.component.scss'],
 })
-export class LedgerComponent implements OnInit, OnDestroy {
+export class LedgerComponent implements OnDestroy {
   STATUS_ENUM = STATUS_ENUM;
   status = STATUS_ENUM.CHAIN_PICK;
   chainType: ChainType;
@@ -34,8 +34,6 @@ export class LedgerComponent implements OnInit, OnDestroy {
         chain === 'Neo2' ? state.n2NetworkIndex : state.n3NetworkIndex;
     });
   }
-
-  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

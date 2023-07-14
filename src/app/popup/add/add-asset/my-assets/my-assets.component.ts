@@ -11,7 +11,7 @@ import { NEO3_CONTRACT, GAS3_CONTRACT } from '../../../_lib';
   templateUrl: 'my-assets.component.html',
   styleUrls: ['../../my-assets.scss'],
 })
-export class PopupMyAssetsComponent implements OnInit, OnDestroy {
+export class PopupMyAssetsComponent implements OnDestroy {
   myAssets: Array<Asset> = []; // 所有的资产
   private watch: Asset[] = []; // 用户添加的资产
   private moneyAssets: Asset[] = []; // 有钱的资产
@@ -60,8 +60,6 @@ export class PopupMyAssetsComponent implements OnInit, OnDestroy {
       this.myAssets = showAssets;
     });
   }
-
-  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

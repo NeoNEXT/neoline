@@ -17,7 +17,7 @@ import { AppState } from '@/app/reduers';
   templateUrl: 'account-name.component.html',
   styleUrls: ['account-name.component.scss'],
 })
-export class AccountNameComponent implements OnInit {
+export class AccountNameComponent {
   @Input() accountData;
   @Input() chainType: ChainType;
   @Output() importSuccess = new EventEmitter();
@@ -30,8 +30,6 @@ export class AccountNameComponent implements OnInit {
     private chrome: ChromeService,
     private store: Store<AppState>
   ) {}
-
-  ngOnInit(): void {}
 
   importLedgerWallet() {
     if (this.checkName() === false) {

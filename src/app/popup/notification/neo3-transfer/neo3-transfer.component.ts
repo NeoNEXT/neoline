@@ -36,7 +36,7 @@ type TabType = 'details' | 'data';
   templateUrl: 'neo3-transfer.component.html',
   styleUrls: ['neo3-transfer.component.scss'],
 })
-export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit, OnDestroy {
+export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
   tabType: TabType = 'details';
   NEO = NEO;
   public rpcClient;
@@ -162,8 +162,6 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, AfterViewInit, 
       this.getAssetDetail();
     });
   }
-
-  ngAfterViewInit(): void {}
 
   async getAssetDetail() {
     const symbols = await this.util.getAssetSymbols(

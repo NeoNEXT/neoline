@@ -7,7 +7,7 @@ import { AuthType } from '@/models/dapi_neo3';
   templateUrl: './dapi-prompt.component.html',
   styleUrls: ['./dapi-prompt.component.scss'],
 })
-export class PopupDapiPromptComponent implements OnInit {
+export class PopupDapiPromptComponent {
   scopes: number;
   scopesType: string;
   constructor(@Inject(MAT_DIALOG_DATA) public data) {
@@ -33,6 +33,4 @@ export class PopupDapiPromptComponent implements OnInit {
         break;
     }
   }
-
-  ngOnInit(): void {}
 }

@@ -521,7 +521,7 @@ export class PopupNoticeInvokeComponent implements OnInit, OnDestroy {
       (this.assetIntentOverrides &&
         this.assetIntentOverrides.inputs &&
         this.assetIntentOverrides.inputs.length &&
-        // tslint:disable-next-line: max-line-length
+        // eslint-disable-next-line max-len
         !this.assetIntentOverrides.inputs.filter(({ index, txid }) =>
           this.utxos.find(
             (utxo) =>

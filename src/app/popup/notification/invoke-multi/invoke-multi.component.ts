@@ -561,7 +561,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
       });
     }
     let addScriptHash = '';
-    // tslint:disable-next-line:prefer-for-of
+    // eslint-disable-next-line @typescript-eslint/prefer-for-of
     for (let i = 0; i < this.invokeArgs.length; i++) {
       if (this.invokeArgs[i].triggerContractVerification) {
         addScriptHash = this.invokeArgs[i].scriptHash;
@@ -591,7 +591,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
       (this.assetIntentOverrides &&
         this.assetIntentOverrides.inputs &&
         this.assetIntentOverrides.inputs.length &&
-        // tslint:disable-next-line: max-line-length
+        // eslint-disable-next-line max-len
         !this.assetIntentOverrides.inputs.filter(({ index, txid }) =>
           this.utxos.find(
             (utxo) =>

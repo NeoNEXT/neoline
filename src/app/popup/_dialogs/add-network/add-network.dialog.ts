@@ -15,7 +15,7 @@ import { MatDialogRef } from '@angular/material/dialog';
   templateUrl: 'add-network.dialog.html',
   styleUrls: ['add-network.dialog.scss'],
 })
-export class PopupAddNetworkDialogComponent implements OnInit, OnDestroy {
+export class PopupAddNetworkDialogComponent implements OnDestroy {
   privateNet: RpcNetwork = {
     name: '',
     rpcUrl: '',
@@ -47,8 +47,6 @@ export class PopupAddNetworkDialogComponent implements OnInit, OnDestroy {
       this.privateNet.id = this.n3Networks[this.n3Networks.length - 1].id + 1;
     });
   }
-
-  ngOnInit() {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

@@ -47,13 +47,13 @@
   </div>
   <div class="tabs-container">
     <span
-      [class]="{ selected: selectedIndex == 0 }"
+      [class]="{ selected: selectedIndex === 0 }"
       (click)="selectedIndex = 0"
     >
       {{ "Tokens" }}
     </span>
     <span
-      [class]="{ selected: selectedIndex == 1 }"
+      [class]="{ selected: selectedIndex === 1 }"
       (click)="selectedIndex = 1"
     >
       {{ "transaction" | translate | async }}

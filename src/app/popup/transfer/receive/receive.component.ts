@@ -9,7 +9,7 @@ declare var QRCode: any;
   templateUrl: 'receive.component.html',
   styleUrls: ['receive.component.scss'],
 })
-export class TransferReceiveComponent implements OnInit, OnDestroy {
+export class TransferReceiveComponent implements OnDestroy {
   private accountSub: Unsubscribable;
   address: string;
   private qrcodeDom;
@@ -40,8 +40,6 @@ export class TransferReceiveComponent implements OnInit, OnDestroy {
       }, 0);
     }
   }
-
-  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

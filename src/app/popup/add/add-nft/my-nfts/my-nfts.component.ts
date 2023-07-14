@@ -9,7 +9,7 @@ import { Unsubscribable } from 'rxjs';
   templateUrl: 'my-nfts.component.html',
   styleUrls: ['../../my-assets.scss'],
 })
-export class PopupMyNftsComponent implements OnInit, OnDestroy {
+export class PopupMyNftsComponent implements OnDestroy {
   nfts: NftAsset[];
   watchNfts: NftAsset[];
   public isLoading = false;
@@ -30,8 +30,6 @@ export class PopupMyNftsComponent implements OnInit, OnDestroy {
       this.getNfts();
     });
   }
-
-  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

@@ -6,13 +6,11 @@ import { MatDialogRef } from '@angular/material/dialog';
   templateUrl: 'transfer-success.component.html',
   styleUrls: ['transfer-success.component.scss'],
 })
-export class PopupTransferSuccessDialogComponent implements OnInit {
+export class PopupTransferSuccessDialogComponent {
   constructor(
     private router: Router,
     private dialogRef: MatDialogRef<PopupTransferSuccessDialogComponent>
   ) {}
-
-  ngOnInit(): void {}
 
   public close() {
     if (this.router.url.match('notification') !== null) {

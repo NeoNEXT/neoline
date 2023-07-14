@@ -7,15 +7,13 @@ import { GlobalService } from '@/app/core';
   templateUrl: './asset-item.component.html',
   styleUrls: ['../../asset-item.scss'],
 })
-export class PopupAssetItemComponent implements OnInit {
+export class PopupAssetItemComponent {
   @Input() asset: NftAsset;
 
-  // tslint:disable-next-line:no-output-on-prefix
+  // eslint-disable-next-line @angular-eslint/no-output-on-prefix
   @Output() onAddAsset = new EventEmitter<any>();
 
   constructor(public global: GlobalService) {}
-
-  ngOnInit(): void {}
 
   public addAsset() {
     this.onAddAsset.emit();

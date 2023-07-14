@@ -96,14 +96,14 @@
         (click)="claim()"
         [disabled]="loading || !init || !showClaim"
       >
-        <ng-container *ngIf="!loading && claimStatus != 'success'">
+        <ng-container *ngIf="!loading && claimStatus !== 'success'">
           {{
-            claimStatus != "confirmed"
+            claimStatus !== "confirmed"
               ? ("syncNow" | translate | async)
               : ("claim" | translate | async)
           }}
         </ng-container>
-        <ng-container *ngIf="claimStatus == 'success' && !loading"
+        <ng-container *ngIf="claimStatus === 'success' && !loading"
           ><img theme src="/assets/images/common/selected.svg" alt=""
         /></ng-container>
         <mat-spinner
@@ -116,13 +116,13 @@
     <hr class="claim-line" />
     <div class="tabs-container">
       <span
-        [class]="{ selected: selectedIndex == 0 }"
+        [class]="{ selected: selectedIndex === 0 }"
         (click)="selectedIndex = 0"
       >
         {{ "assets" | translate | async }}
       </span>
       <span
-        [class]="{ selected: selectedIndex == 1 }"
+        [class]="{ selected: selectedIndex === 1 }"
         (click)="selectedIndex = 1"
       >
         {{ currentWalletIsN3 ? "NEP11" : ("transaction" | translate | async) }}

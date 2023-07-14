@@ -12,7 +12,7 @@ import { ChainType, SelectItem, STORAGE_NAME } from '@popup/_lib';
   templateUrl: 'select.dialog.html',
   styleUrls: ['select.dialog.scss'],
 })
-export class PopupSelectDialogComponent implements OnInit {
+export class PopupSelectDialogComponent {
   constructor(
     private dialogRef: MatDialogRef<PopupSelectDialogComponent>,
     private chromeSer: ChromeService,
@@ -26,8 +26,6 @@ export class PopupSelectDialogComponent implements OnInit {
       type: 'lang' | 'currency' | 'chain'; // lang, currency
     }
   ) {}
-
-  ngOnInit() {}
 
   getTitle() {
     switch (this.data.type) {

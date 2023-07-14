@@ -194,7 +194,7 @@ export class PopupNoticeDeployComponent implements OnInit, OnDestroy {
         90;
       const fromAddress = this.wallet.accounts[0].address;
       let newTx = new tx.InvocationTransaction();
-      // tslint:disable-next-line: no-bitwise
+      // eslint-disable-next-line no-bitwise
       const num =
         (this.pramsData.needsStorage === 'true' ? 1 : 0) |
         (this.pramsData.dynamicInvoke === 'true' ? 2 : 0) |

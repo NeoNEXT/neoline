@@ -14,7 +14,7 @@ import { Unsubscribable } from 'rxjs';
   templateUrl: 'select-chain.component.html',
   styleUrls: ['select-chain.component.scss'],
 })
-export class LedgerChainComponent implements OnInit, OnDestroy {
+export class LedgerChainComponent implements OnDestroy {
   @Output() selectChain = new EventEmitter<ChainType>();
   chain: ChainType = 'Neo2';
   settingStateSub: Unsubscribable;
@@ -23,8 +23,6 @@ export class LedgerChainComponent implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.settingStateSub?.unsubscribe();
   }
-
-  ngOnInit(): void {}
 
   select() {
     this.selectChain.emit(this.chain);

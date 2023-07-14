@@ -8,7 +8,7 @@ import { Unsubscribable } from 'rxjs';
   templateUrl: 'add-asset.component.html',
   styleUrls: ['../add-asset.scss'],
 })
-export class PopupAddAssetComponent implements OnInit, OnDestroy {
+export class PopupAddAssetComponent implements OnDestroy {
   searchAsset: Asset; // Searched asset
   private watch: Asset[] = []; // User-added assets
   private moneyBalance: Asset[] = [];
@@ -41,8 +41,6 @@ export class PopupAddAssetComponent implements OnInit, OnDestroy {
         .subscribe((res) => (this.watch = res));
     });
   }
-
-  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

@@ -10,7 +10,7 @@ declare var QRCode: any;
   templateUrl: 'backup-key.component.html',
   styleUrls: ['backup-key.component.scss'],
 })
-export class PopupBackupKeyComponent implements OnInit, OnDestroy {
+export class PopupBackupKeyComponent implements OnDestroy {
   WIF = '';
   private accountSub: Unsubscribable;
   private address: string;
@@ -32,8 +32,6 @@ export class PopupBackupKeyComponent implements OnInit, OnDestroy {
       this.showKeyQrCode(currentWIFArr, currentWalletArr, state.currentWallet);
     });
   }
-
-  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

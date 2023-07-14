@@ -10,7 +10,7 @@
   <div class="item-middle">{{ asset?.symbol }}</div>
   <div class="item-right">
     <p class="balance">{{ asset?.balance || "0" }}</p>
-    <p class="rate" *ngIf="asset?.rateBalance && asset?.rateBalance != 0">
+    <p class="rate" *ngIf="asset?.rateBalance && asset?.rateBalance !== 0">
       {{ asset?.rateBalance | numberFixed : 2 }}&nbsp;{{ rateCurrency }}
     </p>
   </div>

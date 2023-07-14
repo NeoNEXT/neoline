@@ -9,7 +9,7 @@ import { Unsubscribable } from 'rxjs';
   templateUrl: 'add-nft.component.html',
   styleUrls: ['../add-asset.scss'],
 })
-export class PopupAddNftComponent implements OnInit, OnDestroy {
+export class PopupAddNftComponent implements OnDestroy {
   public watch: NftAsset[] = []; // 用户添加的资产
   private moneyNft: NftAsset[] = [];
 
@@ -40,8 +40,6 @@ export class PopupAddNftComponent implements OnInit, OnDestroy {
         .then((res) => (this.moneyNft = res));
     });
   }
-
-  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

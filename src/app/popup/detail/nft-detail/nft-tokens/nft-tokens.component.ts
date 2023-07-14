@@ -9,14 +9,12 @@ import { NftToken } from '@/models/models';
   templateUrl: 'nft-tokens.component.html',
   styleUrls: ['nft-tokens.component.scss'],
 })
-export class PopupNftTokensComponent implements OnInit {
+export class PopupNftTokensComponent {
   @Input() nftTokens: NftToken[];
 
-  // tslint:disable-next-line:no-output-on-prefix
+  // eslint-disable-next-line @angular-eslint/no-output-on-prefix
 
   constructor(public global: GlobalService, private dialog: MatDialog) {}
-
-  ngOnInit(): void {}
 
   showDetail(token) {
     this.dialog.open(PopupNftTokenDetailDialogComponent, {

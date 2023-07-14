@@ -60,14 +60,14 @@
 <section class="submit-group">
   <button
     class="cancel"
-    [ngClass]="{ disabled: ruleCheck && ruleSelected == 'true' }"
+    [ngClass]="{ disabled: ruleCheck && ruleSelected === 'true' }"
     (click)="refuse()"
   >
     {{ "refuse" | translate | async }}
   </button>
   <button
     class="confirm"
-    [ngClass]="{ disabled: ruleCheck && ruleSelected == 'false' }"
+    [ngClass]="{ disabled: ruleCheck && ruleSelected === 'false' }"
     (click)="connect()"
   >
     {{ "connect" | translate | async }}

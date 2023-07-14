@@ -74,7 +74,7 @@ export class PopupWalletImportComponent
   @Input() password: string;
   @Input() isOnePassword: boolean;
   @Input() hasPwdWallet: boolean;
-  @Output() submit = new EventEmitter<any>();
+  @Output() submitThis = new EventEmitter<any>();
   @Output() submitFile = new EventEmitter<any>();
   matcher = new MyErrorStateMatcher();
   constructor(
@@ -188,7 +188,7 @@ export class PopupWalletImportComponent
           this.loading = false;
           if (this.neon.verifyWallet(res)) {
             this.setPassword(importPwd);
-            this.submit.emit(res);
+            this.submitThis.emit(res);
           } else {
             this.global.snackBarTip('existingWallet');
           }
@@ -205,7 +205,7 @@ export class PopupWalletImportComponent
             this.loading = false;
             if (this.neon.verifyWallet(res)) {
               this.setPassword(importPwd);
-              this.submit.emit(res);
+              this.submitThis.emit(res);
             } else {
               this.global.snackBarTip('existingWallet');
             }

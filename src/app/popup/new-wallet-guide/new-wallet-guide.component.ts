@@ -8,10 +8,8 @@ import { ChainTypeGroups } from '@popup/_lib';
   templateUrl: './new-wallet-guide.component.html',
   styleUrls: ['./new-wallet-guide.component.scss'],
 })
-export class PopupNewWalletGuideComponent implements OnInit {
+export class PopupNewWalletGuideComponent {
   constructor(private dialog: MatDialog, private router: Router) {}
-
-  ngOnInit(): void {}
 
   to(type: 'create' | 'import') {
     this.dialog

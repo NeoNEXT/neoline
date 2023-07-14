@@ -4,6 +4,5 @@ import { Component, OnInit } from '@angular/core';
   templateUrl: 'notification.component.html',
   styleUrls: ['notification.component.scss'],
 })
-export class PopupNotificationComponent implements OnInit {
-  ngOnInit(): void {}
+export class PopupNotificationComponent {
 }

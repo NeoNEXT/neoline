@@ -10,7 +10,7 @@
 </div>
 
 <div class="content">
-  <p class="empty" *ngIf="authorizationList.length == 0">
+  <p class="empty" *ngIf="authorizationList.length === 0">
     {{ 'empty' | translate | async }}
   </p>
   <ul>

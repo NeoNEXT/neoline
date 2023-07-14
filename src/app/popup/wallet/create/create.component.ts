@@ -25,7 +25,7 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
   @Input() password: string;
   @Input() isOnePassword: boolean;
   @Input() hasPwdWallet: boolean;
-  @Output() submit = new EventEmitter<any>();
+  @Output() submitThis = new EventEmitter<any>();
 
   createForm: FormGroup;
   matcher = new MyErrorStateMatcher();
@@ -82,7 +82,7 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
               this.chrome.setStorage(STORAGE_NAME.onePassword, true);
               this.chrome.setPassword(createPwd);
             }
-            this.submit.emit(res);
+            this.submitThis.emit(res);
           } else {
             this.global.snackBarTip('existingWallet');
           }

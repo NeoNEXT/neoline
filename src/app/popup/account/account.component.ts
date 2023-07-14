@@ -33,7 +33,7 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
   templateUrl: 'account.component.html',
   styleUrls: ['account.component.scss'],
 })
-export class PopupAccountComponent implements OnInit, OnDestroy {
+export class PopupAccountComponent implements OnDestroy {
   @ViewChild('inputDom') inputDom: ElementRef;
   publicKey: string;
   isLedger = false;
@@ -70,8 +70,6 @@ export class PopupAccountComponent implements OnInit, OnDestroy {
       this.initData();
     });
   }
-
-  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

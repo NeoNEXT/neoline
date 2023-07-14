@@ -18,17 +18,17 @@
     <span
       class="circle left"
       (click)="updateFee(0)"
-      [ngClass]="{active: fee==gasFeeSpeed?.slow_price}"
+      [ngClass]="{active: fee===gasFeeSpeed?.slow_price}"
     ></span>
     <span
       class="circle middle"
       (click)="updateFee(1)"
-      [ngClass]="{active: fee==gasFeeSpeed?.propose_price}"
+      [ngClass]="{active: fee===gasFeeSpeed?.propose_price}"
     ></span>
     <span
       class="circle right"
       (click)="updateFee(2)"
-      [ngClass]="{active: fee==gasFeeSpeed?.fast_price}"
+      [ngClass]="{active: fee===gasFeeSpeed?.fast_price}"
     ></span>
     <span class="desc left" (click)="updateFee(0)">
       {{ 'slow' | translate |async }}

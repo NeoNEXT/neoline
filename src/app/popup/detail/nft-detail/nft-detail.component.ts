@@ -11,7 +11,7 @@ import { RpcNetwork } from '../../_lib';
   templateUrl: 'nft-detail.component.html',
   styleUrls: ['nft-detail.component.scss'],
 })
-export class PopupNftDetailComponent implements OnInit, OnDestroy {
+export class PopupNftDetailComponent implements OnDestroy {
   nftContract: string;
   nft: NftAsset;
   selectedIndex = 0;
@@ -41,8 +41,6 @@ export class PopupNftDetailComponent implements OnInit, OnDestroy {
       this.getData();
     });
   }
-
-  ngOnInit(): void {}
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();

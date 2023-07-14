@@ -372,7 +372,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
     const qs = q.split('&');
     let argStr = '';
     if (qs) {
-      // tslint:disable-next-line:prefer-for-of
+      // eslint-disable-next-line @typescript-eslint/prefer-for-of
       for (let i = 0; i < qs.length; i++) {
         argStr +=
           qs[i].substring(0, qs[i].indexOf('=')) +

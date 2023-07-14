@@ -7,15 +7,13 @@ import { NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
   templateUrl: './asset-item.component.html',
   styleUrls: ['../../asset-item.scss'],
 })
-export class PopupAssetItemComponent implements OnInit {
+export class PopupAssetItemComponent {
   @Input() asset: Asset;
 
-  // tslint:disable-next-line:no-output-on-prefix
+  // eslint-disable-next-line @angular-eslint/no-output-on-prefix
   @Output() onAddAsset = new EventEmitter<any>();
 
   constructor() {}
-
-  ngOnInit(): void {}
 
   fixed() {
     return (

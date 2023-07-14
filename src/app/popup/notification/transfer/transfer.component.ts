@@ -37,7 +37,7 @@ type TabType = 'details' | 'data';
   templateUrl: 'transfer.component.html',
   styleUrls: ['transfer.component.scss'],
 })
-export class PopupNoticeTransferComponent implements OnInit, AfterViewInit, OnDestroy {
+export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
   tabType: TabType = 'details';
   NEO = NEO;
   public dataJson: any = {};
@@ -175,8 +175,6 @@ export class PopupNoticeTransferComponent implements OnInit, AfterViewInit, OnDe
       }
     });
   }
-
-  ngAfterViewInit(): void {}
 
   async getAssetDetail() {
     const symbols = await this.util.getAssetSymbols(
