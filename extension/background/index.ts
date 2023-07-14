@@ -33,6 +33,7 @@ import {
   GAS,
   NEO3,
   GAS3,
+  SECRET_PASSPHRASE,
 } from '../common/constants';
 import {
   requestTarget,
@@ -75,6 +76,7 @@ import { wallet as wallet2 } from '@cityofzion/neon-js';
 import BigNumber from 'bignumber.js';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import CryptoJS = require('crypto-js');
 
 /**
  * Background methods support.
@@ -430,7 +432,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 )
               ];
             if (!wif) {
-              const pwd = await getSessionStorage('password', () => {});
+              const storagePwd = await getSessionStorage('password', () => {});
+              const bytes = CryptoJS.AES.decrypt(storagePwd, SECRET_PASSPHRASE);
+              const pwd = bytes.toString(CryptoJS.enc.Utf8);
               wif = (await (currWallet.accounts[0] as any).decrypt(pwd)).WIF;
             }
             const privateKey = getPrivateKeyFromWIF(wif);
