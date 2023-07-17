@@ -60,10 +60,11 @@ const requireConnectRequest = [
 window.addEventListener(
   'message',
   async (e) => {
+    if (!e.data.target) return;
     getStorage('connectedWebsites', async (allWebsites) => {
       const currWallet = await getLocalStorage('wallet', () => {});
       allWebsites = allWebsites || {};
-      const websites = allWebsites[currWallet.accounts[0].address] || [];
+      const websites = allWebsites[currWallet?.accounts[0]?.address] || [];
       const existOrigin = websites.find((item) =>
         e.origin.includes(item.hostname)
       );

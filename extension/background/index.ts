@@ -271,6 +271,7 @@ chrome.runtime.onRestartRequired.addListener(() => {
     InvokeArgsArray: [],
   });
   getStorage('connectedWebsites', (res) => {
+    res = res || {};
     Object.keys(res).forEach((address) => {
       res[address] = res[address].filter((item) => item.keep === true);
     });
@@ -286,6 +287,7 @@ chrome.runtime.onInstalled.addListener(() => {
     InvokeArgsArray: [],
   });
   getStorage('connectedWebsites', (res) => {
+    res = res || {};
     Object.keys(res).forEach((address) => {
       res[address] = res[address].filter((item) => item.keep === true);
     });
@@ -301,6 +303,7 @@ chrome.runtime.onStartup.addListener(() => {
     InvokeArgsArray: [],
   });
   getStorage('connectedWebsites', (res) => {
+    res = res || {};
     Object.keys(res).forEach((address) => {
       res[address] = res[address].filter((item) => item.keep === true);
     });
