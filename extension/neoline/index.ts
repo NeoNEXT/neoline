@@ -200,7 +200,9 @@ window.addEventListener(
         case requestTarget.WalletSwitchNetwork:
         case requestTarget.WalletSwitchAccount: {
           chrome.runtime.sendMessage(e.data, (response) => {
-            return Promise.resolve('Dummy response to keep the console quiet');
+            if (!chrome.runtime.lastError) {
+              return Promise.resolve('Dummy response to keep the console quiet');
+            }
           });
           return;
         }
@@ -240,9 +242,11 @@ window.addEventListener(
                     e.data.parameter.network = network || n2Network.network;
                     e.data.nodeUrl = n2Network.rpcUrl;
                     chrome.runtime.sendMessage(e.data, (response) => {
-                      return Promise.resolve(
-                        'Dummy response to keep the console quiet'
-                      );
+                      if (!chrome.runtime.lastError) {
+                        return Promise.resolve(
+                          'Dummy response to keep the console quiet'
+                          );
+                        }
                     });
                   }
                 );

@@ -113,7 +113,9 @@ window.addEventListener(
         case requestTargetN3.WalletSwitchNetwork:
         case requestTargetN3.WalletSwitchAccount: {
           chrome.runtime.sendMessage(e.data, (response) => {
-            return Promise.resolve('Dummy response to keep the console quiet');
+            if (!chrome.runtime.lastError) {
+              return Promise.resolve('Dummy response to keep the console quiet');
+            }
           });
           return;
         }
@@ -152,9 +154,11 @@ window.addEventListener(
                     e.data.parameter.network = network || n3Network.network;
                     e.data.nodeUrl = n3Network.rpcUrl;
                     chrome.runtime.sendMessage(e.data, (response) => {
-                      return Promise.resolve(
-                        'Dummy response to keep the console quiet'
-                      );
+                      if (!chrome.runtime.lastError) {
+                        return Promise.resolve(
+                          'Dummy response to keep the console quiet'
+                          );
+                      }
                     });
                   }
                 );

@@ -1996,7 +1996,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 });
 
 export function windowCallback(data) {
-  chrome.tabs.query({}, (tabs: any) => {
+  chrome.tabs.query({active: true, currentWindow: true}, (tabs: any) => {
     // console.log(tabs);
     // tabCurr = tabs;
     if (tabs.length > 0) {
