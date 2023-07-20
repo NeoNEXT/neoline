@@ -18,7 +18,7 @@
       [password]="password"
       [isOnePassword]="isOnePassword"
       [hasPwdWallet]="hasPwdWallet"
-      (submit)="updateLocalWallet($event, true)"
+      (submitThis)="updateLocalWallet($event, true)"
     ></wallet-create>
     <wallet-import
       *ngIf="getPassword"
@@ -26,7 +26,7 @@
       [password]="password"
       [isOnePassword]="isOnePassword"
       [hasPwdWallet]="hasPwdWallet"
-      (submit)="updateLocalWallet($event, false)"
+      (submitThis)="updateLocalWallet($event, false)"
       (submitFile)="handleFileWallet($event)"
     ></wallet-import>
   </div>
