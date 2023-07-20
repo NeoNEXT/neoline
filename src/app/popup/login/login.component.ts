@@ -13,7 +13,13 @@ import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { ChainType, RpcNetwork, RESET_ACCOUNT, UPDATE_WALLET, STORAGE_NAME } from '../_lib';
+import {
+  ChainType,
+  RpcNetwork,
+  RESET_ACCOUNT,
+  UPDATE_WALLET,
+  STORAGE_NAME,
+} from '../_lib';
 import { FormGroup, Validators, FormBuilder } from '@angular/forms';
 
 @Component({
@@ -52,6 +58,7 @@ export class PopupLoginComponent
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.currentChainType = state.currentChainType;
+      this.selectChainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
       this.selectWallet = state.currentWallet;
       this.allWallet = (state.neo3WalletArr as any).concat(state.neo2WalletArr);
@@ -90,10 +97,7 @@ export class PopupLoginComponent
       return;
     }
     const hasLoginAddress = await this.chrome.getHasLoginAddress().toPromise();
-    if (
-      this.checkIsLedger(this.selectWallet) ||
-      hasLoginAddress[this.selectWallet.accounts[0].address]
-    ) {
+    if (hasLoginAddress[this.selectWallet.accounts[0].address]) {
       this.handleWallet();
       return;
     }
@@ -101,10 +105,16 @@ export class PopupLoginComponent
       return;
     }
     this.loading = true;
-    const account: any =
-      this.selectChainType === 'Neo3'
-        ? this.util.getNeo3Account(this.selectWallet.accounts[0])
-        : this.selectWallet.accounts[0];
+    let account;
+    if (this.checkIsLedger(this.selectWallet)) {
+      const wallet = this.allWallet.find(item => !this.checkIsLedger(item));
+      account = wallet.accounts[0];
+    } else {
+      account =
+        this.selectChainType === 'Neo3'
+          ? this.util.getNeo3Account(this.selectWallet.accounts[0])
+          : this.selectWallet.accounts[0];
+    }
     account
       .decrypt(this.loginForm.value.password)
       .then(() => {
@@ -123,7 +133,7 @@ export class PopupLoginComponent
       })
       .catch(() => {
         this.loading = false;
-        this.loginForm.controls[`password`].setErrors({wrong: true});
+        this.loginForm.controls[`password`].setErrors({ wrong: true });
         this.loginForm.markAsDirty();
       });
   }

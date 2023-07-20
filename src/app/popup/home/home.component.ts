@@ -62,6 +62,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
 
   // 菜单
   showMenu = false;
+  showRemove = false;
 
   private accountSub: Unsubscribable;
   currentWalletIsN3: boolean;
@@ -72,6 +73,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   private currentWIFArr: string[];
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
+  private allWallet = [];
   constructor(
     private assetState: AssetState,
     private neon: NeonService,
@@ -98,6 +100,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       this.currentWalletIsN3 = this.chainType === 'Neo3';
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.allWallet = (state.neo3WalletArr as any).concat(state.neo2WalletArr);
       this.initData();
     });
   }
@@ -135,6 +138,12 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       this.getN3ClaimTxStatus();
     }
     this.initClaim();
+    if (!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
+      const accounts = this.allWallet.filter(item => !item.accounts[0]?.extra?.ledgerSLIP44);
+      this.showRemove = accounts.length > 1 ? true : false;
+    } else {
+      this.showRemove = true;
+    }
   }
 
   initNeo($event) {
@@ -160,6 +169,12 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     }
   }
   removeAccount() {
+    if (!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
+      const accounts = this.allWallet.filter(item => !item.accounts[0]?.extra?.ledgerSLIP44);
+      if (accounts.length <= 1) {
+        return;
+      }
+    }
     this.showMenu = false;
     this.dialog
       .open(PopupConfirmDialogComponent, {

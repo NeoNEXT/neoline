@@ -49,7 +49,7 @@
           "viewOnNeoTube" | translate | async
         }}
       </li>
-      <li (click)="removeAccount()">
+      <li *ngIf="showRemove" (click)="removeAccount()">
         <img theme src="assets/images/account/home-delete.svg" alt="" />{{
           "removeAccount" | translate | async
         }}
