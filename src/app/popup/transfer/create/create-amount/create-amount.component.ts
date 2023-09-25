@@ -275,8 +275,8 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     this.neo3Transfer.createNeo3Tx(param, true).subscribe(
       (tx) => {
         this.transferAmount = bignumber(this.transferAsset.balance)
-          .minus(tx.networkFee.toString())
-          .minus(tx.systemFee.toString())
+          .minus(tx.networkFee.toDecimal(8))
+          .minus(tx.systemFee.toDecimal(8))
           .toString();
         this.loading = false;
         this.istransferAll = false;

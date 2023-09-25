@@ -210,8 +210,8 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
       )
       .subscribe(
         (tx: any) => {
-          this.systemFee = tx.systemFee.toFixed();
-          this.networkFee = tx.networkFee.toFixed();
+          this.systemFee = tx.systemFee.toDecimal(8);
+          this.networkFee = tx.networkFee.toDecimal(8);
           this.getAssetRate();
           this.canSend = true;
           this.resolveSign(tx);

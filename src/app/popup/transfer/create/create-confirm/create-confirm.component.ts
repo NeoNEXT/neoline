@@ -275,11 +275,11 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         this.txSerialize = res.serialize(false);
         if (this.data.chainType === 'Neo3') {
           this.networkFee = new BigNumber(
-            (res as Transaction3).networkFee.toString()
+            (res as Transaction3).networkFee.toDecimal(8)
           )
             .minus(this.data.fee)
             .toFixed();
-          this.systemFee = (res as Transaction3).systemFee.toString();
+          this.systemFee = (res as Transaction3).systemFee.toDecimal(8);
           this.rate.networkFee = await this.getGasRate(this.networkFee);
           this.rate.systemFee = await this.getGasRate(this.systemFee);
         }

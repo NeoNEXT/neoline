@@ -59,8 +59,8 @@ export class Neo3TransferService {
       toAccountAddress: params.addressTo,
       tokenScriptHash: params.tokenScriptHash,
       amountToTransfer: params.amount,
-      systemFee: 0,
-      networkFee: bignumber(params.networkFee).toFixed() || 0,
+      systemFee: u.BigInteger.fromNumber(0),
+      networkFee: u.BigInteger.fromDecimal(params.networkFee, 8),
     };
     const vars: any = {};
     const NEW_GAS = '0xd2a4cff31913016155e38e474a2c06d08be276cf';
@@ -131,10 +131,9 @@ export class Neo3TransferService {
     async function checkNetworkFee() {
       const networkFeeEstimate = await neo3This.calculateNetworkFee(vars.tx);
 
-      vars.tx.networkFee = u.Fixed8.fromRawNumber(
-        networkFeeEstimate.toString()
-      ).add(new BigNumber(params.networkFee).toFixed());
-      vars.networkFeeEstimate = networkFeeEstimate;
+      vars.tx.networkFee = u.BigInteger.fromNumber(networkFeeEstimate).add(
+        inputs.networkFee
+      );
       console.log(
         `\u001b[32m  ✓ Network Fee set: ${vars.tx.networkFee} \u001b[0m`
       );
@@ -163,14 +162,12 @@ export class Neo3TransferService {
             'Transfer script errored out! You might not have sufficient funds for this transfer.',
         };
       }
-      const requiredSystemFee = u.Fixed8.fromRawNumber(
-        invokeFunctionResponse.gasconsumed
-      );
+      const requiredSystemFee = u.BigInteger.fromNumber(invokeFunctionResponse.gasconsumed);
       if (
         inputs.systemFee &&
-        new u.Fixed8(inputs.systemFee) >= requiredSystemFee
+        inputs.systemFee.compare(requiredSystemFee) >= 0
       ) {
-        vars.tx.systemFee = new u.Fixed8(inputs.systemFee);
+        vars.tx.systemFee = inputs.systemFee;
         console.log(
           `  i Node indicates ${requiredSystemFee} systemFee but using user provided value of ${inputs.systemFee}`
         );
@@ -189,9 +186,9 @@ export class Neo3TransferService {
      */
     async function checkBalance() {
       // Check for gas funds for fees
-      const gasRequirements = new BigNumber(vars.tx.networkFee).plus(
-        new BigNumber(vars.tx.systemFee)
-      );
+      const gasRequirements = new BigNumber(vars.tx.networkFee)
+        .plus(vars.tx.systemFee)
+        .shiftedBy(-8);
       let gasAmount = await assetStateTemp.getAddressAssetBalance(
         inputs.fromAccountAddress,
         GAS3_CONTRACT,
@@ -202,13 +199,13 @@ export class Neo3TransferService {
         throw {
           msg: `${
             notificationTemp.content.insufficientBalance
-          } ${gasRequirements.toString()} ${
+          } ${gasRequirements} ${
             notificationTemp.content.butOnlyHad
           } ${gasAmount.toString()}`,
         };
       } else {
         console.log(
-          `\u001b[32m  ✓ Sufficient GAS for fees found (${gasRequirements.toString()}) \u001b[0m`
+          `\u001b[32m  ✓ Sufficient GAS for fees found (${gasRequirements}) \u001b[0m`
         );
       }
       if (!params.nftTokenId) {
@@ -271,9 +268,6 @@ export class Neo3TransferService {
 
   async calculateNetworkFee(txn) {
     let txClone = txn.export();
-    txClone.systemFee = new BigNumber(txn.systemFee)
-      .shiftedBy(8)
-      .toFixed(0) as any;
     txClone = new tx.Transaction(txClone);
     const wif = 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
     txClone.sign(wif, this.n3Network.magicNumber);

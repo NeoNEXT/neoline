@@ -298,15 +298,15 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
         })
         .subscribe(
           async (unSignTx: Transaction) => {
-            this.systemFee = unSignTx.systemFee.toString();
-            this.networkFee = unSignTx.networkFee.toString();
+            this.systemFee = unSignTx.systemFee.toDecimal(8);
+            this.networkFee = unSignTx.networkFee.toDecimal(8);
             this.tx = unSignTx;
             this.txSerialize = this.tx.serialize(false);
             this.getAssetRate();
             const isEnoughFee = await this.neo3Invoke.isEnoughFee(
               this.signAddress,
-              unSignTx.systemFee,
-              unSignTx.networkFee
+              this.systemFee,
+              this.networkFee
             );
             this.loading = false;
             if (isEnoughFee) {

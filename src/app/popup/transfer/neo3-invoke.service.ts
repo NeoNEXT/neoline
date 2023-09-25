@@ -108,9 +108,9 @@ export class Neo3InvokeService {
     async function checkNetworkFee() {
       const networkFeeEstimate = await neo3This.calculateNetworkFee(vars.tx);
 
-      vars.tx.networkFee = u.Fixed8.fromRawNumber(
-        networkFeeEstimate.toString()
-      ).add(new BigNumber(params.networkFee || 0).toFixed());
+      vars.tx.networkFee = u.BigInteger.fromNumber(networkFeeEstimate).add(
+        u.BigInteger.fromDecimal(params.networkFee || 0, 8)
+      );
 
       console.log(
         `\u001b[32m  ✓ Network Fee set: ${vars.tx.networkFee} \u001b[0m`
@@ -123,8 +123,9 @@ export class Neo3InvokeService {
      */
     async function checkSystemFee() {
       if (params.overrideSystemFee) {
-        vars.tx.systemFee = u.Fixed8.fromRawNumber(
-          new BigNumber(params.overrideSystemFee).shiftedBy(8).toFixed(0)
+        vars.tx.systemFee = u.BigInteger.fromDecimal(
+          params.overrideSystemFee,
+          8
         );
         return;
       }
@@ -138,11 +139,11 @@ export class Neo3InvokeService {
           error: invokeFunctionResponse,
         };
       }
-      const requiredSystemFee = u.Fixed8.fromRawNumber(
+      const requiredSystemFee = u.BigInteger.fromNumber(
         invokeFunctionResponse.gasconsumed
       );
       vars.tx.systemFee = requiredSystemFee.add(
-        new BigNumber(params.systemFee || 0).toFixed()
+        u.BigInteger.fromDecimal(params.systemFee || 0, 8)
       );
       console.log(
         `\u001b[32m  ✓ SystemFee set: ${vars.tx.systemFee.toString()}\u001b[0m`
@@ -170,9 +171,7 @@ export class Neo3InvokeService {
     let txClone = new tx.Transaction({
       signers: txn.signers,
       validUntilBlock: txn.validUntilBlock,
-      systemFee: new BigNumber(txn.systemFee.toString())
-        .shiftedBy(8)
-        .toFixed(0),
+      systemFee: txn.systemFee,
       script: txn.script,
     });
     txClone = new tx.Transaction(txClone);
@@ -224,12 +223,10 @@ export class Neo3InvokeService {
       GAS3_CONTRACT,
       'Neo3'
     );
-    const requireGasAmount = new BigNumber(systemFee.toString()).plus(
-      new BigNumber(networkFee.toString())
+    const requireGasAmount = new BigNumber(systemFee).plus(
+      new BigNumber(networkFee)
     );
-    if (
-      requireGasAmount.comparedTo(new BigNumber(gasAmount).shiftedBy(-8)) > 0
-    ) {
+    if (requireGasAmount.comparedTo(new BigNumber(gasAmount)) > 0) {
       return false;
     }
     return true;
