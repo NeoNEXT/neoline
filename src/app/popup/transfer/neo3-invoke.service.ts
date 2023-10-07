@@ -139,8 +139,9 @@ export class Neo3InvokeService {
           error: invokeFunctionResponse,
         };
       }
+      // Some contracts may have uncertain system fees
       const requiredSystemFee = u.BigInteger.fromNumber(
-        invokeFunctionResponse.gasconsumed
+        new BigNumber(invokeFunctionResponse.gasconsumed).times(1.01).toFixed(0)
       );
       vars.tx.systemFee = requiredSystemFee.add(
         u.BigInteger.fromDecimal(params.systemFee || 0, 8)
