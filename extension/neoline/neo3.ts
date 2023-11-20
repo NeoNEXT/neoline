@@ -5,7 +5,7 @@
 import { getStorage, getLocalStorage } from '../common/index';
 import { ERRORS } from '../common/data_module_neo2';
 import { requestTargetN3 } from '../common/data_module_neo3';
-import { DEFAULT_N3_RPC_NETWORK } from '../common/constants';
+import { DEFAULT_N3_RPC_NETWORK, ExcludeWebsite } from '../common/constants';
 import { getWalletType } from '../common/utils';
 
 declare var chrome: any;
@@ -38,7 +38,10 @@ setTimeout(() => {
 }, 0);
 
 window.addEventListener('load', () => {
-  if (window.document.body != null) {
+  if (
+    window.document.body != null &&
+    !ExcludeWebsite.find((item) => location.origin.includes(item))
+  ) {
     window.document.body.appendChild(dapiN3);
   }
 });
@@ -114,7 +117,9 @@ window.addEventListener(
         case requestTargetN3.WalletSwitchAccount: {
           chrome.runtime.sendMessage(e.data, (response) => {
             if (!chrome.runtime.lastError) {
-              return Promise.resolve('Dummy response to keep the console quiet');
+              return Promise.resolve(
+                'Dummy response to keep the console quiet'
+              );
             }
           });
           return;
@@ -157,7 +162,7 @@ window.addEventListener(
                       if (!chrome.runtime.lastError) {
                         return Promise.resolve(
                           'Dummy response to keep the console quiet'
-                          );
+                        );
                       }
                     });
                   }

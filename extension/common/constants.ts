@@ -85,3 +85,5 @@ export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
 
 export const ALL_CHAINID = [0, 1, 2, 3, 6];
 export const SECRET_PASSPHRASE = 'secret key neoline';
+
+export const ExcludeWebsite = ['yandex.com', 'google.com'];

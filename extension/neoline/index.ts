@@ -9,6 +9,7 @@ import {
   DEFAULT_N2_RPC_NETWORK,
   DEFAULT_N3_RPC_NETWORK,
   DEFAULT_NETWORKS,
+  ExcludeWebsite,
 } from '../common/constants';
 
 declare var chrome: any;
@@ -38,7 +39,10 @@ dapi.onload = () => {
 };
 
 window.addEventListener('load', () => {
-  if (window.document.body != null) {
+  if (
+    window.document.body != null &&
+    !ExcludeWebsite.find((item) => location.origin.includes(item))
+  ) {
     window.document.body.appendChild(dapi);
   }
 });
@@ -201,7 +205,9 @@ window.addEventListener(
         case requestTarget.WalletSwitchAccount: {
           chrome.runtime.sendMessage(e.data, (response) => {
             if (!chrome.runtime.lastError) {
-              return Promise.resolve('Dummy response to keep the console quiet');
+              return Promise.resolve(
+                'Dummy response to keep the console quiet'
+              );
             }
           });
           return;
@@ -245,8 +251,8 @@ window.addEventListener(
                       if (!chrome.runtime.lastError) {
                         return Promise.resolve(
                           'Dummy response to keep the console quiet'
-                          );
-                        }
+                        );
+                      }
                     });
                   }
                 );
