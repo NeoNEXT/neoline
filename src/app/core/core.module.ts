@@ -20,14 +20,11 @@ import { UtilServiceState } from './util/util.service';
 import { HomeService } from './services/home.service';
 import { LedgerService } from './services/ledger.service';
 import { ExtensionService } from './util/extension.service';
+import { EvmService } from './services/evm.service';
 
 @NgModule({
   declarations: [],
-  imports: [
-    CommonModule,
-    HttpClientModule,
-    MatDialogModule,
-  ],
+  imports: [CommonModule, HttpClientModule, MatDialogModule],
   exports: [],
   providers: [
     GlobalService,
@@ -46,6 +43,7 @@ import { ExtensionService } from './util/extension.service';
     HomeService,
     LedgerService,
     ExtensionService,
+    EvmService,
   ],
 })
 export class CoreModule {}
