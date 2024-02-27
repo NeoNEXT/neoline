@@ -24,6 +24,7 @@ import { map } from 'rxjs/operators';
 import BigNumber from 'bignumber.js';
 import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
+import Eth from '@ledgerhq/hw-app-eth';
 
 export const LedgerStatuses = {
   UNSUPPORTED: 'UNSUPPORTED',
@@ -37,7 +38,8 @@ const LedgerReadyStatusCode = 0x9000;
 @Injectable()
 export class LedgerService {
   deviceInstance;
-  accounts = { Neo2: [], Neo3: [] };
+  ethTransport;
+  accounts = { Neo2: [], Neo3: [], Evm: [] };
   sendQueue = [];
   ledgerInUse = false;
 
@@ -130,7 +132,12 @@ export class LedgerService {
         newAccounts.push(this.accounts[chainType][index]);
         continue;
       }
-      const account = await this.getPublicKey(index, chainType);
+      let account;
+      if (chainType === 'Evm') {
+        account = await this.ethTransport.getAddress(`44'/60'/0'/0/${index}`);
+      } else {
+        account = await this.getPublicKey(index, chainType);
+      }
       this.accounts[chainType][index] = account;
       newAccounts.push(account);
     }
@@ -375,6 +382,19 @@ export class LedgerService {
   private getAppName(chainType: ChainType): Promise<any> {
     return new Promise((resolve, reject) => {
       this.sendQueue.push(() => {
+        if (chainType === 'Evm') {
+          return this.getDevice()
+            .then((device) => {
+              this.ethTransport = new Eth(device);
+              return this.ethTransport.getAppConfiguration();
+            })
+            .then(() => {
+              resolve('open');
+            })
+            .catch((error) => {
+              reject(error);
+            });
+        }
         return this.getDevice()
           .then((device) => {
             return device.send(0x80, 0x00, 0x00, 0x00, undefined, [

@@ -5,7 +5,7 @@ import { SelectItem } from './type';
  * - `neo2`
  * - `neo3`
  */
-export type ChainType = 'Neo2' | 'Neo3';
+export type ChainType = 'Neo2' | 'Neo3' | 'Evm';
 
 export const ChainTypeGroups: SelectItem[] = [
   {
