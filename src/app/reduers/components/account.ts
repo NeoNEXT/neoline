@@ -26,6 +26,7 @@ import {
   UPDATE_NEO3_WALLETS_ADDRESS,
   UPDATE_ALL_WALLETS,
 } from '@/app/popup/_lib';
+import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 declare var chrome: any;
 
 export interface AccountState {
@@ -33,6 +34,7 @@ export interface AccountState {
   currentChainType: ChainType;
   neo2WalletArr: Array<Wallet2>;
   neo3WalletArr: Array<Wallet3>;
+  neoXWalletArr: Array<EvmWalletJSON>;
   neo2WIFArr: string[];
   neo3WIFArr: string[];
   n2Networks: RpcNetwork[];
@@ -46,6 +48,7 @@ const initialState: AccountState = {
   currentChainType: 'Neo3',
   neo2WalletArr: [],
   neo3WalletArr: [],
+  neoXWalletArr: [],
   neo2WIFArr: [],
   neo3WIFArr: [],
   n2Networks: DEFAULT_N2_RPC_NETWORK,
@@ -71,6 +74,7 @@ export default function account(
         currentChainType: 'Neo3',
         neo2WalletArr: [],
         neo3WalletArr: [],
+        neoXWalletArr: [],
         neo2WIFArr: [],
         neo3WIFArr: [],
       };

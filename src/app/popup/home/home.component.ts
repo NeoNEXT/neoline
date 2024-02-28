@@ -139,7 +139,9 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     }
     this.initClaim();
     if (!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      const accounts = this.allWallet.filter(item => !item.accounts[0]?.extra?.ledgerSLIP44);
+      const accounts = this.allWallet.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
       this.showRemove = accounts.length > 1 ? true : false;
     } else {
       this.showRemove = true;
@@ -170,7 +172,9 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   }
   removeAccount() {
     if (!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      const accounts = this.allWallet.filter(item => !item.accounts[0]?.extra?.ledgerSLIP44);
+      const accounts = this.allWallet.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
       if (accounts.length <= 1) {
         return;
       }
@@ -184,11 +188,13 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
-          this.neon.delCurrentWallet().subscribe((w) => {
-            if (!w) {
-              this.router.navigateByUrl('/popup/wallet/new-guide');
-            }
-          });
+          this.neon
+            .delCurrentWallet(this.currentWallet, this.chainType)
+            .subscribe((w) => {
+              if (!w) {
+                this.router.navigateByUrl('/popup/wallet/new-guide');
+              }
+            });
         }
       });
   }
@@ -211,24 +217,26 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       return;
     }
     if (this.chainType === 'Neo2') {
-      this.neon.claimNeo2GAS(this.claimsData).then((tx) => {
-        if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-          this.getSignTx(tx[0], 'claimNeo2');
-        } else {
-          tx.forEach((item) => {
-            try {
-              rpc.Query.sendRawTransaction(item.serialize(true)).execute(
-                this.n2Network.rpcUrl
-              );
-            } catch (error) {
-              this.loading = false;
-            }
-          });
-        }
-        if (this.intervalClaim === null) {
-          this.initInterval();
-        }
-      });
+      this.neon
+        .claimNeo2GAS(this.claimsData, this.currentWallet as Wallet2)
+        .then((tx) => {
+          if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
+            this.getSignTx(tx[0], 'claimNeo2');
+          } else {
+            tx.forEach((item) => {
+              try {
+                rpc.Query.sendRawTransaction(item.serialize(true)).execute(
+                  this.n2Network.rpcUrl
+                );
+              } catch (error) {
+                this.loading = false;
+              }
+            });
+          }
+          if (this.intervalClaim === null) {
+            this.initInterval();
+          }
+        });
     } else {
       if (this.intervalN3Claim) {
         clearInterval(this.intervalN3Claim);

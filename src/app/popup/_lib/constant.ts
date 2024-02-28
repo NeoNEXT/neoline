@@ -33,6 +33,7 @@ export enum STORAGE_NAME {
   wallet = 'wallet',
   walletArr = 'walletArr',
   'walletArr-Neo3' = 'walletArr-Neo3',
+  'walletArr-NeoX' = 'walletArr-NeoX',
   WIFArr = 'WIFArr',
   'WIFArr-Neo3' = 'WIFArr-Neo3',
   chainType = 'chainType',
@@ -109,6 +110,10 @@ export const STORAGE_VALUE_MESSAGE = {
     isLocal: true,
   },
   'walletArr-Neo3': {
+    type: STORAGE_VALUE_TYPE.array,
+    isLocal: true,
+  },
+  'walletArr-NeoX': {
     type: STORAGE_VALUE_TYPE.array,
     isLocal: true,
   },

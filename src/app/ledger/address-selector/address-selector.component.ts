@@ -75,7 +75,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   chooseAccount(index: number) {
     this.selectedAccount = this.accounts[index];
     this.selectedIndex = (this.accountPage - 1) * LEDGER_PAGE_SIZE + index;
-    if (this.chainType === 'Evm') return;
+    if (this.chainType === 'NeoX') return;
     this.getBalanceReq?.unsubscribe();
     this.accountBalance = [];
     this.getBalanceReq = this.ledger

@@ -39,7 +39,7 @@ const LedgerReadyStatusCode = 0x9000;
 export class LedgerService {
   deviceInstance;
   ethTransport;
-  accounts = { Neo2: [], Neo3: [], Evm: [] };
+  accounts = { Neo2: [], Neo3: [], NeoX: [] };
   sendQueue = [];
   ledgerInUse = false;
 
@@ -133,7 +133,7 @@ export class LedgerService {
         continue;
       }
       let account;
-      if (chainType === 'Evm') {
+      if (chainType === 'NeoX') {
         account = await this.ethTransport.getAddress(`44'/60'/0'/0/${index}`);
       } else {
         account = await this.getPublicKey(index, chainType);
@@ -382,7 +382,7 @@ export class LedgerService {
   private getAppName(chainType: ChainType): Promise<any> {
     return new Promise((resolve, reject) => {
       this.sendQueue.push(() => {
-        if (chainType === 'Evm') {
+        if (chainType === 'NeoX') {
           return this.getDevice()
             .then((device) => {
               this.ethTransport = new Eth(device);
