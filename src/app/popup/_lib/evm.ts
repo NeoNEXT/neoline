@@ -1,14 +1,16 @@
 export interface EvmWalletJSON {
-  crypto: any;
-  id: string;
-  version: number;
-  address: string;
+  crypto?: any;
+  id?: string;
+  version?: number;
+  address?: string;
+  name: string;
   accounts: [
     {
       address: string;
       extra: {
-        name: string;
         publicKey: string;
+        ledgerSLIP44?: string;
+        ledgerAddressIndex?: number;
       };
     }
   ];

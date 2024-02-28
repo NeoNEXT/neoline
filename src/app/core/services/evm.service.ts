@@ -24,13 +24,13 @@ export class EvmService {
     );
     const json = await newAccount.encrypt(pwd);
     const accountLike: EvmWalletJSON = JSON.parse(json);
+    accountLike.name = name;
     accountLike.accounts = [
       {
+        address: newAccount.address,
         extra: {
           publicKey: newAccount.publicKey,
-          name,
         },
-        address: newAccount.address,
       },
     ];
     this.mnemonicAccounts.push(accountLike);
@@ -42,13 +42,13 @@ export class EvmService {
     const account0 = ethers.HDNodeWallet.fromMnemonic(mnemonic);
     const json = await account0.encrypt(pwd);
     const accountLike: EvmWalletJSON = JSON.parse(json);
+    accountLike.name = name;
     accountLike.accounts = [
       {
+        address: account0.address,
         extra: {
           publicKey: account0.publicKey,
-          name,
         },
-        address: account0.address,
       },
     ];
     this.mnemonicAccounts = [accountLike];
@@ -62,13 +62,13 @@ export class EvmService {
     const wallet = new ethers.Wallet(privateKey);
     const json = await wallet.encrypt(pwd);
     const accountLike: EvmWalletJSON = JSON.parse(json);
+    accountLike.name = name;
     accountLike.accounts = [
       {
+        address: wallet.address,
         extra: {
           publicKey: wallet.signingKey.publicKey,
-          name,
         },
-        address: wallet.address,
       },
     ];
     this.importAccounts.push(JSON.stringify(accountLike));

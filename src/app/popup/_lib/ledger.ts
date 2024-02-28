@@ -1,6 +1,7 @@
 export const SLIP44 = {
   Neo2: '80000378',
   Neo3: '80000378_next',
+  NeoX: '80000684',
 };
 
 export const LEDGER_PAGE_SIZE = 5;

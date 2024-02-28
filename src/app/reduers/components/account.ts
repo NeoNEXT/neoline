@@ -9,6 +9,7 @@ import {
   UPDATE_WALLET,
   ADD_NEO2_WALLETS,
   ADD_NEO3_WALLETS,
+  ADD_NEOX_WALLETS,
   REMOVE_NEO2_WALLET,
   REMOVE_NEO3_WALLET,
   ADD_NEO3_NETWORK,
@@ -93,6 +94,11 @@ export default function account(
       return {
         ...state,
         ...addNeo3Wallet(action.data, state.neo3WalletArr, state.neo3WIFArr),
+      };
+    case ADD_NEOX_WALLETS:
+      return {
+        ...state,
+        ...addNeoXWallet(action.data, state.neoXWalletArr),
       };
     case REMOVE_NEO2_WALLET:
       return {
@@ -204,6 +210,13 @@ function addNeo3Wallet(
   );
   updteLoaclStorage(STORAGE_NAME['WIFArr-Neo3'], targetWIFArr);
   return { neo3WalletArr: targetWalletArr, neo3WIFArr: targetWIFArr };
+}
+
+function addNeoXWallet(data: any, sourceWalletArr: EvmWalletJSON[]) {
+  const targetWalletArr = [...sourceWalletArr];
+  targetWalletArr.push(...data.wallet);
+  updteLoaclStorage(STORAGE_NAME['walletArr-NeoX'], targetWalletArr);
+  return { neoXWalletArr: targetWalletArr };
 }
 
 function removeNeo2Wallet(
