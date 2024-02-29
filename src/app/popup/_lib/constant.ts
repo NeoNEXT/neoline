@@ -24,8 +24,10 @@ export const SECRET_PASSPHRASE = 'secret key neoline';
 export enum STORAGE_NAME {
   n2Networks = 'n2Networks',
   n3Networks = 'n3Networks',
+  neoXNetworks = 'neoXNetworks',
   n2SelectedNetworkIndex = 'n2SelectedNetworkIndex',
   n3SelectedNetworkIndex = 'n3SelectedNetworkIndex',
+  neoXSelectedNetworkIndex = 'neoXSelectedNetworkIndex',
   coinsRate = 'coinsRate',
   fiatRate = 'fiatRate',
   neo3CoinsRate = 'neo3CoinsRate',

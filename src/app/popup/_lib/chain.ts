@@ -28,6 +28,7 @@ export enum NetworkType {
   N3MainNet = 'N3MainNet',
   N3TestNet = 'N3TestNet',
   N3PrivateNet = 'N3PrivateNet',
+  NeoX = 'NeoX',
 }
 
 export const CHAINID_OF_NETWORKTYPE = {

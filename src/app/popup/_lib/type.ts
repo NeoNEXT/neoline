@@ -19,6 +19,8 @@ export interface RpcNetwork {
   magicNumber?: number;
   chainId: number;
   id: number;
+  // evm
+  symbol?: string;
 }
 
 export const DEFAULT_NETWORKS = [
