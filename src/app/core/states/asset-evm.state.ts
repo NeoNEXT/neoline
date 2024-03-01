@@ -44,13 +44,29 @@ export class AssetEVMState {
     return ethers.formatUnits(balance, 0);
   }
 
-  async getNeoXAssetDecimals(contractAddress: string): Promise<string> {
+  async getNeoXAssetDecimals(contractAddress: string): Promise<number> {
     const contract = new ethers.Contract(
       contractAddress,
       Erc20ABI,
       this.provider
     );
     const decimals = await contract.decimals();
-    return ethers.formatUnits(decimals, 0);
+    return ethers.toNumber(decimals);
+  }
+
+  async searchNeoXAsset(q: string): Promise<Asset | null> {
+    if (!ethers.isAddress(q)) return null;
+    const contract = new ethers.Contract(q, Erc20ABI, this.provider);
+    return Promise.all([contract.symbol(), contract.name(), contract.decimals()]).then(
+      ([symbol, name, decimals]) => {
+        const asset: Asset = {
+          name,
+          asset_id: q,
+          symbol,
+          decimals: ethers.toNumber(decimals),
+        };
+        return asset;
+      }
+    );
   }
 }

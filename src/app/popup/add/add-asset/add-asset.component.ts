@@ -26,13 +26,18 @@ export class PopupAddAssetComponent implements OnDestroy {
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
-      const chain = state.currentChainType;
-      const network =
-        chain === 'Neo2'
-          ? state.n2Networks[state.n2NetworkIndex]
-          : state.n3Networks[state.n3NetworkIndex];
-      this.networkId = network.id;
       this.address = state.currentWallet?.accounts[0]?.address;
+      switch (state.currentChainType) {
+        case 'Neo2':
+          this.networkId = state.n2Networks[state.n2NetworkIndex].id;
+          break;
+        case 'Neo3':
+          this.networkId = state.n3Networks[state.n3NetworkIndex].id;
+          break;
+        case 'NeoX':
+          this.networkId = state.neoXNetworks[state.neoXNetworkIndex].id;
+          break;
+      }
       this.asset
         .getAddressBalances(this.address)
         .then((res) => (this.moneyBalance = res));

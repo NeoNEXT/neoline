@@ -6,6 +6,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { NEO3_CONTRACT, GAS3_CONTRACT } from '../../../_lib';
+import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 
 @Component({
   templateUrl: 'my-assets.component.html',
@@ -28,13 +29,18 @@ export class PopupMyAssetsComponent implements OnDestroy {
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
-      const chain = state.currentChainType;
       this.address = state.currentWallet?.accounts[0]?.address;
-      const network =
-        chain === 'Neo2'
-          ? state.n2Networks[state.n2NetworkIndex]
-          : state.n3Networks[state.n3NetworkIndex];
-      this.networkId = network.id;
+      switch (state.currentChainType) {
+        case 'Neo2':
+          this.networkId = state.n2Networks[state.n2NetworkIndex].id;
+          break;
+        case 'Neo3':
+          this.networkId = state.n3Networks[state.n3NetworkIndex].id;
+          break;
+        case 'NeoX':
+          this.networkId = state.neoXNetworks[state.neoXNetworkIndex].id;
+          break;
+      }
       this.initData();
     });
   }
@@ -66,7 +72,13 @@ export class PopupMyAssetsComponent implements OnDestroy {
   }
 
   showOperate(asset: Asset) {
-    return [NEO, GAS, NEO3_CONTRACT, GAS3_CONTRACT].indexOf(asset.asset_id) >= 0
+    return [
+      NEO,
+      GAS,
+      NEO3_CONTRACT,
+      GAS3_CONTRACT,
+      ETH_SOURCE_ASSET_HASH,
+    ].indexOf(asset.asset_id) >= 0
       ? false
       : true;
   }

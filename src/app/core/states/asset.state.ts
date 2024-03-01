@@ -188,6 +188,9 @@ export class AssetState {
 
   //#region other
   async searchAsset(q: string): Promise<Asset> {
+    if (this.chainType === 'NeoX') {
+      return this.assetEVMState.searchNeoXAsset(q);
+    }
     const data = {
       jsonrpc: '2.0',
       id: 1,
@@ -196,19 +199,19 @@ export class AssetState {
     };
     const isN3 = this.chainType === 'Neo3';
     const rpcUrl = isN3 ? this.n3Network.rpcUrl : this.n2Network.rpcUrl;
-    const res = await this.http.rpcPost(rpcUrl, data).toPromise();
-    const symbols = await this.util.getAssetSymbols([res.hash], this.chainType);
-    const decimals = await this.util.getAssetDecimals(
-      [res.hash],
-      this.chainType
-    );
-    const asset: Asset = {
-      name: isN3 ? res?.manifest?.name : res?.name,
-      asset_id: res?.hash,
-      symbol: symbols[0],
-      decimals: decimals[0],
-    };
-    return asset;
+    return Promise.all([
+      this.http.rpcPost(rpcUrl, data).toPromise(),
+      this.util.getAssetSymbols([q], this.chainType),
+      this.util.getAssetDecimals([q], this.chainType),
+    ]).then(([res, symbols, decimals]) => {
+      const asset: Asset = {
+        name: isN3 ? res?.manifest?.name : res?.name,
+        asset_id: res?.hash,
+        symbol: symbols[0],
+        decimals: decimals[0],
+      };
+      return asset;
+    });
   }
 
   getNeo2Utxo(address: string, assetId: string): Observable<UTXO[]> {
