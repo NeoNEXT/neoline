@@ -35,12 +35,17 @@ export class AssetEVMState {
     address: string,
     contractAddress: string
   ): Promise<string> {
-    const contract = new ethers.Contract(
-      contractAddress,
-      Erc20ABI,
-      this.provider
-    );
-    const balance = await contract.balanceOf(address);
+    let balance;
+    if (contractAddress === ETH_SOURCE_ASSET_HASH) {
+      balance = await this.provider.getBalance(address);
+    } else {
+      const contract = new ethers.Contract(
+        contractAddress,
+        Erc20ABI,
+        this.provider
+      );
+      balance = await contract.balanceOf(address);
+    }
     return ethers.formatUnits(balance, 0);
   }
 
@@ -57,16 +62,18 @@ export class AssetEVMState {
   async searchNeoXAsset(q: string): Promise<Asset | null> {
     if (!ethers.isAddress(q)) return null;
     const contract = new ethers.Contract(q, Erc20ABI, this.provider);
-    return Promise.all([contract.symbol(), contract.name(), contract.decimals()]).then(
-      ([symbol, name, decimals]) => {
-        const asset: Asset = {
-          name,
-          asset_id: q,
-          symbol,
-          decimals: ethers.toNumber(decimals),
-        };
-        return asset;
-      }
-    );
+    return Promise.all([
+      contract.symbol(),
+      contract.name(),
+      contract.decimals(),
+    ]).then(([symbol, name, decimals]) => {
+      const asset: Asset = {
+        name,
+        asset_id: q,
+        symbol,
+        decimals: ethers.toNumber(decimals),
+      };
+      return asset;
+    });
   }
 }

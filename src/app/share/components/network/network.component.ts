@@ -108,7 +108,7 @@ export class PopupNetworkComponent {
       '/popup/add-nft',
       '/popup/my-nfts',
       '/popup/transfer/create',
-      '/popup/asset/',
+      '/popup/asset',
       '/popup/nfts/',
     ];
     let flag = false;

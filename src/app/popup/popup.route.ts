@@ -37,7 +37,7 @@ const routes: Routes = [
         component: PopupAccountComponent,
       },
       {
-        path: 'asset/:assetId',
+        path: 'asset',
         canActivate: [PopupWalletGuard],
         component: PopupAssetDetailComponent,
       },

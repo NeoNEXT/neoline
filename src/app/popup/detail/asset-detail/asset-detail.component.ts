@@ -1,10 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import {
-  AssetState,
-  ChromeService,
-  GlobalService,
-  UtilServiceState,
-} from '@/app/core';
+import { AssetState, ChromeService, GlobalService } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NEO, GAS, Asset } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
@@ -21,6 +16,7 @@ import {
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
+import { ETH_SOURCE_ASSET_HASH } from '../../_lib/evm';
 
 @Component({
   templateUrl: 'asset-detail.component.html',
@@ -41,6 +37,7 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
   private chainType: ChainType;
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
+  private neoXNetwork: RpcNetwork;
   constructor(
     private assetState: AssetState,
     private aRouter: ActivatedRoute,
@@ -48,7 +45,6 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private global: GlobalService,
     private router: Router,
-    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -57,15 +53,30 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
       this.chainType = state.currentChainType;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
-      this.networkId =
-        this.chainType === 'Neo2' ? this.n2Network.id : this.n3Network.id;
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      switch (this.chainType) {
+        case 'Neo2':
+          this.networkId = this.n2Network.id;
+          break;
+        case 'Neo3':
+          this.networkId = this.n3Network.id;
+          break;
+        case 'NeoX':
+          this.networkId = this.neoXNetwork.id;
+          break;
+      }
       this.initData();
     });
   }
 
   initData() {
-    this.aRouter.params.subscribe((params: any) => {
-      this.assetId = params.assetId || NEO;
+    this.aRouter.queryParams.subscribe((params) => {
+      this.assetId = params.assetId;
+      this.balance = {
+        asset_id: params.assetId,
+        symbol: params.symbol,
+        decimals: params.decimals,
+      };
       this.getAssetDetail();
       this.getCanHide();
     });
@@ -82,9 +93,13 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
   }
 
   getCanHide() {
-    const index = [NEO, GAS, NEO3_CONTRACT, GAS3_CONTRACT].indexOf(
-      this.assetId
-    );
+    const index = [
+      NEO,
+      GAS,
+      NEO3_CONTRACT,
+      GAS3_CONTRACT,
+      ETH_SOURCE_ASSET_HASH,
+    ].indexOf(this.assetId);
     this.canHideBalance = index >= 0 ? false : true;
     if (this.canHideBalance) {
       this.chrome.getWatch(this.networkId, this.address).subscribe((res) => {
@@ -99,20 +114,9 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
       this.assetId,
       this.chainType
     );
-    const symbols = await this.util.getAssetSymbols(
-      [this.assetId],
-      this.chainType
-    );
-    const decimals = await this.util.getAssetDecimals(
-      [this.assetId],
-      this.chainType
-    );
-    this.balance = {
-      asset_id: this.assetId,
-      balance: new BigNumber(balance).shiftedBy(-decimals[0]).toFixed(),
-      symbol: symbols[0],
-      decimals: decimals[0],
-    };
+    this.balance.balance = new BigNumber(balance)
+      .shiftedBy(-this.balance.decimals)
+      .toFixed();
     this.getAssetRate();
   }
 
@@ -172,6 +176,11 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
       case 'Neo3':
         if (this.n3Network.explorer) {
           window.open(`${this.n3Network.explorer}tokens/nep17/${this.assetId}`);
+        }
+        break;
+      case 'NeoX':
+        if (this.neoXNetwork.explorer) {
+          window.open(`${this.neoXNetwork.explorer}tokens/${this.assetId}`);
         }
         break;
     }

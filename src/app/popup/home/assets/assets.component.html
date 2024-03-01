@@ -2,7 +2,12 @@
 <div
   class="asset-item"
   *ngFor="let asset of myAssets"
-  [routerLink]="['/popup/asset', asset.asset_id]"
+  [routerLink]="['/popup/asset']"
+  [queryParams]="{
+    assetId: asset.asset_id,
+    symbol: asset?.symbol,
+    decimals: asset?.decimals
+  }"
 >
   <div class="asset-logo">
     <img [assetId]="asset?.asset_id" appErrorSrc alt="" />
