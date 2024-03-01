@@ -1,6 +1,9 @@
 import { NetworkType } from './chain';
 import { RpcNetwork } from './type';
 
+export const ETH_SOURCE_ASSET_HASH =
+  '0x0000000000000000000000000000000000000000';
+
 export interface EvmWalletJSON {
   crypto?: any;
   id?: string;
@@ -21,7 +24,7 @@ export interface EvmWalletJSON {
 
 export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
   {
-    id: 1,
+    id: 12227330,
     symbol: 'GAS',
     chainId: 12227330,
     name: 'NeoX TESTNET',

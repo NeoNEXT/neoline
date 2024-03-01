@@ -21,6 +21,7 @@ import { HomeService } from './services/home.service';
 import { LedgerService } from './services/ledger.service';
 import { ExtensionService } from './util/extension.service';
 import { EvmService } from './services/evm.service';
+import { AssetEVMState } from './states/asset-evm.state';
 
 @NgModule({
   declarations: [],
@@ -44,6 +45,7 @@ import { EvmService } from './services/evm.service';
     LedgerService,
     ExtensionService,
     EvmService,
+    AssetEVMState,
   ],
 })
 export class CoreModule {}

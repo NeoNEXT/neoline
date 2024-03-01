@@ -24,7 +24,8 @@
     "esModuleInterop": true,
     "target": "es6",
     "lib": ["es2018", "dom"],
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "resolveJsonModule": true,
   },
   "exclude": ["extension", "node_modules"]
 }

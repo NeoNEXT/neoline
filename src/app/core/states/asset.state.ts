@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpService } from '../services/http.service';
 import { GlobalService } from '../services/global.service';
 import { ChromeService } from '../services/chrome.service';
+import { AssetEVMState } from './asset-evm.state';
 import { Observable, from, of, forkJoin } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Asset, NEO, GAS, UTXO } from 'src/models/models';
@@ -46,6 +47,7 @@ export class AssetState {
     private http: HttpService,
     private global: GlobalService,
     private chrome: ChromeService,
+    private assetEVMState: AssetEVMState,
     private util: UtilServiceState,
     private store: Store<AppState>
   ) {
@@ -137,7 +139,8 @@ export class AssetState {
     const isNeo3 = this.chainType === 'Neo3';
     if (
       (isNeo3 && this.n3Network.network !== NetworkType.N3MainNet) ||
-      (!isNeo3 && this.n2Network.network !== NetworkType.MainNet)
+      (!isNeo3 && this.n2Network.network !== NetworkType.MainNet) ||
+      this.chainType === 'NeoX'
     ) {
       return undefined;
     }
@@ -256,10 +259,13 @@ export class AssetState {
     address: string,
     chain?: ChainType
   ): Promise<Asset[]> {
-    if (chain ? chain === 'Neo3' : this.chainType === 'Neo3') {
+    if (chain === 'Neo3' || this.chainType === 'Neo3') {
       return this.getN3AddressBalances(address);
     }
-    return this.getNeo2AddressBalances(address);
+    if (chain === 'Neo2' || this.chainType === 'Neo2') {
+      return this.getNeo2AddressBalances(address);
+    }
+    return this.assetEVMState.getNeoXAddressBalances(address);
   }
 
   async getAddressAssetBalance(
@@ -267,6 +273,9 @@ export class AssetState {
     assetId: string,
     chainType: ChainType
   ) {
+    if (chainType === 'NeoX') {
+      return this.assetEVMState.getNeoXAddressAssetBalance(address, assetId);
+    }
     if (chainType === 'Neo2' && (assetId === NEO || assetId === GAS)) {
       const nativeData = {
         jsonrpc: '2.0',

@@ -6,7 +6,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { Asset, NEO } from '@/models/models';
-import { AssetState, ChromeService, UtilServiceState } from '@/app/core';
+import { AssetState, ChromeService } from '@/app/core';
 import { forkJoin } from 'rxjs';
 import BigNumber from 'bignumber.js';
 import { NEO3_CONTRACT, ChainType, STORAGE_NAME } from '../../_lib';
@@ -32,7 +32,6 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
   constructor(
     private asset: AssetState,
     private chrome: ChromeService,
-    private util: UtilServiceState,
     private store: Store<AppState>
   ) {}
 
@@ -44,11 +43,17 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.address = state.currentWallet?.accounts[0]?.address;
-      const network =
-        this.chainType === 'Neo2'
-          ? state.n2Networks[state.n2NetworkIndex]
-          : state.n3Networks[state.n3NetworkIndex];
-      this.networkId = network.id;
+      switch (this.chainType) {
+        case 'Neo2':
+          this.networkId = state.n2Networks[state.n2NetworkIndex].id;
+          break;
+        case 'Neo3':
+          this.networkId = state.n3Networks[state.n3NetworkIndex].id;
+          break;
+        case 'NeoX':
+          this.networkId = state.neoXNetworks[state.neoXNetworkIndex].id;
+          break;
+      }
       this.getAssets();
     });
   }
@@ -79,12 +84,8 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
               this.chainType
             );
             if (new BigNumber(balance).comparedTo(0) > 0) {
-              const decimals = await this.util.getAssetDecimals(
-                [item.asset_id],
-                this.chainType
-              );
               item.balance = new BigNumber(balance)
-                .shiftedBy(-decimals[0])
+                .shiftedBy(-item.decimals)
                 .toFixed();
             }
             showAssets.push(item);
@@ -96,8 +97,10 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
       let neoAsset;
       if (this.chainType === 'Neo2') {
         neoAsset = this.myAssets.find((m) => m.asset_id === NEO);
-      } else {
+      } else if (this.chainType === 'Neo3') {
         neoAsset = this.myAssets.find((m) => m.asset_id === NEO3_CONTRACT);
+      } else {
+        neoAsset = moneyAssets[0];
       }
       this.backAsset.emit(neoAsset);
       this.isLoading = false;

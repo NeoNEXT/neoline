@@ -153,10 +153,10 @@ export class NeonService {
           });
           neo3WalletArrRes = tempArr;
         }
-        const chainType: ChainType = wallet3.isAddress(
-          walletRes.accounts[0].address,
-          53
-        )
+        const address = walletRes.accounts[0].address;
+        const chainType: ChainType = ethers.isAddress(address)
+          ? 'NeoX'
+          : wallet3.isAddress(address, 53)
           ? 'Neo3'
           : 'Neo2';
         this.store.dispatch({
