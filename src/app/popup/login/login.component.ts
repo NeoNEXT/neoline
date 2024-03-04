@@ -21,6 +21,7 @@ import {
   STORAGE_NAME,
 } from '../_lib';
 import { FormGroup, Validators, FormBuilder } from '@angular/forms';
+import { ethers } from 'ethers';
 
 @Component({
   templateUrl: 'login.component.html',
@@ -107,35 +108,58 @@ export class PopupLoginComponent
     this.loading = true;
     let account;
     if (this.checkIsLedger(this.selectWallet)) {
-      const wallet = this.allWallet.find(item => !this.checkIsLedger(item));
+      const wallet = this.allWallet.find((item) => !this.checkIsLedger(item));
       account = wallet.accounts[0];
     } else {
-      account =
-        this.selectChainType === 'Neo3'
-          ? this.util.getNeo3Account(this.selectWallet.accounts[0])
-          : this.selectWallet.accounts[0];
+      switch (this.selectChainType) {
+        case 'Neo2':
+          account = this.selectWallet.accounts[0];
+          break;
+        case 'Neo3':
+          account = this.util.getNeo3Account(this.selectWallet.accounts[0]);
+          break;
+        case 'NeoX':
+          ethers.Wallet.fromEncryptedJson(
+            JSON.stringify(this.selectWallet),
+            this.loginForm.value.password
+          )
+            .then(() => {
+              this.handleLoginSuccess();
+            })
+            .catch(() => {
+              this.handleLoginFailed();
+            });
+          return;
+      }
     }
     account
       .decrypt(this.loginForm.value.password)
       .then(() => {
-        this.chrome.setPassword(this.loginForm.value.password);
-        if (this.route.snapshot.queryParams.notification !== undefined) {
-          this.chrome.windowCallback(
-            {
-              data: true,
-              return: requestTarget.Login,
-            },
-            true
-          );
-        }
-        this.loading = false;
-        this.handleWallet();
+        this.handleLoginSuccess();
       })
       .catch(() => {
-        this.loading = false;
-        this.loginForm.controls[`password`].setErrors({ wrong: true });
-        this.loginForm.markAsDirty();
+        this.handleLoginFailed();
       });
+  }
+
+  private handleLoginSuccess() {
+    this.chrome.setPassword(this.loginForm.value.password);
+    if (this.route.snapshot.queryParams.notification !== undefined) {
+      this.chrome.windowCallback(
+        {
+          data: true,
+          return: requestTarget.Login,
+        },
+        true
+      );
+    }
+    this.loading = false;
+    this.handleWallet();
+  }
+  private handleLoginFailed() {
+    this.loading = false;
+    this.loginForm.controls[`password`].setErrors({ wrong: true });
+    this.loginForm.markAsDirty();
   }
 
   resetWallet() {
