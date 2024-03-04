@@ -8,6 +8,7 @@ import {
   ADD_NEO3_WALLETS,
   UPDATE_WALLET,
   STORAGE_NAME,
+  ADD_NEOX_WALLETS,
 } from '../_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-core';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
@@ -36,8 +37,7 @@ export class PopupWalletComponent implements OnInit {
   hasPwdWallet = false;
 
   private accountSub: Unsubscribable;
-  private n2Network: RpcNetwork;
-  private n3Network: RpcNetwork;
+  private network: RpcNetwork;
   private chainType: ChainType;
   constructor(
     private route: ActivatedRoute,
@@ -48,8 +48,17 @@ export class PopupWalletComponent implements OnInit {
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
-      this.n2Network = state.n2Networks[state.n2NetworkIndex];
-      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      switch (this.neon.selectedChainType) {
+        case 'Neo2':
+          this.network = state.n2Networks[state.n2NetworkIndex];
+          break;
+        case 'Neo3':
+          this.network = state.n3Networks[state.n3NetworkIndex];
+          break;
+        case 'NeoX':
+          this.network = state.neoXNetworks[state.neoXNetworkIndex];
+          break;
+      }
       this.chainType = state.currentChainType;
       this.checkHasPwdWallet(
         (state.neo2WalletArr as any).concat(state.neo3WalletArr)
@@ -90,39 +99,44 @@ export class PopupWalletComponent implements OnInit {
   }
 
   public updateLocalWallet(newWallet: any, isCreate: boolean) {
-    const newChainType = wallet3.isAddress(newWallet.accounts[0].address, 53)
-      ? 'Neo3'
-      : 'Neo2';
+    const newChainType = this.neon.selectedChainType;
     const wif =
       this.isOnePassword || !this.hasPwdWallet ? '' : newWallet.accounts[0].wif;
-    newWallet =
-      newChainType === 'Neo2'
-        ? new wallet2.Wallet(newWallet.export())
-        : new wallet3.Wallet(newWallet.export());
+    switch (newChainType) {
+      case 'Neo2':
+        newWallet = new wallet2.Wallet(newWallet.export());
+        this.store.dispatch({
+          type: ADD_NEO2_WALLETS,
+          data: { wallet: [newWallet], wif: [wif] },
+        });
+        break;
+      case 'Neo3':
+        newWallet = new wallet3.Wallet(newWallet.export());
+        this.store.dispatch({
+          type: ADD_NEO3_WALLETS,
+          data: { wallet: [newWallet], wif: [wif] },
+        });
+        break;
+      case 'NeoX':
+        this.store.dispatch({
+          type: ADD_NEOX_WALLETS,
+          data: { wallet: [newWallet] },
+        });
+        break;
+    }
     if (newChainType !== this.chainType) {
-      this.chrome.networkChangeEvent(
-        newChainType === 'Neo2' ? this.n2Network : this.n3Network
-      );
+      this.chrome.networkChangeEvent(this.network);
     }
     this.store.dispatch({ type: UPDATE_WALLET, data: newWallet });
-    if (newChainType === 'Neo2') {
-      this.store.dispatch({
-        type: ADD_NEO2_WALLETS,
-        data: { wallet: [newWallet], wif: [wif] },
-      });
-    } else {
-      this.store.dispatch({
-        type: ADD_NEO3_WALLETS,
-        data: { wallet: [newWallet], wif: [wif] },
-      });
-    }
     if (this.dapiData.type === 'dapi') {
       const params = `type=dapi&hostname=${this.dapiData.hostname}&chainType=${this.dapiData.chainType}&messageID=${this.dapiData.messageID}`;
       this.router.navigateByUrl(`/popup/notification/pick-address?${params}`);
       return;
     }
     this.chrome.setHasLoginAddress(newWallet.accounts[0].address);
-    this.chrome.accountChangeEvent(newWallet.export());
+    this.chrome.accountChangeEvent(
+      newChainType === 'NeoX' ? newWallet : newWallet.export()
+    );
     if (isCreate) {
       this.chrome.setHaveBackupTip(true);
     } else {
@@ -137,9 +151,7 @@ export class PopupWalletComponent implements OnInit {
 
   public handleFileWallet({ walletArr, wifArr }) {
     if (this.neon.selectedChainType !== this.chainType) {
-      this.chrome.networkChangeEvent(
-        this.neon.selectedChainType === 'Neo2' ? this.n2Network : this.n3Network
-      );
+      this.chrome.networkChangeEvent(this.network);
     }
     const newCurrentWallet = walletArr[walletArr.length - 1];
     this.store.dispatch({

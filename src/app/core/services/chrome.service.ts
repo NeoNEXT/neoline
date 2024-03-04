@@ -246,6 +246,7 @@ export class ChromeService {
     this.setStorage(STORAGE_NAME['WIFArr-Neo3'], []);
     this.setStorage(STORAGE_NAME.walletArr, []);
     this.setStorage(STORAGE_NAME['walletArr-Neo3'], []);
+    this.setStorage(STORAGE_NAME['walletArr-NeoX'], []);
     this.accountChangeEvent(undefined);
   }
   //#endregion

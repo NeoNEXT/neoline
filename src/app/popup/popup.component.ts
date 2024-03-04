@@ -31,14 +31,21 @@ export class PopupComponent implements OnInit {
         this.address = wallet.accounts[0].address;
       }
       this.chainType = state.currentChainType;
-      this.networks =
-        this.chainType === 'Neo2' ? state.n2Networks : state.n3Networks;
-      this.networkIndex =
-        this.chainType === 'Neo2' ? state.n2NetworkIndex : state.n3NetworkIndex;
-      this.switchNetwork =
-        this.chainType === 'Neo2'
-          ? state.n3Networks[state.n3NetworkIndex]
-          : state.n2Networks[state.n2NetworkIndex];
+      switch (this.chainType) {
+        case 'Neo2':
+          this.networks = state.n2Networks;
+          this.networkIndex = state.n2NetworkIndex;
+          break;
+        case 'Neo3':
+          this.networks = state.n3Networks;
+          this.networkIndex = state.n3NetworkIndex;
+          break;
+        case 'NeoX':
+          this.networks = state.neoXNetworks;
+          this.networkIndex = state.neoXNetworkIndex;
+          break;
+      }
+      this.switchNetwork = this.networks[this.networkIndex];
       this.switchChainWallet =
         this.chainType === 'Neo2'
           ? state.neo3WalletArr[0]

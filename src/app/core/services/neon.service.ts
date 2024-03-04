@@ -36,6 +36,7 @@ import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
+import { EvmService } from './evm.service';
 
 @Injectable()
 export class NeonService {
@@ -54,6 +55,7 @@ export class NeonService {
     private chrome: ChromeService,
     private global: GlobalService,
     private http: HttpClient,
+    private evmService: EvmService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -459,7 +461,7 @@ export class NeonService {
    * 创建包含单个NEP6的新钱包
    * @param key encrypt password for new address
    */
-  public createWallet(key: string, name: string = null): Observable<any> {
+  public createWallet(key: string, name: string = null): Promise<any> {
     if (this.selectedChainType === 'Neo2') {
       const privateKey = wallet2.generatePrivateKey();
       const account = new wallet2.Account(privateKey);
@@ -468,12 +470,10 @@ export class NeonService {
       } as any);
       w.addAccount(account);
       const wif = w.accounts[0].WIF;
-      return from(w.accounts[0].encrypt(key)).pipe(
-        map(() => {
-          (w.accounts[0] as any).wif = wif;
-          return w;
-        })
-      );
+      return w.accounts[0].encrypt(key).then(() => {
+        (w.accounts[0] as any).wif = wif;
+        return w;
+      });
     } else if (this.selectedChainType === 'Neo3') {
       const account = new wallet3.Account();
       const wif = account.WIF;
@@ -481,12 +481,12 @@ export class NeonService {
         name: name || 'NeoLineUser',
       } as any);
       w.addAccount(account);
-      return from(w.accounts[0].encrypt(key)).pipe(
-        map(() => {
-          (w.accounts[0] as any).wif = wif;
-          return w;
-        })
-      );
+      return w.accounts[0].encrypt(key).then(() => {
+        (w.accounts[0] as any).wif = wif;
+        return w;
+      });
+    } else if (this.selectedChainType === 'NeoX') {
+      return this.evmService.createWallet(key, name);
     }
   }
   public delCurrentWallet(
