@@ -79,7 +79,7 @@ export class PopupAccountComponent implements OnDestroy {
     this.address = this.currentWallet.accounts[0].address;
     this.inputName = this.currentWallet.name;
     this.isLedger = !!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44;
-    if (this.isLedger) {
+    if (this.isLedger || this.chainType === 'NeoX') {
       this.publicKey = this.currentWallet.accounts[0]?.extra?.publicKey;
     } else {
       this.publicKey = await this.getPublicKey();
