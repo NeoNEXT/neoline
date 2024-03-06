@@ -6,7 +6,6 @@ import { ethers } from 'ethers';
 
 @Injectable()
 export class EvmService {
-  importAccounts = [];
   private neoXWalletArr: EvmWalletJSON[];
   constructor(private store: Store<AppState>) {
     const account$ = this.store.select('account');
@@ -17,17 +16,20 @@ export class EvmService {
 
   async createWallet(pwd: string, name: string): Promise<EvmWalletJSON> {
     let wallet: ethers.HDNodeWallet;
-    if (this.neoXWalletArr.length === 0) {
-      wallet = ethers.Wallet.createRandom();
-    } else {
+    const createWalletLength = this.neoXWalletArr.filter(
+      (item) => item.accounts[0].extra.isCreate
+    ).length;
+    if (createWalletLength > 0) {
       wallet = (await ethers.Wallet.fromEncryptedJson(
         JSON.stringify(this.neoXWalletArr[0]),
         pwd
       )) as ethers.HDNodeWallet;
+    } else {
+      wallet = ethers.Wallet.createRandom();
     }
     const newAccount = ethers.HDNodeWallet.fromMnemonic(
       wallet.mnemonic,
-      `m/44'/60'/0'/0/${this.neoXWalletArr.length}`
+      `m/44'/60'/0'/0/${createWalletLength}`
     );
     const json = await newAccount.encrypt(pwd);
     const accountLike: EvmWalletJSON = JSON.parse(json);
@@ -37,6 +39,7 @@ export class EvmService {
         address: newAccount.address,
         extra: {
           publicKey: newAccount.publicKey,
+          isCreate: true,
         },
       },
     ];
@@ -55,10 +58,11 @@ export class EvmService {
         address: account0.address,
         extra: {
           publicKey: account0.publicKey,
+          isCreate: true,
         },
       },
     ];
-    this.neoXWalletArr = [accountLike];
+    return accountLike;
   }
 
   async importWalletFromPrivateKey(
@@ -78,6 +82,6 @@ export class EvmService {
         },
       },
     ];
-    this.importAccounts.push(JSON.stringify(accountLike));
+    return accountLike;
   }
 }

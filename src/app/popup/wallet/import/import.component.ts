@@ -1,4 +1,9 @@
-import { GlobalService, NeonService, ChromeService } from '@/app/core';
+import {
+  GlobalService,
+  NeonService,
+  ChromeService,
+  EvmService,
+} from '@/app/core';
 import {
   AfterContentInit,
   Component,
@@ -21,6 +26,7 @@ import {
 } from '@angular/forms';
 import { checkPasswords, MyErrorStateMatcher } from '../confirm-password';
 import { ChainType } from '../../_lib';
+import { EvmWalletJSON } from '../../_lib/evm';
 
 type ImportType = 'key' | 'file';
 
@@ -82,7 +88,8 @@ export class PopupWalletImportComponent
     private neon: NeonService,
     private cdref: ChangeDetectorRef,
     private fb: FormBuilder,
-    private chrome: ChromeService
+    private chrome: ChromeService,
+    private evmService: EvmService
   ) {
     switch (this.neon.selectedChainType) {
       case 'Neo2':
@@ -177,6 +184,10 @@ export class PopupWalletImportComponent
     } else {
       importPwd = this.importForm.value.password;
     }
+    if (this.neon.selectedChainType === 'NeoX') {
+      this.importNeoXKey(importPwd);
+      return;
+    }
     if (this.neonWallet.isPrivateKey(this.importForm.value.WIF)) {
       this.neon
         .importPrivateKey(
@@ -219,6 +230,24 @@ export class PopupWalletImportComponent
     }
   }
 
+  importNeoXKey(pwd: string) {
+    this.evmService
+      .importWalletFromPrivateKey(
+        this.importForm.value.WIF,
+        pwd,
+        this.importForm.value.name
+      )
+      .then((res: EvmWalletJSON) => {
+        this.loading = false;
+        if (this.neon.verifyWallet(res)) {
+          this.setPassword(pwd);
+          this.submitThis.emit(res);
+        } else {
+          this.global.snackBarTip('existingWallet');
+        }
+      });
+  }
+
   public cancel() {
     history.go(-1);
   }
@@ -249,7 +278,9 @@ export class PopupWalletImportComponent
       if (newWallet !== 'Wrong password') {
         if (this.neon.verifyWallet(newWallet)) {
           newWIFArr.push(
-            this.isOnePassword || !this.hasPwdWallet ? '' : newWallet.accounts[0].WIF
+            this.isOnePassword || !this.hasPwdWallet
+              ? ''
+              : newWallet.accounts[0].WIF
           );
           const pushWallet =
             this.neon.selectedChainType === 'Neo2'

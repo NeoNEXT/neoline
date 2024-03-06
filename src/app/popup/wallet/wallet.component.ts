@@ -8,7 +8,7 @@ import {
   ADD_NEO3_WALLETS,
   UPDATE_WALLET,
   STORAGE_NAME,
-  ADD_NEOX_WALLETS,
+  ADD_NEOX_WALLET,
 } from '../_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-core';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
@@ -119,8 +119,8 @@ export class PopupWalletComponent implements OnInit {
         break;
       case 'NeoX':
         this.store.dispatch({
-          type: ADD_NEOX_WALLETS,
-          data: { wallet: [newWallet] },
+          type: ADD_NEOX_WALLET,
+          data: { wallet: newWallet, isCreate },
         });
         break;
     }

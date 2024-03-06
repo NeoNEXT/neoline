@@ -5,7 +5,7 @@ import {
   ADD_NEO2_WALLETS,
   UPDATE_WALLET,
   ADD_NEO3_WALLETS,
-  ADD_NEOX_WALLETS,
+  ADD_NEOX_WALLET,
 } from '@/app/popup/_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
@@ -47,7 +47,7 @@ export class AccountNameComponent {
             extra: {
               publicKey: account.publicKey,
               ledgerAddressIndex: index,
-              ledgerSLIP44: SLIP44[this.chainType]
+              ledgerSLIP44: SLIP44[this.chainType],
             },
           },
         ],
@@ -55,8 +55,8 @@ export class AccountNameComponent {
       const isEfficient = this.neon.verifyWallet(tempWallet);
       if (isEfficient) {
         this.store.dispatch({
-          type: ADD_NEOX_WALLETS,
-          data: { wallet: [tempWallet] },
+          type: ADD_NEOX_WALLET,
+          data: { wallet: tempWallet },
         });
         this.store.dispatch({ type: UPDATE_WALLET, data: tempWallet });
         this.chrome.accountChangeEvent(tempWallet);
