@@ -7,6 +7,7 @@ import {
   LedgerService,
   ChromeService,
   UtilServiceState,
+  EvmService,
 } from '@/app/core';
 import { NEO, GAS, Asset } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
@@ -33,6 +34,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { TransferService } from '../transfer/transfer.service';
+import { EvmWalletJSON } from '../_lib/evm';
 @Component({
   templateUrl: 'home.component.html',
   styleUrls: ['home.component.scss'],
@@ -66,7 +68,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
 
   private accountSub: Unsubscribable;
   currentWalletIsN3: boolean;
-  currentWallet: Wallet2 | Wallet3;
+  currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   address: string;
   private chainType: ChainType;
   private currentWalletArr: Array<Wallet2 | Wallet3>;
@@ -86,6 +88,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     private ledger: LedgerService,
     private chrome: ChromeService,
     private util: UtilServiceState,
+    private evmService: EvmService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -138,6 +141,12 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       this.getN3ClaimTxStatus();
     }
     this.initClaim();
+    if (this.chainType === 'NeoX') {
+      this.showRemove = this.currentWallet.accounts[0].extra.isCreate
+        ? false
+        : true;
+      return;
+    }
     if (!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
       const accounts = this.allWallet.filter(
         (item) => !item.accounts[0]?.extra?.ledgerSLIP44
@@ -171,7 +180,10 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     }
   }
   removeAccount() {
-    if (!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
+    if (
+      this.chainType !== 'NeoX' &&
+      !this.currentWallet.accounts[0]?.extra?.ledgerSLIP44
+    ) {
       const accounts = this.allWallet.filter(
         (item) => !item.accounts[0]?.extra?.ledgerSLIP44
       );
@@ -188,8 +200,12 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
+          if (this.chainType === 'NeoX') {
+            this.evmService.deleteWallet(this.currentWallet as EvmWalletJSON);
+            return;
+          }
           this.neon
-            .delCurrentWallet(this.currentWallet, this.chainType)
+            .delCurrentWallet(this.currentWallet as Wallet3, this.chainType)
             .subscribe((w) => {
               if (!w) {
                 this.router.navigateByUrl('/popup/wallet/new-guide');
@@ -426,7 +442,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         this.ledger
           .getLedgerSignedTx(
             tx,
-            this.currentWallet,
+            this.currentWallet as Wallet3,
             this.chainType,
             this.n3Network.magicNumber
           )
@@ -459,7 +475,11 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       return;
     }
     this.util
-      .getWIF(this.currentWIFArr, this.currentWalletArr, this.currentWallet)
+      .getWIF(
+        this.currentWIFArr,
+        this.currentWalletArr,
+        this.currentWallet as Wallet3
+      )
       .then((wif) => {
         switch (this.chainType) {
           case 'Neo2':

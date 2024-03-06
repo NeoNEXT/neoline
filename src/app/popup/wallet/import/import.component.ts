@@ -27,6 +27,7 @@ import {
 import { checkPasswords, MyErrorStateMatcher } from '../confirm-password';
 import { ChainType } from '../../_lib';
 import { EvmWalletJSON } from '../../_lib/evm';
+import { ethers } from 'ethers';
 
 type ImportType = 'key' | 'file';
 
@@ -41,8 +42,12 @@ function checkWIF(chainType: ChainType): ValidatorFn {
       if (wallet2.isWIF(wif) || wallet2.isPrivateKey(wif)) {
         valid = true;
       }
-    } else {
+    } else if (chainType === 'Neo3') {
       if (wallet3.isWIF(wif) || wallet3.isPrivateKey(wif)) {
+        valid = true;
+      }
+    } else if (chainType === 'NeoX') {
+      if (wallet3.isPrivateKey(wif.startsWith('0x') ? wif.slice(2) : wif)) {
         valid = true;
       }
     }
@@ -162,6 +167,17 @@ export class PopupWalletImportComponent
       reader.readAsText(nep6File, 'UTF-8');
       reader.onload = (evt: any) => {
         this.nep6Json = JSON.parse(evt.target.result);
+        if (this.neon.selectedChainType === 'NeoX') {
+          if (ethers.isKeystoreJson(JSON.stringify(this.nep6Json))) {
+            this.nep6Form.controls.EncrpytedKey.setValue(
+              JSON.stringify(this.nep6Json)
+            );
+          } else {
+            this.global.snackBarTip('nep6Wrong');
+            this.nep6Json = null;
+          }
+          return;
+        }
         const firstAccount = this.nep6Json?.accounts?.[0];
         if (this.neonWallet.isNEP2(firstAccount?.key) && firstAccount?.label) {
           this.nep6Form.controls.EncrpytedKey.setValue(firstAccount.key);
@@ -252,7 +268,44 @@ export class PopupWalletImportComponent
     history.go(-1);
   }
 
+  importNeoXFile() {
+    this.loading = true;
+    let importPwd;
+    if (this.isOnePassword && this.password) {
+      importPwd = this.password;
+    } else {
+      importPwd = this.nep6Form.value?.password;
+    }
+    ethers.Wallet.fromEncryptedJson(
+      JSON.stringify(this.nep6Json),
+      this.nep6Form.value.filePassword
+    )
+      .then(async (res) => {
+        const newWallet = await this.evmService.importWalletFromPrivateKey(
+          res.privateKey,
+          importPwd,
+          this.nep6Json?.name
+        );
+        this.loading = false;
+        if (this.neon.verifyWallet(newWallet)) {
+          this.setPassword(importPwd);
+          this.submitFile.emit({ walletArr: [newWallet] });
+        } else {
+          this.global.snackBarTip('existingWallet');
+        }
+      })
+      .catch(() => {
+        this.loading = false;
+        this.nep6Form.controls[`filePassword`].setErrors({ wrong: true });
+        this.nep6Form.markAsDirty();
+      });
+  }
+
   async importFile() {
+    if (this.neon.selectedChainType === 'NeoX') {
+      this.importNeoXFile();
+      return;
+    }
     if (!this.neonWallet.isNEP2(this.nep6Form.value.EncrpytedKey)) {
       return;
     }

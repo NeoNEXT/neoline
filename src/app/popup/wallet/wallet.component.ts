@@ -158,20 +158,31 @@ export class PopupWalletComponent implements OnInit {
       type: UPDATE_WALLET,
       data: newCurrentWallet,
     });
-    this.store.dispatch({
-      type:
-        this.neon.selectedChainType === 'Neo2'
-          ? ADD_NEO2_WALLETS
-          : ADD_NEO3_WALLETS,
-      data: { wallet: walletArr, wif: wifArr },
-    });
+    if (this.neon.selectedChainType === 'NeoX') {
+      this.store.dispatch({
+        type: ADD_NEOX_WALLET,
+        data: { wallet: newCurrentWallet },
+      });
+    } else {
+      this.store.dispatch({
+        type:
+          this.neon.selectedChainType === 'Neo2'
+            ? ADD_NEO2_WALLETS
+            : ADD_NEO3_WALLETS,
+        data: { wallet: walletArr, wif: wifArr },
+      });
+    }
     if (this.dapiData.type === 'dapi') {
       const params = `type=dapi&hostname=${this.dapiData.hostname}&chainType=${this.dapiData.chainType}&messageID=${this.dapiData.messageID}`;
       this.router.navigateByUrl(`/popup/notification/pick-address?${params}`);
       return;
     }
     this.chrome.setHasLoginAddress(newCurrentWallet.accounts[0].address);
-    this.chrome.accountChangeEvent(newCurrentWallet.export());
+    this.chrome.accountChangeEvent(
+      this.neon.selectedChainType === 'NeoX'
+        ? newCurrentWallet
+        : newCurrentWallet.export()
+    );
     this.chrome.setWalletsStatus(newCurrentWallet.accounts[0].address);
     this.chrome.setHaveBackupTip(false);
     const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';

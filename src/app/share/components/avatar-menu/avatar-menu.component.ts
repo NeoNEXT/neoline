@@ -27,6 +27,7 @@ import {
 import { NEO } from '@/models/models';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
+import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 declare var chrome: any;
 
 @Component({
@@ -37,17 +38,15 @@ declare var chrome: any;
 export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
   @Output() closeEvent = new EventEmitter();
   isSearching = false;
-  displayWalletArr: Array<Wallet2 | Wallet3> = [];
+  displayWalletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
   addressBalances = {};
   isOnePassword = false;
   private searchSub: Unsubscribable;
 
   private accountSub: Unsubscribable;
   private chainType: ChainType;
-  wallet: Wallet2 | Wallet3;
-  walletArr: Array<Wallet2 | Wallet3>;
-  private neo2WalletArr: Wallet2[];
-  private neo3WalletArr: Wallet3[];
+  wallet: Wallet2 | Wallet3 | EvmWalletJSON;
+  walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
   constructor(
     private router: Router,
     private chromeSrc: ChromeService,
@@ -59,10 +58,17 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.wallet = state.currentWallet;
       this.chainType = state.currentChainType;
-      this.neo2WalletArr = state.neo2WalletArr;
-      this.neo3WalletArr = state.neo3WalletArr;
-      this.walletArr =
-        this.chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
+      switch (this.chainType) {
+        case 'Neo2':
+          this.walletArr = state.neo2WalletArr;
+          break;
+        case 'Neo3':
+          this.walletArr = state.neo3WalletArr;
+          break;
+        case 'NeoX':
+          this.walletArr = state.neoXWalletArr;
+          break;
+      }
       this.displayWalletArr = this.walletArr;
       this.getBalances();
     });
@@ -187,13 +193,14 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
 
   async exportWallet() {
     if (!this.isOnePassword) {
-      const exportJson = JSON.stringify(this.wallet.export());
+      if (this.wallet.accounts[0]?.extra?.ledgerSLIP44) return;
+      const exportJson = JSON.stringify((this.wallet as Wallet2).export());
       this.exportWalletJson(exportJson, this.chainType, this.wallet.name);
       return;
     }
     if (this.chainType === 'Neo2') {
       const neo2ExportWallet = new wallet2.Wallet({ name: 'NeoLineUser' });
-      for (const item of this.neo2WalletArr) {
+      for (const item of this.walletArr as Wallet2[]) {
         if (item.accounts[0]?.extra?.ledgerSLIP44) {
           continue;
         }
@@ -203,9 +210,9 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       }
       const neo2ExportJson = JSON.stringify(neo2ExportWallet.export());
       this.exportWalletJson(neo2ExportJson, 'Neo2');
-    } else {
+    } else if (this.chainType === 'Neo3') {
       const neo3ExportWallet = new wallet3.Wallet({ name: 'NeoLineUser' });
-      for (const item of this.neo3WalletArr) {
+      for (const item of this.walletArr as Wallet3[]) {
         if (item.accounts[0]?.extra?.ledgerSLIP44) {
           continue;
         }
@@ -215,6 +222,12 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       }
       const neo3ExportJson = JSON.stringify(neo3ExportWallet.export());
       this.exportWalletJson(neo3ExportJson, 'Neo3');
+    } else if (this.chainType === 'NeoX') {
+      if (this.wallet.accounts[0]?.extra?.ledgerSLIP44) return;
+      const target = JSON.parse(JSON.stringify(this.wallet));
+      delete target.accounts;
+      const exportJson = JSON.stringify(target);
+      this.exportWalletJson(exportJson, this.chainType, this.wallet.name);
     }
   }
   private exportWalletJson(
@@ -227,7 +240,18 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       'href',
       'data:text/json;charset=UTF-8,' + encodeURIComponent(json)
     );
-    const name = chainType === 'Neo2' ? 'neoline_neo_legacy' : 'neoline_neo_n3';
+    let name;
+    switch (chainType) {
+      case 'Neo2':
+        name = 'neoline_neo_legacy';
+        break;
+      case 'Neo3':
+        name = 'neoline_neo_n3';
+        break;
+      case 'NeoX':
+        name = 'neoline_neox';
+        break;
+    }
     element.setAttribute('download', `${exportFileName || name}.json`);
     element.style.display = 'none';
     document.body.appendChild(element);

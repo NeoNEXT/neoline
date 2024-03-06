@@ -1,13 +1,15 @@
+import { REMOVE_NEOX_WALLET, UPDATE_WALLET } from '@/app/popup/_lib';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { AppState } from '@/app/reduers';
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
+import { ChromeService } from './chrome.service';
 
 @Injectable()
 export class EvmService {
   private neoXWalletArr: EvmWalletJSON[];
-  constructor(private store: Store<AppState>) {
+  constructor(private store: Store<AppState>, private chrome: ChromeService) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.neoXWalletArr = state.neoXWalletArr;
@@ -73,7 +75,7 @@ export class EvmService {
     const wallet = new ethers.Wallet(privateKey);
     const json = await wallet.encrypt(pwd);
     const accountLike: EvmWalletJSON = JSON.parse(json);
-    accountLike.name = name;
+    accountLike.name = name ?? 'NeoLineUser';
     accountLike.accounts = [
       {
         address: wallet.address,
@@ -83,5 +85,14 @@ export class EvmService {
       },
     ];
     return accountLike;
+  }
+
+  deleteWallet(w: EvmWalletJSON) {
+    this.store.dispatch({
+      type: REMOVE_NEOX_WALLET,
+      data: w,
+    });
+    this.store.dispatch({ type: UPDATE_WALLET, data: this.neoXWalletArr[0] });
+    this.chrome.accountChangeEvent(this.neoXWalletArr[0]);
   }
 }
