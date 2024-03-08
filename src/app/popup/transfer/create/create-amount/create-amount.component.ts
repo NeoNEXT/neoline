@@ -31,6 +31,7 @@ import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { TransferData } from '../interface';
+import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 
 interface TransferTo {
   address: string;
@@ -60,10 +61,10 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
 
   private accountSub: Unsubscribable;
   private fromAddress: string;
-  private currentWallet: Wallet2 | Wallet3;
+  private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   chainType: ChainType;
   currentNetwork: RpcNetwork;
-  currentWalletArr: Array<Wallet2 | Wallet3>;
+  currentWalletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
   private currentWIF: string;
   constructor(
     private aRoute: ActivatedRoute,
@@ -81,12 +82,20 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       this.chainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
       this.fromAddress = state.currentWallet?.accounts[0]?.address;
-      this.currentWalletArr =
-        this.chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
-      this.currentNetwork =
-        this.chainType === 'Neo2'
-          ? state.n2Networks[state.n2NetworkIndex]
-          : state.n3Networks[state.n3NetworkIndex];
+      switch (this.chainType) {
+        case 'Neo2':
+          this.currentWalletArr = state.neo2WalletArr;
+          this.currentNetwork = state.n2Networks[state.n2NetworkIndex];
+          break;
+        case 'Neo3':
+          this.currentWalletArr = state.neo3WalletArr;
+          this.currentNetwork = state.n3Networks[state.n3NetworkIndex];
+          break;
+        case 'NeoX':
+          this.currentWalletArr = state.neoXWalletArr;
+          this.currentNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+          break;
+      }
       this.getCurrentWIF(
         this.chainType === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr
       );
@@ -96,8 +105,13 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
 
   //#region init
   private getCurrentWIF(WIFArr: string[]) {
+    if (this.chainType === 'NeoX') return;
     this.util
-      .getWIF(WIFArr, this.currentWalletArr, this.currentWallet)
+      .getWIF(
+        WIFArr,
+        this.currentWalletArr as Wallet3[],
+        this.currentWallet as Wallet3
+      )
       .then((res) => (this.currentWIF = res));
   }
   private initData() {

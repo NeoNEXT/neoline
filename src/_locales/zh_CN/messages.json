@@ -911,6 +911,9 @@
   "inputN3AddressTip": {
     "message": "N3 地址"
   },
+  "inputNeoXAddressTip": {
+    "message": "EVM 地址"
+  },
   "Copied": {
     "message": "已复制！"
   },

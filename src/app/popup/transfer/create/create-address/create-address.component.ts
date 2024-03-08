@@ -6,6 +6,8 @@ import { GlobalService, UtilServiceState } from '@/app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { timer, Unsubscribable } from 'rxjs';
+import { EvmWalletJSON } from '@/app/popup/_lib/evm';
+import { ethers } from 'ethers';
 
 @Component({
   selector: 'transfer-create-address',
@@ -15,7 +17,7 @@ import { timer, Unsubscribable } from 'rxjs';
 export class TransferCreateAddressComponent {
   @Input() chainType: ChainType;
   @Input() currentNetwork: RpcNetwork;
-  @Input() walletArr: Array<Wallet2 | Wallet3>;
+  @Input() walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
   @Output() selecteAccountEvent = new EventEmitter();
 
   transferTo = { address: '', name: '' };
@@ -37,7 +39,7 @@ export class TransferCreateAddressComponent {
         } else {
           this.global.snackBarTip('wrongAddress');
         }
-      } else {
+      } else if (this.chainType === 'Neo3') {
         if (wallet3.isAddress(address, 53)) {
           this.findAddress(address);
         } else if (
@@ -59,6 +61,12 @@ export class TransferCreateAddressComponent {
         } else {
           this.global.snackBarTip('wrongAddress');
         }
+      } else {
+        if (ethers.isAddress(address)) {
+          this.findAddress(address);
+        } else {
+          this.global.snackBarTip('wrongAddress');
+        }
       }
     });
   }
@@ -66,11 +74,13 @@ export class TransferCreateAddressComponent {
   getInputAddressTip() {
     if (this.chainType === 'Neo2') {
       return 'inputNeo2AddressTip';
-    } else {
+    } else if (this.chainType === 'Neo3') {
       if (this.currentNetwork.id === 6 || this.currentNetwork.id === 3) {
         return 'inputN3NNSAddressTip';
       }
       return 'inputN3AddressTip';
+    } else {
+      return 'inputNeoXAddressTip';
     }
   }
 

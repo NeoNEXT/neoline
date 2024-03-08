@@ -25,6 +25,7 @@ import BigNumber from 'bignumber.js';
 import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
 import Eth from '@ledgerhq/hw-app-eth';
+import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 
 export const LedgerStatuses = {
   UNSUPPORTED: 'UNSUPPORTED',
@@ -146,7 +147,7 @@ export class LedgerService {
 
   getLedgerSignedTx(
     unsignedTx: Transaction2 | Transaction3 | string,
-    wallet: Wallet2 | Wallet3,
+    wallet: Wallet2 | Wallet3 | EvmWalletJSON,
     chainType: ChainType,
     magicNumber?: number,
     signOnly = false

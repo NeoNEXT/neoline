@@ -911,6 +911,9 @@
   "inputN3AddressTip": {
     "message": "N3 address"
   },
+  "inputNeoXAddressTip": {
+    "message": "EVM address"
+  },
   "Copied": {
     "message": "Copied!"
   },
