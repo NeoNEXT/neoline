@@ -261,7 +261,7 @@ function addNeoXWallet(data: any, sourceWalletArr: EvmWalletJSON[]) {
   const targetWalletArr = [...sourceWalletArr];
   if (data.isCreate) {
     const createWalletLength = sourceWalletArr.filter(
-      (item) => item.accounts[0].extra.isCreate
+      (item) => item.accounts[0].extra.isHDWallet
     ).length;
     targetWalletArr.splice(createWalletLength, 0, data.wallet);
   } else {

@@ -142,7 +142,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     }
     this.initClaim();
     if (this.chainType === 'NeoX') {
-      this.showRemove = this.currentWallet.accounts[0].extra.isCreate
+      this.showRemove = this.currentWallet.accounts[0].extra.isHDWallet
         ? false
         : true;
       return;

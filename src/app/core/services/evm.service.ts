@@ -19,7 +19,7 @@ export class EvmService {
   async createWallet(pwd: string, name: string): Promise<EvmWalletJSON> {
     let wallet: ethers.HDNodeWallet;
     const createWalletLength = this.neoXWalletArr.filter(
-      (item) => item.accounts[0].extra.isCreate
+      (item) => item.accounts[0].extra.isHDWallet
     ).length;
     if (createWalletLength > 0) {
       wallet = (await ethers.Wallet.fromEncryptedJson(
@@ -41,7 +41,7 @@ export class EvmService {
         address: newAccount.address,
         extra: {
           publicKey: newAccount.publicKey,
-          isCreate: true,
+          isHDWallet: true,
         },
       },
     ];
@@ -60,7 +60,7 @@ export class EvmService {
         address: account0.address,
         extra: {
           publicKey: account0.publicKey,
-          isCreate: true,
+          isHDWallet: true,
         },
       },
     ];
