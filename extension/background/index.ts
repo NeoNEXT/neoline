@@ -356,7 +356,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         const existHost = (res?.[currAddress] || []).find(
           (item) => item.hostname === request.hostname
         );
-        if (!existHost || (existHost && existHost.status === 'false' && existHost.keep === false)) {
+        if (
+          !existHost ||
+          (existHost &&
+            existHost.status === 'false' &&
+            existHost.keep === false)
+        ) {
           chrome.windows.create({
             url: `/index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`,
             focused: true,
@@ -367,7 +372,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             type: 'popup',
           });
         } else {
-          if (existHost && existHost.status === 'false' && existHost.keep === true) {
+          if (
+            existHost &&
+            existHost.status === 'false' &&
+            existHost.keep === true
+          ) {
             notification(
               chrome.i18n.getMessage('rejected'),
               chrome.i18n.getMessage('rejectedTip')
@@ -1110,7 +1119,10 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             decimalsData
           );
           let decimals = 0;
-          if (decimalsRes?.result?.stack) {
+          if (
+            decimalsRes?.result?.state === 'HALT' &&
+            decimalsRes?.result?.stack?.[0]?.value
+          ) {
             if (decimalsRes?.result.stack[0].type === 'Integer') {
               decimals = Number(decimalsRes?.result.stack[0].value || 0);
             }
@@ -1848,7 +1860,10 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         };
         httpPost(currN3Network.rpcUrl, decimalsData, (decimalsRes) => {
           let decimals = 0;
-          if (decimalsRes?.result.stack) {
+          if (
+            decimalsRes?.result.state === 'HALT' &&
+            decimalsRes?.result.stack?.[0]?.value
+          ) {
             if (decimalsRes?.result.stack[0].type === 'Integer') {
               decimals = Number(decimalsRes?.result.stack[0].value || 0);
             }
@@ -1996,7 +2011,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 });
 
 export function windowCallback(data) {
-  chrome.tabs.query({active: true, currentWindow: true}, (tabs: any) => {
+  chrome.tabs.query({ active: true, currentWindow: true }, (tabs: any) => {
     // console.log(tabs);
     // tabCurr = tabs;
     if (tabs.length > 0) {
