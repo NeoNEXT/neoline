@@ -310,7 +310,7 @@ export class AssetState {
       chainType === 'Neo2' ? this.n2Network.rpcUrl : this.n3Network.rpcUrl;
     const balanceRes = await this.http.rpcPost(rpcUrl, data).toPromise();
     let balance = '0';
-    if (balanceRes?.stack) {
+    if (balanceRes.state === 'HALT' && balanceRes?.stack?.[0]?.value) {
       if (balanceRes.stack[0].type === 'Integer') {
         balance = balanceRes.stack[0].value;
       }

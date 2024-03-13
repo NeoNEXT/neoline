@@ -175,7 +175,7 @@ export class UtilServiceState {
       .then((res) => {
         res.forEach((item, index) => {
           let symbol: string = '';
-          if (item.result.stack) {
+          if (item.result.state === 'HALT' && item.result.stack?.[0]?.value) {
             symbol = item.result.stack[0].value;
             if (item.result.stack[0].type === 'ByteArray') {
               symbol = hexstring2str(item.result.stack[0].value);
@@ -230,7 +230,7 @@ export class UtilServiceState {
       .then((res) => {
         res.forEach((item, index) => {
           let decimal = 0;
-          if (item.result.stack) {
+          if (item.result.state === 'HALT' && item.result.stack?.[0]?.value) {
             decimal = item.result.stack[0].value;
             if (item.result.stack[0].type === 'Integer') {
               decimal = Number(item.result.stack[0].value || 0);
@@ -354,7 +354,7 @@ export class UtilServiceState {
     return this.http.rpcPost(this.n3Network.rpcUrl, data).pipe(
       map((res) => {
         let address = '';
-        if (res.stack) {
+        if (res.state === 'HALT' && res.stack?.[0]?.value) {
           address = res.stack[0]?.value;
           if (res.stack[0]?.type === 'ByteArray') {
             address = hexstring2str(res.stack[0]?.value);
