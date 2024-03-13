@@ -35,7 +35,9 @@ export class PopupNftsComponent implements OnInit, OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet?.accounts[0]?.address;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
-      this.init();
+      if (state.currentChainType === 'Neo3') {
+        this.init();
+      }
     });
   }
 

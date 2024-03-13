@@ -110,8 +110,8 @@ export async function getAssetSymbol(assetId: string, rpcUrl: string) {
     params: [assetId, 'symbol'],
   };
   const symbolRes: any = await httpPostPromise(rpcUrl, symbolData);
-  let symbol = symbolRes.stack[0].value;
-  if (symbolRes.stack) {
+  let symbol = symbolRes.stack?.[0]?.value;
+  if (symbolRes.state === 'HALT' && symbolRes?.stack?.[0]?.value) {
     if (symbolRes.stack[0].type === 'ByteArray') {
       symbol = hexstring2str(symbolRes.stack[0].value);
     }
@@ -130,8 +130,8 @@ export async function getAssetDecimal(assetId: string, rpcUrl: string) {
     params: [assetId, 'decimals'],
   };
   const decimalRes: any = await httpPostPromise(rpcUrl, symbolData);
-  let decimal = decimalRes.stack[0].value;
-  if (decimalRes.stack) {
+  let decimal = decimalRes.stack?.[0]?.value;
+  if (decimalRes.state === 'HALT' && decimalRes.stack?.[0]?.value) {
     if (decimalRes.stack[0].type === 'Integer') {
       decimal = Number(decimalRes.stack[0].value || 0);
     }
