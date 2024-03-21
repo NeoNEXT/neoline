@@ -139,7 +139,9 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     }
     this.initClaim();
     if (!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      const accounts = this.allWallet.filter(item => !item.accounts[0]?.extra?.ledgerSLIP44);
+      const accounts = this.allWallet.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
       this.showRemove = accounts.length > 1 ? true : false;
     } else {
       this.showRemove = true;
@@ -170,7 +172,9 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   }
   removeAccount() {
     if (!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      const accounts = this.allWallet.filter(item => !item.accounts[0]?.extra?.ledgerSLIP44);
+      const accounts = this.allWallet.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
       if (accounts.length <= 1) {
         return;
       }
@@ -280,18 +284,20 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
 
   //#region claim
   private syncNow() {
-    this.transfer.create(this.address, this.address, NEO, '1').subscribe(
-      async (res) => {
-        this.getSignTx(res, 'syncNow');
-      },
-      (err) => {
-        if (this.chainType === 'Neo3' && err) {
-          this.global.snackBarTip('wentWrong', err, 10000);
-        } else {
-          this.global.snackBarTip('wentWrong', err);
+    this.transfer
+      .create({ from: this.address, to: this.address, asset: NEO, amount: '1' })
+      .subscribe(
+        async (res) => {
+          this.getSignTx(res, 'syncNow');
+        },
+        (err) => {
+          if (this.chainType === 'Neo3' && err) {
+            this.global.snackBarTip('wentWrong', err, 10000);
+          } else {
+            this.global.snackBarTip('wentWrong', err);
+          }
         }
-      }
-    );
+      );
   }
 
   private initClaim() {

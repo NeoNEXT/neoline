@@ -199,15 +199,15 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
     this.loading = false;
     this.loadingMsg = '';
     this.transfer
-      .create(
-        this.fromAddress,
-        this.toAddress,
-        this.assetId,
-        this.amount,
-        this.fee,
-        this.balance.decimals,
-        this.broadcastOverride
-      )
+      .create({
+        from: this.fromAddress,
+        to: this.toAddress,
+        asset: this.assetId,
+        amount: this.amount,
+        fee: this.fee,
+        decimals: this.balance.decimals,
+        broadcastOverride: this.broadcastOverride,
+      })
       .subscribe(
         (tx: any) => {
           this.systemFee = tx.systemFee.toDecimal(8);

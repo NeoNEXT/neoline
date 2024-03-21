@@ -18,6 +18,7 @@ interface CreateNeo3TxInput {
   networkFee: string | number;
   decimals: number;
   nftTokenId?: any;
+  wif?: string;
 }
 
 @Injectable()
@@ -129,7 +130,10 @@ export class Neo3TransferService {
      * signatures) and also the cost of running the verification of signatures.
      */
     async function checkNetworkFee() {
-      const networkFeeEstimate = await neo3This.calculateNetworkFee(vars.tx);
+      const networkFeeEstimate = await neo3This.calculateNetworkFee(
+        vars.tx,
+        params.wif
+      );
 
       vars.tx.networkFee = u.BigInteger.fromNumber(networkFeeEstimate).add(
         inputs.networkFee
@@ -162,7 +166,9 @@ export class Neo3TransferService {
             'Transfer script errored out! You might not have sufficient funds for this transfer.',
         };
       }
-      const requiredSystemFee = u.BigInteger.fromNumber(invokeFunctionResponse.gasconsumed);
+      const requiredSystemFee = u.BigInteger.fromNumber(
+        invokeFunctionResponse.gasconsumed
+      );
       if (
         inputs.systemFee &&
         inputs.systemFee.compare(requiredSystemFee) >= 0
@@ -266,10 +272,11 @@ export class Neo3TransferService {
     );
   }
 
-  async calculateNetworkFee(txn) {
+  async calculateNetworkFee(txn, currentWIF: string) {
     let txClone = txn.export();
     txClone = new tx.Transaction(txClone);
-    const wif = 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
+    const wif =
+      currentWIF ?? 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
     txClone.sign(wif, this.n3Network.magicNumber);
     const fee = await this.rpcClient.calculateNetworkFee(txClone);
     return fee;
