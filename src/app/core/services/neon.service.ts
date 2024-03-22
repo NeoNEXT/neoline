@@ -99,11 +99,15 @@ export class NeonService {
     //#region networks
     const getN2Networks = this.chrome.getStorage(STORAGE_NAME.n2Networks);
     const getN3Networks = this.chrome.getStorage(STORAGE_NAME.n3Networks);
+    const getNeoXNetworks = this.chrome.getStorage(STORAGE_NAME.neoXNetworks);
     const getN2SelectedNetworkIndex = this.chrome.getStorage(
       STORAGE_NAME.n2SelectedNetworkIndex
     );
     const getN3SelectedNetworkIndex = this.chrome.getStorage(
       STORAGE_NAME.n3SelectedNetworkIndex
+    );
+    const getNeoXSelectedNetworkIndex = this.chrome.getStorage(
+      STORAGE_NAME.neoXSelectedNetworkIndex
     );
     //#endregion
     forkJoin([
@@ -118,6 +122,8 @@ export class NeonService {
       getN2SelectedNetworkIndex,
       getN3Networks,
       getN3SelectedNetworkIndex,
+      getNeoXNetworks,
+      getNeoXSelectedNetworkIndex,
       Neo3RemoveT4Flag,
     ]).subscribe(
       ([
@@ -132,6 +138,8 @@ export class NeonService {
         n2NetworkIndexRes,
         n3NetworksRes,
         n3NetworkIndexRes,
+        neoXNetworksRes,
+        neoXNetworkIndexRes,
         Neo3RemoveT4FlagRes,
       ]) => {
         // wallet
@@ -173,8 +181,10 @@ export class NeonService {
             neo3WIFArr: neo3WIFArrRes || [],
             n2Networks: n2NetworksRes || [],
             n3Networks: n3NetworksRes || [],
+            neoXNetworks: neoXNetworksRes || [],
             n2NetworkIndex: n2NetworkIndexRes,
             n3NetworkIndex: n3NetworkIndexRes,
+            neoXNetworkIndex: neoXNetworkIndexRes,
           },
         });
         //#region networks

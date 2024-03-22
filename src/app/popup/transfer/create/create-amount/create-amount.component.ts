@@ -121,14 +121,6 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
             this.gasBalance = new BigNumber(res).shiftedBy(-8).toFixed();
           });
       } else {
-        if (params.id) {
-          this.asset
-            .getAssetDetail(this.fromAddress, params.id)
-            .then(async (res: Asset) => {
-              res.balance = bignumber(res.balance).toFixed();
-              this.transferAsset = res;
-            });
-        }
         this.getAddressAllBalances(params);
       }
     });
@@ -147,9 +139,9 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       this.currentNetwork.id,
       this.fromAddress
     );
-    forkJoin([getMoneyBalance, getWatch]).subscribe(([moneyAssets, watch]) => {
+    forkJoin([getMoneyBalance, getWatch]).subscribe(async ([moneyAssets, watch]) => {
       const showAssets = [...moneyAssets];
-      watch.forEach(async (item) => {
+      for (const item of watch) {
         const index = moneyAssets.findIndex(
           (m) => m.asset_id === item.asset_id
         );
@@ -172,7 +164,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
             }
           }
         }
-      });
+      }
       const gasAssetId =
         this.chainType === 'Neo2'
           ? GAS
@@ -184,6 +176,9 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       this.assetArr = showAssets;
       if (!params.id) {
         this.transferAsset = this.assetArr[0];
+      } else {
+        const findAsset = showAssets.find(m => m.asset_id === params.id);
+        this.transferAsset = findAsset ?? showAssets[0];
       }
     });
   }

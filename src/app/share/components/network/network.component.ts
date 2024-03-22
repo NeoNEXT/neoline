@@ -6,6 +6,7 @@ import {
   UPDATE_NEO3_NETWORK_INDEX,
   UPDATE_NEO3_NETWORKS,
   UPDATE_WALLET,
+  UPDATE_NEOX_NETWORK_INDEX,
 } from '@/app/popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -52,8 +53,11 @@ export class PopupNetworkComponent {
     if (this.chainType === 'Neo2') {
       this.store.dispatch({ type: UPDATE_NEO2_NETWORK_INDEX, data: index });
       this.chromeSer.networkChangeEvent(this.networks[index]);
-    } else {
+    } else if (this.chainType === 'Neo3') {
       this.store.dispatch({ type: UPDATE_NEO3_NETWORK_INDEX, data: index });
+      this.chromeSer.networkChangeEvent(this.networks[index]);
+    } else {
+      this.store.dispatch({ type: UPDATE_NEOX_NETWORK_INDEX, data: index });
       this.chromeSer.networkChangeEvent(this.networks[index]);
     }
     this.close();

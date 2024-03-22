@@ -67,10 +67,10 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     this.isLoading = true;
     const getMoneyBalance = this.asset.getAddressBalances(this.address);
     const getWatch = this.chrome.getWatch(this.networkId, this.address);
-    forkJoin([getMoneyBalance, getWatch]).subscribe((res) => {
+    forkJoin([getMoneyBalance, getWatch]).subscribe(async (res) => {
       const [moneyAssets, watch] = [...res];
       const showAssets = [...moneyAssets];
-      watch.forEach(async (item) => {
+      for (const item of watch) {
         const index = showAssets.findIndex((m) => m.asset_id === item.asset_id);
         if (index >= 0) {
           if (item.watching === false) {
@@ -91,7 +91,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
             showAssets.push(item);
           }
         }
-      });
+      }
       this.myAssets = showAssets;
       this.getAssetsRate();
       let neoAsset;

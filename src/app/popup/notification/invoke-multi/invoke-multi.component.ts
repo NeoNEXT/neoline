@@ -407,7 +407,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
       });
       newTx.script = script;
       if (this.assetIntentOverrides == null) {
-        this.invokeArgs.forEach(async (item) => {
+        this.invokeArgs.forEach((item) => {
           const toScript =
             item.scriptHash.startsWith('0x') && item.scriptHash.length === 42
               ? item.scriptHash.substring(2)

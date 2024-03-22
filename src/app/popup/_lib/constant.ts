@@ -1,4 +1,5 @@
 import { Asset, NEO, GAS } from '@/models/models';
+import { DEFAULT_NEOX_RPC_NETWORK } from './evm';
 import { NEO3_CONTRACT, GAS3_CONTRACT } from './neo3';
 import {
   DEFAULT_N2_RPC_NETWORK,
@@ -76,12 +77,22 @@ export const STORAGE_VALUE_MESSAGE = {
     isLocal: true,
     default: DEFAULT_N3_RPC_NETWORK,
   },
+  neoXNetworks: {
+    type: STORAGE_VALUE_TYPE.array,
+    isLocal: true,
+    default: DEFAULT_NEOX_RPC_NETWORK,
+  },
   n2SelectedNetworkIndex: {
     type: STORAGE_VALUE_TYPE.number,
     isLocal: true,
     default: 0,
   },
   n3SelectedNetworkIndex: {
+    type: STORAGE_VALUE_TYPE.number,
+    isLocal: true,
+    default: 0,
+  },
+  neoXSelectedNetworkIndex: {
     type: STORAGE_VALUE_TYPE.number,
     isLocal: true,
     default: 0,
