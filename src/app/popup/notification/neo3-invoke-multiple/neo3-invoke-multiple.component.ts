@@ -286,8 +286,13 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
   }
 
   private signTx() {
-    setTimeout(() => {
+    setTimeout(async () => {
       this.loading = true;
+      const wif = await this.util.getWIF(
+        this.neo3WIFArr,
+        this.neo3WalletArr,
+        this.currentWallet
+      );
       this.neo3Invoke
         .createNeo3Tx({
           invokeArgs: this.invokeArgs,
@@ -295,6 +300,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
           networkFee: this.fee,
           systemFee: this.pramsData.extraSystemFee,
           overrideSystemFee: this.pramsData.overrideSystemFee,
+          wif,
         })
         .subscribe(
           async (unSignTx: Transaction) => {

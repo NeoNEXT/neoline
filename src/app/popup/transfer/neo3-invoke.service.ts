@@ -26,6 +26,7 @@ interface CreateNeo3TxInput {
   networkFee: string;
   systemFee?: any;
   overrideSystemFee?: any;
+  wif?: string;
 }
 
 @Injectable()
@@ -106,7 +107,7 @@ export class Neo3InvokeService {
      * signatures) and also the cost of running the verification of signatures.
      */
     async function checkNetworkFee() {
-      const networkFeeEstimate = await neo3This.calculateNetworkFee(vars.tx);
+      const networkFeeEstimate = await neo3This.calculateNetworkFee(vars.tx, params.wif);
 
       vars.tx.networkFee = u.BigInteger.fromNumber(networkFeeEstimate).add(
         u.BigInteger.fromDecimal(params.networkFee || 0, 8)
@@ -168,7 +169,7 @@ export class Neo3InvokeService {
     return result;
   }
 
-  async calculateNetworkFee(txn: tx.Transaction) {
+  async calculateNetworkFee(txn: tx.Transaction, currentWIF: string) {
     let txClone = new tx.Transaction({
       signers: txn.signers,
       validUntilBlock: txn.validUntilBlock,
@@ -176,7 +177,7 @@ export class Neo3InvokeService {
       script: txn.script,
     });
     txClone = new tx.Transaction(txClone);
-    const wif = 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
+    const wif = currentWIF ?? 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
     txClone.sign(wif, this.n3Network.magicNumber);
     if (txn.signers.length > 1) {
       const addressSign = txClone.witnesses[0];
@@ -190,7 +191,7 @@ export class Neo3InvokeService {
       );
       txClone.witnesses[addressIndex] = addressSign;
     }
-    const fee = await this.rpcClient.calculateNetworkFee(txClone);
+    const fee = await this.rpcClient.calculateNetworkFee(txClone, );
     return fee;
   }
 

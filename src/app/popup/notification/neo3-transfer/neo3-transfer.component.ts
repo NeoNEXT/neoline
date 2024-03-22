@@ -192,12 +192,17 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
     }
   }
 
-  public submit() {
+  public async submit() {
     this.loading = true;
     this.loadingMsg = 'Loading';
     this.creating = true;
     this.loading = false;
     this.loadingMsg = '';
+    const wif = await this.util.getWIF(
+      this.neo3WIFArr,
+      this.neo3WalletArr,
+      this.currentWallet
+    );
     this.transfer
       .create({
         from: this.fromAddress,
@@ -207,6 +212,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
         fee: this.fee,
         decimals: this.balance.decimals,
         broadcastOverride: this.broadcastOverride,
+        wif,
       })
       .subscribe(
         (tx: any) => {
