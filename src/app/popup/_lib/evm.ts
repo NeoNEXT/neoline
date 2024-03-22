@@ -29,8 +29,17 @@ export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
     symbol: 'GAS',
     chainId: 12227330,
     name: 'NeoX TESTNET',
-    network: NetworkType.NeoX,
+    network: NetworkType.EVM,
     rpcUrl: 'https://neoxseed1.ngd.network',
     explorer: 'https://xt2scan.ngd.network/',
+  },
+  {
+    id: 84532,
+    symbol: 'ETH',
+    chainId: 84532,
+    name: 'Base Sepolia',
+    network: NetworkType.EVM,
+    rpcUrl: 'https://sepolia.base.org',
+    explorer: 'https://base-sepolia.blockscout.com',
   },
 ];

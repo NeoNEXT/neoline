@@ -31,7 +31,7 @@ import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { TransferData } from '../interface';
-import { EvmWalletJSON } from '@/app/popup/_lib/evm';
+import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '@/app/popup/_lib/evm';
 
 interface TransferTo {
   address: string;
@@ -86,32 +86,27 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
         case 'Neo2':
           this.currentWalletArr = state.neo2WalletArr;
           this.currentNetwork = state.n2Networks[state.n2NetworkIndex];
+          this.getCurrentWIF(state.neo2WIFArr);
           break;
         case 'Neo3':
           this.currentWalletArr = state.neo3WalletArr;
           this.currentNetwork = state.n3Networks[state.n3NetworkIndex];
+          this.getCurrentWIF(state.neo3WIFArr);
           break;
         case 'NeoX':
           this.currentWalletArr = state.neoXWalletArr;
           this.currentNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+          this.getCurrentWIF([]);
           break;
       }
-      this.getCurrentWIF(
-        this.chainType === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr
-      );
       this.initData();
     });
   }
 
   //#region init
   private getCurrentWIF(WIFArr: string[]) {
-    if (this.chainType === 'NeoX') return;
     this.util
-      .getWIF(
-        WIFArr,
-        this.currentWalletArr as Wallet3[],
-        this.currentWallet as Wallet3
-      )
+      .getWIF(WIFArr, this.currentWalletArr, this.currentWallet)
       .then((res) => (this.currentWIF = res));
   }
   private initData() {
@@ -152,8 +147,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       this.currentNetwork.id,
       this.fromAddress
     );
-    forkJoin([getMoneyBalance, getWatch]).subscribe((res) => {
-      const [moneyAssets, watch] = [...res];
+    forkJoin([getMoneyBalance, getWatch]).subscribe(([moneyAssets, watch]) => {
       const showAssets = [...moneyAssets];
       watch.forEach(async (item) => {
         const index = moneyAssets.findIndex(
@@ -171,19 +165,20 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
               this.chainType
             );
             if (new BigNumber(balance).comparedTo(0) > 0) {
-              const decimals = await this.util.getAssetDecimals(
-                [item.asset_id],
-                this.chainType
-              );
               item.balance = new BigNumber(balance)
-                .shiftedBy(-decimals[0])
+                .shiftedBy(-item.decimals)
                 .toFixed();
               showAssets.push(item);
             }
           }
         }
       });
-      const gasAssetId = this.chainType === 'Neo2' ? GAS : GAS3_CONTRACT;
+      const gasAssetId =
+        this.chainType === 'Neo2'
+          ? GAS
+          : this.chainType === 'Neo3'
+          ? GAS3_CONTRACT
+          : ETH_SOURCE_ASSET_HASH;
       const gasAsset = showAssets.find((m) => m.asset_id === gasAssetId);
       this.gasBalance = gasAsset?.balance || '0';
       this.assetArr = showAssets;
@@ -368,7 +363,8 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       let requiredAmount = bignumber(this.transferAmount);
       if (
         this.transferAsset.asset_id === GAS ||
-        this.transferAsset.asset_id === GAS3_CONTRACT
+        this.transferAsset.asset_id === GAS3_CONTRACT ||
+        this.transferAsset.asset_id === ETH_SOURCE_ASSET_HASH
       ) {
         requiredAmount = requiredAmount.plus(this.priorityFee);
       }

@@ -1,4 +1,11 @@
-import { Component, Input, OnInit, Output, EventEmitter, OnDestroy } from '@angular/core';
+import {
+  Component,
+  Input,
+  OnInit,
+  Output,
+  EventEmitter,
+  OnDestroy,
+} from '@angular/core';
 import { GAS3_CONTRACT, LedgerStatuses, STORAGE_NAME } from '../../../_lib';
 import { GAS } from '@/models/models';
 import { TransferData } from '../interface';
@@ -21,8 +28,9 @@ import { TransferService } from '../../transfer.service';
 import { Observable } from 'rxjs';
 import { interval } from 'rxjs';
 import { Neo3TransferService } from '../../neo3-transfer.service';
+import { AssetEVMState } from '@/app/core/states/asset-evm.state';
 
-type TabType = 'details' | 'data';
+export type TabType = 'details' | 'data';
 
 @Component({
   selector: 'transfer-create-confirm',
@@ -49,6 +57,14 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   loadingMsg: string;
   getStatusInterval;
 
+  neoXData: {
+    maxFeePerGas: bigint;
+    maxPriorityFeePerGas: bigint;
+    baseFeePerGas: bigint;
+    gasLimit: bigint;
+    estimateGas: bigint;
+  };
+
   constructor(
     private assetState: AssetState,
     private dialog: MatDialog,
@@ -57,7 +73,8 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     private ledger: LedgerService,
     private txState: TransactionState,
     private neo3Transfer: Neo3TransferService,
-    private chrome: ChromeService
+    private chrome: ChromeService,
+    private assetEvmState: AssetEVMState
   ) {}
   ngOnDestroy(): void {
     this.getStatusInterval?.unsubscribe();
@@ -121,8 +138,31 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
           this.data.network.magicNumber
         );
         break;
+      case 'NeoX':
+        this.transferNeoX();
+        return;
     }
     this.resolveSend();
+  }
+  transferNeoX() {
+    const { asset, to, amount, currentWIF } = this.data;
+    const { maxFeePerGas, maxPriorityFeePerGas, gasLimit } = this.neoXData;
+    this.assetEvmState
+      .transferErc20({
+        asset: asset,
+        toAddress: to.address,
+        transferAmount: amount,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+        gasLimit,
+        privateKey: currentWIF,
+      })
+      .then((res) => {
+        console.log(res);
+      })
+      .catch((err) => {
+        console.log(err);
+      });
   }
   private getLedgerStatus() {
     this.ledger.getDeviceStatus(this.data.chainType).then(async (res) => {
@@ -246,6 +286,10 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
 
   //#region init
   private createTx() {
+    if (this.data.chainType === 'NeoX') {
+      this.createNeoXTx();
+      return;
+    }
     this.loading = true;
     let createTxReq: Observable<Transaction2 | Transaction3>;
     if (this.data.isNFT) {
@@ -291,6 +335,17 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         this.global.snackBarTip('wentWrong', err, 10000);
       }
     );
+  }
+  private async createNeoXTx() {
+    const { asset, to, amount, from } = this.data;
+    const res = await this.assetEvmState.getTransferERC20Info({
+      asset: asset,
+      fromAddress: from,
+      toAddress: to.address,
+      transferAmount: amount,
+    });
+    this.neoXData = res;
+    console.log(res);
   }
   private async getTotalData() {
     this.totalFee = this.data.fee;

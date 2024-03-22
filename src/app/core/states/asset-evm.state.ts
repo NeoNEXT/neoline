@@ -62,18 +62,146 @@ export class AssetEVMState {
   async searchNeoXAsset(q: string): Promise<Asset | null> {
     if (!ethers.isAddress(q)) return null;
     const contract = new ethers.Contract(q, Erc20ABI, this.provider);
-    return Promise.all([
-      contract.symbol(),
-      contract.name(),
-      contract.decimals(),
-    ]).then(([symbol, name, decimals]) => {
-      const asset: Asset = {
-        name,
-        asset_id: q,
-        symbol,
-        decimals: ethers.toNumber(decimals),
-      };
-      return asset;
+    const { symbol, name, decimals } = await ethers.resolveProperties({
+      symbol: contract.symbol(),
+      name: contract.name(),
+      decimals: contract.decimals(),
     });
+    const asset: Asset = {
+      name,
+      asset_id: q,
+      symbol,
+      decimals: ethers.toNumber(decimals),
+    };
+    return asset;
   }
+
+  async getTransferERC20Info({
+    asset,
+    fromAddress,
+    toAddress,
+    transferAmount,
+  }: {
+    asset: Asset;
+    fromAddress: string;
+    toAddress: string;
+    transferAmount: string;
+  }): Promise<{
+    maxFeePerGas: bigint;
+    maxPriorityFeePerGas: bigint;
+    baseFeePerGas: bigint;
+    gasLimit: bigint;
+    estimateGas: bigint;
+  }> {
+    let getGasLimit = Promise.resolve(BigInt(21000));
+    if (asset.asset_id !== ETH_SOURCE_ASSET_HASH) {
+      getGasLimit = this.provider.estimateGas({
+        from: fromAddress,
+        to: asset.asset_id,
+        data: this.getTransferERC20Data({
+          asset,
+          toAddress,
+          transferAmount,
+        }),
+      });
+    }
+    const {
+      block: { baseFeePerGas },
+      feeData: { maxFeePerGas, maxPriorityFeePerGas },
+      gasLimit,
+    } = await ethers.resolveProperties({
+      block: this.provider.getBlock('latest'),
+      feeData: this.provider.getFeeData(),
+      gasLimit: getGasLimit,
+    });
+    const estimateGas = maxFeePerGas * gasLimit;
+    return {
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      baseFeePerGas,
+      gasLimit,
+      estimateGas,
+    };
+  }
+
+  async transferErc20({
+    asset,
+    toAddress,
+    transferAmount,
+    maxFeePerGas,
+    maxPriorityFeePerGas,
+    gasLimit,
+    privateKey,
+  }: {
+    asset: Asset;
+    toAddress: string;
+    transferAmount: string;
+    maxFeePerGas: bigint;
+    maxPriorityFeePerGas: bigint;
+    gasLimit: bigint;
+    privateKey: string;
+  }) {
+    let txRequest: ethers.TransactionRequest;
+    if (asset.asset_id === ETH_SOURCE_ASSET_HASH) {
+      txRequest = {
+        to: toAddress,
+        value: ethers.parseUnits(transferAmount, asset.decimals),
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+        gasLimit,
+      };
+    } else {
+      txRequest = {
+        to: asset.asset_id,
+        data: this.getTransferERC20Data({
+          asset,
+          toAddress,
+          transferAmount,
+        }),
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+        gasLimit,
+      };
+    }
+    const wallet = new ethers.Wallet(privateKey, this.provider);
+    try {
+      const tx = await wallet.sendTransaction(txRequest);
+      return await this.provider.waitForTransaction(tx.hash);
+    } catch (error) {
+      throw this.handleEthersError(error);
+    }
+  }
+
+  //#region private function
+  private getTransferERC20Data({
+    asset,
+    toAddress,
+    transferAmount,
+  }: {
+    asset: Asset;
+    toAddress: string;
+    transferAmount: string;
+  }) {
+    const contract = new ethers.Contract(
+      asset.asset_id,
+      Erc20ABI,
+      this.provider
+    );
+    const data = contract.interface.encodeFunctionData('transfer', [
+      toAddress,
+      ethers.parseUnits(transferAmount, asset.decimals),
+    ]);
+    return data;
+  }
+
+  private handleEthersError(error) {
+    console.log(error);
+    const code = error.data.replace('Reverted ', '');
+    let reason = ethers.toUtf8String('0x' + code.substr(138));
+    console.log('revert reason:', reason);
+    const message = error?.info?.error?.message;
+
+    return `Transaction failed: ${message}`;
+  }
+  //#endregion
 }

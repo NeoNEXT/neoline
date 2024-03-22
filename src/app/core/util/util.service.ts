@@ -27,6 +27,8 @@ import { AppState } from '@/app/reduers';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { ChromeService } from '../services/chrome.service';
+import { EvmWalletJSON } from '@/app/popup/_lib/evm';
+import { ethers } from 'ethers';
 
 @Injectable()
 export class UtilServiceState {
@@ -370,8 +372,8 @@ export class UtilServiceState {
 
   async getWIF(
     WIFArr: string[],
-    walletArr: Array<Wallet2 | Wallet3>,
-    currentWallet: Wallet2 | Wallet3
+    walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>,
+    currentWallet: Wallet2 | Wallet3 | EvmWalletJSON
   ): Promise<string> {
     const index = walletArr.findIndex(
       (item) => item.accounts[0].address === currentWallet.accounts[0].address
@@ -384,6 +386,14 @@ export class UtilServiceState {
       return '';
     }
     const pwd = await this.chrome.getPassword();
+    if (ethers.isAddress(currentWallet.accounts[0].address)) {
+      return ethers.Wallet.fromEncryptedJson(
+        JSON.stringify(currentWallet),
+        pwd
+      ).then((wallet) => {
+        return wallet.privateKey;
+      });
+    }
     return (currentWallet.accounts[0] as any).decrypt(pwd).then((res) => {
       return res.WIF;
     });

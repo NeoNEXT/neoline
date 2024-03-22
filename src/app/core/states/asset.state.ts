@@ -43,6 +43,7 @@ export class AssetState {
   private chainType: ChainType;
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
+  private neoXNetwork: RpcNetwork;
   constructor(
     private http: HttpService,
     private global: GlobalService,
@@ -60,6 +61,7 @@ export class AssetState {
       this.chainType = state.currentChainType;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
     });
   }
 
@@ -246,16 +248,22 @@ export class AssetState {
 
   async getAssetDetail(address: string, assetId: string): Promise<Asset> {
     const balance = await this.getAddressBalances(address);
-    const watching = await this.chrome
-      .getWatch(
-        this.chainType === 'Neo2' ? this.n2Network.id : this.n3Network.id,
-        address
-      )
-      .toPromise();
-    return (
-      balance.find((e) => e.asset_id === assetId) ||
-      watching.find((w) => w.asset_id === assetId)
-    );
+    let asset = balance.find((e) => e.asset_id === assetId);
+    if (asset) return asset;
+    let networkId: number;
+    switch (this.chainType) {
+      case 'Neo2':
+        networkId = this.n2Network.id;
+        break;
+      case 'Neo3':
+        networkId = this.n3Network.id;
+        break;
+      case 'NeoX':
+        networkId = this.neoXNetwork.id;
+        break;
+    }
+    const watching = await this.chrome.getWatch(networkId, address).toPromise();
+    return watching.find((w) => w.asset_id === assetId);
   }
 
   async getAddressBalances(

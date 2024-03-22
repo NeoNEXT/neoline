@@ -13,12 +13,7 @@
       src="/assets/images/common/nav-arrow.svg"
     />
     <div class="asset-logo-box big">
-      <img
-        class="asset-logo"
-        [assetId]="datajson?.asset"
-        appErrorSrc
-        alt=""
-      />
+      <img class="asset-logo" [assetId]="datajson?.asset" appErrorSrc alt="" />
     </div>
     <p class="asset-balance">
       {{ data?.amount | numberFixed }} {{ datajson?.symbol }}
