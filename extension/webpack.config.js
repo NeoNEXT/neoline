@@ -119,4 +119,40 @@ module.exports = [
       maxAssetSize: 2000000,
     },
   },
+  {
+    mode: "production",
+    entry: {
+      neolineEVM: "./extension/neoline/evm.ts",
+      dapiEVM: "./extension/dapi/evm.ts",
+      common: "./extension/common/index.ts",
+      data_module_evm: "./extension/common/data_module_evm.ts",
+    },
+    output: {
+      filename: "[name].js",
+      path: path.resolve(__dirname, "../dist"),
+      libraryTarget: "window",
+      library: "NEOLineEVM",
+    },
+    devtool: false,
+    resolve: {
+      extensions: [".ts", ".js"],
+      fallback: {
+        crypto: require.resolve("crypto-browserify"),
+        stream: require.resolve("stream-browserify"),
+      },
+    },
+    module: {
+      rules: [
+        {
+          test: /.ts$/,
+          use: "ts-loader?configFile=extension/tsconfig.json",
+          exclude: /node_modules/,
+        },
+      ],
+    },
+    performance: {
+      maxEntrypointSize: 2000000,
+      maxAssetSize: 2000000,
+    },
+  },
 ];

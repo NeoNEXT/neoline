@@ -31,44 +31,15 @@ import {
   N3AddressToScriptHash,
   N3ScriptHashToAddress,
 } from '../common/data_module_neo3';
-import { getMessageID } from '../common/utils';
 import { ChainType, ALL_CHAINID } from '../common/constants';
-
-function sendMessage<K>(
-  target: requestTarget | requestTargetN3,
-  parameter?: any
-): Promise<K> {
-  const ID = getMessageID();
-  return new Promise((resolveMain, rejectMain) => {
-    const request = parameter ? { target, parameter, ID } : { target, ID };
-    window.postMessage(request, window.location.origin);
-    const promise = new Promise((resolve, reject) => {
-      const callbackFn = (event) => {
-        const returnData = event.data;
-        if (
-          returnData.return !== undefined &&
-          returnData.return === target &&
-          returnData.ID === ID
-        ) {
-          if (returnData.error !== undefined && returnData.error != null) {
-            reject(returnData.error);
-          } else {
-            resolve(returnData.data);
-          }
-          window.removeEventListener('message', callbackFn);
-        }
-      };
-      window.addEventListener('message', callbackFn);
-    });
-    promise
-      .then((res: any) => {
-        resolveMain(res);
-      })
-      .catch((error) => {
-        rejectMain(error);
-      });
-  });
-}
+import {
+  getAuthState,
+  connect,
+  login,
+  sendMessage,
+  getProvider,
+  getIcon,
+} from './index';
 
 export class Init {
   public EVENT = EVENT;
@@ -81,7 +52,7 @@ export class Init {
 
   public getProvider(): Promise<Provider> {
     return new Promise((resolveMain, _) => {
-      getProvider().then((res) => {
+      getProvider(ChainType.Neo3).then((res) => {
         resolveMain(res);
       });
     });
@@ -758,188 +729,3 @@ export class Init {
 }
 
 export const N3: any = new Init();
-
-if (window.dispatchEvent) {
-  getProvider()
-    .then((res) => {
-      window.dispatchEvent(
-        new CustomEvent(EVENT.READY, {
-          detail: res,
-        })
-      );
-    })
-    .catch((error) => {
-      window.dispatchEvent(
-        new CustomEvent(EVENT.READY, {
-          detail: error,
-        })
-      );
-    });
-}
-
-window.addEventListener('message', (e) => {
-  const response = e.data;
-  if (response.target) {
-    if (response.target !== EVENT.READY) {
-      return;
-    }
-    window.dispatchEvent(
-      new CustomEvent(response.target, {
-        detail: response.data,
-      })
-    );
-  }
-  if (response.return) {
-    if (response.return !== EVENT.READY) {
-      return;
-    }
-    window.dispatchEvent(
-      new CustomEvent(response.return, {
-        detail: response.data,
-      })
-    );
-  }
-});
-
-function connect(open = true): Promise<any> {
-  return new Promise((resolveMain) => {
-    if (open) {
-      window.postMessage(
-        {
-          target: requestTarget.Connect,
-          icon: getIcon(),
-          hostname: location.hostname,
-          title: document.title,
-        },
-        window.location.origin
-      );
-    }
-    const promise = new Promise((resolve) => {
-      const callbackFn = (event) => {
-        if (
-          event.data.return !== undefined &&
-          event.data.return === requestTarget.Connect
-        ) {
-          resolve(event.data.data);
-          window.removeEventListener('message', callbackFn);
-        }
-      };
-      window.addEventListener('message', callbackFn);
-    });
-    promise.then(async (res) => {
-      resolveMain(res);
-    });
-  });
-}
-
-function login(open = true): Promise<any> {
-  return new Promise((resolveMain) => {
-    if (open) {
-      window.postMessage(
-        {
-          target: requestTarget.Login,
-        },
-        window.location.origin
-      );
-    }
-    const promise = new Promise((resolve) => {
-      const callbackFn = (event) => {
-        if (
-          event.data.return !== undefined &&
-          event.data.return === requestTarget.Login
-        ) {
-          resolve(event.data.data);
-          window.removeEventListener('message', callbackFn);
-        }
-      };
-      window.addEventListener('message', callbackFn);
-    });
-    promise.then((res) => {
-      resolveMain(res);
-    });
-  });
-}
-
-function getAuthState(): Promise<any> {
-  return new Promise((resolveMain) => {
-    window.postMessage(
-      {
-        target: requestTarget.AuthState,
-      },
-      window.location.origin
-    );
-    const promise = new Promise((resolve) => {
-      const callbackFn = (event) => {
-        if (
-          event.data.return !== undefined &&
-          event.data.return === requestTarget.AuthState
-        ) {
-          resolve(event.data.data);
-          window.removeEventListener('message', callbackFn);
-        }
-      };
-      window.addEventListener('message', callbackFn);
-    });
-    promise.then((res: any) => {
-      const index = res.findIndex(
-        (item) => item.hostname === location.hostname
-      );
-      if (index >= 0) {
-        if (res[index].status === 'false' && res[index].keep === false) {
-          resolveMain('NONE');
-        } else {
-          resolveMain(res[index].status === 'true' ? true : false);
-        }
-      } else {
-        resolveMain('NONE');
-      }
-    });
-  });
-}
-
-function getProvider(): Promise<Provider> {
-  return new Promise((resolveMain, rejectMain) => {
-    window.postMessage(
-      {
-        target: requestTargetN3.Provider,
-      },
-      window.location.origin
-    );
-    const promise = new Promise((resolve) => {
-      const callbackFn = (event) => {
-        if (
-          event.data.return !== undefined &&
-          event.data.return === requestTargetN3.Provider
-        ) {
-          resolve(event.data.data);
-          window.removeEventListener('message', callbackFn);
-        }
-      };
-      window.addEventListener('message', callbackFn);
-    });
-    promise.then((res: any) => {
-      if (res === undefined || res === null) {
-        rejectMain(ERRORS.DEFAULT);
-      } else {
-        const returnResult: Provider = {
-          name: '',
-          version: '',
-          website: '',
-          compatibility: [],
-          extra: {},
-        };
-        returnResult.name = res.name;
-        returnResult.version = res.version;
-        returnResult.website = 'https://neoline.io/';
-        returnResult.extra = res.extra;
-        resolveMain(returnResult);
-      }
-    });
-  });
-}
-
-function getIcon() {
-  let favicon;
-  favicon = `${location.protocol}//${location.hostname}/favicon.ico`;
-  return favicon;
-}

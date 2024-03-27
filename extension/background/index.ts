@@ -34,6 +34,7 @@ import {
   NEO3,
   GAS3,
   SECRET_PASSPHRASE,
+  STORAGE_NAME,
 } from '../common/constants';
 import {
   requestTarget,
@@ -77,6 +78,7 @@ import BigNumber from 'bignumber.js';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import CryptoJS = require('crypto-js');
+import { requestTargetEVM } from '../common/data_module_evm';
 
 /**
  * Background methods support.
@@ -100,6 +102,7 @@ chrome.alarms.onAlarm.addListener(async () => {
   if (!chainType) {
     chainType = await getWalletType();
   }
+  if (chainType === ChainType.NeoX) return;
   let rpcUrl;
   let networkId;
   if (chainType === ChainType.Neo2) {
@@ -263,12 +266,12 @@ chrome.alarms.onAlarm.addListener(async () => {
   }
 })();
 
-chrome.runtime.onRestartRequired.addListener(() => {
+function resetData() {
   setLocalStorage({
     password: '',
-    shouldFindNode: true,
-    hasLoginAddress: {},
-    InvokeArgsArray: [],
+    [STORAGE_NAME.shouldFindNode]: true,
+    [STORAGE_NAME.hasLoginAddress]: {},
+    [STORAGE_NAME.InvokeArgsArray]: [],
   });
   getStorage('connectedWebsites', (res) => {
     res = res || {};
@@ -277,39 +280,13 @@ chrome.runtime.onRestartRequired.addListener(() => {
     });
     setStorage({ connectedWebsites: res });
   });
-});
+}
 
-chrome.runtime.onInstalled.addListener(() => {
-  setLocalStorage({
-    password: '',
-    shouldFindNode: true,
-    hasLoginAddress: {},
-    InvokeArgsArray: [],
-  });
-  getStorage('connectedWebsites', (res) => {
-    res = res || {};
-    Object.keys(res).forEach((address) => {
-      res[address] = res[address].filter((item) => item.keep === true);
-    });
-    setStorage({ connectedWebsites: res });
-  });
-});
+chrome.runtime.onRestartRequired.addListener(() => resetData());
 
-chrome.runtime.onStartup.addListener(() => {
-  setLocalStorage({
-    password: '',
-    shouldFindNode: true,
-    hasLoginAddress: {},
-    InvokeArgsArray: [],
-  });
-  getStorage('connectedWebsites', (res) => {
-    res = res || {};
-    Object.keys(res).forEach((address) => {
-      res[address] = res[address].filter((item) => item.keep === true);
-    });
-    setStorage({ connectedWebsites: res });
-  });
-});
+chrome.runtime.onInstalled.addListener(() => resetData());
+
+chrome.runtime.onStartup.addListener(() => resetData());
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   const n2Networks =
@@ -324,6 +301,24 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   const currN3Network = n3Networks[n3SelectedNetworkIndex];
   const chainType: ChainType = await getLocalStorage('chainType', () => {});
   switch (request.target) {
+    case requestTargetEVM.request: {
+      const localData =
+        (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+      const newData = { ...localData, [request.ID]: request.parameter };
+      setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
+      chrome.windows.create({
+        url: `index.html#popup/notification/evm-request?messageID=${request.ID}`,
+        focused: true,
+        width: 386,
+        height: 620,
+        left: 0,
+        top: 0,
+        type: 'popup',
+      });
+      sendResponse('');
+      return;
+    }
+    //#region neo legacy
     case requestTarget.PickAddress: {
       chrome.windows.create({
         url: `/index.html#popup/notification/pick-address?hostname=${request.parameter.hostname}&chainType=Neo2&messageID=${request.ID}`,
@@ -1205,8 +1200,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       sendResponse('');
       return;
     }
+    //#endregion
 
-    // neo3 dapi method
+    //#region neo3 dapi method
     case requestTargetN3.Balance: {
       const parameter = request.parameter as N3BalanceArgs;
       let params;
@@ -1740,16 +1736,10 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
       }
       getStorage('connectedWebsites', async () => {
-        const storageName = `InvokeArgsArray`;
-        const saveData = {};
-        const invokeArgsArray =
-          (await getLocalStorage(storageName, () => {})) || [];
-        const data = {
-          ...params,
-          messageID: request.ID,
-        };
-        saveData[storageName] = [data, ...invokeArgsArray];
-        setLocalStorage(saveData);
+        const localData =
+          (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+        const newData = { ...localData, [request.ID]: params };
+        setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
         chrome.windows.create({
           url: `index.html#popup/notification/neo3-invoke?messageID=${request.ID}`,
           focused: true,
@@ -1785,26 +1775,10 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         }
       }
       getStorage('connectedWebsites', async () => {
-        let queryString = '';
-        for (const key in params) {
-          if (params.hasOwnProperty(key)) {
-            const value =
-              key === 'invokeArgs' || key === 'signers'
-                ? JSON.stringify(params[key])
-                : params[key];
-            queryString += `${key}=${value}&`;
-          }
-        }
-        const storageName = `InvokeArgsArray`;
-        const saveData = {};
-        const invokeArgsArray =
-          (await getLocalStorage(storageName, () => {})) || [];
-        const data = {
-          ...params,
-          messageID: request.ID,
-        };
-        saveData[storageName] = [data, ...invokeArgsArray];
-        setLocalStorage(saveData);
+        const localData =
+          (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+        const newData = { ...localData, [request.ID]: params };
+        setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
         chrome.windows.create({
           url: `index.html#popup/notification/neo3-invoke-multiple?messageID=${request.ID}`,
           focused: true,
@@ -2006,6 +1980,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       sendResponse('');
       return;
     }
+    //#endregion
   }
   return true;
 });

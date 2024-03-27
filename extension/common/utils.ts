@@ -7,6 +7,7 @@ import SHA256 = require('crypto-js/sha256');
 import hexEncoding = require('crypto-js/enc-hex');
 import { getLocalStorage } from '../common';
 import { tx, wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+import { ethers } from 'ethers';
 
 const curve = new ec('p256');
 
@@ -263,6 +264,9 @@ export function getWalletType() {
       let currChainType = 'Neo2';
       if (wallet && wallet3.isAddress(wallet.accounts[0].address, 53)) {
         currChainType = 'Neo3';
+      }
+      if (ethers.isAddress(wallet.accounts[0].address)) {
+        currChainType = 'NeoX';
       }
       resolve(currChainType);
     }).catch((err) => reject(err));

@@ -7,6 +7,7 @@ export const GAS3 = '0xd2a4cff31913016155e38e474a2c06d08be276cf';
 export enum ChainType {
   Neo2 = 'Neo2',
   Neo3 = 'Neo3',
+  NeoX = 'NeoX',
 }
 
 export const DEFAULT_NETWORKS = [
@@ -32,6 +33,7 @@ enum NetworkType {
   N3MainNet = 'N3MainNet',
   N3TestNet = 'N3TestNet',
   N3PrivateNet = 'N3PrivateNet',
+  EVM = 'EVM',
 }
 export interface RpcNetwork {
   name: string;
@@ -41,6 +43,8 @@ export interface RpcNetwork {
   magicNumber?: number;
   chainId: number;
   id: number;
+  // evm
+  symbol?: string;
 }
 
 export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
@@ -83,7 +87,34 @@ export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
   },
 ];
 
+export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
+  {
+    id: 12227330,
+    symbol: 'GAS',
+    chainId: 12227330,
+    name: 'NeoX TESTNET',
+    network: NetworkType.EVM,
+    rpcUrl: 'https://neoxseed1.ngd.network',
+    explorer: 'https://xt2scan.ngd.network/',
+  },
+  {
+    id: 84532,
+    symbol: 'ETH',
+    chainId: 84532,
+    name: 'Base Sepolia',
+    network: NetworkType.EVM,
+    rpcUrl: 'https://sepolia.base.org',
+    explorer: 'https://base-sepolia.blockscout.com',
+  },
+];
+
 export const ALL_CHAINID = [0, 1, 2, 3, 6];
 export const SECRET_PASSPHRASE = 'secret key neoline';
 
 export const ExcludeWebsite = ['yandex.com', 'google.com'];
+
+export enum STORAGE_NAME {
+  InvokeArgsArray = 'InvokeArgsArray',
+  hasLoginAddress = 'hasLoginAddress',
+  shouldFindNode = 'shouldFindNode',
+}

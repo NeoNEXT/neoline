@@ -110,9 +110,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
         .getStorage(STORAGE_NAME.InvokeArgsArray)
         .subscribe(async (invokeArgsArray) => {
           this.invokeArgsArray = invokeArgsArray;
-          params = invokeArgsArray.filter(
-            (item) => (item as any).messageID === messageID
-          )[0];
+          params = invokeArgsArray[this.messageID];
           if (!params || params.length <= 0) {
             return;
           }
@@ -156,10 +154,8 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
     });
     window.onbeforeunload = () => {
       if (this.chrome.check) {
-        const saveData = this.invokeArgsArray.filter(
-          (item) => item.messageID !== this.messageID
-        );
-        this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, saveData);
+        delete this.invokeArgsArray[this.messageID];
+        this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, this.invokeArgsArray);
       }
       this.chrome.windowCallback({
         error: ERRORS.CANCELLED,
@@ -256,10 +252,8 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
     } else {
       this.getSignTx();
     }
-    const saveData = this.invokeArgsArray.filter(
-      (item) => item.messageID !== this.messageID
-    );
-    this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, saveData);
+    delete this.invokeArgsArray[this.messageID];
+    this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, this.invokeArgsArray);
   }
 
   public editFee() {

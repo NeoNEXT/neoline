@@ -29,8 +29,13 @@ import {
 export { EVENT, ERRORS } from '../common/data_module_neo2';
 import { getMessageID } from '../common/utils';
 import { ChainType, ALL_CHAINID } from '../common/constants';
+import { requestTargetN3 } from '../common/data_module_neo3';
+import { requestTargetEVM } from '../common/data_module_evm';
 
-function sendMessage<K>(target: requestTarget, parameter?: any): Promise<K> {
+export function sendMessage<K>(
+  target: requestTarget | requestTargetN3 | requestTargetEVM,
+  parameter?: any
+): Promise<K> {
   const ID = getMessageID();
   return new Promise((resolveMain, rejectMain) => {
     const request = parameter ? { target, parameter, ID } : { target, ID };
@@ -97,7 +102,7 @@ export class Init {
 
   public getProvider(): Promise<Provider> {
     return new Promise((resolveMain, _) => {
-      getProvider().then((res) => {
+      getProvider(ChainType.Neo2).then((res) => {
         resolveMain(res);
       });
     });
@@ -906,7 +911,7 @@ export class Init {
 export const NEO: any = new Init();
 
 if (window.dispatchEvent) {
-  getProvider()
+  getProvider(ChainType.Neo2)
     .then((res) => {
       window.dispatchEvent(
         new CustomEvent(EVENT.READY, {
@@ -941,7 +946,7 @@ window.addEventListener('message', (e) => {
   }
 });
 
-function connect(open = true): Promise<any> {
+export function connect(open = true): Promise<any> {
   return new Promise((resolveMain) => {
     if (open) {
       window.postMessage(
@@ -972,7 +977,7 @@ function connect(open = true): Promise<any> {
   });
 }
 
-function login(open = true): Promise<any> {
+export function login(open = true): Promise<any> {
   return new Promise((resolveMain) => {
     if (open) {
       window.postMessage(
@@ -1000,7 +1005,7 @@ function login(open = true): Promise<any> {
   });
 }
 
-function getAuthState(): Promise<any> {
+export function getAuthState(): Promise<any> {
   return new Promise((resolveMain) => {
     window.postMessage(
       {
@@ -1037,11 +1042,15 @@ function getAuthState(): Promise<any> {
   });
 }
 
-function getProvider(): Promise<Provider> {
+export function getProvider(chainType: ChainType): Promise<Provider> {
+  const returnTarget =
+    chainType === ChainType.Neo2
+      ? requestTarget.Provider
+      : requestTargetN3.Provider;
   return new Promise((resolveMain, rejectMain) => {
     window.postMessage(
       {
-        target: requestTarget.Provider,
+        target: returnTarget,
       },
       window.location.origin
     );
@@ -1049,7 +1058,7 @@ function getProvider(): Promise<Provider> {
       const callbackFn = (event) => {
         if (
           event.data.return !== undefined &&
-          event.data.return === requestTarget.Provider
+          event.data.return === returnTarget
         ) {
           resolve(event.data.data);
           window.removeEventListener('message', callbackFn);
@@ -1078,7 +1087,7 @@ function getProvider(): Promise<Provider> {
   });
 }
 
-function getIcon() {
+export function getIcon() {
   let favicon;
   favicon = `${location.protocol}//${location.hostname}/favicon.ico`;
   return favicon;

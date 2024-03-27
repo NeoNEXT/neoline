@@ -164,7 +164,7 @@ export const STORAGE_VALUE_MESSAGE = {
     isLocal: false,
   },
   InvokeArgsArray: {
-    type: STORAGE_VALUE_TYPE.array,
+    type: STORAGE_VALUE_TYPE.object,
     isLocal: true,
   },
   walletsStatus: {

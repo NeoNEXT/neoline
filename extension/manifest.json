@@ -18,12 +18,12 @@
   "content_scripts": [
     {
       "matches": ["*://*/*"],
-      "js": ["neoline.js", "neolineN3.js"]
+      "js": ["neoline.js", "neolineN3.js", "neolineEVM.js"]
     }
   ],
   "web_accessible_resources": [
     {
-      "resources": ["dapi.js", "dapiN3.js"],
+      "resources": ["dapi.js", "dapiN3.js", "dapiEVM.js"],
       "matches": ["http://*/*", "https://*/*"],
       "extension_ids": []
     }
