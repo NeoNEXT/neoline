@@ -12,7 +12,7 @@ export class Init {
     },
   };
 
-  public async request(): Promise<any> {
+  public async request(parameter): Promise<any> {
     let authState: any;
     try {
       authState = (await getAuthState()) || 'NONE';
@@ -28,7 +28,7 @@ export class Init {
       }
       if (connectResult === true) {
         await login();
-        return sendMessage(requestTargetEVM.request);
+        return sendMessage(requestTargetEVM.request, parameter);
       } else {
         return new Promise((_, reject) => {
           reject(ERRORS.CONNECTION_DENIED);
