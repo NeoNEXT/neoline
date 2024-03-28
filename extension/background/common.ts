@@ -248,3 +248,25 @@ export function createWindow(url: string, notification = true) {
     type: 'popup',
   });
 }
+
+
+/**
+ * Returns the first network configuration object that matches at least one field of the
+ * provided search criteria. Returns null if no match is found
+ *
+ * @param {object} rpcInfo - The RPC endpoint properties and values to check.
+ * @returns {object} rpcInfo found in the network configurations list
+ */
+export async function findNetworkConfigurationBy(
+  rpcInfo: Partial<RpcNetwork>
+): Promise<RpcNetwork | null> {
+  const { neoXNetworks } = await getNetworkInfo();
+
+  const networkConfiguration = neoXNetworks.find((configuration) => {
+    return Object.keys(rpcInfo).some((key) => {
+      return configuration[key] === rpcInfo[key];
+    });
+  });
+
+  return networkConfiguration || null;
+}

@@ -9,7 +9,11 @@ import {
   isPrefixedFormattedHexString,
   isSafeChainId,
 } from '../../common/evm/network-util';
-import { createWindow, getNetworkInfo } from '../common';
+import {
+  createWindow,
+  findNetworkConfigurationBy,
+  getNetworkInfo,
+} from '../common';
 import { RpcNetwork, NetworkType } from '../../common/constants';
 
 const addEthereumChain = {
@@ -139,7 +143,10 @@ async function addEthereumChainHandler(params: any[], messageID: number) {
     // If this network is already added with but is not the currently selected network
     // Ask the user to switch the network
     createWindow(
-      `wallet-switch-network?chainType=neoX&chainId=${parseInt(_chainId, 16)}`
+      `wallet-switch-network?chainType=neoX&chainId=${parseInt(
+        _chainId,
+        16
+      )}&messageID=${messageID}`
     );
     return;
   }
@@ -223,25 +230,4 @@ async function addEthereumChainHandler(params: any[], messageID: number) {
   createWindow(`evm-add-chain?${queryString}messageID=${messageID}`);
 
   return;
-}
-
-/**
- * Returns the first network configuration object that matches at least one field of the
- * provided search criteria. Returns null if no match is found
- *
- * @param {object} rpcInfo - The RPC endpoint properties and values to check.
- * @returns {object} rpcInfo found in the network configurations list
- */
-async function findNetworkConfigurationBy(
-  rpcInfo: Partial<RpcNetwork>
-): Promise<RpcNetwork | null> {
-  const { neoXNetworks } = await getNetworkInfo();
-
-  const networkConfiguration = neoXNetworks.find((configuration) => {
-    return Object.keys(rpcInfo).some((key) => {
-      return configuration[key] === rpcInfo[key];
-    });
-  });
-
-  return networkConfiguration || null;
 }
