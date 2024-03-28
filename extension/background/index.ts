@@ -79,6 +79,7 @@ import {
   waitN3Txs,
   waitNeo2Txs,
 } from './common';
+import { evmHandlerMap } from './handlers';
 
 /**
  * Background methods support.
@@ -139,12 +140,23 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
   switch (request.target) {
     case requestTargetEVM.request: {
-      const localData =
-        (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
-      const newData = { ...localData, [request.ID]: request.parameter };
-      setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
-      createWindow(`evm-request?messageID=${request.ID}`);
-      sendResponse('');
+      const handler = evmHandlerMap.get(request.parameter.method);
+      if (handler) {
+        const { implementation } = handler;
+        implementation(request.parameter.params, request.ID)
+          .then(() => {
+            sendResponse('');
+          })
+          .catch((error) => {
+            windowCallback({
+              data: null,
+              ID: request.ID,
+              return: requestTargetEVM.request,
+              error: error.serialize(),
+            });
+            sendResponse('');
+          });
+      }
       return;
     }
     //#region neo legacy

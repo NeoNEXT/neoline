@@ -27,7 +27,7 @@ export enum WitnessScope {
   Global = 128,
 }
 
-enum NetworkType {
+export enum NetworkType {
   MainNet = 'MainNet',
   TestNet = 'TestNet',
   N3MainNet = 'N3MainNet',
