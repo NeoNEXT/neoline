@@ -33,9 +33,7 @@ import {
 } from '../common/data_module_neo3';
 import { ChainType, ALL_CHAINID } from '../common/constants';
 import {
-  getAuthState,
-  connect,
-  login,
+  checkConnectAndLogin,
   sendMessage,
   getProvider,
   getIcon,
@@ -52,7 +50,7 @@ export class Init {
 
   public getProvider(): Promise<Provider> {
     return new Promise((resolveMain, _) => {
-      getProvider(ChainType.Neo3).then((res) => {
+      getProvider().then((res) => {
         resolveMain(res);
       });
     });
@@ -63,67 +61,19 @@ export class Init {
   }
 
   public async getAccount(): Promise<Account> {
-    let authState: any;
-    try {
-      authState = (await getAuthState()) || 'NONE';
-    } catch (error) {
-      console.log(error);
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      return sendMessage(requestTarget.Account);
     }
-    if (authState === true || authState === 'NONE') {
-      let connectResult;
-      if (authState === 'NONE') {
-        connectResult = await connect();
-      } else {
-        connectResult = true;
-      }
-      if (connectResult === true) {
-        await login();
-        return sendMessage(requestTarget.Account);
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.CONNECTION_DENIED);
-        });
-      }
-    } else {
-      return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
-      });
-    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
   }
 
   public async getPublicKey(): Promise<AccountPublicKey> {
-    window.postMessage(
-      {
-        target: requestTarget.Account,
-      },
-      window.location.origin
-    );
-    let authState: any;
-    try {
-      authState = (await getAuthState()) || 'NONE';
-    } catch (error) {
-      console.log(error);
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      return sendMessage(requestTarget.AccountPublicKey);
     }
-    if (authState === true || authState === 'NONE') {
-      let connectResult;
-      if (authState === 'NONE') {
-        connectResult = await connect();
-      } else {
-        connectResult = true;
-      }
-      if (connectResult === true) {
-        await login();
-        return sendMessage(requestTarget.AccountPublicKey);
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.CONNECTION_DENIED);
-        });
-      }
-    } else {
-      return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
-      });
-    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
   }
 
   public async AddressToScriptHash(
@@ -200,32 +150,11 @@ export class Init {
     const parameter = {
       hostname: location.hostname,
     };
-    let authState: any;
-    try {
-      authState = (await getAuthState()) || 'NONE';
-    } catch (error) {
-      console.log(error);
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      return sendMessage(requestTargetN3.PickAddress, parameter);
     }
-    if (authState === true || authState === 'NONE') {
-      let connectResult;
-      if (authState === 'NONE') {
-        connectResult = await connect();
-      } else {
-        connectResult = true;
-      }
-      if (connectResult === true) {
-        await login();
-        return sendMessage(requestTargetN3.PickAddress, parameter);
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.CONNECTION_DENIED);
-        });
-      }
-    } else {
-      return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
-      });
-    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
   }
 
   public getStorage(parameter: N3GetStorageArgs): Promise<N3StorageResponse> {
@@ -301,42 +230,20 @@ export class Init {
   public async verifyMessage(
     parameter: N3VerifyMessageArgs
   ): Promise<N3Response> {
-    let authState: any;
-    try {
-      authState = (await getAuthState()) || 'NONE';
-    } catch (error) {
-      console.log(error);
-    }
-    if (authState === true || authState === 'NONE') {
-      let connectResult;
-      if (authState === 'NONE') {
-        connectResult = await connect();
-      } else {
-        connectResult = true;
-      }
-      if (connectResult === true) {
-        await login();
-        if (
-          parameter.message === undefined ||
-          parameter.data === undefined ||
-          parameter.publicKey === undefined
-        ) {
-          return new Promise((_, reject) => {
-            reject(ERRORS.MALFORMED_INPUT);
-          });
-        } else {
-          return sendMessage(requestTargetN3.VerifyMessage, parameter);
-        }
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.CONNECTION_DENIED);
-        });
-      }
-    } else {
+    if (
+      parameter.message === undefined ||
+      parameter.data === undefined ||
+      parameter.publicKey === undefined
+    ) {
       return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
+        reject(ERRORS.MALFORMED_INPUT);
       });
     }
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      return sendMessage(requestTargetN3.VerifyMessage, parameter);
+    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
   }
 
   public async invoke(parameter: N3InvokeArgs) {
@@ -363,147 +270,58 @@ export class Init {
           reject(ERRORS.MALFORMED_INPUT);
         });
       }
-      let authState: any;
-      if (parameter.args === undefined) {
-        parameter.args = [];
-      }
-      try {
-        authState = (await getAuthState()) || 'NONE';
-      } catch (error) {
-        console.log(error);
-      }
-      if (authState === true || authState === 'NONE') {
-        let connectResult;
-        if (authState === 'NONE') {
-          connectResult = await connect();
-        } else {
-          connectResult = true;
-        }
-        if (connectResult === true) {
-          (parameter as any).hostname = location.hostname;
-          return sendMessage(requestTargetN3.Invoke, parameter);
-        } else {
-          return new Promise((_, reject) => {
-            reject(ERRORS.CONNECTION_DENIED);
-          });
-        }
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.CONNECTION_DENIED);
-        });
-      }
     }
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      (parameter as any).hostname = location.hostname;
+      return sendMessage(requestTargetN3.Invoke, parameter);
+    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
   }
 
   public async signMessage(parameter: {
     message: string;
     isJsonObject?: boolean;
   }): Promise<any> {
-    let authState: any;
-    try {
-      authState = (await getAuthState()) || 'NONE';
-    } catch (error) {
-      console.log(error);
-    }
-    if (authState === true || authState === 'NONE') {
-      let connectResult;
-      if (authState === 'NONE') {
-        connectResult = await connect();
-      } else {
-        connectResult = true;
-      }
-      if (connectResult === true) {
-        await login();
-        if (parameter.message === undefined) {
-          return new Promise((_, reject) => {
-            reject(ERRORS.MALFORMED_INPUT);
-          });
-        } else {
-          return sendMessage(requestTargetN3.SignMessage, parameter);
-        }
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.CONNECTION_DENIED);
-        });
-      }
-    } else {
+    if (parameter.message === undefined) {
       return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
+        reject(ERRORS.MALFORMED_INPUT);
       });
     }
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      return sendMessage(requestTargetN3.SignMessage, parameter);
+    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
   }
 
   public async signMessageWithoutSalt(parameter: {
     message: string;
     isJsonObject?: boolean;
   }): Promise<any> {
-    let authState: any;
-    try {
-      authState = (await getAuthState()) || 'NONE';
-    } catch (error) {
-      console.log(error);
-    }
-    if (authState === true || authState === 'NONE') {
-      let connectResult;
-      if (authState === 'NONE') {
-        connectResult = await connect();
-      } else {
-        connectResult = true;
-      }
-      if (connectResult === true) {
-        await login();
-        if (parameter.message === undefined) {
-          return new Promise((_, reject) => {
-            reject(ERRORS.MALFORMED_INPUT);
-          });
-        } else {
-          return sendMessage(requestTargetN3.SignMessageWithoutSalt, parameter);
-        }
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.CONNECTION_DENIED);
-        });
-      }
-    } else {
+    if (parameter.message === undefined) {
       return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
+        reject(ERRORS.MALFORMED_INPUT);
       });
     }
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      return sendMessage(requestTargetN3.SignMessageWithoutSalt, parameter);
+    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
   }
 
   public async signTransaction(parameter): Promise<any> {
-    let authState: any;
-    try {
-      authState = (await getAuthState()) || 'NONE';
-    } catch (error) {
-      console.log(error);
-    }
-    if (authState === true || authState === 'NONE') {
-      let connectResult;
-      if (authState === 'NONE') {
-        connectResult = await connect();
-      } else {
-        connectResult = true;
-      }
-      if (connectResult === true) {
-        await login();
-        if (parameter.transaction === undefined) {
-          return new Promise((_, reject) => {
-            reject(ERRORS.MALFORMED_INPUT);
-          });
-        } else {
-          return sendMessage(requestTargetN3.SignTransaction, parameter);
-        }
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.CONNECTION_DENIED);
-        });
-      }
-    } else {
+    if (parameter.transaction === undefined) {
       return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
+        reject(ERRORS.MALFORMED_INPUT);
       });
     }
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      return sendMessage(requestTargetN3.SignTransaction, parameter);
+    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
   }
 
   public async send(parameter: N3SendArgs): Promise<N3SendOutput> {
@@ -517,33 +335,12 @@ export class Init {
       return new Promise((_, reject) => {
         reject(ERRORS.CONNECTION_DENIED);
       });
-    } else {
-      let authState: any;
-      try {
-        authState = (await getAuthState()) || 'NONE';
-      } catch (error) {
-        console.log(error);
-      }
-      if (authState === true || authState === 'NONE') {
-        let connectResult;
-        if (authState === 'NONE') {
-          connectResult = await connect();
-        } else {
-          connectResult = true;
-        }
-        if (connectResult === true) {
-          return sendMessage(requestTargetN3.Send, parameter);
-        } else {
-          return new Promise((_, reject) => {
-            reject(ERRORS.CONNECTION_DENIED);
-          });
-        }
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.CONNECTION_DENIED);
-        });
-      }
     }
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      return sendMessage(requestTargetN3.Send, parameter);
+    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
   }
 
   public async invokeMultiple(parameter: N3InvokeMultipleArgs) {
@@ -555,142 +352,79 @@ export class Init {
       return new Promise((_, reject) => {
         reject(ERRORS.MALFORMED_INPUT);
       });
-    } else {
-      let flag = true;
-      parameter.signers.map((item) => {
-        if (item.account === undefined || item.scopes === undefined) {
-          flag = false;
-        }
+    }
+    let flag = true;
+    parameter.signers.map((item) => {
+      if (item.account === undefined || item.scopes === undefined) {
+        flag = false;
+      }
+    });
+    if (!flag) {
+      return new Promise((_, reject) => {
+        reject(ERRORS.MALFORMED_INPUT);
       });
-      if (!flag) {
-        return new Promise((_, reject) => {
-          reject(ERRORS.MALFORMED_INPUT);
-        });
-      }
-      if (
-        parameter.invokeArgs instanceof Array &&
-        parameter.invokeArgs.length > 0
-      ) {
-        parameter.invokeArgs.forEach((item) => {
-          if (
-            item.scriptHash === undefined ||
-            item.scriptHash === '' ||
-            item.operation === undefined ||
-            item.operation === ''
-          ) {
-            return new Promise((_, reject) => {
-              reject(ERRORS.MALFORMED_INPUT);
-            });
-          }
-        });
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.MALFORMED_INPUT);
-        });
-      }
-      let authState: any;
-      try {
-        authState = (await getAuthState()) || 'NONE';
-      } catch (error) {
-        console.log(error);
-      }
-      if (authState === true || authState === 'NONE') {
-        let connectResult;
-        if (authState === 'NONE') {
-          connectResult = await connect();
-        } else {
-          connectResult = true;
-        }
-        if (connectResult === true) {
-          (parameter as any).hostname = location.hostname;
-          return sendMessage(requestTargetN3.InvokeMultiple, parameter);
-        } else {
-          return new Promise((_, reject) => {
-            reject(ERRORS.CONNECTION_DENIED);
-          });
-        }
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.CONNECTION_DENIED);
-        });
-      }
     }
-  }
-
-  public async switchWalletNetwork(
-    parameter: WalletSwitchNetworkArg
-  ): Promise<any> {
-    let authState: any;
-    try {
-      authState = (await getAuthState()) || 'NONE';
-    } catch (error) {
-      console.log(error);
-    }
-    if (authState === true || authState === 'NONE') {
-      let connectResult;
-      if (authState === 'NONE') {
-        connectResult = await connect();
-      } else {
-        connectResult = true;
-      }
-      if (connectResult === true) {
-        await login();
+    if (
+      parameter.invokeArgs instanceof Array &&
+      parameter.invokeArgs.length > 0
+    ) {
+      parameter.invokeArgs.forEach((item) => {
         if (
-          parameter.chainId === undefined ||
-          !ALL_CHAINID.includes(parameter.chainId)
+          item.scriptHash === undefined ||
+          item.scriptHash === '' ||
+          item.operation === undefined ||
+          item.operation === ''
         ) {
           return new Promise((_, reject) => {
             reject(ERRORS.MALFORMED_INPUT);
           });
         }
-        parameter.hostname = location.hostname;
-        parameter.icon = getIcon();
-        parameter.chainType = ChainType.Neo3;
-        return sendMessage(requestTargetN3.WalletSwitchNetwork, parameter);
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.CONNECTION_DENIED);
-        });
-      }
+      });
     } else {
       return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
+        reject(ERRORS.MALFORMED_INPUT);
       });
     }
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      (parameter as any).hostname = location.hostname;
+      return sendMessage(requestTargetN3.InvokeMultiple, parameter);
+    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
+  }
+
+  public async switchWalletNetwork(
+    parameter: WalletSwitchNetworkArg
+  ): Promise<any> {
+    if (
+      parameter.chainId === undefined ||
+      !ALL_CHAINID.includes(parameter.chainId)
+    ) {
+      return new Promise((_, reject) => {
+        reject(ERRORS.MALFORMED_INPUT);
+      });
+    }
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      parameter.hostname = location.hostname;
+      parameter.icon = getIcon();
+      parameter.chainType = ChainType.Neo3;
+      return sendMessage(requestTargetN3.WalletSwitchNetwork, parameter);
+    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
   }
 
   public async switchWalletAccount(): Promise<any> {
-    let authState: any;
-    try {
-      authState = (await getAuthState()) || 'NONE';
-    } catch (error) {
-      console.log(error);
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      const parameter: WalletSwitchAccountArg = {
+        hostname: location.hostname,
+        icon: getIcon(),
+        chainType: ChainType.Neo3,
+      };
+      return sendMessage(requestTargetN3.WalletSwitchAccount, parameter);
     }
-    if (authState === true || authState === 'NONE') {
-      let connectResult;
-      if (authState === 'NONE') {
-        connectResult = await connect();
-      } else {
-        connectResult = true;
-      }
-      if (connectResult === true) {
-        await login();
-        const parameter: WalletSwitchAccountArg = {
-          hostname: location.hostname,
-          icon: getIcon(),
-          chainType: ChainType.Neo3,
-        };
-        return sendMessage(requestTargetN3.WalletSwitchAccount, parameter);
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.CONNECTION_DENIED);
-        });
-      }
-    } else {
-      return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
-      });
-    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
   }
 
   public addEventListener(type: string, callback: (data: object) => void) {

@@ -9,7 +9,7 @@ import {
   createWindow,
   findNetworkConfigurationBy,
   getNetworkInfo,
-} from '../common';
+} from '../tool';
 
 const switchEthereumChain = {
   methodNames: [MESSAGE_TYPE.SWITCH_ETHEREUM_CHAIN],

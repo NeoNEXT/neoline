@@ -13,7 +13,7 @@ import {
   createWindow,
   findNetworkConfigurationBy,
   getNetworkInfo,
-} from '../common';
+} from '../tool';
 import { RpcNetwork, NetworkType } from '../../common/constants';
 
 const addEthereumChain = {

@@ -8,9 +8,11 @@ import {
 } from '../common/constants';
 import {
   getLocalStorage,
+  getStorage,
   httpPost,
   notification,
   setLocalStorage,
+  setStorage,
 } from '../common';
 import { getWalletType } from '../common/utils';
 import { EVENT } from '../common/data_module_neo2';
@@ -74,9 +76,9 @@ export async function getNetworkInfo() {
   };
 }
 
-export async function listenNeo2Block(currN2Network: RpcNetwork) {
-  const networkId = currN2Network.id;
-  const rpcUrl = currN2Network.rpcUrl;
+export async function listenBlock(currNetwork: RpcNetwork) {
+  const networkId = currNetwork.id;
+  const rpcUrl = currNetwork.rpcUrl;
   let oldHeight =
     (await getLocalStorage(`BlockHeight_${networkId}`, () => {})) || 0;
   httpPost(
@@ -89,57 +91,56 @@ export async function listenNeo2Block(currN2Network: RpcNetwork) {
     },
     async (blockHeightData) => {
       const newHeight = blockHeightData.result;
+      if (oldHeight === newHeight) return;
       if (oldHeight === 0 || newHeight - oldHeight > 5) {
         oldHeight = newHeight - 1;
       }
-      let timer;
+      let timer: NodeJS.Timeout;
       for (let reqHeight = oldHeight; reqHeight < newHeight; reqHeight++) {
-        if (oldHeight !== newHeight) {
-          timer = setTimeout(() => {
-            httpPost(
-              rpcUrl,
-              {
-                jsonrpc: '2.0',
-                method: 'getblock',
-                params: [reqHeight, 1],
-                id: 1,
-              },
-              (blockDetail) => {
-                if (blockDetail.error === undefined) {
-                  const txStrArr = [];
-                  blockDetail.result.tx.forEach((item) => {
-                    txStrArr.push(item.txid || item.hash);
-                  });
-                  windowCallback({
-                    data: {
-                      chainId: currN2Network.chainId,
-                      blockHeight: reqHeight,
-                      blockTime: blockDetail.result.time,
-                      blockHash: blockDetail.result.hash,
-                      tx: txStrArr,
-                    },
-                    return: EVENT.BLOCK_HEIGHT_CHANGED,
-                  });
-                }
-                if (newHeight - reqHeight <= 1) {
-                  const setData = {};
-                  setData[`BlockHeight_${networkId}`] = newHeight;
-                  setLocalStorage(setData);
-                  clearTimeout(timer);
-                }
-              },
-              '*'
-            );
-          });
-        }
+        timer = setTimeout(() => {
+          httpPost(
+            rpcUrl,
+            {
+              jsonrpc: '2.0',
+              method: 'getblock',
+              params: [reqHeight, 1],
+              id: 1,
+            },
+            (blockDetail) => {
+              if (blockDetail.error === undefined) {
+                const txStrArr = [];
+                blockDetail.result.tx.forEach((item) => {
+                  txStrArr.push(item.txid || item.hash);
+                });
+                windowCallback({
+                  data: {
+                    chainId: currNetwork.chainId,
+                    blockHeight: reqHeight,
+                    blockTime: blockDetail.result.time,
+                    blockHash: blockDetail.result.hash,
+                    tx: txStrArr,
+                  },
+                  return: EVENT.BLOCK_HEIGHT_CHANGED,
+                });
+              }
+              if (newHeight - reqHeight <= 1) {
+                const setData = {};
+                setData[`BlockHeight_${networkId}`] = newHeight;
+                setLocalStorage(setData);
+                clearTimeout(timer);
+              }
+            },
+            '*'
+          );
+        });
       }
     },
     '*'
   );
 }
 
-export async function waitNeo2Txs(currN2Network: RpcNetwork) {
-  const networkId = currN2Network.rpcUrl;
+export async function waitTxs(currNetwork: RpcNetwork, chainType: ChainType) {
+  const networkId = currNetwork.id;
   const txArr = (await getLocalStorage(`TxArr_${networkId}`, () => {})) || [];
   if (txArr.length === 0) {
     return;
@@ -149,13 +150,13 @@ export async function waitNeo2Txs(currN2Network: RpcNetwork) {
     const data = {
       jsonrpc: '2.0',
       method: 'getrawtransaction',
-      params: [txid, 1],
+      params: [txid, chainType === 'Neo2' ? 1 : true],
       id: 1,
     };
-    httpPost(currN2Network.rpcUrl, data, (res) => {
+    httpPost(currNetwork.rpcUrl, data, (res) => {
       if (res?.result?.blocktime) {
-        const explorerUrl = currN2Network.explorer
-          ? `${currN2Network.explorer}transaction/${txid}`
+        const explorerUrl = currNetwork.explorer
+          ? `${currNetwork.explorer}transaction/${txid}`
           : null;
         const sliceTxid = txid.slice(0, 4) + '...' + txid.slice(-4);
         notification(
@@ -165,7 +166,7 @@ export async function waitNeo2Txs(currN2Network: RpcNetwork) {
         );
         windowCallback({
           data: {
-            chainId: currN2Network.chainId,
+            chainId: currNetwork.chainId,
             txid,
             blockHeight: res?.result?.blockindex,
             blockTime: res?.result?.blocktime,
@@ -180,47 +181,21 @@ export async function waitNeo2Txs(currN2Network: RpcNetwork) {
     });
   }
 }
-export async function waitN3Txs(currN3Network: RpcNetwork) {
-  const networkId = currN3Network.rpcUrl;
-  const txArr = (await getLocalStorage(`TxArr_${networkId}`, () => {})) || [];
-  if (txArr.length === 0) {
-    return;
-  }
-  let tempTxArr = [...txArr];
-  for (const txid of tempTxArr) {
-    const data = {
-      jsonrpc: '2.0',
-      method: 'getrawtransaction',
-      params: [txid, true],
-      id: 1,
-    };
-    httpPost(currN3Network.rpcUrl, data, (res) => {
-      if (res?.result?.blocktime) {
-        const explorerUrl = currN3Network.explorer
-          ? `${currN3Network.explorer}transaction/${txid}`
-          : null;
-        const sliceTxid = txid.slice(0, 4) + '...' + txid.slice(-4);
-        notification(
-          explorerUrl,
-          'Confirmed transaction',
-          `Transaction ${sliceTxid} confirmed! View on NeoTube`
-        );
-        windowCallback({
-          data: {
-            chainId: currN3Network.chainId,
-            txid,
-            blockHeight: res?.result?.blockindex,
-            blockTime: res?.result?.blocktime,
-          },
-          return: EVENT.TRANSACTION_CONFIRMED,
-        });
-        const setData = {};
-        tempTxArr = tempTxArr.filter((item) => item !== txid);
-        setData[`TxArr_${networkId}`] = tempTxArr;
-        setLocalStorage(setData);
-      }
+
+export function resetData() {
+  setLocalStorage({
+    password: '',
+    [STORAGE_NAME.shouldFindNode]: true,
+    [STORAGE_NAME.hasLoginAddress]: {},
+    [STORAGE_NAME.InvokeArgsArray]: [],
+  });
+  getStorage('connectedWebsites', (res) => {
+    res = res || {};
+    Object.keys(res).forEach((address) => {
+      res[address] = res[address].filter((item) => item.keep === true);
     });
-  }
+    setStorage({ connectedWebsites: res });
+  });
 }
 
 export function windowCallback(data) {
@@ -248,7 +223,6 @@ export function createWindow(url: string, notification = true) {
     type: 'popup',
   });
 }
-
 
 /**
  * Returns the first network configuration object that matches at least one field of the

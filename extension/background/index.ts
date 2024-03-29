@@ -24,7 +24,6 @@ import {
   getSessionStorage,
 } from '../common';
 import {
-  ChainType,
   WitnessScope,
   NEO,
   GAS,
@@ -75,10 +74,11 @@ import { requestTargetEVM } from '../common/data_module_evm';
 import {
   createWindow,
   getNetworkInfo,
-  listenNeo2Block,
-  waitN3Txs,
-  waitNeo2Txs,
-} from './common';
+  listenBlock,
+  waitTxs,
+  resetData,
+  windowCallback,
+} from './tool';
 import { evmHandlerMap } from './handlers';
 
 /**
@@ -91,15 +91,9 @@ chrome.alarms.create({ periodInMinutes: 1 });
 chrome.alarms.onAlarm.addListener(async () => {
   const { currN2Network, currN3Network, chainType } = await getNetworkInfo();
   setTimeout(async () => {
-    if (chainType === ChainType.Neo2) {
-      await listenNeo2Block(currN2Network);
-    }
+    await listenBlock(chainType === 'Neo2' ? currN2Network : currN3Network);
   }, 0);
-  if (chainType === ChainType.Neo2) {
-    await waitNeo2Txs(currN2Network);
-  } else if (chainType === ChainType.Neo3) {
-    await waitN3Txs(currN3Network);
-  }
+  waitTxs(chainType === 'Neo2' ? currN2Network : currN3Network, chainType);
 });
 
 (function init() {
@@ -111,22 +105,6 @@ chrome.alarms.onAlarm.addListener(async () => {
     });
   }
 })();
-
-function resetData() {
-  setLocalStorage({
-    password: '',
-    [STORAGE_NAME.shouldFindNode]: true,
-    [STORAGE_NAME.hasLoginAddress]: {},
-    [STORAGE_NAME.InvokeArgsArray]: [],
-  });
-  getStorage('connectedWebsites', (res) => {
-    res = res || {};
-    Object.keys(res).forEach((address) => {
-      res[address] = res[address].filter((item) => item.keep === true);
-    });
-    setStorage({ connectedWebsites: res });
-  });
-}
 
 chrome.runtime.onRestartRequired.addListener(() => resetData());
 
@@ -166,8 +144,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       );
       return true;
     }
-    case requestTarget.Connect:
-    case requestTarget.AuthState: {
+    case requestTarget.Connect: {
       const currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
       const currAddress = currWallet.accounts[0].address;
       getStorage('connectedWebsites', (res: any) => {
@@ -1695,20 +1672,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   }
   return true;
 });
-
-export function windowCallback(data) {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs: any) => {
-    // console.log(tabs);
-    // tabCurr = tabs;
-    if (tabs.length > 0) {
-      tabs.forEach((item) => {
-        chrome.tabs.sendMessage(item.id, data, () => {
-          // tabCurr = null;
-        });
-      });
-    }
-  });
-}
 
 chrome.notifications.onClicked.addListener((id: string) => {
   chrome.windows.create({

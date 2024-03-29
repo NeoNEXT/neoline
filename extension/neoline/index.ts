@@ -181,22 +181,6 @@ window.addEventListener(
           });
           return;
         }
-        case requestTarget.AuthState: {
-          getStorage('connectedWebsites', async (res) => {
-            const currWallet = await getLocalStorage('wallet', () => {});
-            res = res || {};
-            window.postMessage(
-              {
-                return: requestTarget.AuthState,
-                data: currWallet
-                  ? res[currWallet.accounts[0].address] || []
-                  : [],
-              },
-              window.location.origin
-            );
-          });
-          return;
-        }
         case requestTarget.Connect:
         case requestTarget.Login:
         case requestTarget.AccountPublicKey:

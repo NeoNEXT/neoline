@@ -18,7 +18,6 @@ export enum requestTargetN3 {
   Deploy = 'neoline.target_deploy_n3',
   Send = 'neoline.target_send_n3',
   Connect = 'neoline.target_connect_n3',
-  AuthState = 'neoline.target_auth_state_n3',
   Login = 'neoline.target_login_n3',
   Balance = 'neoline.target_balance_n3',
   InvokeMultiple = 'neoline.target_invoke_multiple_n3',

@@ -88,28 +88,6 @@ window.addEventListener(
         return;
       }
       switch (e.data.target) {
-        case requestTargetN3.Provider: {
-          getStorage('rateCurrency', (res) => {
-            if (res === undefined) {
-              res = 'USD';
-            }
-            getStorage('theme', (theme) => {
-              if (res === undefined) {
-                theme = 'light-theme';
-              }
-              const manifestData = chrome.runtime.getManifest();
-              manifestData.extra = { currency: res, theme };
-              window.postMessage(
-                {
-                  return: requestTargetN3.Provider,
-                  data: manifestData,
-                },
-                window.location.origin
-              );
-            });
-          });
-          return;
-        }
         case requestTargetN3.PickAddress:
         case requestTargetN3.AddressToScriptHash:
         case requestTargetN3.ScriptHashToAddress:
