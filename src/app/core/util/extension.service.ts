@@ -101,6 +101,10 @@ export class ExtensionService {
     chrome.storage.local.clear();
   }
 
+  clearSessionStorage() {
+    chrome.storage.session.clear();
+  }
+
   getSessionStorage(key, callback): Promise<any> {
     return new Promise((resolve) => {
       chrome.storage.session.get([key], (result) => {

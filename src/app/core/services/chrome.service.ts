@@ -228,24 +228,23 @@ export class ChromeService {
     this.removeStorage(STORAGE_NAME.fiatRate);
   }
 
-  public clearStorage() {
+  clearStorage() {
     if (!this.check) {
       localStorage.clear();
+      sessionStorage.clear();
+      return;
     }
     try {
       this.crx.clearStorage();
       this.crx.clearLocalStorage();
+      this.crx.clearSessionStorage();
     } catch (e) {
       console.log('close wallet failed', e);
     }
   }
 
   public resetWallet() {
-    this.setPassword('');
-    this.setStorage(STORAGE_NAME.WIFArr, []);
-    this.setStorage(STORAGE_NAME['WIFArr-Neo3'], []);
-    this.setStorage(STORAGE_NAME.walletArr, []);
-    this.setStorage(STORAGE_NAME['walletArr-Neo3'], []);
+    this.clearStorage();
     this.accountChangeEvent(undefined);
   }
   //#endregion
