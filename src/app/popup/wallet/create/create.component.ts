@@ -6,6 +6,8 @@ import {
   OnInit,
   Output,
   Input,
+  ChangeDetectorRef,
+  AfterContentChecked,
 } from '@angular/core';
 import { FormGroup, Validators, FormBuilder } from '@angular/forms';
 import { checkPasswords, MyErrorStateMatcher } from '../confirm-password';
@@ -16,7 +18,9 @@ import { WalletInitConstant, STORAGE_NAME } from '../../_lib';
   templateUrl: 'create.component.html',
   styleUrls: ['../common.scss'],
 })
-export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
+export class PopupWalletCreateComponent
+  implements OnInit, AfterContentInit, AfterContentChecked
+{
   limit = WalletInitConstant;
   hidePwd = true;
   hideConfirmPwd = true;
@@ -33,6 +37,7 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
     private global: GlobalService,
     private neon: NeonService,
     private fb: FormBuilder,
+    private cdref: ChangeDetectorRef,
     private chrome: ChromeService
   ) {}
 
@@ -62,6 +67,10 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
     });
   }
 
+  ngAfterContentChecked() {
+    this.cdref.detectChanges();
+  }
+
   public submitCreate(): void {
     this.loading = true;
     let createPwd;
@@ -70,30 +79,25 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
     } else {
       createPwd = this.createForm.value.password;
     }
-    this.neon
-      .createWallet(
-        createPwd,
-        this.createForm.value.name
-      )
-      .subscribe(
-        (res: any) => {
-          if (this.neon.verifyWallet(res)) {
-            if (!this.hasPwdWallet) {
-              this.chrome.setStorage(STORAGE_NAME.onePassword, true);
-              this.chrome.setPassword(createPwd);
-            }
-            this.submitThis.emit(res);
-          } else {
-            this.global.snackBarTip('existingWallet');
+    this.neon.createWallet(createPwd, this.createForm.value.name).subscribe(
+      (res: any) => {
+        if (this.neon.verifyWallet(res)) {
+          if (!this.hasPwdWallet) {
+            this.chrome.setStorage(STORAGE_NAME.onePassword, true);
+            this.chrome.setPassword(createPwd);
           }
-          this.loading = false;
-        },
-        (err: any) => {
-          this.global.log('create wallet faild', err);
-          this.global.snackBarTip('walletCreateFailed');
-          this.loading = false;
+          this.submitThis.emit(res);
+        } else {
+          this.global.snackBarTip('existingWallet');
         }
-      );
+        this.loading = false;
+      },
+      (err: any) => {
+        this.global.log('create wallet faild', err);
+        this.global.snackBarTip('walletCreateFailed');
+        this.loading = false;
+      }
+    );
   }
 
   public cancel() {
