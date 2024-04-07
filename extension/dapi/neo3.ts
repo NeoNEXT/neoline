@@ -37,7 +37,7 @@ import {
   sendMessage,
   getProvider,
   getIcon,
-} from './index';
+} from './common';
 
 export class Init {
   public EVENT = EVENT;

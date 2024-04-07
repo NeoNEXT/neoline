@@ -2,11 +2,11 @@
  * Inject to third part pages.
  */
 
-import { getStorage, getLocalStorage } from '../common/index';
-import { ERRORS } from '../common/data_module_neo2';
+import { getLocalStorage } from '../common/index';
 import { DEFAULT_NEOX_RPC_NETWORK, ExcludeWebsite } from '../common/constants';
 import { getWalletType } from '../common/utils';
 import { requestTargetEVM } from '../common/data_module_evm';
+import { ethErrors } from 'eth-rpc-errors';
 
 declare var chrome: any;
 
@@ -46,80 +46,61 @@ window.addEventListener('load', () => {
   }
 });
 
-const requireConnectRequest = [requestTargetEVM.request];
-
 // neo3 dapi method
 window.addEventListener(
   'message',
   async (e) => {
     if (!e.data.target) return;
-    getStorage('connectedWebsites', async (allWebsites) => {
-      const currWallet = await getLocalStorage('wallet', () => {});
-      allWebsites = allWebsites || {};
-      const websites = allWebsites[currWallet?.accounts[0]?.address] || [];
-      const existOrigin = websites.find((item) =>
-        e.origin.includes(item.hostname)
-      );
-      if (
-        requireConnectRequest.includes(e.data.target) &&
-        (!existOrigin || (existOrigin && existOrigin.status === 'false'))
-      ) {
-        window.postMessage(
-          {
-            return: e.data.target,
-            error: ERRORS.CONNECTION_DENIED,
-            ID: e.data.ID,
-          },
-          window.location.origin
-        );
-        return;
-      }
-      switch (e.data.target) {
-        case requestTargetEVM.request: {
-          getLocalStorage('chainType', async (res) => {
-            let currChainType = res;
-            if (!currChainType) {
-              currChainType = await getWalletType();
-            }
-            if (currChainType === 'NeoX') {
-              getLocalStorage('neoXNetworks', (neoXNetworks) => {
-                getLocalStorage(
-                  'neoXSelectedNetworkIndex',
-                  (neoXSelectedNetworkIndex) => {
-                    const neoXNetwork = (neoXNetworks ||
-                      DEFAULT_NEOX_RPC_NETWORK)[neoXSelectedNetworkIndex || 0];
-                    if (!(e.data as Object).hasOwnProperty('parameter')) {
-                      e.data.parameter = {};
-                    }
-                    let network = e.data?.parameter?.network;
-                    e.data.parameter.network = network || neoXNetwork.network;
-                    e.data.nodeUrl = neoXNetwork.rpcUrl;
-                    chrome.runtime.sendMessage(e.data, (response) => {
-                      if (!chrome.runtime.lastError) {
-                        return Promise.resolve(
-                          'Dummy response to keep the console quiet'
-                        );
-                      }
-                    });
+    switch (e.data.target) {
+      case requestTargetEVM.request: {
+        getLocalStorage('chainType', async (res) => {
+          let currChainType = res;
+          if (!currChainType) {
+            currChainType = await getWalletType();
+          }
+          if (currChainType === 'NeoX') {
+            getLocalStorage('neoXNetworks', (neoXNetworks) => {
+              getLocalStorage(
+                'neoXSelectedNetworkIndex',
+                (neoXSelectedNetworkIndex) => {
+                  const neoXNetwork = (neoXNetworks ||
+                    DEFAULT_NEOX_RPC_NETWORK)[neoXSelectedNetworkIndex || 0];
+                  if (!(e.data as Object).hasOwnProperty('parameter')) {
+                    e.data.parameter = {};
                   }
-                );
-              });
-              return;
-            } else {
-              window.postMessage(
-                {
-                  return: e.data.target,
-                  error: ERRORS.CHAIN_NOT_MATCH,
-                  ID: e.data.ID,
-                },
-                window.location.origin
+                  let network = e.data?.parameter?.network;
+                  e.data.parameter.network = network || neoXNetwork.network;
+                  e.data.nodeUrl = neoXNetwork.rpcUrl;
+                  chrome.runtime.sendMessage(e.data, (response) => {
+                    if (!chrome.runtime.lastError) {
+                      return Promise.resolve(
+                        'Dummy response to keep the console quiet'
+                      );
+                    }
+                  });
+                }
               );
-              return;
-            }
-          });
-        }
+            });
+            return;
+          } else {
+            window.postMessage(
+              {
+                return: e.data.target,
+                error: ethErrors.provider
+                  .chainDisconnected({
+                    message:
+                      'The Provider is not connected to the requested chain.',
+                  })
+                  .serialize(),
+                ID: e.data.ID,
+              },
+              window.location.origin
+            );
+            return;
+          }
+        });
       }
-    });
+    }
   },
   false
 );

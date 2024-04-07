@@ -1,7 +1,7 @@
 import { requestTargetEVM } from '../common/data_module_evm';
 import { ERRORS } from '../common/data_module_neo2';
 import { EVENT } from '../common/data_module_neo3';
-import { checkConnectAndLogin, sendMessage } from './index';
+import { checkConnectAndLogin, sendMessage } from './common';
 
 export class Init {
   public EVENT = EVENT;
