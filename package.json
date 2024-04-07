@@ -51,6 +51,7 @@
     "crypto-js": "^4.1.1",
     "eth-rpc-errors": "^4.0.3",
     "ethers": "^6.11.1",
+    "events": "^3.3.0",
     "mathjs": "^7.0.1",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
