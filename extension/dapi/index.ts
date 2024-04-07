@@ -647,14 +647,7 @@ if (window.dispatchEvent) {
 
 window.addEventListener('message', (e) => {
   const response = e.data;
-  if (response.target) {
-    window.dispatchEvent(
-      new CustomEvent(response.target, {
-        detail: response.data,
-      })
-    );
-  }
-  if (response.return) {
+  if (Object.values(EVENT).includes(response.return)) {
     window.dispatchEvent(
       new CustomEvent(response.return, {
         detail: response.data,
