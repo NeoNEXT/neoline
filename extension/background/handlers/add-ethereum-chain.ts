@@ -12,7 +12,7 @@ import {
 import {
   createWindow,
   findNetworkConfigurationBy,
-  getNetworkInfo,
+  getCurrentNeoXNetwork,
 } from '../tool';
 import { RpcNetwork, NetworkType } from '../../common/constants';
 
@@ -116,17 +116,20 @@ async function addEthereumChainHandler(params: any[], messageID: number) {
     );
   }
 
-  const existingNetwork = await findNetworkConfigurationBy({
-    chainId: parseInt(_chainId, 16),
-  });
+  const { currNeoXNetwork, neoXNetworks } = await getCurrentNeoXNetwork();
+
+  const existingNetwork = await findNetworkConfigurationBy(
+    {
+      chainId: parseInt(_chainId, 16),
+    },
+    neoXNetworks
+  );
 
   // if the request is to add a network that is already added and configured
   // with the same RPC gateway we shouldn't try to add it again.
   if (existingNetwork && existingNetwork.rpcUrl === firstValidRPCUrl) {
     // If the network already exists, the request is considered successful
     // res.result = null;
-
-    const { currNeoXNetwork } = await getNetworkInfo();
 
     const currentChainId = currNeoXNetwork.chainId;
     const currentRpcUrl = currNeoXNetwork.rpcUrl;

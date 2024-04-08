@@ -73,7 +73,9 @@ import CryptoJS = require('crypto-js');
 import { requestTargetEVM } from '../common/data_module_evm';
 import {
   createWindow,
-  getNetworkInfo,
+  getCurrentNeo2Network,
+  getCurrentNeo3Network,
+  getChainType,
   listenBlock,
   waitTxs,
   resetData,
@@ -89,7 +91,9 @@ declare var chrome;
 
 chrome.alarms.create({ periodInMinutes: 1 });
 chrome.alarms.onAlarm.addListener(async () => {
-  const { currN2Network, currN3Network, chainType } = await getNetworkInfo();
+  const { currN2Network } = await getCurrentNeo2Network();
+  const { currN3Network } = await getCurrentNeo3Network();
+  const chainType = await getChainType();
   setTimeout(async () => {
     await listenBlock(chainType === 'Neo2' ? currN2Network : currN3Network);
   }, 0);
@@ -113,8 +117,9 @@ chrome.runtime.onInstalled.addListener(() => resetData());
 chrome.runtime.onStartup.addListener(() => resetData());
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-  const { currN2Network, currN3Network, chainType, n3Networks } =
-    await getNetworkInfo();
+  const { currN2Network } = await getCurrentNeo2Network();
+  const { currN3Network, n3Networks } = await getCurrentNeo3Network();
+  const chainType = await getChainType();
 
   switch (request.target) {
     case requestTargetEVM.request: {

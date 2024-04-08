@@ -22,58 +22,54 @@ import { EVENT } from '../common/data_module_neo2';
  */
 declare var chrome;
 
-export async function getNetworkInfo() {
+export async function getChainType() {
   let chainType: ChainType = await getLocalStorage(
     STORAGE_NAME.chainType,
     () => {}
   );
 
+  if (!chainType) {
+    chainType = await getWalletType();
+  }
+
+  return chainType;
+}
+
+export async function getCurrentNeo2Network() {
   const n2Networks: RpcNetwork[] =
     (await getLocalStorage(STORAGE_NAME.n2Networks, () => {})) ||
     DEFAULT_N2_RPC_NETWORK;
+
+  const n2SelectedNetworkIndex: number =
+    (await getLocalStorage(STORAGE_NAME.n2SelectedNetworkIndex, () => {})) || 0;
+
+  const currN2Network = n2Networks[n2SelectedNetworkIndex];
+  return { currN2Network, n2Networks };
+}
+
+export async function getCurrentNeo3Network() {
   const n3Networks: RpcNetwork[] =
     (await getLocalStorage(STORAGE_NAME.n3Networks, () => {})) ||
     DEFAULT_N3_RPC_NETWORK;
+
+  const n3SelectedNetworkIndex: number =
+    (await getLocalStorage(STORAGE_NAME.n3SelectedNetworkIndex, () => {})) || 0;
+
+  const currN3Network = n3Networks[n3SelectedNetworkIndex];
+  return { currN3Network, n3Networks };
+}
+
+export async function getCurrentNeoXNetwork() {
   const neoXNetworks: RpcNetwork[] =
     (await getLocalStorage(STORAGE_NAME.neoXNetworks, () => {})) ||
     DEFAULT_NEOX_RPC_NETWORK;
 
-  const n2SelectedNetworkIndex: number =
-    (await getLocalStorage(STORAGE_NAME.n2SelectedNetworkIndex, () => {})) || 0;
-  const n3SelectedNetworkIndex: number =
-    (await getLocalStorage(STORAGE_NAME.n3SelectedNetworkIndex, () => {})) || 0;
   const neoXSelectedNetworkIndex: number =
     (await getLocalStorage(STORAGE_NAME.neoXSelectedNetworkIndex, () => {})) ||
     0;
 
-  const currN2Network = n2Networks[n2SelectedNetworkIndex];
-  const currN3Network = n3Networks[n3SelectedNetworkIndex];
   const currNeoXNetwork = neoXNetworks[neoXSelectedNetworkIndex];
-
-  if (!chainType) {
-    chainType = await getWalletType();
-  }
-  let currentRpcUrl: string;
-  let currentNetworkId: number;
-  if (chainType === ChainType.Neo2) {
-    currentNetworkId = n2Networks[n2SelectedNetworkIndex].id;
-    currentRpcUrl = n2Networks[n2SelectedNetworkIndex].rpcUrl;
-  } else if (chainType === ChainType.Neo3) {
-    currentNetworkId = n3Networks[n3SelectedNetworkIndex].id;
-    currentRpcUrl = n3Networks[n3SelectedNetworkIndex].rpcUrl;
-  } else {
-    currentNetworkId = neoXNetworks[neoXSelectedNetworkIndex].id;
-    currentRpcUrl = neoXNetworks[neoXSelectedNetworkIndex].rpcUrl;
-  }
-
-  return {
-    currN2Network,
-    currN3Network,
-    currNeoXNetwork,
-    chainType,
-    n3Networks,
-    neoXNetworks,
-  };
+  return { currNeoXNetwork, neoXNetworks };
 }
 
 export async function listenBlock(currNetwork: RpcNetwork) {
@@ -232,10 +228,9 @@ export function createWindow(url: string, notification = true) {
  * @returns {object} rpcInfo found in the network configurations list
  */
 export async function findNetworkConfigurationBy(
-  rpcInfo: Partial<RpcNetwork>
+  rpcInfo: Partial<RpcNetwork>,
+  neoXNetworks: RpcNetwork[]
 ): Promise<RpcNetwork | null> {
-  const { neoXNetworks } = await getNetworkInfo();
-
   const networkConfiguration = neoXNetworks.find((configuration) => {
     return Object.keys(rpcInfo).some((key) => {
       return configuration[key] === rpcInfo[key];
