@@ -3,7 +3,7 @@
  */
 
 import { getLocalStorage } from '../common/index';
-import { DEFAULT_NEOX_RPC_NETWORK, ExcludeWebsite } from '../common/constants';
+import { ExcludeWebsite } from '../common/constants';
 import { getWalletType } from '../common/utils';
 import { requestTargetEVM } from '../common/data_module_evm';
 import { ethErrors } from 'eth-rpc-errors';
@@ -59,27 +59,12 @@ window.addEventListener(
             currChainType = await getWalletType();
           }
           if (currChainType === 'NeoX') {
-            getLocalStorage('neoXNetworks', (neoXNetworks) => {
-              getLocalStorage(
-                'neoXSelectedNetworkIndex',
-                (neoXSelectedNetworkIndex) => {
-                  const neoXNetwork = (neoXNetworks ||
-                    DEFAULT_NEOX_RPC_NETWORK)[neoXSelectedNetworkIndex || 0];
-                  if (!(e.data as Object).hasOwnProperty('parameter')) {
-                    e.data.parameter = {};
-                  }
-                  let network = e.data?.parameter?.network;
-                  e.data.parameter.network = network || neoXNetwork.network;
-                  e.data.nodeUrl = neoXNetwork.rpcUrl;
-                  chrome.runtime.sendMessage(e.data, (response) => {
-                    if (!chrome.runtime.lastError) {
-                      return Promise.resolve(
-                        'Dummy response to keep the console quiet'
-                      );
-                    }
-                  });
-                }
-              );
+            chrome.runtime.sendMessage(e.data, (response) => {
+              if (!chrome.runtime.lastError) {
+                return Promise.resolve(
+                  'Dummy response to keep the console quiet'
+                );
+              }
             });
             return;
           } else {
