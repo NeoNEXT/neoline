@@ -1,5 +1,5 @@
 import EventEmitter = require('events');
-import { requestTargetEVM } from '../common/data_module_evm';
+import { MESSAGE_TYPE, requestTargetEVM } from '../common/data_module_evm';
 import { ERRORS, EVENT } from '../common/data_module_neo2';
 import { checkConnectAndLogin, sendMessage } from './common';
 import { ethErrors } from 'eth-rpc-errors';
@@ -57,11 +57,16 @@ class NEOLineEVMController extends EventEmitter {
         data: args,
       });
     }
-    return sendMessage(requestTargetEVM.request, args);
-    const isAuth = await checkConnectAndLogin();
-    if (isAuth === true) {
+
+    if (method === MESSAGE_TYPE.ETH_REQUEST_ACCOUNTS) {
+      const isAuth = await checkConnectAndLogin();
+      if (isAuth === true) {
+        return sendMessage(requestTargetEVM.request, args);
+      }
+      throw ethErrors.provider.userRejectedRequest().serialize();
     }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
+
+    return sendMessage(requestTargetEVM.request, args);
   }
 }
 

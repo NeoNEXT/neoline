@@ -130,4 +130,5 @@ export enum STORAGE_NAME {
   'walletArr-NeoX' = 'walletArr-NeoX',
   WIFArr = 'WIFArr',
   'WIFArr-Neo3' = 'WIFArr-Neo3',
+  connectedWebsites = 'connectedWebsites',
 }

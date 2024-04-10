@@ -2,10 +2,10 @@
  * Inject to third part pages.
  */
 
-import { getLocalStorage } from '../common/index';
-import { ExcludeWebsite } from '../common/constants';
+import { getLocalStorage, getStorage } from '../common/index';
+import { ExcludeWebsite, STORAGE_NAME } from '../common/constants';
 import { getWalletType } from '../common/utils';
-import { requestTargetEVM } from '../common/data_module_evm';
+import { MESSAGE_TYPE, requestTargetEVM } from '../common/data_module_evm';
 import { ethErrors } from 'eth-rpc-errors';
 
 declare var chrome: any;
@@ -59,6 +59,14 @@ window.addEventListener(
             currChainType = await getWalletType();
           }
           if (currChainType === 'NeoX') {
+            const reqMethod = e.data.parameter.method;
+            if (
+              reqMethod === MESSAGE_TYPE.ETH_REQUEST_ACCOUNTS ||
+              reqMethod === MESSAGE_TYPE.ETH_ACCOUNTS
+            ) {
+              getAccounts(e);
+              return;
+            }
             chrome.runtime.sendMessage(e.data, (response) => {
               if (!chrome.runtime.lastError) {
                 return Promise.resolve(
@@ -89,3 +97,35 @@ window.addEventListener(
   },
   false
 );
+
+function getAccounts(e) {
+  const data = [];
+  getStorage(STORAGE_NAME.connectedWebsites, (allWebsites) => {
+    Object.keys(allWebsites || {}).forEach((address: string) => {
+      if (
+        allWebsites[address].some(
+          (item) =>
+            item.status === 'true' && item.hostname === location.hostname
+        )
+      ) {
+        data.push(address);
+      }
+    });
+    getLocalStorage('wallet', (wallet) => {
+      const currentAddress = wallet.accounts[0].address;
+      const index = data.findIndex((item) => item === currentAddress);
+      if (index >= 0) {
+        data.splice(index, 1);
+        data.unshift(currentAddress);
+      }
+      window.postMessage(
+        {
+          return: e.data.target,
+          data,
+          ID: e.data.ID,
+        },
+        window.location.origin
+      );
+    });
+  });
+}
