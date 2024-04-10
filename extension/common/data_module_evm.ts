@@ -3,21 +3,16 @@ export enum requestTargetEVM {
   isConnected = 'neoline.target_isConnected_evm',
 }
 
-// export const RestrictedMethods = Object.freeze({
-//   eth_accounts: 'eth_accounts',
-// } as const);
+export const RestrictedMethods = Object.freeze({
+  eth_accounts: 'eth_accounts',
+} as const);
 
 export const MESSAGE_TYPE = {
   ADD_ETHEREUM_CHAIN: 'wallet_addEthereumChain',
-  // ETH_ACCOUNTS: RestrictedMethods.eth_accounts,
-  ETH_CHAIN_ID: 'eth_chainId',
-  ETH_GET_BLOCK_BY_NUMBER: 'eth_getBlockByNumber',
-  // ETH_REQUEST_ACCOUNTS: 'eth_requestAccounts',
-  // ETH_SIGN_TYPED_DATA: 'eth_signTypedData',
-  PERSONAL_SIGN: 'personal_sign',
   SWITCH_ETHEREUM_CHAIN: 'wallet_switchEthereumChain',
-  // WALLET_REQUEST_PERMISSIONS: 'wallet_requestPermissions',
-  WATCH_ASSET: 'wallet_watchAsset',
+  // WATCH_ASSET: 'wallet_watchAsset',
+  ETH_ACCOUNTS: RestrictedMethods.eth_accounts,
+  ETH_REQUEST_ACCOUNTS: 'eth_requestAccounts',
 } as const;
 
 /**

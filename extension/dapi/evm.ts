@@ -2,6 +2,7 @@ import EventEmitter = require('events');
 import { requestTargetEVM } from '../common/data_module_evm';
 import { ERRORS, EVENT } from '../common/data_module_neo2';
 import { checkConnectAndLogin, sendMessage } from './common';
+import { ethErrors } from 'eth-rpc-errors';
 
 enum EventName {
   accountsChanged = 'accountsChanged',
@@ -16,11 +17,47 @@ class NEOLineEVMController extends EventEmitter {
     super();
     this.setMaxListeners(100);
   }
-  async request(request: {
+  /**
+   * Submits an RPC request for the given method, with the given params.
+   * Resolves with the result of the method call, or rejects on error.
+   *
+   * @param args - The RPC request arguments.
+   * @param args.method - The RPC method name.
+   * @param args.params - The parameters for the RPC method.
+   * @returns A Promise that resolves with the result of the RPC method,
+   * or rejects if an error is encountered.
+   */
+  async request(args: {
     method: string;
     params?: Array<unknown>;
   }): Promise<any> {
-    return sendMessage(requestTargetEVM.request, request);
+    if (!args || typeof args !== 'object' || Array.isArray(args)) {
+      throw ethErrors.rpc.invalidRequest({
+        message: 'Expected a single, non-array, object argument.',
+        data: args,
+      });
+    }
+
+    const { method, params } = args;
+
+    if (typeof method !== 'string' || method.length === 0) {
+      throw ethErrors.rpc.invalidRequest({
+        message: "'args.method' must be a non-empty string.",
+        data: args,
+      });
+    }
+
+    if (
+      params !== undefined &&
+      !Array.isArray(params) &&
+      (typeof params !== 'object' || params === null)
+    ) {
+      throw ethErrors.rpc.invalidRequest({
+        message: "'args.params' must be an object or array if provided.",
+        data: args,
+      });
+    }
+    return sendMessage(requestTargetEVM.request, args);
     const isAuth = await checkConnectAndLogin();
     if (isAuth === true) {
     }
