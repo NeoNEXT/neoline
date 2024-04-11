@@ -81,7 +81,7 @@ import {
   resetData,
   windowCallback,
 } from './tool';
-import { evmHandlerMap } from './handlers';
+import { walletHandlerMap, ethereumRPCHandler } from './handlers';
 
 /**
  * Background methods support.
@@ -123,11 +123,31 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
   switch (request.target) {
     case requestTargetEVM.request: {
-      const handler = evmHandlerMap.get(request.parameter.method);
+      const handler = walletHandlerMap.get(request.parameter.method);
       if (handler) {
         const { implementation } = handler;
         implementation(request.parameter.params, request.ID)
           .then(() => {
+            sendResponse('');
+          })
+          .catch((error) => {
+            windowCallback({
+              data: null,
+              ID: request.ID,
+              return: requestTargetEVM.request,
+              error: error.serialize(),
+            });
+            sendResponse('');
+          });
+      } else {
+        ethereumRPCHandler(request.parameter)
+          .then((data) => {
+            windowCallback({
+              data,
+              error: null,
+              ID: request.ID,
+              return: requestTargetEVM.request,
+            });
             sendResponse('');
           })
           .catch((error) => {
