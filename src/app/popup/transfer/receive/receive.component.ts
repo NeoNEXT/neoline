@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
+import { ChainType } from '../../_lib';
 
 declare var QRCode: any;
 
@@ -13,10 +14,12 @@ export class TransferReceiveComponent implements OnDestroy {
   private accountSub: Unsubscribable;
   address: string;
   private qrcodeDom;
+  chainType: ChainType;
   constructor(private store: Store<AppState>) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet?.accounts[0]?.address;
+      this.chainType = state.currentChainType;
       this.initData();
     });
   }

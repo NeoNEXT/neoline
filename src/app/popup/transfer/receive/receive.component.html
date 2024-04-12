@@ -3,6 +3,18 @@
   <div class="receive-content">
     <div id="receive-qrcode"></div>
   </div>
+  <p class="tip">
+    {{
+      (chainType === "NeoX"
+        ? "onlyReceiveETHAssets"
+        : chainType === "Neo3"
+        ? "onlyReceiveNeoN3Assets"
+        : "onlyReceiveNeoLegacyAssets"
+      )
+        | translate
+        | async
+    }}
+  </p>
   <div class="address">{{ address }}</div>
   <copy [value]="address">
     <button class="confirm">

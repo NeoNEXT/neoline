@@ -979,5 +979,17 @@
   },
   "VerificationPassed": {
     "message": "验证通过"
+  },
+  "addressBook": {
+    "message": "地址薄"
+  },
+  "onlyReceiveETHAssets": {
+    "message": "仅支持接收 Ethereum 网络资产"
+  },
+  "onlyReceiveNeoLegacyAssets": {
+    "message": "仅支持接收 Neo Legacy 网络资产"
+  },
+  "onlyReceiveNeoN3Assets": {
+    "message": "仅支持接收 Neo N3 网络资产"
   }
 }

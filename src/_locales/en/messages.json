@@ -979,5 +979,17 @@
   },
   "VerificationPassed": {
     "message": "Verification passed"
+  },
+  "addressBook": {
+    "message": "Address Book"
+  },
+  "onlyReceiveETHAssets": {
+    "message": ""
+  },
+  "onlyReceiveNeoLegacyAssets": {
+    "message": ""
+  },
+  "onlyReceiveNeoN3Assets": {
+    "message": ""
   }
 }
