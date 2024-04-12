@@ -13,6 +13,9 @@
       <li (click)="chain = 'Neo3'" [ngClass]="{ active: chain === 'Neo3' }">
         Neo N3
       </li>
+      <li (click)="chain = 'NeoX'" [ngClass]="{ active: chain === 'NeoX' }">
+        NeoX
+      </li>
     </ul>
     <p class="title ledger">{{ "plugInLedgerWallet" | translate | async }}</p>
     <p class="tip">

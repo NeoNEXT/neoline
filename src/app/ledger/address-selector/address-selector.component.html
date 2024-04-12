@@ -10,9 +10,17 @@
     <p class="tip" *ngIf="chainType === 'Neo3'">
       {{ status.msgNeo3 || status.msg | translate | async }}
     </p>
+    <p class="tip" *ngIf="chainType === 'NeoX'">
+      {{ status.msgNeoX || status.msg | translate | async }}
+    </p>
     <p class="note">
       {{
-        (chainType === "Neo2" ? "LedgerInstallNeoApp" : "LedgerInstallNeo3App")
+        (chainType === "NeoX"
+          ? "LedgerInstallNeoXApp"
+          : chainType === "Neo2"
+          ? "LedgerInstallNeoApp"
+          : "LedgerInstallNeo3App"
+        )
           | translate
           | async
       }}

@@ -824,11 +824,17 @@
   "openNeo3AppOnLedger": {
     "message": "Please open the NEO N3 app on your Ledger device."
   },
+  "openNeoXAppOnLedger": {
+    "message": "Please open the Ethereum app on your Ledger device."
+  },
   "LedgerConnectedNeoReady": {
     "message": "Ledger connected, NEO app open, ready for use."
   },
   "LedgerConnectedNeo3Ready": {
     "message": "Ledger connected, NEO N3 app open, ready for use."
+  },
+  "LedgerConnectedNeoXReady": {
+    "message": "Ledger connected, Ethereum app open, ready for use."
   },
   "TransactionDeniedByUser": {
     "message": "Transaction denied by user."
@@ -844,6 +850,9 @@
   },
   "LedgerInstallNeo3App": {
     "message": "Note: Please ensure your Ledger has the latest NEO N3 app installed."
+  },
+  "LedgerInstallNeoXApp": {
+    "message": "Note: Please ensure your Ledger has the latest Ethereum app installed."
   },
   "signTheTransaction": {
     "message": "Please sign the transaction on your ledger."
@@ -894,7 +903,7 @@
     "message": "Plug in Ledger wallet"
   },
   "plugInLedgerWalletTip": {
-    "message": "Connect your wallet directly to your computer. Unlock your Ledger and open the Neo/Neo N3 app. For more on using your hardware wallet device, "
+    "message": "Connect your wallet directly to your computer. Unlock your Ledger and open the Neo/Neo N3/Ethereum app. For more on using your hardware wallet device, "
   },
   "clickHere": {
     "message": "click here."

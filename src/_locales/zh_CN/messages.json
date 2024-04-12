@@ -824,11 +824,17 @@
   "openNeo3AppOnLedger": {
     "message": "请在您的硬件设备上打开 NEO N3 应用。"
   },
+  "openNeoXAppOnLedger": {
+    "message": "请在您的硬件设备上打开 Ethereum 应用。"
+  },
   "LedgerConnectedNeoReady": {
     "message": "已连接硬件，NEO 应用程序已打开，可以使用。"
   },
   "LedgerConnectedNeo3Ready": {
     "message": "已连接硬件，NEO N3 应用程序已打开，可以使用。"
+  },
+  "LedgerConnectedNeoXReady": {
+    "message": "已连接硬件，Ethereum 应用程序已打开，可以使用。"
   },
   "TransactionDeniedByUser": {
     "message": "交易被用户拒绝。"
@@ -844,6 +850,9 @@
   },
   "LedgerInstallNeo3App": {
     "message": "注意：请确保您的硬件已安装最新的 NEO N3 应用。"
+  },
+  "LedgerInstallNeoXApp": {
+    "message": "注意：请确保您的硬件已安装最新的 Ethereum 应用。"
   },
   "signTheTransaction": {
     "message": "请在您的硬件上签名交易。"
@@ -894,7 +903,7 @@
     "message": "插入 Ledger 钱包"
   },
   "plugInLedgerWalletTip": {
-    "message": "将您的钱包直接连接到电脑。解锁 Ledger 并打开 Neo/Neo N3 应用程序。关于使用您的硬件钱包设备的更多，"
+    "message": "将您的钱包直接连接到电脑。解锁 Ledger 并打开 Neo/Neo N3/Ethereum 应用程序。关于使用您的硬件钱包设备的更多，"
   },
   "clickHere": {
     "message": "点击这里。"

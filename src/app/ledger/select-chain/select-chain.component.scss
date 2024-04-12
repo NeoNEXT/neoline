@@ -42,9 +42,11 @@ section.main {
     }
     ul {
       margin-top: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       li {
-        display: inline-block;
-        width: 48%;
+        width: 100px;
         height: 90px;
         line-height: 90px;
         background: var(--message-box-color);
@@ -54,9 +56,6 @@ section.main {
         font-family: NeverMind-Regular;
         text-align: center;
         cursor: pointer;
-        &:first-child {
-          margin-right: 4%;
-        }
         &.active {
           font-family: NeverMind-Medium;
           border: 1px solid var(--theme-color);
