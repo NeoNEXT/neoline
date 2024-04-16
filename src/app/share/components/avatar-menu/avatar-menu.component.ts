@@ -119,9 +119,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
   }
 
   async selectAccount(w: Wallet2 | Wallet3) {
-    const hasLoginAddress = await this.chromeSrc
-      .getHasLoginAddress()
-      .toPromise();
+    const hasLoginAddress = await this.chromeSrc.getHasLoginAddress();
     this.close();
     if (
       w.accounts[0]?.extra?.ledgerSLIP44 ||

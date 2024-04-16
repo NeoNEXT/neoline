@@ -40,21 +40,21 @@ export enum STORAGE_NAME {
   WIFArr = 'WIFArr',
   'WIFArr-Neo3' = 'WIFArr-Neo3',
   chainType = 'chainType',
-  neo3AddressFlag = 'neo3AddressFlag',
+  neo3AddressFlag = 'neo3AddressFlag', // Fix the wallet created by neon-core@5-next.4 neon-core@5-next.7
   lang = 'lang',
   transaction = 'transaction',
-  connectedWebsites = 'connectedWebsites',
+  connectedWebsites = 'connectedWebsites', // dAPi connect status
   authAddress = 'authAddress',
-  InvokeArgsArray = 'InvokeArgsArray',
-  walletsStatus = 'walletsStatus',
-  haveBackupTip = 'haveBackupTip',
-  hasLoginAddress = 'hasLoginAddress',
+  InvokeArgsArray = 'InvokeArgsArray', // dAPi N3 invoke args
+  walletsStatus = 'walletsStatus', // Addresses that do not need to be backed up
+  haveBackupTip = 'haveBackupTip', // show backup tip if create wallet
+  hasLoginAddress = 'hasLoginAddress', // has login address
   shouldFindNode = 'shouldFindNode',
   rpcUrls = 'rpcUrls',
-  neo3RemoveT4Flag = 'neo3RemoveT4Flag',
-  onePassword = 'onePassword',
-  theme ='theme',
-  onePassCheckAddresses = 'onePassCheckAddresses',
+  neo3RemoveT4Flag = 'neo3RemoveT4Flag', // remove N3T4 network
+  onePassword = 'onePassword', // Whether the current is one password mode
+  theme ='theme', // light or dark theme
+  onePassCheckAddresses = 'onePassCheckAddresses', // one password mode, save verified address
 }
 
 export enum STORAGE_VALUE_TYPE {

@@ -280,18 +280,23 @@ export class ChromeService {
       if (!this.check) {
         sessionStorage.removeItem('hasLoginAddress');
       } else {
-        this.setStorage(STORAGE_NAME.hasLoginAddress, {});
+        this.crx.setSessionStorage({ [STORAGE_NAME.hasLoginAddress]: {} });
       }
     }
   }
 
-  public getShouldFindNode(): Observable<boolean> {
+  public async getShouldFindNode(): Promise<boolean> {
     if (!this.check) {
-      return of(
+      return Promise.resolve(
         sessionStorage.getItem('shouldFindNode') === 'false' ? false : true
       );
     } else {
-      return this.getStorage(STORAGE_NAME.shouldFindNode);
+      return (await this.crx.getSessionStorage(
+        STORAGE_NAME.shouldFindNode,
+        (res) => res
+      )) === false
+        ? false
+        : true;
     }
   }
 
@@ -299,20 +304,27 @@ export class ChromeService {
     if (!this.check) {
       sessionStorage.setItem('shouldFindNode', status.toString());
     } else {
-      this.setStorage(STORAGE_NAME.shouldFindNode, status);
+      this.crx.setSessionStorage({ [STORAGE_NAME.shouldFindNode]: status });
     }
   }
 
-  public getHasLoginAddress(): Observable<any> {
+  public async getHasLoginAddress(): Promise<any> {
     if (!this.check) {
-      return of(JSON.parse(sessionStorage.getItem('hasLoginAddress') || '{}'));
+      return Promise.resolve(
+        JSON.parse(sessionStorage.getItem('hasLoginAddress') || '{}')
+      );
     } else {
-      return this.getStorage(STORAGE_NAME.hasLoginAddress);
+      return (
+        (await this.crx.getSessionStorage(
+          STORAGE_NAME.hasLoginAddress,
+          (res) => res
+        )) || {}
+      );
     }
   }
 
   public setHasLoginAddress(address) {
-    this.getHasLoginAddress().subscribe((hasLoginAddress) => {
+    this.getHasLoginAddress().then((hasLoginAddress) => {
       hasLoginAddress[address] = true;
       if (!this.check) {
         sessionStorage.setItem(
@@ -320,24 +332,31 @@ export class ChromeService {
           JSON.stringify(hasLoginAddress)
         );
       } else {
-        this.setStorage(STORAGE_NAME.hasLoginAddress, hasLoginAddress);
+        this.crx.setSessionStorage({
+          [STORAGE_NAME.hasLoginAddress]: hasLoginAddress,
+        });
       }
     });
   }
   //#endregion
 
   //#region backup
-  public getHaveBackupTip(): Observable<any> {
+  public async getHaveBackupTip(): Promise<any> {
     if (!this.check) {
       if (sessionStorage.getItem('haveBackupTip') === 'true') {
-        return of(true);
+        return Promise.resolve(true);
       }
       if (sessionStorage.getItem('haveBackupTip') === 'false') {
-        return of(false);
+        return Promise.resolve(false);
       }
-      return of(sessionStorage.getItem('haveBackupTip'));
+      return Promise.resolve(sessionStorage.getItem('haveBackupTip'));
     } else {
-      return this.getStorage(STORAGE_NAME.haveBackupTip);
+      return (await this.crx.getSessionStorage(
+        STORAGE_NAME.haveBackupTip,
+        (res) => res
+      )) === true
+        ? true
+        : false;
     }
   }
 
@@ -346,13 +365,13 @@ export class ChromeService {
       if (!this.check) {
         sessionStorage.removeItem('haveBackupTip');
       } else {
-        this.setStorage(STORAGE_NAME.haveBackupTip, null);
+        this.crx.setSessionStorage({ [STORAGE_NAME.haveBackupTip]: null });
       }
     } else {
       if (!this.check) {
         sessionStorage.setItem('haveBackupTip', status.toString());
       } else {
-        this.setStorage(STORAGE_NAME.haveBackupTip, status);
+        this.crx.setSessionStorage({ [STORAGE_NAME.haveBackupTip]: status });
       }
     }
   }

@@ -32,7 +32,7 @@ export class PopupHomeBackupComponent implements OnInit, OnDestroy {
         this.showOnePassword = true;
       }
     });
-    this.chrome.getHaveBackupTip().subscribe((res) => {
+    this.chrome.getHaveBackupTip().then((res) => {
       this.showBackup = res;
       if (this.currentWallet?.accounts[0]?.extra?.ledgerSLIP44) {
         this.showBackup = false;

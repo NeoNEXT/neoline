@@ -97,7 +97,7 @@ export class PopupLoginComponent
     if (this.loading || this.isInit) {
       return;
     }
-    const hasLoginAddress = await this.chrome.getHasLoginAddress().toPromise();
+    const hasLoginAddress = await this.chrome.getHasLoginAddress();
     if (hasLoginAddress[this.selectWallet.accounts[0].address]) {
       this.handleWallet();
       return;
