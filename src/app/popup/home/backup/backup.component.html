@@ -15,7 +15,7 @@
     </button>
   </div>
 </div>
-<div class="backup-tip" *ngIf="!showOnePassword && showBackup">
+<div class="backup-tip" *ngIf="!showOnePassword && getShowBackup()">
   <p class="title">{{ "backUpsafeTip" | translate | async }}</p>
   <p class="desc">{{ "backUpSafeDesc" | translate | async }}</p>
   <div class="btn-group">

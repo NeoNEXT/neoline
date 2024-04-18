@@ -102,16 +102,15 @@ export class PopupWalletComponent implements OnInit {
     const newChainType = this.neon.selectedChainType;
     const wif =
       this.isOnePassword || !this.hasPwdWallet ? '' : newWallet.accounts[0].wif;
+    delete newWallet.accounts[0].wif;
     switch (newChainType) {
       case 'Neo2':
-        newWallet = new wallet2.Wallet(newWallet.export());
         this.store.dispatch({
           type: ADD_NEO2_WALLETS,
           data: { wallet: [newWallet], wif: [wif] },
         });
         break;
       case 'Neo3':
-        newWallet = new wallet3.Wallet(newWallet.export());
         this.store.dispatch({
           type: ADD_NEO3_WALLETS,
           data: { wallet: [newWallet], wif: [wif] },
@@ -137,16 +136,15 @@ export class PopupWalletComponent implements OnInit {
     this.chrome.accountChangeEvent(
       newChainType === 'NeoX' ? newWallet : newWallet.export()
     );
-    if (isCreate) {
-      this.chrome.setHaveBackupTip(true);
+    if (this.route.snapshot.queryParams.returnUrl) {
+      this.router.navigateByUrl(this.route.snapshot.queryParams.returnUrl);
     } else {
-      this.chrome.setWalletsStatus(newWallet.accounts[0].address);
-      this.chrome.setHaveBackupTip(false);
+      if (newWallet.accounts[0].extra?.hasBackup === false) {
+        this.router.navigate(['/popup/backup']);
+      } else {
+        this.router.navigateByUrl('/popup');
+      }
     }
-    const returnUrl =
-      this.route.snapshot.queryParams.returnUrl ||
-      (isCreate ? '/popup/backup' : '/popup');
-    this.router.navigateByUrl(returnUrl);
   }
 
   public handleFileWallet({ walletArr, wifArr }) {
@@ -183,8 +181,6 @@ export class PopupWalletComponent implements OnInit {
         ? newCurrentWallet
         : newCurrentWallet.export()
     );
-    this.chrome.setWalletsStatus(newCurrentWallet.accounts[0].address);
-    this.chrome.setHaveBackupTip(false);
     const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
     this.router.navigateByUrl(returnUrl);
   }

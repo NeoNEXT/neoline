@@ -475,6 +475,7 @@ export class NeonService {
     if (this.selectedChainType === 'Neo2') {
       const privateKey = wallet2.generatePrivateKey();
       const account = new wallet2.Account(privateKey);
+      account.extra = { hasBackup: false };
       const w = Neon2.create.wallet({
         name: name || 'NeoLineUser',
       } as any);
@@ -486,6 +487,7 @@ export class NeonService {
       });
     } else if (this.selectedChainType === 'Neo3') {
       const account = new wallet3.Account();
+      account.extra = { hasBackup: false };
       const wif = account.WIF;
       const w = new wallet3.Wallet({
         name: name || 'NeoLineUser',

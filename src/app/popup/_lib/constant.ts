@@ -46,8 +46,7 @@ export enum STORAGE_NAME {
   connectedWebsites = 'connectedWebsites', // dAPi connect status
   authAddress = 'authAddress',
   InvokeArgsArray = 'InvokeArgsArray', // dAPi N3 invoke args
-  walletsStatus = 'walletsStatus', // Addresses that do not need to be backed up
-  haveBackupTip = 'haveBackupTip', // show backup tip if create wallet
+  isBackupLater = 'isBackupLater', // show backup tip if create wallet
   hasLoginAddress = 'hasLoginAddress', // has login address
   shouldFindNode = 'shouldFindNode',
   rpcUrls = 'rpcUrls',
@@ -167,11 +166,7 @@ export const STORAGE_VALUE_MESSAGE = {
     type: STORAGE_VALUE_TYPE.object,
     isLocal: true,
   },
-  walletsStatus: {
-    type: STORAGE_VALUE_TYPE.object,
-    isLocal: true,
-  },
-  haveBackupTip: {
+  isBackupLater: {
     type: STORAGE_VALUE_TYPE.boolean,
     isLocal: true,
   },

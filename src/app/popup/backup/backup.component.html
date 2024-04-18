@@ -18,10 +18,12 @@
 <backup-mnemonic
   *ngIf="pageState === 'mnemonic'"
   [mnemonic]="mnemonic"
+  [currentWallet]="currentWallet"
 ></backup-mnemonic>
 
 <backup-key
   *ngIf="pageState === 'privateKey'"
   [WIF]="WIF"
-  [currentAddress]="currentAddress"
+  [chainType]="chainType"
+  [currentWallet]="currentWallet"
 ></backup-key>

@@ -1,6 +1,15 @@
-import { Component, Input, SimpleChanges } from '@angular/core';
-import { ChromeService } from '@/app/core';
+import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import {
+  ChainType,
+  UPDATE_NEO2_WALLET_BACKUP_STATUS,
+  UPDATE_NEO3_WALLET_BACKUP_STATUS,
+  UPDATE_WALLET,
+} from '../../_lib';
+import { AppState } from '@/app/reduers';
+import { Store } from '@ngrx/store';
 
 declare var QRCode: any;
 
@@ -11,10 +20,11 @@ declare var QRCode: any;
 })
 export class PopupBackupKeyComponent {
   @Input() WIF: string;
-  @Input() currentAddress: string;
+  @Input() chainType: ChainType;
+  @Input() currentWallet: Wallet2 | Wallet3;
   private qrcodeDom;
 
-  constructor(private chrome: ChromeService, private router: Router) {
+  constructor(private router: Router, private store: Store<AppState>) {
     this.showKeyQrCode();
   }
 
@@ -39,8 +49,17 @@ export class PopupBackupKeyComponent {
   }
 
   complete() {
-    this.chrome.setHaveBackupTip(false);
-    this.chrome.setWalletsStatus(this.currentAddress);
+    this.currentWallet.accounts[0].extra.hasBackup = true;
+    this.store.dispatch({ type: UPDATE_WALLET, data: this.currentWallet });
+    const data = { address: this.currentWallet.accounts[0].address };
+    switch (this.chainType) {
+      case 'Neo2':
+        this.store.dispatch({ type: UPDATE_NEO2_WALLET_BACKUP_STATUS, data });
+        break;
+      case 'Neo3':
+        this.store.dispatch({ type: UPDATE_NEO3_WALLET_BACKUP_STATUS, data });
+        break;
+    }
     this.router.navigateByUrl('/popup/home');
   }
 }

@@ -341,18 +341,16 @@ export class ChromeService {
   //#endregion
 
   //#region backup
-  public async getHaveBackupTip(): Promise<any> {
+  public async getIsBackupLater(): Promise<boolean> {
     if (!this.check) {
-      if (sessionStorage.getItem('haveBackupTip') === 'true') {
-        return Promise.resolve(true);
-      }
-      if (sessionStorage.getItem('haveBackupTip') === 'false') {
-        return Promise.resolve(false);
-      }
-      return Promise.resolve(sessionStorage.getItem('haveBackupTip'));
+      return Promise.resolve(
+        sessionStorage.getItem(STORAGE_NAME.isBackupLater) === 'true'
+          ? true
+          : false
+      );
     } else {
       return (await this.crx.getSessionStorage(
-        STORAGE_NAME.haveBackupTip,
+        STORAGE_NAME.isBackupLater,
         (res) => res
       )) === true
         ? true
@@ -360,19 +358,11 @@ export class ChromeService {
     }
   }
 
-  public setHaveBackupTip(status?: boolean) {
-    if (status === null) {
-      if (!this.check) {
-        sessionStorage.removeItem('haveBackupTip');
-      } else {
-        this.crx.setSessionStorage({ [STORAGE_NAME.haveBackupTip]: null });
-      }
+  public setIsBackupLater(status: boolean) {
+    if (!this.check) {
+      sessionStorage.setItem(STORAGE_NAME.isBackupLater, status.toString());
     } else {
-      if (!this.check) {
-        sessionStorage.setItem('haveBackupTip', status.toString());
-      } else {
-        this.crx.setSessionStorage({ [STORAGE_NAME.haveBackupTip]: status });
-      }
+      this.crx.setSessionStorage({ [STORAGE_NAME.isBackupLater]: status });
     }
   }
   //#endregion
@@ -504,7 +494,6 @@ export class ChromeService {
       if (
         (storageName === STORAGE_NAME.transaction ||
           storageName === STORAGE_NAME.connectedWebsites ||
-          storageName === STORAGE_NAME.walletsStatus ||
           storageName === STORAGE_NAME.hasLoginAddress ||
           storageName === STORAGE_NAME.authAddress) &&
         !value
@@ -581,23 +570,6 @@ export class ChromeService {
         return: EVENT.NETWORK_CHANGED,
       });
     }
-  }
-  //#endregion
-
-  //#region wallet status
-  public setWalletsStatus(address: string) {
-    this.getStorage(STORAGE_NAME.walletsStatus).subscribe((res) => {
-      res[address] = true;
-      this.setStorage(STORAGE_NAME.walletsStatus, res);
-    });
-  }
-
-  public getWalletStatus(address: string): Observable<boolean> {
-    return this.getStorage(STORAGE_NAME.walletsStatus).pipe(
-      map((res) => {
-        return (res && res[address]) || false;
-      })
-    );
   }
   //#endregion
 }

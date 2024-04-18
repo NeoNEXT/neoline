@@ -16,6 +16,7 @@ export interface EvmWalletJSON {
       extra: {
         publicKey: string;
         isHDWallet?: boolean;
+        hasBackup?: boolean,
         ledgerSLIP44?: string;
         ledgerAddressIndex?: number;
       };

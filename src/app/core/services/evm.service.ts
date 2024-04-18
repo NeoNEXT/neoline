@@ -42,6 +42,10 @@ export class EvmService {
         extra: {
           publicKey: newAccount.publicKey,
           isHDWallet: true,
+          hasBackup:
+            createWalletArr.length > 0
+              ? createWalletArr[0].accounts[0].extra.hasBackup
+              : false,
         },
       },
     ];

@@ -1,5 +1,9 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { UPDATE_NEOX_WALLET_BACKUP_STATUS, UPDATE_WALLET } from '../../_lib';
+import { EvmWalletJSON } from '../../_lib/evm';
+import { AppState } from '@/app/reduers';
+import { Store } from '@ngrx/store';
 
 @Component({
   selector: 'backup-mnemonic',
@@ -8,6 +12,7 @@ import { Router } from '@angular/router';
 })
 export class PopupBackupMnemonicComponent implements OnInit {
   @Input() mnemonic: string;
+  @Input() currentWallet: EvmWalletJSON;
 
   wordList = [];
   hideMnemonic = false;
@@ -16,7 +21,7 @@ export class PopupBackupMnemonicComponent implements OnInit {
   confirmWordList = new Array(12).fill('');
   confirmListStatus = new Array(12).fill(true);
 
-  constructor(private router: Router) {}
+  constructor(private router: Router, private store: Store<AppState>) {}
 
   ngOnInit(): void {
     if (this.mnemonic) {
@@ -47,6 +52,12 @@ export class PopupBackupMnemonicComponent implements OnInit {
       }
     });
     if (flag) {
+      this.currentWallet.accounts[0].extra.hasBackup = true;
+      this.store.dispatch({ type: UPDATE_WALLET, data: this.currentWallet });
+      this.store.dispatch({
+        type: UPDATE_NEOX_WALLET_BACKUP_STATUS,
+        data: { address: this.currentWallet.accounts[0].address },
+      });
       this.router.navigateByUrl('/popup/home');
     }
   }
