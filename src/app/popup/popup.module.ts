@@ -80,6 +80,7 @@ import {
   PopupPasswordDialogComponent,
   PopupPrivateKeyComponent,
   PopupWalletListDialogComponent,
+  PopupAddWalletDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -98,6 +99,7 @@ const POPUP_DIALOGS = [
   PopupPasswordDialogComponent,
   PopupPrivateKeyComponent,
   PopupWalletListDialogComponent,
+  PopupAddWalletDialogComponent,
 ];
 
 //#endregion

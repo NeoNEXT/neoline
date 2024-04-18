@@ -1018,5 +1018,17 @@
   },
   "AddAccountOrHardwareWallet": {
     "message": "添加钱包/连接硬件钱包"
+  },
+  "importWalletTip": {
+    "message": "导入助记词或私钥"
+  },
+  "createWalletTip": {
+    "message": "创建新的助记词钱包"
+  },
+  "ledgerWallet": {
+    "message": "硬件钱包"
+  },
+  "ledgerWalletTip": {
+    "message": "连接您的硬件钱包"
   }
 }

@@ -1018,5 +1018,17 @@
   },
   "AddAccountOrHardwareWallet": {
     "message": "Add account or hardware wallet"
+  },
+  "importWalletTip": {
+    "message": "Import mnemonic phrase or private key"
+  },
+  "createWalletTip": {
+    "message": "Create a new mnemonic wallet"
+  },
+  "ledgerWallet": {
+    "message": "Ledger Wallet"
+  },
+  "ledgerWalletTip": {
+    "message": "Connect your hardware wallet"
   }
 }

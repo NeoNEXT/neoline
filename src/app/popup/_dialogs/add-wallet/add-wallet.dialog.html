@@ -1,0 +1,26 @@
+<div class="pop-ups-title">
+  {{ "AddAccountOrHardwareWallet" | translate | async }}
+</div>
+<ul class="wallet">
+  <li (click)="to('create')">
+    <div>
+      <p class="title">{{ "createWallet" | translate | async }}</p>
+      <p class="tip">{{ "createWalletTip" | translate | async }}</p>
+    </div>
+    <img theme src="assets/images/avatar-menu/wallet-create.svg" alt="" />
+  </li>
+  <li (click)="to('import')">
+    <div>
+      <p class="title">{{ "importWallet" | translate | async }}</p>
+      <p class="tip">{{ "importWalletTip" | translate | async }}</p>
+    </div>
+    <img theme src="assets/images/avatar-menu/wallet-import.svg" alt="" />
+  </li>
+  <li (click)="importLedger()">
+    <div>
+      <p class="title">{{ "ledgerWallet" | translate | async }}</p>
+      <p class="tip">{{ "ledgerWalletTip" | translate | async }}</p>
+    </div>
+    <img theme src="assets/images/avatar-menu/wallet-ledger.svg" alt="" />
+  </li>
+</ul>

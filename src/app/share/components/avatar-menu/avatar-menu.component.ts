@@ -11,17 +11,18 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { ChromeService, AssetState } from '@/app/core';
 import { Router } from '@angular/router';
 import {
-  ChainTypeGroups,
   ChainType,
   UPDATE_WALLET,
   NEO3_CONTRACT,
   STORAGE_NAME,
   RpcNetwork,
+  ChainTypeGroups,
 } from '@popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable, timer } from 'rxjs';
 import {
+  PopupAddWalletDialogComponent,
   PopupPasswordDialogComponent,
   PopupSelectDialogComponent,
 } from '../../../popup/_dialogs';
@@ -29,7 +30,6 @@ import { NEO } from '@/models/models';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '@/app/popup/_lib/evm';
-declare var chrome: any;
 
 interface WalletListItem {
   chain: ChainType;
@@ -209,40 +209,39 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
     this.chromeSrc.accountChangeEvent(w);
   }
 
-  //#region wallet
-  importLedger() {
-    this.close();
-    if (chrome.runtime) {
-      const extensionUrl = chrome.runtime.getURL('/index.html');
-      const ledgerUrl = extensionUrl + '#/ledger';
-      chrome.tabs.create({ url: ledgerUrl });
-    } else {
-      this.router.navigateByUrl('/ledger');
-    }
-  }
-  to(type: 'create' | 'import') {
-    this.close();
+  showAddWallet() {
     this.dialog
-      .open(PopupSelectDialogComponent, {
-        data: {
-          optionGroup: ChainTypeGroups,
-          type: 'chain',
-        },
+      .open(PopupAddWalletDialogComponent, {
         panelClass: 'custom-dialog-panel',
       })
       .afterClosed()
-      .subscribe((chain) => {
-        if (!chain) {
-          return;
-        }
-        if (type === 'create') {
-          this.router.navigateByUrl('/popup/wallet/create');
-        } else {
-          this.router.navigateByUrl('/popup/wallet/import');
+      .subscribe((type) => {
+        if (type) {
+          this.dialog
+            .open(PopupSelectDialogComponent, {
+              data: {
+                optionGroup: ChainTypeGroups,
+                type: 'chain',
+              },
+              panelClass: 'custom-dialog-panel',
+            })
+            .afterClosed()
+            .subscribe((chain) => {
+              if (!chain) {
+                return;
+              }
+              this.close();
+              if (type === 'create') {
+                this.router.navigateByUrl('/popup/wallet/create');
+              } else {
+                this.router.navigateByUrl('/popup/wallet/import');
+              }
+            });
         }
       });
   }
 
+  //#region wallet
   async exportWallet() {
     if (!this.isOnePassword) {
       if (this.wallet.accounts[0]?.extra?.ledgerSLIP44) return;
