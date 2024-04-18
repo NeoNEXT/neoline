@@ -1000,5 +1000,20 @@
   },
   "onlyReceiveNeoN3Assets": {
     "message": "仅支持接收 Neo N3 网络资产"
+  },
+  "ConfirmSecretRecoveryPhrase": {
+    "message": "确认助记词"
+  },
+  "YourSecretRecoveryPhrase": {
+    "message": "您的助记词"
+  },
+  "ConfirmTheSecretRecoveryPhrasesInOrder": {
+    "message": "请按顺序确认助记词"
+  },
+  "WrongSecretRecoveryPhrase": {
+    "message": "助记词错误，请重新输入"
+  },
+  "notedItDown": {
+    "message": "我已备份完毕"
   }
 }

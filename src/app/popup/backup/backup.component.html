@@ -1,6 +1,6 @@
 <nav title="backUp"></nav>
 
-<div class="container">
+<div class="container" *ngIf="pageState === 'tip'">
   <img class="backup" theme src="/assets/images/account/backup.svg" alt="" />
   <p class="title">{{ "backUpTip" | translate | async }}</p>
   <p class="desc">{{ "backUpDesc1" | translate | async }}</p>
@@ -14,3 +14,14 @@
     </button>
   </div>
 </div>
+
+<backup-mnemonic
+  *ngIf="pageState === 'mnemonic'"
+  [mnemonic]="mnemonic"
+></backup-mnemonic>
+
+<backup-key
+  *ngIf="pageState === 'privateKey'"
+  [WIF]="WIF"
+  [currentAddress]="currentAddress"
+></backup-key>

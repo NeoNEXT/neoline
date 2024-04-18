@@ -1,45 +1,24 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { GlobalService, ChromeService, UtilServiceState } from '@/app/core';
-import { Store } from '@ngrx/store';
-import { AppState } from '@/app/reduers';
-import { Unsubscribable } from 'rxjs';
+import { Component, Input, SimpleChanges } from '@angular/core';
+import { ChromeService } from '@/app/core';
+import { Router } from '@angular/router';
 
 declare var QRCode: any;
 
 @Component({
+  selector: 'backup-key',
   templateUrl: 'backup-key.component.html',
   styleUrls: ['backup-key.component.scss'],
 })
-export class PopupBackupKeyComponent implements OnDestroy {
-  WIF = '';
-  private accountSub: Unsubscribable;
-  private address: string;
+export class PopupBackupKeyComponent {
+  @Input() WIF: string;
+  @Input() currentAddress: string;
   private qrcodeDom;
-  constructor(
-    private global: GlobalService,
-    private chrome: ChromeService,
-    private util: UtilServiceState,
-    private store: Store<AppState>
-  ) {
-    const account$ = this.store.select('account');
-    this.accountSub = account$.subscribe((state) => {
-      this.address = state.currentWallet?.accounts[0]?.address;
-      const chain = state.currentChainType;
-      const currentWIFArr =
-        chain === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;
-      const currentWalletArr =
-        chain === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
-      this.showKeyQrCode(currentWIFArr, currentWalletArr, state.currentWallet);
-    });
+
+  constructor(private chrome: ChromeService, private router: Router) {
+    this.showKeyQrCode();
   }
 
-  ngOnDestroy(): void {
-    this.accountSub?.unsubscribe();
-  }
-
-  private async showKeyQrCode(WIFArr: string[], walletArr, currentWallet) {
-    this.WIF = await this.util.getWIF(WIFArr, walletArr, currentWallet);
-    this.updateWalletStatus();
+  private async showKeyQrCode() {
     if (QRCode) {
       setTimeout(() => {
         if (this.qrcodeDom) {
@@ -59,8 +38,9 @@ export class PopupBackupKeyComponent implements OnDestroy {
     }
   }
 
-  private updateWalletStatus() {
+  complete() {
     this.chrome.setHaveBackupTip(false);
-    this.chrome.setWalletsStatus(this.address);
+    this.chrome.setWalletsStatus(this.currentAddress);
+    this.router.navigateByUrl('/popup/home');
   }
 }

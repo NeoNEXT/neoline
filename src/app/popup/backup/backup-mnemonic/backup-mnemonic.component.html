@@ -1,0 +1,65 @@
+<div class="container">
+  <p class="title">{{ "YourSecretRecoveryPhrase" | translate | async }}</p>
+  <p class="tip">
+    {{
+      isConfirmMnemonic
+        ? ("ConfirmTheSecretRecoveryPhrasesInOrder" | translate | async)
+        : "请将助记词抄写备份并妥善保管，不要透漏给任何人"
+    }}
+  </p>
+
+  <ul *ngIf="!isConfirmMnemonic">
+    <li *ngFor="let word of wordList; index as index">
+      <span class="order">{{ index + 1 }}</span>
+      <p class="value">{{ hideMnemonic ? "***" : word }}</p>
+    </li>
+  </ul>
+
+  <ul *ngIf="isConfirmMnemonic">
+    <li
+      *ngFor="let word of confirmWordList; index as index; trackBy: trackByFn"
+    >
+      <span class="order">{{ index + 1 }}</span>
+      <input
+        class="value"
+        type="text"
+        [ngClass]="{ error: confirmListStatus[index] === false }"
+        [(ngModel)]="confirmWordList[index]"
+        (paste)="onPaste($event, index)"
+      />
+    </li>
+  </ul>
+
+  <div class="operate" *ngIf="!isConfirmMnemonic">
+    <p class="item" (click)="hideMnemonic = !hideMnemonic">
+      <img
+        theme
+        [src]="
+          hideMnemonic
+            ? 'assets/images/login/eye-view.svg'
+            : 'assets/images/login/eye-hide.svg'
+        "
+      />
+      {{ hideMnemonic ? "显示助记词" : "隐藏助记词" }}
+    </p>
+    <copy [value]="mnemonic">
+      <p class="item">
+        <img theme src="assets/images/common/copy-mnemonic.svg" />
+        复制到剪切板
+      </p>
+    </copy>
+  </div>
+
+  <div class="btn-group">
+    <button
+      *ngIf="!isConfirmMnemonic"
+      class="confirm"
+      (click)="isConfirmMnemonic = true"
+    >
+      {{ "notedItDown" | translate | async }}
+    </button>
+    <button *ngIf="isConfirmMnemonic" (click)="checkMnemonic()" class="confirm">
+      {{ "Confirm" | translate | async }}
+    </button>
+  </div>
+</div>

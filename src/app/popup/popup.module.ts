@@ -30,6 +30,7 @@ import { PopupNftDetailComponent } from './detail/nft-detail/nft-detail.componen
 import { PopupNftTokensComponent } from './detail/nft-detail/nft-tokens/nft-tokens.component';
 import { PopupBackupComponent } from './backup/backup.component';
 import { PopupBackupKeyComponent } from './backup/backup-key/backup-key.component';
+import { PopupBackupMnemonicComponent } from './backup/backup-mnemonic/backup-mnemonic.component';
 import {
   PopupAssetsComponent,
   PopupHomeComponent,
@@ -49,6 +50,7 @@ const POPUP_COMPONENTS = [
   PopupNftDetailComponent,
   PopupBackupComponent,
   PopupBackupKeyComponent,
+  PopupBackupMnemonicComponent,
   PopupAssetsComponent,
   PopupHomeComponent,
   PopupNftsComponent,

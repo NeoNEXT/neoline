@@ -31,6 +31,9 @@ import {
   ADD_NEOX_NETWORK,
   UPDATE_NEOX_NETWORKS,
   UPDATE_NEOX_NETWORK_INDEX,
+  UPDATE_NEO2_WALLET_BACKUP_STATUS,
+  UPDATE_NEO3_WALLET_BACKUP_STATUS,
+  UPDATE_NEOX_WALLET_BACKUP_STATUS,
 } from '@/app/popup/_lib';
 import { EvmWalletJSON, DEFAULT_NEOX_RPC_NETWORK } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
@@ -149,6 +152,33 @@ export default function account(
         neoXWalletArr: updateWalletName(
           action.data,
           state.neo3WalletArr,
+          'NeoX'
+        ),
+      };
+    case UPDATE_NEO2_WALLET_BACKUP_STATUS:
+      return {
+        ...state,
+        neo2WalletArr: updateWalletBackupStatus(
+          action.data,
+          state.neo2WalletArr,
+          'Neo2'
+        ),
+      };
+    case UPDATE_NEO3_WALLET_BACKUP_STATUS:
+      return {
+        ...state,
+        neo3WalletArr: updateWalletBackupStatus(
+          action.data,
+          state.neo3WalletArr,
+          'Neo3'
+        ),
+      };
+    case UPDATE_NEOX_WALLET_BACKUP_STATUS:
+      return {
+        ...state,
+        neoXWalletArr: updateWalletBackupStatus(
+          action.data,
+          state.neoXWalletArr,
           'NeoX'
         ),
       };
@@ -351,6 +381,41 @@ function updateWalletName(
   }
   return targetWalletArr;
 }
+
+function updateWalletBackupStatus(
+  data: any,
+  sourceWalletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>,
+  chainType: ChainType
+): any {
+  const targetWalletArr = [...sourceWalletArr];
+  if (chainType === 'Neo2' || chainType === 'Neo3') {
+    targetWalletArr.find(
+      (item) => item.accounts[0].address === data.address
+    ).accounts[0].extra.hasBackup = true;
+  }
+  if (chainType === 'NeoX') {
+    targetWalletArr.forEach((item) => {
+      if (item.accounts[0].extra.isHDWallet) {
+        item.accounts[0].extra.hasBackup = true;
+      }
+    });
+  }
+  if (chainType === 'Neo2') {
+    updateLocalStorage(
+      STORAGE_NAME.walletArr,
+      getWalletJsons(targetWalletArr as Wallet2[])
+    );
+  } else if (chainType === 'Neo3') {
+    updateLocalStorage(
+      STORAGE_NAME['walletArr-Neo3'],
+      getWalletJsons(targetWalletArr as Wallet3[])
+    );
+  } else {
+    updateLocalStorage(STORAGE_NAME['walletArr-NeoX'], targetWalletArr);
+  }
+  return targetWalletArr;
+}
+
 function updateAllWallets({
   currentWallet,
   neo2WalletArr,

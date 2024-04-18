@@ -1,6 +1,5 @@
-<nav title="youPrivateKey"></nav>
-
 <div class="container">
+  <p class="title">{{ "youPrivateKey" | translate | async }}</p>
   <div class="qrcode-content">
     <div id="key-qrcode"></div>
   </div>
@@ -12,7 +11,7 @@
   </copy>
   <p class="tip">{{ "privateKeyTip" | translate | async }}</p>
   <div class="btn-group">
-    <button class="confirm" routerLink="/popup/home">
+    <button class="confirm" (click)="complete()">
       {{ "complete" | translate | async }}
     </button>
   </div>

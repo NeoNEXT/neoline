@@ -18,12 +18,12 @@ export class EvmService {
 
   async createWallet(pwd: string, name: string): Promise<EvmWalletJSON> {
     let wallet: ethers.HDNodeWallet;
-    const createWalletLength = this.neoXWalletArr.filter(
+    const createWalletArr = this.neoXWalletArr.filter(
       (item) => item.accounts[0].extra.isHDWallet
-    ).length;
-    if (createWalletLength > 0) {
+    );
+    if (createWalletArr.length > 0) {
       wallet = (await ethers.Wallet.fromEncryptedJson(
-        JSON.stringify(this.neoXWalletArr[0]),
+        JSON.stringify(createWalletArr[0]),
         pwd
       )) as ethers.HDNodeWallet;
     } else {
@@ -31,7 +31,7 @@ export class EvmService {
     }
     const newAccount = ethers.HDNodeWallet.fromMnemonic(
       wallet.mnemonic,
-      `m/44'/60'/0'/0/${createWalletLength}`
+      `m/44'/60'/0'/0/${createWalletArr.length}`
     );
     const json = await newAccount.encrypt(pwd);
     const accountLike: EvmWalletJSON = JSON.parse(json);
