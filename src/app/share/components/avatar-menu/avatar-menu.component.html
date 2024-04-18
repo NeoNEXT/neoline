@@ -3,6 +3,7 @@
   <div class="my-account">
     <span>{{ "myAccount" | translate | async }}</span>
     <span class="right">
+      <img theme src="assets/images/avatar-menu/guide.svg" alt="" />
       <img
         (click)="lock()"
         theme
@@ -21,65 +22,61 @@
       />
     </span>
   </div>
-  <div class="account-list">
-    <button class="search">
-      <img class="search" theme src="assets/images/common/search.svg" />
-      <input
-        [placeholder]="'Search' | translate | async"
-        (input)="searchWallet($event)"
-        type="text"
-      />
-    </button>
-    <ul>
-      <li
-        *ngFor="let item of displayWalletArr"
-        (click)="selectAccount(item)"
-        [ngClass]="{
-          active: wallet.accounts[0].address === item.accounts[0].address
-        }"
-      >
-        <span class="select"></span>
-        <div
-          class="avatar-box"
-          [ngClass]="{ ledger: item.accounts[0]?.extra?.ledgerSLIP44 }"
-        >
-          <img class="avatar" [avatar]="item.accounts[0].address" />
+  <button class="search">
+    <img class="search" theme src="assets/images/common/search.svg" />
+    <input
+      [placeholder]="'Search' | translate | async"
+      (input)="searchWallet($event)"
+      type="text"
+    />
+  </button>
+  <div class="wallet-list">
+    <div class="list-item" *ngFor="let list of searchWalletRes">
+      <p class="list-title">
+        <span>{{ list.title }}</span>
+        <span class="dropdown" (click)="list.expand = !list.expand">
           <img
-            *ngIf="item.accounts[0]?.extra?.ledgerSLIP44"
-            class="usb"
-            src="/assets/images/ledger/ledger-avatar.png"
+            theme
+            [ngClass]="{ expand: list.expand }"
+            src="/assets/images/common/arrow.svg"
             alt=""
           />
-        </div>
-        <div>
-          <p class="name">{{ item.name }}</p>
-          <p class="balance">
-            {{ addressBalances[item.accounts[0].address] }} NEO
-          </p>
-        </div>
-      </li>
-    </ul>
+        </span>
+      </p>
+      <ul [hidden]="!list.expand">
+        <li
+          *ngFor="let item of list.walletArr"
+          (click)="selectAccount(item, list.chain)"
+          [ngClass]="{
+            active: wallet.accounts[0].address === item.accounts[0].address
+          }"
+        >
+          <span class="select"></span>
+          <div
+            class="avatar-box"
+            [ngClass]="{ ledger: item.accounts[0]?.extra?.ledgerSLIP44 }"
+          >
+            <img class="avatar" [avatar]="item.accounts[0].address" />
+            <img
+              *ngIf="item.accounts[0]?.extra?.ledgerSLIP44"
+              class="usb"
+              src="/assets/images/ledger/ledger-avatar.png"
+              alt=""
+            />
+          </div>
+          <div>
+            <p class="name">{{ item.name }}</p>
+            <p class="balance" *ngIf="chainType === list.chain">
+              {{ addressBalances[item.accounts[0].address] }}
+              {{ list.chain === "NeoX" ? neoXNetwork.symbol : "NEO" }}
+            </p>
+          </div>
+          <img theme class="more" src="/assets/images/common/more.svg" alt="" />
+        </li>
+      </ul>
+    </div>
   </div>
-  <ul class="wallet">
-    <li (click)="importLedger()">
-      <img theme src="assets/images/avatar-menu/wallet-ledger.svg" alt="" />{{
-        "LEDGER" | translate | async
-      }}
-    </li>
-    <li (click)="to('create')">
-      <img theme src="assets/images/avatar-menu/wallet-create.svg" alt="" />{{
-        "createWallet" | translate | async
-      }}
-    </li>
-    <li (click)="to('import')">
-      <img theme src="assets/images/avatar-menu/wallet-import.svg" alt="" />{{
-        "importWallet" | translate | async
-      }}
-    </li>
-    <li (click)="exportWallet()">
-      <img theme src="assets/images/avatar-menu/wallet-export.svg" alt="" />{{
-        "exportWallet" | translate | async
-      }}
-    </li>
-  </ul>
+  <button class="confirm pop-ups add-wallet">
+    {{ "AddAccountOrHardwareWallet" | translate | async }}
+  </button>
 </div>

@@ -1015,5 +1015,8 @@
   },
   "notedItDown": {
     "message": "I've noted it down"
+  },
+  "AddAccountOrHardwareWallet": {
+    "message": "Add account or hardware wallet"
   }
 }

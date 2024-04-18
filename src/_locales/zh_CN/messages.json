@@ -1015,5 +1015,8 @@
   },
   "notedItDown": {
     "message": "我已备份完毕"
+  },
+  "AddAccountOrHardwareWallet": {
+    "message": "添加钱包/连接硬件钱包"
   }
 }
