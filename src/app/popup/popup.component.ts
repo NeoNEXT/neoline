@@ -1,11 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterEvent, NavigationEnd } from '@angular/router';
-import { RpcNetwork, ChainType } from './_lib';
+import { RpcNetwork } from './_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
   templateUrl: 'popup.component.html',
@@ -18,38 +16,24 @@ export class PopupComponent implements OnInit {
 
   private accountSub: Unsubscribable;
   address: string;
-  networks: RpcNetwork[];
-  networkIndex: number;
-  chainType: ChainType;
-  switchNetwork: RpcNetwork;
-  switchChainWallet: Wallet2 | Wallet3;
+  currentNetwork: RpcNetwork;
   constructor(private store: Store<AppState>, private router: Router) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       if (state.currentWallet) {
-        const wallet = state.currentWallet;
-        this.address = wallet.accounts[0].address;
+        this.address = state.currentWallet.accounts[0].address;
       }
-      this.chainType = state.currentChainType;
-      switch (this.chainType) {
+      switch (state.currentChainType) {
         case 'Neo2':
-          this.networks = state.n2Networks;
-          this.networkIndex = state.n2NetworkIndex;
+          this.currentNetwork = state.n2Networks[state.n2NetworkIndex];
           break;
         case 'Neo3':
-          this.networks = state.n3Networks;
-          this.networkIndex = state.n3NetworkIndex;
+          this.currentNetwork = state.n3Networks[state.n3NetworkIndex];
           break;
         case 'NeoX':
-          this.networks = state.neoXNetworks;
-          this.networkIndex = state.neoXNetworkIndex;
+          this.currentNetwork = state.neoXNetworks[state.neoXNetworkIndex];
           break;
       }
-      this.switchNetwork = this.networks[this.networkIndex];
-      this.switchChainWallet =
-        this.chainType === 'Neo2'
-          ? state.neo3WalletArr[0]
-          : state.neo2WalletArr[0];
     });
   }
 

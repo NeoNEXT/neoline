@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, Input } from '@angular/core';
+import { Component, Output, EventEmitter, OnDestroy } from '@angular/core';
 import {
   RpcNetwork,
   ChainType,
@@ -7,6 +7,8 @@ import {
   UPDATE_NEO3_NETWORKS,
   UPDATE_WALLET,
   UPDATE_NEOX_NETWORK_INDEX,
+  UPDATE_NEOX_NETWORKS,
+  AddNetworkChainTypeGroups,
 } from '@/app/popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -14,81 +16,139 @@ import { ChromeService, NeonService } from '@/app/core';
 import {
   PopupAddNetworkDialogComponent,
   PopupConfirmDialogComponent,
+  PopupSelectDialogComponent,
 } from '@/app/popup/_dialogs';
 import { MatDialog } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Router } from '@angular/router';
+import { Unsubscribable } from 'rxjs';
+import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 
 @Component({
   selector: 'network',
   templateUrl: 'network.component.html',
   styleUrls: ['network.component.scss'],
 })
-export class PopupNetworkComponent {
-  @Input() networks: RpcNetwork[];
-  @Input() chainType: ChainType;
-  @Input() networkIndex: number;
-  @Input() switchNetwork: RpcNetwork;
-  @Input() switchChainWallet: Wallet2 | Wallet3;
+export class PopupNetworkComponent implements OnDestroy {
   @Output() closeEvent = new EventEmitter();
 
+  private accountSub: Unsubscribable;
+  neo2WalletArr: Wallet2[];
+  neo3WalletArr: Wallet3[];
+  neoXWalletArr: EvmWalletJSON[];
+  neo2Networks: RpcNetwork[];
+  neo3Networks: RpcNetwork[];
+  neoXNetworks: RpcNetwork[];
+  currentNetwork: RpcNetwork;
+  neo3NetworkIndex: number;
+  neoXNetworkIndex: number;
+  chainType: ChainType;
+  allNetworks: Array<{
+    chain: ChainType;
+    title: string;
+    expand: boolean;
+    networkArr: RpcNetwork[];
+  }>;
   constructor(
     private store: Store<AppState>,
     private chromeSer: ChromeService,
     private dialog: MatDialog,
     private router: Router,
     private neon: NeonService
-  ) {}
+  ) {
+    const account$ = this.store.select('account');
+    this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
+      this.neo2WalletArr = state.neo2WalletArr;
+      this.neo3WalletArr = state.neo3WalletArr;
+      this.neoXWalletArr = state.neoXWalletArr;
+      this.neo2Networks = state.n2Networks;
+      this.neo3Networks = state.n3Networks;
+      this.neoXNetworks = state.neoXNetworks;
+      switch (this.chainType) {
+        case 'Neo2':
+          this.currentNetwork = this.neo2Networks[state.n2NetworkIndex];
+          break;
+        case 'Neo3':
+          this.currentNetwork = this.neo3Networks[state.n3NetworkIndex];
+          this.neo3NetworkIndex = state.n3NetworkIndex;
+          break;
+        case 'NeoX':
+          this.currentNetwork = this.neoXNetworks[state.neoXNetworkIndex];
+          this.neoXNetworkIndex = state.neoXNetworkIndex;
+          break;
+      }
+      this.allNetworks = [
+        {
+          chain: 'NeoX',
+          title: 'Neo x (EVM network)',
+          networkArr: this.neoXNetworks,
+          expand: this.chainType === 'NeoX',
+        },
+        {
+          chain: 'Neo3',
+          title: 'Neo N3',
+          networkArr: this.neo3Networks,
+          expand: this.chainType === 'Neo3',
+        },
+        {
+          chain: 'Neo2',
+          title: 'Neo Legacy',
+          networkArr: this.neo2Networks,
+          expand: this.chainType === 'Neo2',
+        },
+      ];
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
+  }
 
   close() {
     this.closeEvent.emit();
   }
 
-  public changeNetwork(index: number) {
-    if (index === this.networkIndex) {
+  public changeNetwork(
+    newNetwork: RpcNetwork,
+    index: number,
+    newChain: ChainType
+  ) {
+    if (
+      newChain === this.chainType &&
+      newNetwork.id === this.currentNetwork.id
+    ) {
       return;
     }
-    this.networkIndex = index;
-    if (this.chainType === 'Neo2') {
-      this.store.dispatch({ type: UPDATE_NEO2_NETWORK_INDEX, data: index });
-      this.chromeSer.networkChangeEvent(this.networks[index]);
-    } else if (this.chainType === 'Neo3') {
-      this.store.dispatch({ type: UPDATE_NEO3_NETWORK_INDEX, data: index });
-      this.chromeSer.networkChangeEvent(this.networks[index]);
-    } else {
-      this.store.dispatch({ type: UPDATE_NEOX_NETWORK_INDEX, data: index });
-      this.chromeSer.networkChangeEvent(this.networks[index]);
-    }
-    this.close();
-  }
-
-  addNetwork() {
-    this.close();
-    this.dialog.open(PopupAddNetworkDialogComponent, {
-      panelClass: 'custom-dialog-panel',
-    });
-  }
-
-  deleteNetwork(index: number) {
-    if (this.networkIndex > index) {
-      this.networkIndex--;
-      this.store.dispatch({
-        type: UPDATE_NEO3_NETWORK_INDEX,
-        data: this.networkIndex,
-      });
-    }
-    this.networks.splice(index, 1);
-    this.store.dispatch({ type: UPDATE_NEO3_NETWORKS, data: this.networks });
-  }
-
-  changeChain() {
-    if (!this.switchChainWallet) {
+    if (newChain === this.chainType) {
+      switch (newChain) {
+        case 'Neo2':
+          this.store.dispatch({ type: UPDATE_NEO2_NETWORK_INDEX, data: index });
+          break;
+        case 'Neo3':
+          this.store.dispatch({ type: UPDATE_NEO3_NETWORK_INDEX, data: index });
+          break;
+        case 'NeoX':
+          this.store.dispatch({ type: UPDATE_NEOX_NETWORK_INDEX, data: index });
+          break;
+      }
+      this.chromeSer.networkChangeEvent(newNetwork);
       this.close();
+      return;
+    }
+    // new chian
+    if (
+      (newChain === 'Neo2' && this.neo2WalletArr.length === 0) ||
+      (newChain === 'Neo3' && this.neo3WalletArr.length === 0) ||
+      (newChain === 'NeoX' && this.neoXWalletArr.length === 0)
+    ) {
       this.dialog
         .open(PopupConfirmDialogComponent, {
           data:
-            this.chainType === 'Neo2'
+            newChain === 'NeoX'
+              ? 'createOrImportNeoXFirst'
+              : newChain === 'Neo3'
               ? 'createOrImportNeo3First'
               : 'createOrImportNeo2First',
           panelClass: 'custom-dialog-panel',
@@ -96,34 +156,93 @@ export class PopupNetworkComponent {
         .afterClosed()
         .subscribe((confirm) => {
           if (confirm) {
-            this.neon.selectChainType(
-              this.chainType === 'Neo2' ? 'Neo3' : 'Neo2'
-            );
+            this.close();
+            this.neon.selectChainType(newChain);
             this.router.navigateByUrl('/popup/wallet/create');
           }
         });
-      return;
-    }
-    this.store.dispatch({ type: UPDATE_WALLET, data: this.switchChainWallet });
-    this.chromeSer.accountChangeEvent(this.switchChainWallet);
-    this.chromeSer.networkChangeEvent(this.switchNetwork);
-    const backHomeUrls = [
-      '/popup/add-asset',
-      '/popup/add-nft',
-      '/popup/my-nfts',
-      '/popup/transfer/create',
-      '/popup/asset',
-      '/popup/nfts/',
-    ];
-    let flag = false;
-    backHomeUrls.forEach((item) => {
-      if (location.hash.includes(item)) {
-        flag = true;
+    } else {
+      let switchChainWallet;
+      switch (newChain) {
+        case 'Neo2':
+          switchChainWallet = this.neo2WalletArr[0];
+          break;
+        case 'Neo3':
+          switchChainWallet = this.neo3WalletArr[0];
+          break;
+        case 'NeoX':
+          switchChainWallet = this.neoXWalletArr[0];
+          break;
       }
-    });
-    if (flag) {
-      this.router.navigateByUrl('/popup/home');
+      this.store.dispatch({ type: UPDATE_WALLET, data: switchChainWallet });
+      this.chromeSer.accountChangeEvent(switchChainWallet);
+      this.chromeSer.networkChangeEvent(newNetwork);
+      const backHomeUrls = [
+        '/popup/add-asset',
+        '/popup/add-nft',
+        '/popup/my-nfts',
+        '/popup/transfer/create',
+        '/popup/asset',
+        '/popup/nfts/',
+      ];
+      if (backHomeUrls.find((item) => location.hash.includes(item))) {
+        this.router.navigateByUrl('/popup/home');
+      }
+      this.close();
     }
-    this.close();
+  }
+
+  addNetwork() {
+    this.dialog
+      .open(PopupSelectDialogComponent, {
+        data: {
+          optionGroup: AddNetworkChainTypeGroups,
+          type: 'chain',
+        },
+        panelClass: 'custom-dialog-panel',
+      })
+      .afterClosed()
+      .subscribe((chain) => {
+        if (!chain) {
+          return;
+        }
+        this.close();
+        this.dialog.open(PopupAddNetworkDialogComponent, {
+          panelClass: 'custom-dialog-panel',
+        });
+      });
+  }
+
+  deleteNetwork(index: number, chain: ChainType) {
+    switch (chain) {
+      case 'Neo3':
+        if (chain === this.chainType && this.neo3NetworkIndex > index) {
+          this.neo3NetworkIndex--;
+          this.store.dispatch({
+            type: UPDATE_NEO3_NETWORK_INDEX,
+            data: this.neo3NetworkIndex,
+          });
+        }
+        this.neo3Networks.splice(index, 1);
+        this.store.dispatch({
+          type: UPDATE_NEO3_NETWORKS,
+          data: this.neo3Networks,
+        });
+        break;
+      case 'NeoX':
+        if (chain === this.chainType && this.neoXNetworkIndex > index) {
+          this.neoXNetworkIndex--;
+          this.store.dispatch({
+            type: UPDATE_NEOX_NETWORK_INDEX,
+            data: this.neoXNetworkIndex,
+          });
+        }
+        this.neoXNetworks.splice(index, 1);
+        this.store.dispatch({
+          type: UPDATE_NEOX_NETWORKS,
+          data: this.neoXNetworks,
+        });
+        break;
+    }
   }
 }

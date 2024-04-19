@@ -5,7 +5,7 @@
     [ngClass]="{ disabled: !getShowAvatar() }"
     (click)="showNetworkList = true"
   >
-    {{ networks[networkIndex]?.name }}
+    {{ currentNetwork?.name }}
     <img theme src="assets/images/common/triangle-fill.svg" />
   </button>
   <div class="avatar" (click)="showAvatarMenu = true" *ngIf="getShowAvatar()">
@@ -19,11 +19,6 @@
 
 <network
   *ngIf="showNetworkList"
-  [networks]="networks"
-  [chainType]="chainType"
-  [networkIndex]="networkIndex"
-  [switchChainWallet]="switchChainWallet"
-  [switchNetwork]="switchNetwork"
   (closeEvent)="showNetworkList = false"
 ></network>
 

@@ -16,7 +16,7 @@ export interface EvmWalletJSON {
       extra: {
         publicKey: string;
         isHDWallet?: boolean;
-        hasBackup?: boolean,
+        hasBackup?: boolean;
         ledgerSLIP44?: string;
         ledgerAddressIndex?: number;
       };
@@ -33,6 +33,7 @@ export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
     network: NetworkType.EVM,
     rpcUrl: 'https://neoxseed1.ngd.network',
     explorer: 'https://xt2scan.ngd.network/',
+    keep: true,
   },
   {
     id: 84532,

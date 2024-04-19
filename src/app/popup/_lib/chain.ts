@@ -18,8 +18,13 @@ export const ChainTypeGroups: SelectItem[] = [
   },
   {
     type: 'NeoX',
-    name: 'NeoX'
-  }
+    name: 'NeoX',
+  },
+];
+
+export const AddNetworkChainTypeGroups: SelectItem[] = [
+  ChainTypeGroups[1],
+  ChainTypeGroups[2],
 ];
 
 export enum NetworkType {
@@ -37,4 +42,4 @@ export const CHAINID_OF_NETWORKTYPE = {
   2: 'N2 TESTNET',
   3: 'N3 MAINNET',
   6: 'N3 TESTNET',
-}
+};

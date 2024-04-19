@@ -55,19 +55,27 @@
     position: relative;
     mask-image: -webkit-linear-gradient(
       top,
-      rgba(0, 0, 0, 0.1) 0%,
-      rgba(0, 0, 0, 1) 7%,
-      rgba(0, 0, 0, 1) 93%,
+      rgba(0, 0, 0, 1) 96%,
       rgba(0, 0, 0, 0.1) 100%,
     );
     &::-webkit-scrollbar {
       display: block;
     }
     .list-item {
+      margin-bottom: 8px;
+      position: relative;
+      &::after {
+        content: "";
+        position: absolute;
+        left: 24px;
+        right: 24px;
+        bottom: 0;
+        height: 1px;
+        background: var(--line-color);
+      }
       .list-title {
-        height: 49px;
+        height: 42px;
         padding: 0 24px;
-        padding-top: 14px;
         color: #2a3331;
         display: flex;
         align-items: center;
@@ -96,16 +104,6 @@
           cursor: pointer;
           display: flex;
           align-items: center;
-          position: relative;
-          &::after {
-            content: "";
-            position: absolute;
-            left: 24px;
-            right: 24px;
-            bottom: 0;
-            height: 1px;
-            background: var(--line-color);
-          }
           &.active {
             .select {
               border: none;

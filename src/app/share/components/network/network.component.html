@@ -1,38 +1,44 @@
 <div class="pop-ups-veil" (click)="close()"></div>
 <div class="content">
   <p class="title">{{ "Networks" | translate | async }}</p>
-  <ul>
-    <li
-      *ngFor="let item of networks; index as index"
-      (click)="changeNetwork(index)"
-    >
-      <span
-        class="select"
-        [ngClass]="{ active: networks[networkIndex].id === item.id }"
-      ></span>
-      <span class="flex-1">{{ item.name }}</span>
-      <img
-        class="delete"
-        *ngIf="index !== networkIndex && item.id > 6"
-        (click)="$event.stopPropagation(); deleteNetwork(index)"
-        theme
-        src="/assets/images/common/close.svg"
-        alt=""
-      />
-    </li>
-  </ul>
-  <div class="btn-group">
-    <button
-      *ngIf="chainType === 'Neo3'"
-      class="confirm pop-ups"
-      (click)="addNetwork()"
-    >
-      {{ "AddNetwork" | translate | async }}
-    </button>
-    <button class="cancel pop-ups" (click)="changeChain()">
-      {{ "SwitchTo" | translate | async }}
-      {{ chainType === "Neo2" ? "N3" : "N2" }}
-      {{ "Network" | translate | async }}
-    </button>
+  <div class="network-list">
+    <div class="list-item" *ngFor="let list of allNetworks">
+      <p class="list-title">
+        <span>{{ list.title }}</span>
+        <span class="dropdown" (click)="list.expand = !list.expand">
+          <img
+            theme
+            [ngClass]="{ expand: list.expand }"
+            src="/assets/images/common/arrow.svg"
+            alt=""
+          />
+        </span>
+      </p>
+      <ul [hidden]="!list.expand">
+        <li
+          *ngFor="let item of list.networkArr; index as index"
+          [ngClass]="{ active: currentNetwork.id === item.id }"
+          (click)="changeNetwork(item, index, list.chain)"
+        >
+          <span class="select"></span>
+          <span class="flex-1">{{ item.name }}</span>
+          <img
+            class="delete"
+            *ngIf="
+              currentNetwork.id !== item.id &&
+              ((list.chain === 'Neo3' && item.id > 6) ||
+                (list.chain === 'NeoX' && !item.keep))
+            "
+            (click)="$event.stopPropagation(); deleteNetwork(index, list.chain)"
+            theme
+            src="/assets/images/common/close.svg"
+            alt=""
+          />
+        </li>
+      </ul>
+    </div>
   </div>
+  <button class="confirm pop-ups add-network" (click)="addNetwork()">
+    {{ "AddNetwork" | translate | async }}
+  </button>
 </div>

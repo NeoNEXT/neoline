@@ -21,6 +21,7 @@ export interface RpcNetwork {
   id: number;
   // evm
   symbol?: string;
+  keep?: boolean;
 }
 
 export const DEFAULT_NETWORKS = [
