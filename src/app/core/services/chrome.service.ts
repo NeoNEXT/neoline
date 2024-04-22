@@ -242,6 +242,7 @@ export class ChromeService {
 
   public resetWallet() {
     this.setPassword('');
+    this.setStorage(STORAGE_NAME.wallet, undefined);
     this.setStorage(STORAGE_NAME.WIFArr, []);
     this.setStorage(STORAGE_NAME['WIFArr-Neo3'], []);
     this.setStorage(STORAGE_NAME.walletArr, []);

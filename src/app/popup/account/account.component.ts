@@ -1,10 +1,4 @@
-import {
-  Component,
-  OnInit,
-  OnDestroy,
-  ViewChild,
-  ElementRef,
-} from '@angular/core';
+import { Component, OnDestroy, ViewChild, ElementRef } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 
 import {
@@ -24,10 +18,12 @@ import {
   UPDATE_WALLET,
   UPDATE_NEO2_WALLET_NAME,
   UPDATE_NEO3_WALLET_NAME,
-  STORAGE_NAME,
+  UPDATE_NEOX_WALLET_NAME,
 } from '../_lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { ActivatedRoute } from '@angular/router';
+import { EvmWalletJSON } from '../_lib/evm';
 
 @Component({
   templateUrl: 'account.component.html',
@@ -40,33 +36,39 @@ export class PopupAccountComponent implements OnDestroy {
   showEditName = false;
   inputName = '';
 
+  operateWallet: Wallet2 | Wallet3 | EvmWalletJSON;
+  private operateChainType: ChainType;
+
   private accountSub: Unsubscribable;
-  public address: string;
-  currentWallet: Wallet2 | Wallet3;
-  private chainType: ChainType;
-  private currentWIFArr: string[];
-  private currentWalletArr: Array<Wallet2 | Wallet3>;
-  private network: RpcNetwork;
+  private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
+  private currentChainType: ChainType;
+  private neo2WIFArr: string[];
+  private neo3WIFArr: string[];
+  private neo2WalletArr: Wallet2[];
+  private neo3WalletArr: Wallet3[];
+  private neoXWalletArr: EvmWalletJSON[];
+  private neo2Network: RpcNetwork;
+  private neo3Network: RpcNetwork;
+  private neoXNetwork: RpcNetwork;
   constructor(
     private global: GlobalService,
     private dialog: MatDialog,
     private chrome: ChromeService,
+    private aRouter: ActivatedRoute,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
-      this.chainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
-      this.network =
-        state.currentChainType === 'Neo2'
-          ? state.n2Networks[state.n2NetworkIndex]
-          : state.n3Networks[state.n3NetworkIndex];
-      this.currentWIFArr =
-        state.currentChainType === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;
-      this.currentWalletArr =
-        state.currentChainType === 'Neo2'
-          ? state.neo2WalletArr
-          : state.neo3WalletArr;
+      this.currentChainType = state.currentChainType;
+      this.neo2Network = state.n2Networks[state.n2NetworkIndex];
+      this.neo3Network = state.n3Networks[state.n3NetworkIndex];
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      this.neo2WIFArr = state.neo2WIFArr;
+      this.neo3WIFArr = state.neo3WIFArr;
+      this.neo2WalletArr = state.neo2WalletArr;
+      this.neo3WalletArr = state.neo3WalletArr;
+      this.neoXWalletArr = state.neoXWalletArr;
       this.initData();
     });
   }
@@ -76,20 +78,44 @@ export class PopupAccountComponent implements OnDestroy {
   }
 
   async initData() {
-    this.address = this.currentWallet.accounts[0].address;
-    this.inputName = this.currentWallet.name;
-    this.isLedger = !!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44;
-    if (this.isLedger || this.chainType === 'NeoX') {
-      this.publicKey = this.currentWallet.accounts[0]?.extra?.publicKey;
-    } else {
-      this.publicKey = await this.getPublicKey();
-    }
+    this.aRouter.queryParams.subscribe(async (params) => {
+      const address = params.address;
+      if (address && params.chainType) {
+        this.operateChainType = params.chainType;
+        switch (this.operateChainType) {
+          case 'Neo2':
+            this.operateWallet = this.neo2WalletArr.find(
+              (item) => item.accounts[0].address === address
+            );
+            break;
+          case 'Neo3':
+            this.operateWallet = this.neo3WalletArr.find(
+              (item) => item.accounts[0].address === address
+            );
+            break;
+          case 'NeoX':
+            this.operateWallet = this.neoXWalletArr.find(
+              (item) => item.accounts[0].address === address
+            );
+            break;
+        }
+      } else {
+        this.operateWallet = this.currentWallet;
+        this.operateChainType = this.currentChainType;
+      }
+      this.inputName = this.operateWallet.name;
+      this.isLedger = !!this.operateWallet.accounts[0]?.extra?.ledgerSLIP44;
+      await this.getPublicKey();
+    });
   }
 
   public wif() {
     return this.dialog.open(PopupPrivateKeyComponent, {
       panelClass: 'custom-dialog-panel',
-      data: { currentWallet: this.currentWallet, chainType: this.chainType },
+      data: {
+        currentWallet: this.operateWallet,
+        chainType: this.operateWallet,
+      },
     });
   }
 
@@ -97,7 +123,7 @@ export class PopupAccountComponent implements OnDestroy {
     return this.dialog.open(PopupQRCodeDialogComponent, {
       width: 'auto',
       panelClass: 'custom-dialog-panel',
-      data: this.address,
+      data: this.operateWallet.accounts[0].address,
     });
   }
 
@@ -111,61 +137,99 @@ export class PopupAccountComponent implements OnDestroy {
   updateName() {
     if (
       this.inputName.trim() === '' ||
-      this.currentWallet.name === this.inputName
+      this.operateWallet.name === this.inputName
     ) {
       this.showEditName = false;
       return;
     }
-    this.currentWallet.name = this.inputName;
-    this.store.dispatch({ type: UPDATE_WALLET, data: this.currentWallet });
+    this.operateWallet.name = this.inputName;
+    if (
+      this.currentWallet.accounts[0].address ===
+      this.operateWallet.accounts[0].address
+    ) {
+      this.store.dispatch({ type: UPDATE_WALLET, data: this.operateWallet });
+    }
     const data = {
-      address: this.currentWallet.accounts[0].address,
+      address: this.operateWallet.accounts[0].address,
       name: this.inputName,
     };
-    if (this.chainType === 'Neo2') {
-      this.store.dispatch({
-        type: UPDATE_NEO2_WALLET_NAME,
-        data,
-      });
-    } else {
-      this.store.dispatch({
-        type: UPDATE_NEO3_WALLET_NAME,
-        data,
-      });
+    switch (this.operateChainType) {
+      case 'Neo2':
+        this.store.dispatch({
+          type: UPDATE_NEO2_WALLET_NAME,
+          data,
+        });
+        this.chrome.accountChangeEvent(
+          (this.operateWallet as Wallet2).export()
+        );
+        break;
+      case 'Neo3':
+        this.store.dispatch({
+          type: UPDATE_NEO3_WALLET_NAME,
+          data,
+        });
+        this.chrome.accountChangeEvent(
+          (this.operateWallet as Wallet3).export()
+        );
+        break;
+      case 'NeoX':
+        this.store.dispatch({
+          type: UPDATE_NEOX_WALLET_NAME,
+          data,
+        });
+        this.chrome.accountChangeEvent(this.operateWallet as EvmWalletJSON);
+        break;
     }
-    this.chrome.accountChangeEvent(this.currentWallet.export());
     this.showEditName = false;
     this.global.snackBarTip('nameModifySucc');
   }
 
   toWeb() {
-    switch (this.chainType) {
+    const address = this.operateWallet.accounts[0].address;
+    switch (this.operateChainType) {
       case 'Neo2':
-        if (this.network.explorer) {
-          window.open(`${this.network.explorer}address/${this.address}/page/1`);
+        if (this.neo2Network.explorer) {
+          window.open(`${this.neo2Network.explorer}address/${address}/page/1`);
         }
         break;
       case 'Neo3':
-        if (this.network.explorer) {
-          window.open(`${this.network.explorer}address/${this.address}`);
+        if (this.neo3Network.explorer) {
+          window.open(`${this.neo3Network.explorer}address/${address}`);
+        }
+        break;
+      case 'NeoX':
+        if (this.neoXNetwork.explorer) {
+          window.open(`${this.neoXNetwork.explorer}address/${address}`);
         }
         break;
     }
   }
 
   private async getPublicKey() {
-    const index = this.currentWalletArr.findIndex(
-      (item) => item.accounts[0].address === this.address
+    if (this.isLedger || this.operateChainType === 'NeoX') {
+      this.publicKey = this.operateWallet.accounts[0]?.extra?.publicKey;
+      return;
+    }
+    const currentWIFArr =
+      this.operateChainType === 'Neo2' ? this.neo2WIFArr : this.neo3WIFArr;
+    const currentWalletArr =
+      this.operateChainType === 'Neo2'
+        ? this.neo2WalletArr
+        : this.neo3WalletArr;
+    const index = currentWalletArr.findIndex(
+      (item) =>
+        item.accounts[0].address === this.operateWallet.accounts[0].address
     );
-    const wif = this.currentWIFArr[index];
+    const wif = currentWIFArr[index];
     if (wif) {
-      const walletThis = this.chainType === 'Neo2' ? wallet : wallet3;
+      const walletThis = this.operateChainType === 'Neo2' ? wallet : wallet3;
       const privateKey = walletThis.getPrivateKeyFromWIF(wif);
-      return walletThis.getPublicKeyFromPrivateKey(privateKey);
+      this.publicKey = walletThis.getPublicKeyFromPrivateKey(privateKey);
+      return;
     }
     const pwd = await this.chrome.getPassword();
-    return (this.currentWallet.accounts[0] as any).decrypt(pwd).then((res) => {
-      return res.publicKey;
+    (this.operateWallet.accounts[0] as any).decrypt(pwd).then((res) => {
+      this.publicKey = res.publicKey;
     });
   }
 }

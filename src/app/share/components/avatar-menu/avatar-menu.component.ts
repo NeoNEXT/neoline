@@ -8,7 +8,7 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
-import { ChromeService, AssetState } from '@/app/core';
+import { ChromeService, AssetState, NeonService } from '@/app/core';
 import { Router } from '@angular/router';
 import {
   ChainType,
@@ -23,6 +23,7 @@ import { AppState } from '@/app/reduers';
 import { Unsubscribable, timer } from 'rxjs';
 import {
   PopupAddWalletDialogComponent,
+  PopupConfirmDialogComponent,
   PopupPasswordDialogComponent,
   PopupSelectDialogComponent,
 } from '../../../popup/_dialogs';
@@ -36,6 +37,7 @@ interface WalletListItem {
   title: string;
   expand: boolean;
   walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
+  walletShowMoreArr: boolean[];
 }
 
 @Component({
@@ -60,11 +62,13 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
   neoXNetwork: RpcNetwork;
 
   private displayList: WalletListItem[];
+  private allWallet: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
   constructor(
     private router: Router,
     private chromeSrc: ChromeService,
     private dialog: MatDialog,
     private assetState: AssetState,
+    private neon: NeonService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -75,27 +79,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       this.neo3WalletArr = state.neo3WalletArr;
       this.neoXWalletArr = state.neoXWalletArr;
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
-      this.displayList = [
-        {
-          chain: 'NeoX',
-          title: 'Neo x (EVM network)',
-          walletArr: this.neoXWalletArr,
-          expand: this.chainType === 'NeoX',
-        },
-        {
-          chain: 'Neo3',
-          title: 'Neo N3',
-          walletArr: this.neo3WalletArr,
-          expand: this.chainType === 'Neo3',
-        },
-        {
-          chain: 'Neo2',
-          title: 'Neo Legacy',
-          walletArr: this.neo2WalletArr,
-          expand: this.chainType === 'Neo2',
-        },
-      ];
-      this.searchWalletRes = this.displayList;
+      this.initData();
       this.getBalances();
     });
   }
@@ -109,6 +93,36 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
+  }
+
+  private initData() {
+    this.displayList = [
+      {
+        chain: 'NeoX',
+        title: 'Neo X (EVM Network)',
+        walletArr: this.neoXWalletArr,
+        expand: this.chainType === 'NeoX',
+        walletShowMoreArr: new Array(this.neoXWalletArr.length).fill(false),
+      },
+      {
+        chain: 'Neo3',
+        title: 'Neo N3',
+        walletArr: this.neo3WalletArr,
+        expand: this.chainType === 'Neo3',
+        walletShowMoreArr: new Array(this.neo3WalletArr.length).fill(false),
+      },
+      {
+        chain: 'Neo2',
+        title: 'Neo Legacy',
+        walletArr: this.neo2WalletArr,
+        expand: this.chainType === 'Neo2',
+        walletShowMoreArr: new Array(this.neo2WalletArr.length).fill(false),
+      },
+    ];
+    this.searchWalletRes = this.displayList;
+    this.allWallet = (this.neo3WalletArr as any)
+      .concat(this.neo2WalletArr)
+      .concat(this.neoXWalletArr);
   }
 
   close() {
@@ -142,27 +156,30 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       this.searchWalletRes = [
         {
           chain: 'NeoX',
-          title: 'Neo x (EVM network)',
+          title: 'Neo X (EVM Network)',
           walletArr: searchNeoX,
           expand: true,
+          walletShowMoreArr: new Array(searchNeoX.length).fill(false),
         },
         {
           chain: 'Neo3',
           title: 'Neo N3',
           walletArr: searchNeo3,
           expand: true,
+          walletShowMoreArr: new Array(searchNeo3.length).fill(false),
         },
         {
           chain: 'Neo2',
           title: 'Neo Legacy',
           walletArr: searchNeo2,
           expand: true,
+          walletShowMoreArr: new Array(searchNeo2.length).fill(false),
         },
       ];
     });
   }
 
-  filterWallet(
+  private filterWallet(
     value: string,
     walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>
   ) {
@@ -235,6 +252,54 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
                 this.router.navigateByUrl('/popup/wallet/create');
               } else {
                 this.router.navigateByUrl('/popup/wallet/import');
+              }
+            });
+        }
+      });
+  }
+
+  checkShowRemove(removeWallet: Wallet2 | Wallet3 | EvmWalletJSON): boolean {
+    if (!removeWallet.accounts[0]?.extra?.ledgerSLIP44) {
+      const accounts = this.allWallet.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
+      return accounts.length > 1 ? true : false;
+    } else {
+      return true;
+    }
+  }
+
+  removeAccount(
+    removeWallet: Wallet2 | Wallet3 | EvmWalletJSON,
+    chainType: ChainType
+  ) {
+    if (!removeWallet.accounts[0]?.extra?.ledgerSLIP44) {
+      const accounts = this.allWallet.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
+      if (accounts.length <= 1) {
+        return;
+      }
+    }
+    this.close();
+    this.dialog
+      .open(PopupConfirmDialogComponent, {
+        data: 'delWalletConfirm',
+        panelClass: 'custom-dialog-panel',
+      })
+      .afterClosed()
+      .subscribe((confirm) => {
+        if (confirm) {
+          this.neon
+            .delWallet(
+              removeWallet,
+              chainType,
+              removeWallet.accounts[0].address ===
+                this.wallet.accounts[0].address
+            )
+            .subscribe((w) => {
+              if (!w) {
+                this.router.navigateByUrl('/popup/wallet/new-guide');
               }
             });
         }

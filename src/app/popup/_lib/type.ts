@@ -1,4 +1,4 @@
-import { NetworkType } from './chain';
+import { ChainType, NetworkType } from './chain';
 
 export interface GasFeeSpeed {
   slow_price: string;
@@ -9,6 +9,10 @@ export interface GasFeeSpeed {
 export interface SelectItem {
   type: string;
   name: string;
+}
+
+export interface ChainSelectItem extends SelectItem {
+  type: ChainType;
 }
 
 export interface RpcNetwork {
@@ -75,10 +79,7 @@ export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
 export const DEFAULT_RPC_URLS = {
   lastModified: null,
   nodes: {
-    1: [
-      'http://seed6.ngd.network:10332',
-      'http://seed8.ngd.network:10332',
-    ],
+    1: ['http://seed6.ngd.network:10332', 'http://seed8.ngd.network:10332'],
     2: [
       'http://seed3.ngd.network:20332',
       'http://seed4.ngd.network:20332',

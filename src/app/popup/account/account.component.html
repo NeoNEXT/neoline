@@ -7,10 +7,10 @@
     src="/assets/images/account/detail-qr-code.svg"
     alt=""
   />
-  <img class="avatar" [avatar]="address" />
+  <img class="avatar" [avatar]="operateWallet.accounts[0].address" />
   <div class="name-content">
     <div class="name" *ngIf="showEditName === false">
-      <span>{{ currentWallet.name }}</span
+      <span>{{ operateWallet.name }}</span
       ><img (click)="editName()" src="assets/images/common/edit.svg" />
     </div>
     <div class="edit" *ngIf="showEditName">
@@ -30,9 +30,9 @@
   </div>
 
   <p class="label">{{ "address" | translate | async }}</p>
-  <copy [value]="address">
+  <copy [value]="operateWallet.accounts[0].address">
     <div class="value">
-      <span>{{ address }}</span
+      <span>{{ operateWallet.accounts[0].address }}</span
       ><img theme src="assets/images/common/copy.svg" />
     </div>
   </copy>
@@ -49,6 +49,6 @@
     {{ "displayWIF" | translate | async }}
   </button>
   <button class="cancel link" (click)="toWeb()">
-    {{ "viewOnNeoTube" | translate | async }}
+    {{ "ViewOnExplorer" | translate | async }}
   </button>
 </div>

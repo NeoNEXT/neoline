@@ -29,6 +29,8 @@ import {
   REMOVE_NEO2_WALLET,
   REMOVE_NEO3_WALLET,
   UPDATE_NEO3_WALLETS_ADDRESS,
+  REMOVE_NEOX_WALLET,
+  RESET_ACCOUNT,
 } from '@popup/_lib';
 import { str2hexstring } from '@cityofzion/neon-core-neo3/lib/u';
 import { HttpClient } from '@angular/common/http';
@@ -501,12 +503,19 @@ export class NeonService {
       return this.evmService.createWallet(key, name);
     }
   }
-  public delCurrentWallet(
-    deleteWallet: Wallet2 | Wallet3,
-    currentChainType: ChainType
+  public delWallet(
+    deleteWallet: Wallet2 | Wallet3 | EvmWalletJSON,
+    deleteChainType: ChainType,
+    isDeleteCurrentWallet: boolean
   ) {
-    if (this.neo2WalletArr.length + this.neo3WalletArr.length <= 1) {
-      this.chrome.removeStorage(STORAGE_NAME.wallet);
+    if (
+      this.neo2WalletArr.length +
+        this.neo3WalletArr.length +
+        this.neoXWalletArr.length <=
+      1
+    ) {
+      this.store.dispatch({ type: RESET_ACCOUNT });
+      this.chrome.resetWallet();
       this.chrome.windowCallback({
         data: {
           address: deleteWallet.accounts[0].address || '',
@@ -514,41 +523,76 @@ export class NeonService {
         },
         return: EVENT.DISCONNECTED,
       });
+      return;
     }
     let newWallet;
-    if (currentChainType === 'Neo2') {
-      const index = this.neo2WalletArr.findIndex(
-        (item) => item.accounts[0].address === deleteWallet.accounts[0].address
-      );
-      if (this.neo2WalletArr.length > 1) {
-        newWallet = index === 0 ? this.neo2WalletArr[1] : this.neo2WalletArr[0];
-      } else {
-        if (this.neo3WalletArr.length > 0) {
-          newWallet = this.neo3WalletArr[0];
-        }
-      }
-    } else {
-      const index = this.neo3WalletArr.findIndex(
-        (item) => item.accounts[0].address === deleteWallet.accounts[0].address
-      );
-      if (this.neo3WalletArr.length > 1) {
-        newWallet = index === 0 ? this.neo3WalletArr[1] : this.neo3WalletArr[0];
-      } else {
-        if (this.neo2WalletArr.length > 0) {
-          newWallet = this.neo2WalletArr[0];
-        }
+    if (isDeleteCurrentWallet) {
+      switch (deleteChainType) {
+        case 'Neo2':
+          const neo2Index = this.neo2WalletArr.findIndex(
+            (item) =>
+              item.accounts[0].address === deleteWallet.accounts[0].address
+          );
+          if (this.neo2WalletArr.length > 1) {
+            newWallet =
+              neo2Index === 0 ? this.neo2WalletArr[1] : this.neo2WalletArr[0];
+          } else {
+            if (this.neo3WalletArr.length > 0) {
+              newWallet = this.neo3WalletArr[0];
+            } else if (this.neoXWalletArr.length > 0) {
+              newWallet = this.neoXWalletArr[0];
+            }
+          }
+          break;
+        case 'Neo3':
+          const neo3Index = this.neo3WalletArr.findIndex(
+            (item) =>
+              item.accounts[0].address === deleteWallet.accounts[0].address
+          );
+          if (this.neo3WalletArr.length > 1) {
+            newWallet =
+              neo3Index === 0 ? this.neo3WalletArr[1] : this.neo3WalletArr[0];
+          } else {
+            if (this.neo2WalletArr.length > 0) {
+              newWallet = this.neo2WalletArr[0];
+            } else if (this.neoXWalletArr.length > 0) {
+              newWallet = this.neoXWalletArr[0];
+            }
+          }
+          break;
+        case 'NeoX':
+          const neoXIndex = this.neoXWalletArr.findIndex(
+            (item) =>
+              item.accounts[0].address === deleteWallet.accounts[0].address
+          );
+          if (this.neoXWalletArr.length > 1) {
+            newWallet =
+              neoXIndex === 0 ? this.neoXWalletArr[1] : this.neoXWalletArr[0];
+          } else {
+            if (this.neo3WalletArr.length > 0) {
+              newWallet = this.neo3WalletArr[0];
+            } else if (this.neo2WalletArr.length > 0) {
+              newWallet = this.neo2WalletArr[0];
+            }
+          }
+          break;
       }
     }
     this.store.dispatch({
       type:
-        currentChainType === 'Neo2' ? REMOVE_NEO2_WALLET : REMOVE_NEO3_WALLET,
+        deleteChainType === 'Neo2'
+          ? REMOVE_NEO2_WALLET
+          : deleteChainType === 'Neo3'
+          ? REMOVE_NEO3_WALLET
+          : REMOVE_NEOX_WALLET,
       data: deleteWallet,
     });
     if (newWallet) {
       this.store.dispatch({ type: UPDATE_WALLET, data: newWallet });
       this.chrome.accountChangeEvent(newWallet);
+      return of(newWallet);
     }
-    return of(newWallet);
+    return of(deleteWallet);
   }
   //#endregion
 

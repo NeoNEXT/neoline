@@ -151,7 +151,7 @@ export default function account(
         ...state,
         neoXWalletArr: updateWalletName(
           action.data,
-          state.neo3WalletArr,
+          state.neoXWalletArr,
           'NeoX'
         ),
       };
@@ -289,14 +289,7 @@ function addNeo3Wallet(
 
 function addNeoXWallet(data: any, sourceWalletArr: EvmWalletJSON[]) {
   const targetWalletArr = [...sourceWalletArr];
-  if (data.isCreate) {
-    const createWalletLength = sourceWalletArr.filter(
-      (item) => item.accounts[0].extra.isHDWallet
-    ).length;
-    targetWalletArr.splice(createWalletLength, 0, data.wallet);
-  } else {
-    targetWalletArr.push(data.wallet);
-  }
+  targetWalletArr.push(data.wallet);
   updateLocalStorage(STORAGE_NAME['walletArr-NeoX'], targetWalletArr);
   return { neoXWalletArr: targetWalletArr };
 }

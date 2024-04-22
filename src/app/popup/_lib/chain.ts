@@ -1,4 +1,4 @@
-import { SelectItem } from './type';
+import { ChainSelectItem } from './type';
 
 /**
  * 链类型
@@ -7,24 +7,24 @@ import { SelectItem } from './type';
  */
 export type ChainType = 'Neo2' | 'Neo3' | 'NeoX';
 
-export const ChainTypeGroups: SelectItem[] = [
+export const ChainTypeGroups: ChainSelectItem[] = [
   {
-    type: 'Neo2',
-    name: 'Neo Legacy',
+    type: 'NeoX',
+    name: 'Neo X (EVM Network)',
   },
   {
     type: 'Neo3',
     name: 'Neo N3',
   },
   {
-    type: 'NeoX',
-    name: 'NeoX',
+    type: 'Neo2',
+    name: 'Neo Legacy',
   },
 ];
 
-export const AddNetworkChainTypeGroups: SelectItem[] = [
+export const AddNetworkChainTypeGroups: ChainSelectItem[] = [
+  ChainTypeGroups[0],
   ChainTypeGroups[1],
-  ChainTypeGroups[2],
 ];
 
 export enum NetworkType {

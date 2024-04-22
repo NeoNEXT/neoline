@@ -524,8 +524,8 @@
   "generalSettings": {
     "message": "通用设置"
   },
-  "viewOnNeoTube": {
-    "message": "在 NeoTube 上查看"
+  "ViewOnExplorer": {
+    "message": "在浏览器上查看"
   },
   "accountDetails": {
     "message": "账户详情"
@@ -1030,5 +1030,17 @@
   },
   "ledgerWalletTip": {
     "message": "连接您的硬件钱包"
+  },
+  "enterMnemonic": {
+    "message": "输入助记词"
+  },
+  "MnemonicRequired": {
+    "message": "助记词必填"
+  },
+  "MnemonicPattern": {
+    "message": "助记词无效"
+  },
+  "importMnemonic": {
+    "message": "助记词导入"
   }
 }

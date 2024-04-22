@@ -1,3 +1,5 @@
+@import "src/styles/pop-ups-menu.scss";
+
 .content {
   position: absolute;
   top: 65px;
@@ -104,6 +106,7 @@
           cursor: pointer;
           display: flex;
           align-items: center;
+          position: relative;
           &.active {
             .select {
               border: none;
@@ -161,6 +164,18 @@
             right: 24px;
             top: 50%;
             transform: translateY(-50%);
+          }
+          .pop-ups-menu {
+            width: 164px;
+            position: absolute;
+            right: 8px;
+            top: 48px;
+            padding: 4px 0;
+            li {
+              padding: 0 12px;
+              height: 48px;
+              font-size: 14px;
+            }
           }
         }
       }

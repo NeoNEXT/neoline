@@ -18,20 +18,28 @@ export class EvmService {
 
   async createWallet(pwd: string, name: string): Promise<EvmWalletJSON> {
     let wallet: ethers.HDNodeWallet;
-    const createWalletArr = this.neoXWalletArr.filter(
-      (item) => item.accounts[0].extra.isHDWallet
-    );
-    if (createWalletArr.length > 0) {
+    let maxIndexHDWallet: EvmWalletJSON = undefined;
+    let newHDWalletIndex = 0;
+    this.neoXWalletArr.forEach((item) => {
+      if (
+        item.accounts[0].extra.isHDWallet &&
+        item.accounts[0].extra.hdWalletIndex > (maxIndexHDWallet ?? -1)
+      ) {
+        maxIndexHDWallet = item;
+      }
+    });
+    if (maxIndexHDWallet) {
       wallet = (await ethers.Wallet.fromEncryptedJson(
-        JSON.stringify(createWalletArr[0]),
+        JSON.stringify(maxIndexHDWallet),
         pwd
       )) as ethers.HDNodeWallet;
+      newHDWalletIndex = maxIndexHDWallet.accounts[0].extra.hdWalletIndex + 1;
     } else {
       wallet = ethers.Wallet.createRandom();
     }
     const newAccount = ethers.HDNodeWallet.fromMnemonic(
       wallet.mnemonic,
-      `m/44'/60'/0'/0/${createWalletArr.length}`
+      `m/44'/60'/0'/0/${newHDWalletIndex}`
     );
     const json = await newAccount.encrypt(pwd);
     const accountLike: EvmWalletJSON = JSON.parse(json);
@@ -42,10 +50,10 @@ export class EvmService {
         extra: {
           publicKey: newAccount.publicKey,
           isHDWallet: true,
-          hasBackup:
-            createWalletArr.length > 0
-              ? createWalletArr[0].accounts[0].extra.hasBackup
-              : false,
+          hdWalletIndex: newHDWalletIndex,
+          hasBackup: maxIndexHDWallet
+            ? maxIndexHDWallet.accounts[0].extra.hasBackup
+            : false,
         },
       },
     ];
@@ -53,7 +61,6 @@ export class EvmService {
   }
 
   async importWalletFromPhrase(phrase: string, pwd: string, name: string) {
-    if (this.neoXWalletArr.length > 0) return;
     const mnemonic = ethers.Mnemonic.fromPhrase(phrase);
     const account0 = ethers.HDNodeWallet.fromMnemonic(mnemonic);
     const json = await account0.encrypt(pwd);
@@ -65,6 +72,8 @@ export class EvmService {
         extra: {
           publicKey: account0.publicKey,
           isHDWallet: true,
+          hdWalletIndex: 0,
+          hasBackup: true,
         },
       },
     ];
@@ -89,14 +98,5 @@ export class EvmService {
       },
     ];
     return accountLike;
-  }
-
-  deleteWallet(w: EvmWalletJSON) {
-    this.store.dispatch({
-      type: REMOVE_NEOX_WALLET,
-      data: w,
-    });
-    this.store.dispatch({ type: UPDATE_WALLET, data: this.neoXWalletArr[0] });
-    this.chrome.accountChangeEvent(this.neoXWalletArr[0]);
   }
 }

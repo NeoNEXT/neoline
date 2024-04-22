@@ -82,7 +82,7 @@ export class PopupNetworkComponent implements OnDestroy {
       this.allNetworks = [
         {
           chain: 'NeoX',
-          title: 'Neo x (EVM network)',
+          title: 'Neo X (EVM Network)',
           networkArr: this.neoXNetworks,
           expand: this.chainType === 'NeoX',
         },
