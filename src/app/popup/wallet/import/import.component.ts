@@ -29,7 +29,7 @@ import { ChainType } from '../../_lib';
 import { EvmWalletJSON } from '../../_lib/evm';
 import { ethers } from 'ethers';
 
-type ImportType = 'key' | 'file';
+type ImportType = 'key' | 'file' | 'mnemonic';
 
 function checkWIF(chainType: ChainType): ValidatorFn {
   return (control: AbstractControl): { [key: string]: any } | null => {
@@ -55,6 +55,20 @@ function checkWIF(chainType: ChainType): ValidatorFn {
   };
 }
 
+function checkMnemonic(): ValidatorFn {
+  return (control: AbstractControl): { [key: string]: any } | null => {
+    const mnemonic = control.value;
+    if (!mnemonic) {
+      return null;
+    }
+    let valid = false;
+    if (ethers.Mnemonic.isValidMnemonic(mnemonic)) {
+      valid = true;
+    }
+    return valid === false ? { errorMnemonic: { value: control.value } } : null;
+  };
+}
+
 @Component({
   selector: 'wallet-import',
   templateUrl: 'import.component.html',
@@ -75,6 +89,11 @@ export class PopupWalletImportComponent
   hideConfirmPwd = true;
   hideWIF = true;
 
+  importMnemonicForm: FormGroup;
+  hideImportMnemonicPwd = true;
+  hideConfirmMnemonicPwd = true;
+  hideMnemonic = true;
+
   nep6Form: FormGroup;
   nep6Json;
   hideNep6FilePwd = true;
@@ -82,9 +101,12 @@ export class PopupWalletImportComponent
   hideNep6ConfirmPwd = true;
   showImportTypeMenu = false;
 
+  importTypeList: ImportType[] = ['key', 'file'];
+
   @Input() password: string;
   @Input() isOnePassword: boolean;
   @Input() hasPwdWallet: boolean;
+  @Input() neoXWalletArr: EvmWalletJSON[] = [];
   @Output() submitThis = new EventEmitter<any>();
   @Output() submitFile = new EventEmitter<any>();
   matcher = new MyErrorStateMatcher();
@@ -107,10 +129,23 @@ export class PopupWalletImportComponent
   }
 
   ngOnInit() {
+    if (this.neon.selectedChainType === 'NeoX') {
+      if (
+        this.neoXWalletArr.some((item) => item.accounts[0].extra.isHDWallet)
+      ) {
+        this.importTypeList = ['key'];
+      } else {
+        this.importTypeList = ['key', 'mnemonic'];
+      }
+    }
     if (this.isOnePassword && this.password) {
       this.importForm = this.fb.group({
         name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
         WIF: ['', [Validators.required, checkWIF(this.neon.selectedChainType)]],
+      });
+      this.importMnemonicForm = this.fb.group({
+        name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
+        mnemonic: ['', [Validators.required, checkMnemonic()]],
       });
       this.nep6Form = this.fb.group({
         name: ['', [Validators.required]],
@@ -125,6 +160,18 @@ export class PopupWalletImportComponent
             '',
             [Validators.required, checkWIF(this.neon.selectedChainType)],
           ],
+          password: [
+            '',
+            [Validators.required, Validators.pattern(/^.{8,128}$/)],
+          ],
+          confirmPassword: ['', [Validators.required]],
+        },
+        { validators: checkPasswords }
+      );
+      this.importMnemonicForm = this.fb.group(
+        {
+          name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
+          mnemonic: ['', [Validators.required, checkMnemonic()]],
           password: [
             '',
             [Validators.required, Validators.pattern(/^.{8,128}$/)],
@@ -189,6 +236,33 @@ export class PopupWalletImportComponent
       reader.onerror = () => {
         console.log('error reading file');
       };
+    }
+  }
+
+  importMnemonic() {
+    this.loading = true;
+    let importPwd;
+    if (this.isOnePassword && this.password) {
+      importPwd = this.password;
+    } else {
+      importPwd = this.importMnemonicForm.value.password;
+    }
+    if (ethers.Mnemonic.isValidMnemonic(this.importMnemonicForm.value.mnemonic)) {
+      this.evmService
+        .importWalletFromPhrase(
+          this.importMnemonicForm.value.mnemonic,
+          importPwd,
+          this.importMnemonicForm.value.name
+        )
+        .then((res: any) => {
+          this.loading = false;
+          if (this.neon.verifyWallet(res)) {
+            this.setPassword(importPwd);
+            this.submitThis.emit(res);
+          } else {
+            this.global.snackBarTip('existingWallet');
+          }
+        });
     }
   }
 

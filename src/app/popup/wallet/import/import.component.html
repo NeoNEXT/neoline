@@ -25,11 +25,17 @@
       *ngIf="showImportTypeMenu"
       (click)="showImportTypeMenu = false"
     >
-      <li (click)="importType = 'key'">
-        {{ "importKey" | translate | async }}
-      </li>
-      <li (click)="importType = 'file'">
-        {{ "importFile" | translate | async }}
+      <li *ngFor="let type of importTypeList" (click)="importType = type">
+        {{
+          (type === "key"
+            ? "importKey"
+            : type === "file"
+            ? "importFile"
+            : "importMnemonic"
+          )
+            | translate
+            | async
+        }}
       </li>
     </ul>
   </div>
@@ -63,16 +69,11 @@
         (click)="hideWIF = !hideWIF"
         matSuffix
         theme
-        *ngIf="hideWIF"
-        src="assets/images/login/eye-hide.svg"
-      />
-      <img
-        class="suffix"
-        (click)="hideWIF = !hideWIF"
-        matSuffix
-        theme
-        *ngIf="!hideWIF"
-        src="assets/images/login/eye-view.svg"
+        [src]="
+          hideWIF
+            ? 'assets/images/login/eye-hide.svg'
+            : 'assets/images/login/eye-view.svg'
+        "
       />
       <mat-error *ngIf="importForm.get('WIF').errors?.required">
         {{ "WIFRequired" | translate | async }}
@@ -100,16 +101,11 @@
         (click)="hideImportPwd = !hideImportPwd"
         matSuffix
         theme
-        *ngIf="hideImportPwd"
-        src="assets/images/login/eye-hide.svg"
-      />
-      <img
-        class="suffix"
-        (click)="hideImportPwd = !hideImportPwd"
-        matSuffix
-        theme
-        *ngIf="!hideImportPwd"
-        src="assets/images/login/eye-view.svg"
+        [src]="
+          hideImportPwd
+            ? 'assets/images/login/eye-hide.svg'
+            : 'assets/images/login/eye-view.svg'
+        "
       />
       <mat-error *ngIf="importForm.get('password').errors?.required">
         {{ "passwordRequired" | translate | async }}
@@ -139,18 +135,120 @@
         (click)="hideConfirmPwd = !hideConfirmPwd"
         matSuffix
         theme
-        *ngIf="hideConfirmPwd"
-        src="assets/images/login/eye-hide.svg"
+        [src]="
+          hideConfirmPwd
+            ? 'assets/images/login/eye-hide.svg'
+            : 'assets/images/login/eye-view.svg'
+        "
+      />
+      <mat-error *ngIf="importForm.hasError('notSame')">
+        {{ "confirmError" | translate | async }}
+      </mat-error>
+    </mat-form-field>
+  </form>
+  <form [hidden]="importType !== 'mnemonic'" [formGroup]="importMnemonicForm">
+    <mat-form-field class="form-field" appearance="fill">
+      <img matPrefix theme src="/assets/images/login/wallet.svg" alt="" />
+      <mat-label>{{ "enterWalletName" | translate | async }}</mat-label>
+      <input matInput required formControlName="name" />
+      <mat-error *ngIf="importMnemonicForm.get('name').errors?.required">
+        {{ "walletNameIsRequired" | translate | async }}
+      </mat-error>
+      <mat-error *ngIf="importMnemonicForm.get('name').errors?.pattern">
+        {{ "lengthLimit" | translate | async }}:
+        {{ limit?.nameLimitation[0] }}-{{ limit?.nameLimitation[1] }}
+      </mat-error>
+    </mat-form-field>
+    <mat-form-field class="form-field" appearance="fill">
+      <img matPrefix theme src="/assets/images/login/key.svg" alt="" />
+      <mat-label>{{ "enterMnemonic" | translate | async }}</mat-label>
+      <input
+        matInput
+        required
+        formControlName="mnemonic"
+        [type]="hideMnemonic ? 'password' : 'text'"
+        (keyup.enter)="
+          !isInit && !importMnemonicForm.invalid && !loading ? importMnemonic() : null
+        "
       />
       <img
         class="suffix"
-        (click)="hideConfirmPwd = !hideConfirmPwd"
+        (click)="hideMnemonic = !hideMnemonic"
         matSuffix
         theme
-        *ngIf="!hideConfirmPwd"
-        src="assets/images/login/eye-view.svg"
+        [src]="
+          hideMnemonic
+            ? 'assets/images/login/eye-hide.svg'
+            : 'assets/images/login/eye-view.svg'
+        "
       />
-      <mat-error *ngIf="importForm.hasError('notSame')">
+      <mat-error *ngIf="importMnemonicForm.get('mnemonic').errors?.required">
+        {{ "MnemonicRequired" | translate | async }}
+      </mat-error>
+      <mat-error *ngIf="importMnemonicForm.get('mnemonic').errors?.errorMnemonic">
+        {{ "MnemonicPattern" | translate | async }}
+      </mat-error>
+    </mat-form-field>
+    <mat-form-field
+      *ngIf="!isOnePassword"
+      class="form-field"
+      appearance="fill"
+      focused="true"
+    >
+      <img matPrefix theme src="/assets/images/login/lock.svg" alt="" />
+      <mat-label>{{ "enterPassword" | translate | async }}</mat-label>
+      <input
+        matInput
+        required
+        formControlName="password"
+        [type]="hideImportMnemonicPwd ? 'password' : 'text'"
+      />
+      <img
+        class="suffix"
+        (click)="hideImportMnemonicPwd = !hideImportMnemonicPwd"
+        matSuffix
+        theme
+        [src]="
+          hideImportMnemonicPwd
+            ? 'assets/images/login/eye-hide.svg'
+            : 'assets/images/login/eye-view.svg'
+        "
+      />
+      <mat-error *ngIf="importMnemonicForm.get('password').errors?.required">
+        {{ "passwordRequired" | translate | async }}
+      </mat-error>
+      <mat-error *ngIf="importMnemonicForm.get('password').errors?.pattern">
+        {{ "lengthLimit" | translate | async }}:
+        {{ limit?.passwordLimitation[0] }}-{{ limit?.passwordLimitation[1] }}
+      </mat-error>
+    </mat-form-field>
+    <mat-form-field
+      *ngIf="!isOnePassword"
+      class="form-field"
+      appearance="fill"
+      focused="true"
+    >
+      <img matPrefix theme src="/assets/images/login/lock.svg" />
+      <mat-label>{{ "enterConfirmPassword" | translate | async }}</mat-label>
+      <input
+        matInput
+        required
+        formControlName="confirmPassword"
+        [errorStateMatcher]="matcher"
+        [type]="hideConfirmMnemonicPwd ? 'password' : 'text'"
+      />
+      <img
+        class="suffix"
+        (click)="hideConfirmMnemonicPwd = !hideConfirmMnemonicPwd"
+        matSuffix
+        theme
+        [src]="
+          hideConfirmMnemonicPwd
+            ? 'assets/images/login/eye-hide.svg'
+            : 'assets/images/login/eye-view.svg'
+        "
+      />
+      <mat-error *ngIf="importMnemonicForm.hasError('notSame')">
         {{ "confirmError" | translate | async }}
       </mat-error>
     </mat-form-field>
@@ -179,16 +277,11 @@
           (click)="hideNep6FilePwd = !hideNep6FilePwd"
           matSuffix
           theme
-          *ngIf="hideNep6FilePwd"
-          src="assets/images/login/eye-hide.svg"
-        />
-        <img
-          class="suffix"
-          (click)="hideNep6FilePwd = !hideNep6FilePwd"
-          matSuffix
-          theme
-          *ngIf="!hideNep6FilePwd"
-          src="assets/images/login/eye-view.svg"
+          [src]="
+            hideNep6FilePwd
+              ? 'assets/images/login/eye-hide.svg'
+              : 'assets/images/login/eye-view.svg'
+          "
         />
         <mat-error *ngIf="nep6Form.get('filePassword').errors?.required">
           {{ "filePasswordRequired" | translate | async }}
@@ -216,16 +309,11 @@
           (click)="hideNep6Pwd = !hideNep6Pwd"
           matSuffix
           theme
-          *ngIf="hideNep6Pwd"
-          src="assets/images/login/eye-hide.svg"
-        />
-        <img
-          class="suffix"
-          (click)="hideNep6Pwd = !hideNep6Pwd"
-          matSuffix
-          theme
-          *ngIf="!hideNep6Pwd"
-          src="assets/images/login/eye-view.svg"
+          [src]="
+            hideNep6Pwd
+              ? 'assets/images/login/eye-hide.svg'
+              : 'assets/images/login/eye-view.svg'
+          "
         />
         <mat-error *ngIf="nep6Form.get('password').errors?.required">
           {{ "passwordRequired" | translate | async }}
@@ -255,16 +343,11 @@
           (click)="hideNep6ConfirmPwd = !hideNep6ConfirmPwd"
           matSuffix
           theme
-          *ngIf="hideNep6ConfirmPwd"
-          src="assets/images/login/eye-hide.svg"
-        />
-        <img
-          class="suffix"
-          (click)="hideNep6ConfirmPwd = !hideNep6ConfirmPwd"
-          matSuffix
-          theme
-          *ngIf="!hideNep6ConfirmPwd"
-          src="assets/images/login/eye-view.svg"
+          [src]="
+            hideNep6ConfirmPwd
+              ? 'assets/images/login/eye-hide.svg'
+              : 'assets/images/login/eye-view.svg'
+          "
         />
         <mat-error *ngIf="nep6Form.hasError('notSame')">
           {{ "confirmError" | translate | async }}
@@ -278,6 +361,14 @@
       *ngIf="importType === 'key'"
       (click)="importKey()"
       [ngClass]="{ disabled: isInit || loading || importForm.invalid }"
+    >
+      {{ (loading ? "importing" : "import") | translate | async }}
+    </button>
+    <button
+      class="confirm"
+      *ngIf="importType === 'mnemonic'"
+      (click)="importMnemonic()"
+      [ngClass]="{ disabled: isInit || loading || importMnemonicForm.invalid }"
     >
       {{ (loading ? "importing" : "import") | translate | async }}
     </button>

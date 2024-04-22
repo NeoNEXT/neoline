@@ -10,13 +10,12 @@ import {
   STORAGE_NAME,
   ADD_NEOX_WALLET,
 } from '../_lib';
-import { wallet as wallet2 } from '@cityofzion/neon-core';
-import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { EvmWalletJSON } from '../_lib/evm';
 
 type TabType = 'create' | 'import';
 @Component({
@@ -39,6 +38,7 @@ export class PopupWalletComponent implements OnInit {
   private accountSub: Unsubscribable;
   private network: RpcNetwork;
   private chainType: ChainType;
+  neoXWalletArr: EvmWalletJSON[];
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -59,6 +59,7 @@ export class PopupWalletComponent implements OnInit {
           this.network = state.neoXNetworks[state.neoXNetworkIndex];
           break;
       }
+      this.neoXWalletArr = state.neoXWalletArr;
       this.chainType = state.currentChainType;
       this.checkHasPwdWallet(
         (state.neo2WalletArr as any).concat(state.neo3WalletArr)
@@ -98,7 +99,7 @@ export class PopupWalletComponent implements OnInit {
     this.hasPwdWallet = index >= 0 ? true : false;
   }
 
-  public updateLocalWallet(newWallet: any, isCreate: boolean) {
+  public updateLocalWallet(newWallet: any) {
     const newChainType = this.neon.selectedChainType;
     const wif =
       this.isOnePassword || !this.hasPwdWallet ? '' : newWallet.accounts[0].wif;
@@ -119,7 +120,7 @@ export class PopupWalletComponent implements OnInit {
       case 'NeoX':
         this.store.dispatch({
           type: ADD_NEOX_WALLET,
-          data: { wallet: newWallet, isCreate },
+          data: { wallet: newWallet},
         });
         break;
     }
