@@ -3,17 +3,29 @@
   <div class="receive-content">
     <div id="receive-qrcode"></div>
   </div>
-  <p class="tip">
+  <p class="tip1">
+    {{ "receiveTip1Prefix" | translate | async }}
+    <span class="network">
+      {{
+        chainType === "NeoX"
+          ? "Neo X (EVM Network)"
+          : chainType === "Neo3"
+          ? "Neo N3"
+          : "Neo Legacy"
+      }}</span
+    >
+    {{ "receiveTip1Suffix" | translate | async }}
+  </p>
+  <p class="tip2">
+    {{ "receiveTip2Prefix" | translate | async }}
     {{
-      (chainType === "NeoX"
-        ? "onlyReceiveETHAssets"
+      chainType === "NeoX"
+        ? "Ethereum"
         : chainType === "Neo3"
-        ? "onlyReceiveNeoN3Assets"
-        : "onlyReceiveNeoLegacyAssets"
-      )
-        | translate
-        | async
+        ? "Neo N3"
+        : "Neo Legacy"
     }}
+    {{ "receiveTip2Suffix" | translate | async }}
   </p>
   <div class="address">{{ address }}</div>
   <copy [value]="address">

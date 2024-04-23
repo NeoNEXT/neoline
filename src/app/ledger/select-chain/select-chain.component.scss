@@ -48,14 +48,20 @@ section.main {
       li {
         width: 100px;
         height: 90px;
-        line-height: 90px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
         background: var(--message-box-color);
         border-radius: 10px;
         border: 1px solid var(--line-color);
         font-size: 16px;
         font-family: NeverMind-Regular;
-        text-align: center;
         cursor: pointer;
+        .evm {
+          font-size: 12px;
+        }
         &.active {
           font-family: NeverMind-Medium;
           border: 1px solid var(--theme-color);

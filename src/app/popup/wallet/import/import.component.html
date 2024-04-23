@@ -8,7 +8,12 @@
       <p class="label">{{ "importMethod" | translate | async }}</p>
       <p class="value">
         {{
-          (importType === "key" ? "importKey" : "importFile")
+          (importType === "key"
+            ? "importKey"
+            : importType === "file"
+            ? "importFile"
+            : "importMnemonic"
+          )
             | translate
             | async
         }}
@@ -168,7 +173,9 @@
         formControlName="mnemonic"
         [type]="hideMnemonic ? 'password' : 'text'"
         (keyup.enter)="
-          !isInit && !importMnemonicForm.invalid && !loading ? importMnemonic() : null
+          !isInit && !importMnemonicForm.invalid && !loading
+            ? importMnemonic()
+            : null
         "
       />
       <img
@@ -185,7 +192,9 @@
       <mat-error *ngIf="importMnemonicForm.get('mnemonic').errors?.required">
         {{ "MnemonicRequired" | translate | async }}
       </mat-error>
-      <mat-error *ngIf="importMnemonicForm.get('mnemonic').errors?.errorMnemonic">
+      <mat-error
+        *ngIf="importMnemonicForm.get('mnemonic').errors?.errorMnemonic"
+      >
         {{ "MnemonicPattern" | translate | async }}
       </mat-error>
     </mat-form-field>

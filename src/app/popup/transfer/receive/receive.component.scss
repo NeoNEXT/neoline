@@ -10,11 +10,21 @@
     background: url("/assets/images/transfer/receive-border.svg") center center
       no-repeat;
   }
-  .tip {
+  .tip1 {
+    text-align: center;
+    font-size: 12px;
+    font-family: NeverMind-Regular;
+    line-height: 16px;
+    color: var(--tip-color);
+    margin-top: 12px;
+    .network {
+      color: #4985e5;
+    }
+  }
+  .tip2 {
     text-align: center;
     font-size: 13px;
     color: var(--tip-color);
-    margin-top: 12px;
   }
   .address {
     width: 100%;
@@ -24,7 +34,6 @@
     text-align: center;
     border-radius: 8px;
     background: var(--message-box-color);
-    font-family: NeverMind-Regular;
   }
   button {
     width: 100%;

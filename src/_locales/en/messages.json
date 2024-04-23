@@ -992,13 +992,16 @@
   "addressBook": {
     "message": "Address Book"
   },
-  "onlyReceiveETHAssets": {
+  "receiveTip1Prefix": {
     "message": ""
   },
-  "onlyReceiveNeoLegacyAssets": {
+  "receiveTip1Suffix": {
     "message": ""
   },
-  "onlyReceiveNeoN3Assets": {
+  "receiveTip2Prefix": {
+    "message": ""
+  },
+  "receiveTip2Suffix": {
     "message": ""
   },
   "ConfirmSecretRecoveryPhrase": {
@@ -1014,7 +1017,7 @@
     "message": "Wrong secret recovery phrase, try again."
   },
   "notedItDown": {
-    "message": "I've noted it down"
+    "message": "I've written it down"
   },
   "AddAccountOrHardwareWallet": {
     "message": "Add account or hardware wallet"
@@ -1032,15 +1035,15 @@
     "message": "Connect your hardware wallet"
   },
   "enterMnemonic": {
-    "message": "Enter Mnemonic"
+    "message": "Enter secret recovery phrase"
   },
   "MnemonicRequired": {
-    "message": "Mnemonic is required"
+    "message": "Secret recovery phrase is required"
   },
   "MnemonicPattern": {
-    "message": "Invalid Mnemonic"
+    "message": "Invalid secret recovery phrase"
   },
   "importMnemonic": {
-    "message": "Mnemonic Import"
+    "message": "Secret recovery phrase Import"
   }
 }

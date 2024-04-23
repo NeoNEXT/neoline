@@ -992,14 +992,17 @@
   "addressBook": {
     "message": "地址薄"
   },
-  "onlyReceiveETHAssets": {
-    "message": "仅支持接收 Ethereum 网络资产"
+  "receiveTip1Prefix": {
+    "message": "当前在"
   },
-  "onlyReceiveNeoLegacyAssets": {
-    "message": "仅支持接收 Neo Legacy 网络资产"
+  "receiveTip1Suffix": {
+    "message": "网络下"
   },
-  "onlyReceiveNeoN3Assets": {
-    "message": "仅支持接收 Neo N3 网络资产"
+  "receiveTip2Prefix": {
+    "message": "仅支持接收"
+  },
+  "receiveTip2Suffix": {
+    "message": "网络资产"
   },
   "ConfirmSecretRecoveryPhrase": {
     "message": "确认助记词"
