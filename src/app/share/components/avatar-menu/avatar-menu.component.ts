@@ -4,6 +4,8 @@ import {
   OnDestroy,
   Output,
   EventEmitter,
+  ViewChild,
+  ElementRef,
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
@@ -37,7 +39,6 @@ interface WalletListItem {
   title: string;
   expand: boolean;
   walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
-  walletShowMoreArr: boolean[];
 }
 
 @Component({
@@ -46,6 +47,8 @@ interface WalletListItem {
   styleUrls: ['avatar-menu.component.scss'],
 })
 export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
+  @ViewChild('moreModalDom') moreModalDom: ElementRef;
+
   @Output() closeEvent = new EventEmitter();
   isSearching = false;
   searchWalletRes: WalletListItem[] = [];
@@ -63,6 +66,9 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
 
   private displayList: WalletListItem[];
   private allWallet: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
+  moreModalWallet: Wallet2 | Wallet3 | EvmWalletJSON;
+  moreModalChainType: ChainType;
+  moreModalCanRemove = false;
   constructor(
     private router: Router,
     private chromeSrc: ChromeService,
@@ -102,21 +108,18 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
         title: 'Neo X (EVM Network)',
         walletArr: this.neoXWalletArr,
         expand: this.chainType === 'NeoX',
-        walletShowMoreArr: new Array(this.neoXWalletArr.length).fill(false),
       },
       {
         chain: 'Neo3',
         title: 'Neo N3',
         walletArr: this.neo3WalletArr,
         expand: this.chainType === 'Neo3',
-        walletShowMoreArr: new Array(this.neo3WalletArr.length).fill(false),
       },
       {
         chain: 'Neo2',
         title: 'Neo Legacy',
         walletArr: this.neo2WalletArr,
         expand: this.chainType === 'Neo2',
-        walletShowMoreArr: new Array(this.neo2WalletArr.length).fill(false),
       },
     ];
     this.searchWalletRes = this.displayList;
@@ -159,21 +162,18 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
           title: 'Neo X (EVM Network)',
           walletArr: searchNeoX,
           expand: true,
-          walletShowMoreArr: new Array(searchNeoX.length).fill(false),
         },
         {
           chain: 'Neo3',
           title: 'Neo N3',
           walletArr: searchNeo3,
           expand: true,
-          walletShowMoreArr: new Array(searchNeo3.length).fill(false),
         },
         {
           chain: 'Neo2',
           title: 'Neo Legacy',
           walletArr: searchNeo2,
           expand: true,
-          walletShowMoreArr: new Array(searchNeo2.length).fill(false),
         },
       ];
     });
@@ -258,22 +258,36 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       });
   }
 
-  checkShowRemove(removeWallet: Wallet2 | Wallet3 | EvmWalletJSON): boolean {
-    if (!removeWallet.accounts[0]?.extra?.ledgerSLIP44) {
+  openMoreModal(
+    e: Event,
+    item: Wallet2 | Wallet3 | EvmWalletJSON,
+    chainType: ChainType
+  ) {
+    e.stopPropagation();
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    const top = rect.top - 35;
+    if (top > 400) {
+      const bottom = 508 - top + 35;
+      this.moreModalDom.nativeElement.style.bottom = bottom + 'px';
+      this.moreModalDom.nativeElement.style.top = 'auto';
+    } else {
+      this.moreModalDom.nativeElement.style.top = top + 'px';
+      this.moreModalDom.nativeElement.style.bottom = 'auto';
+    }
+    this.moreModalWallet = item;
+    this.moreModalChainType = chainType;
+    if (!item.accounts[0]?.extra?.ledgerSLIP44) {
       const accounts = this.allWallet.filter(
         (item) => !item.accounts[0]?.extra?.ledgerSLIP44
       );
-      return accounts.length > 1 ? true : false;
+      this.moreModalCanRemove = accounts.length > 1 ? true : false;
     } else {
-      return true;
+      this.moreModalCanRemove = true;
     }
   }
 
-  removeAccount(
-    removeWallet: Wallet2 | Wallet3 | EvmWalletJSON,
-    chainType: ChainType
-  ) {
-    if (!removeWallet.accounts[0]?.extra?.ledgerSLIP44) {
+  removeAccount() {
+    if (!this.moreModalWallet.accounts[0]?.extra?.ledgerSLIP44) {
       const accounts = this.allWallet.filter(
         (item) => !item.accounts[0]?.extra?.ledgerSLIP44
       );
@@ -292,9 +306,9 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
         if (confirm) {
           this.neon
             .delWallet(
-              removeWallet,
-              chainType,
-              removeWallet.accounts[0].address ===
+              this.moreModalWallet,
+              this.moreModalChainType,
+              this.moreModalWallet.accounts[0].address ===
                 this.wallet.accounts[0].address
             )
             .subscribe((w) => {

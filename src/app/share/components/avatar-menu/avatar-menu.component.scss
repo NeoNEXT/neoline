@@ -165,18 +165,6 @@
             top: 50%;
             transform: translateY(-50%);
           }
-          .pop-ups-menu {
-            width: 164px;
-            position: absolute;
-            right: 8px;
-            top: 48px;
-            padding: 4px 0;
-            li {
-              padding: 0 12px;
-              height: 48px;
-              font-size: 14px;
-            }
-          }
         }
       }
     }
@@ -184,5 +172,16 @@
   button.add-wallet {
     width: calc(100% - 48px);
     margin: 0 24px 24px;
+  }
+  .pop-ups-menu {
+    width: 164px;
+    position: absolute;
+    right: 8px;
+    padding: 4px 0;
+    li {
+      padding: 0 12px;
+      height: 48px;
+      font-size: 14px;
+    }
   }
 }

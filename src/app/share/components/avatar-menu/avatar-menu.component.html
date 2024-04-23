@@ -73,46 +73,11 @@
           </div>
           <img
             theme
-            (click)="
-              $event.stopPropagation(); list.walletShowMoreArr[index] = true
-            "
+            (click)="openMoreModal($event, item, list.chain)"
             class="more"
             src="/assets/images/common/more.svg"
             alt=""
           />
-          <section
-            class="pop-ups-veil"
-            *ngIf="list.walletShowMoreArr[index]"
-            (click)="
-              $event.stopPropagation(); list.walletShowMoreArr[index] = false
-            "
-          ></section>
-          <ul class="pop-ups-menu" *ngIf="list.walletShowMoreArr[index]">
-            <li
-              (click)="
-                navigate(
-                  '/popup/account?address=' +
-                    item.accounts[0].address +
-                    '&chainType=' +
-                    list.chain
-                )
-              "
-            >
-              <img
-                theme
-                src="assets/images/account/home-account-detail.svg"
-                alt=""
-              />{{ "accountDetails" | translate | async }}
-            </li>
-            <li
-              *ngIf="checkShowRemove(item)"
-              (click)="removeAccount(item, list.chain)"
-            >
-              <img theme src="assets/images/account/home-delete.svg" alt="" />{{
-                "removeAccount" | translate | async
-              }}
-            </li>
-          </ul>
         </li>
       </ul>
     </div>
@@ -120,4 +85,30 @@
   <button class="confirm pop-ups add-wallet" (click)="showAddWallet()">
     {{ "AddAccountOrHardwareWallet" | translate | async }}
   </button>
+  <section
+    class="pop-ups-veil"
+    *ngIf="moreModalWallet"
+    (click)="$event.stopPropagation(); moreModalWallet = undefined"
+  ></section>
+  <ul #moreModalDom [hidden]="!moreModalWallet" class="pop-ups-menu">
+    <li
+      (click)="
+        navigate(
+          '/popup/account?address=' +
+            moreModalWallet.accounts[0].address +
+            '&chainType=' +
+            moreModalChainType
+        )
+      "
+    >
+      <img theme src="assets/images/account/home-account-detail.svg" alt="" />{{
+        "accountDetails" | translate | async
+      }}
+    </li>
+    <li *ngIf="moreModalCanRemove" (click)="removeAccount()">
+      <img theme src="assets/images/account/home-delete.svg" alt="" />{{
+        "removeAccount" | translate | async
+      }}
+    </li>
+  </ul>
 </div>
