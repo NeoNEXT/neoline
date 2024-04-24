@@ -79,27 +79,27 @@ export class PopupNetworkComponent implements OnDestroy {
           this.neoXNetworkIndex = state.neoXNetworkIndex;
           break;
       }
-      this.allNetworks = [
-        {
-          chain: 'NeoX',
-          title: 'Neo X (EVM Network)',
-          networkArr: this.neoXNetworks,
-          expand: this.chainType === 'NeoX',
-        },
-        {
-          chain: 'Neo3',
-          title: 'Neo N3',
-          networkArr: this.neo3Networks,
-          expand: this.chainType === 'Neo3',
-        },
-        {
-          chain: 'Neo2',
-          title: 'Neo Legacy',
-          networkArr: this.neo2Networks,
-          expand: this.chainType === 'Neo2',
-        },
-      ];
     });
+    this.allNetworks = [
+      {
+        chain: 'NeoX',
+        title: 'Neo X (EVM Network)',
+        networkArr: this.neoXNetworks,
+        expand: this.chainType === 'NeoX',
+      },
+      {
+        chain: 'Neo3',
+        title: 'Neo N3',
+        networkArr: this.neo3Networks,
+        expand: this.chainType === 'Neo3',
+      },
+      {
+        chain: 'Neo2',
+        title: 'Neo Legacy',
+        networkArr: this.neo2Networks,
+        expand: this.chainType === 'Neo2',
+      },
+    ];
   }
 
   ngOnDestroy(): void {
@@ -209,6 +209,7 @@ export class PopupNetworkComponent implements OnDestroy {
         this.close();
         this.dialog.open(PopupAddNetworkDialogComponent, {
           panelClass: 'custom-dialog-panel',
+          data: { addChainType: chain },
         });
       });
   }

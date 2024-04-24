@@ -85,9 +85,9 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       this.neo3WalletArr = state.neo3WalletArr;
       this.neoXWalletArr = state.neoXWalletArr;
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
-      this.initData();
-      this.getBalances();
     });
+    this.initData();
+    this.getBalances();
   }
   ngOnInit(): void {
     this.chromeSrc.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {

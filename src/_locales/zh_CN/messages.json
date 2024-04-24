@@ -803,9 +803,6 @@
   "Explorer_URL": {
     "message": "区块浏览器(选填)"
   },
-  "Invalid_RPC_URL": {
-    "message": "无效的 RPC URL"
-  },
   "oneMonthTxs": {
     "message": "只显示最近一个月的交易"
   },
@@ -941,6 +938,9 @@
   "createOrImportNeo3First": {
     "message": "请先创建或导入一个 Neo N3 账户"
   },
+  "createOrImportNeoXFirst": {
+    "message": "请先创建或导入一个 Neo X (EVM Network) 账户"
+  },
   "OnePasswordPattern": {
     "message": "通用密码设置"
   },
@@ -1045,5 +1045,26 @@
   },
   "importMnemonic": {
     "message": "助记词导入"
+  },
+  "AddNetworkTip": {
+    "message": "请添加你完全受信任的网络！"
+  },
+  "ChainID": {
+    "message": "链 ID"
+  },
+  "networkNameIsRequired": {
+    "message": "网络名称必填"
+  },
+  "rpcUrlIsRequired": {
+    "message": "RPC URL 必填"
+  },
+  "Invalid_RPC_URL": {
+    "message": "无效的 RPC URL"
+  },
+  "exist_RPC_URL": {
+    "message": "此 RPC URL 对应的 Chain ID 已存在"
+  },
+  "symbolIsRequired": {
+    "message": "货币名称必填"
   }
 }

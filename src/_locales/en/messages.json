@@ -803,9 +803,6 @@
   "Explorer_URL": {
     "message": "Block Explorer URL(Optional)"
   },
-  "Invalid_RPC_URL": {
-    "message": "Invalid RPC URL"
-  },
   "oneMonthTxs": {
     "message": "Only show transactions from the most recent month"
   },
@@ -941,6 +938,9 @@
   "createOrImportNeo3First": {
     "message": "Please create or import a Neo N3 account first"
   },
+  "createOrImportNeoXFirst": {
+    "message": "Please create or import a Neo X (EVM Network) account first"
+  },
   "OnePasswordPattern": {
     "message": "One Pass Setting"
   },
@@ -1045,5 +1045,26 @@
   },
   "importMnemonic": {
     "message": "Secret recovery phrase Import"
+  },
+  "AddNetworkTip": {
+    "message": "Please add a network only if you completely trust it!"
+  },
+  "ChainID": {
+    "message": "Chain ID"
+  },
+  "networkNameIsRequired": {
+    "message": "Network name is required"
+  },
+  "rpcUrlIsRequired": {
+    "message": "RPC URL is required"
+  },
+  "Invalid_RPC_URL": {
+    "message": "Invalid RPC URL"
+  },
+  "exist_RPC_URL": {
+    "message": "The Chain ID corresponding to this RPC URL already exists"
+  },
+  "symbolIsRequired": {
+    "message": "Symbol is required"
   }
 }

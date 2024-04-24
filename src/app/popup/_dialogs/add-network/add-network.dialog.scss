@@ -1,40 +1,51 @@
-
-
-section.container {
-  padding: 16px 24px 24px;
-  .item {
-    font-size: 14px;
-    color: var(--title-color);
-    font-family: NeverMind-Medium;
-    &:not(:first-child) {
-      margin-top: 24px;
-    }
-    input {
-      width: 100%;
-      height: 44px;
-      margin-top: 12px;
-      background: var(--message-box-color);
-      border-radius: 4px;
-      padding: 0 16px;
-      color: var(--title-color);
-      &.disabled {
-        color: var(--tip-color);
-        cursor: not-allowed;
-      }
-      &:focus {
-        border: 1px solid var(--title-color);
-      }
-    }
-    .error {
-      position: absolute;
-      color: var(--error-color);
-      font-size: 12px;
-      margin-top: 3px;
-      font-family: NeverMind-Regular;
-    }
+.add-tip {
+  padding: 6px 24px;
+  background: rgba(255, 129, 66, 0.08);
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: 0.01em;
+  color: #aab9bf;
+  img {
+    vertical-align: sub;
   }
-  button {
+}
+
+.container {
+  padding: 16px 24px 0 24px;
+  max-height: 350px;
+  overflow-y: scroll;
+  font-size: 14px;
+  color: var(--title-color);
+  font-family: NeverMind-Medium;
+  mask-image: -webkit-linear-gradient(
+    top,
+    rgba(0, 0, 0, 1) 96%,
+    rgba(0, 0, 0, 0.1) 100%
+  );
+  &::-webkit-scrollbar {
+    display: block;
+  }
+  .label {
+    margin-top: 4px;
+    margin-bottom: 8px;
+  }
+  .form-field {
     width: 100%;
-    margin-top: 32px;
+  }
+}
+
+button {
+  width: calc(100% - 48px);
+  margin: 0 24px 24px;
+}
+
+::ng-deep {
+  .mat-form-field-appearance-outline .mat-form-field-infix {
+    padding: 14px 0;
+    border-top-width: 0;
+  }
+  .mat-form-field-appearance-outline .mat-form-field-outline {
+    background: var(--message-box-color);
+    color: var(--message-box-color);
   }
 }
