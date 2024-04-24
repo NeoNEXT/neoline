@@ -255,7 +255,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     this.loadingMsg = '';
   }
   private pushTransaction(transaction: any) {
-    const networkId = this.data.network.id;
+    const networkName = `${this.data.chainType}-${this.data.network.id}`;
     const address = this.data.from;
     const assetId = this.data.isNFT
       ? this.data.nftContract
@@ -264,21 +264,21 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
       if (res === null || res === undefined) {
         res = {};
       }
-      if (res[networkId] === undefined) {
-        res[networkId] = {};
+      if (res[networkName] === undefined) {
+        res[networkName] = {};
       }
-      if (res[networkId][address] === undefined) {
-        res[networkId][address] = {};
+      if (res[networkName][address] === undefined) {
+        res[networkName][address] = {};
       }
-      if (res[networkId][address][assetId] === undefined) {
-        res[networkId][address][assetId] = [];
+      if (res[networkName][address][assetId] === undefined) {
+        res[networkName][address][assetId] = [];
       }
-      res[networkId][address][assetId].unshift(transaction);
+      res[networkName][address][assetId].unshift(transaction);
       this.chrome.setStorage(STORAGE_NAME.transaction, res);
       const setData = {};
-      setData[`TxArr_${networkId}`] =
-        (await this.chrome.getLocalStorage(`TxArr_${networkId}`)) || [];
-      setData[`TxArr_${networkId}`].push(transaction.txid);
+      setData[`TxArr_${networkName}`] =
+        (await this.chrome.getLocalStorage(`TxArr_${networkName}`)) || [];
+      setData[`TxArr_${networkName}`].push(transaction.txid);
       this.chrome.setLocalStorage(setData);
     });
   }

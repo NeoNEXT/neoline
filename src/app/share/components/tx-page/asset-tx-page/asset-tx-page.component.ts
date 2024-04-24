@@ -62,11 +62,12 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
         this.loading = false;
       });
     } else {
+      const networkName = `${this.chainType}-${this.networkId}`;
       this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((inTxData) => {
         this.localAllTxs = inTxData;
-        if (inTxData?.[this.networkId]?.[this.address]?.[this.assetId]) {
+        if (inTxData?.[networkName]?.[this.address]?.[this.assetId]) {
           this.inTransaction =
-            inTxData[this.networkId][this.address][this.assetId];
+            inTxData[networkName][this.address][this.assetId];
         } else {
           this.inTransaction = [];
         }
@@ -82,6 +83,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
     const httpReq1 = this.txState.getAssetTxs(this.address, this.assetId);
     let httpReq2;
     let txIdArray = [];
+    const networkName = `${this.chainType}-${this.networkId}`;
     this.inTransaction.forEach((item) => {
       txIdArray.push(item.txid);
     });
@@ -102,17 +104,16 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
       if (txIdArray.length > 0) {
         this.listenTxsValid(txIdArray);
       }
-      if (this.localAllTxs[this.networkId] === undefined) {
-        this.localAllTxs[this.networkId] = {};
-      } else if (this.localAllTxs[this.networkId][this.address] === undefined) {
-        this.localAllTxs[this.networkId][this.address] = {};
+      if (this.localAllTxs[networkName] === undefined) {
+        this.localAllTxs[networkName] = {};
+      } else if (this.localAllTxs[networkName][this.address] === undefined) {
+        this.localAllTxs[networkName][this.address] = {};
       } else if (
-        this.localAllTxs[this.networkId][this.address][this.assetId] ===
-        undefined
+        this.localAllTxs[networkName][this.address][this.assetId] === undefined
       ) {
-        this.localAllTxs[this.networkId][this.address][this.assetId] = [];
+        this.localAllTxs[networkName][this.address][this.assetId] = [];
       } else {
-        this.localAllTxs[this.networkId][this.address][this.assetId] =
+        this.localAllTxs[networkName][this.address][this.assetId] =
           this.inTransaction;
       }
       this.chrome.setStorage(STORAGE_NAME.transaction, this.localAllTxs);

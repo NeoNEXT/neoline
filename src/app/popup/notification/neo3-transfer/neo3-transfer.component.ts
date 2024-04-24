@@ -272,10 +272,11 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
           ID: this.messageID,
         });
         const setData = {};
-        setData[`TxArr_${this.n3Network.id}`] =
-          (await this.chrome.getLocalStorage(`TxArr_${this.n3Network.id}`)) ||
-          [];
-        setData[`TxArr_${this.n3Network.id}`].push(TxHash);
+        setData[`TxArr_${this.chainType}-${this.n3Network.id}`] =
+          (await this.chrome.getLocalStorage(
+            `TxArr_${this.chainType}-${this.n3Network.id}`
+          )) || [];
+        setData[`TxArr_${this.chainType}-${this.n3Network.id}`].push(TxHash);
         this.chrome.setLocalStorage(setData);
         this.dialog.open(PopupTransferSuccessDialogComponent, {
           panelClass: 'custom-dialog-panel',
@@ -296,23 +297,23 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
   }
 
   public pushTransaction(transaction: object) {
-    const networkId = this.n3Network.id;
+    const networkName = `${this.chainType}-${this.n3Network.id}`;
     const address = this.fromAddress;
     const assetId = this.assetId;
     this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((res) => {
       if (res === null || res === undefined) {
         res = {};
       }
-      if (res[networkId] === undefined) {
-        res[networkId] = {};
+      if (res[networkName] === undefined) {
+        res[networkName] = {};
       }
-      if (res[networkId][address] === undefined) {
-        res[networkId][address] = {};
+      if (res[networkName][address] === undefined) {
+        res[networkName][address] = {};
       }
-      if (res[networkId][address][assetId] === undefined) {
-        res[networkId][address][assetId] = [];
+      if (res[networkName][address][assetId] === undefined) {
+        res[networkName][address][assetId] = [];
       }
-      res[networkId][address][assetId].unshift(transaction);
+      res[networkName][address][assetId].unshift(transaction);
       this.chrome.setStorage(STORAGE_NAME.transaction, res);
     });
   }

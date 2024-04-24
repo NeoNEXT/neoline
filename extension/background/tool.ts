@@ -137,7 +137,7 @@ export async function listenBlock(currNetwork: RpcNetwork) {
 
 export async function waitTxs(currNetwork: RpcNetwork, chainType: ChainType) {
   const networkId = currNetwork.id;
-  const txArr = (await getLocalStorage(`TxArr_${networkId}`, () => {})) || [];
+  const txArr = (await getLocalStorage(`TxArr_${chainType}-${networkId}`, () => {})) || [];
   if (txArr.length === 0) {
     return;
   }
@@ -171,7 +171,7 @@ export async function waitTxs(currNetwork: RpcNetwork, chainType: ChainType) {
         });
         const setData = {};
         tempTxArr = tempTxArr.filter((item) => item !== txid);
-        setData[`TxArr_${networkId}`] = tempTxArr;
+        setData[`TxArr_${chainType}-${networkId}`] = tempTxArr;
         setLocalStorage(setData);
       }
     });

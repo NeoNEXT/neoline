@@ -158,7 +158,10 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
     window.onbeforeunload = () => {
       if (this.chrome.check) {
         delete this.invokeArgsArray[this.messageID];
-        this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, this.invokeArgsArray);
+        this.chrome.setStorage(
+          STORAGE_NAME.InvokeArgsArray,
+          this.invokeArgsArray
+        );
       }
       this.chrome.windowCallback({
         error: ERRORS.CANCELLED,
@@ -200,10 +203,11 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
           ID: this.messageID,
         });
         const setData = {};
-        setData[`TxArr_${this.n3Network.id}`] =
-          (await this.chrome.getLocalStorage(`TxArr_${this.n3Network.id}`)) ||
-          [];
-        setData[`TxArr_${this.n3Network.id}`].push(txHash);
+        setData[`TxArr_${this.chainType}-${this.n3Network.id}`] =
+          (await this.chrome.getLocalStorage(
+            `TxArr_${this.chainType}-${this.n3Network.id}`
+          )) || [];
+        setData[`TxArr_${this.chainType}-${this.n3Network.id}`].push(txHash);
         this.chrome.setLocalStorage(setData);
         this.dialog.open(PopupTransferSuccessDialogComponent, {
           panelClass: 'custom-dialog-panel',

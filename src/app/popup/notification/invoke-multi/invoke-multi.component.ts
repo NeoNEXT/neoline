@@ -324,11 +324,11 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
               );
             } else {
               const setData = {};
-              setData[`TxArr_${this.n2Network.id}`] =
+              setData[`TxArr_${this.chainType}-${this.n2Network.id}`] =
                 (await this.chrome.getLocalStorage(
-                  `TxArr_${this.n2Network.id}`
+                  `TxArr_${this.chainType}-${this.n2Network.id}`
                 )) || [];
-              setData[`TxArr_${this.n2Network.id}`].push(
+              setData[`TxArr_${this.chainType}-${this.n2Network.id}`].push(
                 '0x' + transaction.hash
               );
               this.chrome.setLocalStorage(setData);

@@ -3,7 +3,7 @@ import { NftState, ChromeService, TransactionState } from '@/app/core';
 import { NftTransaction } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupTxDetailDialogComponent } from '@/app/popup/_dialogs';
-import { STORAGE_NAME } from '../../../../popup/_lib';
+import { ChainType, STORAGE_NAME } from '../../../../popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { forkJoin, Unsubscribable, interval } from 'rxjs';
@@ -27,6 +27,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
   private accountSub: Unsubscribable;
   public networkId: number;
   public address: string;
+  private chainType: ChainType;
   constructor(
     private dialog: MatDialog,
     private nftState: NftState,
@@ -40,6 +41,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet?.accounts[0]?.address;
       this.networkId = state.n3Networks[state.n3NetworkIndex].id;
+      this.chainType = state.currentChainType;
       this.getAllTxs();
     });
   }
@@ -52,11 +54,12 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
 
   private getAllTxs() {
     this.loading = true;
+    const networkName = `${this.chainType}-${this.networkId}`;
     this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((inTxData) => {
       this.localAllTxs = inTxData;
-      if (inTxData?.[this.networkId]?.[this.address]?.[this.nftContract]) {
+      if (inTxData?.[networkName]?.[this.address]?.[this.nftContract]) {
         this.inTransaction =
-          inTxData[this.networkId][this.address][this.nftContract];
+          inTxData[networkName][this.address][this.nftContract];
       } else {
         this.inTransaction = [];
       }
@@ -74,6 +77,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
     );
     let httpReq2;
     let txIdArray = [];
+    const networkName = `${this.chainType}-${this.networkId}`;
     this.inTransaction.forEach((item) => {
       txIdArray.push(item.txid);
     });
@@ -94,17 +98,17 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
       if (txIdArray.length > 0) {
         this.listenTxsValid(txIdArray);
       }
-      if (this.localAllTxs[this.networkId] === undefined) {
-        this.localAllTxs[this.networkId] = {};
-      } else if (this.localAllTxs[this.networkId][this.address] === undefined) {
-        this.localAllTxs[this.networkId][this.address] = {};
+      if (this.localAllTxs[networkName] === undefined) {
+        this.localAllTxs[networkName] = {};
+      } else if (this.localAllTxs[networkName][this.address] === undefined) {
+        this.localAllTxs[networkName][this.address] = {};
       } else if (
-        this.localAllTxs[this.networkId][this.address][this.nftContract] ===
+        this.localAllTxs[networkName][this.address][this.nftContract] ===
         undefined
       ) {
-        this.localAllTxs[this.networkId][this.address][this.nftContract] = [];
+        this.localAllTxs[networkName][this.address][this.nftContract] = [];
       } else {
-        this.localAllTxs[this.networkId][this.address][this.nftContract] =
+        this.localAllTxs[networkName][this.address][this.nftContract] =
           this.inTransaction;
       }
       this.chrome.setStorage(STORAGE_NAME.transaction, this.localAllTxs);

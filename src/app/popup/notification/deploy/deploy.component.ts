@@ -164,10 +164,13 @@ export class PopupNoticeDeployComponent implements OnInit, OnDestroy {
             true
           );
           const setData = {};
-          setData[`TxArr_${this.n2Network.id}`] =
-            (await this.chrome.getLocalStorage(`TxArr_${this.n2Network.id}`)) ||
-            [];
-          setData[`TxArr_${this.n2Network.id}`].push('0x' + transaction.hash);
+          setData[`TxArr_${this.chainType}-${this.n2Network.id}`] =
+            (await this.chrome.getLocalStorage(
+              `TxArr_${this.chainType}-${this.n2Network.id}`
+            )) || [];
+          setData[`TxArr_${this.chainType}-${this.n2Network.id}`].push(
+            '0x' + transaction.hash
+          );
           this.chrome.setLocalStorage(setData);
           this.dialog.open(PopupTransferSuccessDialogComponent, {
             panelClass: 'custom-dialog-panel',
