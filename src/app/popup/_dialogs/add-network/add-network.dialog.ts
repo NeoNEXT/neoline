@@ -219,7 +219,9 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
     }
 
     this.chrome.networkChangeEvent(this.addNetworkForm.value);
-    this.chrome.resetWatch(this.addNetworkForm.value.id);
+    this.chrome.resetWatch(
+      `${this.data.addChainType}-${this.addNetworkForm.value.id}`
+    );
     const transactions = await this.chrome
       .getStorage(STORAGE_NAME.transaction)
       .toPromise();

@@ -4,6 +4,7 @@ import { ChromeService, NftState, GlobalService } from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
+import { ChainType } from '@/app/popup/_lib';
 
 @Component({
   templateUrl: 'my-nfts.component.html',
@@ -17,6 +18,7 @@ export class PopupMyNftsComponent implements OnDestroy {
   private accountSub: Unsubscribable;
   private address: string;
   private n3NetworkId: number;
+  private chainType: ChainType;
   constructor(
     private chrome: ChromeService,
     private nftState: NftState,
@@ -26,6 +28,7 @@ export class PopupMyNftsComponent implements OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet?.accounts[0]?.address;
+      this.chainType = state.currentChainType;
       this.n3NetworkId = state.n3Networks[state.n3NetworkIndex].id;
       this.getNfts();
     });
@@ -38,7 +41,7 @@ export class PopupMyNftsComponent implements OnDestroy {
   getNfts() {
     this.isLoading = true;
     const getWatch = this.chrome
-      .getNftWatch(this.n3NetworkId, this.address)
+      .getNftWatch(`${this.chainType}-${this.n3NetworkId}`, this.address)
       .toPromise();
     const getNfts = this.nftState.getAddressNfts(this.address);
     Promise.all([getNfts, getWatch]).then((res) => {
@@ -69,7 +72,11 @@ export class PopupMyNftsComponent implements OnDestroy {
     } else {
       this.watchNfts.push(asset);
     }
-    this.chrome.setNftWatch(this.n3NetworkId, this.address, this.watchNfts);
+    this.chrome.setNftWatch(
+      `${this.chainType}-${this.n3NetworkId}`,
+      this.address,
+      this.watchNfts
+    );
     this.nfts[index].watching = true;
     this.global.snackBarTip('addSucc');
   }
@@ -82,7 +89,11 @@ export class PopupMyNftsComponent implements OnDestroy {
     } else {
       this.watchNfts.push(asset);
     }
-    this.chrome.setNftWatch(this.n3NetworkId, this.address, this.watchNfts);
+    this.chrome.setNftWatch(
+      `${this.chainType}-${this.n3NetworkId}`,
+      this.address,
+      this.watchNfts
+    );
     this.nfts[index].watching = false;
     this.global.snackBarTip('hiddenSucc');
   }

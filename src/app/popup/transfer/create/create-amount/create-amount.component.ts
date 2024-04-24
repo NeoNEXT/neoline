@@ -136,51 +136,53 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
   private async getAddressAllBalances(params) {
     const getMoneyBalance = this.asset.getAddressBalances(this.fromAddress);
     const getWatch = this.chrome.getWatch(
-      this.currentNetwork.id,
+      `${this.chainType}-${this.currentNetwork.id}`,
       this.fromAddress
     );
-    forkJoin([getMoneyBalance, getWatch]).subscribe(async ([moneyAssets, watch]) => {
-      const showAssets = [...moneyAssets];
-      for (const item of watch) {
-        const index = moneyAssets.findIndex(
-          (m) => m.asset_id === item.asset_id
-        );
-        if (index >= 0) {
-          if (item.watching === false) {
-            showAssets.splice(index, 1);
-          }
-        } else {
-          if (item.watching === true) {
-            const balance = await this.asset.getAddressAssetBalance(
-              this.fromAddress,
-              item.asset_id,
-              this.chainType
-            );
-            if (new BigNumber(balance).comparedTo(0) > 0) {
-              item.balance = new BigNumber(balance)
-                .shiftedBy(-item.decimals)
-                .toFixed();
-              showAssets.push(item);
+    forkJoin([getMoneyBalance, getWatch]).subscribe(
+      async ([moneyAssets, watch]) => {
+        const showAssets = [...moneyAssets];
+        for (const item of watch) {
+          const index = moneyAssets.findIndex(
+            (m) => m.asset_id === item.asset_id
+          );
+          if (index >= 0) {
+            if (item.watching === false) {
+              showAssets.splice(index, 1);
+            }
+          } else {
+            if (item.watching === true) {
+              const balance = await this.asset.getAddressAssetBalance(
+                this.fromAddress,
+                item.asset_id,
+                this.chainType
+              );
+              if (new BigNumber(balance).comparedTo(0) > 0) {
+                item.balance = new BigNumber(balance)
+                  .shiftedBy(-item.decimals)
+                  .toFixed();
+                showAssets.push(item);
+              }
             }
           }
         }
+        const gasAssetId =
+          this.chainType === 'Neo2'
+            ? GAS
+            : this.chainType === 'Neo3'
+            ? GAS3_CONTRACT
+            : ETH_SOURCE_ASSET_HASH;
+        const gasAsset = showAssets.find((m) => m.asset_id === gasAssetId);
+        this.gasBalance = gasAsset?.balance || '0';
+        this.assetArr = showAssets;
+        if (!params.id) {
+          this.transferAsset = this.assetArr[0];
+        } else {
+          const findAsset = showAssets.find((m) => m.asset_id === params.id);
+          this.transferAsset = findAsset ?? showAssets[0];
+        }
       }
-      const gasAssetId =
-        this.chainType === 'Neo2'
-          ? GAS
-          : this.chainType === 'Neo3'
-          ? GAS3_CONTRACT
-          : ETH_SOURCE_ASSET_HASH;
-      const gasAsset = showAssets.find((m) => m.asset_id === gasAssetId);
-      this.gasBalance = gasAsset?.balance || '0';
-      this.assetArr = showAssets;
-      if (!params.id) {
-        this.transferAsset = this.assetArr[0];
-      } else {
-        const findAsset = showAssets.find(m => m.asset_id === params.id);
-        this.transferAsset = findAsset ?? showAssets[0];
-      }
-    });
+    );
   }
   //#endregion
 

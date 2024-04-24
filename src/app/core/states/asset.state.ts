@@ -262,7 +262,9 @@ export class AssetState {
         networkId = this.neoXNetwork.id;
         break;
     }
-    const watching = await this.chrome.getWatch(networkId, address).toPromise();
+    const watching = await this.chrome
+      .getWatch(`${this.chainType}-${networkId}`, address)
+      .toPromise();
     return watching.find((w) => w.asset_id === assetId);
   }
 

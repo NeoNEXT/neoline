@@ -102,9 +102,11 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
     ].indexOf(this.assetId);
     this.canHideBalance = index >= 0 ? false : true;
     if (this.canHideBalance) {
-      this.chrome.getWatch(this.networkId, this.address).subscribe((res) => {
-        this.watch = res;
-      });
+      this.chrome
+        .getWatch(`${this.chainType}-${this.networkId}`, this.address)
+        .subscribe((res) => {
+          this.watch = res;
+        });
     }
   }
 
@@ -153,7 +155,11 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
             this.balance.watching = false;
             this.watch.push(this.balance);
           }
-          this.chrome.setWatch(this.networkId, this.address, this.watch);
+          this.chrome.setWatch(
+            `${this.chainType}-${this.networkId}`,
+            this.address,
+            this.watch
+          );
           this.global.snackBarTip('hiddenSucc');
           this.router.navigateByUrl('/popup/home');
         }

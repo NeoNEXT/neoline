@@ -4,6 +4,7 @@ import { AssetState, ChromeService, GlobalService } from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
+import { ChainType } from '../../_lib';
 @Component({
   templateUrl: 'add-asset.component.html',
   styleUrls: ['../add-asset.scss'],
@@ -18,6 +19,7 @@ export class PopupAddAssetComponent implements OnDestroy {
   private accountSub: Unsubscribable;
   private networkId: number;
   private address: string;
+  private chainType: ChainType;
   constructor(
     private asset: AssetState,
     private chrome: ChromeService,
@@ -27,6 +29,7 @@ export class PopupAddAssetComponent implements OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet?.accounts[0]?.address;
+      this.chainType = state.currentChainType;
       switch (state.currentChainType) {
         case 'Neo2':
           this.networkId = state.n2Networks[state.n2NetworkIndex].id;
@@ -42,7 +45,7 @@ export class PopupAddAssetComponent implements OnDestroy {
         .getAddressBalances(this.address)
         .then((res) => (this.moneyBalance = res));
       this.chrome
-        .getWatch(this.networkId, this.address)
+        .getWatch(`${this.chainType}-${this.networkId}`, this.address)
         .subscribe((res) => (this.watch = res));
     });
   }
@@ -61,7 +64,11 @@ export class PopupAddAssetComponent implements OnDestroy {
     } else {
       this.watch.push(this.searchAsset);
     }
-    this.chrome.setWatch(this.networkId, this.address, this.watch);
+    this.chrome.setWatch(
+      `${this.chainType}-${this.networkId}`,
+      this.address,
+      this.watch
+    );
     this.global.snackBarTip('addSucc');
   }
 

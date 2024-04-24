@@ -5,7 +5,7 @@ import { NftAsset } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { RpcNetwork } from '../../_lib';
+import { ChainType, RpcNetwork } from '../../_lib';
 
 @Component({
   templateUrl: 'nft-detail.component.html',
@@ -21,6 +21,7 @@ export class PopupNftDetailComponent implements OnDestroy {
   private accountSub: Unsubscribable;
   private address: string;
   private n3Network: RpcNetwork;
+  private chainType: ChainType;
   constructor(
     private aRouter: ActivatedRoute,
     private nftState: NftState,
@@ -29,6 +30,7 @@ export class PopupNftDetailComponent implements OnDestroy {
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
+      this.chainType = state.currentChainType;
       this.address = state.currentWallet?.accounts[0]?.address;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.initData();
@@ -51,7 +53,7 @@ export class PopupNftDetailComponent implements OnDestroy {
       this.nft = res;
       if (!this.nft) {
         this.chrome
-          .getNftWatch(this.n3Network.id, this.address)
+          .getNftWatch(`${this.chainType}-${this.n3Network.id}`, this.address)
           .subscribe((res2) => {
             this.nft = res2.find((m) => m.assethash === this.nftContract);
           });

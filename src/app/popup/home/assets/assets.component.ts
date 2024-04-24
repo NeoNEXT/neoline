@@ -66,7 +66,10 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     this.myAssets = [];
     this.isLoading = true;
     const getMoneyBalance = this.asset.getAddressBalances(this.address);
-    const getWatch = this.chrome.getWatch(this.networkId, this.address);
+    const getWatch = this.chrome.getWatch(
+      `${this.chainType}-${this.networkId}`,
+      this.address
+    );
     forkJoin([getMoneyBalance, getWatch]).subscribe(async (res) => {
       const [moneyAssets, watch] = [...res];
       const showAssets = [...moneyAssets];

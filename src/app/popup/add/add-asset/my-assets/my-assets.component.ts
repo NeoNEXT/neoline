@@ -5,7 +5,7 @@ import { forkJoin } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { NEO3_CONTRACT, GAS3_CONTRACT } from '../../../_lib';
+import { NEO3_CONTRACT, GAS3_CONTRACT, ChainType } from '../../../_lib';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 
 @Component({
@@ -21,6 +21,7 @@ export class PopupMyAssetsComponent implements OnDestroy {
   private accountSub: Unsubscribable;
   private networkId: number;
   private address: string;
+  private chainType: ChainType;
   constructor(
     private asset: AssetState,
     private chrome: ChromeService,
@@ -30,6 +31,7 @@ export class PopupMyAssetsComponent implements OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet?.accounts[0]?.address;
+      this.chainType = state.currentChainType;
       switch (state.currentChainType) {
         case 'Neo2':
           this.networkId = state.n2Networks[state.n2NetworkIndex].id;
@@ -47,7 +49,10 @@ export class PopupMyAssetsComponent implements OnDestroy {
 
   private initData() {
     const getMoneyBalance = this.asset.getAddressBalances(this.address);
-    const getWatch = this.chrome.getWatch(this.networkId, this.address);
+    const getWatch = this.chrome.getWatch(
+      `${this.chainType}-${this.networkId}`,
+      this.address
+    );
     forkJoin([getMoneyBalance, getWatch]).subscribe((res) => {
       [this.moneyAssets, this.watch] = [...res];
       const showAssets = [...this.moneyAssets];
@@ -91,7 +96,11 @@ export class PopupMyAssetsComponent implements OnDestroy {
     } else {
       this.watch.push(asset);
     }
-    this.chrome.setWatch(this.networkId, this.address, this.watch);
+    this.chrome.setWatch(
+      `${this.chainType}-${this.networkId}`,
+      this.address,
+      this.watch
+    );
     this.myAssets[index].watching = true;
     this.global.snackBarTip('addSucc');
   }
@@ -104,7 +113,11 @@ export class PopupMyAssetsComponent implements OnDestroy {
     } else {
       this.watch.push(asset);
     }
-    this.chrome.setWatch(this.networkId, this.address, this.watch);
+    this.chrome.setWatch(
+      `${this.chainType}-${this.networkId}`,
+      this.address,
+      this.watch
+    );
     this.myAssets[index].watching = false;
     this.global.snackBarTip('hiddenSucc');
   }

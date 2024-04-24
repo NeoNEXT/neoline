@@ -42,6 +42,8 @@ export enum STORAGE_NAME {
   chainType = 'chainType',
   neo3AddressFlag = 'neo3AddressFlag', // Fix the wallet created by neon-core@5-next.4 neon-core@5-next.7
   lang = 'lang',
+  watch = 'watch',
+  nftWatch = 'nft_watch',
   transaction = 'transaction',
   connectedWebsites = 'connectedWebsites', // dAPi connect status
   authAddress = 'authAddress',
