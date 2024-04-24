@@ -191,18 +191,12 @@ export class PopupNoticeInvokeComponent implements OnInit, OnDestroy {
         } else {
           this.fee = 0;
           if (this.showFeeEdit) {
-            if (this.assetState.gasFeeSpeed) {
+            this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
               this.fee = bignumber(this.minFee)
-                .add(bignumber(this.assetState.gasFeeSpeed.propose_price))
+                .add(bignumber(res.propose_price))
                 .toNumber();
-            } else {
-              this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
-                this.fee = bignumber(this.minFee)
-                  .add(bignumber(res.propose_price))
-                  .toNumber();
-                this.signTx();
-              });
-            }
+              this.signTx();
+            });
           }
         }
         this.attachedAssets = this.pramsData.attachedAssets;

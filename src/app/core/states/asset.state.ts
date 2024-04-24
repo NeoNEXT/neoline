@@ -33,8 +33,8 @@ export class AssetState {
   private rateRequestTime;
   public rateCurrency: string;
 
-  public gasFeeSpeed: GasFeeSpeed;
-  public gasFeeDefaultSpeed: GasFeeSpeed = {
+  private allNeoGasFeeSpeed: { [key: string]: GasFeeSpeed } = {};
+  private gasFeeDefaultSpeed: GasFeeSpeed = {
     slow_price: '0',
     propose_price: '0.011',
     fast_price: '0.2',
@@ -334,20 +334,29 @@ export class AssetState {
   //#endregion
 
   //#region gas fee
-  getGasFee(): Observable<any> {
+  getGasFee(): Observable<GasFeeSpeed> {
+    if (this.chainType === 'NeoX') return of(null);
     if (this.chainType === 'Neo3') {
+      if (this.allNeoGasFeeSpeed[this.n3Network.network]) {
+        return of(this.allNeoGasFeeSpeed[this.n3Network.network]);
+      }
       return this.fetchNeo3GasFee();
+    }
+    if (this.allNeoGasFeeSpeed[this.n2Network.network]) {
+      return of(this.allNeoGasFeeSpeed[this.n2Network.network]);
     }
     return this.http.get(`${this.global.apiDomain}/v1/neo2/fees`).pipe(
       map((res: any) => {
-        this.gasFeeSpeed = res || this.gasFeeDefaultSpeed;
+        if (res) {
+          this.allNeoGasFeeSpeed[this.n2Network.network] = res;
+        }
         return res || this.gasFeeDefaultSpeed;
       }),
       catchError(() => of(this.gasFeeDefaultSpeed))
     );
   }
 
-  fetchNeo3GasFee(): Observable<any> {
+  private fetchNeo3GasFee(): Observable<any> {
     return this.http.get(`${this.global.apiDomain}/v1/neo3/fees`).pipe(
       map((res: any) => {
         if (res) {
@@ -360,6 +369,7 @@ export class AssetState {
           res.fast_price = bignumber(res.fast_price)
             .dividedBy(bignumber(10).pow(8))
             .toFixed();
+          this.allNeoGasFeeSpeed[this.n3Network.network] = res;
         }
         return res || this.gasFeeDefaultSpeed;
       }),

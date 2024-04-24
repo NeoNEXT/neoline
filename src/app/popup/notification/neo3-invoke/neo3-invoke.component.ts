@@ -139,16 +139,10 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
           } else {
             this.fee = '0';
             if (this.showFeeEdit) {
-              if (this.assetState.gasFeeSpeed) {
-                this.fee = bignumber(this.minFee)
-                  .add(bignumber(this.assetState.gasFeeSpeed.propose_price))
-                  .toFixed();
-              } else {
-                const res_1 = await this.assetState.getGasFee().toPromise();
-                this.fee = bignumber(this.minFee)
-                  .add(bignumber(res_1.propose_price))
-                  .toFixed();
-              }
+              const res_1 = await this.assetState.getGasFee().toPromise();
+              this.fee = bignumber(this.minFee)
+                .add(bignumber(res_1.propose_price))
+                .toFixed();
             }
           }
           this.prompt();

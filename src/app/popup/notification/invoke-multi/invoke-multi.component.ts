@@ -187,18 +187,10 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
       } else {
         this.fee = 0;
         if (this.showFeeEdit) {
-          if (this.assetState.gasFeeSpeed) {
-            this.fee = bignumber(this.minFee)
-              .add(bignumber(this.assetState.gasFeeSpeed.propose_price))
-              .toNumber();
-          } else {
-            const tempGasFeeSpeed = await this.assetState
-              .getGasFee()
-              .toPromise();
-            this.fee = bignumber(this.minFee)
-              .add(bignumber(tempGasFeeSpeed.propose_price))
-              .toNumber();
-          }
+          const tempGasFeeSpeed = await this.assetState.getGasFee().toPromise();
+          this.fee = bignumber(this.minFee)
+            .add(bignumber(tempGasFeeSpeed.propose_price))
+            .toNumber();
         }
       }
       if (

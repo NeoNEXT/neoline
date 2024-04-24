@@ -97,14 +97,10 @@ export class PopupNoticeDeployComponent implements OnInit, OnDestroy {
       if (this.pramsData.networkFee) {
         this.fee = this.pramsData.networkFee;
       } else {
-        if (this.assetState.gasFeeSpeed) {
-          this.fee = this.assetState.gasFeeSpeed.propose_price;
-        } else {
-          this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
-            this.fee = res.propose_price;
-            this.signTx();
-          });
-        }
+        this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
+          this.fee = res.propose_price;
+          this.signTx();
+        });
       }
       if (Number(this.pramsData.fee) > 0) {
         this.assetState.getAssetRate('GAS', GAS).then((rate) => {

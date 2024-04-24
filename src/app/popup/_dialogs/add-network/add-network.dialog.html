@@ -21,36 +21,32 @@
 </div>
 
 <form class="container" [formGroup]="addNetworkForm">
-  <div class="item">
-    <p class="label">{{ 'NetworkName' | translate | async }}</p>
-    <mat-form-field class="form-field" appearance="outline">
-      <input matInput required formControlName="name" type="text" />
-      <mat-error *ngIf="addNetworkForm.get('name').errors?.required"
-        >{{ "networkNameIsRequired" | translate | async }}
-      </mat-error>
-    </mat-form-field>
-  </div>
+  <p class="label">{{ 'NetworkName' | translate | async }}</p>
+  <mat-form-field class="form-field" appearance="outline">
+    <input matInput required formControlName="name" type="text" />
+    <mat-error *ngIf="addNetworkForm.get('name').errors?.required"
+      >{{ "networkNameIsRequired" | translate | async }}
+    </mat-error>
+  </mat-form-field>
 
-  <div class="item">
-    <p class="label">{{ 'New_RPC_URL' | translate | async }}</p>
-    <mat-form-field class="form-field" appearance="outline">
-      <input
-        matInput
-        required
-        (input)="getMagicNumber()"
-        formControlName="rpcUrl"
-      />
-      <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.required">
-        {{ "rpcUrlIsRequired" | translate | async }}
-      </mat-error>
-      <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.errorRPC">
-        {{ "Invalid_RPC_URL" | translate | async }}
-      </mat-error>
-      <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.errorExistChainId">
-        {{ "exist_RPC_URL" | translate | async }}
-      </mat-error>
-    </mat-form-field>
-  </div>
+  <p class="label">{{ 'New_RPC_URL' | translate | async }}</p>
+  <mat-form-field class="form-field" appearance="outline">
+    <input
+      matInput
+      required
+      (input)="getMagicNumber()"
+      formControlName="rpcUrl"
+    />
+    <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.required">
+      {{ "rpcUrlIsRequired" | translate | async }}
+    </mat-error>
+    <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.errorRPC">
+      {{ "Invalid_RPC_URL" | translate | async }}
+    </mat-error>
+    <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.errorExistChainId">
+      {{ "exist_RPC_URL" | translate | async }}
+    </mat-error>
+  </mat-form-field>
 
   <div *ngIf="data.addChainType === 'Neo3'">
     <p class="label">Magic Number</p>
@@ -76,12 +72,10 @@
     </mat-form-field>
   </div>
 
-  <div>
-    <p class="label">{{ 'Explorer_URL' | translate | async }}</p>
-    <mat-form-field class="form-field" appearance="outline">
-      <input matInput formControlName="explorer" />
-    </mat-form-field>
-  </div>
+  <p class="label">{{ 'Explorer_URL' | translate | async }}</p>
+  <mat-form-field class="form-field" appearance="outline">
+    <input matInput formControlName="explorer" />
+  </mat-form-field>
 </form>
 
 <button

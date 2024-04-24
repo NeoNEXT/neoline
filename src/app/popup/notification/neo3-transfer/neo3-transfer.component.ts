@@ -150,13 +150,9 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
       if (params.fee) {
         this.fee = params.fee;
       } else {
-        if (this.asset.gasFeeSpeed) {
-          this.fee = this.asset.gasFeeSpeed.propose_price;
-        } else {
-          this.asset.fetchNeo3GasFee().subscribe((res: GasFeeSpeed) => {
-            this.fee = res.propose_price;
-          });
-        }
+        this.asset.getGasFee().subscribe((res: GasFeeSpeed) => {
+          this.fee = res.propose_price;
+        });
       }
       this.remark = params.remark || '';
       this.getAssetDetail();

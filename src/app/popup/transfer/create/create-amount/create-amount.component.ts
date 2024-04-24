@@ -327,15 +327,10 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     return 'customize';
   }
   private getGasFeeSpeed() {
-    if (this.asset.gasFeeSpeed) {
-      this.gasFeeSpeed = this.asset.gasFeeSpeed;
-      this.priorityFee = this.asset.gasFeeSpeed.propose_price;
-    } else {
-      this.asset.getGasFee().subscribe((res: GasFeeSpeed) => {
-        this.gasFeeSpeed = res;
-        this.priorityFee = res.propose_price;
-      });
-    }
+    this.asset.getGasFee().subscribe((res: GasFeeSpeed) => {
+      this.gasFeeSpeed = res;
+      this.priorityFee = res.propose_price;
+    });
   }
   //#endregion
 

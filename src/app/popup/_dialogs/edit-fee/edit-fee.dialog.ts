@@ -34,15 +34,10 @@ export class PopupEditFeeDialogComponent {
   }
 
   getGasFee() {
-    if (this.assetState.gasFeeSpeed) {
-      this.gasFeeSpeed = this.assetState.gasFeeSpeed;
+    this.assetState.getGasFee().subscribe((res) => {
+      this.gasFeeSpeed = res;
       this.updateGasFeeSpeed();
-    } else {
-      this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
-        this.gasFeeSpeed = res;
-        this.updateGasFeeSpeed();
-      });
-    }
+    });
   }
 
   updateGasFeeSpeed() {

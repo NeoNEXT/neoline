@@ -151,13 +151,9 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
       if (params.fee) {
         this.fee = parseFloat(params.fee);
       } else {
-        if (this.asset.gasFeeSpeed) {
-          this.fee = Number(this.asset.gasFeeSpeed.propose_price);
-        } else {
-          this.asset.getGasFee().subscribe((res: GasFeeSpeed) => {
-            this.fee = Number(res.propose_price);
-          });
-        }
+        this.asset.getGasFee().subscribe((res: GasFeeSpeed) => {
+          this.fee = Number(res.propose_price);
+        });
       }
       this.remark = params.remark || '';
       if (this.assetId !== undefined && this.assetId !== '') {
