@@ -13,6 +13,7 @@ import {
   ChromeService,
   NftState,
   UtilServiceState,
+  AssetEVMState,
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import {
@@ -30,7 +31,7 @@ import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
-import { TransferData } from '../interface';
+import { NeoXFeeInfoProp, TransferData } from '../interface';
 import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '@/app/popup/_lib/evm';
 
 interface TransferTo {
@@ -54,13 +55,16 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
   transferNFT: NftToken;
 
   transferAmount = '';
-  istransferAll = false;
+  private isTransferAllLoading = false;
   priorityFee = '0';
   loading = false;
-  gasBalance = '0';
+  gasBalance = '0'; // GAS || GAS3_CONTRACT || ETH_SOURCE_ASSET_HASH
+
+  // EVM
+  neoXFeeInfo: NeoXFeeInfoProp;
 
   private accountSub: Unsubscribable;
-  private fromAddress: string;
+  fromAddress: string;
   private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   chainType: ChainType;
   currentNetwork: RpcNetwork;
@@ -75,6 +79,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     private neo3Transfer: Neo3TransferService,
     private nftState: NftState,
     private util: UtilServiceState,
+    private assetEVMState: AssetEVMState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -187,7 +192,9 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
   //#endregion
 
   ngOnInit(): void {
-    this.getGasFeeSpeed();
+    if (this.chainType !== 'NeoX') {
+      this.getGasFeeSpeed();
+    }
   }
 
   ngOnDestroy(): void {
@@ -219,6 +226,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
             this.transferNFT = res;
           } else {
             this.transferAsset = res;
+            this.transferAmount = '';
           }
         }
       });
@@ -239,17 +247,30 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     }
   }
   transferAll() {
-    if (this.istransferAll) {
+    if (this.isTransferAllLoading) {
       return;
     }
-    this.istransferAll = true;
+    this.isTransferAllLoading = true;
     // 不是 GAS 资产时
     if (
       this.transferAsset.asset_id !== GAS &&
-      this.transferAsset.asset_id !== GAS3_CONTRACT
+      this.transferAsset.asset_id !== GAS3_CONTRACT &&
+      this.transferAsset.asset_id !== ETH_SOURCE_ASSET_HASH
     ) {
       this.transferAmount = this.transferAsset.balance;
-      this.istransferAll = false;
+      this.isTransferAllLoading = false;
+      return;
+    }
+    if (this.chainType === 'NeoX') {
+      const tAmount = new BigNumber(this.transferAsset.balance).minus(
+        this.neoXFeeInfo?.estimateGas.toString() || 0
+      );
+      if (tAmount.comparedTo(0) > 0) {
+        this.transferAmount = tAmount.dp(8).toFixed();
+      } else {
+        this.global.snackBarTip('balanceLack');
+      }
+      this.isTransferAllLoading = false;
       return;
     }
     const tAmount = bignumber(this.transferAsset.balance).minus(
@@ -265,7 +286,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     // neo2 的 GAS
     if (this.transferAsset.asset_id === GAS) {
       this.transferAmount = tempAmount;
-      this.istransferAll = false;
+      this.isTransferAllLoading = false;
       return;
     }
     // neo3 的GAS
@@ -285,17 +306,17 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
           .minus(tx.systemFee.toDecimal(8))
           .toString();
         this.loading = false;
-        this.istransferAll = false;
+        this.isTransferAllLoading = false;
       },
       () => {
         this.loading = false;
-        this.istransferAll = false;
+        this.isTransferAllLoading = false;
       }
     );
   }
   //#endregion
 
-  //#region gas fee
+  //#region NEO gas fee
   editFee() {
     this.dialog
       .open(PopupEditFeeDialogComponent, {
@@ -334,12 +355,19 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
   }
   //#endregion
 
+  updateEvmFee($event) {
+    this.neoXFeeInfo = $event;
+  }
+
   cancel() {
     history.go(-1);
   }
 
   public submit() {
-    if (bignumber(this.priorityFee).comparedTo(this.gasBalance) > 0) {
+    if (
+      this.chainType !== 'NeoX' &&
+      bignumber(this.priorityFee).comparedTo(this.gasBalance) > 0
+    ) {
       this.global.snackBarTip('InsufficientGas');
       return;
     }
@@ -358,7 +386,11 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
         this.transferAsset.asset_id === GAS3_CONTRACT ||
         this.transferAsset.asset_id === ETH_SOURCE_ASSET_HASH
       ) {
-        requiredAmount = requiredAmount.plus(this.priorityFee);
+        if (this.chainType === 'NeoX') {
+          requiredAmount = requiredAmount.plus(this.neoXFeeInfo?.estimateGas);
+        } else {
+          requiredAmount = requiredAmount.plus(this.priorityFee);
+        }
       }
       if (
         requiredAmount.comparedTo(bignumber(this.transferAsset.balance)) > 0
@@ -382,6 +414,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       network: this.currentNetwork,
       currentWallet: this.currentWallet,
       currentWIF: this.currentWIF,
+      neoXFeeInfo: this.neoXFeeInfo,
     };
     this.closeEvent.emit(data);
     return;

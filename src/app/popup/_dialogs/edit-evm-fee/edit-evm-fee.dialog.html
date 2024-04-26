@@ -1,0 +1,95 @@
+<div class="pop-ups-title">
+  {{ 'Advanced gas fee' }}
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    theme
+    src="assets/images/common/close.svg"
+    alt=""
+  />
+</div>
+
+<div class="add-tip">
+  <img src="assets/images/common/warning.svg" alt="" />
+  Use Advanced to customize the gas price. This can be confusing if you aren’t
+  familiar. Interact at your own risk.
+</div>
+
+<p class="custom">
+  Custom: {{ data.customNeoXFeeInfo.estimateGas | numberFixed:8 }}
+  {{data.symbol}}
+</p>
+
+<form class="container" [formGroup]="editEvmFeeForm">
+  <div class="item">
+    <p class="label">{{ 'Max base fee (GWEI)' }}</p>
+    <mat-form-field class="form-field" appearance="outline">
+      <input
+        matInput
+        required
+        min="0"
+        formControlName="baseFeePerGas"
+        type="number"
+      />
+    </mat-form-field>
+    <p
+      class="error"
+      *ngIf="editEvmFeeForm.get('baseFeePerGas').errors?.errorLowPriorityFee"
+    >
+      {{ "Max base fee cannot be lower than priority fee" }}
+    </p>
+    <p
+      class="error"
+      *ngIf="!editEvmFeeForm.get('baseFeePerGas').errors?.errorLowPriorityFee && baseFeePerGasIsLow"
+    >
+      {{ "Max base fee is low for current network conditions" }}
+    </p>
+    <p class="current">current: {{ baseFeePerGasGWEI }}</p>
+  </div>
+
+  <div class="item">
+    <p class="label">{{ 'Priority Fee (GWEI)' }}</p>
+    <mat-form-field class="form-field" appearance="outline">
+      <input
+        matInput
+        required
+        min="0"
+        formControlName="maxPriorityFeePerGas"
+        type="number"
+      />
+    </mat-form-field>
+    <p class="error" *ngIf="maxPriorityFeeIsLow">
+      {{ "Priority fee is low for current network conditions" }}
+    </p>
+    <p class="current">current: {{ maxPriorityFeeGWEI }}</p>
+  </div>
+
+  <div class="item">
+    <p class="label">{{ 'Gas Limit' }}</p>
+    <mat-form-field class="form-field" appearance="outline">
+      <input
+        matInput
+        required
+        min="0"
+        formControlName="gasLimit"
+        type="number"
+      />
+    </mat-form-field>
+    <p
+      class="error"
+      *ngIf="editEvmFeeForm.get('gasLimit').errors?.min || editEvmFeeForm.get('gasLimit').errors?.max"
+    >
+      {{ "Gas limit must be greater than 20999 and less than 7920027" }}
+    </p>
+  </div>
+</form>
+
+<button
+  class="confirm pop-ups"
+  [ngClass]="{
+  disabled: editEvmFeeForm.invalid
+}"
+  (click)="confirm()"
+>
+  {{ 'yes' | translate | async}}
+</button>

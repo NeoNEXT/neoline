@@ -9,6 +9,7 @@
   <div class="content" *ngIf="transferTo?.address">
     <div class="item currencies">
       <p class="label">{{ "currencies" | translate | async }}</p>
+      <!-- not NFT -->
       <div class="value" *ngIf="!nftContract" (click)="selectAsset()">
         <div class="asset-logo-box small">
           <img [assetId]="transferAsset?.asset_id" appErrorSrc alt="" />
@@ -17,7 +18,7 @@
           <p class="symbol">{{ transferAsset?.symbol || "NEO" }}</p>
           <p class="balance">
             {{ "balancecolon" | translate | async }}
-            {{ transferAsset?.balance | numberFixed }}
+            {{ transferAsset?.balance | numberFixed : 8 }}
             <!-- {{ transferAsset?.symbol || "NEO" }} -->
           </p>
         </div>
@@ -28,6 +29,7 @@
           alt=""
         />
       </div>
+      <!-- NFT -->
       <div class="value" *ngIf="nftContract" (click)="selectAsset(true)">
         <div class="asset-logo-box small">
           <img [src]="transferNFT?.image_url" appErrorSrc alt="" />
@@ -63,7 +65,11 @@
         }}</span>
       </div>
     </div>
-    <div class="item priority-fee" (click)="editFee()">
+    <div
+      *ngIf="chainType !== 'NeoX'"
+      class="item priority-fee"
+      (click)="editFee()"
+    >
       <p class="label">{{ "priorityFee" | translate | async }}</p>
       <div class="value">
         <div>
@@ -73,6 +79,16 @@
         <img theme src="assets/images/common/arrow.svg" alt="" />
       </div>
     </div>
+    <evm-fee
+      *ngIf="chainType === 'NeoX'"
+      [transferAsset]="transferAsset"
+      [transferToAddress]="transferTo?.address"
+      [fromAddress]="fromAddress"
+      [transferAmount]="transferAmount"
+      [symbol]="currentNetwork.symbol"
+      (returnFee)="updateEvmFee($event)"
+    >
+    </evm-fee>
     <div class="btn-group">
       <button class="cancel" (click)="cancel()">
         {{ "cancel" | translate | async }}

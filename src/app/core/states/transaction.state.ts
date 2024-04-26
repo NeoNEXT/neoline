@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpService } from '../services/http.service';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ChainType, RpcNetwork } from '@popup/_lib';
 import { Transaction, NEO, GAS } from '@/models/models';
@@ -38,6 +38,9 @@ export class TransactionState {
   }
 
   async getAllTxs(address: string): Promise<Transaction[]> {
+    if (this.chainType === 'NeoX') {
+      return Promise.resolve([]);
+    }
     if (this.chainType === 'Neo3') {
       return this.getN3AllTxs(address);
     }
@@ -45,6 +48,9 @@ export class TransactionState {
   }
 
   async getAssetTxs(address: string, asset: string): Promise<Transaction[]> {
+    if (this.chainType === 'NeoX') {
+      return Promise.resolve([]);
+    }
     if (this.chainType === 'Neo3') {
       return this.getN3AssetTxs(address, asset);
     }
@@ -67,6 +73,7 @@ export class TransactionState {
 
   getTxsValid(txids: string[], chainType: ChainType): Observable<string[]> {
     const reqs = [];
+    if (chainType === 'NeoX') return of(reqs);
     // neo2
     if (chainType === 'Neo2') {
       txids.forEach((txid) => {

@@ -6,6 +6,7 @@ import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import Erc20ABI from '@assets/contract-json/ERC20.json';
+import BigNumber from 'bignumber.js';
 
 @Injectable()
 export class AssetEVMState {
@@ -87,11 +88,11 @@ export class AssetEVMState {
     toAddress: string;
     transferAmount: string;
   }): Promise<{
-    maxFeePerGas: bigint;
-    maxPriorityFeePerGas: bigint;
-    baseFeePerGas: bigint;
-    gasLimit: bigint;
-    estimateGas: bigint;
+    maxFeePerGas: string;
+    maxPriorityFeePerGas: string;
+    baseFeePerGas: string;
+    gasLimit: string;
+    estimateGas: string;
   }> {
     let getGasLimit = Promise.resolve(BigInt(21000));
     if (asset.asset_id !== ETH_SOURCE_ASSET_HASH) {
@@ -116,11 +117,19 @@ export class AssetEVMState {
     });
     const estimateGas = maxFeePerGas * gasLimit;
     return {
-      maxFeePerGas,
-      maxPriorityFeePerGas,
-      baseFeePerGas,
-      gasLimit,
-      estimateGas,
+      maxFeePerGas: new BigNumber(maxFeePerGas.toString())
+        .shiftedBy(-18)
+        .toFixed(),
+      maxPriorityFeePerGas: new BigNumber(maxPriorityFeePerGas.toString())
+        .shiftedBy(-18)
+        .toFixed(),
+      baseFeePerGas: new BigNumber(baseFeePerGas.toString())
+        .shiftedBy(-18)
+        .toFixed(),
+      gasLimit: gasLimit.toString(),
+      estimateGas: new BigNumber(estimateGas.toString())
+        .shiftedBy(-18)
+        .toFixed(),
     };
   }
 
@@ -136,19 +145,25 @@ export class AssetEVMState {
     asset: Asset;
     toAddress: string;
     transferAmount: string;
-    maxFeePerGas: bigint;
-    maxPriorityFeePerGas: bigint;
-    gasLimit: bigint;
+    maxFeePerGas: string;
+    maxPriorityFeePerGas: string;
+    gasLimit: string;
     privateKey: string;
   }) {
+    const newMaxFeePerGas = BigInt(
+      new BigNumber(maxFeePerGas).shiftedBy(18).toFixed()
+    );
+    const newMaxPriorityFeePerGas = BigInt(
+      new BigNumber(maxPriorityFeePerGas).shiftedBy(18).toFixed()
+    );
     let txRequest: ethers.TransactionRequest;
     if (asset.asset_id === ETH_SOURCE_ASSET_HASH) {
       txRequest = {
         to: toAddress,
         value: ethers.parseUnits(transferAmount, asset.decimals),
-        maxFeePerGas,
-        maxPriorityFeePerGas,
-        gasLimit,
+        maxFeePerGas: newMaxFeePerGas,
+        maxPriorityFeePerGas: newMaxPriorityFeePerGas,
+        gasLimit: BigInt(gasLimit),
       };
     } else {
       txRequest = {
@@ -158,9 +173,9 @@ export class AssetEVMState {
           toAddress,
           transferAmount,
         }),
-        maxFeePerGas,
-        maxPriorityFeePerGas,
-        gasLimit,
+        maxFeePerGas: newMaxFeePerGas,
+        maxPriorityFeePerGas: newMaxPriorityFeePerGas,
+        gasLimit: BigInt(gasLimit),
       };
     }
     const wallet = new ethers.Wallet(privateKey, this.provider);

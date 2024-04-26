@@ -8,7 +8,7 @@ export interface TransferData {
   from: string;
   to: { address: string; name: string };
   asset: Asset;
-  nftToken: NftToken;
+  nftToken?: NftToken;
   amount: string;
   fee: string;
   gasBalance: string;
@@ -18,4 +18,29 @@ export interface TransferData {
   network: RpcNetwork;
   currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   currentWIF: string;
+  neoXFeeInfo?: NeoXFeeInfoProp;
+}
+
+export interface NeoXFeeInfoProp {
+  maxFeePerGas: string;
+  maxPriorityFeePerGas: string;
+  baseFeePerGas: string;
+  gasLimit: string;
+  estimateGas: string;
+  custom?: boolean;
+}
+
+export interface NeoDataJsonProp {
+  fromAddress: string;
+  toAddress: string;
+  symbol: string;
+  asset: string;
+  tokenId?: string;
+  amount: string;
+  fee: string;
+  networkFee: string;
+  systemFee: string;
+  networkId: number;
+  chainId: number;
+  estimatedFee: string;
 }

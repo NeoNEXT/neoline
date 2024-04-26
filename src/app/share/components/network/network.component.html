@@ -17,7 +17,9 @@
       <ul [hidden]="!list.expand">
         <li
           *ngFor="let item of list.networkArr; index as index"
-          [ngClass]="{ active: currentNetwork.id === item.id }"
+          [ngClass]="{
+            active: chainType === list.chain && currentNetwork.id === item.id
+          }"
           (click)="changeNetwork(item, index, list.chain)"
         >
           <span class="select"></span>

@@ -12,6 +12,7 @@ import { TransferCreateComponent } from './create/create.component';
 import { TransferCreateAddressComponent } from './create/create-address/create-address.component';
 import { TransferCreateAmountComponent } from './create/create-amount/create-amount.component';
 import { TransferCreateConfirmComponent } from './create/create-confirm/create-confirm.component';
+import { EvmFeeComponent } from './create/evm-fee/evm-fee.component';
 
 @NgModule({
   declarations: [
@@ -20,6 +21,7 @@ import { TransferCreateConfirmComponent } from './create/create-confirm/create-c
     TransferCreateAddressComponent,
     TransferCreateAmountComponent,
     TransferCreateConfirmComponent,
+    EvmFeeComponent,
   ],
   imports: [CommonModule, TransferRoutingModule, ShareModule],
   exports: [],

@@ -42,7 +42,9 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
       const network =
         this.chainType === 'Neo2'
           ? state.n2Networks[state.n2NetworkIndex]
-          : state.n3Networks[state.n3NetworkIndex];
+          : this.chainType === 'Neo3'
+          ? state.n3Networks[state.n3NetworkIndex]
+          : state.neoXNetworks[state.neoXNetworkIndex];
       this.networkId = network.id;
       this.getAllTxs();
     });

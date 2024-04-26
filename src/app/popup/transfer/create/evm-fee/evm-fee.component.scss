@@ -1,0 +1,33 @@
+.item {
+  .label {
+    font-family: NeverMind-Regular;
+    color: var(--sub-title-color);
+    margin-top: 24px;
+  }
+  .value {
+    height: 52px;
+    padding: 0 16px;
+    border-radius: 4px;
+    background: var(--box-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+  }
+  &.priority-fee {
+    .value {
+      cursor: pointer;
+      .fee-desc {
+        font-family: NeverMind-Regular;
+        font-size: 12px;
+      }
+      .fee {
+        color: var(--sub-title-color);
+        margin-top: 5px;
+        &.animate {
+          animation: showFeeAnimation 1.5s ease-in-out alternate;
+        }
+      }
+    }
+  }
+}

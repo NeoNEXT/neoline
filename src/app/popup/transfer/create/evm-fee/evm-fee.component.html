@@ -1,0 +1,19 @@
+<div class="item priority-fee" (click)="editEvmFee()">
+  <p class="label">{{ "Estimated fee" }}</p>
+  <div class="value">
+    <div *ngIf="customNeoXFeeInfo">
+      <p class="fee-desc">{{ "customize" | translate | async }}</p>
+      <p class="fee">
+        {{ customNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
+        {{ symbol }}
+      </p>
+    </div>
+    <div *ngIf="!customNeoXFeeInfo">
+      <p class="fee" [ngClass]="{ animate: showEstimateFeeAnimate }">
+        {{ neoXFeeInfo?.estimateGas | numberFixed : 8 }}
+        {{ symbol }}
+      </p>
+    </div>
+    <img theme src="assets/images/common/arrow.svg" alt="" />
+  </div>
+</div>

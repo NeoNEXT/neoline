@@ -1,5 +1,3 @@
-
-
 section.container {
   height: 100%;
   .content {
@@ -82,6 +80,9 @@ section.container {
           .fee {
             color: var(--sub-title-color);
             margin-top: 5px;
+            &.animate {
+              animation: showFeeAnimation 1.5s ease-in-out alternate;
+            }
           }
         }
       }
@@ -95,5 +96,14 @@ section.container {
         }
       }
     }
+  }
+}
+
+@keyframes showFeeAnimation {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
   }
 }

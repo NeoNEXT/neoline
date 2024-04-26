@@ -57,14 +57,6 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   loadingMsg: string;
   getStatusInterval;
 
-  neoXData: {
-    maxFeePerGas: bigint;
-    maxPriorityFeePerGas: bigint;
-    baseFeePerGas: bigint;
-    gasLimit: bigint;
-    estimateGas: bigint;
-  };
-
   constructor(
     private assetState: AssetState,
     private dialog: MatDialog,
@@ -145,8 +137,8 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     this.resolveSend();
   }
   transferNeoX() {
-    const { asset, to, amount, currentWIF } = this.data;
-    const { maxFeePerGas, maxPriorityFeePerGas, gasLimit } = this.neoXData;
+    const { asset, to, amount, currentWIF, neoXFeeInfo } = this.data;
+    const { maxFeePerGas, maxPriorityFeePerGas, gasLimit } = neoXFeeInfo;
     this.assetEvmState
       .transferErc20({
         asset: asset,
@@ -287,7 +279,6 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   //#region init
   private createTx() {
     if (this.data.chainType === 'NeoX') {
-      this.createNeoXTx();
       return;
     }
     this.loading = true;
@@ -335,17 +326,6 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         this.global.snackBarTip('wentWrong', err, 10000);
       }
     );
-  }
-  private async createNeoXTx() {
-    const { asset, to, amount, from } = this.data;
-    const res = await this.assetEvmState.getTransferERC20Info({
-      asset: asset,
-      fromAddress: from,
-      toAddress: to.address,
-      transferAmount: amount,
-    });
-    this.neoXData = res;
-    console.log(res);
   }
   private async getTotalData() {
     this.totalFee = this.data.fee;
