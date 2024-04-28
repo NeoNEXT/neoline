@@ -146,32 +146,8 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
           this.data.network.magicNumber
         );
         break;
-      case 'NeoX':
-        this.transferNeoX();
-        return;
     }
     this.resolveSend();
-  }
-  transferNeoX() {
-    const { asset, to, amount, currentWIF, neoXFeeInfo } = this.data;
-    const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } = neoXFeeInfo;
-    this.assetEvmState
-      .transferErc20({
-        asset: asset,
-        toAddress: to.address,
-        transferAmount: amount,
-        maxFeePerGas,
-        maxPriorityFeePerGas,
-        gasLimit,
-        gasPrice,
-        privateKey: currentWIF,
-      })
-      .then((res) => {
-        console.log(res);
-      })
-      .catch((err) => {
-        console.log(err);
-      });
   }
   private getLedgerStatus() {
     this.ledger.getDeviceStatus(this.data.chainType).then(async (res) => {
@@ -232,6 +208,22 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
           }
           txid = res;
           break;
+        case 'NeoX':
+          const { asset, to, amount, currentWIF, neoXFeeInfo } = this.data;
+          const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
+            neoXFeeInfo;
+          res = await this.assetEvmState.transferErc20({
+            asset: asset,
+            toAddress: to.address,
+            transferAmount: amount,
+            maxFeePerGas,
+            maxPriorityFeePerGas,
+            gasLimit,
+            gasPrice,
+            privateKey: currentWIF,
+          });
+          txid = res.hash;
+          break;
       }
       if (this.data.from !== this.data.to.address) {
         const txTarget = {
@@ -256,7 +248,6 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         });
       this.loading = false;
       this.loadingMsg = '';
-      return res;
     } catch (err) {
       this.global.handlePrcError(err, 'Neo2');
     }
