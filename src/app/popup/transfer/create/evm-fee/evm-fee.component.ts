@@ -7,6 +7,7 @@ import {
   Input,
   OnChanges,
   OnDestroy,
+  OnInit,
   Output,
   SimpleChanges,
 } from '@angular/core';
@@ -19,16 +20,17 @@ import { timer } from 'rxjs';
   templateUrl: 'evm-fee.component.html',
   styleUrls: ['evm-fee.component.scss'],
 })
-export class EvmFeeComponent implements OnDestroy, OnChanges {
+export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
   @Input() transferAsset: Asset;
   @Input() transferToAddress: string;
   @Input() fromAddress: string;
   @Input() transferAmount: string;
   @Input() symbol: string;
   @Input() customNeoXFeeInfo: NeoXFeeInfoProp;
+  @Input() place: 'amount' | 'confirm' = 'amount';
   @Output() returnFee = new EventEmitter<NeoXFeeInfoProp>();
 
-  neoXFeeInfo: NeoXFeeInfoProp;
+  sourceNeoXFeeInfo: NeoXFeeInfoProp;
 
   getEstimateFeeInterval;
   showEstimateFeeAnimate = false;
@@ -38,6 +40,12 @@ export class EvmFeeComponent implements OnDestroy, OnChanges {
     private assetEVMState: AssetEVMState,
     private dialog: MatDialog
   ) {}
+
+  ngOnInit(): void {
+    if (this.customNeoXFeeInfo) {
+      this.sourceNeoXFeeInfo = this.customNeoXFeeInfo;
+    }
+  }
 
   ngOnChanges(changes: SimpleChanges): void {
     console.log(changes);
@@ -59,14 +67,14 @@ export class EvmFeeComponent implements OnDestroy, OnChanges {
   }
 
   editEvmFee() {
-    if (!this.neoXFeeInfo) return;
+    if (!this.sourceNeoXFeeInfo) return;
     this.editEvmFeeDialogRef = this.dialog.open(
       PopupEditEvmFeeDialogComponent,
       {
         panelClass: 'custom-dialog-panel',
         data: {
-          neoXFeeInfo: this.neoXFeeInfo,
-          customNeoXFeeInfo: this.customNeoXFeeInfo ?? this.neoXFeeInfo,
+          sourceNeoXFeeInfo: this.sourceNeoXFeeInfo,
+          customNeoXFeeInfo: this.customNeoXFeeInfo ?? this.sourceNeoXFeeInfo,
           symbol: this.symbol,
         },
       }
@@ -80,8 +88,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges {
   }
 
   private getEvmEstimateFee() {
-    console.log('---');
-
+    this.sourceNeoXFeeInfo = undefined;
     this.getEstimateFeeInterval?.unsubscribe();
     if (this.transferAsset && this.transferToAddress) {
       this.getEstimateFeeInterval = timer(0, 10000).subscribe(() => {
@@ -93,12 +100,13 @@ export class EvmFeeComponent implements OnDestroy, OnChanges {
             transferAmount: this.transferAmount || '1',
           })
           .then((res) => {
-            this.neoXFeeInfo = res;
-            if (!this.customNeoXFeeInfo) {
-              this.returnFee.emit(this.neoXFeeInfo);
+            this.sourceNeoXFeeInfo = res;
+            if (!this.customNeoXFeeInfo?.custom) {
+              this.returnFee.emit(this.sourceNeoXFeeInfo);
             }
             if (this.editEvmFeeDialogRef?.componentInstance) {
-              this.editEvmFeeDialogRef.componentInstance.data.neoXFeeInfo = res;
+              this.editEvmFeeDialogRef.componentInstance.data.sourceNeoXFeeInfo =
+                res;
             }
             this.showEstimateFeeAnimate = true;
             timer(1500).subscribe(() => {

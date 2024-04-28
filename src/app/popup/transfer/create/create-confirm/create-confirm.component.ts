@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { GAS3_CONTRACT, LedgerStatuses, STORAGE_NAME } from '../../../_lib';
 import { GAS } from '@/models/models';
-import { TransferData } from '../interface';
+import { NeoDataJsonProp, TransferData } from '../interface';
 import {
   AssetState,
   GlobalService,
@@ -29,6 +29,7 @@ import { Observable } from 'rxjs';
 import { interval } from 'rxjs';
 import { Neo3TransferService } from '../../neo3-transfer.service';
 import { AssetEVMState } from '@/app/core/states/asset-evm.state';
+import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 
 export type TabType = 'details' | 'data';
 
@@ -50,12 +51,15 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   rate = { amount: '0', fee: '', networkFee: '', systemFee: '', total: '' };
 
   tabType: TabType = 'details';
-  datajson: any = {};
+  dataJson: NeoDataJsonProp;
   txSerialize: string;
 
   loading = false;
   loadingMsg: string;
   getStatusInterval;
+
+  ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
+  evmHexData: string;
 
   constructor(
     private assetState: AssetState,
@@ -102,12 +106,24 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
       .subscribe(async (res) => {
         if (res !== false) {
           this.data.fee = res;
-          this.datajson.fee = res;
+          this.dataJson.fee = res;
           this.rate.fee = await this.getGasRate(this.data.fee);
           this.createTx();
         }
       });
   }
+
+  //#region EVM
+  getEvmTotalData() {
+    return new BigNumber(this.data.amount)
+      .plus(this.data.neoXFeeInfo.estimateGas)
+      .dp(8)
+      .toFixed();
+  }
+  updateEvmFee($event) {
+    this.data.neoXFeeInfo = $event;
+  }
+  //#endregion
 
   //#region sign tx
   confirm() {
@@ -342,27 +358,44 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
       .toFixed();
   }
   private getDataJson() {
-    this.datajson.fromAddress = this.data.from;
-    this.datajson.toAddress = this.data.to.address;
-    this.datajson.symbol = this.data.isNFT
-      ? this.data.nftToken.symbol
-      : this.data.asset.symbol;
-    this.datajson.asset = this.data.isNFT
-      ? this.data.nftContract
-      : this.data.asset.asset_id;
-    if (this.data.isNFT) {
-      this.datajson.tokenId = this.data.nftToken.tokenid;
+    this.dataJson = {
+      fromAddress: this.data.from,
+      toAddress: this.data.to.address,
+      symbol: this.data.isNFT
+        ? this.data.nftToken.symbol
+        : this.data.asset.symbol,
+      asset: this.data.isNFT ? this.data.nftContract : this.data.asset.asset_id,
+      tokenId: this.data.isNFT ? this.data.nftToken.tokenid : undefined,
+      amount: this.data.amount,
+      fee: this.data.chainType === 'NeoX' ? undefined : this.data.fee,
+      estimatedFee:
+        this.data.chainType === 'NeoX'
+          ? this.data.neoXFeeInfo.estimateGas
+          : undefined,
+      networkFee: this.networkFee,
+      systemFee: this.systemFee,
+      networkId:
+        this.data.chainType === 'NeoX' ? undefined : this.data.network.id,
+      chainId:
+        this.data.chainType === 'NeoX' ? this.data.network.chainId : undefined,
+    };
+
+    if (
+      this.data.chainType === 'NeoX' &&
+      this.data.asset.asset_id !== ETH_SOURCE_ASSET_HASH
+    ) {
+      this.evmHexData = this.assetEvmState.getTransferERC20Data({
+        asset: this.data.asset,
+        toAddress: this.data.to.address,
+        transferAmount: this.data.amount,
+      });
     }
-    this.datajson.amount = this.data.amount;
-    this.datajson.fee = this.data.fee;
-    this.datajson.networkFee = this.networkFee;
-    this.datajson.systemFee = this.systemFee;
-    this.datajson.networkId = this.data.network.id;
   }
   //#endregion
 
   //#region rate
   private getGasRate(value: string) {
+    if (this.data.chainType === 'NeoX') return '0';
     if (this.gasPrice) {
       return new BigNumber(value).times(this.gasPrice).toFixed();
     }
@@ -373,6 +406,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     });
   }
   private getAssetRate(value: string) {
+    if (this.data.chainType === 'NeoX') return '0';
     if (this.assetPrice) {
       return new BigNumber(value).times(this.assetPrice).toFixed();
     }

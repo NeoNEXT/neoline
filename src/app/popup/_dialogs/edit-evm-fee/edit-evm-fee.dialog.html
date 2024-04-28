@@ -44,7 +44,9 @@
     >
       {{ "Max base fee is low for current network conditions" }}
     </p>
-    <p class="current">current: {{ baseFeePerGasGWEI }}</p>
+    <p class="current">
+      current: {{getValueByGWEI(data.sourceNeoXFeeInfo.baseFeePerGas)}}
+    </p>
   </div>
 
   <div class="item">
@@ -61,7 +63,9 @@
     <p class="error" *ngIf="maxPriorityFeeIsLow">
       {{ "Priority fee is low for current network conditions" }}
     </p>
-    <p class="current">current: {{ maxPriorityFeeGWEI }}</p>
+    <p class="current">
+      current: {{getValueByGWEI(data.sourceNeoXFeeInfo.maxPriorityFeePerGas)}}
+    </p>
   </div>
 
   <div class="item">
