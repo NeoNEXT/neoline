@@ -7,6 +7,7 @@ import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import Erc20ABI from '@assets/contract-json/ERC20.json';
 import BigNumber from 'bignumber.js';
+import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 
 @Injectable()
 export class AssetEVMState {
@@ -87,13 +88,7 @@ export class AssetEVMState {
     fromAddress: string;
     toAddress: string;
     transferAmount: string;
-  }): Promise<{
-    maxFeePerGas: string;
-    maxPriorityFeePerGas: string;
-    baseFeePerGas: string;
-    gasLimit: string;
-    estimateGas: string;
-  }> {
+  }): Promise<NeoXFeeInfoProp> {
     let getGasLimit = Promise.resolve(BigInt(21000));
     if (asset.asset_id !== ETH_SOURCE_ASSET_HASH) {
       getGasLimit = this.provider.estimateGas({
@@ -108,24 +103,27 @@ export class AssetEVMState {
     }
     const {
       block: { baseFeePerGas },
-      feeData: { maxFeePerGas, maxPriorityFeePerGas },
+      feeData: { maxFeePerGas, maxPriorityFeePerGas, gasPrice },
       gasLimit,
     } = await ethers.resolveProperties({
       block: this.provider.getBlock('latest'),
       feeData: this.provider.getFeeData(),
       gasLimit: getGasLimit,
     });
-    const estimateGas = maxFeePerGas * gasLimit;
+    const estimateGas = (maxFeePerGas ?? gasPrice) * gasLimit;
     return {
-      maxFeePerGas: new BigNumber(maxFeePerGas.toString())
-        .shiftedBy(-18)
-        .toFixed(),
-      maxPriorityFeePerGas: new BigNumber(maxPriorityFeePerGas.toString())
-        .shiftedBy(-18)
-        .toFixed(),
-      baseFeePerGas: new BigNumber(baseFeePerGas.toString())
-        .shiftedBy(-18)
-        .toFixed(),
+      maxFeePerGas: maxFeePerGas
+        ? new BigNumber(maxFeePerGas.toString()).shiftedBy(-18).toFixed()
+        : undefined,
+      maxPriorityFeePerGas: maxPriorityFeePerGas
+        ? new BigNumber(maxPriorityFeePerGas.toString())
+            .shiftedBy(-18)
+            .toFixed()
+        : undefined,
+      baseFeePerGas: baseFeePerGas
+        ? new BigNumber(baseFeePerGas.toString()).shiftedBy(-18).toFixed()
+        : undefined,
+      gasPrice: new BigNumber(gasPrice.toString()).shiftedBy(-18).toFixed(),
       gasLimit: gasLimit.toString(),
       estimateGas: new BigNumber(estimateGas.toString())
         .shiftedBy(-18)
@@ -140,22 +138,27 @@ export class AssetEVMState {
     maxFeePerGas,
     maxPriorityFeePerGas,
     gasLimit,
+    gasPrice,
     privateKey,
   }: {
     asset: Asset;
     toAddress: string;
     transferAmount: string;
-    maxFeePerGas: string;
-    maxPriorityFeePerGas: string;
+    maxFeePerGas?: string;
+    maxPriorityFeePerGas?: string;
+    gasPrice?: string;
     gasLimit: string;
     privateKey: string;
   }) {
-    const newMaxFeePerGas = BigInt(
-      new BigNumber(maxFeePerGas).shiftedBy(18).toFixed()
-    );
-    const newMaxPriorityFeePerGas = BigInt(
-      new BigNumber(maxPriorityFeePerGas).shiftedBy(18).toFixed()
-    );
+    const newMaxFeePerGas = maxFeePerGas
+      ? BigInt(new BigNumber(maxFeePerGas).shiftedBy(18).toFixed())
+      : undefined;
+    const newMaxPriorityFeePerGas = maxPriorityFeePerGas
+      ? BigInt(new BigNumber(maxPriorityFeePerGas).shiftedBy(18).toFixed())
+      : undefined;
+    const newGasPrice = gasPrice
+      ? BigInt(new BigNumber(gasPrice).shiftedBy(18).toFixed())
+      : undefined;
     let txRequest: ethers.TransactionRequest;
     if (asset.asset_id === ETH_SOURCE_ASSET_HASH) {
       txRequest = {
@@ -164,6 +167,7 @@ export class AssetEVMState {
         maxFeePerGas: newMaxFeePerGas,
         maxPriorityFeePerGas: newMaxPriorityFeePerGas,
         gasLimit: BigInt(gasLimit),
+        gasPrice: newGasPrice,
       };
     } else {
       txRequest = {
@@ -176,6 +180,7 @@ export class AssetEVMState {
         maxFeePerGas: newMaxFeePerGas,
         maxPriorityFeePerGas: newMaxPriorityFeePerGas,
         gasLimit: BigInt(gasLimit),
+        gasPrice: newGasPrice,
       };
     }
     const wallet = new ethers.Wallet(privateKey, this.provider);
@@ -188,7 +193,7 @@ export class AssetEVMState {
   }
 
   //#region private function
-  private getTransferERC20Data({
+  getTransferERC20Data({
     asset,
     toAddress,
     transferAmount,

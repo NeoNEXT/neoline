@@ -20,7 +20,10 @@ export class PopupEditEvmFeeDialogComponent {
   baseFeePerGasIsLow = false;
   maxPriorityFeeIsLow = false;
 
+  gasPriceIsLow = false;
+
   private custom = false;
+  isEIP1559 = true;
 
   constructor(
     private dialogRef: MatDialogRef<PopupEditEvmFeeDialogComponent>,
@@ -32,20 +35,42 @@ export class PopupEditEvmFeeDialogComponent {
     },
     private fb: FormBuilder
   ) {
-    this.editEvmFeeForm = this.fb.group({
-      baseFeePerGas: [
-        this.getValueByGWEI(this.data.customNeoXFeeInfo.baseFeePerGas),
-        [Validators.required, Validators.min(0), this.checkBaseFeePerGas()],
-      ],
-      maxPriorityFeePerGas: [
-        this.getValueByGWEI(this.data.customNeoXFeeInfo.maxPriorityFeePerGas),
-        [Validators.required, Validators.min(0)],
-      ],
-      gasLimit: [
-        this.data.customNeoXFeeInfo.gasLimit,
-        [Validators.required, Validators.max(7920027), Validators.min(21000)],
-      ],
-    });
+    if (this.data.customNeoXFeeInfo.maxFeePerGas) {
+      this.isEIP1559 = true;
+      this.editEvmFeeForm = this.fb.group({
+        baseFeePerGas: [
+          this.getValueByGWEI(this.data.customNeoXFeeInfo.baseFeePerGas),
+          [Validators.required, Validators.min(0), this.checkBaseFeePerGas()],
+        ],
+        maxPriorityFeePerGas: [
+          this.getValueByGWEI(this.data.customNeoXFeeInfo.maxPriorityFeePerGas),
+          [Validators.required, Validators.min(0)],
+        ],
+        gasLimit: [
+          this.data.customNeoXFeeInfo.gasLimit,
+          [Validators.required, Validators.max(7920027), Validators.min(21000)],
+        ],
+      });
+      this.listenBaseFeePerGas();
+      this.listenMaxPriorityFeePerGas();
+    } else {
+      this.isEIP1559 = false;
+      this.editEvmFeeForm = this.fb.group({
+        gasPrice: [
+          this.getValueByGWEI(this.data.customNeoXFeeInfo.gasPrice),
+          [Validators.required, Validators.min(0)],
+        ],
+        gasLimit: [
+          this.data.customNeoXFeeInfo.gasLimit,
+          [Validators.required, Validators.max(7920027), Validators.min(21000)],
+        ],
+      });
+      this.listenGasprice();
+    }
+    this.listenGasLimit();
+  }
+
+  private listenBaseFeePerGas() {
     this.editEvmFeeForm.controls.baseFeePerGas.valueChanges
       .pipe(debounceTime(400), distinctUntilChanged())
       .subscribe((query) => {
@@ -60,6 +85,8 @@ export class PopupEditEvmFeeDialogComponent {
           this.baseFeePerGasIsLow = false;
         }
       });
+  }
+  private listenMaxPriorityFeePerGas() {
     this.editEvmFeeForm.controls.maxPriorityFeePerGas.valueChanges
       .pipe(debounceTime(400), distinctUntilChanged())
       .subscribe((query) => {
@@ -74,6 +101,24 @@ export class PopupEditEvmFeeDialogComponent {
           this.maxPriorityFeeIsLow = false;
         }
       });
+  }
+  private listenGasprice() {
+    this.editEvmFeeForm.controls.gasPrice.valueChanges
+      .pipe(debounceTime(400), distinctUntilChanged())
+      .subscribe((query) => {
+        this.custom = true;
+        this.getCustomEstimateFee();
+        const gasPriceGWEI = this.getValueByGWEI(
+          this.data.sourceNeoXFeeInfo.gasPrice
+        );
+        if (new BigNumber(query).comparedTo(gasPriceGWEI) < 0) {
+          this.gasPriceIsLow = true;
+        } else {
+          this.gasPriceIsLow = false;
+        }
+      });
+  }
+  private listenGasLimit() {
     this.editEvmFeeForm.controls.gasLimit.valueChanges
       .pipe(debounceTime(400), distinctUntilChanged())
       .subscribe(() => {
@@ -81,6 +126,7 @@ export class PopupEditEvmFeeDialogComponent {
         this.getCustomEstimateFee();
       });
   }
+
   private checkBaseFeePerGas(): ValidatorFn {
     return (control: AbstractControl): { [key: string]: any } | null => {
       const baseFeePerGas = control.value;
@@ -103,18 +149,27 @@ export class PopupEditEvmFeeDialogComponent {
 
   private getCustomEstimateFee() {
     if (this.editEvmFeeForm.valid) {
-      this.data.customNeoXFeeInfo.maxFeePerGas = new BigNumber(
-        this.editEvmFeeForm.value.baseFeePerGas
-      )
-        .times(2)
-        .plus(this.editEvmFeeForm.value.maxPriorityFeePerGas)
-        .shiftedBy(-9)
-        .toFixed();
-      this.data.customNeoXFeeInfo.estimateGas = new BigNumber(
-        this.data.customNeoXFeeInfo.maxFeePerGas
-      )
-        .times(this.editEvmFeeForm.value.gasLimit)
-        .toFixed();
+      if (this.isEIP1559) {
+        this.data.customNeoXFeeInfo.maxFeePerGas = new BigNumber(
+          this.editEvmFeeForm.value.baseFeePerGas
+        )
+          .times(2)
+          .plus(this.editEvmFeeForm.value.maxPriorityFeePerGas)
+          .shiftedBy(-9)
+          .toFixed();
+        this.data.customNeoXFeeInfo.estimateGas = new BigNumber(
+          this.data.customNeoXFeeInfo.maxFeePerGas
+        )
+          .times(this.editEvmFeeForm.value.gasLimit)
+          .toFixed();
+      } else {
+        this.data.customNeoXFeeInfo.estimateGas = new BigNumber(
+          this.editEvmFeeForm.value.gasPrice
+        )
+          .shiftedBy(-9)
+          .times(this.editEvmFeeForm.value.gasLimit)
+          .toFixed();
+      }
     } else {
       this.data.customNeoXFeeInfo.maxFeePerGas = '';
       this.data.customNeoXFeeInfo.estimateGas = '';
@@ -126,29 +181,49 @@ export class PopupEditEvmFeeDialogComponent {
       this.dialogRef.close();
       return;
     }
-    this.data.customNeoXFeeInfo.baseFeePerGas = new BigNumber(
-      this.editEvmFeeForm.value.baseFeePerGas
-    )
-      .shiftedBy(-9)
-      .toString();
-    this.data.customNeoXFeeInfo.maxPriorityFeePerGas = new BigNumber(
-      this.editEvmFeeForm.value.maxPriorityFeePerGas
-    )
-      .shiftedBy(-9)
-      .toString();
     this.data.customNeoXFeeInfo.gasLimit = this.editEvmFeeForm.value.gasLimit;
-    if (
-      this.data.customNeoXFeeInfo.baseFeePerGas !==
-        this.data.sourceNeoXFeeInfo.baseFeePerGas ||
-      this.data.customNeoXFeeInfo.maxPriorityFeePerGas !==
-        this.data.sourceNeoXFeeInfo.maxPriorityFeePerGas ||
-      this.data.customNeoXFeeInfo.gasLimit !==
-        this.data.sourceNeoXFeeInfo.gasLimit
-    ) {
-      this.data.customNeoXFeeInfo.custom = true;
-      this.dialogRef.close(this.data.customNeoXFeeInfo);
+
+    if (this.isEIP1559) {
+      this.data.customNeoXFeeInfo.baseFeePerGas = new BigNumber(
+        this.editEvmFeeForm.value.baseFeePerGas
+      )
+        .shiftedBy(-9)
+        .toFixed();
+      this.data.customNeoXFeeInfo.maxPriorityFeePerGas = new BigNumber(
+        this.editEvmFeeForm.value.maxPriorityFeePerGas
+      )
+        .shiftedBy(-9)
+        .toFixed();
+      if (
+        this.data.customNeoXFeeInfo.baseFeePerGas !==
+          this.data.sourceNeoXFeeInfo.baseFeePerGas ||
+        this.data.customNeoXFeeInfo.maxPriorityFeePerGas !==
+          this.data.sourceNeoXFeeInfo.maxPriorityFeePerGas ||
+        this.data.customNeoXFeeInfo.gasLimit !==
+          this.data.sourceNeoXFeeInfo.gasLimit
+      ) {
+        this.data.customNeoXFeeInfo.custom = true;
+        this.dialogRef.close(this.data.customNeoXFeeInfo);
+      } else {
+        this.dialogRef.close();
+      }
     } else {
-      this.dialogRef.close();
+      this.data.customNeoXFeeInfo.gasPrice = new BigNumber(
+        this.editEvmFeeForm.value.gasPrice
+      )
+        .shiftedBy(-9)
+        .toFixed();
+      if (
+        this.data.customNeoXFeeInfo.gasPrice !==
+          this.data.sourceNeoXFeeInfo.gasPrice ||
+        this.data.customNeoXFeeInfo.gasLimit !==
+          this.data.sourceNeoXFeeInfo.gasLimit
+      ) {
+        this.data.customNeoXFeeInfo.custom = true;
+        this.dialogRef.close(this.data.customNeoXFeeInfo);
+      } else {
+        this.dialogRef.close();
+      }
     }
   }
 

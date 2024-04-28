@@ -154,7 +154,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   }
   transferNeoX() {
     const { asset, to, amount, currentWIF, neoXFeeInfo } = this.data;
-    const { maxFeePerGas, maxPriorityFeePerGas, gasLimit } = neoXFeeInfo;
+    const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } = neoXFeeInfo;
     this.assetEvmState
       .transferErc20({
         asset: asset,
@@ -163,6 +163,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         maxFeePerGas,
         maxPriorityFeePerGas,
         gasLimit,
+        gasPrice,
         privateKey: currentWIF,
       })
       .then((res) => {

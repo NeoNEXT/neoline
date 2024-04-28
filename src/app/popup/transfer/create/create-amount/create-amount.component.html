@@ -15,7 +15,7 @@
           <img [assetId]="transferAsset?.asset_id" appErrorSrc alt="" />
         </div>
         <div class="flex-1">
-          <p class="symbol">{{ transferAsset?.symbol || "NEO" }}</p>
+          <p class="symbol">{{ transferAsset?.symbol }}</p>
           <p class="balance">
             {{ "balancecolon" | translate | async }}
             {{ transferAsset?.balance | numberFixed : 8 }}

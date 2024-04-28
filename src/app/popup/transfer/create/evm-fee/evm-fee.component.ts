@@ -48,8 +48,6 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
   }
 
   ngOnChanges(changes: SimpleChanges): void {
-    console.log(changes);
-
     if (
       (changes.transferAsset &&
         changes.transferAsset.currentValue !==
@@ -74,7 +72,8 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
         panelClass: 'custom-dialog-panel',
         data: {
           sourceNeoXFeeInfo: this.sourceNeoXFeeInfo,
-          customNeoXFeeInfo: this.customNeoXFeeInfo ?? this.sourceNeoXFeeInfo,
+          customNeoXFeeInfo:
+            this.customNeoXFeeInfo ?? Object.assign({}, this.sourceNeoXFeeInfo),
           symbol: this.symbol,
         },
       }

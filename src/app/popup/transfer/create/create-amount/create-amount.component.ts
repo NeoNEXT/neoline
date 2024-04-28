@@ -247,7 +247,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     }
   }
   transferAll() {
-    if (this.isTransferAllLoading) {
+    if (this.isTransferAllLoading || !this.transferAsset) {
       return;
     }
     this.isTransferAllLoading = true;
@@ -266,7 +266,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
         this.neoXFeeInfo?.estimateGas.toString() || 0
       );
       if (tAmount.comparedTo(0) > 0) {
-        this.transferAmount = tAmount.dp(8).toFixed();
+        this.transferAmount = tAmount.toFixed(8, 1);
       } else {
         this.global.snackBarTip('balanceLack');
       }
@@ -364,9 +364,13 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
   }
 
   public submit() {
+    if (this.chainType === 'NeoX' && !this.neoXFeeInfo) return;
+
     if (
-      this.chainType !== 'NeoX' &&
-      bignumber(this.priorityFee).comparedTo(this.gasBalance) > 0
+      (this.chainType !== 'NeoX' &&
+        bignumber(this.priorityFee).comparedTo(this.gasBalance) > 0) ||
+      (this.chainType === 'NeoX' &&
+        bignumber(this.neoXFeeInfo.estimateGas).comparedTo(this.gasBalance) > 0)
     ) {
       this.global.snackBarTip('InsufficientGas');
       return;

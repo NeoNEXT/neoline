@@ -41,7 +41,16 @@
     >
       {{ "details" | translate | async }}
     </span>
-    <span [class]="{ selected: tabType === 'data' }" (click)="tabType = 'data'">
+    <span
+      *ngIf="
+        !(
+          data.chainType === 'NeoX' &&
+          data.asset.asset_id === ETH_SOURCE_ASSET_HASH
+        )
+      "
+      [class]="{ selected: tabType === 'data' }"
+      (click)="tabType = 'data'"
+    >
       {{ "data" | translate | async }}
     </span>
   </div>

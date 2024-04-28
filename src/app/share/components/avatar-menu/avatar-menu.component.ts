@@ -422,10 +422,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       walletArr.forEach((item, index) => {
         let balance = res[index];
         if (this.chainType === 'NeoX') {
-          balance = new BigNumber(res[index])
-          .shiftedBy(-18)
-          .dp(8)
-          .toFixed();
+          balance = new BigNumber(res[index]).shiftedBy(-18).dp(8).toFixed();
         }
         this.addressBalances[item.accounts[0].address] = balance;
       });
