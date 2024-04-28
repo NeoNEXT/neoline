@@ -33,6 +33,7 @@ import { NEO } from '@/models/models';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '@/app/popup/_lib/evm';
+import BigNumber from 'bignumber.js';
 
 interface WalletListItem {
   chain: ChainType;
@@ -419,7 +420,14 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
 
     Promise.all(reqs).then((res) => {
       walletArr.forEach((item, index) => {
-        this.addressBalances[item.accounts[0].address] = res[index];
+        let balance = res[index];
+        if (this.chainType === 'NeoX') {
+          balance = new BigNumber(res[index])
+          .shiftedBy(-18)
+          .dp(8)
+          .toFixed();
+        }
+        this.addressBalances[item.accounts[0].address] = balance;
       });
     });
   }
