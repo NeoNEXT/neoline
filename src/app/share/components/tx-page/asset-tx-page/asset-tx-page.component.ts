@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
-import { TransactionState, ChromeService } from '@/app/core';
+import { TransactionState, ChromeService, AssetEVMState } from '@/app/core';
 import { Transaction } from '@/models/models';
 import { forkJoin, Unsubscribable, interval } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -32,6 +32,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private txState: TransactionState,
     private dialog: MatDialog,
+    private assetEVMState: AssetEVMState,
     private store: Store<AppState>
   ) {}
   ngOnInit(): void {
@@ -46,7 +47,11 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
           ? state.n3Networks[state.n3NetworkIndex]
           : state.neoXNetworks[state.neoXNetworkIndex];
       this.networkId = network.id;
-      this.getAllTxs();
+      if (this.chainType === 'NeoX') {
+        this.getEvmAllTxs();
+      } else {
+        this.getAllTxs();
+      }
     });
   }
 
@@ -79,6 +84,27 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
         this.handleTxs();
       });
     }
+  }
+
+  private getEvmAllTxs() {
+    if (!this.assetId) return;
+    const networkName = `${this.chainType}-${this.networkId}`;
+    this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((inTxData) => {
+      this.localAllTxs = inTxData;
+      this.txData =
+        inTxData?.[networkName]?.[this.address]?.[this.assetId] || [];
+      for (let i = 0; i < this.txData.length; i++) {
+        const item = this.txData[i];
+        if (item?.status === undefined) {
+          this.assetEVMState.waitForTx(item.txid).then((res) => {
+            this.txData[i].status = res.status;
+            this.localAllTxs[networkName][this.address][this.assetId] =
+              this.txData;
+            this.chrome.setStorage(STORAGE_NAME.transaction, this.localAllTxs);
+          });
+        }
+      }
+    });
   }
 
   private handleTxs(validTxs?: string[]) {

@@ -1066,5 +1066,8 @@
   },
   "symbolIsRequired": {
     "message": "Symbol is required"
+  },
+  "failed": {
+    "message": "Failed"
   }
 }

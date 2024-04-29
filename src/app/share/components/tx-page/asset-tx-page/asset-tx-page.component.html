@@ -8,12 +8,28 @@
       <span class="time">
         {{ item.block_time * 1000 | date : "yyyy-MM-dd HH:mm" }}
       </span>
-      <span class="status" *ngIf="item.id && item.id !== -1">
-        {{ "confirmed" | translate | async }}
-      </span>
-      <span class="status wait" *ngIf="item.id === -1 || item.id === undefined">
-        {{ "confirming" | translate | async }}
-      </span>
+      <ng-container *ngIf="chainType !== 'NeoX'">
+        <span class="status" *ngIf="item.id && item.id !== -1">
+          {{ "confirmed" | translate | async }}
+        </span>
+        <span
+          class="status wait"
+          *ngIf="item.id === -1 || item.id === undefined"
+        >
+          {{ "confirming" | translate | async }}
+        </span>
+      </ng-container>
+      <ng-container *ngIf="chainType === 'NeoX'">
+        <span class="status" *ngIf="item?.status === 1">
+          {{ "confirmed" | translate | async }}
+        </span>
+        <span class="status failed" *ngIf="item?.status === 0">
+          {{ "failed" | translate | async }}
+        </span>
+        <span class="status wait" *ngIf="item?.status === undefined">
+          {{ "confirming" | translate | async }}
+        </span>
+      </ng-container>
       <img
         class="more-info-btn"
         theme

@@ -1066,5 +1066,8 @@
   },
   "symbolIsRequired": {
     "message": "货币名称必填"
+  },
+  "failed": {
+    "message": "失败"
   }
 }

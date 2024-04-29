@@ -234,14 +234,26 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
           txid = res.hash;
           break;
       }
-      if (this.data.from !== this.data.to.address) {
+      if (
+        this.data.from !== this.data.to.address ||
+        this.data.chainType === 'NeoX'
+      ) {
         const txTarget = {
           txid,
-          value: -this.data.amount,
+          value: `-${this.data.amount}`,
           block_time: Math.floor(new Date().getTime() / 1000),
+          from: [this.data.from],
+          to: [this.data.to.address],
+          type: 'sent',
         };
         if (this.data.isNFT) {
           txTarget['tokenid'] = this.data.nftToken.tokenid;
+        } else {
+          txTarget['symbol'] = this.data.asset.symbol;
+          txTarget['asset_id'] =
+            this.data.asset.asset_id !== ETH_SOURCE_ASSET_HASH
+              ? this.data.asset.asset_id
+              : undefined;
         }
         this.pushTransaction(txTarget);
       }

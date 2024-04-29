@@ -46,13 +46,14 @@ export interface Transaction {
   id?: number;
   size?: number;
   txid: string;
-  value: any;
+  value: string;
   net_fee?: any;
   asset_id: string;
   symbol?: string;
   from?: string[];
   to?: string[];
   type: 'sent' | 'received';
+  status?: number; // EVM tx status 0: failed, 1: success
 }
 
 export interface NftTransaction extends Transaction {

@@ -242,12 +242,11 @@ export class TransactionState {
     target.sort((a, b) => a.txid.localeCompare(b.txid));
     for (let i = 1; i < target.length; ) {
       if (target[i].txid === target[i - 1].txid) {
-        target[i].value = new BigNumber(target[i].value).plus(
+        const tempValue = new BigNumber(target[i].value).plus(
           new BigNumber(target[i - 1].value)
         );
-        target[i].type =
-          target[i].value.comparedTo(0) > 0 ? 'received' : 'sent';
-        target[i].value = target[i].value.toFixed();
+        target[i].type = tempValue.comparedTo(0) > 0 ? 'received' : 'sent';
+        target[i].value = tempValue.toFixed();
         target.splice(i - 1, 1);
       } else {
         i++;
@@ -373,12 +372,11 @@ export class TransactionState {
         result[i].txid === result[i - 1].txid &&
         result[i].asset_id === result[i - 1].asset_id
       ) {
-        result[i].value = new BigNumber(result[i].value).plus(
+        const tempValue = new BigNumber(result[i].value).plus(
           new BigNumber(result[i - 1].value)
         );
-        result[i].type =
-          result[i].value.comparedTo(0) > 0 ? 'received' : 'sent';
-        result[i].value = result[i].value.toFixed();
+        result[i].type = tempValue.comparedTo(0) > 0 ? 'received' : 'sent';
+        result[i].value = tempValue.toFixed();
         result.splice(i - 1, 1);
       } else {
         i++;

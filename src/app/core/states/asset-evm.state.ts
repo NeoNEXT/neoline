@@ -193,7 +193,15 @@ export class AssetEVMState {
     const wallet = new ethers.Wallet(privateKey, this.provider);
     try {
       const tx = await wallet.sendTransaction(txRequest);
-      return await this.provider.waitForTransaction(tx.hash);
+      return tx;
+    } catch (error) {
+      throw this.handleEthersError(error);
+    }
+  }
+
+  async waitForTx(hash: string) {
+    try {
+      return await this.provider.waitForTransaction(hash);
     } catch (error) {
       throw this.handleEthersError(error);
     }
