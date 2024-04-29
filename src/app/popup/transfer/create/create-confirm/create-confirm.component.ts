@@ -113,6 +113,14 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
       });
   }
 
+  getShowAmount() {
+    const newAmount = new BigNumber(this.data.amount).dp(8, 1).toFixed();
+    if (newAmount === '0') {
+      return '< 0.0000001';
+    }
+    return newAmount;
+  }
+
   //#region EVM
   getEvmTotalData() {
     return new BigNumber(this.data.amount)
@@ -209,6 +217,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
           txid = res;
           break;
         case 'NeoX':
+          this.loading = true;
           const { asset, to, amount, currentWIF, neoXFeeInfo } = this.data;
           const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
             neoXFeeInfo;
@@ -376,10 +385,15 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
       this.data.chainType === 'NeoX' &&
       this.data.asset.asset_id !== ETH_SOURCE_ASSET_HASH
     ) {
+      const amountBN = BigInt(
+        new BigNumber(this.data.amount)
+          .shiftedBy(this.data.asset.decimals)
+          .toFixed(0, 1)
+      );
       this.evmHexData = this.assetEvmState.getTransferERC20Data({
         asset: this.data.asset,
         toAddress: this.data.to.address,
-        transferAmount: this.data.amount,
+        transferAmount: amountBN,
       });
     }
   }

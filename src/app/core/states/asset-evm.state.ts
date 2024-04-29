@@ -91,13 +91,16 @@ export class AssetEVMState {
   }): Promise<NeoXFeeInfoProp> {
     let getGasLimit = Promise.resolve(BigInt(21000));
     if (asset.asset_id !== ETH_SOURCE_ASSET_HASH) {
+      const amountBN = BigInt(
+        new BigNumber(transferAmount).shiftedBy(asset.decimals).toFixed(0, 1)
+      );
       getGasLimit = this.provider.estimateGas({
         from: fromAddress,
         to: asset.asset_id,
         data: this.getTransferERC20Data({
           asset,
           toAddress,
-          transferAmount,
+          transferAmount: amountBN,
         }),
       });
     }
@@ -150,24 +153,28 @@ export class AssetEVMState {
     gasLimit: string;
     privateKey: string;
   }) {
-    const newMaxFeePerGas = maxFeePerGas
-      ? BigInt(new BigNumber(maxFeePerGas).shiftedBy(18).toFixed())
+    const maxFeePerGasBN = maxFeePerGas
+      ? BigInt(new BigNumber(maxFeePerGas).shiftedBy(18).toFixed(0, 1))
       : undefined;
-    const newMaxPriorityFeePerGas = maxPriorityFeePerGas
-      ? BigInt(new BigNumber(maxPriorityFeePerGas).shiftedBy(18).toFixed())
+    const maxPriorityFeePerGasBN = maxPriorityFeePerGas
+      ? BigInt(new BigNumber(maxPriorityFeePerGas).shiftedBy(18).toFixed(0, 1))
       : undefined;
-    const newGasPrice = gasPrice
-      ? BigInt(new BigNumber(gasPrice).shiftedBy(18).toFixed())
+    const gasPriceBN = gasPrice
+      ? BigInt(new BigNumber(gasPrice).shiftedBy(18).toFixed(0, 1))
       : undefined;
+    const amountBN = BigInt(
+      new BigNumber(transferAmount).shiftedBy(asset.decimals).toFixed(0, 1)
+    );
+    const gasLimitBN = BigInt(new BigNumber(gasLimit).toFixed(0, 1));
     let txRequest: ethers.TransactionRequest;
     if (asset.asset_id === ETH_SOURCE_ASSET_HASH) {
       txRequest = {
         to: toAddress,
-        value: ethers.parseUnits(transferAmount, asset.decimals),
-        maxFeePerGas: newMaxFeePerGas,
-        maxPriorityFeePerGas: newMaxPriorityFeePerGas,
-        gasLimit: BigInt(gasLimit),
-        gasPrice: newGasPrice,
+        value: amountBN,
+        maxFeePerGas: maxFeePerGasBN,
+        maxPriorityFeePerGas: maxPriorityFeePerGasBN,
+        gasLimit: gasLimitBN,
+        gasPrice: gasPriceBN,
       };
     } else {
       txRequest = {
@@ -175,12 +182,12 @@ export class AssetEVMState {
         data: this.getTransferERC20Data({
           asset,
           toAddress,
-          transferAmount,
+          transferAmount: amountBN,
         }),
-        maxFeePerGas: newMaxFeePerGas,
-        maxPriorityFeePerGas: newMaxPriorityFeePerGas,
-        gasLimit: BigInt(gasLimit),
-        gasPrice: newGasPrice,
+        maxFeePerGas: maxFeePerGasBN,
+        maxPriorityFeePerGas: maxPriorityFeePerGasBN,
+        gasLimit: gasLimitBN,
+        gasPrice: gasPriceBN,
       };
     }
     const wallet = new ethers.Wallet(privateKey, this.provider);
@@ -200,7 +207,7 @@ export class AssetEVMState {
   }: {
     asset: Asset;
     toAddress: string;
-    transferAmount: string;
+    transferAmount: BigInt;
   }) {
     const contract = new ethers.Contract(
       asset.asset_id,
@@ -209,7 +216,7 @@ export class AssetEVMState {
     );
     const data = contract.interface.encodeFunctionData('transfer', [
       toAddress,
-      ethers.parseUnits(transferAmount, asset.decimals),
+      transferAmount,
     ]);
     return data;
   }

@@ -257,7 +257,10 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       this.transferAsset.asset_id !== GAS3_CONTRACT &&
       this.transferAsset.asset_id !== ETH_SOURCE_ASSET_HASH
     ) {
-      this.transferAmount = this.transferAsset.balance;
+      this.transferAmount = new BigNumber(this.transferAsset.balance).toFixed(
+        8,
+        1
+      );
       this.isTransferAllLoading = false;
       return;
     }

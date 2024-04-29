@@ -15,9 +15,7 @@
     <div class="asset-logo-box big">
       <img class="asset-logo" [assetId]="dataJson?.asset" appErrorSrc alt="" />
     </div>
-    <p class="asset-balance">
-      {{ data?.amount | numberFixed }} {{ dataJson?.symbol }}
-    </p>
+    <p class="asset-balance">{{ getShowAmount() }} {{ dataJson?.symbol }}</p>
     <p class="asset-money" *ngIf="!data?.isNFT">
       {{ rate?.amount | numberFixed : 2 }}
       {{ rateCurrency }}
