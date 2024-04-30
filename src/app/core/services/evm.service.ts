@@ -18,14 +18,15 @@ export class EvmService {
 
   async createWallet(pwd: string, name: string): Promise<EvmWalletJSON> {
     let wallet: ethers.HDNodeWallet;
-    let maxIndexHDWallet: EvmWalletJSON = undefined;
-    let newHDWalletIndex = 0;
+    let maxIndexHDWallet: EvmWalletJSON;
+    let newIndex = -1;
     this.neoXWalletArr.forEach((item) => {
       if (
         item.accounts[0].extra.isHDWallet &&
-        item.accounts[0].extra.hdWalletIndex > (maxIndexHDWallet ?? -1)
+        item.accounts[0].extra.hdWalletIndex > newIndex
       ) {
         maxIndexHDWallet = item;
+        newIndex = item.accounts[0].extra.hdWalletIndex;
       }
     });
     if (maxIndexHDWallet) {
@@ -33,13 +34,13 @@ export class EvmService {
         JSON.stringify(maxIndexHDWallet),
         pwd
       )) as ethers.HDNodeWallet;
-      newHDWalletIndex = maxIndexHDWallet.accounts[0].extra.hdWalletIndex + 1;
     } else {
       wallet = ethers.Wallet.createRandom();
     }
+    newIndex += 1;
     const newAccount = ethers.HDNodeWallet.fromMnemonic(
       wallet.mnemonic,
-      `m/44'/60'/0'/0/${newHDWalletIndex}`
+      `m/44'/60'/0'/0/${newIndex}`
     );
     const json = await newAccount.encrypt(pwd);
     const accountLike: EvmWalletJSON = JSON.parse(json);
@@ -50,7 +51,7 @@ export class EvmService {
         extra: {
           publicKey: newAccount.publicKey,
           isHDWallet: true,
-          hdWalletIndex: newHDWalletIndex,
+          hdWalletIndex: newIndex,
           hasBackup: maxIndexHDWallet
             ? maxIndexHDWallet.accounts[0].extra.hasBackup
             : false,

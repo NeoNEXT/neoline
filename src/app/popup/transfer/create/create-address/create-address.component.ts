@@ -8,6 +8,8 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { timer, Unsubscribable } from 'rxjs';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
+import { MatDialog } from '@angular/material/dialog';
+import { PopupAddressBookListDialogComponent } from '@/app/popup/_dialogs';
 
 @Component({
   selector: 'transfer-create-address',
@@ -23,7 +25,11 @@ export class TransferCreateAddressComponent {
   transferTo = { address: '', name: '' };
   private getNnsAddressReq;
   private searchSub: Unsubscribable;
-  constructor(private global: GlobalService, private util: UtilServiceState) {}
+  constructor(
+    private global: GlobalService,
+    private util: UtilServiceState,
+    private dialog: MatDialog
+  ) {}
 
   search($event) {
     this.searchSub?.unsubscribe();
@@ -102,5 +108,21 @@ export class TransferCreateAddressComponent {
       (m) => m.accounts[0].address === address
     )?.name;
     this.selecteAccountEvent.emit(this.transferTo);
+  }
+
+  showAddressBook() {
+    this.dialog
+      .open(PopupAddressBookListDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+        data: { chainType: this.chainType },
+      })
+      .afterClosed()
+      .subscribe((res) => {
+        if (res) {
+          this.transferTo.address = res.address;
+          this.transferTo.name = res.name;
+          this.selecteAccountEvent.emit(this.transferTo);
+        }
+      });
   }
 }

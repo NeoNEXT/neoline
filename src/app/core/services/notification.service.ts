@@ -40,6 +40,7 @@ export class NotificationService {
     LedgerUnSupportSignError: `error: 'There was an error signing this transaction. Ledger does not support this method.`,
     switchSucc: 'switch successfully!',
     PleaseEnterWalletName: 'Please enter wallet name',
+    AddressAdded: 'Address added',
   };
   private CN = {
     close: '关闭',
@@ -77,6 +78,7 @@ export class NotificationService {
     LedgerUnSupportSignError: '签名此交易时出错。硬件不支持该方法。',
     switchSucc: '切换成功！',
     PleaseEnterWalletName: '请输入钱包名',
+    AddressAdded: '添加成功',
   };
   constructor(private settingState: SettingState) {
     this.content = this.EN;

@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { ChromeService } from '@/app/core';
+import { ChromeService, GlobalService } from '@/app/core';
 import { SelectItem, ChainType, ChainTypeGroups, STORAGE_NAME } from '../_lib';
 import { Unsubscribable, timer } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -36,7 +36,11 @@ export class PopupAddressBookComponent implements OnInit {
   searchValue: string = '';
   private searchSub: Unsubscribable;
 
-  constructor(private chrome: ChromeService, private dialog: MatDialog) {
+  constructor(
+    private chrome: ChromeService,
+    private dialog: MatDialog,
+    private global: GlobalService
+  ) {
     this.chainArr.unshift({
       type: 'All',
       name: 'All Network',
@@ -155,6 +159,7 @@ export class PopupAddressBookComponent implements OnInit {
       .afterClosed()
       .subscribe((res: AddAddressBookProp) => {
         if (res) {
+          this.global.snackBarTip('AddressAdded');
           this.storageAddressBook[res.chain].push(res);
           this.initData();
           this.chrome.setStorage(
