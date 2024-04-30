@@ -13,6 +13,7 @@ import { PopupLoginComponent } from './login/login.component';
 import { PopupNewWalletGuideComponent } from './new-wallet-guide/new-wallet-guide.component';
 import { PopupSettingComponent } from './setting/setting.component';
 import { PopupOnePasswordComponent } from './one-password/one-password.component';
+import { PopupAddressBookComponent } from './address-book/address-book.component';
 
 import {
   PopupLoginGuard,
@@ -80,6 +81,11 @@ const routes: Routes = [
         path: 'one-password',
         canActivate: [PopupWalletGuard],
         component: PopupOnePasswordComponent,
+      },
+      {
+        path: 'address-book',
+        canActivate: [PopupWalletGuard],
+        component: PopupAddressBookComponent,
       },
     ],
   },

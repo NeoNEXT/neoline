@@ -1069,5 +1069,29 @@
   },
   "failed": {
     "message": "失败"
+  },
+  "AddAddressBook": {
+    "message": "添加地址"
+  },
+  "EditAddressBook": {
+    "message": "编辑地址"
+  },
+  "Address": {
+    "message": "地址"
+  },
+  "SelectNetwork": {
+    "message": "选择网络"
+  },
+  "nameIsRequired": {
+    "message": "名称必填"
+  },
+  "addressIsRequired": {
+    "message": "地址必填"
+  },
+  "wrongAddress": {
+    "message": "请输入合法地址"
+  },
+  "addAddressExist": {
+    "message": "地址已存在"
   }
 }

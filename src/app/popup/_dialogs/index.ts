@@ -15,3 +15,4 @@ export { PopupPrivateKeyComponent } from './account/private-key/private-key.dial
 export { PopupWalletListDialogComponent } from './wallet-list/wallet-list.dialog';
 export { PopupAddWalletDialogComponent } from './add-wallet/add-wallet.dialog';
 export { PopupEditEvmFeeDialogComponent } from './edit-evm-fee/edit-evm-fee.dialog';
+export { PopupAddAddressBookDialogComponent } from './add-address-book/add-address-book.dialog';

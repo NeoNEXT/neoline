@@ -1069,5 +1069,29 @@
   },
   "failed": {
     "message": "Failed"
+  },
+  "AddAddressBook": {
+    "message": "Add Address"
+  },
+  "EditAddressBook": {
+    "message": "Edit Address"
+  },
+  "Address": {
+    "message": "Address"
+  },
+  "SelectNetwork": {
+    "message": "Select Network"
+  },
+  "nameIsRequired": {
+    "message": "Name is required"
+  },
+  "addressIsRequired": {
+    "message": "Address is required"
+  },
+  "wrongAddress": {
+    "message": "Please enter a legal address"
+  },
+  "addAddressExist": {
+    "message": "Address already exists"
   }
 }

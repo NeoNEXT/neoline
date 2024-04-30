@@ -41,6 +41,7 @@ import { PopupLoginComponent } from './login/login.component';
 import { PopupNewWalletGuideComponent } from './new-wallet-guide/new-wallet-guide.component';
 import { PopupSettingComponent } from './setting/setting.component';
 import { PopupOnePasswordComponent } from './one-password/one-password.component';
+import { PopupAddressBookComponent } from './address-book/address-book.component';
 
 const POPUP_COMPONENTS = [
   PopupComponent,
@@ -60,6 +61,7 @@ const POPUP_COMPONENTS = [
   PopupNewWalletGuideComponent,
   PopupSettingComponent,
   PopupOnePasswordComponent,
+  PopupAddressBookComponent,
 ];
 //#endregion
 
@@ -82,6 +84,7 @@ import {
   PopupWalletListDialogComponent,
   PopupAddWalletDialogComponent,
   PopupEditEvmFeeDialogComponent,
+  PopupAddAddressBookDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -102,6 +105,7 @@ const POPUP_DIALOGS = [
   PopupWalletListDialogComponent,
   PopupAddWalletDialogComponent,
   PopupEditEvmFeeDialogComponent,
+  PopupAddAddressBookDialogComponent,
 ];
 
 //#endregion

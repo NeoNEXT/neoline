@@ -1,0 +1,87 @@
+<section class="container">
+  <nav title="addressBook"></nav>
+  <div class="content">
+    <button class="search">
+      <img class="search" theme src="assets/images/common/search.svg" />
+      <input
+        [placeholder]="'Search' | translate | async"
+        (input)="searchAddress($event)"
+        type="text"
+      />
+      <img
+        (click)="searchValue = ''"
+        *ngIf="searchValue"
+        theme
+        src="/assets/images/common/close.svg"
+        class="clear"
+        alt=""
+      />
+    </button>
+    <div class="select-chain">
+      <span class="chain" (click)="showChainList = true">
+        {{ currentChain.name }}
+        <img theme src="assets/images/common/triangle-fill.svg" />
+      </span>
+      <section
+        class="pop-ups-veil"
+        *ngIf="showChainList"
+        (click)="showChainList = false"
+      ></section>
+      <ul
+        class="pop-ups-menu"
+        *ngIf="showChainList"
+        (click)="showChainList = false"
+      >
+        <li *ngFor="let item of chainArr" (click)="selectChain(item)">
+          {{ item.name }}
+        </li>
+      </ul>
+    </div>
+
+    <ul class="list" *ngIf="displayAddressArr.length > 0">
+      <li *ngFor="let item of displayAddressArr">
+        <img class="avatar" [avatar]="item.address" />
+        <div>
+          <p class="name">{{ item.name }}</p>
+          <p class="address">{{ item.address }}</p>
+        </div>
+        <img
+          theme
+          (click)="openMoreModal($event, item)"
+          class="more"
+          src="/assets/images/common/more.svg"
+          alt=""
+        />
+      </li>
+    </ul>
+    <div class="no-data-content" *ngIf="displayAddressArr.length === 0">
+      <p class="no-data">
+        {{ "noMoreData" | translate | async }}
+      </p>
+    </div>
+    <button class="confirm pop-ups add-address" (click)="showAddAddress()">
+      {{ "AddAddressBook" | translate | async }}
+    </button>
+  </div>
+  <section
+    class="pop-ups-veil"
+    *ngIf="moreModalAddress"
+    (click)="$event.stopPropagation(); moreModalAddress = undefined"
+  ></section>
+  <ul #moreModalDom [hidden]="!moreModalAddress" class="pop-ups-menu">
+    <copy [value]="moreModalAddress?.address">
+      <li>
+        <img theme src="assets/images/common/copy.svg" />
+        {{ "copy" | translate | async }}
+      </li>
+    </copy>
+    <li (click)="editAddress()">
+      <img theme src="assets/images/common/edit-black.svg" alt="" />
+      {{ "edit" | translate | async }}
+    </li>
+    <li (click)="removeAddress()">
+      <img theme src="assets/images/account/home-delete.svg" alt="" />
+      {{ "delete" | translate | async }}
+    </li>
+  </ul>
+</section>

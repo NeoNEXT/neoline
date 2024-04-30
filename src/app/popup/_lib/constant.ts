@@ -56,6 +56,7 @@ export enum STORAGE_NAME {
   onePassword = 'onePassword', // Whether the current is one password mode
   theme ='theme', // light or dark theme
   onePassCheckAddresses = 'onePassCheckAddresses', // one password mode, save verified address
+  addressBook = 'addressBook',
 }
 
 export enum STORAGE_VALUE_TYPE {
@@ -199,6 +200,10 @@ export const STORAGE_VALUE_MESSAGE = {
     default: 'light-theme',
   },
   onePassCheckAddresses: {
+    type: STORAGE_VALUE_TYPE.object,
+    isLocal: true,
+  },
+  addressBook: {
     type: STORAGE_VALUE_TYPE.object,
     isLocal: true,
   },
