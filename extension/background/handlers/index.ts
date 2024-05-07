@@ -47,12 +47,44 @@ export async function ethereumRPCHandler(
     } catch (error) {
       return Promise.reject(error);
     }
+  } else if (method === 'personal_sign') {
+    try {
+      await validateSignReqParams(params, sender);
+      const localData =
+        (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+      const newData = { ...localData, [messageID]: params };
+      setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
+      createWindow(`evm-personal-sign?messageID=${messageID}`);
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  } else {
+    const { currNeoXNetwork } = await getCurrentNeoXNetwork();
+    const data = { jsonrpc: '2.0', method, params, id: 1 };
+    return httpPostPromise(currNeoXNetwork.rpcUrl, data)
+      .then((res) => res)
+      .catch((error) =>
+        Promise.reject(ethErrors.rpc.internal({ data: error }))
+      );
   }
-  const { currNeoXNetwork } = await getCurrentNeoXNetwork();
-  const data = { jsonrpc: '2.0', method, params, id: 1 };
-  return httpPostPromise(currNeoXNetwork.rpcUrl, data)
-    .then((res) => res)
-    .catch((error) => Promise.reject(ethErrors.rpc.internal({ data: error })));
+}
+
+async function validateSignReqParams(params, sender: { origin: string }) {
+  if (!params || !Array.isArray(params) || params.length < 2) {
+    throw ethErrors.rpc.invalidInput();
+  }
+  const challenge = params[0];
+  if (!challenge || typeof challenge !== 'string') {
+    throw ethErrors.rpc.invalidParams({
+      message: `Expected a string 'challenge'. Received: ${challenge}`,
+    });
+  }
+  const signAddress = params[1];
+  await validateAndNormalizeKeyholder(
+    (signAddress === null || signAddress === void 0 ? void 0 : signAddress) ||
+      '',
+    sender
+  );
 }
 
 async function validateReqParams(params, sender: { origin: string }) {

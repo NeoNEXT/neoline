@@ -20,6 +20,7 @@ import { PopupNoticeNeo3SignTransactionComponent } from './neo3-sign-transaction
 import { PopupWalletSwitchNetworkComponent } from './wallet-switch-network/wallet-switch-network.component';
 import { PopupWalletSwitchAccountComponent } from './wallet-switch-accout/wallet-switch-account.component';
 import { PopupEvmAddChainComponent } from './evm-add-chain/add-chain.component';
+import { PopupNoticeEvmSignComponent } from './evm-signature/evm-signature.component';
 
 const routes: Routes = [
   {
@@ -61,10 +62,8 @@ const routes: Routes = [
             path: 'wallet-switch-account',
             component: PopupWalletSwitchAccountComponent,
           },
-          {
-            path: 'evm-add-chain',
-            component: PopupEvmAddChainComponent,
-          },
+          { path: 'evm-add-chain', component: PopupEvmAddChainComponent },
+          { path: 'evm-personal-sign', component: PopupNoticeEvmSignComponent },
         ],
       },
     ],

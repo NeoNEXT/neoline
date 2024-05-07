@@ -21,6 +21,7 @@ import { PopupNoticeNeo3SignTransactionComponent } from './neo3-sign-transaction
 import { PopupWalletSwitchNetworkComponent } from './wallet-switch-network/wallet-switch-network.component';
 import { PopupWalletSwitchAccountComponent } from './wallet-switch-accout/wallet-switch-account.component';
 import { PopupEvmAddChainComponent } from './evm-add-chain/add-chain.component';
+import { PopupNoticeEvmSignComponent } from './evm-signature/evm-signature.component';
 
 @NgModule({
   declarations: [
@@ -40,6 +41,7 @@ import { PopupEvmAddChainComponent } from './evm-add-chain/add-chain.component';
     PopupWalletSwitchNetworkComponent,
     PopupWalletSwitchAccountComponent,
     PopupEvmAddChainComponent,
+    PopupNoticeEvmSignComponent,
   ],
   imports: [
     CommonModule,

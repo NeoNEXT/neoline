@@ -11,7 +11,7 @@ export const MESSAGE_TYPE = {
   ADD_ETHEREUM_CHAIN: 'wallet_addEthereumChain',
   SWITCH_ETHEREUM_CHAIN: 'wallet_switchEthereumChain',
   // WATCH_ASSET: 'wallet_watchAsset',
-  // PERSONAL_SIGN: 'personal_sign',
+  PERSONAL_SIGN: 'personal_sign',
   ETH_ACCOUNTS: RestrictedMethods.eth_accounts,
   ETH_REQUEST_ACCOUNTS: 'eth_requestAccounts',
 } as const;
@@ -133,8 +133,8 @@ export const unrestrictedMethods = Object.freeze([
   // 'net_peerCount',
   // 'net_version',
   // 'personal_ecRecover',
-  // 'personal_sign', //
-  // 'wallet_watchAsset', //
+  'personal_sign',
+  'wallet_watchAsset',
   // 'web3_clientVersion',
   // 'web3_sha3',
 ]);

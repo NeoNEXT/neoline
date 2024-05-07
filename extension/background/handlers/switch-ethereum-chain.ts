@@ -73,7 +73,7 @@ async function switchEthereumChainHandler(params, messageID, hostInfo) {
     // we might want to change all this so that it displays the network you are switching from -> to (in a way that is domain - specific)
 
     if (currentChainId === parseInt(_chainId, 16)) {
-      return;
+      return true;
     }
 
     createWindow(

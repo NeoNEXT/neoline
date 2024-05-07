@@ -1,17 +1,18 @@
 <div class="container">
   <div class="header">
-    <div class="invoke-type">· {{ isSign ? 'SIGNMESSAGEWITHOUTSALT' : 'SIGNMESSAGE' }}</div>
+    <div class="invoke-type">· {{ "SIGNMESSAGE" }}</div>
     <p class="title">{{ "thSignTitle" | translate | async }}</p>
     <p class="warning">
       Only sign this message if you fully understand the content and trust the
       requesting site.
     </p>
-    <p class="account"><img [avatar]="address" />{{ address | longStr : 10 }}</p>
+    <p class="account">
+      <img [avatar]="signAddress" />{{ signAddress | longStr : 10 }}
+    </p>
   </div>
   <div class="content">
     <p class="hex-label">{{ "message" | translate | async }}</p>
-    <p class="json-box serialize" *ngIf="jsonMessage">{{ jsonMessage | json }}</p>
-    <p class="json-box serialize" *ngIf="!jsonMessage">{{ message }}</p>
+    <p class="json-box serialize">{{ challenge }}</p>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="cancel()">

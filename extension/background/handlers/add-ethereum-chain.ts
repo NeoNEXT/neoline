@@ -144,7 +144,7 @@ async function addEthereumChainHandler(
       currentChainId === parseInt(_chainId, 16) &&
       currentRpcUrl === firstValidRPCUrl
     ) {
-      return Promise.reject();
+      return true;
     }
 
     // If this network is already added with but is not the currently selected network

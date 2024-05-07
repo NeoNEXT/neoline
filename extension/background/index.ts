@@ -128,7 +128,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       if (handler) {
         const { implementation } = handler;
         implementation(params, request.ID, hostInfo)
-          .then(() => {
+          .then((finish) => {
+            if (finish) {
+              windowCallback({
+                data: null,
+                ID: request.ID,
+                return: requestTargetEVM.request,
+              });
+            }
             sendResponse('');
           })
           .catch((error) => {
