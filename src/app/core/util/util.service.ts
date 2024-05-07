@@ -39,7 +39,7 @@ export class UtilServiceState {
   public n3AssetName: Map<string, string> = new Map();
   public n3NftProperties = {};
 
-  private currentWallet: Wallet2 | Wallet3;
+  private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   private neo3WIFArr: string[];
   private neo3WalletArr: Wallet3[];
   private n2Network: RpcNetwork;

@@ -31,7 +31,7 @@ export class PopupWalletSwitchAccountComponent implements OnInit {
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
-      this.currentWallet = state.currentWallet;
+      this.currentWallet = state.currentWallet as Wallet2 | Wallet3;
       const chainType = state.currentChainType;
       this.walletArr =
         chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;

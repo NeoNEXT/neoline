@@ -28,7 +28,6 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { TransferService } from '../../transfer/transfer.service';
 
 type TabType = 'details' | 'data';
@@ -68,7 +67,7 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
   private accountSub: Unsubscribable;
   public fromAddress: string;
   public n2Network: RpcNetwork;
-  private currentWallet: Wallet2 | Wallet3;
+  private currentWallet: Wallet2;
   private chainType: ChainType;
   private neo2WIFArr: string[];
   private neo2WalletArr: Wallet2[];
@@ -89,7 +88,7 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
-      this.currentWallet = state.currentWallet;
+      this.currentWallet = state.currentWallet as Wallet2;
       this.fromAddress = state.currentWallet?.accounts[0]?.address;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.neo2WIFArr = state.neo2WIFArr;

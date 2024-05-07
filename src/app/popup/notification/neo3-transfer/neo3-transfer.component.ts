@@ -27,7 +27,6 @@ import { interval } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 type TabType = 'details' | 'data';
@@ -73,7 +72,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
   private accountSub: Unsubscribable;
   public fromAddress: string;
   public n3Network: RpcNetwork;
-  private currentWallet: Wallet2 | Wallet3;
+  private currentWallet: Wallet3;
   private chainType: ChainType;
   private neo3WIFArr: string[];
   private neo3WalletArr: Wallet3[];
@@ -93,7 +92,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
-      this.currentWallet = state.currentWallet;
+      this.currentWallet = state.currentWallet as Wallet3;
       this.fromAddress = state.currentWallet?.accounts[0]?.address;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neo3WIFArr = state.neo3WIFArr;

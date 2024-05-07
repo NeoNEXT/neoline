@@ -22,6 +22,7 @@ import {
 } from '../_lib';
 import { FormGroup, Validators, FormBuilder } from '@angular/forms';
 import { ethers } from 'ethers';
+import { EvmWalletJSON } from '../_lib/evm';
 
 @Component({
   templateUrl: 'login.component.html',
@@ -39,7 +40,7 @@ export class PopupLoginComponent
   isOnePassword = false;
 
   private accountSub: Unsubscribable;
-  private currentWallet: Wallet2 | Wallet3;
+  private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   private allWallet = [];
   private currentChainType: ChainType;
   private n2Network: RpcNetwork;
@@ -61,7 +62,7 @@ export class PopupLoginComponent
       this.currentChainType = state.currentChainType;
       this.selectChainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
-      this.selectWallet = state.currentWallet;
+      this.selectWallet = state.currentWallet as Wallet2 | Wallet3;
       this.allWallet = (state.neo3WalletArr as any).concat(state.neo2WalletArr);
     });
   }
@@ -201,7 +202,7 @@ export class PopupLoginComponent
       });
   }
 
-  checkIsLedger(w: Wallet2 | Wallet3): boolean {
+  checkIsLedger(w: Wallet2 | Wallet3 | EvmWalletJSON): boolean {
     return w.accounts[0]?.extra?.ledgerSLIP44 ? true : false;
   }
 

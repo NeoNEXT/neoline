@@ -8,6 +8,7 @@ import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { EvmWalletJSON } from '../../_lib/evm';
 
 @Component({
   templateUrl: './authorization.component.html',
@@ -29,7 +30,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
 
   private accountSub: Unsubscribable;
   public address = '';
-  public wallet: Wallet2 | Wallet3;
+  public wallet: Wallet2 | Wallet3 | EvmWalletJSON;
   constructor(
     private chrome: ChromeService,
     private aRouter: ActivatedRoute,

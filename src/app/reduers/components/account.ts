@@ -40,7 +40,7 @@ import { ethers } from 'ethers';
 declare var chrome: any;
 
 export interface AccountState {
-  currentWallet: Wallet2 | Wallet3;
+  currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   currentChainType: ChainType;
   neo2WalletArr: Array<Wallet2>;
   neo3WalletArr: Array<Wallet3>;

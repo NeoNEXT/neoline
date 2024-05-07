@@ -23,6 +23,7 @@ import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
+import { EvmWalletJSON } from '../_lib/evm';
 
 @Component({
   templateUrl: 'one-password.component.html',
@@ -45,7 +46,7 @@ export class PopupOnePasswordComponent implements OnInit {
   neo3WalletArr: Wallet3[];
   neo2WIFArr: string[];
   neo3WIFArr: string[];
-  currentWallet: Wallet2 | Wallet3;
+  currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   currentChainType: ChainType;
   constructor(
     private fb: FormBuilder,

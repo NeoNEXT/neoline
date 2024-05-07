@@ -20,7 +20,7 @@ export class PopupBackupComponent implements OnDestroy {
   chainType: ChainType;
   mnemonic: string;
   WIF = '';
-  currentWallet: Wallet2 | Wallet3;
+  currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   pageState: 'tip' | 'privateKey' | 'mnemonic' = 'tip';
 
   constructor(

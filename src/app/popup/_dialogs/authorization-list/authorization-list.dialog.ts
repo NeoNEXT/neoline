@@ -8,6 +8,7 @@ import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { EvmWalletJSON } from '../../_lib/evm';
 
 @Component({
   templateUrl: 'authorization-list.dialog.html',
@@ -17,7 +18,7 @@ export class PopupAuthorizationListDialogComponent implements OnInit {
   public authorizationList = [];
 
   private accountSub: Unsubscribable;
-  private currentWallet: Wallet2 | Wallet3;
+  private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   constructor(
     private chrome: ChromeService,
     private dialog: MatDialog,
