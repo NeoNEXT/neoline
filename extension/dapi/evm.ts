@@ -1,7 +1,7 @@
 import EventEmitter = require('events');
 import { MESSAGE_TYPE, requestTargetEVM } from '../common/data_module_evm';
 import { ERRORS, EVENT } from '../common/data_module_neo2';
-import { checkConnectAndLogin, sendMessage } from './common';
+import { checkConnectAndLogin, getIcon, sendMessage } from './common';
 import { ethErrors } from 'eth-rpc-errors';
 
 enum EventName {
@@ -65,6 +65,11 @@ class NEOLineEVMController extends EventEmitter {
       }
       throw ethErrors.provider.userRejectedRequest().serialize();
     }
+
+    (args as any).hostInfo = {
+      hostname: location.hostname,
+      icon: getIcon(),
+    };
 
     return sendMessage(requestTargetEVM.request, args);
   }

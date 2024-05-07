@@ -123,10 +123,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
 
   switch (request.target) {
     case requestTargetEVM.request: {
-      const handler = walletHandlerMap.get(request.parameter.method);
+      const { method, params, hostInfo } = request.parameter;
+      const handler = walletHandlerMap.get(method);
       if (handler) {
         const { implementation } = handler;
-        implementation(request.parameter.params, request.ID)
+        implementation(params, request.ID, hostInfo)
           .then(() => {
             sendResponse('');
           })
@@ -1656,6 +1657,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         (e) => e.chainId === parameter.chainId
       );
       if (parameter.chainId === 0 && !tempNetwork) {
+        // 0 is N3 private network
         windowCallback({
           return: request.target,
           error: ERRORS.MALFORMED_INPUT,

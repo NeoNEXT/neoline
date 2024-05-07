@@ -22,7 +22,11 @@ const addEthereumChain = {
 };
 export default addEthereumChain;
 
-async function addEthereumChainHandler(params: any[], messageID: number) {
+async function addEthereumChainHandler(
+  params: any[],
+  messageID: number,
+  hostInfo,
+) {
   if (!params?.[0] || typeof params[0] !== 'object') {
     return Promise.reject(
       ethErrors.rpc.invalidParams({
@@ -118,7 +122,7 @@ async function addEthereumChainHandler(params: any[], messageID: number) {
 
   const { currNeoXNetwork, neoXNetworks } = await getCurrentNeoXNetwork();
 
-  const existingNetwork = await findNetworkConfigurationBy(
+  const existingNetwork = findNetworkConfigurationBy(
     {
       chainId: parseInt(_chainId, 16),
     },
@@ -146,10 +150,12 @@ async function addEthereumChainHandler(params: any[], messageID: number) {
     // If this network is already added with but is not the currently selected network
     // Ask the user to switch the network
     createWindow(
-      `wallet-switch-network?chainType=neoX&chainId=${parseInt(
+      `wallet-switch-network?chainType=NeoX&chainId=${parseInt(
         _chainId,
         16
-      )}&messageID=${messageID}`
+      )}&messageID=${messageID}&icon=${hostInfo.icon}&hostname=${
+        hostInfo.hostname
+      }`
     );
     return;
   }
@@ -230,7 +236,9 @@ async function addEthereumChainHandler(params: any[], messageID: number) {
     const value = encodeURIComponent(newChain[key]);
     queryString += `${key}=${value}&`;
   }
-  createWindow(`evm-add-chain?${queryString}messageID=${messageID}`);
+  createWindow(
+    `evm-add-chain?${queryString}messageID=${messageID}&icon=${hostInfo.icon}&hostname=${hostInfo.hostname}`
+  );
 
   return;
 }

@@ -18,7 +18,7 @@ const switchEthereumChain = {
 
 export default switchEthereumChain;
 
-async function switchEthereumChainHandler(params, messageID) {
+async function switchEthereumChainHandler(params, messageID, hostInfo) {
   if (!params?.[0] || typeof params[0] !== 'object') {
     return Promise.reject(
       ethErrors.rpc.invalidParams({
@@ -60,7 +60,7 @@ async function switchEthereumChainHandler(params, messageID) {
   }
 
   const { currNeoXNetwork, neoXNetworks } = await getCurrentNeoXNetwork();
-  const existingNetwork = await findNetworkConfigurationBy(
+  const existingNetwork = findNetworkConfigurationBy(
     {
       chainId: parseInt(_chainId, 16),
     },
@@ -77,10 +77,12 @@ async function switchEthereumChainHandler(params, messageID) {
     }
 
     createWindow(
-      `wallet-switch-network?chainType=neoX&chainId=${parseInt(
+      `wallet-switch-network?chainType=NeoX&chainId=${parseInt(
         _chainId,
         16
-      )}&messageID=${messageID}`
+      )}&messageID=${messageID}&icon=${hostInfo.icon}&hostname=${
+        hostInfo.hostname
+      }`
     );
     return;
   }

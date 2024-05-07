@@ -46,7 +46,7 @@ window.addEventListener('load', () => {
   }
 });
 
-// neo3 dapi method
+// neoX dapi method
 window.addEventListener(
   'message',
   async (e) => {
@@ -58,8 +58,11 @@ window.addEventListener(
           if (!currChainType) {
             currChainType = await getWalletType();
           }
-          if (currChainType === 'NeoX') {
-            const reqMethod = e.data.parameter.method;
+          const reqMethod = e.data.parameter.method;
+          if (
+            currChainType === 'NeoX' ||
+            reqMethod === MESSAGE_TYPE.SWITCH_ETHEREUM_CHAIN
+          ) {
             if (
               reqMethod === MESSAGE_TYPE.ETH_REQUEST_ACCOUNTS ||
               reqMethod === MESSAGE_TYPE.ETH_ACCOUNTS

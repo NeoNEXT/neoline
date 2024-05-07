@@ -1,4 +1,42 @@
-<p>EVM add chain</p>
-<br />
-<br />
-<div>{{ queryParams | json }}</div>
+<div class="container">
+  <div class="host">
+    <button><img [src]="iconSrc" appErrorSrc alt="" />{{ hostname }}</button>
+  </div>
+  <p class="title">Allow this site to add a network?</p>
+  <p class="tip">This will allow this network to be used within NeoLine.</p>
+  <div class="chain-info">
+    <p class="warning">
+      NeoLine does not verify custom networks,please add your trusted network!
+    </p>
+    <ul>
+      <li>
+        <p class="label">Network name</p>
+        <p class="value">{{ queryParams?.name }}</p>
+      </li>
+      <li>
+        <p class="label">Network URL</p>
+        <p class="value">{{ queryParams?.rpcUrl }}</p>
+      </li>
+      <li>
+        <p class="label">Chain ID</p>
+        <p class="value">{{ queryParams?.chainId }}</p>
+      </li>
+      <li>
+        <p class="label">Currency symbol</p>
+        <p class="value">{{ queryParams?.symbol }}</p>
+      </li>
+      <li>
+        <p class="label">Block explorer URL</p>
+        <p class="value">{{ queryParams?.explorer }}</p>
+      </li>
+    </ul>
+  </div>
+</div>
+<div class="btn-group">
+  <button class="cancel" (click)="cancel()">
+    {{ "cancel" | translate | async }}
+  </button>
+  <button class="confirm" (click)="addChain()">
+    {{ "yes" | translate | async }}
+  </button>
+</div>

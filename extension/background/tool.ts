@@ -137,7 +137,8 @@ export async function listenBlock(currNetwork: RpcNetwork) {
 
 export async function waitTxs(currNetwork: RpcNetwork, chainType: ChainType) {
   const networkId = currNetwork.id;
-  const txArr = (await getLocalStorage(`TxArr_${chainType}-${networkId}`, () => {})) || [];
+  const txArr =
+    (await getLocalStorage(`TxArr_${chainType}-${networkId}`, () => {})) || [];
   if (txArr.length === 0) {
     return;
   }
@@ -227,10 +228,10 @@ export function createWindow(url: string, notification = true) {
  * @param {object} rpcInfo - The RPC endpoint properties and values to check.
  * @returns {object} rpcInfo found in the network configurations list
  */
-export async function findNetworkConfigurationBy(
+export function findNetworkConfigurationBy(
   rpcInfo: Partial<RpcNetwork>,
   neoXNetworks: RpcNetwork[]
-): Promise<RpcNetwork | null> {
+): RpcNetwork | null {
   const networkConfiguration = neoXNetworks.find((configuration) => {
     return Object.keys(rpcInfo).some((key) => {
       return configuration[key] === rpcInfo[key];
