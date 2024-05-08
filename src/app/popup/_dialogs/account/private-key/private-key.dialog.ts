@@ -27,6 +27,7 @@ export class PopupPrivateKeyComponent implements OnInit {
     public data: {
       currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
       chainType: ChainType;
+      showMnemonic?: boolean;
     }
   ) {}
 
@@ -52,7 +53,11 @@ export class PopupPrivateKeyComponent implements OnInit {
         .then((res) => {
           this.loading = false;
           this.verified = true;
-          this.wif = res.privateKey;
+          if (this.data.showMnemonic) {
+            this.wif = (res as ethers.HDNodeWallet).mnemonic.phrase;
+          } else {
+            this.wif = res.privateKey;
+          }
         })
         .catch((err) => {
           this.loading = false;

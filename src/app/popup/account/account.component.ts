@@ -4,9 +4,10 @@ import { MatDialog } from '@angular/material/dialog';
 import {
   PopupQRCodeDialogComponent,
   PopupPrivateKeyComponent,
+  PopupConfirmDialogComponent,
 } from '@popup/_dialogs';
 
-import { GlobalService, ChromeService } from '@app/core';
+import { GlobalService, ChromeService, NeonService } from '@app/core';
 import { wallet } from '@cityofzion/neon-core';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
@@ -22,7 +23,7 @@ import {
 } from '../_lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { EvmWalletJSON } from '../_lib/evm';
 
 @Component({
@@ -36,8 +37,11 @@ export class PopupAccountComponent implements OnDestroy {
   showEditName = false;
   inputName = '';
 
+  showRemoveBtn = false;
+  showMnemonicBtn = false;
+
   operateWallet: Wallet2 | Wallet3 | EvmWalletJSON;
-  private operateChainType: ChainType;
+  operateChainType: ChainType;
 
   private accountSub: Unsubscribable;
   private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
@@ -55,6 +59,8 @@ export class PopupAccountComponent implements OnDestroy {
     private dialog: MatDialog,
     private chrome: ChromeService,
     private aRouter: ActivatedRoute,
+    private neon: NeonService,
+    private router: Router,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -105,16 +111,40 @@ export class PopupAccountComponent implements OnDestroy {
       }
       this.inputName = this.operateWallet.name;
       this.isLedger = !!this.operateWallet.accounts[0]?.extra?.ledgerSLIP44;
+      // show remove button
+      if (this.isLedger) {
+        this.showRemoveBtn = true;
+      } else {
+        const neo2Wallet = this.neo2WalletArr.filter(
+          (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+        );
+        const neo3Wallet = this.neo3WalletArr.filter(
+          (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+        );
+        const neoXWallet = this.neoXWalletArr.filter(
+          (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+        );
+        if (neo2Wallet.length + neo3Wallet.length + neoXWallet.length > 1) {
+          this.showRemoveBtn = true;
+        } else {
+          this.showRemoveBtn = false;
+        }
+      }
+      // show mnemonic button
+      this.showMnemonicBtn = this.operateWallet.accounts[0]?.extra?.isHDWallet
+        ? true
+        : false;
       await this.getPublicKey();
     });
   }
 
-  public wif() {
+  public wif(showMnemonic = false) {
     return this.dialog.open(PopupPrivateKeyComponent, {
       panelClass: 'custom-dialog-panel',
       data: {
         currentWallet: this.operateWallet,
-        chainType: this.operateWallet,
+        chainType: this.operateChainType,
+        showMnemonic,
       },
     });
   }
@@ -231,5 +261,32 @@ export class PopupAccountComponent implements OnDestroy {
     (this.operateWallet.accounts[0] as any).decrypt(pwd).then((res) => {
       this.publicKey = res.publicKey;
     });
+  }
+
+  removeAccount() {
+    this.dialog
+      .open(PopupConfirmDialogComponent, {
+        data: 'delWalletConfirm',
+        panelClass: 'custom-dialog-panel',
+      })
+      .afterClosed()
+      .subscribe((confirm) => {
+        if (confirm) {
+          this.neon
+            .delWallet(
+              this.operateWallet,
+              this.operateChainType,
+              this.operateWallet.accounts[0].address ===
+                this.currentWallet.accounts[0].address
+            )
+            .subscribe((w) => {
+              if (!w) {
+                this.router.navigateByUrl('/popup/wallet/new-guide');
+              } else {
+                this.router.navigateByUrl('/popup/home');
+              }
+            });
+        }
+      });
   }
 }

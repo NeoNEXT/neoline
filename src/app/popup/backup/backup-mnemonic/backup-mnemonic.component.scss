@@ -16,10 +16,15 @@
   }
 
   ul {
+    max-height: 250px;
+    overflow-y: scroll;
     margin-top: 24px;
     display: flex;
     flex-wrap: wrap;
     justify-content: space-between;
+    &::-webkit-scrollbar {
+      display: block;
+    }
     li {
       width: 30%;
       height: 36px;

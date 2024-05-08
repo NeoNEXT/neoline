@@ -37,18 +37,24 @@
     </div>
   </copy>
 
-  <p class="label">{{ "PublicKey" | translate | async }}</p>
-  <copy [value]="publicKey">
-    <div class="value">
-      <span>{{ publicKey }}</span
-      ><img theme src="assets/images/common/copy.svg" />
-    </div>
-  </copy>
+  <ng-container *ngIf="operateChainType !== 'NeoX'">
+    <p class="label">{{ "PublicKey" | translate | async }}</p>
+    <copy [value]="publicKey">
+      <div class="value">
+        <span>{{ publicKey }}</span
+        ><img theme src="assets/images/common/copy.svg" />
+      </div>
+    </copy>
+  </ng-container>
 
-  <button *ngIf="!isLedger" class="confirm key" (click)="wif()">
-    {{ "displayWIF" | translate | async }}
+  <button *ngIf="!isLedger" class="key" (click)="wif()">
+    {{ "showPrivateKey" | translate | async }}
   </button>
-  <button class="cancel link" (click)="toWeb()">
-    {{ "ViewOnExplorer" | translate | async }}
+  <button *ngIf="showMnemonicBtn" class="mnemonic" (click)="wif(true)">
+    {{ "Show secret recovery phrase" }}
   </button>
 </div>
+
+<button *ngIf="showRemoveBtn" class="pop-ups remove" (click)="removeAccount()">
+  {{ "remove" | translate | async }}
+</button>

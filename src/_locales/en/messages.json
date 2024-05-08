@@ -152,7 +152,7 @@
   "copy": {
     "message": "Copy"
   },
-  "displayWIF": {
+  "showPrivateKey": {
     "message": "Show Private Key"
   },
   "password": {
@@ -416,8 +416,11 @@
   "noTransaction": {
     "message": "No transactions"
   },
-  "wif": {
-    "message": "WIF(Private key)"
+  "wifPrivateKey": {
+    "message": "WIF(Private Key)"
+  },
+  "privateKey": {
+    "message": "Private Key"
   },
   "delWalletConfirm": {
     "message": "Are you sure to delete this wallet?"
@@ -1093,5 +1096,14 @@
   },
   "addAddressExist": {
     "message": "Address already exists"
+  },
+  "showSecretRecoveryPhrase": {
+    "message": "Show Secret Recovery Phrase"
+  },
+  "secretRecoveryPhrase": {
+    "message": "Secret Recovery Phrase"
+  },
+  "secretRecoveryPhraseTip": {
+    "message": "Please keep your Secret Recovery Phrase safe, do not show it to anyone"
   }
 }
