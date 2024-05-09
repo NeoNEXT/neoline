@@ -1,0 +1,7 @@
+<div class="content" (click)="viewAllAuth()">
+  <img class="logo" [src]="favIconUrl" alt="" />
+  <span
+    [ngClass]="{ connected: authWalletList.length > 0 }"
+    class="status"
+  ></span>
+</div>

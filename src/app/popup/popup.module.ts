@@ -36,6 +36,7 @@ import {
   PopupHomeComponent,
   PopupNftsComponent,
   PopupHomeBackupComponent,
+  PopupHomeDappAuthComponent,
 } from './home';
 import { PopupLoginComponent } from './login/login.component';
 import { PopupNewWalletGuideComponent } from './new-wallet-guide/new-wallet-guide.component';
@@ -56,6 +57,7 @@ const POPUP_COMPONENTS = [
   PopupHomeComponent,
   PopupNftsComponent,
   PopupHomeBackupComponent,
+  PopupHomeDappAuthComponent,
   PopupNftTokensComponent,
   PopupLoginComponent,
   PopupNewWalletGuideComponent,

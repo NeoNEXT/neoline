@@ -74,7 +74,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   private currentWIFArr: string[];
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
-  private allWallet: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
+  allWallet: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
   constructor(
     private assetState: AssetState,
     private neon: NeonService,

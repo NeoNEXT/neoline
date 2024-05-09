@@ -356,12 +356,6 @@
   "clearStorageTips": {
     "message": "确认清除缓存吗"
   },
-  "authorizationManage": {
-    "message": "授权管理"
-  },
-  "authorizationManageTips": {
-    "message": "可清除已授权网站"
-  },
   "viewAll": {
     "message": "查看所有"
   },
@@ -1105,5 +1099,35 @@
   },
   "secretRecoveryPhraseTip": {
     "message": "请妥善保存您的助记词，不要透露给任何人"
+  },
+  "yourHove": {
+    "message": "您有"
+  },
+  "accountsConnectedToThisSite": {
+    "message": "个账户连接到了该网站。"
+  },
+  "noAccountsConnected": {
+    "message": "未连接任何账户。"
+  },
+  "accountsConnected": {
+    "message": "已连接账户"
+  },
+  "notConnected": {
+    "message": "未连接"
+  },
+  "switchToThisAccount": {
+    "message": "切换到该账户"
+  },
+  "permissions": {
+    "message": "权限"
+  },
+  "permissionsTip": {
+    "message": "您已授权以下权限："
+  },
+  "permissionsDesc": {
+    "message": "查看您允许的账户的地址（必填）。"
+  },
+  "disconnectThisAccount": {
+    "message": "断开此账户的连接"
   }
 }

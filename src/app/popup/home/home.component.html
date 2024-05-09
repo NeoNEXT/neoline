@@ -9,6 +9,10 @@
 </div>
 <div class="popup-home">
   <div class="header">
+    <home-dapp-auth
+      [currentWallet]="currentWallet"
+      [allWallet]="allWallet"
+    ></home-dapp-auth>
     <div class="wallet-info">
       <p class="name">{{ currentWallet?.name || "" }}</p>
       <copy [value]="address">
@@ -66,7 +70,7 @@
       />
     </div>
     <p class="asset-balance">
-      {{ balance?.balance || 0 | numberFixed: 8 }} {{ balance?.symbol }}
+      {{ balance?.balance || 0 | numberFixed : 8 }} {{ balance?.symbol }}
     </p>
     <p class="asset-money">
       {{ balance?.rateBalance | numberFixed : 2 }} {{ rateCurrency }}

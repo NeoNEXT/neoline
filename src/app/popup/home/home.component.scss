@@ -10,6 +10,11 @@
     text-align: center;
     position: relative;
     border-bottom: 1px solid var(--line-color);
+    home-dapp-auth {
+      position: absolute;
+      left: 20px;
+      top: 22px;
+    }
     .wallet-info {
       width: 100%;
       height: 100%;

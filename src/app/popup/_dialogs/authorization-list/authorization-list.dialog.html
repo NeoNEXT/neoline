@@ -1,41 +1,94 @@
-<div class="pop-ups-title">
-  {{ 'authorizationManage' | translate | async }}
-  <img
-    class="close"
-    [mat-dialog-close]="false"
-    theme
-    src="assets/images/common/close.svg"
-    alt=""
-  />
-</div>
+<div class="container">
+  <div class="pop-ups-title">
+    <p class="hostname">{{ data.hostname }}</p>
+    <p class="connect-amount" *ngIf="data.authWalletList.length > 0">
+      {{ 'yourHove' | translate | async }} {{ data.authWalletList.length }} {{
+      'accountsConnectedToThisSite' | translate | async }}
+    </p>
+    <p class="connect-amount" *ngIf="!data.authWalletList.length">
+      {{ 'noAccountsConnected' | translate | async }}
+    </p>
+    <img
+      class="close"
+      [mat-dialog-close]="false"
+      theme
+      src="assets/images/common/close.svg"
+      alt=""
+    />
+  </div>
 
-<div class="content">
-  <p class="empty" *ngIf="authorizationList.length === 0">
-    {{ 'empty' | translate | async }}
-  </p>
-  <ul>
-    <li *ngFor="let item of authorizationList">
-      <img class="icon" [src]="item.icon" alt="" />
-      <div class="info-box">
-        <div class="top">
-          <span class="title">{{ item.title }}</span>
-          <span class="status" [ngClass]="{'fail': item.status !== 'true' }">
-            {{ (item.status === 'true' ? 'authorized' : 'rejected') | translate
-            | async }}
-          </span>
+  <div class="content">
+    <p class="title">
+      {{'accountsConnected' | translate | async}} ({{ data.authWalletList.length
+      }})
+    </p>
+    <ul class="list" *ngIf="data.authWalletList.length > 0">
+      <li *ngIf="!currentWalletIsConnected" class="current-not-connect">
+        <img class="logo" [avatar]="currentAddress" alt="" />
+        <div class="wallet-info">
+          <p class="name">{{ data.currentWallet?.name }}</p>
+          <p class="address">{{ currentAddress | longStr }}</p>
+          <p class="not-connect">{{'notConnected' | translate | async}}</p>
+          <p class="switch" (click)="connectCurrentWallet()">
+            {{ 'connect' | translate | async }}
+          </p>
         </div>
-        <p class="url">{{ item.hostname }}</p>
-      </div>
-      <div class="remove-btn" (click)="delItem(item.hostname)">
-        {{ 'delete' | translate | async }}
-      </div>
+      </li>
+
+      <li *ngFor="let item of data.authWalletList">
+        <img class="logo" [avatar]="item.accounts[0].address" alt="" />
+        <div class="wallet-info">
+          <p class="name">{{ item?.name }}</p>
+          <p class="address">{{ item.accounts[0].address | longStr }}</p>
+          <p
+            *ngIf="item.accounts[0].address !== currentAddress"
+            (click)="switchThisAccount(item)"
+            class="switch"
+          >
+            {{'switchToThisAccount' | translate | async}}
+          </p>
+        </div>
+        <img
+          theme
+          (click)="openMoreModal($event, item)"
+          class="more"
+          src="/assets/images/common/more.svg"
+          alt=""
+        />
+      </li>
+    </ul>
+
+    <div class="no-connect" *ngIf="!data.authWalletList.length">
+      <img src="assets/images/third-party/no-connect-account.svg" alt="" />
+    </div>
+
+    <div class="permissions">
+      <p class="permissions-title" (click)="showPermissions = !showPermissions">
+        {{'permissions' | translate | async}}<img
+          theme
+          [ngClass]="{expand: showPermissions}"
+          src="assets/images/common/triangle-fill.svg"
+        />
+      </p>
+      <ng-container *ngIf="showPermissions">
+        <p class="warning">
+          <img src="assets/images/common/warning.svg" />
+          {{'permissionsTip' | translate | async}}
+        </p>
+        <p class="desc">{{'permissionsDesc' | translate | async}}</p>
+      </ng-container>
+    </div>
+  </div>
+
+  <section
+    class="pop-ups-veil"
+    *ngIf="moreModalWallet"
+    (click)="$event.stopPropagation(); moreModalWallet = undefined"
+  ></section>
+  <ul #moreModalDom [hidden]="!moreModalWallet" class="pop-ups-menu">
+    <li (click)="disconnectAddress()">
+      <img theme src="assets/images/account/home-delete.svg" alt="" />{{
+      "disconnectThisAccount" | translate | async }}
     </li>
   </ul>
-  <button
-    class="pop-ups clear-all"
-    *ngIf="authorizationList.length > 0"
-    (click)="delAll()"
-  >
-    {{ 'authDelAllTip' | translate | async }}
-  </button>
 </div>

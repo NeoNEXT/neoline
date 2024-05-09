@@ -30,7 +30,7 @@
       (click)="ruleCheck = !ruleCheck"
     ></span>
     <div class="rule-select">
-      <span class="rule-value" (click)="showRuleOptions = !showRuleOptions">
+      <span class="rule-value">
         {{
           (ruleSelected === "true"
             ? "connectChooseAllow"
@@ -38,18 +38,8 @@
           )
             | translate
             | async
-        }}<img theme src="/assets/images/common/triangle-fill.svg" alt="" />
-      </span>
-      <div *ngIf="showRuleOptions" class="rule-option" (click)="changeRule()">
-        {{
-          (ruleSelected === "true"
-            ? "connectChooseNotAllow"
-            : "connectChooseAllow"
-          )
-            | translate
-            | async
         }}
-      </div>
+      </span>
     </div>
   </div>
   <div class="secure">

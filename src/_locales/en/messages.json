@@ -356,12 +356,6 @@
   "clearStorageTips": {
     "message": "Confirm clear cache?"
   },
-  "authorizationManage": {
-    "message": "Authorization Management"
-  },
-  "authorizationManageTips": {
-    "message": "Clean up authorized sites"
-  },
   "viewAll": {
     "message": "View all"
   },
@@ -1105,5 +1099,35 @@
   },
   "secretRecoveryPhraseTip": {
     "message": "Please keep your Secret Recovery Phrase safe, do not show it to anyone"
+  },
+  "yourHove": {
+    "message": "You have"
+  },
+  "accountsConnectedToThisSite": {
+    "message": "accounts connected to this site."
+  },
+  "noAccountsConnected": {
+    "message": "No accounts connected."
+  },
+  "accountsConnected": {
+    "message": "Accounts connected"
+  },
+  "notConnected": {
+    "message": "Not connected"
+  },
+  "switchToThisAccount": {
+    "message": "Switch to this account"
+  },
+  "permissions": {
+    "message": "Permissions"
+  },
+  "permissionsTip": {
+    "message": "You have authorized the following permissions:"
+  },
+  "permissionsDesc": {
+    "message": "See address, account balance, activity and suggest transactions to approve."
+  },
+  "disconnectThisAccount": {
+    "message": "Disconnect this account"
   }
 }

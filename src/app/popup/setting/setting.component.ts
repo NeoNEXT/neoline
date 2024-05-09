@@ -4,7 +4,6 @@ import { MatDialog } from '@angular/material/dialog';
 import {
   PopupSelectDialogComponent,
   PopupConfirmDialogComponent,
-  PopupAuthorizationListDialogComponent,
 } from '@popup/_dialogs';
 
 import {
@@ -99,12 +98,6 @@ export class PopupSettingComponent implements OnInit {
           this.global.snackBarTip('clearSuccess');
         }
       });
-  }
-
-  viewAllAuth() {
-    this.dialog.open(PopupAuthorizationListDialogComponent, {
-      panelClass: 'custom-dialog-panel',
-    });
   }
 
   changeTheme() {
