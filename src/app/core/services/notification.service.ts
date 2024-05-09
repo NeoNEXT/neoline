@@ -41,6 +41,8 @@ export class NotificationService {
     switchSucc: 'switch successfully!',
     PleaseEnterWalletName: 'Please enter wallet name',
     AddressAdded: 'Address added',
+    switchOnePasswordFirst:
+      'Please switch to the new password management mode first.',
   };
   private CN = {
     close: '关闭',
@@ -79,6 +81,7 @@ export class NotificationService {
     switchSucc: '切换成功！',
     PleaseEnterWalletName: '请输入钱包名',
     AddressAdded: '添加成功',
+    switchOnePasswordFirst: '请先切换到新的密码管理模式',
   };
   constructor(private settingState: SettingState) {
     this.content = this.EN;

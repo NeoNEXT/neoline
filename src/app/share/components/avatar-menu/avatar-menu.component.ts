@@ -10,7 +10,12 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
-import { ChromeService, AssetState, NeonService } from '@/app/core';
+import {
+  ChromeService,
+  AssetState,
+  NeonService,
+  GlobalService,
+} from '@/app/core';
 import { Router } from '@angular/router';
 import {
   ChainType,
@@ -76,6 +81,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private assetState: AssetState,
     private neon: NeonService,
+    private global: GlobalService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -248,15 +254,31 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
               if (!chain) {
                 return;
               }
-              this.close();
-              if (type === 'create') {
-                this.router.navigateByUrl('/popup/wallet/create');
+              if (chain === 'NeoX') {
+                this.chromeSrc
+                  .getStorage(STORAGE_NAME.onePassword)
+                  .subscribe((res) => {
+                    if (res === true) {
+                      this.toCreate(type);
+                    } else {
+                      this.global.snackBarTip('switchOnePasswordFirst');
+                    }
+                  });
               } else {
-                this.router.navigateByUrl('/popup/wallet/import');
+                this.toCreate(type);
               }
             });
         }
       });
+  }
+
+  toCreate(type) {
+    this.close();
+    if (type === 'create') {
+      this.router.navigateByUrl('/popup/wallet/create');
+    } else {
+      this.router.navigateByUrl('/popup/wallet/import');
+    }
   }
 
   openMoreModal(

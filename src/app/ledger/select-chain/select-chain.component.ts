@@ -5,8 +5,8 @@ import {
   EventEmitter,
   OnDestroy,
 } from '@angular/core';
-import { ChainType } from '@/app/popup/_lib';
-import { SettingState } from '@/app/core';
+import { ChainType, STORAGE_NAME } from '@/app/popup/_lib';
+import { ChromeService, GlobalService, SettingState } from '@/app/core';
 import { Unsubscribable } from 'rxjs';
 
 @Component({
@@ -19,13 +19,27 @@ export class LedgerChainComponent implements OnDestroy {
   chain: ChainType = 'Neo2';
   settingStateSub: Unsubscribable;
 
-  constructor(private settingState: SettingState) {}
+  constructor(
+    private settingState: SettingState,
+    private chromeSer: ChromeService,
+    private global: GlobalService
+  ) {}
   ngOnDestroy(): void {
     this.settingStateSub?.unsubscribe();
   }
 
   select() {
-    this.selectChain.emit(this.chain);
+    if (this.chain === 'NeoX') {
+      this.chromeSer.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {
+        if (res === true) {
+          this.selectChain.emit(this.chain);
+        } else {
+          this.global.snackBarTip('switchOnePasswordFirst');
+        }
+      });
+    } else {
+      this.selectChain.emit(this.chain);
+    }
   }
 
   public async jumbToWeb() {

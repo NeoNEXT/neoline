@@ -1,15 +1,21 @@
-import { Component, OnInit } from '@angular/core';
+import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupSelectDialogComponent } from '@popup/_dialogs';
 import { Router } from '@angular/router';
-import { ChainTypeGroups } from '@popup/_lib';
+import { ChainTypeGroups, STORAGE_NAME } from '@popup/_lib';
+import { ChromeService, GlobalService } from '@/app/core';
 
 @Component({
   templateUrl: './new-wallet-guide.component.html',
   styleUrls: ['./new-wallet-guide.component.scss'],
 })
 export class PopupNewWalletGuideComponent {
-  constructor(private dialog: MatDialog, private router: Router) {}
+  constructor(
+    private dialog: MatDialog,
+    private router: Router,
+    private chromeSrc: ChromeService,
+    private global: GlobalService
+  ) {}
 
   to(type: 'create' | 'import') {
     this.dialog
@@ -25,11 +31,27 @@ export class PopupNewWalletGuideComponent {
         if (!chain) {
           return;
         }
-        if (type === 'create') {
-          this.router.navigateByUrl('/popup/wallet/create');
+        if (chain === 'NeoX') {
+          this.chromeSrc
+            .getStorage(STORAGE_NAME.onePassword)
+            .subscribe((res) => {
+              if (res === true) {
+                this.toCreate(type);
+              } else {
+                this.global.snackBarTip('switchOnePasswordFirst');
+              }
+            });
         } else {
-          this.router.navigateByUrl('/popup/wallet/import');
+          this.toCreate(type);
         }
       });
+  }
+
+  private toCreate(type: 'create' | 'import') {
+    if (type === 'create') {
+      this.router.navigateByUrl('/popup/wallet/create');
+    } else {
+      this.router.navigateByUrl('/popup/wallet/import');
+    }
   }
 }
