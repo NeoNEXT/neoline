@@ -12,7 +12,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { NeoXFeeInfoProp } from '../interface';
+import { NeoXFeeInfoProp } from '../../../popup/transfer/create/interface';
 import { timer } from 'rxjs';
 
 @Component({
@@ -21,13 +21,13 @@ import { timer } from 'rxjs';
   styleUrls: ['evm-fee.component.scss'],
 })
 export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
-  @Input() transferAsset: Asset;
+  @Input() transferAsset?: Asset;
   @Input() transferToAddress: string;
   @Input() fromAddress: string;
   @Input() transferAmount: string;
   @Input() symbol: string;
   @Input() customNeoXFeeInfo: NeoXFeeInfoProp;
-  @Input() place: 'amount' | 'confirm' = 'amount';
+  @Input() place: 'amount' | 'confirm' | 'dapp' = 'amount';
   @Output() returnFee = new EventEmitter<NeoXFeeInfoProp>();
 
   sourceNeoXFeeInfo: NeoXFeeInfoProp;

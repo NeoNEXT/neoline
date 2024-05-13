@@ -14,6 +14,7 @@ import {
 } from '../../common';
 import { validateTxParams } from './validation-tx-params';
 import { STORAGE_NAME } from '../../common/constants';
+import { ethers } from 'ethers';
 
 const handlers = [addEthereumChain, switchEthereumChain];
 
@@ -38,7 +39,8 @@ export async function ethereumRPCHandler(
   if (method === 'eth_sendTransaction') {
     try {
       const txParams = await validateReqParams(params, sender);
-      validateTxParams(txParams);
+      const isEIP1559Compatible = await determineEIP1559Compatibility();
+      validateTxParams(txParams, isEIP1559Compatible);
       const localData =
         (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
       const newData = { ...localData, [messageID]: params };
@@ -159,4 +161,15 @@ function getAccounts(sender: { origin: string }): Promise<string[]> {
       resolve(data);
     });
   });
+}
+
+async function determineEIP1559Compatibility() {
+  const { currNeoXNetwork } = await getCurrentNeoXNetwork();
+  const provider = new ethers.JsonRpcProvider(this.currNeoXNetwork.rpcUrl);
+  const block = await this.provider.getBlock('latest');
+
+  if (!block) {
+    return undefined;
+  }
+  return block.baseFeePerGas !== undefined;
 }

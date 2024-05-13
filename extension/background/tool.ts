@@ -184,7 +184,7 @@ export function resetData() {
     password: '',
     [STORAGE_NAME.shouldFindNode]: true,
     [STORAGE_NAME.hasLoginAddress]: {},
-    [STORAGE_NAME.InvokeArgsArray]: [],
+    [STORAGE_NAME.InvokeArgsArray]: {},
   });
   getStorage('connectedWebsites', (res) => {
     res = res || {};

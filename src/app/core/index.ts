@@ -19,3 +19,4 @@ export { HomeService } from './services/home.service';
 export { LedgerService } from './services/ledger.service';
 export { StartupService } from './startup/startup.service';
 export { EvmService } from './services/evm.service';
+export { DappEVMState } from './states/dapp-evm.state';

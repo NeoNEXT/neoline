@@ -10,14 +10,45 @@ const abi_1 = require('@ethersproject/abi');
  * @param txParams - Transaction params object to validate.
  * @param isEIP1559Compatible - whether or not the current network supports EIP-1559 transactions.
  */
-export function validateTxParams(txParams) {
-  // validateEIP1559Compatibility(txParams, isEIP1559Compatible);
+export function validateTxParams(txParams, isEIP1559Compatible = true) {
+  validateEIP1559Compatibility(txParams, isEIP1559Compatible);
   validateParamFrom(txParams.from);
   validateParamRecipient(txParams);
   validateParamValue(txParams.value);
   validateParamData(txParams.data);
   validateParamChainId(txParams.chainId);
   validateGasFeeParams(txParams);
+}
+
+/**
+ * Validates EIP-1559 compatibility for transaction creation.
+ *
+ * @param txParams - The transaction parameters to validate.
+ * @param isEIP1559Compatible - Indicates if the current network supports EIP-1559.
+ * @throws Throws invalid params if the transaction specifies EIP-1559 but the network does not support it.
+ */
+function validateEIP1559Compatibility(txParams, isEIP1559Compatible) {
+  if (isEIP1559Transaction(txParams) && !isEIP1559Compatible) {
+    throw ethErrors.rpc.invalidParams({
+      message:
+        'Invalid transaction params: params specify an EIP-1559 transaction but the current network does not support EIP-1559',
+    });
+  }
+}
+/**
+ * Checks if a transaction is EIP-1559 by checking for the existence of
+ * maxFeePerGas and maxPriorityFeePerGas within its parameters.
+ *
+ * @param txParams - Transaction params object to add.
+ * @returns Boolean that is true if the transaction is EIP-1559 (has maxFeePerGas and maxPriorityFeePerGas), otherwise returns false.
+ */
+function isEIP1559Transaction(txParams) {
+  const hasOwnProp = (obj, key) =>
+    Object.prototype.hasOwnProperty.call(obj, key);
+  return (
+    hasOwnProp(txParams, 'maxFeePerGas') &&
+    hasOwnProp(txParams, 'maxPriorityFeePerGas')
+  );
 }
 
 /**

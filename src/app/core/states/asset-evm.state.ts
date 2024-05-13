@@ -1,11 +1,10 @@
-import { RpcNetwork } from '@/app/popup/_lib';
+import { abiERC20, RpcNetwork } from '@/app/popup/_lib';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { AppState } from '@/app/reduers';
 import { Asset } from '@/models/models';
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
-import Erc20ABI from '@assets/contract-json/ERC20.json';
 import BigNumber from 'bignumber.js';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 
@@ -43,7 +42,7 @@ export class AssetEVMState {
     } else {
       const contract = new ethers.Contract(
         contractAddress,
-        Erc20ABI,
+        abiERC20,
         this.provider
       );
       balance = await contract.balanceOf(address);
@@ -54,7 +53,7 @@ export class AssetEVMState {
   async getNeoXAssetDecimals(contractAddress: string): Promise<number> {
     const contract = new ethers.Contract(
       contractAddress,
-      Erc20ABI,
+      abiERC20,
       this.provider
     );
     const decimals = await contract.decimals();
@@ -63,7 +62,7 @@ export class AssetEVMState {
 
   async searchNeoXAsset(q: string): Promise<Asset | null> {
     if (!ethers.isAddress(q)) return null;
-    const contract = new ethers.Contract(q, Erc20ABI, this.provider);
+    const contract = new ethers.Contract(q, abiERC20, this.provider);
     const { symbol, name, decimals } = await ethers.resolveProperties({
       symbol: contract.symbol(),
       name: contract.name(),
@@ -104,14 +103,30 @@ export class AssetEVMState {
         }),
       });
     }
+    try {
+      const gasLimit = await getGasLimit;
+      return await this.getGasInfo(gasLimit);
+    } catch (error) {
+      return await this.getGasInfo(BigInt(42750000));
+    }
+  }
+
+  async getDappTXInfo(txParams) {
+    try {
+      const gasLimit = await this.provider.estimateGas(txParams);
+      return await this.getGasInfo(gasLimit);
+    } catch (error) {
+      return await this.getGasInfo(BigInt(42750000));
+    }
+  }
+
+  private async getGasInfo(gasLimit: bigint): Promise<NeoXFeeInfoProp> {
     const {
       block: { baseFeePerGas },
       feeData: { maxFeePerGas, maxPriorityFeePerGas, gasPrice },
-      gasLimit,
     } = await ethers.resolveProperties({
       block: this.provider.getBlock('latest'),
       feeData: this.provider.getFeeData(),
-      gasLimit: getGasLimit,
     });
     const estimateGas = (maxFeePerGas ?? gasPrice) * gasLimit;
     return {
@@ -219,7 +234,7 @@ export class AssetEVMState {
   }) {
     const contract = new ethers.Contract(
       asset.asset_id,
-      Erc20ABI,
+      abiERC20,
       this.provider
     );
     const data = contract.interface.encodeFunctionData('transfer', [
