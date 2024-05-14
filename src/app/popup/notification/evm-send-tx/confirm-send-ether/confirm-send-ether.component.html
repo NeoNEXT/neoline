@@ -1,0 +1,78 @@
+<div class="loading-box" *ngIf="loading">
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+    <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
+  </div>
+</div>
+
+<div class="container">
+  <div class="header transfer">
+    <p class="origin">{{ locationOrigin }}</p>
+    <div class="type">· {{ "Sending ETH" }}</div>
+    <div class="asset">
+      <div class="asset-logo-box small">
+        <img
+          [assetId]="ETH_SOURCE_ASSET_HASH"
+          chain="NeoX"
+          appErrorSrc
+          alt=""
+        />
+      </div>
+      <p class="amount">{{ amount || 0 }} {{ neoXNetwork?.symbol }}</p>
+    </div>
+    <div class="address-group">
+      <div class="item">
+        <img class="avatar" [avatar]="txParams?.from" />
+        <span>{{ txParams?.from | longStr : 4 }}</span>
+      </div>
+      <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
+      <div class="item">
+        <img class="avatar" [avatar]="txParams?.to" />
+        <span>{{ txParams?.to | longStr : 4 }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="tabs-container">
+    <span
+      [class]="{ selected: tabType === 'details' }"
+      (click)="tabType = 'details'"
+    >
+      {{ "details" | translate | async }}
+    </span>
+    <span [class]="{ selected: tabType === 'data' }" (click)="tabType = 'data'">
+      {{ "data" | translate | async }}
+    </span>
+  </div>
+  <ul class="content details" *ngIf="tabType === 'details'">
+    <evm-fee
+      *ngIf="neoXFeeInfo"
+      [transferToAddress]="toAddress"
+      [fromAddress]="fromAddress"
+      [transferAmount]="amount"
+      [symbol]="neoXNetwork.symbol"
+      [customNeoXFeeInfo]="neoXFeeInfo"
+      [place]="'dapp'"
+      (returnFee)="updateEvmFee($event)"
+    >
+    </evm-fee>
+  </ul>
+  <div class="content data" *ngIf="tabType === 'data'">
+    <p class="title">
+      FUNCTION TYPE: <span class="value">Sending {{ neoXNetwork.symbol }}</span>
+    </p>
+    <p class="hex-label">HEX DATA: {{ txParams.data !== '0x' ? txParams.data?.length : 0}} BYTES</p>
+    <p class="json-box serialize">{{ txParams.data }}</p>
+  </div>
+  <div class="btn-group">
+    <button class="cancel" (click)="exit()">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button
+      class="confirm"
+      [ngClass]="{ disabled: !canSend }"
+      (click)="confirm()"
+    >
+      {{ "yes" | translate | async }}
+    </button>
+  </div>
+</div>

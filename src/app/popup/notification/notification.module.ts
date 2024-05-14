@@ -22,7 +22,10 @@ import { PopupWalletSwitchNetworkComponent } from './wallet-switch-network/walle
 import { PopupWalletSwitchAccountComponent } from './wallet-switch-accout/wallet-switch-account.component';
 import { PopupEvmAddChainComponent } from './evm-add-chain/add-chain.component';
 import { PopupNoticeEvmSignComponent } from './evm-signature/evm-signature.component';
-import { PopupNoticeEvmSendTxComponent } from './evm-send-tx/evm-send-tx.component';
+import {
+  PopupNoticeEvmSendTxComponent,
+  PopupNoticeEvmConfirmSendEtherComponent,
+} from './evm-send-tx';
 
 @NgModule({
   declarations: [
@@ -44,6 +47,7 @@ import { PopupNoticeEvmSendTxComponent } from './evm-send-tx/evm-send-tx.compone
     PopupEvmAddChainComponent,
     PopupNoticeEvmSignComponent,
     PopupNoticeEvmSendTxComponent,
+    PopupNoticeEvmConfirmSendEtherComponent,
   ],
   imports: [
     CommonModule,

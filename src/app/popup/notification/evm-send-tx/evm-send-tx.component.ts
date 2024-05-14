@@ -1,65 +1,40 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { ChromeService, AssetEVMState, DappEVMState } from '@/app/core';
 import {
-  ChromeService,
-  LedgerService,
-  AssetEVMState,
-  DappEVMState,
-} from '@/app/core';
-import { MatDialog } from '@angular/material/dialog';
-import { RpcNetwork } from '../../_lib/type';
-import { EvmTransactionParams, STORAGE_NAME } from '../../_lib';
-import { Store } from '@ngrx/store';
-import { AppState } from '@/app/reduers';
-import { Unsubscribable } from 'rxjs';
-import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '../../_lib/evm';
-import { ERRORS } from '@/models/dapi';
-import { requestTargetEVM } from '@/models/evm';
+  EvmTransactionParams,
+  EvmTransactionType,
+  STORAGE_NAME,
+} from '../../_lib';
+import { ETH_SOURCE_ASSET_HASH } from '../../_lib/evm';
 import BigNumber from 'bignumber.js';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
 
-type TabType = 'details' | 'data';
-
 @Component({
   templateUrl: './evm-send-tx.component.html',
-  styleUrls: ['./evm-send-tx.component.scss'],
 })
-export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
-  ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
-  tabType: TabType = 'details';
+export class PopupNoticeEvmSendTxComponent implements OnInit {
+  EvmTransactionType = EvmTransactionType;
   invokeArgsArray = {};
   txParams: EvmTransactionParams;
   messageID: string;
-  loading = false;
-  canSend = false;
+  locationOrigin: string;
 
   methodName: string;
   amount: string;
   neoXFeeInfo: NeoXFeeInfoProp;
   signAddressGasBalance: string;
-
-  private accountSub: Unsubscribable;
-  neoXWalletArr: EvmWalletJSON[];
-  neoXNetwork: RpcNetwork;
   constructor(
     private aRoute: ActivatedRoute,
     private chrome: ChromeService,
-    private dialog: MatDialog,
-    private ledger: LedgerService,
     private assetEVMState: AssetEVMState,
-    private dappEVMState: DappEVMState,
-    private store: Store<AppState>
-  ) {
-    const account$ = this.store.select('account');
-    this.accountSub = account$.subscribe((state) => {
-      this.neoXWalletArr = state.neoXWalletArr;
-      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
-    });
-  }
+    private dappEVMState: DappEVMState
+  ) {}
 
   ngOnInit(): void {
-    this.aRoute.queryParams.subscribe(({ messageID }) => {
+    this.aRoute.queryParams.subscribe(({ messageID, origin }) => {
       this.messageID = messageID;
+      this.locationOrigin = origin;
       this.chrome
         .getStorage(STORAGE_NAME.InvokeArgsArray)
         .subscribe(async (invokeArgsArray) => {
@@ -76,30 +51,8 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
           this.invokeArgsArray
         );
       }
-      this.exit();
     };
   }
-
-  ngOnDestroy(): void {
-    this.accountSub?.unsubscribe();
-  }
-
-  updateEvmFee($event) {
-    this.neoXFeeInfo = $event;
-  }
-
-  exit() {
-    this.chrome.windowCallback(
-      {
-        error: ERRORS.CANCELLED,
-        return: requestTargetEVM.request,
-        ID: this.messageID,
-      },
-      true
-    );
-  }
-
-  confirm() {}
 
   private async initData() {
     // method

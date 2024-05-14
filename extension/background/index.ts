@@ -148,7 +148,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             sendResponse('');
           });
       } else {
-        ethereumRPCHandler(request.parameter, request.ID, sender)
+        ethereumRPCHandler(request.parameter, request.ID, sender, hostInfo)
           .then((data) => {
             windowCallback({
               data,

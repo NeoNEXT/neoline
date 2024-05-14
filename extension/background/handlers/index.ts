@@ -28,7 +28,8 @@ export const walletHandlerMap = handlers.reduce((map, handler) => {
 export async function ethereumRPCHandler(
   { method, params },
   messageID: number,
-  sender: { origin: string }
+  sender: { origin: string },
+  hostInfo: { origin: string }
 ) {
   if (UNSUPPORTED_RPC_METHODS.has(method)) {
     return Promise.reject(ethErrors.rpc.methodNotSupported());
@@ -45,7 +46,9 @@ export async function ethereumRPCHandler(
         (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
       const newData = { ...localData, [messageID]: params };
       setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
-      createWindow(`evm-send-transaction?messageID=${messageID}`);
+      createWindow(
+        `evm-send-transaction?messageID=${messageID}&origin=${hostInfo.origin}`
+      );
     } catch (error) {
       return Promise.reject(error);
     }
@@ -56,7 +59,9 @@ export async function ethereumRPCHandler(
         (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
       const newData = { ...localData, [messageID]: params };
       setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
-      createWindow(`evm-personal-sign?messageID=${messageID}`);
+      createWindow(
+        `evm-personal-sign?messageID=${messageID}&origin=${hostInfo.origin}`
+      );
     } catch (error) {
       return Promise.reject(error);
     }
