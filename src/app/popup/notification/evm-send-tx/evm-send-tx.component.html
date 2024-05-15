@@ -7,3 +7,13 @@
   [neoXFeeInfo]="neoXFeeInfo"
   [signAddressGasBalance]="signAddressGasBalance"
 ></confirm-send-ether>
+
+<confirm-send-token
+  *ngIf="methodName === EvmTransactionType.tokenMethodTransfer"
+  [txParams]="txParams"
+  [messageID]="messageID"
+  [locationOrigin]="locationOrigin"
+  [amount]="amount"
+  [neoXFeeInfo]="neoXFeeInfo"
+  [signAddressGasBalance]="signAddressGasBalance"
+></confirm-send-token>

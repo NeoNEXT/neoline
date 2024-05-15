@@ -25,6 +25,7 @@ import { PopupNoticeEvmSignComponent } from './evm-signature/evm-signature.compo
 import {
   PopupNoticeEvmSendTxComponent,
   PopupNoticeEvmConfirmSendEtherComponent,
+  PopupNoticeEvmConfirmSendTokenComponent,
 } from './evm-send-tx';
 
 @NgModule({
@@ -48,6 +49,7 @@ import {
     PopupNoticeEvmSignComponent,
     PopupNoticeEvmSendTxComponent,
     PopupNoticeEvmConfirmSendEtherComponent,
+    PopupNoticeEvmConfirmSendTokenComponent,
   ],
   imports: [
     CommonModule,

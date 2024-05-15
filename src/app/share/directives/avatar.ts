@@ -30,8 +30,9 @@ export class AvatarDirective implements OnChanges {
       changes.avatar &&
       changes.avatar.currentValue != changes.avatar.previousValue
     ) {
-      const key = changes.avatar.currentValue as string;
+      let key = changes.avatar.currentValue as string;
       if (key && key.length) {
+        key = key.toLowerCase();
         this.src =
           avatarList[key.charCodeAt(key.length - 1) % avatarList.length];
       }

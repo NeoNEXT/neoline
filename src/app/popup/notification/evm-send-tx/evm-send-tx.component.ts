@@ -60,6 +60,8 @@ export class PopupNoticeEvmSendTxComponent implements OnInit {
       this.txParams
     );
     this.methodName = type;
+    console.log(type);
+
 
     const { from, value, gas, gasPrice, maxFeePerGas, maxPriorityFeePerGas } =
       this.txParams;

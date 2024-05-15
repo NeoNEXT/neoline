@@ -19,11 +19,11 @@ import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 type TabType = 'details' | 'data';
 
 @Component({
-  selector: 'confirm-send-ether',
-  templateUrl: './confirm-send-ether.component.html',
-  styleUrls: ['./confirm-send-ether.component.scss'],
+  selector: 'confirm-send-token',
+  templateUrl: './confirm-send-token.component.html',
+  styleUrls: ['./confirm-send-token.component.scss'],
 })
-export class PopupNoticeEvmConfirmSendEtherComponent
+export class PopupNoticeEvmConfirmSendTokenComponent
   implements OnInit, OnDestroy
 {
   @Input() messageID: string;
@@ -37,6 +37,8 @@ export class PopupNoticeEvmConfirmSendEtherComponent
   tabType: TabType = 'details';
   loading = false;
   canSend = false;
+  assetDetails;
+  tokenData;
 
   private accountSub: Unsubscribable;
   neoXWalletArr: EvmWalletJSON[];
@@ -58,7 +60,21 @@ export class PopupNoticeEvmConfirmSendEtherComponent
   }
 
   ngOnInit(): void {
-    console.log(11);
+    this.tokenData = this.dappEVMState.parseStandardTokenTransactionData(
+      this.txParams.data
+    );
+
+    this.dappEVMState
+      .getAssetDetails(
+        this.txParams.to,
+        this.txParams.from,
+        this.txParams.data,
+        null
+      )
+      .then((res) => {
+        console.log(res);
+        this.assetDetails = res;
+      });
   }
 
   ngOnDestroy(): void {
