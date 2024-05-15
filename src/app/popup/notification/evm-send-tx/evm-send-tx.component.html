@@ -9,7 +9,11 @@
 ></confirm-send-ether>
 
 <confirm-send-token
-  *ngIf="methodName === EvmTransactionType.tokenMethodTransfer"
+  *ngIf="
+    methodName === EvmTransactionType.tokenMethodTransfer ||
+    methodName === EvmTransactionType.tokenMethodTransferFrom ||
+    methodName === EvmTransactionType.tokenMethodSafeTransferFrom
+  "
   [txParams]="txParams"
   [messageID]="messageID"
   [locationOrigin]="locationOrigin"
@@ -17,3 +21,27 @@
   [neoXFeeInfo]="neoXFeeInfo"
   [signAddressGasBalance]="signAddressGasBalance"
 ></confirm-send-token>
+
+<confirm-contract-interaction
+  *ngIf="methodName === EvmTransactionType.contractInteraction"
+  [txParams]="txParams"
+  [messageID]="messageID"
+  [locationOrigin]="locationOrigin"
+  [amount]="amount"
+  [neoXFeeInfo]="neoXFeeInfo"
+  [signAddressGasBalance]="signAddressGasBalance"
+></confirm-contract-interaction>
+
+<confirm-approve
+  *ngIf="
+    methodName === EvmTransactionType.swapApproval ||
+    methodName === EvmTransactionType.tokenMethodApprove ||
+    methodName === EvmTransactionType.tokenMethodSetApprovalForAll
+  "
+  [txParams]="txParams"
+  [messageID]="messageID"
+  [locationOrigin]="locationOrigin"
+  [amount]="amount"
+  [neoXFeeInfo]="neoXFeeInfo"
+  [signAddressGasBalance]="signAddressGasBalance"
+></confirm-approve>

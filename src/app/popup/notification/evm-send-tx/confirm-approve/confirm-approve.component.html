@@ -8,27 +8,18 @@
 <div class="container">
   <div class="header transfer">
     <p class="origin">{{ locationOrigin }}</p>
-    <div class="type">· {{ "Sending" }}{{ neoXNetwork.symbol }}</div>
-    <div class="asset">
-      <div class="asset-logo-box small">
-        <img
-          [assetId]="ETH_SOURCE_ASSET_HASH"
-          chain="NeoX"
-          appErrorSrc
-          alt=""
-        />
-      </div>
-      <p class="amount">{{ amount || 0 }} {{ neoXNetwork?.symbol }}</p>
-    </div>
+    <p>
+      Approve {{ assetDetails?.symbol }}
+      <img theme src="assets/images/common/copy-color.svg" />
+    </p>
+    <p>
+      Custom spending cap:
+      <input type="text" [value]="assetDetails?.tokenAmount" />
+    </p>
     <div class="address-group">
       <div class="item">
         <img class="avatar" [avatar]="txParams?.from" />
-        <span>{{ txParams?.from | longStr : 4 }}</span>
-      </div>
-      <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
-      <div class="item">
-        <img class="avatar" [avatar]="txParams?.to" />
-        <span>{{ txParams?.to | longStr : 4 }}</span>
+        <span>{{ txParams?.from | longStr : 10 }}</span>
       </div>
     </div>
   </div>
@@ -58,8 +49,12 @@
   </ul>
   <div class="content data" *ngIf="tabType === 'data'">
     <p class="title">
-      FUNCTION TYPE: <span class="value">Sending {{ neoXNetwork.symbol }}</span>
+      FUNCTION TYPE: <span class="value">{{ tokenData?.signature }}</span>
     </p>
+    <p class="hex-label">
+      HEX DATA: {{ txParams.data !== "0x" ? txParams.data?.length : 0 }} BYTES
+    </p>
+    <p class="json-box serialize">{{ txParams.data }}</p>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="exit()">

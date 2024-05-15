@@ -8,17 +8,17 @@
 <div class="container">
   <div class="header transfer">
     <p class="origin">{{ locationOrigin }}</p>
-    <div class="type">· {{ "Sending" }}{{ neoXNetwork.symbol }}</div>
+    <div class="type">{{ txParams?.to | longStr : 4 }}: {{ tokenData?.name }}</div>
     <div class="asset">
       <div class="asset-logo-box small">
         <img
-          [assetId]="ETH_SOURCE_ASSET_HASH"
+          [assetId]="txParams?.to"
           chain="NeoX"
           appErrorSrc
           alt=""
         />
       </div>
-      <p class="amount">{{ amount || 0 }} {{ neoXNetwork?.symbol }}</p>
+      <p class="amount">{{ amount || 0 }}</p>
     </div>
     <div class="address-group">
       <div class="item">
@@ -27,7 +27,7 @@
       </div>
       <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
       <div class="item">
-        <img class="avatar" [avatar]="txParams?.to" />
+        <img class="avatar" src="" />
         <span>{{ txParams?.to | longStr : 4 }}</span>
       </div>
     </div>
@@ -58,8 +58,10 @@
   </ul>
   <div class="content data" *ngIf="tabType === 'data'">
     <p class="title">
-      FUNCTION TYPE: <span class="value">Sending {{ neoXNetwork.symbol }}</span>
+      FUNCTION TYPE: <span class="value">{{ tokenData?.signature }}</span>
     </p>
+    <p class="hex-label">HEX DATA: {{ txParams.data !== '0x' ? txParams.data?.length : 0}} BYTES</p>
+    <p class="json-box serialize">{{ txParams.data }}</p>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="exit()">

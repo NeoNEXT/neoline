@@ -26,6 +26,8 @@ import {
   PopupNoticeEvmSendTxComponent,
   PopupNoticeEvmConfirmSendEtherComponent,
   PopupNoticeEvmConfirmSendTokenComponent,
+  PopupNoticeEvmConfirmContractInteractionComponent,
+  PopupNoticeEvmConfirmApproveComponent,
 } from './evm-send-tx';
 
 @NgModule({
@@ -50,6 +52,8 @@ import {
     PopupNoticeEvmSendTxComponent,
     PopupNoticeEvmConfirmSendEtherComponent,
     PopupNoticeEvmConfirmSendTokenComponent,
+    PopupNoticeEvmConfirmContractInteractionComponent,
+    PopupNoticeEvmConfirmApproveComponent,
   ],
   imports: [
     CommonModule,
