@@ -11,6 +11,7 @@ import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import {
+  addHexPrefix,
   calcTokenAmount,
   getFormattedIpfsUrl,
   getTokenAddressParam,
@@ -21,6 +22,8 @@ import {
   timeoutFetch,
 } from '../evm/util';
 import type BN from 'bn.js';
+import { HttpClient } from '@angular/common/http';
+import { map, of } from 'rxjs';
 
 const abi_1 = require('@ethersproject/abi');
 
@@ -37,12 +40,59 @@ export class DappEVMState {
   private neoXNetwork: RpcNetwork;
   provider: ethers.JsonRpcProvider;
 
-  constructor(private store: Store<AppState>) {
+  constructor(private store: Store<AppState>, private http: HttpClient) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
       this.provider = new ethers.JsonRpcProvider(this.neoXNetwork.rpcUrl);
     });
+  }
+
+  getContractMethodData(data = '') {
+    const prefixedData = addHexPrefix(data);
+    const fourBytePrefix = prefixedData.slice(0, 10);
+    if (fourBytePrefix.length < 10) {
+      return of('');
+    }
+
+    return this.getMethodFrom4Byte(fourBytePrefix).pipe(
+      map((fourByteSig) => {
+        return fourByteSig;
+      })
+    );
+  }
+
+  /**
+   * @typedef EthersContractCall
+   * @type object
+   * @property {any[]} args - The args/params to the function call.
+   * An array-like object with numerical and string indices.
+   * @property {string} name - The name of the function.
+   * @property {string} signature - The function signature.
+   * @property {string} sighash - The function signature hash.
+   * @property {EthersBigNumber} value - The ETH value associated with the call.
+   * @property {FunctionFragment} functionFragment - The Ethers function fragment
+   * representation of the function.
+   */
+
+  private getMethodFrom4Byte(fourBytePrefix) {
+    return this.http
+      .get(
+        `https://www.4byte.directory/api/v1/signatures/?hex_signature=${fourBytePrefix}`
+      )
+      .pipe(
+        map((fourByteResponse: any) => {
+          console.log(fourByteResponse);
+
+          fourByteResponse.results.sort((a, b) => {
+            return new Date(a.created_at).getTime() <
+              new Date(b.created_at).getTime()
+              ? -1
+              : 1;
+          });
+          return fourByteResponse.results[0].text_signature;
+        })
+      );
   }
 
   async getAssetDetails(

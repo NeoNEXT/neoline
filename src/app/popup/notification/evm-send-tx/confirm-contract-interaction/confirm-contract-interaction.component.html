@@ -8,18 +8,7 @@
 <div class="container">
   <div class="header transfer">
     <p class="origin">{{ locationOrigin }}</p>
-    <div class="type">{{ txParams?.to | longStr : 4 }}: {{ tokenData?.name }}</div>
-    <div class="asset">
-      <div class="asset-logo-box small">
-        <img
-          [assetId]="txParams?.to"
-          chain="NeoX"
-          appErrorSrc
-          alt=""
-        />
-      </div>
-      <p class="amount">{{ amount || 0 }}</p>
-    </div>
+    <div class="type">{{ contractMethodData }}</div>
     <div class="address-group">
       <div class="item">
         <img class="avatar" [avatar]="txParams?.from" />
@@ -58,7 +47,7 @@
   </ul>
   <div class="content data" *ngIf="tabType === 'data'">
     <p class="title">
-      FUNCTION TYPE: <span class="value">{{ tokenData?.signature }}</span>
+      FUNCTION TYPE: <span class="value">{{ contractMethodData }}</span>
     </p>
     <p class="hex-label">HEX DATA: {{ txParams.data !== '0x' ? txParams.data?.length : 0}} BYTES</p>
     <p class="json-box serialize">{{ txParams.data }}</p>

@@ -37,7 +37,7 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   tabType: TabType = 'details';
   loading = false;
   canSend = false;
-  tokenData;
+  contractMethodData: string;
 
   private accountSub: Unsubscribable;
   neoXWalletArr: EvmWalletJSON[];
@@ -59,10 +59,12 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   }
 
   ngOnInit(): void {
-    this.tokenData = this.dappEVMState.parseStandardTokenTransactionData(
-      this.txParams.data
-    );
-    console.log(this.tokenData);
+    this.dappEVMState
+      .getContractMethodData(this.txParams.data)
+      .subscribe((res) => {
+        console.log(res);
+        this.contractMethodData = res;
+      });
   }
 
   ngOnDestroy(): void {
