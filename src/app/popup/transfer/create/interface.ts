@@ -24,7 +24,6 @@ export interface TransferData {
 export interface NeoXFeeInfoProp {
   maxFeePerGas?: string;
   maxPriorityFeePerGas?: string;
-  baseFeePerGas?: string;
   gasLimit: string;
   estimateGas: string;
   gasPrice?: string;

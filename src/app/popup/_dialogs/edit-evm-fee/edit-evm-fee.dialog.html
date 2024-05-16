@@ -22,30 +22,30 @@
 
 <form class="container" [formGroup]="editEvmFeeForm">
   <div class="item" *ngIf="isEIP1559">
-    <p class="label">{{ 'Max base fee (GWEI)' }}</p>
+    <p class="label">{{ 'Max Fee (GWEI)' }}</p>
     <mat-form-field class="form-field" appearance="outline">
       <input
         matInput
         required
         min="0"
-        formControlName="baseFeePerGas"
+        formControlName="maxFeePerGas"
         type="number"
       />
     </mat-form-field>
     <p
       class="error"
-      *ngIf="editEvmFeeForm.get('baseFeePerGas').errors?.errorLowPriorityFee"
+      *ngIf="editEvmFeeForm.get('maxFeePerGas').errors?.errorLowPriorityFee"
     >
-      {{ "Max base fee cannot be lower than priority fee" }}
+      {{ "Max fee cannot be lower than priority fee" }}
     </p>
     <p
       class="error"
-      *ngIf="!editEvmFeeForm.get('baseFeePerGas').errors?.errorLowPriorityFee && baseFeePerGasIsLow"
+      *ngIf="!editEvmFeeForm.get('maxFeePerGas').errors?.errorLowPriorityFee && maxFeePerGasIsLow"
     >
-      {{ "Max base fee is low for current network conditions" }}
+      {{ "Max fee is low for current network conditions" }}
     </p>
     <p class="current">
-      current: {{getValueByGWEI(data.sourceNeoXFeeInfo.baseFeePerGas)}}
+      current: {{getValueByGWEI(data.sourceNeoXFeeInfo.maxFeePerGas)}}
     </p>
   </div>
 

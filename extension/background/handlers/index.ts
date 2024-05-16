@@ -170,8 +170,8 @@ function getAccounts(sender: { origin: string }): Promise<string[]> {
 
 async function determineEIP1559Compatibility() {
   const { currNeoXNetwork } = await getCurrentNeoXNetwork();
-  const provider = new ethers.JsonRpcProvider(this.currNeoXNetwork.rpcUrl);
-  const block = await this.provider.getBlock('latest');
+  const provider = new ethers.JsonRpcProvider(currNeoXNetwork.rpcUrl);
+  const block = await provider.getBlock('latest');
 
   if (!block) {
     return undefined;

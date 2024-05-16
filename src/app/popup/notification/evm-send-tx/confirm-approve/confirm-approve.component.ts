@@ -65,7 +65,6 @@ export class PopupNoticeEvmConfirmApproveComponent
     );
     console.log(this.tokenData);
 
-
     this.dappEVMState
       .getAssetDetails(
         this.txParams.to,

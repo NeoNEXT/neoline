@@ -17,7 +17,7 @@ import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 })
 export class PopupEditEvmFeeDialogComponent {
   editEvmFeeForm: FormGroup;
-  baseFeePerGasIsLow = false;
+  maxFeePerGasIsLow = false;
   maxPriorityFeeIsLow = false;
 
   gasPriceIsLow = false;
@@ -38,9 +38,9 @@ export class PopupEditEvmFeeDialogComponent {
     if (this.data.customNeoXFeeInfo.maxFeePerGas) {
       this.isEIP1559 = true;
       this.editEvmFeeForm = this.fb.group({
-        baseFeePerGas: [
-          this.getValueByGWEI(this.data.customNeoXFeeInfo.baseFeePerGas),
-          [Validators.required, Validators.min(0), this.checkBaseFeePerGas()],
+        maxFeePerGas: [
+          this.getValueByGWEI(this.data.customNeoXFeeInfo.maxFeePerGas),
+          [Validators.required, Validators.min(0), this.checkMaxFeePerGas()],
         ],
         maxPriorityFeePerGas: [
           this.getValueByGWEI(this.data.customNeoXFeeInfo.maxPriorityFeePerGas),
@@ -51,7 +51,7 @@ export class PopupEditEvmFeeDialogComponent {
           [Validators.required, Validators.max(7920027), Validators.min(21000)],
         ],
       });
-      this.listenBaseFeePerGas();
+      this.listenMaxFeePerGas();
       this.listenMaxPriorityFeePerGas();
     } else {
       this.isEIP1559 = false;
@@ -70,19 +70,19 @@ export class PopupEditEvmFeeDialogComponent {
     this.listenGasLimit();
   }
 
-  private listenBaseFeePerGas() {
-    this.editEvmFeeForm.controls.baseFeePerGas.valueChanges
+  private listenMaxFeePerGas() {
+    this.editEvmFeeForm.controls.maxFeePerGas.valueChanges
       .pipe(debounceTime(400), distinctUntilChanged())
       .subscribe((query) => {
         this.custom = true;
         this.getCustomEstimateFee();
-        const baseFeePerGasGWEI = this.getValueByGWEI(
-          this.data.sourceNeoXFeeInfo.baseFeePerGas
+        const maxFeePerGasGWEI = this.getValueByGWEI(
+          this.data.sourceNeoXFeeInfo.maxFeePerGas
         );
-        if (new BigNumber(query).comparedTo(baseFeePerGasGWEI) < 0) {
-          this.baseFeePerGasIsLow = true;
+        if (new BigNumber(query).comparedTo(maxFeePerGasGWEI) < 0) {
+          this.maxFeePerGasIsLow = true;
         } else {
-          this.baseFeePerGasIsLow = false;
+          this.maxFeePerGasIsLow = false;
         }
       });
   }
@@ -127,15 +127,15 @@ export class PopupEditEvmFeeDialogComponent {
       });
   }
 
-  private checkBaseFeePerGas(): ValidatorFn {
+  private checkMaxFeePerGas(): ValidatorFn {
     return (control: AbstractControl): { [key: string]: any } | null => {
-      const baseFeePerGas = control.value;
-      if (!baseFeePerGas && baseFeePerGas !== 0) {
+      const maxFeePerGas = control.value;
+      if (!maxFeePerGas && maxFeePerGas !== 0) {
         return null;
       }
       let valid = true;
       if (
-        new BigNumber(baseFeePerGas || 0).comparedTo(
+        new BigNumber(maxFeePerGas || 0).comparedTo(
           this.editEvmFeeForm?.value?.maxPriorityFeePerGas || 0
         ) < 0
       ) {
@@ -151,10 +151,8 @@ export class PopupEditEvmFeeDialogComponent {
     if (this.editEvmFeeForm.valid) {
       if (this.isEIP1559) {
         this.data.customNeoXFeeInfo.maxFeePerGas = new BigNumber(
-          this.editEvmFeeForm.value.baseFeePerGas
+          this.editEvmFeeForm.value.maxFeePerGas
         )
-          .times(2)
-          .plus(this.editEvmFeeForm.value.maxPriorityFeePerGas)
           .shiftedBy(-9)
           .toFixed();
         this.data.customNeoXFeeInfo.estimateGas = new BigNumber(
@@ -184,8 +182,8 @@ export class PopupEditEvmFeeDialogComponent {
     this.data.customNeoXFeeInfo.gasLimit = this.editEvmFeeForm.value.gasLimit;
 
     if (this.isEIP1559) {
-      this.data.customNeoXFeeInfo.baseFeePerGas = new BigNumber(
-        this.editEvmFeeForm.value.baseFeePerGas
+      this.data.customNeoXFeeInfo.maxFeePerGas = new BigNumber(
+        this.editEvmFeeForm.value.maxFeePerGas
       )
         .shiftedBy(-9)
         .toFixed();
@@ -195,8 +193,8 @@ export class PopupEditEvmFeeDialogComponent {
         .shiftedBy(-9)
         .toFixed();
       if (
-        this.data.customNeoXFeeInfo.baseFeePerGas !==
-          this.data.sourceNeoXFeeInfo.baseFeePerGas ||
+        this.data.customNeoXFeeInfo.maxFeePerGas !==
+          this.data.sourceNeoXFeeInfo.maxFeePerGas ||
         this.data.customNeoXFeeInfo.maxPriorityFeePerGas !==
           this.data.sourceNeoXFeeInfo.maxPriorityFeePerGas ||
         this.data.customNeoXFeeInfo.gasLimit !==
