@@ -42,3 +42,12 @@
     animation: showFeeAnimation 1.5s ease-in-out alternate;
   }
 }
+
+@keyframes showFeeAnimation {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}

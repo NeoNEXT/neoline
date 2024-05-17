@@ -1,11 +1,22 @@
+<div class="loading-box" *ngIf="loading">
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+    <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
+  </div>
+</div>
 <confirm-send-ether
   *ngIf="methodName === EvmTransactionType.simpleSend"
   [txParams]="txParams"
-  [messageID]="messageID"
   [locationOrigin]="locationOrigin"
   [amount]="amount"
   [neoXFeeInfo]="neoXFeeInfo"
   [signAddressGasBalance]="signAddressGasBalance"
+  [estimateGasError]="estimateGasError"
+  [insufficientFunds]="insufficientFunds"
+  [neoXNetwork]="neoXNetwork"
+  (closeEvent)="exit()"
+  (updateFeeEvent)="updateEvmFee($event)"
+  (confirmEvent)="confirm()"
 ></confirm-send-ether>
 
 <confirm-send-token

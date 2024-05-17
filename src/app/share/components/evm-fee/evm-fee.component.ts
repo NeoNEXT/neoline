@@ -21,10 +21,11 @@ import { timer } from 'rxjs';
   styleUrls: ['evm-fee.component.scss'],
 })
 export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
+  @Input() txParams?;
   @Input() transferAsset?: Asset;
-  @Input() transferToAddress: string;
-  @Input() fromAddress: string;
-  @Input() transferAmount: string;
+  @Input() transferToAddress?: string;
+  @Input() fromAddress?: string;
+  @Input() transferAmount?: string;
   @Input() symbol: string;
   @Input() customNeoXFeeInfo: NeoXFeeInfoProp;
   @Input() place: 'amount' | 'confirm' | 'dapp' = 'amount';
@@ -43,7 +44,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
 
   ngOnInit(): void {
     if (this.customNeoXFeeInfo) {
-      this.sourceNeoXFeeInfo = this.customNeoXFeeInfo;
+      this.sourceNeoXFeeInfo = Object.assign({}, this.customNeoXFeeInfo);
     }
   }
 
@@ -54,7 +55,9 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
           changes.transferAsset.previousValue) ||
       (changes.transferToAddress &&
         changes.transferToAddress.currentValue !==
-          changes.transferToAddress.previousValue)
+          changes.transferToAddress.previousValue) ||
+      (changes.txParams &&
+        changes.txParams.currentValue !== changes.txParams.previousValue)
     ) {
       this.getEvmEstimateFee();
     }
@@ -89,29 +92,42 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
   private getEvmEstimateFee() {
     this.sourceNeoXFeeInfo = undefined;
     this.getEstimateFeeInterval?.unsubscribe();
-    if (this.transferAsset && this.transferToAddress) {
-      this.getEstimateFeeInterval = timer(0, 10000).subscribe(() => {
-        this.assetEVMState
-          .getTransferERC20Info({
-            asset: this.transferAsset,
-            fromAddress: this.fromAddress,
-            toAddress: this.transferToAddress,
-            transferAmount: this.transferAmount || '1',
-          })
-          .then((res) => {
-            this.sourceNeoXFeeInfo = res;
-            if (!this.customNeoXFeeInfo?.custom) {
-              this.returnFee.emit(this.sourceNeoXFeeInfo);
-            }
-            if (this.editEvmFeeDialogRef?.componentInstance) {
-              this.editEvmFeeDialogRef.componentInstance.data.sourceNeoXFeeInfo =
-                res;
-            }
+    if (
+      (this.transferAsset && this.transferToAddress) ||
+      this.place === 'dapp'
+    ) {
+      this.getEstimateFeeInterval = timer(0, 10000).subscribe(async () => {
+        let networkGasLimit: bigint;
+        try {
+          if (this.place === 'dapp') {
+            networkGasLimit = await this.assetEVMState.estimateGas(
+              this.txParams
+            );
+          } else {
+            networkGasLimit = await this.assetEVMState.estimateGasOfTransfer({
+              asset: this.transferAsset,
+              fromAddress: this.fromAddress,
+              toAddress: this.transferToAddress,
+              transferAmount: this.transferAmount || '1',
+            });
+          }
+        } catch {
+          networkGasLimit = BigInt(42750000);
+        }
+        this.assetEVMState.getGasInfo(networkGasLimit).subscribe((res) => {
+          this.sourceNeoXFeeInfo = res;
+          if (!this.customNeoXFeeInfo?.custom) {
+            this.returnFee.emit(Object.assign({}, res));
             this.showEstimateFeeAnimate = true;
             timer(1500).subscribe(() => {
               this.showEstimateFeeAnimate = false;
             });
-          });
+          }
+          if (this.editEvmFeeDialogRef?.componentInstance) {
+            this.editEvmFeeDialogRef.componentInstance.data.sourceNeoXFeeInfo =
+              res;
+          }
+        });
       });
     }
   }

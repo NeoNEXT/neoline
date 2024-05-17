@@ -1,84 +1,72 @@
-import { Component, Input, OnDestroy, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 import {
-  ChromeService,
-  LedgerService,
-  AssetEVMState,
-  DappEVMState,
-} from '@/app/core';
-import { MatDialog } from '@angular/material/dialog';
-import { Store } from '@ngrx/store';
-import { AppState } from '@/app/reduers';
-import { Unsubscribable } from 'rxjs';
-import { ERRORS } from '@/models/dapi';
-import { requestTargetEVM } from '@/models/evm';
-import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '@/app/popup/_lib/evm';
+  Component,
+  EventEmitter,
+  Input,
+  OnChanges,
+  Output,
+  SimpleChanges,
+} from '@angular/core';
+import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { EvmTransactionParams, RpcNetwork } from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
-
-type TabType = 'details' | 'data';
+import BigNumber from 'bignumber.js';
 
 @Component({
   selector: 'confirm-send-ether',
   templateUrl: './confirm-send-ether.component.html',
   styleUrls: ['./confirm-send-ether.component.scss'],
 })
-export class PopupNoticeEvmConfirmSendEtherComponent
-  implements OnInit, OnDestroy
-{
-  @Input() messageID: string;
+export class PopupNoticeEvmConfirmSendEtherComponent implements OnChanges {
   @Input() locationOrigin: string;
   @Input() txParams: EvmTransactionParams;
   @Input() amount: string;
   @Input() neoXFeeInfo: NeoXFeeInfoProp;
   @Input() signAddressGasBalance: string;
+  @Input() estimateGasError: boolean;
+  @Input() insufficientFunds: boolean;
+
+  @Input() neoXNetwork: RpcNetwork;
+  @Output() closeEvent = new EventEmitter();
+  @Output() updateFeeEvent = new EventEmitter<NeoXFeeInfoProp>();
+  @Output() confirmEvent = new EventEmitter();
 
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
-  tabType: TabType = 'details';
-  loading = false;
-  canSend = false;
 
-  private accountSub: Unsubscribable;
-  neoXWalletArr: EvmWalletJSON[];
-  neoXNetwork: RpcNetwork;
-  constructor(
-    private aRoute: ActivatedRoute,
-    private chrome: ChromeService,
-    private dialog: MatDialog,
-    private ledger: LedgerService,
-    private assetEVMState: AssetEVMState,
-    private dappEVMState: DappEVMState,
-    private store: Store<AppState>
-  ) {
-    const account$ = this.store.select('account');
-    this.accountSub = account$.subscribe((state) => {
-      this.neoXWalletArr = state.neoXWalletArr;
-      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
-    });
-  }
+  constructor() {}
 
-  ngOnInit(): void {
-    console.log(11);
-  }
-
-  ngOnDestroy(): void {
-    this.accountSub?.unsubscribe();
+  ngOnChanges(changes: SimpleChanges): void {
+    console.log(changes);
   }
 
   updateEvmFee($event) {
     this.neoXFeeInfo = $event;
+    this.updateFeeEvent.emit($event);
   }
 
   exit() {
-    this.chrome.windowCallback(
-      {
-        error: ERRORS.CANCELLED,
-        return: requestTargetEVM.request,
-        ID: this.messageID,
-      },
-      true
-    );
+    this.closeEvent.emit();
   }
 
-  confirm() {}
+  confirm() {
+    this.confirmEvent.emit();
+  }
+
+  getShowAmount() {
+    if (!!this.amount) {
+      const newAmount = new BigNumber(this.amount).dp(8, 1).toFixed();
+      if (newAmount === '0') {
+        return '< 0.0000001';
+      }
+      return newAmount;
+    }
+  }
+
+  getEvmTotalData() {
+    if (!!this.amount && !!this.neoXFeeInfo?.estimateGas) {
+      return new BigNumber(this.amount)
+        .plus(this.neoXFeeInfo.estimateGas)
+        .dp(8, 1)
+        .toFixed();
+    }
+  }
 }

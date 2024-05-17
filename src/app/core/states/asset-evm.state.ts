@@ -7,15 +7,20 @@ import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
-import { map, Observable } from 'rxjs';
+import { map, Observable, firstValueFrom } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
+import { GlobalService } from '../services/global.service';
 
 @Injectable()
 export class AssetEVMState {
   private neoXNetwork: RpcNetwork;
   provider: ethers.JsonRpcProvider;
 
-  constructor(private store: Store<AppState>, private http: HttpClient) {
+  constructor(
+    private store: Store<AppState>,
+    private http: HttpClient,
+    private globalService: GlobalService
+  ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
@@ -79,7 +84,7 @@ export class AssetEVMState {
     return asset;
   }
 
-  async getTransferERC20Info({
+  async estimateGasOfTransfer({
     asset,
     fromAddress,
     toAddress,
@@ -89,40 +94,29 @@ export class AssetEVMState {
     fromAddress: string;
     toAddress: string;
     transferAmount: string;
-  }): Promise<NeoXFeeInfoProp> {
-    let getGasLimit = Promise.resolve(BigInt(21000));
-    if (asset.asset_id !== ETH_SOURCE_ASSET_HASH) {
-      const amountBN = BigInt(
-        new BigNumber(transferAmount).shiftedBy(asset.decimals).toFixed(0, 1)
-      );
-      getGasLimit = this.provider.estimateGas({
-        from: fromAddress,
-        to: asset.asset_id,
-        data: this.getTransferERC20Data({
-          asset,
-          toAddress,
-          transferAmount: amountBN,
-        }),
-      });
+  }): Promise<bigint> {
+    if (asset.asset_id === ETH_SOURCE_ASSET_HASH) {
+      return Promise.resolve(BigInt(21000));
     }
-    try {
-      const gasLimit = await getGasLimit;
-      return this.getGasInfo(gasLimit).toPromise();
-    } catch (error) {
-      return this.getGasInfo(BigInt(42750000)).toPromise();
-    }
+    const amountBN = BigInt(
+      new BigNumber(transferAmount).shiftedBy(asset.decimals).toFixed(0, 1)
+    );
+    return this.provider.estimateGas({
+      from: fromAddress,
+      to: asset.asset_id,
+      data: this.getTransferERC20Data({
+        asset,
+        toAddress,
+        transferAmount: amountBN,
+      }),
+    });
   }
 
-  async getDappTXInfo(txParams): Promise<NeoXFeeInfoProp> {
-    try {
-      const gasLimit = await this.provider.estimateGas(txParams);
-      return this.getGasInfo(gasLimit).toPromise();
-    } catch (error) {
-      return this.getGasInfo(BigInt(42750000)).toPromise();
-    }
+  estimateGas(txParams): Promise<bigint> {
+    return this.provider.estimateGas(txParams);
   }
 
-  private getGasInfo(gasLimit: bigint): Observable<NeoXFeeInfoProp> {
+  getGasInfo(gasLimit: bigint): Observable<NeoXFeeInfoProp> {
     return this.http
       .post(this.neoXNetwork.rpcUrl, [
         {
@@ -161,18 +155,25 @@ export class AssetEVMState {
             maxFeePerGas = new BigNumber(block.baseFeePerGas).plus(
               maxPriorityFeePerGas
             );
+            const estimateGas = new BigNumber(maxFeePerGas).times(
+              gasLimit.toString()
+            );
+            return {
+              maxFeePerGas: maxFeePerGas
+                ? maxFeePerGas.shiftedBy(-18).toFixed()
+                : undefined,
+              maxPriorityFeePerGas: maxPriorityFeePerGas
+                ? maxPriorityFeePerGas.shiftedBy(-18).toFixed()
+                : undefined,
+              gasLimit: gasLimit.toString(),
+              estimateGas: estimateGas.shiftedBy(-18).toFixed(),
+            };
           }
 
-          const estimateGas = new BigNumber(maxFeePerGas ?? gasPrice).times(
+          const estimateGas = new BigNumber(gasPrice).times(
             gasLimit.toString()
           );
           return {
-            maxFeePerGas: maxFeePerGas
-              ? maxFeePerGas.shiftedBy(-18).toFixed()
-              : undefined,
-            maxPriorityFeePerGas: maxPriorityFeePerGas
-              ? maxPriorityFeePerGas.shiftedBy(-18).toFixed()
-              : undefined,
             gasPrice: gasPrice ? gasPrice.shiftedBy(-18).toFixed() : undefined,
             gasLimit: gasLimit.toString(),
             estimateGas: estimateGas.shiftedBy(-18).toFixed(),
@@ -244,6 +245,47 @@ export class AssetEVMState {
     } catch (error) {
       throw this.handleEthersError(error);
     }
+  }
+
+  async sendDappTransaction(PreExecutionParams, txParams, privateKey: string) {
+    if (
+      (await firstValueFrom(this.getPreExecutionResult(PreExecutionParams), {
+        defaultValue: false,
+      })) !== true
+    ) {
+      return;
+    }
+    const wallet = new ethers.Wallet(privateKey, this.provider);
+    try {
+      const tx = await wallet.sendTransaction(txParams);
+      return tx;
+    } catch (error) {
+      throw this.handleEthersError(error);
+    }
+  }
+
+  private getPreExecutionResult(
+    txParams,
+    showError = true
+  ): Observable<boolean> {
+    return this.http
+      .post(this.neoXNetwork.rpcUrl, {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'eth_call',
+        params: [txParams],
+      })
+      .pipe(
+        map((res: any) => {
+          if (res.error) {
+            if (showError) {
+              this.globalService.snackBarTip(res.error.message);
+            }
+            return false;
+          }
+          return true;
+        })
+      );
   }
 
   async waitForTx(hash: string) {
