@@ -9,18 +9,13 @@ import BigNumber from 'bignumber.js';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 import { map, Observable, firstValueFrom } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
-import { GlobalService } from '../services/global.service';
 
 @Injectable()
 export class AssetEVMState {
   private neoXNetwork: RpcNetwork;
   provider: ethers.JsonRpcProvider;
 
-  constructor(
-    private store: Store<AppState>,
-    private http: HttpClient,
-    private globalService: GlobalService
-  ) {
+  constructor(private store: Store<AppState>, private http: HttpClient) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
@@ -248,12 +243,12 @@ export class AssetEVMState {
   }
 
   async sendDappTransaction(PreExecutionParams, txParams, privateKey: string) {
-    if (
-      (await firstValueFrom(this.getPreExecutionResult(PreExecutionParams), {
+    try {
+      await firstValueFrom(this.getPreExecutionResult(PreExecutionParams), {
         defaultValue: false,
-      })) !== true
-    ) {
-      return;
+      });
+    } catch (error) {
+      throw error;
     }
     const wallet = new ethers.Wallet(privateKey, this.provider);
     try {
@@ -278,10 +273,7 @@ export class AssetEVMState {
       .pipe(
         map((res: any) => {
           if (res.error) {
-            if (showError) {
-              this.globalService.snackBarTip(res.error.message);
-            }
-            return false;
+            throw res.error.message;
           }
           return true;
         })

@@ -1,6 +1,11 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ChromeService, AssetEVMState, DappEVMState } from '@/app/core';
+import {
+  ChromeService,
+  AssetEVMState,
+  DappEVMState,
+  GlobalService,
+} from '@/app/core';
 import {
   EvmTransactionParams,
   EvmTransactionType,
@@ -16,6 +21,8 @@ import { Unsubscribable } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { ethers } from 'ethers';
+import { PopupTransferSuccessDialogComponent } from '../../_dialogs';
+import { MatDialog } from '@angular/material/dialog';
 
 @Component({
   templateUrl: './evm-send-tx.component.html',
@@ -43,6 +50,8 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private assetEVMState: AssetEVMState,
     private dappEVMState: DappEVMState,
+    private dialog: MatDialog,
+    private globalService: GlobalService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -144,9 +153,20 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
     this.assetEVMState
       .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
-      .then((res) => {
-        console.log(res);
+      .then((txHash) => {
         this.loading = false;
+        this.chrome.windowCallback({
+          data: txHash,
+          return: requestTargetEVM.request,
+          ID: this.messageID,
+        });
+        this.dialog.open(PopupTransferSuccessDialogComponent, {
+          panelClass: 'custom-dialog-panel',
+        });
+      })
+      .catch((error) => {
+        this.loading = false;
+        this.globalService.snackBarTip(error);
       });
   }
 

@@ -1,12 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import {
-  AbstractControl,
-  FormBuilder,
-  FormGroup,
-  ValidatorFn,
-  Validators,
-} from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
 import BigNumber from 'bignumber.js';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -19,6 +13,7 @@ export class PopupEditEvmFeeDialogComponent {
   editEvmFeeForm: FormGroup;
   maxFeePerGasIsLow = false;
   maxPriorityFeeIsLow = false;
+  maxFeeIsLowPriorityFee = false;
 
   gasPriceIsLow = false;
 
@@ -40,7 +35,7 @@ export class PopupEditEvmFeeDialogComponent {
       this.editEvmFeeForm = this.fb.group({
         maxFeePerGas: [
           this.getValueByGWEI(this.data.customNeoXFeeInfo.maxFeePerGas),
-          [Validators.required, Validators.min(0), this.checkMaxFeePerGas()],
+          [Validators.required, Validators.min(0)],
         ],
         maxPriorityFeePerGas: [
           this.getValueByGWEI(this.data.customNeoXFeeInfo.maxPriorityFeePerGas),
@@ -84,6 +79,7 @@ export class PopupEditEvmFeeDialogComponent {
         } else {
           this.maxFeePerGasIsLow = false;
         }
+        this.checkMaxFeeIsLowPriorityFee();
       });
   }
   private listenMaxPriorityFeePerGas() {
@@ -100,6 +96,7 @@ export class PopupEditEvmFeeDialogComponent {
         } else {
           this.maxPriorityFeeIsLow = false;
         }
+        this.checkMaxFeeIsLowPriorityFee();
       });
   }
   private listenGasprice() {
@@ -127,24 +124,18 @@ export class PopupEditEvmFeeDialogComponent {
       });
   }
 
-  private checkMaxFeePerGas(): ValidatorFn {
-    return (control: AbstractControl): { [key: string]: any } | null => {
-      const maxFeePerGas = control.value;
-      if (!maxFeePerGas && maxFeePerGas !== 0) {
-        return null;
-      }
-      let valid = true;
-      if (
-        new BigNumber(maxFeePerGas || 0).comparedTo(
-          this.editEvmFeeForm?.value?.maxPriorityFeePerGas || 0
-        ) < 0
-      ) {
-        valid = false;
-      }
-      return valid === false
-        ? { errorLowPriorityFee: { value: control.value } }
-        : null;
-    };
+  private checkMaxFeeIsLowPriorityFee() {
+    if (
+      this.editEvmFeeForm?.value?.maxFeePerGas &&
+      this.editEvmFeeForm?.value?.maxPriorityFeePerGas &&
+      new BigNumber(this.editEvmFeeForm.value.maxFeePerGas).comparedTo(
+        this.editEvmFeeForm.value.maxPriorityFeePerGas
+      ) < 0
+    ) {
+      this.maxFeeIsLowPriorityFee = true;
+    } else {
+      this.maxFeeIsLowPriorityFee = false;
+    }
   }
 
   private getCustomEstimateFee() {
@@ -179,19 +170,21 @@ export class PopupEditEvmFeeDialogComponent {
       this.dialogRef.close();
       return;
     }
-    this.data.customNeoXFeeInfo.gasLimit = this.editEvmFeeForm.value.gasLimit;
+    this.data.customNeoXFeeInfo.gasLimit = new BigNumber(
+      this.editEvmFeeForm.value.gasLimit
+    ).toFixed(0, 1);
 
     if (this.isEIP1559) {
       this.data.customNeoXFeeInfo.maxFeePerGas = new BigNumber(
         this.editEvmFeeForm.value.maxFeePerGas
       )
         .shiftedBy(-9)
-        .toFixed();
+        .toFixed(18, 1);
       this.data.customNeoXFeeInfo.maxPriorityFeePerGas = new BigNumber(
         this.editEvmFeeForm.value.maxPriorityFeePerGas
       )
         .shiftedBy(-9)
-        .toFixed();
+        .toFixed(18, 1);
       if (
         this.data.customNeoXFeeInfo.maxFeePerGas !==
           this.data.sourceNeoXFeeInfo.maxFeePerGas ||
@@ -210,7 +203,7 @@ export class PopupEditEvmFeeDialogComponent {
         this.editEvmFeeForm.value.gasPrice
       )
         .shiftedBy(-9)
-        .toFixed();
+        .toFixed(18, 1);
       if (
         this.data.customNeoXFeeInfo.gasPrice !==
           this.data.sourceNeoXFeeInfo.gasPrice ||

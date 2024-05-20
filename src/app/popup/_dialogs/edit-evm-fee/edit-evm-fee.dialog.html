@@ -32,10 +32,7 @@
         type="number"
       />
     </mat-form-field>
-    <p
-      class="error"
-      *ngIf="editEvmFeeForm.get('maxFeePerGas').errors?.errorLowPriorityFee"
-    >
+    <p class="error" *ngIf="maxFeeIsLowPriorityFee">
       {{ "Max fee cannot be lower than priority fee" }}
     </p>
     <p
@@ -96,6 +93,8 @@
         min="0"
         formControlName="gasLimit"
         type="number"
+        onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^\d]/g,''))"
+        oninput="value=value.replace(/[^\d.]/g,'')"
       />
     </mat-form-field>
     <p
@@ -110,7 +109,7 @@
 <button
   class="confirm pop-ups"
   [ngClass]="{
-  disabled: editEvmFeeForm.invalid
+  disabled: editEvmFeeForm.invalid || maxFeeIsLowPriorityFee
 }"
   (click)="confirm()"
 >
