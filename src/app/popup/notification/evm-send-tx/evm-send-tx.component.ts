@@ -5,10 +5,12 @@ import {
   AssetEVMState,
   DappEVMState,
   GlobalService,
+  LedgerService,
 } from '@/app/core';
 import {
   EvmTransactionParams,
   EvmTransactionType,
+  LedgerStatuses,
   RpcNetwork,
   STORAGE_NAME,
 } from '../../_lib';
@@ -17,7 +19,7 @@ import BigNumber from 'bignumber.js';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
 import { ERRORS } from '@/models/dapi';
 import { requestTargetEVM } from '@/models/evm';
-import { Unsubscribable } from 'rxjs';
+import { Unsubscribable, interval } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { ethers } from 'ethers';
@@ -33,7 +35,11 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   txParams: EvmTransactionParams;
   messageID: string;
   locationOrigin: string;
+
   loading = false;
+  loadingMsg: string;
+  getStatusInterval;
+  encryptWallet: EvmWalletJSON;
 
   methodName: string;
   amount: string;
@@ -52,6 +58,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     private dappEVMState: DappEVMState,
     private dialog: MatDialog,
     private globalService: GlobalService,
+    private ledger: LedgerService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -104,8 +111,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     );
   }
 
-  async confirm() {
-    this.loading = true;
+  private getTxParams() {
     const { maxFeePerGas, maxPriorityFeePerGas, gasLimit, gasPrice } =
       this.neoXFeeInfo;
 
@@ -142,17 +148,55 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       value: this.txParams.value,
     };
 
-    const pwd = await this.chrome.getPassword();
-    const encryptWallet = this.neoXWalletArr.find(
+    return { PreExecutionParams, newParams };
+  }
+
+  async confirm() {
+    this.loading = true;
+
+    this.encryptWallet = this.neoXWalletArr.find(
       (item) => item.accounts[0].address === this.txParams.from
     );
+
+    if (this.encryptWallet.accounts[0].extra.ledgerSLIP44) {
+      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
+      this.getLedgerStatus();
+      this.getStatusInterval = interval(5000).subscribe(() => {
+        this.getLedgerStatus();
+      });
+      return;
+    }
+
+    const pwd = await this.chrome.getPassword();
     const wallet = await ethers.Wallet.fromEncryptedJson(
-      JSON.stringify(encryptWallet),
+      JSON.stringify(this.encryptWallet),
       pwd
     );
 
+    const { newParams, PreExecutionParams } = this.getTxParams();
     this.assetEVMState
       .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
+      .then((txHash) => {
+        this.loading = false;
+        this.chrome.windowCallback({
+          data: txHash,
+          return: requestTargetEVM.request,
+          ID: this.messageID,
+        });
+        this.dialog.open(PopupTransferSuccessDialogComponent, {
+          panelClass: 'custom-dialog-panel',
+        });
+      })
+      .catch((error) => {
+        this.loading = false;
+        this.globalService.snackBarTip(error);
+      });
+  }
+
+  private ledgerSendTx(signedTx) {
+    const { PreExecutionParams } = this.getTxParams();
+    this.assetEVMState
+      .sendTransactionByRPC(signedTx, PreExecutionParams)
       .then((txHash) => {
         this.loading = false;
         this.chrome.windowCallback({
@@ -276,5 +320,35 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     } else {
       calculateLegacyFee();
     }
+  }
+
+  private getLedgerStatus() {
+    this.ledger.getDeviceStatus('NeoX').then(async (res) => {
+      this.loadingMsg = LedgerStatuses[res].msgNeoX || LedgerStatuses[res].msg;
+      if (LedgerStatuses[res] === LedgerStatuses.READY) {
+        this.getStatusInterval.unsubscribe();
+        this.loadingMsg = 'signTheTransaction';
+
+        const { newParams } = this.getTxParams();
+        if (!newParams.nonce) {
+          const nonce = await this.assetEVMState.getNonce(
+            this.encryptWallet.accounts[0].address
+          );
+          newParams.nonce = nonce;
+        }
+        delete newParams.from;
+        this.ledger
+          .getLedgerSignedTx(newParams as any, this.encryptWallet, 'NeoX')
+          .then((tx) => {
+            this.loading = false;
+            this.ledgerSendTx(tx);
+          })
+          .catch((error) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.ledger.handleLedgerError(error);
+          });
+      }
+    });
   }
 }

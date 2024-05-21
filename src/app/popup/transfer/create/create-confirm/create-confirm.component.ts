@@ -255,7 +255,9 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
           this.loading = true;
           const { currentWIF } = this.data;
           if (this.data.currentWallet.accounts[0].extra.ledgerSLIP44) {
-            txid = await this.assetEvmState.sendTransaction(this.unsignedEvmTx);
+            txid = await this.assetEvmState.sendTransactionByRPC(
+              this.unsignedEvmTx
+            );
           } else {
             const { asset, to, amount, neoXFeeInfo } = this.data;
             const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =

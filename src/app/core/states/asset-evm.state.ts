@@ -268,9 +268,23 @@ export class AssetEVMState {
     ]);
   }
 
-  async sendTransaction(txRequest) {
+  async sendTransactionByRPC(txRequest, PreExecutionParams?) {
+    if (PreExecutionParams) {
+      try {
+        await this.provider.send('eth_call', [PreExecutionParams]);
+      } catch (error) {
+        throw this.handleEthersError(error);
+      }
+    }
     const serializedTx = ethers.Transaction.from(txRequest).serialized;
-    return this.provider.send('eth_sendRawTransaction', [serializedTx]);
+    try {
+      const tx = await this.provider.send('eth_sendRawTransaction', [
+        serializedTx,
+      ]);
+      return tx;
+    } catch (error) {
+      throw this.handleEthersError(error);
+    }
   }
 
   async waitForTx(hash: string) {
