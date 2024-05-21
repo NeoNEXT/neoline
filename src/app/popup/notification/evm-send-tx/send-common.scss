@@ -1,4 +1,4 @@
-@import "../../common-scss/common.scss";
+@import "../common-scss/common.scss";
 
 .container {
   .header.transfer {
@@ -44,6 +44,30 @@
         word-break: break-all;
         line-height: 22px;
       }
+    }
+  }
+  .content.details {
+    .warning-tip {
+      padding: 12px;
+      background: rgba(250, 85, 85, 0.16);
+      font-size: 12px;
+      line-height: 18px;
+      letter-spacing: 0.01em;
+      color: #FA5555;
+      &.top {
+        margin-bottom: 12px;
+      }
+      &.bottom {
+        margin-top: 12px;
+      }
+      img {
+        vertical-align: sub;
+      }
+    }
+    .row.evm .label.tip {
+      font-family: NeverMind-Regular;
+      font-size: 12px;
+      margin-top: 6px;
     }
   }
   .content {

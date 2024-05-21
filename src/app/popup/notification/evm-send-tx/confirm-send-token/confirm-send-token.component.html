@@ -35,7 +35,7 @@
       {{ "data" | translate | async }}
     </span>
   </div>
-  <ul class="content details" *ngIf="tabType === 'details'">
+  <div class="content details" *ngIf="tabType === 'details'">
     <div class="warning-tip top" *ngIf="estimateGasError">
       <img src="assets/images/common/warning-red.svg" alt="" />
       {{ "我们无法估算燃料。合约中可能存在错误，这笔交易可能会失败。" }}
@@ -55,7 +55,7 @@
         "您的账户中没有足够的ETH可以支付Base Sepolia网络上的交易费用。请从另一个账户存入保证金 ETH。"
       }}
     </div>
-  </ul>
+  </div>
   <div class="content data" *ngIf="tabType === 'data'">
     <p class="title">
       FUNCTION TYPE: <span class="value">{{ tokenData?.signature }}</span>

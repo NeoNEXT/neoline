@@ -9,7 +9,7 @@ type TabType = 'details' | 'data';
 @Component({
   selector: 'confirm-send-token',
   templateUrl: './confirm-send-token.component.html',
-  styleUrls: ['./confirm-send-token.component.scss'],
+  styleUrls: ['../send-common.scss'],
 })
 export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   @Input() locationOrigin: string;

@@ -1,9 +1,4 @@
-import {
-  Component,
-  EventEmitter,
-  Input,
-  Output,
-} from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { EvmTransactionParams, RpcNetwork } from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
@@ -12,7 +7,7 @@ import BigNumber from 'bignumber.js';
 @Component({
   selector: 'confirm-send-ether',
   templateUrl: './confirm-send-ether.component.html',
-  styleUrls: ['./confirm-send-ether.component.scss'],
+  styleUrls: ['../send-common.scss'],
 })
 export class PopupNoticeEvmConfirmSendEtherComponent {
   @Input() locationOrigin: string;

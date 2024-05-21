@@ -41,11 +41,16 @@
 <confirm-contract-interaction
   *ngIf="methodName === EvmTransactionType.contractInteraction"
   [txParams]="txParams"
-  [messageID]="messageID"
   [locationOrigin]="locationOrigin"
   [amount]="amount"
   [neoXFeeInfo]="neoXFeeInfo"
   [signAddressGasBalance]="signAddressGasBalance"
+  [estimateGasError]="estimateGasError"
+  [insufficientFunds]="insufficientFunds"
+  [neoXNetwork]="neoXNetwork"
+  (closeEvent)="exit()"
+  (updateFeeEvent)="updateEvmFee($event)"
+  (confirmEvent)="confirm()"
 ></confirm-contract-interaction>
 
 <confirm-approve
@@ -55,9 +60,14 @@
     methodName === EvmTransactionType.tokenMethodSetApprovalForAll
   "
   [txParams]="txParams"
-  [messageID]="messageID"
   [locationOrigin]="locationOrigin"
   [amount]="amount"
   [neoXFeeInfo]="neoXFeeInfo"
   [signAddressGasBalance]="signAddressGasBalance"
+  [estimateGasError]="estimateGasError"
+  [insufficientFunds]="insufficientFunds"
+  [neoXNetwork]="neoXNetwork"
+  (closeEvent)="exit()"
+  (updateFeeEvent)="updateEvmFee($event)"
+  (confirmEvent)="confirm()"
 ></confirm-approve>

@@ -46,19 +46,17 @@
     >
     </evm-fee>
 
-    <li>
-      <div class="row evm">
-        <div class="label">
-          <p>{{ "TOTAL" | translate | async }}</p>
-          <p class="label tip">
-            {{ "amount" | translate | async }}+{{
-              "GASFEE" | translate | async
-            }}
-          </p>
-        </div>
-        <p class="value">{{ getEvmTotalData() }} {{ neoXNetwork?.symbol }}</p>
+    <div class="row evm">
+      <div class="label">
+        <p>{{ "TOTAL" | translate | async }}</p>
+        <p class="label tip">
+          {{ "amount" | translate | async }}+{{
+            "GASFEE" | translate | async
+          }}
+        </p>
       </div>
-    </li>
+      <p class="value">{{ getEvmTotalData() }} {{ neoXNetwork?.symbol }}</p>
+    </div>
 
     <div class="warning-tip bottom" *ngIf="insufficientFunds">
       <img src="assets/images/common/warning-red.svg" alt="" />
