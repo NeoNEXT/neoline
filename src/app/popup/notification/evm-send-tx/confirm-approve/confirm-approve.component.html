@@ -3,7 +3,9 @@
     <p class="origin">{{ locationOrigin }}</p>
     <p>
       Approve {{ assetDetails?.symbol }}
-      <img theme src="assets/images/common/copy-color.svg" />
+      <copy [value]="txParams.to" [showTip]="false">
+        <img theme src="assets/images/common/copy-color.svg" />
+      </copy>
     </p>
     <p>
       Custom spending cap:
