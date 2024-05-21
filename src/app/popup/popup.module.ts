@@ -88,6 +88,7 @@ import {
   PopupEditEvmFeeDialogComponent,
   PopupAddAddressBookDialogComponent,
   PopupAddressBookListDialogComponent,
+  PopupExportWalletDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -110,6 +111,7 @@ const POPUP_DIALOGS = [
   PopupEditEvmFeeDialogComponent,
   PopupAddAddressBookDialogComponent,
   PopupAddressBookListDialogComponent,
+  PopupExportWalletDialogComponent,
 ];
 
 //#endregion

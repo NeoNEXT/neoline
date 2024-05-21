@@ -105,6 +105,14 @@
         "accountDetails" | translate | async
       }}
     </li>
+    <li
+      *ngIf="!moreModalWallet?.accounts?.[0].extra?.ledgerSLIP44"
+      (click)="exportWallet()"
+    >
+      <img theme src="assets/images/avatar-menu/wallet-export.svg" alt="" />{{
+        "exportWallet" | translate | async
+      }}
+    </li>
     <li *ngIf="moreModalCanRemove" (click)="removeAccount()">
       <img theme src="assets/images/account/home-delete.svg" alt="" />{{
         "removeAccount" | translate | async

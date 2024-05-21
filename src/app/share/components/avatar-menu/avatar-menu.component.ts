@@ -31,6 +31,7 @@ import { Unsubscribable, timer } from 'rxjs';
 import {
   PopupAddWalletDialogComponent,
   PopupConfirmDialogComponent,
+  PopupExportWalletDialogComponent,
   PopupPasswordDialogComponent,
   PopupSelectDialogComponent,
 } from '../../../popup/_dialogs';
@@ -344,14 +345,30 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
   }
 
   //#region wallet
-  async exportWallet() {
-    if (!this.isOnePassword) {
-      if (this.wallet.accounts[0]?.extra?.ledgerSLIP44) return;
-      const exportJson = JSON.stringify((this.wallet as Wallet2).export());
-      this.exportWalletJson(exportJson, this.chainType, this.wallet.name);
-      return;
+  private exportThisWallet() {
+    if (this.moreModalWallet.accounts[0]?.extra?.ledgerSLIP44) return;
+    if (this.moreModalChainType !== 'NeoX') {
+      const exportJson = JSON.stringify(
+        (this.moreModalWallet as Wallet2).export()
+      );
+      this.exportWalletJson(
+        exportJson,
+        this.moreModalChainType,
+        this.moreModalWallet.name
+      );
+    } else {
+      const target = JSON.parse(JSON.stringify(this.moreModalWallet));
+      delete target.accounts;
+      const exportJson = JSON.stringify(target);
+      this.exportWalletJson(
+        exportJson,
+        this.moreModalChainType,
+        this.moreModalWallet.name
+      );
     }
-    if (this.chainType === 'Neo2') {
+  }
+  private exportAllWallet() {
+    if (this.moreModalChainType === 'Neo2') {
       const neo2ExportWallet = new wallet2.Wallet({ name: 'NeoLineUser' });
       for (const item of this.neo2WalletArr as Wallet2[]) {
         if (item.accounts[0]?.extra?.ledgerSLIP44) {
@@ -363,7 +380,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       }
       const neo2ExportJson = JSON.stringify(neo2ExportWallet.export());
       this.exportWalletJson(neo2ExportJson, 'Neo2');
-    } else if (this.chainType === 'Neo3') {
+    } else if (this.moreModalChainType === 'Neo3') {
       const neo3ExportWallet = new wallet3.Wallet({ name: 'NeoLineUser' });
       for (const item of this.neo3WalletArr as Wallet3[]) {
         if (item.accounts[0]?.extra?.ledgerSLIP44) {
@@ -375,14 +392,28 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       }
       const neo3ExportJson = JSON.stringify(neo3ExportWallet.export());
       this.exportWalletJson(neo3ExportJson, 'Neo3');
-    } else if (this.chainType === 'NeoX') {
-      if (this.wallet.accounts[0]?.extra?.ledgerSLIP44) return;
-      const target = JSON.parse(JSON.stringify(this.wallet));
-      delete target.accounts;
-      const exportJson = JSON.stringify(target);
-      this.exportWalletJson(exportJson, this.chainType, this.wallet.name);
     }
   }
+  async exportWallet() {
+    if (!this.isOnePassword || this.moreModalChainType === 'NeoX') {
+      this.exportThisWallet();
+      return;
+    }
+    this.dialog
+      .open(PopupExportWalletDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+      })
+      .afterClosed()
+      .subscribe((res) => {
+        if (res === 'current') {
+          this.exportThisWallet();
+        }
+        if (res === 'all') {
+          this.exportAllWallet();
+        }
+      });
+  }
+
   private exportWalletJson(
     json: string,
     chainType: ChainType,
