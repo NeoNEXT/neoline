@@ -248,7 +248,7 @@ export class AssetEVMState {
 
   async sendDappTransaction(PreExecutionParams, txParams, privateKey: string) {
     try {
-      await this.provider.send('eth_call', [PreExecutionParams]);
+      await this.provider.send('eth_call', [PreExecutionParams, 'latest']);
     } catch (error) {
       throw this.handleEthersError(error);
     }
@@ -271,7 +271,7 @@ export class AssetEVMState {
   async sendTransactionByRPC(txRequest, PreExecutionParams?) {
     if (PreExecutionParams) {
       try {
-        await this.provider.send('eth_call', [PreExecutionParams]);
+        await this.provider.send('eth_call', [PreExecutionParams, 'latest']);
       } catch (error) {
         throw this.handleEthersError(error);
       }

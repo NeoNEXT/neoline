@@ -2,9 +2,7 @@ import {
   Component,
   EventEmitter,
   Input,
-  OnChanges,
   Output,
-  SimpleChanges,
 } from '@angular/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { EvmTransactionParams, RpcNetwork } from '@/app/popup/_lib';
@@ -16,7 +14,7 @@ import BigNumber from 'bignumber.js';
   templateUrl: './confirm-send-ether.component.html',
   styleUrls: ['./confirm-send-ether.component.scss'],
 })
-export class PopupNoticeEvmConfirmSendEtherComponent implements OnChanges {
+export class PopupNoticeEvmConfirmSendEtherComponent {
   @Input() locationOrigin: string;
   @Input() txParams: EvmTransactionParams;
   @Input() amount: string;
@@ -33,10 +31,6 @@ export class PopupNoticeEvmConfirmSendEtherComponent implements OnChanges {
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
 
   constructor() {}
-
-  ngOnChanges(changes: SimpleChanges): void {
-    console.log(changes);
-  }
 
   updateEvmFee($event) {
     this.neoXFeeInfo = $event;

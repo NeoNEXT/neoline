@@ -35,10 +35,7 @@
     <p class="error" *ngIf="maxFeeIsLowPriorityFee">
       {{ "Max fee cannot be lower than priority fee" }}
     </p>
-    <p
-      class="error"
-      *ngIf="!editEvmFeeForm.get('maxFeePerGas').errors?.errorLowPriorityFee && maxFeePerGasIsLow"
-    >
+    <p class="error" *ngIf="!maxFeeIsLowPriorityFee && maxFeePerGasIsLow">
       {{ "Max fee is low for current network conditions" }}
     </p>
     <p class="current">

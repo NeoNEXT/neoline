@@ -26,11 +26,16 @@
     methodName === EvmTransactionType.tokenMethodSafeTransferFrom
   "
   [txParams]="txParams"
-  [messageID]="messageID"
   [locationOrigin]="locationOrigin"
   [amount]="amount"
   [neoXFeeInfo]="neoXFeeInfo"
   [signAddressGasBalance]="signAddressGasBalance"
+  [estimateGasError]="estimateGasError"
+  [insufficientFunds]="insufficientFunds"
+  [neoXNetwork]="neoXNetwork"
+  (closeEvent)="exit()"
+  (updateFeeEvent)="updateEvmFee($event)"
+  (confirmEvent)="confirm()"
 ></confirm-send-token>
 
 <confirm-contract-interaction
