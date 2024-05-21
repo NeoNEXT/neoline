@@ -114,7 +114,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
         } catch {
           networkGasLimit = BigInt(42750000);
         }
-        this.assetEVMState.getGasInfo(networkGasLimit).subscribe((res) => {
+        this.assetEVMState.getGasInfo(networkGasLimit).then((res) => {
           this.sourceNeoXFeeInfo = res;
           if (!this.customNeoXFeeInfo?.custom) {
             this.returnFee.emit(Object.assign({}, res));

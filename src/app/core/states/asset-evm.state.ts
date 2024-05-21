@@ -111,73 +111,48 @@ export class AssetEVMState {
     return this.provider.estimateGas(txParams);
   }
 
-  getGasInfo(gasLimit: bigint): Observable<NeoXFeeInfoProp> {
-    return this.http
-      .post(this.neoXNetwork.rpcUrl, [
-        {
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'eth_getBlockByNumber',
-          params: ['latest', false],
-        },
-        {
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'eth_gasPrice',
-          params: [],
-        },
-        {
-          jsonrpc: '2.0',
-          id: 1,
-          method: 'eth_maxPriorityFeePerGas',
-          params: [],
-        },
-      ])
-      .pipe(
-        map((res) => {
-          let block;
-          let gasPrice: BigNumber | null = null;
-          let priorityFee: BigNumber | null = null;
-          if (res[0].result) block = res[0].result;
-          if (res[1].result) gasPrice = new BigNumber(res[1].result);
-          if (res[2].result) priorityFee = new BigNumber(res[2].result);
+  async getGasInfo(gasLimit: bigint): Promise<NeoXFeeInfoProp> {
+    let { block, gasPrice, priorityFee } = await ethers.resolveProperties({
+      block: this.provider.send('eth_getBlockByNumber', ['latest', false]),
+      gasPrice: this.provider.send('eth_gasPrice', []),
+      priorityFee: this.provider.send('eth_maxPriorityFeePerGas', []),
+    });
 
-          let maxFeePerGas: null | BigNumber = null;
-          let maxPriorityFeePerGas: null | BigNumber = null;
-          if (block.baseFeePerGas !== undefined) {
-            maxPriorityFeePerGas =
-              priorityFee != null ? priorityFee : new BigNumber('1000000000');
-            maxFeePerGas = new BigNumber(block.baseFeePerGas).plus(
-              maxPriorityFeePerGas
-            );
-            const estimateGas = new BigNumber(maxFeePerGas).times(
-              gasLimit.toString()
-            );
-            return {
-              maxFeePerGas: maxFeePerGas
-                ? maxFeePerGas.shiftedBy(-18).toFixed()
-                : undefined,
-              maxPriorityFeePerGas: maxPriorityFeePerGas
-                ? maxPriorityFeePerGas.shiftedBy(-18).toFixed()
-                : undefined,
-              gasLimit: gasLimit.toString(),
-              estimateGas: estimateGas.shiftedBy(-18).toFixed(),
-            };
-          }
+    gasPrice = new BigNumber(gasPrice);
+    priorityFee = new BigNumber(priorityFee);
 
-          const estimateGas = new BigNumber(gasPrice).times(
-            gasLimit.toString()
-          );
-          return {
-            gasPrice: gasPrice ? gasPrice.shiftedBy(-18).toFixed() : undefined,
-            gasLimit: gasLimit.toString(),
-            estimateGas: estimateGas.shiftedBy(-18).toFixed(),
-          };
-        })
+    let maxFeePerGas: null | BigNumber = null;
+    let maxPriorityFeePerGas: null | BigNumber = null;
+    if (block.baseFeePerGas !== undefined) {
+      maxPriorityFeePerGas =
+        priorityFee != null ? priorityFee : new BigNumber('1000000000');
+      maxFeePerGas = new BigNumber(block.baseFeePerGas).plus(
+        maxPriorityFeePerGas
       );
+      const estimateGas = new BigNumber(maxFeePerGas).times(
+        gasLimit.toString()
+      );
+      return {
+        maxFeePerGas: maxFeePerGas
+          ? maxFeePerGas.shiftedBy(-18).toFixed()
+          : undefined,
+        maxPriorityFeePerGas: maxPriorityFeePerGas
+          ? maxPriorityFeePerGas.shiftedBy(-18).toFixed()
+          : undefined,
+        gasLimit: gasLimit.toString(),
+        estimateGas: estimateGas.shiftedBy(-18).toFixed(),
+      };
+    }
+
+    const estimateGas = new BigNumber(gasPrice).times(gasLimit.toString());
+    return {
+      gasPrice: gasPrice ? gasPrice.shiftedBy(-18).toFixed() : undefined,
+      gasLimit: gasLimit.toString(),
+      estimateGas: estimateGas.shiftedBy(-18).toFixed(),
+    };
   }
 
-  async transferErc20({
+  getTransferErc20TxRequest({
     asset,
     toAddress,
     transferAmount,
@@ -185,7 +160,6 @@ export class AssetEVMState {
     maxPriorityFeePerGas,
     gasLimit,
     gasPrice,
-    privateKey,
   }: {
     asset: Asset;
     toAddress: string;
@@ -194,8 +168,7 @@ export class AssetEVMState {
     maxPriorityFeePerGas?: string;
     gasPrice?: string;
     gasLimit: string;
-    privateKey: string;
-  }) {
+  }): ethers.TransactionRequest {
     const maxFeePerGasBN = maxFeePerGas
       ? BigInt(new BigNumber(maxFeePerGas).shiftedBy(18).toFixed(0, 1))
       : undefined;
@@ -233,6 +206,37 @@ export class AssetEVMState {
         gasPrice: gasPriceBN,
       };
     }
+    return txRequest;
+  }
+
+  async transferErc20({
+    asset,
+    toAddress,
+    transferAmount,
+    maxFeePerGas,
+    maxPriorityFeePerGas,
+    gasLimit,
+    gasPrice,
+    privateKey,
+  }: {
+    asset: Asset;
+    toAddress: string;
+    transferAmount: string;
+    maxFeePerGas?: string;
+    maxPriorityFeePerGas?: string;
+    gasPrice?: string;
+    gasLimit: string;
+    privateKey: string;
+  }) {
+    const txRequest = this.getTransferErc20TxRequest({
+      asset,
+      toAddress,
+      transferAmount,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      gasLimit,
+      gasPrice,
+    });
     const wallet = new ethers.Wallet(privateKey, this.provider);
     try {
       const tx = await wallet.sendTransaction(txRequest);
@@ -244,11 +248,9 @@ export class AssetEVMState {
 
   async sendDappTransaction(PreExecutionParams, txParams, privateKey: string) {
     try {
-      await firstValueFrom(this.getPreExecutionResult(PreExecutionParams), {
-        defaultValue: false,
-      });
+      await this.provider.send('eth_call', [PreExecutionParams]);
     } catch (error) {
-      throw error;
+      throw this.handleEthersError(error);
     }
     const wallet = new ethers.Wallet(privateKey, this.provider);
     try {
@@ -259,25 +261,16 @@ export class AssetEVMState {
     }
   }
 
-  private getPreExecutionResult(
-    txParams,
-    showError = true
-  ): Observable<boolean> {
-    return this.http
-      .post(this.neoXNetwork.rpcUrl, {
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'eth_call',
-        params: [txParams],
-      })
-      .pipe(
-        map((res: any) => {
-          if (res.error) {
-            throw res.error.message;
-          }
-          return true;
-        })
-      );
+  async getNonce(address: string) {
+    return await this.provider.send('eth_getTransactionCount', [
+      address,
+      'latest',
+    ]);
+  }
+
+  async sendTransaction(txRequest) {
+    const serializedTx = ethers.Transaction.from(txRequest).serialized;
+    return this.provider.send('eth_sendRawTransaction', [serializedTx]);
   }
 
   async waitForTx(hash: string) {
@@ -312,11 +305,12 @@ export class AssetEVMState {
 
   private handleEthersError(error) {
     console.log(error);
-    const code = error.data.replace('Reverted ', '');
-    let reason = ethers.toUtf8String('0x' + code.substr(138));
-    console.log('revert reason:', reason);
+    if (error.data) {
+      const code = error.data.replace('Reverted ', '');
+      let reason = ethers.toUtf8String('0x' + code.substr(138));
+      console.log('revert reason:', reason);
+    }
     const message = error?.info?.error?.message;
-
     return `Transaction failed: ${message}`;
   }
   //#endregion

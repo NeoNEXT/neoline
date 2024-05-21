@@ -30,6 +30,7 @@ import { interval } from 'rxjs';
 import { Neo3TransferService } from '../../neo3-transfer.service';
 import { AssetEVMState } from '@/app/core/states/asset-evm.state';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
+import { ethers } from 'ethers';
 
 export type TabType = 'details' | 'data';
 
@@ -60,6 +61,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
 
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   evmHexData: string;
+  unsignedEvmTx: ethers.TransactionRequest;
 
   constructor(
     private assetState: AssetState,
@@ -134,8 +136,11 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   //#endregion
 
   //#region sign tx
-  confirm() {
+  async confirm() {
     if (this.data.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
+      if (this.data.chainType === 'NeoX') {
+        await this.getEvmTxData();
+      }
       this.loading = true;
       this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
       this.getLedgerStatus();
@@ -157,18 +162,47 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     }
     this.resolveSend();
   }
+  private async getEvmTxData() {
+    const { asset, to, amount, neoXFeeInfo } = this.data;
+    const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
+      neoXFeeInfo;
+    this.unsignedEvmTx = this.assetEvmState.getTransferErc20TxRequest({
+      asset: asset,
+      toAddress: to.address,
+      transferAmount: amount,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      gasLimit,
+      gasPrice,
+    });
+    const nonce = await this.assetEvmState.getNonce(
+      this.data.currentWallet.accounts[0].address
+    );
+    this.unsignedEvmTx.nonce = nonce;
+  }
   private getLedgerStatus() {
     this.ledger.getDeviceStatus(this.data.chainType).then(async (res) => {
-      this.loadingMsg =
-        this.data.chainType === 'Neo2'
-          ? LedgerStatuses[res].msg
-          : LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
+      switch (this.data.chainType) {
+        case 'Neo2':
+          this.loadingMsg = LedgerStatuses[res].msg;
+          break;
+        case 'Neo3':
+          this.loadingMsg =
+            LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
+          break;
+        case 'NeoX':
+          this.loadingMsg =
+            LedgerStatuses[res].msgNeoX || LedgerStatuses[res].msg;
+          break;
+      }
       if (LedgerStatuses[res] === LedgerStatuses.READY) {
         this.getStatusInterval.unsubscribe();
         this.loadingMsg = 'signTheTransaction';
         this.ledger
           .getLedgerSignedTx(
-            this.unsignedTx,
+            this.data.chainType === 'NeoX'
+              ? this.unsignedEvmTx
+              : this.unsignedTx,
             this.data.currentWallet,
             this.data.chainType,
             this.data.network.magicNumber
@@ -176,6 +210,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
           .then((tx) => {
             this.loading = false;
             this.unsignedTx = tx;
+            this.unsignedEvmTx = tx;
             this.resolveSend();
           })
           .catch((error) => {
@@ -218,20 +253,25 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
           break;
         case 'NeoX':
           this.loading = true;
-          const { asset, to, amount, currentWIF, neoXFeeInfo } = this.data;
-          const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
-            neoXFeeInfo;
-          res = await this.assetEvmState.transferErc20({
-            asset: asset,
-            toAddress: to.address,
-            transferAmount: amount,
-            maxFeePerGas,
-            maxPriorityFeePerGas,
-            gasLimit,
-            gasPrice,
-            privateKey: currentWIF,
-          });
-          txid = res.hash;
+          const { currentWIF } = this.data;
+          if (this.data.currentWallet.accounts[0].extra.ledgerSLIP44) {
+            txid = await this.assetEvmState.sendTransaction(this.unsignedEvmTx);
+          } else {
+            const { asset, to, amount, neoXFeeInfo } = this.data;
+            const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
+              neoXFeeInfo;
+            res = await this.assetEvmState.transferErc20({
+              asset: asset,
+              toAddress: to.address,
+              transferAmount: amount,
+              maxFeePerGas,
+              maxPriorityFeePerGas,
+              gasLimit,
+              gasPrice,
+              privateKey: currentWIF,
+            });
+            txid = res.hash;
+          }
           break;
       }
       if (

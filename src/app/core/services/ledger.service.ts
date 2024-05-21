@@ -24,8 +24,9 @@ import { map } from 'rxjs/operators';
 import BigNumber from 'bignumber.js';
 import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
-import Eth from '@ledgerhq/hw-app-eth';
+import Eth, { ledgerService } from '@ledgerhq/hw-app-eth';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
+import { ethers } from 'ethers';
 
 export const LedgerStatuses = {
   UNSUPPORTED: 'UNSUPPORTED',
@@ -46,6 +47,7 @@ export class LedgerService {
 
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
+  private neoXNetwork: RpcNetwork;
   constructor(
     private http: HttpService,
     private global: GlobalService,
@@ -55,6 +57,7 @@ export class LedgerService {
     account$.subscribe((state) => {
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
     });
   }
 
@@ -146,12 +149,20 @@ export class LedgerService {
   }
 
   getLedgerSignedTx(
-    unsignedTx: Transaction2 | Transaction3 | string,
+    unsignedTx:
+      | Transaction2
+      | Transaction3
+      | string
+      | ethers.TransactionRequest,
     wallet: Wallet2 | Wallet3 | EvmWalletJSON,
     chainType: ChainType,
     magicNumber?: number,
     signOnly = false
   ): Promise<any> {
+    if (chainType === 'NeoX') {
+      return this.getNeoXSignature(unsignedTx, wallet as EvmWalletJSON);
+    }
+
     const txIsString = typeof unsignedTx === 'string';
     const serTx = txIsString
       ? unsignedTx
@@ -221,6 +232,32 @@ export class LedgerService {
   }
 
   //#region private function
+  private async getNeoXSignature(txData, wallet: EvmWalletJSON) {
+    txData.chainId = this.neoXNetwork.chainId;
+    let unsignedTx = ethers.Transaction.from(txData).unsignedSerialized;
+    unsignedTx = unsignedTx.startsWith('0x')
+      ? unsignedTx.substring(2)
+      : unsignedTx;
+
+    const resolution = await ledgerService.resolveTransaction(
+      unsignedTx,
+      {},
+      {}
+    );
+    const result = await this.ethTransport.signTransaction(
+      `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+      unsignedTx,
+      resolution
+    );
+    return {
+      ...txData,
+      signature: {
+        r: `0x${result.r}`,
+        s: `0x${result.s}`,
+        v: `0x${result.v}`,
+      },
+    };
+  }
   private getNeo2Signature({ data, addressIndex }) {
     try {
       data += this.BIP44(addressIndex);

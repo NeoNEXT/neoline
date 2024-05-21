@@ -226,7 +226,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       gasPrice: networkGasPrice,
       maxFeePerGas: networkMaxFeePerGas,
       maxPriorityFeePerGas: networkMaxPriorityFeePerGas,
-    } = await this.assetEVMState.getGasInfo(networkGasLimit).toPromise();
+    } = await this.assetEVMState.getGasInfo(networkGasLimit);
     const newGasLimit: string = gas
       ? new BigNumber(gas, 16).toFixed()
       : networkGasLimit.toString();
