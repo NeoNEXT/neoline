@@ -1,7 +1,23 @@
 <div class="container">
   <div class="header transfer">
     <p class="origin">{{ locationOrigin }}</p>
-    <div class="type">{{ contractMethodData }}</div>
+    <div class="type">
+      <span class="address">{{ txParams?.to | longStr : 5 }}</span
+      >: {{ contractMethodData?.name }}
+    </div>
+    <div class="asset">
+      <div class="asset-logo-box small">
+        <img
+          [assetId]="ETH_SOURCE_ASSET_HASH"
+          chain="NeoX"
+          appErrorSrc
+          alt=""
+        />
+      </div>
+      <p class="amount" *ngIf="getShowAmount()">
+        {{ getShowAmount() }} {{ neoXNetwork?.symbol }}
+      </p>
+    </div>
     <div class="address-group">
       <div class="item">
         <img class="avatar" [avatar]="txParams?.from" />
@@ -50,8 +66,12 @@
   </div>
   <div class="content data" *ngIf="tabType === 'data'">
     <p class="title">
-      FUNCTION TYPE: <span class="value">{{ contractMethodData }}</span>
+      FUNCTION TYPE:
+      <span class="value">{{ contractMethodData?.fourByteSig }}</span>
     </p>
+    <pre class="json-box serialize" *ngIf="contractMethodData?.params">{{
+      contractMethodData?.params | json
+    }}</pre>
     <p class="hex-label">
       HEX DATA: {{ txParams.data !== "0x" ? txParams.data?.length : 0 }} BYTES
     </p>

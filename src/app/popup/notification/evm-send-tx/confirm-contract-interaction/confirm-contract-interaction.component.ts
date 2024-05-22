@@ -3,6 +3,7 @@ import { DappEVMState } from '@/app/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { EvmTransactionParams, RpcNetwork } from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
+import BigNumber from 'bignumber.js';
 
 type TabType = 'details' | 'data';
 
@@ -29,16 +30,25 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
 
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   tabType: TabType = 'details';
-  contractMethodData: string;
+  contractMethodData: { fourByteSig: string; name: string; params: any[] };
   constructor(private dappEVMState: DappEVMState) {}
 
   ngOnInit(): void {
     this.dappEVMState
       .getContractMethodData(this.txParams.data)
       .subscribe((res) => {
-        console.log(res);
         this.contractMethodData = res;
       });
+  }
+
+  getShowAmount() {
+    if (!!this.amount) {
+      const newAmount = new BigNumber(this.amount).dp(8, 1).toFixed();
+      if (newAmount === '0') {
+        return '< 0.0000001';
+      }
+      return newAmount;
+    }
   }
 
   updateEvmFee($event) {

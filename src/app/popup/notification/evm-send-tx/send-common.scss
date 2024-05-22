@@ -17,6 +17,9 @@
       font-family: NeverMind-Regular;
       color: var(--important-title-color);
       word-break: break-all;
+      .address {
+        font-size: 12px;
+      }
     }
     .asset {
       display: flex;

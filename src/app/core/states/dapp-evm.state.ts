@@ -52,12 +52,22 @@ export class DappEVMState {
     const prefixedData = addHexPrefix(data);
     const fourBytePrefix = prefixedData.slice(0, 10);
     if (fourBytePrefix.length < 10) {
-      return of('');
+      return of(undefined);
     }
 
     return this.getMethodFrom4Byte(fourBytePrefix).pipe(
       map((fourByteSig) => {
-        return fourByteSig;
+        if (!fourByteSig) {
+          return undefined;
+        }
+
+        const parsedResult = this.parseMethodFrom4Byte(fourByteSig);
+
+        return {
+          name: parsedResult.name,
+          params: parsedResult.args,
+          fourByteSig,
+        };
       })
     );
   }
@@ -82,8 +92,6 @@ export class DappEVMState {
       )
       .pipe(
         map((fourByteResponse: any) => {
-          console.log(fourByteResponse);
-
           fourByteResponse.results.sort((a, b) => {
             return new Date(a.created_at).getTime() <
               new Date(b.created_at).getTime()
@@ -93,6 +101,41 @@ export class DappEVMState {
           return fourByteResponse.results[0].text_signature;
         })
       );
+  }
+
+  private parseMethodFrom4Byte(signature) {
+    const rawName = signature.match(/^([^)(]*)\((.*)\)([^)(]*)$/u);
+    let parsedName;
+    if (rawName) {
+      parsedName =
+        rawName[1].charAt(0).toUpperCase() +
+        rawName[1]
+          .slice(1)
+          .split(/(?=[A-Z])/u)
+          .join(' ');
+    } else {
+      parsedName = '';
+    }
+    if (rawName) {
+      const match = signature.match(
+        new RegExp(`${rawName[1]}\\(+([a-z1-9,()\\[\\]]+)\\)`, 'u')
+      );
+      let matches;
+      let args = [];
+      if (match) {
+        matches = match[1].match(/[A-z1-9]+/gu);
+        if (matches) {
+          args = matches.map((arg) => {
+            return { type: arg };
+          });
+        }
+      }
+      return {
+        name: parsedName,
+        args,
+      };
+    }
+    return {};
   }
 
   async getAssetDetails(
