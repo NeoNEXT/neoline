@@ -51,6 +51,15 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
     }
   }
 
+  getEvmTotalData() {
+    if (!!this.amount && !!this.neoXFeeInfo?.estimateGas) {
+      return new BigNumber(this.amount)
+        .plus(this.neoXFeeInfo.estimateGas)
+        .dp(8, 1)
+        .toFixed();
+    }
+  }
+
   updateEvmFee($event) {
     this.neoXFeeInfo = $event;
     this.updateFeeEvent.emit($event);
