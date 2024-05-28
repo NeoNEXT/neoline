@@ -51,10 +51,10 @@
     {{ "showPrivateKey" | translate | async }}
   </button>
   <button *ngIf="showMnemonicBtn" class="mnemonic" (click)="wif(true)">
-    {{ "Show secret recovery phrase" }}
+    {{ "showSecretRecoveryPhrase" | translate | async }}
   </button>
 </div>
 
 <button *ngIf="showRemoveBtn" class="pop-ups remove" (click)="removeAccount()">
-  {{ "remove" | translate | async }}
+  {{ "removeAccount" | translate | async }}
 </button>

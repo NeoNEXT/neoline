@@ -1,5 +1,5 @@
 <div class="pop-ups-title">
-  {{ 'Advanced gas fee' }}
+  {{ 'advancedGasFee' | translate | async }}
   <img
     class="close"
     [mat-dialog-close]="false"
@@ -11,18 +11,17 @@
 
 <div class="add-tip">
   <img src="assets/images/common/warning.svg" alt="" />
-  Use Advanced to customize the gas price. This can be confusing if you aren’t
-  familiar. Interact at your own risk.
+  {{'advancedGasFeeRisk' | translate | async}}
 </div>
 
 <p class="custom">
-  Custom: {{ data.customNeoXFeeInfo.estimateGas | numberFixed:8 }}
-  {{data.symbol}}
+  {{ 'customize' | translate | async }}: {{ data.customNeoXFeeInfo.estimateGas |
+  numberFixed:8 }} {{data.symbol}}
 </p>
 
 <form class="container" [formGroup]="editEvmFeeForm">
   <div class="item" *ngIf="isEIP1559">
-    <p class="label">{{ 'Max Fee (GWEI)' }}</p>
+    <p class="label">{{ 'maxFee' | translate | async }} (GWEI)</p>
     <mat-form-field class="form-field" appearance="outline">
       <input
         matInput
@@ -33,18 +32,19 @@
       />
     </mat-form-field>
     <p class="error" *ngIf="maxFeeIsLowPriorityFee">
-      {{ "Max fee cannot be lower than priority fee" }}
+      {{ "maxFeeIsLowPriorityFee" | translate | async }}
     </p>
     <p class="error" *ngIf="!maxFeeIsLowPriorityFee && maxFeePerGasIsLow">
-      {{ "Max fee is low for current network conditions" }}
+      {{ "maxFeeIsLow" | translate | async }}
     </p>
     <p class="current">
-      current: {{getValueByGWEI(data.sourceNeoXFeeInfo.maxFeePerGas)}}
+      {{'current' | translate | async}}:
+      {{getValueByGWEI(data.sourceNeoXFeeInfo.maxFeePerGas)}}
     </p>
   </div>
 
   <div class="item" *ngIf="isEIP1559">
-    <p class="label">{{ 'Priority Fee (GWEI)' }}</p>
+    <p class="label">{{ 'maxPriorityFee' | translate | async }} (GWEI)</p>
     <mat-form-field class="form-field" appearance="outline">
       <input
         matInput
@@ -55,15 +55,16 @@
       />
     </mat-form-field>
     <p class="error" *ngIf="maxPriorityFeeIsLow">
-      {{ "Priority fee is low for current network conditions" }}
+      {{ "maxPriorityFeeIsLow" | translate | async }}
     </p>
     <p class="current">
-      current: {{getValueByGWEI(data.sourceNeoXFeeInfo.maxPriorityFeePerGas)}}
+      {{'current' | translate | async}}:
+      {{getValueByGWEI(data.sourceNeoXFeeInfo.maxPriorityFeePerGas)}}
     </p>
   </div>
 
   <div class="item" *ngIf="!isEIP1559">
-    <p class="label">{{ 'Gas Price (GWEI)' }}</p>
+    <p class="label">{{ 'gasPrice' | translate | async }}(GWEI)</p>
     <mat-form-field class="form-field" appearance="outline">
       <input
         matInput
@@ -74,15 +75,16 @@
       />
     </mat-form-field>
     <p class="error" *ngIf="gasPriceIsLow">
-      {{ "Gas Price is low for current network conditions" }}
+      {{ "gasPriceIsLow" | translate | async }}
     </p>
     <p class="current">
-      current: {{getValueByGWEI(data.sourceNeoXFeeInfo.gasPrice)}}
+      {{'current' | translate | async}}:
+      {{getValueByGWEI(data.sourceNeoXFeeInfo.gasPrice)}}
     </p>
   </div>
 
   <div class="item">
-    <p class="label">{{ 'Gas Limit' }}</p>
+    <p class="label">{{ 'gasLimit' | translate | async }}</p>
     <mat-form-field class="form-field" appearance="outline">
       <input
         matInput
@@ -98,7 +100,7 @@
       class="error"
       *ngIf="editEvmFeeForm.get('gasLimit').errors?.min || editEvmFeeForm.get('gasLimit').errors?.max"
     >
-      {{ "Gas limit must be greater than 20999 and less than 7920027" }}
+      {{ "gasLimitRange" | translate | async }}
     </p>
   </div>
 </form>

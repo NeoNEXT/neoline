@@ -3,8 +3,7 @@
     <div class="invoke-type">· {{ "SIGNMESSAGE" }}</div>
     <p class="title">{{ "thSignTitle" | translate | async }}</p>
     <p class="warning">
-      Only sign this message if you fully understand the content and trust the
-      requesting site.
+      {{ "evmSignWarning" | translate | async }}
     </p>
     <p class="account">
       <img [avatar]="signAddress" />{{ signAddress | longStr : 10 }}

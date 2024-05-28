@@ -2,9 +2,12 @@
   <p class="title">{{ "YourSecretRecoveryPhrase" | translate | async }}</p>
   <p class="tip">
     {{
-      isConfirmMnemonic
-        ? ("ConfirmTheSecretRecoveryPhrasesInOrder" | translate | async)
-        : "请将助记词抄写备份并妥善保管，不要透漏给任何人"
+      (isConfirmMnemonic
+        ? "ConfirmTheSecretRecoveryPhrasesInOrder"
+        : "backupSecretRecoveryPhrase"
+      )
+        | translate
+        | async
     }}
   </p>
 
@@ -40,12 +43,16 @@
             : 'assets/images/login/eye-hide.svg'
         "
       />
-      {{ hideMnemonic ? "显示助记词" : "隐藏助记词" }}
+      {{
+        (hideMnemonic ? "showSecretRecoveryPhrase" : "hideSecretRecoveryPhrase")
+          | translate
+          | async
+      }}
     </p>
     <copy [value]="mnemonic">
       <p class="item">
         <img theme src="assets/images/common/copy-mnemonic.svg" />
-        复制到剪切板
+        {{ "CopyToClipboard" | translate | async }}
       </p>
     </copy>
   </div>

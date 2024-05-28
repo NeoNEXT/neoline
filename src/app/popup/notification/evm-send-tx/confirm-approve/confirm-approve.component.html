@@ -2,13 +2,13 @@
   <div class="header transfer">
     <p class="origin">{{ locationOrigin }}</p>
     <p>
-      Approve {{ assetDetails?.symbol }}
+      {{ "Approve" | translate | async }} {{ assetDetails?.symbol }}
       <copy [value]="txParams.to" [showTip]="false">
         <img theme src="assets/images/common/copy-color.svg" />
       </copy>
     </p>
     <p>
-      Custom spending cap:
+      {{ "CustomSpendingCap" | translate | async }}:
       <input type="text" [value]="assetDetails?.tokenAmount" />
     </p>
     <div class="address-group">
@@ -32,7 +32,7 @@
   <div class="content details" *ngIf="tabType === 'details'">
     <div class="warning-tip top" *ngIf="estimateGasError">
       <img src="assets/images/common/warning-red.svg" alt="" />
-      {{ "我们无法估算燃料。合约中可能存在错误，这笔交易可能会失败。" }}
+      {{ "EstimatedFeeError" | translate | async }}
     </div>
     <evm-fee
       *ngIf="neoXFeeInfo"

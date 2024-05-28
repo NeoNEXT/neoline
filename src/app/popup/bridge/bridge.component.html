@@ -10,11 +10,14 @@
   <div class="asset">{{ bridgeAsset.symbol }}</div>
   <div class="item from">
     <div class="label">
-      <span>From</span>
+      <span>{{ "From" | translate | async }}</span>
       <p class="balance">
-        Balance: {{ bridgeAsset.balance || 0 | numberFixed : 8 }}
+        {{ "Balance" | translate | async }}:
+        {{ bridgeAsset.balance || 0 | numberFixed : 8 }}
         {{ bridgeAsset.symbol }}
-        <span class="max" (click)="bridgeAll()">MAX</span>
+        <span class="max" (click)="bridgeAll()">{{
+          "Max" | translate | async
+        }}</span>
       </p>
     </div>
     <div class="input-amount">
@@ -40,18 +43,18 @@
   </div>
   <div class="item to">
     <img class="exchange" src="assets/images/bridge/exchange.svg" alt="" />
-    <div class="label">To Address</div>
+    <div class="label">{{ "ToAddress" | translate | async }}</div>
     <div class="input-amount">
       <span class="chain">{{ toChain }}</span>
     </div>
   </div>
   <ul class="fee">
     <li>
-      <span class="label">Bridge Fee</span>
+      <span class="label">{{ "bridgeFee" | translate | async }}</span>
       <p>0.1 {{ bridgeAsset.symbol }}</p>
     </li>
     <li>
-      <span class="label">Actual Receive</span>
+      <span class="label">{{ "ActualReceive" | translate | async }}</span>
       <p>{{ getActualReceive() }} {{ bridgeAsset.symbol }}</p>
     </li>
   </ul>
@@ -60,7 +63,7 @@
     [ngClass]="{ disabled: !bridgeAmount }"
     (click)="confirm()"
   >
-    {{ "Deposit" }}
+    {{ "Deposit" | translate | async }}
   </button>
 </div>
 

@@ -1,13 +1,13 @@
 <div class="content">
   <img src="assets/images/avatar-menu/wallet-export.svg" alt="" />
-  <p class="title">Are you sure to export this wallet ?</p>
+  <p class="title">{{ 'checkExportWallet' | translate | async }}</p>
   <p class="export-all">
     <span
       class="select"
       [ngClass]="{active: exportAll}"
       (click)="exportAll = !exportAll"
     ></span
-    >Export all wallets on this network
+    >{{ 'exportAllWallet' | translate | async }}
   </p>
 </div>
 

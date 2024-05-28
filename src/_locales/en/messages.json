@@ -990,16 +990,16 @@
     "message": "Address Book"
   },
   "receiveTip1Prefix": {
-    "message": ""
+    "message": "Currently under"
   },
   "receiveTip1Suffix": {
-    "message": ""
+    "message": "network"
   },
   "receiveTip2Prefix": {
-    "message": ""
+    "message": "Only supports receiving"
   },
   "receiveTip2Suffix": {
-    "message": ""
+    "message": "network assets"
   },
   "ConfirmSecretRecoveryPhrase": {
     "message": "Confirm Secret Recovery Phrase"
@@ -1094,6 +1094,9 @@
   "showSecretRecoveryPhrase": {
     "message": "Show Secret Recovery Phrase"
   },
+  "hideSecretRecoveryPhrase": {
+    "message": "Show Secret Recovery Phrase"
+  },
   "secretRecoveryPhrase": {
     "message": "Secret Recovery Phrase"
   },
@@ -1132,5 +1135,95 @@
   },
   "Bridge": {
     "message": "Bridge"
+  },
+  "checkExportWallet": {
+    "message": "Are you sure to export this wallet?"
+  },
+  "exportAllWallet": {
+    "message": "Export all wallets on this network"
+  },
+  "advancedGasFee": {
+    "message": "Advanced gas fee"
+  },
+  "advancedGasFeeRisk": {
+    "message": "Use Advanced to customize the gas price. This can be confusing if you aren’t familiar. Interact at your own risk."
+  },
+  "maxFee": {
+    "message": "Max Fee"
+  },
+  "maxPriorityFee": {
+    "message": "Priority Fee"
+  },
+  "gasPrice": {
+    "message": "Gas Price"
+  },
+  "gasLimit": {
+    "message": "Gas Limit"
+  },
+  "maxFeeIsLowPriorityFee": {
+    "message": "Max fee cannot be lower than priority fee"
+  },
+  "maxFeeIsLow": {
+    "message": "Max fee is low for current network conditions"
+  },
+  "current": {
+    "message": "current"
+  },
+  "maxPriorityFeeIsLow": {
+    "message": "Priority fee is low for current network conditions"
+  },
+  "gasPriceIsLow": {
+    "message": "Gas Price is low for current network conditions"
+  },
+  "gasLimitRange": {
+    "message": "Gas limit must be greater than 20999 and less than 7920027"
+  },
+  "backupSecretRecoveryPhrase": {
+    "message": "Please back up the secret recovery phrase in handwriting and keep it in a safe place. Don't show it to anyone."
+  },
+  "EstimatedFee": {
+    "message": "Estimated fee"
+  },
+  "Deposit": {
+    "message": "Deposit"
+  },
+  "Withdraw": {
+    "message": "Withdraw"
+  },
+  "From": {
+    "message": "From"
+  },
+  "Balance": {
+    "message": "Balance"
+  },
+  "Max": {
+    "message": "Max"
+  },
+  "ToAddress": {
+    "message": "To Address"
+  },
+  "bridgeFee": {
+    "message": "Bridge Fee"
+  },
+  "bridgeFeeDesc": {
+    "message": "The bridge contract charges 0.1 GAS, and the platform does not charge any other fees."
+  },
+  "ActualReceive": {
+    "message": "Actual Receive"
+  },
+  "Approve": {
+    "message": "Approve"
+  },
+  "CustomSpendingCap": {
+    "message": "Custom spending cap"
+  },
+  "EstimatedFeeError": {
+    "message": "We were not able to estimate gas. There might be an error in the contract and this transaction may fail."
+  },
+  "Sending": {
+    "message": "Sending"
+  },
+  "evmSignWarning": {
+    "message": "Only sign this message if you fully understand the content and trust the requesting site."
   }
 }
