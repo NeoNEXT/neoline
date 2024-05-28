@@ -50,7 +50,10 @@
   </div>
   <ul class="fee">
     <li>
-      <span class="label">{{ "bridgeFee" | translate | async }}</span>
+      <span class="label">
+        {{ "bridgeFee" | translate | async }}
+        <tooltip [tip]="'bridgeFeeDesc' | translate | async"></tooltip>
+      </span>
       <p>0.1 {{ bridgeAsset.symbol }}</p>
     </li>
     <li>

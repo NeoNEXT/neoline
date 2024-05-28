@@ -38,6 +38,7 @@ import { PopupNetworkComponent } from './components/network/network.component';
 import { PopupAvatarMenuComponent } from './components/avatar-menu/avatar-menu.component';
 import { CopyComponent } from './components/copy/copy.component';
 import { EvmFeeComponent } from './components/evm-fee/evm-fee.component';
+import { TooltipComponent } from './components/tooltip/tooltip.component';
 const COMPONENTS = [
   AssetTxPageComponent,
   NftTxPageComponent,
@@ -47,6 +48,7 @@ const COMPONENTS = [
   PopupAvatarMenuComponent,
   CopyComponent,
   EvmFeeComponent,
+  TooltipComponent,
 ];
 //#endregion
 

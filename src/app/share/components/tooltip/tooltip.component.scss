@@ -1,0 +1,26 @@
+.content {
+  position: relative;
+  img {
+    cursor: pointer;
+  }
+  .tip {
+    position: absolute;
+    top: 20px;
+    left: 0;
+    display: inline-block;
+    width: max-content;
+    font-size: 12px;
+    line-height: 16px;
+    max-width: 200px;
+    padding: 8px;
+    border-radius: 4px;
+    color: var(--important-title-color);
+    background: #ffffff;
+    box-shadow: var(--small-box-shadow);
+    z-index: 999;
+    pointer-events: none;
+    :host-context([data-theme-style="dark-theme"]) & {
+      background: #43464d;
+    }
+  }
+}
