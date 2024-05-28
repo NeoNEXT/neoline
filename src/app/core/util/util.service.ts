@@ -67,6 +67,15 @@ export class UtilServiceState {
     });
   }
 
+  getHexDataLength(henData: string) {
+    if (!henData) return;
+    let value = henData.startsWith('0x') ? henData.substring(2) : henData;
+    if (value.length >= 2 && value.length % 2 === 0) {
+      return value.length / 2;
+    }
+    return 0;
+  }
+
   parseUrl(url: string): any {
     const query = url.slice(url.indexOf('?') + 1);
     const pairs = query.split('&');

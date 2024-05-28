@@ -84,6 +84,10 @@
         <img theme src="assets/images/transfer/transfer.svg" alt="" />
         {{ "transfer" | translate | async }}
       </div>
+      <div class="item receive" [routerLink]="['/popup/bridge']">
+        <img theme src="assets/images/bridge/bridge.svg" alt="" />
+        {{ "Bridge" | translate | async }}
+      </div>
     </div>
 
     <div class="claim-container" *ngIf="showClaim">

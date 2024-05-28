@@ -1129,5 +1129,8 @@
   },
   "disconnectThisAccount": {
     "message": "断开此账户的连接"
+  },
+  "Bridge": {
+    "message": "Bridge"
   }
 }

@@ -1,0 +1,97 @@
+@import "src/styles/tab-container.scss";
+
+.tabs-container {
+  border-bottom: 1px solid var(--line-color);
+}
+
+section.container {
+  ul.details-content {
+    height: 220px;
+    overflow-y: scroll;
+    &::-webkit-scrollbar {
+      display: block;
+    }
+    padding: 16px 24px;
+    li {
+      margin-top: 30px;
+      &:first-child {
+        margin-top: 0;
+      }
+      .row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        &.tip {
+          justify-content: flex-end;
+          color: var(--sub-title-color);
+          font-family: NeverMind-Regular;
+          font-size: 12px;
+          margin-top: 6px;
+          &.column {
+            justify-content: space-between;
+          }
+        }
+        &.evm {
+          .label.tip {
+            font-family: NeverMind-Regular;
+            font-size: 12px;
+            margin-top: 6px;
+          }
+          .value {
+            line-height: 1.5;
+          }
+        }
+        img.edit {
+          margin-left: 12px;
+        }
+        .label {
+          color: var(--sub-title-color);
+        }
+      }
+    }
+  }
+  .data-content {
+    height: 220px;
+    overflow-y: scroll;
+    padding: 16px 24px;
+    &::-webkit-scrollbar {
+      display: block;
+    }
+    .title {
+      color: var(--sub-title-color);
+      &.hex {
+        margin-top: 24px;
+      }
+      .value {
+        color: var(--title-color);
+      }
+    }
+    .json-box {
+      border-radius: 4px;
+      background: var(--message-box-color);
+      line-height: 20px;
+      margin-top: 8px;
+      padding: 12px 16px;
+      color: var(--sub-title-color);
+      &.serialize {
+        padding: 12px;
+        word-break: break-all;
+      }
+      pre {
+        white-space: pre-wrap;
+        word-break: break-all;
+        font-size: 14px;
+      }
+    }
+  }
+  .btn-group {
+    padding: 0 24px;
+    margin-top: 16px;
+    button {
+      width: calc(50% - 8px);
+      &:first-child {
+        margin-right: 16px;
+      }
+    }
+  }
+}

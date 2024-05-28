@@ -1129,5 +1129,8 @@
   },
   "disconnectThisAccount": {
     "message": "Disconnect this account"
+  },
+  "Bridge": {
+    "message": "Bridge"
   }
 }

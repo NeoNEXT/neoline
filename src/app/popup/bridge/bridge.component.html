@@ -1,0 +1,94 @@
+<nav title="Bridge" *ngIf="!showConfirmPage"></nav>
+<nav
+  title="Bridge"
+  [backUrl]="'/popup/bridge'"
+  (backEvent)="showConfirmPage = false"
+  *ngIf="showConfirmPage"
+></nav>
+
+<div class="content" *ngIf="!showConfirmPage">
+  <div class="asset">{{ bridgeAsset.symbol }}</div>
+  <div class="item from">
+    <div class="label">
+      <span>From</span>
+      <p class="balance">
+        Balance: {{ bridgeAsset.balance || 0 | numberFixed : 8 }}
+        {{ bridgeAsset.symbol }}
+        <span class="max" (click)="bridgeAll()">MAX</span>
+      </p>
+    </div>
+    <div class="input-amount">
+      <span class="chain">{{ fromChain }}</span>
+      <div class="amount">
+        <input
+          type="text"
+          min="0"
+          [(ngModel)]="bridgeAmount"
+          (input)="getAssetRate()"
+          oninput="value=value.replace(/^\D*(\d*(?:\.\d{0,8})?).*$/g, '$1')"
+          placeholder="Enter amount"
+        />
+        <p>
+          {{
+            bridgeAsset?.rateBalance !== undefined
+              ? "$" + bridgeAsset.rateBalance
+              : "--"
+          }}
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="item to">
+    <img class="exchange" src="assets/images/bridge/exchange.svg" alt="" />
+    <div class="label">To Address</div>
+    <div class="input-amount">
+      <span class="chain">{{ toChain }}</span>
+    </div>
+  </div>
+  <ul class="fee">
+    <li>
+      <span class="label">Bridge Fee</span>
+      <p>0.1 {{ bridgeAsset.symbol }}</p>
+    </li>
+    <li>
+      <span class="label">Actual Receive</span>
+      <p>{{ getActualReceive() }} {{ bridgeAsset.symbol }}</p>
+    </li>
+  </ul>
+  <button
+    class="confirm pop-ups"
+    [ngClass]="{ disabled: !bridgeAmount }"
+    (click)="confirm()"
+  >
+    {{ "Deposit" }}
+  </button>
+</div>
+
+<neo3-bridge-confirm
+  *ngIf="showConfirmPage && chainType === 'Neo3'"
+  [bridgeAsset]="bridgeAsset"
+  [bridgeAmount]="bridgeAmount"
+  [toAddress]="toAddress"
+  [n3Network]="n3Network"
+  [unSignedTx]="unSignedTx"
+  [networkFee]="networkFee"
+  [sourceNetworkFee]="sourceNetworkFee"
+  [systemFee]="systemFee"
+  [priorityFee]="priorityFee"
+  [currentWallet]="currentWallet"
+  [invokeArgs]="invokeArgs"
+  [signers]="signers"
+  (backAmount)="showConfirmPage = false"
+></neo3-bridge-confirm>
+
+<neox-bridge-confirm
+  *ngIf="showConfirmPage && chainType === 'NeoX'"
+  [bridgeAsset]="bridgeAsset"
+  [bridgeAmount]="bridgeAmount"
+  [toAddress]="toAddress"
+  [neoXNetwork]="neoXNetwork"
+  [currentWallet]="currentWallet"
+  [neoXFeeInfo]="neoXFeeInfo"
+  [txParams]="txParams"
+  (backAmount)="showConfirmPage = false"
+></neox-bridge-confirm>

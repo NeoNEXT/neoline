@@ -43,6 +43,9 @@ import { PopupNewWalletGuideComponent } from './new-wallet-guide/new-wallet-guid
 import { PopupSettingComponent } from './setting/setting.component';
 import { PopupOnePasswordComponent } from './one-password/one-password.component';
 import { PopupAddressBookComponent } from './address-book/address-book.component';
+import { PopupBridgeComponent } from './bridge/bridge.component';
+import { Neo3BridgeConfirmComponent } from './bridge/neo3-bridge-confirm/neo3-bridge-confirm.component';
+import { NeoXBridgeConfirmComponent } from './bridge/neox-bridge-confirm/neox-bridge-confirm.component';
 
 const POPUP_COMPONENTS = [
   PopupComponent,
@@ -64,6 +67,9 @@ const POPUP_COMPONENTS = [
   PopupSettingComponent,
   PopupOnePasswordComponent,
   PopupAddressBookComponent,
+  PopupBridgeComponent,
+  Neo3BridgeConfirmComponent,
+  NeoXBridgeConfirmComponent,
 ];
 //#endregion
 

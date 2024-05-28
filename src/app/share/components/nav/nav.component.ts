@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { Router } from '@angular/router';
 
 @Component({
@@ -9,10 +9,12 @@ import { Router } from '@angular/router';
 export class NavComponent {
   @Input() title: string;
   @Input() backUrl: string;
+  @Output() backEvent = new EventEmitter();
 
   constructor(private router: Router) {}
 
   back() {
+    this.backEvent.emit();
     if (this.backUrl) {
       this.router.navigateByUrl(this.backUrl);
     } else {
