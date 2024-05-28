@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { DappEVMState } from '@/app/core';
+import { DappEVMState, UtilServiceState } from '@/app/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { EvmTransactionParams, RpcNetwork } from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
@@ -29,9 +29,14 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   tabType: TabType = 'details';
   assetDetails;
   tokenData;
-  constructor(private dappEVMState: DappEVMState) {}
+  hexDataLength: number;
+  constructor(
+    private dappEVMState: DappEVMState,
+    private util: UtilServiceState
+  ) {}
 
   ngOnInit(): void {
+    this.hexDataLength = this.util.getHexDataLength(this.txParams.data);
     this.tokenData = this.dappEVMState.parseStandardTokenTransactionData(
       this.txParams.data
     );

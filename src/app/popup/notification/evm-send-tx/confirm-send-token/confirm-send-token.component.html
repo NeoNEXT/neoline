@@ -60,9 +60,7 @@
     <p class="title">
       FUNCTION TYPE: <span class="value">{{ tokenData?.signature }}</span>
     </p>
-    <p class="hex-label">
-      HEX DATA: {{ txParams.data !== "0x" ? txParams.data?.length : 0 }} BYTES
-    </p>
+    <p class="hex-label">HEX DATA: {{ hexDataLength }} BYTES</p>
     <p class="json-box serialize">{{ txParams.data }}</p>
   </div>
   <div class="btn-group">

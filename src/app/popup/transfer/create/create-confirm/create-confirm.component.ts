@@ -15,6 +15,7 @@ import {
   LedgerService,
   TransactionState,
   ChromeService,
+  UtilServiceState,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import {
@@ -61,6 +62,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
 
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   evmHexData: string;
+  evmHexDataLength: number;
   unsignedEvmTx: ethers.TransactionRequest;
 
   constructor(
@@ -72,7 +74,8 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     private txState: TransactionState,
     private neo3Transfer: Neo3TransferService,
     private chrome: ChromeService,
-    private assetEvmState: AssetEVMState
+    private assetEvmState: AssetEVMState,
+    private util: UtilServiceState
   ) {}
   ngOnDestroy(): void {
     this.getStatusInterval?.unsubscribe();
@@ -449,6 +452,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         toAddress: this.data.to.address,
         transferAmount: amountBN,
       });
+      this.evmHexDataLength = this.util.getHexDataLength(this.evmHexData);
     }
   }
   //#endregion

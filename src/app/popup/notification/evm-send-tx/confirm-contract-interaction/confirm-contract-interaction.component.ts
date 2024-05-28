@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { DappEVMState } from '@/app/core';
+import { DappEVMState, UtilServiceState } from '@/app/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { EvmTransactionParams, RpcNetwork } from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
@@ -31,9 +31,14 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   tabType: TabType = 'details';
   contractMethodData: { fourByteSig: string; name: string; params: any[] };
-  constructor(private dappEVMState: DappEVMState) {}
+  hexDataLength: number;
+  constructor(
+    private dappEVMState: DappEVMState,
+    private util: UtilServiceState
+  ) {}
 
   ngOnInit(): void {
+    this.hexDataLength = this.util.getHexDataLength(this.txParams.data);
     this.dappEVMState
       .getContractMethodData(this.txParams.data)
       .subscribe((res) => {

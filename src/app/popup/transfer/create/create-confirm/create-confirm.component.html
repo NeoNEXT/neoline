@@ -158,8 +158,10 @@
         data.asset.asset_id !== ETH_SOURCE_ASSET_HASH
       "
     >
-      <p class="title">FUNCTION TYPE: <span class="value">Sending {{ dataJson?.symbol }}</span></p>
-      <p class="title hex">HEX DATA: 68 BYTES</p>
+      <p class="title">
+        FUNCTION TYPE: <span class="value">Sending {{ dataJson?.symbol }}</span>
+      </p>
+      <p class="title hex">HEX DATA: {{ evmHexDataLength }} BYTES</p>
       <p class="json-box serialize">{{ evmHexData }}</p>
     </ng-container>
   </div>
