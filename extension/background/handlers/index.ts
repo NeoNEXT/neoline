@@ -5,6 +5,7 @@ import {
 import { ethErrors } from 'eth-rpc-errors';
 import addEthereumChain from './add-ethereum-chain';
 import switchEthereumChain from './switch-ethereum-chain';
+import watchAsset from './watch-asset';
 import { createWindow, getCurrentNeoXNetwork } from '../tool';
 import {
   getLocalStorage,
@@ -16,7 +17,7 @@ import { validateTxParams } from './validation-tx-params';
 import { STORAGE_NAME } from '../../common/constants';
 import { ethers } from 'ethers';
 
-const handlers = [addEthereumChain, switchEthereumChain];
+const handlers = [addEthereumChain, switchEthereumChain, watchAsset];
 
 export const walletHandlerMap = handlers.reduce((map, handler) => {
   for (const methodName of handler.methodNames) {

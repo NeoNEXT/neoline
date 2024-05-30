@@ -1,6 +1,6 @@
 import { ethErrors } from 'eth-rpc-errors';
 import { ethers } from 'ethers';
-import { abiERC20 } from '../../common/evm/ERC20';
+import { abiERC20 } from '../../common/evm/abiERC20';
 const abi_1 = require('@ethersproject/abi');
 
 /**

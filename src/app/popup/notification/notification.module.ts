@@ -21,6 +21,7 @@ import { PopupNoticeNeo3SignTransactionComponent } from './neo3-sign-transaction
 import { PopupWalletSwitchNetworkComponent } from './wallet-switch-network/wallet-switch-network.component';
 import { PopupWalletSwitchAccountComponent } from './wallet-switch-accout/wallet-switch-account.component';
 import { PopupEvmAddChainComponent } from './evm-add-chain/add-chain.component';
+import { PopupEvmAddAssetComponent } from './evm-add-asset/add-asset.component';
 import { PopupNoticeEvmSignComponent } from './evm-signature/evm-signature.component';
 import {
   PopupNoticeEvmSendTxComponent,
@@ -48,6 +49,7 @@ import {
     PopupWalletSwitchNetworkComponent,
     PopupWalletSwitchAccountComponent,
     PopupEvmAddChainComponent,
+    PopupEvmAddAssetComponent,
     PopupNoticeEvmSignComponent,
     PopupNoticeEvmSendTxComponent,
     PopupNoticeEvmConfirmSendEtherComponent,
