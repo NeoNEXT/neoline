@@ -3,6 +3,7 @@ import {
   AssetState,
   GlobalService,
   NotificationService,
+  BridgeState,
 } from '@/app/core';
 import { Asset } from '@/models/models';
 import { Component, OnDestroy } from '@angular/core';
@@ -76,6 +77,7 @@ export class PopupBridgeComponent implements OnDestroy {
     private neo3Invoke: Neo3InvokeService,
     private globalService: GlobalService,
     public notification: NotificationService,
+    private bridgeState: BridgeState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -153,12 +155,17 @@ export class PopupBridgeComponent implements OnDestroy {
         .toFixed(0, 1);
     }
 
+    const data = this.bridgeState.getWithdrawData({
+      asset: NeoXGasAsset,
+      toScriptHash: wallet.getScriptHashFromAddress(this.toAddress),
+    });
+
     let networkGasLimit: bigint;
     this.txParams = {
       from: this.currentWallet.accounts[0].address,
       to: NeoXBridgeContract,
       value,
-      data: '0x51cff8d90000000000000000000000008ddd95c4b5aa2b049abae570cf9bd4476e9b7667',
+      data,
     };
     try {
       networkGasLimit = await this.assetEVMState.estimateGas(this.txParams);

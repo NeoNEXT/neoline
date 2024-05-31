@@ -23,6 +23,7 @@ import { ExtensionService } from './util/extension.service';
 import { EvmService } from './services/evm.service';
 import { AssetEVMState } from './states/asset-evm.state';
 import { DappEVMState } from './states/dapp-evm.state';
+import { BridgeState } from './states/bridge.state';
 
 @NgModule({
   declarations: [],
@@ -48,6 +49,7 @@ import { DappEVMState } from './states/dapp-evm.state';
     EvmService,
     AssetEVMState,
     DappEVMState,
+    BridgeState,
   ],
 })
 export class CoreModule {}

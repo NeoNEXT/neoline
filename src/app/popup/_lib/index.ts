@@ -9,4 +9,5 @@ export * from './actions';
 export * from './abis/abiERC20';
 export * from './abis/abiERC721';
 export * from './abis/abiERC1155';
+export * from './abis/abiNeoXBridgeNeo3';
 export * from './dapp';
