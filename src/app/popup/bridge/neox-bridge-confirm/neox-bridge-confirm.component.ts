@@ -71,6 +71,8 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.getStatusInterval?.unsubscribe();
+    this.getSourceTxReceiptInterval?.unsubscribe();
+    this.getTargetTxReceiptInterval?.unsubscribe();
   }
 
   back() {
@@ -117,7 +119,7 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
       });
   }
 
-  waitSourceTxComplete(hash: string) {
+  private waitSourceTxComplete(hash: string) {
     this.getSourceTxReceiptInterval?.unsubscribe();
     this.getSourceTxReceiptInterval = interval(3000).subscribe(() => {
       this.bridgeState.getTransactionReceipt(hash).then((res) => {
@@ -137,15 +139,17 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
     });
   }
 
-  waitTargetTxComplete(nonce: number) {
+  private waitTargetTxComplete(nonce: number) {
     this.getTargetTxReceiptInterval?.unsubscribe();
     this.getTargetTxReceiptInterval = interval(3000).subscribe(() => {
-      this.bridgeState.getBridgeTxByNonce(nonce).subscribe((res: any) => {
-        console.log(res);
-        if (res.result) {
-          this.getTargetTxReceiptInterval.unsubscribe();
-        }
-      });
+      this.bridgeState
+        .getBridgeTxOnNeoXBridgeNeo3(nonce)
+        .subscribe((res: any) => {
+          console.log(res);
+          if (res.result) {
+            this.getTargetTxReceiptInterval.unsubscribe();
+          }
+        });
     });
   }
 

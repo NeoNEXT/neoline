@@ -37,8 +37,6 @@ const NeoXGasAsset: Asset = {
   symbol: 'GAS',
 };
 
-const Neo3BridgeReceiveAddress = 'NeaCgpk9WCTQBUCE2ULZvW8QaxTJ53PmFn';
-const NeoXBridgeContract = '0x1212000000000000000000000000000000000004';
 @Component({
   templateUrl: 'bridge.component.html',
   styleUrls: ['bridge.component.scss'],
@@ -163,7 +161,7 @@ export class PopupBridgeComponent implements OnDestroy {
     let networkGasLimit: bigint;
     this.txParams = {
       from: this.currentWallet.accounts[0].address,
-      to: NeoXBridgeContract,
+      to: this.bridgeState.neoXContractOnNeoXBridgeNeo3,
       value,
       data,
     };
@@ -196,7 +194,9 @@ export class PopupBridgeComponent implements OnDestroy {
         scriptHash: GAS3_CONTRACT,
         args: [
           sc.ContractParam.hash160(fromAddress),
-          sc.ContractParam.hash160(Neo3BridgeReceiveAddress),
+          sc.ContractParam.hash160(
+            this.bridgeState.neo3ReceiveAddressOnNeo3BridgeNeoX
+          ),
           sc.ContractParam.integer(amount),
           sc.ContractParam.fromJson({ type: 'Hash160', value: this.toAddress }),
         ],

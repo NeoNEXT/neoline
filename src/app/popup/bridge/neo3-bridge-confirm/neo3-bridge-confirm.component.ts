@@ -6,7 +6,13 @@ import {
   OnDestroy,
   OnInit,
 } from '@angular/core';
-import { GlobalService, LedgerService, ChromeService } from '@/app/core';
+import {
+  GlobalService,
+  LedgerService,
+  ChromeService,
+  TransactionState,
+  BridgeState,
+} from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import { PopupEditFeeDialogComponent } from '@/app/popup/_dialogs';
 import { MatDialog } from '@angular/material/dialog';
@@ -55,13 +61,17 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
   loading = false;
   loadingMsg: string;
   getStatusInterval;
+  getSourceTxReceiptInterval;
+  getTargetTxReceiptInterval;
 
   constructor(
     private dialog: MatDialog,
     private global: GlobalService,
     private ledger: LedgerService,
     private chrome: ChromeService,
-    private neo3Invoke: Neo3InvokeService
+    private bridgeState: BridgeState,
+    private neo3Invoke: Neo3InvokeService,
+    private transactionState: TransactionState
   ) {}
 
   ngOnInit(): void {
@@ -71,6 +81,8 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.getStatusInterval?.unsubscribe();
+    this.getSourceTxReceiptInterval?.unsubscribe();
+    this.getTargetTxReceiptInterval?.unsubscribe();
   }
 
   private calculateNeo3TotalFee() {
@@ -128,7 +140,7 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
     this.resolveSend(this.unSignedTx);
   }
 
-  resolveSend(signedTx: Transaction) {
+  private resolveSend(signedTx: Transaction) {
     this.neo3Invoke
       .sendNeo3Tx(this.neo3Invoke.hexToBase64(signedTx.serialize(true)))
       .then((txHash) => {
@@ -137,6 +149,9 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
             msg: 'Transaction rejected by RPC node.',
           };
         }
+        console.log(txHash);
+
+        this.waitSourceTxComplete(txHash);
         this.loading = false;
         this.loadingMsg = '';
       })
@@ -145,6 +160,37 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
         this.loadingMsg = '';
         this.global.snackBarTip('transferFailed', err.msg || err);
       });
+  }
+
+  private waitSourceTxComplete(hash: string) {
+    this.getSourceTxReceiptInterval?.unsubscribe();
+    this.getSourceTxReceiptInterval = interval(3000).subscribe(() => {
+      this.transactionState.getApplicationLog(hash).subscribe((res) => {
+        console.log(res);
+        this.getSourceTxReceiptInterval.unsubscribe();
+        const notifications = res.executions[0].notifications;
+        const notifi = notifications.find(
+          (item) => item.eventname === 'Deposit'
+        );
+        const depositId = notifi.state.value[0].value;
+        console.log(depositId);
+        this.waitTargetTxComplete(depositId);
+      });
+    });
+  }
+
+  private waitTargetTxComplete(depositId: number) {
+    this.getTargetTxReceiptInterval?.unsubscribe();
+    this.getTargetTxReceiptInterval = interval(5000).subscribe(() => {
+      this.bridgeState
+        .getBridgeTxOnNeo3BridgeNeoX(depositId)
+        .subscribe((res: any) => {
+          console.log(res);
+          if (res.txid) {
+            this.getTargetTxReceiptInterval.unsubscribe();
+          }
+        });
+    });
   }
 
   private getLedgerStatus() {

@@ -37,6 +37,16 @@ export class TransactionState {
     return this.http.rpcPost(this.n2Network.rpcUrl, data).toPromise();
   }
 
+  getApplicationLog(hash: string) {
+    const data = {
+      jsonrpc: '2.0',
+      method: 'getapplicationlog',
+      params: [hash],
+      id: 1,
+    };
+    return this.http.rpcPost(this.n3Network.rpcUrl, data);
+  }
+
   async getAllTxs(address: string): Promise<Transaction[]> {
     if (this.chainType === 'NeoX') {
       return Promise.resolve([]);
