@@ -66,10 +66,9 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   showRemove = false;
 
   private accountSub: Unsubscribable;
-  currentWalletIsN3: boolean;
   currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   address: string;
-  private chainType: ChainType;
+  chainType: ChainType;
   private currentWalletArr: Array<Wallet2 | Wallet3>;
   private currentWIFArr: string[];
   private n2Network: RpcNetwork;
@@ -98,7 +97,6 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         this.chainType === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;
       this.currentWalletArr =
         this.chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
-      this.currentWalletIsN3 = this.chainType === 'Neo3';
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.allWallet = (state.neo3WalletArr as any)
