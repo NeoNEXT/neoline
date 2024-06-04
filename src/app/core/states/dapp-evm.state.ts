@@ -34,6 +34,7 @@ const ERC1155Interface = new abi_1.Interface(abiERC1155);
 const ERC721_INTERFACE_ID = '0x80ac58cd';
 const ERC721_METADATA_INTERFACE_ID = '0x5b5e139f';
 const ERC1155_INTERFACE_ID = '0xd9b67a26';
+const IPFS_DEFAULT_GATEWAY_URL = 'https://ipfs.io/ipfs/';
 
 @Injectable()
 export class DappEVMState {
@@ -331,14 +332,22 @@ export class DappEVMState {
   }> {
     // ERC721
     try {
-      return await this.getERC721Details(tokenAddress, userAddress, tokenId);
+      return await this.getERC721Details(
+        tokenAddress,
+        IPFS_DEFAULT_GATEWAY_URL,
+        tokenId
+      );
     } catch {
       // Ignore
     }
 
     // ERC1155
     try {
-      return await this.getERC1155Details(tokenAddress, userAddress, tokenId);
+      return await this.getERC1155Details(
+        tokenAddress,
+        IPFS_DEFAULT_GATEWAY_URL,
+        tokenId
+      );
     } catch {
       // Ignore
     }

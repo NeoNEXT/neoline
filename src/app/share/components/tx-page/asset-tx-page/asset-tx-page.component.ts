@@ -98,6 +98,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
         if (item?.status === undefined) {
           this.assetEVMState.waitForTx(item.txid).then((res) => {
             this.txData[i].status = res.status;
+            this.txData[i].block_time = res.block_time;
             this.localAllTxs[networkName][this.address][this.assetId] =
               this.txData;
             this.chrome.setStorage(STORAGE_NAME.transaction, this.localAllTxs);

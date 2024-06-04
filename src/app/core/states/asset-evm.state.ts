@@ -289,7 +289,12 @@ export class AssetEVMState {
 
   async waitForTx(hash: string) {
     try {
-      return await this.provider.waitForTransaction(hash);
+      const tx = await this.provider.waitForTransaction(hash);
+      const blockTx = await this.provider.send('eth_getBlockByHash', [
+        tx.blockHash,
+        false,
+      ]);
+      return { status: tx.status, block_time: blockTx.timestamp };
     } catch (error) {
       throw this.handleEthersError(error);
     }
