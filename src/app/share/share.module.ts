@@ -58,12 +58,14 @@ import { TranslatePipe } from './pipes/translate.pipe';
 import { NumberFixedPipe } from './pipes/number-fixed.pipe';
 import { LongStrPipe } from './pipes/long-str.pipe';
 import { NftTokenIdPipe } from './pipes/nft-tokenid.pipe';
+import { SanitizerPipe } from './pipes/sanitizer.pipe';
 const PIPES = [
   LanguageNamePipe,
   TranslatePipe,
   NumberFixedPipe,
   LongStrPipe,
   NftTokenIdPipe,
+  SanitizerPipe,
 ];
 //#endregion
 

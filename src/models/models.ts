@@ -40,6 +40,7 @@ export interface NftAsset {
   // name: string;
   // symbol: string;
   // info?: any;
+  standard?: string;
 }
 export interface Transaction {
   block_time: number;

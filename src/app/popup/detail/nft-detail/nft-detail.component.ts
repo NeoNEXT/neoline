@@ -21,6 +21,7 @@ export class PopupNftDetailComponent implements OnDestroy {
   private accountSub: Unsubscribable;
   private address: string;
   private n3Network: RpcNetwork;
+  private neoXNetwork: RpcNetwork;
   private chainType: ChainType;
   constructor(
     private aRouter: ActivatedRoute,
@@ -33,6 +34,7 @@ export class PopupNftDetailComponent implements OnDestroy {
       this.chainType = state.currentChainType;
       this.address = state.currentWallet?.accounts[0]?.address;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
       this.initData();
     });
   }
@@ -49,6 +51,14 @@ export class PopupNftDetailComponent implements OnDestroy {
   }
 
   getData() {
+    if (this.chainType === 'NeoX') {
+      this.chrome
+        .getNftWatch(`${this.chainType}-${this.neoXNetwork.id}`, this.address)
+        .subscribe((res) => {
+          this.nft = res.find((m) => m.assethash === this.nftContract);
+        });
+      return;
+    }
     this.nftState.getNftTokens(this.address, this.nftContract).then((res) => {
       this.nft = res;
       if (!this.nft) {
@@ -63,8 +73,10 @@ export class PopupNftDetailComponent implements OnDestroy {
 
   toWeb() {
     this.showMenu = false;
-    if (this.n3Network.explorer) {
-      window.open(`${this.n3Network.explorer}tokens/nft/${this.nftContract}`);
+    if (this.chainType === 'Neo3') {
+      if (this.n3Network.explorer) {
+        window.open(`${this.n3Network.explorer}tokens/nft/${this.nftContract}`);
+      }
     }
   }
 }

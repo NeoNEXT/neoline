@@ -4,7 +4,7 @@
   (click)="showDetail(token)"
 >
   <div class="asset-logo">
-    <img [src]="token?.image_url" alt="" appErrorSrc />
+    <img [src]="token?.image_url | sanitizer" alt="" appErrorSrc />
   </div>
   <div class="item-middle">
     <span>{{ token?.name || token?.tokenid }}</span>

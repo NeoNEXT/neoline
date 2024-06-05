@@ -24,6 +24,7 @@ import { EvmService } from './services/evm.service';
 import { AssetEVMState } from './states/asset-evm.state';
 import { DappEVMState } from './states/dapp-evm.state';
 import { BridgeState } from './states/bridge.state';
+import { EvmNFTState } from './states/evm-nft.state';
 
 @NgModule({
   declarations: [],
@@ -50,6 +51,7 @@ import { BridgeState } from './states/bridge.state';
     AssetEVMState,
     DappEVMState,
     BridgeState,
+    EvmNFTState,
   ],
 })
 export class CoreModule {}

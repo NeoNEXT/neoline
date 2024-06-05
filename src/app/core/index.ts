@@ -21,3 +21,4 @@ export { StartupService } from './startup/startup.service';
 export { EvmService } from './services/evm.service';
 export { DappEVMState } from './states/dapp-evm.state';
 export { BridgeState } from './states/bridge.state';
+export { EvmNFTState } from './states/evm-nft.state';

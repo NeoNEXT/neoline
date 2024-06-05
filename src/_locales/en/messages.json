@@ -1225,5 +1225,14 @@
   },
   "evmSignWarning": {
     "message": "Only sign this message if you fully understand the content and trust the requesting site."
+  },
+  "AddNFT": {
+    "message": "Add NFT"
+  },
+  "TokenIdIsRequired": {
+    "message": "Token ID is required"
+  },
+  "InvalidTokenId": {
+    "message": "Invalid token ID"
   }
 }

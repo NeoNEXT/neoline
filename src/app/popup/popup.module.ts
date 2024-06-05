@@ -8,6 +8,7 @@ import { ShareModule } from '@app/share';
 //#region modules
 import { PopupAddAssetModule } from './add/add-asset/add-asset.module';
 import { PopupAddNftModule } from './add/add-nft/add-nft.module';
+import { PopupAddEvmNftModule } from './add/add-evm-nft/add-nft.module';
 import { PopupNotificationModule } from './notification/notification.module';
 import { TransferModule } from './transfer/transfer.module';
 import { PopupWalletModule } from './wallet/wallet.module';
@@ -18,6 +19,7 @@ const POPUP_MODULES = [
   TransferModule,
   PopupWalletModule,
   PopupAddNftModule,
+  PopupAddEvmNftModule,
 ];
 //#endregion
 

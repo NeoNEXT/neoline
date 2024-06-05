@@ -15,6 +15,15 @@ export class PopupNftTokenDetailDialogComponent {
   ) {}
 
   openImg(url: string) {
-    window.open(url);
+    if (url.startsWith('data:')) {
+      const w = window.open('about:blank');
+      const image = new Image();
+      image.src = url;
+      setTimeout(function () {
+        w.document.getElementsByTagName('body')[0].innerHTML = image.outerHTML;
+      }, 0);
+    } else {
+      window.open(url);
+    }
   }
 }

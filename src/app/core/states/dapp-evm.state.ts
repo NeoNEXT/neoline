@@ -315,6 +315,42 @@ export class DappEVMState {
     return { contractCode, isContractAddress };
   }
 
+  async getNFTTokenStandardAndDetails(
+    tokenAddress: string,
+    userAddress?: string,
+    tokenId?: string
+  ): Promise<{
+    standard: string;
+    tokenURI?: string | undefined;
+    symbol?: string | undefined;
+    name?: string | undefined;
+    image?: string | undefined;
+  }> {
+    // ERC721
+    try {
+      return await this.getERC721Details(
+        tokenAddress,
+        IPFS_DEFAULT_GATEWAY_URL,
+        tokenId
+      );
+    } catch {
+      // Ignore
+    }
+
+    // ERC1155
+    try {
+      return await this.getERC1155Details(
+        tokenAddress,
+        IPFS_DEFAULT_GATEWAY_URL,
+        tokenId
+      );
+    } catch {
+      // Ignore
+    }
+
+    throw new Error('Unable to determine contract standard');
+  }
+
   /**
    * @param tokenAddress - ERC721 asset contract address.
    */

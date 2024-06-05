@@ -7,6 +7,7 @@ import {
   LedgerService,
   ChromeService,
   UtilServiceState,
+  EvmNFTState,
 } from '@/app/core';
 import { NEO, GAS, Asset } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
@@ -86,6 +87,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     private ledger: LedgerService,
     private chrome: ChromeService,
     private util: UtilServiceState,
+    private evmNFTState: EvmNFTState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -203,6 +205,8 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   toAdd() {
     if (this.chainType === 'Neo3' && this.selectedIndex === 1) {
       this.router.navigateByUrl('/popup/add-nft');
+    } else if (this.chainType === 'NeoX' && this.selectedIndex === 1) {
+      this.router.navigateByUrl('/popup/add-evm-nft');
     } else {
       this.router.navigateByUrl('/popup/add-asset');
     }

@@ -1,0 +1,40 @@
+<section class="container">
+  <nav title="myNft"></nav>
+  <div class="popup-assets-list">
+    <div class="asset-item" *ngFor="let asset of watchNfts; index as index">
+      <div class="asset-logo">
+        <img [src]="asset?.image_url" appErrorSrc="" alt="" />
+      </div>
+      <div class="item-middle">
+        <div class="asset-name">
+          <span>{{ asset.name }}</span>
+          (<span>{{ asset.symbol }}</span
+          >)
+        </div>
+        <p class="asset-id">{{ asset?.assethash }}</p>
+      </div>
+      <div class="operate">
+        <img
+          class="add"
+          *ngIf="asset?.watching === false"
+          theme
+          src="/assets/images/asset/add.svg"
+          alt=""
+          (click)="addAsset(index)"
+        />
+        <img
+          class="delete"
+          *ngIf="asset?.watching !== false"
+          theme
+          src="/assets/images/asset/remove.svg"
+          alt=""
+          (click)="removeAsset(index)"
+        />
+      </div>
+    </div>
+
+    <div class="loading" *ngIf="isLoading">
+      {{ "loading" | translate | async }}
+    </div>
+  </div>
+</section>
