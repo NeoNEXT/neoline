@@ -43,7 +43,7 @@
       *ngIf="
         !(
           data.chainType === 'NeoX' &&
-          data.asset.asset_id === ETH_SOURCE_ASSET_HASH
+          data.asset?.asset_id === ETH_SOURCE_ASSET_HASH
         )
       "
       [class]="{ selected: tabType === 'data' }"
@@ -113,6 +113,8 @@
     <evm-fee
       *ngIf="data.chainType === 'NeoX'"
       [transferAsset]="data.asset"
+      [nftAsset]="data.nftAsset"
+      [transferNFT]="data.nftToken"
       [transferToAddress]="data.to?.address"
       [fromAddress]="data.from"
       [transferAmount]="data.amount"
@@ -155,7 +157,7 @@
     <ng-container
       *ngIf="
         data.chainType === 'NeoX' &&
-        data.asset.asset_id !== ETH_SOURCE_ASSET_HASH
+        data.asset?.asset_id !== ETH_SOURCE_ASSET_HASH
       "
     >
       <p class="title">

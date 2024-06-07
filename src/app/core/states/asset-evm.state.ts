@@ -7,7 +7,6 @@ import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
-import { map, Observable, firstValueFrom } from 'rxjs';
 import { HttpClient } from '@angular/common/http';
 
 @Injectable()
@@ -322,7 +321,7 @@ export class AssetEVMState {
     return data;
   }
 
-  private handleEthersError(error) {
+  handleEthersError(error) {
     console.log(error);
     if (error.data) {
       const code = error.data.replace('Reverted ', '');

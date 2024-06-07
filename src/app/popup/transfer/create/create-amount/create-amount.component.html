@@ -82,6 +82,8 @@
     <evm-fee
       *ngIf="chainType === 'NeoX'"
       [transferAsset]="transferAsset"
+      [nftAsset]="nftAsset"
+      [transferNFT]="transferNFT"
       [transferToAddress]="transferTo?.address"
       [fromAddress]="fromAddress"
       [transferAmount]="transferAmount"

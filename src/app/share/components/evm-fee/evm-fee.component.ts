@@ -1,6 +1,6 @@
-import { AssetEVMState } from '@/app/core';
+import { AssetEVMState, EvmNFTState } from '@/app/core';
 import { PopupEditEvmFeeDialogComponent } from '@/app/popup/_dialogs';
-import { Asset } from '@/models/models';
+import { Asset, NftAsset, NftToken } from '@/models/models';
 import {
   Component,
   EventEmitter,
@@ -23,6 +23,8 @@ import { timer } from 'rxjs';
 export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
   @Input() txParams?;
   @Input() transferAsset?: Asset;
+  @Input() nftAsset?: NftAsset;
+  @Input() transferNFT?: NftToken;
   @Input() transferToAddress?: string;
   @Input() fromAddress?: string;
   @Input() transferAmount?: string;
@@ -39,6 +41,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
 
   constructor(
     private assetEVMState: AssetEVMState,
+    private evmNFTState: EvmNFTState,
     private dialog: MatDialog
   ) {}
 
@@ -94,6 +97,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
     this.getEstimateFeeInterval?.unsubscribe();
     if (
       (this.transferAsset && this.transferToAddress) ||
+      (this.transferNFT && this.transferToAddress) ||
       this.place === 'dapp'
     ) {
       this.getEstimateFeeInterval = timer(0, 10000).subscribe(async () => {
@@ -103,6 +107,13 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
             networkGasLimit = await this.assetEVMState.estimateGas(
               this.txParams
             );
+          } else if (this.transferNFT) {
+            networkGasLimit = await this.evmNFTState.estimateGasOfTransfer({
+              asset: this.nftAsset,
+              token: this.transferNFT,
+              fromAddress: this.fromAddress,
+              toAddress: this.transferToAddress,
+            });
           } else {
             networkGasLimit = await this.assetEVMState.estimateGasOfTransfer({
               asset: this.transferAsset,

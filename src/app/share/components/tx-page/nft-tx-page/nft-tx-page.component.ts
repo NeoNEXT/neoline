@@ -1,5 +1,10 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
-import { NftState, ChromeService, TransactionState } from '@/app/core';
+import {
+  NftState,
+  ChromeService,
+  TransactionState,
+  AssetEVMState,
+} from '@/app/core';
 import { NftTransaction } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupTxDetailDialogComponent } from '@/app/popup/_dialogs';
@@ -33,6 +38,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
     private nftState: NftState,
     private chrome: ChromeService,
     private txState: TransactionState,
+    private assetEVMState: AssetEVMState,
     private store: Store<AppState>
   ) {}
 
@@ -40,9 +46,14 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet?.accounts[0]?.address;
-      this.networkId = state.n3Networks[state.n3NetworkIndex].id;
       this.chainType = state.currentChainType;
-      this.getAllTxs();
+      if (this.chainType === 'Neo3') {
+        this.networkId = state.n3Networks[state.n3NetworkIndex].id;
+        this.getAllTxs();
+      } else {
+        this.networkId = state.neoXNetworks[state.neoXNetworkIndex].id;
+        this.getEvmAllTxs();
+      }
     });
   }
 
@@ -67,6 +78,25 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
         (item) => new Date().getTime() / 1000 - item.block_time <= 7200
       );
       this.handleTxs();
+    });
+  }
+  private getEvmAllTxs() {
+    const networkName = `${this.chainType}-${this.networkId}`;
+    this.chrome.getStorage(STORAGE_NAME.transaction).subscribe(async (inTxData) => {
+      this.localAllTxs = inTxData;
+      this.txData =
+        inTxData?.[networkName]?.[this.address]?.[this.nftContract] || [];
+      for (let i = 0; i < this.txData.length; i++) {
+        const item = this.txData[i];
+        if (item?.status === undefined) {
+          const res = await this.assetEVMState.waitForTx(item.txid);
+          this.txData[i].status = res.status;
+          this.txData[i].block_time = res.block_time;
+          this.localAllTxs[networkName][this.address][this.nftContract] =
+            this.txData;
+          this.chrome.setStorage(STORAGE_NAME.transaction, this.localAllTxs);
+        }
+      }
     });
   }
 

@@ -27,6 +27,7 @@ export interface NftToken {
   amount: string;
   name?: string;
   image_url?: string;
+  isOwner?: boolean;
 }
 
 export interface NftAsset {
@@ -40,7 +41,7 @@ export interface NftAsset {
   // name: string;
   // symbol: string;
   // info?: any;
-  standard?: string;
+  standard?: 'ERC721' | 'ERC1155' | string;
 }
 export interface Transaction {
   block_time: number;

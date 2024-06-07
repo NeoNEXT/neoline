@@ -16,6 +16,7 @@ import {
   TransactionState,
   ChromeService,
   UtilServiceState,
+  EvmNFTState,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import {
@@ -75,7 +76,8 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     private neo3Transfer: Neo3TransferService,
     private chrome: ChromeService,
     private assetEvmState: AssetEVMState,
-    private util: UtilServiceState
+    private util: UtilServiceState,
+    private evmNFTState: EvmNFTState
   ) {}
   ngOnDestroy(): void {
     this.getStatusInterval?.unsubscribe();
@@ -166,18 +168,32 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     this.resolveSend();
   }
   private async getEvmTxData() {
-    const { asset, to, amount, neoXFeeInfo } = this.data;
+    const { asset, to, amount, neoXFeeInfo, nftAsset, nftToken, from, isNFT } =
+      this.data;
     const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
       neoXFeeInfo;
-    this.unsignedEvmTx = this.assetEvmState.getTransferErc20TxRequest({
-      asset: asset,
-      toAddress: to.address,
-      transferAmount: amount,
-      maxFeePerGas,
-      maxPriorityFeePerGas,
-      gasLimit,
-      gasPrice,
-    });
+    if (isNFT) {
+      this.unsignedEvmTx = this.evmNFTState.getTransferTxRequest({
+        asset: nftAsset,
+        token: nftToken,
+        fromAddress: from,
+        toAddress: to.address,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+        gasLimit,
+        gasPrice,
+      });
+    } else {
+      this.unsignedEvmTx = this.assetEvmState.getTransferErc20TxRequest({
+        asset: asset,
+        toAddress: to.address,
+        transferAmount: amount,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+        gasLimit,
+        gasPrice,
+      });
+    }
     const nonce = await this.assetEvmState.getNonce(
       this.data.currentWallet.accounts[0].address
     );
@@ -262,19 +278,34 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
               this.unsignedEvmTx
             );
           } else {
-            const { asset, to, amount, neoXFeeInfo } = this.data;
+            const { asset, to, amount, neoXFeeInfo, nftAsset, nftToken, from } =
+              this.data;
             const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
               neoXFeeInfo;
-            res = await this.assetEvmState.transferErc20({
-              asset: asset,
-              toAddress: to.address,
-              transferAmount: amount,
-              maxFeePerGas,
-              maxPriorityFeePerGas,
-              gasLimit,
-              gasPrice,
-              privateKey: currentWIF,
-            });
+            if (this.data.isNFT) {
+              res = await this.evmNFTState.transferNFT({
+                asset: nftAsset,
+                token: nftToken,
+                fromAddress: from,
+                toAddress: to.address,
+                maxFeePerGas,
+                maxPriorityFeePerGas,
+                gasLimit,
+                gasPrice,
+                privateKey: currentWIF,
+              });
+            } else {
+              res = await this.assetEvmState.transferErc20({
+                asset: asset,
+                toAddress: to.address,
+                transferAmount: amount,
+                maxFeePerGas,
+                maxPriorityFeePerGas,
+                gasLimit,
+                gasPrice,
+                privateKey: currentWIF,
+              });
+            }
             txid = res.hash;
           }
           break;
@@ -440,6 +471,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
 
     if (
       this.data.chainType === 'NeoX' &&
+      !this.data.isNFT &&
       this.data.asset.asset_id !== ETH_SOURCE_ASSET_HASH
     ) {
       const amountBN = BigInt(
@@ -451,6 +483,14 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         asset: this.data.asset,
         toAddress: this.data.to.address,
         transferAmount: amountBN,
+      });
+      this.evmHexDataLength = this.util.getHexDataLength(this.evmHexData);
+    } else if (this.data.chainType === 'NeoX' && this.data.isNFT) {
+      this.evmHexData = this.evmNFTState.getTransferData({
+        asset: this.data.nftAsset,
+        token: this.data.nftToken,
+        fromAddress: this.data.from,
+        toAddress: this.data.to.address,
       });
       this.evmHexDataLength = this.util.getHexDataLength(this.evmHexData);
     }

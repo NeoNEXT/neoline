@@ -1,9 +1,4 @@
-import {
-  RpcNetwork,
-  TokenStandard,
-  abiERC1155,
-  abiERC721,
-} from '@/app/popup/_lib';
+import { RpcNetwork, abiERC1155, abiERC721 } from '@/app/popup/_lib';
 import { AppState } from '@/app/reduers';
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
@@ -11,6 +6,9 @@ import { ethers } from 'ethers';
 import type BN from 'bn.js';
 import { HttpClient } from '@angular/common/http';
 import { DappEVMState } from './dapp-evm.state';
+import { NftAsset, NftToken } from '@/models/models';
+import BigNumber from 'bignumber.js';
+import { AssetEVMState } from './asset-evm.state';
 
 @Injectable()
 export class EvmNFTState {
@@ -20,6 +18,7 @@ export class EvmNFTState {
   constructor(
     private store: Store<AppState>,
     private http: HttpClient,
+    private assetEVMState: AssetEVMState,
     private dappEVMState: DappEVMState
   ) {
     const account$ = this.store.select('account');
@@ -28,6 +27,146 @@ export class EvmNFTState {
       this.provider = new ethers.JsonRpcProvider(this.neoXNetwork.rpcUrl);
     });
   }
+
+  getTransferTxRequest({
+    asset,
+    token,
+    fromAddress,
+    toAddress,
+    maxFeePerGas,
+    maxPriorityFeePerGas,
+    gasLimit,
+    gasPrice,
+  }: {
+    asset: NftAsset;
+    token: NftToken;
+    fromAddress: string;
+    toAddress: string;
+    maxFeePerGas?: string;
+    maxPriorityFeePerGas?: string;
+    gasPrice?: string;
+    gasLimit: string;
+  }): ethers.TransactionRequest {
+    const maxFeePerGasBN = maxFeePerGas
+      ? BigInt(new BigNumber(maxFeePerGas).shiftedBy(18).toFixed(0, 1))
+      : undefined;
+    const maxPriorityFeePerGasBN = maxPriorityFeePerGas
+      ? BigInt(new BigNumber(maxPriorityFeePerGas).shiftedBy(18).toFixed(0, 1))
+      : undefined;
+    const gasPriceBN = gasPrice
+      ? BigInt(new BigNumber(gasPrice).shiftedBy(18).toFixed(0, 1))
+      : undefined;
+    const gasLimitBN = BigInt(new BigNumber(gasLimit).toFixed(0, 1));
+    let txRequest: ethers.TransactionRequest;
+    txRequest = {
+      to: asset.assethash,
+      data: this.getTransferData({ asset, token, fromAddress, toAddress }),
+      maxFeePerGas: maxFeePerGasBN,
+      maxPriorityFeePerGas: maxPriorityFeePerGasBN,
+      gasLimit: gasLimitBN,
+      gasPrice: gasPriceBN,
+    };
+    return txRequest;
+  }
+
+  async transferNFT({
+    asset,
+    token,
+    fromAddress,
+    toAddress,
+    maxFeePerGas,
+    maxPriorityFeePerGas,
+    gasLimit,
+    gasPrice,
+    privateKey,
+  }: {
+    asset: NftAsset;
+    token: NftToken;
+    fromAddress: string;
+    toAddress: string;
+    maxFeePerGas?: string;
+    maxPriorityFeePerGas?: string;
+    gasPrice?: string;
+    gasLimit: string;
+    privateKey: string;
+  }) {
+    const txRequest = this.getTransferTxRequest({
+      asset,
+      token,
+      fromAddress,
+      toAddress,
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      gasLimit,
+      gasPrice,
+    });
+    const wallet = new ethers.Wallet(privateKey, this.provider);
+    try {
+      const tx = await wallet.sendTransaction(txRequest);
+      return tx;
+    } catch (error) {
+      throw this.assetEVMState.handleEthersError(error);
+    }
+  }
+
+  async estimateGasOfTransfer({
+    asset,
+    token,
+    fromAddress,
+    toAddress,
+  }: {
+    asset: NftAsset;
+    token: NftToken;
+    fromAddress: string;
+    toAddress: string;
+  }): Promise<bigint> {
+    return this.provider.estimateGas({
+      from: fromAddress,
+      to: asset.assethash,
+      data: this.getTransferData({ asset, token, fromAddress, toAddress }),
+    });
+  }
+
+  getTransferData({
+    asset,
+    token,
+    fromAddress,
+    toAddress,
+  }: {
+    asset: NftAsset;
+    token: NftToken;
+    fromAddress: string;
+    toAddress: string;
+  }) {
+    if (asset.standard === 'ERC721') {
+      const contract = new ethers.Contract(
+        asset.assethash,
+        abiERC721,
+        this.provider
+      );
+      const data = contract.interface.encodeFunctionData('transferFrom', [
+        fromAddress,
+        toAddress,
+        token.tokenid,
+      ]);
+      return data;
+    } else {
+      const contract = new ethers.Contract(
+        asset.assethash,
+        abiERC1155,
+        this.provider
+      );
+      const data = contract.interface.encodeFunctionData('TransferSingle', [
+        asset.assethash,
+        fromAddress,
+        toAddress,
+        token.tokenid,
+        '1',
+      ]);
+      return data;
+    }
+  }
+
   async watchNft(tokenAddress: string, tokenId: string, userAddress: string) {
     await this.validateWatchNft(tokenAddress, tokenId, userAddress);
 
@@ -77,15 +216,18 @@ export class EvmNFTState {
    * @param options.networkClientId - The networkClientId that can be used to identify the network client to use for this request.
    * @returns Promise resolving the NFT ownership.
    */
-  private async isNftOwner(
+  async isNftOwner(
     ownerAddress: string,
     nftAddress: string,
-    tokenId: string
+    tokenId: string,
+    standard?: 'ERC721' | 'ERC1155' | string,
   ): Promise<boolean> {
     // Checks the ownership for ERC-721.
     try {
-      const owner = await this.getERC721OwnerOf(nftAddress, tokenId);
-      return ownerAddress.toLowerCase() === owner.toLowerCase();
+      if (!standard || standard === 'ERC721') {
+        const owner = await this.getERC721OwnerOf(nftAddress, tokenId);
+        return ownerAddress.toLowerCase() === owner.toLowerCase();
+      }
       // eslint-disable-next-line no-empty
     } catch {
       // Ignore ERC-721 contract error
@@ -93,12 +235,14 @@ export class EvmNFTState {
 
     // Checks the ownership for ERC-1155.
     try {
-      const balance = await this.getERC1155BalanceOf(
-        ownerAddress,
-        nftAddress,
-        tokenId
-      );
-      return !balance.isZero();
+      if (!standard || standard === 'ERC1155') {
+        const balance = await this.getERC1155BalanceOf(
+          ownerAddress,
+          nftAddress,
+          tokenId
+        );
+        return !balance.isZero();
+      }
       // eslint-disable-next-line no-empty
     } catch {
       // Ignore ERC-1155 contract error
@@ -117,7 +261,10 @@ export class EvmNFTState {
    * @param networkClientId - Network Client ID to fetch the provider with.
    * @returns Promise resolving to the owner address.
    */
-  private async getERC721OwnerOf(address: string, tokenId: string): Promise<string> {
+  private async getERC721OwnerOf(
+    address: string,
+    tokenId: string
+  ): Promise<string> {
     const contract = new ethers.Contract(address, abiERC721, this.provider);
     return contract.ownerOf(tokenId);
   }

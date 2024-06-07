@@ -6,7 +6,7 @@ import {
   EventEmitter,
 } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { GAS, Asset, NftToken } from '@/models/models';
+import { GAS, Asset, NftToken, NftAsset } from '@/models/models';
 import {
   AssetState,
   GlobalService,
@@ -51,7 +51,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
   assetArr: Asset[] = [];
   transferAsset: Asset;
   nftContract: string;
-  nftTokens: NftToken[] = [];
+  nftAsset: NftAsset;
   transferNFT: NftToken;
 
   transferAmount = '';
@@ -119,11 +119,20 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       if (params.nftContract) {
         this.nftContract = params.nftContract;
         this.getNftTokens();
-        const gasAssetId = this.chainType === 'Neo2' ? GAS : GAS3_CONTRACT;
+        const gasAssetId =
+          this.chainType === 'Neo2'
+            ? GAS
+            : this.chainType === 'Neo3'
+            ? GAS3_CONTRACT
+            : ETH_SOURCE_ASSET_HASH;
         this.asset
           .getAddressAssetBalance(this.fromAddress, gasAssetId, this.chainType)
           .then((res) => {
-            this.gasBalance = new BigNumber(res).shiftedBy(-8).toFixed();
+            if (this.chainType === 'NeoX') {
+              this.gasBalance = new BigNumber(res).shiftedBy(-18).toFixed();
+            } else {
+              this.gasBalance = new BigNumber(res).shiftedBy(-8).toFixed();
+            }
           });
       } else {
         this.getAddressAllBalances(params);
@@ -131,12 +140,27 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     });
   }
   private getNftTokens() {
-    this.nftState
-      .getNftTokens(this.fromAddress, this.nftContract)
-      .then((res) => {
-        this.nftTokens = res.tokens;
-        this.transferNFT = this.nftTokens[0];
-      });
+    if (this.chainType === 'Neo3') {
+      this.nftState
+        .getNftTokens(this.fromAddress, this.nftContract)
+        .then((res) => {
+          this.nftAsset = res;
+          this.transferNFT = this.nftAsset.tokens[0];
+        });
+    }
+    if (this.chainType === 'NeoX') {
+      this.chrome
+        .getNftWatch(
+          `${this.chainType}-${this.currentNetwork.id}`,
+          this.currentWallet.accounts[0].address
+        )
+        .subscribe((watch) => {
+          this.nftAsset = watch.find(
+            (item) => item.assethash === this.nftContract
+          );
+          this.transferNFT = this.nftAsset.tokens.find((item) => item.isOwner);
+        });
+    }
   }
   private async getAddressAllBalances(params) {
     const getMoneyBalance = this.asset.getAddressBalances(this.fromAddress);
@@ -208,11 +232,16 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
 
   // transfer asset
   selectAsset(isNFT = false) {
+    let tokens = this.nftAsset.tokens;
+    if (isNFT && this.chainType === 'NeoX') {
+      tokens = tokens.filter((item) => item.isOwner === true);
+    }
+
     this.dialog
       .open(PopupAssetListDialogComponent, {
         data: {
           isNft: isNFT,
-          balances: isNFT ? this.nftTokens : this.assetArr,
+          balances: isNFT ? tokens : this.assetArr,
           selectedId: isNFT
             ? this.transferNFT.tokenid
             : this.transferAsset.asset_id,
@@ -412,6 +441,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       to: this.transferTo,
       asset: this.transferAsset,
       nftToken: this.transferNFT,
+      nftAsset: this.nftAsset,
       amount: this.nftContract ? '1' : this.transferAmount,
       fee: this.priorityFee,
       gasBalance: this.gasBalance,
