@@ -140,6 +140,10 @@ export class PopupNftDetailComponent implements OnDestroy {
       if (this.n3Network.explorer) {
         window.open(`${this.n3Network.explorer}tokens/nft/${this.nftContract}`);
       }
+    } else {
+      if (this.neoXNetwork.explorer) {
+        window.open(`${this.neoXNetwork.explorer}/address/${this.address}`);
+      }
     }
   }
 }

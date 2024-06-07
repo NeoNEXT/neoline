@@ -186,7 +186,7 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
         break;
       case 'NeoX':
         if (this.neoXNetwork.explorer) {
-          window.open(`${this.neoXNetwork.explorer}tokens/${this.assetId}`);
+          window.open(`${this.neoXNetwork.explorer}/address/${this.address}`);
         }
         break;
     }

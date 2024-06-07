@@ -74,6 +74,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   private currentWIFArr: string[];
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
+  private neoXNetwork: RpcNetwork;
   allWallet: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
   constructor(
     private assetState: AssetState,
@@ -101,6 +102,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         this.chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
       this.allWallet = (state.neo3WalletArr as any)
         .concat(state.neo2WalletArr)
         .concat(state.neoXWalletArr);
@@ -168,7 +170,12 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         break;
       case 'Neo3':
         if (this.n3Network.explorer) {
-          window.open(`${this.n3Network.explorer}address/${this.address}`);
+          window.open(`${this.n3Network.explorer}/address/${this.address}`);
+        }
+        break;
+      case 'NeoX':
+        if (this.neoXNetwork.explorer) {
+          window.open(`${this.neoXNetwork.explorer}/address/${this.address}`);
         }
         break;
     }
