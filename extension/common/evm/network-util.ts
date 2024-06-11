@@ -1,4 +1,4 @@
-import { MAX_SAFE_CHAIN_ID, CHAIN_IDS } from '../../common/data_module_evm';
+import { MAX_SAFE_CHAIN_ID } from '../../common/data_module_evm';
 
 /**
  * Checks whether the given number primitive chain ID is safe.
@@ -28,30 +28,6 @@ export function isPrefixedFormattedHexString(value: unknown) {
 }
 
 /**
- * Check if token detection is enabled for certain networks
- *
- * @param chainId - ChainID of network
- * @returns Whether the current network supports token detection
- */
-export function isTokenDetectionEnabledForNetwork(chainId: string | undefined) {
-  switch (chainId) {
-    case CHAIN_IDS.MAINNET:
-    case CHAIN_IDS.BSC:
-    case CHAIN_IDS.POLYGON:
-    case CHAIN_IDS.AVALANCHE:
-    case CHAIN_IDS.LINEA_GOERLI:
-    case CHAIN_IDS.LINEA_MAINNET:
-    case CHAIN_IDS.ARBITRUM:
-    case CHAIN_IDS.OPTIMISM:
-    case CHAIN_IDS.BASE:
-    case CHAIN_IDS.ZKSYNC_ERA:
-      return true;
-    default:
-      return false;
-  }
-}
-
-/**
  * Like {@link Number.isSafeInteger}, but types the input as a `number` if it is
  * indeed a safe integer.
  *
@@ -60,8 +36,4 @@ export function isTokenDetectionEnabledForNetwork(chainId: string | undefined) {
  */
 function isSafeInteger(value: unknown): value is number {
   return Number.isSafeInteger(value);
-}
-
-export function shouldShowLineaMainnet(): boolean {
-  return new Date().getTime() > Date.UTC(2023, 6, 11, 18);
 }

@@ -27,13 +27,13 @@ export interface EvmWalletJSON {
 
 export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
   {
-    id: 12227330,
+    id: 12227331,
     symbol: 'GAS',
-    chainId: 12227330,
+    chainId: 12227331,
     name: 'NeoX TESTNET',
     network: NetworkType.EVM,
     rpcUrl: 'https://neoxseed1.ngd.network',
-    explorer: 'https://xt2scan.ngd.network/',
+    explorer: 'https://xt3scan.ngd.network',
     keep: true,
   },
   {
