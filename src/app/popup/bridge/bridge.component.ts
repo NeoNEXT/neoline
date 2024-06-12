@@ -4,6 +4,7 @@ import {
   GlobalService,
   NotificationService,
   BridgeState,
+  TransactionState,
 } from '@/app/core';
 import { Asset } from '@/models/models';
 import { Component, OnDestroy } from '@angular/core';
@@ -25,6 +26,7 @@ import { Neo3InvokeService } from '../transfer/neo3-invoke.service';
 import { SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { ContractCall } from '@cityofzion/neon-core-neo3/lib/sc';
 import { NeoXFeeInfoProp } from '../transfer/create/interface';
+import { interval } from 'rxjs';
 
 const NeoN3GasAsset: Asset = {
   asset_id: GAS3_CONTRACT,
@@ -51,6 +53,13 @@ export class PopupBridgeComponent implements OnDestroy {
   toChain: string;
   toAddress: string;
 
+  getSourceTxReceiptInterval;
+  getTargetTxReceiptInterval;
+  sourceTxID: string;
+  targetTxID: string;
+  sourceTxLoading = false;
+  targetTxLoading = false;
+
   // neo3
   networkFee: string;
   sourceNetworkFee: string;
@@ -76,6 +85,7 @@ export class PopupBridgeComponent implements OnDestroy {
     private globalService: GlobalService,
     public notification: NotificationService,
     private bridgeState: BridgeState,
+    private transactionState: TransactionState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -90,6 +100,8 @@ export class PopupBridgeComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
+    this.getSourceTxReceiptInterval?.unsubscribe();
+    this.getTargetTxReceiptInterval?.unsubscribe();
   }
 
   private async initData() {
@@ -293,5 +305,104 @@ export class PopupBridgeComponent implements OnDestroy {
         this.showConfirmPage = true;
       }
     }
+  }
+
+  handleBack(event?: { hash: string; chain: ChainType }) {
+    this.showConfirmPage = false;
+    if (event) {
+      this.resetData();
+      if (event.chain === 'Neo3') {
+        this.waitNeo3SourceTxComplete(event.hash);
+      }
+      if (event.chain === 'NeoX') {
+        this.waitNeoXSourceTxComplete(event.hash);
+      }
+    }
+  }
+
+  //#region neo3
+  private waitNeo3SourceTxComplete(hash: string) {
+    this.sourceTxLoading = true;
+    this.getSourceTxReceiptInterval?.unsubscribe();
+    this.getSourceTxReceiptInterval = interval(3000).subscribe(() => {
+      this.transactionState.getApplicationLog(hash).subscribe((res) => {
+        console.log(res);
+        this.sourceTxID = hash;
+        this.sourceTxLoading = false;
+        this.getSourceTxReceiptInterval.unsubscribe();
+        const notifications = res.executions[0].notifications;
+        const notifi = notifications.find(
+          (item) => item.eventname === 'Deposit'
+        );
+        const depositId = notifi.state.value[0].value;
+        console.log(depositId);
+        this.waitNeo3TargetTxComplete(depositId);
+      });
+    });
+  }
+
+  private waitNeo3TargetTxComplete(depositId: number) {
+    this.targetTxLoading = true;
+    this.getTargetTxReceiptInterval?.unsubscribe();
+    this.getTargetTxReceiptInterval = interval(5000).subscribe(() => {
+      this.bridgeState
+        .getBridgeTxOnNeo3BridgeNeoX(depositId)
+        .subscribe((res: any) => {
+          console.log(res);
+          if (res.txid) {
+            this.targetTxID = res.txid;
+            this.targetTxLoading = false;
+            this.getTargetTxReceiptInterval.unsubscribe();
+          }
+        });
+    });
+  }
+  //#endregion
+
+  //#region neox
+  private waitNeoXSourceTxComplete(hash: string) {
+    this.sourceTxLoading = true;
+    this.getSourceTxReceiptInterval?.unsubscribe();
+    this.getSourceTxReceiptInterval = interval(3000).subscribe(() => {
+      this.bridgeState.getTransactionReceipt(hash).then((res) => {
+        if (res) {
+          console.log(res);
+          this.sourceTxID = hash;
+          this.sourceTxLoading = false;
+          this.getSourceTxReceiptInterval.unsubscribe();
+          const nonce = this.bridgeState.getWithdrawNonce({
+            asset: this.bridgeAsset,
+            data: res.logs[0].data,
+            topics: res.logs[0].topics,
+          });
+          console.log(nonce);
+          this.waitNeoXTargetTxComplete(nonce);
+        }
+      });
+    });
+  }
+
+  private waitNeoXTargetTxComplete(nonce: number) {
+    this.targetTxLoading = true;
+    this.getTargetTxReceiptInterval?.unsubscribe();
+    this.getTargetTxReceiptInterval = interval(3000).subscribe(() => {
+      this.bridgeState
+        .getBridgeTxOnNeoXBridgeNeo3(nonce)
+        .subscribe((res: any) => {
+          console.log(res);
+          if (res.result) {
+            this.targetTxID = res.result.txid;
+            this.targetTxLoading = false;
+            this.getTargetTxReceiptInterval.unsubscribe();
+          }
+        });
+    });
+  }
+  //#region
+
+  private resetData() {
+    this.initData();
+    this.bridgeAmount = '';
+    this.toAddress = '';
   }
 }

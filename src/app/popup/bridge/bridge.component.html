@@ -68,6 +68,14 @@
   >
     {{ "Deposit" | translate | async }}
   </button>
+  <p>
+    source txid:
+    {{ sourceTxLoading ? "loading..." : (sourceTxID | longStr : 6) }}
+  </p>
+  <p>
+    target txid:
+    {{ targetTxLoading ? "loading..." : (targetTxID | longStr : 6) }}
+  </p>
 </div>
 
 <neo3-bridge-confirm
@@ -84,7 +92,7 @@
   [currentWallet]="currentWallet"
   [invokeArgs]="invokeArgs"
   [signers]="signers"
-  (backAmount)="showConfirmPage = false"
+  (backAmount)="handleBack($event)"
 ></neo3-bridge-confirm>
 
 <neox-bridge-confirm
@@ -96,5 +104,5 @@
   [currentWallet]="currentWallet"
   [neoXFeeInfo]="neoXFeeInfo"
   [txParams]="txParams"
-  (backAmount)="showConfirmPage = false"
+  (backAmount)="handleBack($event)"
 ></neox-bridge-confirm>

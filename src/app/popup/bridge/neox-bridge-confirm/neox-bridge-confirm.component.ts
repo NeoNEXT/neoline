@@ -12,11 +12,10 @@ import {
   UtilServiceState,
   ChromeService,
   AssetEVMState,
-  BridgeState,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import { Asset } from '@/models/models';
-import { EvmTransactionParams, LedgerStatuses } from '../../_lib';
+import { ChainType, EvmTransactionParams, LedgerStatuses } from '../../_lib';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
 import { ethers } from 'ethers';
@@ -37,7 +36,7 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
   @Input() neoXFeeInfo: NeoXFeeInfoProp;
   @Input() txParams: EvmTransactionParams;
 
-  @Output() backAmount = new EventEmitter();
+  @Output() backAmount = new EventEmitter<{ hash: string; chain: ChainType }>();
 
   tabType: TabType = 'details';
   totalAmount: string;
@@ -46,16 +45,13 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
   loading = false;
   loadingMsg: string;
   getStatusInterval;
-  getSourceTxReceiptInterval;
-  getTargetTxReceiptInterval;
 
   constructor(
     private global: GlobalService,
     private ledger: LedgerService,
     private util: UtilServiceState,
     private chrome: ChromeService,
-    private assetEVMState: AssetEVMState,
-    private bridgeState: BridgeState
+    private assetEVMState: AssetEVMState
   ) {}
 
   ngOnInit(): void {
@@ -71,8 +67,6 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.getStatusInterval?.unsubscribe();
-    this.getSourceTxReceiptInterval?.unsubscribe();
-    this.getTargetTxReceiptInterval?.unsubscribe();
   }
 
   back() {
@@ -110,47 +104,13 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
     this.assetEVMState
       .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
       .then((tx) => {
-        this.waitSourceTxComplete(tx.hash);
+        this.backAmount.emit({ hash: tx.hash, chain: 'NeoX' });
         this.loading = false;
       })
       .catch((error) => {
         this.loading = false;
         this.global.snackBarTip(error);
       });
-  }
-
-  private waitSourceTxComplete(hash: string) {
-    this.getSourceTxReceiptInterval?.unsubscribe();
-    this.getSourceTxReceiptInterval = interval(3000).subscribe(() => {
-      this.bridgeState.getTransactionReceipt(hash).then((res) => {
-        if (res) {
-          console.log(res);
-
-          this.getSourceTxReceiptInterval.unsubscribe();
-          const nonce = this.bridgeState.getWithdrawNonce({
-            asset: this.bridgeAsset,
-            data: res.logs[0].data,
-            topics: res.logs[0].topics,
-          });
-          console.log(nonce);
-          this.waitTargetTxComplete(nonce);
-        }
-      });
-    });
-  }
-
-  private waitTargetTxComplete(nonce: number) {
-    this.getTargetTxReceiptInterval?.unsubscribe();
-    this.getTargetTxReceiptInterval = interval(3000).subscribe(() => {
-      this.bridgeState
-        .getBridgeTxOnNeoXBridgeNeo3(nonce)
-        .subscribe((res: any) => {
-          console.log(res);
-          if (res.result) {
-            this.getTargetTxReceiptInterval.unsubscribe();
-          }
-        });
-    });
   }
 
   private ledgerSendTx(signedTx) {

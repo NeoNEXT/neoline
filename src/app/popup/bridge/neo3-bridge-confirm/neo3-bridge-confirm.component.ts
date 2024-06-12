@@ -6,19 +6,13 @@ import {
   OnDestroy,
   OnInit,
 } from '@angular/core';
-import {
-  GlobalService,
-  LedgerService,
-  ChromeService,
-  TransactionState,
-  BridgeState,
-} from '@/app/core';
+import { GlobalService, LedgerService, ChromeService } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import { PopupEditFeeDialogComponent } from '@/app/popup/_dialogs';
 import { MatDialog } from '@angular/material/dialog';
 import { SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Asset } from '@/models/models';
-import { LedgerStatuses, RpcNetwork } from '../../_lib';
+import { ChainType, LedgerStatuses, RpcNetwork } from '../../_lib';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
@@ -49,7 +43,7 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
   @Input() invokeArgs: ContractCall[];
   @Input() signers: SignerLike[];
 
-  @Output() backAmount = new EventEmitter();
+  @Output() backAmount = new EventEmitter<{ hash: string; chain: ChainType }>();
 
   totalFee: string;
   rate = { priorityFee: '', networkFee: '', systemFee: '', totalFee: '' };
@@ -61,17 +55,13 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
   loading = false;
   loadingMsg: string;
   getStatusInterval;
-  getSourceTxReceiptInterval;
-  getTargetTxReceiptInterval;
 
   constructor(
     private dialog: MatDialog,
     private global: GlobalService,
     private ledger: LedgerService,
     private chrome: ChromeService,
-    private bridgeState: BridgeState,
-    private neo3Invoke: Neo3InvokeService,
-    private transactionState: TransactionState
+    private neo3Invoke: Neo3InvokeService
   ) {}
 
   ngOnInit(): void {
@@ -81,8 +71,6 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.getStatusInterval?.unsubscribe();
-    this.getSourceTxReceiptInterval?.unsubscribe();
-    this.getTargetTxReceiptInterval?.unsubscribe();
   }
 
   private calculateNeo3TotalFee() {
@@ -151,7 +139,7 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
         }
         console.log(txHash);
 
-        this.waitSourceTxComplete(txHash);
+        this.backAmount.emit({ hash: txHash, chain: 'Neo3' });
         this.loading = false;
         this.loadingMsg = '';
       })
@@ -160,37 +148,6 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
         this.loadingMsg = '';
         this.global.snackBarTip('transferFailed', err.msg || err);
       });
-  }
-
-  private waitSourceTxComplete(hash: string) {
-    this.getSourceTxReceiptInterval?.unsubscribe();
-    this.getSourceTxReceiptInterval = interval(3000).subscribe(() => {
-      this.transactionState.getApplicationLog(hash).subscribe((res) => {
-        console.log(res);
-        this.getSourceTxReceiptInterval.unsubscribe();
-        const notifications = res.executions[0].notifications;
-        const notifi = notifications.find(
-          (item) => item.eventname === 'Deposit'
-        );
-        const depositId = notifi.state.value[0].value;
-        console.log(depositId);
-        this.waitTargetTxComplete(depositId);
-      });
-    });
-  }
-
-  private waitTargetTxComplete(depositId: number) {
-    this.getTargetTxReceiptInterval?.unsubscribe();
-    this.getTargetTxReceiptInterval = interval(5000).subscribe(() => {
-      this.bridgeState
-        .getBridgeTxOnNeo3BridgeNeoX(depositId)
-        .subscribe((res: any) => {
-          console.log(res);
-          if (res.txid) {
-            this.getTargetTxReceiptInterval.unsubscribe();
-          }
-        });
-    });
   }
 
   private getLedgerStatus() {
