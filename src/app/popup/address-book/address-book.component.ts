@@ -3,7 +3,10 @@ import { ChromeService, GlobalService } from '@/app/core';
 import { SelectItem, ChainType, ChainTypeGroups, STORAGE_NAME } from '../_lib';
 import { Unsubscribable, timer } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupAddAddressBookDialogComponent } from '../_dialogs';
+import {
+  PopupAddAddressBookDialogComponent,
+  PopupConfirmDialogComponent,
+} from '../_dialogs';
 
 export interface AddAddressBookProp {
   chain: ChainType;
@@ -114,13 +117,26 @@ export class PopupAddressBookComponent implements OnInit {
     this.moreModalAddress = item;
   }
   removeAddress() {
-    this.storageAddressBook[this.moreModalAddress.chain] =
-      this.storageAddressBook[this.moreModalAddress.chain].filter(
-        (item) => item.address !== this.moreModalAddress.address
-      );
-    this.initData();
-    this.chrome.setStorage(STORAGE_NAME.addressBook, this.storageAddressBook);
+    const tempAddress = Object.assign({}, this.moreModalAddress);
     this.moreModalAddress = undefined;
+    this.dialog
+      .open(PopupConfirmDialogComponent, {
+        data: 'delAddressConfirm',
+        panelClass: 'custom-dialog-panel',
+      })
+      .afterClosed()
+      .subscribe((confirm) => {
+        if (confirm) {
+          this.storageAddressBook[tempAddress.chain] = this.storageAddressBook[
+            tempAddress.chain
+          ].filter((item) => item.address !== tempAddress.address);
+          this.initData();
+          this.chrome.setStorage(
+            STORAGE_NAME.addressBook,
+            this.storageAddressBook
+          );
+        }
+      });
   }
   editAddress() {
     const editItem = Object.assign({}, this.moreModalAddress);

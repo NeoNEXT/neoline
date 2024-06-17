@@ -422,6 +422,9 @@
   "delWalletConfirm": {
     "message": "确认删除该钱包吗？"
   },
+  "delAddressConfirm": {
+    "message": "确认删除该地址吗？"
+  },
   "delAllAuthListConfirm": {
     "message": "确认清空所有授权吗？"
   },

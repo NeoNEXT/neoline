@@ -422,6 +422,9 @@
   "delWalletConfirm": {
     "message": "Are you sure to delete this wallet?"
   },
+  "delAddressConfirm": {
+    "message": "Are you sure to delete this address?"
+  },
   "delAllAuthListConfirm": {
     "message": "Are you sure delete all authorized sites?"
   },
