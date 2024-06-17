@@ -29,6 +29,11 @@ export class PopupAboutComponent implements OnInit, OnDestroy {
       enUrl: 'mailto:support@neoline.io',
       zhUrl: 'mailto:support@neoline.io',
     },
+    {
+      name: 'FollowUs',
+      enUrl: '',
+      zhUrl: '',
+    },
   ];
   settingStateSub: Unsubscribable;
 

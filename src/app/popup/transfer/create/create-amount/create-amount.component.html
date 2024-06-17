@@ -8,7 +8,7 @@
   ></transfer-create-address>
   <div class="content" *ngIf="transferTo?.address">
     <div class="item currencies">
-      <p class="label">{{ "currencies" | translate | async }}</p>
+      <p class="label">{{ "Asset" | translate | async }}</p>
       <!-- not NFT -->
       <div class="value" *ngIf="!nftContract" (click)="selectAsset()">
         <div class="asset-logo-box small">

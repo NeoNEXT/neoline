@@ -7,6 +7,15 @@ import { Component, Input } from '@angular/core';
 })
 export class TooltipComponent {
   @Input() tip: string;
+  @Input() placement?:
+    | 'top'
+    | 'topLeft'
+    | 'topRight'
+    | 'bottom'
+    | 'bottomLeft'
+    | 'bottomRight'
+    | 'left'
+    | 'right' = 'right';
 
   isShowPopup = false;
   private showPopupTimeout: any;

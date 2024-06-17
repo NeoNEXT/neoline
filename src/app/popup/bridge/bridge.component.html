@@ -52,7 +52,9 @@
     <li>
       <span class="label">
         {{ "bridgeFee" | translate | async }}
-        <tooltip [tip]="'bridgeFeeDesc' | translate | async"></tooltip>
+        <tooltip [tip]="'bridgeFeeDesc' | translate | async" placement="right">
+          <img src="assets/images/common/tooltip.svg" alt="" />
+        </tooltip>
       </span>
       <p>0.1 {{ bridgeAsset.symbol }}</p>
     </li>

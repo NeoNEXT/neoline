@@ -128,8 +128,8 @@
   "allTransfer": {
     "message": "All"
   },
-  "currencies": {
-    "message": "Currencies"
+  "Asset": {
+    "message": "Asset"
   },
   "transferToTip": {
     "message": "Who will receive"
@@ -229,6 +229,9 @@
   },
   "contactUs": {
     "message": "Contact Us"
+  },
+  "FollowUs": {
+    "message": "Follow us"
   },
   "myAccountQRCode": {
     "message": "My wallet QR code"
@@ -1146,7 +1149,7 @@
     "message": "Advanced gas fee"
   },
   "advancedGasFeeRisk": {
-    "message": "Use Advanced to customize the gas price. This can be confusing if you aren’t familiar. Interact at your own risk."
+    "message": "Use this feature to customize the gas price. This can be confusing if you aren’t familiar. Interact at your own risk."
   },
   "maxFee": {
     "message": "Max Fee"
@@ -1234,5 +1237,17 @@
   },
   "InvalidTokenId": {
     "message": "Invalid token ID"
+  },
+  "menuGuideAndSupport": {
+    "message": "Guides and Support"
+  },
+  "menuSettings": {
+    "message": "Settings"
+  },
+  "menuLock": {
+    "message": "Lock NeoLine"
+  },
+  "menuAboutUs": {
+    "message": "About Us"
   }
 }

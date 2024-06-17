@@ -128,8 +128,8 @@
   "transgerTo": {
     "message": "转账给"
   },
-  "currencies": {
-    "message": "币种"
+  "Asset": {
+    "message": "资产"
   },
   "transferToTip": {
     "message": "收款地址"
@@ -229,6 +229,9 @@
   },
   "contactUs": {
     "message": "联系我们"
+  },
+  "FollowUs": {
+    "message": "关注我们"
   },
   "myAccountQRCode": {
     "message": "我的钱包二维码"
@@ -558,7 +561,7 @@
     "message": "转账地址"
   },
   "selectAsset": {
-    "message": "选择币种"
+    "message": "选择资产"
   },
   "importMethod": {
     "message": "导入方式"
@@ -1146,7 +1149,7 @@
     "message": "高级燃料费"
   },
   "advancedGasFeeRisk": {
-    "message": "使用高级来定制燃料价格。如果您不熟悉这可能会引起混淆。操作风险自付。"
+    "message": "使用该功能定制燃料费，如果您不熟悉可能会引起混淆，请谨慎操作，风险自付！"
   },
   "maxFee": {
     "message": "最高费用"
@@ -1234,5 +1237,17 @@
   },
   "InvalidTokenId": {
     "message": "无效的 token ID"
+  },
+  "menuGuideAndSupport": {
+    "message": "指南和支持"
+  },
+  "menuSettings": {
+    "message": "设置"
+  },
+  "menuLock": {
+    "message": "锁定 NeoLine"
+  },
+  "menuAboutUs": {
+    "message": "关于我们"
   }
 }

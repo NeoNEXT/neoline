@@ -232,7 +232,10 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
 
   // transfer asset
   selectAsset(isNFT = false) {
-    let tokens = this.nftAsset.tokens;
+    let tokens;
+    if (isNFT) {
+      tokens = this.nftAsset.tokens;
+    }
     if (isNFT && this.chainType === 'NeoX') {
       tokens = tokens.filter((item) => item.isOwner === true);
     }

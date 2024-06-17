@@ -1,4 +1,4 @@
 <div class="content" (mouseenter)="showPopup()" (mouseleave)="hiddenPopup()">
-  <img src="assets/images/common/tooltip.svg" alt="" />
-  <span class="tip" *ngIf="isShowPopup">{{ tip }}</span>
+  <ng-content></ng-content>
+  <span class="tip" [ngClass]="placement" *ngIf="isShowPopup">{{ tip }}</span>
 </div>
