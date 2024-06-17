@@ -31,8 +31,8 @@ export class PopupAboutComponent implements OnInit, OnDestroy {
     },
     {
       name: 'FollowUs',
-      enUrl: '',
-      zhUrl: '',
+      enUrl: 'https://x.com/NEOLine20',
+      zhUrl: 'https://x.com/NEOLine20',
     },
   ];
   settingStateSub: Unsubscribable;

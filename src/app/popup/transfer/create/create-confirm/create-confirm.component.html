@@ -21,15 +21,19 @@
       {{ rateCurrency }}
     </p>
     <div class="address-group">
-      <div class="item">
-        <img class="avatar" [avatar]="data.from" />
-        <span>{{ data.from | longStr : 4 }}</span>
-      </div>
+      <copy [value]="data.from">
+        <div class="item">
+          <img class="avatar" [avatar]="data.from" />
+          <span>{{ data.from | longStr : 4 }}</span>
+        </div>
+      </copy>
       <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
-      <div class="item">
-        <img class="avatar" [avatar]="data?.to?.address" />
-        <span>{{ data?.to?.address | longStr : 4 }}</span>
-      </div>
+      <copy [value]="data?.to?.address">
+        <div class="item">
+          <img class="avatar" [avatar]="data?.to?.address" />
+          <span>{{ data?.to?.address | longStr : 4 }}</span>
+        </div>
+      </copy>
     </div>
   </div>
   <div class="tabs-container">
