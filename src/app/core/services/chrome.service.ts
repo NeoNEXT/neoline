@@ -463,22 +463,21 @@ export class ChromeService {
     if (!this.check) {
       switch (STORAGE_VALUE_MESSAGE[storageName].type) {
         case STORAGE_VALUE_TYPE.object:
-          targetValue = value && value !== 'undefined' ? JSON.parse(value) : {};
+          targetValue = value ? JSON.parse(value) : {};
           break;
         case STORAGE_VALUE_TYPE.array:
-          targetValue = value && value !== 'undefined' ? JSON.parse(value) : [];
+          targetValue = value ? JSON.parse(value) : [];
           break;
         case STORAGE_VALUE_TYPE.map:
-          targetValue =
-            value && value !== 'undefined'
-              ? new Map(JSON.parse(value))
-              : new Map();
+          targetValue = value ? new Map(JSON.parse(value)) : new Map();
           break;
         case STORAGE_VALUE_TYPE.number:
-          targetValue = value && value !== 'undefined' ? Number(value) : 0;
+          targetValue = value ? Number(value) : 0;
           break;
         case STORAGE_VALUE_TYPE.boolean:
-          targetValue = value === 'true' ? true : false;
+          if (value !== null) {
+            targetValue = value === 'true' ? true : false;
+          }
           break;
       }
     } else {

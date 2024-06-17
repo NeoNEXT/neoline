@@ -259,7 +259,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
                 this.chromeSrc
                   .getStorage(STORAGE_NAME.onePassword)
                   .subscribe((res) => {
-                    if (res === true) {
+                    if (res !== false) {
                       this.toCreate(type);
                     } else {
                       this.global.snackBarTip('switchOnePasswordFirst');

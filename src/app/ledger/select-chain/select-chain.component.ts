@@ -31,7 +31,7 @@ export class LedgerChainComponent implements OnDestroy {
   select() {
     if (this.chain === 'NeoX') {
       this.chromeSer.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {
-        if (res === true) {
+        if (res !== false) {
           this.selectChain.emit(this.chain);
         } else {
           this.global.snackBarTip('switchOnePasswordFirst');
