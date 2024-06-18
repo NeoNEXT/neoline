@@ -27,6 +27,8 @@ import { SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { ContractCall } from '@cityofzion/neon-core-neo3/lib/sc';
 import { NeoXFeeInfoProp } from '../transfer/create/interface';
 import { interval } from 'rxjs';
+import { MatDialog } from '@angular/material/dialog';
+import { PopupSelectAddressDialogComponent } from '../_dialogs';
 
 const NeoN3GasAsset: Asset = {
   asset_id: GAS3_CONTRACT,
@@ -59,6 +61,7 @@ export class PopupBridgeComponent implements OnDestroy {
   targetTxID: string;
   sourceTxLoading = false;
   targetTxLoading = false;
+  loading = false;
 
   // neo3
   networkFee: string;
@@ -78,6 +81,8 @@ export class PopupBridgeComponent implements OnDestroy {
   chainType: ChainType;
   n3Network: RpcNetwork;
   neoXNetwork: RpcNetwork;
+  neo3WalletArr: Wallet3[];
+  neoXWalletArr: EvmWalletJSON[];
   constructor(
     private assetState: AssetState,
     private assetEVMState: AssetEVMState,
@@ -86,6 +91,7 @@ export class PopupBridgeComponent implements OnDestroy {
     public notification: NotificationService,
     private bridgeState: BridgeState,
     private transactionState: TransactionState,
+    private dialog: MatDialog,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -94,6 +100,8 @@ export class PopupBridgeComponent implements OnDestroy {
       this.chainType = state.currentChainType;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      this.neo3WalletArr = state.neo3WalletArr;
+      this.neoXWalletArr = state.neoXWalletArr;
       this.initData();
     });
   }
@@ -278,6 +286,7 @@ export class PopupBridgeComponent implements OnDestroy {
       return;
     }
 
+    this.loading = true;
     if (this.chainType === 'Neo3') {
       this.calculateNeoN3Fee().subscribe((res) => {
         const tAmount = new BigNumber(this.bridgeAsset.balance)
@@ -291,6 +300,7 @@ export class PopupBridgeComponent implements OnDestroy {
         } else {
           this.showConfirmPage = true;
         }
+        this.loading = false;
       });
     } else {
       await this.calculateNeoXFee();
@@ -304,6 +314,7 @@ export class PopupBridgeComponent implements OnDestroy {
       } else {
         this.showConfirmPage = true;
       }
+      this.loading = false;
     }
   }
 
@@ -318,6 +329,24 @@ export class PopupBridgeComponent implements OnDestroy {
         this.waitNeoXSourceTxComplete(event.hash);
       }
     }
+  }
+
+  selectToAddress() {
+    const chain: ChainType = this.chainType === 'Neo3' ? 'NeoX' : 'Neo3';
+    this.dialog
+      .open(PopupSelectAddressDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+        data: {
+          chainType: chain,
+          walletArr: chain === 'Neo3' ? this.neo3WalletArr : this.neoXWalletArr,
+        },
+      })
+      .afterClosed()
+      .subscribe((res) => {
+        if (res) {
+          this.toAddress = res;
+        }
+      });
   }
 
   //#region neo3

@@ -1,18 +1,12 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { ChromeService, GlobalService } from '@/app/core';
-import { SelectItem, ChainType, ChainTypeGroups, STORAGE_NAME } from '../_lib';
+import { SelectItem, ChainType, ChainTypeGroups, STORAGE_NAME, AddAddressBookProp } from '../_lib';
 import { Unsubscribable, timer } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import {
   PopupAddAddressBookDialogComponent,
   PopupConfirmDialogComponent,
 } from '../_dialogs';
-
-export interface AddAddressBookProp {
-  chain: ChainType;
-  name: string;
-  address: string;
-}
 
 type AllChainType = ChainType | 'All';
 

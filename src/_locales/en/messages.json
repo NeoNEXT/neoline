@@ -999,7 +999,7 @@
     "message": "Verification passed"
   },
   "addressBook": {
-    "message": "Address Book"
+    "message": "Address book"
   },
   "receiveTip1Prefix": {
     "message": "Currently under"
@@ -1258,5 +1258,11 @@
   },
   "menuAboutUs": {
     "message": "About Us"
+  },
+  "yourAccounts": {
+    "message": "Your accounts"
+  },
+  "selectAddress": {
+    "message": "Select address"
   }
 }

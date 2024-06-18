@@ -1,4 +1,4 @@
-.content {
+.bridge-content {
   margin: 0 8px;
   padding: 24px 16px 28px 16px;
   border-radius: 4px;
@@ -31,6 +31,10 @@
         left: 50%;
         margin-left: -16px;
         top: -18px;
+      }
+      .select {
+        color: #0ac7b7;
+        cursor: pointer;
       }
     }
     .label {

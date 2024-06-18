@@ -18,3 +18,4 @@ export { PopupEditEvmFeeDialogComponent } from './edit-evm-fee/edit-evm-fee.dial
 export { PopupAddAddressBookDialogComponent } from './add-address-book/add-address-book.dialog';
 export { PopupAddressBookListDialogComponent } from './address-book-list/address-book-list.dialog';
 export { PopupExportWalletDialogComponent } from './export-wallet/export-wallet.dialog';
+export { PopupSelectAddressDialogComponent } from './select-address/select-address.dialog';

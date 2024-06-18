@@ -1,3 +1,9 @@
+<div class="loading-box" *ngIf="loading">
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+  </div>
+</div>
+
 <nav title="Bridge" *ngIf="!showConfirmPage"></nav>
 <nav
   title="Bridge"
@@ -6,7 +12,7 @@
   *ngIf="showConfirmPage"
 ></nav>
 
-<div class="content" *ngIf="!showConfirmPage">
+<div class="bridge-content" *ngIf="!showConfirmPage">
   <div class="asset">{{ bridgeAsset.symbol }}</div>
   <div class="item from">
     <div class="label">
@@ -46,6 +52,13 @@
     <div class="label">{{ "ToAddress" | translate | async }}</div>
     <div class="input-amount">
       <span class="chain">{{ toChain }}</span>
+      <p class="select" (click)="selectToAddress()">
+        {{
+          toAddress
+            ? (toAddress | longStr : 8)
+            : ("selectAddress" | translate | async)
+        }}
+      </p>
     </div>
   </div>
   <ul class="fee">
@@ -70,13 +83,22 @@
   >
     {{ "Deposit" | translate | async }}
   </button>
+
   <p>
     source txid:
-    {{ sourceTxLoading ? "loading..." : (sourceTxID | longStr : 6) }}
+    <span *ngIf="sourceTxLoading">loading...</span>
+    <copy *ngIf="!sourceTxLoading && sourceTxID" [value]="sourceTxID">
+      {{ sourceTxID | longStr : 6 }}
+      <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+    </copy>
   </p>
   <p>
     target txid:
-    {{ targetTxLoading ? "loading..." : (targetTxID | longStr : 6) }}
+    <span *ngIf="targetTxLoading">loading...</span>
+    <copy *ngIf="!targetTxLoading && targetTxID" [value]="targetTxID">
+      {{ targetTxID | longStr : 6 }}
+      <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+    </copy>
   </p>
 </div>
 

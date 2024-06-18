@@ -1,5 +1,10 @@
 import { Component, Inject } from '@angular/core';
-import { ChainSelectItem, ChainType, ChainTypeGroups } from '../../_lib';
+import {
+  AddAddressBookProp,
+  ChainSelectItem,
+  ChainType,
+  ChainTypeGroups,
+} from '../../_lib';
 import {
   AbstractControl,
   FormBuilder,
@@ -11,7 +16,6 @@ import { ethers } from 'ethers';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { wallet as wallet2 } from '@cityofzion/neon-core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { AddAddressBookProp } from '../../address-book/address-book.component';
 
 @Component({
   templateUrl: 'add-address-book.dialog.html',

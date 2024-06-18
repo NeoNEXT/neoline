@@ -1258,5 +1258,11 @@
   },
   "menuAboutUs": {
     "message": "关于我们"
+  },
+  "yourAccounts": {
+    "message": "你的账户"
+  },
+  "selectAddress": {
+    "message": "选择地址"
   }
 }

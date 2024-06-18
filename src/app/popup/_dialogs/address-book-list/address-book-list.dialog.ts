@@ -1,6 +1,5 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { AddAddressBookProp } from '../../address-book/address-book.component';
-import { ChainType, ChainTypeGroups, STORAGE_NAME } from '../../_lib';
+import { AddAddressBookProp, ChainType, ChainTypeGroups, STORAGE_NAME } from '../../_lib';
 import { Unsubscribable, timer } from 'rxjs';
 import { ChromeService } from '@/app/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
