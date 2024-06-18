@@ -75,7 +75,14 @@
     <p class="asset-money">
       {{ balance?.rateBalance | numberFixed : 2 }} {{ rateCurrency }}
     </p>
-    <div class="transaction-btn-container">
+    <div
+      class="transaction-btn-container"
+      [ngClass]="{
+        bridge:
+          (chainType === 'NeoX' && neoXNetwork.chainId === 12227331) ||
+          (chainType === 'Neo3' && n3Network.chainId === 6)
+      }"
+    >
       <div class="item receive" [routerLink]="['/popup/transfer/receive']">
         <img theme src="assets/images/transfer/receive.svg" alt="" />
         {{ "receive" | translate | async }}
@@ -84,7 +91,14 @@
         <img theme src="assets/images/transfer/transfer.svg" alt="" />
         {{ "transfer" | translate | async }}
       </div>
-      <div class="item receive" [routerLink]="['/popup/bridge']">
+      <div
+        *ngIf="
+          (chainType === 'NeoX' && neoXNetwork.chainId === 12227331) ||
+          (chainType === 'Neo3' && n3Network.chainId === 6)
+        "
+        class="item receive"
+        [routerLink]="['/popup/bridge']"
+      >
         <img theme src="assets/images/bridge/bridge.svg" alt="" />
         {{ "Bridge" | translate | async }}
       </div>
