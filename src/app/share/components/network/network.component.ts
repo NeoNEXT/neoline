@@ -1,4 +1,11 @@
-import { Component, Output, EventEmitter, OnDestroy } from '@angular/core';
+import {
+  Component,
+  Output,
+  EventEmitter,
+  OnDestroy,
+  ElementRef,
+  ViewChild,
+} from '@angular/core';
 import {
   RpcNetwork,
   ChainType,
@@ -25,13 +32,25 @@ import { Router } from '@angular/router';
 import { Unsubscribable } from 'rxjs';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 
+interface ChainNetwork {
+  chain: ChainType;
+  title: string;
+  expand: boolean;
+  networkArr: RpcNetwork[];
+}
+
 @Component({
   selector: 'network',
   templateUrl: 'network.component.html',
   styleUrls: ['network.component.scss'],
 })
 export class PopupNetworkComponent implements OnDestroy {
+  @ViewChild('moreModalDom') moreModalDom: ElementRef;
   @Output() closeEvent = new EventEmitter();
+
+  moreModalNetwork: RpcNetwork;
+  moreModalNetworkIndex: number;
+  moreModalChainType: ChainType;
 
   private accountSub: Unsubscribable;
   neo2WalletArr: Wallet2[];
@@ -44,12 +63,7 @@ export class PopupNetworkComponent implements OnDestroy {
   neo3NetworkIndex: number;
   neoXNetworkIndex: number;
   chainType: ChainType;
-  allNetworks: Array<{
-    chain: ChainType;
-    title: string;
-    expand: boolean;
-    networkArr: RpcNetwork[];
-  }>;
+  allNetworks: ChainNetwork[];
   constructor(
     private store: Store<AppState>,
     private chromeSer: ChromeService,
@@ -214,36 +228,108 @@ export class PopupNetworkComponent implements OnDestroy {
       });
   }
 
-  deleteNetwork(index: number, chain: ChainType) {
-    switch (chain) {
-      case 'Neo3':
-        if (chain === this.chainType && this.neo3NetworkIndex > index) {
-          this.neo3NetworkIndex--;
-          this.store.dispatch({
-            type: UPDATE_NEO3_NETWORK_INDEX,
-            data: this.neo3NetworkIndex,
-          });
+  deleteNetwork() {
+    this.moreModalNetwork = undefined;
+    this.dialog
+      .open(PopupConfirmDialogComponent, {
+        data: 'delNetworkConfirm',
+        panelClass: 'custom-dialog-panel',
+      })
+      .afterClosed()
+      .subscribe((confirm) => {
+        if (confirm) {
+          switch (this.moreModalChainType) {
+            case 'Neo3':
+              if (
+                this.moreModalChainType === this.chainType &&
+                this.neo3NetworkIndex > this.moreModalNetworkIndex
+              ) {
+                this.neo3NetworkIndex--;
+                this.store.dispatch({
+                  type: UPDATE_NEO3_NETWORK_INDEX,
+                  data: this.neo3NetworkIndex,
+                });
+              }
+              this.neo3Networks.splice(this.moreModalNetworkIndex, 1);
+              this.store.dispatch({
+                type: UPDATE_NEO3_NETWORKS,
+                data: this.neo3Networks,
+              });
+              break;
+            case 'NeoX':
+              if (
+                this.moreModalChainType === this.chainType &&
+                this.neoXNetworkIndex > this.moreModalNetworkIndex
+              ) {
+                this.neoXNetworkIndex--;
+                this.store.dispatch({
+                  type: UPDATE_NEOX_NETWORK_INDEX,
+                  data: this.neoXNetworkIndex,
+                });
+              }
+              this.neoXNetworks.splice(this.moreModalNetworkIndex, 1);
+              this.store.dispatch({
+                type: UPDATE_NEOX_NETWORKS,
+                data: this.neoXNetworks,
+              });
+              break;
+          }
         }
-        this.neo3Networks.splice(index, 1);
-        this.store.dispatch({
-          type: UPDATE_NEO3_NETWORKS,
-          data: this.neo3Networks,
-        });
-        break;
-      case 'NeoX':
-        if (chain === this.chainType && this.neoXNetworkIndex > index) {
-          this.neoXNetworkIndex--;
-          this.store.dispatch({
-            type: UPDATE_NEOX_NETWORK_INDEX,
-            data: this.neoXNetworkIndex,
-          });
-        }
-        this.neoXNetworks.splice(index, 1);
-        this.store.dispatch({
-          type: UPDATE_NEOX_NETWORKS,
-          data: this.neoXNetworks,
-        });
-        break;
+      });
+  }
+
+  editNetwork() {
+    const tempNetwork = this.moreModalNetwork;
+    this.moreModalNetwork = undefined;
+    this.dialog.open(PopupAddNetworkDialogComponent, {
+      panelClass: 'custom-dialog-panel',
+      data: {
+        addChainType: this.moreModalChainType,
+        index: this.moreModalNetworkIndex,
+        editNetwork: tempNetwork,
+      },
+    });
+  }
+
+  checkShowMore(list: ChainNetwork, item: RpcNetwork) {
+    if (list.chain === 'Neo3') {
+      if (this.chainType === 'Neo3' && this.currentNetwork.id === item.id) {
+        return false;
+      }
+      if (item?.id > 6) {
+        return true;
+      }
     }
+    if (list.chain === 'NeoX') {
+      if (this.chainType === 'NeoX' && this.currentNetwork.id === item.id) {
+        return false;
+      }
+      if (!item?.keep) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  openMoreModal(
+    e: Event,
+    item: RpcNetwork,
+    chainType: ChainType,
+    index: number
+  ) {
+    e.stopPropagation();
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    const top = rect.top - 35;
+    if (top > 400) {
+      const bottom = 508 - top + 35;
+      this.moreModalDom.nativeElement.style.bottom = bottom + 'px';
+      this.moreModalDom.nativeElement.style.top = 'auto';
+    } else {
+      this.moreModalDom.nativeElement.style.top = top + 'px';
+      this.moreModalDom.nativeElement.style.bottom = 'auto';
+    }
+    this.moreModalNetwork = item;
+    this.moreModalNetworkIndex = index;
+    this.moreModalChainType = chainType;
   }
 }

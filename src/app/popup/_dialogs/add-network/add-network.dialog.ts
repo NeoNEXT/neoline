@@ -10,7 +10,12 @@ import {
   UPDATE_NEOX_NETWORK_INDEX,
   UPDATE_WALLET,
 } from '../../_lib';
-import { HomeService, ChromeService, NeonService } from '@/app/core';
+import {
+  HomeService,
+  ChromeService,
+  NeonService,
+  GlobalService,
+} from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable, timer } from 'rxjs';
@@ -48,6 +53,8 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
     @Inject(MAT_DIALOG_DATA)
     public data: {
       addChainType: ChainType;
+      index?: number;
+      editNetwork?: RpcNetwork;
     },
     private homeSer: HomeService,
     private chrome: ChromeService,
@@ -55,6 +62,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
     private dialog: MatDialog,
     private neon: NeonService,
     private router: Router,
+    private global: GlobalService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -69,23 +77,44 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
     });
     if (this.data.addChainType === 'Neo3') {
       this.addNetworkForm = this.fb.group({
-        id: [''],
-        name: ['', [Validators.required]],
-        rpcUrl: ['', [Validators.required]],
-        magicNumber: ['', [Validators.required]],
-        chainId: [''],
-        network: [''],
-        explorer: [''],
+        id: [this.data.editNetwork ? this.data.editNetwork.id : ''],
+        name: [
+          this.data.editNetwork ? this.data.editNetwork.name : '',
+          [Validators.required],
+        ],
+        rpcUrl: [
+          this.data.editNetwork ? this.data.editNetwork.rpcUrl : '',
+          [Validators.required],
+        ],
+        magicNumber: [
+          this.data.editNetwork ? this.data.editNetwork.magicNumber : '',
+          [Validators.required],
+        ],
+        chainId: [this.data.editNetwork ? this.data.editNetwork.chainId : ''],
+        network: [this.data.editNetwork ? this.data.editNetwork.network : ''],
+        explorer: [this.data.editNetwork ? this.data.editNetwork.explorer : ''],
       });
     } else {
       this.addNetworkForm = this.fb.group({
-        id: [''],
-        name: ['', [Validators.required]],
-        rpcUrl: ['', [Validators.required]],
-        chainId: ['', [Validators.required]],
-        symbol: ['', [Validators.required]],
+        id: [this.data.editNetwork ? this.data.editNetwork.id : ''],
+        name: [
+          this.data.editNetwork ? this.data.editNetwork.name : '',
+          [Validators.required],
+        ],
+        rpcUrl: [
+          this.data.editNetwork ? this.data.editNetwork.rpcUrl : '',
+          [Validators.required],
+        ],
+        chainId: [
+          this.data.editNetwork ? this.data.editNetwork.chainId : '',
+          [Validators.required],
+        ],
+        symbol: [
+          this.data.editNetwork ? this.data.editNetwork.symbol : '',
+          [Validators.required],
+        ],
         network: [NetworkType.EVM],
-        explorer: [''],
+        explorer: [this.data.editNetwork ? this.data.editNetwork.explorer : ''],
       });
     }
   }
@@ -155,6 +184,10 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
   }
 
   async confirm() {
+    if (this.data.editNetwork) {
+      this.updateNetwork();
+      return;
+    }
     this.loading = true;
     if (this.data.addChainType === 'Neo3') {
       /* add neo3 network */
@@ -260,5 +293,47 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
           });
       }
     }
+  }
+
+  updateNetwork() {
+    if (this.data.addChainType === 'Neo3') {
+      /* edit neo3 network */
+      this.addNetworkForm.controls.id.setValue(
+        this.n3Networks[this.n3Networks.length - 1].id + 1
+      );
+      switch (this.addNetworkForm.value.magicNumber) {
+        case 860833102:
+          this.addNetworkForm.controls.network.setValue(NetworkType.N3MainNet);
+          this.addNetworkForm.controls.chainId.setValue(3);
+          break;
+        case 894710606:
+          this.addNetworkForm.controls.network.setValue(NetworkType.N3TestNet);
+          this.addNetworkForm.controls.chainId.setValue(6);
+          break;
+        default:
+          this.addNetworkForm.controls.network.setValue(
+            NetworkType.N3PrivateNet
+          );
+          this.addNetworkForm.controls.chainId.setValue(0);
+          break;
+      }
+      this.n3Networks[this.data.index] = this.addNetworkForm.value;
+      this.store.dispatch({
+        type: UPDATE_NEO3_NETWORKS,
+        data: this.n3Networks,
+      });
+    } else {
+      /* edit neoX network */
+      this.addNetworkForm.controls.id.setValue(
+        this.addNetworkForm.value.chainId
+      );
+      this.neoXNetworks[this.data.index] = this.addNetworkForm.value;
+      this.store.dispatch({
+        type: UPDATE_NEOX_NETWORKS,
+        data: this.neoXNetworks,
+      });
+    }
+    this.global.snackBarTip('networkModifySucc');
+    this.dialogRef.close();
   }
 }

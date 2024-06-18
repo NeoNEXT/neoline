@@ -425,6 +425,9 @@
   "delAddressConfirm": {
     "message": "确认删除该地址吗？"
   },
+  "delNetworkConfirm": {
+    "message": "确认删除该网络吗？"
+  },
   "delAllAuthListConfirm": {
     "message": "确认清空所有授权吗？"
   },
@@ -796,6 +799,9 @@
   },
   "AddNetwork": {
     "message": "添加网络"
+  },
+  "EditNetwork": {
+    "message": "编辑网络"
   },
   "NetworkName": {
     "message": "网络名称"

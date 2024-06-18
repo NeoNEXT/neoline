@@ -25,15 +25,10 @@
           <span class="select"></span>
           <span class="flex-1">{{ item.name }}</span>
           <img
-            class="delete"
-            *ngIf="
-              currentNetwork.id !== item.id &&
-              ((list.chain === 'Neo3' && item.id > 6) ||
-                (list.chain === 'NeoX' && !item.keep))
-            "
-            (click)="$event.stopPropagation(); deleteNetwork(index, list.chain)"
+            *ngIf="checkShowMore(list, item)"
+            (click)="openMoreModal($event, item, list.chain, index)"
             theme
-            src="/assets/images/common/close.svg"
+            src="/assets/images/common/more.svg"
             alt=""
           />
         </li>
@@ -43,4 +38,19 @@
   <button class="confirm pop-ups add-network" (click)="addNetwork()">
     {{ "AddNetwork" | translate | async }}
   </button>
+  <section
+    class="pop-ups-veil"
+    *ngIf="moreModalNetwork"
+    (click)="$event.stopPropagation(); moreModalNetwork = undefined"
+  ></section>
+  <ul #moreModalDom [hidden]="!moreModalNetwork" class="pop-ups-menu">
+    <li (click)="editNetwork()">
+      <img theme src="assets/images/account/home-account-detail.svg" alt="" />
+      {{ "edit" | translate | async }}
+    </li>
+    <li (click)="deleteNetwork()">
+      <img theme src="assets/images/account/home-delete.svg" alt="" />
+      {{ "delete" | translate | async }}
+    </li>
+  </ul>
 </div>

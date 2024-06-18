@@ -425,6 +425,9 @@
   "delAddressConfirm": {
     "message": "Are you sure to delete this address?"
   },
+  "delNetworkConfirm": {
+    "message": "Are you sure to delete this network?"
+  },
   "delAllAuthListConfirm": {
     "message": "Are you sure delete all authorized sites?"
   },
@@ -796,6 +799,9 @@
   },
   "AddNetwork": {
     "message": "Add Network"
+  },
+  "EditNetwork": {
+    "message": "Edit Network"
   },
   "NetworkName": {
     "message": "Network Name"

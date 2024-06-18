@@ -1,3 +1,5 @@
+@import "src/styles/pop-ups-menu.scss";
+
 .content {
   position: absolute;
   right: 17px;
@@ -81,9 +83,6 @@
           }
           &:hover {
             background: var(--hover-color);
-            img.delete {
-              display: block;
-            }
           }
           .select {
             display: inline-block;
@@ -93,9 +92,6 @@
             border: 1px solid var(--tip-color);
             margin-right: 12px;
           }
-          img.delete {
-            display: none;
-          }
         }
       }
     }
@@ -103,5 +99,16 @@
   button.add-network {
     width: calc(100% - 48px);
     margin: 0 24px 24px;
+  }
+  .pop-ups-menu {
+    width: 164px;
+    position: absolute;
+    right: 8px;
+    padding: 4px 0;
+    li {
+      padding: 0 12px;
+      height: 48px;
+      font-size: 14px;
+    }
   }
 }
