@@ -1,9 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterEvent, NavigationEnd } from '@angular/router';
-import { RpcNetwork } from './_lib';
+import { ChainType, RpcNetwork } from './_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/reduers';
 import { Unsubscribable } from 'rxjs';
+import { NeonService } from '../core';
 
 @Component({
   templateUrl: 'popup.component.html',
@@ -16,24 +17,25 @@ export class PopupComponent implements OnInit {
 
   private accountSub: Unsubscribable;
   address: string;
-  currentNetwork: RpcNetwork;
-  constructor(private store: Store<AppState>, private router: Router) {
+  currentChainType: ChainType;
+  n2Network: RpcNetwork;
+  n3Network: RpcNetwork;
+  neoXNetwork: RpcNetwork;
+
+  constructor(
+    private store: Store<AppState>,
+    private router: Router,
+    private neon: NeonService
+  ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       if (state.currentWallet) {
         this.address = state.currentWallet.accounts[0].address;
       }
-      switch (state.currentChainType) {
-        case 'Neo2':
-          this.currentNetwork = state.n2Networks[state.n2NetworkIndex];
-          break;
-        case 'Neo3':
-          this.currentNetwork = state.n3Networks[state.n3NetworkIndex];
-          break;
-        case 'NeoX':
-          this.currentNetwork = state.neoXNetworks[state.neoXNetworkIndex];
-          break;
-      }
+      this.currentChainType = state.currentChainType;
+      this.n2Network = state.n2Networks[state.n2NetworkIndex];
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
     });
   }
 
@@ -62,5 +64,26 @@ export class PopupComponent implements OnInit {
       return false;
     }
     return true;
+  }
+
+  getNetworkName() {
+    if (!this.address) {
+      switch (this.neon.selectedChainType) {
+        case 'Neo2':
+          return this.n2Network.name;
+        case 'Neo3':
+          return this.n3Network.name;
+        case 'NeoX':
+          return this.neoXNetwork.name;
+      }
+    }
+    switch (this.currentChainType) {
+      case 'Neo2':
+        return this.n2Network.name;
+      case 'Neo3':
+        return this.n3Network.name;
+      case 'NeoX':
+        return this.neoXNetwork.name;
+    }
   }
 }

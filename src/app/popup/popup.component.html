@@ -5,7 +5,7 @@
     [ngClass]="{ disabled: !getShowAvatar() }"
     (click)="showNetworkList = true"
   >
-    <span>{{ currentNetwork?.name }}</span>
+    <span>{{ getNetworkName() }}</span>
     <img theme src="assets/images/common/triangle-fill.svg" />
   </button>
   <div class="avatar" (click)="showAvatarMenu = true" *ngIf="getShowAvatar()">
