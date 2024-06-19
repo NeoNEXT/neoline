@@ -32,37 +32,25 @@
     color: #7d9299;
     margin-top: 4px;
   }
-  .chain-info {
+  .asset-info {
+    height: 225px;
     border-radius: 8px;
     background: #f5f9f9;
     margin: 12px 0;
-    padding-bottom: 16px;
-    .warning {
-      font-size: 12px;
-      line-height: 16px;
-      color: #09baa5;
-      padding: 8px 20px 3px 20px;
-      border-bottom: 1px solid #f4f4f4;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    line-height: 18px;
+    .balance {
+      min-width: 120px;
     }
-    ul {
-      height: 225px;
-      overflow-y: scroll;
-      padding: 0 20px;
-      &::-webkit-scrollbar {
-        display: block;
-      }
-      li {
-        font-size: 14px;
-        line-height: 18px;
-        .label {
-          color: #7d9299;
-          margin-top: 16px;
-        }
-        .value {
-          color: #2a3331;
-          margin-top: 4px;
-        }
-      }
+    .label {
+      color: #7d9299;
+    }
+    .value {
+      color: #2a3331;
+      margin-top: 4px;
     }
   }
 }

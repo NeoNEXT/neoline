@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { ChromeService } from '@/app/core';
+import { AssetEVMState, ChromeService } from '@/app/core';
 import { ActivatedRoute } from '@angular/router';
 import { ERRORS } from '@/models/dapi';
 import { requestTargetEVM } from '@/models/evm';
@@ -9,6 +9,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Asset } from '@/models/models';
 import { EvmWalletJSON } from '../../_lib/evm';
+import BigNumber from 'bignumber.js';
 
 @Component({
   templateUrl: './add-asset.component.html',
@@ -19,6 +20,7 @@ export class PopupEvmAddAssetComponent implements OnInit, OnDestroy {
   hostname = '';
   private messageID = '';
   queryParams: Asset;
+  assetBalance: string;
   private watch: Asset[] = [];
 
   private accountSub: Unsubscribable;
@@ -28,6 +30,7 @@ export class PopupEvmAddAssetComponent implements OnInit, OnDestroy {
     private chromeService: ChromeService,
     private aRouter: ActivatedRoute,
     private chrome: ChromeService,
+    private assetEVMState: AssetEVMState,
     private store: Store<AppState>
   ) {
     this.aRouter.queryParams.subscribe((params: any) => {
@@ -38,6 +41,7 @@ export class PopupEvmAddAssetComponent implements OnInit, OnDestroy {
         this.hostname.indexOf('flamingo') >= 0
           ? '/assets/images/flamingo.ico'
           : params.icon;
+      this.getBalance();
     });
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -49,7 +53,26 @@ export class PopupEvmAddAssetComponent implements OnInit, OnDestroy {
           this.currentWallet.accounts[0].address
         )
         .subscribe((res) => (this.watch = res));
+      this.getBalance();
     });
+  }
+
+  private getBalance() {
+    if (!this.currentWallet || !this.queryParams?.asset_id) return;
+    this.assetEVMState
+      .getNeoXAddressAssetBalance(
+        this.currentWallet.accounts[0].address,
+        this.queryParams.asset_id
+      )
+      .then((res) => {
+        this.assetBalance = new BigNumber(res)
+          .shiftedBy(-this.queryParams.decimals)
+          .dp(8, 1)
+          .toFixed();
+        if (res && this.assetBalance === '0') {
+          this.assetBalance = '< 0.0000001';
+        }
+      });
   }
 
   ngOnInit() {

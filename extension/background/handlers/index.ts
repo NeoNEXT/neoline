@@ -45,7 +45,7 @@ export async function ethereumRPCHandler(
       validateTxParams(txParams, isEIP1559Compatible);
       const localData =
         (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
-      const newData = { ...localData, [messageID]: params };
+      const newData = { ...localData, [messageID]: txParams };
       setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
       createWindow(
         `evm-send-transaction?messageID=${messageID}&origin=${hostInfo.origin}`
