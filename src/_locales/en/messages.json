@@ -767,8 +767,11 @@
   "AddNEP11": {
     "message": "Add NEP11"
   },
-  "myNft": {
+  "myNep11": {
     "message": "My NEP11"
+  },
+  "myNft": {
+    "message": "My NFT"
   },
   "unlockWallet": {
     "message": "You need to enter the password of the account to unlock the wallet"
@@ -1264,5 +1267,8 @@
   },
   "selectAddress": {
     "message": "Select address"
+  },
+  "confirmMnemonicTip": {
+    "message": "You can paste your entire secret recovery phrase into any field"
   }
 }

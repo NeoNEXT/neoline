@@ -101,9 +101,17 @@ copy {
     text-align: left;
     padding: 0 16px;
     cursor: pointer;
+    :host-context([data-theme-style="dark-theme"]) & {
+      background: #252B2A;
+      color: #11BAAC;
+    }
     &:hover {
       background: #0AC7B7;
       color: #fff;
+      :host-context([data-theme-style="dark-theme"]) & {
+        background: #11BAAC;
+        color: #fff;
+      }
     }
     &.key {
       margin-top: 16px;
@@ -124,6 +132,9 @@ button.remove {
   border: 0.5px solid #CFDFE5;
   color: var(--error-color);
   cursor: pointer;
+  :host-context([data-theme-style="dark-theme"]) & {
+    border-color: #434747;
+  }
   &:hover {
     border-color: rgba(250, 85, 85, 0.16);
     background: rgba(250, 85, 85, 0.16);

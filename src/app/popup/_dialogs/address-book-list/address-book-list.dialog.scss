@@ -2,6 +2,7 @@
 
 section.container {
   padding-top: 16px;
+  color: var(--title-color);
   button.search {
     width: calc(100% - 48px);
     margin: 0 24px;
@@ -60,7 +61,7 @@ section.container {
         align-items: center;
         position: relative;
         &:hover {
-          background: #f5f9f9;
+          background: var(--hover-color);
         }
         img.avatar {
           margin-right: 8px;

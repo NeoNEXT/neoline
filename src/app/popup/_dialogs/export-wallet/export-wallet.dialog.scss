@@ -12,7 +12,7 @@
     font-weight: 500;
     line-height: 20px;
     letter-spacing: 0.01em;
-    color: #2a3331;
+    color: var(--title-color);
     margin-top: 18px;
   }
   .export-all {
@@ -22,6 +22,9 @@
     display: flex;
     align-items: center;
     justify-content: center;
+    :host-context([data-theme-style="dark-theme"]) & {
+      color: #ced9d9;
+    }
   }
   .select {
     display: inline-block;

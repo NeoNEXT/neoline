@@ -51,10 +51,14 @@
     </p>
     <copy [value]="mnemonic">
       <p class="item">
-        <img theme src="assets/images/common/copy-mnemonic.svg" />
+        <img src="assets/images/common/copy-mnemonic.svg" />
         {{ "CopyToClipboard" | translate | async }}
       </p>
     </copy>
+  </div>
+
+  <div class="confirm-tip" *ngIf="isConfirmMnemonic">
+    {{ 'confirmMnemonicTip' | translate | async }}
   </div>
 
   <div class="btn-group">

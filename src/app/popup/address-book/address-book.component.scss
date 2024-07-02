@@ -78,7 +78,7 @@ section.container {
         align-items: center;
         position: relative;
         &:hover {
-          background: #f5f9f9;
+          background: var(--hover-color);
         }
         img.avatar {
           margin-right: 8px;

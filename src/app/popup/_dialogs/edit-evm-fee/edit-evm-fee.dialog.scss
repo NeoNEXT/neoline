@@ -11,6 +11,7 @@
 }
 .custom {
   padding: 16px 24px;
+  color: var(--title-color);
 }
 
 .container {
@@ -51,7 +52,7 @@
     .current {
       margin-top: 4px;
       font-size: 12px;
-      color: #7d9299;
+      color: var(--sub-title-color);
     }
   }
 }

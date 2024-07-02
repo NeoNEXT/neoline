@@ -15,7 +15,7 @@
     padding: 0 16px;
     font-family: NeverMind-Medium;
     font-size: 16px;
-    color: #2a3331;
+    color: var(--title-color);
     border-bottom: 1px solid var(--line-color);
   }
   .network-list {
@@ -45,7 +45,7 @@
       .list-title {
         height: 42px;
         padding: 0 24px;
-        color: #7d9299;
+        color: var(--sub-title-color);
         display: flex;
         align-items: center;
         justify-content: space-between;

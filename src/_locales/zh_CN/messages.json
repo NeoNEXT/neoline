@@ -767,8 +767,11 @@
   "AddNEP11": {
     "message": "添加 NEP11"
   },
-  "myNft": {
+  "myNep11": {
     "message": "我的 NEP11"
+  },
+  "myNft": {
+    "message": "我的 NFT"
   },
   "unlockWallet": {
     "message": "您需要输入该账户的密码来解锁该钱包"
@@ -1264,5 +1267,8 @@
   },
   "selectAddress": {
     "message": "选择地址"
+  },
+  "confirmMnemonicTip": {
+    "message": "您可以将整个助记词短语粘贴到任何字段中"
   }
 }
