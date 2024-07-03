@@ -319,17 +319,7 @@ export class AssetState {
     const rpcUrl =
       chainType === 'Neo2' ? this.n2Network.rpcUrl : this.n3Network.rpcUrl;
     const balanceRes = await this.http.rpcPost(rpcUrl, data).toPromise();
-    let balance = '0';
-    if (balanceRes.state === 'HALT' && balanceRes?.stack?.[0]?.value) {
-      if (balanceRes.stack[0].type === 'Integer') {
-        balance = balanceRes.stack[0].value;
-      }
-      if (balanceRes.stack[0].type === 'ByteArray') {
-        const hexstr = u.reverseHex(balanceRes.stack[0].value);
-        balance = new BigNumber(hexstr || 0, 16).toFixed();
-      }
-    }
-    return balance;
+    return this.util.handleNeo3StackNumberValue(balanceRes);
   }
   //#endregion
 

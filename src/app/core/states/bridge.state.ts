@@ -4,13 +4,14 @@ import { Asset } from '@/models/models';
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
+import { map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
-import BigNumber from 'bignumber.js';
+import { UtilServiceState } from '../util/util.service';
 
 @Injectable()
 export class BridgeState {
-  readonly neo3ReceiveAddressOnNeo3BridgeNeoX =
-    'NeaCgpk9WCTQBUCE2ULZvW8QaxTJ53PmFn';
+  readonly bridgeTxContractOnNeo3BridgeNeoX =
+    '0x90ea23685148733e830a063d0fd7e41a4357adcc';
   private readonly bridgeTxHostOnNeo3BridgeNeoX =
     'https://bridgeapi.banelabs.org/deposits';
 
@@ -22,12 +23,18 @@ export class BridgeState {
     'https://testmagnet.ngd.network/';
 
   private neoXNetwork: RpcNetwork;
+  private neo3Network: RpcNetwork;
   provider: ethers.JsonRpcProvider;
 
-  constructor(private store: Store<AppState>, private http: HttpClient) {
+  constructor(
+    private store: Store<AppState>,
+    private http: HttpClient,
+    private utilService: UtilServiceState
+  ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      this.neo3Network = state.n3Networks[state.n3NetworkIndex];
       this.provider = new ethers.JsonRpcProvider(this.neoXNetwork.rpcUrl);
     });
   }
@@ -35,6 +42,33 @@ export class BridgeState {
   // neo3 => neoX
   getBridgeTxOnNeo3BridgeNeoX(depositId: number) {
     return this.http.get(`${this.bridgeTxHostOnNeo3BridgeNeoX}/${depositId}`);
+  }
+  getGasDepositFee() {
+    const data = {
+      jsonrpc: '2.0',
+      method: 'invokefunction',
+      params: [this.bridgeTxContractOnNeo3BridgeNeoX, 'gasDepositFee'],
+      id: 1,
+    };
+    return this.http.post(this.neo3Network.rpcUrl, data).pipe(
+      map((res: any) => {
+        return this.utilService.handleNeo3StackNumberValue(res.result);
+      })
+    );
+  }
+
+  getMaxGasDeposit() {
+    const data = {
+      jsonrpc: '2.0',
+      method: 'invokefunction',
+      params: [this.bridgeTxContractOnNeo3BridgeNeoX, 'maxGasDeposit'],
+      id: 1,
+    };
+    return this.http.post(this.neo3Network.rpcUrl, data).pipe(
+      map((res: any) => {
+        return this.utilService.handleNeo3StackNumberValue(res.result);
+      })
+    );
   }
 
   //#region neoX => neo3
@@ -50,7 +84,7 @@ export class BridgeState {
       abiNeoXBridgeNeo3,
       this.provider
     );
-    const data = contract.interface.encodeFunctionData('withdraw', [
+    const data = contract.interface.encodeFunctionData('withdrawGas', [
       toScriptHash,
     ]);
     return data;
@@ -58,26 +92,6 @@ export class BridgeState {
 
   getTransactionReceipt(hash: string) {
     return this.provider.getTransactionReceipt(hash);
-  }
-
-  getWithdrawNonce({
-    asset,
-    topics,
-    data,
-  }: {
-    asset: Asset;
-    topics: readonly string[];
-    data: string;
-  }): number {
-    const contract = new ethers.Contract(
-      asset.asset_id,
-      abiNeoXBridgeNeo3,
-      this.provider
-    );
-
-    const decodeRes = contract.interface.parseLog({ data, topics });
-
-    return new BigNumber(decodeRes.args[0].toString()).toNumber();
   }
 
   getBridgeTxOnNeoXBridgeNeo3(nonce: number) {

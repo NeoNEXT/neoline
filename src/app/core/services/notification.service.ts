@@ -45,6 +45,7 @@ export class NotificationService {
     switchOnePasswordFirst:
       'Please switch to the new password management mode first.',
     copied: 'Copied!',
+    exceedDepositLimit: 'Exceeding the maximum deposit limit',
   };
   private CN = {
     close: '关闭',
@@ -86,6 +87,7 @@ export class NotificationService {
     AddressAdded: '添加成功',
     switchOnePasswordFirst: '请先切换到新的密码管理模式',
     copied: '已复制！',
+    exceedDepositLimit: '超过最大存入值',
   };
   constructor(private settingState: SettingState) {
     this.content = this.EN;

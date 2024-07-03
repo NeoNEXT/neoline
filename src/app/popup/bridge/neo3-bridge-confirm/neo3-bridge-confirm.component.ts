@@ -37,7 +37,7 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
 
   @Input() unSignedTx: Transaction;
   @Input() networkFee: string;
-  @Input() sourceNetworkFee: string;
+  @Input() networkFeeWithoutPriorityFee: string;
   @Input() systemFee: string;
   @Input() priorityFee: string;
   @Input() invokeArgs: ContractCall[];
@@ -89,7 +89,7 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
       .subscribe(async (res) => {
         if (res !== false) {
           this.priorityFee = res;
-          this.networkFee = new BigNumber(this.sourceNetworkFee)
+          this.networkFee = new BigNumber(this.networkFeeWithoutPriorityFee)
             .plus(this.priorityFee)
             .toFixed();
           this.unSignedTx.networkFee = u.BigInteger.fromDecimal(

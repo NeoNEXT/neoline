@@ -52,13 +52,13 @@
     <div class="label">{{ "ToAddress" | translate | async }}</div>
     <div class="input-amount">
       <span class="chain">{{ toChain }}</span>
-      <p class="select" (click)="selectToAddress()">
+      <div class="select" (click)="selectToAddress()">
         {{
           toAddress
             ? (toAddress | longStr : 8)
             : ("selectAddress" | translate | async)
         }}
-      </p>
+      </div>
     </div>
   </div>
   <ul class="fee">
@@ -69,7 +69,7 @@
           <img src="assets/images/common/tooltip.svg" alt="" />
         </tooltip>
       </span>
-      <p>0.1 {{ bridgeAsset.symbol }}</p>
+      <p>{{ bridgeFee }} {{ bridgeAsset.symbol }}</p>
     </li>
     <li>
       <span class="label">{{ "ActualReceive" | translate | async }}</span>
@@ -110,7 +110,7 @@
   [n3Network]="n3Network"
   [unSignedTx]="unSignedTx"
   [networkFee]="networkFee"
-  [sourceNetworkFee]="sourceNetworkFee"
+  [networkFeeWithoutPriorityFee]="networkFeeWithoutPriorityFee"
   [systemFee]="systemFee"
   [priorityFee]="priorityFee"
   [currentWallet]="currentWallet"

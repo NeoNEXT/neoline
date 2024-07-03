@@ -110,16 +110,7 @@ export async function getAssetSymbol(assetId: string, rpcUrl: string) {
     params: [assetId, 'symbol'],
   };
   const symbolRes: any = await httpPostPromise(rpcUrl, symbolData);
-  let symbol = symbolRes.stack?.[0]?.value;
-  if (symbolRes.state === 'HALT' && symbolRes?.stack?.[0]?.value) {
-    if (symbolRes.stack[0].type === 'ByteArray') {
-      symbol = hexstring2str(symbolRes.stack[0].value);
-    }
-    if (symbolRes.stack[0].type === 'ByteString') {
-      symbol = hexstring2str(base642hex(symbolRes.stack[0].value));
-    }
-  }
-  return symbol;
+  return handleNeo3StackStringValue(symbolRes);
 }
 
 export async function getAssetDecimal(assetId: string, rpcUrl: string) {
@@ -130,15 +121,34 @@ export async function getAssetDecimal(assetId: string, rpcUrl: string) {
     params: [assetId, 'decimals'],
   };
   const decimalRes: any = await httpPostPromise(rpcUrl, symbolData);
-  let decimal = decimalRes.stack?.[0]?.value;
-  if (decimalRes.state === 'HALT' && decimalRes.stack?.[0]?.value) {
-    if (decimalRes.stack[0].type === 'Integer') {
-      decimal = Number(decimalRes.stack[0].value || 0);
+  return handleNeo3StackNumberValue(decimalRes);
+}
+
+export function handleNeo3StackNumberValue(result): number {
+  let res = 0;
+  if (result.state === 'HALT' && result.stack?.[0]?.value) {
+    res = result.stack[0].value;
+    if (result.stack[0].type === 'Integer') {
+      res = Number(result.stack[0].value || 0);
     }
-    if (decimalRes.stack[0].type === 'ByteArray') {
-      const hexstr = reverseHex(decimalRes.stack[0].value);
-      decimal = new BigNumber(hexstr || 0, 16).toNumber();
+    if (result.stack[0].type === 'ByteArray') {
+      const hexStr = reverseHex(result.stack[0].value);
+      res = new BigNumber(hexStr || 0, 16).toNumber();
     }
   }
-  return decimal;
+  return res;
+}
+
+export function handleNeo3StackStringValue(result): string {
+  let res = '';
+  if (result.state === 'HALT' && result.stack?.[0]?.value) {
+    res = result.stack[0].value;
+    if (result.stack[0].type === 'ByteArray') {
+      res = hexstring2str(result.stack[0].value);
+    }
+    if (result.stack[0].type === 'ByteString') {
+      res = hexstring2str(base642hex(result.stack[0].value));
+    }
+  }
+  return res;
 }

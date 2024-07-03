@@ -22,6 +22,7 @@ import {
   getAssetSymbol,
   getAssetDecimal,
   getSessionStorage,
+  handleNeo3StackNumberValue,
 } from '../common';
 import {
   WitnessScope,
@@ -910,19 +911,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             currN2Network.rpcUrl,
             decimalsData
           );
-          let decimals = 0;
-          if (
-            decimalsRes?.result?.state === 'HALT' &&
-            decimalsRes?.result?.stack?.[0]?.value
-          ) {
-            if (decimalsRes?.result.stack[0].type === 'Integer') {
-              decimals = Number(decimalsRes?.result.stack[0].value || 0);
-            }
-            if (decimalsRes?.result.stack[0].type === 'ByteArray') {
-              const hexstr = reverseHex(decimalsRes?.result.stack[0].value);
-              decimals = new BigNumber(hexstr || 0, 16).toNumber();
-            }
-          }
+          const decimals = handleNeo3StackNumberValue(decimalsRes);
           assetBalance = new BigNumber(assetBalance).shiftedBy(-decimals);
         }
         if (
@@ -1572,19 +1561,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           params: [assetID, 'decimals'],
         };
         httpPost(currN3Network.rpcUrl, decimalsData, (decimalsRes) => {
-          let decimals = 0;
-          if (
-            decimalsRes?.result.state === 'HALT' &&
-            decimalsRes?.result.stack?.[0]?.value
-          ) {
-            if (decimalsRes?.result.stack[0].type === 'Integer') {
-              decimals = Number(decimalsRes?.result.stack[0].value || 0);
-            }
-            if (decimalsRes?.result.stack[0].type === 'ByteArray') {
-              const hexstr = reverseHex(decimalsRes?.result.stack[0].value);
-              decimals = new BigNumber(hexstr || 0, 16).toNumber();
-            }
-          }
+          const decimals = handleNeo3StackNumberValue(decimalsRes);
           assetBalance = new BigNumber(assetBalance).shiftedBy(-decimals);
           if (assetBalance.comparedTo(new BigNumber(parameter.amount)) >= 0) {
             let queryString = '';

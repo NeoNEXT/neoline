@@ -185,16 +185,7 @@ export class UtilServiceState {
       .toPromise()
       .then((res) => {
         res.forEach((item, index) => {
-          let symbol: string = '';
-          if (item.result.state === 'HALT' && item.result.stack?.[0]?.value) {
-            symbol = item.result.stack[0].value;
-            if (item.result.stack[0].type === 'ByteArray') {
-              symbol = hexstring2str(item.result.stack[0].value);
-            }
-            if (item.result.stack[0].type === 'ByteString') {
-              symbol = hexstring2str(base642hex(item.result.stack[0].value));
-            }
-          }
+          const symbol = this.handleNeo3StackStringValue(item.result);
           const sourceIndex = requestIndexs[index];
           if (chainType === 'Neo2') {
             this.n2AssetSymbol.set(contracts[sourceIndex], symbol);
@@ -240,17 +231,7 @@ export class UtilServiceState {
       .toPromise()
       .then((res) => {
         res.forEach((item, index) => {
-          let decimal = 0;
-          if (item.result.state === 'HALT' && item.result.stack?.[0]?.value) {
-            decimal = item.result.stack[0].value;
-            if (item.result.stack[0].type === 'Integer') {
-              decimal = Number(item.result.stack[0].value || 0);
-            }
-            if (item.result.stack[0].type === 'ByteArray') {
-              const hexstr = u.reverseHex(item.result.stack[0].value);
-              decimal = new BigNumber(hexstr || 0, 16).toNumber();
-            }
-          }
+          const decimal = this.handleNeo3StackNumberValue(item.result);
           const sourceIndex = requestIndexs[index];
           if (chainType === 'Neo2') {
             this.n2AssetDecimal.set(contracts[sourceIndex], decimal);
@@ -261,6 +242,35 @@ export class UtilServiceState {
         });
         return decoimalsRes;
       });
+  }
+
+  handleNeo3StackNumberValue(result): number {
+    let res = 0;
+    if (result.state === 'HALT' && result.stack?.[0]?.value) {
+      res = result.stack[0].value;
+      if (result.stack[0].type === 'Integer') {
+        res = Number(result.stack[0].value || 0);
+      }
+      if (result.stack[0].type === 'ByteArray') {
+        const hexStr = u.reverseHex(result.stack[0].value);
+        res = new BigNumber(hexStr || 0, 16).toNumber();
+      }
+    }
+    return res;
+  }
+
+  handleNeo3StackStringValue(result): string {
+    let res = '';
+    if (result.state === 'HALT' && result.stack?.[0]?.value) {
+      res = result.stack[0].value;
+      if (result.stack[0].type === 'ByteArray') {
+        res = hexstring2str(result.stack[0].value);
+      }
+      if (result.stack[0].type === 'ByteString') {
+        res = hexstring2str(base642hex(result.stack[0].value));
+      }
+    }
+    return res;
   }
 
   getN3NftNames(contracts: string[]): Promise<string[]> {
@@ -364,17 +374,7 @@ export class UtilServiceState {
     };
     return this.http.rpcPost(this.n3Network.rpcUrl, data).pipe(
       map((res) => {
-        let address = '';
-        if (res.state === 'HALT' && res.stack?.[0]?.value) {
-          address = res.stack[0]?.value;
-          if (res.stack[0]?.type === 'ByteArray') {
-            address = hexstring2str(res.stack[0]?.value);
-          }
-          if (res.stack[0]?.type === 'ByteString') {
-            address = hexstring2str(base642hex(res.stack[0]?.value));
-          }
-        }
-        return address;
+        return this.handleNeo3StackStringValue(res);
       })
     );
   }
