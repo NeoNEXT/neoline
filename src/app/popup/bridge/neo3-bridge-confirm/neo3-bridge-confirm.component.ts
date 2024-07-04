@@ -26,7 +26,7 @@ export type TabType = 'details' | 'data';
 @Component({
   selector: 'neo3-bridge-confirm',
   templateUrl: 'neo3-bridge-confirm.component.html',
-  styleUrls: ['neo3-bridge-confirm.component.scss'],
+  styleUrls: ['../bridge-confirm.scss'],
 })
 export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
   @Input() bridgeAsset: Asset;

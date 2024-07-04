@@ -1,19 +1,71 @@
 @import "src/styles/tab-container.scss";
 
 .tabs-container {
-  border-bottom: 1px solid var(--line-color);
+  border-top: 1px solid var(--line-color);
+  span {
+    height: 40px;
+    line-height: 40px;
+  }
 }
 
 section.container {
+  .bridge-content {
+    padding: 16px 24px 19px 24px;
+    .label {
+      font-size: 13px;
+      line-height: 17px;
+      color: #7d9299;
+      &.from {
+        margin-top: 16px;
+      }
+    }
+    .amount {
+      font-size: 20px;
+      font-weight: 600;
+      line-height: 24px;
+      color: #2a3331;
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      .symbol {
+        font-size: 18px;
+        color: #425354;
+        flex: 1;
+        margin-left: 4px;
+      }
+      .currency {
+        font-size: 14px;
+        font-weight: normal;
+        color: #7d9299;
+      }
+    }
+    .address {
+      font-size: 14px;
+      font-weight: 500;
+      color: #2a3331;
+      margin-top: 4px;
+      display: flex;
+      gap: 8px;
+    }
+    img.arrow {
+      margin: 8px;
+    }
+  }
   ul.details-content {
-    height: 220px;
+    height: 170px;
     overflow-y: scroll;
+    padding: 16px 24px;
+    mask-image: -webkit-linear-gradient(
+      top,
+      rgba(0, 0, 0, 1) 96%,
+      rgba(0, 0, 0, 0.1) 100%
+    );
     &::-webkit-scrollbar {
       display: block;
     }
-    padding: 16px 24px;
     li {
-      margin-top: 30px;
+      margin-top: 16px;
       &:first-child {
         margin-top: 0;
       }
@@ -51,9 +103,14 @@ section.container {
     }
   }
   .data-content {
-    height: 220px;
+    height: 170px;
     overflow-y: scroll;
     padding: 16px 24px;
+    mask-image: -webkit-linear-gradient(
+      top,
+      rgba(0, 0, 0, 1) 96%,
+      rgba(0, 0, 0, 0.1) 100%
+    );
     &::-webkit-scrollbar {
       display: block;
     }
@@ -65,6 +122,25 @@ section.container {
       .value {
         color: var(--title-color);
       }
+    }
+    ul li {
+      margin-top: 30px;
+      &:first-of-type {
+        margin-top: 0;
+      }
+      .label {
+        font-family: NeverMind-Regular;
+        color: var(--sub-title-color);
+      }
+      .value {
+        line-height: 18px;
+        margin-top: 8px;
+      }
+    }
+    .hex-label {
+      font-family: NeverMind-Regular;
+      color: var(--sub-title-color);
+      margin-top: 30px;
     }
     .json-box {
       border-radius: 4px;
@@ -86,7 +162,6 @@ section.container {
   }
   .btn-group {
     padding: 0 24px;
-    margin-top: 16px;
     button {
       width: calc(50% - 8px);
       &:first-child {

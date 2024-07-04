@@ -5,9 +5,31 @@
   </div>
 </div>
 <section class="container">
-  <p>From: {{ currentWallet.accounts[0].address }}</p>
-  <p>To: {{ toAddress }}</p>
-  <p>Amount: {{ bridgeAmount }}</p>
+  <div class="bridge-content">
+    <p class="label">{{ "YourDeposit" | translate | async }}</p>
+    <p class="amount">
+      <span>{{ bridgeAmount }}</span>
+      <span class="symbol">{{ bridgeAsset.symbol }}</span>
+      <span *ngIf="bridgeAsset?.rateBalance" class="currency">
+        $ {{ bridgeAsset.rateBalance }}
+      </span>
+    </p>
+    <p class="label from">{{ "FromAddress" | translate | async }}</p>
+    <p class="address">
+      {{ currentWallet.accounts[0].address | longStr : 12 }}
+      <copy [value]="currentWallet.accounts[0].address">
+        <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+      </copy>
+    </p>
+    <img class="arrow" src="/assets/images/bridge/arrow.svg" alt="" />
+    <p class="label">{{ "YourNeoXReceiveAddress" | translate | async }}</p>
+    <p class="address">
+      {{ toAddress | longStr : 12 }}
+      <copy [value]="toAddress">
+        <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+      </copy>
+    </p>
+  </div>
   <div class="tabs-container">
     <span
       [class]="{ selected: tabType === 'details' }"

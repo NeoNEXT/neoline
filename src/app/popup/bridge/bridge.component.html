@@ -37,22 +37,20 @@
           oninput="value=value.replace(/^\D*(\d*(?:\.\d{0,8})?).*$/g, '$1')"
           placeholder="Enter amount"
         />
-        <p>
-          {{
-            bridgeAsset?.rateBalance !== undefined
-              ? "$" + bridgeAsset.rateBalance
-              : "--"
-          }}
-        </p>
+        <p *ngIf="bridgeAsset?.rateBalance">$ {{ bridgeAsset.rateBalance }}</p>
       </div>
     </div>
   </div>
   <div class="item to">
-    <img class="exchange" src="assets/images/bridge/exchange.svg" alt="" />
+    <img theme class="exchange" src="assets/images/bridge/exchange.svg" alt="" />
     <div class="label">{{ "ToAddress" | translate | async }}</div>
     <div class="input-amount">
       <span class="chain">{{ toChain }}</span>
-      <div class="select" (click)="selectToAddress()">
+      <div
+        class="select"
+        [ngClass]="{ hasAddress: toAddress }"
+        (click)="selectToAddress()"
+      >
         {{
           toAddress
             ? (toAddress | longStr : 8)
