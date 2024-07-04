@@ -14,7 +14,7 @@
   />
   <div class="content">
     <form [formGroup]="addNFTForm">
-      <p class="label">{{ "address" | translate | async }}</p>
+      <p class="label">{{ "ContractAddress" | translate | async }}</p>
       <mat-form-field class="form-field" appearance="outline">
         <input matInput required formControlName="address" type="text" />
         <mat-error *ngIf="addNFTForm.get('address').errors?.required">

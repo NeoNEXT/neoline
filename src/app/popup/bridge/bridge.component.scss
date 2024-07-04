@@ -58,6 +58,10 @@
         gap: 8px;
         .max {
           color: #0ac7b7;
+          cursor: pointer;
+          &:hover {
+            color: #4bccc1;
+          }
         }
       }
     }

@@ -1212,7 +1212,7 @@
     "message": "Balance"
   },
   "Max": {
-    "message": "Max"
+    "message": "MAX"
   },
   "ToAddress": {
     "message": "To Address"
@@ -1309,5 +1309,8 @@
   },
   "BlockExplorerURL": {
     "message": "Block explorer URL"
+  },
+  "ContractAddress": {
+    "message": "Contract Address"
   }
 }

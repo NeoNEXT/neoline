@@ -18,12 +18,13 @@
     color: var(--tip-color);
     margin-top: 12px;
     .network {
-      color: #4985e5;
+      color: var(--theme-color);
     }
   }
   .tip2 {
     text-align: center;
     font-size: 13px;
+    line-height: 17px;
     color: var(--tip-color);
   }
   .address {

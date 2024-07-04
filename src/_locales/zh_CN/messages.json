@@ -1312,5 +1312,8 @@
   },
   "BlockExplorerURL": {
     "message": "区块浏览器 URL"
+  },
+  "ContractAddress": {
+    "message": "合约地址"
   }
 }

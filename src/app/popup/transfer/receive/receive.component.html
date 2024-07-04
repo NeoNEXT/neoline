@@ -5,15 +5,7 @@
   </div>
   <p class="tip1">
     {{ "receiveTip1Prefix" | translate | async }}
-    <span class="network">
-      {{
-        chainType === "NeoX"
-          ? "Ethereum"
-          : chainType === "Neo3"
-          ? "Neo N3"
-          : "Neo Legacy"
-      }}</span
-    >
+    <span class="network"> {{ network.name }}</span>
     {{ "receiveTip1Suffix" | translate | async }}
   </p>
   <p class="tip2">
