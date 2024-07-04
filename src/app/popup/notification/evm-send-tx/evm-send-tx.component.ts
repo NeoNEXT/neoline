@@ -6,6 +6,7 @@ import {
   DappEVMState,
   GlobalService,
   LedgerService,
+  SettingState,
 } from '@/app/core';
 import {
   EvmTransactionParams,
@@ -35,6 +36,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   txParams: EvmTransactionParams;
   messageID: string;
   locationOrigin: string;
+  lang = 'en';
 
   loading = false;
   loadingMsg: string;
@@ -59,12 +61,16 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private globalService: GlobalService,
     private ledger: LedgerService,
+    private settingState: SettingState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.neoXWalletArr = state.neoXWalletArr;
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+    });
+    this.settingState.langSub.subscribe((lang) => {
+      this.lang = lang;
     });
   }
 

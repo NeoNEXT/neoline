@@ -9,7 +9,7 @@
       display: inline-flex;
       align-items: center;
       border-radius: 23px;
-      border: 1px solid #afb6be;
+      border: 1px solid var(--border-color);
       padding: 0 16px;
       font-family: NeverMind-Medium;
       color: var(--title-color);
@@ -23,19 +23,19 @@
     font-size: 20px;
     line-height: 24px;
     text-align: center;
-    color: #2a3331;
+    color: var(--title-color);
     margin-top: 16px;
   }
   .tip {
     line-height: 18px;
     text-align: center;
-    color: #7d9299;
+    color: var(--sub-title-color);
     margin-top: 4px;
   }
   .asset-info {
     height: 225px;
     border-radius: 8px;
-    background: #f5f9f9;
+    background: var(--hover-color);
     margin: 12px 0;
     padding: 20px;
     display: flex;
@@ -46,17 +46,17 @@
       min-width: 120px;
     }
     .label {
-      color: #7d9299;
+      color: var(--sub-title-color);
     }
     .value {
-      color: #2a3331;
+      color: var(--title-color);
       margin-top: 4px;
     }
   }
 }
 .btn-group {
   padding: 12px 24px 0 24px;
-  border-top: 1px solid #f4f4f4;
+  border-top: 1px solid var(--line-color);
   button {
     width: calc(50% - 12px);
     &.cancel {

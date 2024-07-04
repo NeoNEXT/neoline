@@ -7,6 +7,7 @@ import { ExcludeWebsite, STORAGE_NAME } from '../common/constants';
 import { getWalletType } from '../common/utils';
 import { MESSAGE_TYPE, requestTargetEVM } from '../common/data_module_evm';
 import { ethErrors } from 'eth-rpc-errors';
+import { ethers } from 'ethers';
 
 declare var chrome: any;
 
@@ -106,6 +107,7 @@ function getAccounts(e) {
   getStorage(STORAGE_NAME.connectedWebsites, (allWebsites) => {
     Object.keys(allWebsites || {}).forEach((address: string) => {
       if (
+        ethers.isAddress(address) &&
         allWebsites[address].some(
           (item) =>
             item.status === 'true' && item.hostname === location.hostname

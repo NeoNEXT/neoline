@@ -3,6 +3,7 @@ import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { EvmTransactionParams, RpcNetwork } from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 import BigNumber from 'bignumber.js';
+import { DappEVMState } from '@/app/core';
 
 @Component({
   selector: 'confirm-send-ether',
@@ -10,6 +11,7 @@ import BigNumber from 'bignumber.js';
   styleUrls: ['../send-common.scss'],
 })
 export class PopupNoticeEvmConfirmSendEtherComponent {
+  @Input() lang = 'en';
   @Input() locationOrigin: string;
   @Input() txParams: EvmTransactionParams;
   @Input() amount: string;
@@ -25,7 +27,7 @@ export class PopupNoticeEvmConfirmSendEtherComponent {
 
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
 
-  constructor() {}
+  constructor(private dappEVMState: DappEVMState) {}
 
   updateEvmFee($event) {
     this.neoXFeeInfo = $event;
@@ -57,5 +59,13 @@ export class PopupNoticeEvmConfirmSendEtherComponent {
         .dp(8, 1)
         .toFixed();
     }
+  }
+
+  getTranslate() {
+    return this.dappEVMState.getInsufficientGasTranslate(
+      this.lang,
+      this.neoXNetwork.name,
+      this.neoXNetwork.symbol
+    );
   }
 }

@@ -12,6 +12,7 @@ type TabType = 'details' | 'data';
   styleUrls: ['../send-common.scss'],
 })
 export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
+  @Input() lang = 'en';
   @Input() locationOrigin: string;
   @Input() txParams: EvmTransactionParams;
   @Input() amount: string;
@@ -58,6 +59,14 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   updateEvmFee($event) {
     this.neoXFeeInfo = $event;
     this.updateFeeEvent.emit($event);
+  }
+
+  getTranslate() {
+    return this.dappEVMState.getInsufficientGasTranslate(
+      this.lang,
+      this.neoXNetwork.name,
+      this.neoXNetwork.symbol
+    );
   }
 
   exit() {

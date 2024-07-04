@@ -2,16 +2,16 @@
   <div class="host">
     <button><img [src]="iconSrc" appErrorSrc alt="" />{{ hostname }}</button>
   </div>
-  <p class="title">Add suggested tokens</p>
-  <p class="tip">Would you like to import these tokens?</p>
+  <p class="title">{{ 'addEvmTokenTitle' | translate | async }}</p>
+  <p class="tip">{{ 'addEvmTokenTip' | translate | async }}</p>
 
   <div class="asset-info">
     <div>
-      <p class="label">Token</p>
+      <p class="label">{{ 'Token' | translate | async }}</p>
       <p class="value">{{ queryParams?.symbol }}</p>
     </div>
     <div class="balance">
-      <p class="label">Balance</p>
+      <p class="label">{{ 'Balance' | translate | async }}</p>
       <p class="value">{{ assetBalance }} {{ queryParams?.symbol }}</p>
     </div>
   </div>

@@ -1282,5 +1282,32 @@
   },
   "YourNeo3ReceiveAddress": {
     "message": "Your Neo3 Receive Address"
+  },
+  "addEvmTokenTitle": {
+    "message": "Add suggested tokens"
+  },
+  "addEvmTokenTip": {
+    "message": "Would you like to import these tokens?"
+  },
+  "Token": {
+    "message": "Token"
+  },
+  "addEvmChainTitle": {
+    "message": "Allow this site to add a network?"
+  },
+  "addEvmChainTip": {
+    "message": "This will allow this network to be used within NeoLine."
+  },
+  "addEvmChainWarning": {
+    "message": "NeoLine does not verify custom networks, please add your trusted network!"
+  },
+  "NetworkURL": {
+    "message": "Network URL"
+  },
+  "CurrencySymbol": {
+    "message": "Currency symbol"
+  },
+  "BlockExplorerURL": {
+    "message": "Block explorer URL"
   }
 }

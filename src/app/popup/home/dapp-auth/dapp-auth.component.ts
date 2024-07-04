@@ -6,6 +6,7 @@ import { PopupAuthorizationListDialogComponent } from '../../_dialogs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { EvmWalletJSON } from '../../_lib/evm';
+import { ethers } from 'ethers';
 declare var chrome: any;
 
 @Component({
@@ -84,6 +85,7 @@ export class PopupHomeDappAuthComponent implements OnInit {
           }
           if (
             wallet &&
+            ethers.isAddress(address) &&
             allWebsites[address].some(
               (item) =>
                 item.status === 'true' && item.hostname === this.hostname

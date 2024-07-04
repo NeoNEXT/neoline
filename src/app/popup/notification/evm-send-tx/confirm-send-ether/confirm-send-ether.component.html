@@ -48,7 +48,7 @@
     >
     </evm-fee>
 
-    <li>
+    <li *ngIf="amount">
       <div class="row evm">
         <div class="label">
           <p>{{ "TOTAL" | translate | async }}</p>
@@ -64,9 +64,7 @@
 
     <div class="warning-tip bottom" *ngIf="insufficientFunds">
       <img src="assets/images/common/warning-red.svg" alt="" />
-      {{
-        "您的账户中没有足够的ETH可以支付Base Sepolia网络上的交易费用。请从另一个账户存入保证金 ETH。"
-      }}
+      {{ getTranslate() }}
     </div>
   </div>
   <div class="btn-group">

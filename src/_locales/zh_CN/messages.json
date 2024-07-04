@@ -1285,5 +1285,32 @@
   },
   "YourNeo3ReceiveAddress": {
     "message": "Neo3 接收地址"
+  },
+  "addEvmTokenTitle": {
+    "message": "添加推荐代币"
+  },
+  "addEvmTokenTip": {
+    "message": "您想导入这些代币吗？"
+  },
+  "Token": {
+    "message": "代币"
+  },
+  "addEvmChainTitle": {
+    "message": "允许此网站添加一个网络到 NeoLine 上？"
+  },
+  "addEvmChainTip": {
+    "message": "这将允许在 NeoLine 中使用此网络。"
+  },
+  "addEvmChainWarning": {
+    "message": "NeoLine 不验证自定义网络，请添加您信任的网络。"
+  },
+  "NetworkURL": {
+    "message": "网络 URL"
+  },
+  "CurrencySymbol": {
+    "message": "货币符号"
+  },
+  "BlockExplorerURL": {
+    "message": "区块浏览器 URL"
   }
 }
