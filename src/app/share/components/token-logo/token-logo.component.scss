@@ -1,0 +1,64 @@
+.box {
+  width: 48px;
+  height: 48px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--border-color);
+  border-radius: 50%;
+  font-size: 18px;
+  text-transform: uppercase;
+  color: var(--title-color);
+  &.symbol {
+    background-color: var(--box-color);
+  }
+  &.list {
+    width: 34px;
+    height: 34px;
+    font-size: 15px;
+    border: 0.5px solid #e7efef;
+    :host-context([data-theme-style="dark-theme"]) & {
+      border-color: #b9babe;
+    }
+    img {
+      height: 22px;
+      width: 22px;
+    }
+  }
+  &.claim {
+    width: 36px;
+    height: 36px;
+    font-size: 16px;
+    border: 0.5px solid var(--background-color);
+    img {
+      width: 22px;
+      height: 22px;
+    }
+  }
+  img {
+    height: 30px;
+    width: 30px;
+  }
+  &.small {
+    width: 30px;
+    height: 30px;
+    border: none;
+    font-size: 14px;
+    background: var(--body-background-color);
+    img {
+      width: 22px;
+      height: 22px;
+    }
+  }
+  &.big {
+    width: 56px;
+    height: 56px;
+    font-size: 20px;
+    border: none;
+    background: var(--body-background-color);
+    img {
+      width: 32px;
+      height: 32px;
+    }
+  }
+}

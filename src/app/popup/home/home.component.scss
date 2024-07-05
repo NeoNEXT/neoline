@@ -68,8 +68,9 @@
     height: calc(100% - 67px);
     position: relative;
     overflow: auto;
-    .asset-logo-box {
-      margin: 16px auto;
+    .token-logo {
+      margin-block: 16px;
+      text-align: center;
     }
 
     .transaction-btn-container.bridge {
@@ -84,17 +85,6 @@
       background: var(--message-box-color);
       display: flex;
       align-items: center;
-      .gas-logo-box {
-        width: 36px;
-        height: 36px;
-        padding: 7px;
-        border: 0.5px solid var(--background-color);
-        border-radius: 50%;
-        .gas-logo {
-          height: 22px;
-          width: 22px;
-        }
-      }
       .claim-status-box {
         margin-left: 12px;
         flex: 1 1 auto;

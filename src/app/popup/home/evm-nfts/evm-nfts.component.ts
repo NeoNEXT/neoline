@@ -17,8 +17,8 @@ export class PopupEvmNftsComponent implements OnInit, OnDestroy {
 
   private accountSub: Unsubscribable;
   private address: string;
-  private neoXNetwork: RpcNetwork;
-  private chainType: ChainType;
+  neoXNetwork: RpcNetwork;
+  chainType: ChainType;
   constructor(
     public global: GlobalService,
     private chrome: ChromeService,

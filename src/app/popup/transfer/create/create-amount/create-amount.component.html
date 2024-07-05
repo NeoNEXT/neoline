@@ -11,8 +11,14 @@
       <p class="label">{{ "Asset" | translate | async }}</p>
       <!-- not NFT -->
       <div class="value" *ngIf="!nftContract" (click)="selectAsset()">
-        <div class="asset-logo-box small">
-          <img [assetId]="transferAsset?.asset_id" appErrorSrc alt="" />
+        <div class="asset-logo-box">
+          <token-logo
+            customClass="small"
+            [assetId]="transferAsset?.asset_id"
+            [chainType]="chainType"
+            [symbol]="transferAsset?.symbol"
+            [neoXChainId]="currentNetwork?.id"
+          ></token-logo>
         </div>
         <div class="flex-1">
           <p class="symbol">{{ transferAsset?.symbol }}</p>
@@ -31,8 +37,13 @@
       </div>
       <!-- NFT -->
       <div class="value" *ngIf="nftContract" (click)="selectAsset(true)">
-        <div class="asset-logo-box small">
-          <img [src]="transferNFT?.image_url" appErrorSrc alt="" />
+        <div class="asset-logo-box">
+          <token-logo
+            customClass="small"
+            [isNFT]="true"
+            [imageUrl]="transferNFT?.image_url"
+            [symbol]="transferNFT?.symbol"
+          ></token-logo>
         </div>
         <div class="flex-1">
           <p class="symbol">#{{ transferNFT?.tokenid | nftTokenId }}</p>

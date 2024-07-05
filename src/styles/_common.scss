@@ -101,41 +101,6 @@ $network-list: (
   }
 }
 
-// asset logo
-.asset-logo-box {
-  width: 48px;
-  height: 48px;
-  padding: 9px;
-  border: 1px solid var(--border-color);
-  border-radius: 50%;
-  img {
-    height: 30px;
-    width: 30px;
-  }
-  &.small {
-    width: 30px;
-    height: 30px;
-    padding: 4px;
-    background: var(--body-background-color);
-    border: none;
-    img {
-      width: 22px;
-      height: 22px;
-    }
-  }
-  &.big {
-    width: 56px;
-    height: 56px;
-    padding: 12px;
-    background: var(--body-background-color);
-    border: none;
-    img {
-      width: 32px;
-      height: 32px;
-    }
-  }
-}
-
 // loading
 .loading-box {
   background: rgba(0, 0, 0, 0.2);

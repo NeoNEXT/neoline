@@ -19,9 +19,9 @@ export class PopupMyAssetsComponent implements OnDestroy {
   isLoading = false;
 
   private accountSub: Unsubscribable;
-  private networkId: number;
+  networkId: number;
   private address: string;
-  private chainType: ChainType;
+  chainType: ChainType;
   constructor(
     private asset: AssetState,
     private chrome: ChromeService,

@@ -12,9 +12,13 @@
       theme
       src="/assets/images/common/nav-arrow.svg"
     />
-    <div class="asset-logo-box big">
-      <img class="asset-logo" [assetId]="dataJson?.asset" appErrorSrc alt="" />
-    </div>
+    <token-logo
+      customClass="big"
+      [assetId]="dataJson?.asset"
+      [chainType]="data.chainType"
+      [symbol]="dataJson?.symbol"
+      [neoXChainId]="data.network?.id"
+    ></token-logo>
     <p class="asset-balance">{{ getShowAmount() }} {{ dataJson?.symbol }}</p>
     <p class="asset-money" *ngIf="!data?.isNFT">
       {{ rate?.amount | numberFixed : 2 }}

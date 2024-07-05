@@ -4,9 +4,14 @@
   *ngFor="let asset of nfts"
   [routerLink]="['/popup/nfts', asset.assethash]"
 >
-  <div class="asset-logo">
-    <img [assetId]="asset?.assethash" appErrorSrc alt="" />
-  </div>
+  <token-logo
+    customClass="list"
+    [assetId]="asset?.assethash"
+    [chainType]="chainType"
+    [symbol]="asset.symbol"
+    [neoXChainId]="neoXNetwork.chainId"
+  ></token-logo>
+
   <div class="item-middle">
     <div class="asset-name">
       <span>{{ asset.name }}</span>

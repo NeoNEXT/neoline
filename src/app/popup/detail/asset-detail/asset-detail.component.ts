@@ -32,9 +32,9 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
   private watch: Asset[]; // User-added assets
 
   private accountSub: Unsubscribable;
-  private networkId: number;
+  networkId: number;
   private address;
-  private chainType: ChainType;
+  chainType: ChainType;
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
   private neoXNetwork: RpcNetwork;

@@ -5,9 +5,13 @@
       {{ txParams?.to | longStr : 4 }}: {{ tokenData?.name }}
     </div>
     <div class="asset">
-      <div class="asset-logo-box small">
-        <img [assetId]="txParams?.to" chain="NeoX" appErrorSrc alt="" />
-      </div>
+      <token-logo
+        customClass="small"
+        [assetId]="txParams?.to"
+        chainType="NeoX"
+        [symbol]="assetDetails?.symbol"
+        [neoXChainId]="neoXNetwork?.chainId"
+      ></token-logo>
       <p class="amount">
         {{ assetDetails?.tokenAmount || 0 }} {{ assetDetails?.symbol }}
       </p>

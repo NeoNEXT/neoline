@@ -39,6 +39,7 @@ import { PopupAvatarMenuComponent } from './components/avatar-menu/avatar-menu.c
 import { CopyComponent } from './components/copy/copy.component';
 import { EvmFeeComponent } from './components/evm-fee/evm-fee.component';
 import { TooltipComponent } from './components/tooltip/tooltip.component';
+import { TokenLogoComponent } from './components/token-logo/token-logo.component';
 const COMPONENTS = [
   AssetTxPageComponent,
   NftTxPageComponent,
@@ -49,6 +50,7 @@ const COMPONENTS = [
   CopyComponent,
   EvmFeeComponent,
   TooltipComponent,
+  TokenLogoComponent,
 ];
 //#endregion
 
@@ -71,15 +73,9 @@ const PIPES = [
 
 //#region directive
 import { AvatarDirective } from './directives/avatar';
-import { AssetLogoDirective } from './directives/asset-logo';
 import { ErrSrcDirective } from './directives/err-src.directive';
 import { ImgThemeDirective } from './directives/img-theme';
-const DIRECTIVE = [
-  AvatarDirective,
-  AssetLogoDirective,
-  ErrSrcDirective,
-  ImgThemeDirective,
-];
+const DIRECTIVE = [AvatarDirective, ErrSrcDirective, ImgThemeDirective];
 //#endregion
 
 @NgModule({

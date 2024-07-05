@@ -5,14 +5,13 @@
       · {{ "Sending" | translate | async }}{{ neoXNetwork.symbol }}
     </div>
     <div class="asset">
-      <div class="asset-logo-box small">
-        <img
-          [assetId]="ETH_SOURCE_ASSET_HASH"
-          chain="NeoX"
-          appErrorSrc
-          alt=""
-        />
-      </div>
+      <token-logo
+        customClass="small"
+        [assetId]="ETH_SOURCE_ASSET_HASH"
+        chainType="NeoX"
+        [symbol]="neoXNetwork?.symbol"
+        [neoXChainId]="neoXNetwork?.chainId"
+      ></token-logo>
       <p class="amount">{{ getShowAmount() }} {{ neoXNetwork?.symbol }}</p>
     </div>
     <div class="address-group">

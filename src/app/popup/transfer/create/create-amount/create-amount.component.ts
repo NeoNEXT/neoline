@@ -244,6 +244,8 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       .open(PopupAssetListDialogComponent, {
         data: {
           isNft: isNFT,
+          chainType: this.chainType,
+          networkId: this.currentNetwork.id,
           balances: isNFT ? tokens : this.assetArr,
           selectedId: isNFT
             ? this.transferNFT.tokenid

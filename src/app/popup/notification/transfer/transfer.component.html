@@ -8,9 +8,8 @@
 <div class="container">
   <div class="header transfer">
     <div class="invoke-type">· TRANSFER</div>
-    <div class="asset-logo-box big">
-      <img [assetId]="NEO" chain="Neo2" appErrorSrc alt="" />
-    </div>
+    <token-logo customClass="big" [assetId]="NEO" chainType="Neo2"></token-logo>
+
     <p class="amount">-{{ amount }} {{ symbol }}</p>
     <p class="rate">-{{ money | numberFixed : 2 }} {{ rateCurrency }}</p>
     <div class="address-group">

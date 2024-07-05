@@ -3,6 +3,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 
 import { Asset, NftToken } from '@/models/models';
 import { Unsubscribable, timer } from 'rxjs';
+import { ChainType } from '../../_lib';
 
 @Component({
   templateUrl: 'asset-list.dialog.html',
@@ -20,6 +21,8 @@ export class PopupAssetListDialogComponent implements OnInit {
       balances?: Asset[] | NftToken[];
       selectedId: string;
       isNft?: boolean;
+      chainType: ChainType;
+      networkId: number;
     }
   ) {}
 

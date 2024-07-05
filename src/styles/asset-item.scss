@@ -4,20 +4,6 @@
   align-items: center;
   justify-content: space-between;
   border-bottom: 1px solid var(--line-color);
-  .asset-logo {
-    width: 34px;
-    height: 34px;
-    padding: 6px;
-    border: 0.5px solid #e7efef;
-    border-radius: 50%;
-    :host-context([data-theme-style="dark-theme"]) & {
-      border-color: #b9babe;
-    }
-    img {
-      height: 22px;
-      width: 22px;
-    }
-  }
   .item-middle {
     flex: 1;
     margin: 0 12px;

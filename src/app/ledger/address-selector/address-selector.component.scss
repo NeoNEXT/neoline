@@ -145,11 +145,9 @@ section.main {
               margin-top: 18px;
               p {
                 width: 50%;
-                display: inline-block;
-                img {
-                  width: 16px;
-                  vertical-align: sub;
-                }
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
               }
             }
             .tip {

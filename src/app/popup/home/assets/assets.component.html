@@ -9,9 +9,13 @@
     decimals: asset?.decimals
   }"
 >
-  <div class="asset-logo">
-    <img [assetId]="asset?.asset_id" appErrorSrc alt="" />
-  </div>
+  <token-logo
+    customClass="list"
+    [assetId]="asset?.asset_id"
+    [chainType]="chainType"
+    [symbol]="asset?.symbol"
+    [neoXChainId]="networkId"
+  ></token-logo>
   <div class="item-middle">{{ asset?.symbol }}</div>
   <div class="item-right">
     <p class="balance">{{ asset?.balance || "0" | numberFixed : 8 }}</p>

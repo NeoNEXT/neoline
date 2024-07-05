@@ -2,9 +2,12 @@
   <nav title="myNep11"></nav>
   <div class="popup-assets-list">
     <div class="asset-item" *ngFor="let asset of nfts; index as index">
-      <div class="asset-logo">
-        <img [src]="asset?.image_url" appErrorSrc="" alt="" />
-      </div>
+      <token-logo
+        customClass="list"
+        [isNFT]="true"
+        [imageUrl]="asset?.image_url"
+        [symbol]="asset.symbol"
+      ></token-logo>
       <div class="item-middle">
         <div class="asset-name">
           <span>{{ asset.name }}</span>

@@ -48,6 +48,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   private neo2WalletArr: Wallet2[];
   private neo3WalletArr: Wallet3[];
   private neoXWalletArr: EvmWalletJSON[];
+  neoXChainId: number;
   constructor(
     private ledger: LedgerService,
     private settingState: SettingState,
@@ -59,6 +60,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
       this.neo2WalletArr = state.neo2WalletArr;
       this.neo3WalletArr = state.neo3WalletArr;
       this.neoXWalletArr = state.neoXWalletArr;
+      this.neoXChainId = state.neoXNetworks[state.neoXNetworkIndex].chainId;
     });
   }
 

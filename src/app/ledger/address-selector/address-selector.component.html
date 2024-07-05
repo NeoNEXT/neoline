@@ -70,12 +70,13 @@
           <p class="address">{{ selectedAccount?.address }}</p>
           <div class="balance">
             <p *ngFor="let asset of accountBalance">
-              <img
+              <token-logo
+                customClass="small"
                 [assetId]="asset?.asset_id"
-                [chain]="chainType"
-                appErrorSrc
-                alt=""
-              />
+                [chainType]="chainType"
+                [symbol]="asset?.symbol"
+                [neoXChainId]="neoXChainId"
+              ></token-logo>
               {{ asset?.balance }}
             </p>
           </div>

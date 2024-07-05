@@ -1,0 +1,21 @@
+<ng-container *ngIf="!isNFT">
+  <div
+    *ngIf="chainType === 'NeoX'"
+    [ngClass]="['box', neoXTokenLogo ? '' : 'symbol', customClass ?? '']"
+  >
+    {{ neoXTokenLogo ? '' : symbol?.[0] }}
+    <img *ngIf="neoXTokenLogo" [src]="neoXTokenLogo" alt="" />
+  </div>
+
+  <div *ngIf="chainType !== 'NeoX'" [ngClass]="['box', customClass ?? '']">
+    <img [src]="neoTokenLogo" appErrorSrc alt="" />
+  </div>
+</ng-container>
+
+<div
+  *ngIf="isNFT"
+  [ngClass]="['box', imageUrl ? '' : 'symbol', customClass ?? '']"
+>
+  {{ imageUrl ? '' : symbol?.[0] }}
+  <img *ngIf="imageUrl" [src]="imageUrl | sanitizer" alt="" />
+</div>

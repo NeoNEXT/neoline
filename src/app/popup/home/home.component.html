@@ -54,20 +54,22 @@
         }}
       </li>
       <li *ngIf="showRemove" (click)="removeAccount()">
-        <img class="delete" src="assets/images/account/home-delete.svg" alt="" />{{
-          "removeAccount" | translate | async
-        }}
+        <img
+          class="delete"
+          src="assets/images/account/home-delete.svg"
+          alt=""
+        />{{ "removeAccount" | translate | async }}
       </li>
     </ul>
   </div>
   <div class="popup-home-body">
-    <div class="asset-logo-box">
-      <img
-        class="asset-logo"
+    <div class="token-logo">
+      <token-logo
         [assetId]="balance?.asset_id"
-        appErrorSrc
-        alt=""
-      />
+        [chainType]="chainType"
+        [symbol]="balance?.symbol"
+        [neoXChainId]="neoXNetwork.chainId"
+      ></token-logo>
     </div>
     <p class="asset-balance">
       {{ balance?.balance || 0 | numberFixed : 8 }} {{ balance?.symbol }}
@@ -105,9 +107,11 @@
     </div>
 
     <div class="claim-container" *ngIf="showClaim">
-      <div class="gas-logo-box">
-        <img class="gas-logo" [assetId]="claimAssetId" appErrorSrc alt="" />
-      </div>
+      <token-logo
+        customClass="claim"
+        [assetId]="claimAssetId"
+        [chainType]="chainType"
+      ></token-logo>
       <div class="claim-status-box">
         <p class="number">{{ claimNumber | numberFixed }} GAS</p>
         <p class="status">{{ claimStatus | translate | async }}</p>

@@ -7,9 +7,11 @@
         theme
         src="/assets/images/common/nav-arrow.svg"
       />
-      <div class="asset-logo-box big">
-        <img class="asset-logo" [assetId]="nft?.image_url" appErrorSrc alt="" />
-      </div>
+      <token-logo
+        customClass="big"
+        [isNFT]="true"
+        [symbol]="nft?.symbol"
+      ></token-logo>
       <div class="more" (click)="showMenu = !showMenu">
         <span></span>
         <span></span>
