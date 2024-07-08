@@ -4,7 +4,9 @@
     <div class="dashed-hori-line"></div>
     <div class="dashed-vert-line"></div>
     <div class="avatar-group">
-      <img class="left avatar" [src]="iconSrc" alt="" />
+      <span class="left">
+        <img [src]="iconSrc" [appErrorSrc]="'unknown'" alt="" />
+      </span>
       <img
         class="middle"
         theme
@@ -48,18 +50,10 @@
 </section>
 
 <section class="submit-group">
-  <button
-    class="cancel"
-    [ngClass]="{ disabled: ruleCheck && ruleSelected === 'true' }"
-    (click)="refuse()"
-  >
+  <button class="cancel" (click)="refuse()">
     {{ "refuse" | translate | async }}
   </button>
-  <button
-    class="confirm"
-    [ngClass]="{ disabled: ruleCheck && ruleSelected === 'false' }"
-    (click)="connect()"
-  >
+  <button class="confirm" (click)="connect()">
     {{ "connect" | translate | async }}
   </button>
 </section>

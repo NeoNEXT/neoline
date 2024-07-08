@@ -23,3 +23,5 @@ export const RateCurrencysType: Array<SelectItem> = [
 ];
 
 export const DEFAULT_ASSET_LOGO = '/assets/images/default_asset_logo.svg';
+export const UNKNOWN_LOGO_URL = '/assets/images/unknown-logo.svg';
+

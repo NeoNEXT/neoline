@@ -89,7 +89,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
         icon: this.iconSrc,
         title: this.title,
         status: 'false',
-        keep: this.ruleCheck ? true : false,
+        keep: false,
       };
       if (index >= 0) {
         res[this.address][index] = setData;

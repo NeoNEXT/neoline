@@ -56,11 +56,19 @@
         display: inline-block;
       }
 
-      img.avatar {
+      .left {
         width: 64px;
         height: 64px;
         border-radius: 32px;
         background: rgba(73, 73, 73, 1);
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        img {
+          width: 30px;
+          height: 30px;
+        }
       }
 
       img.middle {
