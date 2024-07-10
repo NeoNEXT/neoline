@@ -20,6 +20,8 @@ import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
 import { ethers } from 'ethers';
 import { interval } from 'rxjs';
+import { PopupTransferSuccessDialogComponent } from '../../_dialogs';
+import { MatDialog } from '@angular/material/dialog';
 
 export type TabType = 'details' | 'data';
 
@@ -49,6 +51,7 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
   constructor(
     private global: GlobalService,
     private ledger: LedgerService,
+    private dialog: MatDialog,
     private util: UtilServiceState,
     private chrome: ChromeService,
     private assetEVMState: AssetEVMState
@@ -104,7 +107,14 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
     this.assetEVMState
       .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
       .then((tx) => {
-        this.backAmount.emit({ hash: tx.hash, chain: 'NeoX' });
+        this.dialog
+          .open(PopupTransferSuccessDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+          })
+          .afterClosed()
+          .subscribe(() => {
+            this.backAmount.emit({ hash: tx.hash, chain: 'NeoX' });
+          });
         this.loading = false;
       })
       .catch((error) => {

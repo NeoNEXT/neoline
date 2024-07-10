@@ -8,7 +8,7 @@ import {
 } from '@angular/core';
 import { GlobalService, LedgerService, ChromeService } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
-import { PopupEditFeeDialogComponent } from '@/app/popup/_dialogs';
+import { PopupEditFeeDialogComponent, PopupTransferSuccessDialogComponent } from '@/app/popup/_dialogs';
 import { MatDialog } from '@angular/material/dialog';
 import { SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Asset } from '@/models/models';
@@ -139,7 +139,14 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
         }
         console.log(txHash);
 
-        this.backAmount.emit({ hash: txHash, chain: 'Neo3' });
+        this.dialog
+          .open(PopupTransferSuccessDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+          })
+          .afterClosed()
+          .subscribe(() => {
+            this.backAmount.emit({ hash: txHash, chain: 'Neo3' });
+          });
         this.loading = false;
         this.loadingMsg = '';
       })

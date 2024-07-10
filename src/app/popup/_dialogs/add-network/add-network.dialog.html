@@ -6,7 +6,7 @@
 </div>
 <div class="pop-ups-title">
   {{ (data.editNetwork ? 'EditNetwork' : 'AddNetwork') | translate | async }}({{
-  data.addChainType === 'NeoX' ? 'Neo X' : data.addChainType }})
+  data.addChainType === 'NeoX' ? 'EVM' : data.addChainType }})
   <img
     class="close"
     [mat-dialog-close]="false"

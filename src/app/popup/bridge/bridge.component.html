@@ -42,7 +42,12 @@
     </div>
   </div>
   <div class="item to">
-    <img theme class="exchange" src="assets/images/bridge/exchange.svg" alt="" />
+    <img
+      theme
+      class="exchange"
+      src="assets/images/bridge/exchange.svg"
+      alt=""
+    />
     <div class="label">{{ "ToAddress" | translate | async }}</div>
     <div class="input-amount">
       <span class="chain">{{ toChain }}</span>
@@ -81,23 +86,47 @@
   >
     {{ "Deposit" | translate | async }}
   </button>
+</div>
 
-  <p>
-    source txid:
-    <span *ngIf="sourceTxLoading">loading...</span>
-    <copy *ngIf="!sourceTxLoading && sourceTxID" [value]="sourceTxID">
-      {{ sourceTxID | longStr : 6 }}
-      <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
-    </copy>
-  </p>
-  <p>
-    target txid:
-    <span *ngIf="targetTxLoading">loading...</span>
-    <copy *ngIf="!targetTxLoading && targetTxID" [value]="targetTxID">
-      {{ targetTxID | longStr : 6 }}
-      <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
-    </copy>
-  </p>
+<div class="tx-history" *ngIf="sourceTxLoading || sourceTxID">
+  <div class="item">
+    <mat-spinner
+      *ngIf="sourceTxLoading"
+      strokeWidth="2"
+      diameter="17"
+    ></mat-spinner>
+    <img *ngIf="sourceTxID" src="/assets/images/login/checked.svg" alt="" />
+    <span class="name">
+      {{
+        chainType === "Neo3"
+          ? sourceTxLoading
+            ? "Depositing"
+            : "Deposited"
+          : sourceTxLoading
+          ? "Withdrawing"
+          : "Withdrawn"
+      }}
+    </span>
+    <span *ngIf="sourceTxID" (click)="toViewTx()" class="tx">
+      View Transaction
+      <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
+    </span>
+  </div>
+  <div class="item" *ngIf="targetTxLoading || targetTxID">
+    <mat-spinner
+      *ngIf="targetTxLoading"
+      strokeWidth="2"
+      diameter="17"
+    ></mat-spinner>
+    <img *ngIf="targetTxID" src="/assets/images/login/checked.svg" alt="" />
+    <span class="name">
+      {{ targetTxLoading ? "Transferring" : "Transferred" }}
+    </span>
+    <span *ngIf="targetTxID" (click)="toViewTx(false)" class="tx">
+      View Transaction
+      <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
+    </span>
+  </div>
 </div>
 
 <neo3-bridge-confirm

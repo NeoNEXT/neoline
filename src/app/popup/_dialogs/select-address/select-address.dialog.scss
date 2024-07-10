@@ -1,7 +1,37 @@
-@import "src/styles/tab-container.scss";
-
 .tabs-container {
-  border-bottom: 1px solid var(--line-color);
+  height: 36px;
+  margin: 0 24px;
+  border-radius: 24px;
+  display: flex;
+  flex-direction: row;
+  justify-content: space-between;
+  gap: 4px;
+  align-items: center;
+  padding: 2px;
+  box-sizing: border-box;
+  background: #fff;
+  border: 0.5px solid #cfdfe5;
+  :host-context([data-theme-style="dark-theme"]) & {
+    background: #303135;
+    border-color: #43464d;
+  }
+  span {
+    width: 50%;
+    height: 32px;
+    line-height: 32px;
+    border-radius: 24px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--sub-title-color);
+    cursor: pointer;
+    &.selected {
+      background: #e9f0f0;
+      color: var(--title-color);
+      :host-context([data-theme-style="dark-theme"]) & {
+        background: #43464d;
+      }
+    }
+  }
 }
 
 button.search {
@@ -13,6 +43,9 @@ button.search {
   display: inline-flex;
   align-items: center;
   padding: 0 12px;
+  :host-context([data-theme-style="dark-theme"]) & {
+    border-color: #9fa2a9;
+  }
   img.search {
     margin-right: 12px;
     cursor: pointer;
@@ -50,7 +83,7 @@ button.search {
       align-items: center;
       position: relative;
       &:hover {
-        background: #f5f9f9;
+        background: var(--hover-color);
       }
       img.avatar {
         margin-right: 8px;
@@ -64,6 +97,7 @@ button.search {
         overflow: hidden;
         text-overflow: ellipsis;
         white-space: nowrap;
+        color: var(--title-color);
       }
       .address {
         margin-top: 4px;

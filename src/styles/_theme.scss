@@ -6,6 +6,7 @@ html[data-theme-style="light-theme"]:root {
   --btn-title-color: #fff;
   --important-title-color: #3d3d3d;
   --sub-title-color: #738993;
+  --second-color: #425354;
   --tip-color: #afb6be;
   --box-color: #fafafa;
   --message-box-color: #fafafa;
@@ -17,11 +18,12 @@ html[data-theme-style="light-theme"]:root {
   --network-color: #fff;
   --login-title: #303334;
   --guide-title: #fcfdff;
+  --bridge-label-color: #aab9bf;
   --popups-box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.16);
   --small-box-shadow: 0px 3px 8px 0px rgba(0, 0, 0, 0.16);
   --asset-add-box-shadow: 0px 5px 10px -2px rgba(6, 204, 171, 0.5);
   --tx-receive-box-shadow: 0px 6px 10px -2px rgba(48, 52, 51, 0.5);
-  --tx-transfer-box-shadow:  0px 6px 10px -2px rgba(6, 204, 171, 0.5);
+  --tx-transfer-box-shadow: 0px 6px 10px -2px rgba(6, 204, 171, 0.5);
 }
 /* dark */
 html[data-theme-style="dark-theme"]:root {
@@ -32,6 +34,7 @@ html[data-theme-style="dark-theme"]:root {
   --btn-title-color: #363940;
   --important-title-color: #fcfdff;
   --sub-title-color: #b9babe;
+  --second-color: #ced9d9;
   --tip-color: #9fa2a9;
   --box-color: #2a2b2f;
   --message-box-color: #43464d;
@@ -43,6 +46,7 @@ html[data-theme-style="dark-theme"]:root {
   --network-color: #303433;
   --login-title: #06ccab;
   --guide-title: #303334;
+  --bridge-label-color: #9fa2a9;
   --popups-box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.5);
   --small-box-shadow: 0px 3px 8px 0px rgba(0, 0, 0, 0.5);
   --asset-add-box-shadow: 0px 5px 8px -2px rgba(6, 204, 171, 0.8);

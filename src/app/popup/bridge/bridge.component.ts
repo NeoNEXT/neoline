@@ -10,11 +10,16 @@ import { Asset } from '@/models/models';
 import { Component, OnDestroy } from '@angular/core';
 import {
   ChainType,
+  DEFAULT_N3_RPC_NETWORK,
   EvmTransactionParams,
   GAS3_CONTRACT,
   RpcNetwork,
 } from '../_lib';
-import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '../_lib/evm';
+import {
+  DEFAULT_NEOX_RPC_NETWORK,
+  ETH_SOURCE_ASSET_HASH,
+  EvmWalletJSON,
+} from '../_lib/evm';
 import { Unsubscribable, map } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -184,7 +189,7 @@ export class PopupBridgeComponent implements OnDestroy {
 
   getActualReceive() {
     if (
-      !isNaN(Number(this.bridgeAmount)) &&
+      this.bridgeAmount &&
       new BigNumber(this.bridgeAmount).comparedTo(this.minBridgeAmount) >= 0
     ) {
       return new BigNumber(this.bridgeAmount)
@@ -196,7 +201,7 @@ export class PopupBridgeComponent implements OnDestroy {
   }
 
   private async calculateNeoXFee() {
-    const value = new BigNumber(this.bridgeAmount ?? 1)
+    const value = new BigNumber(this.bridgeAmount ?? this.minBridgeAmount)
       .shiftedBy(this.bridgeAsset.decimals)
       .toFixed(0, 1);
 
@@ -226,7 +231,7 @@ export class PopupBridgeComponent implements OnDestroy {
   private calculateNeoN3Fee() {
     const fromAddress = this.currentWallet.accounts[0].address;
 
-    const tAmount = new BigNumber(this.bridgeAmount ?? 1)
+    const tAmount = new BigNumber(this.bridgeAmount ?? this.minBridgeAmount)
       .shiftedBy(this.bridgeAsset.decimals)
       .toFixed(0, 1);
 
@@ -314,6 +319,28 @@ export class PopupBridgeComponent implements OnDestroy {
         this.globalService.snackBarTip('balanceLack');
       }
     }
+  }
+
+  toViewTx(isSourceTx = true) {
+    let url: string;
+    if (this.chainType === 'Neo3') {
+      if (isSourceTx) {
+        url = `${this.n3Network.explorer}transaction/${this.sourceTxID}`;
+      } else {
+        if (this.n3Network.chainId === 6) {
+          url = `${DEFAULT_NEOX_RPC_NETWORK[0].explorer}/tx/${this.targetTxID}`;
+        }
+      }
+    } else {
+      if (isSourceTx) {
+        url = `${this.neoXNetwork.explorer}/tx/${this.sourceTxID}`;
+      } else {
+        if (this.neoXNetwork.chainId === 12227331) {
+          url = `${DEFAULT_N3_RPC_NETWORK[1].explorer}transaction/${this.targetTxID}`;
+        }
+      }
+    }
+    window.open(url);
   }
 
   async confirm() {

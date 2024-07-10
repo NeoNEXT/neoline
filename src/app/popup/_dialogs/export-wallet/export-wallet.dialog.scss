@@ -17,14 +17,11 @@
   }
   .export-all {
     line-height: 18px;
-    color: #425354;
+    color: var(--second-color);
     margin-top: 4px;
     display: flex;
     align-items: center;
     justify-content: center;
-    :host-context([data-theme-style="dark-theme"]) & {
-      color: #ced9d9;
-    }
   }
   .select {
     display: inline-block;

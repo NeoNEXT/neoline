@@ -14,7 +14,7 @@ section.container {
     .label {
       font-size: 13px;
       line-height: 17px;
-      color: #7d9299;
+      color: var(--sub-title-color);
       &.from {
         margin-top: 16px;
       }
@@ -23,27 +23,27 @@ section.container {
       font-size: 20px;
       font-weight: 600;
       line-height: 24px;
-      color: #2a3331;
+      color: var(--title-color);
       margin-top: 4px;
       display: flex;
       align-items: center;
       justify-content: space-between;
       .symbol {
         font-size: 18px;
-        color: #425354;
+        color: var(--second-color);
         flex: 1;
         margin-left: 4px;
       }
       .currency {
         font-size: 14px;
         font-weight: normal;
-        color: #7d9299;
+        color: var(--sub-title-color);
       }
     }
     .address {
       font-size: 14px;
       font-weight: 500;
-      color: #2a3331;
+      color: var(--title-color);
       margin-top: 4px;
       display: flex;
       gap: 8px;
