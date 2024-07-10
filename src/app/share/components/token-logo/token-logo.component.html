@@ -16,6 +16,11 @@
   *ngIf="isNFT"
   [ngClass]="['box', imageUrl ? '' : 'symbol', customClass ?? '']"
 >
-  {{ imageUrl ? '' : symbol?.[0] }}
-  <img *ngIf="imageUrl" [src]="imageUrl | sanitizer" alt="" />
+  {{ imageUrl !== undefined ? '' : symbol?.[0] }}
+  <img
+    *ngIf="imageUrl !== undefined"
+    [src]="imageUrl | sanitizer"
+    [appErrorSrc]="'nft'"
+    alt=""
+  />
 </div>
