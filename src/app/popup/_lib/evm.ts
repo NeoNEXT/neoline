@@ -98,3 +98,123 @@ export const EVM_TOKEN_IMAGE_URL = {
     [ETH_SOURCE_ASSET_HASH]: `${TOKEN_IMAGE_URL_PREFIX}/gnosis.svg`,
   },
 };
+
+//#region opensea chains
+interface OpenseaChains {
+  [key: number]: {
+    name: string;
+    value: string;
+  };
+}
+
+// mainnet
+export const OPENSEA_MAINNET_CHAINS: OpenseaChains = {
+  1: {
+    name: 'Ethereum Mainnet',
+    value: 'ethereum',
+  },
+  137: {
+    name: 'Polygon Matic',
+    value: 'matic',
+  },
+  8217: {
+    name: 'Klaytn',
+    value: 'klaytn',
+  },
+  56: {
+    name: 'BNB Chain',
+    value: 'bsc',
+  },
+  42161: {
+    name: 'Arbitrum',
+    value: 'arbitrum',
+  },
+  42170: {
+    name: 'Arbitrum Nova',
+    value: 'arbitrum_nova',
+  },
+  43114: {
+    name: 'Avalanche',
+    value: 'avalanche',
+  },
+  10: {
+    name: 'Optimism',
+    value: 'optimism',
+  },
+  245022934: {
+    name: 'Solana',
+    value: 'solana',
+  },
+  8453: {
+    name: 'Base',
+    value: 'base',
+  },
+  81457: {
+    name: 'Blast',
+    value: 'blast',
+  },
+  7777777: {
+    name: 'Zora',
+    value: 'zora',
+  },
+  1329: {
+    name: 'Sei',
+    value: 'sei',
+  },
+};
+export const OPENSEA_TESTNET_CHAINS: OpenseaChains = {
+  11155111: {
+    name: 'Sepolia',
+    value: 'sepolia',
+  },
+  80002: {
+    name: 'Polygon Amoy',
+    value: 'amoy',
+  },
+  1001: {
+    name: 'Klaytn Baobab',
+    value: 'baobab',
+  },
+  97: {
+    name: 'BNB Testnet',
+    value: 'bsctestnet',
+  },
+  421614: {
+    name: 'Arbitrum Sepolia',
+    value: 'arbitrum_sepolia',
+  },
+  43113: {
+    name: 'Avalanche Fuji',
+    value: 'avalanche_fuji',
+  },
+  11155420: {
+    name: 'Optimism Sepolia',
+    value: 'optimism_sepolia',
+  },
+  245022926: {
+    name: 'Solana Devnet',
+    value: 'soldev',
+  },
+  84532: {
+    name: 'Base Sepolia',
+    value: 'base_sepolia',
+  },
+  168587773: {
+    name: 'Blast Sepolia',
+    value: 'blast_sepolia',
+  },
+  999999999: {
+    name: 'Zora Sepolia',
+    value: 'zora_sepolia',
+  },
+  1328: {
+    name: 'Sei Testnet',
+    value: 'sei_testnet',
+  },
+};
+export const OPENSEA_ALL_CHAINS: OpenseaChains = Object.assign(
+  {},
+  OPENSEA_MAINNET_CHAINS,
+  OPENSEA_TESTNET_CHAINS
+);
+//#endregion

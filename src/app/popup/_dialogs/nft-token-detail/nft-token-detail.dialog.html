@@ -16,17 +16,43 @@
   <ul>
     <li>
       <span class="label">{{ 'Name' | translate | async }}</span>
-      <span class="value"
-        >{{ data.nftToken?.name || data.nftToken.tokenid }}</span
-      >
-    </li>
-    <li>
-      <span class="label">{{ 'Symbol' | translate | async }}</span>
-      <span class="value">{{ data.nftToken.symbol }}</span>
+      <span class="value">
+        {{ data.nftToken?.name || data.nftToken.tokenid }}
+      </span>
     </li>
     <li>
       <span class="label">Token ID</span>
-      <span class="value">{{ data.nftToken.tokenid }}</span>
+      <copy [value]="data.nftToken.tokenid">
+        <span class="value copy">
+          {{ data.nftToken.tokenid | longStr: 6 }}
+          <img theme src="assets/images/common/copy.svg" />
+        </span>
+      </copy>
     </li>
+    <li>
+      <span class="label">{{ 'ContractAddress' | translate |async }}</span>
+      <copy [value]="data.nftContract">
+        <span class="value copy">
+          {{ data.nftContract | longStr: 6 }}
+          <img theme src="assets/images/common/copy.svg" />
+        </span>
+      </copy>
+    </li>
+    <ng-container
+      *ngIf="data.chainType === 'NeoX' && OPENSEA_ALL_CHAINS[data.neoXNetwork.chainId]"
+    >
+      <li>
+        <span class="label">{{ 'Network' | translate | async }}</span>
+        <span class="value">
+          {{ OPENSEA_ALL_CHAINS[data.neoXNetwork.chainId]?.name }}
+        </span>
+      </li>
+      <li>
+        <span class="label">{{ 'ViewInNFTMarket' | translate | async }}</span>
+        <span class="value link" (click)="toNftMarket()">
+          <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
+        </span>
+      </li>
+    </ng-container>
   </ul>
 </div>

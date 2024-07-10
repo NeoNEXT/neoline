@@ -9,12 +9,12 @@ export type ChainType = 'Neo2' | 'Neo3' | 'NeoX';
 
 export const ChainTypeGroups: ChainSelectItem[] = [
   {
-    type: 'NeoX',
-    name: 'Neo X (EVM Network)',
-  },
-  {
     type: 'Neo3',
     name: 'Neo N3',
+  },
+  {
+    type: 'NeoX',
+    name: 'Neo X (EVM Network)',
   },
   {
     type: 'Neo2',

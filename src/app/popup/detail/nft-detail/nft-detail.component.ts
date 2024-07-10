@@ -29,8 +29,8 @@ export class PopupNftDetailComponent implements OnDestroy {
   private accountSub: Unsubscribable;
   private address: string;
   private n3Network: RpcNetwork;
-  private neoXNetwork: RpcNetwork;
-  private chainType: ChainType;
+  neoXNetwork: RpcNetwork;
+  chainType: ChainType;
   constructor(
     private aRouter: ActivatedRoute,
     private nftState: NftState,

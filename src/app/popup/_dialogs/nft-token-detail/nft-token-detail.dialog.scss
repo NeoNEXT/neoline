@@ -26,6 +26,18 @@
       text-align: right;
       word-break: break-all;
       color: var(--title-color);
+      &.copy {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+      }
+      &.link {
+        cursor: pointer;
+        &:hover img {
+          filter: drop-shadow(1000px 0 0 var(--theme-color));
+          transform: translate(-1000px);
+        }
+      }
     }
   }
 }

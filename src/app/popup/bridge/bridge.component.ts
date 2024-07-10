@@ -345,9 +345,11 @@ export class PopupBridgeComponent implements OnDestroy {
 
   async confirm() {
     if (this.getActualReceive() === '-') {
-      this.globalService.snackBarTip(
-        `Deposit amount shouldn't be less than ${this.minBridgeAmount} GAS`
-      );
+      let message = `Deposit amount shouldn't be less than ${this.minBridgeAmount} GAS`;
+      if (this.chainType === 'NeoX') {
+        `Withdraw amount shouldn't be less than ${this.minBridgeAmount} GAS`;
+      }
+      this.globalService.snackBarTip(message);
       return;
     }
     if (

@@ -1315,5 +1315,11 @@
   },
   "ContractAddress": {
     "message": "合约地址"
+  },
+  "ViewTransaction": {
+    "message": "查看交易"
+  },
+  "ViewInNFTMarket": {
+    "message": "到 NFT 市场查看"
   }
 }

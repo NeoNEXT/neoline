@@ -1312,5 +1312,11 @@
   },
   "ContractAddress": {
     "message": "Contract Address"
+  },
+  "ViewTransaction": {
+    "message": "View Transaction"
+  },
+  "ViewInNFTMarket": {
+    "message": "View in NFT Market"
   }
 }
