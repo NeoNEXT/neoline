@@ -58,6 +58,9 @@ export class PopupAuthorizationListDialogComponent {
   disconnectAddress() {
     const address = this.moreModalWallet.accounts[0].address;
     this.moreModalWallet = undefined;
+    if (this.currentAddress === address) {
+      this.currentWalletIsConnected = false;
+    }
     this.data.authWalletList = this.data.authWalletList.filter(
       (item) => item.accounts[0].address !== address
     );

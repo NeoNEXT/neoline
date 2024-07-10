@@ -1,4 +1,8 @@
 <div class="content" (click)="viewAllAuth()">
-  <img class="logo" [src]="favIconUrl" alt="" />
+  <img
+    class="logo"
+    [src]="authWalletList.length > 0 ? favIconUrl : defaultFavIconUrl"
+    alt=""
+  />
   <span *ngIf="authWalletList.length > 0" class="status"></span>
 </div>
