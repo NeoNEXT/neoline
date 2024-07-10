@@ -32,8 +32,11 @@ import { SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { ContractCall } from '@cityofzion/neon-core-neo3/lib/sc';
 import { NeoXFeeInfoProp } from '../transfer/create/interface';
 import { interval } from 'rxjs';
-import { MatDialog } from '@angular/material/dialog';
-import { PopupSelectAddressDialogComponent } from '../_dialogs';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import {
+  PopupBridgeProgressDialogComponent,
+  PopupSelectAddressDialogComponent,
+} from '../_dialogs';
 
 const NeoN3GasAsset: Asset = {
   asset_id: GAS3_CONTRACT,
@@ -73,6 +76,7 @@ export class PopupBridgeComponent implements OnDestroy {
   sourceTxLoading = false;
   targetTxLoading = false;
   loading = false;
+  bridgeProgressDialogRef: MatDialogRef<PopupBridgeProgressDialogComponent>;
 
   // neo3
   networkFee: string;
@@ -403,6 +407,18 @@ export class PopupBridgeComponent implements OnDestroy {
     this.showConfirmPage = false;
     if (event) {
       this.resetData();
+      this.bridgeProgressDialogRef = this.dialog.open(PopupBridgeProgressDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+        data: {
+          chainType: event.chain,
+          sourceTxLoading: this.sourceTxLoading,
+          sourceTxID: this.sourceTxID,
+          targetTxLoading: this.targetTxLoading,
+          targetTxID: this.targetTxID,
+          n3Network: this.n3Network,
+          neoXNetwork: this.neoXNetwork,
+        },
+      });
       if (event.chain === 'Neo3') {
         this.waitNeo3SourceTxComplete(event.hash);
       }
@@ -433,12 +449,21 @@ export class PopupBridgeComponent implements OnDestroy {
   //#region neo3
   private waitNeo3SourceTxComplete(hash: string) {
     this.sourceTxLoading = true;
+    if (this.bridgeProgressDialogRef?.componentInstance) {
+      this.bridgeProgressDialogRef.componentInstance.data.sourceTxLoading =
+        true;
+    }
     this.getSourceTxReceiptInterval?.unsubscribe();
     this.getSourceTxReceiptInterval = interval(3000).subscribe(() => {
       this.transactionState.getApplicationLog(hash).subscribe((res) => {
         console.log(res);
         this.sourceTxID = hash;
         this.sourceTxLoading = false;
+        if (this.bridgeProgressDialogRef?.componentInstance) {
+          this.bridgeProgressDialogRef.componentInstance.data.sourceTxID = hash;
+          this.bridgeProgressDialogRef.componentInstance.data.sourceTxLoading =
+            false;
+        }
         this.getSourceTxReceiptInterval.unsubscribe();
         const notifications = res.executions[0].notifications;
         const notifi = notifications.find(
@@ -453,6 +478,10 @@ export class PopupBridgeComponent implements OnDestroy {
 
   private waitNeo3TargetTxComplete(depositId: number) {
     this.targetTxLoading = true;
+    if (this.bridgeProgressDialogRef?.componentInstance) {
+      this.bridgeProgressDialogRef.componentInstance.data.targetTxLoading =
+        true;
+    }
     this.getTargetTxReceiptInterval?.unsubscribe();
     this.getTargetTxReceiptInterval = interval(5000).subscribe(() => {
       this.bridgeState
@@ -462,6 +491,12 @@ export class PopupBridgeComponent implements OnDestroy {
           if (res.txid) {
             this.targetTxID = res.txid;
             this.targetTxLoading = false;
+            if (this.bridgeProgressDialogRef?.componentInstance) {
+              this.bridgeProgressDialogRef.componentInstance.data.targetTxID =
+                res.txid;
+              this.bridgeProgressDialogRef.componentInstance.data.targetTxLoading =
+                false;
+            }
             this.getTargetTxReceiptInterval.unsubscribe();
           }
         });
@@ -472,6 +507,10 @@ export class PopupBridgeComponent implements OnDestroy {
   //#region neox
   private waitNeoXSourceTxComplete(hash: string) {
     this.sourceTxLoading = true;
+    if (this.bridgeProgressDialogRef?.componentInstance) {
+      this.bridgeProgressDialogRef.componentInstance.data.sourceTxLoading =
+        true;
+    }
     this.getSourceTxReceiptInterval?.unsubscribe();
     this.getSourceTxReceiptInterval = interval(3000).subscribe(() => {
       this.bridgeState.getTransactionReceipt(hash).then((res) => {
@@ -479,6 +518,12 @@ export class PopupBridgeComponent implements OnDestroy {
           console.log(res);
           this.sourceTxID = hash;
           this.sourceTxLoading = false;
+          if (this.bridgeProgressDialogRef?.componentInstance) {
+            this.bridgeProgressDialogRef.componentInstance.data.sourceTxID =
+              hash;
+            this.bridgeProgressDialogRef.componentInstance.data.sourceTxLoading =
+              false;
+          }
           this.getSourceTxReceiptInterval.unsubscribe();
           const nonce = new BigNumber(res.logs[0].topics[1]).toNumber();
           console.log(nonce);
@@ -490,6 +535,10 @@ export class PopupBridgeComponent implements OnDestroy {
 
   private waitNeoXTargetTxComplete(nonce: number) {
     this.targetTxLoading = true;
+    if (this.bridgeProgressDialogRef?.componentInstance) {
+      this.bridgeProgressDialogRef.componentInstance.data.targetTxLoading =
+        true;
+    }
     this.getTargetTxReceiptInterval?.unsubscribe();
     this.getTargetTxReceiptInterval = interval(3000).subscribe(() => {
       this.bridgeState
@@ -499,6 +548,12 @@ export class PopupBridgeComponent implements OnDestroy {
           if (res.result) {
             this.targetTxID = res.result.txid;
             this.targetTxLoading = false;
+            if (this.bridgeProgressDialogRef?.componentInstance) {
+              this.bridgeProgressDialogRef.componentInstance.data.targetTxID =
+                res.result.txid;
+              this.bridgeProgressDialogRef.componentInstance.data.targetTxLoading =
+                false;
+            }
             this.getTargetTxReceiptInterval.unsubscribe();
           }
         });

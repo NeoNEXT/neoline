@@ -1321,5 +1321,38 @@
   },
   "ViewInNFTMarket": {
     "message": "到 NFT 市场查看"
+  },
+  "Depositing": {
+    "message": "存入中"
+  },
+  "Deposited": {
+    "message": "已存入"
+  },
+  "Withdrawing": {
+    "message": "提取中"
+  },
+  "Withdrawn": {
+    "message": "已提取"
+  },
+  "Completed": {
+    "message": "完成"
+  },
+  "DepositingTip": {
+    "message": "交易完成后，GAS 将存入您的钱包。"
+  },
+  "DepositedTip": {
+    "message": "GAS 已存入您的 Neo X 钱包。"
+  },
+  "WithdrawingTip": {
+    "message": "交易完成后，GAS 将被提取到你的钱包中。"
+  },
+  "WithdrawnTip": {
+    "message": "GAS 已提取至您的 Neo3 钱包。"
+  },
+  "Transferring": {
+    "message": "转账中"
+  },
+  "Transferred": {
+    "message": "已转入"
   }
 }

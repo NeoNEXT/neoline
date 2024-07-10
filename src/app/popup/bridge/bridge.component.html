@@ -98,13 +98,16 @@
     <img *ngIf="sourceTxID" src="/assets/images/login/checked.svg" alt="" />
     <span class="name">
       {{
-        chainType === "Neo3"
+        (chainType === "Neo3"
           ? sourceTxLoading
             ? "Depositing"
             : "Deposited"
           : sourceTxLoading
           ? "Withdrawing"
           : "Withdrawn"
+        )
+          | translate
+          | async
       }}
     </span>
     <span *ngIf="sourceTxID" (click)="toViewTx()" class="tx">
@@ -120,7 +123,9 @@
     ></mat-spinner>
     <img *ngIf="targetTxID" src="/assets/images/login/checked.svg" alt="" />
     <span class="name">
-      {{ targetTxLoading ? "Transferring" : "Transferred" }}
+      {{
+        (targetTxLoading ? "Transferring" : "Transferred") | translate | async
+      }}
     </span>
     <span *ngIf="targetTxID" (click)="toViewTx(false)" class="tx">
       {{ "ViewTransaction" | translate | async }}

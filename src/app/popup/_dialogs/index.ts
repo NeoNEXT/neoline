@@ -19,3 +19,4 @@ export { PopupAddAddressBookDialogComponent } from './add-address-book/add-addre
 export { PopupAddressBookListDialogComponent } from './address-book-list/address-book-list.dialog';
 export { PopupExportWalletDialogComponent } from './export-wallet/export-wallet.dialog';
 export { PopupSelectAddressDialogComponent } from './select-address/select-address.dialog';
+export { PopupBridgeProgressDialogComponent } from './bridge-progress/bridge-progress.component';
