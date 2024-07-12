@@ -144,6 +144,7 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
       .open(PopupConfirmDialogComponent, {
         data: 'delAssetTip',
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((confirm) => {

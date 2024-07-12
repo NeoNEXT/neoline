@@ -34,7 +34,10 @@ export class PopupHomeDappAuthComponent implements OnChanges {
   ) {}
 
   ngOnChanges(changes: SimpleChanges): void {
-    if (changes.chainType.previousValue !== changes.chainType.currentValue) {
+    if (
+      changes.chainType &&
+      changes.chainType.previousValue !== changes.chainType.currentValue
+    ) {
       this.initData();
     }
   }
@@ -63,6 +66,7 @@ export class PopupHomeDappAuthComponent implements OnChanges {
     this.dialog
       .open(PopupAuthorizationListDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: {
           hostname: this.hostname,
           favIconUrl: this.favIconUrl,

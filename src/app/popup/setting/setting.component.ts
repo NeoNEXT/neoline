@@ -63,6 +63,7 @@ export class PopupSettingComponent implements OnInit {
         type: 'lang',
       },
       panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-dialog-backdrop',
     });
   }
 
@@ -74,6 +75,7 @@ export class PopupSettingComponent implements OnInit {
         type: 'currency',
       },
       panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-dialog-backdrop',
     });
     tempDialog.afterClosed().subscribe((currency) => {
       if (!currency) {
@@ -89,6 +91,7 @@ export class PopupSettingComponent implements OnInit {
       .open(PopupConfirmDialogComponent, {
         data: 'clearStorageTips',
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((confirm) => {

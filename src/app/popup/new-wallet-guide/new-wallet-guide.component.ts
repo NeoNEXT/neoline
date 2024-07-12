@@ -25,6 +25,7 @@ export class PopupNewWalletGuideComponent {
           type: 'chain',
         },
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((chain) => {

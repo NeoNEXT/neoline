@@ -1,6 +1,12 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { ChromeService, GlobalService } from '@/app/core';
-import { SelectItem, ChainType, ChainTypeGroups, STORAGE_NAME, AddAddressBookProp } from '../_lib';
+import {
+  SelectItem,
+  ChainType,
+  ChainTypeGroups,
+  STORAGE_NAME,
+  AddAddressBookProp,
+} from '../_lib';
 import { Unsubscribable, timer } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import {
@@ -117,6 +123,7 @@ export class PopupAddressBookComponent implements OnInit {
       .open(PopupConfirmDialogComponent, {
         data: 'delAddressConfirm',
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((confirm) => {
@@ -138,6 +145,7 @@ export class PopupAddressBookComponent implements OnInit {
     this.dialog
       .open(PopupAddAddressBookDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: {
           editAddress: editItem,
           storageAddressBook: this.storageAddressBook,
@@ -164,6 +172,7 @@ export class PopupAddressBookComponent implements OnInit {
     this.dialog
       .open(PopupAddAddressBookDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: { storageAddressBook: this.storageAddressBook },
       })
       .afterClosed()

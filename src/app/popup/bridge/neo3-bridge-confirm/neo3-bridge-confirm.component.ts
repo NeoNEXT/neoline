@@ -83,6 +83,7 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
     this.dialog
       .open(PopupEditFeeDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: { fee: this.priorityFee },
       })
       .afterClosed()

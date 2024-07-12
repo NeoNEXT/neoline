@@ -194,6 +194,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       .open(PopupConfirmDialogComponent, {
         data: 'delWalletConfirm',
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((confirm) => {

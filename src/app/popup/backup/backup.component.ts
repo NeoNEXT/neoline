@@ -61,6 +61,7 @@ export class PopupBackupComponent implements OnDestroy {
     this.dialog
       .open(PopupBackupTipDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         disableClose: true,
       })
       .afterClosed()

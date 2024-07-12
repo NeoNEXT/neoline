@@ -166,6 +166,7 @@ export class PopupNetworkComponent implements OnDestroy {
               ? 'createOrImportNeo3First'
               : 'createOrImportNeo2First',
           panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
         })
         .afterClosed()
         .subscribe((confirm) => {
@@ -214,6 +215,7 @@ export class PopupNetworkComponent implements OnDestroy {
           type: 'chain',
         },
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((chain) => {
@@ -223,6 +225,7 @@ export class PopupNetworkComponent implements OnDestroy {
         this.close();
         this.dialog.open(PopupAddNetworkDialogComponent, {
           panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
           data: { addChainType: chain },
         });
       });
@@ -234,6 +237,7 @@ export class PopupNetworkComponent implements OnDestroy {
       .open(PopupConfirmDialogComponent, {
         data: 'delNetworkConfirm',
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((confirm) => {
@@ -283,6 +287,7 @@ export class PopupNetworkComponent implements OnDestroy {
     this.moreModalNetwork = undefined;
     this.dialog.open(PopupAddNetworkDialogComponent, {
       panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-dialog-backdrop',
       data: {
         addChainType: this.moreModalChainType,
         index: this.moreModalNetworkIndex,

@@ -204,6 +204,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
         this.chrome.setLocalStorage(setData);
         this.dialog.open(PopupTransferSuccessDialogComponent, {
           panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
         });
       })
       .catch((err) => {
@@ -249,6 +250,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
     this.dialog
       .open(PopupEditFeeDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: {
           fee: this.fee,
           minFee: this.minFee,
@@ -349,6 +351,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
       this.dialog
         .open(PopupDapiPromptComponent, {
           panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
           data: {
             scopes: this.signers[0].scopes,
           },

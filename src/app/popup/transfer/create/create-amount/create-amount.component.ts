@@ -252,6 +252,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
             : this.transferAsset.asset_id,
         },
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((res) => {
@@ -358,6 +359,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     this.dialog
       .open(PopupEditFeeDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: {
           fee: this.priorityFee,
           speedFee: this.gasFeeSpeed,

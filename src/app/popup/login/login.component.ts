@@ -168,6 +168,7 @@ export class PopupLoginComponent
       .open(PopupConfirmDialogComponent, {
         data: 'resetWalletConfirm',
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((confirm) => {
@@ -187,6 +188,7 @@ export class PopupLoginComponent
           currentAddress: this.selectWallet.accounts[0].address,
         },
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((res) => {

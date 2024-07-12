@@ -319,6 +319,7 @@ export class PopupNoticeInvokeComponent implements OnInit, OnDestroy {
           this.chrome.setLocalStorage(setData);
           this.dialog.open(PopupTransferSuccessDialogComponent, {
             panelClass: 'custom-dialog-panel',
+            backdropClass: 'custom-dialog-backdrop',
           });
           this.chrome.windowCallback(
             {
@@ -679,6 +680,7 @@ export class PopupNoticeInvokeComponent implements OnInit, OnDestroy {
     this.dialog
       .open(PopupEditFeeDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: {
           fee: this.fee,
           minFee: this.minFee,

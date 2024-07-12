@@ -15,6 +15,9 @@
 }
 
 // dialog
+.custom-dialog-backdrop {
+  background: var(--dialog-backdrop-background);
+}
 .custom-dialog-panel {
   width: 92vw;
   max-width: 92vw !important;

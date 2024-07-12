@@ -407,18 +407,22 @@ export class PopupBridgeComponent implements OnDestroy {
     this.showConfirmPage = false;
     if (event) {
       this.resetData();
-      this.bridgeProgressDialogRef = this.dialog.open(PopupBridgeProgressDialogComponent, {
-        panelClass: 'custom-dialog-panel',
-        data: {
-          chainType: event.chain,
-          sourceTxLoading: this.sourceTxLoading,
-          sourceTxID: this.sourceTxID,
-          targetTxLoading: this.targetTxLoading,
-          targetTxID: this.targetTxID,
-          n3Network: this.n3Network,
-          neoXNetwork: this.neoXNetwork,
-        },
-      });
+      this.bridgeProgressDialogRef = this.dialog.open(
+        PopupBridgeProgressDialogComponent,
+        {
+          panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
+          data: {
+            chainType: event.chain,
+            sourceTxLoading: this.sourceTxLoading,
+            sourceTxID: this.sourceTxID,
+            targetTxLoading: this.targetTxLoading,
+            targetTxID: this.targetTxID,
+            n3Network: this.n3Network,
+            neoXNetwork: this.neoXNetwork,
+          },
+        }
+      );
       if (event.chain === 'Neo3') {
         this.waitNeo3SourceTxComplete(event.hash);
       }
@@ -433,6 +437,7 @@ export class PopupBridgeComponent implements OnDestroy {
     this.dialog
       .open(PopupSelectAddressDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: {
           chainType: chain,
           walletArr: chain === 'Neo3' ? this.neo3WalletArr : this.neoXWalletArr,

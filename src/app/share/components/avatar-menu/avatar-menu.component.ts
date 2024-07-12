@@ -218,6 +218,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       .open(PopupPasswordDialogComponent, {
         data: { account: w, chainType: this.chainType },
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((res) => {
@@ -238,6 +239,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
     this.dialog
       .open(PopupAddWalletDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((type) => {
@@ -249,6 +251,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
                 type: 'chain',
               },
               panelClass: 'custom-dialog-panel',
+              backdropClass: 'custom-dialog-backdrop',
             })
             .afterClosed()
             .subscribe((chain) => {
@@ -324,6 +327,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
       .open(PopupConfirmDialogComponent, {
         data: 'delWalletConfirm',
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((confirm) => {
@@ -402,6 +406,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
     this.dialog
       .open(PopupExportWalletDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((res) => {

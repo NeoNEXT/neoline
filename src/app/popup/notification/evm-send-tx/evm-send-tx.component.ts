@@ -191,6 +191,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         });
         this.dialog.open(PopupTransferSuccessDialogComponent, {
           panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
         });
       })
       .catch((error) => {
@@ -212,6 +213,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         });
         this.dialog.open(PopupTransferSuccessDialogComponent, {
           panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
         });
       })
       .catch((error) => {

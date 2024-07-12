@@ -105,6 +105,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     this.dialog
       .open(PopupEditFeeDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: {
           fee: this.data.fee,
         },
@@ -338,6 +339,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
       this.dialog
         .open(PopupTransferSuccessDialogComponent, {
           panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
         })
         .afterClosed()
         .subscribe(() => {

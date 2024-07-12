@@ -114,6 +114,7 @@ export class TransferCreateAddressComponent {
     this.dialog
       .open(PopupAddressBookListDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: { chainType: this.chainType },
       })
       .afterClosed()

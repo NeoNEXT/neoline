@@ -283,6 +283,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
                 ? 'createOrImportNeoXFirst'
                 : 'createOrImportNeo3First',
             panelClass: 'custom-dialog-panel',
+            backdropClass: 'custom-dialog-backdrop',
           })
           .afterClosed()
           .subscribe((confirm) => {

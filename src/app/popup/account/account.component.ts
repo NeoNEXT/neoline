@@ -141,6 +141,7 @@ export class PopupAccountComponent implements OnDestroy {
   public wif(showMnemonic = false) {
     return this.dialog.open(PopupPrivateKeyComponent, {
       panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-dialog-backdrop',
       data: {
         currentWallet: this.operateWallet,
         chainType: this.operateChainType,
@@ -153,6 +154,7 @@ export class PopupAccountComponent implements OnDestroy {
     return this.dialog.open(PopupQRCodeDialogComponent, {
       width: 'auto',
       panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-dialog-backdrop',
       data: this.operateWallet.accounts[0].address,
     });
   }
@@ -268,6 +270,7 @@ export class PopupAccountComponent implements OnDestroy {
       .open(PopupConfirmDialogComponent, {
         data: 'delWalletConfirm',
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((confirm) => {

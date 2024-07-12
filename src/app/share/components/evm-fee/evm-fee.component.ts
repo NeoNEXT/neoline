@@ -76,6 +76,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
       PopupEditEvmFeeDialogComponent,
       {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: {
           sourceNeoXFeeInfo: this.sourceNeoXFeeInfo,
           customNeoXFeeInfo:

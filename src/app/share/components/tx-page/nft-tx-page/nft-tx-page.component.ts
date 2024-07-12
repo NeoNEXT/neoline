@@ -82,22 +82,24 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
   }
   private getEvmAllTxs() {
     const networkName = `${this.chainType}-${this.networkId}`;
-    this.chrome.getStorage(STORAGE_NAME.transaction).subscribe(async (inTxData) => {
-      this.localAllTxs = inTxData;
-      this.txData =
-        inTxData?.[networkName]?.[this.address]?.[this.nftContract] || [];
-      for (let i = 0; i < this.txData.length; i++) {
-        const item = this.txData[i];
-        if (item?.status === undefined) {
-          const res = await this.assetEVMState.waitForTx(item.txid);
-          this.txData[i].status = res.status;
-          this.txData[i].block_time = res.block_time;
-          this.localAllTxs[networkName][this.address][this.nftContract] =
-            this.txData;
-          this.chrome.setStorage(STORAGE_NAME.transaction, this.localAllTxs);
+    this.chrome
+      .getStorage(STORAGE_NAME.transaction)
+      .subscribe(async (inTxData) => {
+        this.localAllTxs = inTxData;
+        this.txData =
+          inTxData?.[networkName]?.[this.address]?.[this.nftContract] || [];
+        for (let i = 0; i < this.txData.length; i++) {
+          const item = this.txData[i];
+          if (item?.status === undefined) {
+            const res = await this.assetEVMState.waitForTx(item.txid);
+            this.txData[i].status = res.status;
+            this.txData[i].block_time = res.block_time;
+            this.localAllTxs[networkName][this.address][this.nftContract] =
+              this.txData;
+            this.chrome.setStorage(STORAGE_NAME.transaction, this.localAllTxs);
+          }
         }
-      }
-    });
+      });
   }
 
   private handleTxs(validTxs?: string[]) {
@@ -164,6 +166,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
   showDetail(tx) {
     this.dialog.open(PopupTxDetailDialogComponent, {
       panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-dialog-backdrop',
       data: { tx, symbol: this.symbol, isNFT: true },
     });
   }

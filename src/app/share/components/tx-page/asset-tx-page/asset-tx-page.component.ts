@@ -168,6 +168,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
   showDetail(tx, symbol) {
     this.dialog.open(PopupTxDetailDialogComponent, {
       panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-dialog-backdrop',
       data: { tx, symbol, isNFT: false },
     });
   }

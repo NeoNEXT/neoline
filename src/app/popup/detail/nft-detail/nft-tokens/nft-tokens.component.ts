@@ -23,6 +23,7 @@ export class PopupNftTokensComponent {
   showDetail(token) {
     this.dialog.open(PopupNftTokenDetailDialogComponent, {
       panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-dialog-backdrop',
       data: {
         nftToken: token,
         nftContract: this.nftContract,
