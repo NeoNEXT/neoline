@@ -5,15 +5,18 @@ import {
   NotificationService,
   BridgeState,
   TransactionState,
+  ChromeService,
 } from '@/app/core';
 import { Asset } from '@/models/models';
-import { Component, OnDestroy } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import {
+  BridgeTransactionItem,
   ChainType,
   DEFAULT_N3_RPC_NETWORK,
   EvmTransactionParams,
   GAS3_CONTRACT,
   RpcNetwork,
+  STORAGE_NAME,
 } from '../_lib';
 import {
   DEFAULT_NEOX_RPC_NETWORK,
@@ -57,7 +60,7 @@ const MIN_BRIDGE_AMOUNT = 1;
   templateUrl: 'bridge.component.html',
   styleUrls: ['bridge.component.scss'],
 })
-export class PopupBridgeComponent implements OnDestroy {
+export class PopupBridgeComponent implements OnInit, OnDestroy {
   showConfirmPage = false;
   keepDecimals = 8;
 
@@ -71,12 +74,9 @@ export class PopupBridgeComponent implements OnDestroy {
 
   getSourceTxReceiptInterval;
   getTargetTxReceiptInterval;
-  sourceTxID: string;
-  targetTxID: string;
-  sourceTxLoading = false;
-  targetTxLoading = false;
   loading = false;
   bridgeProgressDialogRef: MatDialogRef<PopupBridgeProgressDialogComponent>;
+  sessionTx: BridgeTransactionItem;
 
   // neo3
   networkFee: string;
@@ -108,6 +108,7 @@ export class PopupBridgeComponent implements OnDestroy {
     private bridgeState: BridgeState,
     private transactionState: TransactionState,
     private dialog: MatDialog,
+    private chrome: ChromeService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -120,6 +121,24 @@ export class PopupBridgeComponent implements OnDestroy {
       this.neoXWalletArr = state.neoXWalletArr;
       this.initData();
     });
+  }
+
+  ngOnInit(): void {
+    this.chrome
+      .getStorage(STORAGE_NAME.bridgeTransaction)
+      .subscribe((tx: BridgeTransactionItem[]) => {
+        if (tx.length > 0) {
+          this.sessionTx = tx[0];
+          if (!tx[0].sourceTxID || !tx[0].targetTxID) {
+            if (tx[0].sourceChainType === 'Neo3') {
+              this.waitNeo3SourceTxComplete(tx[0].txId);
+            }
+            if (tx[0].sourceChainType === 'NeoX') {
+              this.waitNeoXSourceTxComplete(tx[0].txId);
+            }
+          }
+        }
+      });
   }
 
   ngOnDestroy(): void {
@@ -327,21 +346,17 @@ export class PopupBridgeComponent implements OnDestroy {
 
   toViewTx(isSourceTx = true) {
     let url: string;
-    if (this.chainType === 'Neo3') {
-      if (isSourceTx) {
-        url = `${this.n3Network.explorer}transaction/${this.sourceTxID}`;
+    if (isSourceTx) {
+      if (this.sessionTx.sourceChainType === 'Neo3') {
+        url = `${this.sessionTx.sourceExplorer}transaction/${this.sessionTx.sourceTxID}`;
       } else {
-        if (this.n3Network.chainId === 6) {
-          url = `${DEFAULT_NEOX_RPC_NETWORK[0].explorer}/tx/${this.targetTxID}`;
-        }
+        url = `${this.sessionTx.sourceExplorer}/tx/${this.sessionTx.sourceTxID}`;
       }
     } else {
-      if (isSourceTx) {
-        url = `${this.neoXNetwork.explorer}/tx/${this.sourceTxID}`;
+      if (this.sessionTx.targetChainType === 'Neo3') {
+        url = `${this.sessionTx.targetExplorer}transaction/${this.sessionTx.targetTxID}`;
       } else {
-        if (this.neoXNetwork.chainId === 12227331) {
-          url = `${DEFAULT_N3_RPC_NETWORK[1].explorer}transaction/${this.targetTxID}`;
-        }
+        url = `${this.sessionTx.targetExplorer}/tx/${this.sessionTx.targetTxID}`;
       }
     }
     window.open(url);
@@ -406,21 +421,34 @@ export class PopupBridgeComponent implements OnDestroy {
   handleBack(event?: { hash: string; chain: ChainType }) {
     this.showConfirmPage = false;
     if (event) {
+      const isTestNet =
+        event.chain === 'Neo3'
+          ? this.n3Network.chainId === 6
+          : this.neoXNetwork.chainId === 12227331;
+      this.sessionTx = {
+        txId: event.hash,
+        sourceChainType: event.chain,
+        targetChainType: event.chain === 'Neo3' ? 'NeoX' : 'Neo3',
+        sourceExplorer:
+          event.chain === 'Neo3'
+            ? this.n3Network.explorer
+            : this.neoXNetwork.explorer,
+        targetExplorer: isTestNet
+          ? DEFAULT_NEOX_RPC_NETWORK[0].explorer
+          : DEFAULT_N3_RPC_NETWORK[1].explorer,
+        sourceRpcUrl:
+          event.chain === 'Neo3'
+            ? this.n3Network.rpcUrl
+            : this.neoXNetwork.rpcUrl,
+      };
+      this.updateSessionBridgeTx();
       this.resetData();
       this.bridgeProgressDialogRef = this.dialog.open(
         PopupBridgeProgressDialogComponent,
         {
           panelClass: 'custom-dialog-panel',
           backdropClass: 'custom-dialog-backdrop',
-          data: {
-            chainType: event.chain,
-            sourceTxLoading: this.sourceTxLoading,
-            sourceTxID: this.sourceTxID,
-            targetTxLoading: this.targetTxLoading,
-            targetTxID: this.targetTxID,
-            n3Network: this.n3Network,
-            neoXNetwork: this.neoXNetwork,
-          },
+          data: this.sessionTx,
         }
       );
       if (event.chain === 'Neo3') {
@@ -451,42 +479,37 @@ export class PopupBridgeComponent implements OnDestroy {
       });
   }
 
+  updateSessionBridgeTx() {
+    this.chrome.setStorage(STORAGE_NAME.bridgeTransaction, [this.sessionTx]);
+  }
+
   //#region neo3
   private waitNeo3SourceTxComplete(hash: string) {
-    this.sourceTxLoading = true;
-    if (this.bridgeProgressDialogRef?.componentInstance) {
-      this.bridgeProgressDialogRef.componentInstance.data.sourceTxLoading =
-        true;
-    }
     this.getSourceTxReceiptInterval?.unsubscribe();
     this.getSourceTxReceiptInterval = interval(3000).subscribe(() => {
-      this.transactionState.getApplicationLog(hash).subscribe((res) => {
-        console.log(res);
-        this.sourceTxID = hash;
-        this.sourceTxLoading = false;
-        if (this.bridgeProgressDialogRef?.componentInstance) {
-          this.bridgeProgressDialogRef.componentInstance.data.sourceTxID = hash;
-          this.bridgeProgressDialogRef.componentInstance.data.sourceTxLoading =
-            false;
-        }
-        this.getSourceTxReceiptInterval.unsubscribe();
-        const notifications = res.executions[0].notifications;
-        const notifi = notifications.find(
-          (item) => item.eventname === 'GasDeposit'
-        );
-        const depositId = notifi.state.value[0].value;
-        console.log(depositId);
-        this.waitNeo3TargetTxComplete(depositId);
-      });
+      this.transactionState
+        .getApplicationLog(hash, this.sessionTx.sourceRpcUrl)
+        .subscribe((res) => {
+          console.log(res);
+          this.sessionTx.sourceTxID = hash;
+          this.updateSessionBridgeTx();
+          if (this.bridgeProgressDialogRef?.componentInstance) {
+            this.bridgeProgressDialogRef.componentInstance.data.sourceTxID =
+              hash;
+          }
+          this.getSourceTxReceiptInterval.unsubscribe();
+          const notifications = res.executions[0].notifications;
+          const notifi = notifications.find(
+            (item) => item.eventname === 'GasDeposit'
+          );
+          const depositId = notifi.state.value[0].value;
+          console.log(depositId);
+          this.waitNeo3TargetTxComplete(depositId);
+        });
     });
   }
 
   private waitNeo3TargetTxComplete(depositId: number) {
-    this.targetTxLoading = true;
-    if (this.bridgeProgressDialogRef?.componentInstance) {
-      this.bridgeProgressDialogRef.componentInstance.data.targetTxLoading =
-        true;
-    }
     this.getTargetTxReceiptInterval?.unsubscribe();
     this.getTargetTxReceiptInterval = interval(5000).subscribe(() => {
       this.bridgeState
@@ -494,13 +517,11 @@ export class PopupBridgeComponent implements OnDestroy {
         .subscribe((res: any) => {
           console.log(res);
           if (res.txid) {
-            this.targetTxID = res.txid;
-            this.targetTxLoading = false;
+            this.sessionTx.targetTxID = res.txid;
+            this.updateSessionBridgeTx();
             if (this.bridgeProgressDialogRef?.componentInstance) {
               this.bridgeProgressDialogRef.componentInstance.data.targetTxID =
                 res.txid;
-              this.bridgeProgressDialogRef.componentInstance.data.targetTxLoading =
-                false;
             }
             this.getTargetTxReceiptInterval.unsubscribe();
           }
@@ -511,39 +532,29 @@ export class PopupBridgeComponent implements OnDestroy {
 
   //#region neox
   private waitNeoXSourceTxComplete(hash: string) {
-    this.sourceTxLoading = true;
-    if (this.bridgeProgressDialogRef?.componentInstance) {
-      this.bridgeProgressDialogRef.componentInstance.data.sourceTxLoading =
-        true;
-    }
     this.getSourceTxReceiptInterval?.unsubscribe();
     this.getSourceTxReceiptInterval = interval(3000).subscribe(() => {
-      this.bridgeState.getTransactionReceipt(hash).then((res) => {
-        if (res) {
-          console.log(res);
-          this.sourceTxID = hash;
-          this.sourceTxLoading = false;
-          if (this.bridgeProgressDialogRef?.componentInstance) {
-            this.bridgeProgressDialogRef.componentInstance.data.sourceTxID =
-              hash;
-            this.bridgeProgressDialogRef.componentInstance.data.sourceTxLoading =
-              false;
+      this.bridgeState
+        .getTransactionReceipt(hash, this.sessionTx.sourceRpcUrl)
+        .then((res) => {
+          if (res) {
+            console.log(res);
+            this.sessionTx.sourceTxID = hash;
+            this.updateSessionBridgeTx();
+            if (this.bridgeProgressDialogRef?.componentInstance) {
+              this.bridgeProgressDialogRef.componentInstance.data.sourceTxID =
+                hash;
+            }
+            this.getSourceTxReceiptInterval.unsubscribe();
+            const nonce = new BigNumber(res.logs[0].topics[1]).toNumber();
+            console.log(nonce);
+            this.waitNeoXTargetTxComplete(nonce);
           }
-          this.getSourceTxReceiptInterval.unsubscribe();
-          const nonce = new BigNumber(res.logs[0].topics[1]).toNumber();
-          console.log(nonce);
-          this.waitNeoXTargetTxComplete(nonce);
-        }
-      });
+        });
     });
   }
 
   private waitNeoXTargetTxComplete(nonce: number) {
-    this.targetTxLoading = true;
-    if (this.bridgeProgressDialogRef?.componentInstance) {
-      this.bridgeProgressDialogRef.componentInstance.data.targetTxLoading =
-        true;
-    }
     this.getTargetTxReceiptInterval?.unsubscribe();
     this.getTargetTxReceiptInterval = interval(3000).subscribe(() => {
       this.bridgeState
@@ -551,13 +562,11 @@ export class PopupBridgeComponent implements OnDestroy {
         .subscribe((res: any) => {
           console.log(res);
           if (res.result) {
-            this.targetTxID = res.result.txid;
-            this.targetTxLoading = false;
+            this.sessionTx.targetTxID = res.result.txid;
+            this.updateSessionBridgeTx();
             if (this.bridgeProgressDialogRef?.componentInstance) {
               this.bridgeProgressDialogRef.componentInstance.data.targetTxID =
                 res.result.txid;
-              this.bridgeProgressDialogRef.componentInstance.data.targetTxLoading =
-                false;
             }
             this.getTargetTxReceiptInterval.unsubscribe();
           }

@@ -57,6 +57,7 @@ export enum STORAGE_NAME {
   theme ='theme', // light or dark theme
   onePassCheckAddresses = 'onePassCheckAddresses', // one password mode, save verified address
   addressBook = 'addressBook',
+  bridgeTransaction = 'bridgeTransaction',
 }
 
 export enum STORAGE_VALUE_TYPE {
@@ -207,6 +208,10 @@ export const STORAGE_VALUE_MESSAGE = {
     type: STORAGE_VALUE_TYPE.object,
     isLocal: true,
   },
+  bridgeTransaction: {
+    type: STORAGE_VALUE_TYPE.array,
+    isLocal: true,
+  }
 };
 
 interface DefaultAsset {

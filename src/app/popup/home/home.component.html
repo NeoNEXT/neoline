@@ -78,14 +78,7 @@
     <p class="asset-money">
       {{ balance?.rateBalance | numberFixed : 2 }} {{ rateCurrency }}
     </p>
-    <div
-      class="transaction-btn-container"
-      [ngClass]="{
-        bridge:
-          (chainType === 'NeoX' && neoXNetwork.chainId === 12227331) ||
-          (chainType === 'Neo3' && n3Network.chainId === 6)
-      }"
-    >
+    <div class="transaction-btn-container" [ngClass]="{ bridge: showBridge() }">
       <div class="item receive" [routerLink]="['/popup/transfer/receive']">
         <img theme src="assets/images/transfer/receive.svg" alt="" />
         {{ "receive" | translate | async }}
@@ -95,10 +88,7 @@
         {{ "transfer" | translate | async }}
       </div>
       <div
-        *ngIf="
-          (chainType === 'NeoX' && neoXNetwork.chainId === 12227331) ||
-          (chainType === 'Neo3' && n3Network.chainId === 6)
-        "
+        *ngIf="showBridge()"
         class="item receive"
         [routerLink]="['/popup/bridge']"
       >

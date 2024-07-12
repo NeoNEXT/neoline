@@ -37,14 +37,14 @@ export class TransactionState {
     return this.http.rpcPost(this.n2Network.rpcUrl, data).toPromise();
   }
 
-  getApplicationLog(hash: string) {
+  getApplicationLog(hash: string, rpcUrl: string) {
     const data = {
       jsonrpc: '2.0',
       method: 'getapplicationlog',
       params: [hash],
       id: 1,
     };
-    return this.http.rpcPost(this.n3Network.rpcUrl, data);
+    return this.http.rpcPost(rpcUrl, data);
   }
 
   async getAllTxs(address: string): Promise<Transaction[]> {

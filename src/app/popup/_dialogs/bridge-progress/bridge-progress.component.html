@@ -7,18 +7,18 @@
     alt=""
   />
 
-  <ng-container *ngIf="data.sourceTxLoading || data.targetTxLoading">
+  <ng-container *ngIf="!data.sourceTxID || !data.targetTxID">
     <img src="/assets/images/bridge/progress.svg" alt="" />
     <p class="title">
       {{
-        (data.chainType === "Neo3" ? "Depositing" : "Withdrawing")
+        (data.sourceChainType === "Neo3" ? "Depositing" : "Withdrawing")
           | translate
           | async
       }}
     </p>
     <p class="tip">
       {{
-        (data.chainType === "Neo3" ? "DepositingTip" : "WithdrawingTip")
+        (data.sourceChainType === "Neo3" ? "DepositingTip" : "WithdrawingTip")
           | translate
           | async
       }}
@@ -31,17 +31,17 @@
     </p>
     <p class="tip">
       {{
-        (data.chainType === "Neo3" ? "DepositedTip" : "WithdrawnTip")
+        (data.sourceChainType === "Neo3" ? "DepositedTip" : "WithdrawnTip")
           | translate
           | async
       }}
     </p>
   </ng-container>
-  <div class="tx-history" *ngIf="data.sourceTxLoading || data.sourceTxID">
+  <div class="tx-history">
     <div class="item">
       <p class="item-name">
         <mat-spinner
-          *ngIf="data.sourceTxLoading"
+          *ngIf="!data.sourceTxID"
           strokeWidth="2"
           diameter="17"
         ></mat-spinner>
@@ -52,11 +52,11 @@
         />
         <span class="name">
           {{
-            (data.chainType === "Neo3"
-              ? data.sourceTxLoading
+            (data.sourceChainType === "Neo3"
+              ? !data.sourceTxID
                 ? "Depositing"
                 : "Deposited"
-              : data.sourceTxLoading
+              : !data.sourceTxID
               ? "Withdrawing"
               : "Withdrawn"
             )
@@ -78,10 +78,10 @@
         </span>
       </p>
     </div>
-    <div class="item" *ngIf="data.targetTxLoading || data.targetTxID">
+    <div class="item" *ngIf="data.sourceTxID">
       <p class="item-name">
         <mat-spinner
-          *ngIf="data.targetTxLoading"
+          *ngIf="!data.targetTxID"
           strokeWidth="2"
           diameter="17"
         ></mat-spinner>
@@ -92,7 +92,7 @@
         />
         <span class="name">
           {{
-            (data.targetTxLoading ? "Transferring" : "Transferred")
+            (!data.targetTxID ? "Transferring" : "Transferred")
               | translate
               | async
           }}

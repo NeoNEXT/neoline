@@ -153,6 +153,16 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     }
   }
 
+  showBridge() {
+    if (
+      (this.chainType === 'NeoX' && this.neoXNetwork.chainId === 12227331) ||
+      (this.chainType === 'Neo3' && this.n3Network.chainId === 6)
+    ) {
+      return true;
+    }
+    return false;
+  }
+
   initNeo($event) {
     this.balance = $event;
   }

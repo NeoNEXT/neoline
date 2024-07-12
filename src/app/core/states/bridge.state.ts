@@ -90,8 +90,9 @@ export class BridgeState {
     return data;
   }
 
-  getTransactionReceipt(hash: string) {
-    return this.provider.getTransactionReceipt(hash);
+  getTransactionReceipt(hash: string, rpcUrl: string) {
+    const tempProvider = new ethers.JsonRpcProvider(rpcUrl);
+    return tempProvider.getTransactionReceipt(hash);
   }
 
   getBridgeTxOnNeoXBridgeNeo3(nonce: number) {

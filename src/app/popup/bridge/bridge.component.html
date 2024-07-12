@@ -88,21 +88,25 @@
   </button>
 </div>
 
-<div class="tx-history" *ngIf="sourceTxLoading || sourceTxID">
+<div class="tx-history" *ngIf="sessionTx?.txId">
   <div class="item">
     <mat-spinner
-      *ngIf="sourceTxLoading"
+      *ngIf="!sessionTx.sourceTxID"
       strokeWidth="2"
       diameter="17"
     ></mat-spinner>
-    <img *ngIf="sourceTxID" src="/assets/images/login/checked.svg" alt="" />
+    <img
+      *ngIf="sessionTx.sourceTxID"
+      src="/assets/images/login/checked.svg"
+      alt=""
+    />
     <span class="name">
       {{
         (chainType === "Neo3"
-          ? sourceTxLoading
+          ? !sessionTx.sourceTxID
             ? "Depositing"
             : "Deposited"
-          : sourceTxLoading
+          : !sessionTx.sourceTxID
           ? "Withdrawing"
           : "Withdrawn"
         )
@@ -110,24 +114,30 @@
           | async
       }}
     </span>
-    <span *ngIf="sourceTxID" (click)="toViewTx()" class="tx">
+    <span *ngIf="sessionTx.sourceTxID" (click)="toViewTx()" class="tx">
       {{ "ViewTransaction" | translate | async }}
       <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
     </span>
   </div>
-  <div class="item" *ngIf="targetTxLoading || targetTxID">
+  <div class="item" *ngIf="sessionTx.sourceTxID">
     <mat-spinner
-      *ngIf="targetTxLoading"
+      *ngIf="!sessionTx.targetTxID"
       strokeWidth="2"
       diameter="17"
     ></mat-spinner>
-    <img *ngIf="targetTxID" src="/assets/images/login/checked.svg" alt="" />
+    <img
+      *ngIf="sessionTx.targetTxID"
+      src="/assets/images/login/checked.svg"
+      alt=""
+    />
     <span class="name">
       {{
-        (targetTxLoading ? "Transferring" : "Transferred") | translate | async
+        (!sessionTx.targetTxID ? "Transferring" : "Transferred")
+          | translate
+          | async
       }}
     </span>
-    <span *ngIf="targetTxID" (click)="toViewTx(false)" class="tx">
+    <span *ngIf="sessionTx.targetTxID" (click)="toViewTx(false)" class="tx">
       {{ "ViewTransaction" | translate | async }}
       <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
     </span>
