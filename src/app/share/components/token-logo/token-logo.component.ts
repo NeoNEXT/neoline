@@ -1,5 +1,6 @@
 import { ChainType } from '@/app/popup/_lib';
 import { EVM_TOKEN_IMAGE_URL } from '@/app/popup/_lib/evm';
+import { DEFAULT_NFT_LOGO } from '@/app/popup/_lib/setting';
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 
 @Component({
@@ -8,8 +9,10 @@ import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
   styleUrls: ['token-logo.component.scss'],
 })
 export class TokenLogoComponent implements OnChanges {
+  DEFAULT_NFT_LOGO = DEFAULT_NFT_LOGO;
   // NFT
-  @Input() isNFT = false;
+  @Input() isNFTContract = false;
+  @Input() isNFTToken = false;
   @Input() imageUrl: string;
 
   // asset
@@ -40,7 +43,7 @@ export class TokenLogoComponent implements OnChanges {
   }
 
   getLogo() {
-    if (this.isNFT) {
+    if (this.isNFTContract || this.isNFTToken) {
       return;
     }
     if (this.chainType === 'NeoX') {
