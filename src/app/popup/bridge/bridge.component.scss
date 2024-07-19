@@ -49,6 +49,9 @@
         text-align: center;
         color: var(--bridge-label-color);
         cursor: pointer;
+        &:hover {
+          border: 0.5px solid var(--bridge-select-border);
+        }
         &.hasAddress {
           color: var(--title-color);
         }
@@ -113,6 +116,9 @@
           color: var(--title-color);
           text-align: right;
           font-family: NeverMind-DemiBold;
+          &::placeholder {
+            font-size: 14px;
+          }
         }
       }
     }

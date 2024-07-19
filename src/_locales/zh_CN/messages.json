@@ -1218,7 +1218,7 @@
     "message": "接受地址"
   },
   "bridgeFee": {
-    "message": "跨链费"
+    "message": "Bridge 费"
   },
   "bridgeFeeDesc": {
     "message": "Bridge 合约收取 0.1 GAS，平台不收取任何其他费用。"
@@ -1284,7 +1284,7 @@
     "message": "Neo X 接收地址"
   },
   "YourNeo3ReceiveAddress": {
-    "message": "Neo3 接收地址"
+    "message": "Neo3 N3 接收地址"
   },
   "addEvmTokenTitle": {
     "message": "添加推荐代币"

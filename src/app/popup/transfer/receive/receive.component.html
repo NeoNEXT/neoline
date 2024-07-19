@@ -19,7 +19,7 @@
     }}
     {{ "receiveTip2Suffix" | translate | async }}
   </p>
-  <div class="address">{{ address }}</div>
+  <div class="address">{{ address | longStr : 17 }}</div>
   <copy [value]="address">
     <button class="confirm">
       {{ "copyAddress" | translate | async }}

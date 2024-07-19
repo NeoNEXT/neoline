@@ -18,7 +18,7 @@
     <div class="label">
       <span>{{ "From" | translate | async }}</span>
       <p class="balance">
-        {{ "Balance" | translate | async }}:
+        <img theme src="assets/images/login/wallet.svg" alt="" />
         {{ bridgeAsset.balance || 0 | numberFixed : 8 }}
         {{ bridgeAsset.symbol }}
         <span class="max" (click)="bridgeAll()">{{
@@ -84,16 +84,17 @@
     [ngClass]="{ disabled: !bridgeAmount || !toAddress }"
     (click)="confirm()"
   >
-    {{ "Deposit" | translate | async }}
+    {{ (chainType === "Neo3" ? "Deposit" : "Withdraw") | translate | async }}
   </button>
 </div>
 
-<div class="tx-history" *ngIf="sessionTx?.txId">
+<div class="tx-history" *ngIf="!showConfirmPage && sessionTx?.txId">
   <div class="item">
     <mat-spinner
       *ngIf="!sessionTx.sourceTxID"
       strokeWidth="2"
       diameter="17"
+      (click)="openTxModal()"
     ></mat-spinner>
     <img
       *ngIf="sessionTx.sourceTxID"
@@ -124,6 +125,7 @@
       *ngIf="!sessionTx.targetTxID"
       strokeWidth="2"
       diameter="17"
+      (click)="openTxModal()"
     ></mat-spinner>
     <img
       *ngIf="sessionTx.targetTxID"

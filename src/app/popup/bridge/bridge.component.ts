@@ -443,14 +443,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       };
       this.updateSessionBridgeTx();
       this.resetData();
-      this.bridgeProgressDialogRef = this.dialog.open(
-        PopupBridgeProgressDialogComponent,
-        {
-          panelClass: 'custom-dialog-panel',
-          backdropClass: 'custom-dialog-backdrop',
-          data: this.sessionTx,
-        }
-      );
+      this.openTxModal();
       if (event.chain === 'Neo3') {
         this.waitNeo3SourceTxComplete(event.hash);
       }
@@ -458,6 +451,17 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         this.waitNeoXSourceTxComplete(event.hash);
       }
     }
+  }
+
+  openTxModal() {
+    this.bridgeProgressDialogRef = this.dialog.open(
+      PopupBridgeProgressDialogComponent,
+      {
+        panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
+        data: this.sessionTx,
+      }
+    );
   }
 
   selectToAddress() {
