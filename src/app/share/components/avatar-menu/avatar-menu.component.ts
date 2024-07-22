@@ -15,6 +15,7 @@ import {
   AssetState,
   NeonService,
   GlobalService,
+  SettingState,
 } from '@/app/core';
 import { Router } from '@angular/router';
 import {
@@ -62,6 +63,8 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
   addressBalances = {};
   isOnePassword = false;
   private searchSub: Unsubscribable;
+  settingStateSub: Unsubscribable;
+  lang: string;
 
   private accountSub: Unsubscribable;
   chainType: ChainType;
@@ -83,6 +86,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
     private assetState: AssetState,
     private neon: NeonService,
     private global: GlobalService,
+    private settingState: SettingState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -103,10 +107,14 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
         this.isOnePassword = true;
       }
     });
+    this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
+      this.lang = lang;
+    });
   }
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
+    this.settingStateSub?.unsubscribe();
   }
 
   private initData() {
@@ -148,6 +156,14 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
   navigate(url: string) {
     this.close();
     this.router.navigateByUrl(url);
+  }
+
+  toHelpWebsite() {
+    if (this.lang !== 'en') {
+      window.open('https://neoline.io/help/');
+    } else {
+      window.open('https://neoline.io/en/help/');
+    }
   }
 
   searchWallet($event) {

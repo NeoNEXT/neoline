@@ -3,8 +3,16 @@
   <div class="my-account">
     <span>{{ "myAccount" | translate | async }}</span>
     <div class="right">
-      <tooltip [tip]="'menuGuideAndSupport' | translate | async" placement="bottom">
-        <img theme src="assets/images/avatar-menu/guide.svg" alt="" />
+      <tooltip
+        [tip]="'menuGuideAndSupport' | translate | async"
+        placement="bottom"
+      >
+        <img
+          (click)="toHelpWebsite()"
+          theme
+          src="assets/images/avatar-menu/guide.svg"
+          alt=""
+        />
       </tooltip>
       <tooltip [tip]="'menuSettings' | translate | async" placement="bottom">
         <img
@@ -122,9 +130,11 @@
       }}
     </li>
     <li *ngIf="moreModalCanRemove" (click)="removeAccount()">
-      <img class="delete" src="assets/images/account/home-delete.svg" alt="" />{{
-        "removeAccount" | translate | async
-      }}
+      <img
+        class="delete"
+        src="assets/images/account/home-delete.svg"
+        alt=""
+      />{{ "removeAccount" | translate | async }}
     </li>
   </ul>
 </div>
