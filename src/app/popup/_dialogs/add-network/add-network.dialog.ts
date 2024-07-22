@@ -55,6 +55,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
       addChainType: ChainType;
       index?: number;
       editNetwork?: RpcNetwork;
+      addExplorer?: boolean;
     },
     private homeSer: HomeService,
     private chrome: ChromeService,

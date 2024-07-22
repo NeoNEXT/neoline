@@ -3,7 +3,7 @@ import { AssetState, ChromeService, GlobalService } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NEO, GAS, Asset } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupConfirmDialogComponent } from '@popup/_dialogs';
+import { PopupAddNetworkDialogComponent, PopupConfirmDialogComponent } from '@popup/_dialogs';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
 import {
@@ -37,7 +37,9 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
   chainType: ChainType;
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
+  private n3NetworkIndex: number;
   private neoXNetwork: RpcNetwork;
+  private neoXNetworkIndex: number;
   constructor(
     private assetState: AssetState,
     private aRouter: ActivatedRoute,
@@ -53,7 +55,9 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
       this.chainType = state.currentChainType;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.n3NetworkIndex = state.n3NetworkIndex;
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      this.neoXNetworkIndex = state.neoXNetworkIndex;
       switch (this.chainType) {
         case 'Neo2':
           this.networkId = this.n2Network.id;
@@ -183,11 +187,33 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
       case 'Neo3':
         if (this.n3Network.explorer) {
           window.open(`${this.n3Network.explorer}tokens/nep17/${this.assetId}`);
+        } else {
+          this.dialog.open(PopupAddNetworkDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+            backdropClass: 'custom-dialog-backdrop',
+            data: {
+              addChainType: this.chainType,
+              index: this.n3NetworkIndex,
+              editNetwork: this.n3Network,
+              addExplorer: true,
+            },
+          });
         }
         break;
       case 'NeoX':
         if (this.neoXNetwork.explorer) {
           window.open(`${this.neoXNetwork.explorer}/address/${this.address}`);
+        } else {
+          this.dialog.open(PopupAddNetworkDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+            backdropClass: 'custom-dialog-backdrop',
+            data: {
+              addChainType: this.chainType,
+              index: this.neoXNetworkIndex,
+              editNetwork: this.neoXNetwork,
+              addExplorer: true,
+            },
+          });
         }
         break;
     }

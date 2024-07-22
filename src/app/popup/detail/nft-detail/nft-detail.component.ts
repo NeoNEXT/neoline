@@ -11,6 +11,8 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { ChainType, RpcNetwork } from '../../_lib';
+import { MatDialog } from '@angular/material/dialog';
+import { PopupAddNetworkDialogComponent } from '../../_dialogs';
 
 @Component({
   templateUrl: 'nft-detail.component.html',
@@ -29,7 +31,9 @@ export class PopupNftDetailComponent implements OnDestroy {
   private accountSub: Unsubscribable;
   private address: string;
   private n3Network: RpcNetwork;
+  private n3NetworkIndex: number;
   neoXNetwork: RpcNetwork;
+  private neoXNetworkIndex: number;
   chainType: ChainType;
   constructor(
     private aRouter: ActivatedRoute,
@@ -38,6 +42,7 @@ export class PopupNftDetailComponent implements OnDestroy {
     private evmNFTState: EvmNFTState,
     private chrome: ChromeService,
     private global: GlobalService,
+    private dialog: MatDialog,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -45,7 +50,9 @@ export class PopupNftDetailComponent implements OnDestroy {
       this.chainType = state.currentChainType;
       this.address = state.currentWallet?.accounts[0]?.address;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.n3NetworkIndex = state.n3NetworkIndex;
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      this.neoXNetworkIndex = state.neoXNetworkIndex;
       this.initData();
     });
   }
@@ -139,10 +146,32 @@ export class PopupNftDetailComponent implements OnDestroy {
     if (this.chainType === 'Neo3') {
       if (this.n3Network.explorer) {
         window.open(`${this.n3Network.explorer}tokens/nft/${this.nftContract}`);
+      } else {
+        this.dialog.open(PopupAddNetworkDialogComponent, {
+          panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
+          data: {
+            addChainType: this.chainType,
+            index: this.n3NetworkIndex,
+            editNetwork: this.n3Network,
+            addExplorer: true,
+          },
+        });
       }
     } else {
       if (this.neoXNetwork.explorer) {
         window.open(`${this.neoXNetwork.explorer}/address/${this.address}`);
+      } else {
+        this.dialog.open(PopupAddNetworkDialogComponent, {
+          panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
+          data: {
+            addChainType: this.chainType,
+            index: this.neoXNetworkIndex,
+            editNetwork: this.neoXNetwork,
+            addExplorer: true,
+          },
+        });
       }
     }
   }

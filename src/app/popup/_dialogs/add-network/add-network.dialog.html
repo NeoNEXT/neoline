@@ -75,15 +75,19 @@
 
   <p class="label">{{ 'Explorer_URL' | translate | async }}</p>
   <mat-form-field class="form-field" appearance="outline">
-    <input matInput formControlName="explorer" />
+    <input *ngIf="!data?.addExplorer" matInput formControlName="explorer" />
+    <input
+      *ngIf="data?.addExplorer"
+      cdkFocusInitial
+      matInput
+      formControlName="explorer"
+    />
   </mat-form-field>
 </form>
 
 <button
   class="confirm pop-ups"
-  [ngClass]="{
-  disabled: addNetworkForm.invalid || loading
-}"
+  [ngClass]="{disabled: addNetworkForm.invalid || loading}"
   (click)="confirm()"
 >
   {{ 'yes' | translate | async}}

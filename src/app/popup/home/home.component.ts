@@ -13,7 +13,7 @@ import { NEO, GAS, Asset } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupConfirmDialogComponent } from '../_dialogs';
+import { PopupAddNetworkDialogComponent, PopupConfirmDialogComponent } from '../_dialogs';
 import { Router } from '@angular/router';
 import { rpc } from '@cityofzion/neon-core';
 import {
@@ -74,7 +74,9 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   private currentWIFArr: string[];
   private n2Network: RpcNetwork;
   n3Network: RpcNetwork;
+  n3NetworkIndex: number;
   neoXNetwork: RpcNetwork;
+  neoXNetworkIndex: number;
   allWallet: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
   constructor(
     private assetState: AssetState,
@@ -102,7 +104,9 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         this.chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.n3NetworkIndex = state.n3NetworkIndex;
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      this.neoXNetworkIndex = state.neoXNetworkIndex;
       this.allWallet = (state.neo3WalletArr as any)
         .concat(state.neo2WalletArr)
         .concat(state.neoXWalletArr);
@@ -181,11 +185,33 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       case 'Neo3':
         if (this.n3Network.explorer) {
           window.open(`${this.n3Network.explorer}/address/${this.address}`);
+        } else {
+          this.dialog.open(PopupAddNetworkDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+            backdropClass: 'custom-dialog-backdrop',
+            data: {
+              addChainType: this.chainType,
+              index: this.n3NetworkIndex,
+              editNetwork: this.n3Network,
+              addExplorer: true,
+            },
+          });
         }
         break;
       case 'NeoX':
         if (this.neoXNetwork.explorer) {
           window.open(`${this.neoXNetwork.explorer}/address/${this.address}`);
+        } else {
+          this.dialog.open(PopupAddNetworkDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+            backdropClass: 'custom-dialog-backdrop',
+            data: {
+              addChainType: this.chainType,
+              index: this.neoXNetworkIndex,
+              editNetwork: this.neoXNetwork,
+              addExplorer: true,
+            },
+          });
         }
         break;
     }
