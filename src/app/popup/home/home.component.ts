@@ -34,7 +34,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { TransferService } from '../transfer/transfer.service';
-import { EvmWalletJSON } from '../_lib/evm';
+import { EvmWalletJSON, NeoXTestNetChainId } from '../_lib/evm';
 @Component({
   templateUrl: 'home.component.html',
   styleUrls: ['home.component.scss'],
@@ -159,7 +159,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
 
   showBridge() {
     if (
-      (this.chainType === 'NeoX' && this.neoXNetwork.chainId === 12227331) ||
+      (this.chainType === 'NeoX' && this.neoXNetwork.chainId === NeoXTestNetChainId) ||
       (this.chainType === 'Neo3' && this.n3Network.chainId === 6)
     ) {
       return true;

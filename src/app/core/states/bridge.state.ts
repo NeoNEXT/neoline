@@ -11,14 +11,14 @@ import { UtilServiceState } from '../util/util.service';
 @Injectable()
 export class BridgeState {
   readonly bridgeTxContractOnNeo3BridgeNeoX =
-    '0x90ea23685148733e830a063d0fd7e41a4357adcc';
+    '0x2ba94444d43c9a084a5660982a9f95f43f07422e';
   private readonly bridgeTxHostOnNeo3BridgeNeoX =
     'https://bridgeapi.banelabs.org/deposits';
 
   readonly neoXContractOnNeoXBridgeNeo3 =
     '0x1212000000000000000000000000000000000004';
   private readonly bridgeTxContractOnNeoXBridgeNeo3 =
-    '0x90ea23685148733e830a063d0fd7e41a4357adcc';
+    '0x2ba94444d43c9a084a5660982a9f95f43f07422e';
   private readonly bridgeTxHostOnNeoXBridgeNeo3 =
     'https://testmagnet.ngd.network/';
 

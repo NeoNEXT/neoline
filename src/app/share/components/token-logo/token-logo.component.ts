@@ -1,5 +1,5 @@
 import { ChainType } from '@/app/popup/_lib';
-import { EVM_TOKEN_IMAGE_URL } from '@/app/popup/_lib/evm';
+import { All_CHAIN_TOKENS } from '@/app/popup/_lib/evm';
 import { DEFAULT_NFT_LOGO } from '@/app/popup/_lib/setting';
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 
@@ -48,7 +48,7 @@ export class TokenLogoComponent implements OnChanges {
     }
     if (this.chainType === 'NeoX') {
       this.neoXTokenLogo =
-        EVM_TOKEN_IMAGE_URL?.[this.neoXChainId]?.[this.assetId];
+        All_CHAIN_TOKENS?.[this.neoXChainId]?.[this.assetId]?.logo;
     } else {
       const chain = this.chainType.toLowerCase();
       this.neoTokenLogo = `https://cdn.neoline.io/logo/${chain}/${this.assetId}.png`;

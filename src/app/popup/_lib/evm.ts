@@ -25,15 +25,17 @@ export interface EvmWalletJSON {
   ];
 }
 
+export const NeoXTestNetChainId = 12227332;
+
 export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
   {
-    id: 12227331,
+    id: NeoXTestNetChainId,
     symbol: 'GAS',
-    chainId: 12227331,
+    chainId: NeoXTestNetChainId,
     name: 'Neo X TESTNET',
     network: NetworkType.EVM,
-    rpcUrl: 'https://neoxseed1.ngd.network',
-    explorer: 'https://xt3scan.ngd.network',
+    rpcUrl: 'https://neoxt4seed1.ngd.network',
+    explorer: 'https://xt4scan.ngd.network',
     keep: true,
   },
 ];
@@ -54,48 +56,222 @@ const CHAIN_IDS = {
   Gnosis: 100,
 } as const;
 
-const ETH_IMAGE_URL = '/assets/images/token/eth.svg';
+const ETH_IMAGE_URL = '/assets/images/token/eth.webp';
+const USDC_IMAGE_URL = '/assets/images/token/usdc.webp';
+const USDT_IMAGE_URL = '/assets/images/token/usdt.webp';
 const TOKEN_IMAGE_URL_PREFIX = '/assets/images/token/';
 
-export const EVM_TOKEN_IMAGE_URL = {
+export const All_CHAIN_TOKENS = {
   [CHAIN_IDS.Ethereum]: {
-    [ETH_SOURCE_ASSET_HASH]: ETH_IMAGE_URL,
-  },
-  [CHAIN_IDS.Arbitrum]: {
-    [ETH_SOURCE_ASSET_HASH]: ETH_IMAGE_URL,
+    [ETH_SOURCE_ASSET_HASH]: {
+      symbol: 'ETH',
+      address: ETH_SOURCE_ASSET_HASH,
+      logo: ETH_IMAGE_URL,
+    },
+    '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48': {
+      symbol: 'USDC',
+      address: '0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48',
+      logo: USDC_IMAGE_URL,
+    },
+    '0xdAC17F958D2ee523a2206206994597C13D831ec7': {
+      symbol: 'USDT',
+      address: '0xdAC17F958D2ee523a2206206994597C13D831ec7',
+      logo: USDT_IMAGE_URL,
+    },
   },
   [CHAIN_IDS.Avalanche]: {
-    [ETH_SOURCE_ASSET_HASH]: `${TOKEN_IMAGE_URL_PREFIX}/avax.svg`,
-  },
-  [CHAIN_IDS.Optimism]: {
-    [ETH_SOURCE_ASSET_HASH]: ETH_IMAGE_URL,
-  },
-  [CHAIN_IDS.Base]: {
-    [ETH_SOURCE_ASSET_HASH]: ETH_IMAGE_URL,
-  },
-  [CHAIN_IDS.Polygon]: {
-    [ETH_SOURCE_ASSET_HASH]: `${TOKEN_IMAGE_URL_PREFIX}/matic.svg`,
-  },
-  [CHAIN_IDS.BSC]: {
-    [ETH_SOURCE_ASSET_HASH]: `${TOKEN_IMAGE_URL_PREFIX}/bnb.svg`,
-  },
-  [CHAIN_IDS.Celo]: {
-    ['0x471EcE3750Da237f93B8E339c536989b8978a438']: `${TOKEN_IMAGE_URL_PREFIX}/celo.svg`,
+    [ETH_SOURCE_ASSET_HASH]: {
+      symbol: 'AVAX',
+      address: ETH_SOURCE_ASSET_HASH,
+      logo: TOKEN_IMAGE_URL_PREFIX + `avax.webp`,
+    },
+    '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E': {
+      symbol: 'USDC',
+      address: '0xB97EF9Ef8734C71904D8002F8b6Bc66Dd9c48a6E',
+      logo: USDC_IMAGE_URL,
+    },
+    '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7': {
+      symbol: 'USDT',
+      address: '0x9702230A8Ea53601f5cD2dc00fDBc13d4dF4A8c7',
+      logo: USDT_IMAGE_URL,
+    },
   },
   [CHAIN_IDS.Scroll]: {
-    [ETH_SOURCE_ASSET_HASH]: ETH_IMAGE_URL,
+    [ETH_SOURCE_ASSET_HASH]: {
+      symbol: 'ETH',
+      address: ETH_SOURCE_ASSET_HASH,
+      logo: ETH_IMAGE_URL,
+    },
+    '0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4': {
+      symbol: 'USDC',
+      address: '0x06eFdBFf2a14a7c8E15944D1F4A48F9F95F663A4',
+      logo: USDC_IMAGE_URL,
+    },
+    '0xf55BEC9cafDbE8730f096Aa55dad6D22d44099Df': {
+      symbol: 'USDT',
+      address: '0xf55BEC9cafDbE8730f096Aa55dad6D22d44099Df',
+      logo: TOKEN_IMAGE_URL_PREFIX + 'scroll-usdt.png',
+    },
+  },
+  [CHAIN_IDS.Arbitrum]: {
+    [ETH_SOURCE_ASSET_HASH]: {
+      symbol: 'ETH',
+      address: ETH_SOURCE_ASSET_HASH,
+      logo: ETH_IMAGE_URL,
+    },
+    '0xaf88d065e77c8cC2239327C5EDb3A432268e5831': {
+      symbol: 'USDC',
+      address: '0xaf88d065e77c8cC2239327C5EDb3A432268e5831',
+      logo: USDC_IMAGE_URL,
+    },
+    '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9': {
+      symbol: 'USDT',
+      address: '0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9',
+      logo: USDT_IMAGE_URL,
+    },
+  },
+  [CHAIN_IDS.Optimism]: {
+    [ETH_SOURCE_ASSET_HASH]: {
+      symbol: 'ETH',
+      address: ETH_SOURCE_ASSET_HASH,
+      logo: ETH_IMAGE_URL,
+    },
+    '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85': {
+      symbol: 'USDC',
+      address: '0x0b2C639c533813f4Aa9D7837CAf62653d097Ff85',
+      logo: USDC_IMAGE_URL,
+    },
+    '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58': {
+      symbol: 'USDT',
+      address: '0x94b008aA00579c1307B0EF2c499aD98a8ce58e58',
+      logo: USDT_IMAGE_URL,
+    },
+  },
+  [CHAIN_IDS.BSC]: {
+    [ETH_SOURCE_ASSET_HASH]: {
+      symbol: 'BNB',
+      address: ETH_SOURCE_ASSET_HASH,
+      logo: TOKEN_IMAGE_URL_PREFIX + 'bnb.webp',
+    },
+    '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d': {
+      symbol: 'USDC',
+      address: '0x8AC76a51cc950d9822D68b83fE1Ad97B32Cd580d',
+      logo: USDC_IMAGE_URL,
+    },
+    '0x55d398326f99059fF775485246999027B3197955': {
+      symbol: 'USDT',
+      address: '0x55d398326f99059fF775485246999027B3197955',
+      logo: USDT_IMAGE_URL,
+    },
+    '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56': {
+      symbol: 'BUSD',
+      address: '0xe9e7CEA3DedcA5984780Bafc599bD69ADd087D56',
+      logo: TOKEN_IMAGE_URL_PREFIX + 'busd.webp',
+    },
+  },
+  [CHAIN_IDS.Base]: {
+    [ETH_SOURCE_ASSET_HASH]: {
+      symbol: 'ETH',
+      address: ETH_SOURCE_ASSET_HASH,
+      logo: ETH_IMAGE_URL,
+    },
+    '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913': {
+      symbol: 'USDC',
+      address: '0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913',
+      logo: USDC_IMAGE_URL,
+    },
+  },
+  [CHAIN_IDS.Polygon]: {
+    [ETH_SOURCE_ASSET_HASH]: {
+      symbol: 'MATIC',
+      address: ETH_SOURCE_ASSET_HASH,
+      logo: TOKEN_IMAGE_URL_PREFIX + 'matic.webp',
+    },
+    '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359': {
+      symbol: 'USDC',
+      address: '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359',
+      logo: USDC_IMAGE_URL,
+    },
+    '0xc2132D05D31c914a87C6611C10748AEb04B58e8F': {
+      symbol: 'USDT',
+      address: '0xc2132D05D31c914a87C6611C10748AEb04B58e8F',
+      logo: USDT_IMAGE_URL,
+    },
+  },
+  [CHAIN_IDS.Celo]: {
+    '0x471EcE3750Da237f93B8E339c536989b8978a438': {
+      symbol: 'CELO',
+      address: '0x471EcE3750Da237f93B8E339c536989b8978a438',
+      logo: TOKEN_IMAGE_URL_PREFIX + 'celo.webp',
+    },
+    '0x765DE816845861e75A25fCA122bb6898B8B1282a': {
+      symbol: 'cUSD',
+      address: '0x765DE816845861e75A25fCA122bb6898B8B1282a',
+      logo: TOKEN_IMAGE_URL_PREFIX + 'cusd.webp',
+    },
   },
   [CHAIN_IDS.Metis]: {
-    [ETH_SOURCE_ASSET_HASH]: ETH_IMAGE_URL,
+    [ETH_SOURCE_ASSET_HASH]: {
+      symbol: 'METIS',
+      address: ETH_SOURCE_ASSET_HASH,
+      logo: TOKEN_IMAGE_URL_PREFIX + 'metis.webp',
+    },
+    '0xEA32A96608495e54156Ae48931A7c20f0dcc1a21': {
+      symbol: 'm.USDC',
+      address: '0xEA32A96608495e54156Ae48931A7c20f0dcc1a21',
+      logo: USDC_IMAGE_URL,
+    },
+    '0xbB06DCA3AE6887fAbF931640f67cab3e3a16F4dC': {
+      symbol: 'm.USDT',
+      address: '0xbB06DCA3AE6887fAbF931640f67cab3e3a16F4dC',
+      logo: USDT_IMAGE_URL,
+    },
   },
   [CHAIN_IDS.ZKsync]: {
-    [ETH_SOURCE_ASSET_HASH]: ETH_IMAGE_URL,
+    [ETH_SOURCE_ASSET_HASH]: {
+      symbol: 'ETH',
+      address: ETH_SOURCE_ASSET_HASH,
+      logo: ETH_IMAGE_URL,
+    },
+    '0x1d17CBcF0D6D143135aE902365D2E5e2A16538D4': {
+      symbol: 'USDC',
+      address: '0x1d17CBcF0D6D143135aE902365D2E5e2A16538D4',
+      logo: USDC_IMAGE_URL,
+    },
+    '0x493257fD37EDB34451f62EDf8D2a0C418852bA4C': {
+      symbol: 'USDT',
+      address: '0x493257fD37EDB34451f62EDf8D2a0C418852bA4C',
+      logo: ETH_IMAGE_URL,
+    },
   },
   [CHAIN_IDS.Blast]: {
-    [ETH_SOURCE_ASSET_HASH]: ETH_IMAGE_URL,
+    [ETH_SOURCE_ASSET_HASH]: {
+      symbol: 'ETH',
+      address: ETH_SOURCE_ASSET_HASH,
+      logo: ETH_IMAGE_URL,
+    },
+    '0x4300000000000000000000000000000000000003': {
+      symbol: 'USDB',
+      address: '0x4300000000000000000000000000000000000003',
+      logo: TOKEN_IMAGE_URL_PREFIX + 'usdb.webp',
+    },
   },
   [CHAIN_IDS.Gnosis]: {
-    [ETH_SOURCE_ASSET_HASH]: `${TOKEN_IMAGE_URL_PREFIX}/gnosis.svg`,
+    [ETH_SOURCE_ASSET_HASH]: {
+      symbol: 'xDai',
+      address: ETH_SOURCE_ASSET_HASH,
+      logo: TOKEN_IMAGE_URL_PREFIX + 'xdai.png',
+    },
+    '0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83': {
+      symbol: 'USDC',
+      address: '0xDDAfbb505ad214D7b80b1f830fcCc89B60fb7A83',
+      logo: USDC_IMAGE_URL,
+    },
+    '0x4ECaBa5870353805a9F068101A40E0f32ed605C6': {
+      symbol: 'USDT',
+      address: '0x4ECaBa5870353805a9F068101A40E0f32ed605C6',
+      logo: USDT_IMAGE_URL,
+    },
   },
 };
 

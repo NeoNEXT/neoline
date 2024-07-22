@@ -22,6 +22,7 @@ import {
   DEFAULT_NEOX_RPC_NETWORK,
   ETH_SOURCE_ASSET_HASH,
   EvmWalletJSON,
+  NeoXTestNetChainId,
 } from '../_lib/evm';
 import { Unsubscribable, map } from 'rxjs';
 import { Store } from '@ngrx/store';
@@ -424,7 +425,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       const isTestNet =
         event.chain === 'Neo3'
           ? this.n3Network.chainId === 6
-          : this.neoXNetwork.chainId === 12227331;
+          : this.neoXNetwork.chainId === NeoXTestNetChainId;
       this.sessionTx = {
         txId: event.hash,
         sourceChainType: event.chain,

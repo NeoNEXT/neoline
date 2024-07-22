@@ -73,7 +73,8 @@
       ></token-logo>
     </div>
     <p class="asset-balance">
-      {{ balance?.balance || 0 | numberFixed : 8 }} {{ balance?.symbol }}
+      {{ balance?.balance || 0 | numberFixed : 8 }}
+      {{ chainType === "NeoX" ? neoXNetwork.symbol : balance?.symbol }}
     </p>
     <p class="asset-money">
       {{ balance?.rateBalance | numberFixed : 2 }} {{ rateCurrency }}
