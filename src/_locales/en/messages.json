@@ -594,10 +594,10 @@
     "message": "Back up Reminder"
   },
   "backUpDesc1": {
-    "message": "1. Mastering the private key is equivalent to mastering the ownership of account assets"
+    "message": "1. Mastering the Private Key/Secret Recovery Phrase is equivalent to mastering the ownership of account assets. Please write it down and keep it in a safe place. Do not share it with anyone."
   },
   "backUpDesc2": {
-    "message": "2. Please copy carefully, distinguish between uppercase and lowercase, and keep it in a safe place; NeoLine is a decentralized wallet and will not store your private key; once the private key is lost, it cannot be retrieved, please make sure to back up the private key."
+    "message": "2. NeoLine is a decentralized wallet and does not store your private key/Secret Recovery Phrase. If lost, it cannot be recovered."
   },
   "backUpNow": {
     "message": "Now"
@@ -1267,6 +1267,9 @@
   },
   "selectAddress": {
     "message": "Select address"
+  },
+  "confirmMnemonicTip": {
+    "message": "You can enter your entire mnemonic phrase into any field"
   },
   "YourDeposit": {
     "message": "Your Deposit"

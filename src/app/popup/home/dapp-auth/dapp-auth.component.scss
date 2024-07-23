@@ -1,6 +1,8 @@
 .content {
   width: 24px;
   height: 24px;
+  border-radius: 50%;
+  background: var(--message-box-color);
   position: relative;
   cursor: pointer;
   img.logo {

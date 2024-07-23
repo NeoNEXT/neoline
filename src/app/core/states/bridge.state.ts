@@ -1,4 +1,4 @@
-import { RpcNetwork, abiNeoXBridgeNeo3 } from '@/app/popup/_lib';
+import { RpcNetwork, abiNeoXBridgeNeo3, BridgeNetwork } from '@/app/popup/_lib';
 import { AppState } from '@/app/reduers';
 import { Asset } from '@/models/models';
 import { Injectable } from '@angular/core';
@@ -10,18 +10,20 @@ import { UtilServiceState } from '../util/util.service';
 
 @Injectable()
 export class BridgeState {
-  readonly bridgeTxContractOnNeo3BridgeNeoX =
-    '0x2ba94444d43c9a084a5660982a9f95f43f07422e';
-  private readonly bridgeTxHostOnNeo3BridgeNeoX =
-    'https://bridgeapi.banelabs.org/deposits';
-
-  readonly neoXContractOnNeoXBridgeNeo3 =
-    '0x1212000000000000000000000000000000000004';
-  private readonly bridgeTxContractOnNeoXBridgeNeo3 =
-    '0x2ba94444d43c9a084a5660982a9f95f43f07422e';
-  private readonly bridgeTxHostOnNeoXBridgeNeo3 =
-    'https://testmagnet.ngd.network/';
-
+  readonly BridgeParams = {
+    [BridgeNetwork.MainNet]: {
+      n3BridgeContract: '',
+      bridgeTxHostOnNeo3BridgeNeoX: '',
+      neoXBridgeContract: '',
+      bridgeTxHostOnNeoXBridgeNeo3: '',
+    },
+    [BridgeNetwork.TestNet]: {
+      n3BridgeContract: '0x2ba94444d43c9a084a5660982a9f95f43f07422e',
+      bridgeTxHostOnNeo3BridgeNeoX: 'https://bridgeapi.banelabs.org/deposits',
+      neoXBridgeContract: '0x1212000000000000000000000000000000000004',
+      bridgeTxHostOnNeoXBridgeNeo3: 'https://testmagnet.ngd.network/',
+    },
+  };
   private neoXNetwork: RpcNetwork;
   private neo3Network: RpcNetwork;
   provider: ethers.JsonRpcProvider;
@@ -40,14 +42,16 @@ export class BridgeState {
   }
 
   // neo3 => neoX
-  getBridgeTxOnNeo3BridgeNeoX(depositId: number) {
-    return this.http.get(`${this.bridgeTxHostOnNeo3BridgeNeoX}/${depositId}`);
+  getBridgeTxOnNeo3BridgeNeoX(depositId: number, network: BridgeNetwork) {
+    return this.http.get(
+      `${this.BridgeParams[network].bridgeTxHostOnNeo3BridgeNeoX}/${depositId}`
+    );
   }
-  getGasDepositFee() {
+  getGasDepositFee(network: BridgeNetwork) {
     const data = {
       jsonrpc: '2.0',
       method: 'invokefunction',
-      params: [this.bridgeTxContractOnNeo3BridgeNeoX, 'gasDepositFee'],
+      params: [this.BridgeParams[network].n3BridgeContract, 'gasDepositFee'],
       id: 1,
     };
     return this.http.post(this.neo3Network.rpcUrl, data).pipe(
@@ -57,11 +61,11 @@ export class BridgeState {
     );
   }
 
-  getMaxGasDeposit() {
+  getMaxGasDeposit(network: BridgeNetwork) {
     const data = {
       jsonrpc: '2.0',
       method: 'invokefunction',
-      params: [this.bridgeTxContractOnNeo3BridgeNeoX, 'maxGasDeposit'],
+      params: [this.BridgeParams[network].n3BridgeContract, 'maxGasDeposit'],
       id: 1,
     };
     return this.http.post(this.neo3Network.rpcUrl, data).pipe(
@@ -95,17 +99,20 @@ export class BridgeState {
     return tempProvider.getTransactionReceipt(hash);
   }
 
-  getBridgeTxOnNeoXBridgeNeo3(nonce: number) {
+  getBridgeTxOnNeoXBridgeNeo3(nonce: number, network: BridgeNetwork) {
     const data = {
       jsonrpc: '2.0',
       method: 'GetBridgeTxByNonce',
       params: {
-        ContractHash: this.bridgeTxContractOnNeoXBridgeNeo3,
+        ContractHash: this.BridgeParams[network].n3BridgeContract,
         Nonce: nonce,
       },
       id: 1,
     };
-    return this.http.post(this.bridgeTxHostOnNeoXBridgeNeo3, data);
+    return this.http.post(
+      this.BridgeParams[network].bridgeTxHostOnNeoXBridgeNeo3,
+      data
+    );
   }
   //#endregion
 }

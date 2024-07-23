@@ -86,9 +86,9 @@ export class PopupAuthorizationListDialogComponent {
   connectCurrentWallet() {
     if (!this.data.allWebsites) {
       this.data.allWebsites = {};
-      if (!this.data.allWebsites[this.currentAddress]) {
-        this.data.allWebsites[this.currentAddress] = [];
-      }
+    }
+    if (!this.data.allWebsites[this.currentAddress]) {
+      this.data.allWebsites[this.currentAddress] = [];
     }
     this.data.allWebsites[this.currentAddress].push({
       hostname: this.data.hostname,

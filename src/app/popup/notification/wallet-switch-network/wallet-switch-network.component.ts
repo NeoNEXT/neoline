@@ -30,7 +30,7 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
   private messageID = '';
 
   private switchChainId: number;
-  switchChainType: ChainType;
+  requestChainType: ChainType;
   switchNetworkName: string;
 
   private accountSub: Unsubscribable;
@@ -76,9 +76,9 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
       }
     });
     this.aRouter.queryParams.subscribe((params: any) => {
-      this.switchChainType = params.chainType;
+      this.requestChainType = params.chainType;
       this.switchChainId = Number(params.chainId);
-      if (this.switchChainType === 'NeoX') {
+      if (this.requestChainType === 'NeoX') {
         const switchNetwork = this.neoXNetworks.find(
           (item) => item.chainId === this.switchChainId
         );
@@ -107,9 +107,9 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
         error: ERRORS.CANCELLED,
         ID: this.messageID,
         return:
-          this.switchChainType === 'Neo2'
+          this.requestChainType === 'Neo2'
             ? requestTarget.WalletSwitchNetwork
-            : this.switchChainType === 'Neo3'
+            : this.requestChainType === 'Neo3'
             ? requestTargetN3.WalletSwitchNetwork
             : requestTargetEVM.request,
       },
@@ -118,8 +118,14 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
   }
 
   confirm() {
+    let switchChainType: ChainType = 'NeoX';
+    if (this.requestChainType !== 'NeoX') {
+      switchChainType = this.switchNetworkName.startsWith('N2')
+        ? 'Neo2'
+        : 'Neo3';
+    }
     let switchChainWallet;
-    switch (this.switchChainType) {
+    switch (switchChainType) {
       case 'Neo2':
         switchChainWallet = this.neo2WalletArr[0];
         break;
@@ -130,7 +136,7 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
         switchChainWallet = this.neoXWalletArr[0];
         break;
     }
-    if (this.currentChainType !== this.switchChainType && switchChainWallet) {
+    if (this.currentChainType !== switchChainType && switchChainWallet) {
       this.store.dispatch({
         type: UPDATE_WALLET,
         data: switchChainWallet,
@@ -138,7 +144,7 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
       this.chrome.accountChangeEvent(switchChainWallet);
     }
 
-    if (this.switchChainType === 'Neo2') {
+    if (switchChainType === 'Neo2') {
       const n2NetworkIndex = this.n2Networks.findIndex(
         (e) => e.chainId == this.switchChainId
       );
@@ -147,7 +153,7 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
         data: n2NetworkIndex,
       });
       this.chrome.networkChangeEvent(this.n2Networks[n2NetworkIndex]);
-    } else if (this.switchChainType === 'Neo3') {
+    } else if (switchChainType === 'Neo3') {
       const n3NetworkIndex = this.n3Networks.findIndex(
         (e) => e.chainId == this.switchChainId
       );
@@ -171,9 +177,9 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
         data: null,
         ID: this.messageID,
         return:
-          this.switchChainType === 'Neo2'
+          this.requestChainType === 'Neo2'
             ? requestTarget.WalletSwitchNetwork
-            : this.switchChainType === 'Neo3'
+            : this.requestChainType === 'Neo3'
             ? requestTargetN3.WalletSwitchNetwork
             : requestTargetEVM.request,
       },

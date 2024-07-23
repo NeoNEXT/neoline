@@ -12,7 +12,7 @@
     {{ "receiveTip2Prefix" | translate | async }}
     {{
       chainType === "NeoX"
-        ? "Ethereum"
+        ? network.name
         : chainType === "Neo3"
         ? "Neo N3"
         : "Neo Legacy"

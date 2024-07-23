@@ -8,6 +8,7 @@ import {
 import {
   createWindow,
   findNetworkConfigurationBy,
+  getChainType,
   getCurrentNeoXNetwork,
 } from '../tool';
 
@@ -60,6 +61,7 @@ async function switchEthereumChainHandler(params, messageID, hostInfo) {
   }
 
   const { currNeoXNetwork, neoXNetworks } = await getCurrentNeoXNetwork();
+  const currentChainType = await getChainType();
   const existingNetwork = findNetworkConfigurationBy(
     {
       chainId: parseInt(_chainId, 16),
@@ -72,7 +74,10 @@ async function switchEthereumChainHandler(params, messageID, hostInfo) {
 
     // we might want to change all this so that it displays the network you are switching from -> to (in a way that is domain - specific)
 
-    if (currentChainId === parseInt(_chainId, 16)) {
+    if (
+      currentChainType === 'NeoX' &&
+      currentChainId === parseInt(_chainId, 16)
+    ) {
       return true;
     }
 

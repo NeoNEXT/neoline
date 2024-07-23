@@ -226,7 +226,7 @@ export class AssetState {
     const rpcUrl = this.n2Network.rpcUrl;
     return this.http.rpcPost(rpcUrl, data).pipe(
       map((res) => {
-        if (assetId.includes(res.balance[0].asset_hash)) {
+        if (assetId.includes(res.balance?.[0]?.asset_hash)) {
           return res.balance[0].unspent.map(({ n, value, txid }) => ({
             n,
             txid,
@@ -234,7 +234,7 @@ export class AssetState {
             asset_id: res.balance[0].asset_hash,
           }));
         }
-        if (assetId.includes(res.balance[1].asset_hash)) {
+        if (assetId.includes(res.balance?.[1]?.asset_hash)) {
           return res.balance[1].unspent.map(({ n, value, txid }) => ({
             n,
             txid,

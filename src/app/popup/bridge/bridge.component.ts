@@ -10,6 +10,7 @@ import {
 import { Asset } from '@/models/models';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import {
+  BridgeNetwork,
   BridgeTransactionItem,
   ChainType,
   DEFAULT_N3_RPC_NETWORK,
@@ -100,6 +101,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   neoXNetwork: RpcNetwork;
   neo3WalletArr: Wallet3[];
   neoXWalletArr: EvmWalletJSON[];
+  currentBridgeNetwork: BridgeNetwork;
   constructor(
     private assetState: AssetState,
     private assetEVMState: AssetEVMState,
@@ -150,32 +152,44 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
 
   private async initData() {
     if (this.chainType === 'Neo3') {
+      this.currentBridgeNetwork =
+        this.n3Network.chainId === 3
+          ? BridgeNetwork.MainNet
+          : BridgeNetwork.TestNet;
       this.fromChain = 'Neo N3';
       this.toChain = 'Neo X';
       this.bridgeAsset = NeoN3GasAsset;
       // bridge fee
-      this.bridgeState.getGasDepositFee().subscribe((res) => {
-        if (res) {
-          this.bridgeFee = new BigNumber(res)
-            .shiftedBy(-NeoN3GasAsset.decimals)
-            .toFixed();
-          this.minBridgeAmount = new BigNumber(this.bridgeFee)
-            .plus(MIN_BRIDGE_AMOUNT)
-            .toFixed();
-        }
-      });
+      this.bridgeState
+        .getGasDepositFee(this.currentBridgeNetwork)
+        .subscribe((res) => {
+          if (res) {
+            this.bridgeFee = new BigNumber(res)
+              .shiftedBy(-NeoN3GasAsset.decimals)
+              .toFixed();
+            this.minBridgeAmount = new BigNumber(this.bridgeFee)
+              .plus(MIN_BRIDGE_AMOUNT)
+              .toFixed();
+          }
+        });
       // max deposit fee
-      this.bridgeState.getMaxGasDeposit().subscribe((res) => {
-        if (res) {
-          this.maxGasDeposit = new BigNumber(res)
-            .shiftedBy(-NeoN3GasAsset.decimals)
-            .toFixed();
-        }
-      });
+      this.bridgeState
+        .getMaxGasDeposit(this.currentBridgeNetwork)
+        .subscribe((res) => {
+          if (res) {
+            this.maxGasDeposit = new BigNumber(res)
+              .shiftedBy(-NeoN3GasAsset.decimals)
+              .toFixed();
+          }
+        });
 
       this.calculateNeoN3Fee().subscribe(() => {});
     }
     if (this.chainType === 'NeoX') {
+      this.currentBridgeNetwork =
+        this.neoXNetwork.chainId === NeoXTestNetChainId
+          ? BridgeNetwork.TestNet
+          : BridgeNetwork.MainNet;
       this.fromChain = 'Neo X';
       this.toChain = 'Neo N3';
       this.bridgeAsset = NeoXGasAsset;
@@ -239,7 +253,8 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     let networkGasLimit: bigint;
     this.txParams = {
       from: this.currentWallet.accounts[0].address,
-      to: this.bridgeState.neoXContractOnNeoXBridgeNeo3,
+      to: this.bridgeState.BridgeParams[this.currentBridgeNetwork]
+        .neoXBridgeContract,
       value,
       data,
     };
@@ -266,7 +281,9 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.invokeArgs = [
       {
         operation: 'depositGas',
-        scriptHash: this.bridgeState.bridgeTxContractOnNeo3BridgeNeoX,
+        scriptHash:
+          this.bridgeState.BridgeParams[this.currentBridgeNetwork]
+            .n3BridgeContract,
         args: [
           sc.ContractParam.hash160(fromAddress),
           sc.ContractParam.fromJson({
@@ -282,7 +299,8 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       {
         account: wallet.getScriptHashFromAddress(fromAddress),
         allowedContracts: [
-          this.bridgeState.bridgeTxContractOnNeo3BridgeNeoX,
+          this.bridgeState.BridgeParams[this.currentBridgeNetwork]
+            .n3BridgeContract,
           GAS3_CONTRACT,
         ],
         allowedGroups: [],
@@ -428,6 +446,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           : this.neoXNetwork.chainId === NeoXTestNetChainId;
       this.sessionTx = {
         txId: event.hash,
+        network: isTestNet ? BridgeNetwork.TestNet : BridgeNetwork.MainNet,
         sourceChainType: event.chain,
         targetChainType: event.chain === 'Neo3' ? 'NeoX' : 'Neo3',
         sourceExplorer:
@@ -518,7 +537,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.getTargetTxReceiptInterval?.unsubscribe();
     this.getTargetTxReceiptInterval = interval(5000).subscribe(() => {
       this.bridgeState
-        .getBridgeTxOnNeo3BridgeNeoX(depositId)
+        .getBridgeTxOnNeo3BridgeNeoX(depositId, this.sessionTx.network)
         .subscribe((res: any) => {
           console.log(res);
           if (res.txid) {
@@ -563,7 +582,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.getTargetTxReceiptInterval?.unsubscribe();
     this.getTargetTxReceiptInterval = interval(3000).subscribe(() => {
       this.bridgeState
-        .getBridgeTxOnNeoXBridgeNeo3(nonce)
+        .getBridgeTxOnNeoXBridgeNeo3(nonce, this.sessionTx.network)
         .subscribe((res: any) => {
           console.log(res);
           if (res.result) {
