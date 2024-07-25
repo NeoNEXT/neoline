@@ -50,7 +50,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   signAddressGasBalance: string;
   estimateGasError = false;
   insufficientFunds = false;
-  approveNewData: string;
+  approveNewTxParams: EvmTransactionParams;
 
   private accountSub: Unsubscribable;
   neoXWalletArr: EvmWalletJSON[];
@@ -112,10 +112,10 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     this.checkBalance();
   }
 
-  async updateApproveAmount($event) {
+  async updateApproveAmount($event: EvmTransactionParams) {
     console.log($event);
 
-    this.approveNewData = $event;
+    this.approveNewTxParams = $event;
     await this.getGasFee();
 
     this.checkBalance();
@@ -153,8 +153,13 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     const { maxFeePerGas, maxPriorityFeePerGas, gasLimit, gasPrice } =
       this.neoXFeeInfo;
 
+    const currentTxParams =
+      this.getTxType() === 'approve' && this.approveNewTxParams
+        ? this.approveNewTxParams
+        : this.txParams;
+
     const newParams = {
-      ...this.txParams,
+      ...currentTxParams,
       maxFeePerGas: maxFeePerGas
         ? BigInt(new BigNumber(maxFeePerGas).shiftedBy(18).toFixed(0, 1))
         : undefined,
@@ -167,12 +172,12 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         ? BigInt(new BigNumber(gasPrice).shiftedBy(18).toFixed(0, 1))
         : undefined,
       gasLimit: BigInt(new BigNumber(gasLimit).toFixed(0, 1)),
-      value: this.txParams.value
-        ? BigInt(new BigNumber(this.txParams.value).toFixed(0, 1))
+      value: currentTxParams.value
+        ? BigInt(new BigNumber(currentTxParams.value).toFixed(0, 1))
         : undefined,
     };
     const PreExecutionParams = {
-      ...this.txParams,
+      ...currentTxParams,
       maxFeePerGas: maxFeePerGas
         ? '0x' + new BigNumber(maxFeePerGas).shiftedBy(18).toString(16)
         : undefined,
@@ -183,7 +188,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         ? '0x' + new BigNumber(gasPrice).shiftedBy(18).toString(16)
         : undefined,
       gas: '0x' + new BigNumber(gasLimit).toString(16),
-      value: this.txParams.value,
+      value: currentTxParams.value,
     };
 
     return { PreExecutionParams, newParams };
@@ -300,14 +305,11 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
     let networkGasLimit: bigint;
     try {
-      let data = this.txParams.data;
-      if (this.getTxType() === 'approve' && this.approveNewData) {
-        data = this.approveNewData;
-      }
-      networkGasLimit = await this.assetEVMState.estimateGas({
-        ...this.txParams,
-        data,
-      });
+      networkGasLimit = await this.assetEVMState.estimateGas(
+        this.getTxType() === 'approve' && this.approveNewTxParams
+          ? this.approveNewTxParams
+          : this.txParams
+      );
     } catch (error) {
       this.estimateGasError = true;
       networkGasLimit = BigInt(42750000);

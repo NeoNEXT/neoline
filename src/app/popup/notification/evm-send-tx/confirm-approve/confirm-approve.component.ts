@@ -28,7 +28,7 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   @Input() neoXNetwork: RpcNetwork;
   @Output() closeEvent = new EventEmitter();
   @Output() updateFeeEvent = new EventEmitter<NeoXFeeInfoProp>();
-  @Output() updateApproveAmountEvent = new EventEmitter<string>();
+  @Output() updateApproveAmountEvent = new EventEmitter<EvmTransactionParams>();
   @Output() confirmEvent = new EventEmitter();
 
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
@@ -39,6 +39,7 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   inputAmount = '';
   inputAmountIsBig = true;
   inputAmountTip;
+  newTxParams: EvmTransactionParams;
   private inputAmountSub: Unsubscribable;
   approveAssetBalance: string;
   constructor(
@@ -128,7 +129,8 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
           this.assetDetails.decimals
         ),
       });
-      this.updateApproveAmountEvent.emit(newData);
+      this.newTxParams = Object.assign({}, this.txParams, { data: newData });
+      this.updateApproveAmountEvent.emit(this.newTxParams);
     } else {
       this.confirmEvent.emit();
     }

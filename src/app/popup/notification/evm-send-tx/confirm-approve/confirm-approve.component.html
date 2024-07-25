@@ -110,7 +110,7 @@
       </div>
       <evm-fee
         *ngIf="neoXFeeInfo"
-        [txParams]="txParams"
+        [txParams]="newTxParams ?? txParams"
         [symbol]="neoXNetwork.symbol"
         [customNeoXFeeInfo]="neoXFeeInfo"
         [place]="'dapp'"
