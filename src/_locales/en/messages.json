@@ -29,9 +29,6 @@
   "about": {
     "message": "About us"
   },
-  "expandView": {
-    "message": "Expand View"
-  },
   "close": {
     "message": "Close"
   },
@@ -84,16 +81,16 @@
     "message": "Creating"
   },
   "enterWIF": {
-    "message": "Enter WIF(Private key)"
+    "message": "Enter WIF(private key)"
   },
   "enterEncryptedKey": {
-    "message": "Enter Encrypted Key"
+    "message": "Enter encrypted key"
   },
   "WIFRequired": {
     "message": "WIF is required"
   },
   "EncryptedKeyRequired": {
-    "message": "Encrypted Key required"
+    "message": "Encrypted key required"
   },
   "importing": {
     "message": "Importing"
@@ -153,7 +150,7 @@
     "message": "Copy"
   },
   "showPrivateKey": {
-    "message": "Show Private Key"
+    "message": "Show private key"
   },
   "password": {
     "message": "Password"
@@ -165,7 +162,7 @@
     "message": "Caution"
   },
   "transferExportTip": {
-    "message": "Please keep your Private Key safe, do not show it to anyone"
+    "message": "Please keep your private key safe, do not show it to anyone"
   },
   "verify": {
     "message": "Verify"
@@ -219,16 +216,16 @@
     "message": "Receipt wallet"
   },
   "privacyPolicy": {
-    "message": "Privacy Policy"
+    "message": "Privacy policy"
   },
   "termsOfUse": {
-    "message": "Terms of Use"
+    "message": "Terms of use"
   },
   "companyWebsite": {
-    "message": "Official Website"
+    "message": "Official website"
   },
   "contactUs": {
-    "message": "Contact Us"
+    "message": "Contact us"
   },
   "FollowUs": {
     "message": "Follow us"
@@ -324,7 +321,7 @@
     "message": "clear"
   },
   "clearCache": {
-    "message": "Local Cache"
+    "message": "Local cache"
   },
   "clearCacheTip": {
     "message": "Clear all local cache"
@@ -333,7 +330,7 @@
     "message": "Reset"
   },
   "chooseNep6File": {
-    "message": "Choose Nep6 File"
+    "message": "Choose nep6 file"
   },
   "welcomeBack": {
     "message": "Welcome back"
@@ -387,10 +384,10 @@
     "message": "Languages"
   },
   "WIFPattern": {
-    "message": "wrong WIF"
+    "message": "Wrong WIF"
   },
   "EncryptedKeyPattern": {
-    "message": "wrong Encrypted Key"
+    "message": "Wrong encrypted key"
   },
   "tranSubmit": {
     "message": "Transaction submitted"
@@ -414,10 +411,10 @@
     "message": "No transactions"
   },
   "wifPrivateKey": {
-    "message": "WIF(Private Key)"
+    "message": "WIF(private key)"
   },
   "privateKey": {
-    "message": "Private Key"
+    "message": "Private key"
   },
   "delWalletConfirm": {
     "message": "Are you sure to delete this wallet?"
@@ -447,10 +444,10 @@
     "message": "To"
   },
   "currencyUnit": {
-    "message": "Currency Unit"
+    "message": "Currency unit"
   },
   "privacyData": {
-    "message": "Authorized Sites"
+    "message": "Authorized sites"
   },
   "clearPrivacyDataBtn": {
     "message": "clear all authorized sites"
@@ -480,10 +477,10 @@
     "message": "Create Your"
   },
   "beijingTime": {
-    "message": "China Standard Time"
+    "message": "China standard time"
   },
   "priorityFee": {
-    "message": "Priority Fee"
+    "message": "Priority fee"
   },
   "priorityFeeTip": {
     "message": "Optional"
@@ -510,10 +507,10 @@
     "message": "No longer allowed"
   },
   "darkMode": {
-    "message": "Dark Mode"
+    "message": "Dark mode"
   },
   "myTokens": {
-    "message": "my Tokens"
+    "message": "My tokens"
   },
   "authorized": {
     "message": "Authorized"
@@ -531,7 +528,7 @@
     "message": "General settings"
   },
   "ViewOnExplorer": {
-    "message": "View on Explorer"
+    "message": "View on explorer"
   },
   "accountDetails": {
     "message": "Account details"
@@ -543,7 +540,7 @@
     "message": "Remove account"
   },
   "editFee": {
-    "message": "Edit Fee"
+    "message": "Edit fee"
   },
   "resetWalletConfirm": {
     "message": "After resetting the wallet, all the original wallet data will be erased and cannot be retrieved. Please confirm resetting the wallet?"
@@ -561,25 +558,25 @@
     "message": "Customize"
   },
   "resetWallet": {
-    "message": "Reset Wallet"
+    "message": "Reset wallet"
   },
   "transferAddress": {
-    "message": "Transfer Address"
+    "message": "Transfer address"
   },
   "selectAsset": {
-    "message": "Choose Asset"
+    "message": "Choose asset"
   },
   "importMethod": {
-    "message": "Import Method"
+    "message": "Import method"
   },
   "importKey": {
-    "message": "Private Key Import"
+    "message": "Private key import"
   },
   "importFile": {
-    "message": "File Import"
+    "message": "File import"
   },
   "personalAccount": {
-    "message": "Personal Account"
+    "message": "Personal account"
   },
   "details": {
     "message": "Details"
@@ -588,16 +585,16 @@
     "message": "Data"
   },
   "backUp": {
-    "message": "Back Up"
+    "message": "Back up"
   },
   "backUpTip": {
-    "message": "Back up Reminder"
+    "message": "Back up reminder"
   },
   "backUpDesc1": {
-    "message": "1. Mastering the Private Key/Secret Recovery Phrase is equivalent to mastering the ownership of account assets. Please write it down and keep it in a safe place. Do not share it with anyone."
+    "message": "1. Mastering the private key/secret recovery phrase is equivalent to mastering the ownership of account assets. Please write it down and keep it in a safe place. Do not share it with anyone."
   },
   "backUpDesc2": {
-    "message": "2. NeoLine is a decentralized wallet and does not store your private key/Secret Recovery Phrase. If lost, it cannot be recovered."
+    "message": "2. NeoLine is a decentralized wallet and does not store your private key/secret recovery phrase. If lost, it cannot be recovered."
   },
   "backUpNow": {
     "message": "Now"
@@ -615,13 +612,13 @@
     "message": "Known"
   },
   "youPrivateKey": {
-    "message": "Your Private key"
+    "message": "Your private key"
   },
   "privateKeyTip": {
     "message": "Tip: Please keep your private key properly and do not disclose it to anyone"
   },
   "backUpsafeTip": {
-    "message": "Security Warning"
+    "message": "Security warning"
   },
   "backUpTipLater": {
     "message": "Later"
@@ -630,7 +627,7 @@
     "message": "Your private key has not been backed up yet. Please be sure to back up the private key to restore all assets corresponding to this address, to prevent the asset loss caused by forgetting password, application deletion, phone loss, etc."
   },
   "receiveOurNewsletter": {
-    "message": "Receive our Newsletter"
+    "message": "Receive our newsletter"
   },
   "newsletterTip": {
     "message": "Get the latest updates from the NeoLine team"
@@ -648,10 +645,10 @@
     "message": "Sign up to receive updates and announcements"
   },
   "recommendedAssets": {
-    "message": "Recommended Assets"
+    "message": "Recommended assets"
   },
   "myAssets": {
-    "message": "My Assets"
+    "message": "My assets"
   },
   "addAssetWarn": {
     "message": "Please be aware that this asset is not officially verified by the wallet and there will be risks involved in its security."
@@ -660,7 +657,7 @@
     "message": "Save changes"
   },
   "selectAChain": {
-    "message": "Select a Chain"
+    "message": "Select a chain"
   },
   "TOTAL": {
     "message": "TOTAL"
@@ -726,7 +723,7 @@
     "message": "Invocation arguments"
   },
   "broadcastOverride": {
-    "message": "Broadcast Override"
+    "message": "Broadcast override"
   },
   "signers": {
     "message": "Signers"
@@ -759,7 +756,7 @@
     "message": "asset"
   },
   "ChainSmartContractDeploy": {
-    "message": "Smart Contract Invocation"
+    "message": "Smart contract invocation"
   },
   "PublicKey": {
     "message": "PublicKey(encoded)"
@@ -801,19 +798,19 @@
     "message": "Networks"
   },
   "AddNetwork": {
-    "message": "Add Network"
+    "message": "Add network"
   },
   "EditNetwork": {
-    "message": "Edit Network"
+    "message": "Edit network"
   },
   "NetworkName": {
-    "message": "Network Name"
+    "message": "Network name"
   },
   "New_RPC_URL": {
     "message": "New RPC URL"
   },
   "Explorer_URL": {
-    "message": "Block Explorer URL(Optional)"
+    "message": "Block explorer URL(Optional)"
   },
   "oneMonthTxs": {
     "message": "Only show transactions from the most recent month"
@@ -825,16 +822,16 @@
     "message": "Ledger not supported on this computer."
   },
   "connectLedgerDevice": {
-    "message": "Please connect your Ledger device"
+    "message": "Please connect your ledger device"
   },
   "openNeoAppOnLedger": {
-    "message": "Please open the NEO app on your Ledger device."
+    "message": "Please open the NEO app on your ledger device."
   },
   "openNeo3AppOnLedger": {
-    "message": "Please open the NEO N3 app on your Ledger device."
+    "message": "Please open the NEO N3 app on your ledger device."
   },
   "openNeoXAppOnLedger": {
-    "message": "Please open the Ethereum app on your Ledger device."
+    "message": "Please open the ethereum app on your ledger device."
   },
   "LedgerConnectedNeoReady": {
     "message": "Ledger connected, NEO app open, ready for use."
@@ -849,19 +846,19 @@
     "message": "Transaction denied by user."
   },
   "TransactionTooLarge": {
-    "message": "Transaction too large for Ledger to sign."
+    "message": "Transaction too large for ledger to sign."
   },
   "errorLedgerOpen": {
-    "message": "There was an error parsing this transaction. Please make sure you have the correct Ledger app open."
+    "message": "There was an error parsing this transaction. Please make sure you have the correct ledger app open."
   },
   "LedgerInstallNeoApp": {
-    "message": "Note: Please ensure your Ledger has the latest NEO apps installed."
+    "message": "Note: Please ensure your ledger has the latest NEO apps installed."
   },
   "LedgerInstallNeo3App": {
-    "message": "Note: Please ensure your Ledger has the latest NEO N3 app installed."
+    "message": "Note: Please ensure your ledger has the latest NEO N3 app installed."
   },
   "LedgerInstallNeoXApp": {
-    "message": "Note: Please ensure your Ledger has the latest Ethereum app installed."
+    "message": "Note: Please ensure your ledger has the latest Ethereum app installed."
   },
   "signTheTransaction": {
     "message": "Please sign the transaction on your ledger."
@@ -870,7 +867,7 @@
     "message": "Wait"
   },
   "ImportLedgerWallet": {
-    "message": "Import Ledger Wallet"
+    "message": "Import ledger wallet"
   },
   "Next": {
     "message": "Next"
@@ -885,16 +882,16 @@
     "message": "Creating/importing a wallet confirms I have read and agree to the "
   },
   "PrivacyPolicy": {
-    "message": "Privacy Policy"
+    "message": "Privacy policy"
   },
   "and": {
     "message": " & "
   },
   "TermsOfService": {
-    "message": "Terms of Service"
+    "message": "Terms of service"
   },
   "ImportThisAccount": {
-    "message": "Import this Account"
+    "message": "Import this account"
   },
   "Confirm": {
     "message": "Confirm"
@@ -909,19 +906,19 @@
     "message": "Imported"
   },
   "plugInLedgerWallet": {
-    "message": "Plug in Ledger wallet"
+    "message": "Plug in ledger wallet"
   },
   "plugInLedgerWalletTip": {
-    "message": "Connect your wallet directly to your computer. Unlock your Ledger and open the Neo/Neo N3/Ethereum app. For more on using your hardware wallet device, "
+    "message": "Connect your wallet directly to your computer. Unlock your ledger and open the Neo/Neo N3/Ethereum app. For more on using your hardware wallet device, "
   },
   "clickHere": {
     "message": "click here."
   },
   "reconnectLedger": {
-    "message": "If the Ledger does not respond for a long time, please try to reconnect the Ledger"
+    "message": "If the ledger does not respond for a long time, please try to reconnect the ledger"
   },
   "inputNeo2AddressTip": {
-    "message": "Neo Legacy address"
+    "message": "Neo legacy address"
   },
   "inputN3NNSAddressTip": {
     "message": "N3 address or NeoNS Name"
@@ -954,7 +951,7 @@
     "message": "Please create or import a Neo X (EVM Network) account first"
   },
   "OnePasswordPattern": {
-    "message": "One Pass Setting"
+    "message": "One pass setting"
   },
   "onePasswordDesc": {
     "message": "We have optimized wallet passwords and added password mode switching function, which support users before v4.0.0 to set a general password to manage multiple wallet accounts. Click 'Switch Now' to complete the account security verification and switch to the new password management mode."
@@ -963,13 +960,13 @@
     "message": "Click to learn more!"
   },
   "OnePasswordTitle": {
-    "message": "Password Mode Switch"
+    "message": "Password mode switch"
   },
   "onePasswordTip": {
     "message": "Please enter the passwords corresponding to all accounts correctly to complete the switch, and ensure that the wallet has been backed up safely."
   },
   "SwitchNow": {
-    "message": "Switch Now"
+    "message": "Switch now"
   },
   "enterNewPassword": {
     "message": "Enter a new password"
@@ -1017,10 +1014,10 @@
     "message": "network assets"
   },
   "ConfirmSecretRecoveryPhrase": {
-    "message": "Confirm Secret Recovery Phrase"
+    "message": "Confirm secret recovery phrase"
   },
   "YourSecretRecoveryPhrase": {
-    "message": "Your Secret Recovery Phrase"
+    "message": "Your secret recovery phrase"
   },
   "ConfirmTheSecretRecoveryPhrasesInOrder": {
     "message": "Confirm the secret recovery phrases in order"
@@ -1041,7 +1038,7 @@
     "message": "Create a new mnemonic wallet"
   },
   "ledgerWallet": {
-    "message": "Ledger Wallet"
+    "message": "Ledger wallet"
   },
   "ledgerWalletTip": {
     "message": "Connect your hardware wallet"
@@ -1056,7 +1053,7 @@
     "message": "Invalid secret recovery phrase"
   },
   "importMnemonic": {
-    "message": "Secret recovery phrase Import"
+    "message": "Secret recovery phrase import"
   },
   "AddNetworkTip": {
     "message": "Please add a network only if you completely trust it!"
@@ -1074,7 +1071,7 @@
     "message": "Invalid RPC URL"
   },
   "exist_RPC_URL": {
-    "message": "The Chain ID corresponding to this RPC URL already exists"
+    "message": "The chain ID corresponding to this RPC URL already exists"
   },
   "symbolIsRequired": {
     "message": "Symbol is required"
@@ -1083,16 +1080,16 @@
     "message": "Failed"
   },
   "AddAddressBook": {
-    "message": "Add Address"
+    "message": "Add address"
   },
   "EditAddressBook": {
-    "message": "Edit Address"
+    "message": "Edit address"
   },
   "Address": {
     "message": "Address"
   },
   "SelectNetwork": {
-    "message": "Select Network"
+    "message": "Select network"
   },
   "nameIsRequired": {
     "message": "Name is required"
@@ -1107,16 +1104,16 @@
     "message": "Address already exists"
   },
   "showSecretRecoveryPhrase": {
-    "message": "Show Secret Recovery Phrase"
+    "message": "Show secret recovery phrase"
   },
   "hideSecretRecoveryPhrase": {
-    "message": "Show Secret Recovery Phrase"
+    "message": "Show secret recovery phrase"
   },
   "secretRecoveryPhrase": {
-    "message": "Secret Recovery Phrase"
+    "message": "Secret recovery phrase"
   },
   "secretRecoveryPhraseTip": {
-    "message": "Please keep your Secret Recovery Phrase safe, do not show it to anyone"
+    "message": "Please keep your secret recovery phrase safe, do not show it to anyone"
   },
   "yourHove": {
     "message": "You have"
@@ -1164,16 +1161,16 @@
     "message": "Use this feature to customize the gas price. This can be confusing if you aren’t familiar. Interact at your own risk."
   },
   "maxFee": {
-    "message": "Max Fee"
+    "message": "Max fee"
   },
   "maxPriorityFee": {
-    "message": "Priority Fee"
+    "message": "Priority fee"
   },
   "gasPrice": {
-    "message": "Gas Price"
+    "message": "Gas price"
   },
   "gasLimit": {
-    "message": "Gas Limit"
+    "message": "Gas limit"
   },
   "maxFeeIsLowPriorityFee": {
     "message": "Max fee cannot be lower than priority fee"
@@ -1215,16 +1212,16 @@
     "message": "MAX"
   },
   "ToAddress": {
-    "message": "To Address"
+    "message": "To address"
   },
   "bridgeFee": {
-    "message": "Bridge Fee"
+    "message": "Bridge fee"
   },
   "bridgeFeeDesc": {
     "message": "The bridge contract charges 0.1 GAS, and the platform does not charge any other fees."
   },
   "ActualReceive": {
-    "message": "Actual Receive"
+    "message": "Actual receive"
   },
   "Approve": {
     "message": "Approve"
@@ -1260,7 +1257,7 @@
     "message": "Lock NeoLine"
   },
   "menuAboutUs": {
-    "message": "About Us"
+    "message": "About us"
   },
   "yourAccounts": {
     "message": "Your accounts"
@@ -1272,19 +1269,19 @@
     "message": "You can enter your entire mnemonic phrase into any field"
   },
   "YourDeposit": {
-    "message": "Your Deposit"
+    "message": "Your deposit"
   },
   "YourWithdraw": {
-    "message": "Your Withdraw"
+    "message": "Your withdraw"
   },
   "FromAddress": {
-    "message": "From Address"
+    "message": "From address"
   },
   "YourNeoXReceiveAddress": {
-    "message": "Your Neo X Receive Address"
+    "message": "Your Neo X receive address"
   },
   "YourNeo3ReceiveAddress": {
-    "message": "Your Neo3 N3 Receive Address"
+    "message": "Your Neo3 N3 receive address"
   },
   "addEvmTokenTitle": {
     "message": "Add suggested tokens"
@@ -1314,13 +1311,13 @@
     "message": "Block explorer URL"
   },
   "ContractAddress": {
-    "message": "Contract Address"
+    "message": "Contract address"
   },
   "ViewTransaction": {
-    "message": "View Transaction"
+    "message": "View transaction"
   },
   "ViewInNFTMarket": {
-    "message": "View in NFT Market"
+    "message": "View in NFT market"
   },
   "Depositing": {
     "message": "Depositing"
@@ -1354,5 +1351,20 @@
   },
   "Transferred": {
     "message": "Transferred"
+  },
+  "SpendingCapRequestForYour": {
+    "message": "Spending cap request for your"
+  },
+  "ViewDetails": {
+    "message": "View details"
+  },
+  "approveTip": {
+    "message": "Be careful: The third party could spend your entire token balance without further notice or consent. Protect yourself by customizing a lower spending cap."
+  },
+  "approveCustomTip": {
+    "message": "Only enter a number that you're comfortable with the third party spending now or in the future. You can always increase the spending cap later."
+  },
+  "useSiteSuggestion": {
+    "message": "Use site suggestion"
   }
 }

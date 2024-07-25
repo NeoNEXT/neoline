@@ -1,5 +1,8 @@
 .content {
   position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   .tip {
     position: absolute;
     bottom: -35px;

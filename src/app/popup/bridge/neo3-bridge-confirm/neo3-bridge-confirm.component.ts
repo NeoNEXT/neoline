@@ -138,7 +138,6 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
             msg: 'Transaction rejected by RPC node.',
           };
         }
-        console.log(txHash);
 
         this.backAmount.emit({ hash: txHash, chain: 'Neo3' });
         this.loading = false;

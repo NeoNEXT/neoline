@@ -1,60 +1,146 @@
 <div class="container">
-  <div class="header transfer">
-    <p class="origin">{{ locationOrigin }}</p>
-    <p>
-      {{ "Approve" | translate | async }} {{ assetDetails?.symbol }}
-      <copy [value]="txParams.to" [showTip]="false">
-        <img theme src="assets/images/common/copy-color.svg" />
-      </copy>
-    </p>
-    <p>
-      {{ "CustomSpendingCap" | translate | async }}:
-      <input type="text" [value]="assetDetails?.tokenAmount" />
-    </p>
-    <div class="address-group">
-      <div class="item">
-        <img class="avatar" [avatar]="txParams?.from" />
-        <span>{{ txParams?.from | longStr : 10 }}</span>
+  <div class="content">
+    <div class="sign-address">
+      <img class="avatar" [avatar]="txParams?.from" />
+      <div class="item flex-1">
+        <span class="value">{{ encryptWallet.name }}</span>
+        <span class="label">{{ txParams?.from | longStr : 6 }}</span>
+      </div>
+      <div class="item balance">
+        <span class="label">{{ "Balance" | translate | async }}</span>
+        <span class="value">
+          {{ signAddressGasBalance | numberFixed : 8 }}
+          {{ neoXNetwork.symbol }}
+        </span>
       </div>
     </div>
-  </div>
-  <div class="tabs-container">
-    <span
-      [class]="{ selected: tabType === 'details' }"
-      (click)="tabType = 'details'"
-    >
-      {{ "details" | translate | async }}
-    </span>
-    <span [class]="{ selected: tabType === 'data' }" (click)="tabType = 'data'">
-      {{ "data" | translate | async }}
-    </span>
-  </div>
-  <div class="content details" *ngIf="tabType === 'details'">
-    <div class="warning-tip top" *ngIf="estimateGasError">
-      <img src="assets/images/common/warning-red.svg" alt="" />
-      {{ "EstimatedFeeError" | translate | async }}
+    <div class="host-info">
+      <div class="host">
+        <img [src]="iconSrc" [appErrorSrc]="'unknown'" alt="" />
+        {{ locationOrigin }}
+      </div>
     </div>
-    <evm-fee
-      *ngIf="neoXFeeInfo"
-      [txParams]="txParams"
-      [symbol]="neoXNetwork.symbol"
-      [customNeoXFeeInfo]="neoXFeeInfo"
-      [place]="'dapp'"
-      (returnFee)="updateEvmFee($event)"
-    >
-    </evm-fee>
-    <div class="warning-tip bottom" *ngIf="insufficientFunds">
-      <img src="assets/images/common/warning-red.svg" alt="" />
-      {{ getTranslate() }}
+    <div class="approve-info">
+      <p class="title" *ngIf="lang === 'en'">
+        {{ "SpendingCapRequestForYour" | translate | async }}
+      </p>
+      <div class="asset">
+        <token-logo
+          customClass="list"
+          [assetId]="txParams.to"
+          [chainType]="'NeoX'"
+          [symbol]="assetDetails?.symbol"
+          [neoXChainId]="neoXNetwork.chainId"
+        ></token-logo>
+        <span>{{ assetDetails?.symbol }}</span>
+        <copy [value]="txParams.to" [showTip]="false">
+          <img theme src="assets/images/common/copy.svg" />
+        </copy>
+        <img
+          *ngIf="neoXNetwork.explorer"
+          (click)="toExplorer()"
+          class="link"
+          theme
+          src="assets/images/bridge/tx-link.svg"
+          alt=""
+        />
+      </div>
+      <p class="title" *ngIf="lang !== 'en'">
+        {{ "SpendingCapRequestForYour" | translate | async }}
+      </p>
     </div>
-  </div>
-  <div class="content data" *ngIf="tabType === 'data'">
-    <p class="title">
-      FUNCTION TYPE: <span class="value">{{ tokenData?.signature }}</span>
+
+    <div class="edit-amount">
+      <p class="title">
+        {{ "CustomSpendingCap" | translate | async }}
+        <tooltip
+          placement="top"
+          [tip]="
+            (inputAmountIsBig ? 'approveTip' : 'approveCustomTip')
+              | translate
+              | async
+          "
+        >
+          <img
+            theme
+            [src]="
+              inputAmountIsBig
+                ? 'assets/images/common/warning-red.svg'
+                : 'assets/images/common/tooltip.svg'
+            "
+            alt=""
+          />
+        </tooltip>
+      </p>
+      <ng-container *ngIf="isEdit">
+        <p
+          class="edit"
+          *ngIf="assetDetails && inputAmount !== assetDetails.tokenAmount"
+          (click)="useDappApproveAmount()"
+        >
+          {{ "useSiteSuggestion" | translate | async }}
+        </p>
+        <div class="input-amount">
+          <input
+            type="text"
+            [(ngModel)]="inputAmount"
+            (input)="handleInputAmountChange()"
+            [ngClass]="{ big: inputAmountIsBig }"
+          />
+          <span class="max" (click)="useMaxApproveAmount()">
+            {{ "Max" | translate | async }}
+          </span>
+        </div>
+        <p class="tip">{{ inputAmountTip }}</p>
+      </ng-container>
+      <ng-container *ngIf="!isEdit">
+        <p class="edit" (click)="isEdit = true">
+          {{ "edit" | translate | async }}
+        </p>
+        <p class="amount" [ngClass]="{ big: inputAmountIsBig }">
+          {{ inputAmount }} {{ assetDetails?.symbol }}
+        </p>
+      </ng-container>
+    </div>
+
+    <div class="fee" *ngIf="!isEdit">
+      <div class="warning-tip top" *ngIf="estimateGasError">
+        <img src="assets/images/common/warning-red.svg" alt="" />
+        {{ "EstimatedFeeError" | translate | async }}
+      </div>
+      <evm-fee
+        *ngIf="neoXFeeInfo"
+        [txParams]="txParams"
+        [symbol]="neoXNetwork.symbol"
+        [customNeoXFeeInfo]="neoXFeeInfo"
+        [place]="'dapp'"
+        (returnFee)="updateEvmFee($event)"
+      >
+      </evm-fee>
+      <div class="warning-tip bottom" *ngIf="insufficientFunds">
+        <img src="assets/images/common/warning-red.svg" alt="" />
+        {{ getTranslate() }}
+      </div>
+    </div>
+
+    <p class="view-details">
+      <span (click)="showDetail = !showDetail">
+        {{ "ViewDetails" | translate | async }}
+        <img
+          theme
+          src="assets/images/third-party/triangle-fill.svg"
+          [ngClass]="{ active: showDetail }"
+          alt=""
+        />
+      </span>
     </p>
-    <p class="hex-label">HEX DATA: {{ hexDataLength }} BYTES</p>
-    <p class="json-box serialize">{{ txParams.data }}</p>
+    <div class="params-data" *ngIf="showDetail">
+      <p class="title">{{ "data" | translate | async }}</p>
+      <p>Function: {{ tokenData?.name }}</p>
+      <p>{{ txParams.data }}</p>
+    </div>
   </div>
+
   <div class="btn-group">
     <button class="cancel" (click)="exit()">
       {{ "cancel" | translate | async }}
@@ -64,7 +150,7 @@
       [ngClass]="{ disabled: insufficientFunds }"
       (click)="confirm()"
     >
-      {{ "yes" | translate | async }}
+      {{ (isEdit ? "Next" : "Approve") | translate | async }}
     </button>
   </div>
 </div>

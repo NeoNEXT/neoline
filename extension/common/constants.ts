@@ -45,6 +45,7 @@ export interface RpcNetwork {
   id: number;
   // evm
   symbol?: string;
+  keep?: boolean;
 }
 
 export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
@@ -87,15 +88,18 @@ export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
   },
 ];
 
+export const NeoXTestNetChainId = 12227332;
+
 export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
   {
-    id: 12227330,
+    id: NeoXTestNetChainId,
     symbol: 'GAS',
-    chainId: 12227330,
+    chainId: NeoXTestNetChainId,
     name: 'Neo X TESTNET',
     network: NetworkType.EVM,
-    rpcUrl: 'https://neoxseed1.ngd.network',
-    explorer: 'https://xt2scan.ngd.network/',
+    rpcUrl: 'https://neoxt4seed1.ngd.network',
+    explorer: 'https://xt4scan.ngd.network',
+    keep: true,
   },
 ];
 

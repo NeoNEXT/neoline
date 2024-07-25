@@ -2,6 +2,7 @@ import { ChainType } from '@/app/popup/_lib';
 import { All_CHAIN_TOKENS } from '@/app/popup/_lib/evm';
 import { DEFAULT_NFT_LOGO } from '@/app/popup/_lib/setting';
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { ethers } from 'ethers';
 
 @Component({
   selector: 'token-logo',
@@ -47,8 +48,11 @@ export class TokenLogoComponent implements OnChanges {
       return;
     }
     if (this.chainType === 'NeoX') {
+      const checkSumAddress = this.assetId
+        ? ethers.getAddress(this.assetId)
+        : this.assetId;
       this.neoXTokenLogo =
-        All_CHAIN_TOKENS?.[this.neoXChainId]?.[this.assetId]?.logo;
+        All_CHAIN_TOKENS?.[this.neoXChainId]?.[checkSumAddress]?.logo;
     } else {
       const chain = this.chainType.toLowerCase();
       this.neoTokenLogo = `https://cdn.neoline.io/logo/${chain}/${this.assetId}.png`;

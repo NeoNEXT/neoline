@@ -36,6 +36,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   txParams: EvmTransactionParams;
   messageID: string;
   locationOrigin: string;
+  iconSrc = '';
   lang = 'en';
 
   loading = false;
@@ -49,6 +50,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   signAddressGasBalance: string;
   estimateGasError = false;
   insufficientFunds = false;
+  approveNewData: string;
 
   private accountSub: Unsubscribable;
   neoXWalletArr: EvmWalletJSON[];
@@ -75,9 +77,13 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.aRoute.queryParams.subscribe(({ messageID, origin }) => {
+    this.aRoute.queryParams.subscribe(({ messageID, origin, icon }) => {
       this.messageID = messageID;
       this.locationOrigin = origin;
+      this.iconSrc =
+        this.locationOrigin.indexOf('flamingo') >= 0
+          ? '/assets/images/flamingo.ico'
+          : icon;
       this.chrome
         .getStorage(STORAGE_NAME.InvokeArgsArray)
         .subscribe(async (invokeArgsArray) => {
@@ -104,6 +110,32 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   updateEvmFee($event) {
     this.neoXFeeInfo = $event;
     this.checkBalance();
+  }
+
+  async updateApproveAmount($event) {
+    console.log($event);
+
+    this.approveNewData = $event;
+    await this.getGasFee();
+
+    this.checkBalance();
+  }
+
+  getTxType(): 'sendEther' | 'sendToken' | 'contractInteraction' | 'approve' {
+    switch (this.methodName) {
+      case EvmTransactionType.simpleSend:
+        return 'sendEther';
+      case EvmTransactionType.tokenMethodTransfer:
+      case EvmTransactionType.tokenMethodTransferFrom:
+      case EvmTransactionType.tokenMethodSafeTransferFrom:
+        return 'sendToken';
+      case EvmTransactionType.contractInteraction:
+        return 'contractInteraction';
+      case EvmTransactionType.swapApproval:
+      case EvmTransactionType.tokenMethodApprove:
+      case EvmTransactionType.tokenMethodSetApprovalForAll:
+        return 'approve';
+    }
   }
 
   exit() {
@@ -159,10 +191,6 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
   async confirm() {
     this.loading = true;
-
-    this.encryptWallet = this.neoXWalletArr.find(
-      (item) => item.accounts[0].address === this.txParams.from
-    );
 
     if (this.encryptWallet.accounts[0].extra.ledgerSLIP44) {
       this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
@@ -228,13 +256,17 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       this.txParams
     );
     this.methodName = type;
-    console.log(type);
 
     const { from, value } = this.txParams;
     // send amount
     if (this.txParams.value) {
       this.amount = new BigNumber(value).shiftedBy(-18).toFixed();
     }
+
+    // from wallet
+    this.encryptWallet = this.neoXWalletArr.find(
+      (item) => item.accounts[0].address === this.txParams.from
+    );
 
     // from address SOURCE_ASSET balance
     const balance = await this.assetEVMState.getNeoXAddressAssetBalance(
@@ -268,7 +300,14 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
     let networkGasLimit: bigint;
     try {
-      networkGasLimit = await this.assetEVMState.estimateGas(this.txParams);
+      let data = this.txParams.data;
+      if (this.getTxType() === 'approve' && this.approveNewData) {
+        data = this.approveNewData;
+      }
+      networkGasLimit = await this.assetEVMState.estimateGas({
+        ...this.txParams,
+        data,
+      });
     } catch (error) {
       this.estimateGasError = true;
       networkGasLimit = BigInt(42750000);

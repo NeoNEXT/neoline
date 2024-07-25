@@ -321,6 +321,27 @@ export class AssetEVMState {
     return data;
   }
 
+  getApproveERC20Data({
+    assetAddress,
+    toAddress,
+    approveAmount,
+  }: {
+    assetAddress: string;
+    toAddress: string;
+    approveAmount: BigInt;
+  }) {
+    const contract = new ethers.Contract(
+      assetAddress,
+      abiERC20,
+      this.provider
+    );
+    const data = contract.interface.encodeFunctionData('approve', [
+      toAddress,
+      approveAmount,
+    ]);
+    return data;
+  }
+
   handleEthersError(error) {
     console.log(error);
     if (error.data) {

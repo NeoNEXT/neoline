@@ -5,7 +5,7 @@
   </div>
 </div>
 <confirm-send-ether
-  *ngIf="methodName === EvmTransactionType.simpleSend"
+  *ngIf="getTxType() === 'sendEther'"
   [lang]="lang"
   [txParams]="txParams"
   [locationOrigin]="locationOrigin"
@@ -21,11 +21,7 @@
 ></confirm-send-ether>
 
 <confirm-send-token
-  *ngIf="
-    methodName === EvmTransactionType.tokenMethodTransfer ||
-    methodName === EvmTransactionType.tokenMethodTransferFrom ||
-    methodName === EvmTransactionType.tokenMethodSafeTransferFrom
-  "
+  *ngIf="getTxType() === 'sendToken'"
   [lang]="lang"
   [txParams]="txParams"
   [locationOrigin]="locationOrigin"
@@ -41,7 +37,7 @@
 ></confirm-send-token>
 
 <confirm-contract-interaction
-  *ngIf="methodName === EvmTransactionType.contractInteraction"
+  *ngIf="getTxType() === 'contractInteraction'"
   [lang]="lang"
   [txParams]="txParams"
   [locationOrigin]="locationOrigin"
@@ -57,21 +53,20 @@
 ></confirm-contract-interaction>
 
 <confirm-approve
-  *ngIf="
-    methodName === EvmTransactionType.swapApproval ||
-    methodName === EvmTransactionType.tokenMethodApprove ||
-    methodName === EvmTransactionType.tokenMethodSetApprovalForAll
-  "
+  *ngIf="getTxType() === 'approve'"
   [lang]="lang"
   [txParams]="txParams"
   [locationOrigin]="locationOrigin"
+  [iconSrc]="iconSrc"
   [amount]="amount"
   [neoXFeeInfo]="neoXFeeInfo"
+  [encryptWallet]="encryptWallet"
   [signAddressGasBalance]="signAddressGasBalance"
   [estimateGasError]="estimateGasError"
   [insufficientFunds]="insufficientFunds"
   [neoXNetwork]="neoXNetwork"
   (closeEvent)="exit()"
   (updateFeeEvent)="updateEvmFee($event)"
+  (updateApproveAmountEvent)="updateApproveAmount($event)"
   (confirmEvent)="confirm()"
 ></confirm-approve>

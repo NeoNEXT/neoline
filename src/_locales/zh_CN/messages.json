@@ -29,9 +29,6 @@
   "about": {
     "message": "关于我们"
   },
-  "expandView": {
-    "message": "网页版"
-  },
   "close": {
     "message": "关闭"
   },
@@ -1354,5 +1351,20 @@
   },
   "Transferred": {
     "message": "已转入"
+  },
+  "SpendingCapRequestForYour": {
+    "message": "的支出上限请求"
+  },
+  "ViewDetails": {
+    "message": "查看详情"
+  },
+  "approveTip": {
+    "message": "第三方可能会支出您的全部代币余额，无需进一步通知或同意。请自定义较低的支出上限以保护自己。"
+  },
+  "approveCustomTip": {
+    "message": "仅需输入一个您觉得比较恰当的现在或将来第三方支出的数字。以后您可以随时提高支出上限。"
+  },
+  "useSiteSuggestion": {
+    "message": "使用网站建议"
   }
 }

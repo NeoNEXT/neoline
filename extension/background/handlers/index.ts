@@ -30,7 +30,7 @@ export async function ethereumRPCHandler(
   { method, params },
   messageID: number,
   sender: { origin: string },
-  hostInfo: { origin: string }
+  hostInfo: { origin: string; icon: string }
 ) {
   if (UNSUPPORTED_RPC_METHODS.has(method)) {
     return Promise.reject(ethErrors.rpc.methodNotSupported());
@@ -48,7 +48,7 @@ export async function ethereumRPCHandler(
       const newData = { ...localData, [messageID]: txParams };
       setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
       createWindow(
-        `evm-send-transaction?messageID=${messageID}&origin=${hostInfo.origin}`
+        `evm-send-transaction?messageID=${messageID}&origin=${hostInfo.origin}&icon=${hostInfo.icon}`
       );
     } catch (error) {
       return Promise.reject(error);
