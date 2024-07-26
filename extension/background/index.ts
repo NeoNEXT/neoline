@@ -283,7 +283,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           ID: request.ID,
         });
       } catch (error) {
-        console.log(error);
         windowCallback({
           data: [],
           ID: request.ID,
@@ -1390,7 +1389,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           );
         });
       } catch (error) {
-        console.log(error);
         windowCallback({
           data: [],
           ID: request.ID,
@@ -1538,7 +1536,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         id: 1,
       };
       httpPost(currN3Network.rpcUrl, data, (res) => {
-        console.log(res);
         const index = res?.result?.balance
           ? res?.result?.balance.findIndex((item) =>
               assetID.includes(item.assethash)

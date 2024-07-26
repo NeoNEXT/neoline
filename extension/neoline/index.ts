@@ -28,7 +28,6 @@ dapi.async = true;
 dapi.src = chrome.runtime.getURL('dapi.js');
 dapi.onload = () => {
   dapi.parentNode.removeChild(dapi);
-  console.log('NeoLine configured.');
   window.postMessage(
     {
       from: 'NeoLine',

@@ -25,6 +25,8 @@ section.container {
           margin-right: 12px;
         }
         .label {
+          font-size: 14px;
+          line-height: 16px;
           max-width: 200px;
           overflow: hidden;
           text-overflow: ellipsis;
@@ -70,6 +72,8 @@ section.container {
         }
         .label {
           max-width: 250px;
+          font-size: 14px;
+          line-height: 16px;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;

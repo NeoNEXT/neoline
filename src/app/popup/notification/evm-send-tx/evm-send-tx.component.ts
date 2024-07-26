@@ -89,6 +89,9 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         .subscribe(async (invokeArgsArray) => {
           this.invokeArgsArray = invokeArgsArray;
           this.txParams = this.invokeArgsArray[this.messageID];
+          if (!this.txParams) {
+            return;
+          }
           this.initData();
         });
     });
@@ -113,8 +116,6 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   }
 
   async updateApproveAmount($event: EvmTransactionParams) {
-    console.log($event);
-
     this.approveNewTxParams = $event;
     await this.getGasFee();
 
@@ -270,7 +271,8 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
     // from wallet
     this.encryptWallet = this.neoXWalletArr.find(
-      (item) => item.accounts[0].address === this.txParams.from
+      (item) =>
+        item.accounts[0].address === ethers.getAddress(this.txParams.from)
     );
 
     // from address SOURCE_ASSET balance

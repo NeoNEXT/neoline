@@ -16,7 +16,7 @@ import { Unsubscribable } from 'rxjs';
 })
 export class LedgerChainComponent implements OnDestroy {
   @Output() selectChain = new EventEmitter<ChainType>();
-  chain: ChainType = 'Neo2';
+  chain: ChainType = 'Neo3';
   settingStateSub: Unsubscribable;
 
   constructor(

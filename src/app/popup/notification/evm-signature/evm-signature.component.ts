@@ -63,7 +63,7 @@ export class PopupNoticeEvmSignComponent implements OnInit {
 
   public async signature() {
     const encryptedWallet = this.neoXWalletArr.find(
-      (item) => item.accounts[0].address === this.signAddress
+      (item) => item.accounts[0].address === ethers.getAddress(this.signAddress)
     );
     if (encryptedWallet) {
       const pwd = await this.chrome.getPassword();

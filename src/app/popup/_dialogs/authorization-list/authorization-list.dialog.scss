@@ -66,6 +66,8 @@
         .name {
           color: var(--title-color);
           max-width: 200px;
+          font-size: 14px;
+          line-height: 16px;
           overflow: hidden;
           text-overflow: ellipsis;
           white-space: nowrap;

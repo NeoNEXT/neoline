@@ -213,8 +213,6 @@ async function handleWatchAsset({
   }
   asset.decimals = decimalsNum;
 
-  console.log(asset);
-
   const { address, symbol, decimals, name, image } = asset;
   const newAsset = {
     asset_id: address,

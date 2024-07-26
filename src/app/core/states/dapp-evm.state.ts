@@ -110,7 +110,7 @@ export class DappEVMState {
               ? -1
               : 1;
           });
-          return fourByteResponse.results[0].text_signature;
+          return fourByteResponse.results[0]?.text_signature;
         })
       );
   }

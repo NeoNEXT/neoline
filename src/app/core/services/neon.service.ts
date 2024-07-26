@@ -252,7 +252,6 @@ export class NeonService {
     );
   }
   private async getRpcUrls(force = false) {
-    console.log('-----------getRpcUrls');
     if (this.hasGetFastRpc && !force) {
       return null;
     }

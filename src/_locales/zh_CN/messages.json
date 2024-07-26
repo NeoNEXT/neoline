@@ -1366,5 +1366,8 @@
   },
   "useSiteSuggestion": {
     "message": "使用网站建议"
+  },
+  "contractInteraction": {
+    "message": "合约交互"
   }
 }

@@ -183,7 +183,12 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           }
         });
 
-      this.calculateNeoN3Fee().subscribe(() => {});
+      this.calculateNeoN3Fee().subscribe(
+        () => {},
+        (error) => {
+          this.handleCreateNeo3TxError(error);
+        }
+      );
     }
     if (this.chainType === 'NeoX') {
       this.currentBridgeNetwork =
@@ -344,9 +349,14 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       if (this.systemFee) {
         getAllAmount();
       } else {
-        this.calculateNeoN3Fee().subscribe(() => {
-          getAllAmount();
-        });
+        this.calculateNeoN3Fee().subscribe(
+          () => {
+            getAllAmount();
+          },
+          (error) => {
+            this.handleCreateNeo3TxError(error);
+          }
+        );
       }
     } else {
       if (!this.neoXFeeInfo) {
@@ -407,20 +417,25 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
 
     this.loading = true;
     if (this.chainType === 'Neo3') {
-      this.calculateNeoN3Fee().subscribe(() => {
-        const tAmount = new BigNumber(this.bridgeAsset.balance)
-          .minus(this.bridgeAmount)
-          .minus(this.systemFee)
-          .minus(this.networkFee);
-        if (tAmount.comparedTo(0) < 0) {
-          this.globalService.snackBarTip(
-            `${this.notification.content.insufficientSystemFee} ${this.bridgeAmount}`
-          );
-        } else {
-          this.showConfirmPage = true;
+      this.calculateNeoN3Fee().subscribe(
+        () => {
+          const tAmount = new BigNumber(this.bridgeAsset.balance)
+            .minus(this.bridgeAmount)
+            .minus(this.systemFee)
+            .minus(this.networkFee);
+          if (tAmount.comparedTo(0) < 0) {
+            this.globalService.snackBarTip(
+              `${this.notification.content.insufficientSystemFee} ${this.bridgeAmount}`
+            );
+          } else {
+            this.showConfirmPage = true;
+          }
+          this.loading = false;
+        },
+        (error) => {
+          this.handleCreateNeo3TxError(error);
         }
-        this.loading = false;
-      });
+      );
     } else {
       await this.calculateNeoXFee();
       const tAmount = new BigNumber(this.bridgeAsset.balance)
@@ -434,6 +449,17 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         this.showConfirmPage = true;
       }
       this.loading = false;
+    }
+  }
+
+  private handleCreateNeo3TxError(error) {
+    this.loading = false;
+    if (error?.type === 'scriptError') {
+      this.globalService.snackBarTip('checkInput');
+    } else {
+      this.globalService.snackBarTip(
+        error?.error?.message || error?.error?.exception || 'rpcError'
+      );
     }
   }
 

@@ -7,8 +7,6 @@ import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { Unsubscribable, timer } from 'rxjs';
 
-type TabType = 'details' | 'data';
-
 @Component({
   selector: 'confirm-approve',
   templateUrl: './confirm-approve.component.html',
@@ -51,8 +49,6 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
     this.tokenData = this.dappEVMState.parseStandardTokenTransactionData(
       this.txParams.data
     );
-    console.log(this.tokenData);
-
     this.dappEVMState
       .getAssetDetails(
         this.txParams.to,
@@ -61,7 +57,6 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
         null
       )
       .then((res) => {
-        console.log(res);
         this.assetDetails = res;
         this.getInputTip(true);
         this.inputAmount = this.assetDetails.tokenAmount;

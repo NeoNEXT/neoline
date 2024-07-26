@@ -50,7 +50,6 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
         null
       )
       .then((res) => {
-        console.log(res);
         this.assetDetails = res;
       });
   }

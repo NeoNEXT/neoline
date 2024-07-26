@@ -27,7 +27,6 @@ setTimeout(() => {
   dapiEVM.src = chrome.runtime.getURL('dapiEVM.js');
   dapiEVM.onload = () => {
     dapiEVM.parentNode.removeChild(dapiEVM);
-    console.log('NeoLine EVM configured.');
     window.postMessage(
       {
         from: 'NeoLineEVM',

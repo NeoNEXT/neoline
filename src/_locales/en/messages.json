@@ -1366,5 +1366,8 @@
   },
   "useSiteSuggestion": {
     "message": "Use site suggestion"
+  },
+  "contractInteraction": {
+    "message": "CONTRACT INTERACTION"
   }
 }

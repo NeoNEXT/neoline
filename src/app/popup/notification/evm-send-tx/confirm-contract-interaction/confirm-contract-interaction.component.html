@@ -3,7 +3,12 @@
     <p class="origin">{{ locationOrigin }}</p>
     <div class="type">
       <span class="address">{{ txParams?.to | longStr : 5 }}</span
-      >: {{ contractMethodData?.name }}
+      >:
+      {{
+        contractMethodData
+          ? contractMethodData?.name
+          : ("contractInteraction" | translate | async)
+      }}
     </div>
     <div class="asset">
       <token-logo
@@ -79,7 +84,11 @@
   <div class="content data" *ngIf="tabType === 'data'">
     <p class="title">
       FUNCTION TYPE:
-      <span class="value">{{ contractMethodData?.fourByteSig }}</span>
+      <span class="value">{{
+        contractMethodData
+          ? contractMethodData?.fourByteSig
+          : ("contractInteraction" | translate | async)
+      }}</span>
     </p>
     <pre class="json-box serialize" *ngIf="contractMethodData?.params">{{
       contractMethodData?.params | json

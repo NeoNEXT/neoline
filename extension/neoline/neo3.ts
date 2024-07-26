@@ -26,7 +26,6 @@ setTimeout(() => {
   dapiN3.src = chrome.runtime.getURL('dapiN3.js');
   dapiN3.onload = () => {
     dapiN3.parentNode.removeChild(dapiN3);
-    console.log('NeoLineN3 configured.');
     window.postMessage(
       {
         from: 'NeoLineN3',
