@@ -18,8 +18,7 @@
       >{{ "nameIsRequired" | translate | async }}
     </mat-error>
     <mat-error *ngIf="addForm.get('name').errors?.pattern">
-      {{ "lengthLimit" | translate | async }}: {{ limit?.passwordLimitation[0]
-      }}-{{ limit?.passwordLimitation[1] }}
+      {{ "addressBookNameLengthTip" | translate | async }}
     </mat-error>
   </mat-form-field>
 
@@ -75,5 +74,5 @@
 }"
   (click)="confirm()"
 >
-  {{ 'yes' | translate | async}}
+  {{ 'save' | translate | async}}
 </button>

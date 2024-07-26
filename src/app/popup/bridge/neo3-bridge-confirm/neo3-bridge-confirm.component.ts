@@ -46,8 +46,6 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
   @Output() backAmount = new EventEmitter<{ hash: string; chain: ChainType }>();
 
   totalFee: string;
-  rate = { priorityFee: '', networkFee: '', systemFee: '', totalFee: '' };
-  rateCurrency: string;
 
   tabType: TabType = 'details';
   txSerialize: string;

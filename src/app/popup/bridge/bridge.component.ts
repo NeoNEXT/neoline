@@ -6,6 +6,7 @@ import {
   BridgeState,
   TransactionState,
   ChromeService,
+  SettingState,
 } from '@/app/core';
 import { Asset } from '@/models/models';
 import { Component, OnDestroy, OnInit } from '@angular/core';
@@ -23,9 +24,9 @@ import {
   DEFAULT_NEOX_RPC_NETWORK,
   ETH_SOURCE_ASSET_HASH,
   EvmWalletJSON,
-  NeoXTestNetChainId,
+  NeoXMainNetChainId,
 } from '../_lib/evm';
-import { Unsubscribable, map } from 'rxjs';
+import { Unsubscribable, map, timer } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { sc, wallet } from '@cityofzion/neon-core-neo3/lib';
@@ -65,9 +66,12 @@ const MIN_BRIDGE_AMOUNT = 1;
 export class PopupBridgeComponent implements OnInit, OnDestroy {
   showConfirmPage = false;
   keepDecimals = 8;
+  settingStateSub: Unsubscribable;
+  lang: string;
 
   bridgeAsset: Asset;
   bridgeAmount: string;
+  handleInputSub: Unsubscribable;
   fromChain: string;
   toChain: string;
   toAddress: string;
@@ -110,6 +114,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     public notification: NotificationService,
     private bridgeState: BridgeState,
     private transactionState: TransactionState,
+    private settingState: SettingState,
     private dialog: MatDialog,
     private chrome: ChromeService,
     private store: Store<AppState>
@@ -127,6 +132,9 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
+      this.lang = lang;
+    });
     this.chrome
       .getStorage(STORAGE_NAME.bridgeTransaction)
       .subscribe((tx: BridgeTransactionItem[]) => {
@@ -148,6 +156,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.accountSub?.unsubscribe();
     this.getSourceTxReceiptInterval?.unsubscribe();
     this.getTargetTxReceiptInterval?.unsubscribe();
+    this.settingStateSub?.unsubscribe();
   }
 
   private async initData() {
@@ -183,18 +192,13 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           }
         });
 
-      this.calculateNeoN3Fee().subscribe(
-        () => {},
-        (error) => {
-          this.handleCreateNeo3TxError(error);
-        }
-      );
+      this.calculateNeoN3Fee().subscribe(() => {});
     }
     if (this.chainType === 'NeoX') {
       this.currentBridgeNetwork =
-        this.neoXNetwork.chainId === NeoXTestNetChainId
-          ? BridgeNetwork.TestNet
-          : BridgeNetwork.MainNet;
+        this.neoXNetwork.chainId === NeoXMainNetChainId
+          ? BridgeNetwork.MainNet
+          : BridgeNetwork.TestNet;
       this.fromChain = 'Neo X';
       this.toChain = 'Neo N3';
       this.bridgeAsset = NeoXGasAsset;
@@ -213,21 +217,24 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   }
 
   getAssetRate() {
-    const value = new BigNumber(this.bridgeAmount);
-    if (!isNaN(Number(this.bridgeAmount)) && value.comparedTo(0) > 0) {
-      this.assetState
-        .getAssetRate(this.bridgeAsset.symbol, this.bridgeAsset.asset_id)
-        .then((rate) => {
-          if (rate) {
-            this.bridgeAsset.rateBalance =
-              value.times(rate || 0).toFixed(2) || '0';
-          } else {
-            this.bridgeAsset.rateBalance = undefined;
-          }
-        });
-    } else {
-      this.bridgeAsset.rateBalance = undefined;
-    }
+    this.handleInputSub?.unsubscribe();
+    this.handleInputSub = timer(500).subscribe(() => {
+      const value = new BigNumber(this.bridgeAmount);
+      if (!isNaN(Number(this.bridgeAmount)) && value.comparedTo(0) > 0) {
+        this.assetState
+          .getAssetRate(this.bridgeAsset.symbol, this.bridgeAsset.asset_id)
+          .then((rate) => {
+            if (rate) {
+              this.bridgeAsset.rateBalance =
+                value.times(rate || 0).toFixed(2) || '0';
+            } else {
+              this.bridgeAsset.rateBalance = undefined;
+            }
+          });
+      } else {
+        this.bridgeAsset.rateBalance = undefined;
+      }
+    });
   }
 
   getActualReceive() {
@@ -353,8 +360,8 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           () => {
             getAllAmount();
           },
-          (error) => {
-            this.handleCreateNeo3TxError(error);
+          () => {
+            this.bridgeAmount = this.bridgeAsset.balance;
           }
         );
       }
@@ -371,6 +378,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         this.globalService.snackBarTip('balanceLack');
       }
     }
+    this.getAssetRate();
   }
 
   toViewTx(isSourceTx = true) {
@@ -393,9 +401,15 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
 
   async confirm() {
     if (this.getActualReceive() === '-') {
-      let message = `Deposit amount shouldn't be less than ${this.minBridgeAmount} GAS`;
+      let message =
+        this.lang !== 'en'
+          ? `存入数额不能少于 ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`
+          : `Deposit amount shouldn't be less than ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`;
       if (this.chainType === 'NeoX') {
-        `Withdraw amount shouldn't be less than ${this.minBridgeAmount} GAS`;
+        message =
+          this.lang !== 'en'
+            ? `提取数额不能少于 ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`
+            : `Withdraw amount shouldn't be less than ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`;
       }
       this.globalService.snackBarTip(message);
       return;
@@ -466,22 +480,31 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   handleBack(event?: { hash: string; chain: ChainType }) {
     this.showConfirmPage = false;
     if (event) {
-      const isTestNet =
+      const isMainNet =
         event.chain === 'Neo3'
-          ? this.n3Network.chainId === 6
-          : this.neoXNetwork.chainId === NeoXTestNetChainId;
+          ? this.n3Network.chainId === 3
+          : this.neoXNetwork.chainId === NeoXMainNetChainId;
+      const targetChainType = event.chain === 'Neo3' ? 'NeoX' : 'Neo3';
+      let targetExplorer: string;
+      if (targetChainType === 'Neo3') {
+        targetExplorer = isMainNet
+          ? DEFAULT_N3_RPC_NETWORK[0].explorer
+          : DEFAULT_N3_RPC_NETWORK[1].explorer;
+      } else {
+        targetExplorer = isMainNet
+          ? DEFAULT_NEOX_RPC_NETWORK[0].explorer
+          : DEFAULT_NEOX_RPC_NETWORK[1].explorer;
+      }
       this.sessionTx = {
         txId: event.hash,
-        network: isTestNet ? BridgeNetwork.TestNet : BridgeNetwork.MainNet,
+        network: isMainNet ? BridgeNetwork.MainNet : BridgeNetwork.TestNet,
         sourceChainType: event.chain,
-        targetChainType: event.chain === 'Neo3' ? 'NeoX' : 'Neo3',
+        targetChainType,
         sourceExplorer:
           event.chain === 'Neo3'
             ? this.n3Network.explorer
             : this.neoXNetwork.explorer,
-        targetExplorer: isTestNet
-          ? DEFAULT_NEOX_RPC_NETWORK[0].explorer
-          : DEFAULT_N3_RPC_NETWORK[1].explorer,
+        targetExplorer,
         sourceRpcUrl:
           event.chain === 'Neo3'
             ? this.n3Network.rpcUrl

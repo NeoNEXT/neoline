@@ -174,7 +174,7 @@ export class PopupLoginComponent
       .subscribe((confirm) => {
         if (confirm) {
           this.store.dispatch({ type: RESET_ACCOUNT });
-          this.chrome.resetWallet();
+          this.chrome.clearStorage();
           this.router.navigateByUrl('/popup/wallet/new-guide');
         }
       });

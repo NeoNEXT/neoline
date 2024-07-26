@@ -115,4 +115,8 @@ export class ExtensionService {
       console.log('Set session storage', value);
     });
   }
+
+  clearSessionStorage() {
+    chrome.storage.session.clear();
+  }
 }

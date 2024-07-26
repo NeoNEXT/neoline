@@ -88,9 +88,20 @@ export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
   },
 ];
 
+export const NeoXMainNetChainId = 47763;
 export const NeoXTestNetChainId = 12227332;
 
 export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
+  {
+    id: NeoXMainNetChainId,
+    symbol: 'GAS',
+    chainId: NeoXMainNetChainId,
+    name: 'NeoX Mainnet NeoX',
+    network: NetworkType.EVM,
+    rpcUrl: 'https://mainnet-1.rpc.banelabs.org',
+    explorer: 'https://xexplorer.neo.org',
+    keep: true,
+  },
   {
     id: NeoXTestNetChainId,
     symbol: 'GAS',

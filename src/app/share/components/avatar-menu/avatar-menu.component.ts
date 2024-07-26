@@ -160,9 +160,9 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
 
   toHelpWebsite() {
     if (this.lang !== 'en') {
-      window.open('https://neoline.io/help/');
+      window.open('https://tutorial.neoline.io/v/cn');
     } else {
-      window.open('https://neoline.io/en/help/');
+      window.open('https://tutorial.neoline.io/');
     }
   }
 

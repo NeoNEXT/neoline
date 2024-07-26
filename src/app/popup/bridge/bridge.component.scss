@@ -28,6 +28,9 @@
     :host-context([data-theme-style="dark-theme"]) & {
       background: #303135;
     }
+    &.from .input-amount .rate {
+      height: 18px;
+    }
     &.to {
       position: relative;
       margin-top: 4px;

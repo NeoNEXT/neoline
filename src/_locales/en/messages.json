@@ -1098,7 +1098,10 @@
     "message": "Address is required"
   },
   "wrongAddress": {
-    "message": "Please enter a legal address"
+    "message": "Wrong address, please try again"
+  },
+  "addressBookNameLengthTip": {
+    "message": "Maximum 20 characters"
   },
   "addAddressExist": {
     "message": "Address already exists"
@@ -1369,5 +1372,8 @@
   },
   "contractInteraction": {
     "message": "CONTRACT INTERACTION"
+  },
+  "save": {
+    "message": "Save"
   }
 }

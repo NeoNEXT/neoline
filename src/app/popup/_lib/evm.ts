@@ -25,9 +25,20 @@ export interface EvmWalletJSON {
   ];
 }
 
+export const NeoXMainNetChainId = 47763;
 export const NeoXTestNetChainId = 12227332;
 
 export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
+  {
+    id: NeoXMainNetChainId,
+    symbol: 'GAS',
+    chainId: NeoXMainNetChainId,
+    name: 'NeoX Mainnet NeoX',
+    network: NetworkType.EVM,
+    rpcUrl: 'https://mainnet-1.rpc.banelabs.org',
+    explorer: 'https://xexplorer.neo.org',
+    keep: true,
+  },
   {
     id: NeoXTestNetChainId,
     symbol: 'GAS',
@@ -41,6 +52,7 @@ export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
 ];
 
 const CHAIN_IDS = {
+  NeoX: NeoXMainNetChainId,
   Ethereum: 1,
   Arbitrum: 42161,
   Avalanche: 43114,
@@ -62,6 +74,13 @@ const USDT_IMAGE_URL = '/assets/images/token/usdt.webp';
 const TOKEN_IMAGE_URL_PREFIX = '/assets/images/token/';
 
 export const All_CHAIN_TOKENS = {
+  [CHAIN_IDS.NeoX]: {
+    [ETH_SOURCE_ASSET_HASH]: {
+      symbol: 'GAS',
+      address: ETH_SOURCE_ASSET_HASH,
+      logo: TOKEN_IMAGE_URL_PREFIX + `gas.svg`,
+    },
+  },
   [CHAIN_IDS.Ethereum]: {
     [ETH_SOURCE_ASSET_HASH]: {
       symbol: 'ETH',

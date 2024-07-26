@@ -1098,7 +1098,10 @@
     "message": "地址必填"
   },
   "wrongAddress": {
-    "message": "请输入合法地址"
+    "message": "地址错误，请重新输入"
+  },
+  "addressBookNameLengthTip": {
+    "message": "名字不能超过20个字符"
   },
   "addAddressExist": {
     "message": "地址已存在"
@@ -1369,5 +1372,8 @@
   },
   "contractInteraction": {
     "message": "合约交互"
+  },
+  "save": {
+    "message": "Save"
   }
 }

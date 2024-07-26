@@ -229,12 +229,15 @@ export class ChromeService {
   public clearStorage() {
     if (!this.check) {
       localStorage.clear();
-    }
-    try {
-      this.crx.clearStorage();
-      this.crx.clearLocalStorage();
-    } catch (e) {
-      console.log('close wallet failed', e);
+      sessionStorage.clear();
+    } else {
+      try {
+        this.crx.clearStorage();
+        this.crx.clearLocalStorage();
+        this.crx.clearSessionStorage();
+      } catch (e) {
+        console.log('close wallet failed', e);
+      }
     }
   }
 

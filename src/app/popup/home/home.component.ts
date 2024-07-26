@@ -13,7 +13,10 @@ import { NEO, GAS, Asset } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupAddNetworkDialogComponent, PopupConfirmDialogComponent } from '../_dialogs';
+import {
+  PopupAddNetworkDialogComponent,
+  PopupConfirmDialogComponent,
+} from '../_dialogs';
 import { Router } from '@angular/router';
 import { rpc } from '@cityofzion/neon-core';
 import {
@@ -34,7 +37,11 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { TransferService } from '../transfer/transfer.service';
-import { EvmWalletJSON, NeoXTestNetChainId } from '../_lib/evm';
+import {
+  EvmWalletJSON,
+  NeoXMainNetChainId,
+  NeoXTestNetChainId,
+} from '../_lib/evm';
 @Component({
   templateUrl: 'home.component.html',
   styleUrls: ['home.component.scss'],
@@ -159,8 +166,11 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
 
   showBridge() {
     if (
-      (this.chainType === 'NeoX' && this.neoXNetwork.chainId === NeoXTestNetChainId) ||
-      (this.chainType === 'Neo3' && this.n3Network.chainId === 6)
+      (this.chainType === 'NeoX' &&
+        (this.neoXNetwork.chainId === NeoXTestNetChainId ||
+          this.neoXNetwork.chainId === NeoXMainNetChainId)) ||
+      (this.chainType === 'Neo3' &&
+        (this.n3Network.chainId === 3 || this.n3Network.chainId === 6))
     ) {
       return true;
     }

@@ -12,10 +12,10 @@ import { UtilServiceState } from '../util/util.service';
 export class BridgeState {
   readonly BridgeParams = {
     [BridgeNetwork.MainNet]: {
-      n3BridgeContract: '',
-      bridgeTxHostOnNeo3BridgeNeoX: '',
-      neoXBridgeContract: '',
-      bridgeTxHostOnNeoXBridgeNeo3: '',
+      n3BridgeContract: '0xbb19cfc864b73159277e1fd39694b3fd5fc613d2',
+      bridgeTxHostOnNeo3BridgeNeoX: 'https://bridgeapi.banelabs.org/deposits',
+      neoXBridgeContract: '0x1212000000000000000000000000000000000004',
+      bridgeTxHostOnNeoXBridgeNeo3: 'https://neofura.ngd.network/',
     },
     [BridgeNetwork.TestNet]: {
       n3BridgeContract: '0x2ba94444d43c9a084a5660982a9f95f43f07422e',

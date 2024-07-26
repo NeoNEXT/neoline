@@ -41,7 +41,7 @@ export class PopupAddAddressBookDialogComponent {
     this.addForm = this.fb.group({
       name: [
         this.data?.editAddress?.name || '',
-        [Validators.required, Validators.pattern(/^.{1,32}$/)],
+        [Validators.required, Validators.pattern(/^.{1,20}$/)],
       ],
       address: [
         this.data?.editAddress?.address || '',
