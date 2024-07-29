@@ -21,8 +21,8 @@ export class PopupAboutComponent implements OnInit, OnDestroy {
     },
     {
       name: 'companyWebsite',
-      enUrl: 'https://neoline.io/',
-      zhUrl: 'https://neoline.io/en',
+      enUrl: 'https://neoline.io/en',
+      zhUrl: 'https://neoline.io/',
     },
     {
       name: 'contactUs',

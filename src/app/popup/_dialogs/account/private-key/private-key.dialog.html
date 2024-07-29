@@ -9,7 +9,7 @@
   <img class="avatar" [avatar]="address" />
   <div class="account">
     <p class="title">{{ walletName }}</p>
-    <div class="address">{{ address }}</div>
+    <div class="address">{{ address | longStr : 17 }}</div>
   </div>
   <div class="content">
     <p class="title">

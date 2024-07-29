@@ -91,7 +91,7 @@ window.addEventListener('message', (e) => {
   }
 });
 
-Reflect.set(window, 'ethereum', provider);
+Reflect.set(window, 'NEOLineNeoX', provider);
 
 function announceProvider() {
   const info: EIP6963ProviderInfo = {

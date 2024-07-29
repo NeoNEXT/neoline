@@ -463,3 +463,32 @@ export class Init {
 }
 
 export const N3: any = new Init();
+
+if (window.dispatchEvent) {
+  getProvider()
+    .then((res) => {
+      window.dispatchEvent(
+        new CustomEvent(EVENT.READY, {
+          detail: res,
+        })
+      );
+    })
+    .catch((error) => {
+      window.dispatchEvent(
+        new CustomEvent(EVENT.READY, {
+          detail: error,
+        })
+      );
+    });
+}
+
+window.addEventListener('message', (e) => {
+  const response = e.data;
+  if (Object.values(EVENT).includes(response.return)) {
+    window.dispatchEvent(
+      new CustomEvent(response.return, {
+        detail: response.data,
+      })
+    );
+  }
+});

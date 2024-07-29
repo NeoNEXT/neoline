@@ -110,6 +110,7 @@ export class PopupEvmAddAssetComponent implements OnInit, OnDestroy {
       avatar,
       decimals,
       image_url,
+      watching: true,
     };
     const index = this.watch.findIndex((w) => w.asset_id === newAsset.asset_id);
     if (index >= 0) {
