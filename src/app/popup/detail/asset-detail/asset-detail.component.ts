@@ -3,7 +3,10 @@ import { AssetState, ChromeService, GlobalService } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NEO, GAS, Asset } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupAddNetworkDialogComponent, PopupConfirmDialogComponent } from '@popup/_dialogs';
+import {
+  PopupAddNetworkDialogComponent,
+  PopupConfirmDialogComponent,
+} from '@popup/_dialogs';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
 import {
@@ -76,13 +79,11 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
   initData() {
     this.aRouter.queryParams.subscribe((params) => {
       this.assetId = params.assetId;
-      this.balance = {
-        asset_id: params.assetId,
-        symbol: params.symbol,
-        decimals: params.decimals,
-      };
-      this.getAssetDetail();
-      this.getCanHide();
+      this.assetState.getAssetDetail(this.address, this.assetId).then((res) => {
+        this.balance = res;
+        this.getAssetDetail();
+        this.getCanHide();
+      });
     });
   }
 

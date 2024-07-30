@@ -48,14 +48,36 @@ export class TokenLogoComponent implements OnChanges {
       return;
     }
     if (this.chainType === 'NeoX') {
-      const checkSumAddress = this.assetId
-        ? ethers.getAddress(this.assetId)
-        : this.assetId;
-      this.neoXTokenLogo =
-        All_CHAIN_TOKENS?.[this.neoXChainId]?.[checkSumAddress]?.logo;
+      this.checkImgExists(this.imageUrl)
+        .then(() => {
+          this.neoXTokenLogo = this.imageUrl;
+        })
+        .catch(() => {
+          const checkSumAddress = this.assetId
+            ? ethers.getAddress(this.assetId)
+            : this.assetId;
+          this.neoXTokenLogo =
+            All_CHAIN_TOKENS?.[this.neoXChainId]?.[checkSumAddress]?.logo;
+        });
     } else {
       const chain = this.chainType.toLowerCase();
       this.neoTokenLogo = `https://cdn.neoline.io/logo/${chain}/${this.assetId}.png`;
     }
+  }
+
+  checkImgExists(url: string) {
+    return new Promise((resolve, reject) => {
+      if (!url) {
+        reject('');
+      }
+      let ImgObj = new Image();
+      ImgObj.src = url;
+      ImgObj.onload = (res) => {
+        resolve(res);
+      };
+      ImgObj.onerror = (err) => {
+        reject(err);
+      };
+    });
   }
 }

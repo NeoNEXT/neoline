@@ -13,8 +13,16 @@
       src="/assets/images/common/nav-arrow.svg"
     />
     <token-logo
+      *ngIf="data.isNFT"
+      customClass="big"
+      [isNFTToken]="true"
+      [imageUrl]="data.nftToken?.image_url"
+    ></token-logo>
+    <token-logo
+      *ngIf="!data.isNFT"
       customClass="big"
       [assetId]="dataJson?.asset"
+      [imageUrl]="data.isNFT ? data.nftToken.image_url : data.asset.image_url"
       [chainType]="data.chainType"
       [symbol]="dataJson?.symbol"
       [neoXChainId]="data.network?.id"
