@@ -11,37 +11,47 @@
 </div>
 <ul>
   <li>
-    <span class="label">TxID</span>
-    <span class="value break-all">{{ data.tx.txid }}</span>
+    <p class="label">TxID</p>
+    <p class="value txid">
+      {{ data.tx.txid | longStr: 16 }}
+      <copy [value]="data.tx.txid" placement="topRight">
+        <img theme src="assets/images/common/copy.svg" />
+      </copy>
+    </p>
   </li>
   <li>
-    <span class="label">{{ 'Contract' | translate | async }}</span>
-    <span class="value break-all">{{ data.tx.asset_id }}</span>
+    <p class="label">{{ 'Contract' | translate | async }}</p>
+    <p class="value">{{ data.tx.asset_id | longStr: 16 }}</p>
   </li>
   <li *ngIf="data.isNFT">
-    <span class="label">Token ID</span>
-    <span class="value break-all">{{ data.tx.tokenid }}</span>
+    <p class="label">Token ID</p>
+    <p class="value">{{ data.tx.tokenid }}</p>
   </li>
   <li>
-    <span class="label">{{ 'amount' | translate | async }}</span>
-    <span class="value break-all">{{ data.tx.value + ' ' + data?.symbol }}</span>
+    <p class="label">{{ 'amount' | translate | async }}</p>
+    <p class="value">{{ data.tx.value + ' ' + data?.symbol }}</p>
   </li>
   <li>
-    <span class="label">{{ 'time' | translate | async }}</span>
-    <span class="value"
-      >{{ data.tx.block_time * 1000 | date:'yyyy-MM-dd HH:mm:ss' }}</span
-    >
+    <p class="label">{{ 'time' | translate | async }}</p>
+    <p class="value">
+      {{ data.tx.block_time * 1000 | date:'yyyy-MM-dd HH:mm:ss' }}
+    </p>
   </li>
+  <li class="line"></li>
   <li>
-    <span class="label">{{ 'from' | translate | async }}</span>
-    <div class="value">
-      <p *ngFor="let item of data.tx.from">{{ item | longStr: 10 }}</p>
+    <p class="label">{{ 'from' | translate | async }}</p>
+    <div class="value address">
+      <p *ngFor="let item of data.tx.from">
+        <copy [value]="item" placement="top">{{ item | longStr: 16 }}</copy>
+      </p>
     </div>
   </li>
   <li>
-    <span class="label">{{ 'to' | translate | async }}</span>
-    <div class="value">
-      <p *ngFor="let item of data.tx.to">{{ item | longStr: 10 }}</p>
+    <p class="label">{{ 'to' | translate | async }}</p>
+    <div class="value address">
+      <p *ngFor="let item of data.tx.to">
+        <copy [value]="item" placement="top">{{ item | longStr: 16 }}</copy>
+      </p>
     </div>
   </li>
 </ul>
