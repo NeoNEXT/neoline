@@ -62,7 +62,7 @@ section.container {
     }
     padding: 16px 24px;
     li {
-      margin-top: 30px;
+      margin-top: 12px;
       &:first-child {
         margin-top: 0;
       }
@@ -70,30 +70,38 @@ section.container {
         display: flex;
         align-items: center;
         justify-content: space-between;
+        font-family: NeverMind;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 19px;
+        color: var(--second-color);
         &.tip {
           justify-content: flex-end;
-          color: var(--sub-title-color);
-          font-family: NeverMind-Regular;
           font-size: 12px;
-          margin-top: 6px;
+          font-weight: normal;
+          line-height: 14px;
+          color: var(--sub-title-color);
           &.column {
             justify-content: space-between;
           }
         }
         &.evm {
           .label.tip {
-            font-family: NeverMind-Regular;
             font-size: 12px;
-            margin-top: 6px;
+            font-weight: normal;
+            line-height: 14px;
           }
           .value {
             line-height: 1.5;
           }
         }
         img.edit {
-          margin-left: 12px;
+          margin-left: 8px;
         }
         .label {
+          font-size: 13px;
+          font-weight: normal;
+          line-height: 17px;
           color: var(--sub-title-color);
         }
       }

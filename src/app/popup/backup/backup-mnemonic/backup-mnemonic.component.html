@@ -34,31 +34,27 @@
   </ul>
 
   <div class="operate" *ngIf="!isConfirmMnemonic">
-    <p class="item" (click)="hideMnemonic = !hideMnemonic">
-      <img
-        theme
-        [src]="
-          hideMnemonic
-            ? 'assets/images/login/eye-view.svg'
-            : 'assets/images/login/eye-hide.svg'
-        "
-      />
-      {{
-        (hideMnemonic ? "showSecretRecoveryPhrase" : "hideSecretRecoveryPhrase")
+    <tooltip
+      [tip]="
+        (hideMnemonic ? 'showSecretRecoveryPhrase' : 'hideSecretRecoveryPhrase')
           | translate
           | async
-      }}
-    </p>
-    <copy [value]="mnemonic">
-      <p class="item">
-        <img src="assets/images/common/copy-mnemonic.svg" />
-        {{ "CopyToClipboard" | translate | async }}
-      </p>
+      "
+      placement="topRight"
+    >
+      <span
+        (click)="hideMnemonic = !hideMnemonic"
+        class="item eye"
+        [ngClass]="{ hidden: hideMnemonic }"
+      ></span>
+    </tooltip>
+    <copy [value]="mnemonic" placement="topRight">
+      <span class="item copy"></span>
     </copy>
   </div>
 
   <div class="confirm-tip" *ngIf="isConfirmMnemonic">
-    {{ 'confirmMnemonicTip' | translate | async }}
+    {{ "confirmMnemonicTip" | translate | async }}
   </div>
 
   <div class="btn-group">

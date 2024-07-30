@@ -618,13 +618,13 @@
     "message": "提醒：请妥善保管您的私钥，不要透露给任何人"
   },
   "backUpsafeTip": {
-    "message": "安全提醒"
+    "message": "你还未备份钱包"
   },
   "backUpTipLater": {
     "message": "稍后提醒"
   },
   "backUpSafeDesc": {
-    "message": "您的私钥还未备份，请务必备份私钥用于恢复该地址对应的所有资产，防止忘记密码、应用误删除、手机丢失等情况导致的资产损失。"
+    "message": "若发生设备丢失、应用重装或应用数据删除等情况，你将永久失去此钱包的控制权，且无法恢复其资产。"
   },
   "receiveOurNewsletter": {
     "message": "订阅电子报"

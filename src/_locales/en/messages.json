@@ -618,13 +618,13 @@
     "message": "Tip: Please keep your private key properly and do not disclose it to anyone"
   },
   "backUpsafeTip": {
-    "message": "Security warning"
+    "message": "You haven't backed up your wallet"
   },
   "backUpTipLater": {
     "message": "Later"
   },
   "backUpSafeDesc": {
-    "message": "Your private key has not been backed up yet. Please be sure to back up the private key to restore all assets corresponding to this address, to prevent the asset loss caused by forgetting password, application deletion, phone loss, etc."
+    "message": "If your device is lost, the app is reinstalled, or the app data is deleted, you'll lose access to this wallet and its assets, and can't get them back."
   },
   "receiveOurNewsletter": {
     "message": "Receive our newsletter"
@@ -660,22 +660,22 @@
     "message": "Select a chain"
   },
   "TOTAL": {
-    "message": "TOTAL"
+    "message": "Total"
   },
   "TRANSFER": {
     "message": "TRANSFER"
   },
   "PRIORITYFEE": {
-    "message": "PRIORITY FEE"
+    "message": "Priority fee"
   },
   "SYSTEMFEE": {
-    "message": "SYSTEM FEE"
+    "message": "System fee"
   },
   "NETWORKFEE": {
-    "message": "NETWORK FEE"
+    "message": "Network fee"
   },
   "GASFEE": {
-    "message": "GAS FEE"
+    "message": "Gas fee"
   },
   "None": {
     "message": "Only sign transactions, and do not allow any contract to use this signature."
@@ -1110,7 +1110,7 @@
     "message": "Show secret recovery phrase"
   },
   "hideSecretRecoveryPhrase": {
-    "message": "Show secret recovery phrase"
+    "message": "Hide secret recovery phrase"
   },
   "secretRecoveryPhrase": {
     "message": "Secret recovery phrase"

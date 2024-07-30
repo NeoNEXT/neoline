@@ -9,6 +9,15 @@ import { Component, Input } from '@angular/core';
 export class CopyComponent {
   @Input() value: string;
   @Input() showTip = true;
+  @Input() placement?:
+    | 'top'
+    | 'topLeft'
+    | 'topRight'
+    | 'bottom'
+    | 'bottomLeft'
+    | 'bottomRight'
+    | 'left'
+    | 'right' = 'bottom';
 
   isShowPopup = false;
   private showPopupTimeout: any;
