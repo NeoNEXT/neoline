@@ -16,10 +16,11 @@ import {
   UPDATE_NEOX_NETWORK_INDEX,
   UPDATE_NEOX_NETWORKS,
   AddNetworkChainTypeGroups,
+  STORAGE_NAME,
 } from '@/app/popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { ChromeService, NeonService } from '@/app/core';
+import { ChromeService, NeonService, GlobalService } from '@/app/core';
 import {
   PopupAddNetworkDialogComponent,
   PopupConfirmDialogComponent,
@@ -69,6 +70,7 @@ export class PopupNetworkComponent implements OnDestroy {
     private chromeSer: ChromeService,
     private dialog: MatDialog,
     private router: Router,
+    private global: GlobalService,
     private neon: NeonService
   ) {
     const account$ = this.store.select('account');
@@ -157,25 +159,19 @@ export class PopupNetworkComponent implements OnDestroy {
       (newChain === 'Neo3' && this.neo3WalletArr.length === 0) ||
       (newChain === 'NeoX' && this.neoXWalletArr.length === 0)
     ) {
-      this.dialog
-        .open(PopupConfirmDialogComponent, {
-          data:
-            newChain === 'NeoX'
-              ? 'createOrImportNeoXFirst'
-              : newChain === 'Neo3'
-              ? 'createOrImportNeo3First'
-              : 'createOrImportNeo2First',
-          panelClass: 'custom-dialog-panel',
-          backdropClass: 'custom-dialog-backdrop',
-        })
-        .afterClosed()
-        .subscribe((confirm) => {
-          if (confirm) {
+      if (newChain === 'NeoX') {
+        this.chromeSer.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {
+          if (res !== false) {
+            this.openConfirmCreateModal(newChain);
+          } else {
+            this.global.snackBarTip('switchOnePasswordFirst');
             this.close();
-            this.neon.selectChainType(newChain);
-            this.router.navigateByUrl('/popup/wallet/create');
+            this.router.navigateByUrl('/popup/one-password');
           }
         });
+      } else {
+        this.openConfirmCreateModal(newChain);
+      }
     } else {
       let switchChainWallet;
       switch (newChain) {
@@ -205,6 +201,28 @@ export class PopupNetworkComponent implements OnDestroy {
       }
       this.close();
     }
+  }
+
+  openConfirmCreateModal(newChain: ChainType) {
+    this.dialog
+      .open(PopupConfirmDialogComponent, {
+        data:
+          newChain === 'NeoX'
+            ? 'createOrImportNeoXFirst'
+            : newChain === 'Neo3'
+            ? 'createOrImportNeo3First'
+            : 'createOrImportNeo2First',
+        panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
+      })
+      .afterClosed()
+      .subscribe((confirm) => {
+        if (confirm) {
+          this.close();
+          this.neon.selectChainType(newChain);
+          this.router.navigateByUrl('/popup/wallet/create');
+        }
+      });
   }
 
   addNetwork() {

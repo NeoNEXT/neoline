@@ -727,7 +727,7 @@ export class NeonService {
     if (fromScript.length !== 40 || toScript.length !== 40) {
       throw new Error('target address error');
     }
-    if (balances.length === 0) {
+    if (!balances || balances?.length === 0) {
       throw new Error('no balance');
     }
     let assetId = balances[0].asset_id;

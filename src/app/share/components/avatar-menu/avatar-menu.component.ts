@@ -282,6 +282,8 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
                       this.toCreate(type);
                     } else {
                       this.global.snackBarTip('switchOnePasswordFirst');
+                      this.close();
+                      this.router.navigateByUrl('/popup/one-password');
                     }
                   });
               } else {

@@ -612,8 +612,9 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
       this.assetState
         .getNeo2Utxo(this.signAddress, assetid)
         .subscribe((balances: any) => {
-          if (balances.length === 0) {
+          if (!balances || balances?.length === 0) {
             reject('no balance');
+            return;
           }
           let assetId = balances[0].asset_id;
           if (assetId.startsWith('0x') && assetId.length === 66) {

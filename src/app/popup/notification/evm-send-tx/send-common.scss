@@ -39,9 +39,10 @@
         justify-content: center;
         width: 24px;
         height: 24px;
-        background: #fff;
+        background: var(--body-background-color);
         border-radius: 50%;
         margin-right: 12px;
+        color: var(--title-color);
       }
     }
   }

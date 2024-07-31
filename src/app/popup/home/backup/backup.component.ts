@@ -79,11 +79,11 @@ export class PopupHomeBackupComponent implements OnInit, OnDestroy, OnChanges {
     this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
       if (lang !== 'en') {
         window.open(
-          'https://tutorial.neoline.io/neoline-cha-jian-qian-bao-tong-yong-mi-ma-she-zhi'
+          'https://tutorial.neoline.io/v/cn/xin-shou-zhi-nan/neoline-cha-jian-qian-bao-tong-yong-mi-ma-she-zhi'
         );
       } else {
         window.open(
-          'https://tutorial.neoline.io/v/1/one-pass-setting-for-neoline-extension-wallet'
+          'https://tutorial.neoline.io/getting-started/one-pass-setting-for-neoline-extension-wallet'
         );
       }
     });

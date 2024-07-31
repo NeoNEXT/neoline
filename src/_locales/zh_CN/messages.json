@@ -257,11 +257,14 @@
   "thAuthTip": {
     "message": "想要连接你的钱包"
   },
-  "thAuthDetail": {
-    "message": "这个站点正在请求访问 Neo API，以便它可以与 Neo 区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
+  "thAuthNeo2Detail": {
+    "message": "这个站点正在请求访问 Neo Legacy API，以便它可以与 Neo Legacy 区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
   },
-  "thAuthMore": {
-    "message": "查看更多"
+  "thAuthNeo3Detail": {
+    "message": "这个站点正在请求访问 Neo N3 API，以便它可以与 Neo N3 区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
+  },
+  "thAuthNeoXDetail": {
+    "message": "这个站点正在请求访问 Neo X (EVM Network) API，以便它可以与 Neo X (EVM Network)区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
   },
   "thSignTitle": {
     "message": "这个应用正在请求你的签名。"
@@ -503,9 +506,6 @@
   "connectChooseAllow": {
     "message": "下次通过此站点转账时不再提醒"
   },
-  "connectChooseNotAllow": {
-    "message": "不再允许此站点向我发出转账申请"
-  },
   "darkMode": {
     "message": "暗夜模式"
   },
@@ -675,7 +675,7 @@
     "message": "网络费用"
   },
   "GASFEE": {
-    "message": "GAS"
+    "message": "GAS 费"
   },
   "None": {
     "message": "只对交易签名，不允许任何合约使用该签名。"
@@ -1374,6 +1374,9 @@
     "message": "合约交互"
   },
   "save": {
-    "message": "Save"
+    "message": "保存"
+  },
+  "Loading": {
+    "message": "加载中"
   }
 }

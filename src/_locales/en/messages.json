@@ -257,11 +257,14 @@
   "thAuthTip": {
     "message": "would like to connect to your wallet"
   },
-  "thAuthDetail": {
-    "message": "This site is trying to request access to the Neo API so that it can interact with the Neo blockchain. Before approving your visit, be sure to double check that you are linking to the correct site."
+  "thAuthNeo2Detail": {
+    "message": "This site is trying to request access to the Neo Legacy API so that it can interact with the Neo Legacy blockchain. Before approving your visit, be sure to double check that you are linking to the correct site."
   },
-  "thAuthMore": {
-    "message": "Look more"
+  "thAuthNeo3Detail": {
+    "message": "This site is trying to request access to the Neo N3 API so that it can interact with the Neo N3 blockchain. Before approving your visit, be sure to double check that you are linking to the correct site."
+  },
+  "thAuthNeoXDetail": {
+    "message": "This site is trying to request access to the Neo X (EVM Network) API so that it can interact with the Neo X (EVM Network) blockchain. Before approving your visit, be sure to double check that you are linking to the correct site."
   },
   "thSignTitle": {
     "message": "This app is requesting your signature."
@@ -502,9 +505,6 @@
   },
   "connectChooseAllow": {
     "message": "Allow and no longer remind"
-  },
-  "connectChooseNotAllow": {
-    "message": "No longer allowed"
   },
   "darkMode": {
     "message": "Dark mode"
@@ -1375,5 +1375,8 @@
   },
   "save": {
     "message": "Save"
+  },
+  "Loading": {
+    "message": "Loading"
   }
 }

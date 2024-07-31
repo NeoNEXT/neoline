@@ -114,9 +114,8 @@
       </p>
       <p class="row tip column">
         <span class="label"
-          >{{ "amount" | translate | async }}+{{
-            "GASFEE" | translate | async
-          }}</span
+          >{{ "amount" | translate | async }} +
+          {{ "GASFEE" | translate | async }}</span
         >
         <span class="value"
           >{{ rate.total | numberFixed : 2 }} {{ rateCurrency }}</span
@@ -145,9 +144,8 @@
         <div class="label">
           <p>{{ "TOTAL" | translate | async }}</p>
           <p class="label tip">
-            {{ "amount" | translate | async }}+{{
-              "GASFEE" | translate | async
-            }}
+            {{ "amount" | translate | async }} +
+            {{ "GASFEE" | translate | async }}
           </p>
         </div>
         <p class="value" *ngIf="dataJson.asset !== ETH_SOURCE_ASSET_HASH">

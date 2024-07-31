@@ -1,5 +1,4 @@
 <section class="content">
-  <!-- <p class="title">{{ 'thAuthTitle' | translate | async}}</p> -->
   <div class="avatar">
     <div class="dashed-hori-line"></div>
     <div class="dashed-vert-line"></div>
@@ -23,8 +22,18 @@
     <span class="dot"></span>
   </div>
   <p class="detail-en">{{ title }} {{ "thAuthTip" | translate | async }}</p>
-  <p class="detail-cn">{{ "thAuthDetail" | translate | async }}</p>
-  <!-- <a class="more" href="">{{ 'thAuthMore' | translate | async}}></a> -->
+  <p class="detail-cn">
+    {{
+      (chainType === "Neo2"
+        ? "thAuthNeo2Detail"
+        : chainType === "Neo3"
+        ? "thAuthNeo3Detail"
+        : "thAuthNeoXDetail"
+      )
+        | translate
+        | async
+    }}
+  </p>
   <div class="choose-auth-rule">
     <span
       class="select-radio"
@@ -33,14 +42,7 @@
     ></span>
     <div class="rule-select">
       <span class="rule-value">
-        {{
-          (ruleSelected === "true"
-            ? "connectChooseAllow"
-            : "connectChooseNotAllow"
-          )
-            | translate
-            | async
-        }}
+        {{ "connectChooseAllow" | translate | async }}
       </span>
     </div>
   </div>
