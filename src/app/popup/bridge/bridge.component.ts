@@ -43,6 +43,7 @@ import {
   PopupBridgeProgressDialogComponent,
   PopupSelectAddressDialogComponent,
 } from '../_dialogs';
+import { ethers } from 'ethers';
 
 const NeoN3GasAsset: Asset = {
   asset_id: GAS3_CONTRACT,
@@ -260,6 +261,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       toScriptHash: wallet.getScriptHashFromAddress(
         this.toAddress ?? DEFAULT_NEO3_ADDRESS
       ),
+      maxFee: ethers.parseUnits(this.bridgeFee, this.bridgeAsset.decimals),
     });
 
     let networkGasLimit: bigint;

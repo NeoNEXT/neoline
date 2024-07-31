@@ -19,7 +19,8 @@ export class BridgeState {
     },
     [BridgeNetwork.TestNet]: {
       n3BridgeContract: '0x2ba94444d43c9a084a5660982a9f95f43f07422e',
-      bridgeTxHostOnNeo3BridgeNeoX: 'https://bridgeapi.banelabs.org/deposits',
+      bridgeTxHostOnNeo3BridgeNeoX:
+        'https://test.bridgeapi.banelabs.org/deposits',
       neoXBridgeContract: '0x1212000000000000000000000000000000000004',
       bridgeTxHostOnNeoXBridgeNeo3: 'https://testmagnet.ngd.network/',
     },
@@ -79,9 +80,11 @@ export class BridgeState {
   getWithdrawData({
     asset,
     toScriptHash,
+    maxFee,
   }: {
     asset: Asset;
     toScriptHash: string;
+    maxFee: bigint;
   }) {
     const contract = new ethers.Contract(
       asset.asset_id,
@@ -90,6 +93,7 @@ export class BridgeState {
     );
     const data = contract.interface.encodeFunctionData('withdrawGas', [
       toScriptHash,
+      maxFee,
     ]);
     return data;
   }
