@@ -26,6 +26,8 @@ import {
   ChainType,
   RpcNetwork,
   STORAGE_NAME,
+  N3MainnetNetwork,
+  N3TestnetNetwork,
 } from '../_lib';
 import BigNumber from 'bignumber.js';
 import { Neo3TransferService } from '../transfer/neo3-transfer.service';
@@ -39,8 +41,8 @@ import { Unsubscribable } from 'rxjs';
 import { TransferService } from '../transfer/transfer.service';
 import {
   EvmWalletJSON,
-  NeoXMainNetChainId,
-  NeoXTestNetChainId,
+  NeoXMainnetNetwork,
+  NeoXTestnetNetwork,
 } from '../_lib/evm';
 @Component({
   templateUrl: 'home.component.html',
@@ -167,10 +169,11 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   showBridge() {
     if (
       (this.chainType === 'NeoX' &&
-        (this.neoXNetwork.chainId === NeoXTestNetChainId ||
-          this.neoXNetwork.chainId === NeoXMainNetChainId)) ||
+        (this.neoXNetwork.chainId === NeoXMainnetNetwork.chainId ||
+          this.neoXNetwork.chainId === NeoXTestnetNetwork.chainId)) ||
       (this.chainType === 'Neo3' &&
-        (this.n3Network.chainId === 3 || this.n3Network.chainId === 6))
+        (this.n3Network.chainId === N3MainnetNetwork.chainId ||
+          this.n3Network.chainId === N3TestnetNetwork.chainId))
     ) {
       return true;
     }

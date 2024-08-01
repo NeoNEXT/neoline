@@ -37,7 +37,12 @@ ul {
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
-        text-decoration: underline;
+        .link {
+          cursor: pointer;
+          &:hover {
+            text-decoration: underline;
+          }
+        }
         copy {
           cursor: pointer;
         }

@@ -59,7 +59,10 @@
     <hr />
   </div>
   <div class="loading" *ngIf="loading">{{ "loading" | translate | async }}</div>
-  <p *ngIf="!loading" class="no-data">
+  <p *ngIf="!loading && chainType !== 'NeoX'" class="no-data">
     {{ "oneMonthTxs" | translate | async }}
+  </p>
+  <p *ngIf="!loading && chainType === 'NeoX' && !txData?.length" class="no-data">
+    {{ "youHaveNoTransactions" | translate | async }}
   </p>
 </div>

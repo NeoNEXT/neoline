@@ -8,7 +8,7 @@ import {
 import { NftTransaction } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupTxDetailDialogComponent } from '@/app/popup/_dialogs';
-import { ChainType, STORAGE_NAME } from '../../../../popup/_lib';
+import { ChainType, RpcNetwork, STORAGE_NAME } from '../../../../popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { forkJoin, Unsubscribable, interval } from 'rxjs';
@@ -30,9 +30,11 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
   private localAllTxs = {};
 
   private accountSub: Unsubscribable;
+  public network: RpcNetwork;
+  public networkIndex: number;
   public networkId: number;
   public address: string;
-  private chainType: ChainType;
+  chainType: ChainType;
   constructor(
     private dialog: MatDialog,
     private nftState: NftState,
@@ -48,10 +50,14 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
       this.address = state.currentWallet?.accounts[0]?.address;
       this.chainType = state.currentChainType;
       if (this.chainType === 'Neo3') {
-        this.networkId = state.n3Networks[state.n3NetworkIndex].id;
+        this.networkIndex = state.n3NetworkIndex;
+        this.network = state.n3Networks[state.n3NetworkIndex];
+        this.networkId = this.network.id;
         this.getAllTxs();
       } else {
-        this.networkId = state.neoXNetworks[state.neoXNetworkIndex].id;
+        this.networkIndex = state.neoXNetworkIndex;
+        this.network = state.neoXNetworks[state.neoXNetworkIndex];
+        this.networkId = this.network.id;
         this.getEvmAllTxs();
       }
     });
@@ -167,7 +173,14 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
     this.dialog.open(PopupTxDetailDialogComponent, {
       panelClass: 'custom-dialog-panel',
       backdropClass: 'custom-dialog-backdrop',
-      data: { tx, symbol: this.symbol, isNFT: true },
+      data: {
+        tx,
+        symbol: this.symbol,
+        isNFT: true,
+        chainType: this.chainType,
+        network: this.network,
+        networkIndex: this.networkIndex,
+      },
     });
   }
 }

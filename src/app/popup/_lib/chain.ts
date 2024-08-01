@@ -37,9 +37,9 @@ export enum NetworkType {
 }
 
 export const CHAINID_OF_NETWORKTYPE = {
-  0: 'N3 PRIVATE NETWORK',
-  1: 'N2 MAINNET',
-  2: 'N2 TESTNET',
-  3: 'N3 MAINNET',
-  6: 'N3 TESTNET',
+  0: 'N3 private network',
+  1: 'N2 Mainnet',
+  2: 'N2 Testnet',
+  3: 'N3 Mainnet',
+  6: 'N3 Testnet',
 };

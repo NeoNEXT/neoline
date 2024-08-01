@@ -4,7 +4,7 @@ import { Transaction } from '@/models/models';
 import { forkJoin, Unsubscribable, interval } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupTxDetailDialogComponent } from '@/app/popup/_dialogs';
-import { STORAGE_NAME, ChainType } from '@/app/popup/_lib';
+import { STORAGE_NAME, ChainType, RpcNetwork } from '@/app/popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 
@@ -25,8 +25,10 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
   private localAllTxs = {};
 
   private accountSub: Unsubscribable;
-  private chainType: ChainType;
+  chainType: ChainType;
   private address: string;
+  private network: RpcNetwork;
+  networkIndex: number;
   private networkId: number;
   constructor(
     private chrome: ChromeService,
@@ -40,13 +42,21 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.address = state.currentWallet?.accounts[0]?.address;
-      const network =
-        this.chainType === 'Neo2'
-          ? state.n2Networks[state.n2NetworkIndex]
-          : this.chainType === 'Neo3'
-          ? state.n3Networks[state.n3NetworkIndex]
-          : state.neoXNetworks[state.neoXNetworkIndex];
-      this.networkId = network.id;
+      switch (this.chainType) {
+        case 'Neo2':
+          this.network = state.n2Networks[state.n2NetworkIndex];
+          this.networkIndex = state.n2NetworkIndex;
+          break;
+        case 'Neo3':
+          this.network = state.n3Networks[state.n3NetworkIndex];
+          this.networkIndex = state.n3NetworkIndex;
+          break;
+        case 'NeoX':
+          this.network = state.neoXNetworks[state.neoXNetworkIndex];
+          this.networkIndex = state.neoXNetworkIndex;
+          break;
+      }
+      this.networkId = this.network.id;
       if (this.chainType === 'NeoX') {
         this.getEvmAllTxs();
       } else {
@@ -169,7 +179,14 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
     this.dialog.open(PopupTxDetailDialogComponent, {
       panelClass: 'custom-dialog-panel',
       backdropClass: 'custom-dialog-backdrop',
-      data: { tx, symbol, isNFT: false },
+      data: {
+        tx,
+        symbol,
+        isNFT: false,
+        chainType: this.chainType,
+        networkIndex: this.networkIndex,
+        network: this.network,
+      },
     });
   }
 }

@@ -6,7 +6,11 @@ import { ChromeService } from './chrome.service';
 import { NeonService } from './neon.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { ChainType, RpcNetwork } from '@/app/popup/_lib';
+import {
+  N2MainnetNetwork,
+  N3MainnetNetwork,
+  RpcNetwork,
+} from '@/app/popup/_lib';
 
 @Injectable()
 export class HttpService {
@@ -29,7 +33,10 @@ export class HttpService {
 
   public get(url: string): Observable<any> {
     let networkStr = 'testnet';
-    if (this.network.chainId === 1 || this.network.chainId === 3) {
+    if (
+      this.network.chainId === N2MainnetNetwork.chainId ||
+      this.network.chainId === N3MainnetNetwork.chainId
+    ) {
       networkStr = 'mainnet';
     }
     if (this.chrome.check) {

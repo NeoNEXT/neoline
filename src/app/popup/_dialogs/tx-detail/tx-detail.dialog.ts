@@ -1,7 +1,9 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TransactionState } from '@/app/core';
 import { NEO, GAS } from '@/models/models';
+import { ChainType, RpcNetwork } from '../../_lib';
+import { PopupAddNetworkDialogComponent } from '../add-network/add-network.dialog';
 
 @Component({
   templateUrl: 'tx-detail.dialog.html',
@@ -9,12 +11,16 @@ import { NEO, GAS } from '@/models/models';
 })
 export class PopupTxDetailDialogComponent implements OnInit {
   constructor(
+    private dialog: MatDialog,
     private txState: TransactionState,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       tx: any;
       symbol: string;
       isNFT: boolean;
+      chainType: ChainType;
+      network: RpcNetwork;
+      networkIndex: number;
     }
   ) {}
 
@@ -26,6 +32,35 @@ export class PopupTxDetailDialogComponent implements OnInit {
           this.data.tx.to = res.vout;
         });
       }
+    }
+  }
+
+  toWeb() {
+    const explorer = this.data.network.explorer;
+    switch (this.data.chainType) {
+      case 'Neo2':
+      case 'Neo3':
+        if (explorer) {
+          window.open(`${explorer}transaction/${this.data.tx.txid}`);
+        }
+        break;
+      case 'NeoX':
+        if (explorer) {
+          window.open(`${explorer}/tx/${this.data.tx.txid}`);
+        }
+        break;
+    }
+    if (!explorer && this.data.chainType !== 'Neo2') {
+      this.dialog.open(PopupAddNetworkDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
+        data: {
+          addChainType: this.data.chainType,
+          index: this.data.networkIndex,
+          editNetwork: this.data.network,
+          addExplorer: true,
+        },
+      });
     }
   }
 }

@@ -31,6 +31,11 @@ import {
   UPDATE_NEO3_WALLETS_ADDRESS,
   REMOVE_NEOX_WALLET,
   RESET_ACCOUNT,
+  N3T4NetworkChainId,
+  N3MainnetNetwork,
+  N3TestnetNetwork,
+  N2MainnetNetwork,
+  N2testnetNetwork,
 } from '@popup/_lib';
 import { str2hexstring } from '@cityofzion/neon-core-neo3/lib/u';
 import { HttpClient } from '@angular/common/http';
@@ -191,8 +196,8 @@ export class NeonService {
         });
         //#region networks
         if (!Neo3RemoveT4FlagRes) {
-          if (n3NetworksRes[1].chainId === 4) {
-            n3NetworksRes[2].name = 'N3 TESTNET';
+          if (n3NetworksRes[1].chainId === N3T4NetworkChainId) {
+            n3NetworksRes[2].name = 'N3 Testnet';
             n3NetworksRes.splice(1, 1);
             n3NetworkIndexRes = 0;
             this.store.dispatch({ type: UPDATE_NEO3_NETWORK_INDEX, data: 0 });
@@ -205,6 +210,29 @@ export class NeonService {
           this.getFastRpcUrl(true);
         } else {
           this.getFastRpcUrl();
+        }
+        //#endregion
+
+        //#region update network name
+        if (n3NetworksRes[0].name === 'N3 MAINNET') {
+          n3NetworksRes[0].name = N3MainnetNetwork.name;
+          if (n3NetworksRes[1].name === 'N3 TESTNET') {
+            n3NetworksRes[1].name = N3TestnetNetwork.name;
+          }
+          if (n2NetworksRes[0].name === 'N2 MAINNET') {
+            n2NetworksRes[0].name = N2MainnetNetwork.name;
+          }
+          if (n2NetworksRes[1].name === 'N2 TESTNET') {
+            n2NetworksRes[1].name = N2testnetNetwork.name;
+          }
+          this.store.dispatch({
+            type: UPDATE_NEO3_NETWORKS,
+            data: n3NetworksRes,
+          });
+          this.store.dispatch({
+            type: UPDATE_NEO2_NETWORKS,
+            data: n2NetworksRes,
+          });
         }
         //#endregion
         if (

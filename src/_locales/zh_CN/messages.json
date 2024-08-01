@@ -675,7 +675,7 @@
     "message": "网络费用"
   },
   "GASFEE": {
-    "message": "GAS 费"
+    "message": "GAS fee"
   },
   "None": {
     "message": "只对交易签名，不允许任何合约使用该签名。"
@@ -1218,7 +1218,7 @@
     "message": "接受地址"
   },
   "bridgeFee": {
-    "message": "Bridge 费"
+    "message": "Bridge fee"
   },
   "bridgeFeeDesc": {
     "message": "Bridge 合约收取 0.1 GAS，平台不收取任何其他费用。"
@@ -1378,5 +1378,8 @@
   },
   "Loading": {
     "message": "加载中"
+  },
+  "youHaveNoTransactions": {
+    "message": "您没有任何交易"
   }
 }

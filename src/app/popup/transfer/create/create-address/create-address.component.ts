@@ -1,5 +1,10 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { ChainType, RpcNetwork } from '@/app/popup/_lib';
+import {
+  ChainType,
+  N3MainnetNetwork,
+  N3TestnetNetwork,
+  RpcNetwork,
+} from '@/app/popup/_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { GlobalService, UtilServiceState } from '@/app/core';
@@ -49,8 +54,8 @@ export class TransferCreateAddressComponent {
         if (wallet3.isAddress(address, 53)) {
           this.findAddress(address);
         } else if (
-          this.currentNetwork.chainId === 6 ||
-          this.currentNetwork.chainId === 3
+          this.currentNetwork.chainId === N3TestnetNetwork.chainId ||
+          this.currentNetwork.chainId === N3MainnetNetwork.chainId
         ) {
           this.getNnsAddressReq?.unsubscribe();
           this.getNnsAddressReq = this.util
@@ -81,7 +86,10 @@ export class TransferCreateAddressComponent {
     if (this.chainType === 'Neo2') {
       return 'inputNeo2AddressTip';
     } else if (this.chainType === 'Neo3') {
-      if (this.currentNetwork.id === 6 || this.currentNetwork.id === 3) {
+      if (
+        this.currentNetwork.id === N3TestnetNetwork.chainId ||
+        this.currentNetwork.id === N3MainnetNetwork.chainId
+      ) {
         return 'inputN3NNSAddressTip';
       }
       return 'inputN3AddressTip';

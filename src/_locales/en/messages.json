@@ -1378,5 +1378,8 @@
   },
   "Loading": {
     "message": "Loading"
+  },
+  "youHaveNoTransactions": {
+    "message": "You have no transactions"
   }
 }

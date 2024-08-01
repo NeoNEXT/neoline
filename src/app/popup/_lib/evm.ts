@@ -25,34 +25,33 @@ export interface EvmWalletJSON {
   ];
 }
 
-export const NeoXMainNetChainId = 47763;
-export const NeoXTestNetChainId = 12227332;
-
+export const NeoXMainnetNetwork: RpcNetwork = {
+  id: 47763,
+  symbol: 'GAS',
+  chainId: 47763,
+  name: 'Neo X Mainnet',
+  network: NetworkType.EVM,
+  rpcUrl: 'https://mainnet-1.rpc.banelabs.org',
+  explorer: 'https://xexplorer.neo.org',
+  keep: true,
+};
+export const NeoXTestnetNetwork: RpcNetwork = {
+  id: 12227332,
+  symbol: 'GAS',
+  chainId: 12227332,
+  name: 'Neo X Testnet',
+  network: NetworkType.EVM,
+  rpcUrl: 'https://neoxt4seed1.ngd.network',
+  explorer: 'https://xt4scan.ngd.network',
+  keep: true,
+};
 export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
-  {
-    id: NeoXMainNetChainId,
-    symbol: 'GAS',
-    chainId: NeoXMainNetChainId,
-    name: 'Neo X Mainnet',
-    network: NetworkType.EVM,
-    rpcUrl: 'https://mainnet-1.rpc.banelabs.org',
-    explorer: 'https://xexplorer.neo.org',
-    keep: true,
-  },
-  {
-    id: NeoXTestNetChainId,
-    symbol: 'GAS',
-    chainId: NeoXTestNetChainId,
-    name: 'Neo X Testnet',
-    network: NetworkType.EVM,
-    rpcUrl: 'https://neoxt4seed1.ngd.network',
-    explorer: 'https://xt4scan.ngd.network',
-    keep: true,
-  },
+  NeoXMainnetNetwork,
+  NeoXTestnetNetwork,
 ];
 
 const CHAIN_IDS = {
-  NeoX: NeoXMainNetChainId,
+  NeoX: NeoXMainnetNetwork.chainId,
   Ethereum: 1,
   Arbitrum: 42161,
   Avalanche: 43114,

@@ -13,7 +13,7 @@
   <li>
     <p class="label">TxID</p>
     <p class="value txid">
-      {{ data.tx.txid | longStr: 16 }}
+      <span (click)="toWeb()" class="link">{{ data.tx.txid | longStr: 16 }}</span>
       <copy [value]="data.tx.txid" placement="topRight">
         <img theme src="assets/images/common/copy.svg" />
       </copy>

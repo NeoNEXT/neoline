@@ -14,17 +14,18 @@ import {
   BridgeNetwork,
   BridgeTransactionItem,
   ChainType,
-  DEFAULT_N3_RPC_NETWORK,
   EvmTransactionParams,
   GAS3_CONTRACT,
+  N3MainnetNetwork,
+  N3TestnetNetwork,
   RpcNetwork,
   STORAGE_NAME,
 } from '../_lib';
 import {
-  DEFAULT_NEOX_RPC_NETWORK,
   ETH_SOURCE_ASSET_HASH,
   EvmWalletJSON,
-  NeoXMainNetChainId,
+  NeoXMainnetNetwork,
+  NeoXTestnetNetwork,
 } from '../_lib/evm';
 import { Unsubscribable, map, timer } from 'rxjs';
 import { Store } from '@ngrx/store';
@@ -163,7 +164,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   private async initData() {
     if (this.chainType === 'Neo3') {
       this.currentBridgeNetwork =
-        this.n3Network.chainId === 3
+        this.n3Network.chainId === N3MainnetNetwork.chainId
           ? BridgeNetwork.MainNet
           : BridgeNetwork.TestNet;
       this.fromChain = 'Neo N3';
@@ -197,7 +198,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     }
     if (this.chainType === 'NeoX') {
       this.currentBridgeNetwork =
-        this.neoXNetwork.chainId === NeoXMainNetChainId
+        this.neoXNetwork.chainId === NeoXMainnetNetwork.chainId
           ? BridgeNetwork.MainNet
           : BridgeNetwork.TestNet;
       this.fromChain = 'Neo X';
@@ -484,18 +485,18 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     if (event) {
       const isMainNet =
         event.chain === 'Neo3'
-          ? this.n3Network.chainId === 3
-          : this.neoXNetwork.chainId === NeoXMainNetChainId;
+          ? this.n3Network.chainId === N3MainnetNetwork.chainId
+          : this.neoXNetwork.chainId === NeoXMainnetNetwork.chainId;
       const targetChainType = event.chain === 'Neo3' ? 'NeoX' : 'Neo3';
       let targetExplorer: string;
       if (targetChainType === 'Neo3') {
         targetExplorer = isMainNet
-          ? DEFAULT_N3_RPC_NETWORK[0].explorer
-          : DEFAULT_N3_RPC_NETWORK[1].explorer;
+          ? N3MainnetNetwork.explorer
+          : N3TestnetNetwork.explorer;
       } else {
         targetExplorer = isMainNet
-          ? DEFAULT_NEOX_RPC_NETWORK[0].explorer
-          : DEFAULT_NEOX_RPC_NETWORK[1].explorer;
+          ? NeoXMainnetNetwork.explorer
+          : NeoXTestnetNetwork.explorer;
       }
       this.sessionTx = {
         txId: event.hash,
