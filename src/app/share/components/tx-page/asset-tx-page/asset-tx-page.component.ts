@@ -69,6 +69,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
     this.txData = [];
     this.accountSub?.unsubscribe();
     this.listenTxSub?.unsubscribe();
+    this.assetEVMState.removeWaitTxListen();
   }
 
   private getAllTxs() {

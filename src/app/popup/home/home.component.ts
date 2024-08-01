@@ -7,7 +7,6 @@ import {
   LedgerService,
   ChromeService,
   UtilServiceState,
-  EvmNFTState,
 } from '@/app/core';
 import { NEO, GAS, Asset } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
@@ -99,7 +98,6 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     private ledger: LedgerService,
     private chrome: ChromeService,
     private util: UtilServiceState,
-    private evmNFTState: EvmNFTState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -299,7 +297,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
             this.initInterval();
           }
         });
-    } else {
+    } else if (this.chainType === 'Neo3') {
       if (this.intervalN3Claim) {
         clearInterval(this.intervalN3Claim);
       }
@@ -384,7 +382,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         this.init = true;
         this.loading = false;
       });
-    } else {
+    } else if (this.chainType === 'Neo3') {
       if (
         this.loading &&
         new Date().getTime() - this.homeService.claimTxTime < 20000

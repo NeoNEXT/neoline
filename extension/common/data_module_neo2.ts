@@ -22,7 +22,7 @@ export const ERRORS = {
   },
   RPC_ERROR: {
     type: 'RPC_ERROR',
-    description: 'An RPC error occured when submitting the request',
+    description: 'An RPC error occurred when submitting the request',
     data: null,
   },
   MALFORMED_INPUT: {

@@ -252,9 +252,9 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
         this.creating = false;
         if (this.fromAddress !== this.toAddress) {
           const txTarget = {
-            txid: '0x' + tx.hash,
+            txid: TxHash,
             value: -this.amount,
-            block_time: new Date().getTime() / 1000,
+            block_time: Math.floor(new Date().getTime() / 1000),
           };
           this.pushTransaction(txTarget);
         }

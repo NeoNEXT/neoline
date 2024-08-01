@@ -93,7 +93,7 @@ export class AssetEVMState {
       return Promise.resolve(BigInt(21000));
     }
     const amountBN = BigInt(
-      new BigNumber(transferAmount).shiftedBy(asset.decimals).toFixed(0, 1)
+      new BigNumber(transferAmount).shiftedBy(Number(asset.decimals)).toFixed(0, 1)
     );
     return this.provider.estimateGas({
       from: fromAddress,
@@ -178,7 +178,7 @@ export class AssetEVMState {
       ? BigInt(new BigNumber(gasPrice).shiftedBy(18).toFixed(0, 1))
       : undefined;
     const amountBN = BigInt(
-      new BigNumber(transferAmount).shiftedBy(asset.decimals).toFixed(0, 1)
+      new BigNumber(transferAmount).shiftedBy(Number(asset.decimals)).toFixed(0, 1)
     );
     const gasLimitBN = BigInt(new BigNumber(gasLimit).toFixed(0, 1));
     let txRequest: ethers.TransactionRequest;
@@ -284,6 +284,11 @@ export class AssetEVMState {
     } catch (error) {
       throw this.handleEthersError(error);
     }
+  }
+
+  removeWaitTxListen() {
+    this.provider.off('block');
+    // this.provider.removeAllListeners();
   }
 
   async waitForTx(hash: string) {

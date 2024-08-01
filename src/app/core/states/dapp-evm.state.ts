@@ -469,8 +469,8 @@ export class DappEVMState {
     }
 
     const { symbol, name, tokenURI } = await ethers.resolveProperties({
-      symbol: contract.symbol(),
-      name: contract.name(),
+      symbol: safelyExecute(() => contract.symbol()),
+      name: safelyExecute(() => contract.name()),
       tokenURI: tokenId
         ? safelyExecute(() =>
             this.getERC7721TokenURI(address, tokenId).then((uri) =>

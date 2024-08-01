@@ -56,6 +56,9 @@ export interface Transaction {
   to?: string[];
   type: 'sent' | 'received';
   status?: number; // EVM tx status 0: failed, 1: success
+
+  // NFT
+  tokenid?: string;
 }
 
 export interface NftTransaction extends Transaction {

@@ -161,10 +161,13 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
                   parseInt(res, 16)
                 );
                 /* Check if chainId has been added */
+                const existIndex = this.neoXNetworks.findIndex(
+                  (item) => item.chainId == parseInt(res, 16)
+                );
                 if (
-                  this.neoXNetworks.find(
-                    (item) => item.chainId == parseInt(res, 16)
-                  )
+                  existIndex >= 0 &&
+                  ((this.data.editNetwork && existIndex !== this.data.index) ||
+                    !this.data.editNetwork)
                 ) {
                   this.addNetworkForm.controls.rpcUrl.setErrors({
                     errorExistChainId: true,

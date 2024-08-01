@@ -5,7 +5,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class LongStrPipe implements PipeTransform {
   public transform(value: string, len = 6) {
-    if (value.length <= len * 2) {
+    if (!value || value.length <= len * 2) {
       return value;
     }
     if (value) {

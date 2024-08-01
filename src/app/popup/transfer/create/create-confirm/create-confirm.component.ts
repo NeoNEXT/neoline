@@ -7,7 +7,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { GAS3_CONTRACT, LedgerStatuses, STORAGE_NAME } from '../../../_lib';
-import { GAS } from '@/models/models';
+import { GAS, Transaction } from '@/models/models';
 import { NeoDataJsonProp, TransferData } from '../interface';
 import {
   AssetState,
@@ -315,19 +315,21 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         this.data.from !== this.data.to.address ||
         this.data.chainType === 'NeoX'
       ) {
-        const txTarget = {
+        const txTarget: Transaction = {
           txid,
           value: `-${this.data.amount}`,
           block_time: Math.floor(new Date().getTime() / 1000),
           from: [this.data.from],
           to: [this.data.to.address],
           type: 'sent',
+          asset_id: '',
         };
         if (this.data.isNFT) {
-          txTarget['tokenid'] = this.data.nftToken.tokenid;
+          txTarget.tokenid = this.data.nftToken.tokenid;
+          txTarget.asset_id = this.data.nftAsset.assethash;
         } else {
-          txTarget['symbol'] = this.data.asset.symbol;
-          txTarget['asset_id'] =
+          txTarget.symbol = this.data.asset.symbol;
+          txTarget.asset_id =
             this.data.asset.asset_id !== ETH_SOURCE_ASSET_HASH
               ? this.data.asset.asset_id
               : undefined;

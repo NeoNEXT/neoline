@@ -19,13 +19,13 @@
       </copy>
     </p>
   </li>
-  <li>
+  <li *ngIf="data.tx.asset_id">
     <p class="label">{{ 'Contract' | translate | async }}</p>
     <p class="value">{{ data.tx.asset_id | longStr: 16 }}</p>
   </li>
   <li *ngIf="data.isNFT">
     <p class="label">Token ID</p>
-    <p class="value">{{ data.tx.tokenid }}</p>
+    <p class="value">#{{ data.tx.tokenid }}</p>
   </li>
   <li>
     <p class="label">{{ 'amount' | translate | async }}</p>

@@ -304,7 +304,7 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
           const txTarget = {
             txid: '0x' + tx.hash,
             value: -this.amount,
-            block_time: new Date().getTime() / 1000,
+            block_time: Math.floor(new Date().getTime() / 1000),
           };
           this.pushTransaction(txTarget);
         }

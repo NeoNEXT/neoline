@@ -4,7 +4,12 @@ import { NftAsset, NftToken } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { ChainType } from '../../_lib';
+import {
+  ChainType,
+  NeoXMainnetNetwork,
+  NeoXTestnetNetwork,
+  RpcNetwork,
+} from '../../_lib';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 
 @Component({
@@ -20,7 +25,7 @@ export class PopupAddNftComponent implements OnDestroy {
 
   private accountSub: Unsubscribable;
   private address: string;
-  private neoXNetworkId: number;
+  private neoXNetwork: RpcNetwork;
   private chainType: ChainType;
   constructor(
     private chrome: ChromeService,
@@ -33,9 +38,9 @@ export class PopupAddNftComponent implements OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet?.accounts[0]?.address;
       this.chainType = state.currentChainType;
-      this.neoXNetworkId = state.neoXNetworks[state.neoXNetworkIndex].id;
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
       this.chrome
-        .getNftWatch(`${this.chainType}-${this.neoXNetworkId}`, this.address)
+        .getNftWatch(`${this.chainType}-${this.neoXNetwork.id}`, this.address)
         .subscribe((res) => {
           this.watch = res;
         });
@@ -58,41 +63,61 @@ export class PopupAddNftComponent implements OnDestroy {
     this.evmNFTState
       .watchNft(tokenAddress, tokenId, this.address)
       .then((res) => {
+        if (res.name === undefined || res.symbol === undefined) {
+          if (
+            this.neoXNetwork.chainId !== NeoXMainnetNetwork.chainId &&
+            this.neoXNetwork.chainId !== NeoXTestnetNetwork.chainId
+          ) {
+            this.addError =
+              'Internal Server Error: You may need to change your RPC node';
+          } else {
+            this.addError = 'Unable to determine contract standard';
+          }
+          this.loading = false;
+          return;
+        }
         this.addError = '';
         const nftIndex = this.watch.findIndex(
           (item) => item.assethash === tokenAddress
         );
-        let token;
+        let tokenIndex: number;
         if (nftIndex >= 0) {
-          token = this.watch[nftIndex].tokens.find(
+          tokenIndex = this.watch[nftIndex].tokens.findIndex(
             (item) => item.tokenid === tokenId
           );
         }
-        const tokenItem: NftToken = {
+        const addNFT: NftAsset = {
+          name: res.name,
+          assethash: tokenAddress,
+          symbol: res.symbol,
+          watching: true,
+          standard: res.standard,
+        };
+        const addTokenItem: NftToken = {
           tokenid: tokenId,
           symbol: res.symbol,
           amount: '1',
           image_url: res.image,
           name: res.name,
         };
-        if (token) {
-          this.watch[nftIndex].watching = true;
-        } else if (nftIndex >= 0) {
-          this.watch[nftIndex].tokens.push(tokenItem);
-        } else {
-          const nftItem: NftAsset = {
-            name: res.name,
-            assethash: tokenAddress,
-            symbol: res.symbol,
-            tokens: [tokenItem],
-            watching: true,
-            image_url: res.image,
-            standard: res.standard,
+        if (nftIndex >= 0) {
+          this.watch[nftIndex] = {
+            ...this.watch[nftIndex],
+            ...addNFT,
           };
-          this.watch.push(nftItem);
+          if (tokenIndex >= 0) {
+            this.watch[nftIndex].tokens[tokenIndex] = {
+              ...this.watch[nftIndex].tokens[tokenIndex],
+              ...addTokenItem,
+            };
+          } else {
+            this.watch[nftIndex].tokens.push(addTokenItem);
+          }
+        } else {
+          this.watch.push({ ...addNFT, tokens: [addTokenItem] });
         }
         this.chrome.setNftWatch(
-          `${this.chainType}-${this.neoXNetworkId}`,
+          `${this.chainType}-${this.neoXNetwork.id}`,
           this.address,
           this.watch
         );

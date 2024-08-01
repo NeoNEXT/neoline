@@ -1,14 +1,7 @@
-import {
-  Component,
-  OnInit,
-  Output,
-  EventEmitter,
-  OnDestroy,
-} from '@angular/core';
+import { Component, Output, EventEmitter, OnDestroy } from '@angular/core';
 import { ChainType, STORAGE_NAME } from '@/app/popup/_lib';
 import { ChromeService, GlobalService, SettingState } from '@/app/core';
 import { Unsubscribable } from 'rxjs';
-import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-ledger-chain',
@@ -23,7 +16,6 @@ export class LedgerChainComponent implements OnDestroy {
   constructor(
     private settingState: SettingState,
     private chromeSer: ChromeService,
-    private router: Router,
     private global: GlobalService
   ) {}
   ngOnDestroy(): void {
@@ -37,7 +29,6 @@ export class LedgerChainComponent implements OnDestroy {
           this.selectChain.emit(this.chain);
         } else {
           this.global.snackBarTip('switchOnePasswordFirst');
-          this.router.navigateByUrl('/popup/one-password');
         }
       });
     } else {
