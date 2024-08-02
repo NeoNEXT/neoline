@@ -861,7 +861,10 @@
     "message": "Note: Please ensure your ledger has the latest Ethereum app installed."
   },
   "signTheTransaction": {
-    "message": "Please sign the transaction on your ledger."
+    "message": "Please sign the transaction on your ledger"
+  },
+  "signTheMessage": {
+    "message": "Please sign the message on your ledger"
   },
   "Wait": {
     "message": "Wait"

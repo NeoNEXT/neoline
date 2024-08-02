@@ -1,11 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ChromeService } from '@/app/core';
+import { ChromeService, LedgerService } from '@/app/core';
 import { ERRORS } from '@/models/dapi';
-import { STORAGE_NAME } from '../../_lib';
+import { LedgerStatuses, STORAGE_NAME } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { Unsubscribable } from 'rxjs';
+import { Unsubscribable, interval } from 'rxjs';
 import { EvmWalletJSON } from '../../_lib/evm';
 import { requestTargetEVM } from '@/models/evm';
 import { ethers } from 'ethers';
@@ -20,11 +20,17 @@ export class PopupNoticeEvmSignComponent implements OnInit {
   challenge: string;
   signAddress: string;
 
+  loading = false;
+  loadingMsg: string;
+  getStatusInterval;
+  encryptWallet: EvmWalletJSON;
+
   private accountSub: Unsubscribable;
   private neoXWalletArr: EvmWalletJSON[];
   constructor(
     private aRouter: ActivatedRoute,
     private chrome: ChromeService,
+    private ledger: LedgerService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -62,29 +68,62 @@ export class PopupNoticeEvmSignComponent implements OnInit {
   }
 
   public async signature() {
-    const encryptedWallet = this.neoXWalletArr.find(
+    this.encryptWallet = this.neoXWalletArr.find(
       (item) => item.accounts[0].address === ethers.getAddress(this.signAddress)
     );
-    if (encryptedWallet) {
+    if (this.encryptWallet.accounts[0].extra.ledgerSLIP44) {
+      this.loading = true;
+      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
+      this.getLedgerStatus();
+      this.getStatusInterval = interval(5000).subscribe(() => {
+        this.getLedgerStatus();
+      });
+      return;
+    }
+    if (this.encryptWallet) {
       const pwd = await this.chrome.getPassword();
       const wallet = await ethers.Wallet.fromEncryptedJson(
-        JSON.stringify(encryptedWallet),
+        JSON.stringify(this.encryptWallet),
         pwd
       );
       const data = await wallet.signMessage(this.challenge);
-      this.chrome.windowCallback(
-        {
-          return: requestTargetEVM.request,
-          data,
-          ID: this.messageID,
-        },
-        true
-      );
-      delete this.invokeArgsArray[this.messageID];
-      this.chrome.setStorage(
-        STORAGE_NAME.InvokeArgsArray,
-        this.invokeArgsArray
-      );
+      this.sendMessage(data);
     }
+  }
+
+  private sendMessage(data: string) {
+    this.chrome.windowCallback(
+      {
+        return: requestTargetEVM.request,
+        data,
+        ID: this.messageID,
+      },
+      true
+    );
+    delete this.invokeArgsArray[this.messageID];
+    this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, this.invokeArgsArray);
+  }
+
+  private getLedgerStatus() {
+    this.ledger.getDeviceStatus('NeoX').then(async (res) => {
+      this.loadingMsg = LedgerStatuses[res].msgNeoX || LedgerStatuses[res].msg;
+      if (LedgerStatuses[res] === LedgerStatuses.READY) {
+        this.getStatusInterval.unsubscribe();
+        this.loadingMsg = 'signTheMessage';
+
+        this.ledger
+          .getNeoXSignPersonalMessage(this.challenge, this.encryptWallet)
+          .then((tx) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.sendMessage(tx);
+          })
+          .catch((error) => {
+            this.loading = false;
+            this.loadingMsg = '';
+            this.ledger.handleLedgerError(error);
+          });
+      }
+    });
   }
 }

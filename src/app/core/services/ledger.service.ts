@@ -232,6 +232,22 @@ export class LedgerService {
   }
 
   //#region private function
+  async getNeoXSignPersonalMessage(
+    message: string,
+    wallet: EvmWalletJSON
+  ) {
+    const result = await this.ethTransport.signPersonalMessage(
+      `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+      Buffer.from(message).toString('hex')
+    );
+    let v = result['v'];
+    v = v.toString(16);
+    if (v.length < 2) {
+      v = '0' + v;
+    }
+    const data = '0x' + result['r'] + result['s'] + v;
+    return data;
+  }
   private async getNeoXSignature(txData, wallet: EvmWalletJSON) {
     txData.chainId = this.neoXNetwork.chainId;
     let unsignedTx = ethers.Transaction.from(txData).unsignedSerialized;

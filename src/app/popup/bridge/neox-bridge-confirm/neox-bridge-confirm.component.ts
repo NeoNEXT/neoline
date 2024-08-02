@@ -118,6 +118,7 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
     this.assetEVMState
       .sendTransactionByRPC(signedTx, PreExecutionParams)
       .then((txHash) => {
+        this.backAmount.emit({ hash: txHash, chain: 'NeoX' });
         this.loading = false;
       })
       .catch((error) => {
