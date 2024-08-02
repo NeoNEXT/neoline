@@ -121,6 +121,9 @@ export class LedgerService {
     return this.getAppName(chainType)
       .then(() => LedgerStatuses.READY)
       .catch((err) => {
+        if (chainType === 'NeoX') {
+          return LedgerStatuses[err];
+        }
         this.closeDevice();
         return LedgerStatuses[err] ? err : LedgerStatuses.APP_CLOSED;
       });
@@ -446,7 +449,10 @@ export class LedgerService {
               resolve('open');
             })
             .catch((error) => {
-              console.log(error);
+              if (error.statusCode === 27906) {
+                reject(LedgerStatuses.APP_CLOSED);
+              }
+              reject(error);
             });
         }
         return this.getDevice()

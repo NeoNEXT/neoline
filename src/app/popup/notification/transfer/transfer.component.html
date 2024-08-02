@@ -13,15 +13,19 @@
     <p class="amount">-{{ amount }} {{ symbol }}</p>
     <p class="rate">-{{ money | numberFixed : 2 }} {{ rateCurrency }}</p>
     <div class="address-group">
-      <div class="item">
-        <img class="avatar" [avatar]="fromAddress" />
-        <span>{{ fromAddress | longStr : 4 }}</span>
-      </div>
+      <copy [value]="fromAddress">
+        <div class="item">
+          <img class="avatar" [avatar]="fromAddress" />
+          <span>{{ fromAddress | longStr : 4 }}</span>
+        </div>
+      </copy>
       <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
-      <div class="item">
-        <img class="avatar" [avatar]="toAddress" />
-        <span>{{ toAddress | longStr : 4 }}</span>
-      </div>
+      <copy [value]="toAddress">
+        <div class="item">
+          <img class="avatar" [avatar]="toAddress" />
+          <span>{{ toAddress | longStr : 4 }}</span>
+        </div>
+      </copy>
     </div>
   </div>
   <div class="tabs-container">

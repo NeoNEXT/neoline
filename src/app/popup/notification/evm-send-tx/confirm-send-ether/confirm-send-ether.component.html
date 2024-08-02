@@ -15,15 +15,19 @@
       <p class="amount">{{ getShowAmount() }} {{ neoXNetwork?.symbol }}</p>
     </div>
     <div class="address-group">
-      <div class="item">
-        <img class="avatar" [avatar]="txParams?.from" />
-        <span>{{ txParams?.from | longStr : 4 }}</span>
-      </div>
+      <copy [value]="txParams?.from">
+        <div class="item">
+          <img class="avatar" [avatar]="txParams?.from" />
+          <span>{{ txParams?.from | longStr : 4 }}</span>
+        </div>
+      </copy>
       <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
-      <div class="item">
-        <img class="avatar" [avatar]="txParams?.to" />
-        <span>{{ txParams?.to | longStr : 4 }}</span>
-      </div>
+      <copy [value]="txParams?.to">
+        <div class="item">
+          <img class="avatar" [avatar]="txParams?.to" />
+          <span>{{ txParams?.to | longStr : 4 }}</span>
+        </div>
+      </copy>
     </div>
   </div>
   <div class="tabs-container">

@@ -279,7 +279,6 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       networkGasLimit = BigInt(42750000);
     }
     this.neoXFeeInfo = await this.assetEVMState.getGasInfo(networkGasLimit);
-    console.log(this.neoXFeeInfo);
   }
 
   private calculateNeoN3Fee() {
@@ -566,7 +565,6 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       this.transactionState
         .getApplicationLog(hash, this.sessionTx.sourceRpcUrl)
         .subscribe((res) => {
-          console.log(res);
           this.sessionTx.sourceTxID = hash;
           this.updateSessionBridgeTx();
           if (this.bridgeProgressDialogRef?.componentInstance) {
@@ -579,7 +577,6 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
             (item) => item.eventname === 'GasDeposit'
           );
           const depositId = notifi.state.value[0].value;
-          console.log(depositId);
           this.waitNeo3TargetTxComplete(depositId);
         });
     });
@@ -591,7 +588,6 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       this.bridgeState
         .getBridgeTxOnNeo3BridgeNeoX(depositId, this.sessionTx.network)
         .subscribe((res: any) => {
-          console.log(res);
           if (res.txid) {
             this.sessionTx.targetTxID = res.txid;
             this.updateSessionBridgeTx();
@@ -614,7 +610,6 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         .getTransactionReceipt(hash, this.sessionTx.sourceRpcUrl)
         .then((res) => {
           if (res) {
-            console.log(res);
             this.sessionTx.sourceTxID = hash;
             this.updateSessionBridgeTx();
             if (this.bridgeProgressDialogRef?.componentInstance) {
@@ -623,7 +618,6 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
             }
             this.getSourceTxReceiptInterval.unsubscribe();
             const nonce = new BigNumber(res.logs[0].topics[1]).toNumber();
-            console.log(nonce);
             this.waitNeoXTargetTxComplete(nonce);
           }
         });
@@ -636,7 +630,6 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       this.bridgeState
         .getBridgeTxOnNeoXBridgeNeo3(nonce, this.sessionTx.network)
         .subscribe((res: any) => {
-          console.log(res);
           if (res.result) {
             this.sessionTx.targetTxID = res.result.txid;
             this.updateSessionBridgeTx();

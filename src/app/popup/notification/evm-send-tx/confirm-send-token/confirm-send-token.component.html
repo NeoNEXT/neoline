@@ -17,15 +17,19 @@
       </p>
     </div>
     <div class="address-group">
-      <div class="item">
-        <img class="avatar" [avatar]="txParams?.from" />
-        <span>{{ txParams?.from | longStr : 4 }}</span>
-      </div>
+      <copy [value]="txParams?.from">
+        <div class="item">
+          <img class="avatar" [avatar]="txParams?.from" />
+          <span>{{ txParams?.from | longStr : 4 }}</span>
+        </div>
+      </copy>
       <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
-      <div class="item">
-        <img class="avatar" [avatar]="assetDetails?.toAddress" />
-        <span>{{ assetDetails?.toAddress | longStr : 4 }}</span>
-      </div>
+      <copy [value]="assetDetails?.toAddress">
+        <div class="item">
+          <img class="avatar" [avatar]="assetDetails?.toAddress" />
+          <span>{{ assetDetails?.toAddress | longStr : 4 }}</span>
+        </div>
+      </copy>
     </div>
   </div>
   <div class="tabs-container">

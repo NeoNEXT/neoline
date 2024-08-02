@@ -348,12 +348,12 @@ export class AssetEVMState {
   }
 
   handleEthersError(error) {
-    console.log(error);
-    if (error.data) {
-      const code = error.data.replace('Reverted ', '');
-      let reason = ethers.toUtf8String('0x' + code.substr(138));
-      console.log('revert reason:', reason);
-    }
+    // console.log(error);
+    // if (error.data) {
+    //   const code = error.data.replace('Reverted ', '');
+    //   let reason = ethers.toUtf8String('0x' + code.substr(138));
+    //   console.log('revert reason:', reason);
+    // }
     const message = error?.info?.error?.message;
     return `Transaction failed: ${message}`;
   }
