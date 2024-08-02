@@ -25,7 +25,7 @@ export interface RpcNetwork {
   id: number;
   // evm
   symbol?: string;
-  keep?: boolean;
+  version?: number;
 }
 
 export const DEFAULT_NETWORKS = [
@@ -36,6 +36,7 @@ export const DEFAULT_NETWORKS = [
   'N3PrivateNet',
 ];
 
+const N2_NETWORK_VERSION = 1;
 export const N2MainnetNetwork: RpcNetwork = {
   rpcUrl: 'http://seed1.ngd.network:10332',
   name: 'N2 Mainnet',
@@ -43,6 +44,7 @@ export const N2MainnetNetwork: RpcNetwork = {
   network: NetworkType.MainNet,
   chainId: 1,
   id: 1,
+  version: N2_NETWORK_VERSION,
 };
 
 export const N2testnetNetwork: RpcNetwork = {
@@ -52,6 +54,7 @@ export const N2testnetNetwork: RpcNetwork = {
   network: NetworkType.TestNet,
   chainId: 2,
   id: 2,
+  version: N2_NETWORK_VERSION,
 };
 
 export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
@@ -59,6 +62,7 @@ export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
   N2testnetNetwork,
 ];
 
+const N3_NETWORK_VERSION = 1;
 export const N3MainnetNetwork: RpcNetwork = {
   rpcUrl: 'http://seed1.neo.org:10332',
   name: 'N3 Mainnet',
@@ -67,6 +71,7 @@ export const N3MainnetNetwork: RpcNetwork = {
   network: NetworkType.N3MainNet,
   chainId: 3,
   id: 3,
+  version: N3_NETWORK_VERSION,
 };
 
 export const N3T4NetworkChainId = 4;
@@ -79,6 +84,7 @@ export const N3TestnetNetwork: RpcNetwork = {
   network: NetworkType.N3TestNet,
   chainId: 6,
   id: 6,
+  version: N3_NETWORK_VERSION,
 };
 
 export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [

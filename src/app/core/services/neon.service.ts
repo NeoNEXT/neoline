@@ -32,17 +32,16 @@ import {
   REMOVE_NEOX_WALLET,
   RESET_ACCOUNT,
   N3T4NetworkChainId,
-  N3MainnetNetwork,
-  N3TestnetNetwork,
-  N2MainnetNetwork,
-  N2testnetNetwork,
+  DEFAULT_N2_RPC_NETWORK,
+  DEFAULT_N3_RPC_NETWORK,
+  UPDATE_NEOX_NETWORKS,
 } from '@popup/_lib';
 import { str2hexstring } from '@cityofzion/neon-core-neo3/lib/u';
 import { HttpClient } from '@angular/common/http';
 import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
-import { EvmWalletJSON } from '@/app/popup/_lib/evm';
+import { DEFAULT_NEOX_RPC_NETWORK, EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { EvmService } from './evm.service';
 
 @Injectable()
@@ -100,9 +99,6 @@ export class NeonService {
     const Neo3AddressFlag = this.chrome.getStorage(
       STORAGE_NAME.neo3AddressFlag
     );
-    const Neo3RemoveT4Flag = this.chrome.getStorage(
-      STORAGE_NAME.neo3RemoveT4Flag
-    );
     //#region networks
     const getN2Networks = this.chrome.getStorage(STORAGE_NAME.n2Networks);
     const getN3Networks = this.chrome.getStorage(STORAGE_NAME.n3Networks);
@@ -131,7 +127,6 @@ export class NeonService {
       getN3SelectedNetworkIndex,
       getNeoXNetworks,
       getNeoXSelectedNetworkIndex,
-      Neo3RemoveT4Flag,
     ]).subscribe(
       ([
         walletRes,
@@ -147,7 +142,6 @@ export class NeonService {
         n3NetworkIndexRes,
         neoXNetworksRes,
         neoXNetworkIndexRes,
-        Neo3RemoveT4FlagRes,
       ]) => {
         // wallet
         walletRes = this.parseWallet(walletRes);
@@ -194,44 +188,49 @@ export class NeonService {
             neoXNetworkIndex: neoXNetworkIndexRes,
           },
         });
-        //#region networks
-        if (!Neo3RemoveT4FlagRes) {
-          if (n3NetworksRes[1].chainId === N3T4NetworkChainId) {
-            n3NetworksRes[2].name = 'N3 Testnet';
-            n3NetworksRes.splice(1, 1);
-            n3NetworkIndexRes = 0;
-            this.store.dispatch({ type: UPDATE_NEO3_NETWORK_INDEX, data: 0 });
-            this.store.dispatch({
-              type: UPDATE_NEO3_NETWORKS,
-              data: n3NetworksRes,
-            });
-          }
-          this.chrome.setStorage(STORAGE_NAME.neo3RemoveT4Flag, true);
-          this.getFastRpcUrl(true);
-        } else {
-          this.getFastRpcUrl();
+        //#region update default network
+        let getFastRPCFlag = false;
+        if (
+          !n2NetworksRes[0].version ||
+          n2NetworksRes[0].version !== DEFAULT_N2_RPC_NETWORK[0].version
+        ) {
+          getFastRPCFlag = true;
+          n2NetworksRes = DEFAULT_N2_RPC_NETWORK;
+          this.store.dispatch({
+            type: UPDATE_NEO2_NETWORKS,
+            data: n2NetworksRes,
+          });
         }
-        //#endregion
-
-        //#region update network name
-        if (n3NetworksRes[0].name === 'N3 MAINNET') {
-          n3NetworksRes[0].name = N3MainnetNetwork.name;
-          if (n3NetworksRes[1].name === 'N3 TESTNET') {
-            n3NetworksRes[1].name = N3TestnetNetwork.name;
+        if (
+          !n3NetworksRes[0].version ||
+          n3NetworksRes[0].version !== DEFAULT_N3_RPC_NETWORK[0].version
+        ) {
+          getFastRPCFlag = true;
+          if (!n3NetworksRes[0].version) {
+            if (n3NetworksRes[1].chainId === N3T4NetworkChainId) {
+              n3NetworksRes.splice(0, 3);
+            } else {
+              n3NetworksRes.splice(0, 2);
+            }
+          } else {
+            n3NetworksRes = n3NetworksRes.filter((item) => !item.version);
           }
-          if (n2NetworksRes[0].name === 'N2 MAINNET') {
-            n2NetworksRes[0].name = N2MainnetNetwork.name;
-          }
-          if (n2NetworksRes[1].name === 'N2 TESTNET') {
-            n2NetworksRes[1].name = N2testnetNetwork.name;
-          }
+          n3NetworksRes.unshift(...DEFAULT_N3_RPC_NETWORK);
+          this.store.dispatch({ type: UPDATE_NEO3_NETWORK_INDEX, data: 0 });
           this.store.dispatch({
             type: UPDATE_NEO3_NETWORKS,
             data: n3NetworksRes,
           });
+        }
+        this.getFastRpcUrl(getFastRPCFlag);
+        if (
+          neoXNetworksRes[0].version !== DEFAULT_NEOX_RPC_NETWORK[0].version
+        ) {
+          neoXNetworksRes = neoXNetworksRes.filter((item) => !item.version);
+          neoXNetworksRes.unshift(...DEFAULT_NEOX_RPC_NETWORK);
           this.store.dispatch({
-            type: UPDATE_NEO2_NETWORKS,
-            data: n2NetworksRes,
+            type: UPDATE_NEOX_NETWORKS,
+            data: neoXNetworksRes,
           });
         }
         //#endregion

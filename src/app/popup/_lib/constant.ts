@@ -52,7 +52,6 @@ export enum STORAGE_NAME {
   hasLoginAddress = 'hasLoginAddress', // has login address
   shouldFindNode = 'shouldFindNode',
   rpcUrls = 'rpcUrls',
-  neo3RemoveT4Flag = 'neo3RemoveT4Flag', // remove N3T4 network
   onePassword = 'onePassword', // Whether the current is one password mode
   theme ='theme', // light or dark theme
   onePassCheckAddresses = 'onePassCheckAddresses', // one password mode, save verified address
@@ -186,10 +185,6 @@ export const STORAGE_VALUE_MESSAGE = {
     type: STORAGE_VALUE_TYPE.object,
     isLocal: true,
     default: DEFAULT_RPC_URLS,
-  },
-  neo3RemoveT4Flag: {
-    type: STORAGE_VALUE_TYPE.boolean,
-    isLocal: true,
   },
   onePassword: {
     type: STORAGE_VALUE_TYPE.boolean,

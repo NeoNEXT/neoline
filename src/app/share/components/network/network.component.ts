@@ -327,7 +327,7 @@ export class PopupNetworkComponent implements OnDestroy {
       if (this.chainType === 'NeoX' && this.currentNetwork.id === item.id) {
         return false;
       }
-      if (!item?.keep) {
+      if (!item?.version) {
         return true;
       }
     }
