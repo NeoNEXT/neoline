@@ -49,6 +49,7 @@ import { PopupAddressBookComponent } from './address-book/address-book.component
 import { PopupBridgeComponent } from './bridge/bridge.component';
 import { Neo3BridgeConfirmComponent } from './bridge/neo3-bridge-confirm/neo3-bridge-confirm.component';
 import { NeoXBridgeConfirmComponent } from './bridge/neox-bridge-confirm/neox-bridge-confirm.component';
+import { NeoXBridgeFootnoteComponent } from './bridge/bridge-footnote/bridge-footnote.component';
 
 const POPUP_COMPONENTS = [
   PopupComponent,
@@ -74,6 +75,7 @@ const POPUP_COMPONENTS = [
   PopupBridgeComponent,
   Neo3BridgeConfirmComponent,
   NeoXBridgeConfirmComponent,
+  NeoXBridgeFootnoteComponent,
 ];
 //#endregion
 
@@ -101,6 +103,7 @@ import {
   PopupExportWalletDialogComponent,
   PopupSelectAddressDialogComponent,
   PopupBridgeProgressDialogComponent,
+  PopupBridgeFootnoteDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -126,6 +129,7 @@ const POPUP_DIALOGS = [
   PopupExportWalletDialogComponent,
   PopupSelectAddressDialogComponent,
   PopupBridgeProgressDialogComponent,
+  PopupBridgeFootnoteDialogComponent,
 ];
 
 //#endregion

@@ -14,6 +14,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 const MATMODULES = [
   MatToolbarModule,
   MatInputModule,
@@ -26,6 +27,7 @@ const MATMODULES = [
   MatSlideToggleModule,
   MatSnackBarModule,
   MatProgressSpinnerModule,
+  MatProgressBarModule,
 ];
 //#endregion
 

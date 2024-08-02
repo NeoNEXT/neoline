@@ -1274,12 +1274,6 @@
   "confirmMnemonicTip": {
     "message": "您可以将整个助记词短语输入到任何字段中"
   },
-  "YourDeposit": {
-    "message": "存入"
-  },
-  "YourWithdraw": {
-    "message": "取出"
-  },
   "FromAddress": {
     "message": "来自"
   },
@@ -1384,5 +1378,11 @@
   },
   "youHaveNoTransactions": {
     "message": "您没有任何交易"
+  },
+  "footnoteDesc2": {
+    "message": "当桥接服务稳定后，将逐步取消数量限制，并扩大桥接服务范围，包含 NEO 及其他资产。"
+  },
+  "footnote": {
+    "message": "重要提示"
   }
 }

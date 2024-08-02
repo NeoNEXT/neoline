@@ -1,4 +1,10 @@
-import { RpcNetwork, abiNeoXBridgeNeo3, BridgeNetwork } from '@/app/popup/_lib';
+import {
+  RpcNetwork,
+  abiNeoXBridgeNeo3,
+  BridgeNetwork,
+  N3MainnetNetwork,
+  N3TestnetNetwork,
+} from '@/app/popup/_lib';
 import { AppState } from '@/app/reduers';
 import { Asset } from '@/models/models';
 import { Injectable } from '@angular/core';
@@ -7,6 +13,7 @@ import { ethers } from 'ethers';
 import { map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { UtilServiceState } from '../util/util.service';
+import BigNumber from 'bignumber.js';
 
 @Injectable()
 export class BridgeState {
@@ -72,6 +79,45 @@ export class BridgeState {
     return this.http.post(this.neo3Network.rpcUrl, data).pipe(
       map((res: any) => {
         return this.utilService.handleNeo3StackNumberValue(res.result);
+      })
+    );
+  }
+
+  getGasBridgeProgress(network: BridgeNetwork) {
+    const data = {
+      jsonrpc: '2.0',
+      method: 'invokefunction',
+      params: [this.BridgeParams[network].n3BridgeContract, 'getGasBridge'],
+      id: 1,
+    };
+    const neo3RPC =
+      network === BridgeNetwork.MainNet
+        ? N3MainnetNetwork.rpcUrl
+        : N3TestnetNetwork.rpcUrl;
+    return this.http.post(neo3RPC, data).pipe(
+      map((res: any) => {
+        res = res.result;
+        const value = res.stack?.[0]?.value;
+        let used: string;
+        let total: string;
+        let percentage: string;
+        if (res.state === 'HALT') {
+          if (value?.[1]) {
+            used = this.utilService.handleNeo3StackNumber(value[1]);
+            used = new BigNumber(used).shiftedBy(-8).toFixed(0);
+          }
+          if (value?.[4]?.value?.[4]) {
+            total = this.utilService.handleNeo3StackNumber(value[4].value[4]);
+            total = new BigNumber(total).shiftedBy(-8).toFixed(0);
+          }
+        }
+        if (used && total) {
+          percentage = new BigNumber(used)
+            .div(total)
+            .shiftedBy(2)
+            .toFixed(2, 1);
+        }
+        return { used, total, percentage };
       })
     );
   }

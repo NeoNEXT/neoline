@@ -20,3 +20,4 @@ export { PopupAddressBookListDialogComponent } from './address-book-list/address
 export { PopupExportWalletDialogComponent } from './export-wallet/export-wallet.dialog';
 export { PopupSelectAddressDialogComponent } from './select-address/select-address.dialog';
 export { PopupBridgeProgressDialogComponent } from './bridge-progress/bridge-progress.component';
+export { PopupBridgeFootnoteDialogComponent } from './bridge-footnote/bridge-footnote.dialog';

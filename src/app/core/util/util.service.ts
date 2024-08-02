@@ -259,6 +259,18 @@ export class UtilServiceState {
     return res;
   }
 
+  handleNeo3StackNumber(result): string {
+    let res;
+    if (result.type === 'Integer') {
+      res = result.value;
+    }
+    if (result.type === 'ByteArray') {
+      const hexStr = u.reverseHex(result.value);
+      res = new BigNumber(hexStr || 0, 16).toFixed();
+    }
+    return res;
+  }
+
   handleNeo3StackStringValue(result): string {
     let res = '';
     if (result.state === 'HALT' && result.stack?.[0]?.value) {

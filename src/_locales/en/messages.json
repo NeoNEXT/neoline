@@ -1274,20 +1274,14 @@
   "confirmMnemonicTip": {
     "message": "You can enter your entire mnemonic phrase into any field"
   },
-  "YourDeposit": {
-    "message": "Your deposit"
-  },
-  "YourWithdraw": {
-    "message": "Your withdraw"
-  },
   "FromAddress": {
     "message": "From address"
   },
   "YourNeoXReceiveAddress": {
-    "message": "Your Neo X receive address"
+    "message": "Neo X receive address"
   },
   "YourNeo3ReceiveAddress": {
-    "message": "Your Neo3 N3 receive address"
+    "message": "Neo3 N3 receive address"
   },
   "addEvmTokenTitle": {
     "message": "Add suggested tokens"
@@ -1384,5 +1378,11 @@
   },
   "youHaveNoTransactions": {
     "message": "You have no transactions"
+  },
+  "footnoteDesc2": {
+    "message": "This measure is in place to mitigate risks and ensure a seamless user experience. As the bridge service proves its stability, the provider will gradually lift the GAS amount cap and expand the service to include NEO tokens and other assets."
+  },
+  "footnote": {
+    "message": "Footnote"
   }
 }

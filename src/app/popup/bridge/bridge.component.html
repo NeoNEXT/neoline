@@ -13,7 +13,12 @@
 ></nav>
 
 <div class="bridge-content" *ngIf="!showConfirmPage">
-  <div class="asset">{{ bridgeAsset.symbol }}</div>
+  <div class="bridge-header">
+    <div class="asset">{{ bridgeAsset.symbol }}</div>
+    <bridge-footnote
+      [currentBridgeNetwork]="currentBridgeNetwork"
+    ></bridge-footnote>
+  </div>
   <div class="item from">
     <div class="label">
       <span>{{ "From" | translate | async }}</span>
