@@ -16,6 +16,7 @@
   <div class="bridge-header">
     <div class="asset">{{ bridgeAsset.symbol }}</div>
     <bridge-footnote
+      *ngIf="currentBridgeNetwork === 'MainNet'"
       [currentBridgeNetwork]="currentBridgeNetwork"
     ></bridge-footnote>
   </div>
