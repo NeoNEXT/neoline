@@ -9,6 +9,7 @@ import {
   SettingState,
 } from '@/app/core';
 import {
+  AddressNonceInfo,
   EvmTransactionParams,
   EvmTransactionType,
   LedgerStatuses,
@@ -38,6 +39,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   locationOrigin: string;
   iconSrc = '';
   lang = 'en';
+  nonceInfo: AddressNonceInfo;
 
   loading = false;
   loadingMsg: string;
@@ -176,6 +178,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       value: currentTxParams.value
         ? BigInt(new BigNumber(currentTxParams.value).toFixed(0, 1))
         : undefined,
+      nonce: this.nonceInfo.nonce,
     };
     const PreExecutionParams = {
       ...currentTxParams,
@@ -190,6 +193,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         : undefined,
       gas: '0x' + new BigNumber(gasLimit).toString(16),
       value: currentTxParams.value,
+      nonce: this.nonceInfo.nonce,
     };
 
     return { PreExecutionParams, newParams };
@@ -264,6 +268,12 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     this.methodName = type;
 
     const { from, value } = this.txParams;
+
+    // get nonce info
+    this.assetEVMState.getNonceInfo(from).then((res) => {
+      this.nonceInfo = res;
+    });
+
     // send amount
     if (this.txParams.value) {
       this.amount = new BigNumber(value).shiftedBy(-18).toFixed();
@@ -382,10 +392,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
         const { newParams } = this.getTxParams();
         if (!newParams.nonce) {
-          const nonce = await this.assetEVMState.getNonce(
-            this.encryptWallet.accounts[0].address
-          );
-          newParams.nonce = nonce;
+          newParams.nonce = this.nonceInfo.nonce;
         }
         delete newParams.from;
         this.ledger

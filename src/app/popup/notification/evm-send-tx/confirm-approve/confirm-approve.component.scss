@@ -166,23 +166,6 @@
     .fee {
       margin-inline: 24px;
       margin-top: 16px;
-      .warning-tip {
-        padding: 12px;
-        background: rgba(250, 85, 85, 0.16);
-        font-size: 12px;
-        line-height: 18px;
-        letter-spacing: 0.01em;
-        color: var(--error-color);
-        &.top {
-          margin-bottom: 12px;
-        }
-        &.bottom {
-          margin-top: 12px;
-        }
-        img {
-          vertical-align: sub;
-        }
-      }
     }
     .view-details {
       margin-top: 16px;

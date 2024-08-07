@@ -15,7 +15,13 @@ import {
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import { Asset } from '@/models/models';
-import { ChainType, EvmTransactionParams, LedgerStatuses } from '../../_lib';
+import {
+  AddressNonceInfo,
+  ChainType,
+  EvmTransactionParams,
+  LedgerStatuses,
+  RpcNetwork,
+} from '../../_lib';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
 import { ethers } from 'ethers';
@@ -35,12 +41,15 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
   @Input() currentWallet: EvmWalletJSON;
   @Input() neoXFeeInfo: NeoXFeeInfoProp;
   @Input() txParams: EvmTransactionParams;
+  @Input() neoXNetwork: RpcNetwork;
 
   @Output() backAmount = new EventEmitter<{ hash: string; chain: ChainType }>();
 
   tabType: TabType = 'details';
   totalAmount: string;
   hexDataLength: number;
+  nonceInfo: AddressNonceInfo;
+  insufficientFunds = false;
 
   loading = false;
   loadingMsg: string;
@@ -57,12 +66,28 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.calculateTotalAmount();
     this.hexDataLength = this.util.getHexDataLength(this.txParams.data);
+    this.assetEVMState
+      .getNonceInfo(this.currentWallet.accounts[0].address)
+      .then((res) => {
+        this.nonceInfo = res;
+      });
   }
 
   private calculateTotalAmount() {
     this.totalAmount = new BigNumber(this.bridgeAmount)
       .plus(this.neoXFeeInfo.estimateGas)
       .toFixed();
+    this.checkBalance();
+  }
+
+  private checkBalance() {
+    if (
+      new BigNumber(this.totalAmount).comparedTo(this.bridgeAsset.balance) > 0
+    ) {
+      this.insufficientFunds = true;
+    } else {
+      this.insufficientFunds = false;
+    }
   }
 
   ngOnDestroy(): void {
@@ -136,10 +161,7 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
 
         const { newParams } = this.getTxParams();
         if (!newParams.nonce) {
-          const nonce = await this.assetEVMState.getNonce(
-            this.currentWallet.accounts[0].address
-          );
-          newParams.nonce = nonce;
+          newParams.nonce = this.nonceInfo.nonce;
         }
         delete newParams.from;
         this.ledger
@@ -177,6 +199,7 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
       value: this.txParams.value
         ? BigInt(new BigNumber(this.txParams.value).toFixed(0, 1))
         : undefined,
+      nonce: this.nonceInfo.nonce,
     };
     const PreExecutionParams = {
       ...this.txParams,
@@ -191,6 +214,7 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
         : undefined,
       gas: '0x' + new BigNumber(gasLimit).toString(16),
       value: '0x' + new BigNumber(this.txParams.value).toString(16),
+      nonce: this.nonceInfo.nonce,
     };
 
     return { PreExecutionParams, newParams };

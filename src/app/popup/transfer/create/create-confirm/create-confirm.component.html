@@ -158,6 +158,19 @@
         </p>
       </div>
     </li>
+    <li>
+      <evm-gas-error
+        *ngIf="insufficientFunds"
+        [networkName]="data.network.name"
+        [symbol]="data.network.symbol"
+      ></evm-gas-error>
+    </li>
+    <li>
+      <evm-pending-warning
+        *ngIf="nonceInfo?.pendingTxs"
+        [count]="nonceInfo.pendingTxs"
+      ></evm-pending-warning>
+    </li>
   </ul>
   <div class="data-content" *ngIf="tabType === 'data'">
     <ng-container *ngIf="data.chainType !== 'NeoX'">
@@ -187,7 +200,7 @@
     </button>
     <button
       class="confirm"
-      [ngClass]="{ disabled: loading }"
+      [ngClass]="{ disabled: loading || insufficientFunds }"
       (click)="confirm()"
     >
       {{ "yes" | translate | async }}

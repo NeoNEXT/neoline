@@ -49,17 +49,6 @@ export class DappEVMState {
     });
   }
 
-  getInsufficientGasTranslate(
-    lang: string,
-    network: string,
-    symbol = 'ETH'
-  ): string {
-    if (lang === 'en') {
-      return `You do not have enough ${symbol} in your account to pay for transaction fees on ${network} network. or deposit from another account.`;
-    }
-    return `您的账户中没有足够的${symbol}可以支付${network}网络上的交易费用。或从另一个账户存入保证金。`;
-  }
-
   getContractMethodData(data = '') {
     const prefixedData = addHexPrefix(data);
     const fourBytePrefix = prefixedData.slice(0, 10);

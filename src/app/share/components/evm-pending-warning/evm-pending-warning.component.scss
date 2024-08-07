@@ -1,0 +1,15 @@
+.warning-tip {
+  padding: 12px;
+  background: rgba(255, 132, 61, 0.08);
+  font-size: 12px;
+  line-height: 18px;
+  letter-spacing: 0.01em;
+  color: #AAB9BF;
+  .link {
+    color: var(--theme-color);
+    cursor: pointer;
+  }
+  img {
+    vertical-align: sub;
+  }
+}

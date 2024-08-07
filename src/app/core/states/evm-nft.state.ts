@@ -79,6 +79,7 @@ export class EvmNFTState {
     gasLimit,
     gasPrice,
     privateKey,
+    nonce,
   }: {
     asset: NftAsset;
     token: NftToken;
@@ -89,6 +90,7 @@ export class EvmNFTState {
     gasPrice?: string;
     gasLimit: string;
     privateKey: string;
+    nonce: number;
   }) {
     const txRequest = this.getTransferTxRequest({
       asset,
@@ -100,6 +102,7 @@ export class EvmNFTState {
       gasLimit,
       gasPrice,
     });
+    txRequest.nonce = nonce;
     const wallet = new ethers.Wallet(privateKey, this.provider);
     try {
       const tx = await wallet.sendTransaction(txRequest);

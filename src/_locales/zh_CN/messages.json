@@ -1384,5 +1384,23 @@
   },
   "footnote": {
     "message": "重要提示"
+  },
+  "yourHavePendingTxs": {
+    "message": "您有 ({{count}}) 笔待处理的交易。 在那笔交易完成之前，这笔交易不会被处理。 学习如何"
+  },
+  "evmInsufficientGas": {
+    "message": "您的账户中没有足够的{{symbol}}可以支付{{network}}网络上的交易费用。或从另一个账户存入保证金。"
+  },
+  "approveInitTip": {
+    "message": "此操作允许第三方从您的当前余额中支出 {{symbol}}。"
+  },
+  "approveBigTip": {
+    "message": "此操作允许第三方支出您所有的代币余额，直到达到上限或您撤销支出上限为止。如果不是有意为之，请考虑设置较低的支出上限。"
+  },
+  "approveNormalTip": {
+    "message": "此操作允许第三方从您的当前余额中支出 {{amount}} {{symbol}}。"
+  },
+  "cancelOrSpeedUpTX": {
+    "message": "取消或加速交易。"
   }
 }

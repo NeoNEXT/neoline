@@ -1,4 +1,4 @@
-import { abiERC20, RpcNetwork } from '@/app/popup/_lib';
+import { abiERC20, AddressNonceInfo, RpcNetwork } from '@/app/popup/_lib';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { AppState } from '@/app/reduers';
 import { Asset } from '@/models/models';
@@ -93,7 +93,9 @@ export class AssetEVMState {
       return Promise.resolve(BigInt(21000));
     }
     const amountBN = BigInt(
-      new BigNumber(transferAmount).shiftedBy(Number(asset.decimals)).toFixed(0, 1)
+      new BigNumber(transferAmount)
+        .shiftedBy(Number(asset.decimals))
+        .toFixed(0, 1)
     );
     return this.provider.estimateGas({
       from: fromAddress,
@@ -178,7 +180,9 @@ export class AssetEVMState {
       ? BigInt(new BigNumber(gasPrice).shiftedBy(18).toFixed(0, 1))
       : undefined;
     const amountBN = BigInt(
-      new BigNumber(transferAmount).shiftedBy(Number(asset.decimals)).toFixed(0, 1)
+      new BigNumber(transferAmount)
+        .shiftedBy(Number(asset.decimals))
+        .toFixed(0, 1)
     );
     const gasLimitBN = BigInt(new BigNumber(gasLimit).toFixed(0, 1));
     let txRequest: ethers.TransactionRequest;
@@ -217,6 +221,7 @@ export class AssetEVMState {
     gasLimit,
     gasPrice,
     privateKey,
+    nonce,
   }: {
     asset: Asset;
     toAddress: string;
@@ -226,6 +231,7 @@ export class AssetEVMState {
     gasPrice?: string;
     gasLimit: string;
     privateKey: string;
+    nonce: number;
   }) {
     const txRequest = this.getTransferErc20TxRequest({
       asset,
@@ -236,6 +242,7 @@ export class AssetEVMState {
       gasLimit,
       gasPrice,
     });
+    txRequest.nonce = nonce;
     const wallet = new ethers.Wallet(privateKey, this.provider);
     try {
       const tx = await wallet.sendTransaction(txRequest);
@@ -260,11 +267,18 @@ export class AssetEVMState {
     }
   }
 
-  async getNonce(address: string) {
-    return await this.provider.send('eth_getTransactionCount', [
-      address,
-      'latest',
-    ]);
+  async getNonceInfo(address: string): Promise<AddressNonceInfo> {
+    const { pending, latest } = await ethers.resolveProperties({
+      pending: this.provider.send('eth_getTransactionCount', [
+        address,
+        'pending',
+      ]),
+      latest: this.provider.send('eth_getTransactionCount', [
+        address,
+        'latest',
+      ]),
+    });
+    return { nonce: pending, pendingTxs: pending - latest };
   }
 
   async sendTransactionByRPC(txRequest, PreExecutionParams?) {
@@ -335,11 +349,7 @@ export class AssetEVMState {
     toAddress: string;
     approveAmount: BigInt;
   }) {
-    const contract = new ethers.Contract(
-      assetAddress,
-      abiERC20,
-      this.provider
-    );
+    const contract = new ethers.Contract(assetAddress, abiERC20, this.provider);
     const data = contract.interface.encodeFunctionData('approve', [
       toAddress,
       approveAmount,

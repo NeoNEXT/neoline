@@ -6,7 +6,6 @@
 </div>
 <confirm-send-ether
   *ngIf="getTxType() === 'sendEther'"
-  [lang]="lang"
   [txParams]="txParams"
   [locationOrigin]="locationOrigin"
   [amount]="amount"
@@ -15,6 +14,7 @@
   [estimateGasError]="estimateGasError"
   [insufficientFunds]="insufficientFunds"
   [neoXNetwork]="neoXNetwork"
+  [nonceInfo]="nonceInfo"
   (closeEvent)="exit()"
   (updateFeeEvent)="updateEvmFee($event)"
   (confirmEvent)="confirm()"
@@ -22,7 +22,6 @@
 
 <confirm-send-token
   *ngIf="getTxType() === 'sendToken'"
-  [lang]="lang"
   [txParams]="txParams"
   [locationOrigin]="locationOrigin"
   [amount]="amount"
@@ -31,6 +30,7 @@
   [estimateGasError]="estimateGasError"
   [insufficientFunds]="insufficientFunds"
   [neoXNetwork]="neoXNetwork"
+  [nonceInfo]="nonceInfo"
   (closeEvent)="exit()"
   (updateFeeEvent)="updateEvmFee($event)"
   (confirmEvent)="confirm()"
@@ -38,7 +38,6 @@
 
 <confirm-contract-interaction
   *ngIf="getTxType() === 'contractInteraction'"
-  [lang]="lang"
   [txParams]="txParams"
   [locationOrigin]="locationOrigin"
   [amount]="amount"
@@ -47,6 +46,7 @@
   [estimateGasError]="estimateGasError"
   [insufficientFunds]="insufficientFunds"
   [neoXNetwork]="neoXNetwork"
+  [nonceInfo]="nonceInfo"
   (closeEvent)="exit()"
   (updateFeeEvent)="updateEvmFee($event)"
   (confirmEvent)="confirm()"
@@ -64,6 +64,7 @@
   [estimateGasError]="estimateGasError"
   [insufficientFunds]="insufficientFunds"
   [neoXNetwork]="neoXNetwork"
+  [nonceInfo]="nonceInfo"
   (closeEvent)="exit()"
   (updateFeeEvent)="updateEvmFee($event)"
   (updateApproveAmountEvent)="updateApproveAmount($event)"

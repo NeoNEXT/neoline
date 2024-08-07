@@ -1,6 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
-import { EvmTransactionParams, RpcNetwork } from '@/app/popup/_lib';
+import { AddressNonceInfo, EvmTransactionParams, RpcNetwork } from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 import BigNumber from 'bignumber.js';
 import { DappEVMState } from '@/app/core';
@@ -11,7 +11,6 @@ import { DappEVMState } from '@/app/core';
   styleUrls: ['../send-common.scss'],
 })
 export class PopupNoticeEvmConfirmSendEtherComponent {
-  @Input() lang = 'en';
   @Input() locationOrigin: string;
   @Input() txParams: EvmTransactionParams;
   @Input() amount: string;
@@ -19,6 +18,7 @@ export class PopupNoticeEvmConfirmSendEtherComponent {
   @Input() signAddressGasBalance: string;
   @Input() estimateGasError: boolean;
   @Input() insufficientFunds: boolean;
+  @Input() nonceInfo: AddressNonceInfo;
 
   @Input() neoXNetwork: RpcNetwork;
   @Output() closeEvent = new EventEmitter();
@@ -59,13 +59,5 @@ export class PopupNoticeEvmConfirmSendEtherComponent {
         .dp(8, 1)
         .toFixed();
     }
-  }
-
-  getTranslate() {
-    return this.dappEVMState.getInsufficientGasTranslate(
-      this.lang,
-      this.neoXNetwork.name,
-      this.neoXNetwork.symbol
-    );
   }
 }

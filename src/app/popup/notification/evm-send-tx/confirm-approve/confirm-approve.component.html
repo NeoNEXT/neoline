@@ -91,7 +91,23 @@
             {{ "Max" | translate | async }}
           </span>
         </div>
-        <p class="tip">{{ inputAmountTip }}</p>
+        <p class="tip" *ngIf="initTip">
+          {{
+            "approveInitTip"
+              | translate : { symbol: assetDetails.symbol }
+              | async
+          }}
+        </p>
+        <p class="tip" *ngIf="!initTip && inputAmountIsBig">
+          {{ "approveBigTip" | translate | async }}
+        </p>
+        <p class="tip" *ngIf="!initTip && !inputAmountIsBig">
+          {{
+            "approveNormalTip"
+              | translate : { amount: inputAmount, symbol: assetDetails.symbol }
+              | async
+          }}
+        </p>
       </ng-container>
       <ng-container *ngIf="!isEdit">
         <p class="edit" (click)="isEdit = true">
@@ -104,10 +120,8 @@
     </div>
 
     <div class="fee" *ngIf="!isEdit">
-      <div class="warning-tip top" *ngIf="estimateGasError">
-        <img src="assets/images/common/warning-red.svg" alt="" />
-        {{ "EstimatedFeeError" | translate | async }}
-      </div>
+      <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
+
       <evm-fee
         *ngIf="neoXFeeInfo"
         [txParams]="newTxParams ?? txParams"
@@ -117,10 +131,16 @@
         (returnFee)="updateEvmFee($event)"
       >
       </evm-fee>
-      <div class="warning-tip bottom" *ngIf="insufficientFunds">
-        <img src="assets/images/common/warning-red.svg" alt="" />
-        {{ getTranslate() }}
-      </div>
+
+      <evm-gas-error
+        *ngIf="insufficientFunds"
+        [networkName]="neoXNetwork.name"
+        [symbol]="neoXNetwork.symbol"
+      ></evm-gas-error>
+      <evm-pending-warning
+        *ngIf="nonceInfo?.pendingTxs"
+        [count]="nonceInfo.pendingTxs"
+      ></evm-pending-warning>
     </div>
 
     <p class="view-details">

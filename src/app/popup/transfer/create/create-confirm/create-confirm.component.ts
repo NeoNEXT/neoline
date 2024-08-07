@@ -6,7 +6,7 @@ import {
   EventEmitter,
   OnDestroy,
 } from '@angular/core';
-import { GAS3_CONTRACT, LedgerStatuses, STORAGE_NAME } from '../../../_lib';
+import { AddressNonceInfo, GAS3_CONTRACT, LedgerStatuses, STORAGE_NAME } from '../../../_lib';
 import { GAS, Transaction } from '@/models/models';
 import { NeoDataJsonProp, TransferData } from '../interface';
 import {
@@ -65,6 +65,8 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   evmHexData: string;
   evmHexDataLength: number;
   unsignedEvmTx: ethers.TransactionRequest;
+  nonceInfo: AddressNonceInfo;
+  insufficientFunds = false;
 
   constructor(
     private assetState: AssetState,
@@ -138,6 +140,18 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   }
   updateEvmFee($event) {
     this.data.neoXFeeInfo = $event;
+    this.checkBalance();
+  }
+  private checkBalance() {
+    if (
+      new BigNumber(this.data.amount)
+        .plus(this.data.neoXFeeInfo.estimateGas)
+        .comparedTo(this.data.gasBalance) > 0
+    ) {
+      this.insufficientFunds = true;
+    } else {
+      this.insufficientFunds = false;
+    }
   }
   //#endregion
 
@@ -195,10 +209,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         gasPrice,
       });
     }
-    const nonce = await this.assetEvmState.getNonce(
-      this.data.currentWallet.accounts[0].address
-    );
-    this.unsignedEvmTx.nonce = nonce;
+    this.unsignedEvmTx.nonce = this.nonceInfo.nonce;
   }
   private getLedgerStatus() {
     this.ledger.getDeviceStatus(this.data.chainType).then(async (res) => {
@@ -294,6 +305,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
                 gasLimit,
                 gasPrice,
                 privateKey: currentWIF,
+                nonce: this.nonceInfo.nonce,
               });
             } else {
               res = await this.assetEvmState.transferErc20({
@@ -305,6 +317,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
                 gasLimit,
                 gasPrice,
                 privateKey: currentWIF,
+                nonce: this.nonceInfo.nonce,
               });
             }
             txid = res.hash;
@@ -473,6 +486,14 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         this.data.chainType === 'NeoX' ? this.data.network.chainId : undefined,
     };
 
+    // get nonce
+    if (this.data.chainType === 'NeoX') {
+      this.assetEvmState.getNonceInfo(this.data.from).then((res) => {
+        this.nonceInfo = res;
+      });
+    }
+
+    // EVM: get data
     if (
       this.data.chainType === 'NeoX' &&
       !this.data.isNFT &&

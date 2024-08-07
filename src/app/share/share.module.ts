@@ -42,6 +42,9 @@ import { CopyComponent } from './components/copy/copy.component';
 import { EvmFeeComponent } from './components/evm-fee/evm-fee.component';
 import { TooltipComponent } from './components/tooltip/tooltip.component';
 import { TokenLogoComponent } from './components/token-logo/token-logo.component';
+import { EvmGasErrorComponent } from './components/evm-gas-error/evm-gas-error.component';
+import { EvmPendingWarningComponent } from './components/evm-pending-warning/evm-pending-warning.component';
+import { EvmEstimateErrorComponent } from './components/evm-estimate-error/evm-estimate-error.component';
 const COMPONENTS = [
   AssetTxPageComponent,
   NftTxPageComponent,
@@ -53,6 +56,9 @@ const COMPONENTS = [
   EvmFeeComponent,
   TooltipComponent,
   TokenLogoComponent,
+  EvmGasErrorComponent,
+  EvmPendingWarningComponent,
+  EvmEstimateErrorComponent,
 ];
 //#endregion
 

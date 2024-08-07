@@ -50,10 +50,8 @@
     </span>
   </div>
   <div class="content details" *ngIf="tabType === 'details'">
-    <div class="warning-tip top" *ngIf="estimateGasError">
-      <img src="assets/images/common/warning-red.svg" alt="" />
-      {{ "EstimatedFeeError" | translate | async }}
-    </div>
+    <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
+
     <evm-fee
       *ngIf="neoXFeeInfo"
       [transferToAddress]="toAddress"
@@ -79,10 +77,15 @@
       </div>
     </li>
 
-    <div class="warning-tip bottom" *ngIf="insufficientFunds">
-      <img src="assets/images/common/warning-red.svg" alt="" />
-      {{ getTranslate() }}
-    </div>
+    <evm-gas-error
+      *ngIf="insufficientFunds"
+      [networkName]="neoXNetwork.name"
+      [symbol]="neoXNetwork.symbol"
+    ></evm-gas-error>
+    <evm-pending-warning
+      *ngIf="nonceInfo?.pendingTxs"
+      [count]="nonceInfo.pendingTxs"
+    ></evm-pending-warning>
   </div>
   <div class="content data" *ngIf="tabType === 'data'">
     <p class="title">

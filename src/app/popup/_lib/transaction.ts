@@ -18,3 +18,8 @@ export interface BridgeTransactionItem {
   targetExplorer: string;
   sourceRpcUrl: string;
 }
+
+export interface AddressNonceInfo {
+  nonce: number;
+  pendingTxs: number;
+}
