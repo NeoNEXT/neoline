@@ -29,6 +29,7 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   @Output() updateFeeEvent = new EventEmitter<NeoXFeeInfoProp>();
   @Output() confirmEvent = new EventEmitter();
 
+  customNonce: number;
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   tabType: TabType = 'details';
   contractMethodData: { fourByteSig: string; name: string; params: any[] };
@@ -76,6 +77,6 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   }
 
   confirm() {
-    this.confirmEvent.emit();
+    this.confirmEvent.emit(this.customNonce);
   }
 }

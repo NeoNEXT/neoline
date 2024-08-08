@@ -69,7 +69,7 @@
           min="0"
           placeholder="0"
           [(ngModel)]="transferAmount"
-          (keypress)="checkTransferAmount($event)"
+          (input)="checkTransferAmount($event)"
         />
         <span class="all" (click)="transferAll()">{{
           "allTransfer" | translate | async

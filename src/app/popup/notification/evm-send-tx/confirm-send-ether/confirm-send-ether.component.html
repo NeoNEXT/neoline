@@ -48,18 +48,25 @@
     >
     </evm-fee>
 
-    <li *ngIf="amount">
-      <div class="row evm">
-        <div class="label">
-          <p>{{ "TOTAL" | translate | async }}</p>
-          <p class="label tip">
-            {{ "amount" | translate | async }} +
-            {{ "GASFEE" | translate | async }}
-          </p>
-        </div>
-        <p class="value">{{ getEvmTotalData() }} {{ neoXNetwork?.symbol }}</p>
+    <div class="row evm" *ngIf="amount">
+      <div class="label">
+        <p>{{ "TOTAL" | translate | async }}</p>
+        <p class="label tip">
+          {{ "amount" | translate | async }} +
+          {{ "GASFEE" | translate | async }}
+        </p>
       </div>
-    </li>
+      <p class="value">{{ getEvmTotalData() }} {{ neoXNetwork?.symbol }}</p>
+    </div>
+    <div class="nonce">
+      {{ "customNonce" | translate | async }}:
+      <input
+        type="text"
+        [placeholder]="nonceInfo?.nonce ?? ''"
+        [(ngModel)]="customNonce"
+        oninput="value=value.replace(/[^\d]/g,'')"
+      />
+    </div>
 
     <evm-gas-error
       *ngIf="insufficientFunds"

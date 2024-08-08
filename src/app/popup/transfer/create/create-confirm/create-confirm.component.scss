@@ -106,6 +106,21 @@ section.container {
         }
       }
     }
+    .nonce {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      input {
+        width: 100px;
+        height: 32px;
+        padding: 0 16px;
+        border-radius: 4px;
+        background: var(--box-color);
+        font-family: NeverMind-Medium;
+        font-size: 18px;
+        color: var(--title-color);
+      }
+    }
   }
   .data-content {
     height: 220px;

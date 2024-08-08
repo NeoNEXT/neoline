@@ -55,6 +55,16 @@
       (returnFee)="updateEvmFee($event)"
     >
     </evm-fee>
+    <div class="nonce">
+      {{ "customNonce" | translate | async }}:
+      <input
+        type="text"
+        [placeholder]="nonceInfo?.nonce ?? ''"
+        [(ngModel)]="customNonce"
+        oninput="value=value.replace(/[^\d]/g,'')"
+      />
+    </div>
+
     <evm-gas-error
       *ngIf="insufficientFunds"
       [networkName]="neoXNetwork.name"

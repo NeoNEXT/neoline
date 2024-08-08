@@ -59,6 +59,9 @@ export interface Transaction {
 
   // NFT
   tokenid?: string;
+
+  // EVM
+  nonce?: number;
 }
 
 export interface NftTransaction extends Transaction {

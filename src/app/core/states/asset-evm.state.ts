@@ -1,4 +1,9 @@
-import { abiERC20, AddressNonceInfo, RpcNetwork } from '@/app/popup/_lib';
+import {
+  abiERC20,
+  AddressNonceInfo,
+  EvmTransactionParams,
+  RpcNetwork,
+} from '@/app/popup/_lib';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { AppState } from '@/app/reduers';
 import { Asset } from '@/models/models';
@@ -153,6 +158,49 @@ export class AssetEVMState {
     };
   }
 
+  getBigIntValue(value: string, decimals = 18) {
+    return value
+      ? BigInt(new BigNumber(value).shiftedBy(decimals).toFixed(0, 1))
+      : undefined;
+  }
+  private getHexValue(value: string | number, decimals = 18) {
+    return value
+      ? '0x' + new BigNumber(value).shiftedBy(decimals).toString(16)
+      : undefined;
+  }
+
+  getTxParams(
+    txParams: Omit<EvmTransactionParams, 'type'>,
+    neoXFeeInfo: Omit<NeoXFeeInfoProp, 'estimateGas'>,
+    nonce: number,
+    from: string
+  ) {
+    const { maxFeePerGas, maxPriorityFeePerGas, gasLimit, gasPrice } =
+      neoXFeeInfo;
+
+    const newParams = {
+      ...txParams,
+      maxFeePerGas: this.getBigIntValue(maxFeePerGas),
+      maxPriorityFeePerGas: this.getBigIntValue(maxPriorityFeePerGas),
+      gasPrice: this.getBigIntValue(gasPrice),
+      gasLimit: this.getBigIntValue(gasLimit, 0),
+      value: this.getBigIntValue(txParams.value, 0),
+      nonce: nonce,
+    };
+    const PreExecutionParams = {
+      ...txParams,
+      from,
+      // maxFeePerGas: this.getHexValue(maxFeePerGas),
+      // maxPriorityFeePerGas: this.getHexValue(maxPriorityFeePerGas),
+      // gasPrice: this.getHexValue(gasPrice),
+      // gas: this.getHexValue(gasLimit, 0),
+      value: this.getHexValue(txParams.value, 0),
+      nonce: this.getHexValue(nonce, 0),
+    };
+
+    return { PreExecutionParams, newParams };
+  }
+
   getTransferErc20TxRequest({
     asset,
     toAddress,
@@ -161,6 +209,8 @@ export class AssetEVMState {
     maxPriorityFeePerGas,
     gasLimit,
     gasPrice,
+    nonce,
+    fromAddress,
   }: {
     asset: Asset;
     toAddress: string;
@@ -169,47 +219,32 @@ export class AssetEVMState {
     maxPriorityFeePerGas?: string;
     gasPrice?: string;
     gasLimit: string;
-  }): ethers.TransactionRequest {
-    const maxFeePerGasBN = maxFeePerGas
-      ? BigInt(new BigNumber(maxFeePerGas).shiftedBy(18).toFixed(0, 1))
-      : undefined;
-    const maxPriorityFeePerGasBN = maxPriorityFeePerGas
-      ? BigInt(new BigNumber(maxPriorityFeePerGas).shiftedBy(18).toFixed(0, 1))
-      : undefined;
-    const gasPriceBN = gasPrice
-      ? BigInt(new BigNumber(gasPrice).shiftedBy(18).toFixed(0, 1))
-      : undefined;
-    const amountBN = BigInt(
-      new BigNumber(transferAmount)
-        .shiftedBy(Number(asset.decimals))
-        .toFixed(0, 1)
-    );
-    const gasLimitBN = BigInt(new BigNumber(gasLimit).toFixed(0, 1));
-    let txRequest: ethers.TransactionRequest;
+    nonce: number;
+    fromAddress: string;
+  }) {
+    let txParams;
+    const value = new BigNumber(transferAmount)
+      .shiftedBy(asset.decimals)
+      .toFixed(0, 1);
     if (asset.asset_id === ETH_SOURCE_ASSET_HASH) {
-      txRequest = {
-        to: toAddress,
-        value: amountBN,
-        maxFeePerGas: maxFeePerGasBN,
-        maxPriorityFeePerGas: maxPriorityFeePerGasBN,
-        gasLimit: gasLimitBN,
-        gasPrice: gasPriceBN,
-      };
+      txParams = { to: toAddress, value };
     } else {
-      txRequest = {
+      txParams = {
         to: asset.asset_id,
         data: this.getTransferERC20Data({
           asset,
           toAddress,
-          transferAmount: amountBN,
+          transferAmount: this.getBigIntValue(value, 0),
         }),
-        maxFeePerGas: maxFeePerGasBN,
-        maxPriorityFeePerGas: maxPriorityFeePerGasBN,
-        gasLimit: gasLimitBN,
-        gasPrice: gasPriceBN,
       };
     }
-    return txRequest;
+    const neoXFeeInfo = {
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      gasLimit,
+      gasPrice,
+    };
+    return this.getTxParams(txParams, neoXFeeInfo, nonce, fromAddress);
   }
 
   async transferErc20({
@@ -222,6 +257,7 @@ export class AssetEVMState {
     gasPrice,
     privateKey,
     nonce,
+    fromAddress,
   }: {
     asset: Asset;
     toAddress: string;
@@ -232,8 +268,9 @@ export class AssetEVMState {
     gasLimit: string;
     privateKey: string;
     nonce: number;
+    fromAddress: string;
   }) {
-    const txRequest = this.getTransferErc20TxRequest({
+    const { PreExecutionParams, newParams } = this.getTransferErc20TxRequest({
       asset,
       toAddress,
       transferAmount,
@@ -241,34 +278,33 @@ export class AssetEVMState {
       maxPriorityFeePerGas,
       gasLimit,
       gasPrice,
+      nonce,
+      fromAddress,
     });
-    txRequest.nonce = nonce;
-    const wallet = new ethers.Wallet(privateKey, this.provider);
-    try {
-      const tx = await wallet.sendTransaction(txRequest);
-      return tx;
-    } catch (error) {
-      throw this.handleEthersError(error);
-    }
+    return await this.sendDappTransaction(
+      PreExecutionParams,
+      newParams,
+      privateKey
+    );
   }
 
   async sendDappTransaction(PreExecutionParams, txParams, privateKey: string) {
     try {
       await this.provider.send('eth_call', [PreExecutionParams, 'latest']);
     } catch (error) {
-      throw this.handleEthersError(error);
+      throw await this.handleEthersError(error);
     }
     const wallet = new ethers.Wallet(privateKey, this.provider);
     try {
       const tx = await wallet.sendTransaction(txParams);
       return tx;
     } catch (error) {
-      throw this.handleEthersError(error);
+      throw await this.handleEthersError(error);
     }
   }
 
   async getNonceInfo(address: string): Promise<AddressNonceInfo> {
-    const { pending, latest } = await ethers.resolveProperties({
+    let { pending, latest } = await ethers.resolveProperties({
       pending: this.provider.send('eth_getTransactionCount', [
         address,
         'pending',
@@ -278,6 +314,8 @@ export class AssetEVMState {
         'latest',
       ]),
     });
+    pending = Number(pending);
+    latest = Number(latest);
     return { nonce: pending, pendingTxs: pending - latest };
   }
 
@@ -286,7 +324,7 @@ export class AssetEVMState {
       try {
         await this.provider.send('eth_call', [PreExecutionParams, 'latest']);
       } catch (error) {
-        throw this.handleEthersError(error);
+        throw await this.handleEthersError(error);
       }
     }
     const serializedTx = ethers.Transaction.from(txRequest).serialized;
@@ -296,7 +334,7 @@ export class AssetEVMState {
       ]);
       return tx;
     } catch (error) {
-      throw this.handleEthersError(error);
+      throw await this.handleEthersError(error);
     }
   }
 
@@ -314,7 +352,7 @@ export class AssetEVMState {
       ]);
       return { status: tx.status, block_time: blockTx.timestamp };
     } catch (error) {
-      throw this.handleEthersError(error);
+      throw await this.handleEthersError(error);
     }
   }
 
@@ -357,15 +395,12 @@ export class AssetEVMState {
     return data;
   }
 
-  handleEthersError(error) {
-    // console.log(error);
-    // if (error.data) {
-    //   const code = error.data.replace('Reverted ', '');
-    //   let reason = ethers.toUtf8String('0x' + code.substr(138));
-    //   console.log('revert reason:', reason);
-    // }
-    const message = error?.info?.error?.message;
-    return `Transaction failed: ${message}`;
+  async handleEthersError(err) {
+    const message: string = err?.info?.error?.message ?? err?.error?.message;
+    if (message.toLowerCase().includes('transaction underpriced')) {
+      return 'Transaction underpriced';
+    }
+    return message ? `Transaction failed: ${message}` : 'Transaction failed';
   }
   //#endregion
 }

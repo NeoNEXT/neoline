@@ -64,6 +64,15 @@
         </p>
       </div>
     </li>
+    <li class="nonce">
+      {{ "customNonce" | translate | async }}:
+      <input
+        type="text"
+        [placeholder]="nonceInfo?.nonce ?? ''"
+        [(ngModel)]="customNonce"
+        oninput="value=value.replace(/[^\d]/g,'')"
+      />
+    </li>
     <li>
       <evm-gas-error
         *ngIf="insufficientFunds"

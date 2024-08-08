@@ -86,91 +86,102 @@
       <p class="row tip">{{ rate.fee | numberFixed : 2 }} {{ rateCurrency }}</p>
     </li>
 
-    <li *ngIf="data?.chainType === 'Neo3'">
-      <p class="row">
-        <span class="label">{{ "SYSTEMFEE" | translate | async }}</span>
-        <span class="value">{{ systemFee | numberFixed }} GAS</span>
-      </p>
-      <p class="row tip">
-        {{ rate.systemFee | numberFixed : 2 }} {{ rateCurrency }}
-      </p>
-    </li>
-    <li *ngIf="data?.chainType === 'Neo3'">
-      <p class="row">
-        <span class="label">{{ "NETWORKFEE" | translate | async }}</span>
-        <span class="value">{{ networkFee | numberFixed }} GAS</span>
-      </p>
-      <p class="row tip">
-        {{ rate.networkFee | numberFixed : 2 }} {{ rateCurrency }}
-      </p>
-    </li>
-    <li *ngIf="data?.chainType === 'Neo3'">
-      <p class="row">
-        <span class="label">{{ "TOTAL" | translate | async }}</span>
-        <span class="value"
-          >{{ data?.amount | numberFixed }} {{ dataJson?.symbol }} +
-          {{ totalFee | numberFixed }} GAS</span
-        >
-      </p>
-      <p class="row tip column">
-        <span class="label"
-          >{{ "amount" | translate | async }} +
-          {{ "GASFEE" | translate | async }}</span
-        >
-        <span class="value"
-          >{{ rate.total | numberFixed : 2 }} {{ rateCurrency }}</span
-        >
-      </p>
-    </li>
+    <ng-container *ngIf="data.chainType === 'Neo3'">
+      <li>
+        <p class="row">
+          <span class="label">{{ "SYSTEMFEE" | translate | async }}</span>
+          <span class="value">{{ systemFee | numberFixed }} GAS</span>
+        </p>
+        <p class="row tip">
+          {{ rate.systemFee | numberFixed : 2 }} {{ rateCurrency }}
+        </p>
+      </li>
+      <li>
+        <p class="row">
+          <span class="label">{{ "NETWORKFEE" | translate | async }}</span>
+          <span class="value">{{ networkFee | numberFixed }} GAS</span>
+        </p>
+        <p class="row tip">
+          {{ rate.networkFee | numberFixed : 2 }} {{ rateCurrency }}
+        </p>
+      </li>
+      <li>
+        <p class="row">
+          <span class="label">{{ "TOTAL" | translate | async }}</span>
+          <span class="value"
+            >{{ data?.amount | numberFixed }} {{ dataJson?.symbol }} +
+            {{ totalFee | numberFixed }} GAS</span
+          >
+        </p>
+        <p class="row tip column">
+          <span class="label"
+            >{{ "amount" | translate | async }} +
+            {{ "GASFEE" | translate | async }}</span
+          >
+          <span class="value"
+            >{{ rate.total | numberFixed : 2 }} {{ rateCurrency }}</span
+          >
+        </p>
+      </li>
+    </ng-container>
 
     <!-- evm -->
-
-    <evm-fee
-      *ngIf="data.chainType === 'NeoX'"
-      [transferAsset]="data.asset"
-      [nftAsset]="data.nftAsset"
-      [transferNFT]="data.nftToken"
-      [transferToAddress]="data.to?.address"
-      [fromAddress]="data.from"
-      [transferAmount]="data.amount"
-      [symbol]="data.network.symbol"
-      [customNeoXFeeInfo]="data.neoXFeeInfo"
-      [place]="'confirm'"
-      (returnFee)="updateEvmFee($event)"
-    >
-    </evm-fee>
-    <li *ngIf="data?.chainType === 'NeoX'">
-      <div class="row evm">
-        <div class="label">
-          <p>{{ "TOTAL" | translate | async }}</p>
-          <p class="label tip">
-            {{ "amount" | translate | async }} +
-            {{ "GASFEE" | translate | async }}
+    <ng-container *ngIf="data.chainType === 'NeoX'">
+      <li *ngIf="insufficientFunds">
+        <evm-gas-error
+          [networkName]="data.network.name"
+          [symbol]="data.network.symbol"
+        ></evm-gas-error>
+      </li>
+      <li *ngIf="nonceInfo?.pendingTxs">
+        <evm-pending-warning
+          [count]="nonceInfo.pendingTxs"
+        ></evm-pending-warning>
+      </li>
+      <li>
+        <evm-fee
+          [transferAsset]="data.asset"
+          [nftAsset]="data.nftAsset"
+          [transferNFT]="data.nftToken"
+          [transferToAddress]="data.to?.address"
+          [fromAddress]="data.from"
+          [transferAmount]="data.amount"
+          [symbol]="data.network.symbol"
+          [customNeoXFeeInfo]="data.neoXFeeInfo"
+          [place]="'confirm'"
+          (returnFee)="updateEvmFee($event)"
+        >
+        </evm-fee>
+      </li>
+      <li>
+        <div class="row evm">
+          <div class="label">
+            <p>{{ "TOTAL" | translate | async }}</p>
+            <p class="label tip">
+              {{ "amount" | translate | async }} +
+              {{ "GASFEE" | translate | async }}
+            </p>
+          </div>
+          <p class="value" *ngIf="dataJson.asset !== ETH_SOURCE_ASSET_HASH">
+            {{ data?.amount | numberFixed : 8 }} {{ dataJson?.symbol }} + <br />
+            {{ data.neoXFeeInfo.estimateGas | numberFixed : 8 }}
+            {{ data.network.symbol }}
+          </p>
+          <p class="value" *ngIf="dataJson.asset === ETH_SOURCE_ASSET_HASH">
+            {{ getEvmTotalData() }} {{ dataJson?.symbol }}
           </p>
         </div>
-        <p class="value" *ngIf="dataJson.asset !== ETH_SOURCE_ASSET_HASH">
-          {{ data?.amount | numberFixed : 8 }} {{ dataJson?.symbol }} + <br />
-          {{ data.neoXFeeInfo.estimateGas | numberFixed : 8 }}
-          {{ data.network.symbol }}
-        </p>
-        <p class="value" *ngIf="dataJson.asset === ETH_SOURCE_ASSET_HASH">
-          {{ getEvmTotalData() }} {{ dataJson?.symbol }}
-        </p>
-      </div>
-    </li>
-    <li>
-      <evm-gas-error
-        *ngIf="insufficientFunds"
-        [networkName]="data.network.name"
-        [symbol]="data.network.symbol"
-      ></evm-gas-error>
-    </li>
-    <li>
-      <evm-pending-warning
-        *ngIf="nonceInfo?.pendingTxs"
-        [count]="nonceInfo.pendingTxs"
-      ></evm-pending-warning>
-    </li>
+      </li>
+      <li class="nonce">
+        {{ "customNonce" | translate | async }}:
+        <input
+          type="text"
+          [placeholder]="nonceInfo?.nonce ?? ''"
+          [(ngModel)]="customNonce"
+          oninput="value=value.replace(/[^\d]/g,'')"
+        />
+      </li>
+    </ng-container>
   </ul>
   <div class="data-content" *ngIf="tabType === 'data'">
     <ng-container *ngIf="data.chainType !== 'NeoX'">

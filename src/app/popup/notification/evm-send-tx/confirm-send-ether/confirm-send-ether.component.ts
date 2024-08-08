@@ -26,6 +26,7 @@ export class PopupNoticeEvmConfirmSendEtherComponent {
   @Output() confirmEvent = new EventEmitter();
 
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
+  customNonce: number;
 
   constructor(private dappEVMState: DappEVMState) {}
 
@@ -39,7 +40,7 @@ export class PopupNoticeEvmConfirmSendEtherComponent {
   }
 
   confirm() {
-    this.confirmEvent.emit();
+    this.confirmEvent.emit(this.customNonce);
   }
 
   getShowAmount() {

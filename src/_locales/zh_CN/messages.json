@@ -1402,5 +1402,8 @@
   },
   "cancelOrSpeedUpTX": {
     "message": "取消或加速交易。"
+  },
+  "customNonce": {
+    "message": "自定义 nonce"
   }
 }

@@ -37,6 +37,7 @@ export class EvmNFTState {
     maxPriorityFeePerGas,
     gasLimit,
     gasPrice,
+    nonce,
   }: {
     asset: NftAsset;
     token: NftToken;
@@ -46,27 +47,20 @@ export class EvmNFTState {
     maxPriorityFeePerGas?: string;
     gasPrice?: string;
     gasLimit: string;
-  }): ethers.TransactionRequest {
-    const maxFeePerGasBN = maxFeePerGas
-      ? BigInt(new BigNumber(maxFeePerGas).shiftedBy(18).toFixed(0, 1))
-      : undefined;
-    const maxPriorityFeePerGasBN = maxPriorityFeePerGas
-      ? BigInt(new BigNumber(maxPriorityFeePerGas).shiftedBy(18).toFixed(0, 1))
-      : undefined;
-    const gasPriceBN = gasPrice
-      ? BigInt(new BigNumber(gasPrice).shiftedBy(18).toFixed(0, 1))
-      : undefined;
-    const gasLimitBN = BigInt(new BigNumber(gasLimit).toFixed(0, 1));
-    let txRequest: ethers.TransactionRequest;
-    txRequest = {
+    nonce: number;
+  }) {
+    let txParams;
+    txParams = {
       to: asset.assethash,
       data: this.getTransferData({ asset, token, fromAddress, toAddress }),
-      maxFeePerGas: maxFeePerGasBN,
-      maxPriorityFeePerGas: maxPriorityFeePerGasBN,
-      gasLimit: gasLimitBN,
-      gasPrice: gasPriceBN,
     };
-    return txRequest;
+    const neoXFeeInfo = {
+      maxFeePerGas,
+      maxPriorityFeePerGas,
+      gasLimit,
+      gasPrice,
+    };
+    return this.assetEVMState.getTxParams(txParams, neoXFeeInfo, nonce, fromAddress);
   }
 
   async transferNFT({
@@ -92,7 +86,7 @@ export class EvmNFTState {
     privateKey: string;
     nonce: number;
   }) {
-    const txRequest = this.getTransferTxRequest({
+    const { PreExecutionParams, newParams } = this.getTransferTxRequest({
       asset,
       token,
       fromAddress,
@@ -101,15 +95,13 @@ export class EvmNFTState {
       maxPriorityFeePerGas,
       gasLimit,
       gasPrice,
+      nonce,
     });
-    txRequest.nonce = nonce;
-    const wallet = new ethers.Wallet(privateKey, this.provider);
-    try {
-      const tx = await wallet.sendTransaction(txRequest);
-      return tx;
-    } catch (error) {
-      throw this.assetEVMState.handleEthersError(error);
-    }
+    return await this.assetEVMState.sendDappTransaction(
+      PreExecutionParams,
+      newParams,
+      privateKey
+    );
   }
 
   async estimateGasOfTransfer({
@@ -223,7 +215,7 @@ export class EvmNFTState {
     ownerAddress: string,
     nftAddress: string,
     tokenId: string,
-    standard?: 'ERC721' | 'ERC1155' | string,
+    standard?: 'ERC721' | 'ERC1155' | string
   ): Promise<boolean> {
     // Checks the ownership for ERC-721.
     try {

@@ -56,8 +56,8 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
 
   transferAmount = '';
   private isTransferAllLoading = false;
+  private isTransferAll = false;
   priorityFee = '0';
-  loading = false;
   gasBalance = '0'; // GAS || GAS3_CONTRACT || ETH_SOURCE_ASSET_HASH
 
   // EVM
@@ -269,22 +269,19 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
 
   //#region amount
   checkTransferAmount(event) {
-    const inputStr = String.fromCharCode(event.keyCode);
-    let re = /^[0-9\.]+$/;
-    if (
-      this.transferAmount !== undefined &&
-      this.transferAmount.indexOf('.') >= 0
-    ) {
-      re = /^[0-9]+$/;
-    }
-    if (!re.test(inputStr)) {
-      return false;
-    }
+    this.isTransferAll = false;
+    const value = event.target.value;
+    const regex = new RegExp(
+      `^\\D*(\\d*(?:\\.\\d{0,${this.transferAsset.decimals}})?).*`,
+      'g'
+    );
+    event.target.value = value.replace(regex, '$1');
   }
   transferAll() {
     if (this.isTransferAllLoading || !this.transferAsset) {
       return;
     }
+    this.isTransferAll = true;
     this.isTransferAllLoading = true;
     // 不是 GAS 资产时
     if (
@@ -292,10 +289,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       this.transferAsset.asset_id !== GAS3_CONTRACT &&
       this.transferAsset.asset_id !== ETH_SOURCE_ASSET_HASH
     ) {
-      this.transferAmount = new BigNumber(this.transferAsset.balance).toFixed(
-        8,
-        1
-      );
+      this.transferAmount = this.transferAsset.balance;
       this.isTransferAllLoading = false;
       return;
     }
@@ -304,7 +298,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
         this.neoXFeeInfo?.estimateGas.toString() || 0
       );
       if (tAmount.comparedTo(0) > 0) {
-        this.transferAmount = tAmount.toFixed(8, 1);
+        this.transferAmount = tAmount.toFixed(this.transferAsset.decimals, 1);
       } else {
         this.global.snackBarTip('balanceLack');
       }
@@ -319,7 +313,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       this.priorityFee = '0'; // 优先费大于全部资产时，小费重设为0
       tempAmount = this.transferAsset.balance;
     } else {
-      tempAmount = tAmount.toString();
+      tempAmount = tAmount.toFixed(this.transferAsset.decimals, 1);
     }
     // neo2 的 GAS
     if (this.transferAsset.asset_id === GAS) {
@@ -336,18 +330,15 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       networkFee: this.priorityFee,
       decimals: this.transferAsset.decimals,
     };
-    this.loading = true;
     this.neo3Transfer.createNeo3Tx(param, true).subscribe(
       (tx) => {
         this.transferAmount = bignumber(this.transferAsset.balance)
           .minus(tx.networkFee.toDecimal(8))
           .minus(tx.systemFee.toDecimal(8))
           .toString();
-        this.loading = false;
         this.isTransferAllLoading = false;
       },
       () => {
-        this.loading = false;
         this.isTransferAllLoading = false;
       }
     );
@@ -396,6 +387,19 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
 
   updateEvmFee($event) {
     this.neoXFeeInfo = $event;
+    // isTransferAll: Recalculate transferAmount
+    if (
+      this.isTransferAll &&
+      this.transferAsset.asset_id === ETH_SOURCE_ASSET_HASH
+    ) {
+      const tAmount = new BigNumber(this.transferAsset.balance).minus(
+        this.neoXFeeInfo?.estimateGas.toString() || 0
+      );
+      this.transferAmount =
+        tAmount.comparedTo(0) > 0
+          ? tAmount.toFixed(this.transferAsset.decimals, 1)
+          : '';
+    }
   }
 
   cancel() {

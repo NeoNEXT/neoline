@@ -6,7 +6,12 @@ import {
   EventEmitter,
   OnDestroy,
 } from '@angular/core';
-import { AddressNonceInfo, GAS3_CONTRACT, LedgerStatuses, STORAGE_NAME } from '../../../_lib';
+import {
+  AddressNonceInfo,
+  GAS3_CONTRACT,
+  LedgerStatuses,
+  STORAGE_NAME,
+} from '../../../_lib';
 import { GAS, Transaction } from '@/models/models';
 import { NeoDataJsonProp, TransferData } from '../interface';
 import {
@@ -66,6 +71,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   evmHexDataLength: number;
   unsignedEvmTx: ethers.TransactionRequest;
   nonceInfo: AddressNonceInfo;
+  customNonce: number;
   insufficientFunds = false;
 
   constructor(
@@ -144,13 +150,28 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   }
   private checkBalance() {
     if (
-      new BigNumber(this.data.amount)
-        .plus(this.data.neoXFeeInfo.estimateGas)
-        .comparedTo(this.data.gasBalance) > 0
+      !this.data.isNFT &&
+      this.data.asset.asset_id === ETH_SOURCE_ASSET_HASH
     ) {
-      this.insufficientFunds = true;
+      if (
+        new BigNumber(this.data.amount)
+          .plus(this.data.neoXFeeInfo.estimateGas)
+          .comparedTo(this.data.gasBalance) > 0
+      ) {
+        this.insufficientFunds = true;
+      } else {
+        this.insufficientFunds = false;
+      }
     } else {
-      this.insufficientFunds = false;
+      if (
+        new BigNumber(this.data.neoXFeeInfo.estimateGas).comparedTo(
+          this.data.gasBalance
+        ) > 0
+      ) {
+        this.insufficientFunds = true;
+      } else {
+        this.insufficientFunds = false;
+      }
     }
   }
   //#endregion
@@ -188,7 +209,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
       neoXFeeInfo;
     if (isNFT) {
-      this.unsignedEvmTx = this.evmNFTState.getTransferTxRequest({
+      const { newParams } = this.evmNFTState.getTransferTxRequest({
         asset: nftAsset,
         token: nftToken,
         fromAddress: from,
@@ -197,9 +218,11 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         maxPriorityFeePerGas,
         gasLimit,
         gasPrice,
+        nonce: this.customNonce ?? this.nonceInfo.nonce,
       });
+      this.unsignedEvmTx = newParams;
     } else {
-      this.unsignedEvmTx = this.assetEvmState.getTransferErc20TxRequest({
+      const { newParams } = this.assetEvmState.getTransferErc20TxRequest({
         asset: asset,
         toAddress: to.address,
         transferAmount: amount,
@@ -207,9 +230,11 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         maxPriorityFeePerGas,
         gasLimit,
         gasPrice,
+        nonce: this.customNonce ?? this.nonceInfo.nonce,
+        fromAddress: from,
       });
+      this.unsignedEvmTx = newParams;
     }
-    this.unsignedEvmTx.nonce = this.nonceInfo.nonce;
   }
   private getLedgerStatus() {
     this.ledger.getDeviceStatus(this.data.chainType).then(async (res) => {
@@ -305,7 +330,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
                 gasLimit,
                 gasPrice,
                 privateKey: currentWIF,
-                nonce: this.nonceInfo.nonce,
+                nonce: this.customNonce ?? this.nonceInfo.nonce,
               });
             } else {
               res = await this.assetEvmState.transferErc20({
@@ -317,7 +342,8 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
                 gasLimit,
                 gasPrice,
                 privateKey: currentWIF,
-                nonce: this.nonceInfo.nonce,
+                nonce: this.customNonce ?? this.nonceInfo.nonce,
+                fromAddress: from,
               });
             }
             txid = res.hash;
@@ -347,6 +373,9 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
               ? this.data.asset.asset_id
               : undefined;
         }
+        if (this.data.chainType === 'NeoX') {
+          txTarget.nonce = this.customNonce ?? this.nonceInfo.nonce;
+        }
         this.pushTransaction(txTarget);
       }
       // todo transfer done
@@ -360,10 +389,18 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         .subscribe(() => {
           history.go(-1);
         });
-      this.loading = false;
-      this.loadingMsg = '';
     } catch (err) {
-      this.global.handlePrcError(err, 'Neo2');
+      switch (this.data.chainType) {
+        case 'Neo2':
+          this.global.handlePrcError(err, 'Neo2');
+          break;
+        case 'Neo3':
+          this.global.handlePrcError(err, 'Neo3');
+          break;
+        case 'NeoX':
+          this.global.snackBarTip(err);
+          break;
+      }
     }
     this.loading = false;
     this.loadingMsg = '';

@@ -125,7 +125,12 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
       pwd
     );
 
-    const { newParams, PreExecutionParams } = this.getTxParams();
+    const { newParams, PreExecutionParams } = this.assetEVMState.getTxParams(
+      this.txParams,
+      this.neoXFeeInfo,
+      this.nonceInfo.nonce,
+      this.txParams.from
+    );
     this.assetEVMState
       .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
       .then((tx) => {
@@ -138,8 +143,7 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
       });
   }
 
-  private ledgerSendTx(signedTx) {
-    const { PreExecutionParams } = this.getTxParams();
+  private ledgerSendTx(signedTx, PreExecutionParams) {
     this.assetEVMState
       .sendTransactionByRPC(signedTx, PreExecutionParams)
       .then((txHash) => {
@@ -159,16 +163,19 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
         this.getStatusInterval.unsubscribe();
         this.loadingMsg = 'signTheTransaction';
 
-        const { newParams } = this.getTxParams();
-        if (!newParams.nonce) {
-          newParams.nonce = this.nonceInfo.nonce;
-        }
+        const { newParams, PreExecutionParams } =
+          this.assetEVMState.getTxParams(
+            this.txParams,
+            this.neoXFeeInfo,
+            this.nonceInfo.nonce,
+            this.txParams.from
+          );
         delete newParams.from;
         this.ledger
           .getLedgerSignedTx(newParams as any, this.currentWallet, 'NeoX')
           .then((tx) => {
             this.loading = false;
-            this.ledgerSendTx(tx);
+            this.ledgerSendTx(tx, PreExecutionParams);
           })
           .catch((error) => {
             this.loading = false;
@@ -177,46 +184,5 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
           });
       }
     });
-  }
-  private getTxParams() {
-    const { maxFeePerGas, maxPriorityFeePerGas, gasLimit, gasPrice } =
-      this.neoXFeeInfo;
-
-    const newParams = {
-      ...this.txParams,
-      maxFeePerGas: maxFeePerGas
-        ? BigInt(new BigNumber(maxFeePerGas).shiftedBy(18).toFixed(0, 1))
-        : undefined,
-      maxPriorityFeePerGas: maxPriorityFeePerGas
-        ? BigInt(
-            new BigNumber(maxPriorityFeePerGas).shiftedBy(18).toFixed(0, 1)
-          )
-        : undefined,
-      gasPrice: gasPrice
-        ? BigInt(new BigNumber(gasPrice).shiftedBy(18).toFixed(0, 1))
-        : undefined,
-      gasLimit: BigInt(new BigNumber(gasLimit).toFixed(0, 1)),
-      value: this.txParams.value
-        ? BigInt(new BigNumber(this.txParams.value).toFixed(0, 1))
-        : undefined,
-      nonce: this.nonceInfo.nonce,
-    };
-    const PreExecutionParams = {
-      ...this.txParams,
-      maxFeePerGas: maxFeePerGas
-        ? '0x' + new BigNumber(maxFeePerGas).shiftedBy(18).toString(16)
-        : undefined,
-      maxPriorityFeePerGas: maxPriorityFeePerGas
-        ? '0x' + new BigNumber(maxPriorityFeePerGas).shiftedBy(18).toString(16)
-        : undefined,
-      gasPrice: gasPrice
-        ? '0x' + new BigNumber(gasPrice).shiftedBy(18).toString(16)
-        : undefined,
-      gas: '0x' + new BigNumber(gasLimit).toString(16),
-      value: '0x' + new BigNumber(this.txParams.value).toString(16),
-      nonce: this.nonceInfo.nonce,
-    };
-
-    return { PreExecutionParams, newParams };
   }
 }

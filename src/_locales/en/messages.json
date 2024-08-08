@@ -1402,5 +1402,8 @@
   },
   "cancelOrSpeedUpTX": {
     "message": "cancel or speed up a transaction."
+  },
+  "customNonce": {
+    "message": "Custom nonce"
   }
 }

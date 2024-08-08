@@ -30,6 +30,7 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   @Output() updateApproveAmountEvent = new EventEmitter<EvmTransactionParams>();
   @Output() confirmEvent = new EventEmitter();
 
+  customNonce: number;
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   assetDetails;
   tokenData;
@@ -119,7 +120,7 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
       this.newTxParams = Object.assign({}, this.txParams, { data: newData });
       this.updateApproveAmountEvent.emit(this.newTxParams);
     } else {
-      this.confirmEvent.emit();
+      this.confirmEvent.emit(this.customNonce);
     }
   }
 

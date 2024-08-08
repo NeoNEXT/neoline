@@ -31,6 +31,10 @@
     <p class="label">{{ 'amount' | translate | async }}</p>
     <p class="value">{{ data.tx.value + ' ' + data?.symbol }}</p>
   </li>
+  <li *ngIf="data.tx?.nonce">
+    <p class="label">Nonce</p>
+    <p class="value">{{ data.tx.nonce }}</p>
+  </li>
   <li>
     <p class="label">{{ 'time' | translate | async }}</p>
     <p class="value">

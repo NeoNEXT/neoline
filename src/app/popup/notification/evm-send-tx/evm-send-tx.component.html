@@ -17,7 +17,7 @@
   [nonceInfo]="nonceInfo"
   (closeEvent)="exit()"
   (updateFeeEvent)="updateEvmFee($event)"
-  (confirmEvent)="confirm()"
+  (confirmEvent)="confirm($event)"
 ></confirm-send-ether>
 
 <confirm-send-token
@@ -33,7 +33,7 @@
   [nonceInfo]="nonceInfo"
   (closeEvent)="exit()"
   (updateFeeEvent)="updateEvmFee($event)"
-  (confirmEvent)="confirm()"
+  (confirmEvent)="confirm($event)"
 ></confirm-send-token>
 
 <confirm-contract-interaction
@@ -49,7 +49,7 @@
   [nonceInfo]="nonceInfo"
   (closeEvent)="exit()"
   (updateFeeEvent)="updateEvmFee($event)"
-  (confirmEvent)="confirm()"
+  (confirmEvent)="confirm($event)"
 ></confirm-contract-interaction>
 
 <confirm-approve
@@ -68,5 +68,5 @@
   (closeEvent)="exit()"
   (updateFeeEvent)="updateEvmFee($event)"
   (updateApproveAmountEvent)="updateApproveAmount($event)"
-  (confirmEvent)="confirm()"
+  (confirmEvent)="confirm($event)"
 ></confirm-approve>

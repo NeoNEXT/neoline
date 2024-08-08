@@ -40,6 +40,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   iconSrc = '';
   lang = 'en';
   nonceInfo: AddressNonceInfo;
+  customNonce: number;
 
   loading = false;
   loadingMsg: string;
@@ -153,53 +154,21 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   }
 
   private getTxParams() {
-    const { maxFeePerGas, maxPriorityFeePerGas, gasLimit, gasPrice } =
-      this.neoXFeeInfo;
-
     const currentTxParams =
       this.getTxType() === 'approve' && this.approveNewTxParams
         ? this.approveNewTxParams
         : this.txParams;
 
-    const newParams = {
-      ...currentTxParams,
-      maxFeePerGas: maxFeePerGas
-        ? BigInt(new BigNumber(maxFeePerGas).shiftedBy(18).toFixed(0, 1))
-        : undefined,
-      maxPriorityFeePerGas: maxPriorityFeePerGas
-        ? BigInt(
-            new BigNumber(maxPriorityFeePerGas).shiftedBy(18).toFixed(0, 1)
-          )
-        : undefined,
-      gasPrice: gasPrice
-        ? BigInt(new BigNumber(gasPrice).shiftedBy(18).toFixed(0, 1))
-        : undefined,
-      gasLimit: BigInt(new BigNumber(gasLimit).toFixed(0, 1)),
-      value: currentTxParams.value
-        ? BigInt(new BigNumber(currentTxParams.value).toFixed(0, 1))
-        : undefined,
-      nonce: this.nonceInfo.nonce,
-    };
-    const PreExecutionParams = {
-      ...currentTxParams,
-      maxFeePerGas: maxFeePerGas
-        ? '0x' + new BigNumber(maxFeePerGas).shiftedBy(18).toString(16)
-        : undefined,
-      maxPriorityFeePerGas: maxPriorityFeePerGas
-        ? '0x' + new BigNumber(maxPriorityFeePerGas).shiftedBy(18).toString(16)
-        : undefined,
-      gasPrice: gasPrice
-        ? '0x' + new BigNumber(gasPrice).shiftedBy(18).toString(16)
-        : undefined,
-      gas: '0x' + new BigNumber(gasLimit).toString(16),
-      value: currentTxParams.value,
-      nonce: this.nonceInfo.nonce,
-    };
-
-    return { PreExecutionParams, newParams };
+    return this.assetEVMState.getTxParams(
+      currentTxParams,
+      this.neoXFeeInfo,
+      this.customNonce ?? this.nonceInfo.nonce,
+      this.txParams.from
+    );
   }
 
-  async confirm() {
+  async confirm(nonce: number) {
+    this.customNonce = nonce;
     this.loading = true;
 
     if (this.encryptWallet.accounts[0].extra.ledgerSLIP44) {
@@ -391,9 +360,6 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         this.loadingMsg = 'signTheTransaction';
 
         const { newParams } = this.getTxParams();
-        if (!newParams.nonce) {
-          newParams.nonce = this.nonceInfo.nonce;
-        }
         delete newParams.from;
         this.ledger
           .getLedgerSignedTx(newParams as any, this.encryptWallet, 'NeoX')

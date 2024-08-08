@@ -122,7 +122,7 @@ export class LedgerService {
       .then(() => LedgerStatuses.READY)
       .catch((err) => {
         if (chainType === 'NeoX') {
-          return LedgerStatuses[err];
+          return LedgerStatuses[err] ? err : LedgerStatuses.APP_CLOSED;
         }
         this.closeDevice();
         return LedgerStatuses[err] ? err : LedgerStatuses.APP_CLOSED;
@@ -235,10 +235,7 @@ export class LedgerService {
   }
 
   //#region private function
-  async getNeoXSignPersonalMessage(
-    message: string,
-    wallet: EvmWalletJSON
-  ) {
+  async getNeoXSignPersonalMessage(message: string, wallet: EvmWalletJSON) {
     const result = await this.ethTransport.signPersonalMessage(
       `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
       Buffer.from(message).toString('hex')
@@ -449,8 +446,16 @@ export class LedgerService {
               resolve('open');
             })
             .catch((error) => {
-              if (error.statusCode === 27906) {
+              if (
+                error.statusCode == '0x5515' ||
+                error.statusCode === 27906 || // UNKNOWN_APDU
+                error.statusCode === 28160 // CLA_NOT_SUPPORTED
+              ) {
                 reject(LedgerStatuses.APP_CLOSED);
+              }
+
+              if (error.includes('TransportOpenUserCancelled')) {
+                reject(LedgerStatuses.DISCONNECTED);
               }
               reject(error);
             });

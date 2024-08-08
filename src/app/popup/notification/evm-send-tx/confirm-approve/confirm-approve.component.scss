@@ -1,14 +1,7 @@
 .container {
   height: 100%;
+  overflow-y: scroll;
   .content {
-    height: calc(100% - 66px);
-    padding-bottom: 24px;
-    overflow-y: scroll;
-    mask-image: -webkit-linear-gradient(
-      top,
-      rgba(0, 0, 0, 1) 96%,
-      rgba(0, 0, 0, 0.1) 100%
-    );
     .sign-address {
       padding: 14px 20px;
       display: flex;
@@ -167,6 +160,23 @@
       margin-inline: 24px;
       margin-top: 16px;
     }
+    .nonce {
+      margin-top: 16px;
+      margin-inline: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      input {
+        width: 100px;
+        height: 32px;
+        padding: 0 16px;
+        border-radius: 4px;
+        background: var(--box-color);
+        font-family: NeverMind-Medium;
+        font-size: 18px;
+        color: var(--title-color);
+      }
+    }
     .view-details {
       margin-top: 16px;
       font-size: 12px;
@@ -206,7 +216,7 @@
     }
   }
   .btn-group {
-    padding: 0 24px;
+    padding: 24px;
     button {
       width: calc(50% - 12px);
       &.cancel {
