@@ -44,7 +44,11 @@
           placeholder="Enter amount"
         />
         <p class="rate">
-          {{ bridgeAsset.rateBalance ? "$" + bridgeAsset.rateBalance : "" }}
+          {{
+            bridgeAsset.rateBalance
+              ? bridgeAsset.rateBalance + " " + rateCurrency
+              : ""
+          }}
         </p>
       </div>
     </div>
@@ -168,6 +172,7 @@
   [currentWallet]="currentWallet"
   [invokeArgs]="invokeArgs"
   [signers]="signers"
+  [rateCurrency]="rateCurrency"
   (backAmount)="handleBack($event)"
 ></neo3-bridge-confirm>
 
@@ -181,5 +186,6 @@
   [neoXFeeInfo]="neoXFeeInfo"
   [neoXNetwork]="neoXNetwork"
   [txParams]="txParams"
+  [rateCurrency]="rateCurrency"
   (backAmount)="handleBack($event)"
 ></neox-bridge-confirm>

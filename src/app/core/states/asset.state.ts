@@ -3,7 +3,7 @@ import { HttpService } from '../services/http.service';
 import { GlobalService } from '../services/global.service';
 import { ChromeService } from '../services/chrome.service';
 import { AssetEVMState } from './asset-evm.state';
-import { Observable, from, of, forkJoin } from 'rxjs';
+import { Observable, from, of, forkJoin, firstValueFrom } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Asset, NEO, GAS, UTXO } from 'src/models/models';
 import { map } from 'rxjs/operators';
@@ -17,20 +17,29 @@ import {
   DEFAULT_NEO2_ASSETS,
   STORAGE_NAME,
   DEFAULT_NEO3_ASSETS,
-  NetworkType,
 } from '@popup/_lib';
 import BigNumber from 'bignumber.js';
 import { UtilServiceState } from '../util/util.service';
 import { wallet as wallet3, u } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
+import { ethers } from 'ethers';
+
+interface CoinRatesItem {
+  rates: { [assetId: string]: string };
+  time: number;
+}
+
+const initCoinRates: Record<ChainType | 'fiat', CoinRatesItem> = {
+  Neo2: { rates: {}, time: undefined },
+  Neo3: { rates: {}, time: undefined },
+  NeoX: { rates: {}, time: undefined },
+  fiat: { rates: {}, time: undefined },
+};
 
 @Injectable()
 export class AssetState {
-  private coinRates;
-  private neo3CoinRates;
-  private fiatRates;
-  private rateRequestTime;
+  private coinRatesV2 = JSON.parse(JSON.stringify(initCoinRates));
   public rateCurrency: string;
 
   private allNeoGasFeeSpeed: { [key: string]: GasFeeSpeed } = {};
@@ -55,7 +64,6 @@ export class AssetState {
     this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
       this.rateCurrency = res;
     });
-    this.getLocalRate();
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.chainType = state.currentChainType;
@@ -65,24 +73,8 @@ export class AssetState {
     });
   }
 
-  getLocalRate() {
-    const getNeo2CoinsRate = this.chrome.getStorage(STORAGE_NAME.coinsRate);
-    const getN3CoinsRate = this.chrome.getStorage(STORAGE_NAME.neo3CoinsRate);
-    const getFiatRate = this.chrome.getStorage(STORAGE_NAME.fiatRate);
-    forkJoin([getNeo2CoinsRate, getN3CoinsRate, getFiatRate]).subscribe(
-      ([coinRate, neo3CoinRate, fiatRate]) => {
-        this.coinRates = coinRate;
-        this.neo3CoinRates = neo3CoinRate;
-        this.fiatRates = fiatRate;
-      }
-    );
-  }
-
   clearCache() {
-    this.coinRates = undefined;
-    this.neo3CoinRates = undefined;
-    this.fiatRates = undefined;
-    this.rateRequestTime = undefined;
+    this.coinRatesV2 = JSON.parse(JSON.stringify(initCoinRates));
   }
 
   //#region claim
@@ -123,69 +115,80 @@ export class AssetState {
   //#endregion
 
   //#region rate
-  public getRate(): Observable<any> {
-    const chain = this.chainType === 'Neo3' ? 'neo3' : 'neo';
-    return this.http.get(
-      `${this.global.apiDomain}/v2/coin/rates?chain=${chain}`
-    );
-  }
-
   private getFiatRate(): Observable<any> {
     return this.http.get(`${this.global.apiDomain}/v1/fiat/rates`);
   }
 
-  public async getAssetRate(
-    symbol: string,
-    assetId: string
-  ): Promise<BigNumber | undefined> {
-    const isNeo3 = this.chainType === 'Neo3';
-    if (
-      (isNeo3 && this.n3Network.network !== NetworkType.N3MainNet) ||
-      (!isNeo3 && this.n2Network.network !== NetworkType.MainNet) ||
-      this.chainType === 'NeoX'
-    ) {
-      return undefined;
+  private getRatesV2(chainType: ChainType) {
+    switch (chainType) {
+      case 'Neo2':
+      case 'Neo3':
+        const chain = chainType === 'Neo3' ? 'neo3' : 'neo';
+        return this.http.get(
+          `${this.global.apiDomain}/v2/coin/rates?chain=${chain}`
+        );
+      case 'NeoX':
+        return this.http.get(`${this.global.apiDomain}/v1/evm/rates`);
     }
+  }
+
+  public async getAssetRateV2(
+    chainType: ChainType,
+    assetId: string,
+    chainId?: number
+  ): Promise<BigNumber> {
     const time = new Date().getTime() / 1000;
     if (
-      !this.rateRequestTime ||
-      (isNeo3 && JSON.stringify(this.neo3CoinRates) === '{}') ||
-      (!isNeo3 && JSON.stringify(this.coinRates) === '{}') ||
-      (this.rateRequestTime && time - this.rateRequestTime > 300)
+      !this.coinRatesV2[chainType].time ||
+      this.coinRatesV2[chainType].time - time > 300 // 5 min
     ) {
-      this.rateRequestTime = time;
-      const coinRateTemp = await this.getRate().toPromise();
-      if (isNeo3 && coinRateTemp) {
-        this.neo3CoinRates = coinRateTemp;
-        this.chrome.setStorage(STORAGE_NAME.neo3CoinsRate, coinRateTemp);
-      }
-      if (!isNeo3 && coinRateTemp) {
-        this.coinRates = coinRateTemp;
-        this.chrome.setStorage(STORAGE_NAME.coinsRate, coinRateTemp);
-      }
-      this.fiatRates = await this.getFiatRate().toPromise();
-      this.chrome.setStorage(STORAGE_NAME.fiatRate, this.fiatRates);
+      this.coinRatesV2[chainType].rates = await firstValueFrom(
+        this.getRatesV2(chainType)
+      );
+      this.coinRatesV2[chainType].time = time;
     }
-    assetId = assetId.startsWith('0x') ? assetId.slice(2) : assetId;
-    let price;
-    if (isNeo3 && this.neo3CoinRates[assetId]) {
-      price = this.neo3CoinRates[assetId];
+    if (!this.coinRatesV2.fiat.time) {
+      const fiatResponse = await firstValueFrom(this.getFiatRate());
+      this.coinRatesV2.fiat.rates = fiatResponse.rates;
+      this.coinRatesV2.fiat.time = fiatResponse.last_updated;
     }
-    if (!isNeo3 && this.coinRates[assetId]) {
-      price = this.coinRates[assetId];
+
+    let price: string;
+    switch (chainType) {
+      case 'Neo2':
+      case 'Neo3':
+        assetId = assetId.startsWith('0x') ? assetId.slice(2) : assetId;
+        price = this.coinRatesV2[chainType].rates?.[assetId];
+        break;
+      case 'NeoX':
+        assetId = ethers.getAddress(assetId);
+        price = this.coinRatesV2[chainType].rates?.[chainId]?.[assetId]?.price;
+        break;
     }
     if (price) {
       const currency = this.rateCurrency.toUpperCase();
-      const fiat =
-        this.fiatRates.rates[currency] && this.fiatRates.rates[currency];
-      const rate =
-        price && fiat
-          ? new BigNumber(price).times(new BigNumber(fiat))
-          : undefined;
+      const fiat = this.coinRatesV2.fiat.rates[currency];
+      const rate = fiat ? new BigNumber(price).times(fiat) : undefined;
       return rate;
     }
     return undefined;
   }
+
+  async getAssetAmountRate({
+    chainType,
+    assetId,
+    chainId,
+    amount,
+  }: {
+    chainType: ChainType;
+    assetId: string;
+    chainId?: number;
+    amount: string | number;
+  }) {
+    const rate = await this.getAssetRateV2(chainType, assetId, chainId);
+    return rate && amount ? rate.times(amount).toFixed(2) : undefined;
+  }
+
   //#endregion
 
   //#region other

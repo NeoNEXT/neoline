@@ -122,10 +122,10 @@ export class PopupNoticeInvokeComponent implements OnInit, OnDestroy {
         }
       }
       if (Number(this.pramsData.fee) > 0) {
-        this.assetState.getAssetRate('GAS', GAS).then((rate) => {
-          this.feeMoney = new BigNumber(this.pramsData.fee)
-            .times(rate || 0)
-            .toFixed();
+        this.feeMoney = await this.assetState.getAssetAmountRate({
+          chainType: 'Neo2',
+          assetId: GAS,
+          amount: this.pramsData.fee,
         });
       }
       this.dataJson = this.pramsData;
@@ -698,11 +698,15 @@ export class PopupNoticeInvokeComponent implements OnInit, OnDestroy {
           if (res === 0 || res === '0') {
             this.feeMoney = '0';
           } else {
-            this.assetState.getAssetRate('GAS', GAS).then((rate) => {
-              this.feeMoney = new BigNumber(this.fee)
-                .times(rate || 0)
-                .toFixed();
-            });
+            this.assetState
+              .getAssetAmountRate({
+                chainType: 'Neo2',
+                assetId: GAS,
+                amount: this.fee,
+              })
+              .then((res) => {
+                this.feeMoney = res;
+              });
           }
           this.signTx();
         }

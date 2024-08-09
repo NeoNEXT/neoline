@@ -6,7 +6,12 @@ import {
   OnDestroy,
   OnInit,
 } from '@angular/core';
-import { GlobalService, LedgerService, ChromeService } from '@/app/core';
+import {
+  GlobalService,
+  LedgerService,
+  ChromeService,
+  AssetState,
+} from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import { PopupEditFeeDialogComponent } from '@/app/popup/_dialogs';
 import { MatDialog } from '@angular/material/dialog';
@@ -34,6 +39,7 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
   @Input() toAddress: string;
   @Input() currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   @Input() n3Network: RpcNetwork;
+  @Input() rateCurrency: string;
 
   @Input() unSignedTx: Transaction;
   @Input() networkFee: string;
@@ -46,6 +52,7 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
   @Output() backAmount = new EventEmitter<{ hash: string; chain: ChainType }>();
 
   totalFee: string;
+  rate = { priorityFee: '', total: '', networkFee: '', systemFee: '' };
 
   tabType: TabType = 'details';
   txSerialize: string;
@@ -59,6 +66,7 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
     private global: GlobalService,
     private ledger: LedgerService,
     private chrome: ChromeService,
+    private assetState: AssetState,
     private neo3Invoke: Neo3InvokeService
   ) {}
 
@@ -74,7 +82,16 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
   private calculateNeo3TotalFee() {
     this.totalFee = new BigNumber(this.networkFee)
       .plus(this.systemFee)
+      .plus(this.bridgeAmount)
       .toFixed();
+    this.assetState
+      .getAssetRateV2('Neo3', this.bridgeAsset.asset_id)
+      .then((res) => {
+        this.rate.priorityFee = res.times(this.priorityFee).toFixed(2);
+        this.rate.networkFee = res.times(this.networkFee).toFixed(2);
+        this.rate.systemFee = res.times(this.systemFee).toFixed(2);
+        this.rate.total = res.times(this.totalFee).toFixed(2);
+      });
   }
 
   editFee() {

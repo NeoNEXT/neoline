@@ -12,6 +12,7 @@ import {
   UtilServiceState,
   ChromeService,
   AssetEVMState,
+  AssetState,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import { Asset } from '@/models/models';
@@ -42,6 +43,7 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
   @Input() neoXFeeInfo: NeoXFeeInfoProp;
   @Input() txParams: EvmTransactionParams;
   @Input() neoXNetwork: RpcNetwork;
+  @Input() rateCurrency: string;
 
   @Output() backAmount = new EventEmitter<{ hash: string; chain: ChainType }>();
 
@@ -54,11 +56,13 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
   loading = false;
   loadingMsg: string;
   getStatusInterval;
+  rate = { fee: '', total: '' };
 
   constructor(
     private global: GlobalService,
     private ledger: LedgerService,
     private util: UtilServiceState,
+    private assetState: AssetState,
     private chrome: ChromeService,
     private assetEVMState: AssetEVMState
   ) {}
@@ -77,6 +81,16 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
     this.totalAmount = new BigNumber(this.bridgeAmount)
       .plus(this.neoXFeeInfo.estimateGas)
       .toFixed();
+    this.assetState
+      .getAssetRateV2(
+        'NeoX',
+        this.bridgeAsset.asset_id,
+        this.neoXNetwork.chainId
+      )
+      .then((res) => {
+        this.rate.fee = res.times(this.neoXFeeInfo.estimateGas).toFixed(2);
+        this.rate.total = res.times(this.totalAmount).toFixed(2);
+      });
     this.checkBalance();
   }
 

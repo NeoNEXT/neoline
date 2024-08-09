@@ -55,7 +55,6 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   systemFee: string;
   totalFee: string;
   gasPrice: BigNumber;
-  assetPrice: BigNumber;
   rate = { amount: '0', fee: '', networkFee: '', systemFee: '', total: '' };
 
   tabType: TabType = 'details';
@@ -96,9 +95,25 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
       this.rateCurrency = res;
     });
-    this.rate.fee = await this.getGasRate(this.data.fee);
+    if (this.data.chainType === 'NeoX') {
+      this.rate.fee = await this.getGasRate(this.data.neoXFeeInfo.estimateGas);
+    } else {
+      this.rate.fee = await this.getGasRate(this.data.fee);
+    }
     if (!this.data.isNFT) {
-      this.rate.amount = await this.getAssetRate(this.data.amount);
+      this.assetState
+        .getAssetAmountRate({
+          chainType: this.data.chainType,
+          assetId: this.data.asset.asset_id,
+          chainId:
+            this.data.chainType === 'NeoX'
+              ? this.data.network.chainId
+              : undefined,
+          amount: this.data.amount,
+        })
+        .then((res) => {
+          this.rate.amount = res;
+        });
     }
     this.createTx();
   }
@@ -147,6 +162,12 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   updateEvmFee($event) {
     this.data.neoXFeeInfo = $event;
     this.checkBalance();
+    this.getGasRate(this.data.neoXFeeInfo.estimateGas).then((res) => {
+      this.rate.fee = res;
+      this.rate.total = new BigNumber(this.rate.amount)
+        .plus(this.rate.fee)
+        .toFixed();
+    });
   }
   private checkBalance() {
     if (
@@ -560,28 +581,19 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   //#endregion
 
   //#region rate
-  private getGasRate(value: string) {
-    if (this.data.chainType === 'NeoX') return '0';
-    if (this.gasPrice) {
-      return new BigNumber(value).times(this.gasPrice).toFixed();
+  private async getGasRate(value: string) {
+    if (!this.gasPrice) {
+      this.gasPrice = await this.assetState.getAssetRateV2(
+        this.data.chainType,
+        this.data.chainType === 'Neo2'
+          ? GAS
+          : this.data.chainType === 'Neo3'
+          ? GAS3_CONTRACT
+          : ETH_SOURCE_ASSET_HASH,
+        this.data.chainType === 'NeoX' ? this.data.network.chainId : undefined
+      );
     }
-    const gasAassetId = this.data.chainType === 'Neo3' ? GAS3_CONTRACT : GAS;
-    return this.assetState.getAssetRate('GAS', gasAassetId).then((res) => {
-      this.gasPrice = res ? res : new BigNumber(0);
-      return new BigNumber(value).times(this.gasPrice).toFixed();
-    });
-  }
-  private getAssetRate(value: string) {
-    if (this.data.chainType === 'NeoX') return '0';
-    if (this.assetPrice) {
-      return new BigNumber(value).times(this.assetPrice).toFixed();
-    }
-    return this.assetState
-      .getAssetRate(this.data.asset.symbol, this.data.asset.asset_id)
-      .then((res) => {
-        this.assetPrice = res ? res : new BigNumber(0);
-        return new BigNumber(value).times(this.assetPrice).toFixed();
-      });
+    return this.gasPrice ? this.gasPrice.times(value).toFixed(2) : undefined;
   }
   //#endregion
 }

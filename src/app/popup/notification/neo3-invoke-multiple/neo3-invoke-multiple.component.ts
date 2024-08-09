@@ -162,14 +162,19 @@ export class PopupNoticeNeo3InvokeMultipleComponent
       });
     };
   }
-  public async getAssetRate() {
-    this.assetState.getAssetRate('gas', GAS3_CONTRACT).then((rate) => {
-      const gasPrice = rate || 0;
-      this.totalFee = new BigNumber(this.systemFee)
-        .plus(new BigNumber(this.networkFee))
-        .toFixed();
-      this.totalMoney = new BigNumber(this.totalFee).times(gasPrice).toFixed();
-    });
+  getAssetRate() {
+    this.totalFee = new BigNumber(this.systemFee)
+      .plus(new BigNumber(this.networkFee))
+      .toFixed();
+    this.assetState
+      .getAssetAmountRate({
+        chainType: 'Neo3',
+        assetId: GAS3_CONTRACT,
+        amount: this.totalFee,
+      })
+      .then((res) => {
+        this.totalMoney = res;
+      });
   }
 
   private async resolveSend() {

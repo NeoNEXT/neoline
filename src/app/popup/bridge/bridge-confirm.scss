@@ -75,20 +75,28 @@ section.container {
         align-items: center;
         justify-content: space-between;
         font-family: NeverMind;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 19px;
         color: var(--second-color);
+        &.tip {
+          justify-content: flex-end;
+          font-size: 12px;
+          font-weight: normal;
+          line-height: 14px;
+          color: var(--sub-title-color);
+          &.column {
+            justify-content: space-between;
+          }
+        }
         img.edit {
           margin-left: 8px;
         }
         .label {
-          color: var(--sub-title-color);
           font-size: 13px;
           font-weight: normal;
           line-height: 17px;
-        }
-        .value {
-          font-size: 15px;
-          font-weight: 500;
-          line-height: 19px;
+          color: var(--sub-title-color);
         }
       }
     }

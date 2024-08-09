@@ -9,7 +9,7 @@ import { Asset, NEO } from '@/models/models';
 import { AssetState, ChromeService } from '@/app/core';
 import { forkJoin } from 'rxjs';
 import BigNumber from 'bignumber.js';
-import { NEO3_CONTRACT, ChainType, STORAGE_NAME } from '../../_lib';
+import { NEO3_CONTRACT, ChainType, STORAGE_NAME, RpcNetwork } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -29,6 +29,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
   private chainType: ChainType;
   private address: string;
   private networkId: number;
+  private neoXNetwork: RpcNetwork;
   constructor(
     private asset: AssetState,
     private chrome: ChromeService,
@@ -51,7 +52,8 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
           this.networkId = state.n3Networks[state.n3NetworkIndex].id;
           break;
         case 'NeoX':
-          this.networkId = state.neoXNetworks[state.neoXNetworkIndex].id;
+          this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+          this.networkId = this.neoXNetwork.id;
           break;
       }
       this.getAssets();
@@ -112,12 +114,13 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
   async getAssetsRate() {
     for (let i = 0; i < this.myAssets.length; i++) {
       const item = this.myAssets[i];
-      if (new BigNumber(item.balance).comparedTo(0) > 0) {
-        const rate = await this.asset.getAssetRate(item.symbol, item.asset_id);
-        if (rate) {
-          item.rateBalance = new BigNumber(item.balance).times(rate).toFixed();
-        }
-      }
+      item.rateBalance = await this.asset.getAssetAmountRate({
+        chainType: this.chainType,
+        assetId: item.asset_id,
+        chainId:
+          this.chainType === 'NeoX' ? this.neoXNetwork.chainId : undefined,
+        amount: item.balance,
+      });
     }
   }
 }

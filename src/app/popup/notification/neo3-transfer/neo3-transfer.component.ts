@@ -315,23 +315,21 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
   }
 
   public async getAssetRate() {
-    this.asset.getAssetRate('gas', GAS3_CONTRACT).then((rate) => {
-      const gasPrice = rate || 0;
-      this.feeMoney = new BigNumber(this.fee).times(gasPrice).toFixed();
-      this.systemFeeMoney = new BigNumber(this.systemFee)
-        .times(gasPrice)
-        .toFixed();
-      this.networkFeeMoney = new BigNumber(this.networkFee)
-        .times(gasPrice)
-        .toFixed();
-      if (this.symbol === 'GAS') {
-        this.money = new BigNumber(this.amount).times(gasPrice).toFixed();
-      }
-    });
-    if (this.symbol !== 'GAS') {
-      this.asset.getAssetRate(this.symbol, this.assetId).then((rate) => {
-        const price = rate || 0;
-        this.money = new BigNumber(this.amount).times(price).toFixed();
+    const gasPrice = await this.asset.getAssetRateV2('Neo3', GAS3_CONTRACT);
+    this.feeMoney = new BigNumber(this.fee).times(gasPrice).toFixed();
+    this.systemFeeMoney = new BigNumber(this.systemFee)
+      .times(gasPrice)
+      .toFixed();
+    this.networkFeeMoney = new BigNumber(this.networkFee)
+      .times(gasPrice)
+      .toFixed();
+    if (this.symbol === 'GAS') {
+      this.money = new BigNumber(this.amount).times(gasPrice).toFixed();
+    } else {
+      this.money = await this.asset.getAssetAmountRate({
+        chainType: 'Neo3',
+        assetId: this.assetId,
+        amount: this.amount,
       });
     }
   }
@@ -385,14 +383,18 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
           if (res === 0 || res === '0') {
             this.feeMoney = '0';
           } else {
-            this.asset.getAssetRate('gas', GAS3_CONTRACT).then((rate) => {
-              this.feeMoney = new BigNumber(this.fee)
-                .times(rate || 0)
-                .toFixed();
-              this.totalMoney = this.global
-                .mathAdd(Number(this.feeMoney), Number(this.money))
-                .toString();
-            });
+            this.asset
+              .getAssetAmountRate({
+                chainType: 'Neo3',
+                assetId: GAS3_CONTRACT,
+                amount: this.fee,
+              })
+              .then((res) => {
+                this.feeMoney = res;
+                this.totalMoney = this.global
+                  .mathAdd(Number(this.feeMoney), Number(this.money))
+                  .toString();
+              });
           }
           this.submit();
         }

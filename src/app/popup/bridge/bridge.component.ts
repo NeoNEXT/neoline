@@ -70,6 +70,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   keepDecimals = 8;
   settingStateSub: Unsubscribable;
   lang: string;
+  rateCurrency = '';
 
   bridgeAsset: Asset;
   bridgeAmount: string;
@@ -136,6 +137,9 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
       this.lang = lang;
+    });
+    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+      this.rateCurrency = res;
     });
     this.chrome
       .getStorage(STORAGE_NAME.bridgeTransaction)
@@ -220,22 +224,14 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
 
   getAssetRate() {
     this.handleInputSub?.unsubscribe();
-    this.handleInputSub = timer(500).subscribe(() => {
-      const value = new BigNumber(this.bridgeAmount);
-      if (!isNaN(Number(this.bridgeAmount)) && value.comparedTo(0) > 0) {
-        this.assetState
-          .getAssetRate(this.bridgeAsset.symbol, this.bridgeAsset.asset_id)
-          .then((rate) => {
-            if (rate) {
-              this.bridgeAsset.rateBalance =
-                value.times(rate || 0).toFixed(2) || '0';
-            } else {
-              this.bridgeAsset.rateBalance = undefined;
-            }
-          });
-      } else {
-        this.bridgeAsset.rateBalance = undefined;
-      }
+    this.handleInputSub = timer(500).subscribe(async () => {
+      this.bridgeAsset.rateBalance = await this.assetState.getAssetAmountRate({
+        chainType: this.chainType,
+        assetId: this.bridgeAsset.asset_id,
+        chainId:
+          this.chainType === 'NeoX' ? this.neoXNetwork.chainId : undefined,
+        amount: this.bridgeAmount,
+      });
     });
   }
 

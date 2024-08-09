@@ -11,7 +11,7 @@
       <span>{{ bridgeAmount }}</span>
       <span class="symbol">{{ bridgeAsset.symbol }}</span>
       <span *ngIf="bridgeAsset?.rateBalance" class="currency">
-        $ {{ bridgeAsset.rateBalance }}
+        {{ bridgeAsset.rateBalance }} {{ rateCurrency }}
       </span>
     </p>
     <p class="label from">{{ "FromAddress" | translate | async }}</p>
@@ -42,27 +42,33 @@
     </span>
   </div>
   <ul class="details-content" *ngIf="tabType === 'details'">
-    <evm-fee
-      [txParams]="txParams"
-      [symbol]="bridgeAsset.symbol"
-      [customNeoXFeeInfo]="neoXFeeInfo"
-      [place]="'dapp'"
-      (returnFee)="updateEvmFee($event)"
-    >
-    </evm-fee>
     <li>
-      <div class="row evm">
-        <div class="label">
-          <p>{{ "TOTAL" | translate | async }}</p>
-          <p class="label tip">
-            {{ "amount" | translate | async }} +
-            {{ "GASFEE" | translate | async }}
-          </p>
-        </div>
+      <evm-fee
+        [txParams]="txParams"
+        [symbol]="bridgeAsset.symbol"
+        [customNeoXFeeInfo]="neoXFeeInfo"
+        [place]="'dapp'"
+        (returnFee)="updateEvmFee($event)"
+      >
+      </evm-fee>
+      <p class="row tip">{{ rate.fee | numberFixed : 2 }} {{ rateCurrency }}</p>
+    </li>
+    <li>
+      <div class="row">
+        <span class="label">{{ "TOTAL" | translate | async }}</span>
         <p class="value">
           {{ totalAmount | numberFixed : 8 }} {{ bridgeAsset.symbol }}
         </p>
       </div>
+      <p class="row tip column">
+        <span>
+          {{ "amount" | translate | async }} +
+          {{ "GASFEE" | translate | async }}
+        </span>
+        <span class="value">
+          {{ rate.total | numberFixed : 2 }} {{ rateCurrency }}
+        </span>
+      </p>
     </li>
     <li class="nonce">
       {{ "customNonce" | translate | async }}:

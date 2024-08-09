@@ -367,11 +367,17 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
 
   public async getAssetRate() {
     if (Number(this.fee) > 0) {
-      const rate = await this.asset.getAssetRate('GAS', GAS);
-      this.feeMoney = new BigNumber(this.fee).times(rate || 0).toFixed();
+      this.feeMoney = await this.asset.getAssetAmountRate({
+        chainType: 'Neo2',
+        assetId: GAS,
+        amount: this.fee,
+      });
     }
-    const assetRate = await this.asset.getAssetRate(this.symbol, this.assetId);
-    this.money = new BigNumber(this.amount).times(assetRate || 0).toFixed();
+    this.money = await this.asset.getAssetAmountRate({
+      chainType: 'Neo2',
+      assetId: this.assetId,
+      amount: this.amount,
+    });
     this.totalMoney = this.global
       .mathAdd(Number(this.feeMoney), Number(this.money))
       .toString();
@@ -426,14 +432,18 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
           if (res === 0 || res === '0') {
             this.feeMoney = '0';
           } else {
-            this.asset.getAssetRate('GAS', GAS).then((rate) => {
-              this.feeMoney = new BigNumber(this.fee)
-                .times(rate || 0)
-                .toFixed();
-              this.totalMoney = this.global
-                .mathAdd(Number(this.feeMoney), Number(this.money))
-                .toString();
-            });
+            this.asset
+              .getAssetAmountRate({
+                chainType: 'Neo2',
+                assetId: GAS,
+                amount: this.fee,
+              })
+              .then((res) => {
+                this.feeMoney = res;
+                this.totalMoney = this.global
+                  .mathAdd(Number(this.feeMoney), Number(this.money))
+                  .toString();
+              });
           }
           this.submit();
         }

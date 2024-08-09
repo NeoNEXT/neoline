@@ -46,13 +46,6 @@ export class PopupSettingComponent implements OnInit {
     this.setting.themeSub.subscribe((res) => {
       this.isDark = res === 'dark-theme' ? true : false;
     });
-    this.asset.getRate().subscribe((rateBalance) => {
-      const tempRateObj = rateBalance.result;
-      if (JSON.stringify(tempRateObj) === '{}') {
-        return;
-      }
-      this.rateTime = tempRateObj && tempRateObj.response_time;
-    });
   }
 
   public language() {

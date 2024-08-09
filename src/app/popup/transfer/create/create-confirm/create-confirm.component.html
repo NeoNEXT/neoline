@@ -114,13 +114,13 @@
           >
         </p>
         <p class="row tip column">
-          <span class="label"
-            >{{ "amount" | translate | async }} +
-            {{ "GASFEE" | translate | async }}</span
-          >
-          <span class="value"
-            >{{ rate.total | numberFixed : 2 }} {{ rateCurrency }}</span
-          >
+          <span>
+            {{ "amount" | translate | async }} +
+            {{ "GASFEE" | translate | async }}
+          </span>
+          <span class="value">
+            {{ rate.total | numberFixed : 2 }} {{ rateCurrency }}
+          </span>
         </p>
       </li>
     </ng-container>
@@ -152,16 +152,13 @@
           (returnFee)="updateEvmFee($event)"
         >
         </evm-fee>
+        <p class="row tip">
+          {{ rate.fee | numberFixed : 2 }} {{ rateCurrency }}
+        </p>
       </li>
       <li>
-        <div class="row evm">
-          <div class="label">
-            <p>{{ "TOTAL" | translate | async }}</p>
-            <p class="label tip">
-              {{ "amount" | translate | async }} +
-              {{ "GASFEE" | translate | async }}
-            </p>
-          </div>
+        <div class="row">
+          <span class="label">{{ "TOTAL" | translate | async }}</span>
           <p class="value" *ngIf="dataJson.asset !== ETH_SOURCE_ASSET_HASH">
             {{ data?.amount | numberFixed : 8 }} {{ dataJson?.symbol }} + <br />
             {{ data.neoXFeeInfo.estimateGas | numberFixed : 8 }}
@@ -171,6 +168,15 @@
             {{ getEvmTotalData() }} {{ dataJson?.symbol }}
           </p>
         </div>
+        <p class="row tip column">
+          <span>
+            {{ "amount" | translate | async }} +
+            {{ "GASFEE" | translate | async }}
+          </span>
+          <span class="value">
+            {{ rate.total | numberFixed : 2 }} {{ rateCurrency }}
+          </span>
+        </p>
       </li>
       <li class="nonce">
         {{ "customNonce" | translate | async }}:
