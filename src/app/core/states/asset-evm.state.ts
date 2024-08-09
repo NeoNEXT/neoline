@@ -6,7 +6,7 @@ import {
 } from '@/app/popup/_lib';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { AppState } from '@/app/reduers';
-import { Asset } from '@/models/models';
+import { Asset, TransactionStatus } from '@/models/models';
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
@@ -345,6 +345,14 @@ export class AssetEVMState {
 
   async waitForTx(hash: string) {
     try {
+      const hashTx = await this.provider.getTransaction(hash);
+      if (hashTx === null) {
+        return {
+          status: TransactionStatus.Dropped,
+          block_time: Math.floor(new Date().getTime() / 1000),
+        };
+      }
+
       const tx = await this.provider.waitForTransaction(hash);
       const blockTx = await this.provider.send('eth_getBlockByHash', [
         tx.blockHash,

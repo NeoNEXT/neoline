@@ -43,6 +43,12 @@ export interface NftAsset {
   // info?: any;
   standard?: 'ERC721' | 'ERC1155' | string;
 }
+
+export enum TransactionStatus {
+  'Failed' = 0,
+  'Success' = 1,
+  'Dropped' = 2,
+}
 export interface Transaction {
   block_time: number;
   id?: number;
@@ -55,7 +61,7 @@ export interface Transaction {
   from?: string[];
   to?: string[];
   type: 'sent' | 'received';
-  status?: number; // EVM tx status 0: failed, 1: success
+  status?: TransactionStatus; // EVM tx status 0: failed, 1: success
 
   // NFT
   tokenid?: string;

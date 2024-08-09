@@ -26,6 +26,9 @@
         <span class="status failed" *ngIf="item?.status === 0">
           {{ "failed" | translate | async }}
         </span>
+        <span class="status failed" *ngIf="item?.status === 2">
+          {{ "Dropped" | translate | async }}
+        </span>
         <span class="status wait" *ngIf="item?.status === undefined">
           {{ "confirming" | translate | async }}
         </span>

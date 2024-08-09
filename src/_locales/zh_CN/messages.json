@@ -1405,5 +1405,8 @@
   },
   "customNonce": {
     "message": "自定义 nonce"
+  },
+  "Dropped": {
+    "message": "已丢弃"
   }
 }
