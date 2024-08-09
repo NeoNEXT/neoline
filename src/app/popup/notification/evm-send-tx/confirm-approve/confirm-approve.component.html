@@ -122,15 +122,20 @@
     <div class="fee" *ngIf="!isEdit">
       <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
 
-      <evm-fee
-        *ngIf="neoXFeeInfo"
-        [txParams]="newTxParams ?? txParams"
-        [symbol]="neoXNetwork.symbol"
-        [customNeoXFeeInfo]="neoXFeeInfo"
-        [place]="'dapp'"
-        (returnFee)="updateEvmFee($event)"
-      >
-      </evm-fee>
+      <div>
+        <evm-fee
+          *ngIf="neoXFeeInfo"
+          [txParams]="newTxParams ?? txParams"
+          [symbol]="neoXNetwork.symbol"
+          [customNeoXFeeInfo]="neoXFeeInfo"
+          [place]="'dapp'"
+          (returnFee)="updateEvmFee($event)"
+        >
+        </evm-fee>
+        <p class="rate">
+          {{ rate.fee | numberFixed : 2 }} {{ rate.rateCurrency }}
+        </p>
+      </div>
 
       <evm-gas-error
         *ngIf="insufficientFunds"

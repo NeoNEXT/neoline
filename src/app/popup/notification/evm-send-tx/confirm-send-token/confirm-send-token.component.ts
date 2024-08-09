@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { DappEVMState, UtilServiceState } from '@/app/core';
+import { DappEVMState, UtilServiceState, AssetState } from '@/app/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import {
   AddressNonceInfo,
@@ -7,6 +7,7 @@ import {
   RpcNetwork,
 } from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
+import { RateType } from '../evm-send-tx.component';
 
 type TabType = 'details' | 'data';
 
@@ -24,6 +25,7 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   @Input() estimateGasError: boolean;
   @Input() insufficientFunds: boolean;
   @Input() nonceInfo: AddressNonceInfo;
+  @Input() rate: RateType;
 
   @Input() neoXNetwork: RpcNetwork;
   @Output() closeEvent = new EventEmitter();
@@ -34,11 +36,13 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   tabType: TabType = 'details';
   assetDetails;
+  sendAssetRate = '';
   tokenData;
   hexDataLength: number;
   constructor(
     private dappEVMState: DappEVMState,
-    private util: UtilServiceState
+    private util: UtilServiceState,
+    private assetState: AssetState
   ) {}
 
   ngOnInit(): void {
@@ -56,6 +60,17 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
       )
       .then((res) => {
         this.assetDetails = res;
+
+        this.assetState
+          .getAssetAmountRate({
+            chainType: 'NeoX',
+            assetId: this.txParams.to,
+            chainId: this.neoXNetwork.chainId,
+            amount: this.assetDetails.tokenAmount,
+          })
+          .then((res) => {
+            this.sendAssetRate = res;
+          });
       });
   }
 

@@ -6,6 +6,7 @@ import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { Unsubscribable, timer } from 'rxjs';
+import { RateType } from '../evm-send-tx.component';
 
 @Component({
   selector: 'confirm-approve',
@@ -23,6 +24,7 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   @Input() estimateGasError: boolean;
   @Input() insufficientFunds: boolean;
   @Input() nonceInfo: AddressNonceInfo;
+  @Input() rate: RateType;
 
   @Input() neoXNetwork: RpcNetwork;
   @Output() closeEvent = new EventEmitter();

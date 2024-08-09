@@ -36,6 +36,10 @@
         font-size: 16px;
       }
     }
+    .rate {
+      font-size: 12px;
+      color: var(--sub-title-color);
+    }
     .address-group {
       margin-top: 12px;
       color: var(--important-title-color);
@@ -110,17 +114,36 @@
       display: flex;
       flex-direction: column;
       gap: 16px;
-      .row.evm {
+      .fee-group .rate {
+        margin-top: 6px;
+        text-align: right;
+        font-size: 12px;
+        color: var(--sub-title-color);
+      }
+      .total-fee .row {
         display: flex;
         align-items: center;
         justify-content: space-between;
-        .label {
-          color: var(--sub-title-color);
-        }
-        .label.tip {
-          font-family: NeverMind-Regular;
+        font-family: NeverMind;
+        font-size: 15px;
+        font-weight: 500;
+        line-height: 19px;
+        color: var(--second-color);
+        &.tip {
+          justify-content: flex-end;
           font-size: 12px;
-          margin-top: 6px;
+          font-weight: normal;
+          line-height: 14px;
+          color: var(--sub-title-color);
+          &.column {
+            justify-content: space-between;
+          }
+        }
+        .label {
+          font-size: 13px;
+          font-weight: normal;
+          line-height: 17px;
+          color: var(--sub-title-color);
         }
       }
       .nonce {

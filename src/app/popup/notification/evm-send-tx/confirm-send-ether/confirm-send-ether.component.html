@@ -14,6 +14,9 @@
       ></token-logo>
       <p class="amount">{{ getShowAmount() }} {{ neoXNetwork?.symbol }}</p>
     </div>
+    <p class="rate">
+      {{ rate.amount | numberFixed : 2 }} {{ rate.rateCurrency }}
+    </p>
     <div class="address-group">
       <copy [value]="txParams?.from">
         <div class="item">
@@ -38,25 +41,35 @@
   <div class="content details">
     <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
 
-    <evm-fee
-      *ngIf="neoXFeeInfo"
-      [txParams]="txParams"
-      [symbol]="neoXNetwork.symbol"
-      [customNeoXFeeInfo]="neoXFeeInfo"
-      [place]="'dapp'"
-      (returnFee)="updateEvmFee($event)"
-    >
-    </evm-fee>
+    <div class="fee-group">
+      <evm-fee
+        *ngIf="neoXFeeInfo"
+        [txParams]="txParams"
+        [symbol]="neoXNetwork.symbol"
+        [customNeoXFeeInfo]="neoXFeeInfo"
+        [place]="'dapp'"
+        (returnFee)="updateEvmFee($event)"
+      >
+      </evm-fee>
+      <p class="rate">
+        {{ rate.fee | numberFixed : 2 }} {{ rate.rateCurrency }}
+      </p>
+    </div>
 
-    <div class="row evm" *ngIf="amount">
-      <div class="label">
-        <p>{{ "TOTAL" | translate | async }}</p>
-        <p class="label tip">
+    <div class="total-fee" *ngIf="amount">
+      <p class="row">
+        <span class="label">{{ "TOTAL" | translate | async }}</span>
+        <span>{{ getEvmTotalData() }} {{ neoXNetwork?.symbol }}</span>
+      </p>
+      <p class="row tip column">
+        <span>
           {{ "amount" | translate | async }} +
           {{ "GASFEE" | translate | async }}
-        </p>
-      </div>
-      <p class="value">{{ getEvmTotalData() }} {{ neoXNetwork?.symbol }}</p>
+        </span>
+        <span>
+          {{ rate.total | numberFixed : 2 }} {{ rate.rateCurrency }}
+        </span>
+      </p>
     </div>
     <div class="nonce">
       {{ "customNonce" | translate | async }}:

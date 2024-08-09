@@ -4,6 +4,7 @@ import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { AddressNonceInfo, EvmTransactionParams, RpcNetwork } from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 import BigNumber from 'bignumber.js';
+import { RateType } from '../evm-send-tx.component';
 
 type TabType = 'details' | 'data';
 
@@ -23,6 +24,7 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   @Input() estimateGasError: boolean;
   @Input() insufficientFunds: boolean;
   @Input() nonceInfo: AddressNonceInfo;
+  @Input() rate: RateType;
 
   @Input() neoXNetwork: RpcNetwork;
   @Output() closeEvent = new EventEmitter();

@@ -7,6 +7,7 @@ import {
   GlobalService,
   LedgerService,
   SettingState,
+  AssetState,
 } from '@/app/core';
 import {
   AddressNonceInfo,
@@ -28,6 +29,13 @@ import { ethers } from 'ethers';
 import { PopupTransferSuccessDialogComponent } from '../../_dialogs';
 import { MatDialog } from '@angular/material/dialog';
 
+export interface RateType {
+  fee: string;
+  amount: string;
+  total: string;
+  rateCurrency: string;
+}
+
 @Component({
   templateUrl: './evm-send-tx.component.html',
 })
@@ -41,6 +49,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   lang = 'en';
   nonceInfo: AddressNonceInfo;
   customNonce: number;
+  rate: RateType = { fee: '', amount: '', total: '', rateCurrency: '' };
 
   loading = false;
   loadingMsg: string;
@@ -67,6 +76,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     private globalService: GlobalService,
     private ledger: LedgerService,
     private settingState: SettingState,
+    private assetState: AssetState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -80,6 +90,9 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+      this.rate.rateCurrency = res;
+    });
     this.aRoute.queryParams.subscribe(({ messageID, origin, icon }) => {
       this.messageID = messageID;
       this.locationOrigin = origin;
@@ -115,6 +128,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
   updateEvmFee($event) {
     this.neoXFeeInfo = $event;
+    this.getAllRate();
     this.checkBalance();
   }
 
@@ -246,6 +260,16 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     // send amount
     if (this.txParams.value) {
       this.amount = new BigNumber(value).shiftedBy(-18).toFixed();
+      this.assetState
+        .getAssetAmountRate({
+          chainType: 'NeoX',
+          assetId: ETH_SOURCE_ASSET_HASH,
+          chainId: this.neoXNetwork.chainId,
+          amount: this.amount,
+        })
+        .then((res) => {
+          this.rate.amount = res;
+        });
     }
 
     // from wallet
@@ -350,6 +374,19 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     } else {
       calculateLegacyFee();
     }
+    this.getAllRate();
+  }
+
+  getAllRate() {
+    this.assetState
+      .getAssetRateV2('NeoX', ETH_SOURCE_ASSET_HASH, this.neoXNetwork.chainId)
+      .then((res) => {
+        this.rate.fee = res.times(this.neoXFeeInfo.estimateGas).toFixed(2);
+        const total = new BigNumber(this.neoXFeeInfo.estimateGas).plus(
+          this.amount
+        );
+        this.rate.total = res.times(total).toFixed(2);
+      });
   }
 
   private getLedgerStatus() {

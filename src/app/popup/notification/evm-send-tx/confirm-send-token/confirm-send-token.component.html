@@ -16,6 +16,9 @@
         {{ assetDetails?.tokenAmount || 0 }} {{ assetDetails?.symbol }}
       </p>
     </div>
+    <p class="rate">
+      {{ sendAssetRate | numberFixed : 2 }} {{ rate.rateCurrency }}
+    </p>
     <div class="address-group">
       <copy [value]="txParams?.from">
         <div class="item">
@@ -46,15 +49,20 @@
   <div class="content details" *ngIf="tabType === 'details'">
     <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
 
-    <evm-fee
-      *ngIf="neoXFeeInfo"
-      [txParams]="txParams"
-      [symbol]="neoXNetwork.symbol"
-      [customNeoXFeeInfo]="neoXFeeInfo"
-      [place]="'dapp'"
-      (returnFee)="updateEvmFee($event)"
-    >
-    </evm-fee>
+    <div class="fee-group">
+      <evm-fee
+        *ngIf="neoXFeeInfo"
+        [txParams]="txParams"
+        [symbol]="neoXNetwork.symbol"
+        [customNeoXFeeInfo]="neoXFeeInfo"
+        [place]="'dapp'"
+        (returnFee)="updateEvmFee($event)"
+      >
+      </evm-fee>
+      <p class="rate">
+        {{ rate.fee | numberFixed : 2 }} {{ rate.rateCurrency }}
+      </p>
+    </div>
     <div class="nonce">
       {{ "customNonce" | translate | async }}:
       <input

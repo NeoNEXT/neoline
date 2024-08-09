@@ -4,6 +4,7 @@ import { AddressNonceInfo, EvmTransactionParams, RpcNetwork } from '@/app/popup/
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 import BigNumber from 'bignumber.js';
 import { DappEVMState } from '@/app/core';
+import { RateType } from '../evm-send-tx.component';
 
 @Component({
   selector: 'confirm-send-ether',
@@ -19,6 +20,7 @@ export class PopupNoticeEvmConfirmSendEtherComponent {
   @Input() estimateGasError: boolean;
   @Input() insufficientFunds: boolean;
   @Input() nonceInfo: AddressNonceInfo;
+  @Input() rate: RateType;
 
   @Input() neoXNetwork: RpcNetwork;
   @Output() closeEvent = new EventEmitter();
