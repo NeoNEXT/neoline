@@ -36,7 +36,7 @@ export class PopupSettingComponent implements OnInit {
   ) {}
 
   async ngOnInit(): Promise<void> {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.setting.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
     this.setting.langSub.subscribe((res) => {
@@ -77,6 +77,7 @@ export class PopupSettingComponent implements OnInit {
         return;
       }
       this.rateCurrency = currency;
+      this.setting.changRateCurrency(currency);
       this.global.snackBarTip('rateCurrencySetSucc');
     });
   }

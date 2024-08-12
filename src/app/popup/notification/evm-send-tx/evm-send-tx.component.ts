@@ -90,7 +90,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rate.rateCurrency = res;
     });
     this.aRoute.queryParams.subscribe(({ messageID, origin, icon }) => {

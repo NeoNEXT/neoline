@@ -15,7 +15,6 @@ import {
   GAS3_CONTRACT,
   ChainType,
   DEFAULT_NEO2_ASSETS,
-  STORAGE_NAME,
   DEFAULT_NEO3_ASSETS,
   NetworkType,
 } from '@popup/_lib';
@@ -25,6 +24,7 @@ import { wallet as wallet3, u } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { ethers } from 'ethers';
+import { SettingState } from './setting.state';
 
 interface CoinRatesItem {
   rates: { [assetId: string]: string };
@@ -41,7 +41,7 @@ const initCoinRates: Record<ChainType | 'fiat', CoinRatesItem> = {
 @Injectable()
 export class AssetState {
   private coinRatesV2 = JSON.parse(JSON.stringify(initCoinRates));
-  public rateCurrency: string;
+  private rateCurrency: string;
 
   private allNeoGasFeeSpeed: { [key: string]: GasFeeSpeed } = {};
   private gasFeeDefaultSpeed: GasFeeSpeed = {
@@ -60,9 +60,10 @@ export class AssetState {
     private chrome: ChromeService,
     private assetEVMState: AssetEVMState,
     private util: UtilServiceState,
+    private setting: SettingState,
     private store: Store<AppState>
   ) {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.setting.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
     const account$ = this.store.select('account');

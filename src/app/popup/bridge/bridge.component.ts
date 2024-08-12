@@ -138,7 +138,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
       this.lang = lang;
     });
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
     this.chrome

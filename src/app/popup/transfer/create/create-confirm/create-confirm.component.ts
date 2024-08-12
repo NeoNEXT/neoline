@@ -22,6 +22,7 @@ import {
   ChromeService,
   UtilServiceState,
   EvmNFTState,
+  SettingState,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import {
@@ -84,6 +85,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private assetEvmState: AssetEVMState,
     private util: UtilServiceState,
+    private settingState: SettingState,
     private evmNFTState: EvmNFTState
   ) {}
   ngOnDestroy(): void {
@@ -92,7 +94,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     this.getDataJson();
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
     if (this.data.chainType === 'NeoX') {

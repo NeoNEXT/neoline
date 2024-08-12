@@ -1,5 +1,5 @@
-import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import {
   AssetState,
   NeonService,
@@ -8,6 +8,7 @@ import {
   TransactionState,
   LedgerService,
   UtilServiceState,
+  SettingState,
 } from '@/app/core';
 import { NEO, GAS, Asset } from '@/models/models';
 import { tx as tx2, u } from '@cityofzion/neon-js';
@@ -72,7 +73,6 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
   private neo2WIFArr: string[];
   private neo2WalletArr: Wallet2[];
   constructor(
-    private router: Router,
     private aRoute: ActivatedRoute,
     private asset: AssetState,
     private transfer: TransferService,
@@ -83,6 +83,7 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private ledger: LedgerService,
     private util: UtilServiceState,
+    private settingState: SettingState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -100,7 +101,7 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
     this.aRoute.queryParams.subscribe((params: any) => {

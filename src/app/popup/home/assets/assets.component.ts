@@ -6,7 +6,7 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { Asset, NEO } from '@/models/models';
-import { AssetState, ChromeService } from '@/app/core';
+import { AssetState, ChromeService, SettingState } from '@/app/core';
 import { forkJoin } from 'rxjs';
 import BigNumber from 'bignumber.js';
 import { NEO3_CONTRACT, ChainType, STORAGE_NAME, RpcNetwork } from '../../_lib';
@@ -33,11 +33,12 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
   constructor(
     private asset: AssetState,
     private chrome: ChromeService,
+    private settingState: SettingState,
     private store: Store<AppState>
   ) {}
 
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
     const account$ = this.store.select('account');

@@ -49,8 +49,6 @@ export class PopupSelectDialogComponent {
         this.dialogRef.close();
         break;
       case 'currency':
-        this.assetSer.rateCurrency = option;
-        this.chromeSer.setStorage(STORAGE_NAME.rateCurrency, option);
         this.dialogRef.close(option);
         break;
       case 'chain':

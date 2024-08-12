@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   GlobalService,
   ChromeService,
@@ -7,6 +7,7 @@ import {
   NotificationService,
   LedgerService,
   UtilServiceState,
+  SettingState,
 } from '@/app/core';
 import { Transaction, Witness } from '@cityofzion/neon-core-neo3/lib/tx';
 import { tx, wallet } from '@cityofzion/neon-js-neo3';
@@ -76,11 +77,11 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
   private neo3WalletArr: Wallet3[];
   constructor(
     private aRoute: ActivatedRoute,
-    private router: Router,
     private global: GlobalService,
     private dialog: MatDialog,
     private chrome: ChromeService,
     private assetState: AssetState,
+    private settingState: SettingState,
     private neo3Invoke: Neo3InvokeService,
     private notification: NotificationService,
     private ledger: LedgerService,
@@ -102,7 +103,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
     this.aRoute.queryParams.subscribe(async ({ messageID }) => {

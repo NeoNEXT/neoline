@@ -5,8 +5,8 @@ import {
   GlobalService,
   HomeService,
   LedgerService,
-  ChromeService,
   UtilServiceState,
+  SettingState,
 } from '@/app/core';
 import { NEO, GAS, Asset } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
@@ -24,7 +24,6 @@ import {
   GAS3_CONTRACT,
   ChainType,
   RpcNetwork,
-  STORAGE_NAME,
   N3MainnetNetwork,
   N3TestnetNetwork,
 } from '../_lib';
@@ -96,7 +95,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     private neo3TransferService: Neo3TransferService,
     private homeService: HomeService,
     private ledger: LedgerService,
-    private chrome: ChromeService,
+    private settingState: SettingState,
     private util: UtilServiceState,
     private store: Store<AppState>
   ) {
@@ -122,7 +121,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
   }

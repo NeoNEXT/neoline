@@ -1,5 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { AssetState, ChromeService, GlobalService } from '@/app/core';
+import {
+  AssetState,
+  ChromeService,
+  GlobalService,
+  SettingState,
+} from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NEO, GAS, Asset } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
@@ -7,14 +12,12 @@ import {
   PopupAddNetworkDialogComponent,
   PopupConfirmDialogComponent,
 } from '@popup/_dialogs';
-import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
 import {
   NEO3_CONTRACT,
   GAS3_CONTRACT,
   ChainType,
   RpcNetwork,
-  STORAGE_NAME,
 } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -50,6 +53,7 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private global: GlobalService,
     private router: Router,
+    private settingState: SettingState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -88,7 +92,7 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
   }
