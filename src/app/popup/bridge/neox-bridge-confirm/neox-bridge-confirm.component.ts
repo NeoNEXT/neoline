@@ -51,6 +51,7 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
   totalAmount: string;
   hexDataLength: number;
   nonceInfo: AddressNonceInfo;
+  customNonce: number;
   insufficientFunds = false;
 
   loading = false;
@@ -88,8 +89,10 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
         this.neoXNetwork.chainId
       )
       .then((res) => {
-        this.rate.fee = res.times(this.neoXFeeInfo.estimateGas).toFixed(2);
-        this.rate.total = res.times(this.totalAmount).toFixed(2);
+        if (res) {
+          this.rate.fee = res.times(this.neoXFeeInfo.estimateGas).toFixed(2);
+          this.rate.total = res.times(this.totalAmount).toFixed(2);
+        }
       });
     this.checkBalance();
   }
@@ -121,6 +124,10 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
     this.calculateTotalAmount();
   }
 
+  changeNonce($event) {
+    this.customNonce = $event;
+  }
+
   async confirm() {
     this.loading = true;
 
@@ -142,7 +149,7 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
     const { newParams, PreExecutionParams } = this.assetEVMState.getTxParams(
       this.txParams,
       this.neoXFeeInfo,
-      this.nonceInfo.nonce,
+      this.customNonce ?? this.nonceInfo.nonce,
       this.txParams.from
     );
     this.assetEVMState
@@ -181,7 +188,7 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
           this.assetEVMState.getTxParams(
             this.txParams,
             this.neoXFeeInfo,
-            this.nonceInfo.nonce,
+            this.customNonce ?? this.nonceInfo.nonce,
             this.txParams.from
           );
         delete newParams.from;

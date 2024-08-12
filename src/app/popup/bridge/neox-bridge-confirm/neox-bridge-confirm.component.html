@@ -70,14 +70,11 @@
         </span>
       </p>
     </li>
-    <li class="nonce">
-      {{ "customNonce" | translate | async }}:
-      <input
-        type="text"
-        [placeholder]="nonceInfo?.nonce ?? ''"
-        [(ngModel)]="customNonce"
-        oninput="value=value.replace(/[^\d]/g,'')"
-      />
+    <li>
+      <evm-custom-nonce
+        [default]="nonceInfo?.nonce"
+        (changeNonceEvent)="changeNonce($event)"
+      ></evm-custom-nonce>
     </li>
     <li>
       <evm-gas-error

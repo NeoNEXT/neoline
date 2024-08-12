@@ -61,10 +61,8 @@ ul.content li {
     padding: 2px;
     cursor: pointer;
     transition: all .3s;
-    :host-context([data-theme-style="dark-theme"]) & {
-      background: var(--theme-color);
-    }
     &.active {
+      background: var(--theme-color);
       .circle {
         transform: translateX(20px);
       }

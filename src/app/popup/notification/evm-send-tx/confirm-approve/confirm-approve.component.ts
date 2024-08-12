@@ -126,6 +126,10 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
     }
   }
 
+  changeNonce($event) {
+    this.customNonce = $event;
+  }
+
   private checkInputAmountIsBig() {
     this.inputAmountIsBig =
       new BigNumber(this.inputAmount).comparedTo(this.approveAssetBalance) > 0

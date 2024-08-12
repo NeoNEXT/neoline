@@ -17,6 +17,7 @@ import {
   DEFAULT_NEO2_ASSETS,
   STORAGE_NAME,
   DEFAULT_NEO3_ASSETS,
+  NetworkType,
 } from '@popup/_lib';
 import BigNumber from 'bignumber.js';
 import { UtilServiceState } from '../util/util.service';
@@ -137,6 +138,13 @@ export class AssetState {
     assetId: string,
     chainId?: number
   ): Promise<BigNumber> {
+    if (
+      (chainType === 'Neo3' &&
+        this.n3Network.network !== NetworkType.N3MainNet) ||
+      (chainType === 'Neo2' && this.n2Network.network !== NetworkType.MainNet)
+    ) {
+      return undefined;
+    }
     const time = new Date().getTime() / 1000;
     if (
       !this.coinRatesV2[chainType].time ||

@@ -381,11 +381,13 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     this.assetState
       .getAssetRateV2('NeoX', ETH_SOURCE_ASSET_HASH, this.neoXNetwork.chainId)
       .then((res) => {
-        this.rate.fee = res.times(this.neoXFeeInfo.estimateGas).toFixed(2);
-        const total = new BigNumber(this.neoXFeeInfo.estimateGas).plus(
-          this.amount
-        );
-        this.rate.total = res.times(total).toFixed(2);
+        if (res) {
+          this.rate.fee = res.times(this.neoXFeeInfo.estimateGas).toFixed(2);
+          const total = new BigNumber(this.neoXFeeInfo.estimateGas).plus(
+            this.amount
+          );
+          this.rate.total = res.times(total).toFixed(2);
+        }
       });
   }
 

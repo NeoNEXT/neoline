@@ -153,6 +153,9 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   }
 
   //#region EVM
+  changeNonce($event) {
+    this.customNonce = $event;
+  }
   getEvmTotalData() {
     return new BigNumber(this.data.amount)
       .plus(this.data.neoXFeeInfo.estimateGas)
@@ -164,8 +167,8 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     this.checkBalance();
     this.getGasRate(this.data.neoXFeeInfo.estimateGas).then((res) => {
       this.rate.fee = res;
-      this.rate.total = new BigNumber(this.rate.amount)
-        .plus(this.rate.fee)
+      this.rate.total = new BigNumber(this.rate.amount ?? 0)
+        .plus(this.rate.fee ?? 0)
         .toFixed();
     });
   }
@@ -517,8 +520,8 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         .toFixed();
       totalFeeRate = await this.getGasRate(this.totalFee);
     }
-    this.rate.total = new BigNumber(this.rate.amount)
-      .plus(totalFeeRate)
+    this.rate.total = new BigNumber(this.rate.amount ?? 0)
+      .plus(totalFeeRate ?? 0)
       .toFixed();
   }
   private getDataJson() {

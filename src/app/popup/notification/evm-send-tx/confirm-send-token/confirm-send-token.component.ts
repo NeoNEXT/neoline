@@ -86,4 +86,8 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   confirm() {
     this.confirmEvent.emit(this.customNonce);
   }
+
+  changeNonce($event) {
+    this.customNonce = $event;
+  }
 }

@@ -39,6 +39,17 @@
       <span class="circle"></span>
     </div>
   </li>
+  <li>
+    <img theme src="assets/images/setting/theme.svg" alt="" />
+    <div class="middle">{{ "customNonce" | translate | async }}</div>
+    <div
+      class="slide"
+      [ngClass]="{ active: isCustomNonce }"
+      (click)="changeCustomNonce()"
+    >
+      <span class="circle"></span>
+    </div>
+  </li>
   <li class="hover-bg" [routerLink]="'/popup/address-book'">
     <img theme src="assets/images/setting/address-book.svg" alt="" />
     <div class="middle">{{ "addressBook" | translate | async }}</div>

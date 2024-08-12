@@ -316,21 +316,23 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
 
   public async getAssetRate() {
     const gasPrice = await this.asset.getAssetRateV2('Neo3', GAS3_CONTRACT);
-    this.feeMoney = new BigNumber(this.fee).times(gasPrice).toFixed();
-    this.systemFeeMoney = new BigNumber(this.systemFee)
-      .times(gasPrice)
-      .toFixed();
-    this.networkFeeMoney = new BigNumber(this.networkFee)
-      .times(gasPrice)
-      .toFixed();
-    if (this.symbol === 'GAS') {
-      this.money = new BigNumber(this.amount).times(gasPrice).toFixed();
-    } else {
-      this.money = await this.asset.getAssetAmountRate({
-        chainType: 'Neo3',
-        assetId: this.assetId,
-        amount: this.amount,
-      });
+    if (gasPrice) {
+      this.feeMoney = new BigNumber(this.fee).times(gasPrice).toFixed();
+      this.systemFeeMoney = new BigNumber(this.systemFee)
+        .times(gasPrice)
+        .toFixed();
+      this.networkFeeMoney = new BigNumber(this.networkFee)
+        .times(gasPrice)
+        .toFixed();
+      if (this.symbol === 'GAS') {
+        this.money = new BigNumber(this.amount).times(gasPrice).toFixed();
+      } else {
+        this.money = await this.asset.getAssetAmountRate({
+          chainType: 'Neo3',
+          assetId: this.assetId,
+          amount: this.amount,
+        });
+      }
     }
   }
 

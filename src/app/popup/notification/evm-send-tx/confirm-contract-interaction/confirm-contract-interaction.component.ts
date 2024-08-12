@@ -74,6 +74,10 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
     this.updateFeeEvent.emit($event);
   }
 
+  changeNonce($event) {
+    this.customNonce = $event;
+  }
+
   exit() {
     this.closeEvent.emit();
   }

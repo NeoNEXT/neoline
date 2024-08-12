@@ -29,10 +29,6 @@ export enum STORAGE_NAME {
   n2SelectedNetworkIndex = 'n2SelectedNetworkIndex',
   n3SelectedNetworkIndex = 'n3SelectedNetworkIndex',
   neoXSelectedNetworkIndex = 'neoXSelectedNetworkIndex',
-  coinsRate = 'coinsRate',
-  fiatRate = 'fiatRate',
-  neo3CoinsRate = 'neo3CoinsRate',
-  rateCurrency = 'rateCurrency',
   wallet = 'wallet',
   walletArr = 'walletArr',
   'walletArr-Neo3' = 'walletArr-Neo3',
@@ -40,11 +36,10 @@ export enum STORAGE_NAME {
   WIFArr = 'WIFArr',
   'WIFArr-Neo3' = 'WIFArr-Neo3',
   chainType = 'chainType',
+
   neo3AddressFlag = 'neo3AddressFlag', // Fix the wallet created by neon-core@5-next.4 neon-core@5-next.7
-  lang = 'lang',
   watch = 'watch',
   nftWatch = 'nft_watch',
-  transaction = 'transaction',
   connectedWebsites = 'connectedWebsites', // dAPi connect status
   authAddress = 'authAddress',
   InvokeArgsArray = 'InvokeArgsArray', // dAPi N3 invoke args
@@ -53,9 +48,15 @@ export enum STORAGE_NAME {
   shouldFindNode = 'shouldFindNode',
   rpcUrls = 'rpcUrls',
   onePassword = 'onePassword', // Whether the current is one password mode
-  theme ='theme', // light or dark theme
   onePassCheckAddresses = 'onePassCheckAddresses', // one password mode, save verified address
   addressBook = 'addressBook',
+
+  rateCurrency = 'rateCurrency',
+  theme ='theme', // light or dark theme
+  lang = 'lang',
+  evmCustomNonce = 'evmCustomNonce',
+
+  transaction = 'transaction',
   bridgeTransaction = 'bridgeTransaction',
 }
 
@@ -99,18 +100,6 @@ export const STORAGE_VALUE_MESSAGE = {
     isLocal: true,
     default: 0,
   },
-  coinsRate: {
-    type: STORAGE_VALUE_TYPE.object,
-    isLocal: false,
-  },
-  fiatRate: {
-    type: STORAGE_VALUE_TYPE.object,
-    isLocal: false,
-  },
-  neo3CoinsRate: {
-    type: STORAGE_VALUE_TYPE.object,
-    isLocal: false,
-  },
   rateCurrency: {
     type: STORAGE_VALUE_TYPE.string,
     isLocal: false,
@@ -152,6 +141,11 @@ export const STORAGE_VALUE_MESSAGE = {
     type: STORAGE_VALUE_TYPE.string,
     isLocal: false,
     default: 'en',
+  },
+  evmCustomNonce: {
+    type: STORAGE_VALUE_TYPE.boolean,
+    isLocal: false,
+    default: false,
   },
   transaction: {
     type: STORAGE_VALUE_TYPE.object,

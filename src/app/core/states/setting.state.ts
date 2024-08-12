@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
 import { RateCurrencysType } from '@/app/popup/_lib/setting';
-import { SelectItem } from '@/app/popup/_lib';
+import { SelectItem, STORAGE_NAME } from '@/app/popup/_lib';
 import { BehaviorSubject } from 'rxjs';
+import { ChromeService } from '../services/chrome.service';
 
 @Injectable()
 export class SettingState {
@@ -10,7 +11,13 @@ export class SettingState {
   langSub = new BehaviorSubject<string>('en');
   langJson = { en: undefined, zh_CN: undefined };
 
-  constructor() {}
+  evmCustomNonceSub = new BehaviorSubject<boolean>(false);
+
+  constructor(private chrome: ChromeService) {
+    this.chrome.getStorage(STORAGE_NAME.evmCustomNonce).subscribe((res) => {
+      this.changCustomNonce(res, true);
+    });
+  }
 
   changeTheme(theme) {
     this.themeSub.next(theme);
@@ -20,5 +27,12 @@ export class SettingState {
 
   changLang(lang: string) {
     this.langSub.next(lang);
+  }
+
+  changCustomNonce(custom: boolean, init = false) {
+    this.evmCustomNonceSub.next(custom);
+    if (!init) {
+      this.chrome.setStorage(STORAGE_NAME.evmCustomNonce, custom);
+    }
   }
 }

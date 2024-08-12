@@ -148,15 +148,10 @@
       ></evm-pending-warning>
     </div>
 
-    <div class="nonce">
-      {{ "customNonce" | translate | async }}:
-      <input
-        type="text"
-        [placeholder]="nonceInfo?.nonce ?? ''"
-        [(ngModel)]="customNonce"
-        oninput="value=value.replace(/[^\d]/g,'')"
-      />
-    </div>
+    <evm-custom-nonce
+      [default]="nonceInfo?.nonce"
+      (changeNonceEvent)="changeNonce($event)"
+    ></evm-custom-nonce>
 
     <p class="view-details">
       <span (click)="showDetail = !showDetail">

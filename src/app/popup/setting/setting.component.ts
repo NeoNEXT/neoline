@@ -26,6 +26,8 @@ export class PopupSettingComponent implements OnInit {
   public rateTime: number;
   public isDark;
 
+  isCustomNonce = false;
+
   constructor(
     private chrome: ChromeService,
     private global: GlobalService,
@@ -45,6 +47,9 @@ export class PopupSettingComponent implements OnInit {
     });
     this.setting.themeSub.subscribe((res) => {
       this.isDark = res === 'dark-theme' ? true : false;
+    });
+    this.setting.evmCustomNonceSub.subscribe((res) => {
+      this.isCustomNonce = res;
     });
   }
 
@@ -89,7 +94,6 @@ export class PopupSettingComponent implements OnInit {
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
-          this.chrome.clearAssetFile();
           this.asset.clearCache();
           this.global.snackBarTip('clearSuccess');
         }
@@ -101,5 +105,10 @@ export class PopupSettingComponent implements OnInit {
     const newTheme = this.isDark ? 'dark-theme' : 'light-theme';
     this.chrome.setStorage(STORAGE_NAME.theme, newTheme);
     this.setting.changeTheme(newTheme);
+  }
+
+  changeCustomNonce() {
+    this.isCustomNonce = !this.isCustomNonce;
+    this.setting.changCustomNonce(this.isCustomNonce);
   }
 }

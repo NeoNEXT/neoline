@@ -45,6 +45,7 @@ import { TokenLogoComponent } from './components/token-logo/token-logo.component
 import { EvmGasErrorComponent } from './components/evm-gas-error/evm-gas-error.component';
 import { EvmPendingWarningComponent } from './components/evm-pending-warning/evm-pending-warning.component';
 import { EvmEstimateErrorComponent } from './components/evm-estimate-error/evm-estimate-error.component';
+import { EvmCustomNonceComponent } from './components/evm-custom-nonce/evm-custom-nonce.component';
 const COMPONENTS = [
   AssetTxPageComponent,
   NftTxPageComponent,
@@ -59,6 +60,7 @@ const COMPONENTS = [
   EvmGasErrorComponent,
   EvmPendingWarningComponent,
   EvmEstimateErrorComponent,
+  EvmCustomNonceComponent,
 ];
 //#endregion
 

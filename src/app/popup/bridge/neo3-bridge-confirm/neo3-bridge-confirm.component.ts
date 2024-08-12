@@ -87,10 +87,12 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
     this.assetState
       .getAssetRateV2('Neo3', this.bridgeAsset.asset_id)
       .then((res) => {
-        this.rate.priorityFee = res.times(this.priorityFee).toFixed(2);
-        this.rate.networkFee = res.times(this.networkFee).toFixed(2);
-        this.rate.systemFee = res.times(this.systemFee).toFixed(2);
-        this.rate.total = res.times(this.totalFee).toFixed(2);
+        if (res) {
+          this.rate.priorityFee = res.times(this.priorityFee).toFixed(2);
+          this.rate.networkFee = res.times(this.networkFee).toFixed(2);
+          this.rate.systemFee = res.times(this.systemFee).toFixed(2);
+          this.rate.total = res.times(this.totalFee).toFixed(2);
+        }
       });
   }
 

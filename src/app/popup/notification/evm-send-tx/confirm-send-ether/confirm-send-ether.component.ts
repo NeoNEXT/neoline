@@ -45,6 +45,10 @@ export class PopupNoticeEvmConfirmSendEtherComponent {
     this.confirmEvent.emit(this.customNonce);
   }
 
+  changeNonce($event) {
+    this.customNonce = $event;
+  }
+
   getShowAmount() {
     if (!!this.amount) {
       const newAmount = new BigNumber(this.amount).dp(8, 1).toFixed();

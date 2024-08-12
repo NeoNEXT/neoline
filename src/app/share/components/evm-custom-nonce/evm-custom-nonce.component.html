@@ -1,0 +1,9 @@
+<div class="nonce" *ngIf="isCustomNonce">
+  {{ "customNonce" | translate | async }}:
+  <input
+    type="text"
+    [placeholder]="default ?? ''"
+    [(ngModel)]="customNonce"
+    (input)="changeNonce($event)"
+  />
+</div>
