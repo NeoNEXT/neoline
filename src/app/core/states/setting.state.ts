@@ -1,12 +1,10 @@
 import { Injectable } from '@angular/core';
-import { RateCurrencysType } from '@/app/popup/_lib/setting';
-import { SelectItem, STORAGE_NAME } from '@/app/popup/_lib';
+import { STORAGE_NAME } from '@/app/popup/_lib';
 import { BehaviorSubject } from 'rxjs';
 import { ChromeService } from '../services/chrome.service';
 
 @Injectable()
 export class SettingState {
-  public rateCurrencys: Array<SelectItem> = RateCurrencysType;
   themeSub = new BehaviorSubject<string>('light-theme');
   langSub = new BehaviorSubject<string>('en');
   langJson = { en: undefined, zh_CN: undefined };

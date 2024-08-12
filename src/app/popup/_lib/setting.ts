@@ -11,7 +11,7 @@ export const LanguagesType: Array<SelectItem> = [
   },
 ];
 
-export const RateCurrencysType: Array<SelectItem> = [
+export const RateCurrencyType: Array<SelectItem> = [
   {
     name: 'USD',
     type: 'USD',

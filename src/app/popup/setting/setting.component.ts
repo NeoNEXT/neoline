@@ -12,8 +12,8 @@ import {
   AssetState,
   SettingState,
 } from '@app/core';
-import { SelectItem, STORAGE_NAME } from '../_lib';
-import { LanguagesType } from '../_lib/setting';
+import { STORAGE_NAME } from '../_lib';
+import { LanguagesType, RateCurrencyType } from '../_lib/setting';
 
 @Component({
   templateUrl: 'setting.component.html',
@@ -22,7 +22,6 @@ import { LanguagesType } from '../_lib/setting';
 export class PopupSettingComponent implements OnInit {
   public lang: string;
   public rateCurrency: string;
-  public rateCurrencys: Array<SelectItem>;
   public rateTime: number;
   public isDark;
 
@@ -34,9 +33,7 @@ export class PopupSettingComponent implements OnInit {
     private asset: AssetState,
     private dialog: MatDialog,
     private setting: SettingState
-  ) {
-    this.rateCurrencys = this.setting.rateCurrencys;
-  }
+  ) {}
 
   async ngOnInit(): Promise<void> {
     this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
@@ -69,7 +66,7 @@ export class PopupSettingComponent implements OnInit {
     const tempDialog = this.dialog.open(PopupSelectDialogComponent, {
       data: {
         currentOption: this.rateCurrency,
-        optionGroup: this.rateCurrencys,
+        optionGroup: RateCurrencyType,
         type: 'currency',
       },
       panelClass: 'custom-dialog-panel',
