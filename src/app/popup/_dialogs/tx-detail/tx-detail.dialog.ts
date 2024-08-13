@@ -4,12 +4,14 @@ import { TransactionState } from '@/app/core';
 import { NEO, GAS } from '@/models/models';
 import { ChainType, RpcNetwork } from '../../_lib';
 import { PopupAddNetworkDialogComponent } from '../add-network/add-network.dialog';
+import BigNumber from 'bignumber.js';
 
 @Component({
   templateUrl: 'tx-detail.dialog.html',
   styleUrls: ['tx-detail.dialog.scss'],
 })
 export class PopupTxDetailDialogComponent implements OnInit {
+  showActivityLog = false;
   constructor(
     private dialog: MatDialog,
     private txState: TransactionState,
@@ -35,18 +37,26 @@ export class PopupTxDetailDialogComponent implements OnInit {
     }
   }
 
-  toWeb() {
+  getShowGas(value: string) {
+    const newAmount = new BigNumber(value).dp(8, 1).toFixed();
+    if (newAmount === '0') {
+      return '< 0.0000001';
+    }
+    return newAmount;
+  }
+
+  toWeb(txId: string) {
     const explorer = this.data.network.explorer;
     switch (this.data.chainType) {
       case 'Neo2':
       case 'Neo3':
         if (explorer) {
-          window.open(`${explorer}transaction/${this.data.tx.txid}`);
+          window.open(`${explorer}transaction/${txId}`);
         }
         break;
       case 'NeoX':
         if (explorer) {
-          window.open(`${explorer}/tx/${this.data.tx.txid}`);
+          window.open(`${explorer}/tx/${txId}`);
         }
         break;
     }

@@ -308,6 +308,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     try {
       let res;
       let txid: string;
+      let evmTxParams;
       switch (this.data.chainType) {
         case 'Neo2':
           try {
@@ -346,31 +347,43 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
             const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
               neoXFeeInfo;
             if (this.data.isNFT) {
-              res = await this.evmNFTState.transferNFT({
-                asset: nftAsset,
-                token: nftToken,
-                fromAddress: from,
-                toAddress: to.address,
-                maxFeePerGas,
-                maxPriorityFeePerGas,
-                gasLimit,
-                gasPrice,
-                privateKey: currentWIF,
-                nonce: this.customNonce ?? this.nonceInfo.nonce,
-              });
+              const { PreExecutionParams, newParams } =
+                this.evmNFTState.getTransferTxRequest({
+                  asset: nftAsset,
+                  token: nftToken,
+                  fromAddress: from,
+                  toAddress: to.address,
+                  maxFeePerGas,
+                  maxPriorityFeePerGas,
+                  gasLimit,
+                  gasPrice,
+                  nonce: this.customNonce ?? this.nonceInfo.nonce,
+                });
+              evmTxParams = newParams;
+              res = await this.assetEvmState.sendDappTransaction(
+                PreExecutionParams,
+                newParams,
+                currentWIF
+              );
             } else {
-              res = await this.assetEvmState.transferErc20({
-                asset: asset,
-                toAddress: to.address,
-                transferAmount: amount,
-                maxFeePerGas,
-                maxPriorityFeePerGas,
-                gasLimit,
-                gasPrice,
-                privateKey: currentWIF,
-                nonce: this.customNonce ?? this.nonceInfo.nonce,
-                fromAddress: from,
-              });
+              const { PreExecutionParams, newParams } =
+                this.assetEvmState.getTransferErc20TxRequest({
+                  asset,
+                  toAddress: to.address,
+                  transferAmount: amount,
+                  maxFeePerGas,
+                  maxPriorityFeePerGas,
+                  gasLimit,
+                  gasPrice,
+                  nonce: this.customNonce ?? this.nonceInfo.nonce,
+                  fromAddress: from,
+                });
+              evmTxParams = newParams;
+              res = await this.assetEvmState.sendDappTransaction(
+                PreExecutionParams,
+                newParams,
+                currentWIF
+              );
             }
             txid = res.hash;
           }
@@ -401,6 +414,20 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         }
         if (this.data.chainType === 'NeoX') {
           txTarget.nonce = this.customNonce ?? this.nonceInfo.nonce;
+          txTarget.txParams = {
+            from: evmTxParams.from,
+            to: evmTxParams.to,
+            data: evmTxParams.data,
+            value: evmTxParams.value.toString(),
+          };
+          txTarget.history = [
+            {
+              txId: txid,
+              time: txTarget.block_time,
+              estimateGas: this.data.neoXFeeInfo.estimateGas,
+              type: 'create',
+            },
+          ];
         }
         this.pushTransaction(txTarget);
       }

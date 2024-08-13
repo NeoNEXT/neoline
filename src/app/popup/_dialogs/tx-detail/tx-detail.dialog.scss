@@ -15,6 +15,21 @@ ul {
     &.line {
       border-top: 1px solid var(--line-color);
     }
+    &.col {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    &.log {
+      cursor: pointer;
+      img {
+        transform: rotate(90deg);
+        transition: all 0.3s;
+        &.expand {
+          transform: rotate(270deg);
+        }
+      }
+    }
     .label {
       font-family: NeverMind;
       font-size: 13px;
@@ -55,6 +70,17 @@ ul {
           }
         }
       }
+    }
+  }
+  .log-group {
+    position: relative;
+    padding-left: 10px;
+    .log-item {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      margin-bottom: 10px;
     }
   }
 }

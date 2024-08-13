@@ -1,0 +1,15 @@
+.content {
+  padding: 16px 24px 24px;
+  .desc {
+    font-family: NeverMind;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+    color: var(--title-color);
+    margin-bottom: 24px;
+  }
+  button.confirm {
+    width: 100%;
+    margin-top: 50px;
+  }
+}

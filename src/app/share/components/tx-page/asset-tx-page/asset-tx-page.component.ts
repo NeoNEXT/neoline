@@ -1,10 +1,18 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import { TransactionState, ChromeService, AssetEVMState } from '@/app/core';
-import { Transaction } from '@/models/models';
+import { Transaction, TransactionStatus } from '@/models/models';
 import { forkJoin, Unsubscribable, interval } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupTxDetailDialogComponent } from '@/app/popup/_dialogs';
-import { STORAGE_NAME, ChainType, RpcNetwork } from '@/app/popup/_lib';
+import {
+  PopupSpeedUpFeeDialogComponent,
+  PopupTxDetailDialogComponent,
+} from '@/app/popup/_dialogs';
+import {
+  STORAGE_NAME,
+  ChainType,
+  RpcNetwork,
+  EvmWalletJSON,
+} from '@/app/popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 
@@ -14,6 +22,7 @@ import { AppState } from '@/app/reduers';
   styleUrls: ['../tx-page.scss'],
 })
 export class AssetTxPageComponent implements OnInit, OnDestroy {
+  TransactionStatus = TransactionStatus;
   @Input() assetId = '';
   @Input() symbol = '';
 
@@ -27,6 +36,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
   private accountSub: Unsubscribable;
   chainType: ChainType;
   private address: string;
+  private currentWallet: EvmWalletJSON;
   private network: RpcNetwork;
   networkIndex: number;
   private networkId: number;
@@ -54,6 +64,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
         case 'NeoX':
           this.network = state.neoXNetworks[state.neoXNetworkIndex];
           this.networkIndex = state.neoXNetworkIndex;
+          this.currentWallet = state.currentWallet as EvmWalletJSON;
           break;
       }
       this.networkId = this.network.id;
@@ -108,7 +119,10 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
         const item = this.txData[i];
         if (item?.status === undefined) {
           this.assetEVMState.waitForTx(item.txid).then((res) => {
-            this.txData[i].status = res.status;
+            this.txData[i].status =
+              this.txData[i].status === TransactionStatus.Canceling
+                ? TransactionStatus.Cancelled
+                : res.status;
             this.txData[i].block_time = res.block_time;
             this.localAllTxs[networkName][this.address][this.assetId] =
               this.txData;
@@ -187,6 +201,19 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
         chainType: this.chainType,
         networkIndex: this.networkIndex,
         network: this.network,
+      },
+    });
+  }
+
+  speedUpTx(tx: Transaction, isSpeedUp: boolean) {
+    this.dialog.open(PopupSpeedUpFeeDialogComponent, {
+      panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-dialog-backdrop',
+      data: {
+        tx,
+        isSpeedUp,
+        network: this.network,
+        currentWallet: this.currentWallet,
       },
     });
   }

@@ -74,6 +74,21 @@
       left: 24px;
       right: 24px;
     }
+    .btn-group {
+      margin-top: 16px;
+      border-top: 1px solid var(--line-color);
+      padding-top: 16px;
+      button {
+        width: auto;
+        height: 34px;
+        border-radius: 4px;
+        font-size: 12px;
+        padding-inline: 12px;
+        &.cancel {
+          margin-right: 15px;
+        }
+      }
+    }
   }
 
   .no-data,

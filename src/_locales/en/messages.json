@@ -1406,7 +1406,43 @@
   "customNonce": {
     "message": "Custom nonce"
   },
-  "Dropped": {
+  "dropped": {
     "message": "Dropped"
+  },
+  "cancelled": {
+    "message": "Cancelled"
+  },
+  "canceling": {
+    "message": "Canceling"
+  },
+  "speedUp": {
+    "message": "Speed up"
+  },
+  "cancelTransaction": {
+    "message": "Cancel transaction"
+  },
+  "ActivityLog": {
+    "message": "Activity log"
+  },
+  "SpeedUpCancellation": {
+    "message": "Speed up this cancellation"
+  },
+  "evmLogCreateTx": {
+    "message": "Transaction created with estimated gas fee of {{gas}} {{symbol}} at {{time}}."
+  },
+  "evmLogSpeedUpTx": {
+    "message": "Transaction resubmitted with estimated gas fee increased to {{gas}} {{symbol}} at {{time}}."
+  },
+  "evmLogCancelTx": {
+    "message": "Transaction canceled with estimated gas fee of {{gas}} {{symbol}} at {{time}}."
+  },
+  "cancelTxDesc": {
+    "message": "By canceling the transaction, you'll also need to pay network fees. Due to network error, the cancellation may be unsuccessful."
+  },
+  "speedUpTxDesc": {
+    "message": "Speed up the transaction by increasing the network fee."
+  },
+  "speedUpTip": {
+    "message": "Note: We won't charge you the service fee for accelerating this transaction."
   }
 }

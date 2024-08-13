@@ -20,14 +20,20 @@
         </span>
       </ng-container>
       <ng-container *ngIf="chainType === 'NeoX'">
-        <span class="status" *ngIf="item?.status === 1">
-          {{ "confirmed" | translate | async }}
-        </span>
         <span class="status failed" *ngIf="item?.status === 0">
           {{ "failed" | translate | async }}
         </span>
+        <span class="status" *ngIf="item?.status === 1">
+          {{ "confirmed" | translate | async }}
+        </span>
         <span class="status failed" *ngIf="item?.status === 2">
-          {{ "Dropped" | translate | async }}
+          {{ "dropped" | translate | async }}
+        </span>
+        <span class="status failed" *ngIf="item?.status === 3">
+          {{ "cancelled" | translate | async }}
+        </span>
+        <span class="status failed" *ngIf="item?.status === 4">
+          {{ "canceling" | translate | async }}
         </span>
         <span class="status wait" *ngIf="item?.status === undefined">
           {{ "confirming" | translate | async }}
@@ -57,16 +63,46 @@
         <p class="asset-amount" [class]="{ send: item.type !== 'received' }">
           {{ item.value }} {{ assetId === "" ? item.symbol : symbol }}
         </p>
-        <!-- <p class="money-amount"></p> -->
       </div>
     </div>
+    <ng-container *ngIf="chainType === 'NeoX'">
+      <div
+        class="btn-group"
+        (click)="$event.stopPropagation()"
+        *ngIf="item?.status === undefined"
+      >
+        <button class="cancel" (click)="speedUpTx(item, false)">
+          {{ "cancelTransaction" | translate | async }}
+        </button>
+        <button
+          class="confirm"
+          [ngClass]="{ disabled }"
+          (click)="speedUpTx(item, true)"
+        >
+          {{ "speedUp" | translate | async }}
+        </button>
+      </div>
+      <div
+        class="btn-group"
+        (click)="$event.stopPropagation()"
+        *ngIf="item?.status === TransactionStatus.Canceling"
+      >
+        <button class="cancel" (click)="speedUpTx(item, false)">
+          {{ "SpeedUpCancellation" | translate | async }}
+        </button>
+      </div>
+    </ng-container>
+
     <hr />
   </div>
   <div class="loading" *ngIf="loading">{{ "loading" | translate | async }}</div>
   <p *ngIf="!loading && chainType !== 'NeoX'" class="no-data">
     {{ "oneMonthTxs" | translate | async }}
   </p>
-  <p *ngIf="!loading && chainType === 'NeoX' && !txData?.length" class="no-data">
+  <p
+    *ngIf="!loading && chainType === 'NeoX' && !txData?.length"
+    class="no-data"
+  >
     {{ "youHaveNoTransactions" | translate | async }}
   </p>
 </div>

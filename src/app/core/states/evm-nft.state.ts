@@ -4,10 +4,8 @@ import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import type BN from 'bn.js';
-import { HttpClient } from '@angular/common/http';
 import { DappEVMState } from './dapp-evm.state';
 import { NftAsset, NftToken } from '@/models/models';
-import BigNumber from 'bignumber.js';
 import { AssetEVMState } from './asset-evm.state';
 
 @Injectable()
@@ -17,7 +15,6 @@ export class EvmNFTState {
 
   constructor(
     private store: Store<AppState>,
-    private http: HttpClient,
     private assetEVMState: AssetEVMState,
     private dappEVMState: DappEVMState
   ) {
@@ -61,47 +58,6 @@ export class EvmNFTState {
       gasPrice,
     };
     return this.assetEVMState.getTxParams(txParams, neoXFeeInfo, nonce, fromAddress);
-  }
-
-  async transferNFT({
-    asset,
-    token,
-    fromAddress,
-    toAddress,
-    maxFeePerGas,
-    maxPriorityFeePerGas,
-    gasLimit,
-    gasPrice,
-    privateKey,
-    nonce,
-  }: {
-    asset: NftAsset;
-    token: NftToken;
-    fromAddress: string;
-    toAddress: string;
-    maxFeePerGas?: string;
-    maxPriorityFeePerGas?: string;
-    gasPrice?: string;
-    gasLimit: string;
-    privateKey: string;
-    nonce: number;
-  }) {
-    const { PreExecutionParams, newParams } = this.getTransferTxRequest({
-      asset,
-      token,
-      fromAddress,
-      toAddress,
-      maxFeePerGas,
-      maxPriorityFeePerGas,
-      gasLimit,
-      gasPrice,
-      nonce,
-    });
-    return await this.assetEVMState.sendDappTransaction(
-      PreExecutionParams,
-      newParams,
-      privateKey
-    );
   }
 
   async estimateGasOfTransfer({

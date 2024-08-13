@@ -21,3 +21,4 @@ export { PopupExportWalletDialogComponent } from './export-wallet/export-wallet.
 export { PopupSelectAddressDialogComponent } from './select-address/select-address.dialog';
 export { PopupBridgeProgressDialogComponent } from './bridge-progress/bridge-progress.component';
 export { PopupBridgeFootnoteDialogComponent } from './bridge-footnote/bridge-footnote.dialog';
+export { PopupSpeedUpFeeDialogComponent } from './speed-up-fee/speed-up-fee.dialog';

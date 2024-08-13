@@ -13,7 +13,9 @@
   <li>
     <p class="label">TxID</p>
     <p class="value txid">
-      <span (click)="toWeb()" class="link">{{ data.tx.txid | longStr: 16 }}</span>
+      <span (click)="toWeb(data.tx.txid)" class="link"
+        >{{ data.tx.txid | longStr: 16 }}</span
+      >
       <copy [value]="data.tx.txid" placement="topRight">
         <img theme src="assets/images/common/copy.svg" />
       </copy>
@@ -31,7 +33,7 @@
     <p class="label">{{ 'amount' | translate | async }}</p>
     <p class="value">{{ data.tx.value + ' ' + data?.symbol }}</p>
   </li>
-  <li *ngIf="data.tx?.nonce">
+  <li class="col" *ngIf="data.tx?.nonce">
     <p class="label">Nonce</p>
     <p class="value">{{ data.tx.nonce }}</p>
   </li>
@@ -56,6 +58,41 @@
       <p *ngFor="let item of data.tx.to">
         <copy [value]="item" placement="top">{{ item | longStr: 16 }}</copy>
       </p>
+    </div>
+  </li>
+  <li (click)="showActivityLog=!showActivityLog" class="col log">
+    <span class="label">{{ 'ActivityLog' | translate | async }}</span>
+    <img
+      theme
+      [ngClass]="{ expand: showActivityLog }"
+      src="/assets/images/common/arrow.svg"
+      alt=""
+    />
+  </li>
+  <li class="log-group" *ngIf="showActivityLog">
+    <div
+      class="log-item"
+      *ngFor="let historyItem of data.tx.history"
+      (click)="toWeb(historyItem.txId)"
+    >
+      <ng-container *ngIf="historyItem.type === 'create'">
+        <img src="/assets/images/txs/log-create.svg" alt="" />
+        {{ 'evmLogCreateTx' | translate: {gas:
+        getShowGas(historyItem.estimateGas), symbol: data.symbol, time:
+        historyItem.time*1000|date} | async }}
+      </ng-container>
+      <ng-container *ngIf="historyItem.type === 'speedUp'">
+        <img src="/assets/images/txs/log-speed-up.svg" alt="" />
+        {{ 'evmLogSpeedUpTx' | translate: {gas:
+        getShowGas(historyItem.estimateGas), symbol: data.symbol, time:
+        historyItem.time*1000|date} | async }}
+      </ng-container>
+      <ng-container *ngIf="historyItem.type === 'cancel'">
+        <img src="/assets/images/txs/log-cancel.svg" alt="" />
+        {{ 'evmLogCancelTx' | translate: {gas:
+        getShowGas(historyItem.estimateGas), symbol: data.symbol, time:
+        historyItem.time*1000|date} | async }}
+      </ng-container>
     </div>
   </li>
 </ul>

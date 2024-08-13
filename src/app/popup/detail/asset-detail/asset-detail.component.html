@@ -61,7 +61,7 @@
   <div class="txs">
     <p class="title">{{ "transaction" | translate | async }}</p>
     <app-asset-tx-page
-      *ngIf="assetId"
+      *ngIf="assetId && balance?.symbol"
       [assetId]="assetId"
       [symbol]="balance?.symbol"
     >

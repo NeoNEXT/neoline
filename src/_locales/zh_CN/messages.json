@@ -1406,7 +1406,43 @@
   "customNonce": {
     "message": "自定义 nonce"
   },
-  "Dropped": {
+  "dropped": {
     "message": "已丢弃"
+  },
+  "cancelled": {
+    "message": "已取消"
+  },
+  "canceling": {
+    "message": "取消中"
+  },
+  "speedUp": {
+    "message": "加速"
+  },
+  "cancelTransaction": {
+    "message": "取消"
+  },
+  "ActivityLog": {
+    "message": "活动日志"
+  },
+  "SpeedUpCancellation": {
+    "message": "加速取消该笔交易"
+  },
+  "evmLogCreateTx": {
+    "message": "已在 {{time}} 提交交易，燃料费预计为 {{gas}} {{symbol}}。"
+  },
+  "evmLogSpeedUpTx": {
+    "message": "已在 {{time}} 重新提交交易，燃料费预计升至 {{gas}} {{symbol}}。"
+  },
+  "evmLogCancelTx": {
+    "message": "已在 {{time}} 取消交易，燃料费预计为 {{gas}} {{symbol}}。"
+  },
+  "cancelTxDesc": {
+    "message": "取消交易需要额外花费网络费用（由于网络原因，取消交易不能保证成功）。"
+  },
+  "speedUpTxDesc": {
+    "message": "提高网络费用以加速交易"
+  },
+  "speedUpTip": {
+    "message": "注：NeoLine钱包不会对本次交易收取加速服务费。"
   }
 }

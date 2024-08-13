@@ -247,47 +247,6 @@ export class AssetEVMState {
     return this.getTxParams(txParams, neoXFeeInfo, nonce, fromAddress);
   }
 
-  async transferErc20({
-    asset,
-    toAddress,
-    transferAmount,
-    maxFeePerGas,
-    maxPriorityFeePerGas,
-    gasLimit,
-    gasPrice,
-    privateKey,
-    nonce,
-    fromAddress,
-  }: {
-    asset: Asset;
-    toAddress: string;
-    transferAmount: string;
-    maxFeePerGas?: string;
-    maxPriorityFeePerGas?: string;
-    gasPrice?: string;
-    gasLimit: string;
-    privateKey: string;
-    nonce: number;
-    fromAddress: string;
-  }) {
-    const { PreExecutionParams, newParams } = this.getTransferErc20TxRequest({
-      asset,
-      toAddress,
-      transferAmount,
-      maxFeePerGas,
-      maxPriorityFeePerGas,
-      gasLimit,
-      gasPrice,
-      nonce,
-      fromAddress,
-    });
-    return await this.sendDappTransaction(
-      PreExecutionParams,
-      newParams,
-      privateKey
-    );
-  }
-
   async sendDappTransaction(PreExecutionParams, txParams, privateKey: string) {
     try {
       await this.provider.send('eth_call', [PreExecutionParams, 'latest']);

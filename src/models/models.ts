@@ -48,6 +48,8 @@ export enum TransactionStatus {
   'Failed' = 0,
   'Success' = 1,
   'Dropped' = 2,
+  'Cancelled' = 3,
+  'Canceling' = 4,
 }
 export interface Transaction {
   block_time: number;
@@ -68,6 +70,14 @@ export interface Transaction {
 
   // EVM
   nonce?: number;
+  txParams?: any;
+  history?: HistoryTransaction[];
+}
+interface HistoryTransaction {
+  txId: string;
+  estimateGas: string;
+  time: number;
+  type: 'create' | 'cancel' | 'speedUp';
 }
 
 export interface NftTransaction extends Transaction {
