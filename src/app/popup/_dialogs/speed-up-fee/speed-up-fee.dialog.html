@@ -27,6 +27,9 @@
     (returnFee)="updateEvmFee($event)"
   >
   </evm-fee>
+  <p class="tip" *ngIf="data.isSpeedUp">
+    {{ 'speedUpTip' | translate | async }}
+  </p>
   <button class="confirm pop-ups" (click)="confirm()">
     {{ 'Confirm' | translate | async}}
   </button>
