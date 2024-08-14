@@ -27,8 +27,8 @@ import { forkJoin, Unsubscribable, interval } from 'rxjs';
 
 @Component({
   selector: 'app-nft-tx-page',
-  templateUrl: 'nft-tx-page.component.html',
-  styleUrls: ['../tx-page.scss'],
+  templateUrl: '../tx-page.component.html',
+  styleUrls: ['../tx-page.component.scss'],
 })
 export class NftTxPageComponent implements OnInit, OnDestroy {
   TransactionStatus = TransactionStatus;
@@ -196,13 +196,13 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
     });
   }
 
-  showDetail(tx) {
+  showDetail(tx, symbol) {
     this.dialog.open(PopupTxDetailDialogComponent, {
       panelClass: 'custom-dialog-panel',
       backdropClass: 'custom-dialog-backdrop',
       data: {
         tx,
-        symbol: this.symbol,
+        symbol,
         isNFT: true,
         chainType: this.chainType,
         network: this.network,

@@ -31,6 +31,7 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   @Output() closeEvent = new EventEmitter();
   @Output() updateFeeEvent = new EventEmitter<NeoXFeeInfoProp>();
   @Output() confirmEvent = new EventEmitter();
+  @Output() returnAssetDetail = new EventEmitter();
 
   customNonce: number;
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
@@ -60,6 +61,7 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
       )
       .then((res) => {
         this.assetDetails = res;
+        this.returnAssetDetail.emit(this.assetDetails);
 
         this.assetState
           .getAssetAmountRate({

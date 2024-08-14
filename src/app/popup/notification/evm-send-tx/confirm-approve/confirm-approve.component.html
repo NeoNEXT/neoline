@@ -148,10 +148,12 @@
       ></evm-pending-warning>
     </div>
 
-    <evm-custom-nonce
-      [default]="nonceInfo?.nonce"
-      (changeNonceEvent)="changeNonce($event)"
-    ></evm-custom-nonce>
+    <div class="nonce">
+      <evm-custom-nonce
+        [default]="nonceInfo?.nonce"
+        (changeNonceEvent)="changeNonce($event)"
+      ></evm-custom-nonce>
+    </div>
 
     <p class="view-details">
       <span (click)="showDetail = !showDetail">

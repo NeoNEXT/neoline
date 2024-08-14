@@ -18,8 +18,8 @@ import { AppState } from '@/app/reduers';
 
 @Component({
   selector: 'app-asset-tx-page',
-  templateUrl: 'asset-tx-page.component.html',
-  styleUrls: ['../tx-page.scss'],
+  templateUrl: '../tx-page.component.html',
+  styleUrls: ['../tx-page.component.scss'],
 })
 export class AssetTxPageComponent implements OnInit, OnDestroy {
   TransactionStatus = TransactionStatus;
@@ -109,12 +109,17 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
   }
 
   private getEvmAllTxs() {
-    if (!this.assetId) return;
     const networkName = `${this.chainType}-${this.networkId}`;
     this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((inTxData) => {
       this.localAllTxs = inTxData;
-      this.txData =
-        inTxData?.[networkName]?.[this.address]?.[this.assetId] || [];
+      if (this.assetId) {
+        this.txData =
+          inTxData?.[networkName]?.[this.address]?.[this.assetId] || [];
+      } else {
+        this.txData = this.getEvmAddressAllTx(
+          inTxData?.[networkName]?.[this.address] || []
+        );
+      }
       for (let i = 0; i < this.txData.length; i++) {
         const item = this.txData[i];
         if (
@@ -132,13 +137,33 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
               time: res.block_time,
               type: 'complete',
             });
-            this.localAllTxs[networkName][this.address][this.assetId] =
-              this.txData;
+            if (this.assetId) {
+              this.localAllTxs[networkName][this.address][this.assetId] =
+                this.txData;
+            } else {
+              const index = this.localAllTxs[networkName][this.address][
+                this.txData[i].asset_id ?? 'dapp'
+              ].findIndex((tx) => tx.txid === this.txData[i].txid);
+
+              this.localAllTxs[networkName][this.address][
+                this.txData[i].asset_id ?? 'dapp'
+              ][index] = this.txData[i];
+            }
             this.chrome.setStorage(STORAGE_NAME.transaction, this.localAllTxs);
           });
         }
       }
     });
+  }
+
+  getEvmAddressAllTx(data: { [asset: string]: Transaction[] }) {
+    let txArr = [];
+    Object.keys(data).forEach((assetId) => {
+      txArr = txArr.concat(data[assetId]);
+    });
+    txArr.sort((a, b) => b.block_time - a.block_time);
+
+    return txArr;
   }
 
   private handleTxs(validTxs?: string[]) {

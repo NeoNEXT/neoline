@@ -31,6 +31,7 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   @Output() updateFeeEvent = new EventEmitter<NeoXFeeInfoProp>();
   @Output() updateApproveAmountEvent = new EventEmitter<EvmTransactionParams>();
   @Output() confirmEvent = new EventEmitter();
+  @Output() returnAssetDetail = new EventEmitter();
 
   customNonce: number;
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
@@ -62,6 +63,8 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
       )
       .then((res) => {
         this.assetDetails = res;
+        this.returnAssetDetail.emit(this.assetDetails);
+
         this.inputAmount = this.assetDetails.tokenAmount;
         this.assetEVMState
           .getNeoXAddressAssetBalance(this.txParams.from, this.txParams.to)

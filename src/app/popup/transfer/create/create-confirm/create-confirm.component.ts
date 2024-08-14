@@ -406,13 +406,11 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         };
         if (this.data.isNFT) {
           txTarget.tokenid = this.data.nftToken.tokenid;
+          txTarget.symbol = this.data.nftAsset.symbol;
           txTarget.asset_id = this.data.nftAsset.assethash;
         } else {
           txTarget.symbol = this.data.asset.symbol;
-          txTarget.asset_id =
-            this.data.asset.asset_id !== ETH_SOURCE_ASSET_HASH
-              ? this.data.asset.asset_id
-              : undefined;
+          txTarget.asset_id = this.data.asset.asset_id;
         }
         if (this.data.chainType === 'NeoX') {
           txTarget.nonce = this.customNonce ?? this.nonceInfo.nonce;

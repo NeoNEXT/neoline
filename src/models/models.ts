@@ -62,7 +62,13 @@ export interface Transaction {
   symbol?: string;
   from?: string[];
   to?: string[];
-  type: 'sent' | 'received';
+  type:
+    | 'sent'
+    | 'received'
+    | 'sendEther'
+    | 'sendToken'
+    | 'contractInteraction'
+    | 'approve';
   status?: TransactionStatus; // EVM tx status 0: failed, 1: success
 
   // NFT

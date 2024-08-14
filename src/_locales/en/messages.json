@@ -111,7 +111,7 @@
     "message": "Received"
   },
   "sent": {
-    "message": "Sent"
+    "message": "Send"
   },
   "balance": {
     "message": "Balance"
@@ -1368,7 +1368,7 @@
     "message": "Use site suggestion"
   },
   "contractInteraction": {
-    "message": "CONTRACT INTERACTION"
+    "message": "Contract interaction"
   },
   "save": {
     "message": "Save"
@@ -1447,5 +1447,17 @@
   },
   "speedUpTip": {
     "message": "Note: We won't charge you the service fee for accelerating this transaction."
+  },
+  "approve": {
+    "message": "Approve"
+  },
+  "sendToken": {
+    "message": "Send"
+  },
+  "sendEther": {
+    "message": "Send"
+  },
+  "Activity": {
+    "message": "Activity"
   }
 }

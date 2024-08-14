@@ -48,7 +48,11 @@
     </div>
     <div class="content">
       <img
-        *ngIf="item.type !== 'received'"
+        *ngIf="
+          item.type !== 'received' &&
+          item.type !== 'contractInteraction' &&
+          item.type !== 'approve'
+        "
         src="/assets/images/txs/send.svg"
         alt=""
       />
@@ -58,10 +62,26 @@
         src="/assets/images/txs/receive.svg"
         alt=""
       />
+      <img
+        *ngIf="item.type === 'contractInteraction'"
+        src="/assets/images/txs/contract.svg"
+        alt=""
+      />
+      <img
+        *ngIf="item.type === 'approve'"
+        src="/assets/images/txs/approve.svg"
+        alt=""
+      />
       <p class="txid">{{ item.txid | longStr }}</p>
       <div class="amount-box">
         <p class="asset-amount" [class]="{ send: item.type !== 'received' }">
-          {{ item.value }} {{ assetId === "" ? item.symbol : symbol }}
+          {{ item.value }}
+          <ng-container *ngIf="item.tokenid">
+            #{{ item.tokenid | nftTokenId }}
+          </ng-container>
+          <ng-container *ngIf="!item.tokenid">
+            {{ assetId === "" ? item.symbol : symbol }}
+          </ng-container>
         </p>
       </div>
     </div>

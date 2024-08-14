@@ -172,19 +172,6 @@
     .nonce {
       margin-top: 16px;
       margin-inline: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      input {
-        width: 100px;
-        height: 32px;
-        padding: 0 16px;
-        border-radius: 4px;
-        background: var(--box-color);
-        font-family: NeverMind-Medium;
-        font-size: 18px;
-        color: var(--title-color);
-      }
     }
     .view-details {
       margin-top: 16px;

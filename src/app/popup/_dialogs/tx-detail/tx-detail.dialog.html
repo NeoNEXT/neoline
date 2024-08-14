@@ -1,6 +1,6 @@
 <div class="pop-ups-title">
-  {{ (data.tx.type === 'received'? 'received' : 'sent') | translate | async }}
-  {{ data?.symbol }}
+  {{ (data.tx.type ? data.tx.type : 'sent') | translate | async }} {{
+  data?.symbol }}
   <img
     class="close"
     [mat-dialog-close]="false"
@@ -21,7 +21,7 @@
       </copy>
     </p>
   </li>
-  <li *ngIf="data.tx.asset_id">
+  <li *ngIf="data.tx.asset_id && data.tx.asset_id !== ETH_SOURCE_ASSET_HASH">
     <p class="label">{{ 'Contract' | translate | async }}</p>
     <p class="value">{{ data.tx.asset_id | longStr: 16 }}</p>
   </li>
@@ -29,13 +29,9 @@
     <p class="label">Token ID</p>
     <p class="value">#{{ data.tx.tokenid }}</p>
   </li>
-  <li>
+  <li *ngIf="data.tx.value !== ''">
     <p class="label">{{ 'amount' | translate | async }}</p>
-    <p class="value">{{ data.tx.value + ' ' + data?.symbol }}</p>
-  </li>
-  <li class="col" *ngIf="data.tx?.nonce">
-    <p class="label">Nonce</p>
-    <p class="value">{{ data.tx.nonce }}</p>
+    <p class="value">{{ data.tx.value }} {{data?.symbol}}</p>
   </li>
   <li>
     <p class="label">{{ 'time' | translate | async }}</p>
@@ -60,7 +56,15 @@
       </p>
     </div>
   </li>
-  <li (click)="showActivityLog=!showActivityLog" class="col log">
+  <li class="col" *ngIf="data.tx?.nonce">
+    <p class="label">Nonce</p>
+    <p class="value">{{ data.tx.nonce }}</p>
+  </li>
+  <li
+    *ngIf="data.chainType==='NeoX'"
+    (click)="showActivityLog=!showActivityLog"
+    class="col log"
+  >
     <span class="label">{{ 'ActivityLog' | translate | async }}</span>
     <img
       theme

@@ -151,6 +151,13 @@
             : ("transaction" | translate | async)
         }}
       </span>
+      <span
+        *ngIf="chainType === 'NeoX'"
+        [class]="{ selected: selectedIndex === 2 }"
+        (click)="selectedIndex = 2"
+      >
+        {{ "Activity" | translate | async }}
+      </span>
       <img
         (click)="toAdd()"
         class="asset-add"
@@ -160,10 +167,10 @@
         alt=""
       />
     </div>
-    <div [hidden]="selectedIndex === 1">
+    <div *ngIf="selectedIndex === 0">
       <app-assets (backAsset)="initNeo($event)"></app-assets>
     </div>
-    <div [hidden]="selectedIndex === 0">
+    <div *ngIf="selectedIndex === 1">
       <app-nfts *ngIf="chainType === 'Neo3'"></app-nfts>
       <app-evm-nfts *ngIf="chainType === 'NeoX'"></app-evm-nfts>
       <app-asset-tx-page
@@ -171,6 +178,9 @@
         [symbol]="balance?.symbol"
       >
       </app-asset-tx-page>
+    </div>
+    <div *ngIf="selectedIndex === 2">
+      <app-asset-tx-page></app-asset-tx-page>
     </div>
   </div>
 </div>

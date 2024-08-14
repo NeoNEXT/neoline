@@ -2,7 +2,7 @@ import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { TransactionState } from '@/app/core';
 import { NEO, GAS } from '@/models/models';
-import { ChainType, RpcNetwork } from '../../_lib';
+import { ChainType, RpcNetwork, ETH_SOURCE_ASSET_HASH } from '../../_lib';
 import { PopupAddNetworkDialogComponent } from '../add-network/add-network.dialog';
 import BigNumber from 'bignumber.js';
 
@@ -11,6 +11,7 @@ import BigNumber from 'bignumber.js';
   styleUrls: ['tx-detail.dialog.scss'],
 })
 export class PopupTxDetailDialogComponent implements OnInit {
+  ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   showActivityLog = false;
   constructor(
     private dialog: MatDialog,

@@ -1447,5 +1447,17 @@
   },
   "speedUpTip": {
     "message": "注：NeoLine钱包不会对本次交易收取加速服务费。"
+  },
+  "approve": {
+    "message": "批准"
+  },
+  "sendToken": {
+    "message": "发送"
+  },
+  "sendEther": {
+    "message": "发送"
+  },
+  "Activity": {
+    "message": "活动"
   }
 }
