@@ -206,15 +206,22 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
   }
 
   speedUpTx(tx: Transaction, isSpeedUp: boolean) {
-    this.dialog.open(PopupSpeedUpFeeDialogComponent, {
-      panelClass: 'custom-dialog-panel',
-      backdropClass: 'custom-dialog-backdrop',
-      data: {
-        tx,
-        isSpeedUp,
-        network: this.network,
-        currentWallet: this.currentWallet,
-      },
-    });
+    this.dialog
+      .open(PopupSpeedUpFeeDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
+        data: {
+          tx,
+          isSpeedUp,
+          network: this.network,
+          currentWallet: this.currentWallet,
+        },
+      })
+      .afterClosed()
+      .subscribe((res) => {
+        if (res) {
+          this.getEvmAllTxs();
+        }
+      });
   }
 }

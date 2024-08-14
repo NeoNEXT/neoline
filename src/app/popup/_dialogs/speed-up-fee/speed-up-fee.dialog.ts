@@ -94,7 +94,7 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
       .then((tx) => {
         this.loading = false;
         this.updateLocalTx(tx.hash);
-        this.dialogRef.close();
+        this.dialogRef.close(true);
         this.dialog.open(PopupTransferSuccessDialogComponent, {
           panelClass: 'custom-dialog-panel',
           backdropClass: 'custom-dialog-backdrop',
@@ -155,7 +155,7 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
       .then((txHash) => {
         this.loading = false;
         this.updateLocalTx(txHash);
-        this.dialogRef.close();
+        this.dialogRef.close(true);
         this.dialog.open(PopupTransferSuccessDialogComponent, {
           panelClass: 'custom-dialog-panel',
           backdropClass: 'custom-dialog-backdrop',

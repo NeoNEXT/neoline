@@ -5,10 +5,22 @@ import {
   TransactionState,
   AssetEVMState,
 } from '@/app/core';
-import { NftTransaction } from '@/models/models';
+import {
+  NftTransaction,
+  Transaction,
+  TransactionStatus,
+} from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupTxDetailDialogComponent } from '@/app/popup/_dialogs';
-import { ChainType, RpcNetwork, STORAGE_NAME } from '../../../../popup/_lib';
+import {
+  PopupSpeedUpFeeDialogComponent,
+  PopupTxDetailDialogComponent,
+} from '@/app/popup/_dialogs';
+import {
+  ChainType,
+  EvmWalletJSON,
+  RpcNetwork,
+  STORAGE_NAME,
+} from '../../../../popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { forkJoin, Unsubscribable, interval } from 'rxjs';
@@ -19,6 +31,7 @@ import { forkJoin, Unsubscribable, interval } from 'rxjs';
   styleUrls: ['../tx-page.scss'],
 })
 export class NftTxPageComponent implements OnInit, OnDestroy {
+  TransactionStatus = TransactionStatus;
   @Input() nftContract: string;
   @Input() symbol: string;
 
@@ -34,6 +47,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
   public networkIndex: number;
   public networkId: number;
   public address: string;
+  private currentWallet: EvmWalletJSON;
   chainType: ChainType;
   constructor(
     private dialog: MatDialog,
@@ -48,6 +62,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet?.accounts[0]?.address;
+      this.currentWallet = state.currentWallet as EvmWalletJSON;
       this.chainType = state.currentChainType;
       if (this.chainType === 'Neo3') {
         this.networkIndex = state.n3NetworkIndex;
@@ -99,7 +114,10 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
           const item = this.txData[i];
           if (item?.status === undefined) {
             const res = await this.assetEVMState.waitForTx(item.txid);
-            this.txData[i].status = res.status;
+            this.txData[i].status =
+              this.txData[i].status === TransactionStatus.Canceling
+                ? TransactionStatus.Cancelled
+                : res.status;
             this.txData[i].block_time = res.block_time;
             this.localAllTxs[networkName][this.address][this.nftContract] =
               this.txData;
@@ -183,5 +201,25 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
         networkIndex: this.networkIndex,
       },
     });
+  }
+
+  speedUpTx(tx: Transaction, isSpeedUp: boolean) {
+    this.dialog
+      .open(PopupSpeedUpFeeDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
+        data: {
+          tx,
+          isSpeedUp,
+          network: this.network,
+          currentWallet: this.currentWallet,
+        },
+      })
+      .afterClosed()
+      .subscribe((res) => {
+        if (res) {
+          this.getEvmAllTxs();
+        }
+      });
   }
 }

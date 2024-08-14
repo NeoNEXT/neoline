@@ -38,7 +38,7 @@ export class PopupTxDetailDialogComponent implements OnInit {
   }
 
   getShowGas(value: string) {
-    const newAmount = new BigNumber(value).dp(8, 1).toFixed();
+    const newAmount = new BigNumber(value).dp(8).toFixed();
     if (newAmount === '0') {
       return '< 0.0000001';
     }
