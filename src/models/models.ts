@@ -75,9 +75,9 @@ export interface Transaction {
 }
 interface HistoryTransaction {
   txId: string;
-  estimateGas: string;
+  estimateGas?: string;
   time: number;
-  type: 'create' | 'cancel' | 'speedUp';
+  type: 'create' | 'cancel' | 'speedUp' | 'complete';
 }
 
 export interface NftTransaction extends Transaction {

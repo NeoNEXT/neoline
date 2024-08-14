@@ -73,6 +73,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   nonceInfo: AddressNonceInfo;
   customNonce: number;
   insufficientFunds = false;
+  sendTxParams: ethers.TransactionRequest;
 
   constructor(
     private assetState: AssetState,
@@ -247,6 +248,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         nonce: this.customNonce ?? this.nonceInfo.nonce,
       });
       this.unsignedEvmTx = newParams;
+      this.sendTxParams = newParams;
     } else {
       const { newParams } = this.assetEvmState.getTransferErc20TxRequest({
         asset: asset,
@@ -260,6 +262,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         fromAddress: from,
       });
       this.unsignedEvmTx = newParams;
+      this.sendTxParams = newParams;
     }
   }
   private getLedgerStatus() {
@@ -308,7 +311,6 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     try {
       let res;
       let txid: string;
-      let evmTxParams;
       switch (this.data.chainType) {
         case 'Neo2':
           try {
@@ -359,7 +361,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
                   gasPrice,
                   nonce: this.customNonce ?? this.nonceInfo.nonce,
                 });
-              evmTxParams = newParams;
+              this.sendTxParams = newParams;
               res = await this.assetEvmState.sendDappTransaction(
                 PreExecutionParams,
                 newParams,
@@ -378,7 +380,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
                   nonce: this.customNonce ?? this.nonceInfo.nonce,
                   fromAddress: from,
                 });
-              evmTxParams = newParams;
+              this.sendTxParams = newParams;
               res = await this.assetEvmState.sendDappTransaction(
                 PreExecutionParams,
                 newParams,
@@ -415,10 +417,12 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         if (this.data.chainType === 'NeoX') {
           txTarget.nonce = this.customNonce ?? this.nonceInfo.nonce;
           txTarget.txParams = {
-            from: evmTxParams.from,
-            to: evmTxParams.to,
-            data: evmTxParams.data,
-            value: evmTxParams.value.toString(),
+            from: this.sendTxParams.from,
+            to: this.sendTxParams.to,
+            data: this.sendTxParams.data,
+            value: this.sendTxParams.value
+              ? this.sendTxParams.value.toString()
+              : this.sendTxParams.value,
           };
           txTarget.history = [
             {

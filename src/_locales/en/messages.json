@@ -1436,6 +1436,9 @@
   "evmLogCancelTx": {
     "message": "Transaction canceled with estimated gas fee of {{gas}} {{symbol}} at {{time}}."
   },
+  "evmLogCompleteTx": {
+    "message": "Transaction confirmed at {{time}}."
+  },
   "cancelTxDesc": {
     "message": "By canceling the transaction, you'll also need to pay network fees. Due to network error, the cancellation may be unsuccessful."
   },

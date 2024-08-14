@@ -1436,6 +1436,9 @@
   "evmLogCancelTx": {
     "message": "已在 {{time}} 取消交易，燃料费预计为 {{gas}} {{symbol}}。"
   },
+  "evmLogCompleteTx": {
+    "message": "交易已在 {{time}} 确认。"
+  },
   "cancelTxDesc": {
     "message": "取消交易需要额外花费网络费用（由于网络原因，取消交易不能保证成功）。"
   },

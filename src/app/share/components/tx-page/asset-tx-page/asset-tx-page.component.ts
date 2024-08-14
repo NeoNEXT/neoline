@@ -28,7 +28,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
 
   public show = false;
   public inTransaction: Array<Transaction>;
-  public txData: Array<any> = [];
+  public txData: Array<Transaction> = [];
   public loading = false;
   private listenTxSub: Unsubscribable;
   private localAllTxs = {};
@@ -117,13 +117,21 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
         inTxData?.[networkName]?.[this.address]?.[this.assetId] || [];
       for (let i = 0; i < this.txData.length; i++) {
         const item = this.txData[i];
-        if (item?.status === undefined) {
+        if (
+          item?.status === undefined ||
+          item?.status === TransactionStatus.Canceling
+        ) {
           this.assetEVMState.waitForTx(item.txid).then((res) => {
             this.txData[i].status =
               this.txData[i].status === TransactionStatus.Canceling
                 ? TransactionStatus.Cancelled
                 : res.status;
             this.txData[i].block_time = res.block_time;
+            this.txData[i].history.push({
+              txId: item.txid,
+              time: res.block_time,
+              type: 'complete',
+            });
             this.localAllTxs[networkName][this.address][this.assetId] =
               this.txData;
             this.chrome.setStorage(STORAGE_NAME.transaction, this.localAllTxs);
