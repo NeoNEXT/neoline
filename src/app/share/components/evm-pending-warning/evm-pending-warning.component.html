@@ -1,5 +1,7 @@
 <div class="warning-tip">
   <img src="assets/images/common/warning.svg" alt="" />
   {{ "yourHavePendingTxs" | translate : { count: count } | async }}
-  <span class="link">{{ "cancelOrSpeedUpTX" | translate | async }}</span>
+  <span class="link" (click)="toWeb()">
+    {{ "cancelOrSpeedUpTX" | translate | async }}
+  </span>
 </div>

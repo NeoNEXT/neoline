@@ -148,11 +148,13 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
                 ? TransactionStatus.Cancelled
                 : res.status;
             this.txData[i].block_time = res.block_time;
-            this.txData[i].history.push({
-              txId: item.txid,
-              time: res.block_time,
-              type: 'complete',
-            });
+            if (res.status !== TransactionStatus.Dropped) {
+              this.txData[i].history.push({
+                txId: item.txid,
+                time: res.block_time,
+                type: 'complete',
+              });
+            }
             if (this.assetId) {
               this.localAllTxs[networkName][this.address][this.assetId] =
                 this.txData;

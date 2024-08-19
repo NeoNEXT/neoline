@@ -28,7 +28,8 @@
         required
         min="0"
         formControlName="maxFeePerGas"
-        type="number"
+        oninput="value=value.replace(/^\D*(\d*(?:\.\d{0,9})?).*$/g, '$1')"
+        type="text"
       />
     </mat-form-field>
     <p class="error" *ngIf="maxFeeIsLowPriorityFee">
@@ -50,8 +51,9 @@
         matInput
         required
         min="0"
+        oninput="value=value.replace(/^\D*(\d*(?:\.\d{0,9})?).*$/g, '$1')"
         formControlName="maxPriorityFeePerGas"
-        type="number"
+        type="text"
       />
     </mat-form-field>
     <p class="error" *ngIf="maxPriorityFeeIsLow">
@@ -70,8 +72,9 @@
         matInput
         required
         min="0"
+        oninput="value=value.replace(/^\D*(\d*(?:\.\d{0,9})?).*$/g, '$1')"
         formControlName="gasPrice"
-        type="number"
+        type="text"
       />
     </mat-form-field>
     <p class="error" *ngIf="gasPriceIsLow">

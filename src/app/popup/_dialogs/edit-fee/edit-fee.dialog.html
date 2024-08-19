@@ -52,7 +52,7 @@
   <div class="custom-input" [ngClass]="{show: showCustom}">
     <span class="tip">GAS</span>
     <input
-      type="number"
+      type="text"
       [min]="minFee"
       oninput="this.value=this.value.replace(/\D*(\d*)(\.?)(\d{0,8})\d*/,'$1$2$3')"
       pattern="[0-9]*\.?[0-9]{0,8}"
