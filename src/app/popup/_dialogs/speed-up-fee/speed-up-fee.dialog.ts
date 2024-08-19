@@ -80,7 +80,7 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
     ) {
       newFeeInfo.maxFeePerGas = new BigNumber(latestTx.neoXFeeInfo.maxFeePerGas)
         .times(1.1)
-        .toFixed(18);
+        .toFixed(18, 0);
     }
     if (
       new BigNumber(latestTx.neoXFeeInfo.maxPriorityFeePerGas)
@@ -91,7 +91,7 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
         latestTx.neoXFeeInfo.maxPriorityFeePerGas
       )
         .times(1.1)
-        .toFixed(18);
+        .toFixed(18, 0);
     }
     if (
       new BigNumber(latestTx.neoXFeeInfo.gasPrice)
@@ -100,7 +100,7 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
     ) {
       newFeeInfo.gasPrice = new BigNumber(latestTx.neoXFeeInfo.gasPrice)
         .times(1.1)
-        .toFixed(18);
+        .toFixed(18, 0);
     }
     this.customNeoXFeeInfo = newFeeInfo;
   }

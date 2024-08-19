@@ -1,5 +1,9 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MatDialog, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import {
+  MatDialog,
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+} from '@angular/material/dialog';
 import { TransactionState } from '@/app/core';
 import { NEO, GAS } from '@/models/models';
 import { ChainType, RpcNetwork, ETH_SOURCE_ASSET_HASH } from '../../_lib';
@@ -15,6 +19,7 @@ export class PopupTxDetailDialogComponent implements OnInit {
   showActivityLog = false;
   constructor(
     private dialog: MatDialog,
+    private dialogRef: MatDialogRef<PopupTxDetailDialogComponent>,
     private txState: TransactionState,
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -36,6 +41,10 @@ export class PopupTxDetailDialogComponent implements OnInit {
         });
       }
     }
+  }
+
+  speedUpTx(isSpeedUp: boolean) {
+    this.dialogRef.close({ isSpeedUp });
   }
 
   getShowGas(value: string) {

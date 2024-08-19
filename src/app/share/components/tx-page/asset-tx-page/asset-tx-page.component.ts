@@ -224,18 +224,25 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
   }
 
   showDetail(tx, symbol) {
-    this.dialog.open(PopupTxDetailDialogComponent, {
-      panelClass: 'custom-dialog-panel',
-      backdropClass: 'custom-dialog-backdrop',
-      data: {
-        tx,
-        symbol,
-        isNFT: false,
-        chainType: this.chainType,
-        networkIndex: this.networkIndex,
-        network: this.network,
-      },
-    });
+    this.dialog
+      .open(PopupTxDetailDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
+        data: {
+          tx,
+          symbol,
+          isNFT: false,
+          chainType: this.chainType,
+          networkIndex: this.networkIndex,
+          network: this.network,
+        },
+      })
+      .afterClosed()
+      .subscribe((res) => {
+        if (res) {
+          this.speedUpTx(tx, res.isSpeedUp);
+        }
+      });
   }
 
   speedUpTx(tx: Transaction, isSpeedUp: boolean) {

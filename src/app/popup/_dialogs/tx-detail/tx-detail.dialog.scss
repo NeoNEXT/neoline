@@ -1,3 +1,24 @@
+.pop-ups-title {
+  height: auto;
+  min-height: 63px;
+  line-height: normal;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-block: 16px;
+
+  button {
+    width: 76px;
+    height: 30px;
+    border-radius: 15px;
+    font-size: 12px;
+    &.cancel {
+      margin-right: 10px;
+    }
+  }
+}
+
 ul {
   max-height: 450px;
   overflow-y: scroll;

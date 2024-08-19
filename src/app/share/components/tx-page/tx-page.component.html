@@ -75,7 +75,7 @@
       <p class="txid">{{ item.txid | longStr }}</p>
       <div class="amount-box">
         <p class="asset-amount" [class]="{ send: item.type !== 'received' }">
-          {{ item.value | numberFixed: 8 }}
+          {{ item.value | numberFixed : 8 }}
           <ng-container *ngIf="item.tokenid">
             #{{ item.tokenid | nftTokenId }}
           </ng-container>
@@ -94,11 +94,7 @@
         <button class="cancel" (click)="speedUpTx(item, false)">
           {{ "cancelTransaction" | translate | async }}
         </button>
-        <button
-          class="confirm"
-          [ngClass]="{ disabled }"
-          (click)="speedUpTx(item, true)"
-        >
+        <button class="confirm" (click)="speedUpTx(item, true)">
           {{ "speedUp" | translate | async }}
         </button>
       </div>

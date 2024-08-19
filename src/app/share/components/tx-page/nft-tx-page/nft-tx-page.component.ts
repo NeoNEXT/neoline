@@ -197,18 +197,25 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
   }
 
   showDetail(tx, symbol) {
-    this.dialog.open(PopupTxDetailDialogComponent, {
-      panelClass: 'custom-dialog-panel',
-      backdropClass: 'custom-dialog-backdrop',
-      data: {
-        tx,
-        symbol,
-        isNFT: true,
-        chainType: this.chainType,
-        network: this.network,
-        networkIndex: this.networkIndex,
-      },
-    });
+    this.dialog
+      .open(PopupTxDetailDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
+        data: {
+          tx,
+          symbol,
+          isNFT: true,
+          chainType: this.chainType,
+          network: this.network,
+          networkIndex: this.networkIndex,
+        },
+      })
+      .afterClosed()
+      .subscribe((res) => {
+        if (res) {
+          this.speedUpTx(tx, res.isSpeedUp);
+        }
+      });
   }
 
   speedUpTx(tx: Transaction, isSpeedUp: boolean) {

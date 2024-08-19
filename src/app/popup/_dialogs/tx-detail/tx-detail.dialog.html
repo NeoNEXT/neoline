@@ -1,6 +1,18 @@
 <div class="pop-ups-title">
-  {{ (data.tx.type ? data.tx.type : 'sent') | translate | async }} {{
-  data?.symbol }}
+  <span class="title">
+    {{ (data.tx.type ? data.tx.type : 'sent') | translate | async }} {{
+    data?.symbol }}
+  </span>
+  <ng-container *ngIf="data.chainType === 'NeoX'">
+    <div class="btn-group" *ngIf="data.tx?.status === undefined">
+      <button class="cancel" (click)="speedUpTx(false)">
+        {{ "cancel" | translate | async }}
+      </button>
+      <button class="confirm" (click)="speedUpTx(true)">
+        {{ "speedUp" | translate | async }}
+      </button>
+    </div>
+  </ng-container>
   <img
     class="close"
     [mat-dialog-close]="false"
