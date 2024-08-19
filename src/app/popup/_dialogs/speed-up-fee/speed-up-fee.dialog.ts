@@ -22,6 +22,7 @@ import {
 import { interval } from 'rxjs';
 import { ethers } from 'ethers';
 import { PopupTransferSuccessDialogComponent } from '../transfer-success/transfer-success.component';
+import BigNumber from 'bignumber.js';
 
 @Component({
   templateUrl: 'speed-up-fee.dialog.html',
@@ -32,8 +33,10 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
   loading = false;
   getStatusInterval;
   neoXFeeInfo: NeoXFeeInfoProp;
+  sendNeoXFeeInfo: NeoXFeeInfoProp;
 
   createTxParams;
+  customNeoXFeeInfo: NeoXFeeInfoProp;
   constructor(
     private dialogRef: MatDialogRef<PopupSpeedUpFeeDialogComponent>,
     private assetEVMState: AssetEVMState,
@@ -64,13 +67,50 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
 
   updateEvmFee($event) {
     this.neoXFeeInfo = $event;
+    this.getGasFee();
+  }
+
+  private getGasFee() {
+    const latestTx = this.data.tx.history[this.data.tx.history.length - 1];
+    let newFeeInfo = Object.assign({}, this.neoXFeeInfo);
+    if (
+      new BigNumber(latestTx.neoXFeeInfo.maxFeePerGas)
+        .times(1.1)
+        .comparedTo(this.neoXFeeInfo.maxFeePerGas) > 0
+    ) {
+      newFeeInfo.maxFeePerGas = new BigNumber(latestTx.neoXFeeInfo.maxFeePerGas)
+        .times(1.1)
+        .toFixed(18);
+    }
+    if (
+      new BigNumber(latestTx.neoXFeeInfo.maxPriorityFeePerGas)
+        .times(1.1)
+        .comparedTo(this.neoXFeeInfo.maxPriorityFeePerGas) > 0
+    ) {
+      newFeeInfo.maxPriorityFeePerGas = new BigNumber(
+        latestTx.neoXFeeInfo.maxPriorityFeePerGas
+      )
+        .times(1.1)
+        .toFixed(18);
+    }
+    if (
+      new BigNumber(latestTx.neoXFeeInfo.gasPrice)
+        .times(1.1)
+        .comparedTo(this.neoXFeeInfo.gasPrice) > 0
+    ) {
+      newFeeInfo.gasPrice = new BigNumber(latestTx.neoXFeeInfo.gasPrice)
+        .times(1.1)
+        .toFixed(18);
+    }
+    this.customNeoXFeeInfo = newFeeInfo;
   }
 
   async confirm() {
     this.loading = true;
+    this.sendNeoXFeeInfo = Object.assign({}, this.neoXFeeInfo);
     const { newParams, PreExecutionParams } = this.assetEVMState.getTxParams(
       this.createTxParams,
-      this.neoXFeeInfo,
+      this.sendNeoXFeeInfo,
       this.data.tx.nonce,
       this.data.currentWallet.accounts[0].address
     );
@@ -117,7 +157,7 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
       txs[index].history.push({
         txId,
         time: Math.floor(new Date().getTime() / 1000),
-        estimateGas: this.neoXFeeInfo.estimateGas,
+        neoXFeeInfo: this.sendNeoXFeeInfo,
         type: this.data.isSpeedUp ? 'speedUp' : 'cancel',
       });
       if (!this.data.isSpeedUp) {

@@ -24,10 +24,15 @@
   <evm-fee
     [txParams]="createTxParams"
     [symbol]="data.network.symbol"
+    [customNeoXFeeInfo]="customNeoXFeeInfo"
     [place]="'dapp'"
     (returnFee)="updateEvmFee($event)"
   >
   </evm-fee>
+
+  <evm-estimate-error
+    *ngIf="neoXFeeInfo?.estimateGasError"
+  ></evm-estimate-error>
   <p class="tip" *ngIf="data.isSpeedUp">
     {{ 'speedUpTip' | translate | async }}
   </p>

@@ -42,6 +42,18 @@
     </span>
   </div>
   <ul class="details-content" *ngIf="tabType === 'details'">
+    <li *ngIf="neoXFeeInfo?.estimateGasError">
+      <evm-estimate-error></evm-estimate-error>
+    </li>
+    <li *ngIf="insufficientFunds">
+      <evm-gas-error
+        [networkName]="neoXNetwork.name"
+        [symbol]="neoXNetwork.symbol"
+      ></evm-gas-error>
+    </li>
+    <li *ngIf="nonceInfo?.pendingTxs">
+      <evm-pending-warning [count]="nonceInfo.pendingTxs"></evm-pending-warning>
+    </li>
     <li>
       <evm-fee
         [txParams]="txParams"
@@ -75,19 +87,6 @@
         [default]="nonceInfo?.nonce"
         (changeNonceEvent)="changeNonce($event)"
       ></evm-custom-nonce>
-    </li>
-    <li>
-      <evm-gas-error
-        *ngIf="insufficientFunds"
-        [networkName]="neoXNetwork.name"
-        [symbol]="neoXNetwork.symbol"
-      ></evm-gas-error>
-    </li>
-    <li>
-      <evm-pending-warning
-        *ngIf="nonceInfo?.pendingTxs"
-        [count]="nonceInfo.pendingTxs"
-      ></evm-pending-warning>
     </li>
   </ul>
   <div class="data-content" *ngIf="tabType === 'data'">

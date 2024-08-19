@@ -82,20 +82,20 @@
       <ng-container *ngIf="historyItem.type === 'create'">
         <img src="/assets/images/txs/log-create.svg" alt="" />
         {{ 'evmLogCreateTx' | translate: {gas:
-        getShowGas(historyItem.estimateGas), symbol: data.symbol, time:
-        historyItem.time*1000|date:'yyyy-MM-dd HH:mm'} | async }}
+        getShowGas(historyItem.neoXFeeInfo.estimateGas), symbol: data.symbol,
+        time: historyItem.time*1000|date:'yyyy-MM-dd HH:mm'} | async }}
       </ng-container>
       <ng-container *ngIf="historyItem.type === 'speedUp'">
         <img src="/assets/images/txs/log-speed-up.svg" alt="" />
         {{ 'evmLogSpeedUpTx' | translate: {gas:
-        getShowGas(historyItem.estimateGas), symbol: data.symbol, time:
-        historyItem.time*1000|date:'yyyy-MM-dd HH:mm'} | async }}
+        getShowGas(historyItem.neoXFeeInfo.estimateGas), symbol: data.symbol,
+        time: historyItem.time*1000|date:'yyyy-MM-dd HH:mm'} | async }}
       </ng-container>
       <ng-container *ngIf="historyItem.type === 'cancel'">
         <img src="/assets/images/txs/log-cancel.svg" alt="" />
         {{ 'evmLogCancelTx' | translate: {gas:
-        getShowGas(historyItem.estimateGas), symbol: data.symbol, time:
-        historyItem.time*1000|date:'yyyy-MM-dd HH:mm'} | async }}
+        getShowGas(historyItem.neoXFeeInfo.estimateGas), symbol: data.symbol,
+        time: historyItem.time*1000|date:'yyyy-MM-dd HH:mm'} | async }}
       </ng-container>
       <ng-container *ngIf="historyItem.type === 'complete'">
         <img src="/assets/images/txs/log-complete.svg" alt="" />

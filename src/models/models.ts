@@ -1,3 +1,5 @@
+import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
+
 export interface ClaimItem {
   end_height: number;
   generated: number;
@@ -81,9 +83,9 @@ export interface Transaction {
 }
 interface HistoryTransaction {
   txId: string;
-  estimateGas?: string;
   time: number;
   type: 'create' | 'cancel' | 'speedUp' | 'complete';
+  neoXFeeInfo?: NeoXFeeInfoProp;
 }
 
 export interface NftTransaction extends Transaction {

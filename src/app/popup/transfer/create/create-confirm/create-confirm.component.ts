@@ -13,7 +13,7 @@ import {
   STORAGE_NAME,
 } from '../../../_lib';
 import { GAS, Transaction } from '@/models/models';
-import { NeoDataJsonProp, TransferData } from '../interface';
+import { NeoDataJsonProp, NeoXFeeInfoProp, TransferData } from '../interface';
 import {
   AssetState,
   GlobalService,
@@ -69,11 +69,12 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   evmHexData: string;
   evmHexDataLength: number;
-  unsignedEvmTx: ethers.TransactionRequest;
+  evmLedgerTx: ethers.TransactionRequest;
   nonceInfo: AddressNonceInfo;
   customNonce: number;
   insufficientFunds = false;
   sendTxParams: ethers.TransactionRequest;
+  sendNeoXFeeInfo: NeoXFeeInfoProp;
 
   constructor(
     private assetState: AssetState,
@@ -233,6 +234,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   private async getEvmTxData() {
     const { asset, to, amount, neoXFeeInfo, nftAsset, nftToken, from, isNFT } =
       this.data;
+    this.sendNeoXFeeInfo = Object.assign({}, neoXFeeInfo);
     const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
       neoXFeeInfo;
     if (isNFT) {
@@ -247,7 +249,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         gasPrice,
         nonce: this.customNonce ?? this.nonceInfo.nonce,
       });
-      this.unsignedEvmTx = newParams;
+      this.evmLedgerTx = newParams;
       this.sendTxParams = newParams;
     } else {
       const { newParams } = this.assetEvmState.getTransferErc20TxRequest({
@@ -261,7 +263,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         nonce: this.customNonce ?? this.nonceInfo.nonce,
         fromAddress: from,
       });
-      this.unsignedEvmTx = newParams;
+      this.evmLedgerTx = newParams;
       this.sendTxParams = newParams;
     }
   }
@@ -285,9 +287,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         this.loadingMsg = 'signTheTransaction';
         this.ledger
           .getLedgerSignedTx(
-            this.data.chainType === 'NeoX'
-              ? this.unsignedEvmTx
-              : this.unsignedTx,
+            this.data.chainType === 'NeoX' ? this.evmLedgerTx : this.unsignedTx,
             this.data.currentWallet,
             this.data.chainType,
             this.data.network.magicNumber
@@ -295,7 +295,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
           .then((tx) => {
             this.loading = false;
             this.unsignedTx = tx;
-            this.unsignedEvmTx = tx;
+            this.evmLedgerTx = tx;
             this.resolveSend();
           })
           .catch((error) => {
@@ -341,11 +341,12 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
           const { currentWIF } = this.data;
           if (this.data.currentWallet.accounts[0].extra.ledgerSLIP44) {
             txid = await this.assetEvmState.sendTransactionByRPC(
-              this.unsignedEvmTx
+              this.evmLedgerTx
             );
           } else {
             const { asset, to, amount, neoXFeeInfo, nftAsset, nftToken, from } =
               this.data;
+            this.sendNeoXFeeInfo = Object.assign({}, neoXFeeInfo);
             const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
               neoXFeeInfo;
             if (this.data.isNFT) {
@@ -426,8 +427,8 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
             {
               txId: txid,
               time: txTarget.block_time,
-              estimateGas: this.data.neoXFeeInfo.estimateGas,
               type: 'create',
+              neoXFeeInfo: this.sendNeoXFeeInfo,
             },
           ];
         }

@@ -66,6 +66,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   estimateGasError = false;
   insufficientFunds = false;
   approveNewTxParams: EvmTransactionParams;
+  sendNeoXFeeInfo: NeoXFeeInfoProp;
 
   private accountSub: Unsubscribable;
   neoXWalletArr: EvmWalletJSON[];
@@ -180,9 +181,11 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         ? this.approveNewTxParams
         : this.txParams;
 
+    this.sendNeoXFeeInfo = Object.assign({}, this.neoXFeeInfo);
+
     return this.assetEVMState.getTxParams(
       currentTxParams,
-      this.neoXFeeInfo,
+      this.sendNeoXFeeInfo,
       this.customNonce ?? this.nonceInfo.nonce,
       this.txParams.from
     );
@@ -284,7 +287,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
           {
             txId,
             time: Math.floor(new Date().getTime() / 1000),
-            estimateGas: this.neoXFeeInfo.estimateGas,
+            neoXFeeInfo: this.sendNeoXFeeInfo,
             type: 'create',
           },
         ],

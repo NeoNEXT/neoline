@@ -29,6 +29,7 @@ export interface NeoXFeeInfoProp {
   estimateGas: string;
   gasPrice?: string;
   custom?: boolean;
+  estimateGasError?: boolean;
 }
 
 export interface NeoDataJsonProp {

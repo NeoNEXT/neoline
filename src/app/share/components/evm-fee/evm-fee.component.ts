@@ -103,6 +103,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
     ) {
       this.getEstimateFeeInterval = timer(0, 10000).subscribe(async () => {
         let networkGasLimit: bigint;
+        let estimateGasError = false;
         try {
           if (this.place === 'dapp') {
             networkGasLimit = await this.assetEVMState.estimateGas(
@@ -125,8 +126,10 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
           }
         } catch {
           networkGasLimit = BigInt(42750000);
+          estimateGasError = true;
         }
         this.assetEVMState.getGasInfo(networkGasLimit).then((res) => {
+          res.estimateGasError = estimateGasError;
           this.sourceNeoXFeeInfo = res;
           if (!this.customNeoXFeeInfo?.custom) {
             this.returnFee.emit(Object.assign({}, res));
