@@ -101,7 +101,7 @@
     </button>
     <button
       class="confirm"
-      [ngClass]="{ disabled: loading || insufficientFunds }"
+      [ngClass]="{ disabled: !nonceInfo || loading || insufficientFunds }"
       (click)="confirm()"
     >
       {{ "yes" | translate | async }}

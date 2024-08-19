@@ -124,7 +124,7 @@
     </button>
     <button
       class="confirm"
-      [ngClass]="{ disabled: insufficientFunds }"
+      [ngClass]="{ disabled: !nonceInfo || insufficientFunds }"
       (click)="confirm()"
     >
       {{ "yes" | translate | async }}

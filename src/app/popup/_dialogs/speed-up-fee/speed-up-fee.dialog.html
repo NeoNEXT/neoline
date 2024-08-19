@@ -18,7 +18,8 @@
 
 <div class="content">
   <p class="desc">
-    {{ (data.isSpeedUp ? 'speedUpTxDesc' : 'cancelTxDesc') | translate | async }}
+    {{ (data.isSpeedUp ? 'speedUpTxDesc' : 'cancelTxDesc') | translate | async
+    }}
   </p>
   <evm-fee
     [txParams]="createTxParams"
@@ -30,7 +31,11 @@
   <p class="tip" *ngIf="data.isSpeedUp">
     {{ 'speedUpTip' | translate | async }}
   </p>
-  <button class="confirm pop-ups" (click)="confirm()">
+  <button
+    class="confirm pop-ups"
+    [ngClass]="{disabled: !neoXFeeInfo}"
+    (click)="confirm()"
+  >
     {{ 'Confirm' | translate | async}}
   </button>
 </div>

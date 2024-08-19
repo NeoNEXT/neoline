@@ -75,7 +75,7 @@
       <p class="txid">{{ item.txid | longStr }}</p>
       <div class="amount-box">
         <p class="asset-amount" [class]="{ send: item.type !== 'received' }">
-          {{ item.value }}
+          {{ item.value | numberFixed: 8 }}
           <ng-container *ngIf="item.tokenid">
             #{{ item.tokenid | nftTokenId }}
           </ng-container>
