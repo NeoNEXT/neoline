@@ -111,13 +111,29 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
   private getEvmAllTxs() {
     const networkName = `${this.chainType}-${this.networkId}`;
     this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((inTxData) => {
+      if (!inTxData?.[networkName]) {
+        inTxData[networkName] = {};
+      }
+      if (!inTxData[networkName]?.[this.address]) {
+        inTxData[networkName][this.address] = {};
+      }
+      if (!inTxData[networkName][this.address]?.[this.assetId]) {
+        inTxData[networkName][this.address][this.assetId] = [];
+      }
+      Object.keys(inTxData[networkName][this.address]).forEach((assetId) => {
+        let txs = inTxData[networkName][this.address][assetId];
+        txs = txs.filter(
+          (item) => new Date().getTime() / 1000 - item.block_time <= 2592000 // 30 days
+        );
+        inTxData[networkName][this.address][assetId] = txs;
+      });
       this.localAllTxs = inTxData;
+      this.chrome.setStorage(STORAGE_NAME.transaction, this.localAllTxs);
       if (this.assetId) {
-        this.txData =
-          inTxData?.[networkName]?.[this.address]?.[this.assetId] || [];
+        this.txData = inTxData[networkName][this.address][this.assetId];
       } else {
         this.txData = this.getEvmAddressAllTx(
-          inTxData?.[networkName]?.[this.address] || []
+          inTxData[networkName][this.address]
         );
       }
       for (let i = 0; i < this.txData.length; i++) {

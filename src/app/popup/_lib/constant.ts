@@ -149,7 +149,7 @@ export const STORAGE_VALUE_MESSAGE = {
   },
   transaction: {
     type: STORAGE_VALUE_TYPE.object,
-    isLocal: false,
+    isLocal: true,
   },
   connectedWebsites: {
     type: STORAGE_VALUE_TYPE.object,

@@ -1376,9 +1376,6 @@
   "Loading": {
     "message": "Loading"
   },
-  "youHaveNoTransactions": {
-    "message": "You have no transactions"
-  },
   "footnoteDesc2": {
     "message": "This measure is in place to mitigate risks and ensure a seamless user experience. As the bridge service proves its stability, the provider will gradually lift the GAS amount cap and expand the service to include NEO tokens and other assets."
   },

@@ -107,9 +107,23 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
     this.chrome
       .getStorage(STORAGE_NAME.transaction)
       .subscribe(async (inTxData) => {
+        if (!inTxData?.[networkName]) {
+          inTxData[networkName] = {};
+        }
+        if (!inTxData[networkName]?.[this.address]) {
+          inTxData[networkName][this.address] = {};
+        }
+        if (!inTxData[networkName][this.address]?.[this.nftContract]) {
+          inTxData[networkName][this.address][this.nftContract] = [];
+        }
+        let txs = inTxData[networkName][this.address][this.nftContract];
+        txs = txs.filter(
+          (item) => new Date().getTime() / 1000 - item.block_time <= 2592000 // 30 days
+        );
+        this.txData = txs;
+        inTxData[networkName][this.address][this.nftContract] = txs;
         this.localAllTxs = inTxData;
-        this.txData =
-          inTxData?.[networkName]?.[this.address]?.[this.nftContract] || [];
+        this.chrome.setStorage(STORAGE_NAME.transaction, this.localAllTxs);
         for (let i = 0; i < this.txData.length; i++) {
           const item = this.txData[i];
           if (

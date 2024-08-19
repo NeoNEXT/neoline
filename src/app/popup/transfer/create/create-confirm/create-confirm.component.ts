@@ -482,11 +482,13 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
       }
       res[networkName][address][assetId].unshift(transaction);
       this.chrome.setStorage(STORAGE_NAME.transaction, res);
-      const setData = {};
-      setData[`TxArr_${networkName}`] =
-        (await this.chrome.getLocalStorage(`TxArr_${networkName}`)) || [];
-      setData[`TxArr_${networkName}`].push(transaction.txid);
-      this.chrome.setLocalStorage(setData);
+      if (this.data.chainType !== 'NeoX') {
+        const setData = {};
+        setData[`TxArr_${networkName}`] =
+          (await this.chrome.getLocalStorage(`TxArr_${networkName}`)) || [];
+        setData[`TxArr_${networkName}`].push(transaction.txid);
+        this.chrome.setLocalStorage(setData);
+      }
     });
   }
   //#endregion
