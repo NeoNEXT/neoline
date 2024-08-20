@@ -29,6 +29,7 @@ import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { ChromeService } from '../services/chrome.service';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
+import { Router } from '@angular/router';
 
 @Injectable()
 export class UtilServiceState {
@@ -46,6 +47,7 @@ export class UtilServiceState {
   private n3Network: RpcNetwork;
   constructor(
     private http: HttpService,
+    private router: Router,
     private store: Store<AppState>,
     private chrome: ChromeService
   ) {
@@ -65,6 +67,23 @@ export class UtilServiceState {
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
     });
+  }
+
+  checkNeedRedirectHome() {
+    const noNeedRedirectUrl = [
+      '/popup/about',
+      '/popup/setting',
+      '/popup/wallet',
+      '/popup/account',
+      '/popup/address-book',
+      '/popup/transfer/receive',
+      '/popup/one-password',
+    ];
+    if (
+      noNeedRedirectUrl.findIndex((item) => location.hash.includes(item)) < 0
+    ) {
+      this.router.navigateByUrl('/popup/home');
+    }
   }
 
   getHexDataLength(henData: string) {

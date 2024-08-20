@@ -15,6 +15,7 @@ import {
   ChromeService,
   NeonService,
   GlobalService,
+  UtilServiceState,
 } from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -63,6 +64,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
     private dialog: MatDialog,
     private neon: NeonService,
     private router: Router,
+    private util: UtilServiceState,
     private global: GlobalService,
     private store: Store<AppState>
   ) {
@@ -271,6 +273,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
       ] = {};
     }
     this.chrome.setStorage(STORAGE_NAME.transaction, transactions);
+    this.util.checkNeedRedirectHome();
     this.dialogRef.close();
 
     /* There is no account under the newly created network */

@@ -42,6 +42,13 @@ import {
   NeoXMainnetNetwork,
   NeoXTestnetNetwork,
 } from '../_lib/evm';
+
+enum ClaimStatus {
+  confirmed = 'confirmed',
+  estimated = 'estimated',
+  success = 'success',
+}
+
 @Component({
   templateUrl: 'home.component.html',
   styleUrls: ['home.component.scss'],
@@ -52,11 +59,6 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   rateCurrency: string;
 
   claimAssetId = GAS3_CONTRACT;
-  private status = {
-    confirmed: 'confirmed',
-    estimated: 'estimated',
-    success: 'success',
-  };
   claimNumber = 0;
   claimStatus = 'confirmed';
   loading = false;
@@ -141,6 +143,15 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   }
 
   private initData() {
+    this.selectedIndex = 0;
+    this.claimNumber = 0;
+    this.claimStatus = 'confirmed';
+    this.claimsData = null;
+    this.intervalClaim = null;
+    this.intervalN3Claim = null;
+    this.showClaim = false;
+    this.init = false;
+
     this.claimAssetId = this.chainType === 'Neo2' ? GAS : GAS3_CONTRACT;
     if (
       this.chainType === 'Neo3' &&
@@ -267,11 +278,11 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   }
   claim() {
     this.loading = true;
-    if (this.claimStatus === this.status.success) {
+    if (this.claimStatus === ClaimStatus.success) {
       this.initClaim();
       return;
     }
-    if (this.claimStatus === this.status.estimated) {
+    if (this.claimStatus === ClaimStatus.estimated) {
       this.syncNow();
       return;
     }
@@ -330,7 +341,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
             if (res.blocktime) {
               queryTxInterval.unsubscribe();
               this.loading = false;
-              this.claimStatus = this.status.success;
+              this.claimStatus = ClaimStatus.success;
               setTimeout(() => {
                 this.initClaim();
               }, 3000);
@@ -373,7 +384,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
           this.showClaim = true;
         } else if (res.unavailable > 0) {
           this.claimNumber = res.unavailable;
-          this.claimStatus = this.status.estimated;
+          this.claimStatus = ClaimStatus.estimated;
           this.showClaim = true;
         } else {
           this.showClaim = false;
@@ -401,7 +412,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         this.claimNumber = new BigNumber(res?.unclaimed)
           .shiftedBy(-8)
           .toNumber();
-        this.claimStatus = this.status.confirmed;
+        this.claimStatus = ClaimStatus.confirmed;
         this.showClaim = true;
       } else {
         this.showClaim = false;
@@ -420,7 +431,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
           this.claimNumber = claimRes.unavailable;
           clearInterval(this.intervalClaim);
           this.intervalClaim = null;
-          this.claimStatus = this.status.success;
+          this.claimStatus = ClaimStatus.success;
         }
       });
     }, 10000);
@@ -458,7 +469,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
                       this.claimsData = claimRes.claimable;
                       this.claimNumber = claimRes.available;
                       clearInterval(this.intervalClaim);
-                      this.claimStatus = this.status.confirmed;
+                      this.claimStatus = ClaimStatus.confirmed;
                       this.intervalClaim = null;
                     }
                   });

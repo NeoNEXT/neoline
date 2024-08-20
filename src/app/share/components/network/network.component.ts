@@ -20,7 +20,12 @@ import {
 } from '@/app/popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { ChromeService, NeonService, GlobalService } from '@/app/core';
+import {
+  ChromeService,
+  NeonService,
+  GlobalService,
+  UtilServiceState,
+} from '@/app/core';
 import {
   PopupAddNetworkDialogComponent,
   PopupConfirmDialogComponent,
@@ -71,6 +76,7 @@ export class PopupNetworkComponent implements OnDestroy {
     private dialog: MatDialog,
     private router: Router,
     private global: GlobalService,
+    private util: UtilServiceState,
     private neon: NeonService
   ) {
     const account$ = this.store.select('account');
@@ -150,6 +156,7 @@ export class PopupNetworkComponent implements OnDestroy {
           break;
       }
       this.chromeSer.networkChangeEvent(newNetwork);
+      this.util.checkNeedRedirectHome();
       this.close();
       return;
     }
@@ -188,17 +195,7 @@ export class PopupNetworkComponent implements OnDestroy {
       this.store.dispatch({ type: UPDATE_WALLET, data: switchChainWallet });
       this.chromeSer.accountChangeEvent(switchChainWallet);
       this.chromeSer.networkChangeEvent(newNetwork);
-      const backHomeUrls = [
-        '/popup/add-asset',
-        '/popup/add-nft',
-        '/popup/my-nfts',
-        '/popup/transfer/create',
-        '/popup/asset',
-        '/popup/nfts/',
-      ];
-      if (backHomeUrls.find((item) => location.hash.includes(item))) {
-        this.router.navigateByUrl('/popup/home');
-      }
+      this.util.checkNeedRedirectHome();
       this.close();
     }
   }

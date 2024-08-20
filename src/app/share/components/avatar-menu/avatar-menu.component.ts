@@ -16,6 +16,7 @@ import {
   NeonService,
   GlobalService,
   SettingState,
+  UtilServiceState,
 } from '@/app/core';
 import { Router } from '@angular/router';
 import {
@@ -86,6 +87,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
     private assetState: AssetState,
     private neon: NeonService,
     private global: GlobalService,
+    private util: UtilServiceState,
     private settingState: SettingState,
     private store: Store<AppState>
   ) {
@@ -249,6 +251,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
     this.wallet = w;
     this.store.dispatch({ type: UPDATE_WALLET, data: w });
     this.chromeSrc.accountChangeEvent(w);
+    this.util.checkNeedRedirectHome();
   }
 
   showAddWallet() {
@@ -358,6 +361,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
                 this.wallet.accounts[0].address
             )
             .subscribe((w) => {
+              this.util.checkNeedRedirectHome();
               if (!w) {
                 this.router.navigateByUrl('/popup/wallet/new-guide');
               }

@@ -1,4 +1,3 @@
-import { REMOVE_NEOX_WALLET, UPDATE_WALLET } from '@/app/popup/_lib';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { AppState } from '@/app/reduers';
 import { Injectable } from '@angular/core';
