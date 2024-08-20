@@ -4,7 +4,10 @@
     data?.symbol }}
   </span>
   <ng-container *ngIf="data.chainType === 'NeoX'">
-    <div class="btn-group" *ngIf="data.tx?.status === undefined">
+    <div
+      class="btn-group"
+      *ngIf="data.tx?.status === undefined || data.tx?.status === TransactionStatus.Accelerating"
+    >
       <button class="cancel" (click)="speedUpTx(false)">
         {{ "cancel" | translate | async }}
       </button>

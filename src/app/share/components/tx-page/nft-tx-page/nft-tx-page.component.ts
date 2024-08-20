@@ -128,7 +128,8 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
           const item = this.txData[i];
           if (
             item?.status === undefined ||
-            item?.status === TransactionStatus.Canceling
+            item?.status === TransactionStatus.Canceling ||
+            item?.status === TransactionStatus.Accelerating
           ) {
             const res = await this.assetEVMState.waitForTx(item.txid);
             this.txData[i].status =

@@ -416,7 +416,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         if (this.data.chainType === 'NeoX') {
           txTarget.nonce = this.customNonce ?? this.nonceInfo.nonce;
           txTarget.txParams = {
-            from: this.sendTxParams.from,
+            from: this.data.from,
             to: this.sendTxParams.to,
             data: this.sendTxParams.data,
             value: this.sendTxParams.value

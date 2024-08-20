@@ -140,7 +140,8 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
         const item = this.txData[i];
         if (
           item?.status === undefined ||
-          item?.status === TransactionStatus.Canceling
+          item?.status === TransactionStatus.Canceling ||
+          item?.status === TransactionStatus.Accelerating
         ) {
           this.assetEVMState.waitForTx(item.txid).then((res) => {
             this.txData[i].status =

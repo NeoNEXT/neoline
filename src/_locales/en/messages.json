@@ -1412,6 +1412,9 @@
   "canceling": {
     "message": "Canceling"
   },
+  "speedingUp": {
+    "message": "Speeding up"
+  },
   "speedUp": {
     "message": "Speed up"
   },

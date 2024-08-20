@@ -52,6 +52,7 @@ export enum TransactionStatus {
   'Dropped' = 2,
   'Cancelled' = 3,
   'Canceling' = 4,
+  'Accelerating' = 5,
 }
 export interface Transaction {
   block_time: number;

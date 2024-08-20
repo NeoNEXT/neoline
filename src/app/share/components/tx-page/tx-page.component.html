@@ -20,20 +20,38 @@
         </span>
       </ng-container>
       <ng-container *ngIf="chainType === 'NeoX'">
-        <span class="status failed" *ngIf="item?.status === 0">
+        <span
+          class="status failed"
+          *ngIf="item?.status === TransactionStatus.Failed"
+        >
           {{ "failed" | translate | async }}
         </span>
-        <span class="status" *ngIf="item?.status === 1">
+        <span class="status" *ngIf="item?.status === TransactionStatus.Success">
           {{ "confirmed" | translate | async }}
         </span>
-        <span class="status failed" *ngIf="item?.status === 2">
+        <span
+          class="status failed"
+          *ngIf="item?.status === TransactionStatus.Dropped"
+        >
           {{ "dropped" | translate | async }}
         </span>
-        <span class="status failed" *ngIf="item?.status === 3">
+        <span
+          class="status failed"
+          *ngIf="item?.status === TransactionStatus.Cancelled"
+        >
           {{ "cancelled" | translate | async }}
         </span>
-        <span class="status failed" *ngIf="item?.status === 4">
+        <span
+          class="status failed"
+          *ngIf="item?.status === TransactionStatus.Canceling"
+        >
           {{ "canceling" | translate | async }}
+        </span>
+        <span
+          class="status wait"
+          *ngIf="item?.status === TransactionStatus.Accelerating"
+        >
+          {{ "speedingUp" | translate | async }}
         </span>
         <span class="status wait" *ngIf="item?.status === undefined">
           {{ "confirming" | translate | async }}
@@ -89,7 +107,10 @@
       <div
         class="btn-group"
         (click)="$event.stopPropagation()"
-        *ngIf="item?.status === undefined"
+        *ngIf="
+          item?.status === undefined ||
+          item?.status === TransactionStatus.Accelerating
+        "
       >
         <button class="cancel" (click)="speedUpTx(item, false)">
           {{ "cancelTransaction" | translate | async }}

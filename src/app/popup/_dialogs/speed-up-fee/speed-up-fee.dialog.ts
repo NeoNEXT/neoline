@@ -154,15 +154,15 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
       const txs: Transaction[] = res[networkName][address][assetId];
       const index = txs.findIndex((tx) => tx.nonce === this.data.tx.nonce);
       txs[index].txid = txId;
+      txs[index].status = this.data.isSpeedUp
+        ? TransactionStatus.Accelerating
+        : TransactionStatus.Canceling;
       txs[index].history.push({
         txId,
         time: Math.floor(new Date().getTime() / 1000),
         neoXFeeInfo: this.sendNeoXFeeInfo,
         type: this.data.isSpeedUp ? 'speedUp' : 'cancel',
       });
-      if (!this.data.isSpeedUp) {
-        txs[index].status = TransactionStatus.Canceling;
-      }
       this.chrome.setStorage(STORAGE_NAME.transaction, res);
     });
   }

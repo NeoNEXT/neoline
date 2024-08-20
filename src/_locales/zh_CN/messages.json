@@ -1412,6 +1412,9 @@
   "canceling": {
     "message": "取消中"
   },
+  "speedingUp": {
+    "message": "加速中"
+  },
   "speedUp": {
     "message": "加速"
   },
