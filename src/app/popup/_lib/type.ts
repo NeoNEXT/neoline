@@ -124,3 +124,16 @@ export const DEFAULT_RPC_URLS = {
     ],
   },
 };
+
+export interface ConnectedWebsitesType {
+  [hostname: string]: {
+    title: string;
+    icon: string;
+    connectedAddress: {
+      [address: string]: {
+        keep: boolean;
+        chain: ChainType;
+      };
+    };
+  };
+}

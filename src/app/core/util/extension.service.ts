@@ -119,4 +119,16 @@ export class ExtensionService {
   clearSessionStorage() {
     chrome.storage.session.clear();
   }
+
+  getCurrentWindow(): Promise<{
+    favIconUrl: string;
+    title: string;
+    url: string;
+  }> {
+    return new Promise((resolve) => {
+      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        resolve(tabs[0]);
+      });
+    });
+  }
 }

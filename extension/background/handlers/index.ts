@@ -14,7 +14,7 @@ import {
   setLocalStorage,
 } from '../../common';
 import { validateTxParams } from './validation-tx-params';
-import { STORAGE_NAME } from '../../common/constants';
+import { ConnectedWebsitesType, STORAGE_NAME } from '../../common/constants';
 import { ethers } from 'ethers';
 
 const handlers = [addEthereumChain, switchEthereumChain, watchAsset];
@@ -150,22 +150,25 @@ function resemblesAddress(str) {
 }
 
 function getAccounts(sender: { origin: string }): Promise<string[]> {
+  const url = new URL(sender.origin);
+  const hostname = url.hostname;
   const data = [];
 
   return new Promise((resolve) => {
-    getStorage(STORAGE_NAME.connectedWebsites, (allWebsites) => {
-      Object.keys(allWebsites || {}).forEach((address: string) => {
-        if (
-          allWebsites[address].some(
-            (item) =>
-              item.status === 'true' && sender.origin.includes(item.hostname)
-          )
-        ) {
-          data.push(address);
-        }
-      });
-      resolve(data);
-    });
+    getStorage(
+      STORAGE_NAME.connectedWebsites,
+      (allWebsites: ConnectedWebsitesType) => {
+        Object.keys(allWebsites[hostname].connectedAddress).forEach(
+          (address) => {
+            const item = allWebsites[hostname].connectedAddress[address];
+            if (item.chain === 'NeoX') {
+              data.push(address);
+            }
+          }
+        );
+        resolve(data);
+      }
+    );
   });
 }
 

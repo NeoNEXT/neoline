@@ -1,5 +1,6 @@
 import {
   ChainType,
+  ConnectedWebsitesType,
   DEFAULT_N2_RPC_NETWORK,
   DEFAULT_N3_RPC_NETWORK,
   DEFAULT_NEOX_RPC_NETWORK,
@@ -186,12 +187,16 @@ export function resetData() {
     [STORAGE_NAME.hasLoginAddress]: {},
     [STORAGE_NAME.InvokeArgsArray]: {},
   });
-  getStorage('connectedWebsites', (res) => {
+  getStorage(STORAGE_NAME.connectedWebsites, (res: ConnectedWebsitesType) => {
     res = res || {};
-    Object.keys(res).forEach((address) => {
-      res[address] = res[address].filter((item) => item.keep === true);
+    Object.keys(res).forEach((hostname) => {
+      Object.keys(res[hostname].connectedAddress).forEach((address) => {
+        if (res[hostname].connectedAddress[address].keep === false) {
+          delete res[hostname].connectedAddress[address];
+        }
+      });
     });
-    setStorage({ connectedWebsites: res });
+    setStorage({ [STORAGE_NAME.connectedWebsites]: res });
   });
 }
 

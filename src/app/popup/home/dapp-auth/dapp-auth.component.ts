@@ -1,14 +1,11 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { ChromeService } from '@/app/core';
-import { ChainType, STORAGE_NAME } from '../../_lib';
+import { ChainType, ConnectedWebsitesType, STORAGE_NAME } from '../../_lib';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupAuthorizationListDialogComponent } from '../../_dialogs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { EvmWalletJSON } from '../../_lib/evm';
-import { ethers } from 'ethers';
-import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
-import { wallet as wallet2 } from '@cityofzion/neon-core';
 declare var chrome: any;
 
 @Component({
@@ -59,6 +56,11 @@ export class PopupHomeDappAuthComponent implements OnChanges {
           this.getDappAuthList();
         }
       });
+    } else {
+      this.favIconUrl = '';
+      this.hostTitle = document.title;
+      this.hostname = location.hostname;
+      this.getDappAuthList();
     }
   }
 
@@ -74,6 +76,7 @@ export class PopupHomeDappAuthComponent implements OnChanges {
           authWalletList: this.authWalletList,
           currentWallet: this.currentWallet,
           allWebsites: this.allWebsites,
+          chainType: this.chainType,
         },
       })
       .afterClosed()
@@ -86,43 +89,24 @@ export class PopupHomeDappAuthComponent implements OnChanges {
     if (!this.hostname) return;
     this.chromeService
       .getStorage(STORAGE_NAME.connectedWebsites)
-      .subscribe((allWebsites) => {
+      .subscribe((allWebsites: ConnectedWebsitesType) => {
         this.allWebsites = allWebsites;
         let walletList = [];
         let addressList = [];
-        Object.keys(allWebsites || {}).forEach((address: string) => {
-          const wallet = this.allWallet.find(
-            (item) => item.accounts[0].address === address
-          );
-          if (!wallet) {
-            delete this.allWebsites[address];
-          }
-          if (
-            wallet &&
-            allWebsites[address].some(
-              (item) =>
-                item.status === 'true' && item.hostname === this.hostname
-            )
-          ) {
-            let valid = false;
-            switch (this.chainType) {
-              case 'Neo2':
-                valid = wallet2.isAddress(address);
-                break;
-              case 'Neo3':
-                valid = wallet3.isAddress(address, 53);
-                break;
-              case 'NeoX':
-                valid = ethers.isAddress(address);
-                break;
-            }
-            if (valid) {
-              walletList.push(wallet);
+        Object.keys(
+          allWebsites?.[this.hostname]?.connectedAddress || {}
+        ).forEach((address) => {
+          const item = allWebsites[this.hostname].connectedAddress[address];
+          if (item.chain === this.chainType) {
+            const tempWallet = this.allWallet.find(
+              (wallet) => wallet.accounts[0].address === address
+            );
+            if (tempWallet) {
+              walletList.push(tempWallet);
               addressList.push(address);
             }
           }
         });
-
         this.authWalletList = walletList;
       });
   }

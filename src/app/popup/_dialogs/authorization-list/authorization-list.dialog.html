@@ -22,7 +22,7 @@
       {{'accountsConnected' | translate | async}} ({{ data.authWalletList.length
       }})
     </p>
-    <ul class="list" *ngIf="data.authWalletList.length > 0">
+    <ul class="list">
       <li *ngIf="!currentWalletIsConnected" class="current-not-connect">
         <img class="logo" [avatar]="currentAddress" alt="" />
         <div class="wallet-info">
@@ -57,10 +57,6 @@
         />
       </li>
     </ul>
-
-    <div class="no-connect" *ngIf="!data.authWalletList.length">
-      <img src="assets/images/third-party/no-connect-account.svg" alt="" />
-    </div>
 
     <div class="permissions">
       <p class="permissions-title" (click)="showPermissions = !showPermissions">

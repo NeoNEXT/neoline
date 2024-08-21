@@ -3,6 +3,10 @@ export enum requestTargetEVM {
   isConnected = 'neoline.target_isConnected_evm',
 }
 
+export enum NEOX_EVENT {
+  INIT_CHAIN_ID = 'NEOLine.NEOX.EVENT.INIT_CHAIN_ID',
+}
+
 export const RestrictedMethods = Object.freeze({
   eth_accounts: 'eth_accounts',
 } as const);

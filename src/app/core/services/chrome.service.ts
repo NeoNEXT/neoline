@@ -12,6 +12,8 @@ import {
 } from '@/app/popup/_lib';
 import { ExtensionService } from '../util/extension.service';
 import CryptoJS from 'crypto-js';
+import { ethers } from 'ethers';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class ChromeService {
@@ -544,7 +546,17 @@ export class ChromeService {
 
   //#region wallet
   public accountChangeEvent(w: any) {
-    if (this.check) {
+    if (!this.check) return;
+    if (ethers.isAddress(w?.accounts[0]?.address)) {
+      this.getAccounts().then((data) => {
+        if (data) {
+          this.windowCallback({
+            data,
+            return: EVENT.ACCOUNT_CHANGED,
+          });
+        }
+      });
+    } else {
       this.windowCallback({
         data: {
           address: w?.accounts[0]?.address,
@@ -554,6 +566,37 @@ export class ChromeService {
       });
     }
   }
+  private async getAccounts() {
+    if (!this.check) {
+      return;
+    }
+    const wallet = await this.getLocalStorage(STORAGE_NAME.wallet);
+    const currentAddress = wallet.accounts[0].address;
+
+    const tab = await this.crx.getCurrentWindow();
+    const hostname = new URL(tab.url).hostname;
+    const allWebsites = await firstValueFrom(
+      this.getStorage(STORAGE_NAME.connectedWebsites)
+    );
+
+    if (allWebsites[hostname].connectedAddress?.[currentAddress]) {
+      const connectedAddress = [];
+      Object.keys(allWebsites[hostname].connectedAddress).forEach(
+        (address) => {
+          const item = allWebsites[hostname].connectedAddress[address];
+          if (item.chain === 'NeoX') {
+            connectedAddress.push(address);
+          }
+        }
+      );
+      const index = connectedAddress.indexOf(currentAddress);
+      connectedAddress.splice(index, 1);
+      connectedAddress.unshift(currentAddress);
+      return connectedAddress;
+    }
+    return;
+  }
+
   public networkChangeEvent(network: RpcNetwork) {
     if (this.check) {
       this.windowCallback({

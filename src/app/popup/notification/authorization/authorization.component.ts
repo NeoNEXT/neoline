@@ -2,7 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ChromeService } from '@/app/core';
 import { ActivatedRoute } from '@angular/router';
 import { ERRORS, EVENT, requestTarget, Account } from '@/models/dapi';
-import { ChainType, STORAGE_NAME } from '../../_lib';
+import { ChainType, ConnectedWebsitesType, STORAGE_NAME } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -68,40 +68,41 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
     );
   }
   public connect() {
-    this.chrome.getStorage(STORAGE_NAME.connectedWebsites).subscribe((res) => {
-      if (res[this.address] === undefined) {
-        res[this.address] = [];
-      }
-      const index = res[this.address].findIndex(
-        (item) => item.hostname === this.hostname
-      );
-      const setData = {
-        hostname: this.hostname,
-        icon: this.iconSrc,
-        title: this.title,
-        status: 'true',
-        keep: this.ruleCheck ? true : false,
-      };
-      if (index >= 0) {
-        res[this.address][index] = setData;
-      } else {
-        res[this.address].push(setData);
-      }
-      this.chrome.setStorage(STORAGE_NAME.connectedWebsites, res);
-      this.chrome.windowCallback({
-        data: true,
-        return: requestTarget.Connect,
-      });
-      this.chrome.windowCallback(
-        {
-          data: {
-            address: this.address || '',
-            label: this.wallet.name || '',
+    this.chrome
+      .getStorage(STORAGE_NAME.connectedWebsites)
+      .subscribe((res: ConnectedWebsitesType) => {
+        if (!res[this.hostname]) {
+          res[this.hostname] = {
+            icon: this.iconSrc,
+            title: this.title,
+            connectedAddress: {
+              [this.address]: {
+                keep: false,
+                chain: this.chainType,
+              },
+            },
+          };
+        } else {
+          res[this.hostname].connectedAddress[this.address] = {
+            keep: false,
+            chain: this.chainType,
+          };
+        }
+        this.chrome.setStorage(STORAGE_NAME.connectedWebsites, res);
+        this.chrome.windowCallback({
+          data: true,
+          return: requestTarget.Connect,
+        });
+        this.chrome.windowCallback(
+          {
+            data: {
+              address: this.address || '',
+              label: this.wallet.name || '',
+            },
+            return: EVENT.CONNECTED,
           },
-          return: EVENT.CONNECTED,
-        },
-        true
-      );
-    });
+          true
+        );
+      });
   }
 }

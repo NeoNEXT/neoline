@@ -1,5 +1,9 @@
 import EventEmitter = require('events');
-import { MESSAGE_TYPE, requestTargetEVM } from '../common/data_module_evm';
+import {
+  MESSAGE_TYPE,
+  NEOX_EVENT,
+  requestTargetEVM,
+} from '../common/data_module_evm';
 import { ERRORS, EVENT } from '../common/data_module_neo2';
 import { checkConnectAndLogin, getIcon, sendMessage } from './common';
 import { ethErrors } from 'eth-rpc-errors';
@@ -13,6 +17,8 @@ enum EventName {
 
 class NEOLineEVMController extends EventEmitter {
   isNEOLine = true;
+  chainId = '';
+  networkVersion = '';
   constructor() {
     super();
     this.setMaxListeners(100);
@@ -83,11 +89,24 @@ const provider = new Proxy(new NEOLineEVMController(), {
 
 window.addEventListener('message', (e) => {
   const response = e.data;
-  if (response.return === EVENT.ACCOUNT_CHANGED) {
+  if (
+    response.return === EVENT.ACCOUNT_CHANGED &&
+    Array.isArray(response.data)
+  ) {
     provider.emit(EventName.accountsChanged, response.data);
   }
   if (response.return === EVENT.NETWORK_CHANGED) {
-    provider.emit(EventName.chainChanged, response.data?.chainId);
+    const chainId = response.data?.chainId;
+    const hexChainId = '0x' + Number(chainId).toString(16);
+    provider.chainId = hexChainId;
+    provider.networkVersion = chainId.toString();
+    provider.emit(EventName.chainChanged, hexChainId);
+  }
+  if (response.return === NEOX_EVENT.INIT_CHAIN_ID) {
+    const chainId = response.data;
+    const hexChainId = '0x' + Number(chainId).toString(16);
+    provider.chainId = hexChainId;
+    provider.networkVersion = chainId.toString();
   }
 });
 

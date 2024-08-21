@@ -40,7 +40,7 @@ export enum STORAGE_NAME {
   neo3AddressFlag = 'neo3AddressFlag', // Fix the wallet created by neon-core@5-next.4 neon-core@5-next.7
   watch = 'watch',
   nftWatch = 'nft_watch',
-  connectedWebsites = 'connectedWebsites', // dAPi connect status
+  connectedWebsites = 'connectedWebsitesV2', // dAPi connect status
   authAddress = 'authAddress',
   InvokeArgsArray = 'InvokeArgsArray', // dAPi N3 invoke args
   isBackupLater = 'isBackupLater', // show backup tip if create wallet
@@ -151,7 +151,7 @@ export const STORAGE_VALUE_MESSAGE = {
     type: STORAGE_VALUE_TYPE.object,
     isLocal: true,
   },
-  connectedWebsites: {
+  connectedWebsitesV2: {
     type: STORAGE_VALUE_TYPE.object,
     isLocal: false,
   },

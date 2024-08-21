@@ -1,7 +1,12 @@
 import { Component, ElementRef, Inject, ViewChild } from '@angular/core';
 import { MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { ChromeService } from '@/app/core';
-import { STORAGE_NAME, UPDATE_WALLET } from '../../_lib';
+import {
+  ChainType,
+  ConnectedWebsitesType,
+  STORAGE_NAME,
+  UPDATE_WALLET,
+} from '../../_lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { EvmWalletJSON } from '../../_lib/evm';
@@ -30,7 +35,8 @@ export class PopupAuthorizationListDialogComponent {
       hostTitle: string;
       authWalletList: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
       currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
-      allWebsites;
+      allWebsites: ConnectedWebsitesType;
+      chainType: ChainType;
     }
   ) {
     this.currentAddress = this.data.currentWallet.accounts[0].address;
@@ -61,18 +67,15 @@ export class PopupAuthorizationListDialogComponent {
     if (this.currentAddress === address) {
       this.currentWalletIsConnected = false;
     }
-    this.data.authWalletList = this.data.authWalletList.filter(
-      (item) => item.accounts[0].address !== address
+    const index = this.data.authWalletList.findIndex(
+      (item) => item.accounts[0].address === address
     );
-    if (this.data.allWebsites[address]) {
-      this.data.allWebsites[address] = this.data.allWebsites[address].filter(
-        (item) => item.hostname !== this.data.hostname
-      );
-      this.chrome.setStorage(
-        STORAGE_NAME.connectedWebsites,
-        this.data.allWebsites
-      );
-    }
+    this.data.authWalletList.splice(index, 1);
+    delete this.data.allWebsites[this.data.hostname].connectedAddress[address];
+    this.chrome.setStorage(
+      STORAGE_NAME.connectedWebsites,
+      this.data.allWebsites
+    );
   }
 
   async switchThisAccount(w: Wallet2 | Wallet3 | EvmWalletJSON) {
@@ -84,19 +87,25 @@ export class PopupAuthorizationListDialogComponent {
   }
 
   connectCurrentWallet() {
-    if (!this.data.allWebsites) {
-      this.data.allWebsites = {};
+    if (!this.data.allWebsites[this.data.hostname]) {
+      this.data.allWebsites[this.data.hostname] = {
+        icon: this.data.favIconUrl,
+        title: this.data.hostTitle,
+        connectedAddress: {
+          [this.currentAddress]: {
+            keep: false,
+            chain: this.data.chainType,
+          },
+        },
+      };
+    } else {
+      this.data.allWebsites[this.data.hostname].connectedAddress[
+        this.currentAddress
+      ] = {
+        keep: false,
+        chain: this.data.chainType,
+      };
     }
-    if (!this.data.allWebsites[this.currentAddress]) {
-      this.data.allWebsites[this.currentAddress] = [];
-    }
-    this.data.allWebsites[this.currentAddress].push({
-      hostname: this.data.hostname,
-      icon: this.data.favIconUrl,
-      title: this.data.hostTitle,
-      keep: false,
-      status: 'true',
-    });
     this.chrome.setStorage(
       STORAGE_NAME.connectedWebsites,
       this.data.allWebsites

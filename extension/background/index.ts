@@ -32,6 +32,7 @@ import {
   GAS3,
   SECRET_PASSPHRASE,
   STORAGE_NAME,
+  ConnectedWebsitesType,
 } from '../common/constants';
 import {
   requestTarget,
@@ -181,46 +182,28 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     case requestTarget.Connect: {
       const currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
       const currAddress = currWallet.accounts[0].address;
-      getStorage('connectedWebsites', (res: any) => {
-        const existHost = (res?.[currAddress] || []).find(
-          (item) => item.hostname === request.hostname
-        );
-        if (
-          !existHost ||
-          (existHost &&
-            existHost.status === 'false' &&
-            existHost.keep === false)
-        ) {
-          createWindow(
-            `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`
-          );
-        } else {
-          if (
-            existHost &&
-            existHost.status === 'false' &&
-            existHost.keep === true
-          ) {
-            notification(
-              chrome.i18n.getMessage('rejected'),
-              chrome.i18n.getMessage('rejectedTip')
-            );
+      getStorage(
+        STORAGE_NAME.connectedWebsites,
+        (res: ConnectedWebsitesType) => {
+          const existHost =
+            res?.[request.hostname]?.connectedAddress?.[currAddress];
+          if (existHost) {
             windowCallback({
               return: requestTarget.Connect,
-              data: false,
+              data: true,
             });
-            return;
+            // notification(
+            //   `${chrome.i18n.getMessage('from')}: ${request.hostname}`,
+            //   chrome.i18n.getMessage('connectedTip')
+            // );
+          } else {
+            createWindow(
+              `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`
+            );
           }
-          windowCallback({
-            return: requestTarget.Connect,
-            data: true,
-          });
-          notification(
-            `${chrome.i18n.getMessage('from')}: ${request.hostname}`,
-            chrome.i18n.getMessage('connectedTip')
-          );
+          sendResponse('');
         }
-        sendResponse('');
-      });
+      );
       return true;
     }
     case requestTarget.Login: {
