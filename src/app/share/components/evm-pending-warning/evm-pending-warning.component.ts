@@ -12,7 +12,7 @@ export class EvmPendingWarningComponent {
 
   toWeb() {
     window.open(
-      `https://tutorial.neoline.io/~/changes/s6QX5P9uABPzBUNVrhXy/reference/how-to-speed-up-or-cancel-a-pending-transaction`
+      `https://tutorial.neoline.io/getting-started/how-to-speed-up-or-cancel-a-pending-transaction`
     );
   }
 }

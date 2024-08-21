@@ -217,7 +217,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         this.loading = false;
         this.updateLocalTx(tx.hash, newParams);
         this.chrome.windowCallback({
-          data: tx,
+          data: tx.hash,
           return: requestTargetEVM.request,
           ID: this.messageID,
         });
