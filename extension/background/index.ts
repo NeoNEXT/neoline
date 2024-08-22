@@ -84,6 +84,7 @@ import {
   windowCallback,
 } from './tool';
 import { walletHandlerMap, ethereumRPCHandler } from './handlers';
+import { ethErrors } from 'eth-rpc-errors';
 
 /**
  * Background methods support.
@@ -145,7 +146,10 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               data: null,
               ID: request.ID,
               return: requestTargetEVM.request,
-              error: error.serialize(),
+              error:
+                typeof error.serialize === 'function'
+                  ? error.serialize()
+                  : ethErrors.rpc.internal().serialize(),
             });
             sendResponse('');
           });
@@ -165,7 +169,10 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               data: null,
               ID: request.ID,
               return: requestTargetEVM.request,
-              error: error.serialize(),
+              error:
+                typeof error.serialize === 'function'
+                  ? error.serialize()
+                  : ethErrors.rpc.internal().serialize(),
             });
             sendResponse('');
           });

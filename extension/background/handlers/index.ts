@@ -40,7 +40,9 @@ export async function ethereumRPCHandler(
   }
   if (method === 'eth_sendTransaction') {
     try {
-      const txParams = await validateReqParams(params, sender);
+      let txParams = await validateReqParams(params, sender);
+      txParams = normalizeTransactionParams(txParams);
+
       const isEIP1559Compatible = await determineEIP1559Compatibility();
       validateTxParams(txParams, isEIP1559Compatible);
       const localData =
@@ -93,6 +95,28 @@ async function validateSignReqParams(params, sender: { origin: string }) {
       '',
     sender
   );
+}
+
+/**
+ * Normalizes properties on transaction params.
+ *
+ * @param txParams - The transaction params to normalize.
+ * @returns Normalized transaction params.
+ */
+export function normalizeTransactionParams(txParams) {
+  const normalizedTxParams = { from: '' };
+
+  Object.keys(txParams).forEach((key) => {
+    if (txParams[key]) {
+      normalizedTxParams[key] = txParams[key];
+    }
+  });
+
+  if (!normalizedTxParams['value']) {
+    normalizedTxParams['value'] = '0x0';
+  }
+
+  return normalizedTxParams;
 }
 
 async function validateReqParams(params, sender: { origin: string }) {
