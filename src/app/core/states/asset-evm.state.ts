@@ -114,7 +114,13 @@ export class AssetEVMState {
   }
 
   estimateGas(txParams): Promise<bigint> {
-    return this.provider.estimateGas(txParams);
+    const newParams = {
+      from: txParams.from,
+      to: txParams.to,
+      value: txParams.value,
+      data: txParams.data,
+    };
+    return this.provider.estimateGas(newParams);
   }
 
   async getGasInfo(gasLimit: bigint): Promise<NeoXFeeInfoProp> {
@@ -188,7 +194,9 @@ export class AssetEVMState {
       nonce: nonce,
     };
     const PreExecutionParams = {
-      ...txParams,
+      // ...txParams,
+      to: txParams.to,
+      data: txParams.data,
       from,
       // maxFeePerGas: this.getHexValue(maxFeePerGas),
       // maxPriorityFeePerGas: this.getHexValue(maxPriorityFeePerGas),

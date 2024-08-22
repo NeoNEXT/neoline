@@ -14,6 +14,20 @@
   {{'advancedGasFeeRisk' | translate | async}}
 </div>
 
+<p class="custom" *ngIf="data.siteNeoXFeeInfo">
+  {{ 'Site' | translate | async }}: {{ data.siteNeoXFeeInfo.estimateGas |
+  numberFixed:8 }} {{data.symbol}}
+  <tooltip
+    [tip]="data.siteNeoXFeeInfo.gasPrice ? ('SiteLegacyFeeTip' | translate: {host: hostname, gasLimit: data.siteNeoXFeeInfo.gasLimit, gasPrice: data.siteNeoXFeeInfo.gasPrice} | async) : ('SiteTip' | translate: {host: hostname, maxFeePerGas: data.siteNeoXFeeInfo.maxFeePerGas, maxPriorityFee: data.siteNeoXFeeInfo.maxPriorityFee, gasLimit: data.siteNeoXFeeInfo.gasLimit} | async)"
+    placement="bottom"
+  >
+    <img src="assets/images/common/tooltip.svg" alt="" />
+  </tooltip>
+  <span class="site" (click)="useSite()">
+    {{'useSiteSuggestions' | translate | async}}
+  </span>
+</p>
+
 <p class="custom">
   {{ 'customize' | translate | async }}: {{ data.customNeoXFeeInfo.estimateGas |
   numberFixed:8 }} {{data.symbol}}

@@ -62,6 +62,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   methodName: string;
   amount: string;
   neoXFeeInfo: NeoXFeeInfoProp;
+  siteNeoXFeeInfo: NeoXFeeInfoProp;
   signAddressGasBalance: string;
   estimateGasError = false;
   insufficientFunds = false;
@@ -142,9 +143,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
   async updateApproveAmount($event: EvmTransactionParams) {
     this.approveNewTxParams = $event;
-    await this.getGasFee();
 
-    this.checkBalance();
   }
 
   getTxType(): 'sendEther' | 'sendToken' | 'contractInteraction' | 'approve' {
@@ -364,12 +363,11 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       .toFixed();
 
     // fee info
-    await this.getGasFee();
-
-    this.checkBalance();
+    await this.getSiteGasFee();
   }
 
   private checkBalance() {
+    if (!this.neoXFeeInfo) return;
     if (
       new BigNumber(this.amount ?? 0)
         .plus(this.neoXFeeInfo.estimateGas)
@@ -381,76 +379,56 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     }
   }
 
-  private async getGasFee() {
+  private async getSiteGasFee() {
     const { gas, gasPrice, maxFeePerGas, maxPriorityFeePerGas } = this.txParams;
 
-    let networkGasLimit: bigint;
-    try {
-      networkGasLimit = await this.assetEVMState.estimateGas(
-        this.getTxType() === 'approve' && this.approveNewTxParams
-          ? this.approveNewTxParams
-          : this.txParams
-      );
-    } catch (error) {
-      this.estimateGasError = true;
-      networkGasLimit = BigInt(42750000);
+    let newGasLimit: string;
+    if (gas) {
+      newGasLimit = new BigNumber(gas, 16).toFixed();
+    } else {
+      let networkGasLimit: bigint;
+      try {
+        networkGasLimit = await this.assetEVMState.estimateGas(
+          this.getTxType() === 'approve' && this.approveNewTxParams
+            ? this.approveNewTxParams
+            : this.txParams
+        );
+      } catch (error) {
+        this.estimateGasError = true;
+        networkGasLimit = BigInt(42750000);
+      }
+      newGasLimit = networkGasLimit.toString();
     }
-
-    const {
-      gasPrice: networkGasPrice,
-      maxFeePerGas: networkMaxFeePerGas,
-      maxPriorityFeePerGas: networkMaxPriorityFeePerGas,
-    } = await this.assetEVMState.getGasInfo(networkGasLimit);
-    const newGasLimit: string = gas
-      ? new BigNumber(gas, 16).toFixed()
-      : networkGasLimit.toString();
-
-    const newGasPrice = gasPrice
-      ? new BigNumber(gasPrice, 16).shiftedBy(-18).toFixed()
-      : networkGasPrice;
-
-    const newMaxFeePerGas = maxFeePerGas
-      ? new BigNumber(maxFeePerGas, 16).shiftedBy(-18).toFixed()
-      : networkMaxFeePerGas;
-
-    const newMaxPriorityFeePerGas = maxPriorityFeePerGas
-      ? new BigNumber(maxPriorityFeePerGas, 16).shiftedBy(-18).toFixed()
-      : networkMaxPriorityFeePerGas;
-    const calculateLegacyFee = () => {
+    if (gasPrice) {
+      const newGasPrice = new BigNumber(gasPrice, 16).shiftedBy(-18).toFixed();
       const estimateGas = new BigNumber(newGasLimit)
         .times(newGasPrice)
         .toFixed();
-      this.neoXFeeInfo = {
+      this.siteNeoXFeeInfo = {
         gasLimit: newGasLimit,
         gasPrice: newGasPrice,
         estimateGas,
+        custom: true,
       };
-    };
-
-    const calculateEIP1559Fee = () => {
-      const bigMaxFeePerGas =
-        new BigNumber(newMaxFeePerGas).comparedTo(newMaxPriorityFeePerGas) > 0
-          ? newMaxFeePerGas
-          : newMaxPriorityFeePerGas;
-      const estimateGas = new BigNumber(bigMaxFeePerGas)
+    }
+    if (maxFeePerGas) {
+      const newMaxFeePerGas = new BigNumber(maxFeePerGas, 16)
+        .shiftedBy(-18)
+        .toFixed();
+      const newMaxPriorityFeePerGas = maxPriorityFeePerGas
+        ? new BigNumber(maxPriorityFeePerGas, 16).shiftedBy(-18).toFixed()
+        : '0';
+      const estimateGas = new BigNumber(newMaxFeePerGas)
         .times(newGasLimit)
         .toFixed();
-      this.neoXFeeInfo = {
+      this.siteNeoXFeeInfo = {
         gasLimit: newGasLimit,
-        maxFeePerGas: bigMaxFeePerGas,
+        maxFeePerGas: newMaxFeePerGas,
         maxPriorityFeePerGas: newMaxPriorityFeePerGas,
         estimateGas,
+        custom: true,
       };
-    };
-
-    if (gasPrice) {
-      calculateLegacyFee();
-    } else if (networkMaxFeePerGas) {
-      calculateEIP1559Fee();
-    } else {
-      calculateLegacyFee();
     }
-    this.getAllRate();
   }
 
   getAllRate() {

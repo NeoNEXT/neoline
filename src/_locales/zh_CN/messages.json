@@ -1459,5 +1459,17 @@
   },
   "Activity": {
     "message": "活动"
+  },
+  "Site": {
+    "message": "网站"
+  },
+  "useSiteSuggestions": {
+    "message": "使用网站建议"
+  },
+  "SiteTip": {
+    "message": "{{host}} 建议了这个价格。<br /> Max base fee: {{maxFeePerGas}}<br /> Priority fee: {{maxPriorityFee}}<br /> Gas limit: {{gasLimit}}"
+  },
+  "SiteLegacyFeeTip": {
+    "message": "{{host}} 建议了这个价格。<br /> Gas price: {{gasPrice}}<br /> Gas limit: {{gasLimit}}"
   }
 }

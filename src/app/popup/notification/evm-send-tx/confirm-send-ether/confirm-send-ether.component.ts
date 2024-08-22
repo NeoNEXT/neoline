@@ -15,7 +15,7 @@ export class PopupNoticeEvmConfirmSendEtherComponent {
   @Input() locationOrigin: string;
   @Input() txParams: EvmTransactionParams;
   @Input() amount: string;
-  @Input() neoXFeeInfo: NeoXFeeInfoProp;
+  @Input() siteNeoXFeeInfo: NeoXFeeInfoProp;
   @Input() signAddressGasBalance: string;
   @Input() estimateGasError: boolean;
   @Input() insufficientFunds: boolean;
@@ -29,6 +29,7 @@ export class PopupNoticeEvmConfirmSendEtherComponent {
 
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   customNonce: number;
+  neoXFeeInfo: NeoXFeeInfoProp;
 
   constructor(private dappEVMState: DappEVMState) {}
 

@@ -124,10 +124,9 @@
 
       <div>
         <evm-fee
-          *ngIf="neoXFeeInfo"
           [txParams]="newTxParams ?? txParams"
           [symbol]="neoXNetwork.symbol"
-          [customNeoXFeeInfo]="neoXFeeInfo"
+          [siteNeoXFeeInfo]="siteNeoXFeeInfo"
           [place]="'dapp'"
           (returnFee)="updateEvmFee($event)"
         >

@@ -31,16 +31,22 @@
       src="assets/images/common/edit.svg"
     />
   </span>
-  <span *ngIf="customNeoXFeeInfo?.custom" class="fee">
-    {{ customNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
+  <span *ngIf="isUseSiteFee" class="fee">
+    {{ siteNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
     {{ symbol }}
   </span>
-  <span
-    *ngIf="!customNeoXFeeInfo?.custom"
-    class="fee"
-    [ngClass]="{ animate: showEstimateFeeAnimate }"
-  >
-    {{ sourceNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
-    {{ symbol }}
-  </span>
+  <ng-container *ngIf="!isUseSiteFee">
+    <span *ngIf="customNeoXFeeInfo?.custom" class="fee">
+      {{ customNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
+      {{ symbol }}
+    </span>
+    <span
+      *ngIf="!customNeoXFeeInfo?.custom"
+      class="fee"
+      [ngClass]="{ animate: showEstimateFeeAnimate }"
+    >
+      {{ sourceNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
+      {{ symbol }}
+    </span>
+  </ng-container>
 </div>

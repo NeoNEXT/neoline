@@ -20,7 +20,7 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   @Input() locationOrigin: string;
   @Input() txParams: EvmTransactionParams;
   @Input() amount: string;
-  @Input() neoXFeeInfo: NeoXFeeInfoProp;
+  @Input() siteNeoXFeeInfo: NeoXFeeInfoProp;
   @Input() signAddressGasBalance: string;
   @Input() estimateGasError: boolean;
   @Input() insufficientFunds: boolean;
@@ -40,6 +40,7 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   sendAssetRate = '';
   tokenData;
   hexDataLength: number;
+  neoXFeeInfo: NeoXFeeInfoProp;
   constructor(
     private dappEVMState: DappEVMState,
     private util: UtilServiceState,

@@ -4,6 +4,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
 import BigNumber from 'bignumber.js';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
+import { ExtensionService } from '@/app/core/util/extension.service';
 
 @Component({
   templateUrl: 'edit-evm-fee.dialog.html',
@@ -20,16 +21,25 @@ export class PopupEditEvmFeeDialogComponent {
   private custom = false;
   isEIP1559 = true;
 
+  hostname: string;
+
   constructor(
     private dialogRef: MatDialogRef<PopupEditEvmFeeDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       sourceNeoXFeeInfo: NeoXFeeInfoProp;
       customNeoXFeeInfo: NeoXFeeInfoProp;
+      siteNeoXFeeInfo?: NeoXFeeInfoProp;
       symbol: string;
     },
+    private extensionService: ExtensionService,
     private fb: FormBuilder
   ) {
+    this.extensionService.getCurrentWindow().then((res) => {
+      if (res) {
+        this.hostname = new URL(res.url).hostname;
+      }
+    });
     if (this.data.customNeoXFeeInfo.maxFeePerGas) {
       this.isEIP1559 = true;
       this.editEvmFeeForm = this.fb.group({
@@ -163,6 +173,10 @@ export class PopupEditEvmFeeDialogComponent {
       this.data.customNeoXFeeInfo.maxFeePerGas = '';
       this.data.customNeoXFeeInfo.estimateGas = '';
     }
+  }
+
+  useSite() {
+    this.dialogRef.close({ useSite: true });
   }
 
   confirm() {

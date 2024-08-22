@@ -18,7 +18,7 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   @Input() locationOrigin: string;
   @Input() iconSrc: string;
   @Input() txParams: EvmTransactionParams;
-  @Input() neoXFeeInfo: NeoXFeeInfoProp;
+  @Input() siteNeoXFeeInfo: NeoXFeeInfoProp;
   @Input() signAddressGasBalance: string;
   @Input() encryptWallet: EvmWalletJSON;
   @Input() estimateGasError: boolean;
@@ -45,6 +45,7 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   newTxParams: EvmTransactionParams;
   private inputAmountSub: Unsubscribable;
   approveAssetBalance: string;
+  neoXFeeInfo: NeoXFeeInfoProp;
   constructor(
     private dappEVMState: DappEVMState,
     private assetEVMState: AssetEVMState

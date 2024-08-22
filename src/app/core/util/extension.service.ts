@@ -126,9 +126,13 @@ export class ExtensionService {
     url: string;
   }> {
     return new Promise((resolve) => {
-      chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-        resolve(tabs[0]);
-      });
+      if (chrome.tabs) {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          resolve(tabs[0]);
+        });
+      } else {
+        resolve(null);
+      }
     });
   }
 }

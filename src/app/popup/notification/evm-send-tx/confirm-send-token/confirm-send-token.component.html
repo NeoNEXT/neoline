@@ -51,10 +51,9 @@
 
     <div class="fee-group">
       <evm-fee
-        *ngIf="neoXFeeInfo"
         [txParams]="txParams"
         [symbol]="neoXNetwork.symbol"
-        [customNeoXFeeInfo]="neoXFeeInfo"
+        [siteNeoXFeeInfo]="siteNeoXFeeInfo"
         [place]="'dapp'"
         (returnFee)="updateEvmFee($event)"
       >

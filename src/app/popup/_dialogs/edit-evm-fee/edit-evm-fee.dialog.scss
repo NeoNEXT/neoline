@@ -10,13 +10,24 @@
   }
 }
 .custom {
-  padding: 16px 24px;
+  margin: 16px 24px;
   color: var(--title-color);
+  display: flex;
+  gap: 6px;
+  .site {
+    font-size: 12px;
+    font-weight: normal;
+    color: #0ac7b7;
+    cursor: pointer;
+    &:hover {
+      text-decoration: underline;
+    }
+  }
 }
 
 .container {
   padding: 0 24px 24px;
-  max-height: 350px;
+  max-height: 300px;
   overflow-y: scroll;
   font-size: 14px;
   color: var(--title-color);

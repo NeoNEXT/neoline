@@ -30,6 +30,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
   @Input() transferAmount?: string;
   @Input() symbol: string;
   @Input() customNeoXFeeInfo: NeoXFeeInfoProp;
+  @Input() siteNeoXFeeInfo?: NeoXFeeInfoProp;
   @Input() place: 'amount' | 'confirm' | 'dapp' = 'amount';
   @Output() returnFee = new EventEmitter<NeoXFeeInfoProp>();
 
@@ -38,6 +39,8 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
   getEstimateFeeInterval;
   showEstimateFeeAnimate = false;
   editEvmFeeDialogRef: MatDialogRef<PopupEditEvmFeeDialogComponent>;
+
+  isUseSiteFee = false;
 
   constructor(
     private assetEVMState: AssetEVMState,
@@ -81,12 +84,17 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
           sourceNeoXFeeInfo: this.sourceNeoXFeeInfo,
           customNeoXFeeInfo:
             this.customNeoXFeeInfo ?? Object.assign({}, this.sourceNeoXFeeInfo),
+          siteNeoXFeeInfo: this.siteNeoXFeeInfo,
           symbol: this.symbol,
         },
       }
     );
     this.editEvmFeeDialogRef.afterClosed().subscribe((res) => {
-      if (res) {
+      if (res?.useSite) {
+        this.isUseSiteFee = true;
+        this.returnFee.emit(this.siteNeoXFeeInfo);
+      } else if (res) {
+        this.isUseSiteFee = false;
         this.customNeoXFeeInfo = res;
         this.returnFee.emit(this.customNeoXFeeInfo);
       }
@@ -131,7 +139,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
         this.assetEVMState.getGasInfo(networkGasLimit).then((res) => {
           res.estimateGasError = estimateGasError;
           this.sourceNeoXFeeInfo = res;
-          if (!this.customNeoXFeeInfo?.custom) {
+          if (!this.customNeoXFeeInfo?.custom && !this.isUseSiteFee) {
             this.returnFee.emit(Object.assign({}, res));
             this.showEstimateFeeAnimate = true;
             timer(1500).subscribe(() => {

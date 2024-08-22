@@ -19,7 +19,7 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   @Input() locationOrigin: string;
   @Input() txParams: EvmTransactionParams;
   @Input() amount: string;
-  @Input() neoXFeeInfo: NeoXFeeInfoProp;
+  @Input() siteNeoXFeeInfo: NeoXFeeInfoProp;
   @Input() signAddressGasBalance: string;
   @Input() estimateGasError: boolean;
   @Input() insufficientFunds: boolean;
@@ -36,6 +36,8 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   tabType: TabType = 'details';
   contractMethodData: { fourByteSig: string; name: string; params: any[] };
   hexDataLength: number;
+  neoXFeeInfo: NeoXFeeInfoProp;
+
   constructor(
     private dappEVMState: DappEVMState,
     private util: UtilServiceState

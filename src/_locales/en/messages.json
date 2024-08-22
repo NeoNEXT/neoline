@@ -1459,5 +1459,17 @@
   },
   "Activity": {
     "message": "Activity"
+  },
+  "Site": {
+    "message": "Site"
+  },
+  "useSiteSuggestions": {
+    "message": "Use website suggestions"
+  },
+  "SiteTip": {
+    "message": "{{host}} has suggested this price.<br /> Max base fee: {{maxFeePerGas}}<br /> Priority fee: {{maxPriorityFee}}<br /> Gas limit: {{gasLimit}}"
+  },
+  "SiteLegacyFeeTip": {
+    "message": "{{host}} has suggested this price.<br /> Gas price: {{gasPrice}}<br /> Gas limit: {{gasLimit}}"
   }
 }
