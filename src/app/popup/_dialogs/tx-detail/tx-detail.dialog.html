@@ -28,12 +28,17 @@
   <li>
     <p class="label">TxID</p>
     <p class="value txid">
-      <span (click)="toWeb(data.tx.txid)" class="link"
-        >{{ data.tx.txid | longStr: 16 }}</span
-      >
-      <copy [value]="data.tx.txid" placement="topRight">
-        <img theme src="assets/images/common/copy.svg" />
+      <copy [value]="data.tx.txid" placement="top">
+        <span>{{ data.tx.txid | longStr: 16 }}</span>
       </copy>
+      <tooltip tip="{{'ViewOnExplorer' | translate | async}}" placement="topRight">
+        <img
+          (click)="toWeb(data.tx.txid)"
+          theme
+          src="assets/images/account/home-explorer.svg"
+          alt=""
+        />
+      </tooltip>
     </p>
   </li>
   <li *ngIf="data.tx.asset_id && data.tx.asset_id !== ETH_SOURCE_ASSET_HASH">

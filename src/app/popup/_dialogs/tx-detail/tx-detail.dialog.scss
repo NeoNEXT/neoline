@@ -73,13 +73,13 @@ ul {
         flex-direction: row;
         align-items: center;
         justify-content: space-between;
-        .link {
+        copy {
           cursor: pointer;
           &:hover {
-            text-decoration: underline;
+            color: var(--theme-color);
           }
         }
-        copy {
+        tooltip {
           cursor: pointer;
         }
       }
