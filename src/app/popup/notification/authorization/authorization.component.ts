@@ -77,14 +77,14 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
             title: this.title,
             connectedAddress: {
               [this.address]: {
-                keep: false,
+                keep: this.ruleCheck,
                 chain: this.chainType,
               },
             },
           };
         } else {
           res[this.hostname].connectedAddress[this.address] = {
-            keep: false,
+            keep: this.ruleCheck,
             chain: this.chainType,
           };
         }
