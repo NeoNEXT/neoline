@@ -9,6 +9,9 @@ import {
   RpcNetwork,
   DEFAULT_NETWORKS,
   SECRET_PASSPHRASE,
+  EvmWalletJSON,
+  ChainType,
+  ConnectedWebsitesType,
 } from '@/app/popup/_lib';
 import { ExtensionService } from '../util/extension.service';
 import CryptoJS from 'crypto-js';
@@ -548,7 +551,7 @@ export class ChromeService {
   public accountChangeEvent(w: any) {
     if (!this.check) return;
     if (ethers.isAddress(w?.accounts[0]?.address)) {
-      this.getAccounts().then((data) => {
+      this.getEvmConnectedAccounts(w).then((data) => {
         if (data) {
           this.windowCallback({
             data,
@@ -566,29 +569,84 @@ export class ChromeService {
       });
     }
   }
-  private async getAccounts() {
-    if (!this.check) {
-      return;
-    }
-    const wallet = await this.getLocalStorage(STORAGE_NAME.wallet);
-    const currentAddress = wallet.accounts[0].address;
+  evmAccountChange(data: string[]) {
+    this.windowCallback({
+      data,
+      return: EVENT.ACCOUNT_CHANGED,
+    });
+  }
+
+  removeConnectWebsiteOfAddress(
+    deleteAddress: string,
+    deleteChainType: ChainType,
+    currentAddress?: string
+  ) {
+    let isDeleteNeoXConnectedAddress = false;
+    let currentIsNeoXConnectedAddress = false;
+    this.getStorage(STORAGE_NAME.connectedWebsites).subscribe(
+      (allWebsites: ConnectedWebsitesType) => {
+        this.crx.getCurrentWindow().then((tab) => {
+          const hostname = new URL(tab.url).hostname;
+          if (
+            deleteChainType === 'NeoX' &&
+            allWebsites[hostname].connectedAddress[deleteAddress]
+          ) {
+            isDeleteNeoXConnectedAddress = true;
+          }
+          if (
+            currentAddress &&
+            ethers.isAddress(currentAddress) &&
+            allWebsites[hostname].connectedAddress[currentAddress]
+          ) {
+            currentIsNeoXConnectedAddress = true;
+          }
+          // remove connect info of deleted address
+          Object.keys(allWebsites).forEach((hostname) => {
+            if (allWebsites[hostname].connectedAddress[deleteAddress]) {
+              delete allWebsites[hostname].connectedAddress[deleteAddress];
+            }
+          });
+          this.setStorage(STORAGE_NAME.connectedWebsites, allWebsites);
+
+          // update evm connected accounts
+          if (isDeleteNeoXConnectedAddress || currentIsNeoXConnectedAddress) {
+            const connectedAddress = [];
+            Object.keys(allWebsites[hostname].connectedAddress).forEach(
+              (address) => {
+                const item = allWebsites[hostname].connectedAddress[address];
+                if (item.chain === 'NeoX') {
+                  connectedAddress.push(address);
+                }
+              }
+            );
+            if (currentIsNeoXConnectedAddress) {
+              const index = connectedAddress.indexOf(currentAddress);
+              connectedAddress.splice(index, 1);
+              connectedAddress.unshift(currentAddress);
+            }
+            this.evmAccountChange(connectedAddress);
+          }
+        });
+      }
+    );
+  }
+  private async getEvmConnectedAccounts(w: EvmWalletJSON) {
+    const currentAddress = w.accounts[0].address;
 
     const tab = await this.crx.getCurrentWindow();
     const hostname = new URL(tab.url).hostname;
-    const allWebsites = await firstValueFrom(
+    const allWebsites: ConnectedWebsitesType = await firstValueFrom(
       this.getStorage(STORAGE_NAME.connectedWebsites)
     );
 
     if (allWebsites[hostname].connectedAddress?.[currentAddress]) {
       const connectedAddress = [];
-      Object.keys(allWebsites[hostname].connectedAddress).forEach(
-        (address) => {
-          const item = allWebsites[hostname].connectedAddress[address];
-          if (item.chain === 'NeoX') {
-            connectedAddress.push(address);
-          }
+      Object.keys(allWebsites[hostname].connectedAddress).forEach((address) => {
+        const item = allWebsites[hostname].connectedAddress[address];
+        if (item.chain === 'NeoX') {
+          connectedAddress.push(address);
         }
-      );
+      });
       const index = connectedAddress.indexOf(currentAddress);
       connectedAddress.splice(index, 1);
       connectedAddress.unshift(currentAddress);

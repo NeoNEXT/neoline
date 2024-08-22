@@ -613,9 +613,16 @@ export class NeonService {
           : REMOVE_NEOX_WALLET,
       data: deleteWallet,
     });
+    this.chrome.removeConnectWebsiteOfAddress(
+      deleteWallet.accounts[0].address,
+      deleteChainType,
+      newWallet?.accounts[0].address
+    );
     if (newWallet) {
       this.store.dispatch({ type: UPDATE_WALLET, data: newWallet });
-      this.chrome.accountChangeEvent(newWallet);
+      if (!ethers.isAddress(newWallet.accounts[0].address)) {
+        this.chrome.accountChangeEvent(newWallet);
+      }
       return of(newWallet);
     }
     return of(deleteWallet);

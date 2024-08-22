@@ -76,6 +76,20 @@ export class PopupAuthorizationListDialogComponent {
       STORAGE_NAME.connectedWebsites,
       this.data.allWebsites
     );
+    this.chrome.evmAccountChange(this.getConnectedAddress());
+  }
+
+  getConnectedAddress() {
+    const addresses = this.data.authWalletList.reduce((prev, item) => {
+      prev.push(item.accounts[0].address);
+      return prev;
+    }, []);
+    const index = addresses.indexOf(this.currentAddress);
+    if (index >= 0) {
+      addresses.splice(index, 1);
+      addresses.unshift(this.currentAddress);
+    }
+    return addresses;
   }
 
   async switchThisAccount(w: Wallet2 | Wallet3 | EvmWalletJSON) {
@@ -112,5 +126,6 @@ export class PopupAuthorizationListDialogComponent {
     );
     this.currentWalletIsConnected = true;
     this.data.authWalletList.unshift(this.data.currentWallet);
+    this.chrome.evmAccountChange(this.getConnectedAddress());
   }
 }
