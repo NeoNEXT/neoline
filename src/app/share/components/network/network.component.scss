@@ -17,6 +17,32 @@
     font-size: 16px;
     color: var(--title-color);
     border-bottom: 1px solid var(--line-color);
+    position: relative;
+    .tip-icon {
+      cursor: pointer;
+    }
+    .tip {
+      position: absolute;
+      left: 14px;
+      top: 40px;
+      width: 316px;
+      border-radius: 4px;
+      padding: 8px;
+      background: var(--body-background-color);
+      box-shadow: var(--popups-box-shadow);
+      font-size: 12px;
+      font-weight: normal;
+      line-height: 14px;
+      color: var(--sub-title-color);
+      z-index: 9999;
+      span {
+        color: var(--theme-color);
+        cursor: pointer;
+        &:hover {
+          text-decoration: underline;
+        }
+      }
+    }
   }
   .network-list {
     height: 392px;

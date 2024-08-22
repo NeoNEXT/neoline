@@ -1,6 +1,24 @@
 <div class="pop-ups-veil" (click)="close()"></div>
 <div class="content">
-  <p class="title">{{ "Networks" | translate | async }}</p>
+  <div class="title">
+    {{ "Networks" | translate | async }}
+    <img
+      class="tip-icon"
+      src="assets/images/common/tooltip.svg"
+      (mouseenter)="showPopup()"
+      (mouseleave)="hiddenPopup()"
+      alt=""
+    />
+    <div
+      class="tip"
+      (mouseenter)="showPopup()"
+      (mouseleave)="hiddenPopup()"
+      *ngIf="isShowPopup"
+    >
+      {{ "networkTip" | translate | async }}
+      <span (click)="toWeb()">{{ "ClickToLearnMore" | translate | async }}</span>
+    </div>
+  </div>
   <div class="network-list">
     <div class="list-item" *ngFor="let list of allNetworks">
       <p class="list-title">

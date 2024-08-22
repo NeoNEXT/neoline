@@ -1471,5 +1471,14 @@
   },
   "SiteLegacyFeeTip": {
     "message": "{{host}} has suggested this price.<br /> Gas price: {{gasPrice}}<br /> Gas limit: {{gasLimit}}"
+  },
+  "LearnBridge": {
+    "message": "Learn how to bridge?"
+  },
+  "GetSupport": {
+    "message": "Get Support"
+  },
+  "networkTip": {
+    "message": "NeoLine now supports Neo X (EVM Network), and users can easily add any EVM network."
   }
 }

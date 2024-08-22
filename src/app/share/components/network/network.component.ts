@@ -25,6 +25,7 @@ import {
   NeonService,
   GlobalService,
   UtilServiceState,
+  SettingState,
 } from '@/app/core';
 import {
   PopupAddNetworkDialogComponent,
@@ -57,6 +58,9 @@ export class PopupNetworkComponent implements OnDestroy {
   moreModalNetwork: RpcNetwork;
   moreModalNetworkIndex: number;
   moreModalChainType: ChainType;
+  lang = 'en';
+  isShowPopup = false;
+  private showPopupTimeout: any;
 
   private accountSub: Unsubscribable;
   neo2WalletArr: Wallet2[];
@@ -77,8 +81,12 @@ export class PopupNetworkComponent implements OnDestroy {
     private router: Router,
     private global: GlobalService,
     private util: UtilServiceState,
-    private neon: NeonService
+    private neon: NeonService,
+    private settingState: SettingState
   ) {
+    this.settingState.langSub.subscribe((lang) => {
+      this.lang = lang;
+    });
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
@@ -351,5 +359,28 @@ export class PopupNetworkComponent implements OnDestroy {
     this.moreModalNetwork = item;
     this.moreModalNetworkIndex = index;
     this.moreModalChainType = chainType;
+  }
+
+  showPopup(): void {
+    clearTimeout(this.showPopupTimeout);
+    this.isShowPopup = true;
+  }
+
+  hiddenPopup(): void {
+    this.showPopupTimeout = setTimeout(() => {
+      this.isShowPopup = false;
+    }, 200);
+  }
+
+  toWeb() {
+    if (this.lang === 'en') {
+      window.open(
+        'https://tutorial.neoline.io/create-and-manage-neo-x-wallet/how-to-add-and-switch-networks'
+      );
+    } else {
+      window.open(
+        'https://tutorial.neoline.io/v/cn/neox-qian-bao-de-chuang-jian-he-shi-yong/ru-he-tong-guo-neoline-tian-jia-he-qie-huan-qi-ta-evm-wang-luo'
+      );
+    }
   }
 }

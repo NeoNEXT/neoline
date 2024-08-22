@@ -32,6 +32,19 @@
       color: var(--important-title-color);
     }
   }
+  .get-help {
+    margin-top: 24px;
+    font-size: 12px;
+    font-weight: normal;
+    line-height: 14px;
+    color: var(--tip-color);
+    text-align: center;
+    cursor: pointer;
+    text-decoration: underline;
+    &:hover {
+      color: var(--theme-color);
+    }
+  }
 }
 
 ::ng-deep .footnote-content {

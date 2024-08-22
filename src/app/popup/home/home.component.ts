@@ -70,6 +70,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   ledgerSignLoading = false;
   loadingMsg = '';
   getStatusInterval;
+  lang = 'en';
 
   // 菜单
   showMenu = false;
@@ -123,6 +124,9 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.settingState.langSub.subscribe((lang) => {
+      this.lang = lang;
+    });
     this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
@@ -547,4 +551,28 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       });
   }
   //#endregion
+
+  getSupport(type: 'asset' | 'txs' = 'asset') {
+    let url: string;
+    switch (type) {
+      case 'asset':
+        if (this.lang === 'en') {
+          url = 'https://tutorial.neoline.io/getting-started/manage-assets';
+        } else {
+          url =
+            'https://tutorial.neoline.io/v/cn/xin-shou-zhi-nan/zi-chan-guan-li';
+        }
+        break;
+      case 'txs':
+        if (this.lang === 'en') {
+          url =
+            'https://tutorial.neoline.io/create-and-manage-neo-x-wallet/about-neoline-activity';
+        } else {
+          url =
+            ' https://tutorial.neoline.io/v/cn/neox-qian-bao-de-chuang-jian-he-shi-yong/guan-yu-neoline-activity';
+        }
+        break;
+    }
+    window.open(url);
+  }
 }

@@ -36,4 +36,8 @@
     ></mat-progress-bar>
     <p class="value">{{bridgeData.percentage}}%</p>
   </div>
+
+  <p class="get-help" (click)="toWeb()">
+    {{'LearnBridge' | translate | async}}
+  </p>
 </div>

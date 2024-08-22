@@ -22,4 +22,16 @@ export class PopupBridgeFootnoteDialogComponent {
       this.lang = lang;
     });
   }
+
+  toWeb() {
+    if (this.lang === 'en') {
+      window.open(
+        'https://tutorial.neoline.io/create-and-manage-neo-x-wallet/how-to-bridge-gas-using-the-neoline-chrome-extension'
+      );
+    } else {
+      window.open(
+        'https://tutorial.neoline.io/v/cn/neox-qian-bao-de-chuang-jian-he-shi-yong/ru-he-shi-yong-neoline-cha-jian-qian-bao-jin-xing-gas-qiao-jie'
+      );
+    }
+  }
 }

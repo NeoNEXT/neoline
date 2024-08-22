@@ -169,18 +169,32 @@
     </div>
     <div *ngIf="selectedIndex === 0">
       <app-assets (backAsset)="initNeo($event)"></app-assets>
+      <p class="get-help" (click)="getSupport()">
+        {{ "GetSupport" | translate | async }}{{ " " }}
+        <img src="assets/images/common/support-arrow.svg" alt="" />
+      </p>
     </div>
     <div *ngIf="selectedIndex === 1">
-      <app-nfts *ngIf="chainType === 'Neo3'"></app-nfts>
-      <app-evm-nfts *ngIf="chainType === 'NeoX'"></app-evm-nfts>
+      <ng-container *ngIf="chainType !== 'Neo2'">
+        <app-nfts *ngIf="chainType === 'Neo3'"></app-nfts>
+        <app-evm-nfts *ngIf="chainType === 'NeoX'"></app-evm-nfts>
+        <p class="get-help" (click)="getSupport()">
+          {{ "GetSupport" | translate | async }}{{ " " }}
+          <img src="assets/images/common/support-arrow.svg" alt="" />
+        </p>
+      </ng-container>
+
       <app-asset-tx-page
         *ngIf="chainType === 'Neo2'"
         [symbol]="balance?.symbol"
-      >
-      </app-asset-tx-page>
+      ></app-asset-tx-page>
     </div>
     <div *ngIf="selectedIndex === 2">
       <app-asset-tx-page></app-asset-tx-page>
+      <p class="get-help" (click)="getSupport('txs')">
+        {{ "GetSupport" | translate | async }}{{ " " }}
+        <img src="assets/images/common/support-arrow.svg" alt="" />
+      </p>
     </div>
   </div>
 </div>

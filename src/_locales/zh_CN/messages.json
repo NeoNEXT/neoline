@@ -1471,5 +1471,14 @@
   },
   "SiteLegacyFeeTip": {
     "message": "{{host}} 建议了这个价格。<br /> Gas price: {{gasPrice}}<br /> Gas limit: {{gasLimit}}"
+  },
+  "LearnBridge": {
+    "message": "学习如何 Bridge？"
+  },
+  "GetSupport": {
+    "message": "获取帮助"
+  },
+  "networkTip": {
+    "message": "NeoLine 插件钱包目前已支持 Neo X (EVM Network)，支持用户自定义添加任何 EVM 网络。"
   }
 }
