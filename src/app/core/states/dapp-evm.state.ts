@@ -417,11 +417,9 @@ export class DappEVMState {
     balance: BN | undefined;
   }> {
     const contract = new ethers.Contract(address, abiERC20, this.provider);
-    const { symbol, decimals, balance } = await ethers.resolveProperties({
-      symbol: contract.symbol(),
-      decimals: contract.decimals(),
-      balance: contract.balanceOf(userAddress),
-    });
+    const symbol = await contract.symbol();
+    const decimals = await contract.decimals();
+    const balance = await contract.balanceOf(userAddress);
     return {
       decimals,
       symbol,
@@ -457,19 +455,17 @@ export class DappEVMState {
       throw new Error("This isn't a valid ERC721 contract");
     }
 
-    const { symbol, name, tokenURI } = await ethers.resolveProperties({
-      symbol: safelyExecute(() => contract.symbol()),
-      name: safelyExecute(() => contract.name()),
-      tokenURI: tokenId
-        ? safelyExecute(() =>
-            this.getERC7721TokenURI(address, tokenId).then((uri) =>
-              uri.startsWith('ipfs://')
-                ? getFormattedIpfsUrl(ipfsGateway, uri, true)
-                : uri
-            )
+    const symbol = await safelyExecute(() => contract.symbol());
+    const name = await safelyExecute(() => contract.name());
+    const tokenURI = tokenId
+      ? await safelyExecute(() =>
+          this.getERC7721TokenURI(address, tokenId).then((uri) =>
+            uri.startsWith('ipfs://')
+              ? getFormattedIpfsUrl(ipfsGateway, uri, true)
+              : uri
           )
-        : undefined,
-    });
+        )
+      : undefined;
 
     let image;
     if (tokenURI) {

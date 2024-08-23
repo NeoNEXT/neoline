@@ -130,24 +130,22 @@ async function handleWatchAsset({
   }
 
   const contract = new ethers.Contract(asset.address, abiERC20, provider);
-  let { contractSymbol, contractName, contractDecimals } =
-    await ethers.resolveProperties({
-      contractSymbol: contract.symbol().catch(() => {
-        throw ethErrors.rpc.invalidParams({
-          message: 'Failed to parse token symbol',
-        });
-      }),
-      contractName: contract.name().catch(() => {
-        throw ethErrors.rpc.invalidParams({
-          message: 'Failed to parse token name',
-        });
-      }),
-      contractDecimals: contract.decimals().catch(() => {
-        throw ethErrors.rpc.invalidParams({
-          message: 'Failed to parse token decimals',
-        });
-      }),
+
+  const contractSymbol = await contract.symbol().catch(() => {
+    throw ethErrors.rpc.invalidParams({
+      message: 'Failed to parse token symbol',
     });
+  });
+  const contractName = await contract.name().catch(() => {
+    throw ethErrors.rpc.invalidParams({
+      message: 'Failed to parse token name',
+    });
+  });
+  let contractDecimals = await contract.decimals().catch(() => {
+    throw ethErrors.rpc.invalidParams({
+      message: 'Failed to parse token decimals',
+    });
+  });
 
   contractDecimals = contractDecimals.toString();
 

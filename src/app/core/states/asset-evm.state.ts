@@ -69,11 +69,9 @@ export class AssetEVMState {
   async searchNeoXAsset(q: string): Promise<Asset | null> {
     if (!ethers.isAddress(q)) return null;
     const contract = new ethers.Contract(q, abiERC20, this.provider);
-    const { symbol, name, decimals } = await ethers.resolveProperties({
-      symbol: contract.symbol(),
-      name: contract.name(),
-      decimals: contract.decimals(),
-    });
+    const symbol = await contract.symbol();
+    const name = await contract.name();
+    const decimals = await contract.decimals();
     const asset: Asset = {
       name,
       asset_id: q,
@@ -124,11 +122,12 @@ export class AssetEVMState {
   }
 
   async getGasInfo(gasLimit: bigint): Promise<NeoXFeeInfoProp> {
-    let { block, gasPrice, priorityFee } = await ethers.resolveProperties({
-      block: this.provider.send('eth_getBlockByNumber', ['latest', false]),
-      gasPrice: this.provider.send('eth_gasPrice', []),
-      priorityFee: this.provider.send('eth_maxPriorityFeePerGas', []),
-    });
+    let block = await this.provider.send('eth_getBlockByNumber', [
+      'latest',
+      false,
+    ]);
+    let gasPrice = await this.provider.send('eth_gasPrice', []);
+    let priorityFee = await this.provider.send('eth_maxPriorityFeePerGas', []);
 
     gasPrice = new BigNumber(gasPrice);
     priorityFee = new BigNumber(priorityFee);
@@ -271,16 +270,14 @@ export class AssetEVMState {
   }
 
   async getNonceInfo(address: string): Promise<AddressNonceInfo> {
-    let { pending, latest } = await ethers.resolveProperties({
-      pending: this.provider.send('eth_getTransactionCount', [
-        address,
-        'pending',
-      ]),
-      latest: this.provider.send('eth_getTransactionCount', [
-        address,
-        'latest',
-      ]),
-    });
+    let pending = await this.provider.send('eth_getTransactionCount', [
+      address,
+      'pending',
+    ]);
+    let latest = await this.provider.send('eth_getTransactionCount', [
+      address,
+      'latest',
+    ]);
     pending = Number(pending);
     latest = Number(latest);
     return { nonce: pending, pendingTxs: pending - latest };
