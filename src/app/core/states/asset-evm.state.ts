@@ -312,6 +312,13 @@ export class AssetEVMState {
 
   async waitForTx(hash: string) {
     try {
+      const tx = await this.provider.waitForTransaction(hash, 1, 600000);
+      const blockTx = await this.provider.send('eth_getBlockByHash', [
+        tx.blockHash,
+        false,
+      ]);
+      return { status: tx.status, block_time: blockTx.timestamp };
+    } catch {
       const hashTx = await this.provider.getTransaction(hash);
       if (hashTx === null) {
         return {
@@ -319,15 +326,16 @@ export class AssetEVMState {
           block_time: Math.floor(new Date().getTime() / 1000),
         };
       }
-
-      const tx = await this.provider.waitForTransaction(hash);
-      const blockTx = await this.provider.send('eth_getBlockByHash', [
-        tx.blockHash,
-        false,
-      ]);
-      return { status: tx.status, block_time: blockTx.timestamp };
-    } catch (error) {
-      throw await this.handleEthersError(error);
+      try {
+        const tx = await this.provider.waitForTransaction(hash);
+        const blockTx = await this.provider.send('eth_getBlockByHash', [
+          tx.blockHash,
+          false,
+        ]);
+        return { status: tx.status, block_time: blockTx.timestamp };
+      } catch (error) {
+        throw await this.handleEthersError(error);
+      }
     }
   }
 
