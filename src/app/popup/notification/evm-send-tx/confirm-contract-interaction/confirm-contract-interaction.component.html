@@ -57,9 +57,7 @@
 
     <div class="fee-group">
       <evm-fee
-        [transferToAddress]="toAddress"
-        [fromAddress]="fromAddress"
-        [transferAmount]="amount"
+        [txParams]="txParams"
         [symbol]="neoXNetwork.symbol"
         [siteNeoXFeeInfo]="siteNeoXFeeInfo"
         [place]="'dapp'"

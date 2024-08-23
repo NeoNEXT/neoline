@@ -113,10 +113,7 @@
         oninput="value=value.replace(/[^\d.]/g,'')"
       />
     </mat-form-field>
-    <p
-      class="error"
-      *ngIf="editEvmFeeForm.get('gasLimit').errors?.min || editEvmFeeForm.get('gasLimit').errors?.max"
-    >
+    <p class="error" *ngIf="editEvmFeeForm.get('gasLimit').errors?.min">
       {{ "gasLimitRange" | translate | async }}
     </p>
   </div>

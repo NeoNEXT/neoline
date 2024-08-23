@@ -1194,7 +1194,7 @@
     "message": "Gas Price is low for current network conditions"
   },
   "gasLimitRange": {
-    "message": "Gas limit must be greater than 20999 and less than 7920027"
+    "message": "Gas limit must be greater than 20999"
   },
   "backupSecretRecoveryPhrase": {
     "message": "Please back up the secret recovery phrase in handwriting and keep it in a safe place. Don't show it to anyone."
@@ -1480,5 +1480,8 @@
   },
   "networkTip": {
     "message": "NeoLine now supports Neo X (EVM Network), and users can easily add any EVM network."
+  },
+  "learnMore": {
+    "message": "Learn more!"
   }
 }

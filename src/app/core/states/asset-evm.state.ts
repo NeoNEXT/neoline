@@ -372,10 +372,15 @@ export class AssetEVMState {
 
   async handleEthersError(err) {
     const message: string = err?.info?.error?.message ?? err?.error?.message;
-    if (message.toLowerCase().includes('transaction underpriced')) {
+    if (
+      typeof message === 'string' &&
+      message.toLowerCase().includes('transaction underpriced')
+    ) {
       return 'Transaction underpriced';
     }
-    return message ? `Transaction failed: ${message}` : 'Transaction failed';
+    return typeof message === 'string'
+      ? `Transaction failed: ${message}`
+      : 'Transaction failed';
   }
   //#endregion
 }

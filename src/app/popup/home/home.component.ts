@@ -148,6 +148,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
 
   private initData() {
     this.selectedIndex = 0;
+    this.balance = undefined;
     this.claimNumber = 0;
     this.claimStatus = 'confirmed';
     this.claimsData = null;

@@ -1194,7 +1194,7 @@
     "message": "对于当前网络条件而言，Gas 价格较低"
   },
   "gasLimitRange": {
-    "message": "燃料限额必须大于 20999 且小于 7920027"
+    "message": "燃料限额必须大于 20999"
   },
   "backupSecretRecoveryPhrase": {
     "message": "请将助记词抄写备份并妥善保管，不要透漏给任何人"
@@ -1473,12 +1473,15 @@
     "message": "{{host}} 建议了这个价格。<br /> Gas price: {{gasPrice}}<br /> Gas limit: {{gasLimit}}"
   },
   "LearnBridge": {
-    "message": "学习如何 Bridge？"
+    "message": "查看 Bridge 教程"
   },
   "GetSupport": {
     "message": "获取帮助"
   },
   "networkTip": {
-    "message": "NeoLine 插件钱包目前已支持 Neo X (EVM Network)，支持用户自定义添加任何 EVM 网络。"
+    "message": "NeoLine 现已支持 Neo X (EVM Network)，支持用户添加任何 EVM 网络。"
+  },
+  "learnMore": {
+    "message": "点击查看教程！"
   }
 }

@@ -107,7 +107,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
     if (
       (this.transferAsset && this.transferToAddress) ||
       (this.transferNFT && this.transferToAddress) ||
-      this.place === 'dapp'
+      (this.place === 'dapp' && this.txParams)
     ) {
       this.getEstimateFeeInterval = timer(0, 10000).subscribe(async () => {
         let networkGasLimit: bigint;

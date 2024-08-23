@@ -53,7 +53,7 @@ export class PopupEditEvmFeeDialogComponent {
         ],
         gasLimit: [
           this.data.customNeoXFeeInfo.gasLimit,
-          [Validators.required, Validators.max(7920027), Validators.min(21000)],
+          [Validators.required, Validators.min(21000)],
         ],
       });
       this.listenMaxFeePerGas();
@@ -67,7 +67,7 @@ export class PopupEditEvmFeeDialogComponent {
         ],
         gasLimit: [
           this.data.customNeoXFeeInfo.gasLimit,
-          [Validators.required, Validators.max(7920027), Validators.min(21000)],
+          [Validators.required, Validators.min(21000)],
         ],
       });
       this.listenGasprice();
