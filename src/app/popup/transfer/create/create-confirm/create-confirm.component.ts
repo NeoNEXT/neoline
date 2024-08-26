@@ -23,6 +23,7 @@ import {
   UtilServiceState,
   EvmNFTState,
   SettingState,
+  AssetEVMState,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import {
@@ -36,7 +37,6 @@ import { TransferService } from '../../transfer.service';
 import { Observable } from 'rxjs';
 import { interval } from 'rxjs';
 import { Neo3TransferService } from '../../neo3-transfer.service';
-import { AssetEVMState } from '@/app/core/states/asset-evm.state';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
 
