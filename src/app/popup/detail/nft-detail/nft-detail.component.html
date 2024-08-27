@@ -70,14 +70,16 @@
     [nftTokens]="ownerNft"
     [nftContract]="nftContract"
     [chainType]="chainType"
-    [neoXNetwork]="neoXNetwork"
+    [network]="currentNetwork"
+    [networkIndex]="currentNetworkIndex"
   ></app-nft-tokens>
   <app-nft-tokens
     [hidden]="selectedTab !== 'previouslyOwned'"
     [nftTokens]="previouslyOwnedNft"
     [nftContract]="nftContract"
     [chainType]="chainType"
-    [neoXNetwork]="neoXNetwork"
+    [network]="currentNetwork"
+    [networkIndex]="currentNetworkIndex"
   ></app-nft-tokens>
   <app-nft-tx-page
     *ngIf="nftContract"

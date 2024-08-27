@@ -216,27 +216,6 @@ export class PopupAccountComponent implements OnDestroy {
     this.global.snackBarTip('nameModifySucc');
   }
 
-  toWeb() {
-    const address = this.operateWallet.accounts[0].address;
-    switch (this.operateChainType) {
-      case 'Neo2':
-        if (this.neo2Network.explorer) {
-          window.open(`${this.neo2Network.explorer}address/${address}/page/1`);
-        }
-        break;
-      case 'Neo3':
-        if (this.neo3Network.explorer) {
-          window.open(`${this.neo3Network.explorer}address/${address}`);
-        }
-        break;
-      case 'NeoX':
-        if (this.neoXNetwork.explorer) {
-          window.open(`${this.neoXNetwork.explorer}address/${address}`);
-        }
-        break;
-    }
-  }
-
   private async getPublicKey() {
     if (this.isLedger || this.operateChainType === 'NeoX') {
       this.publicKey = this.operateWallet.accounts[0]?.extra?.publicKey;

@@ -1,4 +1,4 @@
-import { Component, OnInit, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { GlobalService } from '@/app/core';
 import { PopupNftTokenDetailDialogComponent } from '../../../_dialogs';
 import { MatDialog } from '@angular/material/dialog';
@@ -14,7 +14,8 @@ export class PopupNftTokensComponent {
   @Input() nftTokens: NftToken[];
   @Input() nftContract: string;
   @Input() chainType: ChainType;
-  @Input() neoXNetwork: RpcNetwork;
+  @Input() network: RpcNetwork;
+  @Input() networkIndex: number;
 
   // eslint-disable-next-line @angular-eslint/no-output-on-prefix
 
@@ -28,7 +29,8 @@ export class PopupNftTokensComponent {
         nftToken: token,
         nftContract: this.nftContract,
         chainType: this.chainType,
-        neoXNetwork: this.neoXNetwork,
+        network: this.network,
+        networkIndex: this.networkIndex,
       },
     });
   }

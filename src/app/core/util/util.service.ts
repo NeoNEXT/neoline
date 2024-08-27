@@ -16,9 +16,7 @@ import {
   DEFAULT_NEO3_ASSETS,
   NNS_CONTRACT,
   RpcNetwork,
-  STORAGE_NAME,
 } from '@/app/popup/_lib';
-import { of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import BigNumber from 'bignumber.js';
 import { NEO, GAS } from '@/models/models';
@@ -30,6 +28,8 @@ import { ChromeService } from '../services/chrome.service';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
 import { Router } from '@angular/router';
+import { MatDialog } from '@angular/material/dialog';
+import { PopupAddNetworkDialogComponent } from '@/app/popup/_dialogs';
 
 @Injectable()
 export class UtilServiceState {
@@ -48,6 +48,7 @@ export class UtilServiceState {
   constructor(
     private http: HttpService,
     private router: Router,
+    private dialog: MatDialog,
     private store: Store<AppState>,
     private chrome: ChromeService
   ) {
@@ -67,6 +68,81 @@ export class UtilServiceState {
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
     });
+  }
+
+  toExplorer({
+    chain,
+    network,
+    networkIndex,
+    type,
+    value,
+  }: {
+    chain: ChainType;
+    network: RpcNetwork;
+    networkIndex: number;
+    type: 'account' | 'token' | 'NFT' | 'tx';
+    value: string;
+  }) {
+    let openEditDialog = false;
+    const explorer = network?.explorer.endsWith('/')
+      ? network.explorer.slice(0, -1)
+      : network.explorer;
+    switch (chain) {
+      case 'Neo2':
+        if (explorer) {
+          if (type === 'account') {
+            window.open(`${explorer}/address/${value}/page/1`);
+          } else if (type === 'tx') {
+            window.open(`${explorer}/transaction/${value}`);
+          } else if (type === 'token') {
+            const isNep5 = value !== NEO && value !== GAS;
+            window.open(
+              `${explorer}/${isNep5 ? 'nep5' : 'asset'}/${value}/page/1`
+            );
+          }
+        }
+        break;
+      case 'Neo3':
+        if (explorer) {
+          if (type === 'account') {
+            window.open(`${explorer}/address/${value}`);
+          } else if (type === 'tx') {
+            window.open(`${explorer}/transaction/${value}`);
+          } else if (type === 'token') {
+            window.open(`${explorer}/tokens/nep17/${value}`);
+          } else if (type === 'NFT') {
+            window.open(`${explorer}/tokens/nft/${value}`);
+          }
+        } else {
+          openEditDialog = true;
+        }
+        break;
+      case 'NeoX':
+        if (explorer) {
+          if (type === 'account') {
+            window.open(`${explorer}/address/${value}`);
+          } else if (type === 'tx') {
+            window.open(`${explorer}/tx/${value}`);
+          } else if (type === 'token' || type === 'NFT') {
+            window.open(`${explorer}/token/${value}`);
+          }
+        } else {
+          openEditDialog = true;
+        }
+        break;
+    }
+    if (openEditDialog) {
+      this.dialog.open(PopupAddNetworkDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
+        data: {
+          addChainType: chain,
+          index: networkIndex,
+          editNetwork: network,
+          addExplorer: true,
+        },
+      });
+    }
   }
 
   checkNeedRedirectHome() {

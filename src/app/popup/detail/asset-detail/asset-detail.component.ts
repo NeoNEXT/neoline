@@ -4,14 +4,12 @@ import {
   ChromeService,
   GlobalService,
   SettingState,
+  UtilServiceState,
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NEO, GAS, Asset } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
-import {
-  PopupAddNetworkDialogComponent,
-  PopupConfirmDialogComponent,
-} from '@popup/_dialogs';
+import { PopupConfirmDialogComponent } from '@popup/_dialogs';
 import BigNumber from 'bignumber.js';
 import {
   NEO3_CONTRACT,
@@ -53,6 +51,7 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private global: GlobalService,
     private router: Router,
+    private util: UtilServiceState,
     private settingState: SettingState,
     private store: Store<AppState>
   ) {
@@ -175,49 +174,37 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
 
   toWeb() {
     this.showMenu = false;
+    let network: RpcNetwork;
+    let networkIndex: number;
     switch (this.chainType) {
       case 'Neo2':
-        const isNep5 = this.assetId !== NEO && this.assetId !== GAS;
-        if (this.n2Network.explorer) {
-          window.open(
-            `${this.n2Network.explorer}${isNep5 ? 'nep5' : 'asset'}/${
-              this.assetId
-            }/page/1`
-          );
-        }
+        network = this.n2Network;
         break;
       case 'Neo3':
-        if (this.n3Network.explorer) {
-          window.open(`${this.n3Network.explorer}tokens/nep17/${this.assetId}`);
-        } else {
-          this.dialog.open(PopupAddNetworkDialogComponent, {
-            panelClass: 'custom-dialog-panel',
-            backdropClass: 'custom-dialog-backdrop',
-            data: {
-              addChainType: this.chainType,
-              index: this.n3NetworkIndex,
-              editNetwork: this.n3Network,
-              addExplorer: true,
-            },
-          });
-        }
+        network = this.n3Network;
+        networkIndex = this.n3NetworkIndex;
         break;
       case 'NeoX':
-        if (this.neoXNetwork.explorer) {
-          window.open(`${this.neoXNetwork.explorer}/address/${this.address}`);
-        } else {
-          this.dialog.open(PopupAddNetworkDialogComponent, {
-            panelClass: 'custom-dialog-panel',
-            backdropClass: 'custom-dialog-backdrop',
-            data: {
-              addChainType: this.chainType,
-              index: this.neoXNetworkIndex,
-              editNetwork: this.neoXNetwork,
-              addExplorer: true,
-            },
-          });
-        }
+        network = this.neoXNetwork;
+        networkIndex = this.neoXNetworkIndex;
         break;
     }
+    if (this.chainType === 'NeoX' && this.assetId === ETH_SOURCE_ASSET_HASH) {
+      this.util.toExplorer({
+        chain: this.chainType,
+        network,
+        networkIndex,
+        type: 'account',
+        value: this.address,
+      });
+      return;
+    }
+    this.util.toExplorer({
+      chain: this.chainType,
+      network,
+      networkIndex,
+      type: 'token',
+      value: this.assetId,
+    });
   }
 }

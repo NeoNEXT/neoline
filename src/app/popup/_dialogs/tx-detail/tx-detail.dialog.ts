@@ -1,13 +1,8 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import {
-  MatDialog,
-  MatDialogRef,
-  MAT_DIALOG_DATA,
-} from '@angular/material/dialog';
-import { TransactionState } from '@/app/core';
+import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
+import { TransactionState, UtilServiceState } from '@/app/core';
 import { NEO, GAS, TransactionStatus } from '@/models/models';
 import { ChainType, RpcNetwork, ETH_SOURCE_ASSET_HASH } from '../../_lib';
-import { PopupAddNetworkDialogComponent } from '../add-network/add-network.dialog';
 import BigNumber from 'bignumber.js';
 
 @Component({
@@ -19,7 +14,7 @@ export class PopupTxDetailDialogComponent implements OnInit {
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   showActivityLog = false;
   constructor(
-    private dialog: MatDialog,
+    private util: UtilServiceState,
     private dialogRef: MatDialogRef<PopupTxDetailDialogComponent>,
     private txState: TransactionState,
     @Inject(MAT_DIALOG_DATA)
@@ -57,31 +52,12 @@ export class PopupTxDetailDialogComponent implements OnInit {
   }
 
   toWeb(txId: string) {
-    const explorer = this.data.network.explorer;
-    switch (this.data.chainType) {
-      case 'Neo2':
-      case 'Neo3':
-        if (explorer) {
-          window.open(`${explorer}transaction/${txId}`);
-        }
-        break;
-      case 'NeoX':
-        if (explorer) {
-          window.open(`${explorer}/tx/${txId}`);
-        }
-        break;
-    }
-    if (!explorer && this.data.chainType !== 'Neo2') {
-      this.dialog.open(PopupAddNetworkDialogComponent, {
-        panelClass: 'custom-dialog-panel',
-        backdropClass: 'custom-dialog-backdrop',
-        data: {
-          addChainType: this.data.chainType,
-          index: this.data.networkIndex,
-          editNetwork: this.data.network,
-          addExplorer: true,
-        },
-      });
-    }
+    this.util.toExplorer({
+      chain: this.data.chainType,
+      network: this.data.network,
+      networkIndex: this.data.networkIndex,
+      type: 'tx',
+      value: txId,
+    });
   }
 }
