@@ -7,6 +7,8 @@ import SHA256 = require('crypto-js/sha256');
 import hexEncoding = require('crypto-js/enc-hex');
 import { getLocalStorage } from '../common';
 import { tx, wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+import { ethers } from 'ethers';
+import { ChainType } from './constants';
 
 const curve = new ec('p256');
 
@@ -258,11 +260,14 @@ export function isPublicKey(key, encoded) {
 }
 
 export function getWalletType() {
-  return new Promise<string>((resolve, reject) => {
+  return new Promise<ChainType>((resolve, reject) => {
     getLocalStorage('wallet', (wallet) => {
-      let currChainType = 'Neo2';
+      let currChainType = ChainType.Neo2;
       if (wallet && wallet3.isAddress(wallet.accounts[0].address, 53)) {
-        currChainType = 'Neo3';
+        currChainType = ChainType.Neo3;
+      }
+      if (ethers.isAddress(wallet.accounts[0].address)) {
+        currChainType = ChainType.NeoX;
       }
       resolve(currChainType);
     }).catch((err) => reject(err));

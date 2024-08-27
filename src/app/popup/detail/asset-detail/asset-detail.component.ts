@@ -3,24 +3,26 @@ import {
   AssetState,
   ChromeService,
   GlobalService,
-  UtilServiceState,
+  SettingState,
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NEO, GAS, Asset } from '@/models/models';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupConfirmDialogComponent } from '@popup/_dialogs';
-import { bignumber } from 'mathjs';
+import {
+  PopupAddNetworkDialogComponent,
+  PopupConfirmDialogComponent,
+} from '@popup/_dialogs';
 import BigNumber from 'bignumber.js';
 import {
   NEO3_CONTRACT,
   GAS3_CONTRACT,
   ChainType,
   RpcNetwork,
-  STORAGE_NAME,
 } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
+import { ETH_SOURCE_ASSET_HASH } from '../../_lib/evm';
 
 @Component({
   templateUrl: 'asset-detail.component.html',
@@ -36,11 +38,14 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
   private watch: Asset[]; // User-added assets
 
   private accountSub: Unsubscribable;
-  private networkId: number;
+  networkId: number;
   private address;
-  private chainType: ChainType;
+  chainType: ChainType;
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
+  private n3NetworkIndex: number;
+  private neoXNetwork: RpcNetwork;
+  private neoXNetworkIndex: number;
   constructor(
     private assetState: AssetState,
     private aRouter: ActivatedRoute,
@@ -48,7 +53,7 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private global: GlobalService,
     private router: Router,
-    private util: UtilServiceState,
+    private settingState: SettingState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -57,22 +62,37 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
       this.chainType = state.currentChainType;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
-      this.networkId =
-        this.chainType === 'Neo2' ? this.n2Network.id : this.n3Network.id;
+      this.n3NetworkIndex = state.n3NetworkIndex;
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      this.neoXNetworkIndex = state.neoXNetworkIndex;
+      switch (this.chainType) {
+        case 'Neo2':
+          this.networkId = this.n2Network.id;
+          break;
+        case 'Neo3':
+          this.networkId = this.n3Network.id;
+          break;
+        case 'NeoX':
+          this.networkId = this.neoXNetwork.id;
+          break;
+      }
       this.initData();
     });
   }
 
   initData() {
-    this.aRouter.params.subscribe((params: any) => {
-      this.assetId = params.assetId || NEO;
-      this.getAssetDetail();
-      this.getCanHide();
+    this.aRouter.queryParams.subscribe((params) => {
+      this.assetId = params.assetId;
+      this.assetState.getAssetDetail(this.address, this.assetId).then((res) => {
+        this.balance = res;
+        this.getAssetDetail();
+        this.getCanHide();
+      });
     });
   }
 
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
   }
@@ -82,14 +102,20 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
   }
 
   getCanHide() {
-    const index = [NEO, GAS, NEO3_CONTRACT, GAS3_CONTRACT].indexOf(
-      this.assetId
-    );
+    const index = [
+      NEO,
+      GAS,
+      NEO3_CONTRACT,
+      GAS3_CONTRACT,
+      ETH_SOURCE_ASSET_HASH,
+    ].indexOf(this.assetId);
     this.canHideBalance = index >= 0 ? false : true;
     if (this.canHideBalance) {
-      this.chrome.getWatch(this.networkId, this.address).subscribe((res) => {
-        this.watch = res;
-      });
+      this.chrome
+        .getWatch(`${this.chainType}-${this.networkId}`, this.address)
+        .subscribe((res) => {
+          this.watch = res;
+        });
     }
   }
 
@@ -99,38 +125,24 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
       this.assetId,
       this.chainType
     );
-    const symbols = await this.util.getAssetSymbols(
-      [this.assetId],
-      this.chainType
-    );
-    const decimals = await this.util.getAssetDecimals(
-      [this.assetId],
-      this.chainType
-    );
-    this.balance = {
-      asset_id: this.assetId,
-      balance: new BigNumber(balance).shiftedBy(-decimals[0]).toFixed(),
-      symbol: symbols[0],
-      decimals: decimals[0],
-    };
+    this.balance.balance = new BigNumber(balance)
+      .shiftedBy(-this.balance.decimals)
+      .toFixed();
     this.getAssetRate();
   }
 
   getAssetRate() {
-    if (
-      this.balance.balance &&
-      bignumber(this.balance.balance).comparedTo(0) > 0
-    ) {
-      this.assetState
-        .getAssetRate(this.balance.symbol, this.balance.asset_id)
-        .then((rate) => {
-          this.balance.rateBalance =
-            new BigNumber(this.balance.balance).times(rate || 0).toFixed() ||
-            '0';
-        });
-    } else {
-      this.balance.rateBalance = '0';
-    }
+    this.assetState
+      .getAssetAmountRate({
+        chainType: this.chainType,
+        assetId: this.balance.asset_id,
+        chainId:
+          this.chainType === 'NeoX' ? this.neoXNetwork.chainId : undefined,
+        amount: this.balance.balance,
+      })
+      .then((res) => {
+        this.balance.rateBalance = res;
+      });
   }
 
   hideBalance() {
@@ -138,6 +150,7 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
       .open(PopupConfirmDialogComponent, {
         data: 'delAssetTip',
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((confirm) => {
@@ -149,7 +162,11 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
             this.balance.watching = false;
             this.watch.push(this.balance);
           }
-          this.chrome.setWatch(this.networkId, this.address, this.watch);
+          this.chrome.setWatch(
+            `${this.chainType}-${this.networkId}`,
+            this.address,
+            this.watch
+          );
           this.global.snackBarTip('hiddenSucc');
           this.router.navigateByUrl('/popup/home');
         }
@@ -172,6 +189,33 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
       case 'Neo3':
         if (this.n3Network.explorer) {
           window.open(`${this.n3Network.explorer}tokens/nep17/${this.assetId}`);
+        } else {
+          this.dialog.open(PopupAddNetworkDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+            backdropClass: 'custom-dialog-backdrop',
+            data: {
+              addChainType: this.chainType,
+              index: this.n3NetworkIndex,
+              editNetwork: this.n3Network,
+              addExplorer: true,
+            },
+          });
+        }
+        break;
+      case 'NeoX':
+        if (this.neoXNetwork.explorer) {
+          window.open(`${this.neoXNetwork.explorer}/address/${this.address}`);
+        } else {
+          this.dialog.open(PopupAddNetworkDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+            backdropClass: 'custom-dialog-backdrop',
+            data: {
+              addChainType: this.chainType,
+              index: this.neoXNetworkIndex,
+              editNetwork: this.neoXNetwork,
+              addExplorer: true,
+            },
+          });
         }
         break;
     }

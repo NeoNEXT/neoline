@@ -1,15 +1,21 @@
 <div class="container">
   <button class="host">
-    <img [src]="iconSrc" appErrorSrc alt="" />{{ hostname }}
+    <img [src]="iconSrc" [appErrorSrc]="'unknown'" alt="" />{{ hostname }}
   </button>
   <p class="title">{{ "switchNetworkTitle" | translate | async }}</p>
   <p class="desc">{{ "switchNetworkDesc" | translate | async }}</p>
   <div class="networks">
-    <span class="network">{{ currentNetworkType }}</span>
+    <div class="network">
+      <p>{{ currentNetworkName }}</p>
+      <p *ngIf="currentChainType === 'NeoX'">({{ currentChainType }})</p>
+    </div>
     <span class="arrow">
       <img src="/assets/images/third-party/wallet-arrow.svg" alt="" />
     </span>
-    <span class="network">{{ switchNetworkType }}</span>
+    <div class="network">
+      <p>{{ switchNetworkName }}</p>
+      <p *ngIf="requestChainType === 'NeoX'">({{ requestChainType }})</p>
+    </div>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="refuse()">

@@ -9,14 +9,19 @@
   padding: 24px;
   z-index: 9999999;
   .title {
+    font-family: NeverMind;
     font-size: 18px;
+    font-weight: 500;
+    line-height: 18px;
     color: var(--theme-color);
     text-align: center;
   }
   .desc {
-    font-family: NeverMind-Regular;
+    font-family: NeverMind;
+    font-weight: normal;
+    text-align: center;
     line-height: 18px;
-    color: #ffffff;
+    color: #b9babe;
     margin-top: 16px;
     .link {
       color: var(--theme-color);

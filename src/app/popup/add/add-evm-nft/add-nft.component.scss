@@ -1,0 +1,50 @@
+section.container {
+  position: relative;
+  height: 100%;
+  img.my-asset {
+    position: absolute;
+    right: 24px;
+    top: 12px;
+    cursor: pointer;
+  }
+  .content {
+    padding: 16px 24px;
+    form {
+      font-size: 14px;
+      color: var(--title-color);
+      font-family: NeverMind-Medium;
+      .label {
+        margin-top: 4px;
+        margin-bottom: 8px;
+      }
+      .form-field {
+        width: 100%;
+      }
+    }
+
+    button {
+      width: 100%;
+      margin-top: 12px;
+    }
+    .error {
+      font-size: 12px;
+      line-height: 14px;
+      margin-top: 4px;
+      color: #fa5555;
+    }
+  }
+}
+
+::ng-deep {
+  .mat-form-field-appearance-outline .mat-form-field-infix {
+    padding: 14px 0;
+    border-top-width: 0;
+  }
+  .mat-form-field-appearance-outline .mat-form-field-outline {
+    background: var(--message-box-color);
+    color: var(--message-box-color);
+  }
+  .mat-form-field-appearance-outline .mat-form-field-subscript-wrapper {
+    padding: 0 !important;
+  }
+}

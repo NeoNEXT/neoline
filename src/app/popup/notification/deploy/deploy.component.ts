@@ -32,7 +32,6 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 type TabType = 'details' | 'data';
 
@@ -59,7 +58,7 @@ export class PopupNoticeDeployComponent implements OnInit, OnDestroy {
   getStatusInterval;
   private accountSub: Unsubscribable;
   public n2Network: RpcNetwork;
-  private wallet: Wallet2 | Wallet3;
+  private wallet: Wallet2;
   private chainType: ChainType;
   private neo2WIFArr: string[];
   private neo2WalletArr: Wallet2[];
@@ -78,7 +77,7 @@ export class PopupNoticeDeployComponent implements OnInit, OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
-      this.wallet = state.currentWallet;
+      this.wallet = state.currentWallet as Wallet2;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.neo2WIFArr = state.neo2WIFArr;
       this.neo2WalletArr = state.neo2WalletArr;
@@ -97,18 +96,16 @@ export class PopupNoticeDeployComponent implements OnInit, OnDestroy {
       if (this.pramsData.networkFee) {
         this.fee = this.pramsData.networkFee;
       } else {
-        if (this.assetState.gasFeeSpeed) {
-          this.fee = this.assetState.gasFeeSpeed.propose_price;
-        } else {
-          this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
-            this.fee = res.propose_price;
-            this.signTx();
-          });
-        }
+        this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
+          this.fee = res.propose_price;
+          this.signTx();
+        });
       }
       if (Number(this.pramsData.fee) > 0) {
-        this.assetState.getAssetRate('GAS', GAS).then((rate) => {
-          this.feeMoney = new BigNumber(this.fee).times(rate || 0).toFixed();
+        this.feeMoney = await this.assetState.getAssetAmountRate({
+          chainType: 'Neo2',
+          assetId: GAS,
+          amount: this.fee,
         });
       }
       return;
@@ -164,13 +161,17 @@ export class PopupNoticeDeployComponent implements OnInit, OnDestroy {
             true
           );
           const setData = {};
-          setData[`TxArr_${this.n2Network.id}`] =
-            (await this.chrome.getLocalStorage(`TxArr_${this.n2Network.id}`)) ||
-            [];
-          setData[`TxArr_${this.n2Network.id}`].push('0x' + transaction.hash);
+          setData[`TxArr_${this.chainType}-${this.n2Network.id}`] =
+            (await this.chrome.getLocalStorage(
+              `TxArr_${this.chainType}-${this.n2Network.id}`
+            )) || [];
+          setData[`TxArr_${this.chainType}-${this.n2Network.id}`].push(
+            '0x' + transaction.hash
+          );
           this.chrome.setLocalStorage(setData);
           this.dialog.open(PopupTransferSuccessDialogComponent, {
             panelClass: 'custom-dialog-panel',
+            backdropClass: 'custom-dialog-backdrop',
           });
         }
       })
@@ -318,6 +319,7 @@ export class PopupNoticeDeployComponent implements OnInit, OnDestroy {
     this.dialog
       .open(PopupEditFeeDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: {
           fee: this.fee,
         },
@@ -329,11 +331,15 @@ export class PopupNoticeDeployComponent implements OnInit, OnDestroy {
           if (res === 0 || res === '0') {
             this.feeMoney = '0';
           } else {
-            this.assetState.getAssetRate('GAS', GAS).then((rate) => {
-              this.feeMoney = new BigNumber(this.fee)
-                .times(rate || 0)
-                .toFixed();
-            });
+            this.assetState
+              .getAssetAmountRate({
+                chainType: 'Neo2',
+                assetId: GAS,
+                amount: this.fee,
+              })
+              .then((res) => {
+                this.feeMoney = res;
+              });
           }
           this.signTx();
         }

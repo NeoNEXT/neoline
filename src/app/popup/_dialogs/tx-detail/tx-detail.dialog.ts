@@ -1,20 +1,35 @@
 import { Component, Inject, OnInit } from '@angular/core';
-import { MAT_DIALOG_DATA } from '@angular/material/dialog';
+import {
+  MatDialog,
+  MatDialogRef,
+  MAT_DIALOG_DATA,
+} from '@angular/material/dialog';
 import { TransactionState } from '@/app/core';
-import { NEO, GAS } from '@/models/models';
+import { NEO, GAS, TransactionStatus } from '@/models/models';
+import { ChainType, RpcNetwork, ETH_SOURCE_ASSET_HASH } from '../../_lib';
+import { PopupAddNetworkDialogComponent } from '../add-network/add-network.dialog';
+import BigNumber from 'bignumber.js';
 
 @Component({
   templateUrl: 'tx-detail.dialog.html',
   styleUrls: ['tx-detail.dialog.scss'],
 })
 export class PopupTxDetailDialogComponent implements OnInit {
+  TransactionStatus = TransactionStatus;
+  ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
+  showActivityLog = false;
   constructor(
+    private dialog: MatDialog,
+    private dialogRef: MatDialogRef<PopupTxDetailDialogComponent>,
     private txState: TransactionState,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       tx: any;
       symbol: string;
       isNFT: boolean;
+      chainType: ChainType;
+      network: RpcNetwork;
+      networkIndex: number;
     }
   ) {}
 
@@ -26,6 +41,47 @@ export class PopupTxDetailDialogComponent implements OnInit {
           this.data.tx.to = res.vout;
         });
       }
+    }
+  }
+
+  speedUpTx(isSpeedUp: boolean) {
+    this.dialogRef.close({ isSpeedUp });
+  }
+
+  getShowGas(value: string) {
+    const newAmount = new BigNumber(value).dp(8).toFixed();
+    if (newAmount === '0') {
+      return '< 0.0000001';
+    }
+    return newAmount;
+  }
+
+  toWeb(txId: string) {
+    const explorer = this.data.network.explorer;
+    switch (this.data.chainType) {
+      case 'Neo2':
+      case 'Neo3':
+        if (explorer) {
+          window.open(`${explorer}transaction/${txId}`);
+        }
+        break;
+      case 'NeoX':
+        if (explorer) {
+          window.open(`${explorer}/tx/${txId}`);
+        }
+        break;
+    }
+    if (!explorer && this.data.chainType !== 'Neo2') {
+      this.dialog.open(PopupAddNetworkDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
+        data: {
+          addChainType: this.data.chainType,
+          index: this.data.networkIndex,
+          editNetwork: this.data.network,
+          addExplorer: true,
+        },
+      });
     }
   }
 }

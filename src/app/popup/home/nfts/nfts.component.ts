@@ -9,7 +9,7 @@ import { NftAsset } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { RpcNetwork } from '../../_lib';
+import { ChainType, RpcNetwork } from '../../_lib';
 
 @Component({
   selector: 'app-nfts',
@@ -23,6 +23,7 @@ export class PopupNftsComponent implements OnInit, OnDestroy {
   private accountSub: Unsubscribable;
   private address: string;
   private n3Network: RpcNetwork;
+  private chainType: ChainType;
   constructor(
     public global: GlobalService,
     private nftState: NftState,
@@ -34,6 +35,7 @@ export class PopupNftsComponent implements OnInit, OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet?.accounts[0]?.address;
+      this.chainType = state.currentChainType;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       if (state.currentChainType === 'Neo3') {
         this.init();
@@ -49,7 +51,7 @@ export class PopupNftsComponent implements OnInit, OnDestroy {
     this.nfts = [];
     this.isLoading = true;
     const getWatch = this.chrome
-      .getNftWatch(this.n3Network.id, this.address)
+      .getNftWatch(`${this.chainType}-${this.n3Network.id}`, this.address)
       .toPromise();
     const getNfts = this.nftState.getAddressNfts(this.address);
     Promise.all([getNfts, getWatch]).then(([moneyAssets, watch]) => {

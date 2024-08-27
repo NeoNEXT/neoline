@@ -1,4 +1,11 @@
-import { Component, OnInit, Input, OnDestroy } from '@angular/core';
+import {
+  Component,
+  OnInit,
+  Input,
+  OnDestroy,
+  OnChanges,
+  SimpleChanges,
+} from '@angular/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { ChromeService, SettingState } from '@/app/core';
@@ -10,9 +17,10 @@ import { Unsubscribable } from 'rxjs';
   templateUrl: 'backup.component.html',
   styleUrls: ['./backup.component.scss'],
 })
-export class PopupHomeBackupComponent implements OnInit, OnDestroy {
+export class PopupHomeBackupComponent implements OnInit, OnDestroy, OnChanges {
   @Input() currentWallet: Wallet2 | Wallet3;
-  showBackup: boolean = null;
+  currentHasBackup: boolean = null;
+  isBackupLater = false;
 
   showOnePassword: boolean = null;
   settingStateSub: Unsubscribable;
@@ -32,24 +40,34 @@ export class PopupHomeBackupComponent implements OnInit, OnDestroy {
         this.showOnePassword = true;
       }
     });
-    this.chrome.getHaveBackupTip().subscribe((res) => {
-      this.showBackup = res;
-      if (this.currentWallet?.accounts[0]?.extra?.ledgerSLIP44) {
-        this.showBackup = false;
-      }
-      if (this.showBackup === null) {
-        this.chrome
-          .getWalletStatus(this.currentWallet?.accounts[0]?.address)
-          .subscribe((res) => {
-            this.showBackup = !res;
-          });
-      }
+    this.chrome.getIsBackupLater().then((res) => {
+      this.isBackupLater = res;
     });
+    this.currentHasBackup =
+      this.currentWallet?.accounts[0].extra?.hasBackup === false ? false : true;
+  }
+
+  ngOnChanges(changes: SimpleChanges): void {
+    if (
+      changes.currentWallet.currentValue !== changes.currentWallet.previousValue
+    ) {
+      this.currentHasBackup =
+        this.currentWallet?.accounts[0].extra?.hasBackup === false
+          ? false
+          : true;
+    }
   }
 
   backupLater() {
-    this.chrome.setHaveBackupTip(false);
-    this.showBackup = false;
+    this.chrome.setIsBackupLater(true);
+    this.isBackupLater = true;
+  }
+
+  getShowBackup() {
+    if (!this.isBackupLater && !this.currentHasBackup) {
+      return true;
+    }
+    return false;
   }
 
   switchOneLater() {
@@ -61,11 +79,11 @@ export class PopupHomeBackupComponent implements OnInit, OnDestroy {
     this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
       if (lang !== 'en') {
         window.open(
-          'https://tutorial.neoline.io/neoline-cha-jian-qian-bao-tong-yong-mi-ma-she-zhi'
+          'https://tutorial.neoline.io/v/cn/xin-shou-zhi-nan/neoline-cha-jian-qian-bao-tong-yong-mi-ma-she-zhi'
         );
       } else {
         window.open(
-          'https://tutorial.neoline.io/v/1/one-pass-setting-for-neoline-extension-wallet'
+          'https://tutorial.neoline.io/getting-started/one-pass-setting-for-neoline-extension-wallet'
         );
       }
     });

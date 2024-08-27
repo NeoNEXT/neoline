@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpService } from '../services/http.service';
-import { Observable, forkJoin } from 'rxjs';
+import { Observable, forkJoin, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ChainType, RpcNetwork } from '@popup/_lib';
 import { Transaction, NEO, GAS } from '@/models/models';
@@ -37,7 +37,20 @@ export class TransactionState {
     return this.http.rpcPost(this.n2Network.rpcUrl, data).toPromise();
   }
 
+  getApplicationLog(hash: string, rpcUrl: string) {
+    const data = {
+      jsonrpc: '2.0',
+      method: 'getapplicationlog',
+      params: [hash],
+      id: 1,
+    };
+    return this.http.rpcPost(rpcUrl, data);
+  }
+
   async getAllTxs(address: string): Promise<Transaction[]> {
+    if (this.chainType === 'NeoX') {
+      return Promise.resolve([]);
+    }
     if (this.chainType === 'Neo3') {
       return this.getN3AllTxs(address);
     }
@@ -45,6 +58,9 @@ export class TransactionState {
   }
 
   async getAssetTxs(address: string, asset: string): Promise<Transaction[]> {
+    if (this.chainType === 'NeoX') {
+      return Promise.resolve([]);
+    }
     if (this.chainType === 'Neo3') {
       return this.getN3AssetTxs(address, asset);
     }
@@ -67,6 +83,7 @@ export class TransactionState {
 
   getTxsValid(txids: string[], chainType: ChainType): Observable<string[]> {
     const reqs = [];
+    if (chainType === 'NeoX') return of(reqs);
     // neo2
     if (chainType === 'Neo2') {
       txids.forEach((txid) => {
@@ -235,12 +252,11 @@ export class TransactionState {
     target.sort((a, b) => a.txid.localeCompare(b.txid));
     for (let i = 1; i < target.length; ) {
       if (target[i].txid === target[i - 1].txid) {
-        target[i].value = new BigNumber(target[i].value).plus(
+        const tempValue = new BigNumber(target[i].value).plus(
           new BigNumber(target[i - 1].value)
         );
-        target[i].type =
-          target[i].value.comparedTo(0) > 0 ? 'received' : 'sent';
-        target[i].value = target[i].value.toFixed();
+        target[i].type = tempValue.comparedTo(0) > 0 ? 'received' : 'sent';
+        target[i].value = tempValue.toFixed();
         target.splice(i - 1, 1);
       } else {
         i++;
@@ -366,12 +382,11 @@ export class TransactionState {
         result[i].txid === result[i - 1].txid &&
         result[i].asset_id === result[i - 1].asset_id
       ) {
-        result[i].value = new BigNumber(result[i].value).plus(
+        const tempValue = new BigNumber(result[i].value).plus(
           new BigNumber(result[i - 1].value)
         );
-        result[i].type =
-          result[i].value.comparedTo(0) > 0 ? 'received' : 'sent';
-        result[i].value = result[i].value.toFixed();
+        result[i].type = tempValue.comparedTo(0) > 0 ? 'received' : 'sent';
+        result[i].value = tempValue.toFixed();
         result.splice(i - 1, 1);
       } else {
         i++;

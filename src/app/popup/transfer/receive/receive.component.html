@@ -3,7 +3,23 @@
   <div class="receive-content">
     <div id="receive-qrcode"></div>
   </div>
-  <div class="address">{{ address }}</div>
+  <p class="tip1">
+    {{ "receiveTip1Prefix" | translate | async }}
+    <span class="network"> {{ network.name }}</span>
+    {{ "receiveTip1Suffix" | translate | async }}
+  </p>
+  <p class="tip2">
+    {{ "receiveTip2Prefix" | translate | async }}
+    {{
+      chainType === "NeoX"
+        ? network.name
+        : chainType === "Neo3"
+        ? "Neo N3"
+        : "Neo Legacy"
+    }}
+    {{ "receiveTip2Suffix" | translate | async }}
+  </p>
+  <div class="address">{{ address | longStr : 17 }}</div>
   <copy [value]="address">
     <button class="confirm">
       {{ "copyAddress" | translate | async }}

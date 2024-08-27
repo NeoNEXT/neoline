@@ -1,0 +1,53 @@
+.create-amount-fee {
+  .label {
+    font-family: NeverMind-Regular;
+    color: var(--sub-title-color);
+    margin-top: 24px;
+  }
+  .value {
+    height: 52px;
+    padding: 0 16px;
+    border-radius: 4px;
+    background: var(--box-color);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 12px;
+    cursor: pointer;
+    .fee-desc {
+      font-family: NeverMind-Regular;
+      font-size: 12px;
+      margin-bottom: 5px;
+    }
+    .fee {
+      color: var(--sub-title-color);
+      &.animate {
+        animation: showFeeAnimation 1.5s ease-in-out alternate;
+      }
+    }
+  }
+}
+
+.create-confirm-fee {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  .label {
+    color: var(--sub-title-color);
+    img.edit {
+      margin-left: 12px;
+    }
+  }
+  .fee.animate {
+    animation: showFeeAnimation 1.5s ease-in-out alternate;
+  }
+}
+
+@keyframes showFeeAnimation {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+}

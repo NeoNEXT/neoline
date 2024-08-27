@@ -1,25 +1,109 @@
+.pop-ups-title {
+  height: auto;
+  min-height: 63px;
+  line-height: normal;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding-block: 16px;
 
+  button {
+    width: 76px;
+    height: 30px;
+    border-radius: 15px;
+    font-size: 12px;
+    &.cancel {
+      margin-right: 10px;
+    }
+  }
+}
 
 ul {
+  max-height: 450px;
+  overflow-y: scroll;
   padding: 16px 24px;
+  margin-bottom: 10px;
+  display: flex;
+  gap: 16px;
+  flex-direction: column;
+  &::-webkit-scrollbar {
+    display: block;
+  }
   li {
-    display: flex;
-    align-items: flex-start;
-    justify-content: space-between;
-    margin-top: 24px;
     line-height: 18px;
     color: var(--title-color);
-    &:first-child {
-      margin-top: 0;
+    &.line {
+      border-top: 1px solid var(--line-color);
+    }
+    &.col {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    &.log {
+      cursor: pointer;
+      img {
+        transform: rotate(90deg);
+        transition: all 0.3s;
+        &.expand {
+          transform: rotate(270deg);
+        }
+      }
     }
     .label {
+      font-family: NeverMind;
+      font-size: 13px;
+      font-weight: normal;
+      line-height: 17px;
       color: var(--sub-title-color);
     }
     .value {
-      text-align: right;
-      &.break-all {
-        max-width: 200px;
-        word-break: break-all;
+      font-family: NeverMind;
+      font-size: 14px;
+      font-weight: 500;
+      line-height: 18px;
+      color: var(--title-color);
+      margin-top: 6px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      &.txid {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+        copy {
+          cursor: pointer;
+          &:hover {
+            color: var(--theme-color);
+          }
+        }
+        tooltip {
+          cursor: pointer;
+        }
+      }
+      &.address {
+        copy {
+          cursor: pointer;
+          &:hover {
+            color: var(--theme-color);
+          }
+        }
+      }
+    }
+  }
+  .log-group {
+    position: relative;
+    padding-left: 10px;
+    .log-item {
+      display: flex;
+      align-items: center;
+      font-size: 12px;
+      gap: 6px;
+      margin-bottom: 10px;
+      img {
+        width: 16px;
       }
     }
   }

@@ -1,10 +1,11 @@
 <section class="content">
-  <!-- <p class="title">{{ 'thAuthTitle' | translate | async}}</p> -->
   <div class="avatar">
     <div class="dashed-hori-line"></div>
     <div class="dashed-vert-line"></div>
     <div class="avatar-group">
-      <img class="left avatar" [src]="iconSrc" appErrorSrc alt="" />
+      <span class="left">
+        <img [src]="iconSrc" [appErrorSrc]="'unknown'" alt="" />
+      </span>
       <img
         class="middle"
         theme
@@ -21,8 +22,18 @@
     <span class="dot"></span>
   </div>
   <p class="detail-en">{{ title }} {{ "thAuthTip" | translate | async }}</p>
-  <p class="detail-cn">{{ "thAuthDetail" | translate | async }}</p>
-  <!-- <a class="more" href="">{{ 'thAuthMore' | translate | async}}></a> -->
+  <p class="detail-cn">
+    {{
+      (chainType === "Neo2"
+        ? "thAuthNeo2Detail"
+        : chainType === "Neo3"
+        ? "thAuthNeo3Detail"
+        : "thAuthNeoXDetail"
+      )
+        | translate
+        | async
+    }}
+  </p>
   <div class="choose-auth-rule">
     <span
       class="select-radio"
@@ -30,26 +41,9 @@
       (click)="ruleCheck = !ruleCheck"
     ></span>
     <div class="rule-select">
-      <span class="rule-value" (click)="showRuleOptions = !showRuleOptions">
-        {{
-          (ruleSelected === "true"
-            ? "connectChooseAllow"
-            : "connectChooseNotAllow"
-          )
-            | translate
-            | async
-        }}<img theme src="/assets/images/common/triangle-fill.svg" alt="" />
+      <span class="rule-value">
+        {{ "connectChooseAllow" | translate | async }}
       </span>
-      <div *ngIf="showRuleOptions" class="rule-option" (click)="changeRule()">
-        {{
-          (ruleSelected === "true"
-            ? "connectChooseNotAllow"
-            : "connectChooseAllow"
-          )
-            | translate
-            | async
-        }}
-      </div>
     </div>
   </div>
   <div class="secure">
@@ -58,18 +52,10 @@
 </section>
 
 <section class="submit-group">
-  <button
-    class="cancel"
-    [ngClass]="{ disabled: ruleCheck && ruleSelected === 'true' }"
-    (click)="refuse()"
-  >
+  <button class="cancel" (click)="refuse()">
     {{ "refuse" | translate | async }}
   </button>
-  <button
-    class="confirm"
-    [ngClass]="{ disabled: ruleCheck && ruleSelected === 'false' }"
-    (click)="connect()"
-  >
+  <button class="confirm" (click)="connect()">
     {{ "connect" | translate | async }}
   </button>
 </section>

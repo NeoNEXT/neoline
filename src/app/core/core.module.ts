@@ -20,14 +20,15 @@ import { UtilServiceState } from './util/util.service';
 import { HomeService } from './services/home.service';
 import { LedgerService } from './services/ledger.service';
 import { ExtensionService } from './util/extension.service';
+import { EvmService } from './services/evm.service';
+import { AssetEVMState } from './states/asset-evm.state';
+import { DappEVMState } from './states/dapp-evm.state';
+import { BridgeState } from './states/bridge.state';
+import { EvmNFTState } from './states/evm-nft.state';
 
 @NgModule({
   declarations: [],
-  imports: [
-    CommonModule,
-    HttpClientModule,
-    MatDialogModule,
-  ],
+  imports: [CommonModule, HttpClientModule, MatDialogModule],
   exports: [],
   providers: [
     GlobalService,
@@ -46,6 +47,11 @@ import { ExtensionService } from './util/extension.service';
     HomeService,
     LedgerService,
     ExtensionService,
+    EvmService,
+    AssetEVMState,
+    DappEVMState,
+    BridgeState,
+    EvmNFTState,
   ],
 })
 export class CoreModule {}

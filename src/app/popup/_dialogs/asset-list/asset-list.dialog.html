@@ -20,9 +20,14 @@
     (click)="select(item)"
   >
     <ng-container *ngIf="!data.isNft">
-      <div class="asset-logo-box small">
-        <img [assetId]="item.asset_id" appErrorSrc alt="" />
-      </div>
+      <token-logo
+        customClass="small"
+        [assetId]="item?.asset_id"
+        [imageUrl]="item?.image_url"
+        [chainType]="data.chainType"
+        [symbol]="item?.symbol"
+        [neoXChainId]="data.networkId"
+      ></token-logo>
       <div class="asset-info-box">
         <p>{{ item?.symbol || '' }}</p>
         <p class="balance">
@@ -38,9 +43,11 @@
       />
     </ng-container>
     <ng-container *ngIf="data.isNft">
-      <div class="asset-logo-box small">
-        <img [src]="item?.image_url" appErrorSrc alt="" />
-      </div>
+      <token-logo
+        customClass="small"
+        [isNFTToken]="true"
+        [imageUrl]="item?.image_url"
+      ></token-logo>
       <div class="asset-info-box">
         <p>
           {{ item?.name || item?.tokenid }} #{{ item?.tokenid | nftTokenId }}

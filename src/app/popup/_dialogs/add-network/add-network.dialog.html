@@ -5,7 +5,8 @@
   </div>
 </div>
 <div class="pop-ups-title">
-  {{ 'AddNetwork' | translate | async }}
+  {{ (data.editNetwork ? 'EditNetwork' : 'AddNetwork') | translate | async }}({{
+  data.addChainType === 'NeoX' ? 'EVM' : data.addChainType }})
   <img
     class="close"
     [mat-dialog-close]="false"
@@ -15,36 +16,79 @@
   />
 </div>
 
-<section class="container">
-  <div class="item">
-    <p class="label">{{ 'NetworkName' | translate | async }}</p>
-    <input type="text" [(ngModel)]="privateNet.name" />
-  </div>
-  <div class="item">
-    <p class="label">{{ 'New_RPC_URL' | translate | async }}</p>
+<div class="add-tip">
+  <img src="assets/images/common/warning.svg" alt="" />
+  {{'AddNetworkTip' | translate | async}}
+</div>
+
+<form class="container" [formGroup]="addNetworkForm">
+  <p class="label">{{ 'NetworkName' | translate | async }}</p>
+  <mat-form-field class="form-field" appearance="outline">
+    <input matInput required formControlName="name" type="text" />
+    <mat-error *ngIf="addNetworkForm.get('name').errors?.required"
+      >{{ "networkNameIsRequired" | translate | async }}
+    </mat-error>
+  </mat-form-field>
+
+  <p class="label">{{ 'New_RPC_URL' | translate | async }}</p>
+  <mat-form-field class="form-field" appearance="outline">
     <input
-      type="text"
+      matInput
+      required
       (input)="getMagicNumber()"
-      [(ngModel)]="privateNet.rpcUrl"
+      formControlName="rpcUrl"
     />
-    <p class="error">
-      {{ isInvalidRpcUrl ? ('Invalid_RPC_URL' | translate | async) : '' }}
-    </p>
-  </div>
-  <div class="item">
+    <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.required">
+      {{ "rpcUrlIsRequired" | translate | async }}
+    </mat-error>
+    <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.errorRPC">
+      {{ "Invalid_RPC_URL" | translate | async }}
+    </mat-error>
+    <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.errorExistChainId">
+      {{ "exist_RPC_URL" | translate | async }}
+    </mat-error>
+  </mat-form-field>
+
+  <div *ngIf="data.addChainType === 'Neo3'">
     <p class="label">Magic Number</p>
+    <mat-form-field class="form-field" appearance="outline">
+      <input matInput required readonly formControlName="magicNumber" />
+    </mat-form-field>
+  </div>
+
+  <div *ngIf="data.addChainType === 'NeoX'">
+    <p class="label">{{ 'ChainID' | translate | async }}</p>
+    <mat-form-field class="form-field" appearance="outline">
+      <input matInput required readonly formControlName="chainId" />
+    </mat-form-field>
+  </div>
+
+  <div *ngIf="data.addChainType === 'NeoX'">
+    <p class="label">{{ 'Symbol' | translate | async }}</p>
+    <mat-form-field class="form-field" appearance="outline">
+      <input matInput required formControlName="symbol" />
+      <mat-error *ngIf="addNetworkForm.get('symbol').errors?.required">
+        {{ "symbolIsRequired" | translate | async }}
+      </mat-error>
+    </mat-form-field>
+  </div>
+
+  <p class="label">{{ 'Explorer_URL' | translate | async }}</p>
+  <mat-form-field class="form-field" appearance="outline">
+    <input *ngIf="!data?.addExplorer" matInput formControlName="explorer" />
     <input
-      type="text"
-      class="disabled"
-      disabled
-      [value]="privateNet.magicNumber || ''"
+      *ngIf="data?.addExplorer"
+      cdkFocusInitial
+      matInput
+      formControlName="explorer"
     />
-  </div>
-  <div class="item">
-    <p class="label">{{ 'Explorer_URL' | translate | async }}</p>
-    <input type="text" [(ngModel)]="privateNet.explorer" />
-  </div>
-  <button class="confirm pop-ups" (click)="confirm()">
-    {{ 'yes' | translate | async}}
-  </button>
-</section>
+  </mat-form-field>
+</form>
+
+<button
+  class="confirm pop-ups"
+  [ngClass]="{disabled: addNetworkForm.invalid || loading}"
+  (click)="confirm()"
+>
+  {{ 'save' | translate | async}}
+</button>

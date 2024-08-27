@@ -1,0 +1,109 @@
+<div class="loading-box" *ngIf="loading">
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+    <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
+  </div>
+</div>
+<section class="container">
+  <div class="bridge-content">
+    <p class="label">{{ "Withdraw" | translate | async }}</p>
+    <p class="amount">
+      <span>{{ bridgeAmount }}</span>
+      <span class="symbol">{{ bridgeAsset.symbol }}</span>
+      <span *ngIf="bridgeAsset?.rateBalance" class="currency">
+        {{ bridgeAsset.rateBalance }} {{ rateCurrency }}
+      </span>
+    </p>
+    <p class="label from">{{ "FromAddress" | translate | async }}</p>
+    <p class="address">
+      {{ currentWallet.accounts[0].address | longStr : 12 }}
+      <copy [value]="currentWallet.accounts[0].address">
+        <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+      </copy>
+    </p>
+    <img class="arrow" src="/assets/images/bridge/arrow.svg" alt="" />
+    <p class="label">{{ "YourNeo3ReceiveAddress" | translate | async }}</p>
+    <p class="address">
+      {{ toAddress | longStr : 12 }}
+      <copy [value]="toAddress">
+        <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+      </copy>
+    </p>
+  </div>
+  <div class="tabs-container">
+    <span
+      [class]="{ selected: tabType === 'details' }"
+      (click)="tabType = 'details'"
+    >
+      {{ "details" | translate | async }}
+    </span>
+    <span [class]="{ selected: tabType === 'data' }" (click)="tabType = 'data'">
+      {{ "data" | translate | async }}
+    </span>
+  </div>
+  <ul class="details-content" *ngIf="tabType === 'details'">
+    <li *ngIf="neoXFeeInfo?.estimateGasError">
+      <evm-estimate-error></evm-estimate-error>
+    </li>
+    <li *ngIf="insufficientFunds">
+      <evm-gas-error
+        [networkName]="neoXNetwork.name"
+        [symbol]="neoXNetwork.symbol"
+      ></evm-gas-error>
+    </li>
+    <li *ngIf="nonceInfo?.pendingTxs">
+      <evm-pending-warning [count]="nonceInfo.pendingTxs"></evm-pending-warning>
+    </li>
+    <li>
+      <evm-fee
+        [txParams]="txParams"
+        [symbol]="bridgeAsset.symbol"
+        [customNeoXFeeInfo]="neoXFeeInfo"
+        [place]="'dapp'"
+        (returnFee)="updateEvmFee($event)"
+      >
+      </evm-fee>
+      <p class="row tip">{{ rate.fee | numberFixed : 2 }} {{ rateCurrency }}</p>
+    </li>
+    <li>
+      <div class="row">
+        <span class="label">{{ "TOTAL" | translate | async }}</span>
+        <p class="value">
+          {{ totalAmount | numberFixed : 8 }} {{ bridgeAsset.symbol }}
+        </p>
+      </div>
+      <p class="row tip column">
+        <span>
+          {{ "amount" | translate | async }} +
+          {{ "GASFEE" | translate | async }}
+        </span>
+        <span class="value">
+          {{ rate.total | numberFixed : 2 }} {{ rateCurrency }}
+        </span>
+      </p>
+    </li>
+    <li>
+      <evm-custom-nonce
+        [default]="nonceInfo?.nonce"
+        (changeNonceEvent)="changeNonce($event)"
+      ></evm-custom-nonce>
+    </li>
+  </ul>
+  <div class="data-content" *ngIf="tabType === 'data'">
+    <p class="title">FUNCTION TYPE: <span class="value">withdrawGas</span></p>
+    <p class="title hex">HEX DATA: {{ hexDataLength }} BYTES</p>
+    <p class="json-box serialize">{{ txParams.data }}</p>
+  </div>
+  <div class="btn-group">
+    <button class="cancel" (click)="cancel()">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button
+      class="confirm"
+      [ngClass]="{ disabled: !nonceInfo || loading || insufficientFunds }"
+      (click)="confirm()"
+    >
+      {{ "yes" | translate | async }}
+    </button>
+  </div>
+</section>

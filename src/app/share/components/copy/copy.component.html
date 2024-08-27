@@ -5,7 +5,7 @@
   (mouseleave)="hiddenPopup()"
 >
   <ng-content></ng-content>
-  <span class="tip" *ngIf="isShowPopup">{{
+  <span class="tip" [ngClass]="placement" *ngIf="isShowPopup">{{
     (hasCopied ? "Copied" : "CopyToClipboard") | translate | async
   }}</span>
 </div>

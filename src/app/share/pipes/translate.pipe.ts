@@ -8,10 +8,17 @@ import { SettingState } from '@/app/core';
 export class TranslatePipe implements PipeTransform {
   constructor(private settingState: SettingState) {}
 
-  public transform(value: string) {
+  public transform(value: string, params: { [key: string]: string }) {
     return this.settingState.langSub.pipe(
       map((res) => {
-        return this.settingState.langJson[res][value].message;
+        let source: string = this.settingState.langJson[res][value].message;
+        if (params) {
+          Object.keys(params).forEach((key) => {
+            const pattern = new RegExp(`\{\{${key}\}\}`, 'g');
+            source = source.replace(pattern, params[key] || '');
+          });
+        }
+        return source;
       })
     );
   }

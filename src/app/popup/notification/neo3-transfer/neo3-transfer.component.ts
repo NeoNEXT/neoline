@@ -1,11 +1,12 @@
-import { Component, OnInit, AfterViewInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit, OnDestroy } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import {
   AssetState,
   GlobalService,
   ChromeService,
   LedgerService,
   UtilServiceState,
+  SettingState,
 } from '@/app/core';
 import { NEO } from '@/models/models';
 import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
@@ -27,7 +28,6 @@ import { interval } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 type TabType = 'details' | 'data';
@@ -73,12 +73,11 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
   private accountSub: Unsubscribable;
   public fromAddress: string;
   public n3Network: RpcNetwork;
-  private currentWallet: Wallet2 | Wallet3;
+  private currentWallet: Wallet3;
   private chainType: ChainType;
   private neo3WIFArr: string[];
   private neo3WalletArr: Wallet3[];
   constructor(
-    private router: Router,
     private aRoute: ActivatedRoute,
     private asset: AssetState,
     private transfer: TransferService,
@@ -88,12 +87,13 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
     private neo3Transfer: Neo3TransferService,
     private ledger: LedgerService,
     private util: UtilServiceState,
+    private settingState: SettingState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
-      this.currentWallet = state.currentWallet;
+      this.currentWallet = state.currentWallet as Wallet3;
       this.fromAddress = state.currentWallet?.accounts[0]?.address;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neo3WIFArr = state.neo3WIFArr;
@@ -106,7 +106,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
     this.aRoute.queryParams.subscribe(async (params: any) => {
@@ -150,13 +150,9 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
       if (params.fee) {
         this.fee = params.fee;
       } else {
-        if (this.asset.gasFeeSpeed) {
-          this.fee = this.asset.gasFeeSpeed.propose_price;
-        } else {
-          this.asset.fetchNeo3GasFee().subscribe((res: GasFeeSpeed) => {
-            this.fee = res.propose_price;
-          });
-        }
+        this.asset.getGasFee().subscribe((res: GasFeeSpeed) => {
+          this.fee = res.propose_price;
+        });
       }
       this.remark = params.remark || '';
       this.getAssetDetail();
@@ -257,9 +253,9 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
         this.creating = false;
         if (this.fromAddress !== this.toAddress) {
           const txTarget = {
-            txid: '0x' + tx.hash,
+            txid: TxHash,
             value: -this.amount,
-            block_time: new Date().getTime() / 1000,
+            block_time: Math.floor(new Date().getTime() / 1000),
           };
           this.pushTransaction(txTarget);
         }
@@ -272,13 +268,15 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
           ID: this.messageID,
         });
         const setData = {};
-        setData[`TxArr_${this.n3Network.id}`] =
-          (await this.chrome.getLocalStorage(`TxArr_${this.n3Network.id}`)) ||
-          [];
-        setData[`TxArr_${this.n3Network.id}`].push(TxHash);
+        setData[`TxArr_${this.chainType}-${this.n3Network.id}`] =
+          (await this.chrome.getLocalStorage(
+            `TxArr_${this.chainType}-${this.n3Network.id}`
+          )) || [];
+        setData[`TxArr_${this.chainType}-${this.n3Network.id}`].push(TxHash);
         this.chrome.setLocalStorage(setData);
         this.dialog.open(PopupTransferSuccessDialogComponent, {
           panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
         });
       })
       .catch((err) => {
@@ -296,30 +294,30 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
   }
 
   public pushTransaction(transaction: object) {
-    const networkId = this.n3Network.id;
+    const networkName = `${this.chainType}-${this.n3Network.id}`;
     const address = this.fromAddress;
     const assetId = this.assetId;
     this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((res) => {
       if (res === null || res === undefined) {
         res = {};
       }
-      if (res[networkId] === undefined) {
-        res[networkId] = {};
+      if (res[networkName] === undefined) {
+        res[networkName] = {};
       }
-      if (res[networkId][address] === undefined) {
-        res[networkId][address] = {};
+      if (res[networkName][address] === undefined) {
+        res[networkName][address] = {};
       }
-      if (res[networkId][address][assetId] === undefined) {
-        res[networkId][address][assetId] = [];
+      if (res[networkName][address][assetId] === undefined) {
+        res[networkName][address][assetId] = [];
       }
-      res[networkId][address][assetId].unshift(transaction);
+      res[networkName][address][assetId].unshift(transaction);
       this.chrome.setStorage(STORAGE_NAME.transaction, res);
     });
   }
 
   public async getAssetRate() {
-    this.asset.getAssetRate('gas', GAS3_CONTRACT).then((rate) => {
-      const gasPrice = rate || 0;
+    const gasPrice = await this.asset.getAssetRateV2('Neo3', GAS3_CONTRACT);
+    if (gasPrice) {
       this.feeMoney = new BigNumber(this.fee).times(gasPrice).toFixed();
       this.systemFeeMoney = new BigNumber(this.systemFee)
         .times(gasPrice)
@@ -329,13 +327,13 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
         .toFixed();
       if (this.symbol === 'GAS') {
         this.money = new BigNumber(this.amount).times(gasPrice).toFixed();
+      } else {
+        this.money = await this.asset.getAssetAmountRate({
+          chainType: 'Neo3',
+          assetId: this.assetId,
+          amount: this.amount,
+        });
       }
-    });
-    if (this.symbol !== 'GAS') {
-      this.asset.getAssetRate(this.symbol, this.assetId).then((rate) => {
-        const price = rate || 0;
-        this.money = new BigNumber(this.amount).times(price).toFixed();
-      });
     }
   }
 
@@ -376,6 +374,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
     this.dialog
       .open(PopupEditFeeDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: {
           fee: this.fee,
         },
@@ -387,14 +386,18 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
           if (res === 0 || res === '0') {
             this.feeMoney = '0';
           } else {
-            this.asset.getAssetRate('gas', GAS3_CONTRACT).then((rate) => {
-              this.feeMoney = new BigNumber(this.fee)
-                .times(rate || 0)
-                .toFixed();
-              this.totalMoney = this.global
-                .mathAdd(Number(this.feeMoney), Number(this.money))
-                .toString();
-            });
+            this.asset
+              .getAssetAmountRate({
+                chainType: 'Neo3',
+                assetId: GAS3_CONTRACT,
+                amount: this.fee,
+              })
+              .then((res) => {
+                this.feeMoney = res;
+                this.totalMoney = this.global
+                  .mathAdd(Number(this.feeMoney), Number(this.money))
+                  .toString();
+              });
           }
           this.submit();
         }

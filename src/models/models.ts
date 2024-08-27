@@ -1,3 +1,5 @@
+import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
+
 export interface ClaimItem {
   end_height: number;
   generated: number;
@@ -27,6 +29,7 @@ export interface NftToken {
   amount: string;
   name?: string;
   image_url?: string;
+  isOwner?: boolean;
 }
 
 export interface NftAsset {
@@ -40,19 +43,50 @@ export interface NftAsset {
   // name: string;
   // symbol: string;
   // info?: any;
+  standard?: 'ERC721' | 'ERC1155' | string;
+}
+
+export enum TransactionStatus {
+  'Failed' = 0,
+  'Success' = 1,
+  'Dropped' = 2,
+  'Cancelled' = 3,
+  'Canceling' = 4,
+  'Accelerating' = 5,
 }
 export interface Transaction {
   block_time: number;
   id?: number;
   size?: number;
   txid: string;
-  value: any;
+  value: string;
   net_fee?: any;
   asset_id: string;
   symbol?: string;
   from?: string[];
   to?: string[];
-  type: 'sent' | 'received';
+  type:
+    | 'sent'
+    | 'received'
+    | 'sendEther'
+    | 'sendToken'
+    | 'contractInteraction'
+    | 'approve';
+  status?: TransactionStatus; // EVM tx status 0: failed, 1: success
+
+  // NFT
+  tokenid?: string;
+
+  // EVM
+  nonce?: number;
+  txParams?: any;
+  history?: HistoryTransaction[];
+}
+interface HistoryTransaction {
+  txId: string;
+  time: number;
+  type: 'create' | 'cancel' | 'speedUp' | 'complete';
+  neoXFeeInfo?: NeoXFeeInfoProp;
 }
 
 export interface NftTransaction extends Transaction {

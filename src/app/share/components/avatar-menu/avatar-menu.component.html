@@ -2,84 +2,139 @@
 <div class="content">
   <div class="my-account">
     <span>{{ "myAccount" | translate | async }}</span>
-    <span class="right">
-      <img
-        (click)="lock()"
-        theme
-        src="assets/images/avatar-menu/lock.svg"
-        alt=""
-      />
-      <img
-        (click)="navigate('/popup/setting')"
-        theme
-        src="assets/images/avatar-menu/setting.svg"
-      />
-      <img
-        (click)="navigate('/popup/about')"
-        theme
-        src="assets/images/avatar-menu/about-us.svg"
-      />
-    </span>
-  </div>
-  <div class="account-list">
-    <button class="search">
-      <img class="search" theme src="assets/images/common/search.svg" />
-      <input
-        [placeholder]="'Search' | translate | async"
-        (input)="searchWallet($event)"
-        type="text"
-      />
-    </button>
-    <ul>
-      <li
-        *ngFor="let item of displayWalletArr"
-        (click)="selectAccount(item)"
-        [ngClass]="{
-          active: wallet.accounts[0].address === item.accounts[0].address
-        }"
+    <div class="right">
+      <tooltip
+        [tip]="'menuGuideAndSupport' | translate | async"
+        placement="bottom"
       >
-        <span class="select"></span>
-        <div
-          class="avatar-box"
-          [ngClass]="{ ledger: item.accounts[0]?.extra?.ledgerSLIP44 }"
-        >
-          <img class="avatar" [avatar]="item.accounts[0].address" />
+        <img
+          (click)="toHelpWebsite()"
+          theme
+          src="assets/images/avatar-menu/guide.svg"
+          alt=""
+        />
+      </tooltip>
+      <tooltip [tip]="'menuSettings' | translate | async" placement="bottom">
+        <img
+          (click)="navigate('/popup/setting')"
+          theme
+          src="assets/images/avatar-menu/setting.svg"
+        />
+      </tooltip>
+      <tooltip [tip]="'menuLock' | translate | async" placement="bottom">
+        <img
+          (click)="lock()"
+          theme
+          src="assets/images/avatar-menu/lock.svg"
+          alt=""
+        />
+      </tooltip>
+      <tooltip [tip]="'menuAboutUs' | translate | async" placement="bottom">
+        <img
+          (click)="navigate('/popup/about')"
+          theme
+          src="assets/images/avatar-menu/about-us.svg"
+        />
+      </tooltip>
+    </div>
+  </div>
+  <button class="search">
+    <img class="search" theme src="assets/images/common/search.svg" />
+    <input
+      [placeholder]="'Search' | translate | async"
+      (input)="searchWallet($event)"
+      type="text"
+    />
+  </button>
+  <div class="wallet-list">
+    <div class="list-item" *ngFor="let list of searchWalletRes">
+      <p class="list-title">
+        <span>{{ list.title }}</span>
+        <span class="dropdown" (click)="list.expand = !list.expand">
           <img
-            *ngIf="item.accounts[0]?.extra?.ledgerSLIP44"
-            class="usb"
-            src="/assets/images/ledger/ledger-avatar.png"
+            theme
+            [ngClass]="{ expand: list.expand }"
+            src="/assets/images/common/arrow.svg"
             alt=""
           />
-        </div>
-        <div>
-          <p class="name">{{ item.name }}</p>
-          <p class="balance">
-            {{ addressBalances[item.accounts[0].address] }} NEO
-          </p>
-        </div>
-      </li>
-    </ul>
+        </span>
+      </p>
+      <ul [hidden]="!list.expand">
+        <li
+          *ngFor="let item of list.walletArr; index as index"
+          (click)="selectAccount(item, list.chain)"
+          [ngClass]="{
+            active: wallet.accounts[0].address === item.accounts[0].address
+          }"
+        >
+          <span class="select"></span>
+          <div
+            class="avatar-box"
+            [ngClass]="{ ledger: item.accounts[0]?.extra?.ledgerSLIP44 }"
+          >
+            <img class="avatar" [avatar]="item.accounts[0].address" />
+            <img
+              *ngIf="item.accounts[0]?.extra?.ledgerSLIP44"
+              class="usb"
+              src="/assets/images/ledger/ledger-avatar.png"
+              alt=""
+            />
+          </div>
+          <div>
+            <p class="name">{{ item.name }}</p>
+            <p class="balance" *ngIf="chainType === list.chain">
+              {{ addressBalances[item.accounts[0].address] }}
+              {{ list.chain === "NeoX" ? neoXNetwork.symbol : "NEO" }}
+            </p>
+          </div>
+          <img
+            theme
+            (click)="openMoreModal($event, item, list.chain)"
+            class="more"
+            src="/assets/images/common/more.svg"
+            alt=""
+          />
+        </li>
+      </ul>
+    </div>
   </div>
-  <ul class="wallet">
-    <li (click)="importLedger()">
-      <img theme src="assets/images/avatar-menu/wallet-ledger.svg" alt="" />{{
-        "LEDGER" | translate | async
+  <button class="confirm pop-ups add-wallet" (click)="showAddWallet()">
+    {{ "AddAccountOrHardwareWallet" | translate | async }}
+  </button>
+  <section
+    class="pop-ups-veil"
+    *ngIf="moreModalWallet"
+    (click)="$event.stopPropagation(); moreModalWallet = undefined"
+  ></section>
+  <ul #moreModalDom [hidden]="!moreModalWallet" class="pop-ups-menu">
+    <li
+      (click)="
+        navigate(
+          '/popup/account?address=' +
+            moreModalWallet.accounts[0].address +
+            '&chainType=' +
+            moreModalChainType
+        )
+      "
+    >
+      <img theme src="assets/images/account/home-account-detail.svg" alt="" />{{
+        "accountDetails" | translate | async
       }}
     </li>
-    <li (click)="to('create')">
-      <img theme src="assets/images/avatar-menu/wallet-create.svg" alt="" />{{
-        "createWallet" | translate | async
-      }}
-    </li>
-    <li (click)="to('import')">
-      <img theme src="assets/images/avatar-menu/wallet-import.svg" alt="" />{{
-        "importWallet" | translate | async
-      }}
-    </li>
-    <li (click)="exportWallet()">
+    <li
+      *ngIf="!moreModalWallet?.accounts?.[0].extra?.ledgerSLIP44"
+      (click)="exportWallet()"
+    >
       <img theme src="assets/images/avatar-menu/wallet-export.svg" alt="" />{{
         "exportWallet" | translate | async
       }}
+    </li>
+    <li *ngIf="moreModalCanRemove" (click)="removeAccount()">
+      <img
+        class="delete"
+        src="assets/images/account/home-delete.svg"
+        alt=""
+      />{{ "removeAccount" | translate | async }}
     </li>
   </ul>
 </div>

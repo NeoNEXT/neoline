@@ -3,6 +3,7 @@ import { GlobalService } from '@/app/core';
 import { PopupNftTokenDetailDialogComponent } from '../../../_dialogs';
 import { MatDialog } from '@angular/material/dialog';
 import { NftToken } from '@/models/models';
+import { ChainType, RpcNetwork } from '@/app/popup/_lib';
 
 @Component({
   selector: 'app-nft-tokens',
@@ -11,6 +12,9 @@ import { NftToken } from '@/models/models';
 })
 export class PopupNftTokensComponent {
   @Input() nftTokens: NftToken[];
+  @Input() nftContract: string;
+  @Input() chainType: ChainType;
+  @Input() neoXNetwork: RpcNetwork;
 
   // eslint-disable-next-line @angular-eslint/no-output-on-prefix
 
@@ -19,8 +23,12 @@ export class PopupNftTokensComponent {
   showDetail(token) {
     this.dialog.open(PopupNftTokenDetailDialogComponent, {
       panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-dialog-backdrop',
       data: {
         nftToken: token,
+        nftContract: this.nftContract,
+        chainType: this.chainType,
+        neoXNetwork: this.neoXNetwork,
       },
     });
   }

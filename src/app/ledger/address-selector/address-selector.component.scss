@@ -136,17 +136,18 @@ section.main {
             padding: 15px 12px;
             font-size: 14px;
             color: var(--title-color);
+            .address {
+              word-wrap: break-word;
+            }
             .balance {
               height: 24px;
               font-size: 18px;
               margin-top: 18px;
               p {
                 width: 50%;
-                display: inline-block;
-                img {
-                  width: 16px;
-                  vertical-align: sub;
-                }
+                display: inline-flex;
+                align-items: center;
+                gap: 8px;
               }
             }
             .tip {

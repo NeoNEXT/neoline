@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
 import { NEO, GAS, Asset } from '@/models/models';
-import { NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
+import { NEO3_CONTRACT, GAS3_CONTRACT, ChainType } from '@popup/_lib';
 
 @Component({
   selector: 'app-asset-item',
@@ -9,6 +9,8 @@ import { NEO3_CONTRACT, GAS3_CONTRACT } from '@popup/_lib';
 })
 export class PopupAssetItemComponent {
   @Input() asset: Asset;
+  @Input() networkId: number;
+  @Input() chainType: ChainType;
 
   // eslint-disable-next-line @angular-eslint/no-output-on-prefix
   @Output() onAddAsset = new EventEmitter<any>();

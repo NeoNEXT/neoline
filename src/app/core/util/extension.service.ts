@@ -115,4 +115,24 @@ export class ExtensionService {
       console.log('Set session storage', value);
     });
   }
+
+  clearSessionStorage() {
+    chrome.storage.session.clear();
+  }
+
+  getCurrentWindow(): Promise<{
+    favIconUrl: string;
+    title: string;
+    url: string;
+  }> {
+    return new Promise((resolve) => {
+      if (chrome.tabs) {
+        chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+          resolve(tabs[0]);
+        });
+      } else {
+        resolve(null);
+      }
+    });
+  }
 }

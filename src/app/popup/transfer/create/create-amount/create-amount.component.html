@@ -8,16 +8,24 @@
   ></transfer-create-address>
   <div class="content" *ngIf="transferTo?.address">
     <div class="item currencies">
-      <p class="label">{{ "currencies" | translate | async }}</p>
+      <p class="label">{{ "Asset" | translate | async }}</p>
+      <!-- not NFT -->
       <div class="value" *ngIf="!nftContract" (click)="selectAsset()">
-        <div class="asset-logo-box small">
-          <img [assetId]="transferAsset?.asset_id" appErrorSrc alt="" />
+        <div class="asset-logo-box">
+          <token-logo
+            customClass="small"
+            [assetId]="transferAsset?.asset_id"
+            [imageUrl]="transferAsset?.image_url"
+            [chainType]="chainType"
+            [symbol]="transferAsset?.symbol"
+            [neoXChainId]="currentNetwork?.id"
+          ></token-logo>
         </div>
         <div class="flex-1">
-          <p class="symbol">{{ transferAsset?.symbol || "NEO" }}</p>
+          <p class="symbol">{{ transferAsset?.symbol }}</p>
           <p class="balance">
             {{ "balancecolon" | translate | async }}
-            {{ transferAsset?.balance | numberFixed }}
+            {{ transferAsset?.balance | numberFixed : 8 }}
             <!-- {{ transferAsset?.symbol || "NEO" }} -->
           </p>
         </div>
@@ -28,9 +36,14 @@
           alt=""
         />
       </div>
+      <!-- NFT -->
       <div class="value" *ngIf="nftContract" (click)="selectAsset(true)">
-        <div class="asset-logo-box small">
-          <img [src]="transferNFT?.image_url" appErrorSrc alt="" />
+        <div class="asset-logo-box">
+          <token-logo
+            customClass="small"
+            [isNFTToken]="true"
+            [imageUrl]="transferNFT?.image_url"
+          ></token-logo>
         </div>
         <div class="flex-1">
           <p class="symbol">#{{ transferNFT?.tokenid | nftTokenId }}</p>
@@ -56,14 +69,18 @@
           min="0"
           placeholder="0"
           [(ngModel)]="transferAmount"
-          (keypress)="checkTransferAmount($event)"
+          (input)="checkTransferAmount($event)"
         />
         <span class="all" (click)="transferAll()">{{
           "allTransfer" | translate | async
         }}</span>
       </div>
     </div>
-    <div class="item priority-fee" (click)="editFee()">
+    <div
+      *ngIf="chainType !== 'NeoX'"
+      class="item priority-fee"
+      (click)="editFee()"
+    >
       <p class="label">{{ "priorityFee" | translate | async }}</p>
       <div class="value">
         <div>
@@ -73,6 +90,18 @@
         <img theme src="assets/images/common/arrow.svg" alt="" />
       </div>
     </div>
+    <evm-fee
+      *ngIf="chainType === 'NeoX'"
+      [transferAsset]="transferAsset"
+      [nftAsset]="nftAsset"
+      [transferNFT]="transferNFT"
+      [transferToAddress]="transferTo?.address"
+      [fromAddress]="fromAddress"
+      [transferAmount]="transferAmount"
+      [symbol]="currentNetwork.symbol"
+      (returnFee)="updateEvmFee($event)"
+    >
+    </evm-fee>
     <div class="btn-group">
       <button class="cancel" (click)="cancel()">
         {{ "cancel" | translate | async }}

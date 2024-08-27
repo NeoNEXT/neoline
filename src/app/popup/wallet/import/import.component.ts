@@ -1,4 +1,9 @@
-import { GlobalService, NeonService, ChromeService } from '@/app/core';
+import {
+  GlobalService,
+  NeonService,
+  ChromeService,
+  EvmService,
+} from '@/app/core';
 import {
   AfterContentInit,
   Component,
@@ -21,8 +26,10 @@ import {
 } from '@angular/forms';
 import { checkPasswords, MyErrorStateMatcher } from '../confirm-password';
 import { ChainType } from '../../_lib';
+import { EvmWalletJSON } from '../../_lib/evm';
+import { ethers } from 'ethers';
 
-type ImportType = 'key' | 'file';
+type ImportType = 'key' | 'file' | 'mnemonic';
 
 function checkWIF(chainType: ChainType): ValidatorFn {
   return (control: AbstractControl): { [key: string]: any } | null => {
@@ -35,12 +42,30 @@ function checkWIF(chainType: ChainType): ValidatorFn {
       if (wallet2.isWIF(wif) || wallet2.isPrivateKey(wif)) {
         valid = true;
       }
-    } else {
+    } else if (chainType === 'Neo3') {
       if (wallet3.isWIF(wif) || wallet3.isPrivateKey(wif)) {
+        valid = true;
+      }
+    } else if (chainType === 'NeoX') {
+      if (wallet3.isPrivateKey(wif.startsWith('0x') ? wif.slice(2) : wif)) {
         valid = true;
       }
     }
     return valid === false ? { errorWIF: { value: control.value } } : null;
+  };
+}
+
+function checkMnemonic(): ValidatorFn {
+  return (control: AbstractControl): { [key: string]: any } | null => {
+    const mnemonic = control.value;
+    if (!mnemonic) {
+      return null;
+    }
+    let valid = false;
+    if (ethers.Mnemonic.isValidMnemonic(mnemonic)) {
+      valid = true;
+    }
+    return valid === false ? { errorMnemonic: { value: control.value } } : null;
   };
 }
 
@@ -64,6 +89,11 @@ export class PopupWalletImportComponent
   hideConfirmPwd = true;
   hideWIF = true;
 
+  importMnemonicForm: FormGroup;
+  hideImportMnemonicPwd = true;
+  hideConfirmMnemonicPwd = true;
+  hideMnemonic = true;
+
   nep6Form: FormGroup;
   nep6Json;
   hideNep6FilePwd = true;
@@ -71,9 +101,12 @@ export class PopupWalletImportComponent
   hideNep6ConfirmPwd = true;
   showImportTypeMenu = false;
 
+  importTypeList: ImportType[] = ['key', 'file'];
+
   @Input() password: string;
   @Input() isOnePassword: boolean;
   @Input() hasPwdWallet: boolean;
+  @Input() neoXWalletArr: EvmWalletJSON[] = [];
   @Output() submitThis = new EventEmitter<any>();
   @Output() submitFile = new EventEmitter<any>();
   matcher = new MyErrorStateMatcher();
@@ -82,7 +115,8 @@ export class PopupWalletImportComponent
     private neon: NeonService,
     private cdref: ChangeDetectorRef,
     private fb: FormBuilder,
-    private chrome: ChromeService
+    private chrome: ChromeService,
+    private evmService: EvmService
   ) {
     switch (this.neon.selectedChainType) {
       case 'Neo2':
@@ -95,10 +129,23 @@ export class PopupWalletImportComponent
   }
 
   ngOnInit() {
+    if (this.neon.selectedChainType === 'NeoX') {
+      if (
+        this.neoXWalletArr.some((item) => item.accounts[0].extra.isHDWallet)
+      ) {
+        this.importTypeList = ['key'];
+      } else {
+        this.importTypeList = ['key', 'mnemonic'];
+      }
+    }
     if (this.isOnePassword && this.password) {
       this.importForm = this.fb.group({
         name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
         WIF: ['', [Validators.required, checkWIF(this.neon.selectedChainType)]],
+      });
+      this.importMnemonicForm = this.fb.group({
+        name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
+        mnemonic: ['', [Validators.required, checkMnemonic()]],
       });
       this.nep6Form = this.fb.group({
         name: ['', [Validators.required]],
@@ -113,6 +160,18 @@ export class PopupWalletImportComponent
             '',
             [Validators.required, checkWIF(this.neon.selectedChainType)],
           ],
+          password: [
+            '',
+            [Validators.required, Validators.pattern(/^.{8,128}$/)],
+          ],
+          confirmPassword: ['', [Validators.required]],
+        },
+        { validators: checkPasswords }
+      );
+      this.importMnemonicForm = this.fb.group(
+        {
+          name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
+          mnemonic: ['', [Validators.required, checkMnemonic()]],
           password: [
             '',
             [Validators.required, Validators.pattern(/^.{8,128}$/)],
@@ -155,6 +214,17 @@ export class PopupWalletImportComponent
       reader.readAsText(nep6File, 'UTF-8');
       reader.onload = (evt: any) => {
         this.nep6Json = JSON.parse(evt.target.result);
+        if (this.neon.selectedChainType === 'NeoX') {
+          if (ethers.isKeystoreJson(JSON.stringify(this.nep6Json))) {
+            this.nep6Form.controls.EncrpytedKey.setValue(
+              JSON.stringify(this.nep6Json)
+            );
+          } else {
+            this.global.snackBarTip('nep6Wrong');
+            this.nep6Json = null;
+          }
+          return;
+        }
         const firstAccount = this.nep6Json?.accounts?.[0];
         if (this.neonWallet.isNEP2(firstAccount?.key) && firstAccount?.label) {
           this.nep6Form.controls.EncrpytedKey.setValue(firstAccount.key);
@@ -169,6 +239,33 @@ export class PopupWalletImportComponent
     }
   }
 
+  importMnemonic() {
+    this.loading = true;
+    let importPwd;
+    if (this.isOnePassword && this.password) {
+      importPwd = this.password;
+    } else {
+      importPwd = this.importMnemonicForm.value.password;
+    }
+    if (ethers.Mnemonic.isValidMnemonic(this.importMnemonicForm.value.mnemonic)) {
+      this.evmService
+        .importWalletFromPhrase(
+          this.importMnemonicForm.value.mnemonic,
+          importPwd,
+          this.importMnemonicForm.value.name
+        )
+        .then((res: any) => {
+          this.loading = false;
+          if (this.neon.verifyWallet(res)) {
+            this.setPassword(importPwd);
+            this.submitThis.emit(res);
+          } else {
+            this.global.snackBarTip('existingWallet');
+          }
+        });
+    }
+  }
+
   importKey() {
     this.loading = true;
     let importPwd;
@@ -176,6 +273,10 @@ export class PopupWalletImportComponent
       importPwd = this.password;
     } else {
       importPwd = this.importForm.value.password;
+    }
+    if (this.neon.selectedChainType === 'NeoX') {
+      this.importNeoXKey(importPwd);
+      return;
     }
     if (this.neonWallet.isPrivateKey(this.importForm.value.WIF)) {
       this.neon
@@ -219,11 +320,66 @@ export class PopupWalletImportComponent
     }
   }
 
+  importNeoXKey(pwd: string) {
+    this.evmService
+      .importWalletFromPrivateKey(
+        this.importForm.value.WIF,
+        pwd,
+        this.importForm.value.name
+      )
+      .then((res: EvmWalletJSON) => {
+        this.loading = false;
+        if (this.neon.verifyWallet(res)) {
+          this.setPassword(pwd);
+          this.submitThis.emit(res);
+        } else {
+          this.global.snackBarTip('existingWallet');
+        }
+      });
+  }
+
   public cancel() {
     history.go(-1);
   }
 
+  importNeoXFile() {
+    this.loading = true;
+    let importPwd;
+    if (this.isOnePassword && this.password) {
+      importPwd = this.password;
+    } else {
+      importPwd = this.nep6Form.value?.password;
+    }
+    ethers.Wallet.fromEncryptedJson(
+      JSON.stringify(this.nep6Json),
+      this.nep6Form.value.filePassword
+    )
+      .then(async (res) => {
+        const newWallet = await this.evmService.importWalletFromPrivateKey(
+          res.privateKey,
+          importPwd,
+          this.nep6Json?.name
+        );
+        this.loading = false;
+        if (this.neon.verifyWallet(newWallet)) {
+          this.setPassword(importPwd);
+          this.submitFile.emit({ walletArr: [newWallet] });
+        } else {
+          this.global.snackBarTip('existingWallet');
+        }
+      })
+      .catch(() => {
+        this.loading = false;
+        this.nep6Form.controls[`filePassword`].setErrors({ wrong: true });
+        this.nep6Form.markAsDirty();
+      });
+  }
+
   async importFile() {
+    if (this.neon.selectedChainType === 'NeoX') {
+      this.importNeoXFile();
+      return;
+    }
     if (!this.neonWallet.isNEP2(this.nep6Form.value.EncrpytedKey)) {
       return;
     }
@@ -249,7 +405,9 @@ export class PopupWalletImportComponent
       if (newWallet !== 'Wrong password') {
         if (this.neon.verifyWallet(newWallet)) {
           newWIFArr.push(
-            this.isOnePassword || !this.hasPwdWallet ? '' : newWallet.accounts[0].WIF
+            this.isOnePassword || !this.hasPwdWallet
+              ? ''
+              : newWallet.accounts[0].WIF
           );
           const pushWallet =
             this.neon.selectedChainType === 'Neo2'

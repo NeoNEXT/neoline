@@ -1,38 +1,74 @@
 <div class="pop-ups-veil" (click)="close()"></div>
 <div class="content">
-  <p class="title">{{ "Networks" | translate | async }}</p>
-  <ul>
-    <li
-      *ngFor="let item of networks; index as index"
-      (click)="changeNetwork(index)"
+  <div class="title">
+    {{ "Networks" | translate | async }}
+    <img
+      class="tip-icon"
+      src="assets/images/common/tooltip.svg"
+      (mouseenter)="showPopup()"
+      (mouseleave)="hiddenPopup()"
+      alt=""
+    />
+    <div
+      class="tip"
+      (mouseenter)="showPopup()"
+      (mouseleave)="hiddenPopup()"
+      *ngIf="isShowPopup"
     >
-      <span
-        class="select"
-        [ngClass]="{ active: networks[networkIndex].id === item.id }"
-      ></span>
-      <span class="flex-1">{{ item.name }}</span>
-      <img
-        class="delete"
-        *ngIf="index !== networkIndex && item.id > 6"
-        (click)="$event.stopPropagation(); deleteNetwork(index)"
-        theme
-        src="/assets/images/common/close.svg"
-        alt=""
-      />
+      {{ "networkTip" | translate | async }}
+      <span (click)="toWeb()">{{ "learnMore" | translate | async }}</span>
+    </div>
+  </div>
+  <div class="network-list">
+    <div class="list-item" *ngFor="let list of allNetworks">
+      <p class="list-title">
+        <span>{{ list.title }}</span>
+        <span class="dropdown" (click)="list.expand = !list.expand">
+          <img
+            theme
+            [ngClass]="{ expand: list.expand }"
+            src="/assets/images/common/arrow.svg"
+            alt=""
+          />
+        </span>
+      </p>
+      <ul [hidden]="!list.expand">
+        <li
+          *ngFor="let item of list.networkArr; index as index"
+          [ngClass]="{
+            active: chainType === list.chain && currentNetwork.id === item.id
+          }"
+          (click)="changeNetwork(item, index, list.chain)"
+        >
+          <span class="select"></span>
+          <span class="flex-1">{{ item.name }}</span>
+          <img
+            *ngIf="checkShowMore(list, item)"
+            (click)="openMoreModal($event, item, list.chain, index)"
+            theme
+            src="/assets/images/common/more.svg"
+            alt=""
+          />
+        </li>
+      </ul>
+    </div>
+  </div>
+  <button class="confirm pop-ups add-network" (click)="addNetwork()">
+    {{ "AddNetwork" | translate | async }}
+  </button>
+  <section
+    class="pop-ups-veil"
+    *ngIf="moreModalNetwork"
+    (click)="$event.stopPropagation(); moreModalNetwork = undefined"
+  ></section>
+  <ul #moreModalDom [hidden]="!moreModalNetwork" class="pop-ups-menu">
+    <li (click)="editNetwork()">
+      <img theme src="assets/images/account/home-account-detail.svg" alt="" />
+      {{ "edit" | translate | async }}
+    </li>
+    <li (click)="deleteNetwork()">
+      <img class="delete" src="assets/images/account/home-delete.svg" alt="" />
+      {{ "delete" | translate | async }}
     </li>
   </ul>
-  <div class="btn-group">
-    <button
-      *ngIf="chainType === 'Neo3'"
-      class="confirm pop-ups"
-      (click)="addNetwork()"
-    >
-      {{ "AddNetwork" | translate | async }}
-    </button>
-    <button class="cancel pop-ups" (click)="changeChain()">
-      {{ "SwitchTo" | translate | async }}
-      {{ chainType === "Neo2" ? "N3" : "N2" }}
-      {{ "Network" | translate | async }}
-    </button>
-  </div>
 </div>

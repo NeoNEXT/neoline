@@ -1,0 +1,43 @@
+<div class="pop-ups-title">
+  {{ 'footnote' | translate | async }}
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    theme
+    src="assets/images/common/close.svg"
+    alt=""
+  />
+</div>
+<div class="footnote-content">
+  <p *ngIf="lang === 'en'">
+    Please note that for the initial phase of the Neo X main net launch, only
+    the GAS bilaterally bridging service will be available. There will be a cap
+    of <span class="important">{{ bridgeData.total | number }} GAS</span>
+    bridged from N3 to X for the first weeks to ensure the bridge service
+    operates properly and smoothly.
+  </p>
+  <p *ngIf="lang !== 'en'">
+    在 Neo X 主网启动的初期阶段，只提供 GAS
+    双向桥接服务。为了确保服务的正常运行，将对 Neo N3 到 Neo X 的桥接 GAS
+    数量做限制，上限为<span class="important"
+      >{{ bridgeData.total | number }}</span
+    >。
+  </p>
+  <p class="desc">{{ 'footnoteDesc2' | translate | async }}</p>
+  <div class="percentage">
+    <p class="title">
+      <span>Bridge GAS</span>
+      <span>{{ bridgeData.used | number }}/{{ bridgeData.total |number}}</span>
+    </p>
+    <mat-progress-bar
+      class="progress-bar"
+      mode="determinate"
+      [value]="bridgeData.percentage"
+    ></mat-progress-bar>
+    <p class="value">{{bridgeData.percentage}}%</p>
+  </div>
+
+  <p class="get-help" (click)="toWeb()">
+    {{'LearnBridge' | translate | async}}
+  </p>
+</div>

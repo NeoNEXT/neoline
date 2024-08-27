@@ -14,6 +14,7 @@ import { MatSliderModule } from '@angular/material/slider';
 import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 const MATMODULES = [
   MatToolbarModule,
   MatInputModule,
@@ -26,6 +27,7 @@ const MATMODULES = [
   MatSlideToggleModule,
   MatSnackBarModule,
   MatProgressSpinnerModule,
+  MatProgressBarModule,
 ];
 //#endregion
 
@@ -37,6 +39,13 @@ import { LoadingComponent } from './components/loading/loading.component';
 import { PopupNetworkComponent } from './components/network/network.component';
 import { PopupAvatarMenuComponent } from './components/avatar-menu/avatar-menu.component';
 import { CopyComponent } from './components/copy/copy.component';
+import { EvmFeeComponent } from './components/evm-fee/evm-fee.component';
+import { TooltipComponent } from './components/tooltip/tooltip.component';
+import { TokenLogoComponent } from './components/token-logo/token-logo.component';
+import { EvmGasErrorComponent } from './components/evm-gas-error/evm-gas-error.component';
+import { EvmPendingWarningComponent } from './components/evm-pending-warning/evm-pending-warning.component';
+import { EvmEstimateErrorComponent } from './components/evm-estimate-error/evm-estimate-error.component';
+import { EvmCustomNonceComponent } from './components/evm-custom-nonce/evm-custom-nonce.component';
 const COMPONENTS = [
   AssetTxPageComponent,
   NftTxPageComponent,
@@ -45,6 +54,13 @@ const COMPONENTS = [
   LoadingComponent,
   PopupAvatarMenuComponent,
   CopyComponent,
+  EvmFeeComponent,
+  TooltipComponent,
+  TokenLogoComponent,
+  EvmGasErrorComponent,
+  EvmPendingWarningComponent,
+  EvmEstimateErrorComponent,
+  EvmCustomNonceComponent,
 ];
 //#endregion
 
@@ -54,26 +70,22 @@ import { TranslatePipe } from './pipes/translate.pipe';
 import { NumberFixedPipe } from './pipes/number-fixed.pipe';
 import { LongStrPipe } from './pipes/long-str.pipe';
 import { NftTokenIdPipe } from './pipes/nft-tokenid.pipe';
+import { SanitizerPipe } from './pipes/sanitizer.pipe';
 const PIPES = [
   LanguageNamePipe,
   TranslatePipe,
   NumberFixedPipe,
   LongStrPipe,
   NftTokenIdPipe,
+  SanitizerPipe,
 ];
 //#endregion
 
 //#region directive
 import { AvatarDirective } from './directives/avatar';
-import { AssetLogoDirective } from './directives/asset-logo';
 import { ErrSrcDirective } from './directives/err-src.directive';
 import { ImgThemeDirective } from './directives/img-theme';
-const DIRECTIVE = [
-  AvatarDirective,
-  AssetLogoDirective,
-  ErrSrcDirective,
-  ImgThemeDirective,
-];
+const DIRECTIVE = [AvatarDirective, ErrSrcDirective, ImgThemeDirective];
 //#endregion
 
 @NgModule({

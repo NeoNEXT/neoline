@@ -7,10 +7,10 @@
     src="/assets/images/account/detail-qr-code.svg"
     alt=""
   />
-  <img class="avatar" [avatar]="address" />
+  <img class="avatar" [avatar]="operateWallet.accounts[0].address" />
   <div class="name-content">
     <div class="name" *ngIf="showEditName === false">
-      <span>{{ currentWallet.name }}</span
+      <span>{{ operateWallet.name }}</span
       ><img (click)="editName()" src="assets/images/common/edit.svg" />
     </div>
     <div class="edit" *ngIf="showEditName">
@@ -30,25 +30,31 @@
   </div>
 
   <p class="label">{{ "address" | translate | async }}</p>
-  <copy [value]="address">
+  <copy [value]="operateWallet.accounts[0].address">
     <div class="value">
-      <span>{{ address }}</span
+      <span>{{ operateWallet.accounts[0].address }}</span
       ><img theme src="assets/images/common/copy.svg" />
     </div>
   </copy>
 
-  <p class="label">{{ "PublicKey" | translate | async }}</p>
-  <copy [value]="publicKey">
-    <div class="value">
-      <span>{{ publicKey }}</span
-      ><img theme src="assets/images/common/copy.svg" />
-    </div>
-  </copy>
+  <ng-container *ngIf="operateChainType !== 'NeoX'">
+    <p class="label">{{ "PublicKey" | translate | async }}</p>
+    <copy [value]="publicKey">
+      <div class="value">
+        <span>{{ publicKey }}</span
+        ><img theme src="assets/images/common/copy.svg" />
+      </div>
+    </copy>
+  </ng-container>
 
-  <button *ngIf="!isLedger" class="confirm key" (click)="wif()">
-    {{ "displayWIF" | translate | async }}
+  <button *ngIf="!isLedger" class="key" (click)="wif()">
+    {{ "showPrivateKey" | translate | async }}
   </button>
-  <button class="cancel link" (click)="toWeb()">
-    {{ "viewOnNeoTube" | translate | async }}
+  <button *ngIf="showMnemonicBtn" class="mnemonic" (click)="wif(true)">
+    {{ "showSecretRecoveryPhrase" | translate | async }}
   </button>
 </div>
+
+<button *ngIf="showRemoveBtn" class="pop-ups remove" (click)="removeAccount()">
+  {{ "removeAccount" | translate | async }}
+</button>

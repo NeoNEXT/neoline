@@ -29,9 +29,6 @@
   "about": {
     "message": "关于我们"
   },
-  "expandView": {
-    "message": "网页版"
-  },
   "close": {
     "message": "关闭"
   },
@@ -128,8 +125,8 @@
   "transgerTo": {
     "message": "转账给"
   },
-  "currencies": {
-    "message": "币种"
+  "Asset": {
+    "message": "资产"
   },
   "transferToTip": {
     "message": "收款地址"
@@ -152,7 +149,7 @@
   "copy": {
     "message": "复制"
   },
-  "displayWIF": {
+  "showPrivateKey": {
     "message": "显示私钥"
   },
   "password": {
@@ -230,6 +227,9 @@
   "contactUs": {
     "message": "联系我们"
   },
+  "FollowUs": {
+    "message": "关注我们"
+  },
   "myAccountQRCode": {
     "message": "我的钱包二维码"
   },
@@ -257,11 +257,14 @@
   "thAuthTip": {
     "message": "想要连接你的钱包"
   },
-  "thAuthDetail": {
-    "message": "这个站点正在请求访问 Neo API，以便它可以与 Neo 区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
+  "thAuthNeo2Detail": {
+    "message": "这个站点正在请求访问 Neo Legacy API，以便它可以与 Neo Legacy 区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
   },
-  "thAuthMore": {
-    "message": "查看更多"
+  "thAuthNeo3Detail": {
+    "message": "这个站点正在请求访问 Neo N3 API，以便它可以与 Neo N3 区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
+  },
+  "thAuthNeoXDetail": {
+    "message": "这个站点正在请求访问 Neo X (EVM Network) API，以便它可以与 Neo X (EVM Network)区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
   },
   "thSignTitle": {
     "message": "这个应用正在请求你的签名。"
@@ -356,12 +359,6 @@
   "clearStorageTips": {
     "message": "确认清除缓存吗"
   },
-  "authorizationManage": {
-    "message": "授权管理"
-  },
-  "authorizationManageTips": {
-    "message": "可清除已授权网站"
-  },
   "viewAll": {
     "message": "查看所有"
   },
@@ -416,11 +413,20 @@
   "noTransaction": {
     "message": "无交易"
   },
-  "wif": {
+  "wifPrivateKey": {
     "message": "WIF(私钥)"
+  },
+  "privateKey": {
+    "message": "私钥"
   },
   "delWalletConfirm": {
     "message": "确认删除该钱包吗？"
+  },
+  "delAddressConfirm": {
+    "message": "确认删除该地址吗？"
+  },
+  "delNetworkConfirm": {
+    "message": "确认删除该网络吗？"
   },
   "delAllAuthListConfirm": {
     "message": "确认清空所有授权吗？"
@@ -500,9 +506,6 @@
   "connectChooseAllow": {
     "message": "下次通过此站点转账时不再提醒"
   },
-  "connectChooseNotAllow": {
-    "message": "不再允许此站点向我发出转账申请"
-  },
   "darkMode": {
     "message": "暗夜模式"
   },
@@ -524,8 +527,8 @@
   "generalSettings": {
     "message": "通用设置"
   },
-  "viewOnNeoTube": {
-    "message": "在 NeoTube 上查看"
+  "ViewOnExplorer": {
+    "message": "在浏览器上查看"
   },
   "accountDetails": {
     "message": "账户详情"
@@ -561,7 +564,7 @@
     "message": "转账地址"
   },
   "selectAsset": {
-    "message": "选择币种"
+    "message": "选择资产"
   },
   "importMethod": {
     "message": "导入方式"
@@ -588,10 +591,10 @@
     "message": "备份提示"
   },
   "backUpDesc1": {
-    "message": "1. 掌握私钥等于掌握了账户资产所有权"
+    "message": "1. 掌握私钥/助记词等于掌握了账户资产所有权，请手抄并保存在安全的地方，不要分享给任何人；"
   },
   "backUpDesc2": {
-    "message": "2. 请认真抄写，且大小写区分，并保管在安全的地方；NeoLine为去中心化钱包，不会存储您的私钥；私钥一旦丢失无法找回，请务必备份私钥。"
+    "message": "2. NeoLine为去中心化钱包，不会存储您的私钥/助记词，一旦丢失将无法找回。"
   },
   "backUpNow": {
     "message": "立即备份"
@@ -615,13 +618,13 @@
     "message": "提醒：请妥善保管您的私钥，不要透露给任何人"
   },
   "backUpsafeTip": {
-    "message": "安全提醒"
+    "message": "你还未备份钱包"
   },
   "backUpTipLater": {
     "message": "稍后提醒"
   },
   "backUpSafeDesc": {
-    "message": "您的私钥还未备份，请务必备份私钥用于恢复该地址对应的所有资产，防止忘记密码、应用误删除、手机丢失等情况导致的资产损失。"
+    "message": "若发生设备丢失、应用重装或应用数据删除等情况，你将永久失去此钱包的控制权，且无法恢复其资产。"
   },
   "receiveOurNewsletter": {
     "message": "订阅电子报"
@@ -672,7 +675,7 @@
     "message": "网络费用"
   },
   "GASFEE": {
-    "message": "GAS"
+    "message": "GAS fee"
   },
   "None": {
     "message": "只对交易签名，不允许任何合约使用该签名。"
@@ -761,8 +764,11 @@
   "AddNEP11": {
     "message": "添加 NEP11"
   },
-  "myNft": {
+  "myNep11": {
     "message": "我的 NEP11"
+  },
+  "myNft": {
+    "message": "我的 NFT"
   },
   "unlockWallet": {
     "message": "您需要输入该账户的密码来解锁该钱包"
@@ -794,6 +800,9 @@
   "AddNetwork": {
     "message": "添加网络"
   },
+  "EditNetwork": {
+    "message": "编辑网络"
+  },
   "NetworkName": {
     "message": "网络名称"
   },
@@ -802,9 +811,6 @@
   },
   "Explorer_URL": {
     "message": "区块浏览器(选填)"
-  },
-  "Invalid_RPC_URL": {
-    "message": "无效的 RPC URL"
   },
   "oneMonthTxs": {
     "message": "只显示最近一个月的交易"
@@ -824,11 +830,17 @@
   "openNeo3AppOnLedger": {
     "message": "请在您的硬件设备上打开 NEO N3 应用。"
   },
+  "openNeoXAppOnLedger": {
+    "message": "请在您的硬件设备上打开 Ethereum 应用。"
+  },
   "LedgerConnectedNeoReady": {
     "message": "已连接硬件，NEO 应用程序已打开，可以使用。"
   },
   "LedgerConnectedNeo3Ready": {
     "message": "已连接硬件，NEO N3 应用程序已打开，可以使用。"
+  },
+  "LedgerConnectedNeoXReady": {
+    "message": "已连接硬件，Ethereum 应用程序已打开，可以使用。"
   },
   "TransactionDeniedByUser": {
     "message": "交易被用户拒绝。"
@@ -845,8 +857,14 @@
   "LedgerInstallNeo3App": {
     "message": "注意：请确保您的硬件已安装最新的 NEO N3 应用。"
   },
+  "LedgerInstallNeoXApp": {
+    "message": "注意：请确保您的硬件已安装最新的 Ethereum 应用。"
+  },
   "signTheTransaction": {
-    "message": "请在您的硬件上签名交易。"
+    "message": "请在您的硬件上签名交易"
+  },
+  "signTheMessage": {
+    "message": "请在您的硬件上签署此消息"
   },
   "Wait": {
     "message": "Wait"
@@ -894,7 +912,7 @@
     "message": "插入 Ledger 钱包"
   },
   "plugInLedgerWalletTip": {
-    "message": "将您的钱包直接连接到电脑。解锁 Ledger 并打开 Neo/Neo N3 应用程序。关于使用您的硬件钱包设备的更多，"
+    "message": "将您的钱包直接连接到电脑。解锁 Ledger 并打开 Neo/Neo N3/Ethereum 应用程序。关于使用您的硬件钱包设备的更多，"
   },
   "clickHere": {
     "message": "点击这里。"
@@ -910,6 +928,9 @@
   },
   "inputN3AddressTip": {
     "message": "N3 地址"
+  },
+  "inputNeoXAddressTip": {
+    "message": "EVM 地址"
   },
   "Copied": {
     "message": "已复制！"
@@ -928,6 +949,9 @@
   },
   "createOrImportNeo3First": {
     "message": "请先创建或导入一个 Neo N3 账户"
+  },
+  "createOrImportNeoXFirst": {
+    "message": "请先创建或导入一个 Neo X (EVM Network) 账户"
   },
   "OnePasswordPattern": {
     "message": "通用密码设置"
@@ -976,5 +1000,488 @@
   },
   "VerificationPassed": {
     "message": "验证通过"
+  },
+  "addressBook": {
+    "message": "地址薄"
+  },
+  "receiveTip1Prefix": {
+    "message": "当前在"
+  },
+  "receiveTip1Suffix": {
+    "message": "网络下"
+  },
+  "receiveTip2Prefix": {
+    "message": "仅支持接收"
+  },
+  "receiveTip2Suffix": {
+    "message": "网络资产"
+  },
+  "ConfirmSecretRecoveryPhrase": {
+    "message": "确认助记词"
+  },
+  "YourSecretRecoveryPhrase": {
+    "message": "您的助记词"
+  },
+  "ConfirmTheSecretRecoveryPhrasesInOrder": {
+    "message": "请按顺序确认助记词"
+  },
+  "WrongSecretRecoveryPhrase": {
+    "message": "助记词错误，请重新输入"
+  },
+  "notedItDown": {
+    "message": "我已备份完毕"
+  },
+  "AddAccountOrHardwareWallet": {
+    "message": "添加钱包/连接硬件钱包"
+  },
+  "importWalletTip": {
+    "message": "导入助记词或私钥"
+  },
+  "createWalletTip": {
+    "message": "创建新的助记词钱包"
+  },
+  "ledgerWallet": {
+    "message": "硬件钱包"
+  },
+  "ledgerWalletTip": {
+    "message": "连接您的硬件钱包"
+  },
+  "enterMnemonic": {
+    "message": "输入助记词"
+  },
+  "MnemonicRequired": {
+    "message": "助记词必填"
+  },
+  "MnemonicPattern": {
+    "message": "助记词无效"
+  },
+  "importMnemonic": {
+    "message": "助记词导入"
+  },
+  "AddNetworkTip": {
+    "message": "请添加你完全受信任的网络！"
+  },
+  "ChainID": {
+    "message": "链 ID"
+  },
+  "networkNameIsRequired": {
+    "message": "网络名称必填"
+  },
+  "rpcUrlIsRequired": {
+    "message": "RPC URL 必填"
+  },
+  "Invalid_RPC_URL": {
+    "message": "无效的 RPC URL"
+  },
+  "exist_RPC_URL": {
+    "message": "此 RPC URL 对应的 Chain ID 已存在"
+  },
+  "symbolIsRequired": {
+    "message": "货币名称必填"
+  },
+  "failed": {
+    "message": "失败"
+  },
+  "AddAddressBook": {
+    "message": "添加地址"
+  },
+  "EditAddressBook": {
+    "message": "编辑地址"
+  },
+  "Address": {
+    "message": "地址"
+  },
+  "SelectNetwork": {
+    "message": "选择网络"
+  },
+  "nameIsRequired": {
+    "message": "名称必填"
+  },
+  "addressIsRequired": {
+    "message": "地址必填"
+  },
+  "wrongAddress": {
+    "message": "地址错误，请重新输入"
+  },
+  "addressBookNameLengthTip": {
+    "message": "名字不能超过20个字符"
+  },
+  "addAddressExist": {
+    "message": "地址已存在"
+  },
+  "showSecretRecoveryPhrase": {
+    "message": "显示助记词"
+  },
+  "hideSecretRecoveryPhrase": {
+    "message": "隐藏助记词"
+  },
+  "secretRecoveryPhrase": {
+    "message": "助记词"
+  },
+  "secretRecoveryPhraseTip": {
+    "message": "请妥善保存您的助记词，不要透露给任何人"
+  },
+  "yourHove": {
+    "message": "您有"
+  },
+  "accountsConnectedToThisSite": {
+    "message": "个账户连接到了该网站。"
+  },
+  "noAccountsConnected": {
+    "message": "未连接任何账户。"
+  },
+  "accountsConnected": {
+    "message": "已连接账户"
+  },
+  "notConnected": {
+    "message": "未连接"
+  },
+  "switchToThisAccount": {
+    "message": "切换到该账户"
+  },
+  "permissions": {
+    "message": "权限"
+  },
+  "permissionsTip": {
+    "message": "您已授权以下权限："
+  },
+  "permissionsDesc": {
+    "message": "查看您允许的账户的地址（必填）。"
+  },
+  "disconnectThisAccount": {
+    "message": "断开此账户的连接"
+  },
+  "Bridge": {
+    "message": "Bridge"
+  },
+  "checkExportWallet": {
+    "message": "确定导出钱包吗?"
+  },
+  "exportAllWallet": {
+    "message": "导出当前网络的所有钱包"
+  },
+  "advancedGasFee": {
+    "message": "高级燃料费"
+  },
+  "advancedGasFeeRisk": {
+    "message": "使用该功能定制燃料费，如果您不熟悉可能会引起混淆，请谨慎操作，风险自付！"
+  },
+  "maxFee": {
+    "message": "最高费用"
+  },
+  "maxPriorityFee": {
+    "message": "优先费用"
+  },
+  "gasPrice": {
+    "message": "Gas 价格"
+  },
+  "gasLimit": {
+    "message": "Gas 限额"
+  },
+  "maxFeeIsLowPriorityFee": {
+    "message": "最高费用不能低于优先费用"
+  },
+  "maxFeeIsLow": {
+    "message": "对于当前网络条件而言，最高费用较低"
+  },
+  "current": {
+    "message": "当前"
+  },
+  "maxPriorityFeeIsLow": {
+    "message": "对于当前网络条件而言，优先费用较低"
+  },
+  "gasPriceIsLow": {
+    "message": "对于当前网络条件而言，Gas 价格较低"
+  },
+  "gasLimitRange": {
+    "message": "燃料限额必须大于 20999"
+  },
+  "backupSecretRecoveryPhrase": {
+    "message": "请将助记词抄写备份并妥善保管，不要透漏给任何人"
+  },
+  "EstimatedFee": {
+    "message": "预估燃料费"
+  },
+  "Deposit": {
+    "message": "存入"
+  },
+  "Withdraw": {
+    "message": "取出"
+  },
+  "From": {
+    "message": "来自"
+  },
+  "Balance": {
+    "message": "余额"
+  },
+  "Max": {
+    "message": "最大"
+  },
+  "ToAddress": {
+    "message": "接受地址"
+  },
+  "bridgeFee": {
+    "message": "Bridge fee"
+  },
+  "bridgeFeeDesc": {
+    "message": "Bridge 合约收取 0.1 GAS，平台不收取任何其他费用。"
+  },
+  "ActualReceive": {
+    "message": "实际收到"
+  },
+  "Approve": {
+    "message": "批准"
+  },
+  "CustomSpendingCap": {
+    "message": "自定义支出上限"
+  },
+  "EstimatedFeeError": {
+    "message": "我们无法估算燃料。合约中可能存在错误，这笔交易可能会失败。"
+  },
+  "Sending": {
+    "message": "正在发送"
+  },
+  "evmSignWarning": {
+    "message": "只有在您完全理解内容并信任请求网站的情况下，才能签署此消息。"
+  },
+  "AddNFT": {
+    "message": "添加 NFT"
+  },
+  "TokenIdIsRequired": {
+    "message": "Token ID 必填"
+  },
+  "InvalidTokenId": {
+    "message": "无效的 token ID"
+  },
+  "menuGuideAndSupport": {
+    "message": "指南和支持"
+  },
+  "menuSettings": {
+    "message": "设置"
+  },
+  "menuLock": {
+    "message": "锁定 NeoLine"
+  },
+  "menuAboutUs": {
+    "message": "关于我们"
+  },
+  "yourAccounts": {
+    "message": "你的账户"
+  },
+  "selectAddress": {
+    "message": "选择地址"
+  },
+  "confirmMnemonicTip": {
+    "message": "您可以将整个助记词短语输入到任何字段中"
+  },
+  "FromAddress": {
+    "message": "来自"
+  },
+  "YourNeoXReceiveAddress": {
+    "message": "Neo X 接收地址"
+  },
+  "YourNeo3ReceiveAddress": {
+    "message": "Neo3 N3 接收地址"
+  },
+  "addEvmTokenTitle": {
+    "message": "添加推荐代币"
+  },
+  "addEvmTokenTip": {
+    "message": "您想导入这些代币吗？"
+  },
+  "Token": {
+    "message": "代币"
+  },
+  "addEvmChainTitle": {
+    "message": "允许此网站添加一个网络到 NeoLine 上？"
+  },
+  "addEvmChainTip": {
+    "message": "这将允许在 NeoLine 中使用此网络。"
+  },
+  "addEvmChainWarning": {
+    "message": "NeoLine 不验证自定义网络，请添加您信任的网络。"
+  },
+  "NetworkURL": {
+    "message": "网络 URL"
+  },
+  "CurrencySymbol": {
+    "message": "货币符号"
+  },
+  "BlockExplorerURL": {
+    "message": "区块浏览器 URL"
+  },
+  "ContractAddress": {
+    "message": "合约地址"
+  },
+  "ViewTransaction": {
+    "message": "查看交易"
+  },
+  "ViewInNFTMarket": {
+    "message": "到 NFT 市场查看"
+  },
+  "Depositing": {
+    "message": "存入中"
+  },
+  "Deposited": {
+    "message": "已存入"
+  },
+  "Withdrawing": {
+    "message": "提取中"
+  },
+  "Withdrawn": {
+    "message": "已提取"
+  },
+  "Completed": {
+    "message": "完成"
+  },
+  "DepositingTip": {
+    "message": "交易完成后，GAS 将存入您的钱包。"
+  },
+  "DepositedTip": {
+    "message": "GAS 已存入您的 Neo X 钱包。"
+  },
+  "WithdrawingTip": {
+    "message": "交易完成后，GAS 将被提取到你的钱包中。"
+  },
+  "WithdrawnTip": {
+    "message": "GAS 已提取至您的 Neo3 钱包。"
+  },
+  "Transferring": {
+    "message": "转账中"
+  },
+  "Transferred": {
+    "message": "已转入"
+  },
+  "SpendingCapRequestForYour": {
+    "message": "的支出上限请求"
+  },
+  "ViewDetails": {
+    "message": "查看详情"
+  },
+  "approveTip": {
+    "message": "第三方可能会支出您的全部代币余额，无需进一步通知或同意。请自定义较低的支出上限以保护自己。"
+  },
+  "approveCustomTip": {
+    "message": "仅需输入一个您觉得比较恰当的现在或将来第三方支出的数字。以后您可以随时提高支出上限。"
+  },
+  "useSiteSuggestion": {
+    "message": "使用网站建议"
+  },
+  "contractInteraction": {
+    "message": "合约交互"
+  },
+  "save": {
+    "message": "保存"
+  },
+  "Loading": {
+    "message": "加载中"
+  },
+  "footnoteDesc2": {
+    "message": "当桥接服务稳定后，将逐步取消数量限制，并扩大桥接服务范围，包含 NEO 及其他资产。"
+  },
+  "footnote": {
+    "message": "重要提示"
+  },
+  "yourHavePendingTxs": {
+    "message": "您有 ({{count}}) 笔待处理的交易。 在那笔交易完成之前，这笔交易不会被处理。 学习如何"
+  },
+  "evmInsufficientGas": {
+    "message": "您的账户中没有足够的{{symbol}}可以支付{{network}}网络上的交易费用。或从另一个账户存入保证金。"
+  },
+  "approveInitTip": {
+    "message": "此操作允许第三方从您的当前余额中支出 {{symbol}}。"
+  },
+  "approveBigTip": {
+    "message": "此操作允许第三方支出您所有的代币余额，直到达到上限或您撤销支出上限为止。如果不是有意为之，请考虑设置较低的支出上限。"
+  },
+  "approveNormalTip": {
+    "message": "此操作允许第三方从您的当前余额中支出 {{amount}} {{symbol}}。"
+  },
+  "cancelOrSpeedUpTX": {
+    "message": "取消或加速交易。"
+  },
+  "customNonce": {
+    "message": "自定义 nonce"
+  },
+  "dropped": {
+    "message": "已丢弃"
+  },
+  "cancelled": {
+    "message": "已取消"
+  },
+  "canceling": {
+    "message": "取消中"
+  },
+  "speedingUp": {
+    "message": "加速中"
+  },
+  "speedUp": {
+    "message": "加速"
+  },
+  "cancelTransaction": {
+    "message": "取消"
+  },
+  "ActivityLog": {
+    "message": "活动日志"
+  },
+  "SpeedUpCancellation": {
+    "message": "加速取消该笔交易"
+  },
+  "evmLogCreateTx": {
+    "message": "已在 {{time}} 提交交易，燃料费预计为 {{gas}} {{symbol}}。"
+  },
+  "evmLogSpeedUpTx": {
+    "message": "已在 {{time}} 重新提交交易，燃料费预计升至 {{gas}} {{symbol}}。"
+  },
+  "evmLogCancelTx": {
+    "message": "已在 {{time}} 取消交易，燃料费预计为 {{gas}} {{symbol}}。"
+  },
+  "evmLogCompleteTx": {
+    "message": "交易已在 {{time}} 确认。"
+  },
+  "cancelTxDesc": {
+    "message": "取消交易需要额外花费网络费用（由于网络原因，取消交易不能保证成功）。"
+  },
+  "speedUpTxDesc": {
+    "message": "提高网络费用以加速交易"
+  },
+  "speedUpTip": {
+    "message": "注：NeoLine钱包不会对本次交易收取加速服务费。"
+  },
+  "approve": {
+    "message": "批准"
+  },
+  "sendToken": {
+    "message": "发送"
+  },
+  "sendEther": {
+    "message": "发送"
+  },
+  "Activity": {
+    "message": "活动"
+  },
+  "Site": {
+    "message": "网站"
+  },
+  "useSiteSuggestions": {
+    "message": "使用网站建议"
+  },
+  "SiteTip": {
+    "message": "{{host}} 建议了这个价格。<br /> Max base fee: {{maxFeePerGas}}<br /> Priority fee: {{maxPriorityFee}}<br /> Gas limit: {{gasLimit}}"
+  },
+  "SiteLegacyFeeTip": {
+    "message": "{{host}} 建议了这个价格。<br /> Gas price: {{gasPrice}}<br /> Gas limit: {{gasLimit}}"
+  },
+  "LearnBridge": {
+    "message": "查看 Bridge 教程"
+  },
+  "GetSupport": {
+    "message": "获取帮助"
+  },
+  "networkTip": {
+    "message": "NeoLine 现已支持 Neo X (EVM Network)，支持用户添加任何 EVM 网络。"
+  },
+  "learnMore": {
+    "message": "点击查看教程！"
   }
 }

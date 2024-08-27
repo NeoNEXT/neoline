@@ -9,6 +9,8 @@
     "lib": ["dom", "es2017"],
     "outDir": "../dist",
     "rootDir": ".",
-    "downlevelIteration": true
+    "downlevelIteration": true,
+    "resolveJsonModule": true,
+    "esModuleInterop": true
   }
 }

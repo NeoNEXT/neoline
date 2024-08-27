@@ -1,11 +1,20 @@
 import { Component, Input, Output, EventEmitter } from '@angular/core';
-import { ChainType, RpcNetwork } from '@/app/popup/_lib';
+import {
+  ChainType,
+  N3MainnetNetwork,
+  N3TestnetNetwork,
+  RpcNetwork,
+} from '@/app/popup/_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { GlobalService, UtilServiceState } from '@/app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { timer, Unsubscribable } from 'rxjs';
+import { EvmWalletJSON } from '@/app/popup/_lib/evm';
+import { ethers } from 'ethers';
+import { MatDialog } from '@angular/material/dialog';
+import { PopupAddressBookListDialogComponent } from '@/app/popup/_dialogs';
 
 @Component({
   selector: 'transfer-create-address',
@@ -15,13 +24,17 @@ import { timer, Unsubscribable } from 'rxjs';
 export class TransferCreateAddressComponent {
   @Input() chainType: ChainType;
   @Input() currentNetwork: RpcNetwork;
-  @Input() walletArr: Array<Wallet2 | Wallet3>;
+  @Input() walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
   @Output() selecteAccountEvent = new EventEmitter();
 
   transferTo = { address: '', name: '' };
   private getNnsAddressReq;
   private searchSub: Unsubscribable;
-  constructor(private global: GlobalService, private util: UtilServiceState) {}
+  constructor(
+    private global: GlobalService,
+    private util: UtilServiceState,
+    private dialog: MatDialog
+  ) {}
 
   search($event) {
     this.searchSub?.unsubscribe();
@@ -37,12 +50,12 @@ export class TransferCreateAddressComponent {
         } else {
           this.global.snackBarTip('wrongAddress');
         }
-      } else {
+      } else if (this.chainType === 'Neo3') {
         if (wallet3.isAddress(address, 53)) {
           this.findAddress(address);
         } else if (
-          this.currentNetwork.chainId === 6 ||
-          this.currentNetwork.chainId === 3
+          this.currentNetwork.chainId === N3TestnetNetwork.chainId ||
+          this.currentNetwork.chainId === N3MainnetNetwork.chainId
         ) {
           this.getNnsAddressReq?.unsubscribe();
           this.getNnsAddressReq = this.util
@@ -59,6 +72,12 @@ export class TransferCreateAddressComponent {
         } else {
           this.global.snackBarTip('wrongAddress');
         }
+      } else {
+        if (ethers.isAddress(address)) {
+          this.findAddress(address);
+        } else {
+          this.global.snackBarTip('wrongAddress');
+        }
       }
     });
   }
@@ -66,11 +85,16 @@ export class TransferCreateAddressComponent {
   getInputAddressTip() {
     if (this.chainType === 'Neo2') {
       return 'inputNeo2AddressTip';
-    } else {
-      if (this.currentNetwork.id === 6 || this.currentNetwork.id === 3) {
+    } else if (this.chainType === 'Neo3') {
+      if (
+        this.currentNetwork.id === N3TestnetNetwork.chainId ||
+        this.currentNetwork.id === N3MainnetNetwork.chainId
+      ) {
         return 'inputN3NNSAddressTip';
       }
       return 'inputN3AddressTip';
+    } else {
+      return 'inputNeoXAddressTip';
     }
   }
 
@@ -92,5 +116,22 @@ export class TransferCreateAddressComponent {
       (m) => m.accounts[0].address === address
     )?.name;
     this.selecteAccountEvent.emit(this.transferTo);
+  }
+
+  showAddressBook() {
+    this.dialog
+      .open(PopupAddressBookListDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
+        data: { chainType: this.chainType },
+      })
+      .afterClosed()
+      .subscribe((res) => {
+        if (res) {
+          this.transferTo.address = res.address;
+          this.transferTo.name = res.name;
+          this.selecteAccountEvent.emit(this.transferTo);
+        }
+      });
   }
 }

@@ -1,11 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, RouterEvent, NavigationEnd } from '@angular/router';
-import { RpcNetwork, ChainType } from './_lib';
+import { ChainType, RpcNetwork } from './_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { NeonService } from '../core';
 
 @Component({
   templateUrl: 'popup.component.html',
@@ -18,31 +17,25 @@ export class PopupComponent implements OnInit {
 
   private accountSub: Unsubscribable;
   address: string;
-  networks: RpcNetwork[];
-  networkIndex: number;
-  chainType: ChainType;
-  switchNetwork: RpcNetwork;
-  switchChainWallet: Wallet2 | Wallet3;
-  constructor(private store: Store<AppState>, private router: Router) {
+  currentChainType: ChainType;
+  n2Network: RpcNetwork;
+  n3Network: RpcNetwork;
+  neoXNetwork: RpcNetwork;
+
+  constructor(
+    private store: Store<AppState>,
+    private router: Router,
+    private neon: NeonService
+  ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       if (state.currentWallet) {
-        const wallet = state.currentWallet;
-        this.address = wallet.accounts[0].address;
+        this.address = state.currentWallet.accounts[0].address;
       }
-      this.chainType = state.currentChainType;
-      this.networks =
-        this.chainType === 'Neo2' ? state.n2Networks : state.n3Networks;
-      this.networkIndex =
-        this.chainType === 'Neo2' ? state.n2NetworkIndex : state.n3NetworkIndex;
-      this.switchNetwork =
-        this.chainType === 'Neo2'
-          ? state.n3Networks[state.n3NetworkIndex]
-          : state.n2Networks[state.n2NetworkIndex];
-      this.switchChainWallet =
-        this.chainType === 'Neo2'
-          ? state.neo3WalletArr[0]
-          : state.neo2WalletArr[0];
+      this.currentChainType = state.currentChainType;
+      this.n2Network = state.n2Networks[state.n2NetworkIndex];
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
     });
   }
 
@@ -71,5 +64,26 @@ export class PopupComponent implements OnInit {
       return false;
     }
     return true;
+  }
+
+  getNetworkName() {
+    if (!this.address) {
+      switch (this.neon.selectedChainType) {
+        case 'Neo2':
+          return this.n2Network.name;
+        case 'Neo3':
+          return this.n3Network.name;
+        case 'NeoX':
+          return this.neoXNetwork.name;
+      }
+    }
+    switch (this.currentChainType) {
+      case 'Neo2':
+        return this.n2Network.name;
+      case 'Neo3':
+        return this.n3Network.name;
+      case 'NeoX':
+        return this.neoXNetwork.name;
+    }
   }
 }

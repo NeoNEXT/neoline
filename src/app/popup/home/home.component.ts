@@ -5,14 +5,17 @@ import {
   GlobalService,
   HomeService,
   LedgerService,
-  ChromeService,
   UtilServiceState,
+  SettingState,
 } from '@/app/core';
 import { NEO, GAS, Asset } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupConfirmDialogComponent } from '../_dialogs';
+import {
+  PopupAddNetworkDialogComponent,
+  PopupConfirmDialogComponent,
+} from '../_dialogs';
 import { Router } from '@angular/router';
 import { rpc } from '@cityofzion/neon-core';
 import {
@@ -21,7 +24,8 @@ import {
   GAS3_CONTRACT,
   ChainType,
   RpcNetwork,
-  STORAGE_NAME,
+  N3MainnetNetwork,
+  N3TestnetNetwork,
 } from '../_lib';
 import BigNumber from 'bignumber.js';
 import { Neo3TransferService } from '../transfer/neo3-transfer.service';
@@ -33,6 +37,18 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { TransferService } from '../transfer/transfer.service';
+import {
+  EvmWalletJSON,
+  NeoXMainnetNetwork,
+  NeoXTestnetNetwork,
+} from '../_lib/evm';
+
+enum ClaimStatus {
+  confirmed = 'confirmed',
+  estimated = 'estimated',
+  success = 'success',
+}
+
 @Component({
   templateUrl: 'home.component.html',
   styleUrls: ['home.component.scss'],
@@ -43,11 +59,6 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   rateCurrency: string;
 
   claimAssetId = GAS3_CONTRACT;
-  private status = {
-    confirmed: 'confirmed',
-    estimated: 'estimated',
-    success: 'success',
-  };
   claimNumber = 0;
   claimStatus = 'confirmed';
   loading = false;
@@ -59,21 +70,24 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   ledgerSignLoading = false;
   loadingMsg = '';
   getStatusInterval;
+  lang = 'en';
 
   // 菜单
   showMenu = false;
   showRemove = false;
 
   private accountSub: Unsubscribable;
-  currentWalletIsN3: boolean;
-  currentWallet: Wallet2 | Wallet3;
+  currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   address: string;
-  private chainType: ChainType;
+  chainType: ChainType;
   private currentWalletArr: Array<Wallet2 | Wallet3>;
   private currentWIFArr: string[];
   private n2Network: RpcNetwork;
-  private n3Network: RpcNetwork;
-  private allWallet = [];
+  n3Network: RpcNetwork;
+  n3NetworkIndex: number;
+  neoXNetwork: RpcNetwork;
+  neoXNetworkIndex: number;
+  allWallet: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
   constructor(
     private assetState: AssetState,
     private neon: NeonService,
@@ -84,7 +98,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     private neo3TransferService: Neo3TransferService,
     private homeService: HomeService,
     private ledger: LedgerService,
-    private chrome: ChromeService,
+    private settingState: SettingState,
     private util: UtilServiceState,
     private store: Store<AppState>
   ) {
@@ -97,16 +111,23 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         this.chainType === 'Neo2' ? state.neo2WIFArr : state.neo3WIFArr;
       this.currentWalletArr =
         this.chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
-      this.currentWalletIsN3 = this.chainType === 'Neo3';
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
-      this.allWallet = (state.neo3WalletArr as any).concat(state.neo2WalletArr);
+      this.n3NetworkIndex = state.n3NetworkIndex;
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      this.neoXNetworkIndex = state.neoXNetworkIndex;
+      this.allWallet = (state.neo3WalletArr as any)
+        .concat(state.neo2WalletArr)
+        .concat(state.neoXWalletArr);
       this.initData();
     });
   }
 
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.langSub.subscribe((lang) => {
+      this.lang = lang;
+    });
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
   }
@@ -126,6 +147,16 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   }
 
   private initData() {
+    this.selectedIndex = 0;
+    this.balance = undefined;
+    this.claimNumber = 0;
+    this.claimStatus = 'confirmed';
+    this.claimsData = null;
+    this.intervalClaim = null;
+    this.intervalN3Claim = null;
+    this.showClaim = false;
+    this.init = false;
+
     this.claimAssetId = this.chainType === 'Neo2' ? GAS : GAS3_CONTRACT;
     if (
       this.chainType === 'Neo3' &&
@@ -139,11 +170,27 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
     }
     this.initClaim();
     if (!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      const accounts = this.allWallet.filter(item => !item.accounts[0]?.extra?.ledgerSLIP44);
+      const accounts = this.allWallet.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
       this.showRemove = accounts.length > 1 ? true : false;
     } else {
       this.showRemove = true;
     }
+  }
+
+  showBridge() {
+    if (
+      (this.chainType === 'NeoX' &&
+        (this.neoXNetwork.chainId === NeoXMainnetNetwork.chainId ||
+          this.neoXNetwork.chainId === NeoXTestnetNetwork.chainId)) ||
+      (this.chainType === 'Neo3' &&
+        (this.n3Network.chainId === N3MainnetNetwork.chainId ||
+          this.n3Network.chainId === N3TestnetNetwork.chainId))
+    ) {
+      return true;
+    }
+    return false;
   }
 
   initNeo($event) {
@@ -163,14 +210,43 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         break;
       case 'Neo3':
         if (this.n3Network.explorer) {
-          window.open(`${this.n3Network.explorer}address/${this.address}`);
+          window.open(`${this.n3Network.explorer}/address/${this.address}`);
+        } else {
+          this.dialog.open(PopupAddNetworkDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+            backdropClass: 'custom-dialog-backdrop',
+            data: {
+              addChainType: this.chainType,
+              index: this.n3NetworkIndex,
+              editNetwork: this.n3Network,
+              addExplorer: true,
+            },
+          });
+        }
+        break;
+      case 'NeoX':
+        if (this.neoXNetwork.explorer) {
+          window.open(`${this.neoXNetwork.explorer}/address/${this.address}`);
+        } else {
+          this.dialog.open(PopupAddNetworkDialogComponent, {
+            panelClass: 'custom-dialog-panel',
+            backdropClass: 'custom-dialog-backdrop',
+            data: {
+              addChainType: this.chainType,
+              index: this.neoXNetworkIndex,
+              editNetwork: this.neoXNetwork,
+              addExplorer: true,
+            },
+          });
         }
         break;
     }
   }
   removeAccount() {
     if (!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      const accounts = this.allWallet.filter(item => !item.accounts[0]?.extra?.ledgerSLIP44);
+      const accounts = this.allWallet.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
       if (accounts.length <= 1) {
         return;
       }
@@ -180,15 +256,18 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       .open(PopupConfirmDialogComponent, {
         data: 'delWalletConfirm',
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
-          this.neon.delCurrentWallet().subscribe((w) => {
-            if (!w) {
-              this.router.navigateByUrl('/popup/wallet/new-guide');
-            }
-          });
+          this.neon
+            .delWallet(this.currentWallet, this.chainType, true)
+            .subscribe((w) => {
+              if (!w) {
+                this.router.navigateByUrl('/popup/wallet/new-guide');
+              }
+            });
         }
       });
   }
@@ -196,40 +275,44 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   toAdd() {
     if (this.chainType === 'Neo3' && this.selectedIndex === 1) {
       this.router.navigateByUrl('/popup/add-nft');
+    } else if (this.chainType === 'NeoX' && this.selectedIndex === 1) {
+      this.router.navigateByUrl('/popup/add-evm-nft');
     } else {
       this.router.navigateByUrl('/popup/add-asset');
     }
   }
   claim() {
     this.loading = true;
-    if (this.claimStatus === this.status.success) {
+    if (this.claimStatus === ClaimStatus.success) {
       this.initClaim();
       return;
     }
-    if (this.claimStatus === this.status.estimated) {
+    if (this.claimStatus === ClaimStatus.estimated) {
       this.syncNow();
       return;
     }
     if (this.chainType === 'Neo2') {
-      this.neon.claimNeo2GAS(this.claimsData).then((tx) => {
-        if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-          this.getSignTx(tx[0], 'claimNeo2');
-        } else {
-          tx.forEach((item) => {
-            try {
-              rpc.Query.sendRawTransaction(item.serialize(true)).execute(
-                this.n2Network.rpcUrl
-              );
-            } catch (error) {
-              this.loading = false;
-            }
-          });
-        }
-        if (this.intervalClaim === null) {
-          this.initInterval();
-        }
-      });
-    } else {
+      this.neon
+        .claimNeo2GAS(this.claimsData, this.currentWallet as Wallet2)
+        .then((tx) => {
+          if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
+            this.getSignTx(tx[0], 'claimNeo2');
+          } else {
+            tx.forEach((item) => {
+              try {
+                rpc.Query.sendRawTransaction(item.serialize(true)).execute(
+                  this.n2Network.rpcUrl
+                );
+              } catch (error) {
+                this.loading = false;
+              }
+            });
+          }
+          if (this.intervalClaim === null) {
+            this.initInterval();
+          }
+        });
+    } else if (this.chainType === 'Neo3') {
       if (this.intervalN3Claim) {
         clearInterval(this.intervalN3Claim);
       }
@@ -263,7 +346,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
             if (res.blocktime) {
               queryTxInterval.unsubscribe();
               this.loading = false;
-              this.claimStatus = this.status.success;
+              this.claimStatus = ClaimStatus.success;
               setTimeout(() => {
                 this.initClaim();
               }, 3000);
@@ -306,7 +389,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
           this.showClaim = true;
         } else if (res.unavailable > 0) {
           this.claimNumber = res.unavailable;
-          this.claimStatus = this.status.estimated;
+          this.claimStatus = ClaimStatus.estimated;
           this.showClaim = true;
         } else {
           this.showClaim = false;
@@ -314,7 +397,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         this.init = true;
         this.loading = false;
       });
-    } else {
+    } else if (this.chainType === 'Neo3') {
       if (
         this.loading &&
         new Date().getTime() - this.homeService.claimTxTime < 20000
@@ -334,7 +417,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         this.claimNumber = new BigNumber(res?.unclaimed)
           .shiftedBy(-8)
           .toNumber();
-        this.claimStatus = this.status.confirmed;
+        this.claimStatus = ClaimStatus.confirmed;
         this.showClaim = true;
       } else {
         this.showClaim = false;
@@ -353,7 +436,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
           this.claimNumber = claimRes.unavailable;
           clearInterval(this.intervalClaim);
           this.intervalClaim = null;
-          this.claimStatus = this.status.success;
+          this.claimStatus = ClaimStatus.success;
         }
       });
     }, 10000);
@@ -391,7 +474,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
                       this.claimsData = claimRes.claimable;
                       this.claimNumber = claimRes.available;
                       clearInterval(this.intervalClaim);
-                      this.claimStatus = this.status.confirmed;
+                      this.claimStatus = ClaimStatus.confirmed;
                       this.intervalClaim = null;
                     }
                   });
@@ -418,7 +501,7 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
         this.ledger
           .getLedgerSignedTx(
             tx,
-            this.currentWallet,
+            this.currentWallet as Wallet3,
             this.chainType,
             this.n3Network.magicNumber
           )
@@ -451,7 +534,11 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       return;
     }
     this.util
-      .getWIF(this.currentWIFArr, this.currentWalletArr, this.currentWallet)
+      .getWIF(
+        this.currentWIFArr,
+        this.currentWalletArr,
+        this.currentWallet as Wallet3
+      )
       .then((wif) => {
         switch (this.chainType) {
           case 'Neo2':
@@ -465,4 +552,28 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
       });
   }
   //#endregion
+
+  getSupport(type: 'asset' | 'txs' = 'asset') {
+    let url: string;
+    switch (type) {
+      case 'asset':
+        if (this.lang === 'en') {
+          url = 'https://tutorial.neoline.io/getting-started/manage-assets';
+        } else {
+          url =
+            'https://tutorial.neoline.io/v/cn/xin-shou-zhi-nan/zi-chan-guan-li';
+        }
+        break;
+      case 'txs':
+        if (this.lang === 'en') {
+          url =
+            'https://tutorial.neoline.io/create-and-manage-neo-x-wallet/about-neoline-activity';
+        } else {
+          url =
+            ' https://tutorial.neoline.io/v/cn/neox-qian-bao-de-chuang-jian-he-shi-yong/guan-yu-neoline-activity';
+        }
+        break;
+    }
+    window.open(url);
+  }
 }

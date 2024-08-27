@@ -9,12 +9,22 @@
   <img class="avatar" [avatar]="address" />
   <div class="account">
     <p class="title">{{ walletName }}</p>
-    <div class="address">{{ address }}</div>
+    <div class="address">{{ address | longStr : 17 }}</div>
   </div>
   <div class="content">
-    <p class="title">{{ "displayWIF" | translate | async }}</p>
-    <p class="label">
-      {{ (verified ? 'wif' : "password") | translate | async }}
+    <p class="title">
+      {{ (data?.showMnemonic ? "showSecretRecoveryPhrase" : 'showPrivateKey') |
+      translate | async }}
+    </p>
+
+    <p class="label" *ngIf="data?.showMnemonic">
+      {{ (verified ? 'secretRecoveryPhrase' : "password") | translate | async }}
+    </p>
+    <p class="label" *ngIf="!data?.showMnemonic &&data.chainType === 'NeoX'">
+      {{ (verified ? 'privateKey' : "password") | translate | async }}
+    </p>
+    <p class="label" *ngIf="!data?.showMnemonic &&data.chainType !== 'NeoX'">
+      {{ (verified ? 'wifPrivateKey' : "password") | translate | async }}
     </p>
     <div class="pwd-wif">
       <input
@@ -26,13 +36,15 @@
         class="pwd"
       />
       <copy [value]="wif" *ngIf="verified">
-        <div class="wif">{{ wif }}</div>
+        <div class="wif" [ngClass]="{ breakAll: !data?.showMnemonic }">
+          {{ wif }}
+        </div>
       </copy>
     </div>
 
     <div class="tip">
-      {{ "caution" | translate | async }}: {{ "transferExportTip" | translate |
-      async }}
+      {{ "caution" | translate | async }}: {{ (data?.showMnemonic ?
+      'secretRecoveryPhraseTip' : "transferExportTip" )| translate | async }}
     </div>
     <div class="btns">
       <button class="cancel pop-ups half" *ngIf="!verified" (click)="close()">

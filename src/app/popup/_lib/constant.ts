@@ -1,4 +1,5 @@
 import { Asset, NEO, GAS } from '@/models/models';
+import { DEFAULT_NEOX_RPC_NETWORK } from './evm';
 import { NEO3_CONTRACT, GAS3_CONTRACT } from './neo3';
 import {
   DEFAULT_N2_RPC_NETWORK,
@@ -24,33 +25,39 @@ export const SECRET_PASSPHRASE = 'secret key neoline';
 export enum STORAGE_NAME {
   n2Networks = 'n2Networks',
   n3Networks = 'n3Networks',
+  neoXNetworks = 'neoXNetworks',
   n2SelectedNetworkIndex = 'n2SelectedNetworkIndex',
   n3SelectedNetworkIndex = 'n3SelectedNetworkIndex',
-  coinsRate = 'coinsRate',
-  fiatRate = 'fiatRate',
-  neo3CoinsRate = 'neo3CoinsRate',
-  rateCurrency = 'rateCurrency',
+  neoXSelectedNetworkIndex = 'neoXSelectedNetworkIndex',
   wallet = 'wallet',
   walletArr = 'walletArr',
   'walletArr-Neo3' = 'walletArr-Neo3',
+  'walletArr-NeoX' = 'walletArr-NeoX',
   WIFArr = 'WIFArr',
   'WIFArr-Neo3' = 'WIFArr-Neo3',
   chainType = 'chainType',
-  neo3AddressFlag = 'neo3AddressFlag',
-  lang = 'lang',
-  transaction = 'transaction',
-  connectedWebsites = 'connectedWebsites',
+
+  neo3AddressFlag = 'neo3AddressFlag', // Fix the wallet created by neon-core@5-next.4 neon-core@5-next.7
+  watch = 'watch',
+  nftWatch = 'nft_watch',
+  connectedWebsites = 'connectedWebsitesV2', // dAPi connect status
   authAddress = 'authAddress',
-  InvokeArgsArray = 'InvokeArgsArray',
-  walletsStatus = 'walletsStatus',
-  haveBackupTip = 'haveBackupTip',
-  hasLoginAddress = 'hasLoginAddress',
+  InvokeArgsArray = 'InvokeArgsArray', // dAPi N3 invoke args
+  isBackupLater = 'isBackupLater', // show backup tip if create wallet
+  hasLoginAddress = 'hasLoginAddress', // has login address
   shouldFindNode = 'shouldFindNode',
   rpcUrls = 'rpcUrls',
-  neo3RemoveT4Flag = 'neo3RemoveT4Flag',
-  onePassword = 'onePassword',
-  theme ='theme',
-  onePassCheckAddresses = 'onePassCheckAddresses',
+  onePassword = 'onePassword', // Whether the current is one password mode
+  onePassCheckAddresses = 'onePassCheckAddresses', // one password mode, save verified address
+  addressBook = 'addressBook',
+
+  rateCurrency = 'rateCurrency',
+  theme ='theme', // light or dark theme
+  lang = 'lang',
+  evmCustomNonce = 'evmCustomNonce',
+
+  transaction = 'transaction',
+  bridgeTransaction = 'bridgeTransaction',
 }
 
 export enum STORAGE_VALUE_TYPE {
@@ -73,6 +80,11 @@ export const STORAGE_VALUE_MESSAGE = {
     isLocal: true,
     default: DEFAULT_N3_RPC_NETWORK,
   },
+  neoXNetworks: {
+    type: STORAGE_VALUE_TYPE.array,
+    isLocal: true,
+    default: DEFAULT_NEOX_RPC_NETWORK,
+  },
   n2SelectedNetworkIndex: {
     type: STORAGE_VALUE_TYPE.number,
     isLocal: true,
@@ -83,17 +95,10 @@ export const STORAGE_VALUE_MESSAGE = {
     isLocal: true,
     default: 0,
   },
-  coinsRate: {
-    type: STORAGE_VALUE_TYPE.object,
-    isLocal: false,
-  },
-  fiatRate: {
-    type: STORAGE_VALUE_TYPE.object,
-    isLocal: false,
-  },
-  neo3CoinsRate: {
-    type: STORAGE_VALUE_TYPE.object,
-    isLocal: false,
+  neoXSelectedNetworkIndex: {
+    type: STORAGE_VALUE_TYPE.number,
+    isLocal: true,
+    default: 0,
   },
   rateCurrency: {
     type: STORAGE_VALUE_TYPE.string,
@@ -109,6 +114,10 @@ export const STORAGE_VALUE_MESSAGE = {
     isLocal: true,
   },
   'walletArr-Neo3': {
+    type: STORAGE_VALUE_TYPE.array,
+    isLocal: true,
+  },
+  'walletArr-NeoX': {
     type: STORAGE_VALUE_TYPE.array,
     isLocal: true,
   },
@@ -133,11 +142,16 @@ export const STORAGE_VALUE_MESSAGE = {
     isLocal: false,
     default: 'en',
   },
+  evmCustomNonce: {
+    type: STORAGE_VALUE_TYPE.boolean,
+    isLocal: false,
+    default: false,
+  },
   transaction: {
     type: STORAGE_VALUE_TYPE.object,
-    isLocal: false,
+    isLocal: true,
   },
-  connectedWebsites: {
+  connectedWebsitesV2: {
     type: STORAGE_VALUE_TYPE.object,
     isLocal: false,
   },
@@ -146,14 +160,10 @@ export const STORAGE_VALUE_MESSAGE = {
     isLocal: false,
   },
   InvokeArgsArray: {
-    type: STORAGE_VALUE_TYPE.array,
-    isLocal: true,
-  },
-  walletsStatus: {
     type: STORAGE_VALUE_TYPE.object,
     isLocal: true,
   },
-  haveBackupTip: {
+  isBackupLater: {
     type: STORAGE_VALUE_TYPE.boolean,
     isLocal: true,
   },
@@ -170,10 +180,6 @@ export const STORAGE_VALUE_MESSAGE = {
     isLocal: true,
     default: DEFAULT_RPC_URLS,
   },
-  neo3RemoveT4Flag: {
-    type: STORAGE_VALUE_TYPE.boolean,
-    isLocal: true,
-  },
   onePassword: {
     type: STORAGE_VALUE_TYPE.boolean,
     isLocal: true,
@@ -187,6 +193,14 @@ export const STORAGE_VALUE_MESSAGE = {
     type: STORAGE_VALUE_TYPE.object,
     isLocal: true,
   },
+  addressBook: {
+    type: STORAGE_VALUE_TYPE.object,
+    isLocal: true,
+  },
+  bridgeTransaction: {
+    type: STORAGE_VALUE_TYPE.array,
+    isLocal: true,
+  }
 };
 
 interface DefaultAsset {

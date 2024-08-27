@@ -1,0 +1,78 @@
+<div class="pop-ups-title">
+  {{ (data.editAddress ? 'EditAddressBook' : 'AddAddressBook') | translate |
+  async }}
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    theme
+    src="assets/images/common/close.svg"
+    alt=""
+  />
+</div>
+
+<form class="container" [formGroup]="addForm">
+  <p class="label">{{ 'Name' | translate | async }}</p>
+  <mat-form-field class="form-field" appearance="outline">
+    <input matInput required formControlName="name" type="text" />
+    <mat-error *ngIf="addForm.get('name').errors?.required"
+      >{{ "nameIsRequired" | translate | async }}
+    </mat-error>
+    <mat-error *ngIf="addForm.get('name').errors?.pattern">
+      {{ "addressBookNameLengthTip" | translate | async }}
+    </mat-error>
+  </mat-form-field>
+
+  <div class="chain-row">
+    <p class="label">{{ 'SelectNetwork' | translate | async }}</p>
+    <div class="select-chain">
+      <span class="chain" (click)="showChainListModal()">
+        {{ currentChain.name }}
+        <img theme src="assets/images/common/triangle-fill.svg" />
+      </span>
+      <section
+        class="pop-ups-veil"
+        *ngIf="showChainList"
+        (click)="showChainList = false"
+      ></section>
+      <ul
+        class="pop-ups-menu"
+        *ngIf="showChainList"
+        (click)="showChainList = false"
+      >
+        <li *ngFor="let item of ChainTypeGroups" (click)="selectChain(item)">
+          {{ item.name }}
+        </li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="label">{{ 'Address' | translate | async }}</p>
+  <mat-form-field class="form-field" appearance="outline">
+    <input
+      matInput
+      required
+      [readonly]="data.editAddress"
+      formControlName="address"
+      type="text"
+    />
+    <mat-error *ngIf="addForm.get('address').errors?.required"
+      >{{ "addressIsRequired" | translate | async }}
+    </mat-error>
+    <mat-error *ngIf="addForm.get('address').errors?.errorAddress"
+      >{{ "wrongAddress" | translate | async }}
+    </mat-error>
+    <mat-error *ngIf="addForm.get('address').errors?.errorAddressExist"
+      >{{ "addAddressExist" | translate | async }}
+    </mat-error>
+  </mat-form-field>
+</form>
+
+<button
+  class="confirm pop-ups"
+  [ngClass]="{
+  disabled: addForm.invalid || loading
+}"
+  (click)="confirm()"
+>
+  {{ 'save' | translate | async}}
+</button>

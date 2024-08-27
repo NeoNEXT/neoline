@@ -1,0 +1,46 @@
+<div class="loading-box" *ngIf="loading">
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+    <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
+  </div>
+</div>
+
+<div class="pop-ups-title">
+  {{ (data.isSpeedUp ? 'speedUp' : 'cancelTransaction') | translate | async }}
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    theme
+    src="assets/images/common/close.svg"
+    alt=""
+  />
+</div>
+
+<div class="content">
+  <p class="desc">
+    {{ (data.isSpeedUp ? 'speedUpTxDesc' : 'cancelTxDesc') | translate | async
+    }}
+  </p>
+  <evm-fee
+    [txParams]="createTxParams"
+    [symbol]="data.network.symbol"
+    [customNeoXFeeInfo]="customNeoXFeeInfo"
+    [place]="'dapp'"
+    (returnFee)="updateEvmFee($event)"
+  >
+  </evm-fee>
+
+  <evm-estimate-error
+    *ngIf="neoXFeeInfo?.estimateGasError"
+  ></evm-estimate-error>
+  <p class="tip" *ngIf="data.isSpeedUp">
+    {{ 'speedUpTip' | translate | async }}
+  </p>
+  <button
+    class="confirm pop-ups"
+    [ngClass]="{disabled: !neoXFeeInfo}"
+    (click)="confirm()"
+  >
+    {{ 'Confirm' | translate | async}}
+  </button>
+</div>

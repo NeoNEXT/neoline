@@ -1,0 +1,17 @@
+<div class="bridge-footnote-title-content" *ngIf="bridgeData">
+  <p class="title">
+    <span class="name">
+      Bridge GAS
+      <img
+        (click)="showModal()"
+        src="assets/images/common/tooltip.svg"
+        alt=""
+      />
+    </span>
+    <span class="percentage">{{ bridgeData.percentage }}%</span>
+  </p>
+  <mat-progress-bar
+    mode="determinate"
+    [value]="bridgeData.percentage"
+  ></mat-progress-bar>
+</div>

@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import {
   GlobalService,
   ChromeService,
@@ -7,6 +7,7 @@ import {
   NotificationService,
   LedgerService,
   UtilServiceState,
+  SettingState,
 } from '@/app/core';
 import { Transaction, Witness } from '@cityofzion/neon-core-neo3/lib/tx';
 import { tx, wallet } from '@cityofzion/neon-js-neo3';
@@ -28,7 +29,6 @@ import { interval } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 type TabType = 'details' | 'data';
@@ -37,7 +37,9 @@ type TabType = 'details' | 'data';
   templateUrl: 'neo3-invoke-multiple.component.html',
   styleUrls: ['neo3-invoke-multiple.component.scss'],
 })
-export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy {
+export class PopupNoticeNeo3InvokeMultipleComponent
+  implements OnInit, OnDestroy
+{
   tabType: TabType = 'details';
   public dataJson: any = {};
   public rateCurrency = '';
@@ -68,13 +70,12 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
   private accountSub: Unsubscribable;
   public signAddress: string;
   public n3Network: RpcNetwork;
-  private currentWallet: Wallet2 | Wallet3;
+  private currentWallet: Wallet3;
   private chainType: ChainType;
   private neo3WIFArr: string[];
   private neo3WalletArr: Wallet3[];
   constructor(
     private aRoute: ActivatedRoute,
-    private router: Router,
     private global: GlobalService,
     private dialog: MatDialog,
     private chrome: ChromeService,
@@ -82,13 +83,14 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
     private neo3Invoke: Neo3InvokeService,
     private notification: NotificationService,
     private ledger: LedgerService,
+    private settingState: SettingState,
     private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
-      this.currentWallet = state.currentWallet;
+      this.currentWallet = state.currentWallet as Wallet3;
       this.signAddress = state.currentWallet?.accounts[0]?.address;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neo3WIFArr = state.neo3WIFArr;
@@ -100,7 +102,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
   }
 
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
     this.aRoute.queryParams.subscribe(async ({ messageID }) => {
@@ -110,9 +112,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
         .getStorage(STORAGE_NAME.InvokeArgsArray)
         .subscribe(async (invokeArgsArray) => {
           this.invokeArgsArray = invokeArgsArray;
-          params = invokeArgsArray.filter(
-            (item) => (item as any).messageID === messageID
-          )[0];
+          params = invokeArgsArray[this.messageID];
           if (!params || params.length <= 0) {
             return;
           }
@@ -138,16 +138,10 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
           } else {
             this.fee = '0';
             if (this.showFeeEdit) {
-              if (this.assetState.gasFeeSpeed) {
-                this.fee = bignumber(this.minFee)
-                  .add(bignumber(this.assetState.gasFeeSpeed.propose_price))
-                  .toFixed();
-              } else {
-                const res_1 = await this.assetState.getGasFee().toPromise();
-                this.fee = bignumber(this.minFee)
-                  .add(bignumber(res_1.propose_price))
-                  .toFixed();
-              }
+              const res_1 = await this.assetState.getGasFee().toPromise();
+              this.fee = bignumber(this.minFee)
+                .add(bignumber(res_1.propose_price))
+                .toFixed();
             }
           }
           this.signTx();
@@ -156,10 +150,11 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
     });
     window.onbeforeunload = () => {
       if (this.chrome.check) {
-        const saveData = this.invokeArgsArray.filter(
-          (item) => item.messageID !== this.messageID
+        delete this.invokeArgsArray[this.messageID];
+        this.chrome.setStorage(
+          STORAGE_NAME.InvokeArgsArray,
+          this.invokeArgsArray
         );
-        this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, saveData);
       }
       this.chrome.windowCallback({
         error: ERRORS.CANCELLED,
@@ -168,14 +163,19 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
       });
     };
   }
-  public async getAssetRate() {
-    this.assetState.getAssetRate('gas', GAS3_CONTRACT).then((rate) => {
-      const gasPrice = rate || 0;
-      this.totalFee = new BigNumber(this.systemFee)
-        .plus(new BigNumber(this.networkFee))
-        .toFixed();
-      this.totalMoney = new BigNumber(this.totalFee).times(gasPrice).toFixed();
-    });
+  getAssetRate() {
+    this.totalFee = new BigNumber(this.systemFee)
+      .plus(new BigNumber(this.networkFee))
+      .toFixed();
+    this.assetState
+      .getAssetAmountRate({
+        chainType: 'Neo3',
+        assetId: GAS3_CONTRACT,
+        amount: this.totalFee,
+      })
+      .then((res) => {
+        this.totalMoney = res;
+      });
   }
 
   private async resolveSend() {
@@ -201,13 +201,15 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
           ID: this.messageID,
         });
         const setData = {};
-        setData[`TxArr_${this.n3Network.id}`] =
-          (await this.chrome.getLocalStorage(`TxArr_${this.n3Network.id}`)) ||
-          [];
-        setData[`TxArr_${this.n3Network.id}`].push(txHash);
+        setData[`TxArr_${this.chainType}-${this.n3Network.id}`] =
+          (await this.chrome.getLocalStorage(
+            `TxArr_${this.chainType}-${this.n3Network.id}`
+          )) || [];
+        setData[`TxArr_${this.chainType}-${this.n3Network.id}`].push(txHash);
         this.chrome.setLocalStorage(setData);
         this.dialog.open(PopupTransferSuccessDialogComponent, {
           panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
         });
       })
       .catch((err) => {
@@ -256,16 +258,15 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
     } else {
       this.getSignTx();
     }
-    const saveData = this.invokeArgsArray.filter(
-      (item) => item.messageID !== this.messageID
-    );
-    this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, saveData);
+    delete this.invokeArgsArray[this.messageID];
+    this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, this.invokeArgsArray);
   }
 
   public editFee() {
     this.dialog
       .open(PopupEditFeeDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: {
           fee: this.fee,
           minFee: this.minFee,
@@ -350,6 +351,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit, OnDestroy
       this.dialog
         .open(PopupDapiPromptComponent, {
           panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
           data: {
             scopes: this.signers[0].scopes,
           },

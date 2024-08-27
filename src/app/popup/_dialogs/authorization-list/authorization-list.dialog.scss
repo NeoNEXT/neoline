@@ -1,93 +1,133 @@
+@import "src/styles/pop-ups-menu.scss";
 
+.pop-ups-title {
+  height: auto;
+  line-height: normal;
+  padding-top: 30px;
+  padding-bottom: 20px;
+  .hostname {
+    display: inline-block;
+    height: 24px;
+    border-radius: 20px;
+    padding: 0px 12px;
+    border: 0.5px solid var(--title-color);
+    color: var(--title-color);
+    font-family: NeverMind-DemiBold;
+  }
+  .connect-amount {
+    font-size: 13px;
+    line-height: 17px;
+    color: var(--sub-title-color);
+    margin-top: 12px;
+    margin-left: 4px;
+    font-family: NeverMind-Regular;
+  }
+}
 
 .content {
-  padding: 0 24px 24px;
-  .empty {
-    margin-top: 40px;
-    text-align: center;
-    color: var(--tip-color);
+  .title {
+    line-height: 18px;
+    color: var(--sub-title-color);
+    margin: 0 24px;
+    padding-top: 16px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--line-color);
   }
-  ul {
-    height: 280px;
+  ul.list {
+    height: 250px;
     overflow-y: scroll;
+    &::-webkit-scrollbar {
+      display: block;
+    }
     li {
-      height: 82px;
       display: flex;
       align-items: center;
       justify-content: space-between;
-      border-bottom: 1px solid var(--line-color);
-      img.icon {
-        width: 34px;
-        height: 34px;
-        border-radius: 50%;
+      gap: 8px;
+      padding: 10px 24px;
+      &.current-not-connect {
+        background: var(--message-box-color);
       }
-      .info-box {
+      img.logo {
+        width: 24px;
+        height: 24px;
+      }
+      .wallet-info {
         flex: 1;
-        margin-left: 12px;
-        .title {
-          color: var(--important-title-color);
-          font-size: 16px;
-          margin-right: 8px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+        .name {
+          color: var(--title-color);
+          max-width: 200px;
+          font-size: 14px;
+          line-height: 16px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
         }
-        .status {
-          display: inline-block;
-          height: 15px;
-          line-height: 15px;
-          padding-left: 13px;
-          padding-right: 8px;
-          border-radius: 8px;
-          background: #daf8f3;
-          font-family: NeverMind-Regular;
-          font-size: 10px;
-          color: var(--theme-color);
-          position: relative;
-          &::before {
-            content: "";
-            position: absolute;
-            left: 6px;
-            top: 6px;
-            width: 3px;
-            height: 3px;
-            border-radius: 50%;
-            background: var(--theme-color);
-          }
-          &.fail {
-            background: var(--line-color);
-            color: var(--sub-title-color);
-            &::before {
-              background: var(--sub-title-color);
-            }
-          }
-        }
-        .url {
+        .address {
           font-size: 12px;
           color: var(--sub-title-color);
-          margin-top: 5px;
+          font-family: NeverMind-Regular;
+        }
+        .not-connect {
+          font-size: 13px;
+          color: var(--warn-color);
+        }
+        .switch {
+          font-size: 13px;
+          color: #0ac7b7;
+          cursor: pointer;
         }
       }
-      .remove-btn {
-        height: 24px;
-        line-height: 24px;
-        padding: 0 6px;
-        border-radius: 4px;
-        background: #feeeee;
-        color: var(--error-color);
-        font-size: 12px;
+      img.more {
         cursor: pointer;
-        &:hover {
-          box-shadow: 0px 5px 15px -5px rgba(250, 85, 85, 0.5);
-        }
       }
     }
   }
-  button.clear-all {
-    width: 100%;
-    margin-top: 20px;
-    border: 1px solid var(--error-color);
-    color: var(--error-color);
-    cursor: pointer;
-    &:hover {
-      box-shadow: 0px 10px 25px -12px rgba(250, 85, 85, 0.47);
+  .permissions {
+    height: 95px;
+    margin: 0 24px 24px;
+    padding-top: 12px;
+    border-top: 1px solid var(--line-color);
+    .permissions-title {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      color: var(--sub-title-color);
+      img {
+        transition: all 0.3s;
+        &.expand {
+          transform: rotate(180deg);
+        }
+      }
     }
+    .warning {
+      margin-top: 12px;
+      color: var(--warn-color);
+      font-size: 12px;
+      line-height: 14px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .desc {
+      color: var(--sub-title-color);
+      line-height: 18px;
+      margin-top: 4px;
+    }
+  }
+}
+
+.pop-ups-menu {
+  position: absolute;
+  right: 25px;
+  padding: 4px 0;
+  li {
+    padding: 0 12px;
+    height: 48px;
+    font-size: 14px;
   }
 }

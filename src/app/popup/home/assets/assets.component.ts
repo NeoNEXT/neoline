@@ -6,10 +6,10 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { Asset, NEO } from '@/models/models';
-import { AssetState, ChromeService, UtilServiceState } from '@/app/core';
+import { AssetState, ChromeService, SettingState } from '@/app/core';
 import { forkJoin } from 'rxjs';
 import BigNumber from 'bignumber.js';
-import { NEO3_CONTRACT, ChainType, STORAGE_NAME } from '../../_lib';
+import { NEO3_CONTRACT, ChainType, STORAGE_NAME, RpcNetwork } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -29,26 +29,34 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
   private chainType: ChainType;
   private address: string;
   private networkId: number;
+  private neoXNetwork: RpcNetwork;
   constructor(
     private asset: AssetState,
     private chrome: ChromeService,
-    private util: UtilServiceState,
+    private settingState: SettingState,
     private store: Store<AppState>
   ) {}
 
   ngOnInit(): void {
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.address = state.currentWallet?.accounts[0]?.address;
-      const network =
-        this.chainType === 'Neo2'
-          ? state.n2Networks[state.n2NetworkIndex]
-          : state.n3Networks[state.n3NetworkIndex];
-      this.networkId = network.id;
+      switch (this.chainType) {
+        case 'Neo2':
+          this.networkId = state.n2Networks[state.n2NetworkIndex].id;
+          break;
+        case 'Neo3':
+          this.networkId = state.n3Networks[state.n3NetworkIndex].id;
+          break;
+        case 'NeoX':
+          this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+          this.networkId = this.neoXNetwork.id;
+          break;
+      }
       this.getAssets();
     });
   }
@@ -61,11 +69,14 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     this.myAssets = [];
     this.isLoading = true;
     const getMoneyBalance = this.asset.getAddressBalances(this.address);
-    const getWatch = this.chrome.getWatch(this.networkId, this.address);
-    forkJoin([getMoneyBalance, getWatch]).subscribe((res) => {
+    const getWatch = this.chrome.getWatch(
+      `${this.chainType}-${this.networkId}`,
+      this.address
+    );
+    forkJoin([getMoneyBalance, getWatch]).subscribe(async (res) => {
       const [moneyAssets, watch] = [...res];
       const showAssets = [...moneyAssets];
-      watch.forEach(async (item) => {
+      for (const item of watch) {
         const index = showAssets.findIndex((m) => m.asset_id === item.asset_id);
         if (index >= 0) {
           if (item.watching === false) {
@@ -79,25 +90,23 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
               this.chainType
             );
             if (new BigNumber(balance).comparedTo(0) > 0) {
-              const decimals = await this.util.getAssetDecimals(
-                [item.asset_id],
-                this.chainType
-              );
               item.balance = new BigNumber(balance)
-                .shiftedBy(-decimals[0])
+                .shiftedBy(-item.decimals)
                 .toFixed();
             }
             showAssets.push(item);
           }
         }
-      });
+      }
       this.myAssets = showAssets;
       this.getAssetsRate();
       let neoAsset;
       if (this.chainType === 'Neo2') {
         neoAsset = this.myAssets.find((m) => m.asset_id === NEO);
-      } else {
+      } else if (this.chainType === 'Neo3') {
         neoAsset = this.myAssets.find((m) => m.asset_id === NEO3_CONTRACT);
+      } else {
+        neoAsset = moneyAssets[0];
       }
       this.backAsset.emit(neoAsset);
       this.isLoading = false;
@@ -106,12 +115,13 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
   async getAssetsRate() {
     for (let i = 0; i < this.myAssets.length; i++) {
       const item = this.myAssets[i];
-      if (new BigNumber(item.balance).comparedTo(0) > 0) {
-        const rate = await this.asset.getAssetRate(item.symbol, item.asset_id);
-        if (rate) {
-          item.rateBalance = new BigNumber(item.balance).times(rate).toFixed();
-        }
-      }
+      item.rateBalance = await this.asset.getAssetAmountRate({
+        chainType: this.chainType,
+        assetId: item.asset_id,
+        chainId:
+          this.chainType === 'NeoX' ? this.neoXNetwork.chainId : undefined,
+        amount: item.balance,
+      });
     }
   }
 }

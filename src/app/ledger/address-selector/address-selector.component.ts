@@ -12,13 +12,14 @@ import {
   LedgerStatuses,
   LEDGER_PAGE_SIZE,
 } from '@/app/popup/_lib';
-import { LedgerService, SettingState } from '@/app/core';
+import { LedgerService, SettingState, AssetEVMState } from '@/app/core';
 import { interval } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 
 @Component({
   selector: 'app-address-selector',
@@ -46,15 +47,20 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   private accountSub: Unsubscribable;
   private neo2WalletArr: Wallet2[];
   private neo3WalletArr: Wallet3[];
+  private neoXWalletArr: EvmWalletJSON[];
+  neoXChainId: number;
   constructor(
     private ledger: LedgerService,
     private settingState: SettingState,
+    private assetEVMState: AssetEVMState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.neo2WalletArr = state.neo2WalletArr;
       this.neo3WalletArr = state.neo3WalletArr;
+      this.neoXWalletArr = state.neoXWalletArr;
+      this.neoXChainId = state.neoXNetworks[state.neoXNetworkIndex].chainId;
     });
   }
 
@@ -75,6 +81,14 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   chooseAccount(index: number) {
     this.selectedAccount = this.accounts[index];
     this.selectedIndex = (this.accountPage - 1) * LEDGER_PAGE_SIZE + index;
+    if (this.chainType === 'NeoX') {
+      this.assetEVMState
+        .getNeoXAddressBalances(this.selectedAccount.address)
+        .then((res) => {
+          this.accountBalance = res;
+        });
+      return;
+    }
     this.getBalanceReq?.unsubscribe();
     this.accountBalance = [];
     this.getBalanceReq = this.ledger
@@ -108,14 +122,22 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   }
 
   private getSavedAddress() {
-    if (this.chainType === 'Neo2') {
-      this.neo2WalletArr.forEach((item) => {
-        this.savedAddressesObj[item.accounts[0].address] = true;
-      });
-    } else {
-      this.neo3WalletArr.forEach((item) => {
-        this.savedAddressesObj[item.accounts[0].address] = true;
-      });
+    switch (this.chainType) {
+      case 'Neo2':
+        this.neo2WalletArr.forEach((item) => {
+          this.savedAddressesObj[item.accounts[0].address] = true;
+        });
+        break;
+      case 'Neo3':
+        this.neo3WalletArr.forEach((item) => {
+          this.savedAddressesObj[item.accounts[0].address] = true;
+        });
+        break;
+      case 'NeoX':
+        this.neoXWalletArr.forEach((item) => {
+          this.savedAddressesObj[item.accounts[0].address] = true;
+        });
+        break;
     }
   }
 

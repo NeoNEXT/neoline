@@ -32,19 +32,27 @@
       >{{ rateCurrency }}<img theme src="assets/images/common/arrow.svg" alt=""
     /></span>
   </li>
-  <li class="hover-bg" (click)="viewAllAuth()">
-    <img theme src="assets/images/setting/auth-manage.svg" alt="" />
-    <div class="middle">
-      <p>{{ "authorizationManage" | translate | async }}</p>
-      <p class="tip">{{ "authorizationManageTips" | translate | async }}</p>
-    </div>
-    <img theme src="assets/images/common/arrow.svg" alt="" />
-  </li>
   <li>
     <img theme src="assets/images/setting/theme.svg" alt="" />
     <div class="middle">{{ "darkMode" | translate | async }}</div>
     <div class="slide" [ngClass]="{ active: isDark }" (click)="changeTheme()">
       <span class="circle"></span>
     </div>
+  </li>
+  <li>
+    <img theme src="assets/images/setting/custom-nonce.svg" alt="" />
+    <div class="middle">{{ "customNonce" | translate | async }}</div>
+    <div
+      class="slide"
+      [ngClass]="{ active: isCustomNonce }"
+      (click)="changeCustomNonce()"
+    >
+      <span class="circle"></span>
+    </div>
+  </li>
+  <li class="hover-bg" [routerLink]="'/popup/address-book'">
+    <img theme src="assets/images/setting/address-book.svg" alt="" />
+    <div class="middle">{{ "addressBook" | translate | async }}</div>
+    <img theme src="assets/images/common/arrow.svg" alt="" />
   </li>
 </ul>

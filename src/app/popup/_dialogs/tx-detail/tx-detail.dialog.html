@@ -1,6 +1,21 @@
 <div class="pop-ups-title">
-  {{ (data.tx.type === 'received'? 'received' : 'sent') | translate | async }}
-  {{ data?.symbol }}
+  <span class="title">
+    {{ (data.tx.type ? data.tx.type : 'sent') | translate | async }} {{
+    data?.symbol }}
+  </span>
+  <ng-container *ngIf="data.chainType === 'NeoX'">
+    <div
+      class="btn-group"
+      *ngIf="data.tx?.status === undefined || data.tx?.status === TransactionStatus.Accelerating"
+    >
+      <button class="cancel" (click)="speedUpTx(false)">
+        {{ "cancel" | translate | async }}
+      </button>
+      <button class="confirm" (click)="speedUpTx(true)">
+        {{ "speedUp" | translate | async }}
+      </button>
+    </div>
+  </ng-container>
   <img
     class="close"
     [mat-dialog-close]="false"
@@ -11,37 +26,102 @@
 </div>
 <ul>
   <li>
-    <span class="label">TxID</span>
-    <span class="value break-all">{{ data.tx.txid }}</span>
+    <p class="label">TxID</p>
+    <p class="value txid">
+      <copy [value]="data.tx.txid" placement="top">
+        <span>{{ data.tx.txid | longStr: 16 }}</span>
+      </copy>
+      <tooltip tip="{{'ViewOnExplorer' | translate | async}}" placement="topRight">
+        <img
+          (click)="toWeb(data.tx.txid)"
+          theme
+          src="assets/images/account/home-explorer.svg"
+          alt=""
+        />
+      </tooltip>
+    </p>
   </li>
-  <li>
-    <span class="label">{{ 'Contract' | translate | async }}</span>
-    <span class="value break-all">{{ data.tx.asset_id }}</span>
+  <li *ngIf="data.tx.asset_id && data.tx.asset_id !== ETH_SOURCE_ASSET_HASH">
+    <p class="label">{{ 'Contract' | translate | async }}</p>
+    <p class="value">{{ data.tx.asset_id | longStr: 16 }}</p>
   </li>
   <li *ngIf="data.isNFT">
-    <span class="label">Token ID</span>
-    <span class="value break-all">{{ data.tx.tokenid }}</span>
+    <p class="label">Token ID</p>
+    <p class="value">#{{ data.tx.tokenid }}</p>
+  </li>
+  <li *ngIf="data.tx.value !== ''">
+    <p class="label">{{ 'amount' | translate | async }}</p>
+    <p class="value">{{ data.tx.value }} {{data?.symbol}}</p>
   </li>
   <li>
-    <span class="label">{{ 'amount' | translate | async }}</span>
-    <span class="value break-all">{{ data.tx.value + ' ' + data?.symbol }}</span>
+    <p class="label">{{ 'time' | translate | async }}</p>
+    <p class="value">
+      {{ data.tx.block_time * 1000 | date:'yyyy-MM-dd HH:mm:ss' }}
+    </p>
   </li>
+  <li class="line"></li>
   <li>
-    <span class="label">{{ 'time' | translate | async }}</span>
-    <span class="value"
-      >{{ data.tx.block_time * 1000 | date:'yyyy-MM-dd HH:mm:ss' }}</span
-    >
-  </li>
-  <li>
-    <span class="label">{{ 'from' | translate | async }}</span>
-    <div class="value">
-      <p *ngFor="let item of data.tx.from">{{ item | longStr: 10 }}</p>
+    <p class="label">{{ 'from' | translate | async }}</p>
+    <div class="value address">
+      <p *ngFor="let item of data.tx.from">
+        <copy [value]="item" placement="top">{{ item | longStr: 16 }}</copy>
+      </p>
     </div>
   </li>
   <li>
-    <span class="label">{{ 'to' | translate | async }}</span>
-    <div class="value">
-      <p *ngFor="let item of data.tx.to">{{ item | longStr: 10 }}</p>
+    <p class="label">{{ 'to' | translate | async }}</p>
+    <div class="value address">
+      <p *ngFor="let item of data.tx.to">
+        <copy [value]="item" placement="top">{{ item | longStr: 16 }}</copy>
+      </p>
+    </div>
+  </li>
+  <li class="col" *ngIf="data.tx?.nonce">
+    <p class="label">Nonce</p>
+    <p class="value">{{ data.tx.nonce }}</p>
+  </li>
+  <li
+    *ngIf="data.chainType==='NeoX'"
+    (click)="showActivityLog=!showActivityLog"
+    class="col log"
+  >
+    <span class="label">{{ 'ActivityLog' | translate | async }}</span>
+    <img
+      theme
+      [ngClass]="{ expand: showActivityLog }"
+      src="/assets/images/common/arrow.svg"
+      alt=""
+    />
+  </li>
+  <li class="log-group" *ngIf="showActivityLog">
+    <div
+      class="log-item"
+      *ngFor="let historyItem of data.tx.history"
+      (click)="toWeb(historyItem.txId)"
+    >
+      <ng-container *ngIf="historyItem.type === 'create'">
+        <img src="/assets/images/txs/log-create.svg" alt="" />
+        {{ 'evmLogCreateTx' | translate: {gas:
+        getShowGas(historyItem.neoXFeeInfo.estimateGas), symbol: data.symbol,
+        time: historyItem.time*1000|date:'yyyy-MM-dd HH:mm'} | async }}
+      </ng-container>
+      <ng-container *ngIf="historyItem.type === 'speedUp'">
+        <img src="/assets/images/txs/log-speed-up.svg" alt="" />
+        {{ 'evmLogSpeedUpTx' | translate: {gas:
+        getShowGas(historyItem.neoXFeeInfo.estimateGas), symbol: data.symbol,
+        time: historyItem.time*1000|date:'yyyy-MM-dd HH:mm'} | async }}
+      </ng-container>
+      <ng-container *ngIf="historyItem.type === 'cancel'">
+        <img src="/assets/images/txs/log-cancel.svg" alt="" />
+        {{ 'evmLogCancelTx' | translate: {gas:
+        getShowGas(historyItem.neoXFeeInfo.estimateGas), symbol: data.symbol,
+        time: historyItem.time*1000|date:'yyyy-MM-dd HH:mm'} | async }}
+      </ng-container>
+      <ng-container *ngIf="historyItem.type === 'complete'">
+        <img src="/assets/images/txs/log-complete.svg" alt="" />
+        {{ 'evmLogCompleteTx' | translate: {time:
+        historyItem.time*1000|date:'yyyy-MM-dd HH:mm'} | async }}
+      </ng-container>
     </div>
   </li>
 </ul>

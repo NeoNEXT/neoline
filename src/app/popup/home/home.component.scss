@@ -1,4 +1,3 @@
-
 @import "src/styles/pop-ups-menu.scss";
 @import "src/styles/home-top.scss";
 @import "src/styles/tab-container.scss";
@@ -10,6 +9,11 @@
     text-align: center;
     position: relative;
     border-bottom: 1px solid var(--line-color);
+    home-dapp-auth {
+      position: absolute;
+      left: 20px;
+      top: 22px;
+    }
     .wallet-info {
       width: 100%;
       height: 100%;
@@ -20,6 +24,7 @@
       .name {
         font-family: NeverMind-Medium;
         font-size: 18px;
+        line-height: 20px;
         color: var(--important-title-color);
         max-width: 200px;
         overflow: hidden;
@@ -64,8 +69,13 @@
     height: calc(100% - 67px);
     position: relative;
     overflow: auto;
-    .asset-logo-box {
-      margin: 16px auto;
+    .token-logo {
+      margin-block: 16px;
+      text-align: center;
+    }
+
+    .transaction-btn-container.bridge {
+      padding: 0 26px;
     }
 
     .claim-container {
@@ -76,17 +86,6 @@
       background: var(--message-box-color);
       display: flex;
       align-items: center;
-      .gas-logo-box {
-        width: 36px;
-        height: 36px;
-        padding: 7px;
-        border: 0.5px solid var(--background-color);
-        border-radius: 50%;
-        .gas-logo {
-          height: 22px;
-          width: 22px;
-        }
-      }
       .claim-status-box {
         margin-left: 12px;
         flex: 1 1 auto;
@@ -142,5 +141,19 @@
         }
       }
     }
+  }
+}
+
+.get-help {
+  margin-top: 58px;
+  padding-bottom: 24px;
+  font-size: 12px;
+  font-weight: normal;
+  line-height: 14px;
+  text-align: center;
+  cursor: pointer;
+  color: var(--theme-color);
+  &:hover {
+    text-decoration: underline;
   }
 }

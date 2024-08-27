@@ -2,9 +2,14 @@
   <nav title="myAssets"></nav>
   <div class="popup-assets-list">
     <div class="asset-item" *ngFor="let asset of myAssets; index as index">
-      <div class="asset-logo">
-        <img [assetId]="asset?.asset_id" appErrorSrc alt="" />
-      </div>
+      <token-logo
+        customClass="list"
+        [assetId]="asset?.asset_id"
+        [imageUrl]="asset?.image_url"
+        [chainType]="chainType"
+        [symbol]="asset?.symbol"
+        [neoXChainId]="networkId"
+      ></token-logo>
       <div class="item-middle">
         <div class="asset-name">
           <span>{{ asset.symbol }}</span>

@@ -40,5 +40,9 @@
         </div>
       </li>
     </ul>
+    <button class="confirm pop-ups" (click)="showAddressBook()">
+      <img src="/assets/images/transfer/address-book.svg" alt="" />
+      {{ "addressBook" | translate | async }}
+    </button>
   </div>
 </section>

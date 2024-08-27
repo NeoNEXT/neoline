@@ -37,17 +37,11 @@
       border-radius: 50%;
     }
     &.receive {
-      img {
-        background: var(--title-color);
-      }
       &:hover img {
         box-shadow: var(--tx-receive-box-shadow);
       }
     }
     &.transfer {
-      img {
-        background: var(--theme-color);
-      }
       &:hover img {
         box-shadow: var(--tx-transfer-box-shadow);
       }

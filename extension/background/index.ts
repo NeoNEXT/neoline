@@ -22,24 +22,22 @@ import {
   getAssetSymbol,
   getAssetDecimal,
   getSessionStorage,
+  handleNeo3StackNumberValue,
 } from '../common';
 import {
-  ChainType,
   WitnessScope,
-  DEFAULT_N2_RPC_NETWORK,
-  DEFAULT_N3_RPC_NETWORK,
-  RpcNetwork,
   NEO,
   GAS,
   NEO3,
   GAS3,
   SECRET_PASSPHRASE,
+  STORAGE_NAME,
+  ConnectedWebsitesType,
 } from '../common/constants';
 import {
   requestTarget,
   GetBalanceArgs,
   ERRORS,
-  EVENT,
   AccountPublicKey,
   GetBlockInputArgs,
   TransactionInputArgs,
@@ -61,22 +59,32 @@ import {
   N3BalanceArgs,
 } from '../common/data_module_neo3';
 import {
-  base64Encode,
   getPrivateKeyFromWIF,
   getPublicKeyFromPrivateKey,
   getScriptHashFromAddress,
-  getWalletType,
   hexstring2str,
   str2hexstring,
   verify,
   reverseHex,
 } from '../common/utils';
 import { u as u3, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
-import { wallet as wallet2 } from '@cityofzion/neon-js';
 import BigNumber from 'bignumber.js';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import CryptoJS = require('crypto-js');
+import { requestTargetEVM } from '../common/data_module_evm';
+import {
+  createWindow,
+  getCurrentNeo2Network,
+  getCurrentNeo3Network,
+  getChainType,
+  listenBlock,
+  waitTxs,
+  resetData,
+  windowCallback,
+} from './tool';
+import { walletHandlerMap, ethereumRPCHandler } from './handlers';
+import { ethErrors } from 'eth-rpc-errors';
 
 /**
  * Background methods support.
@@ -86,171 +94,13 @@ declare var chrome;
 
 chrome.alarms.create({ periodInMinutes: 1 });
 chrome.alarms.onAlarm.addListener(async () => {
-  let chainType = await getLocalStorage('chainType', () => {});
-  const n2Networks =
-    (await getLocalStorage('n2Networks', () => {})) || DEFAULT_N2_RPC_NETWORK;
-  const n3Networks =
-    (await getLocalStorage('n3Networks', () => {})) || DEFAULT_N3_RPC_NETWORK;
-  const n2SelectedNetworkIndex =
-    (await getLocalStorage('n2SelectedNetworkIndex', () => {})) || 0;
-  const n3SelectedNetworkIndex =
-    (await getLocalStorage('n3SelectedNetworkIndex', () => {})) || 0;
-  const currN2Network = n2Networks[n2SelectedNetworkIndex];
-  const currN3Network = n3Networks[n3SelectedNetworkIndex];
-  if (!chainType) {
-    chainType = await getWalletType();
-  }
-  let rpcUrl;
-  let networkId;
-  if (chainType === ChainType.Neo2) {
-    networkId = n2Networks[n2SelectedNetworkIndex].id;
-    rpcUrl = n2Networks[n2SelectedNetworkIndex].rpcUrl;
-  } else if (chainType === ChainType.Neo3) {
-    networkId = n3Networks[n3SelectedNetworkIndex].id;
-    rpcUrl = n3Networks[n3SelectedNetworkIndex].rpcUrl;
-  }
+  const { currN2Network } = await getCurrentNeo2Network();
+  const { currN3Network } = await getCurrentNeo3Network();
+  const chainType = await getChainType();
   setTimeout(async () => {
-    let oldHeight =
-      (await getLocalStorage(`BlockHeight_${networkId}`, () => {})) || 0;
-    httpPost(
-      rpcUrl,
-      {
-        jsonrpc: '2.0',
-        method: 'getblockcount',
-        params: [],
-        id: 1,
-      },
-      async (blockHeightData) => {
-        const newHeight = blockHeightData.result;
-        if (oldHeight === 0 || newHeight - oldHeight > 5) {
-          oldHeight = newHeight - 1;
-        }
-        let timer;
-        for (let reqHeight = oldHeight; reqHeight < newHeight; reqHeight++) {
-          if (oldHeight !== newHeight) {
-            timer = setTimeout(() => {
-              httpPost(
-                rpcUrl,
-                {
-                  jsonrpc: '2.0',
-                  method: 'getblock',
-                  params: [reqHeight, 1],
-                  id: 1,
-                },
-                (blockDetail) => {
-                  if (blockDetail.error === undefined) {
-                    const txStrArr = [];
-                    blockDetail.result.tx.forEach((item) => {
-                      txStrArr.push(item.txid || item.hash);
-                    });
-                    windowCallback({
-                      data: {
-                        chainId: currN2Network.chainId,
-                        blockHeight: reqHeight,
-                        blockTime: blockDetail.result.time,
-                        blockHash: blockDetail.result.hash,
-                        tx: txStrArr,
-                      },
-                      return: EVENT.BLOCK_HEIGHT_CHANGED,
-                    });
-                  }
-                  if (newHeight - reqHeight <= 1) {
-                    const setData = {};
-                    setData[`BlockHeight_${networkId}`] = newHeight;
-                    setLocalStorage(setData);
-                    clearTimeout(timer);
-                  }
-                },
-                '*'
-              );
-            });
-          }
-        }
-      },
-      '*'
-    );
+    await listenBlock(chainType === 'Neo2' ? currN2Network : currN3Network);
   }, 0);
-  if (chainType === ChainType.Neo2) {
-    const txArr = (await getLocalStorage(`TxArr_${networkId}`, () => {})) || [];
-    if (txArr.length === 0) {
-      return;
-    }
-    let tempTxArr = [...txArr];
-    for (const txid of tempTxArr) {
-      const data = {
-        jsonrpc: '2.0',
-        method: 'getrawtransaction',
-        params: [txid, 1],
-        id: 1,
-      };
-      httpPost(currN2Network.rpcUrl, data, (res) => {
-        if (res?.result?.blocktime) {
-          const explorerUrl = currN2Network.explorer
-            ? `${currN2Network.explorer}transaction/${txid}`
-            : null;
-          const sliceTxid = txid.slice(0, 4) + '...' + txid.slice(-4);
-          notification(
-            explorerUrl,
-            'Confirmed transaction',
-            `Transaction ${sliceTxid} confirmed! View on NeoTube`
-          );
-          windowCallback({
-            data: {
-              chainId: currN2Network.chainId,
-              txid,
-              blockHeight: res?.result?.blockindex,
-              blockTime: res?.result?.blocktime,
-            },
-            return: EVENT.TRANSACTION_CONFIRMED,
-          });
-          const setData = {};
-          tempTxArr = tempTxArr.filter((item) => item !== txid);
-          setData[`TxArr_${networkId}`] = tempTxArr;
-          setLocalStorage(setData);
-        }
-      });
-    }
-  } else if (chainType === ChainType.Neo3) {
-    const txArr = (await getLocalStorage(`TxArr_${networkId}`, () => {})) || [];
-    if (txArr.length === 0) {
-      return;
-    }
-    let tempTxArr = [...txArr];
-    for (const txid of tempTxArr) {
-      const data = {
-        jsonrpc: '2.0',
-        method: 'getrawtransaction',
-        params: [txid, true],
-        id: 1,
-      };
-      httpPost(currN3Network.rpcUrl, data, (res) => {
-        if (res?.result?.blocktime) {
-          const explorerUrl = currN3Network.explorer
-            ? `${currN3Network.explorer}transaction/${txid}`
-            : null;
-          const sliceTxid = txid.slice(0, 4) + '...' + txid.slice(-4);
-          notification(
-            explorerUrl,
-            'Confirmed transaction',
-            `Transaction ${sliceTxid} confirmed! View on NeoTube`
-          );
-          windowCallback({
-            data: {
-              chainId: currN3Network.chainId,
-              txid,
-              blockHeight: res?.result?.blockindex,
-              blockTime: res?.result?.blocktime,
-            },
-            return: EVENT.TRANSACTION_CONFIRMED,
-          });
-          const setData = {};
-          tempTxArr = tempTxArr.filter((item) => item !== txid);
-          setData[`TxArr_${networkId}`] = tempTxArr;
-          setLocalStorage(setData);
-        }
-      });
-    }
-  }
+  waitTxs(chainType === 'Neo2' ? currN2Network : currN3Network, chainType);
 });
 
 (function init() {
@@ -263,141 +113,104 @@ chrome.alarms.onAlarm.addListener(async () => {
   }
 })();
 
-chrome.runtime.onRestartRequired.addListener(() => {
-  setLocalStorage({
-    password: '',
-    shouldFindNode: true,
-    hasLoginAddress: {},
-    InvokeArgsArray: [],
-  });
-  getStorage('connectedWebsites', (res) => {
-    res = res || {};
-    Object.keys(res).forEach((address) => {
-      res[address] = res[address].filter((item) => item.keep === true);
-    });
-    setStorage({ connectedWebsites: res });
-  });
-});
+chrome.runtime.onRestartRequired.addListener(() => resetData());
 
-chrome.runtime.onInstalled.addListener(() => {
-  setLocalStorage({
-    password: '',
-    shouldFindNode: true,
-    hasLoginAddress: {},
-    InvokeArgsArray: [],
-  });
-  getStorage('connectedWebsites', (res) => {
-    res = res || {};
-    Object.keys(res).forEach((address) => {
-      res[address] = res[address].filter((item) => item.keep === true);
-    });
-    setStorage({ connectedWebsites: res });
-  });
-});
+chrome.runtime.onInstalled.addListener(() => resetData());
 
-chrome.runtime.onStartup.addListener(() => {
-  setLocalStorage({
-    password: '',
-    shouldFindNode: true,
-    hasLoginAddress: {},
-    InvokeArgsArray: [],
-  });
-  getStorage('connectedWebsites', (res) => {
-    res = res || {};
-    Object.keys(res).forEach((address) => {
-      res[address] = res[address].filter((item) => item.keep === true);
-    });
-    setStorage({ connectedWebsites: res });
-  });
-});
+chrome.runtime.onStartup.addListener(() => resetData());
 
 chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
-  const n2Networks =
-    (await getLocalStorage('n2Networks', () => {})) || DEFAULT_N2_RPC_NETWORK;
-  const n3Networks =
-    (await getLocalStorage('n3Networks', () => {})) || DEFAULT_N3_RPC_NETWORK;
-  const n2SelectedNetworkIndex =
-    (await getLocalStorage('n2SelectedNetworkIndex', () => {})) || 0;
-  const n3SelectedNetworkIndex =
-    (await getLocalStorage('n3SelectedNetworkIndex', () => {})) || 0;
-  const currN2Network = n2Networks[n2SelectedNetworkIndex];
-  const currN3Network = n3Networks[n3SelectedNetworkIndex];
-  const chainType: ChainType = await getLocalStorage('chainType', () => {});
+  const { currN2Network } = await getCurrentNeo2Network();
+  const { currN3Network, n3Networks } = await getCurrentNeo3Network();
+  const chainType = await getChainType();
+
   switch (request.target) {
-    case requestTarget.PickAddress: {
-      chrome.windows.create({
-        url: `/index.html#popup/notification/pick-address?hostname=${request.parameter.hostname}&chainType=Neo2&messageID=${request.ID}`,
-        focused: true,
-        width: 386,
-        height: 620,
-        left: 0,
-        top: 0,
-        type: 'popup',
-      });
-      return true;
-    }
-    case requestTargetN3.PickAddress: {
-      chrome.windows.create({
-        url: `/index.html#popup/notification/pick-address?hostname=${request.parameter.hostname}&chainType=Neo3&messageID=${request.ID}`,
-        focused: true,
-        width: 386,
-        height: 620,
-        left: 0,
-        top: 0,
-        type: 'popup',
-      });
-      return true;
-    }
-    case requestTarget.Connect:
-    case requestTarget.AuthState: {
-      const currWallet = await getLocalStorage('wallet', () => {});
-      const currAddress = currWallet.accounts[0].address;
-      getStorage('connectedWebsites', (res: any) => {
-        const existHost = (res?.[currAddress] || []).find(
-          (item) => item.hostname === request.hostname
-        );
-        if (
-          !existHost ||
-          (existHost &&
-            existHost.status === 'false' &&
-            existHost.keep === false)
-        ) {
-          chrome.windows.create({
-            url: `/index.html#popup/notification/authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`,
-            focused: true,
-            width: 386,
-            height: 620,
-            left: 0,
-            top: 0,
-            type: 'popup',
+    case requestTargetEVM.request: {
+      const { method, params, hostInfo } = request.parameter;
+      const handler = walletHandlerMap.get(method);
+      if (handler) {
+        const { implementation } = handler;
+        implementation(params, request.ID, hostInfo)
+          .then((finish) => {
+            if (finish) {
+              windowCallback({
+                data: null,
+                ID: request.ID,
+                return: requestTargetEVM.request,
+              });
+            }
+            sendResponse('');
+          })
+          .catch((error) => {
+            windowCallback({
+              data: null,
+              ID: request.ID,
+              return: requestTargetEVM.request,
+              error:
+                typeof error.serialize === 'function'
+                  ? error.serialize()
+                  : ethErrors.rpc.internal().serialize(),
+            });
+            sendResponse('');
           });
-        } else {
-          if (
-            existHost &&
-            existHost.status === 'false' &&
-            existHost.keep === true
-          ) {
-            notification(
-              chrome.i18n.getMessage('rejected'),
-              chrome.i18n.getMessage('rejectedTip')
-            );
+      } else {
+        ethereumRPCHandler(request.parameter, request.ID, sender, hostInfo)
+          .then((data) => {
+            windowCallback({
+              data,
+              error: null,
+              ID: request.ID,
+              return: requestTargetEVM.request,
+            });
+            sendResponse('');
+          })
+          .catch((error) => {
+            windowCallback({
+              data: null,
+              ID: request.ID,
+              return: requestTargetEVM.request,
+              error:
+                typeof error.serialize === 'function'
+                  ? error.serialize()
+                  : ethErrors.rpc.internal().serialize(),
+            });
+            sendResponse('');
+          });
+      }
+      return;
+    }
+    //#region neo legacy
+    case requestTarget.PickAddress: {
+      createWindow(
+        `pick-address?hostname=${request.parameter.hostname}&chainType=Neo2&messageID=${request.ID}`
+      );
+      return true;
+    }
+    case requestTarget.Connect: {
+      const currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
+      const currAddress = currWallet.accounts[0].address;
+      getStorage(
+        STORAGE_NAME.connectedWebsites,
+        (res: ConnectedWebsitesType) => {
+          const existHost =
+            res?.[request.hostname]?.connectedAddress?.[currAddress];
+          if (existHost) {
             windowCallback({
               return: requestTarget.Connect,
-              data: false,
+              data: true,
             });
-            return;
+            // notification(
+            //   `${chrome.i18n.getMessage('from')}: ${request.hostname}`,
+            //   chrome.i18n.getMessage('connectedTip')
+            // );
+          } else {
+            createWindow(
+              `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`
+            );
           }
-          windowCallback({
-            return: requestTarget.Connect,
-            data: true,
-          });
-          notification(
-            `${chrome.i18n.getMessage('from')}: ${request.hostname}`,
-            chrome.i18n.getMessage('connectedTip')
-          );
+          sendResponse('');
         }
-        sendResponse('');
-      });
+      );
       return true;
     }
     case requestTarget.Login: {
@@ -408,15 +221,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             data: true,
           });
         } else {
-          chrome.windows.create({
-            url: `/index.html#popup/login?notification=true`,
-            focused: true,
-            width: 386,
-            height: 620,
-            left: 0,
-            top: 0,
-            type: 'popup',
-          });
+          createWindow(`/index.html#popup/login?notification=true`, false);
         }
         sendResponse('');
       });
@@ -424,13 +229,21 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTarget.AccountPublicKey: {
       try {
-        const chain = await getLocalStorage(`chainType`, () => {});
-        const key = chain === 'Neo2' ? '' : `-${chain}`;
-        const walletArr = await getLocalStorage(`walletArr${key}`, () => {});
-        let currWallet = await getLocalStorage('wallet', () => {});
+        const walletArrStorage =
+          chainType === 'Neo2'
+            ? STORAGE_NAME.walletArr
+            : STORAGE_NAME['walletArr-Neo3'];
+        const wifArrStorage =
+          chainType === 'Neo2'
+            ? STORAGE_NAME.WIFArr
+            : STORAGE_NAME['WIFArr-Neo3'];
+        const walletArr = await getLocalStorage(walletArrStorage, () => {});
+        let currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
         currWallet =
-          chain === 'Neo2' ? new Wallet2(currWallet) : new Wallet3(currWallet);
-        const WIFArr = await getLocalStorage(`WIFArr${key}`, () => {});
+          chainType === 'Neo2'
+            ? new Wallet2(currWallet)
+            : new Wallet3(currWallet);
+        const WIFArr = await getLocalStorage(wifArrStorage, () => {});
         const data: AccountPublicKey = { address: '', publicKey: '' };
         if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
           if (currWallet.accounts[0]?.extra?.ledgerSLIP44) {
@@ -460,7 +273,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           ID: request.ID,
         });
       } catch (error) {
-        console.log(error);
         windowCallback({
           data: [],
           ID: request.ID,
@@ -970,86 +782,56 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTarget.SignMessage: {
       const params = request.parameter;
-      getStorage('connectedWebsites', () => {
-        let queryString = '';
-        for (const key in params) {
-          if (params.hasOwnProperty(key)) {
-            const value = encodeURIComponent(params[key]);
-            queryString += `${key}=${value}&`;
-          }
+      let queryString = '';
+      for (const key in params) {
+        if (params.hasOwnProperty(key)) {
+          const value = encodeURIComponent(params[key]);
+          queryString += `${key}=${value}&`;
         }
-        chrome.windows.create({
-          url: `index.html#popup/notification/signature?${queryString}messageID=${request.ID}`,
-          focused: true,
-          width: 386,
-          height: 620,
-          left: 0,
-          top: 0,
-          type: 'popup',
-        });
-      });
+      }
+      createWindow(`signature?${queryString}messageID=${request.ID}`);
       sendResponse('');
       return;
     }
     case requestTarget.Invoke: {
       const params = request.parameter;
-      getStorage('connectedWebsites', () => {
-        let queryString = '';
-        for (const key in params) {
-          if (params.hasOwnProperty(key)) {
-            const value =
-              key === 'args' ||
-              key === 'assetIntentOverrides' ||
-              key === 'attachedAssets' ||
-              key === 'assetIntentOverrides' ||
-              key === 'txHashAttributes' ||
-              key === 'extra_witness'
-                ? JSON.stringify(params[key])
-                : params[key];
-            queryString += `${key}=${value}&`;
-          }
+      let queryString = '';
+      for (const key in params) {
+        if (params.hasOwnProperty(key)) {
+          const value =
+            key === 'args' ||
+            key === 'assetIntentOverrides' ||
+            key === 'attachedAssets' ||
+            key === 'assetIntentOverrides' ||
+            key === 'txHashAttributes' ||
+            key === 'extra_witness'
+              ? JSON.stringify(params[key])
+              : params[key];
+          queryString += `${key}=${value}&`;
         }
-        chrome.windows.create({
-          url: `index.html#popup/notification/invoke?${queryString}messageID=${request.ID}`,
-          focused: true,
-          width: 386,
-          height: 620,
-          left: 0,
-          top: 0,
-          type: 'popup',
-        });
-      });
+      }
+      createWindow(`invoke?${queryString}messageID=${request.ID}`);
       sendResponse('');
       return;
     }
     case requestTarget.InvokeMulti: {
       const params = request.parameter;
-      getStorage('connectedWebsites', () => {
-        let queryString = '';
-        for (const key in params) {
-          if (params.hasOwnProperty(key)) {
-            const value =
-              key === 'invokeArgs' ||
-              key === 'assetIntentOverrides' ||
-              key === 'attachedAssets' ||
-              key === 'assetIntentOverrides' ||
-              key === 'txHashAttributes' ||
-              key === 'extra_witness'
-                ? JSON.stringify(params[key])
-                : params[key];
-            queryString += `${key}=${value}&`;
-          }
+      let queryString = '';
+      for (const key in params) {
+        if (params.hasOwnProperty(key)) {
+          const value =
+            key === 'invokeArgs' ||
+            key === 'assetIntentOverrides' ||
+            key === 'attachedAssets' ||
+            key === 'assetIntentOverrides' ||
+            key === 'txHashAttributes' ||
+            key === 'extra_witness'
+              ? JSON.stringify(params[key])
+              : params[key];
+          queryString += `${key}=${value}&`;
         }
-        chrome.windows.create({
-          url: `index.html#popup/notification/invoke-multi?${queryString}messageID=${request.ID}`,
-          focused: true,
-          width: 386,
-          height: 620,
-          left: 0,
-          top: 0,
-          type: 'popup',
-        });
-      });
+      }
+      createWindow(`invoke-multi?${queryString}messageID=${request.ID}`);
       sendResponse('');
       return;
     }
@@ -1118,19 +900,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
             currN2Network.rpcUrl,
             decimalsData
           );
-          let decimals = 0;
-          if (
-            decimalsRes?.result?.state === 'HALT' &&
-            decimalsRes?.result?.stack?.[0]?.value
-          ) {
-            if (decimalsRes?.result.stack[0].type === 'Integer') {
-              decimals = Number(decimalsRes?.result.stack[0].value || 0);
-            }
-            if (decimalsRes?.result.stack[0].type === 'ByteArray') {
-              const hexstr = reverseHex(decimalsRes?.result.stack[0].value);
-              decimals = new BigNumber(hexstr || 0, 16).toNumber();
-            }
-          }
+          const decimals = handleNeo3StackNumberValue(decimalsRes);
           assetBalance = new BigNumber(assetBalance).shiftedBy(-decimals);
         }
         if (
@@ -1148,7 +918,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               queryString += `${key}=${value}&`;
             }
           }
-          getLocalStorage('wallet', (wallet) => {
+          getLocalStorage(STORAGE_NAME.wallet, (wallet) => {
             if (
               wallet !== undefined &&
               wallet.accounts[0].address !== parameter.fromAddress
@@ -1159,15 +929,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 ID: request.ID,
               });
             } else {
-              chrome.windows.create({
-                url: `index.html#popup/notification/transfer?${queryString}messageID=${request.ID}`,
-                focused: true,
-                width: 386,
-                height: 620,
-                left: 0,
-                top: 0,
-                type: 'popup',
-              });
+              createWindow(`transfer?${queryString}messageID=${request.ID}`);
             }
           });
         } else {
@@ -1184,36 +946,33 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTarget.Deploy: {
       const params = request.parameter;
-      getStorage('connectedWebsites', () => {
-        let queryString = '';
-        for (const key in params) {
-          if (params.hasOwnProperty(key)) {
-            const value = params[key];
-            queryString += `${key}=${value}&`;
-          }
+      let queryString = '';
+      for (const key in params) {
+        if (params.hasOwnProperty(key)) {
+          const value = params[key];
+          queryString += `${key}=${value}&`;
         }
-        chrome.windows.create({
-          url: `index.html#popup/notification/deploy?${queryString}messageID=${request.ID}`,
-          focused: true,
-          width: 386,
-          height: 620,
-          left: 0,
-          top: 0,
-          type: 'popup',
-        });
-      });
+      }
+      createWindow(`deploy?${queryString}messageID=${request.ID}`);
       sendResponse('');
       return;
     }
+    //#endregion
 
-    // neo3 dapi method
+    //#region neo3 dapi method
+    case requestTargetN3.PickAddress: {
+      createWindow(
+        `pick-address?hostname=${request.parameter.hostname}&chainType=Neo3&messageID=${request.ID}`
+      );
+      return true;
+    }
     case requestTargetN3.Balance: {
       const parameter = request.parameter as N3BalanceArgs;
       let params;
       if (parameter.params) {
         params = parameter.params;
       } else {
-        const currWallet = await getLocalStorage('wallet', () => {});
+        const currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
         if (!wallet3.isAddress(currWallet.accounts[0].address, 53)) {
           return;
         }
@@ -1620,7 +1379,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           );
         });
       } catch (error) {
-        console.log(error);
         windowCallback({
           data: [],
           ID: request.ID,
@@ -1650,77 +1408,51 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTargetN3.SignMessage: {
       const params = request.parameter;
-      getStorage('connectedWebsites', () => {
-        let queryString = '';
-        for (const key in params) {
-          if (params.hasOwnProperty(key)) {
-            const value = encodeURIComponent(params[key]);
-            queryString += `${key}=${value}&`;
-          }
+      let queryString = '';
+      for (const key in params) {
+        if (params.hasOwnProperty(key)) {
+          const value = encodeURIComponent(params[key]);
+          queryString += `${key}=${value}&`;
         }
-        chrome.windows.create({
-          url: `index.html#popup/notification/neo3-signature?${queryString}messageID=${request.ID}`,
-          focused: true,
-          width: 386,
-          height: 620,
-          left: 0,
-          top: 0,
-          type: 'popup',
-        });
-      });
+      }
+      createWindow(`neo3-signature?${queryString}messageID=${request.ID}`);
       sendResponse('');
       return;
     }
     case requestTargetN3.SignMessageWithoutSalt: {
       const params = request.parameter;
-      getStorage('connectedWebsites', () => {
-        let queryString = '';
-        for (const key in params) {
-          if (params.hasOwnProperty(key)) {
-            const value = encodeURIComponent(params[key]);
-            queryString += `${key}=${value}&`;
-          }
+      let queryString = '';
+      for (const key in params) {
+        if (params.hasOwnProperty(key)) {
+          const value = encodeURIComponent(params[key]);
+          queryString += `${key}=${value}&`;
         }
-        chrome.windows.create({
-          url: `index.html#popup/notification/neo3-signature?${queryString}messageID=${request.ID}&sign=1`,
-          focused: true,
-          width: 386,
-          height: 620,
-          left: 0,
-          top: 0,
-          type: 'popup',
-        });
-      });
+      }
+      createWindow(
+        `neo3-signature?${queryString}messageID=${request.ID}&sign=1`
+      );
       sendResponse('');
       return;
     }
     case requestTargetN3.SignTransaction: {
       const params = request.parameter;
-      getStorage('connectedWebsites', (res) => {
-        let queryString = '';
-        for (const key in params) {
-          if (params.hasOwnProperty(key)) {
-            const value =
-              key === 'transaction' ? JSON.stringify(params[key]) : params[key];
-            queryString += `${key}=${value}&`;
-          }
+      let queryString = '';
+      for (const key in params) {
+        if (params.hasOwnProperty(key)) {
+          const value =
+            key === 'transaction' ? JSON.stringify(params[key]) : params[key];
+          queryString += `${key}=${value}&`;
         }
-        chrome.windows.create({
-          url: `index.html#popup/notification/neo3-sign-transaction?${queryString}messageID=${request.ID}`,
-          focused: true,
-          width: 386,
-          height: 620,
-          left: 0,
-          top: 0,
-          type: 'popup',
-        });
-      });
+      }
+      createWindow(
+        `neo3-sign-transaction?${queryString}messageID=${request.ID}`
+      );
       sendResponse('');
       return;
     }
     case requestTargetN3.Invoke: {
       const params = request.parameter as N3InvokeArgs;
-      const currWallet = await getLocalStorage('wallet', () => {});
+      const currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
       const tempScriptHash = getScriptHashFromAddress(
         currWallet.accounts[0].address
       );
@@ -1739,33 +1471,17 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           params.signers[0].scopes = WitnessScope.CalledByEntry;
         }
       }
-      getStorage('connectedWebsites', async () => {
-        const storageName = `InvokeArgsArray`;
-        const saveData = {};
-        const invokeArgsArray =
-          (await getLocalStorage(storageName, () => {})) || [];
-        const data = {
-          ...params,
-          messageID: request.ID,
-        };
-        saveData[storageName] = [data, ...invokeArgsArray];
-        setLocalStorage(saveData);
-        chrome.windows.create({
-          url: `index.html#popup/notification/neo3-invoke?messageID=${request.ID}`,
-          focused: true,
-          width: 386,
-          height: 620,
-          left: 0,
-          top: 0,
-          type: 'popup',
-        });
-      });
+      const localData =
+        (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+      const newData = { ...localData, [request.ID]: params };
+      setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
+      createWindow(`neo3-invoke?messageID=${request.ID}`);
       sendResponse('');
       return;
     }
     case requestTargetN3.InvokeMultiple: {
       const params = request.parameter as N3InvokeMultipleArgs;
-      const currWallet = await getLocalStorage('wallet', () => {});
+      const currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
       const tempScriptHash = getScriptHashFromAddress(
         currWallet.accounts[0].address
       );
@@ -1784,37 +1500,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           params.signers[0].scopes = WitnessScope.CalledByEntry;
         }
       }
-      getStorage('connectedWebsites', async () => {
-        let queryString = '';
-        for (const key in params) {
-          if (params.hasOwnProperty(key)) {
-            const value =
-              key === 'invokeArgs' || key === 'signers'
-                ? JSON.stringify(params[key])
-                : params[key];
-            queryString += `${key}=${value}&`;
-          }
-        }
-        const storageName = `InvokeArgsArray`;
-        const saveData = {};
-        const invokeArgsArray =
-          (await getLocalStorage(storageName, () => {})) || [];
-        const data = {
-          ...params,
-          messageID: request.ID,
-        };
-        saveData[storageName] = [data, ...invokeArgsArray];
-        setLocalStorage(saveData);
-        chrome.windows.create({
-          url: `index.html#popup/notification/neo3-invoke-multiple?messageID=${request.ID}`,
-          focused: true,
-          width: 386,
-          height: 620,
-          left: 0,
-          top: 0,
-          type: 'popup',
-        });
-      });
+      const localData =
+        (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+      const newData = { ...localData, [request.ID]: params };
+      setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
+      createWindow(`neo3-invoke-multiple?messageID=${request.ID}`);
       sendResponse('');
       return;
     }
@@ -1836,7 +1526,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         id: 1,
       };
       httpPost(currN3Network.rpcUrl, data, (res) => {
-        console.log(res);
         const index = res?.result?.balance
           ? res?.result?.balance.findIndex((item) =>
               assetID.includes(item.assethash)
@@ -1859,19 +1548,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           params: [assetID, 'decimals'],
         };
         httpPost(currN3Network.rpcUrl, decimalsData, (decimalsRes) => {
-          let decimals = 0;
-          if (
-            decimalsRes?.result.state === 'HALT' &&
-            decimalsRes?.result.stack?.[0]?.value
-          ) {
-            if (decimalsRes?.result.stack[0].type === 'Integer') {
-              decimals = Number(decimalsRes?.result.stack[0].value || 0);
-            }
-            if (decimalsRes?.result.stack[0].type === 'ByteArray') {
-              const hexstr = reverseHex(decimalsRes?.result.stack[0].value);
-              decimals = new BigNumber(hexstr || 0, 16).toNumber();
-            }
-          }
+          const decimals = handleNeo3StackNumberValue(decimalsRes);
           assetBalance = new BigNumber(assetBalance).shiftedBy(-decimals);
           if (assetBalance.comparedTo(new BigNumber(parameter.amount)) >= 0) {
             let queryString = '';
@@ -1881,7 +1558,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 queryString += `${key}=${value}&`;
               }
             }
-            getLocalStorage('wallet', (wallet) => {
+            getLocalStorage(STORAGE_NAME.wallet, (wallet) => {
               if (
                 wallet !== undefined &&
                 wallet.accounts[0].address !== parameter.fromAddress
@@ -1893,15 +1570,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
                 });
                 sendResponse('');
               } else {
-                chrome.windows.create({
-                  url: `index.html#popup/notification/neo3-transfer?${queryString}messageID=${request.ID}`,
-                  focused: true,
-                  width: 386,
-                  height: 620,
-                  left: 0,
-                  top: 0,
-                  type: 'popup',
-                });
+                createWindow(
+                  `neo3-transfer?${queryString}messageID=${request.ID}`
+                );
               }
             });
           } else {
@@ -1957,6 +1628,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         (e) => e.chainId === parameter.chainId
       );
       if (parameter.chainId === 0 && !tempNetwork) {
+        // 0 is N3 private network
         windowCallback({
           return: request.target,
           error: ERRORS.MALFORMED_INPUT,
@@ -1972,15 +1644,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           queryString += `${key}=${value}&`;
         }
       }
-      chrome.windows.create({
-        url: `index.html#popup/notification/wallet-switch-network?${queryString}messageID=${request.ID}`,
-        focused: true,
-        width: 386,
-        height: 620,
-        left: 0,
-        top: 0,
-        type: 'popup',
-      });
+      createWindow(
+        `wallet-switch-network?${queryString}messageID=${request.ID}`
+      );
       sendResponse('');
       return;
     }
@@ -1994,35 +1660,16 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           queryString += `${key}=${value}&`;
         }
       }
-      chrome.windows.create({
-        url: `index.html#popup/notification/wallet-switch-account?${queryString}messageID=${request.ID}`,
-        focused: true,
-        width: 386,
-        height: 620,
-        left: 0,
-        top: 0,
-        type: 'popup',
-      });
+      createWindow(
+        `wallet-switch-account?${queryString}messageID=${request.ID}`
+      );
       sendResponse('');
       return;
     }
+    //#endregion
   }
   return true;
 });
-
-export function windowCallback(data) {
-  chrome.tabs.query({ active: true, currentWindow: true }, (tabs: any) => {
-    // console.log(tabs);
-    // tabCurr = tabs;
-    if (tabs.length > 0) {
-      tabs.forEach((item) => {
-        chrome.tabs.sendMessage(item.id, data, () => {
-          // tabCurr = null;
-        });
-      });
-    }
-  });
-}
 
 chrome.notifications.onClicked.addListener((id: string) => {
   chrome.windows.create({

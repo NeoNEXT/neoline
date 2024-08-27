@@ -35,7 +35,6 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 type TabType = 'details' | 'data';
 
@@ -71,10 +70,10 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
   private accountSub: Unsubscribable;
   public signAddress: string;
   public n2Network: RpcNetwork;
-  private currentWallet: Wallet2 | Wallet3;
+  private currentWallet: Wallet2;
   private chainType: ChainType;
   private neo2WIFArr: string[];
-  private neo2WalletArr: Array<Wallet2 | Wallet3>;
+  private neo2WalletArr: Array<Wallet2>;
   constructor(
     private aRoute: ActivatedRoute,
     private router: Router,
@@ -91,7 +90,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
-      this.currentWallet = state.currentWallet;
+      this.currentWallet = state.currentWallet as Wallet2;
       this.signAddress = state.currentWallet?.accounts[0]?.address;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.neo2WIFArr = state.neo2WIFArr;
@@ -121,11 +120,15 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
         }
       }
       if (Number(this.pramsData.fee) > 0) {
-        this.assetState.getAssetRate('GAS', GAS).then((rate) => {
-          this.feeMoney = new BigNumber(this.pramsData.fee)
-            .times(rate || 0)
-            .toFixed();
-        });
+        this.assetState
+          .getAssetAmountRate({
+            chainType: 'Neo2',
+            assetId: GAS,
+            amount: this.pramsData.fee,
+          })
+          .then((res) => {
+            this.feeMoney = res;
+          });
       }
       this.dataJson = this.pramsData;
       this.dataJson.messageID = undefined;
@@ -187,18 +190,10 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
       } else {
         this.fee = 0;
         if (this.showFeeEdit) {
-          if (this.assetState.gasFeeSpeed) {
-            this.fee = bignumber(this.minFee)
-              .add(bignumber(this.assetState.gasFeeSpeed.propose_price))
-              .toNumber();
-          } else {
-            const tempGasFeeSpeed = await this.assetState
-              .getGasFee()
-              .toPromise();
-            this.fee = bignumber(this.minFee)
-              .add(bignumber(tempGasFeeSpeed.propose_price))
-              .toNumber();
-          }
+          const tempGasFeeSpeed = await this.assetState.getGasFee().toPromise();
+          this.fee = bignumber(this.minFee)
+            .add(bignumber(tempGasFeeSpeed.propose_price))
+            .toNumber();
         }
       }
       if (
@@ -324,16 +319,17 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
               );
             } else {
               const setData = {};
-              setData[`TxArr_${this.n2Network.id}`] =
+              setData[`TxArr_${this.chainType}-${this.n2Network.id}`] =
                 (await this.chrome.getLocalStorage(
-                  `TxArr_${this.n2Network.id}`
+                  `TxArr_${this.chainType}-${this.n2Network.id}`
                 )) || [];
-              setData[`TxArr_${this.n2Network.id}`].push(
+              setData[`TxArr_${this.chainType}-${this.n2Network.id}`].push(
                 '0x' + transaction.hash
               );
               this.chrome.setLocalStorage(setData);
               this.dialog.open(PopupTransferSuccessDialogComponent, {
                 panelClass: 'custom-dialog-panel',
+                backdropClass: 'custom-dialog-backdrop',
               });
               this.chrome.windowCallback(
                 {
@@ -407,7 +403,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
       });
       newTx.script = script;
       if (this.assetIntentOverrides == null) {
-        this.invokeArgs.forEach(async (item) => {
+        this.invokeArgs.forEach((item) => {
           const toScript =
             item.scriptHash.startsWith('0x') && item.scriptHash.length === 42
               ? item.scriptHash.substring(2)
@@ -620,8 +616,9 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
       this.assetState
         .getNeo2Utxo(this.signAddress, assetid)
         .subscribe((balances: any) => {
-          if (balances.length === 0) {
+          if (!balances || balances?.length === 0) {
             reject('no balance');
+            return;
           }
           let assetId = balances[0].asset_id;
           if (assetId.startsWith('0x') && assetId.length === 66) {
@@ -747,6 +744,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
     this.dialog
       .open(PopupEditFeeDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: {
           fee: this.fee,
           minFee: this.minFee,
@@ -762,11 +760,15 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
           if (res === 0 || res === '0') {
             this.feeMoney = '0';
           } else {
-            this.assetState.getAssetRate('GAS', GAS).then((rate) => {
-              this.feeMoney = new BigNumber(this.fee)
-                .times(rate || 0)
-                .toFixed();
-            });
+            this.assetState
+              .getAssetAmountRate({
+                chainType: 'Neo2',
+                assetId: GAS,
+                amount: this.fee,
+              })
+              .then((res) => {
+                this.feeMoney = res;
+              });
           }
         }
         this.signTx();

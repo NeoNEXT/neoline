@@ -7,9 +7,11 @@
         theme
         src="/assets/images/common/nav-arrow.svg"
       />
-      <div class="asset-logo-box big">
-        <img class="asset-logo" [assetId]="nft?.image_url" appErrorSrc alt="" />
-      </div>
+      <token-logo
+        customClass="big"
+        [isNFTContract]="true"
+        [symbol]="nft?.symbol"
+      ></token-logo>
       <div class="more" (click)="showMenu = !showMenu">
         <span></span>
         <span></span>
@@ -23,7 +25,7 @@
       <ul class="pop-ups-menu" *ngIf="showMenu">
         <li (click)="toWeb()">
           <img theme src="assets/images/account/home-explorer.svg" alt="" />{{
-            "viewOnNeoTube" | translate | async
+            "ViewOnExplorer" | translate | async
           }}
         </li>
       </ul>
@@ -36,10 +38,7 @@
         <img theme src="assets/images/transfer/receive.svg" alt="" />
         {{ "receive" | translate | async }}
       </div>
-      <div
-        class="item transfer"
-        [routerLink]="['/popup/transfer/create/nft/' + nftContract]"
-      >
+      <div class="item transfer" (click)="sendNFT()">
         <img theme src="assets/images/transfer/transfer.svg" alt="" />
         {{ "transfer" | translate | async }}
       </div>
@@ -47,25 +46,42 @@
   </div>
   <div class="tabs-container">
     <span
-      [class]="{ selected: selectedIndex === 0 }"
-      (click)="selectedIndex = 0"
+      [class]="{ selected: selectedTab === 'tokens' }"
+      (click)="selectedTab = 'tokens'"
     >
       {{ "Tokens" }}
     </span>
     <span
-      [class]="{ selected: selectedIndex === 1 }"
-      (click)="selectedIndex = 1"
+      *ngIf="previouslyOwnedNft.length > 0"
+      [class]="{ selected: selectedTab === 'previouslyOwned' }"
+      (click)="selectedTab = 'previouslyOwned'"
+    >
+      {{ "Previously Owned" }}
+    </span>
+    <span
+      [class]="{ selected: selectedTab === 'transactions' }"
+      (click)="selectedTab = 'transactions'"
     >
       {{ "transaction" | translate | async }}
     </span>
   </div>
   <app-nft-tokens
-    [hidden]="selectedIndex === 1"
-    [nftTokens]="nft?.tokens"
+    [hidden]="selectedTab !== 'tokens'"
+    [nftTokens]="ownerNft"
+    [nftContract]="nftContract"
+    [chainType]="chainType"
+    [neoXNetwork]="neoXNetwork"
+  ></app-nft-tokens>
+  <app-nft-tokens
+    [hidden]="selectedTab !== 'previouslyOwned'"
+    [nftTokens]="previouslyOwnedNft"
+    [nftContract]="nftContract"
+    [chainType]="chainType"
+    [neoXNetwork]="neoXNetwork"
   ></app-nft-tokens>
   <app-nft-tx-page
     *ngIf="nftContract"
-    [hidden]="selectedIndex === 0"
+    [hidden]="selectedTab !== 'transactions'"
     [symbol]="nft?.symbol"
     [nftContract]="nftContract"
   ></app-nft-tx-page>

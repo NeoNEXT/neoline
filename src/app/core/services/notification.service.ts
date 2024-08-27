@@ -19,6 +19,7 @@ export class NotificationService {
     signFailed: 'Signature failed',
     transferFailed: 'Transfer failed',
     nameModifySucc: 'Name modify success!',
+    networkModifySucc: 'Network modify success!',
     nameModifyFailed: 'Name modify failed',
     walletCreateSucc: 'Wallet creation success!',
     walletCreateFailed: 'Wallet creation failed',
@@ -31,7 +32,7 @@ export class NotificationService {
     agreePrivacyPolicy: 'Please agree to the privacy agreement',
     insufficientBalance: 'Insufficient GAS to pay for fees! Required',
     butOnlyHad: 'but only had',
-    insufficientSystemFee: 'Insufficient balance when system fee added',
+    insufficientSystemFee: 'Insufficient balance when gas fee added',
     rpcError: 'rpc error, please check the console.',
     InsufficientNetworkFee: 'Insufficient network fee',
     InsufficientGas: 'Insufficient GAS to pay for fees',
@@ -40,6 +41,11 @@ export class NotificationService {
     LedgerUnSupportSignError: `error: 'There was an error signing this transaction. Ledger does not support this method.`,
     switchSucc: 'switch successfully!',
     PleaseEnterWalletName: 'Please enter wallet name',
+    AddressAdded: 'Address added',
+    switchOnePasswordFirst:
+      'Please switch to the new password management mode first.',
+    copied: 'Copied!',
+    exceedDepositLimit: 'Exceeding the maximum deposit limit',
   };
   private CN = {
     close: '关闭',
@@ -56,6 +62,7 @@ export class NotificationService {
     signFailed: '签名失败',
     transferFailed: '转账失败',
     nameModifySucc: '名称修改成功',
+    networkModifySucc: '网络修改成功！',
     nameModifyFailed: '名称修改失败',
     walletCreateFailed: '钱包创建失败',
     walletCreateSucc: '钱包创建成功',
@@ -68,7 +75,7 @@ export class NotificationService {
     agreePrivacyPolicy: '请同意隐私协议',
     insufficientBalance: 'GAS 不足以支付费用！需要',
     butOnlyHad: '但只有',
-    insufficientSystemFee: '加上系统费用后余额不足',
+    insufficientSystemFee: '加上燃料费后余额不足',
     rpcError: '节点返回错误, 请查看控制台。',
     InsufficientNetworkFee: '网络费不足',
     InsufficientGas: 'GAS 不足以支付费用',
@@ -77,6 +84,10 @@ export class NotificationService {
     LedgerUnSupportSignError: '签名此交易时出错。硬件不支持该方法。',
     switchSucc: '切换成功！',
     PleaseEnterWalletName: '请输入钱包名',
+    AddressAdded: '添加成功',
+    switchOnePasswordFirst: '请先切换到新的密码管理模式',
+    copied: '已复制！',
+    exceedDepositLimit: '超过最大存入值',
   };
   constructor(private settingState: SettingState) {
     this.content = this.EN;

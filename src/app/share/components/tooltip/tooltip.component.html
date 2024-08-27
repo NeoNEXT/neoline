@@ -1,0 +1,4 @@
+<div class="content" (mouseenter)="showPopup()" (mouseleave)="hiddenPopup()">
+  <ng-content></ng-content>
+  <span class="tip" [ngClass]="placement" *ngIf="isShowPopup" [innerHTML]="tip"></span>
+</div>

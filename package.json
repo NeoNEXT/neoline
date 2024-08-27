@@ -1,6 +1,6 @@
 {
   "name": "neoline",
-  "version": "4.0.7",
+  "version": "5.0.0",
   "engines": {
     "node": "^16.20.1",
     "npm": "~8.19.4"
@@ -36,7 +36,8 @@
     "@cityofzion/neon-core-neo3-rc1": "npm:@cityofzion/neon-core@^5.0.0-next.7",
     "@cityofzion/neon-js": "^4.8.0",
     "@cityofzion/neon-js-neo3": "npm:@cityofzion/neon-js@^5.5.1",
-    "@ledgerhq/hw-transport-webhid": "^6.27.1",
+    "@ledgerhq/hw-app-eth": "^6.35.6",
+    "@ledgerhq/hw-transport-webhid": "^6.28.4",
     "@ngrx/store": "^13.2.0",
     "@types/crypto-js": "^3.1.47",
     "@types/elliptic": "^6.4.12",
@@ -48,11 +49,17 @@
     "core-js": "^3.6.5",
     "crypto-browserify": "^3.12.0",
     "crypto-js": "^4.1.1",
+    "eth-rpc-errors": "^4.0.3",
+    "ethers": "^6.11.1",
+    "events": "^3.3.0",
+    "likloadm-ethereum-cryptography": "^1.0.20",
     "mathjs": "^7.0.1",
+    "multiformats": "^13.1.0",
     "path-browserify": "^1.0.1",
     "process": "^0.11.10",
     "sortablejs": "^1.15.0",
     "stream-browserify": "^3.0.0",
+    "superstruct": "^1.0.4",
     "tslib": "^2.0.0",
     "util": "^0.12.5",
     "zone.js": "~0.11.4"

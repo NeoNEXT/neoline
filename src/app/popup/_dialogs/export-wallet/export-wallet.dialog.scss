@@ -1,0 +1,49 @@
+.content {
+  text-align: center;
+  padding-top: 28px;
+  padding-bottom: 24px;
+  img {
+    height: 60px;
+    filter: drop-shadow(1000px 0 0 #09baa5);
+    transform: translate(-1000px);
+  }
+  .title {
+    font-size: 16px;
+    font-weight: 500;
+    line-height: 20px;
+    letter-spacing: 0.01em;
+    color: var(--title-color);
+    margin-top: 18px;
+  }
+  .export-all {
+    line-height: 18px;
+    color: var(--second-color);
+    margin-top: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .select {
+    display: inline-block;
+    width: 18px;
+    height: 18px;
+    border-radius: 4px;
+    border: 1px solid var(--tip-color);
+    margin-right: 8px;
+    &.active {
+      border: none;
+      background: url("/assets/images/common/selected-account.svg") center
+        center no-repeat;
+    }
+  }
+}
+
+.choose-group {
+  padding: 0 24px 24px;
+  button {
+    width: calc(50% - 12px);
+    &.cancel {
+      margin-right: 24px;
+    }
+  }
+}

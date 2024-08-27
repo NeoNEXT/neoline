@@ -1,0 +1,66 @@
+.container {
+  padding: 0 24px;
+  letter-spacing: 0.01em;
+  .host {
+    text-align: center;
+    padding-top: 12px;
+    button {
+      height: 40px;
+      display: inline-flex;
+      align-items: center;
+      border-radius: 23px;
+      border: 1px solid var(--border-color);
+      padding: 0 16px;
+      font-family: NeverMind-Medium;
+      color: var(--title-color);
+      img {
+        width: 24px;
+        margin-right: 8px;
+      }
+    }
+  }
+  .title {
+    font-size: 20px;
+    line-height: 24px;
+    text-align: center;
+    color: var(--title-color);
+    margin-top: 16px;
+  }
+  .tip {
+    line-height: 18px;
+    text-align: center;
+    color: var(--sub-title-color);
+    margin-top: 4px;
+  }
+  .asset-info {
+    height: 225px;
+    border-radius: 8px;
+    background: var(--hover-color);
+    margin: 12px 0;
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 14px;
+    line-height: 18px;
+    .balance {
+      min-width: 120px;
+    }
+    .label {
+      color: var(--sub-title-color);
+    }
+    .value {
+      color: var(--title-color);
+      margin-top: 4px;
+    }
+  }
+}
+.btn-group {
+  padding: 12px 24px 0 24px;
+  border-top: 1px solid var(--line-color);
+  button {
+    width: calc(50% - 12px);
+    &.cancel {
+      margin-right: 24px;
+    }
+  }
+}

@@ -5,12 +5,14 @@ import {
   ADD_NEO2_WALLETS,
   UPDATE_WALLET,
   ADD_NEO3_WALLETS,
+  ADD_NEOX_WALLET,
 } from '@/app/popup/_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { NeonService, GlobalService, ChromeService } from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
+import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 
 @Component({
   selector: 'app-account-name',
@@ -36,6 +38,34 @@ export class AccountNameComponent {
       return;
     }
     const { account, index } = this.accountData;
+    if (this.chainType === 'NeoX') {
+      const tempWallet: EvmWalletJSON = {
+        name: this.name,
+        accounts: [
+          {
+            address: account.address,
+            extra: {
+              publicKey: account.publicKey,
+              ledgerAddressIndex: index,
+              ledgerSLIP44: SLIP44[this.chainType],
+            },
+          },
+        ],
+      };
+      const isEfficient = this.neon.verifyWallet(tempWallet);
+      if (isEfficient) {
+        this.store.dispatch({
+          type: ADD_NEOX_WALLET,
+          data: { wallet: tempWallet },
+        });
+        this.store.dispatch({ type: UPDATE_WALLET, data: tempWallet });
+        this.chrome.accountChangeEvent(tempWallet);
+        this.importSuccess.emit();
+      } else {
+        this.global.snackBarTip('existingWallet');
+      }
+      return;
+    }
     const accountLike = account.export();
     accountLike.extra = {
       publicKey: account.publicKey,

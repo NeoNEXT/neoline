@@ -10,9 +10,17 @@
     <p class="tip" *ngIf="chainType === 'Neo3'">
       {{ status.msgNeo3 || status.msg | translate | async }}
     </p>
+    <p class="tip" *ngIf="chainType === 'NeoX'">
+      {{ status.msgNeoX || status.msg | translate | async }}
+    </p>
     <p class="note">
       {{
-        (chainType === "Neo2" ? "LedgerInstallNeoApp" : "LedgerInstallNeo3App")
+        (chainType === "NeoX"
+          ? "LedgerInstallNeoXApp"
+          : chainType === "Neo2"
+          ? "LedgerInstallNeoApp"
+          : "LedgerInstallNeo3App"
+        )
           | translate
           | async
       }}
@@ -62,12 +70,13 @@
           <p class="address">{{ selectedAccount?.address }}</p>
           <div class="balance">
             <p *ngFor="let asset of accountBalance">
-              <img
+              <token-logo
+                customClass="small"
                 [assetId]="asset?.asset_id"
-                [chain]="chainType"
-                appErrorSrc
-                alt=""
-              />
+                [chainType]="chainType"
+                [symbol]="asset?.symbol"
+                [neoXChainId]="neoXChainId"
+              ></token-logo>
               {{ asset?.balance }}
             </p>
           </div>

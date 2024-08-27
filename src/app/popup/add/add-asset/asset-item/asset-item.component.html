@@ -1,7 +1,11 @@
 <div class="asset-item">
-  <div class="asset-logo">
-    <img [assetId]="asset?.asset_id" appErrorSrc alt="" />
-  </div>
+  <token-logo
+    customClass="list"
+    [assetId]="asset?.asset_id"
+    [chainType]="chainType"
+    [symbol]="asset?.symbol"
+    [neoXChainId]="networkId"
+  ></token-logo>
   <div class="item-middle">
     <div class="asset-name">
       <span>{{ asset.name }}</span>

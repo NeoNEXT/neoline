@@ -70,30 +70,25 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
     } else {
       createPwd = this.createForm.value.password;
     }
-    this.neon
-      .createWallet(
-        createPwd,
-        this.createForm.value.name
-      )
-      .subscribe(
-        (res: any) => {
-          if (this.neon.verifyWallet(res)) {
-            if (!this.hasPwdWallet) {
-              this.chrome.setStorage(STORAGE_NAME.onePassword, true);
-              this.chrome.setPassword(createPwd);
-            }
-            this.submitThis.emit(res);
-          } else {
-            this.global.snackBarTip('existingWallet');
+    this.neon.createWallet(createPwd, this.createForm.value.name).then(
+      (res: any) => {
+        if (this.neon.verifyWallet(res)) {
+          if (!this.hasPwdWallet) {
+            this.chrome.setStorage(STORAGE_NAME.onePassword, true);
+            this.chrome.setPassword(createPwd);
           }
-          this.loading = false;
-        },
-        (err: any) => {
-          this.global.log('create wallet faild', err);
-          this.global.snackBarTip('walletCreateFailed');
-          this.loading = false;
+          this.submitThis.emit(res);
+        } else {
+          this.global.snackBarTip('existingWallet');
         }
-      );
+        this.loading = false;
+      },
+      (err: any) => {
+        this.global.log('create wallet faild', err);
+        this.global.snackBarTip('walletCreateFailed');
+        this.loading = false;
+      }
+    );
   }
 
   public cancel() {

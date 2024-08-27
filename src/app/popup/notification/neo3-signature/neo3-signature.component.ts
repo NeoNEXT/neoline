@@ -9,7 +9,6 @@ import { RpcNetwork, ChainType } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 @Component({
@@ -25,7 +24,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
   private accountSub: Unsubscribable;
   public address: string;
   public n3Network: RpcNetwork;
-  private currentWallet: Wallet2 | Wallet3;
+  private currentWallet: Wallet3;
   private neo3WIFArr: string[];
   private neo3WalletArr: Wallet3[];
   constructor(
@@ -37,7 +36,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
-      this.currentWallet = state.currentWallet;
+      this.currentWallet = state.currentWallet as Wallet3;
       this.address = state.currentWallet?.accounts[0]?.address;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neo3WIFArr = state.neo3WIFArr;

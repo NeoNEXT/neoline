@@ -7,14 +7,14 @@
         theme
         src="/assets/images/common/nav-arrow.svg"
       />
-      <div class="asset-logo-box big">
-        <img
-          class="asset-logo"
-          [assetId]="balance?.asset_id"
-          appErrorSrc
-          alt=""
-        />
-      </div>
+      <token-logo
+        customClass="big"
+        [assetId]="balance?.asset_id"
+        [imageUrl]="balance?.image_url"
+        [chainType]="chainType"
+        [symbol]="balance?.symbol"
+        [neoXChainId]="networkId"
+      ></token-logo>
       <div class="more" (click)="showMenu = !showMenu">
         <span></span>
         <span></span>
@@ -33,13 +33,13 @@
         </li>
         <li (click)="toWeb()">
           <img theme src="assets/images/account/home-explorer.svg" alt="" />{{
-            "viewOnNeoTube" | translate | async
+            "ViewOnExplorer" | translate | async
           }}
         </li>
       </ul>
     </div>
     <p class="asset-balance">
-      {{ balance?.balance || 0 | numberFixed }} {{ balance?.symbol }}
+      {{ balance?.balance || 0 | numberFixed : 8 }} {{ balance?.symbol }}
     </p>
     <p class="asset-money">
       {{ balance?.rateBalance | numberFixed : 2 }} {{ rateCurrency }}
@@ -49,7 +49,10 @@
         <img theme src="assets/images/transfer/receive.svg" alt="" />
         {{ "receive" | translate | async }}
       </div>
-      <div class="item transfer" [routerLink]="['/popup/transfer/create/' + assetId]">
+      <div
+        class="item transfer"
+        [routerLink]="['/popup/transfer/create/' + assetId]"
+      >
         <img theme src="assets/images/transfer/transfer.svg" alt="" />
         {{ "transfer" | translate | async }}
       </div>
@@ -58,7 +61,7 @@
   <div class="txs">
     <p class="title">{{ "transaction" | translate | async }}</p>
     <app-asset-tx-page
-      *ngIf="assetId"
+      *ngIf="assetId && balance?.symbol"
       [assetId]="assetId"
       [symbol]="balance?.symbol"
     >

@@ -1,12 +1,21 @@
 <div class="container">
   <div class="header">
-    <div class="invoke-type">· {{ isSign ? 'SIGNMESSAGEWITHOUTSALT' : 'SIGNMESSAGE' }}</div>
+    <div class="invoke-type">
+      · {{ isSign ? "SIGNMESSAGEWITHOUTSALT" : "SIGNMESSAGE" }}
+    </div>
     <p class="title">{{ "thSignTitle" | translate | async }}</p>
-    <p class="account"><img [avatar]="address" />{{ address | longStr : 10 }}</p>
+    <p class="warning">
+      {{ "evmSignWarning" | translate | async }}
+    </p>
+    <p class="account">
+      <img [avatar]="address" />{{ address | longStr : 10 }}
+    </p>
   </div>
   <div class="content">
     <p class="hex-label">{{ "message" | translate | async }}</p>
-    <p class="json-box serialize" *ngIf="jsonMessage">{{ jsonMessage | json }}</p>
+    <p class="json-box serialize" *ngIf="jsonMessage">
+      {{ jsonMessage | json }}
+    </p>
     <p class="json-box serialize" *ngIf="!jsonMessage">{{ message }}</p>
   </div>
   <div class="btn-group">

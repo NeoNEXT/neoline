@@ -1,5 +1,6 @@
-
-
+copy {
+  width: 100%;
+}
 .container {
   display: flex;
   flex-direction: column;
@@ -20,6 +21,7 @@
     .name {
       font-family: NeverMind-Medium;
       font-size: 18px;
+      line-height: 20px;
       color: var(--title-color);
       padding-top: 16px;
       display: flex;
@@ -94,11 +96,48 @@
   }
   button {
     width: 100%;
-    &.key {
-      margin-top: 39px;
+    border-radius: 8px;
+    background: #F5F9F9;
+    color: #0AC7B7;
+    text-align: left;
+    padding: 0 16px;
+    cursor: pointer;
+    :host-context([data-theme-style="dark-theme"]) & {
+      background: #252B2A;
+      color: #11BAAC;
     }
-    &.link {
+    &:hover {
+      background: #0AC7B7;
+      color: #fff;
+      :host-context([data-theme-style="dark-theme"]) & {
+        background: #11BAAC;
+        color: #fff;
+      }
+    }
+    &.key {
       margin-top: 16px;
     }
+    &.mnemonic {
+      margin-top: 8px;
+    }
+  }
+}
+
+button.remove {
+  width: calc(100% - 48px);
+  position: absolute;
+  left: 24px;
+  right: 24px;
+  bottom: 24px;
+  border-radius: 24px;
+  border: 0.5px solid #CFDFE5;
+  color: var(--error-color);
+  cursor: pointer;
+  :host-context([data-theme-style="dark-theme"]) & {
+    border-color: #434747;
+  }
+  &:hover {
+    border-color: rgba(250, 85, 85, 0.16);
+    background: rgba(250, 85, 85, 0.16);
   }
 }

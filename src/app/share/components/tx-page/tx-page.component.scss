@@ -1,0 +1,102 @@
+.popup-home-tx-page {
+  .tx-item {
+    padding: 16px 24px;
+    cursor: pointer;
+    position: relative;
+    &:hover {
+      background: var(--hover-color);
+    }
+    .head {
+      font-family: NeverMind-Regular;
+      .time {
+        font-size: 12px;
+        color: var(--tip-color);
+      }
+      .status {
+        display: inline-block;
+        height: 15px;
+        line-height: 15px;
+        margin-left: 12px;
+        font-size: 10px;
+        border-radius: 8px;
+        background: #daf8f3;
+        color: var(--theme-color);
+        padding: 0 8px;
+        &.wait {
+          background: #ff814226;
+          color: #ff8142;
+        }
+        &.failed {
+          color: var(--error-color);
+          background: #feeeee;
+        }
+      }
+      .more-info-btn {
+        float: right;
+      }
+    }
+
+    .content {
+      margin-top: 17px;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+      font-size: 14px;
+      color: var(--title-color);
+      .txid {
+        margin-left: 12px;
+        font-family: NeverMind-Regular;
+      }
+      .amount-box {
+        flex-grow: 1;
+        text-align: right;
+        .asset-amount {
+          font-family: NeverMind-Medium;
+          &.send {
+            color: var(--theme-color);
+          }
+        }
+        .money-amount {
+          font-family: NeverMind-Regular;
+          font-size: 12px;
+          color: var(--sub-title-color);
+          margin-top: 8px;
+        }
+      }
+    }
+
+    hr {
+      border: none;
+      height: 1px;
+      border-top: 1px solid var(--line-color);
+      position: absolute;
+      bottom: 0px;
+      left: 24px;
+      right: 24px;
+    }
+    .btn-group {
+      margin-top: 16px;
+      border-top: 1px solid var(--line-color);
+      padding-top: 16px;
+      button {
+        width: auto;
+        height: 34px;
+        border-radius: 4px;
+        font-size: 12px;
+        padding-inline: 12px;
+        &.cancel {
+          margin-right: 15px;
+        }
+      }
+    }
+  }
+
+  .no-data,
+  .loading {
+    margin-top: 20px;
+    text-align: center;
+    font-size: 12px;
+    color: var(--tip-color);
+    margin-bottom: 40px;
+  }
+}

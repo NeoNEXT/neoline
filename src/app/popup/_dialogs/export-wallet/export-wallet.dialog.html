@@ -1,0 +1,21 @@
+<div class="content">
+  <img src="assets/images/avatar-menu/wallet-export.svg" alt="" />
+  <p class="title">{{ 'checkExportWallet' | translate | async }}</p>
+  <p class="export-all">
+    <span
+      class="select"
+      [ngClass]="{active: exportAll}"
+      (click)="exportAll = !exportAll"
+    ></span
+    >{{ 'exportAllWallet' | translate | async }}
+  </p>
+</div>
+
+<div class="choose-group">
+  <button class="cancel pop-ups" [mat-dialog-close]="false">
+    {{ 'cancel' | translate | async}}
+  </button>
+  <button class="confirm pop-ups" (click)="confirm()">
+    {{ 'yes' | translate | async}}
+  </button>
+</div>

@@ -36,6 +36,8 @@
       <app-asset-item
         *ngIf="searchAsset"
         [asset]="searchAsset"
+        [networkId]="networkId"
+        [chainType]="chainType"
         (onAddAsset)="addAsset()"
       ></app-asset-item>
       <div class="loading" *ngIf="isLoading">

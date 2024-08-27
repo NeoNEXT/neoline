@@ -9,6 +9,11 @@
 </div>
 <div class="popup-home">
   <div class="header">
+    <home-dapp-auth
+      [currentWallet]="currentWallet"
+      [allWallet]="allWallet"
+      [chainType]="chainType"
+    ></home-dapp-auth>
     <div class="wallet-info">
       <p class="name">{{ currentWallet?.name || "" }}</p>
       <copy [value]="address">
@@ -46,32 +51,35 @@
       </li>
       <li (click)="toWeb()">
         <img theme src="assets/images/account/home-explorer.svg" alt="" />{{
-          "viewOnNeoTube" | translate | async
+          "ViewOnExplorer" | translate | async
         }}
       </li>
       <li *ngIf="showRemove" (click)="removeAccount()">
-        <img theme src="assets/images/account/home-delete.svg" alt="" />{{
-          "removeAccount" | translate | async
-        }}
+        <img
+          class="delete"
+          src="assets/images/account/home-delete.svg"
+          alt=""
+        />{{ "removeAccount" | translate | async }}
       </li>
     </ul>
   </div>
   <div class="popup-home-body">
-    <div class="asset-logo-box">
-      <img
-        class="asset-logo"
+    <div class="token-logo">
+      <token-logo
         [assetId]="balance?.asset_id"
-        appErrorSrc
-        alt=""
-      />
+        [chainType]="chainType"
+        [symbol]="balance?.symbol"
+        [neoXChainId]="neoXNetwork.chainId"
+      ></token-logo>
     </div>
     <p class="asset-balance">
-      {{ balance?.balance || 0 | numberFixed }} {{ balance?.symbol }}
+      {{ balance?.balance || 0 | numberFixed : 8 }}
+      {{ chainType === "NeoX" ? neoXNetwork.symbol : balance?.symbol }}
     </p>
     <p class="asset-money">
       {{ balance?.rateBalance | numberFixed : 2 }} {{ rateCurrency }}
     </p>
-    <div class="transaction-btn-container">
+    <div class="transaction-btn-container" [ngClass]="{ bridge: showBridge() }">
       <div class="item receive" [routerLink]="['/popup/transfer/receive']">
         <img theme src="assets/images/transfer/receive.svg" alt="" />
         {{ "receive" | translate | async }}
@@ -80,12 +88,22 @@
         <img theme src="assets/images/transfer/transfer.svg" alt="" />
         {{ "transfer" | translate | async }}
       </div>
+      <div
+        *ngIf="showBridge()"
+        class="item receive"
+        [routerLink]="['/popup/bridge']"
+      >
+        <img theme src="assets/images/bridge/bridge.svg" alt="" />
+        {{ "Bridge" | translate | async }}
+      </div>
     </div>
 
     <div class="claim-container" *ngIf="showClaim">
-      <div class="gas-logo-box">
-        <img class="gas-logo" [assetId]="claimAssetId" appErrorSrc alt="" />
-      </div>
+      <token-logo
+        customClass="claim"
+        [assetId]="claimAssetId"
+        [chainType]="chainType"
+      ></token-logo>
       <div class="claim-status-box">
         <p class="number">{{ claimNumber | numberFixed }} GAS</p>
         <p class="status">{{ claimStatus | translate | async }}</p>
@@ -125,7 +143,20 @@
         [class]="{ selected: selectedIndex === 1 }"
         (click)="selectedIndex = 1"
       >
-        {{ currentWalletIsN3 ? "NEP11" : ("transaction" | translate | async) }}
+        {{
+          chainType === "Neo3"
+            ? "NEP11"
+            : chainType === "NeoX"
+            ? "NFT"
+            : ("transaction" | translate | async)
+        }}
+      </span>
+      <span
+        *ngIf="chainType === 'NeoX'"
+        [class]="{ selected: selectedIndex === 2 }"
+        (click)="selectedIndex = 2"
+      >
+        {{ "Activity" | translate | async }}
       </span>
       <img
         (click)="toAdd()"
@@ -136,16 +167,34 @@
         alt=""
       />
     </div>
-    <div [hidden]="selectedIndex === 1">
+    <div *ngIf="selectedIndex === 0">
       <app-assets (backAsset)="initNeo($event)"></app-assets>
+      <p class="get-help" (click)="getSupport()">
+        {{ "GetSupport" | translate | async }}{{ " " }}
+        <img src="assets/images/common/support-arrow.svg" alt="" />
+      </p>
     </div>
-    <div [hidden]="selectedIndex === 0">
-      <app-nfts *ngIf="currentWalletIsN3 === true"></app-nfts>
+    <div *ngIf="selectedIndex === 1">
+      <ng-container *ngIf="chainType !== 'Neo2'">
+        <app-nfts *ngIf="chainType === 'Neo3'"></app-nfts>
+        <app-evm-nfts *ngIf="chainType === 'NeoX'"></app-evm-nfts>
+        <p class="get-help" (click)="getSupport()">
+          {{ "GetSupport" | translate | async }}{{ " " }}
+          <img src="assets/images/common/support-arrow.svg" alt="" />
+        </p>
+      </ng-container>
+
       <app-asset-tx-page
-        *ngIf="currentWalletIsN3 === false"
+        *ngIf="chainType === 'Neo2'"
         [symbol]="balance?.symbol"
-      >
-      </app-asset-tx-page>
+      ></app-asset-tx-page>
+    </div>
+    <div *ngIf="selectedIndex === 2">
+      <app-asset-tx-page></app-asset-tx-page>
+      <p class="get-help" (click)="getSupport('txs')">
+        {{ "GetSupport" | translate | async }}{{ " " }}
+        <img src="assets/images/common/support-arrow.svg" alt="" />
+      </p>
     </div>
   </div>
 </div>

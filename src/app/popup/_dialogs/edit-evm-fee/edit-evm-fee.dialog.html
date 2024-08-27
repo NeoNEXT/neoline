@@ -1,0 +1,130 @@
+<div class="pop-ups-title">
+  {{ 'advancedGasFee' | translate | async }}
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    theme
+    src="assets/images/common/close.svg"
+    alt=""
+  />
+</div>
+
+<div class="add-tip">
+  <img src="assets/images/common/warning.svg" alt="" />
+  {{'advancedGasFeeRisk' | translate | async}}
+</div>
+
+<p class="custom" *ngIf="data.siteNeoXFeeInfo">
+  {{ 'Site' | translate | async }}: {{ data.siteNeoXFeeInfo.estimateGas |
+  numberFixed:8 }} {{data.symbol}}
+  <tooltip
+    [tip]="data.siteNeoXFeeInfo.gasPrice ? ('SiteLegacyFeeTip' | translate: {host: hostname, gasLimit: data.siteNeoXFeeInfo.gasLimit, gasPrice: data.siteNeoXFeeInfo.gasPrice} | async) : ('SiteTip' | translate: {host: hostname, maxFeePerGas: data.siteNeoXFeeInfo.maxFeePerGas, maxPriorityFee: data.siteNeoXFeeInfo.maxPriorityFee, gasLimit: data.siteNeoXFeeInfo.gasLimit} | async)"
+    placement="bottom"
+  >
+    <img src="assets/images/common/tooltip.svg" alt="" />
+  </tooltip>
+  <span class="site" (click)="useSite()">
+    {{'useSiteSuggestions' | translate | async}}
+  </span>
+</p>
+
+<p class="custom">
+  {{ 'customize' | translate | async }}: {{ data.customNeoXFeeInfo.estimateGas |
+  numberFixed:8 }} {{data.symbol}}
+</p>
+
+<form class="container" [formGroup]="editEvmFeeForm">
+  <div class="item" *ngIf="isEIP1559">
+    <p class="label">{{ 'maxFee' | translate | async }} (GWEI)</p>
+    <mat-form-field class="form-field" appearance="outline">
+      <input
+        matInput
+        required
+        min="0"
+        formControlName="maxFeePerGas"
+        oninput="value=value.replace(/^\D*(\d*(?:\.\d{0,9})?).*$/g, '$1')"
+        type="text"
+      />
+    </mat-form-field>
+    <p class="error" *ngIf="maxFeeIsLowPriorityFee">
+      {{ "maxFeeIsLowPriorityFee" | translate | async }}
+    </p>
+    <p class="error" *ngIf="!maxFeeIsLowPriorityFee && maxFeePerGasIsLow">
+      {{ "maxFeeIsLow" | translate | async }}
+    </p>
+    <p class="current">
+      {{'current' | translate | async}}:
+      {{getValueByGWEI(data.sourceNeoXFeeInfo.maxFeePerGas)}}
+    </p>
+  </div>
+
+  <div class="item" *ngIf="isEIP1559">
+    <p class="label">{{ 'maxPriorityFee' | translate | async }} (GWEI)</p>
+    <mat-form-field class="form-field" appearance="outline">
+      <input
+        matInput
+        required
+        min="0"
+        oninput="value=value.replace(/^\D*(\d*(?:\.\d{0,9})?).*$/g, '$1')"
+        formControlName="maxPriorityFeePerGas"
+        type="text"
+      />
+    </mat-form-field>
+    <p class="error" *ngIf="maxPriorityFeeIsLow">
+      {{ "maxPriorityFeeIsLow" | translate | async }}
+    </p>
+    <p class="current">
+      {{'current' | translate | async}}:
+      {{getValueByGWEI(data.sourceNeoXFeeInfo.maxPriorityFeePerGas)}}
+    </p>
+  </div>
+
+  <div class="item" *ngIf="!isEIP1559">
+    <p class="label">{{ 'gasPrice' | translate | async }}(GWEI)</p>
+    <mat-form-field class="form-field" appearance="outline">
+      <input
+        matInput
+        required
+        min="0"
+        oninput="value=value.replace(/^\D*(\d*(?:\.\d{0,9})?).*$/g, '$1')"
+        formControlName="gasPrice"
+        type="text"
+      />
+    </mat-form-field>
+    <p class="error" *ngIf="gasPriceIsLow">
+      {{ "gasPriceIsLow" | translate | async }}
+    </p>
+    <p class="current">
+      {{'current' | translate | async}}:
+      {{getValueByGWEI(data.sourceNeoXFeeInfo.gasPrice)}}
+    </p>
+  </div>
+
+  <div class="item">
+    <p class="label">{{ 'gasLimit' | translate | async }}</p>
+    <mat-form-field class="form-field" appearance="outline">
+      <input
+        matInput
+        required
+        min="0"
+        formControlName="gasLimit"
+        type="number"
+        onbeforepaste="clipboardData.setData('text',clipboardData.getData('text').replace(/[^\d]/g,''))"
+        oninput="value=value.replace(/[^\d.]/g,'')"
+      />
+    </mat-form-field>
+    <p class="error" *ngIf="editEvmFeeForm.get('gasLimit').errors?.min">
+      {{ "gasLimitRange" | translate | async }}
+    </p>
+  </div>
+</form>
+
+<button
+  class="confirm pop-ups"
+  [ngClass]="{
+  disabled: editEvmFeeForm.invalid || maxFeeIsLowPriorityFee
+}"
+  (click)="confirm()"
+>
+  {{ 'yes' | translate | async}}
+</button>

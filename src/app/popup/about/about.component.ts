@@ -21,13 +21,18 @@ export class PopupAboutComponent implements OnInit, OnDestroy {
     },
     {
       name: 'companyWebsite',
-      enUrl: 'https://neoline.io/',
-      zhUrl: 'https://neoline.io/en',
+      enUrl: 'https://neoline.io/en',
+      zhUrl: 'https://neoline.io/',
     },
     {
       name: 'contactUs',
-      enUrl: 'mailto:support@neoline.io',
-      zhUrl: 'mailto:support@neoline.io',
+      enUrl: 'https://t.me/neoline_community',
+      zhUrl: 'https://t.me/neoline_community',
+    },
+    {
+      name: 'FollowUs',
+      enUrl: 'https://x.com/NEOLine20',
+      zhUrl: 'https://x.com/NEOLine20',
     },
   ];
   settingStateSub: Unsubscribable;

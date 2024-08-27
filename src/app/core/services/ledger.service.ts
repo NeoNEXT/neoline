@@ -24,6 +24,9 @@ import { map } from 'rxjs/operators';
 import BigNumber from 'bignumber.js';
 import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
+import Eth, { ledgerService } from '@ledgerhq/hw-app-eth';
+import { EvmWalletJSON } from '@/app/popup/_lib/evm';
+import { ethers } from 'ethers';
 
 export const LedgerStatuses = {
   UNSUPPORTED: 'UNSUPPORTED',
@@ -37,12 +40,14 @@ const LedgerReadyStatusCode = 0x9000;
 @Injectable()
 export class LedgerService {
   deviceInstance;
-  accounts = { Neo2: [], Neo3: [] };
+  ethTransport;
+  accounts = { Neo2: [], Neo3: [], NeoX: [] };
   sendQueue = [];
   ledgerInUse = false;
 
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
+  private neoXNetwork: RpcNetwork;
   constructor(
     private http: HttpService,
     private global: GlobalService,
@@ -52,6 +57,7 @@ export class LedgerService {
     account$.subscribe((state) => {
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
     });
   }
 
@@ -115,6 +121,9 @@ export class LedgerService {
     return this.getAppName(chainType)
       .then(() => LedgerStatuses.READY)
       .catch((err) => {
+        if (chainType === 'NeoX') {
+          return LedgerStatuses[err] ? err : LedgerStatuses.APP_CLOSED;
+        }
         this.closeDevice();
         return LedgerStatuses[err] ? err : LedgerStatuses.APP_CLOSED;
       });
@@ -130,7 +139,12 @@ export class LedgerService {
         newAccounts.push(this.accounts[chainType][index]);
         continue;
       }
-      const account = await this.getPublicKey(index, chainType);
+      let account;
+      if (chainType === 'NeoX') {
+        account = await this.ethTransport.getAddress(`44'/60'/0'/0/${index}`);
+      } else {
+        account = await this.getPublicKey(index, chainType);
+      }
       this.accounts[chainType][index] = account;
       newAccounts.push(account);
     }
@@ -138,12 +152,20 @@ export class LedgerService {
   }
 
   getLedgerSignedTx(
-    unsignedTx: Transaction2 | Transaction3 | string,
-    wallet: Wallet2 | Wallet3,
+    unsignedTx:
+      | Transaction2
+      | Transaction3
+      | string
+      | ethers.TransactionRequest,
+    wallet: Wallet2 | Wallet3 | EvmWalletJSON,
     chainType: ChainType,
     magicNumber?: number,
     signOnly = false
   ): Promise<any> {
+    if (chainType === 'NeoX') {
+      return this.getNeoXSignature(unsignedTx, wallet as EvmWalletJSON);
+    }
+
     const txIsString = typeof unsignedTx === 'string';
     const serTx = txIsString
       ? unsignedTx
@@ -213,6 +235,45 @@ export class LedgerService {
   }
 
   //#region private function
+  async getNeoXSignPersonalMessage(message: string, wallet: EvmWalletJSON) {
+    const result = await this.ethTransport.signPersonalMessage(
+      `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+      Buffer.from(message).toString('hex')
+    );
+    let v = result['v'];
+    v = v.toString(16);
+    if (v.length < 2) {
+      v = '0' + v;
+    }
+    const data = '0x' + result['r'] + result['s'] + v;
+    return data;
+  }
+  private async getNeoXSignature(txData, wallet: EvmWalletJSON) {
+    txData.chainId = this.neoXNetwork.chainId;
+    let unsignedTx = ethers.Transaction.from(txData).unsignedSerialized;
+    unsignedTx = unsignedTx.startsWith('0x')
+      ? unsignedTx.substring(2)
+      : unsignedTx;
+
+    const resolution = await ledgerService.resolveTransaction(
+      unsignedTx,
+      {},
+      {}
+    );
+    const result = await this.ethTransport.signTransaction(
+      `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+      unsignedTx,
+      resolution
+    );
+    return {
+      ...txData,
+      signature: {
+        r: `0x${result.r}`,
+        s: `0x${result.s}`,
+        v: `0x${result.v}`,
+      },
+    };
+  }
   private getNeo2Signature({ data, addressIndex }) {
     try {
       data += this.BIP44(addressIndex);
@@ -375,6 +436,30 @@ export class LedgerService {
   private getAppName(chainType: ChainType): Promise<any> {
     return new Promise((resolve, reject) => {
       this.sendQueue.push(() => {
+        if (chainType === 'NeoX') {
+          return this.getDevice()
+            .then((device) => {
+              this.ethTransport = new Eth(device);
+              return this.ethTransport.getAppConfiguration();
+            })
+            .then(() => {
+              resolve('open');
+            })
+            .catch((error) => {
+              if (
+                error.statusCode == '0x5515' ||
+                error.statusCode === 27906 || // UNKNOWN_APDU
+                error.statusCode === 28160 // CLA_NOT_SUPPORTED
+              ) {
+                reject(LedgerStatuses.APP_CLOSED);
+              }
+
+              if (error.includes('TransportOpenUserCancelled')) {
+                reject(LedgerStatuses.DISCONNECTED);
+              }
+              reject(error);
+            });
+        }
         return this.getDevice()
           .then((device) => {
             return device.send(0x80, 0x00, 0x00, 0x00, undefined, [

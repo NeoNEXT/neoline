@@ -22,7 +22,7 @@ export const ERRORS = {
   },
   RPC_ERROR: {
     type: 'RPC_ERROR',
-    description: 'An RPC error occured when submitting the request',
+    description: 'An RPC error occurred when submitting the request',
     data: null,
   },
   MALFORMED_INPUT: {
@@ -82,7 +82,6 @@ export enum requestTarget {
   Deploy = 'neoline.target_deploy',
   Send = 'neoline.target_send',
   Connect = 'neoline.target_connect',
-  AuthState = 'neoline.target_auth_state',
   Login = 'neoline.target_login',
   PickAddress = 'neoline.target_pick_address',
   WalletSwitchNetwork = 'neoline.target_wallet_switch_network',

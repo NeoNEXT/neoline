@@ -1,0 +1,52 @@
+<div
+  *ngIf="place === 'amount'"
+  class="create-amount-fee"
+  (click)="editEvmFee()"
+>
+  <p class="label">{{ "EstimatedFee" | translate | async }}</p>
+  <div class="value">
+    <div *ngIf="customNeoXFeeInfo?.custom">
+      <p class="fee-desc">{{ "customize" | translate | async }}</p>
+      <p class="fee">
+        {{ customNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
+        {{ symbol }}
+      </p>
+    </div>
+    <div *ngIf="!customNeoXFeeInfo?.custom">
+      <p class="fee" [ngClass]="{ animate: showEstimateFeeAnimate }">
+        {{ sourceNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
+        {{ symbol }}
+      </p>
+    </div>
+    <img theme src="assets/images/common/arrow.svg" alt="" />
+  </div>
+</div>
+
+<div *ngIf="place === 'confirm' || place === 'dapp'" class="create-confirm-fee">
+  <span class="label">
+    {{ "EstimatedFee" | translate | async
+    }}<img
+      class="edit"
+      (click)="editEvmFee()"
+      src="assets/images/common/edit.svg"
+    />
+  </span>
+  <span *ngIf="isUseSiteFee" class="fee">
+    {{ siteNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
+    {{ symbol }}
+  </span>
+  <ng-container *ngIf="!isUseSiteFee">
+    <span *ngIf="customNeoXFeeInfo?.custom" class="fee">
+      {{ customNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
+      {{ symbol }}
+    </span>
+    <span
+      *ngIf="!customNeoXFeeInfo?.custom"
+      class="fee"
+      [ngClass]="{ animate: showEstimateFeeAnimate }"
+    >
+      {{ sourceNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
+      {{ symbol }}
+    </span>
+  </ng-container>
+</div>

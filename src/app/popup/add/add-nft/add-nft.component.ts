@@ -4,6 +4,7 @@ import { NftAsset } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
+import { ChainType } from '../../_lib';
 
 @Component({
   templateUrl: 'add-nft.component.html',
@@ -20,6 +21,7 @@ export class PopupAddNftComponent implements OnDestroy {
   private accountSub: Unsubscribable;
   private address: string;
   private n3NetworkId: number;
+  private chainType: ChainType;
   constructor(
     private nftState: NftState,
     private chrome: ChromeService,
@@ -29,9 +31,10 @@ export class PopupAddNftComponent implements OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.address = state.currentWallet?.accounts[0]?.address;
+      this.chainType = state.currentChainType;
       this.n3NetworkId = state.n3Networks[state.n3NetworkIndex].id;
       this.chrome
-        .getNftWatch(this.n3NetworkId, this.address)
+        .getNftWatch(`${this.chainType}-${this.n3NetworkId}`, this.address)
         .subscribe((res) => {
           this.watch = res;
         });
@@ -82,7 +85,11 @@ export class PopupAddNftComponent implements OnDestroy {
     } else {
       this.watch.push(this.searchNft);
     }
-    this.chrome.setNftWatch(this.n3NetworkId, this.address, this.watch);
+    this.chrome.setNftWatch(
+      `${this.chainType}-${this.n3NetworkId}`,
+      this.address,
+      this.watch
+    );
     this.global.snackBarTip('addSucc');
   }
 }

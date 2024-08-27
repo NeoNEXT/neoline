@@ -1,0 +1,72 @@
+<div class="container">
+  <p class="title">{{ "YourSecretRecoveryPhrase" | translate | async }}</p>
+  <p class="tip">
+    {{
+      (isConfirmMnemonic
+        ? "ConfirmTheSecretRecoveryPhrasesInOrder"
+        : "backupSecretRecoveryPhrase"
+      )
+        | translate
+        | async
+    }}
+  </p>
+
+  <ul *ngIf="!isConfirmMnemonic">
+    <li *ngFor="let word of wordList; index as index">
+      <span class="order">{{ index + 1 }}</span>
+      <p class="value">{{ hideMnemonic ? "***" : word }}</p>
+    </li>
+  </ul>
+
+  <ul *ngIf="isConfirmMnemonic">
+    <li
+      *ngFor="let word of confirmWordList; index as index; trackBy: trackByFn"
+    >
+      <span class="order">{{ index + 1 }}</span>
+      <input
+        class="value"
+        type="text"
+        [ngClass]="{ error: confirmListStatus[index] === false }"
+        [(ngModel)]="confirmWordList[index]"
+        (paste)="onPaste($event, index)"
+      />
+    </li>
+  </ul>
+
+  <div class="operate" *ngIf="!isConfirmMnemonic">
+    <tooltip
+      [tip]="
+        (hideMnemonic ? 'showSecretRecoveryPhrase' : 'hideSecretRecoveryPhrase')
+          | translate
+          | async
+      "
+      placement="topRight"
+    >
+      <span
+        (click)="hideMnemonic = !hideMnemonic"
+        class="item eye"
+        [ngClass]="{ hidden: hideMnemonic }"
+      ></span>
+    </tooltip>
+    <copy [value]="mnemonic" placement="topRight">
+      <span class="item copy"></span>
+    </copy>
+  </div>
+
+  <div class="confirm-tip" *ngIf="isConfirmMnemonic">
+    {{ "confirmMnemonicTip" | translate | async }}
+  </div>
+
+  <div class="btn-group">
+    <button
+      *ngIf="!isConfirmMnemonic"
+      class="confirm"
+      (click)="isConfirmMnemonic = true"
+    >
+      {{ "notedItDown" | translate | async }}
+    </button>
+    <button *ngIf="isConfirmMnemonic" (click)="checkMnemonic()" class="confirm">
+      {{ "Confirm" | translate | async }}
+    </button>
+  </div>
+</div>

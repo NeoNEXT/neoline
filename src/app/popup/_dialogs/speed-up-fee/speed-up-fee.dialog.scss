@@ -1,0 +1,39 @@
+.content {
+  padding: 16px 24px 24px;
+  color: var(--title-color);
+  .desc {
+    font-family: NeverMind;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 18px;
+    margin-bottom: 24px;
+  }
+  .tip {
+    font-family: NeverMind;
+    font-size: 14px;
+    font-weight: normal;
+    line-height: 18px;
+    color: var(--tip-color);
+    margin-top: 24px;
+    padding-top: 16px;
+    position: relative;
+    &::before {
+      position: absolute;
+      top: 0;
+      left: -24px;
+      right: -24px;
+      content: '';
+      height: 1px;
+      background: var(--line-color);
+    }
+  }
+  button.confirm {
+    width: 100%;
+    margin-top: 50px;
+  }
+}
+
+evm-estimate-error {
+  margin-top: 20px;
+  display: block;
+}

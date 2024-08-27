@@ -1,0 +1,46 @@
+<div class="loading-box" *ngIf="loading">
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+  </div>
+</div>
+<section class="container">
+  <nav title="AddNFT"></nav>
+  <img
+    class="my-asset"
+    routerLink="/popup/my-evm-nfts"
+    theme
+    src="assets/images/asset/my-asset.svg"
+    alt=""
+  />
+  <div class="content">
+    <form [formGroup]="addNFTForm">
+      <p class="label">{{ "ContractAddress" | translate | async }}</p>
+      <mat-form-field class="form-field" appearance="outline">
+        <input matInput required formControlName="address" type="text" />
+        <mat-error *ngIf="addNFTForm.get('address').errors?.required">
+          {{ "addressIsRequired" | translate | async }}
+        </mat-error>
+      </mat-form-field>
+
+      <p class="label">{{ "Token ID" }}</p>
+      <mat-form-field class="form-field" appearance="outline">
+        <input matInput required formControlName="tokenId" type="text" />
+        <mat-error *ngIf="addNFTForm.get('tokenId').errors?.required">
+          {{ "TokenIdIsRequired" | translate | async }}
+        </mat-error>
+        <mat-error *ngIf="addNFTForm.get('tokenId').errors?.pattern">
+          {{ "InvalidTokenId" | translate | async }}
+        </mat-error>
+      </mat-form-field>
+    </form>
+
+    <button
+      class="confirm pop-ups"
+      [ngClass]="{ disabled: addNFTForm.invalid || loading }"
+      (click)="confirm()"
+    >
+      {{ "yes" | translate | async }}
+    </button>
+    <p class="error">{{ addError }}</p>
+  </div>
+</section>

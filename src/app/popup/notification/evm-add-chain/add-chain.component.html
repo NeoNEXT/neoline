@@ -1,0 +1,44 @@
+<div class="container">
+  <div class="host">
+    <button>
+      <img [src]="iconSrc" [appErrorSrc]="'unknown'" alt="" />{{ hostname }}
+    </button>
+  </div>
+  <p class="title">{{ "addEvmChainTitle" | translate | async }}</p>
+  <p class="tip">{{ "addEvmChainTip" | translate | async }}</p>
+  <div class="chain-info">
+    <p class="warning">
+      {{ "addEvmChainWarning" | translate | async }}
+    </p>
+    <ul>
+      <li>
+        <p class="label">{{ "NetworkName" | translate | async }}</p>
+        <p class="value">{{ queryParams?.name }}</p>
+      </li>
+      <li>
+        <p class="label">{{ "NetworkURL" | translate | async }}</p>
+        <p class="value">{{ queryParams?.rpcUrl }}</p>
+      </li>
+      <li>
+        <p class="label">{{ "ChainID" | translate | async }}</p>
+        <p class="value">{{ queryParams?.chainId }}</p>
+      </li>
+      <li>
+        <p class="label">{{ "CurrencySymbol" | translate | async }}</p>
+        <p class="value">{{ queryParams?.symbol }}</p>
+      </li>
+      <li>
+        <p class="label">{{ "BlockExplorerURL" | translate | async }}</p>
+        <p class="value">{{ queryParams?.explorer }}</p>
+      </li>
+    </ul>
+  </div>
+</div>
+<div class="btn-group">
+  <button class="cancel" (click)="cancel()">
+    {{ "cancel" | translate | async }}
+  </button>
+  <button class="confirm" (click)="addChain()">
+    {{ "yes" | translate | async }}
+  </button>
+</div>

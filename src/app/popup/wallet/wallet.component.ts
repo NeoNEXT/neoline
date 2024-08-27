@@ -8,14 +8,14 @@ import {
   ADD_NEO3_WALLETS,
   UPDATE_WALLET,
   STORAGE_NAME,
+  ADD_NEOX_WALLET,
 } from '../_lib';
-import { wallet as wallet2 } from '@cityofzion/neon-core';
-import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { EvmWalletJSON } from '../_lib/evm';
 
 type TabType = 'create' | 'import';
 @Component({
@@ -36,9 +36,9 @@ export class PopupWalletComponent implements OnInit {
   hasPwdWallet = false;
 
   private accountSub: Unsubscribable;
-  private n2Network: RpcNetwork;
-  private n3Network: RpcNetwork;
+  private network: RpcNetwork;
   private chainType: ChainType;
+  neoXWalletArr: EvmWalletJSON[];
   constructor(
     private route: ActivatedRoute,
     private router: Router,
@@ -48,8 +48,18 @@ export class PopupWalletComponent implements OnInit {
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
-      this.n2Network = state.n2Networks[state.n2NetworkIndex];
-      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      switch (this.neon.selectedChainType) {
+        case 'Neo2':
+          this.network = state.n2Networks[state.n2NetworkIndex];
+          break;
+        case 'Neo3':
+          this.network = state.n3Networks[state.n3NetworkIndex];
+          break;
+        case 'NeoX':
+          this.network = state.neoXNetworks[state.neoXNetworkIndex];
+          break;
+      }
+      this.neoXWalletArr = state.neoXWalletArr;
       this.chainType = state.currentChainType;
       this.checkHasPwdWallet(
         (state.neo2WalletArr as any).concat(state.neo3WalletArr)
@@ -89,79 +99,89 @@ export class PopupWalletComponent implements OnInit {
     this.hasPwdWallet = index >= 0 ? true : false;
   }
 
-  public updateLocalWallet(newWallet: any, isCreate: boolean) {
-    const newChainType = wallet3.isAddress(newWallet.accounts[0].address, 53)
-      ? 'Neo3'
-      : 'Neo2';
+  public updateLocalWallet(newWallet: any) {
+    const newChainType = this.neon.selectedChainType;
     const wif =
       this.isOnePassword || !this.hasPwdWallet ? '' : newWallet.accounts[0].wif;
-    newWallet =
-      newChainType === 'Neo2'
-        ? new wallet2.Wallet(newWallet.export())
-        : new wallet3.Wallet(newWallet.export());
+    delete newWallet.accounts[0].wif;
+    switch (newChainType) {
+      case 'Neo2':
+        this.store.dispatch({
+          type: ADD_NEO2_WALLETS,
+          data: { wallet: [newWallet], wif: [wif] },
+        });
+        break;
+      case 'Neo3':
+        this.store.dispatch({
+          type: ADD_NEO3_WALLETS,
+          data: { wallet: [newWallet], wif: [wif] },
+        });
+        break;
+      case 'NeoX':
+        this.store.dispatch({
+          type: ADD_NEOX_WALLET,
+          data: { wallet: newWallet},
+        });
+        break;
+    }
     if (newChainType !== this.chainType) {
-      this.chrome.networkChangeEvent(
-        newChainType === 'Neo2' ? this.n2Network : this.n3Network
-      );
+      this.chrome.networkChangeEvent(this.network);
     }
     this.store.dispatch({ type: UPDATE_WALLET, data: newWallet });
-    if (newChainType === 'Neo2') {
-      this.store.dispatch({
-        type: ADD_NEO2_WALLETS,
-        data: { wallet: [newWallet], wif: [wif] },
-      });
-    } else {
-      this.store.dispatch({
-        type: ADD_NEO3_WALLETS,
-        data: { wallet: [newWallet], wif: [wif] },
-      });
-    }
     if (this.dapiData.type === 'dapi') {
       const params = `type=dapi&hostname=${this.dapiData.hostname}&chainType=${this.dapiData.chainType}&messageID=${this.dapiData.messageID}`;
       this.router.navigateByUrl(`/popup/notification/pick-address?${params}`);
       return;
     }
     this.chrome.setHasLoginAddress(newWallet.accounts[0].address);
-    this.chrome.accountChangeEvent(newWallet.export());
-    if (isCreate) {
-      this.chrome.setHaveBackupTip(true);
+    this.chrome.accountChangeEvent(
+      newChainType === 'NeoX' ? newWallet : newWallet.export()
+    );
+    if (this.route.snapshot.queryParams.returnUrl) {
+      this.router.navigateByUrl(this.route.snapshot.queryParams.returnUrl);
     } else {
-      this.chrome.setWalletsStatus(newWallet.accounts[0].address);
-      this.chrome.setHaveBackupTip(false);
+      if (newWallet.accounts[0].extra?.hasBackup === false) {
+        this.router.navigate(['/popup/backup']);
+      } else {
+        this.router.navigateByUrl('/popup');
+      }
     }
-    const returnUrl =
-      this.route.snapshot.queryParams.returnUrl ||
-      (isCreate ? '/popup/backup' : '/popup');
-    this.router.navigateByUrl(returnUrl);
   }
 
   public handleFileWallet({ walletArr, wifArr }) {
     if (this.neon.selectedChainType !== this.chainType) {
-      this.chrome.networkChangeEvent(
-        this.neon.selectedChainType === 'Neo2' ? this.n2Network : this.n3Network
-      );
+      this.chrome.networkChangeEvent(this.network);
     }
     const newCurrentWallet = walletArr[walletArr.length - 1];
     this.store.dispatch({
       type: UPDATE_WALLET,
       data: newCurrentWallet,
     });
-    this.store.dispatch({
-      type:
-        this.neon.selectedChainType === 'Neo2'
-          ? ADD_NEO2_WALLETS
-          : ADD_NEO3_WALLETS,
-      data: { wallet: walletArr, wif: wifArr },
-    });
+    if (this.neon.selectedChainType === 'NeoX') {
+      this.store.dispatch({
+        type: ADD_NEOX_WALLET,
+        data: { wallet: newCurrentWallet },
+      });
+    } else {
+      this.store.dispatch({
+        type:
+          this.neon.selectedChainType === 'Neo2'
+            ? ADD_NEO2_WALLETS
+            : ADD_NEO3_WALLETS,
+        data: { wallet: walletArr, wif: wifArr },
+      });
+    }
     if (this.dapiData.type === 'dapi') {
       const params = `type=dapi&hostname=${this.dapiData.hostname}&chainType=${this.dapiData.chainType}&messageID=${this.dapiData.messageID}`;
       this.router.navigateByUrl(`/popup/notification/pick-address?${params}`);
       return;
     }
     this.chrome.setHasLoginAddress(newCurrentWallet.accounts[0].address);
-    this.chrome.accountChangeEvent(newCurrentWallet.export());
-    this.chrome.setWalletsStatus(newCurrentWallet.accounts[0].address);
-    this.chrome.setHaveBackupTip(false);
+    this.chrome.accountChangeEvent(
+      this.neon.selectedChainType === 'NeoX'
+        ? newCurrentWallet
+        : newCurrentWallet.export()
+    );
     const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
     this.router.navigateByUrl(returnUrl);
   }

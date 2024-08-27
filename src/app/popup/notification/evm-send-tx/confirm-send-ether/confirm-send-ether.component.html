@@ -1,0 +1,101 @@
+<div class="container">
+  <div class="header transfer">
+    <p class="origin">{{ locationOrigin }}</p>
+    <div class="type">
+      · {{ "Sending" | translate | async }}{{ neoXNetwork.symbol }}
+    </div>
+    <div class="asset">
+      <token-logo
+        customClass="small"
+        [assetId]="ETH_SOURCE_ASSET_HASH"
+        chainType="NeoX"
+        [symbol]="neoXNetwork?.symbol"
+        [neoXChainId]="neoXNetwork?.chainId"
+      ></token-logo>
+      <p class="amount">{{ getShowAmount() }} {{ neoXNetwork?.symbol }}</p>
+    </div>
+    <p class="rate">
+      {{ rate.amount | numberFixed : 2 }} {{ rate.rateCurrency }}
+    </p>
+    <div class="address-group">
+      <copy [value]="txParams?.from">
+        <div class="item">
+          <img class="avatar" [avatar]="txParams?.from" />
+          <span>{{ txParams?.from | longStr : 4 }}</span>
+        </div>
+      </copy>
+      <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
+      <copy [value]="txParams?.to">
+        <div class="item">
+          <img class="avatar" [avatar]="txParams?.to" />
+          <span>{{ txParams?.to | longStr : 4 }}</span>
+        </div>
+      </copy>
+    </div>
+  </div>
+  <div class="tabs-container">
+    <span class="selected">
+      {{ "details" | translate | async }}
+    </span>
+  </div>
+  <div class="content details">
+    <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
+
+    <div class="fee-group">
+      <evm-fee
+        [txParams]="txParams"
+        [symbol]="neoXNetwork.symbol"
+        [siteNeoXFeeInfo]="siteNeoXFeeInfo"
+        [place]="'dapp'"
+        (returnFee)="updateEvmFee($event)"
+      >
+      </evm-fee>
+      <p class="rate">
+        {{ rate.fee | numberFixed : 2 }} {{ rate.rateCurrency }}
+      </p>
+    </div>
+
+    <div class="total-fee" *ngIf="amount">
+      <p class="row">
+        <span class="label">{{ "TOTAL" | translate | async }}</span>
+        <span>{{ getEvmTotalData() }} {{ neoXNetwork?.symbol }}</span>
+      </p>
+      <p class="row tip column">
+        <span>
+          {{ "amount" | translate | async }} +
+          {{ "GASFEE" | translate | async }}
+        </span>
+        <span>
+          {{ rate.total | numberFixed : 2 }} {{ rate.rateCurrency }}
+        </span>
+      </p>
+    </div>
+
+    <evm-custom-nonce
+      [default]="nonceInfo?.nonce"
+      (changeNonceEvent)="changeNonce($event)"
+    ></evm-custom-nonce>
+
+    <evm-gas-error
+      *ngIf="insufficientFunds"
+      [networkName]="neoXNetwork.name"
+      [symbol]="neoXNetwork.symbol"
+    ></evm-gas-error>
+    <evm-pending-warning
+      *ngIf="nonceInfo?.pendingTxs"
+      [count]="nonceInfo.pendingTxs"
+    ></evm-pending-warning>
+  </div>
+  <div class="btn-group">
+    <button class="cancel" (click)="exit()">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button
+      class="confirm"
+      [ngClass]="{ disabled: !nonceInfo || insufficientFunds }"
+      (click)="confirm()"
+    >
+      {{ "yes" | translate | async }}
+    </button>
+  </div>
+</div>

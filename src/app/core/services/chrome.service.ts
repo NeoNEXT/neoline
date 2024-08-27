@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { Observable, of, throwError, from } from 'rxjs';
-import { map } from 'rxjs/operators';
 import { Asset, NftAsset } from '@/models/models';
 import { EVENT } from '@/models/dapi';
 import {
@@ -10,9 +9,14 @@ import {
   RpcNetwork,
   DEFAULT_NETWORKS,
   SECRET_PASSPHRASE,
+  EvmWalletJSON,
+  ChainType,
+  ConnectedWebsitesType,
 } from '@/app/popup/_lib';
 import { ExtensionService } from '../util/extension.service';
 import CryptoJS from 'crypto-js';
+import { ethers } from 'ethers';
+import { firstValueFrom } from 'rxjs';
 
 @Injectable()
 export class ChromeService {
@@ -35,14 +39,13 @@ export class ChromeService {
   }
 
   //#region watch, NFT watch
-  public getWatch(networkId: number, address: string): Observable<Asset[]> {
-    const storageName = `watch`;
+  public getWatch(networkName: string, address: string): Observable<Asset[]> {
     if (!this.check) {
       try {
         let rs =
-          (JSON.parse(localStorage.getItem(storageName)) || {})?.[networkId]?.[
-            address
-          ] || [];
+          (JSON.parse(localStorage.getItem(STORAGE_NAME.watch)) || {})?.[
+            networkName
+          ]?.[address] || [];
         if (!Array.isArray(rs)) {
           rs = [];
         }
@@ -57,8 +60,8 @@ export class ChromeService {
       return from(
         new Promise<Asset[]>((resolve, reject) => {
           try {
-            this.crx.getLocalStorage(storageName, (res) => {
-              res = (res || {})?.[networkId]?.[address] || [];
+            this.crx.getLocalStorage(STORAGE_NAME.watch, (res) => {
+              res = (res || {})?.[networkName]?.[address] || [];
               if (!Array.isArray(res)) {
                 res = [];
               }
@@ -73,10 +76,9 @@ export class ChromeService {
     }
   }
   private getAllWatch(): Observable<object> {
-    const storageName = `watch`;
     if (!this.check) {
       try {
-        const rs = JSON.parse(localStorage.getItem(storageName)) || {};
+        const rs = JSON.parse(localStorage.getItem(STORAGE_NAME.watch)) || {};
         return of(rs);
       } catch (e) {
         return throwError(
@@ -87,7 +89,7 @@ export class ChromeService {
       return from(
         new Promise<Asset[]>((resolve, reject) => {
           try {
-            this.crx.getLocalStorage(storageName, (res) => {
+            this.crx.getLocalStorage(STORAGE_NAME.watch, (res) => {
               res = res || {};
               resolve(res);
             });
@@ -98,28 +100,27 @@ export class ChromeService {
       );
     }
   }
-  public setWatch(networkId: number, address?: string, watch?: Asset[]) {
+  public setWatch(networkName: string, address?: string, watch?: Asset[]) {
     if (watch) {
       watch.forEach((item) => delete item.balance);
     }
-    const storageName = `watch`;
     this.getAllWatch().subscribe((watchObject) => {
       const saveWatch = watchObject || {};
-      if (!saveWatch?.[networkId]) {
-        saveWatch[networkId] = {};
+      if (!saveWatch?.[networkName]) {
+        saveWatch[networkName] = {};
       }
       if (address) {
-        saveWatch[networkId][address] = watch;
+        saveWatch[networkName][address] = watch;
       } else {
-        saveWatch[networkId] = {}; // reset this networkId data
+        saveWatch[networkName] = {}; // reset this networkId data
       }
       if (!this.check) {
-        localStorage.setItem(storageName, JSON.stringify(saveWatch));
+        localStorage.setItem(STORAGE_NAME.watch, JSON.stringify(saveWatch));
         return;
       }
       try {
         const saveData = {};
-        saveData[storageName] = saveWatch;
+        saveData[STORAGE_NAME.watch] = saveWatch;
         this.crx.setLocalStorage(saveData);
       } catch (e) {
         console.log('set watch failed', e);
@@ -127,16 +128,15 @@ export class ChromeService {
     });
   }
   public getNftWatch(
-    networkId: number,
+    networkName: string,
     address: string
   ): Observable<NftAsset[]> {
-    const storageName = `nft_watch`;
     if (!this.check) {
       try {
         let rs =
-          (JSON.parse(localStorage.getItem(storageName)) || {})?.[networkId]?.[
-            address
-          ] || [];
+          (JSON.parse(localStorage.getItem(STORAGE_NAME.nftWatch)) || {})?.[
+            networkName
+          ]?.[address] || [];
         if (!Array.isArray(rs)) {
           rs = [];
         }
@@ -150,8 +150,8 @@ export class ChromeService {
       return from(
         new Promise<NftAsset[]>((resolve, reject) => {
           try {
-            this.crx.getLocalStorage(storageName, (res) => {
-              res = (res || {})?.[networkId]?.[address] || [];
+            this.crx.getLocalStorage(STORAGE_NAME.nftWatch, (res) => {
+              res = (res || {})?.[networkName]?.[address] || [];
               if (!Array.isArray(res)) {
                 res = [];
               }
@@ -165,10 +165,10 @@ export class ChromeService {
     }
   }
   private getAllNftWatch(): Observable<object> {
-    const storageName = `nft_watch`;
     if (!this.check) {
       try {
-        const rs = JSON.parse(localStorage.getItem(storageName)) || {};
+        const rs =
+          JSON.parse(localStorage.getItem(STORAGE_NAME.nftWatch)) || {};
         return of(rs);
       } catch (e) {
         return throwError(
@@ -179,7 +179,7 @@ export class ChromeService {
       return from(
         new Promise<NftAsset[]>((resolve, reject) => {
           try {
-            this.crx.getLocalStorage(storageName, (res) => {
+            this.crx.getLocalStorage(STORAGE_NAME.nftWatch, (res) => {
               res = res || {};
               resolve(res);
             });
@@ -190,62 +190,64 @@ export class ChromeService {
       );
     }
   }
-  public setNftWatch(networkId: number, address?: string, watch?: NftAsset[]) {
-    const storageName = `nft_watch`;
+  public setNftWatch(
+    networkName: string,
+    address?: string,
+    watch?: NftAsset[]
+  ) {
     this.getAllNftWatch().subscribe((watchObject) => {
       const saveWatch = watchObject || {};
-      if (!saveWatch?.[networkId]) {
-        saveWatch[networkId] = {};
+      if (!saveWatch?.[networkName]) {
+        saveWatch[networkName] = {};
       }
       if (address) {
-        saveWatch[networkId][address] = watch;
+        saveWatch[networkName][address] = watch;
       } else {
-        saveWatch[networkId] = {}; // reset this networkId data
+        saveWatch[networkName] = {}; // reset this networkId data
       }
       if (!this.check) {
-        localStorage.setItem(storageName, JSON.stringify(saveWatch));
+        localStorage.setItem(STORAGE_NAME.nftWatch, JSON.stringify(saveWatch));
         return;
       }
       try {
         const saveData = {};
-        saveData[storageName] = saveWatch;
+        saveData[STORAGE_NAME.nftWatch] = saveWatch;
         this.crx.setLocalStorage(saveData);
       } catch (e) {
         console.log('set watch failed', e);
       }
     });
   }
-  resetWatch(networkId: number) {
-    this.setWatch(networkId);
-    this.setNftWatch(networkId);
+  resetWatch(networkName: string) {
+    this.setWatch(networkName);
+    this.setNftWatch(networkName);
   }
   //#endregion
 
   //#region reset method
-  public clearAssetFile() {
-    this.removeStorage(STORAGE_NAME.coinsRate);
-    this.removeStorage(STORAGE_NAME.neo3CoinsRate);
-    this.removeStorage(STORAGE_NAME.fiatRate);
-  }
-
   public clearStorage() {
     if (!this.check) {
       localStorage.clear();
-    }
-    try {
-      this.crx.clearStorage();
-      this.crx.clearLocalStorage();
-    } catch (e) {
-      console.log('close wallet failed', e);
+      sessionStorage.clear();
+    } else {
+      try {
+        this.crx.clearStorage();
+        this.crx.clearLocalStorage();
+        this.crx.clearSessionStorage();
+      } catch (e) {
+        console.log('close wallet failed', e);
+      }
     }
   }
 
   public resetWallet() {
     this.setPassword('');
+    this.setStorage(STORAGE_NAME.wallet, undefined);
     this.setStorage(STORAGE_NAME.WIFArr, []);
     this.setStorage(STORAGE_NAME['WIFArr-Neo3'], []);
     this.setStorage(STORAGE_NAME.walletArr, []);
     this.setStorage(STORAGE_NAME['walletArr-Neo3'], []);
+    this.setStorage(STORAGE_NAME['walletArr-NeoX'], []);
     this.accountChangeEvent(undefined);
   }
   //#endregion
@@ -279,18 +281,23 @@ export class ChromeService {
       if (!this.check) {
         sessionStorage.removeItem('hasLoginAddress');
       } else {
-        this.setStorage(STORAGE_NAME.hasLoginAddress, {});
+        this.crx.setSessionStorage({ [STORAGE_NAME.hasLoginAddress]: {} });
       }
     }
   }
 
-  public getShouldFindNode(): Observable<boolean> {
+  public async getShouldFindNode(): Promise<boolean> {
     if (!this.check) {
-      return of(
+      return Promise.resolve(
         sessionStorage.getItem('shouldFindNode') === 'false' ? false : true
       );
     } else {
-      return this.getStorage(STORAGE_NAME.shouldFindNode);
+      return (await this.crx.getSessionStorage(
+        STORAGE_NAME.shouldFindNode,
+        (res) => res
+      )) === false
+        ? false
+        : true;
     }
   }
 
@@ -298,20 +305,27 @@ export class ChromeService {
     if (!this.check) {
       sessionStorage.setItem('shouldFindNode', status.toString());
     } else {
-      this.setStorage(STORAGE_NAME.shouldFindNode, status);
+      this.crx.setSessionStorage({ [STORAGE_NAME.shouldFindNode]: status });
     }
   }
 
-  public getHasLoginAddress(): Observable<any> {
+  public async getHasLoginAddress(): Promise<any> {
     if (!this.check) {
-      return of(JSON.parse(sessionStorage.getItem('hasLoginAddress') || '{}'));
+      return Promise.resolve(
+        JSON.parse(sessionStorage.getItem('hasLoginAddress') || '{}')
+      );
     } else {
-      return this.getStorage(STORAGE_NAME.hasLoginAddress);
+      return (
+        (await this.crx.getSessionStorage(
+          STORAGE_NAME.hasLoginAddress,
+          (res) => res
+        )) || {}
+      );
     }
   }
 
   public setHasLoginAddress(address) {
-    this.getHasLoginAddress().subscribe((hasLoginAddress) => {
+    this.getHasLoginAddress().then((hasLoginAddress) => {
       hasLoginAddress[address] = true;
       if (!this.check) {
         sessionStorage.setItem(
@@ -319,40 +333,37 @@ export class ChromeService {
           JSON.stringify(hasLoginAddress)
         );
       } else {
-        this.setStorage(STORAGE_NAME.hasLoginAddress, hasLoginAddress);
+        this.crx.setSessionStorage({
+          [STORAGE_NAME.hasLoginAddress]: hasLoginAddress,
+        });
       }
     });
   }
   //#endregion
 
   //#region backup
-  public getHaveBackupTip(): Observable<any> {
+  public async getIsBackupLater(): Promise<boolean> {
     if (!this.check) {
-      if (sessionStorage.getItem('haveBackupTip') === 'true') {
-        return of(true);
-      }
-      if (sessionStorage.getItem('haveBackupTip') === 'false') {
-        return of(false);
-      }
-      return of(sessionStorage.getItem('haveBackupTip'));
+      return Promise.resolve(
+        sessionStorage.getItem(STORAGE_NAME.isBackupLater) === 'true'
+          ? true
+          : false
+      );
     } else {
-      return this.getStorage(STORAGE_NAME.haveBackupTip);
+      return (await this.crx.getSessionStorage(
+        STORAGE_NAME.isBackupLater,
+        (res) => res
+      )) === true
+        ? true
+        : false;
     }
   }
 
-  public setHaveBackupTip(status?: boolean) {
-    if (status === null) {
-      if (!this.check) {
-        sessionStorage.removeItem('haveBackupTip');
-      } else {
-        this.setStorage(STORAGE_NAME.haveBackupTip, null);
-      }
+  public setIsBackupLater(status: boolean) {
+    if (!this.check) {
+      sessionStorage.setItem(STORAGE_NAME.isBackupLater, status.toString());
     } else {
-      if (!this.check) {
-        sessionStorage.setItem('haveBackupTip', status.toString());
-      } else {
-        this.setStorage(STORAGE_NAME.haveBackupTip, status);
-      }
+      this.crx.setSessionStorage({ [STORAGE_NAME.isBackupLater]: status });
     }
   }
   //#endregion
@@ -454,22 +465,21 @@ export class ChromeService {
     if (!this.check) {
       switch (STORAGE_VALUE_MESSAGE[storageName].type) {
         case STORAGE_VALUE_TYPE.object:
-          targetValue = value && value !== 'undefined' ? JSON.parse(value) : {};
+          targetValue = value ? JSON.parse(value) : {};
           break;
         case STORAGE_VALUE_TYPE.array:
-          targetValue = value && value !== 'undefined' ? JSON.parse(value) : [];
+          targetValue = value ? JSON.parse(value) : [];
           break;
         case STORAGE_VALUE_TYPE.map:
-          targetValue =
-            value && value !== 'undefined'
-              ? new Map(JSON.parse(value))
-              : new Map();
+          targetValue = value ? new Map(JSON.parse(value)) : new Map();
           break;
         case STORAGE_VALUE_TYPE.number:
-          targetValue = value && value !== 'undefined' ? Number(value) : 0;
+          targetValue = value ? Number(value) : 0;
           break;
         case STORAGE_VALUE_TYPE.boolean:
-          targetValue = value === 'true' ? true : false;
+          if (value !== null) {
+            targetValue = value === 'true' ? true : false;
+          }
           break;
       }
     } else {
@@ -484,7 +494,6 @@ export class ChromeService {
       if (
         (storageName === STORAGE_NAME.transaction ||
           storageName === STORAGE_NAME.connectedWebsites ||
-          storageName === STORAGE_NAME.walletsStatus ||
           storageName === STORAGE_NAME.hasLoginAddress ||
           storageName === STORAGE_NAME.authAddress) &&
         !value
@@ -540,7 +549,17 @@ export class ChromeService {
 
   //#region wallet
   public accountChangeEvent(w: any) {
-    if (this.check) {
+    if (!this.check) return;
+    if (ethers.isAddress(w?.accounts[0]?.address)) {
+      this.getEvmConnectedAccounts(w).then((data) => {
+        if (data) {
+          this.windowCallback({
+            data,
+            return: EVENT.ACCOUNT_CHANGED,
+          });
+        }
+      });
+    } else {
       this.windowCallback({
         data: {
           address: w?.accounts[0]?.address,
@@ -550,6 +569,92 @@ export class ChromeService {
       });
     }
   }
+  evmAccountChange(data: string[]) {
+    this.windowCallback({
+      data,
+      return: EVENT.ACCOUNT_CHANGED,
+    });
+  }
+
+  removeConnectWebsiteOfAddress(
+    deleteAddress: string,
+    deleteChainType: ChainType,
+    currentAddress?: string
+  ) {
+    let isDeleteNeoXConnectedAddress = false;
+    let currentIsNeoXConnectedAddress = false;
+    this.getStorage(STORAGE_NAME.connectedWebsites).subscribe(
+      (allWebsites: ConnectedWebsitesType) => {
+        this.crx.getCurrentWindow().then((tab) => {
+          const hostname = new URL(tab.url).hostname;
+          if (
+            deleteChainType === 'NeoX' &&
+            allWebsites[hostname].connectedAddress[deleteAddress]
+          ) {
+            isDeleteNeoXConnectedAddress = true;
+          }
+          if (
+            currentAddress &&
+            ethers.isAddress(currentAddress) &&
+            allWebsites[hostname].connectedAddress[currentAddress]
+          ) {
+            currentIsNeoXConnectedAddress = true;
+          }
+          // remove connect info of deleted address
+          Object.keys(allWebsites).forEach((hostname) => {
+            if (allWebsites[hostname].connectedAddress[deleteAddress]) {
+              delete allWebsites[hostname].connectedAddress[deleteAddress];
+            }
+          });
+          this.setStorage(STORAGE_NAME.connectedWebsites, allWebsites);
+
+          // update evm connected accounts
+          if (isDeleteNeoXConnectedAddress || currentIsNeoXConnectedAddress) {
+            const connectedAddress = [];
+            Object.keys(allWebsites[hostname].connectedAddress).forEach(
+              (address) => {
+                const item = allWebsites[hostname].connectedAddress[address];
+                if (item.chain === 'NeoX') {
+                  connectedAddress.push(address);
+                }
+              }
+            );
+            if (currentIsNeoXConnectedAddress) {
+              const index = connectedAddress.indexOf(currentAddress);
+              connectedAddress.splice(index, 1);
+              connectedAddress.unshift(currentAddress);
+            }
+            this.evmAccountChange(connectedAddress);
+          }
+        });
+      }
+    );
+  }
+  private async getEvmConnectedAccounts(w: EvmWalletJSON) {
+    const currentAddress = w.accounts[0].address;
+
+    const tab = await this.crx.getCurrentWindow();
+    const hostname = new URL(tab.url).hostname;
+    const allWebsites: ConnectedWebsitesType = await firstValueFrom(
+      this.getStorage(STORAGE_NAME.connectedWebsites)
+    );
+
+    if (allWebsites[hostname].connectedAddress?.[currentAddress]) {
+      const connectedAddress = [];
+      Object.keys(allWebsites[hostname].connectedAddress).forEach((address) => {
+        const item = allWebsites[hostname].connectedAddress[address];
+        if (item.chain === 'NeoX') {
+          connectedAddress.push(address);
+        }
+      });
+      const index = connectedAddress.indexOf(currentAddress);
+      connectedAddress.splice(index, 1);
+      connectedAddress.unshift(currentAddress);
+      return connectedAddress;
+    }
+    return;
+  }
+
   public networkChangeEvent(network: RpcNetwork) {
     if (this.check) {
       this.windowCallback({
@@ -561,23 +666,6 @@ export class ChromeService {
         return: EVENT.NETWORK_CHANGED,
       });
     }
-  }
-  //#endregion
-
-  //#region wallet status
-  public setWalletsStatus(address: string) {
-    this.getStorage(STORAGE_NAME.walletsStatus).subscribe((res) => {
-      res[address] = true;
-      this.setStorage(STORAGE_NAME.walletsStatus, res);
-    });
-  }
-
-  public getWalletStatus(address: string): Observable<boolean> {
-    return this.getStorage(STORAGE_NAME.walletsStatus).pipe(
-      map((res) => {
-        return (res && res[address]) || false;
-      })
-    );
   }
   //#endregion
 }

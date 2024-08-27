@@ -1,13 +1,29 @@
-import { Component, Input, OnInit, Output, EventEmitter, OnDestroy } from '@angular/core';
-import { GAS3_CONTRACT, LedgerStatuses, STORAGE_NAME } from '../../../_lib';
-import { GAS } from '@/models/models';
-import { TransferData } from '../interface';
+import {
+  Component,
+  Input,
+  OnInit,
+  Output,
+  EventEmitter,
+  OnDestroy,
+} from '@angular/core';
+import {
+  AddressNonceInfo,
+  GAS3_CONTRACT,
+  LedgerStatuses,
+  STORAGE_NAME,
+} from '../../../_lib';
+import { GAS, Transaction } from '@/models/models';
+import { NeoDataJsonProp, NeoXFeeInfoProp, TransferData } from '../interface';
 import {
   AssetState,
   GlobalService,
   LedgerService,
   TransactionState,
   ChromeService,
+  UtilServiceState,
+  EvmNFTState,
+  SettingState,
+  AssetEVMState,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import {
@@ -21,8 +37,10 @@ import { TransferService } from '../../transfer.service';
 import { Observable } from 'rxjs';
 import { interval } from 'rxjs';
 import { Neo3TransferService } from '../../neo3-transfer.service';
+import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
+import { ethers } from 'ethers';
 
-type TabType = 'details' | 'data';
+export type TabType = 'details' | 'data';
 
 @Component({
   selector: 'transfer-create-confirm',
@@ -38,16 +56,25 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   systemFee: string;
   totalFee: string;
   gasPrice: BigNumber;
-  assetPrice: BigNumber;
   rate = { amount: '0', fee: '', networkFee: '', systemFee: '', total: '' };
 
   tabType: TabType = 'details';
-  datajson: any = {};
+  dataJson: NeoDataJsonProp;
   txSerialize: string;
 
   loading = false;
   loadingMsg: string;
   getStatusInterval;
+
+  ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
+  evmHexData: string;
+  evmHexDataLength: number;
+  evmLedgerTx: ethers.TransactionRequest;
+  nonceInfo: AddressNonceInfo;
+  customNonce: number;
+  insufficientFunds = false;
+  sendTxParams: ethers.TransactionRequest;
+  sendNeoXFeeInfo: NeoXFeeInfoProp;
 
   constructor(
     private assetState: AssetState,
@@ -57,7 +84,11 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     private ledger: LedgerService,
     private txState: TransactionState,
     private neo3Transfer: Neo3TransferService,
-    private chrome: ChromeService
+    private chrome: ChromeService,
+    private assetEvmState: AssetEVMState,
+    private util: UtilServiceState,
+    private settingState: SettingState,
+    private evmNFTState: EvmNFTState
   ) {}
   ngOnDestroy(): void {
     this.getStatusInterval?.unsubscribe();
@@ -65,12 +96,28 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
 
   async ngOnInit(): Promise<void> {
     this.getDataJson();
-    this.chrome.getStorage(STORAGE_NAME.rateCurrency).subscribe((res) => {
+    this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
-    this.rate.fee = await this.getGasRate(this.data.fee);
+    if (this.data.chainType === 'NeoX') {
+      this.rate.fee = await this.getGasRate(this.data.neoXFeeInfo.estimateGas);
+    } else {
+      this.rate.fee = await this.getGasRate(this.data.fee);
+    }
     if (!this.data.isNFT) {
-      this.rate.amount = await this.getAssetRate(this.data.amount);
+      this.assetState
+        .getAssetAmountRate({
+          chainType: this.data.chainType,
+          assetId: this.data.asset.asset_id,
+          chainId:
+            this.data.chainType === 'NeoX'
+              ? this.data.network.chainId
+              : undefined,
+          amount: this.data.amount,
+        })
+        .then((res) => {
+          this.rate.amount = res;
+        });
     }
     this.createTx();
   }
@@ -85,6 +132,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     this.dialog
       .open(PopupEditFeeDialogComponent, {
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
         data: {
           fee: this.data.fee,
         },
@@ -93,16 +141,75 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
       .subscribe(async (res) => {
         if (res !== false) {
           this.data.fee = res;
-          this.datajson.fee = res;
+          this.dataJson.fee = res;
           this.rate.fee = await this.getGasRate(this.data.fee);
           this.createTx();
         }
       });
   }
 
+  getShowAmount() {
+    const newAmount = new BigNumber(this.data.amount).dp(8, 1).toFixed();
+    if (newAmount === '0') {
+      return '< 0.0000001';
+    }
+    return newAmount;
+  }
+
+  //#region EVM
+  changeNonce($event) {
+    this.customNonce = $event;
+  }
+  getEvmTotalData() {
+    return new BigNumber(this.data.amount)
+      .plus(this.data.neoXFeeInfo.estimateGas)
+      .dp(8)
+      .toFixed();
+  }
+  updateEvmFee($event) {
+    this.data.neoXFeeInfo = $event;
+    this.checkBalance();
+    this.getGasRate(this.data.neoXFeeInfo.estimateGas).then((res) => {
+      this.rate.fee = res;
+      this.rate.total = new BigNumber(this.rate.amount ?? 0)
+        .plus(this.rate.fee ?? 0)
+        .toFixed();
+    });
+  }
+  private checkBalance() {
+    if (
+      !this.data.isNFT &&
+      this.data.asset.asset_id === ETH_SOURCE_ASSET_HASH
+    ) {
+      if (
+        new BigNumber(this.data.amount)
+          .plus(this.data.neoXFeeInfo.estimateGas)
+          .comparedTo(this.data.gasBalance) > 0
+      ) {
+        this.insufficientFunds = true;
+      } else {
+        this.insufficientFunds = false;
+      }
+    } else {
+      if (
+        new BigNumber(this.data.neoXFeeInfo.estimateGas).comparedTo(
+          this.data.gasBalance
+        ) > 0
+      ) {
+        this.insufficientFunds = true;
+      } else {
+        this.insufficientFunds = false;
+      }
+    }
+  }
+  //#endregion
+
   //#region sign tx
-  confirm() {
+  async confirm() {
     if (this.data.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
+      if (this.data.chainType === 'NeoX') {
+        await this.getEvmTxData();
+      }
       this.loading = true;
       this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
       this.getLedgerStatus();
@@ -124,18 +231,63 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     }
     this.resolveSend();
   }
+  private async getEvmTxData() {
+    const { asset, to, amount, neoXFeeInfo, nftAsset, nftToken, from, isNFT } =
+      this.data;
+    this.sendNeoXFeeInfo = Object.assign({}, neoXFeeInfo);
+    const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
+      neoXFeeInfo;
+    if (isNFT) {
+      const { newParams } = this.evmNFTState.getTransferTxRequest({
+        asset: nftAsset,
+        token: nftToken,
+        fromAddress: from,
+        toAddress: to.address,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+        gasLimit,
+        gasPrice,
+        nonce: this.customNonce ?? this.nonceInfo.nonce,
+      });
+      this.evmLedgerTx = newParams;
+      this.sendTxParams = newParams;
+    } else {
+      const { newParams } = this.assetEvmState.getTransferErc20TxRequest({
+        asset: asset,
+        toAddress: to.address,
+        transferAmount: amount,
+        maxFeePerGas,
+        maxPriorityFeePerGas,
+        gasLimit,
+        gasPrice,
+        nonce: this.customNonce ?? this.nonceInfo.nonce,
+        fromAddress: from,
+      });
+      this.evmLedgerTx = newParams;
+      this.sendTxParams = newParams;
+    }
+  }
   private getLedgerStatus() {
     this.ledger.getDeviceStatus(this.data.chainType).then(async (res) => {
-      this.loadingMsg =
-        this.data.chainType === 'Neo2'
-          ? LedgerStatuses[res].msg
-          : LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
+      switch (this.data.chainType) {
+        case 'Neo2':
+          this.loadingMsg = LedgerStatuses[res].msg;
+          break;
+        case 'Neo3':
+          this.loadingMsg =
+            LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
+          break;
+        case 'NeoX':
+          this.loadingMsg =
+            LedgerStatuses[res].msgNeoX || LedgerStatuses[res].msg;
+          break;
+      }
       if (LedgerStatuses[res] === LedgerStatuses.READY) {
         this.getStatusInterval.unsubscribe();
         this.loadingMsg = 'signTheTransaction';
         this.ledger
           .getLedgerSignedTx(
-            this.unsignedTx,
+            this.data.chainType === 'NeoX' ? this.evmLedgerTx : this.unsignedTx,
             this.data.currentWallet,
             this.data.chainType,
             this.data.network.magicNumber
@@ -143,6 +295,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
           .then((tx) => {
             this.loading = false;
             this.unsignedTx = tx;
+            this.evmLedgerTx = tx;
             this.resolveSend();
           })
           .catch((error) => {
@@ -183,15 +336,101 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
           }
           txid = res;
           break;
+        case 'NeoX':
+          this.loading = true;
+          const { currentWIF } = this.data;
+          if (this.data.currentWallet.accounts[0].extra.ledgerSLIP44) {
+            txid = await this.assetEvmState.sendTransactionByRPC(
+              this.evmLedgerTx
+            );
+          } else {
+            const { asset, to, amount, neoXFeeInfo, nftAsset, nftToken, from } =
+              this.data;
+            this.sendNeoXFeeInfo = Object.assign({}, neoXFeeInfo);
+            const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
+              neoXFeeInfo;
+            if (this.data.isNFT) {
+              const { PreExecutionParams, newParams } =
+                this.evmNFTState.getTransferTxRequest({
+                  asset: nftAsset,
+                  token: nftToken,
+                  fromAddress: from,
+                  toAddress: to.address,
+                  maxFeePerGas,
+                  maxPriorityFeePerGas,
+                  gasLimit,
+                  gasPrice,
+                  nonce: this.customNonce ?? this.nonceInfo.nonce,
+                });
+              this.sendTxParams = newParams;
+              res = await this.assetEvmState.sendDappTransaction(
+                PreExecutionParams,
+                newParams,
+                currentWIF
+              );
+            } else {
+              const { PreExecutionParams, newParams } =
+                this.assetEvmState.getTransferErc20TxRequest({
+                  asset,
+                  toAddress: to.address,
+                  transferAmount: amount,
+                  maxFeePerGas,
+                  maxPriorityFeePerGas,
+                  gasLimit,
+                  gasPrice,
+                  nonce: this.customNonce ?? this.nonceInfo.nonce,
+                  fromAddress: from,
+                });
+              this.sendTxParams = newParams;
+              res = await this.assetEvmState.sendDappTransaction(
+                PreExecutionParams,
+                newParams,
+                currentWIF
+              );
+            }
+            txid = res.hash;
+          }
+          break;
       }
-      if (this.data.from !== this.data.to.address) {
-        const txTarget = {
+      if (
+        this.data.from !== this.data.to.address ||
+        this.data.chainType === 'NeoX'
+      ) {
+        const txTarget: Transaction = {
           txid,
-          value: -this.data.amount,
+          value: `-${this.data.amount}`,
           block_time: Math.floor(new Date().getTime() / 1000),
+          from: [this.data.from],
+          to: [this.data.to.address],
+          type: 'sent',
+          asset_id: '',
         };
         if (this.data.isNFT) {
-          txTarget['tokenid'] = this.data.nftToken.tokenid;
+          txTarget.tokenid = this.data.nftToken.tokenid;
+          txTarget.symbol = this.data.nftAsset.symbol;
+          txTarget.asset_id = this.data.nftAsset.assethash;
+        } else {
+          txTarget.symbol = this.data.asset.symbol;
+          txTarget.asset_id = this.data.asset.asset_id;
+        }
+        if (this.data.chainType === 'NeoX') {
+          txTarget.nonce = this.customNonce ?? this.nonceInfo.nonce;
+          txTarget.txParams = {
+            from: this.data.from,
+            to: this.sendTxParams.to,
+            data: this.sendTxParams.data,
+            value: this.sendTxParams.value
+              ? this.sendTxParams.value.toString()
+              : this.sendTxParams.value,
+          };
+          txTarget.history = [
+            {
+              txId: txid,
+              time: txTarget.block_time,
+              type: 'create',
+              neoXFeeInfo: this.sendNeoXFeeInfo,
+            },
+          ];
         }
         this.pushTransaction(txTarget);
       }
@@ -200,22 +439,30 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
       this.dialog
         .open(PopupTransferSuccessDialogComponent, {
           panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
         })
         .afterClosed()
         .subscribe(() => {
           history.go(-1);
         });
-      this.loading = false;
-      this.loadingMsg = '';
-      return res;
     } catch (err) {
-      this.global.handlePrcError(err, 'Neo2');
+      switch (this.data.chainType) {
+        case 'Neo2':
+          this.global.handlePrcError(err, 'Neo2');
+          break;
+        case 'Neo3':
+          this.global.handlePrcError(err, 'Neo3');
+          break;
+        case 'NeoX':
+          this.global.snackBarTip(err);
+          break;
+      }
     }
     this.loading = false;
     this.loadingMsg = '';
   }
   private pushTransaction(transaction: any) {
-    const networkId = this.data.network.id;
+    const networkName = `${this.data.chainType}-${this.data.network.id}`;
     const address = this.data.from;
     const assetId = this.data.isNFT
       ? this.data.nftContract
@@ -224,28 +471,33 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
       if (res === null || res === undefined) {
         res = {};
       }
-      if (res[networkId] === undefined) {
-        res[networkId] = {};
+      if (res[networkName] === undefined) {
+        res[networkName] = {};
       }
-      if (res[networkId][address] === undefined) {
-        res[networkId][address] = {};
+      if (res[networkName][address] === undefined) {
+        res[networkName][address] = {};
       }
-      if (res[networkId][address][assetId] === undefined) {
-        res[networkId][address][assetId] = [];
+      if (res[networkName][address][assetId] === undefined) {
+        res[networkName][address][assetId] = [];
       }
-      res[networkId][address][assetId].unshift(transaction);
+      res[networkName][address][assetId].unshift(transaction);
       this.chrome.setStorage(STORAGE_NAME.transaction, res);
-      const setData = {};
-      setData[`TxArr_${networkId}`] =
-        (await this.chrome.getLocalStorage(`TxArr_${networkId}`)) || [];
-      setData[`TxArr_${networkId}`].push(transaction.txid);
-      this.chrome.setLocalStorage(setData);
+      if (this.data.chainType !== 'NeoX') {
+        const setData = {};
+        setData[`TxArr_${networkName}`] =
+          (await this.chrome.getLocalStorage(`TxArr_${networkName}`)) || [];
+        setData[`TxArr_${networkName}`].push(transaction.txid);
+        this.chrome.setLocalStorage(setData);
+      }
     });
   }
   //#endregion
 
   //#region init
   private createTx() {
+    if (this.data.chainType === 'NeoX') {
+      return;
+    }
     this.loading = true;
     let createTxReq: Observable<Transaction2 | Transaction3>;
     if (this.data.isNFT) {
@@ -302,51 +554,83 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
         .toFixed();
       totalFeeRate = await this.getGasRate(this.totalFee);
     }
-    this.rate.total = new BigNumber(this.rate.amount)
-      .plus(totalFeeRate)
+    this.rate.total = new BigNumber(this.rate.amount ?? 0)
+      .plus(totalFeeRate ?? 0)
       .toFixed();
   }
   private getDataJson() {
-    this.datajson.fromAddress = this.data.from;
-    this.datajson.toAddress = this.data.to.address;
-    this.datajson.symbol = this.data.isNFT
-      ? this.data.nftToken.symbol
-      : this.data.asset.symbol;
-    this.datajson.asset = this.data.isNFT
-      ? this.data.nftContract
-      : this.data.asset.asset_id;
-    if (this.data.isNFT) {
-      this.datajson.tokenId = this.data.nftToken.tokenid;
+    this.dataJson = {
+      fromAddress: this.data.from,
+      toAddress: this.data.to.address,
+      symbol: this.data.isNFT
+        ? this.data.nftToken.symbol
+        : this.data.asset.symbol,
+      asset: this.data.isNFT ? this.data.nftContract : this.data.asset.asset_id,
+      tokenId: this.data.isNFT ? this.data.nftToken.tokenid : undefined,
+      amount: this.data.amount,
+      fee: this.data.chainType === 'NeoX' ? undefined : this.data.fee,
+      estimatedFee:
+        this.data.chainType === 'NeoX'
+          ? this.data.neoXFeeInfo.estimateGas
+          : undefined,
+      networkFee: this.networkFee,
+      systemFee: this.systemFee,
+      networkId:
+        this.data.chainType === 'NeoX' ? undefined : this.data.network.id,
+      chainId:
+        this.data.chainType === 'NeoX' ? this.data.network.chainId : undefined,
+    };
+
+    // get nonce
+    if (this.data.chainType === 'NeoX') {
+      this.assetEvmState.getNonceInfo(this.data.from).then((res) => {
+        this.nonceInfo = res;
+      });
     }
-    this.datajson.amount = this.data.amount;
-    this.datajson.fee = this.data.fee;
-    this.datajson.networkFee = this.networkFee;
-    this.datajson.systemFee = this.systemFee;
-    this.datajson.networkId = this.data.network.id;
+
+    // EVM: get data
+    if (
+      this.data.chainType === 'NeoX' &&
+      !this.data.isNFT &&
+      this.data.asset.asset_id !== ETH_SOURCE_ASSET_HASH
+    ) {
+      const amountBN = BigInt(
+        new BigNumber(this.data.amount)
+          .shiftedBy(this.data.asset.decimals)
+          .toFixed(0, 1)
+      );
+      this.evmHexData = this.assetEvmState.getTransferERC20Data({
+        asset: this.data.asset,
+        toAddress: this.data.to.address,
+        transferAmount: amountBN,
+      });
+      this.evmHexDataLength = this.util.getHexDataLength(this.evmHexData);
+    } else if (this.data.chainType === 'NeoX' && this.data.isNFT) {
+      this.evmHexData = this.evmNFTState.getTransferData({
+        asset: this.data.nftAsset,
+        token: this.data.nftToken,
+        fromAddress: this.data.from,
+        toAddress: this.data.to.address,
+      });
+      this.evmHexDataLength = this.util.getHexDataLength(this.evmHexData);
+    }
   }
   //#endregion
 
   //#region rate
-  private getGasRate(value: string) {
-    if (this.gasPrice) {
-      return new BigNumber(value).times(this.gasPrice).toFixed();
+  private async getGasRate(value: string) {
+    if (!this.gasPrice) {
+      this.gasPrice = await this.assetState.getAssetRateV2(
+        this.data.chainType,
+        this.data.chainType === 'Neo2'
+          ? GAS
+          : this.data.chainType === 'Neo3'
+          ? GAS3_CONTRACT
+          : ETH_SOURCE_ASSET_HASH,
+        this.data.chainType === 'NeoX' ? this.data.network.chainId : undefined
+      );
     }
-    const gasAassetId = this.data.chainType === 'Neo3' ? GAS3_CONTRACT : GAS;
-    return this.assetState.getAssetRate('GAS', gasAassetId).then((res) => {
-      this.gasPrice = res ? res : new BigNumber(0);
-      return new BigNumber(value).times(this.gasPrice).toFixed();
-    });
-  }
-  private getAssetRate(value: string) {
-    if (this.assetPrice) {
-      return new BigNumber(value).times(this.assetPrice).toFixed();
-    }
-    return this.assetState
-      .getAssetRate(this.data.asset.symbol, this.data.asset.asset_id)
-      .then((res) => {
-        this.assetPrice = res ? res : new BigNumber(0);
-        return new BigNumber(value).times(this.assetPrice).toFixed();
-      });
+    return this.gasPrice ? this.gasPrice.times(value).toFixed(2) : undefined;
   }
   //#endregion
 }

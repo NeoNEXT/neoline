@@ -1,0 +1,78 @@
+<div class="loading-box" *ngIf="loading">
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+    <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
+  </div>
+</div>
+<confirm-send-ether
+  *ngIf="getTxType() === 'sendEther'"
+  [txParams]="txParams"
+  [locationOrigin]="locationOrigin"
+  [amount]="amount"
+  [siteNeoXFeeInfo]="siteNeoXFeeInfo"
+  [signAddressGasBalance]="signAddressGasBalance"
+  [estimateGasError]="estimateGasError"
+  [insufficientFunds]="insufficientFunds"
+  [neoXNetwork]="neoXNetwork"
+  [nonceInfo]="nonceInfo"
+  [rate]="rate"
+  (closeEvent)="exit()"
+  (updateFeeEvent)="updateEvmFee($event)"
+  (confirmEvent)="confirm($event)"
+></confirm-send-ether>
+
+<confirm-send-token
+  *ngIf="getTxType() === 'sendToken'"
+  [txParams]="txParams"
+  [locationOrigin]="locationOrigin"
+  [amount]="amount"
+  [siteNeoXFeeInfo]="siteNeoXFeeInfo"
+  [signAddressGasBalance]="signAddressGasBalance"
+  [estimateGasError]="estimateGasError"
+  [insufficientFunds]="insufficientFunds"
+  [neoXNetwork]="neoXNetwork"
+  [nonceInfo]="nonceInfo"
+  [rate]="rate"
+  (closeEvent)="exit()"
+  (updateFeeEvent)="updateEvmFee($event)"
+  (confirmEvent)="confirm($event)"
+  (returnAssetDetail)="setAssetDetail($event)"
+></confirm-send-token>
+
+<confirm-contract-interaction
+  *ngIf="getTxType() === 'contractInteraction'"
+  [txParams]="txParams"
+  [locationOrigin]="locationOrigin"
+  [amount]="amount"
+  [siteNeoXFeeInfo]="siteNeoXFeeInfo"
+  [signAddressGasBalance]="signAddressGasBalance"
+  [estimateGasError]="estimateGasError"
+  [insufficientFunds]="insufficientFunds"
+  [neoXNetwork]="neoXNetwork"
+  [nonceInfo]="nonceInfo"
+  [rate]="rate"
+  (closeEvent)="exit()"
+  (updateFeeEvent)="updateEvmFee($event)"
+  (confirmEvent)="confirm($event)"
+></confirm-contract-interaction>
+
+<confirm-approve
+  *ngIf="getTxType() === 'approve'"
+  [lang]="lang"
+  [txParams]="txParams"
+  [locationOrigin]="locationOrigin"
+  [iconSrc]="iconSrc"
+  [siteNeoXFeeInfo]="siteNeoXFeeInfo"
+  [encryptWallet]="encryptWallet"
+  [signAddressGasBalance]="signAddressGasBalance"
+  [estimateGasError]="estimateGasError"
+  [insufficientFunds]="insufficientFunds"
+  [neoXNetwork]="neoXNetwork"
+  [nonceInfo]="nonceInfo"
+  [rate]="rate"
+  (closeEvent)="exit()"
+  (updateFeeEvent)="updateEvmFee($event)"
+  (updateApproveAmountEvent)="updateApproveAmount($event)"
+  (confirmEvent)="confirm($event)"
+  (returnAssetDetail)="setAssetDetail($event)"
+></confirm-approve>

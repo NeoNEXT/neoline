@@ -8,21 +8,24 @@
 <div class="container">
   <div class="header transfer">
     <div class="invoke-type">· TRANSFER</div>
-    <div class="asset-logo-box big">
-      <img [assetId]="NEO" chain="Neo2" appErrorSrc alt="" />
-    </div>
+    <token-logo customClass="big" [assetId]="NEO" chainType="Neo2"></token-logo>
+
     <p class="amount">-{{ amount }} {{ symbol }}</p>
     <p class="rate">-{{ money | numberFixed : 2 }} {{ rateCurrency }}</p>
     <div class="address-group">
-      <div class="item">
-        <img class="avatar" [avatar]="fromAddress" />
-        <span>{{ fromAddress | longStr : 4 }}</span>
-      </div>
+      <copy [value]="fromAddress">
+        <div class="item">
+          <img class="avatar" [avatar]="fromAddress" />
+          <span>{{ fromAddress | longStr : 4 }}</span>
+        </div>
+      </copy>
       <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
-      <div class="item">
-        <img class="avatar" [avatar]="toAddress" />
-        <span>{{ toAddress | longStr : 4 }}</span>
-      </div>
+      <copy [value]="toAddress">
+        <div class="item">
+          <img class="avatar" [avatar]="toAddress" />
+          <span>{{ toAddress | longStr : 4 }}</span>
+        </div>
+      </copy>
     </div>
   </div>
   <div class="tabs-container">
@@ -40,7 +43,8 @@
     <li>
       <p class="row">
         <span class="label"
-          >GAS FEE<img
+          >{{ "GASFEE" | translate | async
+          }}<img
             class="edit"
             (click)="editFee()"
             src="assets/images/common/edit.svg"
@@ -51,11 +55,14 @@
     </li>
     <li>
       <p class="row">
-        <span class="label">TOTAL</span>
+        <span class="label">{{ "TOTAL" | translate | async }}</span>
         <span class="value">{{ amount }} {{ symbol }} + {{ fee }} GAS</span>
       </p>
       <p class="row tip column">
-        <span class="label">Amount+GAS FEE</span>
+        <span class="label"
+          >{{ "amount" | translate | async }} +
+          {{ "GASFEE" | translate | async }}</span
+        >
         <span class="value">
           {{ totalMoney | numberFixed : 2 }} {{ rateCurrency }}
         </span>

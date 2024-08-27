@@ -1,0 +1,115 @@
+<div class="content">
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    theme
+    src="assets/images/common/close.svg"
+    alt=""
+  />
+
+  <ng-container *ngIf="!data.sourceTxID || !data.targetTxID">
+    <img src="/assets/images/bridge/progress.svg" alt="" />
+    <p class="title">
+      {{
+        (data.sourceChainType === "Neo3" ? "Depositing" : "Withdrawing")
+          | translate
+          | async
+      }}
+    </p>
+    <p class="tip">
+      {{
+        (data.sourceChainType === "Neo3" ? "DepositingTip" : "WithdrawingTip")
+          | translate
+          | async
+      }}
+    </p>
+  </ng-container>
+  <ng-container *ngIf="data.sourceTxID && data.targetTxID">
+    <img src="/assets/images/transfer/success.svg" alt="" />
+    <p class="title">
+      {{ "Completed" | translate | async }}
+    </p>
+    <p class="tip">
+      {{
+        (data.sourceChainType === "Neo3" ? "DepositedTip" : "WithdrawnTip")
+          | translate
+          | async
+      }}
+    </p>
+  </ng-container>
+  <div class="tx-history">
+    <div class="item">
+      <p class="item-name">
+        <mat-spinner
+          *ngIf="!data.sourceTxID"
+          strokeWidth="2"
+          diameter="17"
+        ></mat-spinner>
+        <img
+          *ngIf="data.sourceTxID"
+          src="/assets/images/login/checked.svg"
+          alt=""
+        />
+        <span class="name">
+          {{
+            (data.sourceChainType === "Neo3"
+              ? !data.sourceTxID
+                ? "Depositing"
+                : "Deposited"
+              : !data.sourceTxID
+              ? "Withdrawing"
+              : "Withdrawn"
+            )
+              | translate
+              | async
+          }}
+        </span>
+      </p>
+      <p class="item-txid" *ngIf="data.sourceTxID">
+        <copy [value]="data.sourceTxID">
+          <span class="txid">
+            {{ data.sourceTxID | longStr : 6 }}
+            <img theme src="assets/images/common/copy.svg" />
+          </span>
+        </copy>
+        <span (click)="toViewTx()" class="link">
+          {{ "ViewTransaction" | translate | async }}
+          <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
+        </span>
+      </p>
+    </div>
+    <div class="item" *ngIf="data.sourceTxID">
+      <p class="item-name">
+        <mat-spinner
+          *ngIf="!data.targetTxID"
+          strokeWidth="2"
+          diameter="17"
+        ></mat-spinner>
+        <img
+          *ngIf="data.targetTxID"
+          src="/assets/images/login/checked.svg"
+          alt=""
+        />
+        <span class="name">
+          {{
+            (!data.targetTxID ? "Transferring" : "Transferred")
+              | translate
+              | async
+          }}
+        </span>
+      </p>
+      <p class="item-txid" *ngIf="data.targetTxID">
+        <copy [value]="data.targetTxID">
+          <span class="txid">
+            {{ data.targetTxID | longStr : 6 }}
+            <img theme src="assets/images/common/copy.svg" />
+          </span>
+        </copy>
+        <span (click)="toViewTx(false)" class="link">
+          {{ "ViewTransaction" | translate | async }}
+          <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
+        </span>
+      </p>
+    </div>
+  </div>
+</div>

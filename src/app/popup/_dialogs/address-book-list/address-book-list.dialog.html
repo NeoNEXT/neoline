@@ -1,0 +1,51 @@
+<div class="pop-ups-title">
+  {{ 'addressBook' | translate | async }}
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    theme
+    src="assets/images/common/close.svg"
+    alt=""
+  />
+</div>
+
+<section class="container">
+  <button class="search">
+    <img class="search" theme src="assets/images/common/search.svg" />
+    <input
+      [placeholder]="'Search' | translate | async"
+      (input)="searchAddress($event)"
+      type="text"
+    />
+    <img
+      (click)="searchValue = ''"
+      *ngIf="searchValue"
+      theme
+      src="/assets/images/common/close.svg"
+      class="clear"
+      alt=""
+    />
+  </button>
+
+  <div class="select-chain">
+    <span class="chain">
+      {{ chainName }}
+      <img theme src="assets/images/common/triangle-fill.svg" />
+    </span>
+  </div>
+
+  <div class="list">
+    <ul *ngIf="displayAddressArr.length > 0">
+      <li *ngFor="let item of displayAddressArr" (click)="selectAddress(item)">
+        <img class="avatar" [avatar]="item.address" />
+        <div>
+          <p class="name">{{ item.name }}</p>
+          <p class="address">{{ item.address }}</p>
+        </div>
+      </li>
+    </ul>
+    <p class="no-data" *ngIf="displayAddressArr.length === 0">
+      {{ "noMoreData" | translate | async }}
+    </p>
+  </div>
+</section>

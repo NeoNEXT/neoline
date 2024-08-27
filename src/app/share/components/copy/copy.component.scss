@@ -2,9 +2,6 @@
   position: relative;
   .tip {
     position: absolute;
-    bottom: -35px;
-    left: 50%;
-    transform: translateX(-50%);
     display: inline-block;
     width: max-content;
     height: 32px;
@@ -16,6 +13,44 @@
     box-shadow: var(--small-box-shadow);
     z-index: 999;
     pointer-events: none;
+    &.left {
+      top: 50%;
+      left: -4px;
+      transform: translate(-100%, -50%);
+    }
+    &.right {
+      top: 50%;
+      right: -4px;
+      transform: translate(100%, -50%);
+    }
+    &.bottom {
+      top: calc(100% + 4px);
+      left: 50%;
+      transform: translateX(-50%);
+    }
+    &.bottomRight {
+      top: calc(100% + 4px);
+      right: 0;
+    }
+    &.bottomLeft {
+      top: calc(100% + 4px);
+      left: 0;
+    }
+    &.top {
+      top: -4px;
+      left: 50%;
+      transform: translate(-50%, -100%);
+    }
+    &.topRight {
+      top: -4px;
+      right: 0;
+      transform: translateY(-100%);
+    }
+    &.topLeft {
+      top: -4px;
+      left: 0;
+      transform: translateY(-100%);
+    }
     :host-context([data-theme-style="dark-theme"]) & {
       background: #43464d;
     }

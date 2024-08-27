@@ -8,9 +8,7 @@
 <div class="container">
   <div class="header transfer">
     <div class="invoke-type">· DEPLOY</div>
-    <div class="asset-logo-box big">
-      <img [assetId]="NEO" chain="Neo2" appErrorSrc alt="" />
-    </div>
+    <token-logo customClass="big" [assetId]="NEO" chainType="Neo2"></token-logo>
     <p class="amount">NEO</p>
   </div>
   <div class="tabs-container">
@@ -28,7 +26,7 @@
     <li>
       <p class="row">
         <span class="label"
-          >GAS FEE<img
+          >{{ "GASFEE" | translate | async }}<img
             class="edit"
             (click)="editFee()"
             src="assets/images/common/edit.svg"

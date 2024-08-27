@@ -21,6 +21,8 @@ import {
   STORAGE_NAME,
 } from '../_lib';
 import { FormGroup, Validators, FormBuilder } from '@angular/forms';
+import { ethers } from 'ethers';
+import { EvmWalletJSON } from '../_lib/evm';
 
 @Component({
   templateUrl: 'login.component.html',
@@ -38,7 +40,7 @@ export class PopupLoginComponent
   isOnePassword = false;
 
   private accountSub: Unsubscribable;
-  private currentWallet: Wallet2 | Wallet3;
+  private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   private allWallet = [];
   private currentChainType: ChainType;
   private n2Network: RpcNetwork;
@@ -60,7 +62,7 @@ export class PopupLoginComponent
       this.currentChainType = state.currentChainType;
       this.selectChainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
-      this.selectWallet = state.currentWallet;
+      this.selectWallet = state.currentWallet as Wallet2 | Wallet3;
       this.allWallet = (state.neo3WalletArr as any).concat(state.neo2WalletArr);
     });
   }
@@ -96,7 +98,7 @@ export class PopupLoginComponent
     if (this.loading || this.isInit) {
       return;
     }
-    const hasLoginAddress = await this.chrome.getHasLoginAddress().toPromise();
+    const hasLoginAddress = await this.chrome.getHasLoginAddress();
     if (hasLoginAddress[this.selectWallet.accounts[0].address]) {
       this.handleWallet();
       return;
@@ -107,35 +109,58 @@ export class PopupLoginComponent
     this.loading = true;
     let account;
     if (this.checkIsLedger(this.selectWallet)) {
-      const wallet = this.allWallet.find(item => !this.checkIsLedger(item));
+      const wallet = this.allWallet.find((item) => !this.checkIsLedger(item));
       account = wallet.accounts[0];
     } else {
-      account =
-        this.selectChainType === 'Neo3'
-          ? this.util.getNeo3Account(this.selectWallet.accounts[0])
-          : this.selectWallet.accounts[0];
+      switch (this.selectChainType) {
+        case 'Neo2':
+          account = this.selectWallet.accounts[0];
+          break;
+        case 'Neo3':
+          account = this.util.getNeo3Account(this.selectWallet.accounts[0]);
+          break;
+        case 'NeoX':
+          ethers.Wallet.fromEncryptedJson(
+            JSON.stringify(this.selectWallet),
+            this.loginForm.value.password
+          )
+            .then(() => {
+              this.handleLoginSuccess();
+            })
+            .catch(() => {
+              this.handleLoginFailed();
+            });
+          return;
+      }
     }
     account
       .decrypt(this.loginForm.value.password)
       .then(() => {
-        this.chrome.setPassword(this.loginForm.value.password);
-        if (this.route.snapshot.queryParams.notification !== undefined) {
-          this.chrome.windowCallback(
-            {
-              data: true,
-              return: requestTarget.Login,
-            },
-            true
-          );
-        }
-        this.loading = false;
-        this.handleWallet();
+        this.handleLoginSuccess();
       })
       .catch(() => {
-        this.loading = false;
-        this.loginForm.controls[`password`].setErrors({ wrong: true });
-        this.loginForm.markAsDirty();
+        this.handleLoginFailed();
       });
+  }
+
+  private handleLoginSuccess() {
+    this.chrome.setPassword(this.loginForm.value.password);
+    if (this.route.snapshot.queryParams.notification !== undefined) {
+      this.chrome.windowCallback(
+        {
+          data: true,
+          return: requestTarget.Login,
+        },
+        true
+      );
+    }
+    this.loading = false;
+    this.handleWallet();
+  }
+  private handleLoginFailed() {
+    this.loading = false;
+    this.loginForm.controls[`password`].setErrors({ wrong: true });
+    this.loginForm.markAsDirty();
   }
 
   resetWallet() {
@@ -143,12 +168,13 @@ export class PopupLoginComponent
       .open(PopupConfirmDialogComponent, {
         data: 'resetWalletConfirm',
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
           this.store.dispatch({ type: RESET_ACCOUNT });
-          this.chrome.resetWallet();
+          this.chrome.clearStorage();
           this.router.navigateByUrl('/popup/wallet/new-guide');
         }
       });
@@ -162,6 +188,7 @@ export class PopupLoginComponent
           currentAddress: this.selectWallet.accounts[0].address,
         },
         panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
       })
       .afterClosed()
       .subscribe((res) => {
@@ -177,7 +204,7 @@ export class PopupLoginComponent
       });
   }
 
-  checkIsLedger(w: Wallet2 | Wallet3): boolean {
+  checkIsLedger(w: Wallet2 | Wallet3 | EvmWalletJSON): boolean {
     return w.accounts[0]?.extra?.ledgerSLIP44 ? true : false;
   }
 

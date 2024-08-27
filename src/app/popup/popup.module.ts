@@ -8,6 +8,7 @@ import { ShareModule } from '@app/share';
 //#region modules
 import { PopupAddAssetModule } from './add/add-asset/add-asset.module';
 import { PopupAddNftModule } from './add/add-nft/add-nft.module';
+import { PopupAddEvmNftModule } from './add/add-evm-nft/add-nft.module';
 import { PopupNotificationModule } from './notification/notification.module';
 import { TransferModule } from './transfer/transfer.module';
 import { PopupWalletModule } from './wallet/wallet.module';
@@ -18,6 +19,7 @@ const POPUP_MODULES = [
   TransferModule,
   PopupWalletModule,
   PopupAddNftModule,
+  PopupAddEvmNftModule,
 ];
 //#endregion
 
@@ -30,16 +32,24 @@ import { PopupNftDetailComponent } from './detail/nft-detail/nft-detail.componen
 import { PopupNftTokensComponent } from './detail/nft-detail/nft-tokens/nft-tokens.component';
 import { PopupBackupComponent } from './backup/backup.component';
 import { PopupBackupKeyComponent } from './backup/backup-key/backup-key.component';
+import { PopupBackupMnemonicComponent } from './backup/backup-mnemonic/backup-mnemonic.component';
 import {
   PopupAssetsComponent,
   PopupHomeComponent,
   PopupNftsComponent,
   PopupHomeBackupComponent,
+  PopupHomeDappAuthComponent,
+  PopupEvmNftsComponent,
 } from './home';
 import { PopupLoginComponent } from './login/login.component';
 import { PopupNewWalletGuideComponent } from './new-wallet-guide/new-wallet-guide.component';
 import { PopupSettingComponent } from './setting/setting.component';
 import { PopupOnePasswordComponent } from './one-password/one-password.component';
+import { PopupAddressBookComponent } from './address-book/address-book.component';
+import { PopupBridgeComponent } from './bridge/bridge.component';
+import { Neo3BridgeConfirmComponent } from './bridge/neo3-bridge-confirm/neo3-bridge-confirm.component';
+import { NeoXBridgeConfirmComponent } from './bridge/neox-bridge-confirm/neox-bridge-confirm.component';
+import { NeoXBridgeFootnoteComponent } from './bridge/bridge-footnote/bridge-footnote.component';
 
 const POPUP_COMPONENTS = [
   PopupComponent,
@@ -49,15 +59,23 @@ const POPUP_COMPONENTS = [
   PopupNftDetailComponent,
   PopupBackupComponent,
   PopupBackupKeyComponent,
+  PopupBackupMnemonicComponent,
   PopupAssetsComponent,
   PopupHomeComponent,
   PopupNftsComponent,
+  PopupEvmNftsComponent,
   PopupHomeBackupComponent,
+  PopupHomeDappAuthComponent,
   PopupNftTokensComponent,
   PopupLoginComponent,
   PopupNewWalletGuideComponent,
   PopupSettingComponent,
   PopupOnePasswordComponent,
+  PopupAddressBookComponent,
+  PopupBridgeComponent,
+  Neo3BridgeConfirmComponent,
+  NeoXBridgeConfirmComponent,
+  NeoXBridgeFootnoteComponent,
 ];
 //#endregion
 
@@ -78,6 +96,15 @@ import {
   PopupPasswordDialogComponent,
   PopupPrivateKeyComponent,
   PopupWalletListDialogComponent,
+  PopupAddWalletDialogComponent,
+  PopupEditEvmFeeDialogComponent,
+  PopupAddAddressBookDialogComponent,
+  PopupAddressBookListDialogComponent,
+  PopupExportWalletDialogComponent,
+  PopupSelectAddressDialogComponent,
+  PopupBridgeProgressDialogComponent,
+  PopupBridgeFootnoteDialogComponent,
+  PopupSpeedUpFeeDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -96,6 +123,15 @@ const POPUP_DIALOGS = [
   PopupPasswordDialogComponent,
   PopupPrivateKeyComponent,
   PopupWalletListDialogComponent,
+  PopupAddWalletDialogComponent,
+  PopupEditEvmFeeDialogComponent,
+  PopupAddAddressBookDialogComponent,
+  PopupAddressBookListDialogComponent,
+  PopupExportWalletDialogComponent,
+  PopupSelectAddressDialogComponent,
+  PopupBridgeProgressDialogComponent,
+  PopupBridgeFootnoteDialogComponent,
+  PopupSpeedUpFeeDialogComponent,
 ];
 
 //#endregion

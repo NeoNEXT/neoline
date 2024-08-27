@@ -1,0 +1,71 @@
+<div class="pop-ups-title">
+  {{ 'selectAddress' | translate | async }}
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    theme
+    src="assets/images/common/close.svg"
+    alt=""
+  />
+</div>
+
+<button class="search">
+  <img theme class="search" src="/assets/images/common/search.svg" alt="" />
+  <input
+    [placeholder]="(data.chainType === 'Neo3' ? 'inputN3AddressTip': 'inputNeoXAddressTip') | translate | async"
+    (input)="search($event)"
+    type="text"
+  />
+</button>
+
+<div class="tabs-container">
+  <span
+    [class]="{ selected: tabType === 'yourAccounts' }"
+    (click)="tabType = 'yourAccounts'"
+  >
+    {{ "yourAccounts" | translate | async }}
+  </span>
+  <span
+    [class]="{ selected: tabType === 'addressBook' }"
+    (click)="tabType = 'addressBook'"
+  >
+    {{ "addressBook" | translate | async }}
+  </span>
+</div>
+
+<div class="address-content">
+  <ng-container *ngIf="tabType === 'yourAccounts'">
+    <ul class="list">
+      <li
+        *ngFor="let item of data.walletArr"
+        (click)="selectThisAddress(item.accounts[0].address)"
+      >
+        <img class="avatar" [avatar]="item.accounts[0].address" />
+        <div>
+          <p class="name">{{ item.name }}</p>
+          <p class="address">{{ item.accounts[0].address }}</p>
+        </div>
+      </li>
+    </ul>
+    <div class="no-data-content" *ngIf="data.walletArr.length === 0">
+      <p class="no-data">{{ "noMoreData" | translate | async }}</p>
+    </div>
+  </ng-container>
+  <ng-container *ngIf="tabType === 'addressBook'">
+    <ul class="list">
+      <li
+        *ngFor="let item of addressBook"
+        (click)="selectThisAddress(item.address)"
+      >
+        <img class="avatar" [avatar]="item.address" />
+        <div>
+          <p class="name">{{ item.name }}</p>
+          <p class="address">{{ item.address }}</p>
+        </div>
+      </li>
+    </ul>
+    <div class="no-data-content" *ngIf="addressBook.length === 0">
+      <p class="no-data">{{ "noMoreData" | translate | async }}</p>
+    </div>
+  </ng-container>
+</div>

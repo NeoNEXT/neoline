@@ -27,6 +27,9 @@ import { AppState } from '@/app/reduers';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { ChromeService } from '../services/chrome.service';
+import { EvmWalletJSON } from '@/app/popup/_lib/evm';
+import { ethers } from 'ethers';
+import { Router } from '@angular/router';
 
 @Injectable()
 export class UtilServiceState {
@@ -37,13 +40,14 @@ export class UtilServiceState {
   public n3AssetName: Map<string, string> = new Map();
   public n3NftProperties = {};
 
-  private currentWallet: Wallet2 | Wallet3;
+  private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   private neo3WIFArr: string[];
   private neo3WalletArr: Wallet3[];
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
   constructor(
     private http: HttpService,
+    private router: Router,
     private store: Store<AppState>,
     private chrome: ChromeService
   ) {
@@ -63,6 +67,32 @@ export class UtilServiceState {
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
     });
+  }
+
+  checkNeedRedirectHome() {
+    const noNeedRedirectUrl = [
+      '/popup/about',
+      '/popup/setting',
+      '/popup/wallet',
+      '/popup/account',
+      '/popup/address-book',
+      '/popup/transfer/receive',
+      '/popup/one-password',
+    ];
+    if (
+      noNeedRedirectUrl.findIndex((item) => location.hash.includes(item)) < 0
+    ) {
+      this.router.navigateByUrl('/popup/home');
+    }
+  }
+
+  getHexDataLength(henData: string) {
+    if (!henData) return;
+    let value = henData.startsWith('0x') ? henData.substring(2) : henData;
+    if (value.length >= 2 && value.length % 2 === 0) {
+      return value.length / 2;
+    }
+    return 0;
   }
 
   parseUrl(url: string): any {
@@ -174,16 +204,7 @@ export class UtilServiceState {
       .toPromise()
       .then((res) => {
         res.forEach((item, index) => {
-          let symbol: string = '';
-          if (item.result.state === 'HALT' && item.result.stack?.[0]?.value) {
-            symbol = item.result.stack[0].value;
-            if (item.result.stack[0].type === 'ByteArray') {
-              symbol = hexstring2str(item.result.stack[0].value);
-            }
-            if (item.result.stack[0].type === 'ByteString') {
-              symbol = hexstring2str(base642hex(item.result.stack[0].value));
-            }
-          }
+          const symbol = this.handleNeo3StackStringValue(item.result);
           const sourceIndex = requestIndexs[index];
           if (chainType === 'Neo2') {
             this.n2AssetSymbol.set(contracts[sourceIndex], symbol);
@@ -229,17 +250,7 @@ export class UtilServiceState {
       .toPromise()
       .then((res) => {
         res.forEach((item, index) => {
-          let decimal = 0;
-          if (item.result.state === 'HALT' && item.result.stack?.[0]?.value) {
-            decimal = item.result.stack[0].value;
-            if (item.result.stack[0].type === 'Integer') {
-              decimal = Number(item.result.stack[0].value || 0);
-            }
-            if (item.result.stack[0].type === 'ByteArray') {
-              const hexstr = u.reverseHex(item.result.stack[0].value);
-              decimal = new BigNumber(hexstr || 0, 16).toNumber();
-            }
-          }
+          const decimal = this.handleNeo3StackNumberValue(item.result);
           const sourceIndex = requestIndexs[index];
           if (chainType === 'Neo2') {
             this.n2AssetDecimal.set(contracts[sourceIndex], decimal);
@@ -250,6 +261,47 @@ export class UtilServiceState {
         });
         return decoimalsRes;
       });
+  }
+
+  handleNeo3StackNumberValue(result): number {
+    let res = 0;
+    if (result.state === 'HALT' && result.stack?.[0]?.value) {
+      res = result.stack[0].value;
+      if (result.stack[0].type === 'Integer') {
+        res = Number(result.stack[0].value || 0);
+      }
+      if (result.stack[0].type === 'ByteArray') {
+        const hexStr = u.reverseHex(result.stack[0].value);
+        res = new BigNumber(hexStr || 0, 16).toNumber();
+      }
+    }
+    return res;
+  }
+
+  handleNeo3StackNumber(result): string {
+    let res;
+    if (result.type === 'Integer') {
+      res = result.value;
+    }
+    if (result.type === 'ByteArray') {
+      const hexStr = u.reverseHex(result.value);
+      res = new BigNumber(hexStr || 0, 16).toFixed();
+    }
+    return res;
+  }
+
+  handleNeo3StackStringValue(result): string {
+    let res = '';
+    if (result.state === 'HALT' && result.stack?.[0]?.value) {
+      res = result.stack[0].value;
+      if (result.stack[0].type === 'ByteArray') {
+        res = hexstring2str(result.stack[0].value);
+      }
+      if (result.stack[0].type === 'ByteString') {
+        res = hexstring2str(base642hex(result.stack[0].value));
+      }
+    }
+    return res;
   }
 
   getN3NftNames(contracts: string[]): Promise<string[]> {
@@ -353,25 +405,15 @@ export class UtilServiceState {
     };
     return this.http.rpcPost(this.n3Network.rpcUrl, data).pipe(
       map((res) => {
-        let address = '';
-        if (res.state === 'HALT' && res.stack?.[0]?.value) {
-          address = res.stack[0]?.value;
-          if (res.stack[0]?.type === 'ByteArray') {
-            address = hexstring2str(res.stack[0]?.value);
-          }
-          if (res.stack[0]?.type === 'ByteString') {
-            address = hexstring2str(base642hex(res.stack[0]?.value));
-          }
-        }
-        return address;
+        return this.handleNeo3StackStringValue(res);
       })
     );
   }
 
   async getWIF(
     WIFArr: string[],
-    walletArr: Array<Wallet2 | Wallet3>,
-    currentWallet: Wallet2 | Wallet3
+    walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>,
+    currentWallet: Wallet2 | Wallet3 | EvmWalletJSON
   ): Promise<string> {
     const index = walletArr.findIndex(
       (item) => item.accounts[0].address === currentWallet.accounts[0].address
@@ -384,6 +426,14 @@ export class UtilServiceState {
       return '';
     }
     const pwd = await this.chrome.getPassword();
+    if (ethers.isAddress(currentWallet.accounts[0].address)) {
+      return ethers.Wallet.fromEncryptedJson(
+        JSON.stringify(currentWallet),
+        pwd
+      ).then((wallet) => {
+        return wallet.privateKey;
+      });
+    }
     return (currentWallet.accounts[0] as any).decrypt(pwd).then((res) => {
       return res.WIF;
     });

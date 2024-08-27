@@ -1,0 +1,28 @@
+<div class="container">
+  <div class="host">
+    <button>
+      <img [src]="iconSrc" [appErrorSrc]="'unknown'" alt="" />{{ hostname }}
+    </button>
+  </div>
+  <p class="title">{{ "addEvmTokenTitle" | translate | async }}</p>
+  <p class="tip">{{ "addEvmTokenTip" | translate | async }}</p>
+
+  <div class="asset-info">
+    <div>
+      <p class="label">{{ "Token" | translate | async }}</p>
+      <p class="value">{{ queryParams?.symbol }}</p>
+    </div>
+    <div class="balance">
+      <p class="label">{{ "Balance" | translate | async }}</p>
+      <p class="value">{{ assetBalance }} {{ queryParams?.symbol }}</p>
+    </div>
+  </div>
+</div>
+<div class="btn-group">
+  <button class="cancel" (click)="cancel()">
+    {{ "cancel" | translate | async }}
+  </button>
+  <button class="confirm" (click)="addAsset()">
+    {{ "yes" | translate | async }}
+  </button>
+</div>

@@ -64,15 +64,16 @@ section.container {
         }
       }
       .wif {
-        padding: 14px 36px;
+        padding: 14px;
         border-radius: 4px;
         background: var(--message-box-color);
         margin-top: 12px;
-        text-align: center;
         font-size: 14px;
         line-height: 18px;
         color: var(--title-color);
-        word-break: break-all;
+        &.breakAll {
+          word-break: break-all;
+        }
       }
     }
     .tip {

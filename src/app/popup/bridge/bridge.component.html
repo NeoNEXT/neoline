@@ -1,0 +1,191 @@
+<div class="loading-box" *ngIf="loading">
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+  </div>
+</div>
+
+<nav title="Bridge" *ngIf="!showConfirmPage"></nav>
+<nav
+  title="Bridge"
+  [backUrl]="'/popup/bridge'"
+  (backEvent)="showConfirmPage = false"
+  *ngIf="showConfirmPage"
+></nav>
+
+<div class="bridge-content" *ngIf="!showConfirmPage">
+  <div class="bridge-header">
+    <div class="asset">{{ bridgeAsset.symbol }}</div>
+    <bridge-footnote
+      *ngIf="currentBridgeNetwork === 'MainNet'"
+      [currentBridgeNetwork]="currentBridgeNetwork"
+    ></bridge-footnote>
+  </div>
+  <div class="item from">
+    <div class="label">
+      <span>{{ "From" | translate | async }}</span>
+      <p class="balance">
+        <img theme src="assets/images/login/wallet.svg" alt="" />
+        {{ bridgeAsset.balance || 0 | numberFixed : 8 }}
+        {{ bridgeAsset.symbol }}
+        <span class="max" (click)="bridgeAll()">{{
+          "Max" | translate | async
+        }}</span>
+      </p>
+    </div>
+    <div class="input-amount">
+      <span class="chain">{{ fromChain }}</span>
+      <div class="amount">
+        <input
+          type="text"
+          min="0"
+          [(ngModel)]="bridgeAmount"
+          (input)="getAssetRate()"
+          oninput="value=value.replace(/^\D*(\d*(?:\.\d{0,8})?).*$/g, '$1')"
+          placeholder="Enter amount"
+        />
+        <p class="rate">
+          {{
+            bridgeAsset.rateBalance
+              ? bridgeAsset.rateBalance + " " + rateCurrency
+              : ""
+          }}
+        </p>
+      </div>
+    </div>
+  </div>
+  <div class="item to">
+    <img
+      theme
+      class="exchange"
+      src="assets/images/bridge/exchange.svg"
+      alt=""
+    />
+    <div class="label">{{ "ToAddress" | translate | async }}</div>
+    <div class="input-amount">
+      <span class="chain">{{ toChain }}</span>
+      <div
+        class="select"
+        [ngClass]="{ hasAddress: toAddress }"
+        (click)="selectToAddress()"
+      >
+        {{
+          toAddress
+            ? (toAddress | longStr : 8)
+            : ("selectAddress" | translate | async)
+        }}
+      </div>
+    </div>
+  </div>
+  <ul class="fee">
+    <li>
+      <span class="label">
+        {{ "bridgeFee" | translate | async }}
+        <tooltip [tip]="'bridgeFeeDesc' | translate | async" placement="right">
+          <img src="assets/images/common/tooltip.svg" alt="" />
+        </tooltip>
+      </span>
+      <p>{{ bridgeFee }} {{ bridgeAsset.symbol }}</p>
+    </li>
+    <li>
+      <span class="label">{{ "ActualReceive" | translate | async }}</span>
+      <p>{{ getActualReceive() }} {{ bridgeAsset.symbol }}</p>
+    </li>
+  </ul>
+  <button
+    class="confirm pop-ups"
+    [ngClass]="{ disabled: !bridgeAmount || !toAddress }"
+    (click)="confirm()"
+  >
+    {{ (chainType === "Neo3" ? "Deposit" : "Withdraw") | translate | async }}
+  </button>
+</div>
+
+<div class="tx-history" *ngIf="!showConfirmPage && sessionTx?.txId">
+  <div class="item">
+    <mat-spinner
+      *ngIf="!sessionTx.sourceTxID"
+      strokeWidth="2"
+      diameter="17"
+      (click)="openTxModal()"
+    ></mat-spinner>
+    <img
+      *ngIf="sessionTx.sourceTxID"
+      src="/assets/images/login/checked.svg"
+      alt=""
+    />
+    <span class="name">
+      {{
+        (chainType === "Neo3"
+          ? !sessionTx.sourceTxID
+            ? "Depositing"
+            : "Deposited"
+          : !sessionTx.sourceTxID
+          ? "Withdrawing"
+          : "Withdrawn"
+        )
+          | translate
+          | async
+      }}
+    </span>
+    <span *ngIf="sessionTx.sourceTxID" (click)="toViewTx()" class="tx">
+      {{ "ViewTransaction" | translate | async }}
+      <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
+    </span>
+  </div>
+  <div class="item" *ngIf="sessionTx.sourceTxID">
+    <mat-spinner
+      *ngIf="!sessionTx.targetTxID"
+      strokeWidth="2"
+      diameter="17"
+      (click)="openTxModal()"
+    ></mat-spinner>
+    <img
+      *ngIf="sessionTx.targetTxID"
+      src="/assets/images/login/checked.svg"
+      alt=""
+    />
+    <span class="name">
+      {{
+        (!sessionTx.targetTxID ? "Transferring" : "Transferred")
+          | translate
+          | async
+      }}
+    </span>
+    <span *ngIf="sessionTx.targetTxID" (click)="toViewTx(false)" class="tx">
+      {{ "ViewTransaction" | translate | async }}
+      <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
+    </span>
+  </div>
+</div>
+
+<neo3-bridge-confirm
+  *ngIf="showConfirmPage && chainType === 'Neo3'"
+  [bridgeAsset]="bridgeAsset"
+  [bridgeAmount]="bridgeAmount"
+  [toAddress]="toAddress"
+  [n3Network]="n3Network"
+  [unSignedTx]="unSignedTx"
+  [networkFee]="networkFee"
+  [networkFeeWithoutPriorityFee]="networkFeeWithoutPriorityFee"
+  [systemFee]="systemFee"
+  [priorityFee]="priorityFee"
+  [currentWallet]="currentWallet"
+  [invokeArgs]="invokeArgs"
+  [signers]="signers"
+  [rateCurrency]="rateCurrency"
+  (backAmount)="handleBack($event)"
+></neo3-bridge-confirm>
+
+<neox-bridge-confirm
+  *ngIf="showConfirmPage && chainType === 'NeoX'"
+  [bridgeAsset]="bridgeAsset"
+  [bridgeAmount]="bridgeAmount"
+  [toAddress]="toAddress"
+  [neoXNetwork]="neoXNetwork"
+  [currentWallet]="currentWallet"
+  [neoXFeeInfo]="neoXFeeInfo"
+  [neoXNetwork]="neoXNetwork"
+  [txParams]="txParams"
+  [rateCurrency]="rateCurrency"
+  (backAmount)="handleBack($event)"
+></neox-bridge-confirm>

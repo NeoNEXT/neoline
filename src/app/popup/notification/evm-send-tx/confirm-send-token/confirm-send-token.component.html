@@ -1,0 +1,100 @@
+<div class="container">
+  <div class="header transfer">
+    <p class="origin">{{ locationOrigin }}</p>
+    <div class="type">
+      {{ txParams?.to | longStr : 4 }}: {{ tokenData?.name }}
+    </div>
+    <div class="asset">
+      <token-logo
+        customClass="small"
+        [assetId]="txParams?.to"
+        chainType="NeoX"
+        [symbol]="assetDetails?.symbol"
+        [neoXChainId]="neoXNetwork?.chainId"
+      ></token-logo>
+      <p class="amount">
+        {{ assetDetails?.tokenAmount || 0 }} {{ assetDetails?.symbol }}
+      </p>
+    </div>
+    <p class="rate">
+      {{ sendAssetRate | numberFixed : 2 }} {{ rate.rateCurrency }}
+    </p>
+    <div class="address-group">
+      <copy [value]="txParams?.from">
+        <div class="item">
+          <img class="avatar" [avatar]="txParams?.from" />
+          <span>{{ txParams?.from | longStr : 4 }}</span>
+        </div>
+      </copy>
+      <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
+      <copy [value]="assetDetails?.toAddress">
+        <div class="item">
+          <img class="avatar" [avatar]="assetDetails?.toAddress" />
+          <span>{{ assetDetails?.toAddress | longStr : 4 }}</span>
+        </div>
+      </copy>
+    </div>
+  </div>
+  <div class="tabs-container">
+    <span
+      [class]="{ selected: tabType === 'details' }"
+      (click)="tabType = 'details'"
+    >
+      {{ "details" | translate | async }}
+    </span>
+    <span [class]="{ selected: tabType === 'data' }" (click)="tabType = 'data'">
+      {{ "data" | translate | async }}
+    </span>
+  </div>
+  <div class="content details" *ngIf="tabType === 'details'">
+    <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
+
+    <div class="fee-group">
+      <evm-fee
+        [txParams]="txParams"
+        [symbol]="neoXNetwork.symbol"
+        [siteNeoXFeeInfo]="siteNeoXFeeInfo"
+        [place]="'dapp'"
+        (returnFee)="updateEvmFee($event)"
+      >
+      </evm-fee>
+      <p class="rate">
+        {{ rate.fee | numberFixed : 2 }} {{ rate.rateCurrency }}
+      </p>
+    </div>
+
+    <evm-custom-nonce
+      [default]="nonceInfo?.nonce"
+      (changeNonceEvent)="changeNonce($event)"
+    ></evm-custom-nonce>
+
+    <evm-gas-error
+      *ngIf="insufficientFunds"
+      [networkName]="neoXNetwork.name"
+      [symbol]="neoXNetwork.symbol"
+    ></evm-gas-error>
+    <evm-pending-warning
+      *ngIf="nonceInfo?.pendingTxs"
+      [count]="nonceInfo.pendingTxs"
+    ></evm-pending-warning>
+  </div>
+  <div class="content data" *ngIf="tabType === 'data'">
+    <p class="title">
+      FUNCTION TYPE: <span class="value">{{ tokenData?.signature }}</span>
+    </p>
+    <p class="hex-label">HEX DATA: {{ hexDataLength }} BYTES</p>
+    <p class="json-box serialize">{{ txParams.data }}</p>
+  </div>
+  <div class="btn-group">
+    <button class="cancel" (click)="exit()">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button
+      class="confirm"
+      [ngClass]="{ disabled: !nonceInfo || insufficientFunds }"
+      (click)="confirm()"
+    >
+      {{ "yes" | translate | async }}
+    </button>
+  </div>
+</div>
