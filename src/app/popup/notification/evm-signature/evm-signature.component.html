@@ -18,7 +18,18 @@
   </div>
   <div class="content">
     <p class="hex-label">{{ "message" | translate | async }}</p>
-    <p class="json-box serialize">{{ challenge }}</p>
+    <p
+      class="json-box serialize"
+      *ngIf="signMethod === ETH_EOA_SIGN_METHODS.PersonalSign"
+    >
+      {{ challenge }}
+    </p>
+    <p
+      class="json-box serialize"
+      *ngIf="signMethod === ETH_EOA_SIGN_METHODS.SignTypedDataV4"
+    >
+      {{ typedData?.message | json }}
+    </p>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="cancel()">
