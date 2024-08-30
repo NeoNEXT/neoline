@@ -31,20 +31,30 @@
     </li>
     <li>
       <span class="label">{{ 'ContractAddress' | translate |async }}</span>
-      <copy [value]="data.nftContract">
-        <span class="value copy">
+      <div class="value contract">
+        <copy [value]="data.nftContract">
           {{ data.nftContract | longStr: 6 }}
-          <img theme src="assets/images/common/copy.svg" />
-        </span>
-      </copy>
+        </copy>
+        <tooltip
+          tip="{{'ViewOnExplorer' | translate | async}}"
+          placement="topRight"
+        >
+          <img
+            (click)="toWeb(data.nftContract)"
+            theme
+            src="assets/images/account/home-explorer.svg"
+            alt=""
+          />
+        </tooltip>
+      </div>
     </li>
     <ng-container
-      *ngIf="data.chainType === 'NeoX' && OPENSEA_ALL_CHAINS[data.neoXNetwork.chainId]"
+      *ngIf="data.chainType === 'NeoX' && OPENSEA_ALL_CHAINS[data.network.chainId]"
     >
       <li>
         <span class="label">{{ 'Network' | translate | async }}</span>
         <span class="value">
-          {{ OPENSEA_ALL_CHAINS[data.neoXNetwork.chainId]?.name }}
+          {{ OPENSEA_ALL_CHAINS[data.network.chainId]?.name }}
         </span>
       </li>
       <li>

@@ -12,10 +12,7 @@ import { NEO, GAS, Asset } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { MatDialog } from '@angular/material/dialog';
-import {
-  PopupAddNetworkDialogComponent,
-  PopupConfirmDialogComponent,
-} from '../_dialogs';
+import { PopupConfirmDialogComponent } from '../_dialogs';
 import { Router } from '@angular/router';
 import { rpc } from '@cityofzion/neon-core';
 import {
@@ -200,47 +197,28 @@ export class PopupHomeComponent implements OnInit, OnDestroy {
   //#region user click function
   toWeb() {
     this.showMenu = false;
+    let network: RpcNetwork;
+    let networkIndex: number;
     switch (this.chainType) {
       case 'Neo2':
-        if (this.n2Network.explorer) {
-          window.open(
-            `${this.n2Network.explorer}address/${this.address}/page/1`
-          );
-        }
+        network = this.n2Network;
         break;
       case 'Neo3':
-        if (this.n3Network.explorer) {
-          window.open(`${this.n3Network.explorer}/address/${this.address}`);
-        } else {
-          this.dialog.open(PopupAddNetworkDialogComponent, {
-            panelClass: 'custom-dialog-panel',
-            backdropClass: 'custom-dialog-backdrop',
-            data: {
-              addChainType: this.chainType,
-              index: this.n3NetworkIndex,
-              editNetwork: this.n3Network,
-              addExplorer: true,
-            },
-          });
-        }
+        network = this.n3Network;
+        networkIndex = this.n3NetworkIndex;
         break;
       case 'NeoX':
-        if (this.neoXNetwork.explorer) {
-          window.open(`${this.neoXNetwork.explorer}/address/${this.address}`);
-        } else {
-          this.dialog.open(PopupAddNetworkDialogComponent, {
-            panelClass: 'custom-dialog-panel',
-            backdropClass: 'custom-dialog-backdrop',
-            data: {
-              addChainType: this.chainType,
-              index: this.neoXNetworkIndex,
-              editNetwork: this.neoXNetwork,
-              addExplorer: true,
-            },
-          });
-        }
+        network = this.neoXNetwork;
+        networkIndex = this.neoXNetworkIndex;
         break;
     }
+    this.util.toExplorer({
+      chain: this.chainType,
+      network,
+      networkIndex,
+      type: 'account',
+      value: this.address,
+    });
   }
   removeAccount() {
     if (!this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {

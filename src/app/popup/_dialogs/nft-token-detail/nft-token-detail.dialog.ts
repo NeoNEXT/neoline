@@ -8,6 +8,7 @@ import {
   RpcNetwork,
   ChainType,
 } from '../../_lib';
+import { UtilServiceState } from '@/app/core';
 
 @Component({
   templateUrl: 'nft-token-detail.dialog.html',
@@ -16,12 +17,14 @@ import {
 export class PopupNftTokenDetailDialogComponent {
   OPENSEA_ALL_CHAINS = OPENSEA_ALL_CHAINS;
   constructor(
+    private util: UtilServiceState,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       nftToken: NftToken;
       nftContract: string;
       chainType: ChainType;
-      neoXNetwork: RpcNetwork;
+      network: RpcNetwork;
+      networkIndex: number;
     }
   ) {}
 
@@ -41,16 +44,28 @@ export class PopupNftTokenDetailDialogComponent {
   toNftMarket() {
     let urlPrefix: string;
     let chain: string;
-    if (OPENSEA_TESTNET_CHAINS[this.data.neoXNetwork.chainId]) {
+    if (OPENSEA_TESTNET_CHAINS[this.data.network.chainId]) {
       urlPrefix = 'https://testnets.opensea.io/assets';
-      chain = OPENSEA_TESTNET_CHAINS[this.data.neoXNetwork.chainId].value;
+      chain = OPENSEA_TESTNET_CHAINS[this.data.network.chainId].value;
     }
-    if (OPENSEA_MAINNET_CHAINS[this.data.neoXNetwork.chainId]) {
+    if (OPENSEA_MAINNET_CHAINS[this.data.network.chainId]) {
       urlPrefix = 'https://opensea.io/assets';
-      chain = OPENSEA_MAINNET_CHAINS[this.data.neoXNetwork.chainId].value;
+      chain = OPENSEA_MAINNET_CHAINS[this.data.network.chainId].value;
     }
-    window.open(
-      `${urlPrefix}/${chain}/${this.data.nftContract}/${this.data.nftToken.tokenid}`
-    );
+    if (urlPrefix && chain) {
+      window.open(
+        `${urlPrefix}/${chain}/${this.data.nftContract}/${this.data.nftToken.tokenid}`
+      );
+    }
+  }
+
+  toWeb(contract: string) {
+    this.util.toExplorer({
+      chain: this.data.chainType,
+      network: this.data.network,
+      networkIndex: this.data.networkIndex,
+      type: 'NFT',
+      value: contract,
+    });
   }
 }

@@ -1,9 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import {
   NftState,
   ChromeService,
   EvmNFTState,
   GlobalService,
+  UtilServiceState,
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NftAsset, NftToken } from '@/models/models';
@@ -11,8 +12,6 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { ChainType, RpcNetwork } from '../../_lib';
-import { MatDialog } from '@angular/material/dialog';
-import { PopupAddNetworkDialogComponent } from '../../_dialogs';
 
 @Component({
   templateUrl: 'nft-detail.component.html',
@@ -30,10 +29,8 @@ export class PopupNftDetailComponent implements OnDestroy {
 
   private accountSub: Unsubscribable;
   private address: string;
-  private n3Network: RpcNetwork;
-  private n3NetworkIndex: number;
-  neoXNetwork: RpcNetwork;
-  private neoXNetworkIndex: number;
+  currentNetwork: RpcNetwork;
+  currentNetworkIndex: number;
   chainType: ChainType;
   constructor(
     private aRouter: ActivatedRoute,
@@ -42,17 +39,23 @@ export class PopupNftDetailComponent implements OnDestroy {
     private evmNFTState: EvmNFTState,
     private chrome: ChromeService,
     private global: GlobalService,
-    private dialog: MatDialog,
+    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.address = state.currentWallet?.accounts[0]?.address;
-      this.n3Network = state.n3Networks[state.n3NetworkIndex];
-      this.n3NetworkIndex = state.n3NetworkIndex;
-      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
-      this.neoXNetworkIndex = state.neoXNetworkIndex;
+      switch (this.chainType) {
+        case 'Neo3':
+          this.currentNetworkIndex = state.n3NetworkIndex;
+          this.currentNetwork = state.n3Networks[state.n3NetworkIndex];
+          break;
+        case 'NeoX':
+          this.currentNetworkIndex = state.neoXNetworkIndex;
+          this.currentNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+          break;
+      }
       this.initData();
     });
   }
@@ -71,7 +74,10 @@ export class PopupNftDetailComponent implements OnDestroy {
   getData() {
     if (this.chainType === 'NeoX') {
       this.chrome
-        .getNftWatch(`${this.chainType}-${this.neoXNetwork.id}`, this.address)
+        .getNftWatch(
+          `${this.chainType}-${this.currentNetwork.id}`,
+          this.address
+        )
         .subscribe((res) => {
           this.neoXNftsOfAddress = res;
           this.nft = res.find((m) => m.assethash === this.nftContract);
@@ -83,7 +89,10 @@ export class PopupNftDetailComponent implements OnDestroy {
       this.nft = res;
       if (!this.nft) {
         this.chrome
-          .getNftWatch(`${this.chainType}-${this.n3Network.id}`, this.address)
+          .getNftWatch(
+            `${this.chainType}-${this.currentNetwork.id}`,
+            this.address
+          )
           .subscribe((res2) => {
             this.nft = res2.find((m) => m.assethash === this.nftContract);
             this.handleToken();
@@ -128,7 +137,7 @@ export class PopupNftDetailComponent implements OnDestroy {
 
     this.neoXNftsOfAddress[index] = this.nft;
     this.chrome.setNftWatch(
-      `${this.chainType}-${this.neoXNetwork.id}`,
+      `${this.chainType}-${this.currentNetwork.id}`,
       this.address,
       this.neoXNftsOfAddress
     );
@@ -143,36 +152,12 @@ export class PopupNftDetailComponent implements OnDestroy {
 
   toWeb() {
     this.showMenu = false;
-    if (this.chainType === 'Neo3') {
-      if (this.n3Network.explorer) {
-        window.open(`${this.n3Network.explorer}tokens/nft/${this.nftContract}`);
-      } else {
-        this.dialog.open(PopupAddNetworkDialogComponent, {
-          panelClass: 'custom-dialog-panel',
-          backdropClass: 'custom-dialog-backdrop',
-          data: {
-            addChainType: this.chainType,
-            index: this.n3NetworkIndex,
-            editNetwork: this.n3Network,
-            addExplorer: true,
-          },
-        });
-      }
-    } else {
-      if (this.neoXNetwork.explorer) {
-        window.open(`${this.neoXNetwork.explorer}/address/${this.address}`);
-      } else {
-        this.dialog.open(PopupAddNetworkDialogComponent, {
-          panelClass: 'custom-dialog-panel',
-          backdropClass: 'custom-dialog-backdrop',
-          data: {
-            addChainType: this.chainType,
-            index: this.neoXNetworkIndex,
-            editNetwork: this.neoXNetwork,
-            addExplorer: true,
-          },
-        });
-      }
-    }
+    this.util.toExplorer({
+      chain: this.chainType,
+      network: this.currentNetwork,
+      networkIndex: this.currentNetworkIndex,
+      type: 'NFT',
+      value: this.nftContract,
+    });
   }
 }
