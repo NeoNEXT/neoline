@@ -17,6 +17,7 @@ export const MESSAGE_TYPE = {
   WATCH_ASSET: 'wallet_watchAsset',
   PERSONAL_SIGN: 'personal_sign',
   ETH_ACCOUNTS: RestrictedMethods.eth_accounts,
+  ETH_SIGN_TYPED_DATA_V4: 'eth_signTypedData_v4',
   ETH_REQUEST_ACCOUNTS: 'eth_requestAccounts',
 } as const;
 
@@ -87,13 +88,11 @@ export const unrestrictedMethods = Object.freeze([
   // 'eth_signTypedData',
   // 'eth_signTypedData_v1',
   // 'eth_signTypedData_v3',
-  // 'eth_signTypedData_v4',
+  'eth_signTypedData_v4',
   // 'eth_submitHashrate',
   // 'eth_submitWork',
   'eth_syncing',
   'eth_uninstallFilter',
-  // 'metamask_getProviderState',
-  // 'metamask_watchAsset',
   // 'net_listening',
   // 'net_peerCount',
   'net_version',
@@ -103,3 +102,8 @@ export const unrestrictedMethods = Object.freeze([
   'web3_clientVersion',
   'web3_sha3',
 ]);
+
+export enum ETH_EOA_SIGN_METHODS {
+  PersonalSign = 'personal_sign',
+  SignTypedDataV4 = 'eth_signTypedData_v4',
+}

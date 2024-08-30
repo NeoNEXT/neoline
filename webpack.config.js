@@ -3,7 +3,7 @@
 
 const path = require("path");
 const appSrc = "./src";
-const webpack = require('webpack');
+const webpack = require("webpack");
 
 module.exports = {
   // optimization: {
@@ -45,6 +45,10 @@ module.exports = {
       buffer: require.resolve("buffer/"),
       util: require.resolve("util"),
       fs: false,
+      zlib: require.resolve("browserify-zlib"),
+      https: require.resolve("https-browserify"),
+      http: require.resolve("stream-http"),
+      assert: require.resolve("assert/"),
     },
   },
   plugins: [

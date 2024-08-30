@@ -6,6 +6,7 @@ import { ethErrors } from 'eth-rpc-errors';
 import addEthereumChain from './add-ethereum-chain';
 import switchEthereumChain from './switch-ethereum-chain';
 import watchAsset from './watch-asset';
+import signTypedDataV4 from './sign-typed-data-v4';
 import { createWindow, getCurrentNeoXNetwork } from '../tool';
 import {
   getLocalStorage,
@@ -17,7 +18,12 @@ import { validateTxParams } from './validation-tx-params';
 import { ConnectedWebsitesType, STORAGE_NAME } from '../../common/constants';
 import { ethers } from 'ethers';
 
-const handlers = [addEthereumChain, switchEthereumChain, watchAsset];
+const handlers = [
+  addEthereumChain,
+  switchEthereumChain,
+  watchAsset,
+  signTypedDataV4,
+];
 
 export const walletHandlerMap = handlers.reduce((map, handler) => {
   for (const methodName of handler.methodNames) {

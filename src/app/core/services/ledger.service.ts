@@ -27,6 +27,7 @@ import { Store } from '@ngrx/store';
 import Eth, { ledgerService } from '@ledgerhq/hw-app-eth';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
+import { TypedMessage, MessageTypes } from '@metamask/eth-sig-util';
 
 export const LedgerStatuses = {
   UNSUPPORTED: 'UNSUPPORTED',
@@ -235,11 +236,7 @@ export class LedgerService {
   }
 
   //#region private function
-  async getNeoXSignPersonalMessage(message: string, wallet: EvmWalletJSON) {
-    const result = await this.ethTransport.signPersonalMessage(
-      `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
-      Buffer.from(message).toString('hex')
-    );
+  private handleSignResult(result) {
     let v = result['v'];
     v = v.toString(16);
     if (v.length < 2) {
@@ -248,6 +245,28 @@ export class LedgerService {
     const data = '0x' + result['r'] + result['s'] + v;
     return data;
   }
+  async getNeoXSignPersonalMessage(message: string, wallet: EvmWalletJSON) {
+    const result = await this.ethTransport.signPersonalMessage(
+      `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+      Buffer.from(message).toString('hex')
+    );
+    return this.handleSignResult(result);
+  }
+  async getNeoXSignTypedData(
+    typedData: TypedMessage<MessageTypes>,
+    wallet: EvmWalletJSON
+  ) {
+    try {
+      const result = await this.ethTransport.signEIP712Message(
+        `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+        typedData
+      );
+      return this.handleSignResult(result);
+    } catch {
+      throw new Error('ledgerNotSupportMethod');
+    }
+  }
+
   private async getNeoXSignature(txData, wallet: EvmWalletJSON) {
     txData.chainId = this.neoXNetwork.chainId;
     let unsignedTx = ethers.Transaction.from(txData).unsignedSerialized;
