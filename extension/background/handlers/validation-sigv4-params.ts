@@ -1,20 +1,7 @@
-import {
-  ETH_EOA_SIGN_METHODS,
-  MESSAGE_TYPE,
-} from '../../common/data_module_evm';
 import { ethErrors } from 'eth-rpc-errors';
-import { createWindow, getCurrentNeoXNetwork } from '../tool';
+import { getCurrentNeoXNetwork } from '../tool';
 import { ethers } from 'ethers';
 import { validate } from 'jsonschema';
-import { getLocalStorage, setLocalStorage } from '../../common';
-import { STORAGE_NAME } from '../../common/constants';
-
-const signTypedDataV4 = {
-  methodNames: [MESSAGE_TYPE.ETH_SIGN_TYPED_DATA_V4],
-  implementation: signTypedDataV4Handler,
-};
-
-export default signTypedDataV4;
 
 type SignTypedDataMessageV3V4 = {
   types: Record<string, unknown>;
@@ -23,10 +10,8 @@ type SignTypedDataMessageV3V4 = {
   message: unknown;
 };
 
-async function signTypedDataV4Handler(
-  params: [string, SignTypedDataMessageV3V4],
-  messageID,
-  hostInfo
+export async function validateSigTypedDataV4Params(
+  params: [string, SignTypedDataMessageV3V4]
 ) {
   const [from, typedData] = params;
   validateAddress(from, 'from');
@@ -36,11 +21,9 @@ async function signTypedDataV4Handler(
     Array.isArray(typedData) ||
     (typeof typedData !== 'object' && typeof typedData !== 'string')
   ) {
-    return Promise.reject(
-      ethErrors.rpc.invalidParams({
-        message: `Invalid message "data": Must be a valid string or object.`,
-      })
-    );
+    throw ethErrors.rpc.invalidParams({
+      message: `Invalid message "data": Must be a valid string or object.`,
+    });
   }
 
   let data;
@@ -50,22 +33,17 @@ async function signTypedDataV4Handler(
     try {
       data = JSON.parse(typedData);
     } catch (e) {
-      return Promise.reject(
-        ethErrors.rpc.invalidParams({
-          message: 'Data must be passed as a valid JSON string.',
-        })
-      );
+      throw ethErrors.rpc.invalidParams({
+        message: 'Data must be passed as a valid JSON string.',
+      });
     }
   }
 
   const validation = validate(data, TYPED_MESSAGE_SCHEMA);
   if (validation.errors.length > 0) {
-    return Promise.reject(
-      ethErrors.rpc.invalidParams({
-        message:
-          'Data must conform to EIP-712 schema. See https://git.io/fNtcx.',
-      })
-    );
+    throw ethErrors.rpc.invalidParams({
+      message: 'Data must conform to EIP-712 schema. See https://git.io/fNtcx.',
+    });
   }
 
   const { currNeoXNetwork } = await getCurrentNeoXNetwork();
@@ -79,21 +57,11 @@ async function signTypedDataV4Handler(
     const activeChainId = Number(currNeoXNetwork.chainId);
 
     if (chainId !== activeChainId) {
-      return Promise.reject(
-        ethErrors.rpc.invalidParams({
-          message: `Provided chainId "${chainId}" must match the active chainId "${activeChainId}"`,
-        })
-      );
+      throw ethErrors.rpc.invalidParams({
+        message: `Provided chainId "${chainId}" must match the active chainId "${activeChainId}"`,
+      });
     }
   }
-
-  const localData =
-    (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
-  const newData = { ...localData, [messageID]: params };
-  setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
-  createWindow(
-    `evm-personal-sign?messageID=${messageID}&method=${ETH_EOA_SIGN_METHODS.SignTypedDataV4}&origin=${hostInfo.origin}`
-  );
 }
 
 /**
@@ -104,11 +72,9 @@ async function signTypedDataV4Handler(
  */
 function validateAddress(address: string, propertyName: string) {
   if (!address || typeof address !== 'string' || !ethers.isAddress(address)) {
-    return Promise.reject(
-      ethErrors.rpc.invalidParams({
-        message: `Invalid "${propertyName}" address: ${address} must be a valid string.`,
-      })
-    );
+    throw ethErrors.rpc.invalidParams({
+      message: `Invalid "${propertyName}" address: ${address} must be a valid string.`,
+    });
   }
 }
 

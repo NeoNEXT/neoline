@@ -1,4 +1,6 @@
 import {
+  ETH_EOA_SIGN_METHODS,
+  MESSAGE_TYPE,
   unrestrictedMethods,
   UNSUPPORTED_RPC_METHODS,
 } from '../../common/data_module_evm';
@@ -6,7 +8,6 @@ import { ethErrors } from 'eth-rpc-errors';
 import addEthereumChain from './add-ethereum-chain';
 import switchEthereumChain from './switch-ethereum-chain';
 import watchAsset from './watch-asset';
-import signTypedDataV4 from './sign-typed-data-v4';
 import { createWindow, getCurrentNeoXNetwork } from '../tool';
 import {
   getLocalStorage,
@@ -17,13 +18,9 @@ import {
 import { validateTxParams } from './validation-tx-params';
 import { ConnectedWebsitesType, STORAGE_NAME } from '../../common/constants';
 import { ethers } from 'ethers';
+import { validateSigTypedDataV4Params } from './validation-sigv4-params';
 
-const handlers = [
-  addEthereumChain,
-  switchEthereumChain,
-  watchAsset,
-  signTypedDataV4,
-];
+const handlers = [addEthereumChain, switchEthereumChain, watchAsset];
 
 export const walletHandlerMap = handlers.reduce((map, handler) => {
   for (const methodName of handler.methodNames) {
@@ -70,6 +67,20 @@ export async function ethereumRPCHandler(
       setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
       createWindow(
         `evm-personal-sign?messageID=${messageID}&origin=${hostInfo.origin}`
+      );
+    } catch (error) {
+      return Promise.reject(error);
+    }
+  } else if (method === MESSAGE_TYPE.ETH_SIGN_TYPED_DATA_V4) {
+    try {
+      await validateSigTypedDataV4Params(params);
+      await validateAndNormalizeKeyholder(params[0], sender);
+      const localData =
+        (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+      const newData = { ...localData, [messageID]: params };
+      setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
+      createWindow(
+        `evm-personal-sign?messageID=${messageID}&method=${ETH_EOA_SIGN_METHODS.SignTypedDataV4}&origin=${hostInfo.origin}`
       );
     } catch (error) {
       return Promise.reject(error);
