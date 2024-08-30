@@ -1,24 +1,34 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ChromeService, LedgerService } from '@/app/core';
+import { ChromeService, LedgerService, GlobalService } from '@/app/core';
 import { ERRORS } from '@/models/dapi';
 import { LedgerStatuses, STORAGE_NAME } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable, interval } from 'rxjs';
 import { EvmWalletJSON } from '../../_lib/evm';
-import { requestTargetEVM } from '@/models/evm';
+import { ETH_EOA_SIGN_METHODS, requestTargetEVM } from '@/models/evm';
 import { ethers } from 'ethers';
+import {
+  signTypedData,
+  SignTypedDataVersion,
+  TypedMessage,
+  MessageTypes,
+} from '@metamask/eth-sig-util';
 
 @Component({
   templateUrl: './evm-signature.component.html',
   styleUrls: ['./evm-signature.component.scss'],
 })
 export class PopupNoticeEvmSignComponent implements OnInit {
+  ETH_EOA_SIGN_METHODS = ETH_EOA_SIGN_METHODS;
   private messageID: number;
   private invokeArgsArray;
   challenge: string;
   signAddress: string;
+
+  signMethod = ETH_EOA_SIGN_METHODS.PersonalSign;
+  typedData: TypedMessage<MessageTypes>;
 
   loading = false;
   loadingMsg: string;
@@ -31,6 +41,7 @@ export class PopupNoticeEvmSignComponent implements OnInit {
     private aRouter: ActivatedRoute,
     private chrome: ChromeService,
     private ledger: LedgerService,
+    private global: GlobalService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -40,17 +51,36 @@ export class PopupNoticeEvmSignComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.aRouter.queryParams.subscribe(({ messageID }) => {
-      this.messageID = messageID;
-      this.chrome
-        .getStorage(STORAGE_NAME.InvokeArgsArray)
-        .subscribe((invokeArgsArray) => {
-          this.invokeArgsArray = invokeArgsArray;
-          const params = invokeArgsArray[messageID];
-          this.challenge = params[0];
-          this.signAddress = params[1];
-        });
-    });
+    this.aRouter.queryParams.subscribe(
+      ({
+        messageID,
+        method,
+      }: {
+        method: ETH_EOA_SIGN_METHODS;
+        messageID: number;
+      }) => {
+        this.messageID = messageID;
+        if (method && method === ETH_EOA_SIGN_METHODS.SignTypedDataV4) {
+          this.signMethod = method;
+        }
+        this.chrome
+          .getStorage(STORAGE_NAME.InvokeArgsArray)
+          .subscribe((invokeArgsArray) => {
+            this.invokeArgsArray = invokeArgsArray;
+            const params = invokeArgsArray[messageID];
+            switch (this.signMethod) {
+              case ETH_EOA_SIGN_METHODS.PersonalSign:
+                this.challenge = params[0];
+                this.signAddress = params[1];
+                break;
+              case ETH_EOA_SIGN_METHODS.SignTypedDataV4:
+                this.signAddress = params[0];
+                this.typedData = params[1];
+                break;
+            }
+          });
+      }
+    );
     window.onbeforeunload = () => {
       this.cancel();
     };
@@ -81,13 +111,29 @@ export class PopupNoticeEvmSignComponent implements OnInit {
       return;
     }
     if (this.encryptWallet) {
-      const pwd = await this.chrome.getPassword();
-      const wallet = await ethers.Wallet.fromEncryptedJson(
-        JSON.stringify(this.encryptWallet),
-        pwd
-      );
-      const data = await wallet.signMessage(this.challenge);
-      this.sendMessage(data);
+      try {
+        const pwd = await this.chrome.getPassword();
+        const wallet = await ethers.Wallet.fromEncryptedJson(
+          JSON.stringify(this.encryptWallet),
+          pwd
+        );
+        let data: string;
+        switch (this.signMethod) {
+          case ETH_EOA_SIGN_METHODS.PersonalSign:
+            data = await wallet.signMessage(this.challenge);
+            break;
+          case ETH_EOA_SIGN_METHODS.SignTypedDataV4:
+            data = signTypedData({
+              privateKey: Buffer.from(wallet.privateKey.slice(2), 'hex'),
+              data: this.typedData,
+              version: SignTypedDataVersion.V4,
+            });
+            break;
+        }
+        this.sendMessage(data);
+      } catch (error) {
+        this.global.snackBarTip(error?.message || 'wentWrong');
+      }
     }
   }
 
@@ -111,8 +157,13 @@ export class PopupNoticeEvmSignComponent implements OnInit {
         this.getStatusInterval.unsubscribe();
         this.loadingMsg = 'signTheMessage';
 
-        this.ledger
-          .getNeoXSignPersonalMessage(this.challenge, this.encryptWallet)
+        (this.signMethod === ETH_EOA_SIGN_METHODS.PersonalSign
+          ? this.ledger.getNeoXSignPersonalMessage(
+              this.challenge,
+              this.encryptWallet
+            )
+          : this.ledger.getNeoXSignTypedData(this.typedData, this.encryptWallet)
+        )
           .then((tx) => {
             this.loading = false;
             this.loadingMsg = '';
