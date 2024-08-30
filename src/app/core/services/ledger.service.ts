@@ -256,11 +256,15 @@ export class LedgerService {
     typedData: TypedMessage<MessageTypes>,
     wallet: EvmWalletJSON
   ) {
-    const result = await this.ethTransport.signEIP721Message(
-      `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
-      typedData
-    );
-    return this.handleSignResult(result);
+    try {
+      const result = await this.ethTransport.signEIP712Message(
+        `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+        typedData
+      );
+      return this.handleSignResult(result);
+    } catch {
+      throw new Error('ledgerNotSupportMethod');
+    }
   }
 
   private async getNeoXSignature(txData, wallet: EvmWalletJSON) {
