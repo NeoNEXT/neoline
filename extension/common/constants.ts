@@ -16,6 +16,7 @@ export const DEFAULT_NETWORKS = [
   'N3MainNet',
   'N3TestNet',
   'N3PrivateNet',
+  'EVM'
 ];
 
 export enum WitnessScope {
@@ -129,6 +130,7 @@ export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
 ];
 
 const N3PrivateNetworkChainId = 0;
+export const EVMNetworkChainId = -1;
 
 export const ALL_CHAINID = [
   N3PrivateNetworkChainId,

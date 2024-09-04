@@ -34,6 +34,7 @@ export const DEFAULT_NETWORKS = [
   'N3MainNet',
   'N3TestNet',
   'N3PrivateNet',
+  'EVM'
 ];
 
 const N2_NETWORK_VERSION = 1;

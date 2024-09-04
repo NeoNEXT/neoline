@@ -10,7 +10,9 @@ import {
   DEFAULT_N2_RPC_NETWORK,
   DEFAULT_N3_RPC_NETWORK,
   DEFAULT_NETWORKS,
+  EVMNetworkChainId,
   ExcludeWebsite,
+  NetworkType,
   STORAGE_NAME,
 } from '../common/constants';
 
@@ -116,7 +118,21 @@ window.addEventListener(
           }
           case requestTarget.Networks: {
             getLocalStorage('chainType', async (res) => {
-              if (res === 'Neo2') {
+              if (res === 'NeoX') {
+                const returnData = {
+                  chainId: EVMNetworkChainId,
+                  networks: DEFAULT_NETWORKS,
+                  defaultNetwork: NetworkType.EVM,
+                };
+                window.postMessage(
+                  {
+                    return: requestTarget.Networks,
+                    data: returnData,
+                    ID: e.data.ID,
+                  },
+                  window.location.origin
+                );
+              } else if (res === 'Neo2') {
                 getLocalStorage('n2Networks', (n2Networks) => {
                   getLocalStorage('n2SelectedNetworkIndex', (index) => {
                     const n2Network = (n2Networks || DEFAULT_N2_RPC_NETWORK)[

@@ -5,6 +5,8 @@ export enum requestTargetEVM {
 
 export enum NEOX_EVENT {
   INIT_CHAIN_ID = 'NEOLine.NEOX.EVENT.INIT_CHAIN_ID',
+  EVM_ACCOUNT_CHANGED = 'NEOLine.NEOX.EVENT.EVM_ACCOUNT_CHANGED',
+  EVM_NETWORK_CHANGED = 'NEOLine.NEOX.EVENT.EVM_NETWORK_CHANGED',
 }
 
 export const RestrictedMethods = Object.freeze({

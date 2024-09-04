@@ -17,6 +17,7 @@ import { ExtensionService } from '../util/extension.service';
 import CryptoJS from 'crypto-js';
 import { ethers } from 'ethers';
 import { firstValueFrom } from 'rxjs';
+import { NEOX_EVENT } from '@/models/evm';
 
 @Injectable()
 export class ChromeService {
@@ -555,7 +556,7 @@ export class ChromeService {
         if (data) {
           this.windowCallback({
             data,
-            return: EVENT.ACCOUNT_CHANGED,
+            return: NEOX_EVENT.EVM_ACCOUNT_CHANGED,
           });
         }
       });
@@ -572,7 +573,7 @@ export class ChromeService {
   evmAccountChange(data: string[]) {
     this.windowCallback({
       data,
-      return: EVENT.ACCOUNT_CHANGED,
+      return: NEOX_EVENT.EVM_ACCOUNT_CHANGED,
     });
   }
 
@@ -657,14 +658,25 @@ export class ChromeService {
 
   public networkChangeEvent(network: RpcNetwork) {
     if (this.check) {
-      this.windowCallback({
-        data: {
-          chainId: network.chainId,
-          networks: DEFAULT_NETWORKS,
-          defaultNetwork: network.network,
-        },
-        return: EVENT.NETWORK_CHANGED,
-      });
+      if (network.network === 'EVM') {
+        this.windowCallback({
+          data: {
+            chainId: network.chainId,
+            networks: DEFAULT_NETWORKS,
+            defaultNetwork: network.network,
+          },
+          return: NEOX_EVENT.EVM_NETWORK_CHANGED,
+        });
+      } else {
+        this.windowCallback({
+          data: {
+            chainId: network.chainId,
+            networks: DEFAULT_NETWORKS,
+            defaultNetwork: network.network,
+          },
+          return: EVENT.NETWORK_CHANGED,
+        });
+      }
     }
   }
   //#endregion

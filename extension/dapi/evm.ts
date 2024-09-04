@@ -90,12 +90,12 @@ const provider = new Proxy(new NEOLineEVMController(), {
 window.addEventListener('message', (e) => {
   const response = e.data;
   if (
-    response.return === EVENT.ACCOUNT_CHANGED &&
+    response.return === NEOX_EVENT.EVM_ACCOUNT_CHANGED &&
     Array.isArray(response.data)
   ) {
     provider.emit(EventName.accountsChanged, response.data);
   }
-  if (response.return === EVENT.NETWORK_CHANGED) {
+  if (response.return === NEOX_EVENT.EVM_NETWORK_CHANGED) {
     const chainId = response.data?.chainId;
     const hexChainId = '0x' + Number(chainId).toString(16);
     provider.chainId = hexChainId;
