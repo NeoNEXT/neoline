@@ -82,7 +82,7 @@ export class Init {
   }
 
   public async getAccount(): Promise<Account> {
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
     if (isAuth === true) {
       return sendMessage(requestTarget.Account);
     }

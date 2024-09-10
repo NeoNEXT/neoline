@@ -33,6 +33,9 @@ import {
   SECRET_PASSPHRASE,
   STORAGE_NAME,
   ConnectedWebsitesType,
+  NeoXMainnetNetwork,
+  N3MainnetNetwork,
+  N2MainnetNetwork,
 } from '../common/constants';
 import {
   requestTarget,
@@ -187,6 +190,32 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       return true;
     }
     case requestTarget.Connect: {
+      if (
+        (request.connectChain &&
+          request.connectChain === 'NeoX' &&
+          chainType !== 'NeoX') ||
+        (request.connectChain &&
+          request.connectChain !== 'NeoX' &&
+          chainType === 'NeoX')
+      ) {
+        let switchChainId: number;
+        switch (request.connectChain) {
+          case 'Neo2':
+            switchChainId = N2MainnetNetwork.chainId;
+            break;
+          case 'Neo3':
+            switchChainId = N3MainnetNetwork.chainId;
+            break;
+          case 'NeoX':
+            switchChainId = NeoXMainnetNetwork.chainId;
+            break;
+        }
+        createWindow(
+          `wallet-switch-network?chainType=${request.connectChain}&chainId=${switchChainId}&icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&redirectToConnect=true`
+        );
+        return;
+      }
+
       const currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
       const currAddress = currWallet.accounts[0].address;
       getStorage(
@@ -1614,7 +1643,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     case requestTargetN3.WalletSwitchNetwork: {
       const parameter = request.parameter;
       const currentChainId =
-        chainType === 'Neo2' ? currN2Network.chainId : currN3Network.chainId;
+        chainType === 'Neo2'
+          ? currN2Network.chainId
+          : chainType === 'Neo3'
+          ? currN3Network.chainId
+          : -1;
       if (currentChainId === parameter.chainId) {
         windowCallback({
           return: request.target,

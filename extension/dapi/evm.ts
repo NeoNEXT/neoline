@@ -7,6 +7,7 @@ import {
 import { ERRORS, EVENT } from '../common/data_module_neo2';
 import { checkConnectAndLogin, getIcon, sendMessage } from './common';
 import { ethErrors } from 'eth-rpc-errors';
+import { ChainType } from '../common/constants';
 
 enum EventName {
   accountsChanged = 'accountsChanged',
@@ -65,7 +66,7 @@ class NEOLineEVMController extends EventEmitter {
     }
 
     if (method === MESSAGE_TYPE.ETH_REQUEST_ACCOUNTS) {
-      const isAuth = await checkConnectAndLogin();
+      const isAuth = await checkConnectAndLogin(ChainType.NeoX);
       if (isAuth === true) {
         return sendMessage(requestTargetEVM.request, args);
       }

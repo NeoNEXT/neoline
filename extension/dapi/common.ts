@@ -3,6 +3,7 @@ export { EVENT, ERRORS } from '../common/data_module_neo2';
 import { getMessageID } from '../common/utils';
 import { requestTargetN3 } from '../common/data_module_neo3';
 import { requestTargetEVM } from '../common/data_module_evm';
+import { ChainType } from '../common/constants';
 
 export function sendMessage<K>(
   target: requestTarget | requestTargetN3 | requestTargetEVM,
@@ -40,8 +41,10 @@ export function sendMessage<K>(
   });
 }
 
-export async function checkConnectAndLogin(): Promise<boolean> {
-  const connected = await connect();
+export async function checkConnectAndLogin(
+  connectChain?: ChainType
+): Promise<boolean> {
+  const connected = await connect(connectChain);
   if (connected === true) {
     const isLogin = await login();
     if (isLogin === true) {
@@ -92,7 +95,7 @@ export function getIcon() {
   return `${location.protocol}//${location.hostname}/favicon.ico`;
 }
 
-function connect(): Promise<boolean | any> {
+function connect(connectChain?: ChainType): Promise<boolean | any> {
   return new Promise((resolveMain) => {
     window.postMessage(
       {
@@ -100,6 +103,7 @@ function connect(): Promise<boolean | any> {
         icon: getIcon(),
         hostname: location.hostname,
         title: document.title,
+        connectChain,
       },
       window.location.origin
     );
