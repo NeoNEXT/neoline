@@ -188,6 +188,17 @@ export class PopupNetworkComponent implements OnDestroy {
         this.openConfirmCreateModal(newChain);
       }
     } else {
+      switch (newChain) {
+        case 'Neo2':
+          this.store.dispatch({ type: UPDATE_NEO2_NETWORK_INDEX, data: index });
+          break;
+        case 'Neo3':
+          this.store.dispatch({ type: UPDATE_NEO3_NETWORK_INDEX, data: index });
+          break;
+        case 'NeoX':
+          this.store.dispatch({ type: UPDATE_NEOX_NETWORK_INDEX, data: index });
+          break;
+      }
       let switchChainWallet;
       switch (newChain) {
         case 'Neo2':
