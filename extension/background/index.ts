@@ -33,9 +33,6 @@ import {
   SECRET_PASSPHRASE,
   STORAGE_NAME,
   ConnectedWebsitesType,
-  NeoXMainnetNetwork,
-  N3MainnetNetwork,
-  N2MainnetNetwork,
 } from '../common/constants';
 import {
   requestTarget,
@@ -190,52 +187,45 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       return true;
     }
     case requestTarget.Connect: {
-      if (
-        (request.connectChain &&
-          request.connectChain === 'NeoX' &&
-          chainType !== 'NeoX') ||
-        (request.connectChain &&
-          request.connectChain !== 'NeoX' &&
-          chainType === 'NeoX')
-      ) {
-        let switchChainId: number;
-        switch (request.connectChain) {
-          case 'Neo2':
-            switchChainId = N2MainnetNetwork.chainId;
-            break;
-          case 'Neo3':
-            switchChainId = N3MainnetNetwork.chainId;
-            break;
-          case 'NeoX':
-            switchChainId = NeoXMainnetNetwork.chainId;
-            break;
-        }
-        createWindow(
-          `wallet-switch-network?chainType=${request.connectChain}&chainId=${switchChainId}&icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&redirectToConnect=true`
-        );
-        return;
-      }
-
-      const currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
-      const currAddress = currWallet.accounts[0].address;
       getStorage(
         STORAGE_NAME.connectedWebsites,
-        (res: ConnectedWebsitesType) => {
-          const existHost =
-            res?.[request.hostname]?.connectedAddress?.[currAddress];
-          if (existHost) {
-            windowCallback({
-              return: requestTarget.Connect,
-              data: true,
-            });
-            // notification(
-            //   `${chrome.i18n.getMessage('from')}: ${request.hostname}`,
-            //   chrome.i18n.getMessage('connectedTip')
-            // );
+        async (res: ConnectedWebsitesType) => {
+          if (request.connectChain === 'NeoX') {
+            const connectedNeoXIndex = Object.values(
+              res?.[request.hostname]?.connectedAddress
+            ).findIndex((item) => item.chain === 'NeoX');
+            if (connectedNeoXIndex >= 0) {
+              windowCallback({
+                return: requestTarget.Connect,
+                data: true,
+              });
+            } else {
+              createWindow(
+                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&connectChainType=${request.connectChain}`
+              );
+            }
           } else {
-            createWindow(
-              `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`
+            const currWallet = await getLocalStorage(
+              STORAGE_NAME.wallet,
+              () => {}
             );
+            const currAddress = currWallet.accounts[0].address;
+            const existHost =
+              res?.[request.hostname]?.connectedAddress?.[currAddress];
+            if (existHost) {
+              windowCallback({
+                return: requestTarget.Connect,
+                data: true,
+              });
+              // notification(
+              //   `${chrome.i18n.getMessage('from')}: ${request.hostname}`,
+              //   chrome.i18n.getMessage('connectedTip')
+              // );
+            } else {
+              createWindow(
+                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`
+              );
+            }
           }
           sendResponse('');
         }

@@ -70,6 +70,8 @@ window.addEventListener(
           const reqMethod = e.data.parameter.method;
           if (
             currChainType === 'NeoX' ||
+            reqMethod === 'eth_chainId' ||
+            reqMethod === MESSAGE_TYPE.ETH_ACCOUNTS ||
             reqMethod === MESSAGE_TYPE.ETH_REQUEST_ACCOUNTS ||
             reqMethod === MESSAGE_TYPE.SWITCH_ETHEREUM_CHAIN
           ) {

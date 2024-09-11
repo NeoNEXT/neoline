@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ChromeService } from '@/app/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { ERRORS, requestTarget } from '@/models/dapi';
 import {
   ChainType,
@@ -10,8 +10,6 @@ import {
   UPDATE_NEO3_NETWORK_INDEX,
   UPDATE_WALLET,
   UPDATE_NEOX_NETWORK_INDEX,
-  STORAGE_NAME,
-  ConnectedWebsitesType,
 } from '../../_lib';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { AppState } from '@/app/reduers';
@@ -30,8 +28,6 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
   iconSrc = '';
   hostname = '';
   private messageID = '';
-  private redirectToConnect = false;
-  private paramsTitle: string;
 
   private switchChainId: number;
   requestChainType: ChainType;
@@ -39,7 +35,6 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
 
   private accountSub: Unsubscribable;
   currentChainType: ChainType;
-  currentAddress: string;
   currentNetworkName: string;
   n2Networks: RpcNetwork[];
   n3Networks: RpcNetwork[];
@@ -50,13 +45,11 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
   constructor(
     private chrome: ChromeService,
     private aRouter: ActivatedRoute,
-    private router: Router,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.currentChainType = state.currentChainType;
-      this.currentAddress = state.currentWallet.accounts[0].address;
       this.n2Networks = state.n2Networks;
       this.n3Networks = state.n3Networks;
       this.neoXNetworks = state.neoXNetworks;
@@ -95,9 +88,6 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
       }
       this.messageID = params.messageID;
       this.hostname = params.hostname;
-      this.redirectToConnect =
-        params.redirectToConnect === 'true' ? true : false;
-      this.paramsTitle = params.title;
       this.iconSrc =
         this.hostname.indexOf('flamingo') >= 0
           ? '/assets/images/flamingo.ico'
@@ -112,16 +102,6 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
   }
 
   refuse() {
-    if (this.redirectToConnect) {
-      this.chrome.windowCallback(
-        {
-          data: false,
-          return: requestTarget.Connect,
-        },
-        true
-      );
-      return;
-    }
     this.chrome.windowCallback(
       {
         error: ERRORS.CANCELLED,
@@ -192,42 +172,18 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
       });
       this.chrome.networkChangeEvent(this.neoXNetworks[neoXNetworkIndex]);
     }
-    if (this.redirectToConnect) {
-      this.chrome
-        .getStorage(STORAGE_NAME.connectedWebsites)
-        .subscribe((allWebsites: ConnectedWebsitesType) => {
-          if (
-            allWebsites?.[this.hostname]?.connectedAddress?.[
-              this.currentAddress
-            ]
-          ) {
-            this.chrome.windowCallback(
-              {
-                data: true,
-                return: requestTarget.Connect,
-              },
-              true
-            );
-          } else {
-            this.router.navigateByUrl(
-              `/popup/notification/authorization?icon=${this.iconSrc}&hostname=${this.hostname}&title=${this.paramsTitle}`
-            );
-          }
-        });
-    } else {
-      this.chrome.windowCallback(
-        {
-          data: null,
-          ID: this.messageID,
-          return:
-            this.requestChainType === 'Neo2'
-              ? requestTarget.WalletSwitchNetwork
-              : this.requestChainType === 'Neo3'
-              ? requestTargetN3.WalletSwitchNetwork
-              : requestTargetEVM.request,
-        },
-        true
-      );
-    }
+    this.chrome.windowCallback(
+      {
+        data: null,
+        ID: this.messageID,
+        return:
+          this.requestChainType === 'Neo2'
+            ? requestTarget.WalletSwitchNetwork
+            : this.requestChainType === 'Neo3'
+            ? requestTargetN3.WalletSwitchNetwork
+            : requestTargetEVM.request,
+      },
+      true
+    );
   }
 }
