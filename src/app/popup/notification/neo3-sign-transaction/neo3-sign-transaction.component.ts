@@ -121,7 +121,7 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit, OnDestro
             this.tx,
             this.currentWallet,
             this.chainType,
-            this.n3Network.magicNumber
+            this.magicNumber ?? this.n3Network.magicNumber
           )
           .then((tx) => {
             this.loading = false;
@@ -151,7 +151,7 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit, OnDestro
     this.util
       .getWIF(this.neo3WIFArr, this.neo3WalletArr, this.currentWallet)
       .then((wif) => {
-        this.tx.sign(wif, this.n3Network.magicNumber);
+        this.tx.sign(wif, this.magicNumber ?? this.n3Network.magicNumber);
         this.sendMessage();
       });
   }
