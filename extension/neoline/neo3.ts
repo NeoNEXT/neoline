@@ -53,9 +53,12 @@ window.addEventListener('load', () => {
 const requireConnectRequest = [
   requestTargetN3.PickAddress,
   requestTargetN3.VerifyMessage,
+  requestTargetN3.VerifyMessageV2,
   requestTargetN3.Invoke,
   requestTargetN3.SignMessage,
+  requestTargetN3.SignMessageV2,
   requestTargetN3.SignMessageWithoutSalt,
+  requestTargetN3.SignMessageWithoutSaltV2,
   requestTargetN3.SignTransaction,
   requestTargetN3.Send,
   requestTargetN3.InvokeMulti,
@@ -119,8 +122,11 @@ window.addEventListener(
           case requestTargetN3.InvokeMultiple:
           case requestTargetN3.Send:
           case requestTargetN3.VerifyMessage:
+          case requestTargetN3.VerifyMessageV2:
           case requestTargetN3.SignMessageWithoutSalt:
+          case requestTargetN3.SignMessageWithoutSaltV2:
           case requestTargetN3.SignMessage:
+          case requestTargetN3.SignMessageV2:
           case requestTargetN3.SignTransaction: {
             getLocalStorage('chainType', async (res) => {
               let currChainType = res;

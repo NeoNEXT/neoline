@@ -246,6 +246,25 @@ export class Init {
     return Promise.reject(ERRORS.CONNECTION_DENIED);
   }
 
+  public async verifyMessageV2(
+    parameter: N3VerifyMessageArgs
+  ): Promise<N3Response> {
+    if (
+      parameter.message === undefined ||
+      parameter.data === undefined ||
+      parameter.publicKey === undefined
+    ) {
+      return new Promise((_, reject) => {
+        reject(ERRORS.MALFORMED_INPUT);
+      });
+    }
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      return sendMessage(requestTargetN3.VerifyMessageV2, parameter);
+    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
+  }
+
   public async invoke(parameter: N3InvokeArgs) {
     if (
       parameter.scriptHash === undefined ||
@@ -295,6 +314,22 @@ export class Init {
     return Promise.reject(ERRORS.CONNECTION_DENIED);
   }
 
+  public async signMessageV2(parameter: {
+    message: string;
+    isJsonObject?: boolean;
+  }): Promise<any> {
+    if (parameter.message === undefined) {
+      return new Promise((_, reject) => {
+        reject(ERRORS.MALFORMED_INPUT);
+      });
+    }
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      return sendMessage(requestTargetN3.SignMessageV2, parameter);
+    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
+  }
+
   public async signMessageWithoutSalt(parameter: {
     message: string;
     isJsonObject?: boolean;
@@ -307,6 +342,22 @@ export class Init {
     const isAuth = await checkConnectAndLogin();
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignMessageWithoutSalt, parameter);
+    }
+    return Promise.reject(ERRORS.CONNECTION_DENIED);
+  }
+
+  public async signMessageWithoutSaltV2(parameter: {
+    message: string;
+    isJsonObject?: boolean;
+  }): Promise<any> {
+    if (parameter.message === undefined) {
+      return new Promise((_, reject) => {
+        reject(ERRORS.MALFORMED_INPUT);
+      });
+    }
+    const isAuth = await checkConnectAndLogin();
+    if (isAuth === true) {
+      return sendMessage(requestTargetN3.SignMessageWithoutSaltV2, parameter);
     }
     return Promise.reject(ERRORS.CONNECTION_DENIED);
   }

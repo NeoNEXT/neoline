@@ -1,23 +1,30 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ChromeService, LedgerService, UtilServiceState } from '@/app/core';
-import { ERRORS, requestTarget } from '@/models/dapi';
-import { wallet, u } from '@cityofzion/neon-js';
+import {
+  ChromeService,
+  GlobalService,
+  LedgerService,
+  UtilServiceState,
+} from '@/app/core';
 import { randomBytes } from 'crypto';
-import { RpcNetwork, LedgerStatuses, ChainType } from '../../_lib';
-import { interval } from 'rxjs';
+import { wallet, u } from '@cityofzion/neon-core-neo3';
+import { requestTargetN3 } from '@/models/dapi_neo3';
+import { ERRORS } from '@/models/dapi';
+import { RpcNetwork, ChainType, LedgerStatuses } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { interval } from 'rxjs';
 
 @Component({
-  templateUrl: './signature.component.html',
-  styleUrls: ['./signature.component.scss'],
+  templateUrl: './neo3-signature-v2.component.html',
+  styleUrls: ['./neo3-signature-v2.component.scss'],
 })
-export class PopupNoticeSignComponent implements OnInit, OnDestroy {
+export class PopupNoticeNeo3SignV2Component implements OnInit {
   public message: string;
   private messageID = 0;
+  isSign = false;
   jsonMessage;
 
   getStatusInterval;
@@ -29,14 +36,15 @@ export class PopupNoticeSignComponent implements OnInit, OnDestroy {
 
   private accountSub: Unsubscribable;
   public address: string;
-  public n2Network: RpcNetwork;
-  private currentWallet: Wallet2;
+  public n3Network: RpcNetwork;
   private chainType: ChainType;
-  private neo2WIFArr: string[];
-  private neo2WalletArr: Wallet2[];
+  private currentWallet: Wallet3;
+  private neo3WIFArr: string[];
+  private neo3WalletArr: Wallet3[];
   constructor(
     private aRouter: ActivatedRoute,
     private chrome: ChromeService,
+    private global: GlobalService,
     private ledger: LedgerService,
     private utilServiceState: UtilServiceState,
     private store: Store<AppState>
@@ -44,15 +52,12 @@ export class PopupNoticeSignComponent implements OnInit, OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
-      this.currentWallet = state.currentWallet as Wallet2;
+      this.currentWallet = state.currentWallet as Wallet3;
       this.address = state.currentWallet?.accounts[0]?.address;
-      this.n2Network = state.n2Networks[state.n2NetworkIndex];
-      this.neo2WIFArr = state.neo2WIFArr;
-      this.neo2WalletArr = state.neo2WalletArr;
+      this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.neo3WIFArr = state.neo3WIFArr;
+      this.neo3WalletArr = state.neo3WalletArr;
     });
-  }
-  ngOnDestroy(): void {
-    this.getStatusInterval?.unsubscribe();
   }
 
   ngOnInit() {
@@ -63,10 +68,13 @@ export class PopupNoticeSignComponent implements OnInit, OnDestroy {
       if (query?.isJsonObject === 'true') {
         this.jsonMessage = JSON.parse(this.message);
       }
+      this.isSign = query?.sign === '1' ? true : false;
       window.onbeforeunload = () => {
         this.chrome.windowCallback({
           error: ERRORS.CANCELLED,
-          return: requestTarget.SignMessage,
+          return: this.isSign
+            ? requestTargetN3.SignMessageWithoutSaltV2
+            : requestTargetN3.SignMessageV2,
           ID: this.messageID,
         });
       };
@@ -77,7 +85,9 @@ export class PopupNoticeSignComponent implements OnInit, OnDestroy {
     this.chrome.windowCallback(
       {
         error: ERRORS.CANCELLED,
-        return: requestTarget.SignMessage,
+        return: this.isSign
+          ? requestTargetN3.SignMessageWithoutSaltV2
+          : requestTargetN3.SignMessageV2,
         ID: this.messageID,
       },
       true
@@ -86,14 +96,13 @@ export class PopupNoticeSignComponent implements OnInit, OnDestroy {
 
   public signature() {
     this.randomSalt = randomBytes(16).toString('hex');
-    const parameterHexString = Buffer.from(
-      this.randomSalt + this.message
-    ).toString('hex');
-    const lengthHex = (parameterHexString.length / 2)
-      .toString(16)
-      .padStart(2, '0');
+    const str = this.isSign ? this.message : this.randomSalt + this.message;
+    const parameterHexString = Buffer.from(str).toString('hex');
+    const lengthHex = u.num2VarInt(parameterHexString.length / 2);
     const concatenatedString = lengthHex + parameterHexString;
-    const serializedTransaction = '010001f0' + concatenatedString + '0000';
+    const serializedTransaction =
+      '000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000' +
+      concatenatedString;
     this.getSignTx(serializedTransaction);
   }
 
@@ -104,9 +113,14 @@ export class PopupNoticeSignComponent implements OnInit, OnDestroy {
       salt: this.randomSalt,
       message: this.message,
     };
+    if (this.isSign) {
+      delete data.salt;
+    }
     this.chrome.windowCallback(
       {
-        return: requestTarget.SignMessage,
+        return: this.isSign
+          ? requestTargetN3.SignMessageWithoutSaltV2
+          : requestTargetN3.SignMessageV2,
         data,
         ID: this.messageID,
       },
@@ -116,7 +130,7 @@ export class PopupNoticeSignComponent implements OnInit, OnDestroy {
 
   private getLedgerStatus(tx) {
     this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
-      this.loadingMsg = LedgerStatuses[res].msg;
+      this.loadingMsg = LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
       if (LedgerStatuses[res] === LedgerStatuses.READY) {
         this.getStatusInterval.unsubscribe();
         this.loadingMsg = 'signTheTransaction';
@@ -125,7 +139,7 @@ export class PopupNoticeSignComponent implements OnInit, OnDestroy {
             tx,
             this.currentWallet,
             this.chainType,
-            undefined,
+            0,
             true
           )
           .then((tx) => {
@@ -154,10 +168,11 @@ export class PopupNoticeSignComponent implements OnInit, OnDestroy {
       return;
     }
     this.utilServiceState
-      .getWIF(this.neo2WIFArr, this.neo2WalletArr, this.currentWallet)
+      .getWIF(this.neo3WIFArr, this.neo3WalletArr, this.currentWallet)
       .then((wif) => {
         const privateKey = wallet.getPrivateKeyFromWIF(wif);
         this.publicKey = wallet.getPublicKeyFromPrivateKey(privateKey);
+        tx = u.num2hexstring(0, 4, true) + u.sha256(tx);
         this.sendMessage(wallet.sign(tx, privateKey));
       });
   }

@@ -23,6 +23,7 @@ import { PopupEvmAddChainComponent } from './evm-add-chain/add-chain.component';
 import { PopupEvmAddAssetComponent } from './evm-add-asset/add-asset.component';
 import { PopupNoticeEvmSignComponent } from './evm-signature/evm-signature.component';
 import { PopupNoticeEvmSendTxComponent } from './evm-send-tx/evm-send-tx.component';
+import { PopupNoticeNeo3SignV2Component } from './neo3-signature-v2/neo3-signature-v2.component';
 
 const routes: Routes = [
   {
@@ -51,6 +52,7 @@ const routes: Routes = [
             component: PopupNoticeNeo3InvokeMultipleComponent,
           },
           { path: 'neo3-signature', component: PopupNoticeNeo3SignComponent },
+          { path: 'neo3-signature-v2', component: PopupNoticeNeo3SignV2Component },
           {
             path: 'neo3-sign-transaction',
             component: PopupNoticeNeo3SignTransactionComponent,

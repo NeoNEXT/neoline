@@ -1425,20 +1425,30 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       sendResponse('');
       return;
     }
-    case requestTargetN3.SignMessage: {
-      const params = request.parameter;
-      let queryString = '';
-      for (const key in params) {
-        if (params.hasOwnProperty(key)) {
-          const value = encodeURIComponent(params[key]);
-          queryString += `${key}=${value}&`;
-        }
-      }
-      createWindow(`neo3-signature?${queryString}messageID=${request.ID}`);
+    case requestTargetN3.VerifyMessageV2: {
+      const parameter = request.parameter as N3VerifyMessageArgs;
+      const parameterHexString = Buffer.from(parameter.message).toString('hex');
+      const lengthHex = u3.num2VarInt(parameterHexString.length / 2);
+      const concatenatedString = lengthHex + parameterHexString;
+      const messageHex =
+        '000000000000000000000000000000000000000000000000000100000000000000000000000000000000000000000000' +
+        concatenatedString;
+      const signHex = u3.num2hexstring(0, 4, true) + u3.sha256(messageHex);
+      const result = verify(signHex, parameter.data, parameter.publicKey);
+      windowCallback({
+        return: requestTargetN3.VerifyMessageV2,
+        data: {
+          result,
+        },
+        ID: request.ID,
+      });
       sendResponse('');
       return;
     }
-    case requestTargetN3.SignMessageWithoutSalt: {
+    case requestTargetN3.SignMessage:
+    case requestTargetN3.SignMessageV2:
+    case requestTargetN3.SignMessageWithoutSalt:
+    case requestTargetN3.SignMessageWithoutSaltV2: {
       const params = request.parameter;
       let queryString = '';
       for (const key in params) {
@@ -1447,9 +1457,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           queryString += `${key}=${value}&`;
         }
       }
-      createWindow(
-        `neo3-signature?${queryString}messageID=${request.ID}&sign=1`
-      );
+      const route = request.target === requestTargetN3.SignMessageV2 || request.target === requestTargetN3.SignMessageWithoutSaltV2 ? 'neo3-signature-v2' : 'neo3-signature';
+      const isSign = request.target === requestTargetN3.SignMessageWithoutSalt || request.target === requestTargetN3.SignMessageWithoutSaltV2 ? '&sign=1': '';
+      createWindow(`${route}?${queryString}messageID=${request.ID}${isSign}`);
       sendResponse('');
       return;
     }

@@ -49,7 +49,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
       const query = this.utilServiceState.parseUrl(location.hash);
       this.messageID = query.messageID;
       this.message = query.message;
-      if (query?.isJsonObject) {
+      if (query?.isJsonObject === 'true') {
         this.jsonMessage = JSON.parse(this.message);
       }
       this.isSign = query?.sign === '1' ? true : false;
