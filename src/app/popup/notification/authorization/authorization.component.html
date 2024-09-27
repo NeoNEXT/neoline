@@ -1,61 +1,72 @@
 <section class="content">
-  <div class="avatar">
-    <div class="dashed-hori-line"></div>
-    <div class="dashed-vert-line"></div>
-    <div class="avatar-group">
-      <span class="left">
-        <img [src]="iconSrc" [appErrorSrc]="'unknown'" alt="" />
-      </span>
+  <div class="header">
+    <p class="title">{{ "ConnectionRequest" | translate | async }}</p>
+    <div class="avatar">
+      <div class="item">
+        <span class="dapp-avatar">
+          <img [src]="iconSrc" [appErrorSrc]="'unknown'" alt="" />
+        </span>
+        <p class="name">{{ title }}</p>
+        <p class="hostname">{{ hostname }}</p>
+      </div>
       <img
         class="middle"
-        theme
-        src="/assets/images/common/selected-account.svg"
+        src="/assets/images/third-party/auth-connect.svg"
         alt=""
       />
-      <img class="right" [avatar]="address" alt="" />
-    </div>
-    <div class="name-group">
-      <span class="left">{{ title }}</span>
-      <span class="right">{{ wallet?.name }}</span>
-    </div>
-    <p class="address">{{ hostname }}</p>
-    <span class="dot"></span>
-  </div>
-  <p class="detail-en">{{ title }} {{ "thAuthTip" | translate | async }}</p>
-  <p class="detail-cn">
-    {{
-      (chainType === "Neo2"
-        ? "thAuthNeo2Detail"
-        : chainType === "Neo3"
-        ? "thAuthNeo3Detail"
-        : "thAuthNeoXDetail"
-      )
-        | translate
-        | async
-    }}
-  </p>
-  <div class="choose-auth-rule">
-    <span
-      class="select-radio"
-      [ngClass]="{ selected: ruleCheck }"
-      (click)="ruleCheck = !ruleCheck"
-    ></span>
-    <div class="rule-select">
-      <span class="rule-value">
-        {{ "connectChooseAllow" | translate | async }}
-      </span>
+      <div class="item">
+        <img class="address" [avatar]="address" alt="" />
+        <p class="name">{{ wallet?.name }}</p>
+      </div>
     </div>
   </div>
-  <div class="secure">
-    <img theme src="/assets/images/third-party/auth-secure.svg" alt="" />
-  </div>
-</section>
 
-<section class="submit-group">
-  <button class="cancel" (click)="refuse()">
-    {{ "refuse" | translate | async }}
-  </button>
-  <button class="confirm" (click)="connect()">
-    {{ "connect" | translate | async }}
-  </button>
+  <div class="separation">
+    <img class="bg" theme src="/assets/images/third-party/auth-bg.svg" alt="" />
+    <img
+      class="arrow-bg"
+      theme
+      src="/assets/images/third-party/auth-arrow.svg"
+      alt=""
+    />
+  </div>
+
+  <div class="connect-body">
+    <p class="detail-en">{{ title }} {{ "thAuthTip" | translate | async }}</p>
+    <p class="detail-cn">
+      {{
+        (chainType === "Neo2"
+          ? "thAuthNeo2Detail"
+          : chainType === "Neo3"
+          ? "thAuthNeo3Detail"
+          : "thAuthNeoXDetail"
+        )
+          | translate
+          | async
+      }}
+    </p>
+    <div class="choose-auth-rule">
+      <span
+        class="select-radio"
+        [ngClass]="{ selected: ruleCheck }"
+        (click)="ruleCheck = !ruleCheck"
+      ></span>
+      <div class="rule-select">
+        <span class="rule-value">
+          {{ "connectChooseAllow" | translate | async }}
+        </span>
+      </div>
+    </div>
+    <div class="submit-group">
+      <button class="cancel" (click)="refuse()">
+        {{ "refuse" | translate | async }}
+      </button>
+      <button class="confirm" (click)="connect()">
+        {{ "connect" | translate | async }}
+      </button>
+    </div>
+    <div class="secure">
+      <img theme src="/assets/images/third-party/auth-secure.svg" alt="" />
+    </div>
+  </div>
 </section>

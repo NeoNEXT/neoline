@@ -1489,5 +1489,8 @@
   },
   "contactSupport": {
     "message": "NeoLine 支持"
+  },
+  "ConnectionRequest": {
+    "message": "连接请求"
   }
 }

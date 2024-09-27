@@ -1489,5 +1489,8 @@
   },
   "contactSupport": {
     "message": "NeoLine Support"
+  },
+  "ConnectionRequest": {
+    "message": "Connection Request"
   }
 }
