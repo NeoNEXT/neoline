@@ -5,7 +5,7 @@ section {
   margin-top: -74px;
   background: var(--background-color);
   .welcome {
-    height: 239px;
+    height: 225px;
     padding-top: 94px;
     position: relative;
     img {
@@ -99,11 +99,29 @@ section {
         cursor: pointer;
       }
     }
-    button.confirm {
+    .bottom {
       position: absolute;
       bottom: 24px;
       left: 24px;
       right: 24px;
+      button {
+        width: 100%;
+      }
+      .get-help {
+        margin-top: 14px;
+        text-align: center;
+        font-size: 11px;
+        font-weight: normal;
+        line-height: 12px;
+        color: #303433;
+        .link {
+          color: #06CCAB;
+          cursor: pointer;
+          &:hover {
+            text-decoration: underline;
+          }
+        }
+      }
     }
   }
 }

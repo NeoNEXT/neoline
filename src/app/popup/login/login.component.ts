@@ -2,7 +2,7 @@ import { Component, OnInit, AfterContentInit, OnDestroy } from '@angular/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Router, ActivatedRoute } from '@angular/router';
-import { ChromeService, GlobalService, UtilServiceState } from '@/app/core';
+import { ChromeService, GlobalService, SettingState, UtilServiceState } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import {
   PopupConfirmDialogComponent,
@@ -38,6 +38,7 @@ export class PopupLoginComponent
   selectWallet: Wallet2 | Wallet3;
   selectChainType: ChainType;
   isOnePassword = false;
+  lang = 'en';
 
   private accountSub: Unsubscribable;
   private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
@@ -53,6 +54,7 @@ export class PopupLoginComponent
     private dialog: MatDialog,
     private util: UtilServiceState,
     private fb: FormBuilder,
+    private settingState: SettingState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -68,6 +70,9 @@ export class PopupLoginComponent
   }
 
   ngOnInit(): void {
+    this.settingState.langSub.subscribe((lang) => {
+      this.lang = lang;
+    });
     this.chrome.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {
       if (res === true) {
         this.isOnePassword = true;
@@ -224,5 +229,13 @@ export class PopupLoginComponent
     }
     const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
     this.router.navigateByUrl(returnUrl);
+  }
+
+  getHelp() {
+    if (this.lang === 'en') {
+      window.open('https://tutorial.neoline.io/');
+    } else {
+      window.open('https://tutorial.neoline.io/v/cn?fallback=true')
+    }
   }
 }

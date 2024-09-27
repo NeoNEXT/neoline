@@ -1483,5 +1483,11 @@
   },
   "learnMore": {
     "message": "点击查看教程！"
+  },
+  "needHelp": {
+    "message": "需要帮助？请联系"
+  },
+  "contactSupport": {
+    "message": "NeoLine 支持"
   }
 }

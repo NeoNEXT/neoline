@@ -1483,5 +1483,11 @@
   },
   "learnMore": {
     "message": "Learn more!"
+  },
+  "needHelp": {
+    "message": "Need help? Contact"
+  },
+  "contactSupport": {
+    "message": "NeoLine Support"
   }
 }

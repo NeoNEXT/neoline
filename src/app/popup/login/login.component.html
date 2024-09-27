@@ -65,8 +65,18 @@
         {{ "resetWallet" | translate | async }}
       </span>
     </p>
-    <button class="confirm" [ngClass]="{ disabled: loading }" (click)="login()">
-      {{ (loading ? "logining" : "login") | translate | async }}
-    </button>
+    <div class="bottom">
+      <button
+        class="confirm"
+        [ngClass]="{ disabled: loading }"
+        (click)="login()"
+      >
+        {{ (loading ? "logining" : "login") | translate | async }}
+      </button>
+      <p class="get-help">
+        {{ "needHelp" | translate | async }}
+        <span class="link" (click)="getHelp()">{{ "contactSupport" | translate | async }}</span>
+      </p>
+    </div>
   </div>
 </section>
