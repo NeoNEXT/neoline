@@ -165,6 +165,16 @@
     font-size: 12px;
     font-weight: 500;
     color: var(--title-color);
+    .checked-icon {
+      display: inline-block;
+      width: 16px;
+      height: 16px;
+      cursor: pointer;
+      background: url("/assets/images/login/checked.svg") center center no-repeat;
+      &:hover {
+        background-image: url("/assets/images/third-party/auth-selected.svg");
+      }
+    }
   }
   .name {
     width: 70px;

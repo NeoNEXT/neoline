@@ -108,11 +108,11 @@
       diameter="17"
       (click)="openTxModal()"
     ></mat-spinner>
-    <img
+    <span
       *ngIf="sessionTx.sourceTxID"
-      src="/assets/images/login/checked.svg"
-      alt=""
-    />
+      class="checked-icon"
+      (click)="openTxModal()"
+    ></span>
     <span class="name">
       {{
         (chainType === "Neo3"
@@ -139,11 +139,11 @@
       diameter="17"
       (click)="openTxModal()"
     ></mat-spinner>
-    <img
+    <span
       *ngIf="sessionTx.targetTxID"
-      src="/assets/images/login/checked.svg"
-      alt=""
-    />
+      class="checked-icon"
+      (click)="openTxModal()"
+    ></span>
     <span class="name">
       {{
         (!sessionTx.targetTxID ? "Transferring" : "Transferred")
