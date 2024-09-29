@@ -190,9 +190,9 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       getStorage(
         STORAGE_NAME.connectedWebsites,
         async (res: ConnectedWebsitesType) => {
-          if (request.connectChain === 'NeoX') {
+          if (request?.connectChain === 'NeoX') {
             const connectedNeoXIndex = Object.values(
-              res?.[request.hostname]?.connectedAddress
+              res?.[request.hostname]?.connectedAddress || {}
             ).findIndex((item) => item.chain === 'NeoX');
             if (connectedNeoXIndex >= 0) {
               windowCallback({
