@@ -17,7 +17,12 @@ import { PopupEditFeeDialogComponent } from '@/app/popup/_dialogs';
 import { MatDialog } from '@angular/material/dialog';
 import { SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Asset } from '@/models/models';
-import { ChainType, LedgerStatuses, RpcNetwork } from '../../_lib';
+import {
+  ChainType,
+  GAS3_CONTRACT,
+  LedgerStatuses,
+  RpcNetwork,
+} from '../../_lib';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
@@ -25,6 +30,7 @@ import { ContractCall } from '@cityofzion/neon-core-neo3/lib/sc';
 import { Neo3InvokeService } from '../../transfer/neo3-invoke.service';
 import { u } from '@cityofzion/neon-core-neo3';
 import { interval } from 'rxjs';
+import { ethers } from 'ethers';
 
 export type TabType = 'details' | 'data';
 
@@ -34,6 +40,7 @@ export type TabType = 'details' | 'data';
   styleUrls: ['../bridge-confirm.scss'],
 })
 export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
+  GAS3_CONTRACT = GAS3_CONTRACT;
   @Input() bridgeAsset: Asset;
   @Input() bridgeAmount: string;
   @Input() toAddress: string;
@@ -80,20 +87,44 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
   }
 
   private calculateNeo3TotalFee() {
-    this.totalFee = new BigNumber(this.networkFee)
-      .plus(this.systemFee)
-      .plus(this.bridgeAmount)
-      .toFixed();
-    this.assetState
-      .getAssetRateV2('Neo3', this.bridgeAsset.asset_id)
-      .then((res) => {
-        if (res) {
-          this.rate.priorityFee = res.times(this.priorityFee).toFixed(2);
-          this.rate.networkFee = res.times(this.networkFee).toFixed(2);
-          this.rate.systemFee = res.times(this.systemFee).toFixed(2);
-          this.rate.total = res.times(this.totalFee).toFixed(2);
+    if (this.bridgeAsset.asset_id === GAS3_CONTRACT) {
+      this.totalFee = new BigNumber(this.networkFee)
+        .plus(this.systemFee)
+        .plus(this.bridgeAmount)
+        .toFixed();
+      this.assetState.getAssetRateV2('Neo3', GAS3_CONTRACT).then((gasRate) => {
+        if (gasRate) {
+          this.rate.priorityFee = gasRate.times(this.priorityFee).toFixed(2);
+          this.rate.networkFee = gasRate.times(this.networkFee).toFixed(2);
+          this.rate.systemFee = gasRate.times(this.systemFee).toFixed(2);
+          this.rate.total = gasRate.times(this.totalFee).toFixed(2);
         }
       });
+    } else {
+      this.totalFee = new BigNumber(this.networkFee)
+        .plus(this.systemFee)
+        .toFixed();
+      ethers
+        .resolveProperties({
+          bridgeAssetRate: this.assetState.getAssetRateV2(
+            'Neo3',
+            this.bridgeAsset.asset_id
+          ),
+          gasRate: this.assetState.getAssetRateV2('Neo3', GAS3_CONTRACT),
+        })
+        .then(({ bridgeAssetRate, gasRate }) => {
+          if (gasRate) {
+            this.rate.priorityFee = gasRate.times(this.priorityFee).toFixed(2);
+            this.rate.networkFee = gasRate.times(this.networkFee).toFixed(2);
+            this.rate.systemFee = gasRate.times(this.systemFee).toFixed(2);
+          }
+          if (gasRate && bridgeAssetRate) {
+            const totalAmountValue = bridgeAssetRate.times(this.bridgeAmount);
+            const totalFeeValue = gasRate.times(this.totalFee);
+            this.rate.total = totalAmountValue.plus(totalFeeValue).toFixed(2);
+          }
+        });
+    }
   }
 
   editFee() {

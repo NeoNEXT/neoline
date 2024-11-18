@@ -1,6 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { BridgeTransactionItem } from '../../_lib';
+import { BridgeTransactionOnBridge } from '../../_lib';
 
 @Component({
   templateUrl: 'bridge-progress.component.html',
@@ -10,7 +10,7 @@ export class PopupBridgeProgressDialogComponent {
   constructor(
     private dialogRef: MatDialogRef<PopupBridgeProgressDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
-    public data: BridgeTransactionItem
+    public data: BridgeTransactionOnBridge
   ) {}
 
   public close() {

@@ -1,0 +1,83 @@
+import { ETH_SOURCE_ASSET_HASH } from './evm';
+import { GAS3_CONTRACT } from './neo3';
+import { BridgeNetwork } from './transaction';
+
+export const Neo3BridgeAssetList = {
+  [BridgeNetwork.MainNet]: [
+    {
+      asset_id: GAS3_CONTRACT,
+      decimals: 8,
+      bridgeDecimals: 8,
+      symbol: 'GAS',
+    },
+    {
+      asset_id: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
+      decimals: 0,
+      bridgeDecimals: 0,
+      bridgeTargetAssetId: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
+      symbol: 'NEO',
+    },
+  ],
+  [BridgeNetwork.TestNet]: [
+    {
+      asset_id: GAS3_CONTRACT,
+      decimals: 8,
+      bridgeDecimals: 8,
+      symbol: 'GAS',
+    },
+    {
+      asset_id: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
+      decimals: 0,
+      bridgeDecimals: 0,
+      bridgeTargetAssetId: '0xAB0A26b8d903f36acb4Bf9663f8D2De0672433cd',
+      symbol: 'NEO',
+    },
+    {
+      asset_id: '0x5b53998b399d10cd25727269e865acc785ef5c1a',
+      decimals: 8,
+      bridgeDecimals: 8,
+      bridgeTargetAssetId: '0xba7e9465D241CaAbe431A79b2F863f5B2ebAEBB3',
+      symbol: 'FLM',
+    },
+  ],
+};
+
+export const NeoXBridgeAssetList = {
+  [BridgeNetwork.MainNet]: [
+    {
+      asset_id: ETH_SOURCE_ASSET_HASH,
+      decimals: 18,
+      bridgeDecimals: 8,
+      symbol: 'GAS',
+    },
+    {
+      asset_id: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
+      decimals: 18,
+      bridgeDecimals: 0,
+      bridgeTargetAssetId: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
+      symbol: 'NEO',
+    },
+  ],
+  [BridgeNetwork.TestNet]: [
+    {
+      asset_id: ETH_SOURCE_ASSET_HASH,
+      decimals: 18,
+      bridgeDecimals: 8,
+      symbol: 'GAS',
+    },
+    {
+      asset_id: '0xAB0A26b8d903f36acb4Bf9663f8D2De0672433cd',
+      decimals: 18,
+      bridgeDecimals: 0,
+      bridgeTargetAssetId: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
+      symbol: 'NEO',
+    },
+    {
+      asset_id: '0xba7e9465D241CaAbe431A79b2F863f5B2ebAEBB3',
+      decimals: 8,
+      bridgeDecimals: 8,
+      bridgeTargetAssetId: '0x5b53998b399d10cd25727269e865acc785ef5c1a',
+      symbol: 'FLM',
+    },
+  ],
+};

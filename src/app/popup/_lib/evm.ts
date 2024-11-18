@@ -80,6 +80,11 @@ export const All_CHAIN_TOKENS = {
       address: ETH_SOURCE_ASSET_HASH,
       logo: TOKEN_IMAGE_URL_PREFIX + `gas.svg`,
     },
+    '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f': {
+      symbol: 'NEO',
+      address: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
+      logo: TOKEN_IMAGE_URL_PREFIX + `neo.png`,
+    },
   },
   [CHAIN_IDS.Ethereum]: {
     [ETH_SOURCE_ASSET_HASH]: {

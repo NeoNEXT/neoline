@@ -1335,16 +1335,16 @@
     "message": "完成"
   },
   "DepositingTip": {
-    "message": "交易完成后，GAS 将存入您的钱包。"
+    "message": "交易完成后，{{symbol}} 将存入您的钱包。"
   },
   "DepositedTip": {
-    "message": "GAS 已存入您的 Neo X 钱包。"
+    "message": "{{symbol}} 已存入您的 Neo X 钱包。"
   },
   "WithdrawingTip": {
-    "message": "交易完成后，GAS 将被提取到你的钱包中。"
+    "message": "交易完成后，{{symbol}} 将被提取到你的钱包中。"
   },
   "WithdrawnTip": {
-    "message": "GAS 已提取至您的 Neo3 钱包。"
+    "message": "{{symbol}} 已提取至您的 Neo3 钱包。"
   },
   "Transferring": {
     "message": "转账中"
@@ -1366,6 +1366,9 @@
   },
   "useSiteSuggestion": {
     "message": "使用网站建议"
+  },
+  "useSuggestion": {
+    "message": "使用建议"
   },
   "contractInteraction": {
     "message": "合约交互"
@@ -1492,5 +1495,14 @@
   },
   "ConnectionRequest": {
     "message": "连接请求"
+  },
+  "approval": {
+    "message": "批准"
+  },
+  "approving": {
+    "message": "批准中"
+  },
+  "TokenApproved": {
+    "message": "批准 {{symbol}}"
   }
 }

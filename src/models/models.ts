@@ -20,6 +20,8 @@ export interface Asset {
   avatar?: string;
   rateBalance?: string;
   decimals?: number;
+  bridgeDecimals?: number;
+  bridgeTargetAssetId?: string;
   image_url?: string;
 }
 

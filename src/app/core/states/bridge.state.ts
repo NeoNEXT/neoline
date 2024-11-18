@@ -4,6 +4,9 @@ import {
   BridgeNetwork,
   N3MainnetNetwork,
   N3TestnetNetwork,
+  BridgeTransactionOnBridge,
+  ETH_SOURCE_ASSET_HASH,
+  abiERC20,
 } from '@/app/popup/_lib';
 import { AppState } from '@/app/reduers';
 import { Asset } from '@/models/models';
@@ -49,10 +52,19 @@ export class BridgeState {
     });
   }
 
-  // neo3 => neoX
-  getBridgeTxOnNeo3BridgeNeoX(depositId: number, network: BridgeNetwork) {
+  //#region neo3 => neoX
+  getBridgeTxOnNeo3BridgeNeoX(
+    depositId: number,
+    storageTx: BridgeTransactionOnBridge
+  ) {
+    let suffixAddress = '';
+    if (storageTx.asset.bridgeTargetAssetId) {
+      suffixAddress = `/${storageTx.asset.bridgeTargetAssetId}`;
+    }
     return this.http.get(
-      `${this.BridgeParams[network].bridgeTxHostOnNeo3BridgeNeoX}/${depositId}`
+      `${
+        this.BridgeParams[storageTx.network].bridgeTxHostOnNeo3BridgeNeoX
+      }${suffixAddress}/${depositId}`
     );
   }
   getGasDepositFee(network: BridgeNetwork) {
@@ -64,7 +76,8 @@ export class BridgeState {
     };
     return this.http.post(this.neo3Network.rpcUrl, data).pipe(
       map((res: any) => {
-        return this.utilService.handleNeo3StackNumberValue(res.result);
+        const fee = this.utilService.handleNeo3StackNumberValue(res.result);
+        return new BigNumber(fee).shiftedBy(-8).toFixed();
       })
     );
   }
@@ -78,7 +91,8 @@ export class BridgeState {
     };
     return this.http.post(this.neo3Network.rpcUrl, data).pipe(
       map((res: any) => {
-        return this.utilService.handleNeo3StackNumberValue(res.result);
+        const data = this.utilService.handleNeo3StackNumberValue(res.result);
+        return new BigNumber(data).shiftedBy(-8).toFixed();
       })
     );
   }
@@ -121,26 +135,38 @@ export class BridgeState {
       })
     );
   }
+  //#endregion
 
   //#region neoX => neo3
   getWithdrawData({
     asset,
     toScriptHash,
     maxFee,
+    amount,
   }: {
     asset: Asset;
     toScriptHash: string;
     maxFee: bigint;
+    amount: string;
   }) {
     const contract = new ethers.Contract(
       asset.asset_id,
       abiNeoXBridgeNeo3,
       this.provider
     );
-    const data = contract.interface.encodeFunctionData('withdrawGas', [
-      toScriptHash,
-      maxFee,
-    ]);
+    let data;
+    if (asset.asset_id === ETH_SOURCE_ASSET_HASH) {
+      data = contract.interface.encodeFunctionData('withdrawGas', [
+        toScriptHash,
+        maxFee,
+      ]);
+    } else {
+      data = contract.interface.encodeFunctionData('withdrawToken', [
+        asset.asset_id,
+        toScriptHash,
+        new BigNumber(amount).shiftedBy(asset.decimals).toFixed(0),
+      ]);
+    }
     return data;
   }
 
@@ -149,20 +175,46 @@ export class BridgeState {
     return tempProvider.getTransactionReceipt(hash);
   }
 
-  getBridgeTxOnNeoXBridgeNeo3(nonce: number, network: BridgeNetwork) {
+  getBridgeTxOnNeoXBridgeNeo3(
+    nonce: number,
+    storageTx: BridgeTransactionOnBridge
+  ) {
     const data = {
       jsonrpc: '2.0',
       method: 'GetBridgeTxByNonce',
       params: {
-        ContractHash: this.BridgeParams[network].n3BridgeContract,
+        ContractHash: this.BridgeParams[storageTx.network].n3BridgeContract,
         Nonce: nonce,
       },
       id: 1,
     };
+    if (storageTx.asset.bridgeTargetAssetId) {
+      data.params['TokenHash'] = storageTx.asset.bridgeTargetAssetId;
+    }
     return this.http.post(
-      this.BridgeParams[network].bridgeTxHostOnNeoXBridgeNeo3,
+      this.BridgeParams[storageTx.network].bridgeTxHostOnNeoXBridgeNeo3,
       data
     );
+  }
+
+  getAllowance(asset: Asset, address: string, network: BridgeNetwork) {
+    const contract = new ethers.Contract(
+      asset.asset_id,
+      abiERC20,
+      this.provider
+    );
+    const data = contract.interface.encodeFunctionData('allowance', [
+      address,
+      this.BridgeParams[network].neoXBridgeContract,
+    ]);
+    return this.provider
+      .call({
+        to: asset.asset_id,
+        data,
+      })
+      .then((res) => {
+        return ethers.formatUnits(res, asset.decimals);
+      });
   }
   //#endregion
 }

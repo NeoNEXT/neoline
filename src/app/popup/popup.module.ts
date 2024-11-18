@@ -105,6 +105,7 @@ import {
   PopupBridgeProgressDialogComponent,
   PopupBridgeFootnoteDialogComponent,
   PopupSpeedUpFeeDialogComponent,
+  PopupApproveDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -132,6 +133,7 @@ const POPUP_DIALOGS = [
   PopupBridgeProgressDialogComponent,
   PopupBridgeFootnoteDialogComponent,
   PopupSpeedUpFeeDialogComponent,
+  PopupApproveDialogComponent,
 ];
 
 //#endregion

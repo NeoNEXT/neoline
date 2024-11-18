@@ -1,0 +1,155 @@
+<div class="loading-box" *ngIf="loading">
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+    <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
+  </div>
+</div>
+<div class="container">
+  <div class="header">{{ 'approval' | translate | async }}</div>
+  <div class="content">
+    <div class="approve-info">
+      <p class="title" *ngIf="data.lang === 'en'">
+        {{ "SpendingCapRequestForYour" | translate | async }}
+      </p>
+      <div class="asset">
+        <token-logo
+          customClass="list"
+          [assetId]="data.asset.asset_id"
+          [chainType]="'NeoX'"
+          [symbol]="data.asset.symbol"
+          [neoXChainId]="data.neoXNetwork.chainId"
+        ></token-logo>
+        <span>{{ data.asset.symbol }}</span>
+        <copy [value]="data.asset.asset_id" [showTip]="false">
+          <img theme src="assets/images/common/copy.svg" />
+        </copy>
+        <img
+          *ngIf="data.neoXNetwork.explorer"
+          (click)="toExplorer()"
+          class="link"
+          theme
+          src="assets/images/bridge/tx-link.svg"
+          alt=""
+        />
+      </div>
+      <p class="title" *ngIf="data.lang !== 'en'">
+        {{ "SpendingCapRequestForYour" | translate | async }}
+      </p>
+    </div>
+
+    <div class="edit-amount">
+      <p class="title">
+        {{ "CustomSpendingCap" | translate | async }}
+        <tooltip
+          placement="top"
+          [tip]="
+            (inputAmountIsBig ? 'approveTip' : 'approveCustomTip')
+              | translate
+              | async
+          "
+        >
+          <img
+            theme
+            [src]="
+              inputAmountIsBig
+                ? 'assets/images/common/warning-red.svg'
+                : 'assets/images/common/tooltip.svg'
+            "
+            alt=""
+          />
+        </tooltip>
+      </p>
+      <p
+        class="edit"
+        *ngIf="inputAmount !== data.amount"
+        (click)="useDappApproveAmount()"
+      >
+        {{ "useSuggestion" | translate | async }}
+      </p>
+      <div class="input-amount">
+        <input
+          type="text"
+          [(ngModel)]="inputAmount"
+          (input)="handleInputAmountChange($event)"
+          [ngClass]="{ big: inputAmountIsBig }"
+        />
+        <span class="max" (click)="useMaxApproveAmount()">
+          {{ "Max" | translate | async }}
+        </span>
+      </div>
+      <p class="tip" *ngIf="initTip">
+        {{ "approveInitTip" | translate : { symbol: data.asset.symbol } | async
+        }}
+      </p>
+      <p class="tip" *ngIf="!initTip && inputAmountIsBig">
+        {{ "approveBigTip" | translate | async }}
+      </p>
+      <p class="tip" *ngIf="!initTip && !inputAmountIsBig">
+        {{ "approveNormalTip" | translate : { amount: inputAmount, symbol:
+        data.asset.symbol } | async }}
+      </p>
+    </div>
+
+    <div class="fee">
+      <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
+
+      <div>
+        <evm-fee
+          [txParams]="txParams"
+          [symbol]="data.neoXNetwork.symbol"
+          [place]="'dapp'"
+          (returnFee)="updateEvmFee($event)"
+        >
+        </evm-fee>
+        <p class="rate">{{ rate | numberFixed : 2 }} {{ data.rateCurrency }}</p>
+      </div>
+
+      <evm-gas-error
+        *ngIf="insufficientFunds"
+        [networkName]="neoXNetwork.name"
+        [symbol]="neoXNetwork.symbol"
+      ></evm-gas-error>
+      <evm-pending-warning
+        *ngIf="nonceInfo?.pendingTxs"
+        [count]="nonceInfo.pendingTxs"
+      ></evm-pending-warning>
+    </div>
+
+    <div class="nonce">
+      <evm-custom-nonce
+        [default]="nonceInfo?.nonce"
+        (changeNonceEvent)="changeNonce($event)"
+      ></evm-custom-nonce>
+    </div>
+
+    <p class="view-details">
+      <span (click)="showDetail = !showDetail">
+        {{ "ViewDetails" | translate | async }}
+        <img
+          theme
+          src="assets/images/third-party/triangle-fill.svg"
+          [ngClass]="{ active: showDetail }"
+          alt=""
+        />
+      </span>
+    </p>
+    <div class="params-data" *ngIf="showDetail">
+      <p class="title">{{ "data" | translate | async }}</p>
+      <p>Function: Approve</p>
+      <p>{{ txParams.data }}</p>
+    </div>
+  </div>
+
+  <div class="btn-group">
+    <button class="cancel" [mat-dialog-close]="false">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button
+      class="confirm"
+      [ngClass]="{ disabled: !nonceInfo || insufficientFunds }"
+      (click)="confirm()"
+    >
+      {{ "Approve" | translate | async }}
+    </button>
+  </div>
+</div>

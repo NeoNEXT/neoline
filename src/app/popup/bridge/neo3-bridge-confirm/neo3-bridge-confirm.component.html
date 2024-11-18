@@ -54,7 +54,9 @@
         </span>
         <span class="value">{{ priorityFee | numberFixed }} GAS</span>
       </p>
-      <p class="row tip">{{ rate.priorityFee | numberFixed : 2 }} {{ rateCurrency }}</p>
+      <p class="row tip">
+        {{ rate.priorityFee | numberFixed : 2 }} {{ rateCurrency }}
+      </p>
     </li>
     <li>
       <p class="row">
@@ -77,7 +79,12 @@
     <li>
       <p class="row">
         <span class="label">{{ "TOTAL" | translate | async }}</span>
-        <span class="value"> {{ totalFee | numberFixed }} GAS </span>
+        <span class="value" *ngIf="bridgeAsset.asset_id === GAS3_CONTRACT"
+          >{{ totalFee | numberFixed }} GAS
+        </span>
+        <span class="value" *ngIf="bridgeAsset.asset_id !== GAS3_CONTRACT"
+          >{{ bridgeAmount }} {{ bridgeAsset.symbol }} + {{ totalFee }} GAS
+        </span>
       </p>
       <p class="row tip column">
         <span>

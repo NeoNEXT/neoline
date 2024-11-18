@@ -13,6 +13,7 @@ html[data-theme-style="light-theme"]:root {
   --line-color: #f4f4f4;
   --border-color: #e7efef;
   --hover-color: #f5f9f9;
+  --bridge-asset-bg-color: #f5f9f9;
   --background-color: #e7efef;
   --body-background-color: #fff;
   --network-color: #fff;
@@ -21,6 +22,8 @@ html[data-theme-style="light-theme"]:root {
   --bridge-label-color: #aab9bf;
   --bridge-select-border: #cfdfe5;
   --progress-bar-bg: #e9f0f0;
+  --full-background-color: #fff;
+  --full-header-background-color: #e9f0f0;
   --popups-box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.16);
   --small-box-shadow: 0px 3px 8px 0px rgba(0, 0, 0, 0.16);
   --asset-add-box-shadow: 0px 5px 10px -2px rgba(6, 204, 171, 0.5);
@@ -44,6 +47,7 @@ html[data-theme-style="dark-theme"]:root {
   --line-color: #43464d;
   --border-color: #43464d;
   --hover-color: #43464d;
+  --bridge-asset-bg-color: rgba(0, 0, 0, 0.08);
   --background-color: #303135;
   --body-background-color: #363940;
   --network-color: #303433;
@@ -52,6 +56,8 @@ html[data-theme-style="dark-theme"]:root {
   --bridge-label-color: #9fa2a9;
   --bridge-select-border: #9fa2a9;
   --progress-bar-bg: #303135;
+  --full-background-color: #363940;
+  --full-header-background-color: #303135;
   --popups-box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.5);
   --small-box-shadow: 0px 3px 8px 0px rgba(0, 0, 0, 0.5);
   --asset-add-box-shadow: 0px 5px 8px -2px rgba(6, 204, 171, 0.8);

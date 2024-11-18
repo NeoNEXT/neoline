@@ -12,7 +12,9 @@ import { Asset } from '@/models/models';
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import {
   BridgeNetwork,
-  BridgeTransactionItem,
+  TransactionOnBridge,
+  BridgeTransactionOnBridge,
+  ApproveTransactionOnBridge,
   ChainType,
   EvmTransactionParams,
   GAS3_CONTRACT,
@@ -41,21 +43,12 @@ import { NeoXFeeInfoProp } from '../transfer/create/interface';
 import { interval } from 'rxjs';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import {
+  PopupApproveDialogComponent,
   PopupBridgeProgressDialogComponent,
   PopupSelectAddressDialogComponent,
 } from '../_dialogs';
 import { ethers } from 'ethers';
-
-const NeoN3GasAsset: Asset = {
-  asset_id: GAS3_CONTRACT,
-  decimals: 8,
-  symbol: 'GAS',
-};
-const NeoXGasAsset: Asset = {
-  asset_id: ETH_SOURCE_ASSET_HASH,
-  decimals: 18,
-  symbol: 'GAS',
-};
+import { Neo3BridgeAssetList, NeoXBridgeAssetList } from '../_lib/bridge';
 
 const DEFAULT_NEO3_ADDRESS = 'NfuwpaQ1A2xaeVbxWe8FRtaRgaMa8yF3YM';
 const DEFAULT_NEOX_ADDRESS = '0x1212000000000000000000000000000000000004';
@@ -67,25 +60,27 @@ const MIN_BRIDGE_AMOUNT = 1;
 })
 export class PopupBridgeComponent implements OnInit, OnDestroy {
   showConfirmPage = false;
-  keepDecimals = 8;
   settingStateSub: Unsubscribable;
   lang: string;
   rateCurrency = '';
 
   bridgeAsset: Asset;
+  bridgeAssetList: Asset[];
+  isShowAssetList = false;
+  showAssetListTimeout: NodeJS.Timeout;
   bridgeAmount: string;
   handleInputSub: Unsubscribable;
-  fromChain: string;
-  toChain: string;
   toAddress: string;
   bridgeFee = '0.1';
   minBridgeAmount = '1.1';
+  private gasBalance: string;
 
   getSourceTxReceiptInterval;
   getTargetTxReceiptInterval;
   loading = false;
   bridgeProgressDialogRef: MatDialogRef<PopupBridgeProgressDialogComponent>;
-  sessionTx: BridgeTransactionItem;
+  sessionFirstTx: TransactionOnBridge;
+  sessionTx: BridgeTransactionOnBridge;
 
   // neo3
   networkFee: string;
@@ -100,6 +95,8 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   // neoX
   neoXFeeInfo: NeoXFeeInfoProp;
   txParams: EvmTransactionParams;
+  isApproveBtn = false;
+  isApproving = false;
 
   private accountSub: Unsubscribable;
   private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
@@ -143,15 +140,18 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     });
     this.chrome
       .getStorage(STORAGE_NAME.bridgeTransaction)
-      .subscribe((tx: BridgeTransactionItem[]) => {
+      .subscribe((tx: TransactionOnBridge[]) => {
         if (tx.length > 0) {
-          this.sessionTx = tx[0];
-          if (!tx[0].sourceTxID || !tx[0].targetTxID) {
-            if (tx[0].sourceChainType === 'Neo3') {
-              this.waitNeo3SourceTxComplete(tx[0].txId);
-            }
-            if (tx[0].sourceChainType === 'NeoX') {
-              this.waitNeoXSourceTxComplete(tx[0].txId);
+          this.sessionFirstTx = tx[0];
+          if (tx[0].type === 'bridge') {
+            this.sessionTx = tx[0];
+            if (!tx[0].sourceTxID || !tx[0].targetTxID) {
+              if (tx[0].sourceChainType === 'Neo3') {
+                this.waitNeo3SourceTxComplete(tx[0].txId);
+              }
+              if (tx[0].sourceChainType === 'NeoX') {
+                this.waitNeoXSourceTxComplete(tx[0].txId);
+              }
             }
           }
         }
@@ -171,20 +171,15 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         this.n3Network.chainId === N3MainnetNetwork.chainId
           ? BridgeNetwork.MainNet
           : BridgeNetwork.TestNet;
-      this.fromChain = 'Neo N3';
-      this.toChain = 'Neo X';
-      this.bridgeAsset = NeoN3GasAsset;
+      this.bridgeAssetList = Neo3BridgeAssetList[this.currentBridgeNetwork];
+      this.bridgeAsset = this.bridgeAssetList[0];
       // bridge fee
       this.bridgeState
         .getGasDepositFee(this.currentBridgeNetwork)
         .subscribe((res) => {
           if (res) {
-            this.bridgeFee = new BigNumber(res)
-              .shiftedBy(-NeoN3GasAsset.decimals)
-              .toFixed();
-            this.minBridgeAmount = new BigNumber(this.bridgeFee)
-              .plus(MIN_BRIDGE_AMOUNT)
-              .toFixed();
+            this.bridgeFee = res;
+            this.getMinBridgeAmount();
           }
         });
       // max deposit fee
@@ -192,9 +187,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         .getMaxGasDeposit(this.currentBridgeNetwork)
         .subscribe((res) => {
           if (res) {
-            this.maxGasDeposit = new BigNumber(res)
-              .shiftedBy(-NeoN3GasAsset.decimals)
-              .toFixed();
+            this.maxGasDeposit = res;
           }
         });
 
@@ -205,24 +198,16 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         this.neoXNetwork.chainId === NeoXMainnetNetwork.chainId
           ? BridgeNetwork.MainNet
           : BridgeNetwork.TestNet;
-      this.fromChain = 'Neo X';
-      this.toChain = 'Neo N3';
-      this.bridgeAsset = NeoXGasAsset;
+      this.bridgeAssetList = NeoXBridgeAssetList[this.currentBridgeNetwork];
+      this.bridgeAsset = this.bridgeAssetList[0];
 
       await this.calculateNeoXFee();
     }
     // balance
-    const balance = await this.assetState.getAddressAssetBalance(
-      this.currentWallet.accounts[0].address,
-      this.bridgeAsset.asset_id,
-      this.chainType
-    );
-    this.bridgeAsset.balance = new BigNumber(balance)
-      .shiftedBy(-this.bridgeAsset.decimals)
-      .toFixed();
+    await this.getBridgeAssetBalance();
   }
 
-  getAssetRate() {
+  private getAssetRate() {
     this.handleInputSub?.unsubscribe();
     this.handleInputSub = timer(500).subscribe(async () => {
       this.bridgeAsset.rateBalance = await this.assetState.getAssetAmountRate({
@@ -240,10 +225,16 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       this.bridgeAmount &&
       new BigNumber(this.bridgeAmount).comparedTo(this.minBridgeAmount) >= 0
     ) {
-      return new BigNumber(this.bridgeAmount)
-        .minus(this.bridgeFee)
-        .dp(8, 1)
-        .toFixed();
+      if (this.bridgeAsset.symbol === 'GAS') {
+        return new BigNumber(this.bridgeAmount)
+          .minus(this.bridgeFee)
+          .dp(this.bridgeAsset.decimals, 1)
+          .toFixed();
+      } else {
+        return new BigNumber(this.bridgeAmount)
+          .dp(this.bridgeAsset.decimals, 1)
+          .toFixed();
+      }
     }
     return '-';
   }
@@ -254,11 +245,12 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       .toFixed(0, 1);
 
     const data = this.bridgeState.getWithdrawData({
-      asset: NeoXGasAsset,
+      asset: this.bridgeAsset,
       toScriptHash: wallet.getScriptHashFromAddress(
         this.toAddress ?? DEFAULT_NEO3_ADDRESS
       ),
       maxFee: ethers.parseUnits(this.bridgeFee, this.bridgeAsset.decimals),
+      amount: this.bridgeAmount,
     });
 
     let networkGasLimit: bigint;
@@ -269,6 +261,11 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       value,
       data,
     };
+    if (this.bridgeAsset.asset_id !== ETH_SOURCE_ASSET_HASH) {
+      this.txParams.value = new BigNumber(this.bridgeFee)
+        .shiftedBy(18)
+        .toFixed(0);
+    }
     try {
       networkGasLimit = await this.assetEVMState.estimateGas(this.txParams);
     } catch {
@@ -284,9 +281,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       .shiftedBy(this.bridgeAsset.decimals)
       .toFixed(0, 1);
 
-    const tBridgeFee = new BigNumber(this.bridgeFee)
-      .shiftedBy(NeoN3GasAsset.decimals)
-      .toFixed(0, 1);
+    const tBridgeFee = new BigNumber(this.bridgeFee).shiftedBy(8).toFixed(0, 1);
 
     this.invokeArgs = [
       {
@@ -318,6 +313,14 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       },
     ];
 
+    if (this.bridgeAsset.asset_id !== GAS3_CONTRACT) {
+      this.invokeArgs[0].operation = 'depositToken';
+      this.invokeArgs[0].args.unshift(
+        sc.ContractParam.hash160(this.bridgeAsset.asset_id)
+      );
+      this.signers[0].allowedContracts.push(this.bridgeAsset.asset_id);
+    }
+
     return this.neo3Invoke
       .createNeo3Tx({
         invokeArgs: this.invokeArgs,
@@ -338,7 +341,9 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   }
 
   async bridgeAll() {
-    if (this.chainType === 'Neo3') {
+    if (this.bridgeAsset.symbol !== 'GAS') {
+      this.bridgeAmount = this.bridgeAsset.balance;
+    } else if (this.chainType === 'Neo3') {
       const getAllAmount = () => {
         const tAmount = new BigNumber(this.bridgeAsset.balance)
           .minus(this.systemFee)
@@ -348,6 +353,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
             .dp(this.bridgeAsset.decimals, 1)
             .toFixed();
         } else {
+          this.bridgeAmount = '0';
           this.globalService.snackBarTip('balanceLack');
         }
       };
@@ -371,11 +377,16 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         this.neoXFeeInfo.estimateGas
       );
       if (tAmount.comparedTo(0) > 0) {
-        this.bridgeAmount = tAmount.dp(this.keepDecimals, 1).toFixed();
+        this.bridgeAmount = tAmount.dp(this.bridgeAsset.decimals, 1).toFixed();
       } else {
+        this.bridgeAmount = '0';
         this.globalService.snackBarTip('balanceLack');
       }
     }
+    this.bridgeAmount = new BigNumber(this.bridgeAmount)
+      .dp(this.bridgeAsset.bridgeDecimals, 1)
+      .toFixed();
+    this.checkShowApprove();
     this.getAssetRate();
   }
 
@@ -396,8 +407,15 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     }
     window.open(url);
   }
+  toViewApproveTx(neoXExplorer: string, txId: string) {
+    window.open(`${neoXExplorer}/tx/${txId}`);
+  }
 
   async confirm() {
+    this.checkShowApprove();
+    if (this.isApproveBtn) {
+      return;
+    }
     if (this.getActualReceive() === '-') {
       let message =
         this.lang !== 'en'
@@ -431,16 +449,29 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     if (this.chainType === 'Neo3') {
       this.calculateNeoN3Fee().subscribe(
         () => {
-          const tAmount = new BigNumber(this.bridgeAsset.balance)
-            .minus(this.bridgeAmount)
-            .minus(this.systemFee)
-            .minus(this.networkFee);
-          if (tAmount.comparedTo(0) < 0) {
-            this.globalService.snackBarTip(
-              `${this.notification.content.insufficientSystemFee} ${this.bridgeAmount}`
-            );
+          if (this.bridgeAsset.asset_id === GAS3_CONTRACT) {
+            const tAmount = new BigNumber(this.bridgeAsset.balance)
+              .minus(this.bridgeAmount)
+              .minus(this.systemFee)
+              .minus(this.networkFee);
+            if (tAmount.comparedTo(0) < 0) {
+              this.globalService.snackBarTip(
+                `${this.notification.content.insufficientSystemFee} ${this.bridgeAmount}`
+              );
+            } else {
+              this.showConfirmPage = true;
+            }
           } else {
-            this.showConfirmPage = true;
+            const tAmount = new BigNumber(this.gasBalance)
+              .minus(this.systemFee)
+              .minus(this.networkFee);
+            if (tAmount.comparedTo(0) < 0) {
+              this.globalService.snackBarTip(
+                `${this.notification.content.InsufficientGas}`
+              );
+            } else {
+              this.showConfirmPage = true;
+            }
           }
           this.loading = false;
         },
@@ -450,32 +481,34 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       );
     } else {
       await this.calculateNeoXFee();
-      const tAmount = new BigNumber(this.bridgeAsset.balance)
-        .minus(this.bridgeAmount)
-        .minus(this.neoXFeeInfo.estimateGas);
-      if (tAmount.comparedTo(0) < 0) {
-        this.globalService.snackBarTip(
-          `${this.notification.content.insufficientSystemFee} ${this.bridgeAmount}`
-        );
+      if (this.bridgeAsset.asset_id === ETH_SOURCE_ASSET_HASH) {
+        const tAmount = new BigNumber(this.bridgeAsset.balance)
+          .minus(this.bridgeAmount)
+          .minus(this.neoXFeeInfo.estimateGas);
+        if (tAmount.comparedTo(0) < 0) {
+          this.globalService.snackBarTip(
+            `${this.notification.content.insufficientSystemFee} ${this.bridgeAmount}`
+          );
+        } else {
+          this.showConfirmPage = true;
+        }
       } else {
-        this.showConfirmPage = true;
+        const tAmount = new BigNumber(this.gasBalance)
+          .minus(this.bridgeFee)
+          .minus(this.neoXFeeInfo.estimateGas);
+        if (tAmount.comparedTo(0) < 0) {
+          this.globalService.snackBarTip(
+            `${this.notification.content.InsufficientGas}`
+          );
+        } else {
+          this.showConfirmPage = true;
+        }
       }
       this.loading = false;
     }
   }
 
-  private handleCreateNeo3TxError(error) {
-    this.loading = false;
-    if (error?.type === 'scriptError') {
-      this.globalService.snackBarTip('checkInput');
-    } else {
-      this.globalService.snackBarTip(
-        error?.error?.message || error?.error?.exception || 'rpcError'
-      );
-    }
-  }
-
-  handleBack(event?: { hash: string; chain: ChainType }) {
+  handleTxhash(event?: { hash: string; chain: ChainType }) {
     this.showConfirmPage = false;
     if (event) {
       const isMainNet =
@@ -494,7 +527,9 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           : NeoXTestnetNetwork.explorer;
       }
       this.sessionTx = {
+        type: 'bridge',
         txId: event.hash,
+        asset: this.bridgeAsset,
         network: isMainNet ? BridgeNetwork.MainNet : BridgeNetwork.TestNet,
         sourceChainType: event.chain,
         targetChainType,
@@ -508,7 +543,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
             ? this.n3Network.rpcUrl
             : this.neoXNetwork.rpcUrl,
       };
-      this.updateSessionBridgeTx();
+      this.updateSessionBridgeTx(this.sessionTx);
       this.resetData();
       this.openTxModal();
       if (event.chain === 'Neo3') {
@@ -550,8 +585,9 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       });
   }
 
-  updateSessionBridgeTx() {
-    this.chrome.setStorage(STORAGE_NAME.bridgeTransaction, [this.sessionTx]);
+  private updateSessionBridgeTx(tx: TransactionOnBridge) {
+    this.sessionFirstTx = tx;
+    this.chrome.setStorage(STORAGE_NAME.bridgeTransaction, [tx]);
   }
 
   //#region neo3
@@ -562,17 +598,25 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         .getApplicationLog(hash, this.sessionTx.sourceRpcUrl)
         .subscribe((res) => {
           this.sessionTx.sourceTxID = hash;
-          this.updateSessionBridgeTx();
+          this.updateSessionBridgeTx(this.sessionTx);
           if (this.bridgeProgressDialogRef?.componentInstance) {
             this.bridgeProgressDialogRef.componentInstance.data.sourceTxID =
               hash;
           }
           this.getSourceTxReceiptInterval.unsubscribe();
           const notifications = res.executions[0].notifications;
-          const notifi = notifications.find(
-            (item) => item.eventname === 'GasDeposit'
-          );
-          const depositId = notifi.state.value[0].value;
+          let depositId;
+          if (this.sessionTx.asset.asset_id === GAS3_CONTRACT) {
+            const notifi = notifications.find(
+              (item) => item.eventname === 'GasDeposit'
+            );
+            depositId = notifi.state.value[0].value;
+          } else {
+            const notifi = notifications.find(
+              (item) => item.eventname === 'TokenDeposit'
+            );
+            depositId = notifi.state.value[2].value;
+          }
           this.waitNeo3TargetTxComplete(depositId);
         });
     });
@@ -582,11 +626,11 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.getTargetTxReceiptInterval?.unsubscribe();
     this.getTargetTxReceiptInterval = interval(5000).subscribe(() => {
       this.bridgeState
-        .getBridgeTxOnNeo3BridgeNeoX(depositId, this.sessionTx.network)
+        .getBridgeTxOnNeo3BridgeNeoX(depositId, this.sessionTx)
         .subscribe((res: any) => {
           if (res.txid) {
             this.sessionTx.targetTxID = res.txid;
-            this.updateSessionBridgeTx();
+            this.updateSessionBridgeTx(this.sessionTx);
             if (this.bridgeProgressDialogRef?.componentInstance) {
               this.bridgeProgressDialogRef.componentInstance.data.targetTxID =
                 res.txid;
@@ -607,13 +651,18 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         .then((res) => {
           if (res) {
             this.sessionTx.sourceTxID = hash;
-            this.updateSessionBridgeTx();
+            this.updateSessionBridgeTx(this.sessionTx);
             if (this.bridgeProgressDialogRef?.componentInstance) {
               this.bridgeProgressDialogRef.componentInstance.data.sourceTxID =
                 hash;
             }
             this.getSourceTxReceiptInterval.unsubscribe();
-            const nonce = new BigNumber(res.logs[0].topics[1]).toNumber();
+            let nonce;
+            if (this.sessionTx.asset.asset_id === ETH_SOURCE_ASSET_HASH) {
+              nonce = new BigNumber(res.logs[0].topics[1]).toNumber();
+            } else {
+              nonce = new BigNumber(res.logs[1].topics[2]).toNumber();
+            }
             this.waitNeoXTargetTxComplete(nonce);
           }
         });
@@ -624,11 +673,11 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.getTargetTxReceiptInterval?.unsubscribe();
     this.getTargetTxReceiptInterval = interval(3000).subscribe(() => {
       this.bridgeState
-        .getBridgeTxOnNeoXBridgeNeo3(nonce, this.sessionTx.network)
+        .getBridgeTxOnNeoXBridgeNeo3(nonce, this.sessionTx)
         .subscribe((res: any) => {
           if (res.result) {
             this.sessionTx.targetTxID = res.result.txid;
-            this.updateSessionBridgeTx();
+            this.updateSessionBridgeTx(this.sessionTx);
             if (this.bridgeProgressDialogRef?.componentInstance) {
               this.bridgeProgressDialogRef.componentInstance.data.targetTxID =
                 res.result.txid;
@@ -638,11 +687,152 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         });
     });
   }
-  //#region
+  //#endregion
 
+  //#region private
   private resetData() {
     this.initData();
     this.bridgeAmount = '';
     this.toAddress = '';
+  }
+
+  private handleCreateNeo3TxError(error) {
+    this.loading = false;
+    if (error?.type === 'scriptError') {
+      this.globalService.snackBarTip('checkInput');
+    } else {
+      this.globalService.snackBarTip(
+        error?.error?.message || error?.error?.exception || 'rpcError'
+      );
+    }
+  }
+  private async getBridgeAssetBalance() {
+    const balance = await this.assetState.getAddressAssetBalance(
+      this.currentWallet.accounts[0].address,
+      this.bridgeAsset.asset_id,
+      this.chainType
+    );
+    this.bridgeAsset.balance = new BigNumber(balance)
+      .shiftedBy(-this.bridgeAsset.decimals)
+      .toFixed();
+    if (this.bridgeAsset.symbol === 'GAS') {
+      this.gasBalance = this.bridgeAsset.balance;
+    }
+  }
+  //#endregion
+
+  showAssetList() {
+    if (this.showAssetListTimeout) {
+      clearTimeout(this.showAssetListTimeout);
+    }
+    this.isShowAssetList = true;
+  }
+  hideAssetList() {
+    if (this.showAssetListTimeout) {
+      clearTimeout(this.showAssetListTimeout);
+    }
+    this.showAssetListTimeout = setTimeout(() => {
+      this.isShowAssetList = false;
+    }, 300);
+  }
+
+  async selectBridgeAsset(asset: Asset) {
+    this.bridgeAsset = asset;
+    this.bridgeAmount = '';
+    this.isShowAssetList = false;
+    this.getMinBridgeAmount();
+    this.checkShowApprove();
+    await this.getBridgeAssetBalance();
+  }
+
+  private getMinBridgeAmount() {
+    if (this.bridgeAsset.symbol === 'GAS') {
+      this.minBridgeAmount = new BigNumber(this.bridgeFee)
+        .plus(MIN_BRIDGE_AMOUNT)
+        .toFixed();
+    } else {
+      this.minBridgeAmount = MIN_BRIDGE_AMOUNT.toString();
+    }
+  }
+
+  checkBridgeAmount(event) {
+    const value = event.target.value;
+    let regex = new RegExp(
+      `^\\D*(\\d*(?:\\.\\d{0,${this.bridgeAsset.bridgeDecimals}})?).*`,
+      'g'
+    );
+    if (this.bridgeAsset.bridgeDecimals === 0) {
+      regex = new RegExp(`^\\D*(\\d*).*`, 'g');
+    }
+    event.target.value = value.replace(regex, '$1');
+    this.bridgeAmount = event.target.value;
+    this.getAssetRate();
+    this.checkShowApprove();
+  }
+
+  private checkShowApprove() {
+    if (
+      this.chainType === 'NeoX' &&
+      this.bridgeAmount &&
+      this.bridgeAsset.asset_id !== ETH_SOURCE_ASSET_HASH
+    ) {
+      this.bridgeState
+        .getAllowance(
+          this.bridgeAsset,
+          this.currentWallet.accounts[0].address,
+          this.currentBridgeNetwork
+        )
+        .then((res) => {
+          if (new BigNumber(this.bridgeAmount).comparedTo(res) > 0) {
+            this.isApproveBtn = true;
+          } else {
+            this.isApproveBtn = false;
+          }
+        });
+    } else {
+      this.isApproveBtn = false;
+    }
+  }
+
+  showApprove() {
+    if (this.isApproving) return;
+    this.dialog
+      .open(PopupApproveDialogComponent, {
+        data: {
+          asset: this.bridgeAsset,
+          encryptWallet: this.currentWallet,
+          spender:
+            this.bridgeState.BridgeParams[this.currentBridgeNetwork]
+              .neoXBridgeContract,
+          amount: this.bridgeAmount,
+          lang: this.lang,
+          rateCurrency: this.rateCurrency,
+          neoXNetwork: this.neoXNetwork,
+        },
+        panelClass: 'custom-dialog-panel-full',
+      })
+      .afterClosed()
+      .subscribe((res) => {
+        if (res) {
+          this.isApproving = true;
+          this.assetEVMState.waitForTx(res).then((txInfo) => {
+            this.isApproving = false;
+            this.isApproveBtn = false;
+            if (txInfo.status) {
+              this.checkShowApprove();
+              const tx: ApproveTransactionOnBridge = {
+                type: 'approval',
+                txId: res,
+                asset: this.bridgeAsset,
+                network: this.currentBridgeNetwork,
+                neoXExplorer: this.neoXNetwork.explorer,
+              };
+              this.getSourceTxReceiptInterval?.unsubscribe();
+              this.getTargetTxReceiptInterval?.unsubscribe();
+              this.updateSessionBridgeTx(tx);
+            }
+          });
+        }
+      });
   }
 }

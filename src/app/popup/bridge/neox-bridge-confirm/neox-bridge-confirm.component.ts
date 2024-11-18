@@ -23,7 +23,7 @@ import {
   LedgerStatuses,
   RpcNetwork,
 } from '../../_lib';
-import { EvmWalletJSON } from '@/app/popup/_lib/evm';
+import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
 import { ethers } from 'ethers';
 import { interval } from 'rxjs';
@@ -36,6 +36,7 @@ export type TabType = 'details' | 'data';
   styleUrls: ['../bridge-confirm.scss'],
 })
 export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
+  ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   @Input() bridgeAsset: Asset;
   @Input() bridgeAmount: string;
   @Input() toAddress: string;
@@ -79,21 +80,48 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
   }
 
   private calculateTotalAmount() {
-    this.totalAmount = new BigNumber(this.bridgeAmount)
-      .plus(this.neoXFeeInfo.estimateGas)
-      .toFixed();
-    this.assetState
-      .getAssetRateV2(
-        'NeoX',
-        this.bridgeAsset.asset_id,
-        this.neoXNetwork.chainId
-      )
-      .then((res) => {
-        if (res) {
-          this.rate.fee = res.times(this.neoXFeeInfo.estimateGas).toFixed(2);
-          this.rate.total = res.times(this.totalAmount).toFixed(2);
-        }
-      });
+    if (this.bridgeAsset.asset_id === ETH_SOURCE_ASSET_HASH) {
+      this.totalAmount = new BigNumber(this.bridgeAmount)
+        .plus(this.neoXFeeInfo.estimateGas)
+        .toFixed();
+      this.assetState
+        .getAssetRateV2(
+          'NeoX',
+          this.bridgeAsset.asset_id,
+          this.neoXNetwork.chainId
+        )
+        .then((res) => {
+          if (res) {
+            this.rate.fee = res.times(this.neoXFeeInfo.estimateGas).toFixed(2);
+            this.rate.total = res.times(this.totalAmount).toFixed(2);
+          }
+        });
+    } else {
+      ethers
+        .resolveProperties({
+          gasRate: this.assetState.getAssetRateV2(
+            'NeoX',
+            ETH_SOURCE_ASSET_HASH,
+            this.neoXNetwork.chainId
+          ),
+          bridgeAssetRate: this.assetState.getAssetRateV2(
+            'NeoX',
+            this.bridgeAsset.asset_id,
+            this.neoXNetwork.chainId
+          ),
+        })
+        .then(({ gasRate, bridgeAssetRate }) => {
+          if (gasRate) {
+            this.rate.fee = gasRate
+              .times(this.neoXFeeInfo.estimateGas)
+              .toFixed(2);
+          }
+          if (gasRate && bridgeAssetRate) {
+            const totalAmountValue = bridgeAssetRate.times(this.bridgeAmount);
+            this.rate.total = totalAmountValue.plus(this.rate.fee).toFixed(2);
+          }
+        });
+    }
     this.checkBalance();
   }
 

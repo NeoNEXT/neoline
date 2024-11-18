@@ -25,6 +25,16 @@
       width: 22px;
     }
   }
+  &.bridge {
+    width: 20px;
+    height: 20px;
+    border: none;
+    background: var(--bridge-asset-bg-color);
+    img {
+      width: 12px;
+      height: 12px;
+    }
+  }
   &.claim {
     width: 36px;
     height: 36px;

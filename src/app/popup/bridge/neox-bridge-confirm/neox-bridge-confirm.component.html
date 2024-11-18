@@ -57,7 +57,7 @@
     <li>
       <evm-fee
         [txParams]="txParams"
-        [symbol]="bridgeAsset.symbol"
+        symbol="GAS"
         [customNeoXFeeInfo]="neoXFeeInfo"
         [place]="'dapp'"
         (returnFee)="updateEvmFee($event)"
@@ -68,8 +68,12 @@
     <li>
       <div class="row">
         <span class="label">{{ "TOTAL" | translate | async }}</span>
-        <p class="value">
+        <p class="value" *ngIf="bridgeAsset.asset_id === ETH_SOURCE_ASSET_HASH">
           {{ totalAmount | numberFixed : 8 }} {{ bridgeAsset.symbol }}
+        </p>
+        <p class="value" *ngIf="bridgeAsset.asset_id !== ETH_SOURCE_ASSET_HASH">
+          {{ bridgeAmount | numberFixed : 8 }} {{ bridgeAsset.symbol }} +
+          {{ neoXFeeInfo.estimateGas }} GAS
         </p>
       </div>
       <p class="row tip column">
@@ -90,7 +94,12 @@
     </li>
   </ul>
   <div class="data-content" *ngIf="tabType === 'data'">
-    <p class="title">FUNCTION TYPE: <span class="value">withdrawGas</span></p>
+    <p class="title">
+      FUNCTION TYPE:
+      <span class="value">{{
+        bridgeAsset.symbol === "GAS" ? "withdrawGas" : "withdrawToken"
+      }}</span>
+    </p>
     <p class="title hex">HEX DATA: {{ hexDataLength }} BYTES</p>
     <p class="json-box serialize">{{ txParams.data }}</p>
   </div>

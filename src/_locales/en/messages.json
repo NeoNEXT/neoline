@@ -1335,16 +1335,16 @@
     "message": "Completed"
   },
   "DepositingTip": {
-    "message": "GAS will be deposited into your wallet once the transaction is complete."
+    "message": "{{symbol}} will be deposited into your wallet once the transaction is complete."
   },
   "DepositedTip": {
-    "message": "GAS has bee deposited into your Neo X wallet."
+    "message": "{{symbol}} has bee deposited into your Neo X wallet."
   },
   "WithdrawingTip": {
-    "message": "GAS will be withdrawn into your wallet once the transaction is complete."
+    "message": "{{symbol}} will be withdrawn into your wallet once the transaction is complete."
   },
   "WithdrawnTip": {
-    "message": "GAS has bee withdrawn into your Neo3 wallet."
+    "message": "{{symbol}} has bee withdrawn into your Neo3 wallet."
   },
   "Transferring": {
     "message": "Transferring"
@@ -1366,6 +1366,9 @@
   },
   "useSiteSuggestion": {
     "message": "Use site suggestion"
+  },
+  "useSuggestion": {
+    "message": "Use suggestion"
   },
   "contractInteraction": {
     "message": "Contract interaction"
@@ -1492,5 +1495,14 @@
   },
   "ConnectionRequest": {
     "message": "Connection Request"
+  },
+  "approval": {
+    "message": "Approval"
+  },
+  "approving": {
+    "message": "Approving"
+  },
+  "TokenApproved": {
+    "message": "{{symbol}} Approved"
   }
 }

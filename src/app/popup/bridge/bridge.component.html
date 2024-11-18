@@ -14,7 +14,41 @@
 
 <div class="bridge-content" *ngIf="!showConfirmPage">
   <div class="bridge-header">
-    <div class="asset">{{ bridgeAsset.symbol }}</div>
+    <div
+      class="asset"
+      (mouseenter)="showAssetList()"
+      (mouseleave)="hideAssetList()"
+    >
+      <token-logo
+        [assetId]="bridgeAsset?.asset_id"
+        [chainType]="chainType"
+        [symbol]="bridgeAsset?.symbol"
+        [neoXChainId]="neoXNetwork.chainId"
+        customClass="bridge"
+      ></token-logo>
+      {{ bridgeAsset.symbol }}
+      <img class="arrow" theme src="assets/images/common/arrow.svg" alt="" />
+    </div>
+    <ul
+      *ngIf="isShowAssetList"
+      (mouseenter)="showAssetList()"
+      (mouseleave)="hideAssetList()"
+      class="asset-list"
+    >
+      <li
+        *ngFor="let item of bridgeAssetList"
+        (click)="selectBridgeAsset(item)"
+      >
+        <token-logo
+          [assetId]="item?.asset_id"
+          [chainType]="chainType"
+          [symbol]="item?.symbol"
+          [neoXChainId]="neoXNetwork.chainId"
+          customClass="bridge"
+        ></token-logo>
+        {{ item.symbol }}
+      </li>
+    </ul>
     <bridge-footnote
       *ngIf="currentBridgeNetwork === 'MainNet'"
       [currentBridgeNetwork]="currentBridgeNetwork"
@@ -33,14 +67,13 @@
       </p>
     </div>
     <div class="input-amount">
-      <span class="chain">{{ fromChain }}</span>
+      <span class="chain">{{ chainType === "NeoX" ? "NeoX" : "Neo N3" }}</span>
       <div class="amount">
         <input
           type="text"
           min="0"
           [(ngModel)]="bridgeAmount"
-          (input)="getAssetRate()"
-          oninput="value=value.replace(/^\D*(\d*(?:\.\d{0,8})?).*$/g, '$1')"
+          (input)="checkBridgeAmount($event)"
           placeholder="Enter amount"
         />
         <p class="rate">
@@ -62,7 +95,7 @@
     />
     <div class="label">{{ "ToAddress" | translate | async }}</div>
     <div class="input-amount">
-      <span class="chain">{{ toChain }}</span>
+      <span class="chain">{{ chainType === "Neo3" ? "Neo N3" : "NeoX" }}</span>
       <div
         class="select"
         [ngClass]="{ hasAddress: toAddress }"
@@ -84,7 +117,7 @@
           <img src="assets/images/common/tooltip.svg" alt="" />
         </tooltip>
       </span>
-      <p>{{ bridgeFee }} {{ bridgeAsset.symbol }}</p>
+      <p>{{ bridgeFee }} GAS</p>
     </li>
     <li>
       <span class="label">{{ "ActualReceive" | translate | async }}</span>
@@ -92,70 +125,104 @@
     </li>
   </ul>
   <button
+    *ngIf="!isApproveBtn"
     class="confirm pop-ups"
     [ngClass]="{ disabled: !bridgeAmount || !toAddress }"
     (click)="confirm()"
   >
     {{ (chainType === "Neo3" ? "Deposit" : "Withdraw") | translate | async }}
   </button>
+  <button
+    *ngIf="isApproveBtn"
+    class="confirm pop-ups"
+    [ngClass]="{ disabled: !bridgeAmount || !toAddress }"
+    (click)="showApprove()"
+  >
+    <loading-dot *ngIf="isApproving"></loading-dot>
+    {{ (isApproving ? "approving" : "Approve") | translate | async }}
+    {{ isApproving ? "" : bridgeAsset.symbol }}
+  </button>
 </div>
 
-<div class="tx-history" *ngIf="!showConfirmPage && sessionTx?.txId">
-  <div class="item">
-    <mat-spinner
-      *ngIf="!sessionTx.sourceTxID"
-      strokeWidth="2"
-      diameter="17"
-      (click)="openTxModal()"
-    ></mat-spinner>
-    <span
-      *ngIf="sessionTx.sourceTxID"
-      class="checked-icon"
-      (click)="openTxModal()"
-    ></span>
-    <span class="name">
-      {{
-        (chainType === "Neo3"
-          ? !sessionTx.sourceTxID
-            ? "Depositing"
-            : "Deposited"
-          : !sessionTx.sourceTxID
-          ? "Withdrawing"
-          : "Withdrawn"
-        )
-          | translate
-          | async
-      }}
-    </span>
-    <span *ngIf="sessionTx.sourceTxID" (click)="toViewTx()" class="tx">
-      {{ "ViewTransaction" | translate | async }}
-      <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
-    </span>
-  </div>
-  <div class="item" *ngIf="sessionTx.sourceTxID">
-    <mat-spinner
-      *ngIf="!sessionTx.targetTxID"
-      strokeWidth="2"
-      diameter="17"
-      (click)="openTxModal()"
-    ></mat-spinner>
-    <span
-      *ngIf="sessionTx.targetTxID"
-      class="checked-icon"
-      (click)="openTxModal()"
-    ></span>
-    <span class="name">
-      {{
-        (!sessionTx.targetTxID ? "Transferring" : "Transferred")
-          | translate
-          | async
-      }}
-    </span>
-    <span *ngIf="sessionTx.targetTxID" (click)="toViewTx(false)" class="tx">
-      {{ "ViewTransaction" | translate | async }}
-      <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
-    </span>
-  </div>
+<div class="tx-history" *ngIf="!showConfirmPage && sessionFirstTx?.txId">
+  <ng-container *ngIf="sessionFirstTx.type === 'bridge'">
+    <div class="item">
+      <mat-spinner
+        *ngIf="!sessionTx.sourceTxID"
+        strokeWidth="2"
+        diameter="17"
+        (click)="openTxModal()"
+      ></mat-spinner>
+      <span
+        *ngIf="sessionTx.sourceTxID"
+        class="checked-icon"
+        (click)="openTxModal()"
+      ></span>
+      <span class="name">
+        {{
+          (chainType === "Neo3"
+            ? !sessionTx.sourceTxID
+              ? "Depositing"
+              : "Deposited"
+            : !sessionTx.sourceTxID
+            ? "Withdrawing"
+            : "Withdrawn"
+          )
+            | translate
+            | async
+        }}
+      </span>
+      <span *ngIf="sessionTx.sourceTxID" (click)="toViewTx()" class="tx">
+        {{ "ViewTransaction" | translate | async }}
+        <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
+      </span>
+    </div>
+    <div class="item" *ngIf="sessionTx.sourceTxID">
+      <mat-spinner
+        *ngIf="!sessionTx.targetTxID"
+        strokeWidth="2"
+        diameter="17"
+        (click)="openTxModal()"
+      ></mat-spinner>
+      <span
+        *ngIf="sessionTx.targetTxID"
+        class="checked-icon"
+        (click)="openTxModal()"
+      ></span>
+      <span class="name">
+        {{
+          (!sessionTx.targetTxID ? "Transferring" : "Transferred")
+            | translate
+            | async
+        }}
+      </span>
+      <span *ngIf="sessionTx.targetTxID" (click)="toViewTx(false)" class="tx">
+        {{ "ViewTransaction" | translate | async }}
+        <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
+      </span>
+    </div>
+  </ng-container>
+  <ng-container *ngIf="sessionFirstTx.type === 'approval'">
+    <div class="item">
+      <span class="checked-icon"></span>
+      <span class="name">
+        {{
+          "TokenApproved"
+            | translate : { symbol: sessionFirstTx.asset.symbol }
+            | async
+        }}
+      </span>
+      <span
+        (click)="
+          toViewApproveTx(sessionFirstTx.neoXExplorer, sessionFirstTx.txId)
+        "
+        class="tx"
+      >
+        {{ "ViewTransaction" | translate | async }}
+        <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
+      </span>
+    </div>
+  </ng-container>
 </div>
 
 <neo3-bridge-confirm
@@ -173,7 +240,7 @@
   [invokeArgs]="invokeArgs"
   [signers]="signers"
   [rateCurrency]="rateCurrency"
-  (backAmount)="handleBack($event)"
+  (backAmount)="handleTxhash($event)"
 ></neo3-bridge-confirm>
 
 <neox-bridge-confirm
@@ -187,5 +254,5 @@
   [neoXNetwork]="neoXNetwork"
   [txParams]="txParams"
   [rateCurrency]="rateCurrency"
-  (backAmount)="handleBack($event)"
+  (backAmount)="handleTxhash($event)"
 ></neox-bridge-confirm>

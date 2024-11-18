@@ -10,17 +10,53 @@
     align-items: center;
     justify-content: space-between;
     margin-bottom: 16px;
+    position: relative;
     .asset {
-      display: inline-block;
+      display: inline-flex;
+      gap: 4px;
+      align-items: center;
       border-radius: 24px;
       background: #f5f9f9;
       border: 0.5px solid #0ac7b7;
       padding: 6px 16px;
       color: var(--second-color);
       font-size: 16px;
+      cursor: pointer;
       :host-context([data-theme-style="dark-theme"]) & {
         background: #363940;
         border-color: #11baac;
+      }
+      .arrow {
+        transform: rotate(90deg);
+        margin-left: 3px;
+        transition: transform 0.3s;
+      }
+      &:hover .arrow {
+        transform: rotate(270deg);
+      }
+    }
+    ul.asset-list {
+      position: absolute;
+      left: 0;
+      top: 40px;
+      z-index: 999;
+      width: 112px;
+      border-radius: 4px;
+      padding: 4px 0px;
+      background: var(--body-background-color);
+      box-shadow: var(--popups-box-shadow);
+      li {
+        height: 40px;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        gap: 6px;
+        color: var(--title-color);
+        cursor: pointer;
+        &:hover {
+          background: var(--hover-color);
+          color: var(--theme-color);
+        }
       }
     }
   }
@@ -148,9 +184,14 @@
       }
     }
   }
-  button {
+  button.confirm {
     width: 100%;
     margin-top: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 9px;
+    color: #fff;
   }
 }
 
@@ -170,14 +211,16 @@
       width: 16px;
       height: 16px;
       cursor: pointer;
-      background: url("/assets/images/login/checked.svg") center center no-repeat;
+      background: url("/assets/images/login/checked.svg") center center
+        no-repeat;
       &:hover {
         background-image: url("/assets/images/third-party/auth-selected.svg");
       }
     }
   }
   .name {
-    width: 70px;
+    min-width: 70px;
+    max-width: 100px;
   }
   .tx {
     text-decoration: underline;

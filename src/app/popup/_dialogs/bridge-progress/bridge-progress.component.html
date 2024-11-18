@@ -19,7 +19,7 @@
     <p class="tip">
       {{
         (data.sourceChainType === "Neo3" ? "DepositingTip" : "WithdrawingTip")
-          | translate
+          | translate : { symbol: data.asset.symbol }
           | async
       }}
     </p>
@@ -32,7 +32,7 @@
     <p class="tip">
       {{
         (data.sourceChainType === "Neo3" ? "DepositedTip" : "WithdrawnTip")
-          | translate
+          | translate : { symbol: data.asset.symbol }
           | async
       }}
     </p>

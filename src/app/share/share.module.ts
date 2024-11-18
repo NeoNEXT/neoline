@@ -36,6 +36,7 @@ import { AssetTxPageComponent } from './components/tx-page/asset-tx-page/asset-t
 import { NftTxPageComponent } from './components/tx-page/nft-tx-page/nft-tx-page.component';
 import { NavComponent } from './components/nav/nav.component';
 import { LoadingComponent } from './components/loading/loading.component';
+import { LoadingDotComponent } from './components/loading-dot/loading-dot.component';
 import { PopupNetworkComponent } from './components/network/network.component';
 import { PopupAvatarMenuComponent } from './components/avatar-menu/avatar-menu.component';
 import { CopyComponent } from './components/copy/copy.component';
@@ -52,6 +53,7 @@ const COMPONENTS = [
   PopupNetworkComponent,
   NavComponent,
   LoadingComponent,
+  LoadingDotComponent,
   PopupAvatarMenuComponent,
   CopyComponent,
   EvmFeeComponent,
