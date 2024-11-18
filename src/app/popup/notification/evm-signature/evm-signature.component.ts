@@ -15,6 +15,8 @@ import {
   TypedMessage,
   MessageTypes,
 } from '@metamask/eth-sig-util';
+import { remove0xPrefix } from '@cityofzion/neon-core-neo3/lib/u';
+import * as lodash from 'lodash';
 
 @Component({
   templateUrl: './evm-signature.component.html',
@@ -70,7 +72,8 @@ export class PopupNoticeEvmSignComponent implements OnInit {
             const params = invokeArgsArray[messageID];
             switch (this.signMethod) {
               case ETH_EOA_SIGN_METHODS.PersonalSign:
-                this.challenge = params[0];
+                const text = this.sanitizeString(this.hexToText(params[0]));
+                this.challenge = text;
                 this.signAddress = params[1];
                 break;
               case ETH_EOA_SIGN_METHODS.SignTypedDataV4:
@@ -176,5 +179,39 @@ export class PopupNoticeEvmSignComponent implements OnInit {
           });
       }
     });
+  }
+
+  /**
+   * A helper function that converts hex data to human readable string.
+   *
+   * @param hex - The hex string to convert to string.
+   * @returns A human readable string conversion.
+   */
+  private hexToText(hex: string) {
+    try {
+      const stripped = remove0xPrefix(hex);
+      const buff = Buffer.from(stripped, 'hex');
+      return buff.toString('utf8');
+    } catch (e) {
+      /* istanbul ignore next */
+      return hex;
+    }
+  }
+
+  /**
+   * The method escape RTL character in string
+   *
+   * @param {*} value
+   * @returns {(string|*)} escaped string or original param value
+   */
+  private sanitizeString(value) {
+    if (!value) {
+      return value;
+    }
+    if (!lodash.isString(value)) {
+      return value;
+    }
+    const regex = /\u202E/giu;
+    return value.replace(regex, '\\u202E');
   }
 }

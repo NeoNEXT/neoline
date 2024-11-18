@@ -19,6 +19,8 @@ import { validateTxParams } from './validation-tx-params';
 import { ConnectedWebsitesType, STORAGE_NAME } from '../../common/constants';
 import { ethers } from 'ethers';
 import { validateSigTypedDataV4Params } from './validation-sigv4-params';
+import { u } from '@cityofzion/neon-core-neo3';
+import { add0x } from '../../common/evm/tokensController';
 
 const handlers = [addEthereumChain, switchEthereumChain, watchAsset];
 
@@ -61,6 +63,7 @@ export async function ethereumRPCHandler(
   } else if (method === 'personal_sign') {
     try {
       await validateSignReqParams(params, sender);
+      params[0] = normalizeMessageData(params[0]);
       const localData =
         (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
       const newData = { ...localData, [messageID]: params };
@@ -222,4 +225,24 @@ async function determineEIP1559Compatibility() {
     return undefined;
   }
   return block.baseFeePerGas !== undefined;
+}
+
+const hexRe = /^[0-9A-Fa-f]+$/gu;
+/**
+ * A helper function that converts rawmessageData buffer data to a hex, or just returns the data if
+ * it is already formatted as a hex.
+ *
+ * @param data - The buffer data to convert to a hex.
+ * @returns A hex string conversion of the buffer data.
+ */
+function normalizeMessageData(data: string) {
+  try {
+    const stripped = u.remove0xPrefix(data);
+    if (stripped.match(hexRe)) {
+      return add0x(stripped);
+    }
+  } catch (e) {
+    /* istanbul ignore next */
+  }
+  return u.ab2hexstring(Buffer.from(data, 'utf8'));
 }
