@@ -64,24 +64,21 @@
         (returnFee)="updateEvmFee($event)"
       >
       </evm-fee>
-      <p class="rate">
+      <p class="value-rate">
         {{ rate.fee | numberFixed : 2 }} {{ rate.rateCurrency }}
       </p>
+      <div class="border-line"></div>
     </div>
 
     <div class="total-fee" *ngIf="amount">
-      <p class="row">
-        <span class="label">{{ "TOTAL" | translate | async }}</span>
-        <span>{{ getEvmTotalData() }} {{ neoXNetwork?.symbol }}</span>
+      <p class="label">{{ "TOTAL" | translate | async }}</p>
+      <p class="value-rate">
+        {{ "amount" | translate | async }} +
+        <span class="underline">{{ "GASFEE" | translate | async }}</span>
       </p>
-      <p class="row tip column">
-        <span>
-          {{ "amount" | translate | async }} +
-          {{ "GASFEE" | translate | async }}
-        </span>
-        <span>
-          {{ rate.total | numberFixed : 2 }} {{ rate.rateCurrency }}
-        </span>
+      <p class="value">{{ getEvmTotalData() }} {{ neoXNetwork?.symbol }}</p>
+      <p class="value-rate">
+        {{ rate.total | numberFixed : 2 }} {{ rate.rateCurrency }}
       </p>
     </div>
 

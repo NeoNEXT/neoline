@@ -40,33 +40,31 @@
   </div>
   <ul class="content details" *ngIf="tabType === 'details'">
     <li>
-      <p class="row">
-        <span class="label"
-          >{{ "GASFEE" | translate | async
-          }}<img
-            class="edit"
-            (click)="editFee()"
-            src="assets/images/common/edit.svg"
-        /></span>
-        <span class="value">{{ fee }} GAS</span>
+      <p class="label">
+        {{ "GASFEE" | translate | async
+        }}<img
+          class="edit"
+          (click)="editFee()"
+          src="assets/images/common/edit.svg"
+        />
       </p>
-      <p class="row tip">{{ feeMoney | numberFixed : 2 }} {{ rateCurrency }}</p>
+      <p class="value">{{ fee }} GAS</p>
+      <p class="value-rate">
+        {{ feeMoney | numberFixed : 2 }} {{ rateCurrency }}
+      </p>
+      <div class="border-line"></div>
     </li>
     <li>
-      <p class="row">
-        <span class="label">{{ "SYSTEMFEE" | translate | async }}</span>
-        <span class="value">{{ systemFee | numberFixed }} GAS</span>
-      </p>
-      <p class="row tip">
+      <p class="label">{{ "SYSTEMFEE" | translate | async }}</p>
+      <p class="value">{{ systemFee | numberFixed }} GAS</p>
+      <p class="value-rate">
         {{ systemFeeMoney | numberFixed : 2 }} {{ rateCurrency }}
       </p>
     </li>
     <li>
-      <p class="row">
-        <span class="label">{{ "NETWORKFEE" | translate | async }}</span>
-        <span class="value">{{ networkFee | numberFixed }} GAS</span>
-      </p>
-      <p class="row tip">
+      <p class="label">{{ "NETWORKFEE" | translate | async }}</p>
+      <p class="value">{{ networkFee | numberFixed }} GAS</p>
+      <p class="value-rate">
         {{ networkFeeMoney | numberFixed : 2 }} {{ rateCurrency }}
       </p>
     </li>

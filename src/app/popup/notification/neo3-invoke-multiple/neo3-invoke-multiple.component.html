@@ -28,38 +28,41 @@
   </div>
   <ul class="content details" *ngIf="tabType === 'details'">
     <li>
-      <p class="row">
-        <span class="label"
-          >{{ "GASFEE" | translate | async }}<img
-            class="edit"
-            (click)="editFee()"
-            src="assets/images/common/edit.svg"
-        /></span>
-        <span class="value"
-          >{{ (showFeeEdit ? fee : 0) | numberFixed }} GAS</span
-        >
+      <p class="label">
+        {{ "GASFEE" | translate | async
+        }}<img
+          class="edit"
+          (click)="editFee()"
+          src="assets/images/common/edit.svg"
+        />
       </p>
+      <p class="value">{{ (showFeeEdit ? fee : 0) | numberFixed }} GAS</p>
+      <div class="border-line"></div>
     </li>
     <li>
-      <p class="row">
-        <span class="label">{{ "SYSTEMFEE" | translate | async }}</span>
-        <span class="value">{{ systemFee | numberFixed }} GAS</span>
+      <p class="label">{{ "TOTAL" | translate | async }}</p>
+      <p class="value">
+        {{ totalFee | numberFixed }} GAS
+        <img
+          (click)="expandTotalFee = !expandTotalFee"
+          class="arrow"
+          [ngClass]="{ expand: expandTotalFee }"
+          [class.expand]="expandTotalFee"
+          src="assets/images/common/support-arrow.svg"
+          alt=""
+        />
       </p>
-    </li>
-    <li>
-      <p class="row">
-        <span class="label">{{ "NETWORKFEE" | translate | async }}</span>
-        <span class="value">{{ networkFee | numberFixed }} GAS</span>
-      </p>
-    </li>
-    <li>
-      <p class="row">
-        <span class="label">{{ "TOTAL" | translate | async }}</span>
-        <span class="value">{{ totalFee | numberFixed }} GAS</span>
-      </p>
-      <p class="row tip">
+      <p class="value-rate">
         {{ totalMoney | numberFixed : 2 }} {{ rateCurrency }}
       </p>
+    </li>
+    <li [hidden]="!expandTotalFee">
+      <p class="label">{{ "SYSTEMFEE" | translate | async }}</p>
+      <p class="value">{{ systemFee | numberFixed }} GAS</p>
+    </li>
+    <li [hidden]="!expandTotalFee">
+      <p class="label">{{ "NETWORKFEE" | translate | async }}</p>
+      <p class="value">{{ networkFee | numberFixed }} GAS</p>
     </li>
   </ul>
   <div class="content data" *ngIf="tabType === 'data'">

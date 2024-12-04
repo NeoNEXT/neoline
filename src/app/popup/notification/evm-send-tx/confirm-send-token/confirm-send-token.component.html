@@ -58,9 +58,10 @@
         (returnFee)="updateEvmFee($event)"
       >
       </evm-fee>
-      <p class="rate">
+      <p class="value-rate">
         {{ rate.fee | numberFixed : 2 }} {{ rate.rateCurrency }}
       </p>
+      <div class="border-line"></div>
     </div>
 
     <evm-custom-nonce

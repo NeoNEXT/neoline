@@ -24,16 +24,18 @@
   </div>
   <ul class="content details" *ngIf="tabType === 'details'">
     <li>
-      <p class="row">
-        <span class="label"
-          >{{ "GASFEE" | translate | async }}<img
-            class="edit"
-            (click)="editFee()"
-            src="assets/images/common/edit.svg"
-        /></span>
-        <span class="value">{{ fee }} GAS</span>
+      <p class="label">
+        {{ "GASFEE" | translate | async
+        }}<img
+          class="edit"
+          (click)="editFee()"
+          src="assets/images/common/edit.svg"
+        />
       </p>
-      <p class="row tip">{{ feeMoney | numberFixed : 2 }} {{ rateCurrency }}</p>
+      <p class="value">{{ fee }} GAS</p>
+      <p class="value-rate">
+        {{ feeMoney | numberFixed : 2 }} {{ rateCurrency }}
+      </p>
     </li>
   </ul>
   <div class="content data" *ngIf="tabType === 'data'">

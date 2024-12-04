@@ -66,6 +66,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent
   public canSend = false;
 
   getStatusInterval;
+  expandTotalFee = false;
 
   private accountSub: Unsubscribable;
   public signAddress: string;

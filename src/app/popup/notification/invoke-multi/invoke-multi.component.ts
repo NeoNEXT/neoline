@@ -8,6 +8,7 @@ import {
   TransactionState,
   LedgerService,
   UtilServiceState,
+  SettingState,
 } from '@/app/core';
 import {
   Transaction,
@@ -81,6 +82,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
     private neon: NeonService,
     private dialog: MatDialog,
     private chrome: ChromeService,
+    private settingState: SettingState,
     private assetState: AssetState,
     private txState: TransactionState,
     private ledger: LedgerService,
@@ -102,6 +104,9 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    this.settingState.rateCurrencySub.subscribe((res) => {
+      this.rateCurrency = res;
+    });
     this.aRoute.queryParams.subscribe(async (params: any) => {
       this.pramsData = JSON.parse(JSON.stringify(params));
       this.messageID = params.messageID;

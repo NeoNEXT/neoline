@@ -379,9 +379,11 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
       assetId: this.assetId,
       amount: this.amount,
     });
-    this.totalMoney = this.global
-      .mathAdd(Number(this.feeMoney), Number(this.money))
-      .toString();
+    if (this.feeMoney && this.money) {
+      this.totalMoney = this.global
+        .mathAdd(Number(this.feeMoney), Number(this.money))
+        .toString();
+    }
   }
 
   public exit() {
@@ -441,9 +443,11 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
               })
               .then((res) => {
                 this.feeMoney = res;
-                this.totalMoney = this.global
-                  .mathAdd(Number(this.feeMoney), Number(this.money))
-                  .toString();
+                if (this.feeMoney && this.money) {
+                  this.totalMoney = this.global
+                    .mathAdd(Number(this.feeMoney), Number(this.money))
+                    .toString();
+                }
               });
           }
           this.submit();

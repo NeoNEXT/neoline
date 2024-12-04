@@ -41,31 +41,29 @@
   </div>
   <ul class="content details" *ngIf="tabType === 'details'">
     <li>
-      <p class="row">
-        <span class="label"
-          >{{ "GASFEE" | translate | async
-          }}<img
-            class="edit"
-            (click)="editFee()"
-            src="assets/images/common/edit.svg"
-        /></span>
-        <span class="value">{{ fee }} GAS</span>
+      <p class="label">
+        {{ "GASFEE" | translate | async
+        }}<img
+          class="edit"
+          (click)="editFee()"
+          src="assets/images/common/edit.svg"
+        />
       </p>
-      <p class="row tip">{{ feeMoney | numberFixed : 2 }} {{ rateCurrency }}</p>
+      <p class="value">{{ fee }} GAS</p>
+      <p class="value-rate">
+        {{ feeMoney | numberFixed : 2 }} {{ rateCurrency }}
+      </p>
+      <div class="border-line"></div>
     </li>
     <li>
-      <p class="row">
-        <span class="label">{{ "TOTAL" | translate | async }}</span>
-        <span class="value">{{ amount }} {{ symbol }} + {{ fee }} GAS</span>
+      <p class="label">{{ "TOTAL" | translate | async }}</p>
+      <p class="value-rate">
+        {{ "amount" | translate | async }} +
+        <span class="underline">{{ "GASFEE" | translate | async }}</span>
       </p>
-      <p class="row tip column">
-        <span class="label"
-          >{{ "amount" | translate | async }} +
-          {{ "GASFEE" | translate | async }}</span
-        >
-        <span class="value">
-          {{ totalMoney | numberFixed : 2 }} {{ rateCurrency }}
-        </span>
+      <p class="value">{{ amount }} {{ symbol }} + {{ fee }} GAS</p>
+      <p class="value-rate">
+        {{ (totalMoney ?? 0) | numberFixed : 2 }} {{ rateCurrency }}
       </p>
     </li>
   </ul>

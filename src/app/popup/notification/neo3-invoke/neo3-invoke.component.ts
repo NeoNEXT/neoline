@@ -67,6 +67,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
   public canSend = false;
 
   getStatusInterval;
+  expandTotalFee = false;
 
   private accountSub: Unsubscribable;
   public signAddress: string;
