@@ -23,30 +23,30 @@
 </div>
 
 <div *ngIf="place === 'confirm' || place === 'dapp'" class="create-confirm-fee">
-  <span class="label">
+  <p class="label">
     {{ "EstimatedFee" | translate | async
     }}<img
       class="edit"
       (click)="editEvmFee()"
       src="assets/images/common/edit.svg"
     />
-  </span>
-  <span *ngIf="isUseSiteFee" class="fee">
+  </p>
+  <p *ngIf="isUseSiteFee" class="fee">
     {{ siteNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
     {{ symbol }}
-  </span>
+  </p>
   <ng-container *ngIf="!isUseSiteFee">
-    <span *ngIf="customNeoXFeeInfo?.custom" class="fee">
+    <p *ngIf="customNeoXFeeInfo?.custom" class="fee">
       {{ customNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
       {{ symbol }}
-    </span>
-    <span
+    </p>
+    <p
       *ngIf="!customNeoXFeeInfo?.custom"
       class="fee"
       [ngClass]="{ animate: showEstimateFeeAnimate }"
     >
       {{ sourceNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
       {{ symbol }}
-    </span>
+    </p>
   </ng-container>
 </div>

@@ -70,57 +70,59 @@
   </div>
   <ul class="details-content" *ngIf="tabType === 'details'">
     <li *ngIf="data.chainType !== 'NeoX'">
-      <p class="row">
-        <span class="label"
-          >{{
-            (data?.chainType === "Neo3" ? "PRIORITYFEE" : "GASFEE")
-              | translate
-              | async
-          }}<img
-            class="edit"
-            (click)="editFee()"
-            src="assets/images/common/edit.svg"
-        /></span>
-        <span class="value">{{ data?.fee | numberFixed }} GAS</span>
+      <p class="label">
+        {{
+          (data?.chainType === "Neo3" ? "PRIORITYFEE" : "GASFEE")
+            | translate
+            | async
+        }}<img
+          class="edit"
+          (click)="editFee()"
+          src="assets/images/common/edit.svg"
+        />
       </p>
-      <p class="row tip">{{ rate.fee | numberFixed : 2 }} {{ rateCurrency }}</p>
+      <p class="value">{{ data?.fee | numberFixed }} GAS</p>
+      <p class="value-rate">
+        {{ rate.fee | numberFixed : 2 }} {{ rateCurrency }}
+      </p>
+      <div class="border-line"></div>
     </li>
 
     <ng-container *ngIf="data.chainType === 'Neo3'">
       <li>
-        <p class="row">
-          <span class="label">{{ "SYSTEMFEE" | translate | async }}</span>
-          <span class="value">{{ systemFee | numberFixed }} GAS</span>
+        <p class="label">{{ "TOTAL" | translate | async }}</p>
+        <p class="value-rate">
+          {{ "amount" | translate | async }} +
+          <span class="underline">{{ "GASFEE" | translate | async }}</span>
         </p>
-        <p class="row tip">
+        <p class="value dropdown">
+          {{ data?.amount | numberFixed }} {{ dataJson?.symbol }} +
+          {{ totalFee | numberFixed }} GAS
+          <img
+            (click)="expandTotalFee = !expandTotalFee"
+            class="arrow"
+            [ngClass]="{ expand: expandTotalFee }"
+            [class.expand]="expandTotalFee"
+            src="assets/images/common/support-arrow.svg"
+            alt=""
+          />
+        </p>
+        <p class="value-rate">
+          {{ rate.total | numberFixed : 2 }} {{ rateCurrency }}
+        </p>
+      </li>
+      <li [hidden]="!expandTotalFee">
+        <p class="label">{{ "SYSTEMFEE" | translate | async }}</p>
+        <p class="value">{{ systemFee | numberFixed }} GAS</p>
+        <p class="value-rate">
           {{ rate.systemFee | numberFixed : 2 }} {{ rateCurrency }}
         </p>
       </li>
-      <li>
-        <p class="row">
-          <span class="label">{{ "NETWORKFEE" | translate | async }}</span>
-          <span class="value">{{ networkFee | numberFixed }} GAS</span>
-        </p>
-        <p class="row tip">
+      <li [hidden]="!expandTotalFee">
+        <p class="label">{{ "NETWORKFEE" | translate | async }}</p>
+        <p class="value">{{ networkFee | numberFixed }} GAS</p>
+        <p class="value-rate">
           {{ rate.networkFee | numberFixed : 2 }} {{ rateCurrency }}
-        </p>
-      </li>
-      <li>
-        <p class="row">
-          <span class="label">{{ "TOTAL" | translate | async }}</span>
-          <span class="value"
-            >{{ data?.amount | numberFixed }} {{ dataJson?.symbol }} +
-            {{ totalFee | numberFixed }} GAS</span
-          >
-        </p>
-        <p class="row tip column">
-          <span>
-            {{ "amount" | translate | async }} +
-            {{ "GASFEE" | translate | async }}
-          </span>
-          <span class="value">
-            {{ rate.total | numberFixed : 2 }} {{ rateCurrency }}
-          </span>
         </p>
       </li>
     </ng-container>
@@ -152,30 +154,27 @@
           (returnFee)="updateEvmFee($event)"
         >
         </evm-fee>
-        <p class="row tip">
+        <p class="value-rate">
           {{ rate.fee | numberFixed : 2 }} {{ rateCurrency }}
         </p>
+        <div class="border-line"></div>
       </li>
       <li>
-        <div class="row">
-          <span class="label">{{ "TOTAL" | translate | async }}</span>
-          <p class="value" *ngIf="dataJson.asset !== ETH_SOURCE_ASSET_HASH">
-            {{ data?.amount | numberFixed : 8 }} {{ dataJson?.symbol }} + <br />
-            {{ data.neoXFeeInfo.estimateGas | numberFixed : 8 }}
-            {{ data.network.symbol }}
-          </p>
-          <p class="value" *ngIf="dataJson.asset === ETH_SOURCE_ASSET_HASH">
-            {{ getEvmTotalData() }} {{ dataJson?.symbol }}
-          </p>
-        </div>
-        <p class="row tip column">
-          <span>
-            {{ "amount" | translate | async }} +
-            {{ "GASFEE" | translate | async }}
-          </span>
-          <span class="value">
-            {{ rate.total | numberFixed : 2 }} {{ rateCurrency }}
-          </span>
+        <p class="label">{{ "TOTAL" | translate | async }}</p>
+        <p class="value-rate">
+          {{ "amount" | translate | async }} +
+          <span class="underline">{{ "GASFEE" | translate | async }}</span>
+        </p>
+        <p class="value" *ngIf="dataJson.asset !== ETH_SOURCE_ASSET_HASH">
+          {{ data?.amount | numberFixed : 8 }} {{ dataJson?.symbol }} +
+          {{ data.neoXFeeInfo.estimateGas | numberFixed : 8 }}
+          {{ data.network.symbol }}
+        </p>
+        <p class="value" *ngIf="dataJson.asset === ETH_SOURCE_ASSET_HASH">
+          {{ getEvmTotalData() }} {{ dataJson?.symbol }}
+        </p>
+        <p class="value-rate">
+          {{ rate.total | numberFixed : 2 }} {{ rateCurrency }}
         </p>
       </li>
       <li>

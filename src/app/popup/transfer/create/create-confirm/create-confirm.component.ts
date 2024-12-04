@@ -61,6 +61,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
   tabType: TabType = 'details';
   dataJson: NeoDataJsonProp;
   txSerialize: string;
+  expandTotalFee = false;
 
   loading = false;
   loadingMsg: string;

@@ -5,6 +5,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
+  border-bottom: 1px solid var(--line-color);
   span {
     display: inline-block;
     height: 44px;

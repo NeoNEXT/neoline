@@ -29,17 +29,25 @@
 }
 
 .create-confirm-fee {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
   .label {
+    font-size: 13px;
+    font-weight: normal;
+    line-height: 17px;
     color: var(--sub-title-color);
     img.edit {
       margin-left: 12px;
     }
   }
-  .fee.animate {
-    animation: showFeeAnimation 1.5s ease-in-out alternate;
+  .fee {
+    margin-top: 8px;
+    font-family: NeverMind;
+    font-size: 15px;
+    font-weight: 500;
+    line-height: 19px;
+    color: var(--second-color);
+    &.animate {
+      animation: showFeeAnimation 1.5s ease-in-out alternate;
+    }
   }
 }
 

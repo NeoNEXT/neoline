@@ -67,6 +67,7 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
   loading = false;
   loadingMsg: string;
   getStatusInterval;
+  expandTotalFee = false;
 
   constructor(
     private dialog: MatDialog,
