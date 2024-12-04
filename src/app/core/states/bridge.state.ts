@@ -30,7 +30,7 @@ export class BridgeState {
     [BridgeNetwork.TestNet]: {
       n3BridgeContract: '0x2ba94444d43c9a084a5660982a9f95f43f07422e',
       bridgeTxHostOnNeo3BridgeNeoX:
-        'https://test.bridgeapi.banelabs.org/deposits',
+        'https://xt4scan.ngd.network:8877/api/v1/transactions/deposits',
       neoXBridgeContract: '0x1212000000000000000000000000000000000004',
       bridgeTxHostOnNeoXBridgeNeo3: 'https://testmagnet.ngd.network/',
     },
