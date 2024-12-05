@@ -57,9 +57,8 @@
     </li>
     <li>
       <p class="label">{{ "TOTAL" | translate | async }}</p>
-      <p class="value-rate">
-        {{ "amount" | translate | async }} +
-        <span class="underline">{{ "GASFEE" | translate | async }}</span>
+      <p class="label bold">
+        {{ "amount" | translate | async }} + {{ "GASFEE" | translate | async }}
       </p>
       <p class="value">{{ amount }} {{ symbol }} + {{ fee }} GAS</p>
       <p class="value-rate">

@@ -59,9 +59,11 @@
     </li>
     <li>
       <p class="label">{{ "TOTAL" | translate | async }}</p>
-      <p class="value-rate">
+      <p class="label bold">
         {{ "amount" | translate | async }} +
-        <span class="underline">{{ "GASFEE" | translate | async }}</span>
+        <span (click)="expandTotalFee = !expandTotalFee" class="underline">{{
+          "GASFEE" | translate | async
+        }}</span>
       </p>
       <p class="value dropdown" *ngIf="bridgeAsset.asset_id === GAS3_CONTRACT">
         {{ totalFee | numberFixed }} GAS

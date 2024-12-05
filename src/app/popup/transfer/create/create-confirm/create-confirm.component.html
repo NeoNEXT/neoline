@@ -91,9 +91,11 @@
     <ng-container *ngIf="data.chainType === 'Neo3'">
       <li>
         <p class="label">{{ "TOTAL" | translate | async }}</p>
-        <p class="value-rate">
+        <p class="label bold">
           {{ "amount" | translate | async }} +
-          <span class="underline">{{ "GASFEE" | translate | async }}</span>
+          <span (click)="expandTotalFee = !expandTotalFee" class="underline">{{
+            "GASFEE" | translate | async
+          }}</span>
         </p>
         <p class="value dropdown">
           {{ data?.amount | numberFixed }} {{ dataJson?.symbol }} +
@@ -161,9 +163,9 @@
       </li>
       <li>
         <p class="label">{{ "TOTAL" | translate | async }}</p>
-        <p class="value-rate">
+        <p class="label bold">
           {{ "amount" | translate | async }} +
-          <span class="underline">{{ "GASFEE" | translate | async }}</span>
+          {{ "GASFEE" | translate | async }}
         </p>
         <p class="value" *ngIf="dataJson.asset !== ETH_SOURCE_ASSET_HASH">
           {{ data?.amount | numberFixed : 8 }} {{ dataJson?.symbol }} +

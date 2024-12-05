@@ -58,9 +58,8 @@
 
     <div class="total-fee" *ngIf="amount">
       <p class="label">{{ "TOTAL" | translate | async }}</p>
-      <p class="value-rate">
-        {{ "amount" | translate | async }} +
-        <span class="underline">{{ "GASFEE" | translate | async }}</span>
+      <p class="label bold">
+        {{ "amount" | translate | async }} + {{ "GASFEE" | translate | async }}
       </p>
       <p class="value">{{ getEvmTotalData() }} {{ neoXNetwork?.symbol }}</p>
       <p class="value-rate">
