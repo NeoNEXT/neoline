@@ -160,7 +160,7 @@
       ></span>
       <span class="name">
         {{
-          (chainType === "Neo3"
+          (sessionTx.sourceChainType === "Neo3"
             ? !sessionTx.sourceTxID
               ? "Depositing"
               : "Deposited"
