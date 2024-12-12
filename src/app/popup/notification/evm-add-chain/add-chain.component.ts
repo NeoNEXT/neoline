@@ -1,12 +1,12 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ChromeService } from '@/app/core';
 import { ActivatedRoute } from '@angular/router';
-import { ERRORS } from '@/models/dapi';
 import { requestTargetEVM } from '@/models/evm';
 import { ADD_NEOX_NETWORK, RpcNetwork } from '../../_lib';
 import { Unsubscribable } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
+import { ethErrors } from 'eth-rpc-errors';
 declare var chrome: any;
 
 @Component({
@@ -50,7 +50,7 @@ export class PopupEvmAddChainComponent implements OnInit, OnDestroy {
   ngOnInit() {
     window.onbeforeunload = () => {
       this.chromeService.windowCallback({
-        error: ERRORS.CANCELLED,
+        error: ethErrors.provider.userRejectedRequest().serialize(),
         ID: this.messageID,
         return: requestTargetEVM.request,
       });
@@ -64,7 +64,7 @@ export class PopupEvmAddChainComponent implements OnInit, OnDestroy {
   cancel() {
     this.chromeService.windowCallback(
       {
-        error: ERRORS.CANCELLED,
+        error: ethErrors.provider.userRejectedRequest().serialize(),
         return: requestTargetEVM.request,
         ID: this.messageID,
       },

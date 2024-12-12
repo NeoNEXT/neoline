@@ -1,7 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ChromeService, LedgerService, GlobalService } from '@/app/core';
-import { ERRORS } from '@/models/dapi';
 import { LedgerStatuses, STORAGE_NAME } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -17,6 +16,7 @@ import {
 } from '@metamask/eth-sig-util';
 import { remove0xPrefix } from '@cityofzion/neon-core-neo3/lib/u';
 import * as lodash from 'lodash';
+import { ethErrors } from 'eth-rpc-errors';
 
 @Component({
   templateUrl: './evm-signature.component.html',
@@ -92,7 +92,7 @@ export class PopupNoticeEvmSignComponent implements OnInit {
   public cancel() {
     this.chrome.windowCallback(
       {
-        error: ERRORS.CANCELLED,
+        error: ethErrors.provider.userRejectedRequest().serialize(),
         return: requestTargetEVM.request,
         ID: this.messageID,
       },

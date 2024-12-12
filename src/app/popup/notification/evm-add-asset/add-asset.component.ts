@@ -1,7 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { AssetEVMState, ChromeService } from '@/app/core';
 import { ActivatedRoute } from '@angular/router';
-import { ERRORS } from '@/models/dapi';
 import { requestTargetEVM } from '@/models/evm';
 import { RpcNetwork } from '../../_lib';
 import { Unsubscribable } from 'rxjs';
@@ -10,6 +9,7 @@ import { AppState } from '@/app/reduers';
 import { Asset } from '@/models/models';
 import { EvmWalletJSON } from '../../_lib/evm';
 import BigNumber from 'bignumber.js';
+import { ethErrors } from 'eth-rpc-errors';
 
 @Component({
   templateUrl: './add-asset.component.html',
@@ -78,7 +78,7 @@ export class PopupEvmAddAssetComponent implements OnInit, OnDestroy {
   ngOnInit() {
     window.onbeforeunload = () => {
       this.chromeService.windowCallback({
-        error: ERRORS.CANCELLED,
+        error: ethErrors.provider.userRejectedRequest().serialize(),
         ID: this.messageID,
         return: requestTargetEVM.request,
       });
@@ -92,7 +92,7 @@ export class PopupEvmAddAssetComponent implements OnInit, OnDestroy {
   cancel() {
     this.chromeService.windowCallback(
       {
-        error: ERRORS.CANCELLED,
+        error: ethErrors.provider.userRejectedRequest().serialize(),
         return: requestTargetEVM.request,
         ID: this.messageID,
       },

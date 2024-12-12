@@ -20,7 +20,6 @@ import {
 import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '../../_lib/evm';
 import BigNumber from 'bignumber.js';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
-import { ERRORS } from '@/models/dapi';
 import { requestTargetEVM } from '@/models/evm';
 import { Unsubscribable, interval } from 'rxjs';
 import { Store } from '@ngrx/store';
@@ -29,6 +28,7 @@ import { ethers } from 'ethers';
 import { PopupTransferSuccessDialogComponent } from '../../_dialogs';
 import { MatDialog } from '@angular/material/dialog';
 import { Transaction } from '@/models/models';
+import { ethErrors } from 'eth-rpc-errors';
 
 export interface RateType {
   fee: string;
@@ -166,7 +166,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   exit() {
     this.chrome.windowCallback(
       {
-        error: ERRORS.CANCELLED,
+        error: ethErrors.provider.userRejectedRequest().serialize(),
         return: requestTargetEVM.request,
         ID: this.messageID,
       },
