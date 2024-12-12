@@ -128,6 +128,22 @@ export class PopupNoticeDeployComponent implements OnInit, OnDestroy {
   }
 
   private resolveSend(transaction: Transaction) {
+    if (this.broadcastOverride === true) {
+      this.loading = false;
+      this.loadingMsg = '';
+      this.chrome.windowCallback(
+        {
+          data: {
+            txid: this.tx.hash,
+            signedTx: this.tx.serialize(true),
+          },
+          return: requestTarget.Deploy,
+          ID: this.messageID,
+        },
+        true
+      );
+      return;
+    }
     return this.txState
       .rpcSendRawTransaction(transaction.serialize(true))
       .then(async (res) => {
@@ -297,23 +313,7 @@ export class PopupNoticeDeployComponent implements OnInit, OnDestroy {
   }
 
   public confirm() {
-    if (this.broadcastOverride === true) {
-      this.loading = false;
-      this.loadingMsg = '';
-      this.chrome.windowCallback(
-        {
-          data: {
-            txid: this.tx.hash,
-            signedTx: this.tx.serialize(true),
-          },
-          return: requestTarget.Deploy,
-          ID: this.messageID,
-        },
-        true
-      );
-    } else {
-      this.getSignTx(this.tx);
-    }
+    this.getSignTx(this.tx);
   }
   public editFee() {
     this.dialog

@@ -276,6 +276,22 @@ export class PopupNoticeInvokeComponent implements OnInit, OnDestroy {
   }
 
   private async resolveSend(transaction: Transaction) {
+    if (this.broadcastOverride === true) {
+      this.loading = false;
+      this.loadingMsg = '';
+      this.chrome.windowCallback(
+        {
+          data: {
+            txid: this.tx.hash,
+            signedTx: this.tx.serialize(true),
+          },
+          return: requestTarget.Invoke,
+          ID: this.messageID,
+        },
+        true
+      );
+      return;
+    }
     this.loading = true;
     this.loadingMsg = 'Wait';
     let serialize = '';
@@ -665,23 +681,7 @@ export class PopupNoticeInvokeComponent implements OnInit, OnDestroy {
   }
 
   public confirm() {
-    if (this.broadcastOverride === true) {
-      this.loading = false;
-      this.loadingMsg = '';
-      this.chrome.windowCallback(
-        {
-          data: {
-            txid: this.tx.hash,
-            signedTx: this.tx.serialize(true),
-          },
-          return: requestTarget.Invoke,
-          ID: this.messageID,
-        },
-        true
-      );
-    } else {
-      this.getSignTx(this.tx);
-    }
+    this.getSignTx(this.tx);
   }
   public editFee() {
     this.dialog

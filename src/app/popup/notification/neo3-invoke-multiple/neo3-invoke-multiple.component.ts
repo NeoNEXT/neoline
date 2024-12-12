@@ -180,6 +180,22 @@ export class PopupNoticeNeo3InvokeMultipleComponent
   }
 
   private async resolveSend() {
+    if (this.broadcastOverride) {
+      this.loading = false;
+      this.loadingMsg = '';
+      this.chrome.windowCallback(
+        {
+          data: {
+            txid: this.tx.hash(),
+            signedTx: this.tx.serialize(true),
+          },
+          return: requestTargetN3.InvokeMultiple,
+          ID: this.messageID,
+        },
+        true
+      );
+      return;
+    }
     this.loading = true;
     this.loadingMsg = 'Wait';
 
@@ -241,24 +257,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent
       this.signTx();
       return;
     }
-    if (this.broadcastOverride) {
-      this.loading = false;
-      this.loadingMsg = '';
-      this.chrome.windowCallback(
-        {
-          data: {
-            txid: this.tx.hash(),
-            signedTx: this.tx.serialize(true),
-          },
-          return: requestTargetN3.InvokeMultiple,
-          ID: this.messageID,
-        },
-        true
-      );
-      this.signTx();
-    } else {
-      this.getSignTx();
-    }
+    this.getSignTx();
     delete this.invokeArgsArray[this.messageID];
     this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, this.invokeArgsArray);
   }

@@ -263,6 +263,22 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
   }
 
   private async resolveSend(transaction: Transaction) {
+    if (this.broadcastOverride) {
+      this.loading = false;
+      this.loadingMsg = '';
+      this.chrome.windowCallback(
+        {
+          data: {
+            txid: this.tx.hash,
+            signedTx: this.tx.serialize(true),
+          },
+          return: requestTarget.InvokeMulti,
+          ID: this.messageID,
+        },
+        true
+      );
+      return;
+    }
     this.loading = true;
     this.loadingMsg = 'Wait';
     new Promise((myResolve) => {
@@ -727,23 +743,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
   }
 
   public confirm() {
-    if (this.broadcastOverride) {
-      this.loading = false;
-      this.loadingMsg = '';
-      this.chrome.windowCallback(
-        {
-          data: {
-            txid: this.tx.hash,
-            signedTx: this.tx.serialize(true),
-          },
-          return: requestTarget.InvokeMulti,
-          ID: this.messageID,
-        },
-        true
-      );
-    } else {
-      this.getSignTx(this.tx);
-    }
+    this.getSignTx(this.tx);
   }
   public editFee() {
     this.dialog

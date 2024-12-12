@@ -182,6 +182,22 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
   }
 
   private async resolveSend() {
+    if (this.broadcastOverride) {
+      this.loading = false;
+      this.loadingMsg = '';
+      this.chrome.windowCallback(
+        {
+          data: {
+            txid: this.tx.hash(),
+            signedTx: this.tx.serialize(true),
+          },
+          return: requestTargetN3.Invoke,
+          ID: this.messageID,
+        },
+        true
+      );
+      return;
+    }
     this.loading = true;
     this.loadingMsg = 'Wait';
     return this.neo3Invoke
@@ -231,24 +247,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
       this.signTx();
       return;
     }
-    if (this.broadcastOverride) {
-      this.loading = false;
-      this.loadingMsg = '';
-      this.chrome.windowCallback(
-        {
-          data: {
-            txid: this.tx.hash(),
-            signedTx: this.tx.serialize(true),
-          },
-          return: requestTargetN3.Invoke,
-          ID: this.messageID,
-        },
-        true
-      );
-      this.signTx();
-    } else {
-      this.getSignTx();
-    }
+    this.getSignTx();
     delete this.invokeArgsArray[this.messageID];
     this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, this.invokeArgsArray);
   }

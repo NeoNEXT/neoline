@@ -238,6 +238,22 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
   }
 
   private resolveSend(tx: Transaction3) {
+    if (this.broadcastOverride) {
+      this.loading = false;
+      this.loadingMsg = '';
+      this.chrome.windowCallback(
+        {
+          data: {
+            txid: this.tx.hash,
+            signedTx: this.tx.serialize(true),
+          },
+          return: requestTargetN3.Send,
+          ID: this.messageID,
+        },
+        true
+      );
+      return;
+    }
     this.loadingMsg = 'Wait';
     this.loading = true;
     return this.rpcClient
@@ -352,23 +368,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
     if (this.creating) {
       return;
     }
-    if (this.broadcastOverride) {
-      this.loading = false;
-      this.loadingMsg = '';
-      this.chrome.windowCallback(
-        {
-          data: {
-            txid: this.tx.hash,
-            signedTx: this.tx.serialize(true),
-          },
-          return: requestTargetN3.Send,
-          ID: this.messageID,
-        },
-        true
-      );
-    } else {
-      this.getSignTx(this.tx);
-    }
+    this.getSignTx(this.tx);
   }
   public editFee() {
     this.dialog
