@@ -27,14 +27,12 @@ declare var chrome: any;
  * Follow-up to add a dapi for the introduction of third-party pages to hide the realization of message sending and receiving.
  * You can also dynamically inject scripts into third-party pages. How to use ts for scripts injected in this way is to be considered.
  */
-const dapiEVM = window.document.createElement('script');
-
-setTimeout(() => {
-  dapiEVM.setAttribute('type', 'text/javascript');
-  dapiEVM.async = true;
-  dapiEVM.src = chrome.runtime.getURL('dapiEVM.js');
-  dapiEVM.onload = () => {
-    dapiEVM.parentNode.removeChild(dapiEVM);
+function injectScript(filePath) {
+  const script = document.createElement('script');
+  script.src = chrome.runtime.getURL(filePath);
+  script.type = 'text/javascript';
+  script.onload = () => {
+    script.remove();
     window.postMessage(
       {
         from: 'NeoLineEVM',
@@ -44,16 +42,12 @@ setTimeout(() => {
     );
     getEvmChainId();
   };
-}, 0);
-
-window.addEventListener('load', () => {
-  if (
-    window.document.body != null &&
-    !ExcludeWebsite.find((item) => location.origin.includes(item))
-  ) {
-    window.document.body.appendChild(dapiEVM);
+  if (!ExcludeWebsite.find((item) => location.origin.includes(item))) {
+    (document.head || document.documentElement).appendChild(script);
   }
-});
+}
+
+injectScript('dapiEVM.js');
 
 // neoX dapi method
 window.addEventListener(
