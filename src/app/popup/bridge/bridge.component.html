@@ -95,7 +95,7 @@
     />
     <div class="label">{{ "ToAddress" | translate | async }}</div>
     <div class="input-amount">
-      <span class="chain">{{ chainType === "Neo3" ? "Neo N3" : "NeoX" }}</span>
+      <span class="chain">{{ chainType === "NeoX" ? "Neo N3" : "NeoX" }}</span>
       <div
         class="select"
         [ngClass]="{ hasAddress: toAddress }"
