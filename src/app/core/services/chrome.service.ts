@@ -590,20 +590,20 @@ export class ChromeService {
           const hostname = new URL(tab.url).hostname;
           if (
             deleteChainType === 'NeoX' &&
-            allWebsites[hostname].connectedAddress[deleteAddress]
+            allWebsites[hostname]?.connectedAddress[deleteAddress]
           ) {
             isDeleteNeoXConnectedAddress = true;
           }
           if (
             currentAddress &&
             ethers.isAddress(currentAddress) &&
-            allWebsites[hostname].connectedAddress[currentAddress]
+            allWebsites[hostname]?.connectedAddress[currentAddress]
           ) {
             currentIsNeoXConnectedAddress = true;
           }
           // remove connect info of deleted address
           Object.keys(allWebsites).forEach((hostname) => {
-            if (allWebsites[hostname].connectedAddress[deleteAddress]) {
+            if (allWebsites[hostname]?.connectedAddress[deleteAddress]) {
               delete allWebsites[hostname].connectedAddress[deleteAddress];
             }
           });
@@ -612,7 +612,7 @@ export class ChromeService {
           // update evm connected accounts
           if (isDeleteNeoXConnectedAddress || currentIsNeoXConnectedAddress) {
             const connectedAddress = [];
-            Object.keys(allWebsites[hostname].connectedAddress).forEach(
+            Object.keys(allWebsites[hostname]?.connectedAddress || {}).forEach(
               (address) => {
                 const item = allWebsites[hostname].connectedAddress[address];
                 if (item.chain === 'NeoX') {
