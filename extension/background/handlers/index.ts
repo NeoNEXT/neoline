@@ -202,7 +202,7 @@ function getAccounts(sender: { origin: string }): Promise<string[]> {
     getStorage(
       STORAGE_NAME.connectedWebsites,
       (allWebsites: ConnectedWebsitesType) => {
-        Object.keys(allWebsites[hostname].connectedAddress).forEach(
+        Object.keys(allWebsites[hostname]?.connectedAddress || {}).forEach(
           (address) => {
             const item = allWebsites[hostname].connectedAddress[address];
             if (item.chain === 'NeoX') {

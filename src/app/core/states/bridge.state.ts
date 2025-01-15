@@ -7,6 +7,7 @@ import {
   BridgeTransactionOnBridge,
   ETH_SOURCE_ASSET_HASH,
   abiERC20,
+  GAS3_CONTRACT,
 } from '@/app/popup/_lib';
 import { AppState } from '@/app/reduers';
 import { Asset } from '@/models/models';
@@ -17,6 +18,7 @@ import { map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import { UtilServiceState } from '../util/util.service';
 import BigNumber from 'bignumber.js';
+import { sc, wallet } from '@cityofzion/neon-core-neo3/lib';
 
 @Injectable()
 export class BridgeState {
@@ -217,4 +219,100 @@ export class BridgeState {
       });
   }
   //#endregion
+
+  getNeoN3TxParams({
+    bridgeAsset,
+    bridgeAmount,
+    fromAddress,
+    toAddress,
+    bridgeFee,
+    currentBridgeNetwork,
+  }: {
+    bridgeAsset: Asset;
+    bridgeAmount: string;
+    fromAddress: string;
+    toAddress: string;
+    bridgeFee: string;
+    currentBridgeNetwork: BridgeNetwork;
+  }) {
+    const tAmount = new BigNumber(bridgeAmount)
+      .shiftedBy(bridgeAsset.decimals)
+      .toFixed(0, 1);
+    const tBridgeFee = new BigNumber(bridgeFee).shiftedBy(8).toFixed(0, 1);
+
+    const invokeArgs = [
+      {
+        operation: 'depositGas',
+        scriptHash: this.BridgeParams[currentBridgeNetwork].n3BridgeContract,
+        args: [
+          sc.ContractParam.hash160(fromAddress),
+          sc.ContractParam.fromJson({
+            type: 'Hash160',
+            value: toAddress,
+          }),
+          sc.ContractParam.integer(tAmount),
+          sc.ContractParam.integer(tBridgeFee),
+        ],
+      },
+    ];
+    const signers = [
+      {
+        account: wallet.getScriptHashFromAddress(fromAddress),
+        allowedContracts: [
+          this.BridgeParams[currentBridgeNetwork].n3BridgeContract,
+          GAS3_CONTRACT,
+        ],
+        allowedGroups: [],
+        scopes: 16,
+      },
+    ];
+
+    if (bridgeAsset.asset_id !== GAS3_CONTRACT) {
+      invokeArgs[0].operation = 'depositToken';
+      invokeArgs[0].args.unshift(
+        sc.ContractParam.hash160(bridgeAsset.asset_id)
+      );
+      signers[0].allowedContracts.push(bridgeAsset.asset_id);
+    }
+
+    return { invokeArgs, signers };
+  }
+
+  getNeoXTxParams({
+    bridgeAsset,
+    bridgeAmount,
+    fromAddress,
+    toAddress,
+    bridgeFee,
+    currentBridgeNetwork,
+  }: {
+    bridgeAsset: Asset;
+    bridgeAmount: string;
+    fromAddress: string;
+    toAddress: string;
+    bridgeFee: string;
+    currentBridgeNetwork: BridgeNetwork;
+  }) {
+    const value = new BigNumber(bridgeAmount)
+      .shiftedBy(bridgeAsset.decimals)
+      .toFixed(0, 1);
+
+    const data = this.getWithdrawData({
+      asset: bridgeAsset,
+      toScriptHash: wallet.getScriptHashFromAddress(toAddress),
+      maxFee: ethers.parseUnits(bridgeFee, bridgeAsset.decimals),
+      amount: bridgeAmount,
+    });
+
+    const txParams = {
+      from: fromAddress,
+      to: this.BridgeParams[currentBridgeNetwork].neoXBridgeContract,
+      value,
+      data,
+    };
+    if (bridgeAsset.asset_id !== ETH_SOURCE_ASSET_HASH) {
+      txParams.value = new BigNumber(bridgeFee).shiftedBy(18).toFixed(0);
+    }
+    return txParams;
+  }
 }

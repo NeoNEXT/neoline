@@ -112,14 +112,14 @@ function getAccounts(e) {
   getStorage(
     STORAGE_NAME.connectedWebsites,
     (allWebsites: ConnectedWebsitesType) => {
-      Object.keys(allWebsites[location.hostname].connectedAddress).forEach(
-        (address) => {
-          const item = allWebsites[location.hostname].connectedAddress[address];
-          if (item.chain === 'NeoX') {
-            data.push(address);
-          }
+      Object.keys(
+        allWebsites[location.hostname]?.connectedAddress || {}
+      ).forEach((address) => {
+        const item = allWebsites[location.hostname].connectedAddress[address];
+        if (item.chain === 'NeoX') {
+          data.push(address);
         }
-      );
+      });
       getLocalStorage('wallet', (wallet) => {
         const currentAddress = wallet.accounts[0].address;
         const index = data.findIndex((item) => item === currentAddress);
