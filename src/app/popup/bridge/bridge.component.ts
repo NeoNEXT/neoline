@@ -186,8 +186,6 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
             this.maxGasDeposit = res;
           }
         });
-
-      this.calculateNeoN3Fee().subscribe(() => {});
     }
     if (this.chainType === 'NeoX') {
       this.currentBridgeNetwork =
@@ -196,8 +194,6 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           : BridgeNetwork.TestNet;
       this.bridgeAssetList = NeoXBridgeAssetList[this.currentBridgeNetwork];
       this.bridgeAsset = this.bridgeAssetList[0];
-
-      await this.calculateNeoXFee();
     }
     // balance
     await this.getBridgeAssetBalance();
