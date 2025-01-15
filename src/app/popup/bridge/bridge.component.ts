@@ -48,8 +48,6 @@ import {
 } from '../_dialogs';
 import { Neo3BridgeAssetList, NeoXBridgeAssetList } from '../_lib/bridge';
 
-const DEFAULT_NEO3_ADDRESS = 'NfuwpaQ1A2xaeVbxWe8FRtaRgaMa8yF3YM';
-const DEFAULT_NEOX_ADDRESS = '0x1212000000000000000000000000000000000004';
 const MIN_BRIDGE_AMOUNT = 1;
 
 @Component({
@@ -242,7 +240,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       bridgeAsset: this.bridgeAsset,
       bridgeAmount: this.bridgeAmount ?? this.minBridgeAmount,
       fromAddress: this.currentWallet.accounts[0].address,
-      toAddress: this.toAddress ?? DEFAULT_NEO3_ADDRESS,
+      toAddress: this.toAddress ?? 'NL1Frwvb3jo8sWyqN6NCfwg2o2Y2pQ9ttT', // 0x0000000000000000000000000000000000000001
       bridgeFee: this.bridgeFee,
       currentBridgeNetwork: this.currentBridgeNetwork,
     });
@@ -260,7 +258,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       bridgeAsset: this.bridgeAsset,
       bridgeAmount: this.bridgeAmount ?? this.minBridgeAmount,
       fromAddress: this.currentWallet.accounts[0].address,
-      toAddress: this.toAddress ?? DEFAULT_NEOX_ADDRESS,
+      toAddress: this.toAddress ?? '0x0000000000000000000000000000000000000001',
       bridgeFee: this.bridgeFee,
       currentBridgeNetwork: this.currentBridgeNetwork,
     });
