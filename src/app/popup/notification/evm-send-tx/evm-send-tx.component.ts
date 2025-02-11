@@ -143,7 +143,6 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
   async updateApproveAmount($event: EvmTransactionParams) {
     this.approveNewTxParams = $event;
-
   }
 
   getTxType(): 'sendEther' | 'sendToken' | 'contractInteraction' | 'approve' {
@@ -228,6 +227,15 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       .catch((error) => {
         this.loading = false;
         this.globalService.snackBarTip(error);
+        this.chrome.windowCallback(
+          {
+            data: null,
+            return: requestTargetEVM.request,
+            ID: this.messageID,
+            error: ethErrors.rpc.internal({ message: error }).serialize(),
+          },
+          true
+        );
       });
   }
 
@@ -315,6 +323,15 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       .catch((error) => {
         this.loading = false;
         this.globalService.snackBarTip(error);
+        this.chrome.windowCallback(
+          {
+            data: null,
+            return: requestTargetEVM.request,
+            ID: this.messageID,
+            error: ethErrors.rpc.internal({ message: error }).serialize(),
+          },
+          true
+        );
       });
   }
 
@@ -410,6 +427,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         estimateGas,
         custom: true,
       };
+      this.updateEvmFee(JSON.parse(JSON.stringify(this.siteNeoXFeeInfo)));
     }
     if (maxFeePerGas) {
       const newMaxFeePerGas = new BigNumber(maxFeePerGas, 16)
@@ -428,6 +446,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         estimateGas,
         custom: true,
       };
+      this.updateEvmFee(JSON.parse(JSON.stringify(this.siteNeoXFeeInfo)));
     }
   }
 
