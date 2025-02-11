@@ -40,7 +40,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
   showEstimateFeeAnimate = false;
   editEvmFeeDialogRef: MatDialogRef<PopupEditEvmFeeDialogComponent>;
 
-  isUseSiteFee = false;
+  isUseSiteFee = true;
 
   constructor(
     private assetEVMState: AssetEVMState,
@@ -139,7 +139,10 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
         this.assetEVMState.getGasInfo(networkGasLimit).then((res) => {
           res.estimateGasError = estimateGasError;
           this.sourceNeoXFeeInfo = res;
-          if (!this.customNeoXFeeInfo?.custom && !this.isUseSiteFee) {
+          if (
+            !this.customNeoXFeeInfo?.custom &&
+            (!this.isUseSiteFee || (this.isUseSiteFee && !this.siteNeoXFeeInfo))
+          ) {
             this.returnFee.emit(Object.assign({}, res));
             this.showEstimateFeeAnimate = true;
             timer(1500).subscribe(() => {

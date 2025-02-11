@@ -31,11 +31,11 @@
       src="assets/images/common/edit.svg"
     />
   </p>
-  <p *ngIf="isUseSiteFee" class="fee">
+  <p *ngIf="isUseSiteFee && siteNeoXFeeInfo" class="fee">
     {{ siteNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
     {{ symbol }}
   </p>
-  <ng-container *ngIf="!isUseSiteFee">
+  <ng-container *ngIf="!isUseSiteFee || !siteNeoXFeeInfo">
     <p *ngIf="customNeoXFeeInfo?.custom" class="fee">
       {{ customNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
       {{ symbol }}

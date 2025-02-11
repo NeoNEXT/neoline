@@ -143,7 +143,6 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
   async updateApproveAmount($event: EvmTransactionParams) {
     this.approveNewTxParams = $event;
-
   }
 
   getTxType(): 'sendEther' | 'sendToken' | 'contractInteraction' | 'approve' {
@@ -410,6 +409,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         estimateGas,
         custom: true,
       };
+      this.updateEvmFee(JSON.parse(JSON.stringify(this.siteNeoXFeeInfo)));
     }
     if (maxFeePerGas) {
       const newMaxFeePerGas = new BigNumber(maxFeePerGas, 16)
@@ -428,6 +428,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         estimateGas,
         custom: true,
       };
+      this.updateEvmFee(JSON.parse(JSON.stringify(this.siteNeoXFeeInfo)));
     }
   }
 

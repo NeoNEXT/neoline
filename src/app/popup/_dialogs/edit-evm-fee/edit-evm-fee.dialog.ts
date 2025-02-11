@@ -181,7 +181,7 @@ export class PopupEditEvmFeeDialogComponent {
 
   confirm() {
     if (!this.custom) {
-      this.dialogRef.close();
+      this.dialogRef.close(this.data.customNeoXFeeInfo);
       return;
     }
     this.data.customNeoXFeeInfo.gasLimit = new BigNumber(
@@ -210,7 +210,7 @@ export class PopupEditEvmFeeDialogComponent {
         this.data.customNeoXFeeInfo.custom = true;
         this.dialogRef.close(this.data.customNeoXFeeInfo);
       } else {
-        this.dialogRef.close();
+        this.dialogRef.close(this.data.customNeoXFeeInfo);
       }
     } else {
       this.data.customNeoXFeeInfo.gasPrice = new BigNumber(
@@ -227,7 +227,7 @@ export class PopupEditEvmFeeDialogComponent {
         this.data.customNeoXFeeInfo.custom = true;
         this.dialogRef.close(this.data.customNeoXFeeInfo);
       } else {
-        this.dialogRef.close();
+        this.dialogRef.close(this.data.customNeoXFeeInfo);
       }
     }
   }
