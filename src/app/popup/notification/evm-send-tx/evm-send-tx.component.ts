@@ -227,6 +227,15 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       .catch((error) => {
         this.loading = false;
         this.globalService.snackBarTip(error);
+        this.chrome.windowCallback(
+          {
+            data: null,
+            return: requestTargetEVM.request,
+            ID: this.messageID,
+            error: ethErrors.rpc.internal({ message: error }).serialize(),
+          },
+          true
+        );
       });
   }
 
@@ -314,6 +323,15 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       .catch((error) => {
         this.loading = false;
         this.globalService.snackBarTip(error);
+        this.chrome.windowCallback(
+          {
+            data: null,
+            return: requestTargetEVM.request,
+            ID: this.messageID,
+            error: ethErrors.rpc.internal({ message: error }).serialize(),
+          },
+          true
+        );
       });
   }
 
