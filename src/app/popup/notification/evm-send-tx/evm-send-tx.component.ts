@@ -214,11 +214,14 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       .then((tx) => {
         this.loading = false;
         this.updateLocalTx(tx.hash, newParams);
-        this.chrome.windowCallback({
-          data: tx.hash,
-          return: requestTargetEVM.request,
-          ID: this.messageID,
-        });
+        this.chrome.windowCallback(
+          {
+            data: tx.hash,
+            return: requestTargetEVM.request,
+            ID: this.messageID,
+          },
+          true
+        );
         this.dialog.open(PopupTransferSuccessDialogComponent, {
           panelClass: 'custom-dialog-panel',
           backdropClass: 'custom-dialog-backdrop',
@@ -310,11 +313,14 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       .then((txHash) => {
         this.loading = false;
         this.updateLocalTx(txHash, newParams);
-        this.chrome.windowCallback({
-          data: txHash,
-          return: requestTargetEVM.request,
-          ID: this.messageID,
-        });
+        this.chrome.windowCallback(
+          {
+            data: txHash,
+            return: requestTargetEVM.request,
+            ID: this.messageID,
+          },
+          true
+        );
         this.dialog.open(PopupTransferSuccessDialogComponent, {
           panelClass: 'custom-dialog-panel',
           backdropClass: 'custom-dialog-backdrop',
