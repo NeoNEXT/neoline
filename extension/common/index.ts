@@ -14,9 +14,9 @@ export function httpGet(url, callback, headers?) {
 export function httpPostPromise(url, data) {
   return new Promise((resolve, reject) => {
     httpPost(url, data, (res) => {
-      if (res && res.result) {
+      if (res && res.hasOwnProperty('result')) {
         resolve(res.result);
-      } else if (res && res.error) {
+      } else if (res && res.hasOwnProperty('error')) {
         reject(res.error);
       } else {
         reject(res);

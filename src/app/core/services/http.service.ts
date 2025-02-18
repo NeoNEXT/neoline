@@ -99,7 +99,7 @@ export class HttpService {
           this.neon.getFastRpcUrl(true);
           throw 'Error!';
         }
-        if (res && res.result) {
+        if (res && res.hasOwnProperty('result')) {
           return res.result;
         } else {
           throw res.error;
@@ -118,9 +118,9 @@ export class HttpService {
           this.neon.getFastRpcUrl(true);
           throw 'Error!';
         }
-        if (res && res.result) {
+        if (res && res.hasOwnProperty('result')) {
           return res.result;
-        } else if (res && res.error) {
+        } else if (res && res.hasOwnProperty('error')) {
           return res.error;
         } else {
           throw res;
