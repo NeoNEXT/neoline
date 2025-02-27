@@ -1,3 +1,8 @@
+:host {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
 .add-tip {
   padding: 6px 24px;
   background: rgba(255, 129, 66, 0.08);
@@ -12,7 +17,6 @@
 
 .container {
   padding: 16px 24px 0 24px;
-  max-height: 350px;
   overflow-y: scroll;
   font-size: 14px;
   color: var(--title-color);

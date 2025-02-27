@@ -1,15 +1,17 @@
 @import "src/styles/theme-default";
 
-
 :host {
   overflow: auto;
 }
 
 .body {
-  width: 100%;
+  width: 60%;
   height: 100%;
-  margin: 0;
+  min-width: 375px;
+  min-height: 600px;
+  margin: 0 auto;
   transform: none;
   background-color: var(--body-background-color);
   z-index: 10;
+  position: relative;
 }

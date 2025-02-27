@@ -4,12 +4,17 @@
   position: absolute;
   top: 65px;
   right: 16px;
-  width: 343px;
+  width: 73vw;
+  max-width: 400px;
+  max-height: 83vh;
+  display: flex;
+  flex-direction: column;
   border-radius: 4px;
   background: var(--body-background-color);
   box-shadow: var(--popups-box-shadow);
   z-index: 999;
   .my-account {
+    flex-shrink: 0;
     height: 48px;
     color: var(--sub-title-color);
     padding-left: 16px;
@@ -29,6 +34,7 @@
   button.search {
     width: calc(100% - 48px);
     height: 44px;
+    flex-shrink: 0;
     margin: 12px 24px 4px 24px;
     border-radius: 4px;
     border: 1px solid #cfdfe5;
@@ -51,13 +57,13 @@
     }
   }
   .wallet-list {
-    height: 332px;
+    min-height: 332px;
     overflow-y: scroll;
     position: relative;
     mask-image: -webkit-linear-gradient(
       top,
       rgba(0, 0, 0, 1) 96%,
-      rgba(0, 0, 0, 0.1) 100%,
+      rgba(0, 0, 0, 0.1) 100%
     );
     &::-webkit-scrollbar {
       display: block;
@@ -172,6 +178,7 @@
   button.add-wallet {
     width: calc(100% - 48px);
     margin: 0 24px 24px;
+    flex-shrink: 0;
   }
   .pop-ups-menu {
     width: 164px;
