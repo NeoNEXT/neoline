@@ -52,18 +52,6 @@
         }
       }
     }
-    .menu {
-      position: absolute;
-      right: 16px;
-      bottom: 20px;
-      cursor: pointer;
-    }
-    .pop-ups-menu {
-      width: 234px;
-      position: absolute;
-      right: 16px;
-      top: 64px;
-    }
   }
   .popup-home-body {
     height: calc(100% - 67px);
@@ -78,52 +66,6 @@
       padding: 0 26px;
     }
 
-    .claim-container {
-      height: 48px;
-      margin: 24px;
-      padding: 0 6px;
-      border-radius: 24px;
-      background: var(--message-box-color);
-      display: flex;
-      align-items: center;
-      .claim-status-box {
-        margin-left: 12px;
-        flex: 1 1 auto;
-        .number {
-          font-size: 12px;
-          line-height: 12px;
-          font-family: NeverMind-Medium;
-          color: var(--title-color);
-        }
-        .status {
-          font-size: 10px;
-          line-height: 12px;
-          font-family: NeverMind-Regular;
-          color: var(--tip-color);
-          margin-top: 2px;
-        }
-      }
-      button.claim-btn {
-        width: 67px;
-        height: 36px;
-        border-radius: 18px;
-        background: var(--body-background-color);
-        font-family: NeverMind-Regular;
-        font-size: 14px;
-        color: var(--theme-color);
-        cursor: pointer;
-        mat-spinner {
-          margin: auto;
-        }
-        img {
-          width: 15px;
-          height: 15px;
-          margin: auto;
-          filter: drop-shadow(1000px 0 0 var(--theme-color));
-          transform: translate(-1000px);
-        }
-      }
-    }
     .claim-line {
       margin-top: 24px;
       border: none;

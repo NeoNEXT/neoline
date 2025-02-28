@@ -1,12 +1,3 @@
-<div class="loading-box" *ngIf="ledgerSignLoading">
-  <div class="content">
-    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
-    <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
-    <button class="cancel pop-ups" (click)="cancelLedgerSign()">
-      {{ "cancel" | translate | async }}
-    </button>
-  </div>
-</div>
 <app-header></app-header>
 <div class="popup-home">
   <div class="header">
@@ -30,56 +21,8 @@
         </p>
       </copy>
     </div>
-    <img
-      class="menu"
-      theme
-      src="/assets/images/common/menu.svg"
-      (click)="showMenu = !showMenu"
-      alt=""
-    />
-    <section
-      class="pop-ups-veil"
-      *ngIf="showMenu"
-      (click)="showMenu = false"
-    ></section>
-    <ul class="pop-ups-menu" *ngIf="showMenu">
-      <li routerLink="/popup/account">
-        <img
-          theme
-          src="assets/images/account/home-account-detail.svg"
-          alt=""
-        />{{ "accountDetails" | translate | async }}
-      </li>
-      <li (click)="toWeb()">
-        <img theme src="assets/images/account/home-explorer.svg" alt="" />{{
-          "ViewOnExplorer" | translate | async
-        }}
-      </li>
-      <li *ngIf="showRemove" (click)="removeAccount()">
-        <img
-          class="delete"
-          src="assets/images/account/home-delete.svg"
-          alt=""
-        />{{ "removeAccount" | translate | async }}
-      </li>
-    </ul>
   </div>
   <div class="popup-home-body">
-    <div class="token-logo">
-      <token-logo
-        [assetId]="balance?.asset_id"
-        [chainType]="chainType"
-        [symbol]="balance?.symbol"
-        [neoXChainId]="neoXNetwork.chainId"
-      ></token-logo>
-    </div>
-    <p class="asset-balance">
-      {{ balance?.balance || 0 | numberFixed : 8 }}
-      {{ chainType === "NeoX" ? neoXNetwork.symbol : balance?.symbol }}
-    </p>
-    <p class="asset-money">
-      {{ balance?.rateBalance | numberFixed : 2 }} {{ rateCurrency }}
-    </p>
     <div class="transaction-btn-container" [ngClass]="{ bridge: showBridge() }">
       <div class="item receive" [routerLink]="['/popup/transfer/receive']">
         <img theme src="assets/images/transfer/receive.svg" alt="" />
@@ -98,40 +41,7 @@
         {{ "Bridge" | translate | async }}
       </div>
     </div>
-
-    <div class="claim-container" *ngIf="showClaim">
-      <token-logo
-        customClass="claim"
-        [assetId]="claimAssetId"
-        [chainType]="chainType"
-      ></token-logo>
-      <div class="claim-status-box">
-        <p class="number">{{ claimNumber | numberFixed }} GAS</p>
-        <p class="status">{{ claimStatus | translate | async }}</p>
-      </div>
-      <button
-        class="claim-btn"
-        mat-flat-button
-        (click)="claim()"
-        [disabled]="loading || !init || !showClaim"
-      >
-        <ng-container *ngIf="!loading && claimStatus !== 'success'">
-          {{
-            claimStatus !== "confirmed"
-              ? ("syncNow" | translate | async)
-              : ("claim" | translate | async)
-          }}
-        </ng-container>
-        <ng-container *ngIf="claimStatus === 'success' && !loading"
-          ><img theme src="/assets/images/common/selected.svg" alt=""
-        /></ng-container>
-        <mat-spinner
-          *ngIf="loading"
-          strokeWidth="2"
-          diameter="20"
-        ></mat-spinner>
-      </button>
-    </div>
+    <app-claim-gas></app-claim-gas>
     <hr class="claim-line" />
     <div class="tabs-container">
       <span
