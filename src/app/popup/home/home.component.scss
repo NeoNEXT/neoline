@@ -3,7 +3,7 @@
 @import "src/styles/tab-container.scss";
 
 .popup-home {
-  height: 100%;
+  height: calc(100% - 74px);
   .header {
     height: 67px;
     text-align: center;
