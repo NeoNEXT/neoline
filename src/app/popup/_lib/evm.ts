@@ -25,7 +25,7 @@ export interface EvmWalletJSON {
   ];
 }
 
-const NEOX_NETWORK_VERSION = 1;
+const NEOX_NETWORK_VERSION = 2;
 export const NeoXMainnetNetwork: RpcNetwork = {
   id: 47763,
   symbol: 'GAS',
@@ -43,7 +43,7 @@ export const NeoXTestnetNetwork: RpcNetwork = {
   name: 'Neo X Testnet',
   network: NetworkType.EVM,
   rpcUrl: 'https://neoxt4seed1.ngd.network',
-  explorer: 'https://neoxt4scan.ngd.network',
+  explorer: 'https://xt4scan.ngd.network',
   version: NEOX_NETWORK_VERSION,
 };
 export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
