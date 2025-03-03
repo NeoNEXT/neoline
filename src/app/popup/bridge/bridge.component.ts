@@ -583,7 +583,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           let depositId;
           if (this.sessionTx.asset.asset_id === GAS3_CONTRACT) {
             const notifi = notifications.find(
-              (item) => item.eventname === 'GasDeposit'
+              (item) => item.eventname === 'NativeDeposit'
             );
             depositId = notifi.state.value[0].value;
           } else {

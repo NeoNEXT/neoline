@@ -16,7 +16,7 @@ export const DEFAULT_NETWORKS = [
   'N3MainNet',
   'N3TestNet',
   'N3PrivateNet',
-  'EVM'
+  'EVM',
 ];
 
 export enum WitnessScope {
@@ -111,7 +111,7 @@ export const NeoXMainnetNetwork: RpcNetwork = {
   name: 'Neo X Mainnet',
   network: NetworkType.EVM,
   rpcUrl: 'https://mainnet-1.rpc.banelabs.org',
-  explorer: 'https://xexplorer.neo.org',
+  explorer: 'https://neoxscan.ngd.network',
   version: NEOX_NETWORK_VERSION,
 };
 export const NeoXTestnetNetwork: RpcNetwork = {
@@ -121,7 +121,7 @@ export const NeoXTestnetNetwork: RpcNetwork = {
   name: 'Neo X Testnet',
   network: NetworkType.EVM,
   rpcUrl: 'https://neoxt4seed1.ngd.network',
-  explorer: 'https://xt4scan.ngd.network',
+  explorer: 'https://neoxt4scan.ngd.network',
   version: NEOX_NETWORK_VERSION,
 };
 export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
