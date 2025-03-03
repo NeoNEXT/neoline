@@ -106,8 +106,8 @@
 
       <evm-gas-error
         *ngIf="insufficientFunds"
-        [networkName]="neoXNetwork.name"
-        [symbol]="neoXNetwork.symbol"
+        [networkName]="data.neoXNetwork.name"
+        [symbol]="data.neoXNetwork.symbol"
       ></evm-gas-error>
       <evm-pending-warning
         *ngIf="nonceInfo?.pendingTxs"
