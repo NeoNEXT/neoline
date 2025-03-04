@@ -23,6 +23,7 @@ export class PopupHomeDappAuthComponent implements OnChanges {
   hostTitle: string;
   authWalletList: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
 
+  currentWalletIsConnected = false;
   private allWebsites;
 
   constructor(
@@ -60,7 +61,7 @@ export class PopupHomeDappAuthComponent implements OnChanges {
       this.favIconUrl = '';
       this.hostTitle = document.title;
       this.hostname = location.hostname;
-      this.getDappAuthList();
+      // this.getDappAuthList();
     }
   }
 
@@ -86,6 +87,7 @@ export class PopupHomeDappAuthComponent implements OnChanges {
   }
 
   private getDappAuthList() {
+    this.currentWalletIsConnected = false;
     if (!this.hostname) return;
     this.chromeService
       .getStorage(STORAGE_NAME.connectedWebsites)
@@ -96,6 +98,9 @@ export class PopupHomeDappAuthComponent implements OnChanges {
         Object.keys(
           allWebsites?.[this.hostname]?.connectedAddress || {}
         ).forEach((address) => {
+          if (address === this.currentWallet.accounts[0].address) {
+            this.currentWalletIsConnected = true;
+          }
           const item = allWebsites[this.hostname].connectedAddress[address];
           if (item.chain === this.chainType) {
             const tempWallet = this.allWallet.find(

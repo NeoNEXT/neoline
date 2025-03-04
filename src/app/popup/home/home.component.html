@@ -1,15 +1,14 @@
 <app-header></app-header>
 <div class="popup-home">
-  <div class="header">
-    <home-dapp-auth
-      [currentWallet]="currentWallet"
-      [allWallet]="allWallet"
-      [chainType]="chainType"
-    ></home-dapp-auth>
-    <div class="wallet-info">
-      <p class="name">{{ currentWallet?.name || "" }}</p>
-      <copy [value]="address">
-        <p class="address">
+  <div class="account-container">
+    <div class="account-name">
+      <img class="avatar" [avatar]="address" alt="" />
+      <div class="right">
+        <p class="name" (click)="showAccountList()">
+          <span>{{ currentWallet?.name || "" }}</span>
+          <img theme src="assets/images/common/triangle-fill.svg" alt="" />
+        </p>
+        <p class="address-warp">
           <img
             class="usb"
             *ngIf="currentWallet.accounts[0]?.extra?.ledgerSLIP44"
@@ -17,9 +16,49 @@
             alt=""
           />
           <span>{{ address | longStr }}</span>
-          <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+          <copy [value]="address">
+            <img
+              class="copy"
+              theme
+              src="assets/images/common/copy.svg"
+              alt=""
+            />
+          </copy>
+          <home-dapp-auth
+            [currentWallet]="currentWallet"
+            [allWallet]="allWallet"
+            [chainType]="chainType"
+          ></home-dapp-auth>
         </p>
-      </copy>
+      </div>
+    </div>
+    <div class="account-value">
+      <span *ngIf="!hideValue"
+        >{{ rateCurrency === "USD" ? "$" : "¥" }}
+        {{ totalValue | number }}</span
+      >
+      <ul *ngIf="hideValue">
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+        <li></li>
+      </ul>
+      <img
+        (click)="hideValue = !hideValue"
+        theme
+        *ngIf="hideValue"
+        src="assets/images/login/eye-hide.svg"
+      />
+      <img
+        (click)="hideValue = !hideValue"
+        theme
+        *ngIf="!hideValue"
+        src="assets/images/login/eye-view.svg"
+      />
     </div>
   </div>
   <div class="popup-home-body">
@@ -79,7 +118,7 @@
       />
     </div>
     <div *ngIf="selectedIndex === 0">
-      <app-assets (backAsset)="initNeo($event)"></app-assets>
+      <app-assets (backAsset)="getTotalValue($event)"></app-assets>
       <p class="get-help" (click)="getSupport()">
         {{ "GetSupport" | translate | async }}{{ " " }}
         <img src="assets/images/common/support-arrow.svg" alt="" />

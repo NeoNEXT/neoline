@@ -1139,6 +1139,9 @@
   "notConnected": {
     "message": "未连接"
   },
+  "Connected": {
+    "message": "已连接"
+  },
   "switchToThisAccount": {
     "message": "切换到该账户"
   },

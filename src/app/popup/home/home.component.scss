@@ -3,52 +3,82 @@
 
 .popup-home {
   height: calc(100% - 74px);
-  .header {
-    height: 67px;
-    text-align: center;
-    position: relative;
-    border-bottom: 1px solid var(--line-color);
-    home-dapp-auth {
-      position: absolute;
-      left: 20px;
-      top: 22px;
+  .account-container {
+    width: 88%;
+    max-width: 640px;
+    margin: 0 auto;
+    margin-top: 18px;
+    padding: 16px;
+    border-radius: 8px;
+    background: #f4f4f4;
+    border: 2px solid #e9f0f0;
+    :host-context([data-theme-style="dark-theme"]) & {
+      background: rgba(255, 255, 255, 0.04);
+      border-color: #303135;
     }
-    .wallet-info {
-      width: 100%;
-      height: 100%;
+    .account-name {
       display: flex;
-      flex-direction: column;
       align-items: center;
-      justify-content: center;
-      .name {
-        font-family: NeverMind-Medium;
-        font-size: 18px;
-        line-height: 20px;
-        color: var(--important-title-color);
-        max-width: 200px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+      gap: 8px;
+      img.avatar {
+        width: 40px;
+        height: 40px;
       }
-      .address {
+      .name {
         display: inline-flex;
         align-items: center;
-        height: 30px;
-        padding: 0 16px;
-        border-radius: 14px;
+        cursor: pointer;
+        gap: 6px;
+        span {
+          font-family: NeverMind-Medium;
+          font-size: 18px;
+          color: var(--important-title-color);
+          max-width: 200px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+      .address-warp {
+        margin-top: 3px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
         font-family: NeverMind-Regular;
         font-size: 12px;
         color: var(--title-color);
-        cursor: pointer;
-        &:hover {
-          background: var(--hover-color);
-        }
         img.usb {
           width: 15px;
         }
-        span {
-          margin: 0 8px;
+        img.copy {
+          cursor: pointer;
         }
+      }
+    }
+    .account-value {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      font-family: NeverMind;
+      font-size: 26px;
+      font-weight: bold;
+      letter-spacing: 0.01em;
+      font-variation-settings: "opsz" auto;
+      color: var(--important-title-color);
+      ul {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        li {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--title-color);
+        }
+      }
+      img {
+        cursor: pointer;
       }
     }
   }
@@ -61,8 +91,15 @@
       text-align: center;
     }
 
-    .transaction-btn-container.bridge {
-      padding: 0 26px;
+    .transaction-btn-container {
+      width: 88%;
+      max-width: 640px;
+      margin: 0 auto;
+      margin-top: 32px;
+      padding: 0 30px;
+      &.bridge {
+        padding: 0 6px;
+      }
     }
 
     .claim-line {

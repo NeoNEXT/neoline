@@ -7,7 +7,7 @@ import {
   ViewChild,
   ElementRef,
 } from '@angular/core';
-import { MatDialog } from '@angular/material/dialog';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import {
@@ -36,7 +36,7 @@ import {
   PopupExportWalletDialogComponent,
   PopupPasswordDialogComponent,
   PopupSelectDialogComponent,
-} from '../../../popup/_dialogs';
+} from '../..';
 import { NEO } from '@/models/models';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
@@ -51,14 +51,12 @@ interface WalletListItem {
 }
 
 @Component({
-  selector: 'avatar-menu',
-  templateUrl: 'avatar-menu.component.html',
-  styleUrls: ['avatar-menu.component.scss'],
+  templateUrl: 'account-list.component.html',
+  styleUrls: ['account-list.component.scss'],
 })
-export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
+export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
   @ViewChild('moreModalDom') moreModalDom: ElementRef;
 
-  @Output() closeEvent = new EventEmitter();
   isSearching = false;
   searchWalletRes: WalletListItem[] = [];
   addressBalances = {};
@@ -81,6 +79,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
   moreModalChainType: ChainType;
   moreModalCanRemove = false;
   constructor(
+    private dialogRef: MatDialogRef<PopupAccountListDialogComponent>,
     private router: Router,
     private chromeSrc: ChromeService,
     private dialog: MatDialog,
@@ -147,7 +146,7 @@ export class PopupAvatarMenuComponent implements OnInit, OnDestroy {
   }
 
   close() {
-    this.closeEvent.emit();
+    this.dialogRef.close();
   }
 
   lock() {

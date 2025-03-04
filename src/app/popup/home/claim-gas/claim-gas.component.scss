@@ -1,6 +1,8 @@
 .claim-container {
   height: 48px;
-  margin: 24px;
+  width: 88%;
+  max-width: 640px;
+  margin: 24px auto;
   padding: 0 6px;
   border-radius: 24px;
   background: var(--message-box-color);

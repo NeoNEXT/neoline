@@ -1,8 +1,21 @@
 <div class="content" (click)="viewAllAuth()">
+  <div class="has-auth" *ngIf="authWalletList.length > 0">
+    <img class="logo" [src]="favIconUrl" alt="" />
+    <span
+      class="current-status"
+      [ngClass]="{ connected: currentWalletIsConnected }"
+      >{{
+        (currentWalletIsConnected ? "connected" : "notConnected")
+          | translate
+          | async
+      }}</span
+    >
+  </div>
   <img
     class="logo"
-    [src]="authWalletList.length > 0 ? favIconUrl : defaultFavIconUrl"
+    theme
+    *ngIf="authWalletList.length <= 0"
+    src="assets/images/common/dapp-auth.svg"
     alt=""
   />
-  <span *ngIf="authWalletList.length > 0" class="status"></span>
 </div>

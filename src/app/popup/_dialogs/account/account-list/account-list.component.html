@@ -1,42 +1,6 @@
-<section class="pop-ups-veil" (click)="close()"></section>
 <div class="content">
   <div class="my-account">
-    <span>{{ "myAccount" | translate | async }}</span>
-    <div class="right">
-      <tooltip
-        [tip]="'menuGuideAndSupport' | translate | async"
-        placement="bottom"
-      >
-        <img
-          (click)="toHelpWebsite()"
-          theme
-          src="assets/images/avatar-menu/guide.svg"
-          alt=""
-        />
-      </tooltip>
-      <tooltip [tip]="'menuSettings' | translate | async" placement="bottom">
-        <img
-          (click)="navigate('/popup/setting')"
-          theme
-          src="assets/images/avatar-menu/setting.svg"
-        />
-      </tooltip>
-      <tooltip [tip]="'menuLock' | translate | async" placement="bottom">
-        <img
-          (click)="lock()"
-          theme
-          src="assets/images/avatar-menu/lock.svg"
-          alt=""
-        />
-      </tooltip>
-      <tooltip [tip]="'menuAboutUs' | translate | async" placement="bottom">
-        <img
-          (click)="navigate('/popup/about')"
-          theme
-          src="assets/images/avatar-menu/about-us.svg"
-        />
-      </tooltip>
-    </div>
+    {{ "myAccount" | translate | async }}
   </div>
   <button class="search">
     <img class="search" theme src="assets/images/common/search.svg" />

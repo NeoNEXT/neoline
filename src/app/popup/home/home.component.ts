@@ -17,6 +17,8 @@ import {
   NeoXMainnetNetwork,
   NeoXTestnetNetwork,
 } from '../_lib/evm';
+import { MatDialog } from '@angular/material/dialog';
+import { PopupAccountListDialogComponent } from '../_dialogs';
 
 @Component({
   templateUrl: 'home.component.html',
@@ -26,6 +28,8 @@ export class PopupHomeComponent implements OnInit {
   selectedIndex = 0; // asset tab or transaction tab
   rateCurrency: string;
   lang = 'en';
+  hideValue = false;
+  totalValue = 0;
 
   private accountSub: Unsubscribable;
   currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
@@ -39,6 +43,7 @@ export class PopupHomeComponent implements OnInit {
   constructor(
     private router: Router,
     private settingState: SettingState,
+    private dialog: MatDialog,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -63,6 +68,17 @@ export class PopupHomeComponent implements OnInit {
     });
     this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
+    });
+  }
+
+  getTotalValue(value) {
+    this.totalValue = value;
+  }
+
+  showAccountList() {
+    this.dialog.open(PopupAccountListDialogComponent, {
+      panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-dialog-backdrop',
     });
   }
 

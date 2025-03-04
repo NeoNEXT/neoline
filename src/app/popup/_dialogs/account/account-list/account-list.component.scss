@@ -1,18 +1,9 @@
 @import "src/styles/pop-ups-menu.scss";
 
 .content {
-  position: absolute;
-  top: 65px;
-  right: 16px;
-  width: 73vw;
-  max-width: 400px;
   max-height: 83vh;
   display: flex;
   flex-direction: column;
-  border-radius: 4px;
-  background: var(--body-background-color);
-  box-shadow: var(--popups-box-shadow);
-  z-index: 999;
   .my-account {
     flex-shrink: 0;
     height: 48px;
@@ -23,13 +14,6 @@
     align-items: center;
     justify-content: space-between;
     border-bottom: 1px solid var(--line-color);
-    .right {
-      display: inline-flex;
-      gap: 25px;
-      img {
-        cursor: pointer;
-      }
-    }
   }
   button.search {
     width: calc(100% - 48px);
@@ -158,6 +142,7 @@
             overflow: hidden;
             text-overflow: ellipsis;
             white-space: nowrap;
+            color: var(--title-color);
           }
           .balance {
             font-family: NeverMind-Regular;
