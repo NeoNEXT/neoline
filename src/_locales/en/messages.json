@@ -533,6 +533,9 @@
   "accountDetails": {
     "message": "Account details"
   },
+  "expandView": {
+    "message": "Expand view"
+  },
   "accountAdded": {
     "message": "Account added"
   },

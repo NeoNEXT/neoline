@@ -1,31 +1,45 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Router, RouterEvent, NavigationEnd } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { ChainType, RpcNetwork } from '@/app/popup/_lib';
-import { NeonService } from '@/app/core';
+import {
+  ChromeService,
+  NeonService,
+  SettingState,
+  UtilServiceState,
+} from '@/app/core';
 
+declare var chrome: any;
 @Component({
   selector: 'app-header',
   templateUrl: './header.component.html',
   styleUrls: ['./header.component.scss'],
 })
-export class HeaderComponent implements OnInit {
+export class HeaderComponent implements OnInit, OnDestroy {
   private currentUrl = this.router.url;
   showNetworkList = false;
+  showMenu = false;
+  lang: string;
+  settingStateSub: Unsubscribable;
 
   private accountSub: Unsubscribable;
   address: string;
   currentChainType: ChainType;
   n2Network: RpcNetwork;
   n3Network: RpcNetwork;
+  n3NetworkIndex: number;
   neoXNetwork: RpcNetwork;
+  neoXNetworkIndex: number;
 
   constructor(
     private store: Store<AppState>,
     private router: Router,
-    private neon: NeonService
+    private neon: NeonService,
+    private util: UtilServiceState,
+    private chromeSrc: ChromeService,
+    private settingState: SettingState
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -35,7 +49,9 @@ export class HeaderComponent implements OnInit {
       this.currentChainType = state.currentChainType;
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.n3NetworkIndex = state.n3NetworkIndex;
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      this.neoXNetworkIndex = state.neoXNetworkIndex;
     });
   }
 
@@ -45,6 +61,14 @@ export class HeaderComponent implements OnInit {
         this.currentUrl = res.url;
       }
     });
+    this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
+      this.lang = lang;
+    });
+  }
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
+    this.settingStateSub?.unsubscribe();
   }
 
   checkIsThemeBg() {
@@ -84,6 +108,58 @@ export class HeaderComponent implements OnInit {
         return this.n3Network.name;
       case 'NeoX':
         return this.neoXNetwork.name;
+    }
+  }
+
+  toWeb() {
+    this.showMenu = false;
+    let network: RpcNetwork;
+    let networkIndex: number;
+    switch (this.currentChainType) {
+      case 'Neo2':
+        network = this.n2Network;
+        break;
+      case 'Neo3':
+        network = this.n3Network;
+        networkIndex = this.n3NetworkIndex;
+        break;
+      case 'NeoX':
+        network = this.neoXNetwork;
+        networkIndex = this.neoXNetworkIndex;
+        break;
+    }
+    this.util.toExplorer({
+      chain: this.currentChainType,
+      network,
+      networkIndex,
+      type: 'account',
+      value: this.address,
+    });
+  }
+
+  lock() {
+    this.chromeSrc.setPassword('');
+    this.navigate('/popup/login');
+  }
+
+  navigate(url: string) {
+    this.showMenu = false;
+    this.router.navigateByUrl(url);
+  }
+
+  toHelpWebsite() {
+    if (this.lang !== 'en') {
+      window.open('https://tutorial.neoline.io/v/cn');
+    } else {
+      window.open('https://tutorial.neoline.io/');
+    }
+  }
+
+  expandView() {
+    if (chrome.runtime) {
+      const extensionUrl = chrome.runtime.getURL('/index.html');
+      const ledgerUrl = extensionUrl + '#/popup/home';
+      chrome.tabs.create({ url: ledgerUrl });
     }
   }
 }

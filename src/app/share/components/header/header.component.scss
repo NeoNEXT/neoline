@@ -1,3 +1,5 @@
+@import "src/styles/pop-ups-menu.scss";
+
 header {
   height: 74px;
   display: flex;
@@ -5,6 +7,7 @@ header {
   justify-content: space-between;
   padding: 0 16px;
   background: var(--background-color);
+  position: relative;
   &.theme-bg {
     img.logo {
       filter: drop-shadow(1000px 0 0 var(--network-color));
@@ -66,5 +69,11 @@ header {
   }
   img.menu {
     cursor: pointer;
+  }
+  .pop-ups-menu {
+    width: 234px;
+    position: absolute;
+    right: 16px;
+    top: 64px;
   }
 }

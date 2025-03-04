@@ -11,12 +11,55 @@
     </button>
     <img
       *ngIf="getShowAvatar()"
+      (click)="showMenu = !showMenu"
       theme
       class="menu"
       src="assets/images/common/menu.svg"
       alt=""
     />
   </div>
+  <section
+    class="pop-ups-veil"
+    *ngIf="showMenu"
+    (click)="showMenu = false"
+  ></section>
+  <ul class="pop-ups-menu" *ngIf="showMenu">
+    <li (click)="navigate('/popup/account')">
+      <img theme src="assets/images/account/home-account-detail.svg" alt="" />{{
+        "accountDetails" | translate | async
+      }}
+    </li>
+    <li (click)="toWeb()">
+      <img theme src="assets/images/account/home-explorer.svg" alt="" />{{
+        "ViewOnExplorer" | translate | async
+      }}
+    </li>
+    <li (click)="expandView()">
+      <img theme src="assets/images/account/home-expand.svg" alt="" />{{
+        "expandView" | translate | async
+      }}
+    </li>
+    <li (click)="toHelpWebsite()">
+      <img theme src="assets/images/account/home-guide.svg" alt="" />{{
+        "menuGuideAndSupport" | translate | async
+      }}
+    </li>
+    <li (click)="navigate('/popup/setting')">
+      <img theme src="assets/images/account/home-setting.svg" />{{
+        "menuSettings" | translate | async
+      }}
+    </li>
+    <li (click)="navigate('/popup/about')">
+      <img theme src="assets/images/account/home-about-us.svg" />{{
+        "menuAboutUs" | translate | async
+      }}
+    </li>
+    <li (click)="lock()">
+      <img theme src="assets/images/account/home-lock.svg" alt="" />{{
+        "menuLock" | translate | async
+      }}
+    </li>
+  </ul>
 </header>
 
 <network

@@ -533,6 +533,9 @@
   "accountDetails": {
     "message": "账户详情"
   },
+  "expandView": {
+    "message": "展开视图"
+  },
   "accountAdded": {
     "message": "已添加账户"
   },
