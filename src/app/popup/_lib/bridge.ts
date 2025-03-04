@@ -10,13 +10,13 @@ export const Neo3BridgeAssetList = {
       bridgeDecimals: 8,
       symbol: 'GAS',
     },
-    // {
-    //   asset_id: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
-    //   decimals: 0,
-    //   bridgeDecimals: 0,
-    //   bridgeTargetAssetId: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
-    //   symbol: 'NEO',
-    // },
+    {
+      asset_id: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
+      decimals: 0,
+      bridgeDecimals: 0,
+      bridgeTargetAssetId: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
+      symbol: 'NEO',
+    },
   ],
   [BridgeNetwork.TestNet]: [
     {
@@ -50,13 +50,13 @@ export const NeoXBridgeAssetList = {
       bridgeDecimals: 8,
       symbol: 'GAS',
     },
-    // {
-    //   asset_id: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
-    //   decimals: 18,
-    //   bridgeDecimals: 0,
-    //   bridgeTargetAssetId: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
-    //   symbol: 'NEO',
-    // },
+    {
+      asset_id: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
+      decimals: 18,
+      bridgeDecimals: 0,
+      bridgeTargetAssetId: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
+      symbol: 'NEO',
+    },
   ],
   [BridgeNetwork.TestNet]: [
     {

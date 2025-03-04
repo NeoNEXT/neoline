@@ -78,7 +78,7 @@
         />
         <p class="rate">
           {{
-            bridgeAsset.rateBalance
+            bridgeAmount && bridgeAsset.rateBalance
               ? bridgeAsset.rateBalance + " " + rateCurrency
               : ""
           }}

@@ -12,7 +12,7 @@ export const abiNeoXBridgeNeo3 = [
         type: 'uint256',
       },
     ],
-    name: 'withdrawGas',
+    name: 'withdrawNative',
     outputs: [],
     stateMutability: 'payable',
     type: 'function',
@@ -40,4 +40,4 @@ export const abiNeoXBridgeNeo3 = [
     stateMutability: 'payable',
     type: 'function',
   },
-]
+];

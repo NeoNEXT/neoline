@@ -25,7 +25,8 @@ export class BridgeState {
   readonly BridgeParams = {
     [BridgeNetwork.MainNet]: {
       n3BridgeContract: '0xbb19cfc864b73159277e1fd39694b3fd5fc613d2',
-      bridgeTxHostOnNeo3BridgeNeoX: 'https://bridgeapi.banelabs.org/deposits',
+      bridgeTxHostOnNeo3BridgeNeoX:
+        'https://xexplorer.neo.org:8877/api/v1/transactions/deposits',
       neoXBridgeContract: '0x1212000000000000000000000000000000000004',
       bridgeTxHostOnNeoXBridgeNeo3: 'https://neofura.ngd.network/',
     },
@@ -73,7 +74,7 @@ export class BridgeState {
     const data = {
       jsonrpc: '2.0',
       method: 'invokefunction',
-      params: [this.BridgeParams[network].n3BridgeContract, 'gasDepositFee'],
+      params: [this.BridgeParams[network].n3BridgeContract, 'nativeDepositFee'],
       id: 1,
     };
     return this.http.post(this.neo3Network.rpcUrl, data).pipe(
@@ -88,7 +89,7 @@ export class BridgeState {
     const data = {
       jsonrpc: '2.0',
       method: 'invokefunction',
-      params: [this.BridgeParams[network].n3BridgeContract, 'maxGasDeposit'],
+      params: [this.BridgeParams[network].n3BridgeContract, 'maxNativeDeposit'],
       id: 1,
     };
     return this.http.post(this.neo3Network.rpcUrl, data).pipe(
@@ -103,7 +104,7 @@ export class BridgeState {
     const data = {
       jsonrpc: '2.0',
       method: 'invokefunction',
-      params: [this.BridgeParams[network].n3BridgeContract, 'getGasBridge'],
+      params: [this.BridgeParams[network].n3BridgeContract, 'getNativeBridge'],
       id: 1,
     };
     const neo3RPC =
@@ -158,7 +159,7 @@ export class BridgeState {
     );
     let data;
     if (asset.asset_id === ETH_SOURCE_ASSET_HASH) {
-      data = contract.interface.encodeFunctionData('withdrawGas', [
+      data = contract.interface.encodeFunctionData('withdrawNative', [
         toScriptHash,
         maxFee,
       ]);
@@ -242,7 +243,7 @@ export class BridgeState {
 
     const invokeArgs = [
       {
-        operation: 'depositGas',
+        operation: 'depositNative',
         scriptHash: this.BridgeParams[currentBridgeNetwork].n3BridgeContract,
         args: [
           sc.ContractParam.hash160(fromAddress),

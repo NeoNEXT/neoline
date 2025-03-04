@@ -25,7 +25,7 @@ export interface EvmWalletJSON {
   ];
 }
 
-const NEOX_NETWORK_VERSION = 1;
+const NEOX_NETWORK_VERSION = 2;
 export const NeoXMainnetNetwork: RpcNetwork = {
   id: 47763,
   symbol: 'GAS',
@@ -33,7 +33,7 @@ export const NeoXMainnetNetwork: RpcNetwork = {
   name: 'Neo X Mainnet',
   network: NetworkType.EVM,
   rpcUrl: 'https://mainnet-1.rpc.banelabs.org',
-  explorer: 'https://xexplorer.neo.org',
+  explorer: 'https://neoxscan.ngd.network',
   version: NEOX_NETWORK_VERSION,
 };
 export const NeoXTestnetNetwork: RpcNetwork = {
