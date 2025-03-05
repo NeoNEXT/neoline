@@ -56,6 +56,7 @@ interface WalletListItem {
 })
 export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
   @ViewChild('moreModalDom') moreModalDom: ElementRef;
+  @ViewChild('contentDom') contentDom: ElementRef;
 
   isSearching = false;
   searchWalletRes: WalletListItem[] = [];
@@ -312,9 +313,12 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
   ) {
     e.stopPropagation();
     const rect = (e.target as HTMLElement).getBoundingClientRect();
-    const top = rect.top - 35;
-    if (top > 400) {
-      const bottom = 508 - top + 35;
+    const contentRect = this.contentDom.nativeElement.getBoundingClientRect();
+
+    const top = rect.top - contentRect.top + 30;
+    const bottom = contentRect.bottom - rect.bottom + 30;
+    // 200: height of more modal + 30
+    if (bottom < 200) {
       this.moreModalDom.nativeElement.style.bottom = bottom + 'px';
       this.moreModalDom.nativeElement.style.top = 'auto';
     } else {
