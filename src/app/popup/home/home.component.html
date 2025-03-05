@@ -1,64 +1,67 @@
 <app-header></app-header>
 <div class="popup-home">
   <div class="account-container">
-    <div class="account-name">
-      <img class="avatar" [avatar]="address" alt="" />
-      <div class="right">
-        <p class="name" (click)="showAccountList()">
-          <span>{{ currentWallet?.name || "" }}</span>
-          <img theme src="assets/images/common/triangle-fill.svg" alt="" />
-        </p>
-        <p class="address-warp">
-          <img
-            class="usb"
-            *ngIf="currentWallet.accounts[0]?.extra?.ledgerSLIP44"
-            src="/assets/images/ledger/usb.svg"
-            alt=""
-          />
-          <span>{{ address | longStr }}</span>
-          <copy [value]="address">
+    <div class="account-content">
+      <div class="account-name">
+        <img class="avatar" [avatar]="address" alt="" />
+        <div class="right">
+          <p class="name" (click)="showAccountList()">
+            <span>{{ currentWallet?.name || "" }}</span>
+            <img theme src="assets/images/common/triangle-fill.svg" alt="" />
+          </p>
+          <p class="address-warp">
             <img
-              class="copy"
-              theme
-              src="assets/images/common/copy.svg"
+              class="usb"
+              *ngIf="currentWallet.accounts[0]?.extra?.ledgerSLIP44"
+              src="/assets/images/ledger/usb.svg"
               alt=""
             />
-          </copy>
-          <home-dapp-auth
-            [currentWallet]="currentWallet"
-            [allWallet]="allWallet"
-            [chainType]="chainType"
-          ></home-dapp-auth>
-        </p>
+            <span>{{ address | longStr }}</span>
+            <copy [value]="address">
+              <img
+                class="copy"
+                theme
+                src="assets/images/common/copy.svg"
+                alt=""
+              />
+            </copy>
+            <home-dapp-auth
+              *ngIf="showDappAuth"
+              [currentWallet]="currentWallet"
+              [allWallet]="allWallet"
+              [chainType]="chainType"
+            ></home-dapp-auth>
+          </p>
+        </div>
       </div>
-    </div>
-    <div class="account-value">
-      <span *ngIf="!hideValue"
-        >{{ rateCurrency === "USD" ? "$" : "¥" }}
-        {{ totalValue | number }}</span
-      >
-      <ul *ngIf="hideValue">
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-        <li></li>
-      </ul>
-      <img
-        (click)="hideValue = !hideValue"
-        theme
-        *ngIf="hideValue"
-        src="assets/images/login/eye-hide.svg"
-      />
-      <img
-        (click)="hideValue = !hideValue"
-        theme
-        *ngIf="!hideValue"
-        src="assets/images/login/eye-view.svg"
-      />
+      <div class="account-value">
+        <span *ngIf="!hideValue"
+          >{{ rateCurrency === "USD" ? "$" : "¥" }}
+          {{ totalValue | number }}</span
+        >
+        <ul *ngIf="hideValue">
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+          <li></li>
+        </ul>
+        <img
+          (click)="hideValue = !hideValue"
+          theme
+          *ngIf="hideValue"
+          src="assets/images/login/eye-hide.svg"
+        />
+        <img
+          (click)="hideValue = !hideValue"
+          theme
+          *ngIf="!hideValue"
+          src="assets/images/login/eye-view.svg"
+        />
+      </div>
     </div>
   </div>
   <div class="popup-home-body">

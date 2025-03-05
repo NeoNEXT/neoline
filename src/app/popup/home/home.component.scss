@@ -3,18 +3,21 @@
 
 .popup-home {
   height: calc(100% - 74px);
+  overflow: scroll;
   .account-container {
     width: 88%;
     max-width: 640px;
     margin: 0 auto;
-    margin-top: 18px;
-    padding: 16px;
-    border-radius: 8px;
-    background: #f4f4f4;
-    border: 2px solid #e9f0f0;
-    :host-context([data-theme-style="dark-theme"]) & {
-      background: rgba(255, 255, 255, 0.04);
-      border-color: #303135;
+    padding-top: 18px;
+    .account-content {
+      padding: 16px 0 16px 16px;
+      border-radius: 8px;
+      background: #f4f4f4;
+      border: 2px solid #e9f0f0;
+      :host-context([data-theme-style="dark-theme"]) & {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: #303135;
+      }
     }
     .account-name {
       display: flex;
@@ -56,6 +59,7 @@
       }
     }
     .account-value {
+      height: 26px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -64,7 +68,6 @@
       font-size: 26px;
       font-weight: bold;
       letter-spacing: 0.01em;
-      font-variation-settings: "opsz" auto;
       color: var(--important-title-color);
       ul {
         display: inline-flex;
@@ -83,9 +86,7 @@
     }
   }
   .popup-home-body {
-    height: calc(100% - 67px);
     position: relative;
-    overflow: auto;
     .token-logo {
       margin-block: 16px;
       text-align: center;

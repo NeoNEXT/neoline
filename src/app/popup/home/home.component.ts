@@ -20,6 +20,8 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { PopupAccountListDialogComponent } from '../_dialogs';
 
+declare const chrome: any;
+
 @Component({
   templateUrl: 'home.component.html',
   styleUrls: ['home.component.scss'],
@@ -30,6 +32,7 @@ export class PopupHomeComponent implements OnInit {
   lang = 'en';
   hideValue = false;
   totalValue = 0;
+  showDappAuth = true;
 
   private accountSub: Unsubscribable;
   currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
@@ -69,6 +72,13 @@ export class PopupHomeComponent implements OnInit {
     this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
+    if (chrome.tabs) {
+      chrome.tabs.getCurrent(function (tab) {
+        if (tab) {
+          this.showDappAuth = false;
+        }
+      });
+    }
   }
 
   getTotalValue(value) {
