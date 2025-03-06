@@ -1,4 +1,3 @@
-
 @import "src/styles/asset-item";
 
 section.container {
@@ -6,7 +5,7 @@ section.container {
 }
 
 .popup-assets-list {
-  height: calc(100% - 44px);
+  height: calc(100% - var(--nav-height));
   overflow-y: scroll;
   &::-webkit-scrollbar {
     display: block;

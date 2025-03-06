@@ -53,3 +53,7 @@ input:focus,
 textarea:focus {
   outline: none;
 }
+
+html:root {
+  --nav-height: 62px;
+}

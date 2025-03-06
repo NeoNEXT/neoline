@@ -33,8 +33,11 @@ export class PopupHomeDappAuthComponent implements OnChanges {
 
   ngOnChanges(changes: SimpleChanges): void {
     if (
-      changes.chainType &&
-      changes.chainType.previousValue !== changes.chainType.currentValue
+      (changes.chainType &&
+        changes.chainType.previousValue !== changes.chainType.currentValue) ||
+      (changes.currentWallet &&
+        changes.currentWallet.previousValue !==
+          changes.currentWallet.currentValue)
     ) {
       this.initData();
     }

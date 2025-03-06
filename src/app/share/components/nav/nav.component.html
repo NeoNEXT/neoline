@@ -1,9 +1,11 @@
 <div class="nav">
-  <img
-    class="back"
-    theme
-    src="/assets/images/common/nav-arrow.svg"
-    (click)="back()"
-  />
-  {{ title | translate | async }}
+  <div class="content">
+    <img
+      class="back"
+      theme
+      src="/assets/images/common/nav-arrow.svg"
+      (click)="back()"
+    />
+    {{ title | translate | async }}
+  </div>
 </div>

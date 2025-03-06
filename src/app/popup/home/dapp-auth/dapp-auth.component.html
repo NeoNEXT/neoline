@@ -5,11 +5,10 @@
       class="current-status"
       [ngClass]="{ connected: currentWalletIsConnected }"
       >{{
-        (currentWalletIsConnected ? "connected" : "notConnected")
-          | translate
-          | async
+        (currentWalletIsConnected ? "Connected" : "connect") | translate | async
       }}</span
     >
+    <span *ngIf="currentWalletIsConnected" class="status-dot"></span>
   </div>
   <img
     class="logo"

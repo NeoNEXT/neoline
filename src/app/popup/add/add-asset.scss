@@ -1,16 +1,14 @@
-
-
 section.container {
   position: relative;
   height: 100%;
   img.my-asset {
     position: absolute;
     right: 24px;
-    top: 12px;
+    top: 26px;
     cursor: pointer;
   }
   .content {
-    height: calc(100% - 44px);
+    height: calc(100% - var(--nav-height));
     padding: 16px 24px;
     button.search {
       width: 100%;

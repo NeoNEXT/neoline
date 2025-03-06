@@ -46,15 +46,19 @@
         margin-top: 3px;
         display: flex;
         align-items: center;
-        gap: 8px;
         font-family: NeverMind-Regular;
         font-size: 12px;
         color: var(--title-color);
         img.usb {
           width: 15px;
+          margin-right: 4px;
+        }
+        .address {
+          margin-right: 6px;
         }
         img.copy {
           cursor: pointer;
+          margin-right: 8px;
         }
       }
     }
