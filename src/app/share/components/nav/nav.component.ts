@@ -9,6 +9,7 @@ import { Router } from '@angular/router';
 export class NavComponent {
   @Input() title: string;
   @Input() backUrl: string;
+  @Input() needTranslate?: boolean = true;
   @Output() backEvent = new EventEmitter();
 
   constructor(private router: Router) {}

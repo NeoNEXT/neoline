@@ -1,6 +1,6 @@
 .container {
   padding: 26px 24px 24px;
-  height: calc(100% - 44px);
+  height: calc(100% - var(--nav-height));
   .title {
     font-size: 20px;
     font-weight: 600;

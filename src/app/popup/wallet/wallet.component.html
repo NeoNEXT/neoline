@@ -1,4 +1,8 @@
 <section class="container">
+  <nav
+    [needTranslate]="false"
+    [title]="'AddAccount' | translate : { chain: chainName } | async"
+  ></nav>
   <div class="tab">
     <span
       [ngClass]="{ active: tabType === 'create' }"

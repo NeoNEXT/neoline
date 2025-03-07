@@ -1037,6 +1037,9 @@
   "AddAccountOrHardwareWallet": {
     "message": "添加钱包/连接硬件钱包"
   },
+  "AddAccount": {
+    "message": "添加 {{chain}} 钱包"
+  },
   "importWalletTip": {
     "message": "导入助记词或私钥"
   },

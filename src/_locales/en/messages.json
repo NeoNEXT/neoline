@@ -1037,6 +1037,9 @@
   "AddAccountOrHardwareWallet": {
     "message": "Add account or hardware wallet"
   },
+  "AddAccount": {
+    "message": "Add {{chain}} account"
+  },
   "importWalletTip": {
     "message": "Import mnemonic phrase or private key"
   },

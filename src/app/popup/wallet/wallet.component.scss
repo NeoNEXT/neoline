@@ -1,9 +1,7 @@
-
-
 section.container {
   height: 100%;
   .tab {
-    background: var(--background-color);
+    border-bottom: 1px solid var(--line-color);
     span {
       display: inline-block;
       width: 50%;
@@ -36,6 +34,6 @@ section.container {
     }
   }
   .content {
-    height: calc(100% - 44px);
+    height: calc(100% - 106px); // tab height + nav height: 44+62=106
   }
 }

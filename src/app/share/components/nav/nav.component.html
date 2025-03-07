@@ -6,6 +6,6 @@
       src="/assets/images/common/nav-arrow.svg"
       (click)="back()"
     />
-    {{ title | translate | async }}
+    {{ needTranslate ? (title | translate | async) : title }}
   </div>
 </div>
