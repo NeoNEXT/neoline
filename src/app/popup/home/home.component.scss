@@ -113,6 +113,15 @@
       border-top: 4px solid var(--line-color);
     }
     .tabs-container {
+      .content {
+        padding-left: 24px;
+        display: inline-flex;
+        justify-content: space-between;
+        gap: 24px;
+        span {
+          margin-left: 0;
+        }
+      }
       img.asset-add {
         position: absolute;
         right: 24px;
@@ -138,5 +147,11 @@
   color: var(--theme-color);
   &:hover {
     text-decoration: underline;
+  }
+}
+
+@media screen and (min-width: 1000px) {
+  .popup-home .popup-home-body .tabs-container .content {
+    gap: 120px;
   }
 }

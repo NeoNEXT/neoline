@@ -15,3 +15,9 @@
   z-index: 10;
   position: relative;
 }
+
+@media screen and (min-width: 500px) {
+  .body {
+    border-radius: 24px;
+  }
+}

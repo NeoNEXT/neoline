@@ -86,31 +86,33 @@
     <app-claim-gas></app-claim-gas>
     <hr class="claim-line" />
     <div class="tabs-container">
-      <span
-        [class]="{ selected: selectedIndex === 0 }"
-        (click)="selectedIndex = 0"
-      >
-        {{ "assets" | translate | async }}
-      </span>
-      <span
-        [class]="{ selected: selectedIndex === 1 }"
-        (click)="selectedIndex = 1"
-      >
-        {{
-          chainType === "Neo3"
-            ? "NEP11"
-            : chainType === "NeoX"
-            ? "NFT"
-            : ("transaction" | translate | async)
-        }}
-      </span>
-      <span
-        *ngIf="chainType === 'NeoX'"
-        [class]="{ selected: selectedIndex === 2 }"
-        (click)="selectedIndex = 2"
-      >
-        {{ "Activity" | translate | async }}
-      </span>
+      <div class="content">
+        <span
+          [class]="{ selected: selectedIndex === 0 }"
+          (click)="selectedIndex = 0"
+        >
+          {{ "assets" | translate | async }}
+        </span>
+        <span
+          [class]="{ selected: selectedIndex === 1 }"
+          (click)="selectedIndex = 1"
+        >
+          {{
+            chainType === "Neo3"
+              ? "NEP11"
+              : chainType === "NeoX"
+              ? "NFT"
+              : ("transaction" | translate | async)
+          }}
+        </span>
+        <span
+          *ngIf="chainType === 'NeoX'"
+          [class]="{ selected: selectedIndex === 2 }"
+          (click)="selectedIndex = 2"
+        >
+          {{ "Activity" | translate | async }}
+        </span>
+      </div>
       <img
         (click)="toAdd()"
         class="asset-add"
