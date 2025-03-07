@@ -102,13 +102,13 @@
       (returnFee)="updateEvmFee($event)"
     >
     </evm-fee>
-    <div class="btn-group">
-      <button class="cancel" (click)="cancel()">
-        {{ "cancel" | translate | async }}
-      </button>
-      <button class="confirm" (click)="submit()">
-        {{ "Next" | translate | async }}
-      </button>
-    </div>
+  </div>
+  <div class="btn-group" *ngIf="transferTo?.address">
+    <button class="cancel" (click)="cancel()">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button class="confirm" (click)="submit()">
+      {{ "Next" | translate | async }}
+    </button>
   </div>
 </section>

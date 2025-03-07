@@ -9,6 +9,16 @@
 }
 
 section.container {
+  height: calc(100% - var(--nav-height));
+  display: flex;
+  flex-direction: column;
+  .content {
+    flex: 1;
+    overflow: auto;
+    &::-webkit-scrollbar {
+      display: block;
+    }
+  }
   .bridge-content {
     padding: 16px 24px 19px 24px;
     .label {
@@ -54,17 +64,12 @@ section.container {
     }
   }
   ul.details-content {
-    height: 170px;
-    overflow-y: scroll;
     padding: 16px 24px;
     mask-image: -webkit-linear-gradient(
       top,
       rgba(0, 0, 0, 1) 96%,
       rgba(0, 0, 0, 0.1) 100%
     );
-    &::-webkit-scrollbar {
-      display: block;
-    }
     li {
       margin-top: 10px;
       &:first-child {
@@ -124,17 +129,12 @@ section.container {
     }
   }
   .data-content {
-    height: 170px;
-    overflow-y: scroll;
     padding: 16px 24px;
     mask-image: -webkit-linear-gradient(
       top,
       rgba(0, 0, 0, 1) 96%,
       rgba(0, 0, 0, 0.1) 100%
     );
-    &::-webkit-scrollbar {
-      display: block;
-    }
     .title {
       color: var(--sub-title-color);
       &.hex {
@@ -183,6 +183,8 @@ section.container {
     }
   }
   .btn-group {
+    margin-top: 16px;
+    margin-bottom: 24px;
     padding: 0 24px;
     button {
       width: calc(50% - 8px);

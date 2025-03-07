@@ -110,12 +110,14 @@ $network-list: (
 .loading-box {
   background: rgba(0, 0, 0, 0.2);
   position: fixed;
+  left: 0;
   top: 0;
   height: 100%;
   width: 100%;
   z-index: 99999;
-  padding-top: 50%;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   .content {
     display: inline-flex;
     flex-direction: column;

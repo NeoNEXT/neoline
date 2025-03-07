@@ -4,210 +4,212 @@
     <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
   </div>
 </div>
+<nav [title]="'transfer'" [customBack]="true" (backEvent)="back()"></nav>
 <section class="container">
-  <div class="asset-detail">
-    <img
-      class="back"
-      (click)="back()"
-      theme
-      src="/assets/images/common/nav-arrow.svg"
-    />
-    <token-logo
-      *ngIf="data.isNFT"
-      customClass="big"
-      [isNFTToken]="true"
-      [imageUrl]="data.nftToken?.image_url"
-    ></token-logo>
-    <token-logo
-      *ngIf="!data.isNFT"
-      customClass="big"
-      [assetId]="dataJson?.asset"
-      [imageUrl]="data.isNFT ? data.nftToken.image_url : data.asset.image_url"
-      [chainType]="data.chainType"
-      [symbol]="dataJson?.symbol"
-      [neoXChainId]="data.network?.id"
-    ></token-logo>
-    <p class="asset-balance">{{ getShowAmount() }} {{ dataJson?.symbol }}</p>
-    <p class="asset-money" *ngIf="!data?.isNFT">
-      {{ rate?.amount | numberFixed : 2 }}
-      {{ rateCurrency }}
-    </p>
-    <div class="address-group">
-      <copy [value]="data.from">
-        <div class="item">
-          <img class="avatar" [avatar]="data.from" />
-          <span>{{ data.from | longStr : 4 }}</span>
-        </div>
-      </copy>
-      <img src="assets/images/bridge/arrow.svg" alt="" />
-      <copy [value]="data?.to?.address">
-        <div class="item">
-          <img class="avatar" [avatar]="data?.to?.address" />
-          <span>{{ data?.to?.address | longStr : 4 }}</span>
-        </div>
-      </copy>
+  <div class="content">
+    <div class="asset-detail">
+      <token-logo
+        *ngIf="data.isNFT"
+        customClass="big"
+        [isNFTToken]="true"
+        [imageUrl]="data.nftToken?.image_url"
+      ></token-logo>
+      <token-logo
+        *ngIf="!data.isNFT"
+        customClass="big"
+        [assetId]="dataJson?.asset"
+        [imageUrl]="data.isNFT ? data.nftToken.image_url : data.asset.image_url"
+        [chainType]="data.chainType"
+        [symbol]="dataJson?.symbol"
+        [neoXChainId]="data.network?.id"
+      ></token-logo>
+      <p class="asset-balance">{{ getShowAmount() }} {{ dataJson?.symbol }}</p>
+      <p class="asset-money" *ngIf="!data?.isNFT">
+        {{ rate?.amount | numberFixed : 2 }}
+        {{ rateCurrency }}
+      </p>
+      <div class="address-group">
+        <copy [value]="data.from">
+          <div class="item">
+            <img class="avatar" [avatar]="data.from" />
+            <span>{{ data.from | longStr : 4 }}</span>
+          </div>
+        </copy>
+        <img src="assets/images/bridge/arrow.svg" alt="" />
+        <copy [value]="data?.to?.address">
+          <div class="item">
+            <img class="avatar" [avatar]="data?.to?.address" />
+            <span>{{ data?.to?.address | longStr : 4 }}</span>
+          </div>
+        </copy>
+      </div>
     </div>
-  </div>
-  <div class="tabs-container">
-    <span
-      [class]="{ selected: tabType === 'details' }"
-      (click)="tabType = 'details'"
-    >
-      {{ "details" | translate | async }}
-    </span>
-    <span
-      *ngIf="
-        !(
-          data.chainType === 'NeoX' &&
-          data.asset?.asset_id === ETH_SOURCE_ASSET_HASH
-        )
-      "
-      [class]="{ selected: tabType === 'data' }"
-      (click)="tabType = 'data'"
-    >
-      {{ "data" | translate | async }}
-    </span>
-  </div>
-  <ul class="details-content" *ngIf="tabType === 'details'">
-    <li *ngIf="data.chainType !== 'NeoX'">
-      <p class="label">
-        {{
-          (data?.chainType === "Neo3" ? "PRIORITYFEE" : "GASFEE")
-            | translate
-            | async
-        }}<img
-          class="edit"
-          (click)="editFee()"
-          src="assets/images/common/edit.svg"
-        />
-      </p>
-      <p class="value">{{ data?.fee | numberFixed }} GAS</p>
-      <p class="value-rate">
-        {{ rate.fee | numberFixed : 2 }} {{ rateCurrency }}
-      </p>
-      <div class="border-line"></div>
-    </li>
-
-    <ng-container *ngIf="data.chainType === 'Neo3'">
-      <li>
-        <p class="label">{{ "TOTAL" | translate | async }}</p>
-        <p class="label bold">
-          {{ "amount" | translate | async }} +
-          <span (click)="expandTotalFee = !expandTotalFee" class="underline">{{
-            "GASFEE" | translate | async
-          }}</span>
-        </p>
-        <p class="value dropdown">
-          {{ data?.amount | numberFixed }} {{ dataJson?.symbol }} +
-          {{ totalFee | numberFixed }} GAS
-          <img
-            (click)="expandTotalFee = !expandTotalFee"
-            class="arrow"
-            [ngClass]="{ expand: expandTotalFee }"
-            [class.expand]="expandTotalFee"
-            src="assets/images/common/support-arrow.svg"
-            alt=""
+    <div class="tabs-container">
+      <span
+        [class]="{ selected: tabType === 'details' }"
+        (click)="tabType = 'details'"
+      >
+        {{ "details" | translate | async }}
+      </span>
+      <span
+        *ngIf="
+          !(
+            data.chainType === 'NeoX' &&
+            data.asset?.asset_id === ETH_SOURCE_ASSET_HASH
+          )
+        "
+        [class]="{ selected: tabType === 'data' }"
+        (click)="tabType = 'data'"
+      >
+        {{ "data" | translate | async }}
+      </span>
+    </div>
+    <ul class="details-content" *ngIf="tabType === 'details'">
+      <li *ngIf="data.chainType !== 'NeoX'">
+        <p class="label">
+          {{
+            (data?.chainType === "Neo3" ? "PRIORITYFEE" : "GASFEE")
+              | translate
+              | async
+          }}<img
+            class="edit"
+            (click)="editFee()"
+            src="assets/images/common/edit.svg"
           />
         </p>
-        <p class="value-rate">
-          {{ rate.total | numberFixed : 2 }} {{ rateCurrency }}
-        </p>
-      </li>
-      <li [hidden]="!expandTotalFee">
-        <p class="label">{{ "SYSTEMFEE" | translate | async }}</p>
-        <p class="value">{{ systemFee | numberFixed }} GAS</p>
-        <p class="value-rate">
-          {{ rate.systemFee | numberFixed : 2 }} {{ rateCurrency }}
-        </p>
-      </li>
-      <li [hidden]="!expandTotalFee">
-        <p class="label">{{ "NETWORKFEE" | translate | async }}</p>
-        <p class="value">{{ networkFee | numberFixed }} GAS</p>
-        <p class="value-rate">
-          {{ rate.networkFee | numberFixed : 2 }} {{ rateCurrency }}
-        </p>
-      </li>
-    </ng-container>
-
-    <!-- evm -->
-    <ng-container *ngIf="data.chainType === 'NeoX'">
-      <li *ngIf="insufficientFunds">
-        <evm-gas-error
-          [networkName]="data.network.name"
-          [symbol]="data.network.symbol"
-        ></evm-gas-error>
-      </li>
-      <li *ngIf="nonceInfo?.pendingTxs">
-        <evm-pending-warning
-          [count]="nonceInfo.pendingTxs"
-        ></evm-pending-warning>
-      </li>
-      <li>
-        <evm-fee
-          [transferAsset]="data.asset"
-          [nftAsset]="data.nftAsset"
-          [transferNFT]="data.nftToken"
-          [transferToAddress]="data.to?.address"
-          [fromAddress]="data.from"
-          [transferAmount]="data.amount"
-          [symbol]="data.network.symbol"
-          [customNeoXFeeInfo]="data.neoXFeeInfo"
-          [place]="'confirm'"
-          (returnFee)="updateEvmFee($event)"
-        >
-        </evm-fee>
+        <p class="value">{{ data?.fee | numberFixed }} GAS</p>
         <p class="value-rate">
           {{ rate.fee | numberFixed : 2 }} {{ rateCurrency }}
         </p>
         <div class="border-line"></div>
       </li>
-      <li>
-        <p class="label">{{ "TOTAL" | translate | async }}</p>
-        <p class="label bold">
-          {{ "amount" | translate | async }} +
-          {{ "GASFEE" | translate | async }}
+
+      <ng-container *ngIf="data.chainType === 'Neo3'">
+        <li>
+          <p class="label">{{ "TOTAL" | translate | async }}</p>
+          <p class="label bold">
+            {{ "amount" | translate | async }} +
+            <span
+              (click)="expandTotalFee = !expandTotalFee"
+              class="underline"
+              >{{ "GASFEE" | translate | async }}</span
+            >
+          </p>
+          <p class="value dropdown">
+            {{ data?.amount | numberFixed }} {{ dataJson?.symbol }} +
+            {{ totalFee | numberFixed }} GAS
+            <img
+              (click)="expandTotalFee = !expandTotalFee"
+              class="arrow"
+              [ngClass]="{ expand: expandTotalFee }"
+              [class.expand]="expandTotalFee"
+              src="assets/images/common/support-arrow.svg"
+              alt=""
+            />
+          </p>
+          <p class="value-rate">
+            {{ rate.total | numberFixed : 2 }} {{ rateCurrency }}
+          </p>
+        </li>
+        <li [hidden]="!expandTotalFee">
+          <p class="label">{{ "SYSTEMFEE" | translate | async }}</p>
+          <p class="value">{{ systemFee | numberFixed }} GAS</p>
+          <p class="value-rate">
+            {{ rate.systemFee | numberFixed : 2 }} {{ rateCurrency }}
+          </p>
+        </li>
+        <li [hidden]="!expandTotalFee">
+          <p class="label">{{ "NETWORKFEE" | translate | async }}</p>
+          <p class="value">{{ networkFee | numberFixed }} GAS</p>
+          <p class="value-rate">
+            {{ rate.networkFee | numberFixed : 2 }} {{ rateCurrency }}
+          </p>
+        </li>
+      </ng-container>
+
+      <!-- evm -->
+      <ng-container *ngIf="data.chainType === 'NeoX'">
+        <li *ngIf="insufficientFunds">
+          <evm-gas-error
+            [networkName]="data.network.name"
+            [symbol]="data.network.symbol"
+          ></evm-gas-error>
+        </li>
+        <li *ngIf="nonceInfo?.pendingTxs">
+          <evm-pending-warning
+            [count]="nonceInfo.pendingTxs"
+          ></evm-pending-warning>
+        </li>
+        <li>
+          <evm-fee
+            [transferAsset]="data.asset"
+            [nftAsset]="data.nftAsset"
+            [transferNFT]="data.nftToken"
+            [transferToAddress]="data.to?.address"
+            [fromAddress]="data.from"
+            [transferAmount]="data.amount"
+            [symbol]="data.network.symbol"
+            [customNeoXFeeInfo]="data.neoXFeeInfo"
+            [place]="'confirm'"
+            (returnFee)="updateEvmFee($event)"
+          >
+          </evm-fee>
+          <p class="value-rate">
+            {{ rate.fee | numberFixed : 2 }} {{ rateCurrency }}
+          </p>
+          <div class="border-line"></div>
+        </li>
+        <li>
+          <p class="label">{{ "TOTAL" | translate | async }}</p>
+          <p class="label bold">
+            {{ "amount" | translate | async }} +
+            {{ "GASFEE" | translate | async }}
+          </p>
+          <p class="value" *ngIf="dataJson.asset !== ETH_SOURCE_ASSET_HASH">
+            {{ data?.amount | numberFixed : 8 }} {{ dataJson?.symbol }} +
+            {{ data.neoXFeeInfo.estimateGas | numberFixed : 8 }}
+            {{ data.network.symbol }}
+          </p>
+          <p class="value" *ngIf="dataJson.asset === ETH_SOURCE_ASSET_HASH">
+            {{ getEvmTotalData() }} {{ dataJson?.symbol }}
+          </p>
+          <p class="value-rate">
+            {{ rate.total | numberFixed : 2 }} {{ rateCurrency }}
+          </p>
+        </li>
+        <li>
+          <evm-custom-nonce
+            [default]="nonceInfo?.nonce"
+            (changeNonceEvent)="changeNonce($event)"
+          ></evm-custom-nonce>
+        </li>
+      </ng-container>
+    </ul>
+    <div class="data-content" *ngIf="tabType === 'data'">
+      <ng-container *ngIf="data.chainType !== 'NeoX'">
+        <p class="title">
+          invoke function: <span class="value">transfer</span>
         </p>
-        <p class="value" *ngIf="dataJson.asset !== ETH_SOURCE_ASSET_HASH">
-          {{ data?.amount | numberFixed : 8 }} {{ dataJson?.symbol }} +
-          {{ data.neoXFeeInfo.estimateGas | numberFixed : 8 }}
-          {{ data.network.symbol }}
+        <div class="json-box">
+          <pre>{{ dataJson || {} | json }}</pre>
+        </div>
+        <p class="title hex">HEX</p>
+        <p class="json-box serialize">{{ txSerialize }}</p>
+      </ng-container>
+      <ng-container
+        *ngIf="
+          data.chainType === 'NeoX' &&
+          data.asset?.asset_id !== ETH_SOURCE_ASSET_HASH
+        "
+      >
+        <p class="title">
+          FUNCTION TYPE:
+          <span class="value">Sending {{ dataJson?.symbol }}</span>
         </p>
-        <p class="value" *ngIf="dataJson.asset === ETH_SOURCE_ASSET_HASH">
-          {{ getEvmTotalData() }} {{ dataJson?.symbol }}
-        </p>
-        <p class="value-rate">
-          {{ rate.total | numberFixed : 2 }} {{ rateCurrency }}
-        </p>
-      </li>
-      <li>
-        <evm-custom-nonce
-          [default]="nonceInfo?.nonce"
-          (changeNonceEvent)="changeNonce($event)"
-        ></evm-custom-nonce>
-      </li>
-    </ng-container>
-  </ul>
-  <div class="data-content" *ngIf="tabType === 'data'">
-    <ng-container *ngIf="data.chainType !== 'NeoX'">
-      <p class="title">invoke function: <span class="value">transfer</span></p>
-      <div class="json-box">
-        <pre>{{ dataJson || {} | json }}</pre>
-      </div>
-      <p class="title hex">HEX</p>
-      <p class="json-box serialize">{{ txSerialize }}</p>
-    </ng-container>
-    <ng-container
-      *ngIf="
-        data.chainType === 'NeoX' &&
-        data.asset?.asset_id !== ETH_SOURCE_ASSET_HASH
-      "
-    >
-      <p class="title">
-        FUNCTION TYPE: <span class="value">Sending {{ dataJson?.symbol }}</span>
-      </p>
-      <p class="title hex">HEX DATA: {{ evmHexDataLength }} BYTES</p>
-      <p class="json-box serialize">{{ evmHexData }}</p>
-    </ng-container>
+        <p class="title hex">HEX DATA: {{ evmHexDataLength }} BYTES</p>
+        <p class="json-box serialize">{{ evmHexData }}</p>
+      </ng-container>
+    </div>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="cancel()">

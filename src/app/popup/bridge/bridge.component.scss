@@ -196,8 +196,11 @@
 }
 
 .tx-history {
-  margin-left: 40px;
-  margin-top: 12px;
+  height: 100px;
+  max-height: 180px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   .item {
     display: flex;
     align-items: center;
