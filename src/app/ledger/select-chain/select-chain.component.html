@@ -1,40 +1,35 @@
 <section class="main">
-  <div class="header">
-    <p class="title">{{ "ImportLedgerWallet" | translate | async }}</p>
-    <img class="logo" theme src="/assets/images/login/neo-bg.png" alt="" />
+  <p class="title">{{ "selectAChain" | translate | async }}</p>
+  <ul>
+    <li (click)="chain = 'NeoX'" [ngClass]="{ active: chain === 'NeoX' }">
+      <p>Neo X</p>
+      <p class="evm">(EVM Network)</p>
+    </li>
+    <li (click)="chain = 'Neo3'" [ngClass]="{ active: chain === 'Neo3' }">
+      Neo N3
+    </li>
+    <li (click)="chain = 'Neo2'" [ngClass]="{ active: chain === 'Neo2' }">
+      Neo Legacy
+    </li>
+  </ul>
+  <p class="title ledger">{{ "plugInLedgerWallet" | translate | async }}</p>
+  <p class="tip">
+    {{ "plugInLedgerWalletTip" | translate | async
+    }}<span class="link" (click)="jumbToWeb()">{{
+      "clickHere" | translate | async
+    }}</span>
+  </p>
+  <div class="tip-imgs">
+    <img
+      class="ledger"
+      theme
+      src="/assets/images/ledger/plug-ledger.png"
+      alt=""
+    />
+    <img class="arrow" src="/assets/images/ledger/plug-arrow.png" alt="" />
+    <img class="pc" theme src="/assets/images/ledger/plug-pc.png" alt="" />
   </div>
-  <div class="bg"></div>
-  <div class="content">
-    <p class="title">{{ "selectAChain" | translate | async }}</p>
-    <ul>
-      <li (click)="chain = 'NeoX'" [ngClass]="{ active: chain === 'NeoX' }">
-        <p>Neo X</p>
-        <p class="evm">(EVM Network)</p>
-      </li>
-      <li (click)="chain = 'Neo3'" [ngClass]="{ active: chain === 'Neo3' }">
-        Neo N3
-      </li>
-      <li (click)="chain = 'Neo2'" [ngClass]="{ active: chain === 'Neo2' }">
-        Neo Legacy
-      </li>
-    </ul>
-    <p class="title ledger">{{ "plugInLedgerWallet" | translate | async }}</p>
-    <p class="tip">
-      {{ "plugInLedgerWalletTip" | translate | async
-      }}<span class="link" (click)="jumbToWeb()">{{
-        "clickHere" | translate | async
-      }}</span>
-    </p>
-    <div class="tip-imgs">
-      <img
-        class="ledger"
-        theme
-        src="/assets/images/ledger/plug-ledger.png"
-        alt=""
-      />
-      <img class="arrow" src="/assets/images/ledger/plug-arrow.png" alt="" />
-      <img class="pc" theme src="/assets/images/ledger/plug-pc.png" alt="" />
-    </div>
+  <div class="confirm-content">
     <button class="confirm" (click)="select()">
       {{ "Next" | translate | async }}
     </button>

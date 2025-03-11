@@ -139,12 +139,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   lock() {
     this.chromeSrc.setPassword('');
-    this.navigate('/popup/login');
-  }
-
-  navigate(url: string) {
-    this.showMenu = false;
-    this.router.navigateByUrl(url);
+    this.router.navigateByUrl('/popup/login');
   }
 
   toHelpWebsite() {

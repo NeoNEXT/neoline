@@ -293,6 +293,8 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
                 this.toCreate(type);
               }
             });
+        } else {
+          this.close();
         }
       });
   }

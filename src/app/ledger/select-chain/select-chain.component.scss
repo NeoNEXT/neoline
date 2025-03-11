@@ -1,107 +1,78 @@
-
-
 section.main {
-  overflow: hidden;
+  max-width: 696px;
+  padding: 40px 24px;
+  margin: 0 auto;
   position: relative;
-  .header {
-    height: 132px;
-    position: relative;
-    overflow: hidden;
-    .title {
-      position: absolute;
-      left: 24px;
-      bottom: 32px;
-      font-size: 20px;
-      color: var(--btn-title-color);
-    }
-    img.logo {
-      position: absolute;
-      top: 41px;
-      right: 49px;
-      width: 107px;
-    }
+  .title {
+    color: var(--sub-title-color);
+    font-size: 18px;
   }
-  .bg {
-    position: absolute;
-    left: -10px;
-    top: 114px;
-    width: 100%;
-    height: 100px;
-    transform: rotate(-7deg);
-    border-radius: 40px;
-    opacity: 0.48;
-    background: #ffffff;
-  }
-  .content {
-    height: 468px;
-    background: var(--body-background-color);
-    padding: 24px;
-    position: relative;
-    .title {
-      color: var(--sub-title-color);
-    }
-    ul {
-      margin-top: 16px;
+  ul {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    li {
+      width: 100px;
+      height: 90px;
       display: flex;
-      align-items: center;
-      justify-content: space-between;
-      li {
-        width: 100px;
-        height: 90px;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 7px;
-        background: var(--message-box-color);
-        border-radius: 10px;
-        border: 1px solid var(--line-color);
-        font-size: 16px;
-        font-family: NeverMind-Regular;
-        cursor: pointer;
-        .evm {
-          font-size: 12px;
-        }
-        &.active {
-          font-family: NeverMind-Medium;
-          border: 1px solid var(--theme-color);
-        }
-      }
-    }
-    .title.ledger {
-      margin-top: 32px;
-    }
-    .tip {
-      font-size: 12px;
-      color: var(--tip-color);
-      margin-top: 12px;
-      line-height: 18px;
-      font-family: NeverMind-Regular;
-      .link {
-        color: var(--theme-color);
-        cursor: pointer;
-        text-decoration: none;
-      }
-    }
-    .tip-imgs {
-      margin-top: 24px;
-      display: flex;
+      flex-direction: column;
       align-items: center;
       justify-content: center;
-      img.ledger {
-        width: 70px;
+      gap: 7px;
+      background: var(--message-box-color);
+      border-radius: 10px;
+      border: 1px solid var(--line-color);
+      font-size: 16px;
+      font-family: NeverMind-Regular;
+      cursor: pointer;
+      .evm {
+        font-size: 12px;
       }
-      img.arrow {
-        width: 24px;
-        margin: 0 20px;
-      }
-      img.pc {
-        width: 90px;
+      &.active {
+        font-family: NeverMind-Medium;
+        border: 1px solid var(--theme-color);
       }
     }
-    button.confirm {
-      width: 100%;
-      margin-top: 45px;
+  }
+  .title.ledger {
+    margin-top: 40px;
+    font-size: 16px;
+  }
+  .tip {
+    font-size: 14px;
+    color: var(--tip-color);
+    margin-top: 12px;
+    line-height: 18px;
+    font-family: NeverMind-Regular;
+    .link {
+      color: var(--theme-color);
+      cursor: pointer;
+      text-decoration: none;
+    }
+  }
+  .tip-imgs {
+    margin-top: 50px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    img.ledger {
+      width: 85px;
+    }
+    img.arrow {
+      width: 26px;
+      margin: 0 40px;
+    }
+    img.pc {
+      width: 99px;
+    }
+  }
+  .confirm-content {
+    width: 100%;
+    margin-top: 80px;
+    text-align: center;
+    button {
+      width: 327px;
     }
   }
 }

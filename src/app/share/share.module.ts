@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 
 //#region mat modules
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -92,7 +93,13 @@ const DIRECTIVE = [AvatarDirective, ErrSrcDirective, ImgThemeDirective];
 
 @NgModule({
   declarations: [...PIPES, ...DIRECTIVE, ...COMPONENTS],
-  imports: [FormsModule, CommonModule, MatIconModule, MatButtonModule],
+  imports: [
+    FormsModule,
+    RouterModule,
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+  ],
   exports: [
     FormsModule,
     ReactiveFormsModule,

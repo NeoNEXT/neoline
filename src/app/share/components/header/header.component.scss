@@ -9,6 +9,7 @@ header {
   border-bottom: 1px solid var(--border-color);
   position: relative;
   &.theme-bg {
+    border-bottom: none;
     img.logo {
       filter: drop-shadow(1000px 0 0 var(--network-color));
       transform: translate(-1000px);

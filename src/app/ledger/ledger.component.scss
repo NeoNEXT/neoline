@@ -1,49 +1,53 @@
-
-
-section.main {
-  width: 100vw;
-  height: 100vh;
-  background: #ebf2f1;
-  font-weight: 400;
-  :host-context([data-theme-style="dark-theme"]) & {
-    background: #303135;
+::ng-deep {
+  .body {
+    height: auto !important;
+    min-height: 100% !important;
+    overflow-y: auto !important;
   }
+  app-header header {
+    border-bottom: none !important;
+  }
+}
+section.main {
+  width: 100%;
+  height: 100%;
+  font-weight: 400;
+  margin-top: -74px;
+  position: relative;
+  z-index: -1;
   .header {
-    width: 80%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 20px 10px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    .right {
-      display: inline-flex;
-      align-items: center;
-      button {
-        min-width: 140px;
-        height: 32px;
-        line-height: 32px;
-        padding: 0 10px;
-        border-radius: 19px;
-        border: 1px solid var(--sub-title-color);
-        display: inline-flex;
-        align-items: center;
-        justify-content: center;
-        background: transparent;
-        margin-right: 25px;
-        color: var(--title-color);
-      }
-      img {
-        width: 32px;
-        height: 32px;
-      }
+    position: relative;
+    overflow: hidden;
+    height: 254px;
+    background: linear-gradient(141deg, #06ccab 37%, #01bfbf 60%);
+    border-top-left-radius: 24px;
+    border-top-right-radius: 24px;
+    .title {
+      position: absolute;
+      left: 60px;
+      bottom: 50px;
+      font-size: 38px;
+      color: var(--btn-title-color);
+    }
+    img.logo {
+      position: absolute;
+      top: 98px;
+      right: 160px;
+      width: 190px;
+    }
+    .bg {
+      position: absolute;
+      right: 60px;
+      bottom: -74px;
+      width: 100%;
+      height: 100px;
+      transform: rotate(-7deg);
+      border-top-right-radius: 40px;
+      opacity: 0.48;
+      background: #ffffff;
     }
   }
   .content {
-    width: 375px;
-    min-height: 600px;
-    margin: 0 auto;
-    background: linear-gradient(172deg, #06ccab 3%, #01bfbf 57%);
-    box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.16);
+    height: calc(100% - 254px);
   }
 }

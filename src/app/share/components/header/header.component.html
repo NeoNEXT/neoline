@@ -1,5 +1,11 @@
 <header [ngClass]="{ 'theme-bg': checkIsThemeBg() }">
-  <img theme src="assets/images/logo-word.svg" class="logo" alt="" />
+  <img
+    routerLink="/popup/home"
+    theme
+    src="assets/images/logo-word.svg"
+    class="logo"
+    alt=""
+  />
   <div class="right">
     <button
       class="network"
@@ -24,7 +30,7 @@
     (click)="showMenu = false"
   ></section>
   <ul class="pop-ups-menu" *ngIf="showMenu">
-    <li (click)="navigate('/popup/account')">
+    <li routerLink="/popup/account">
       <img theme src="assets/images/account/home-account-detail.svg" alt="" />{{
         "accountDetails" | translate | async
       }}
@@ -44,12 +50,12 @@
         "menuGuideAndSupport" | translate | async
       }}
     </li>
-    <li (click)="navigate('/popup/setting')">
+    <li routerLink="/popup/setting">
       <img theme src="assets/images/account/home-setting.svg" />{{
         "menuSettings" | translate | async
       }}
     </li>
-    <li (click)="navigate('/popup/about')">
+    <li routerLink="/popup/about">
       <img theme src="assets/images/account/home-about-us.svg" />{{
         "menuAboutUs" | translate | async
       }}
