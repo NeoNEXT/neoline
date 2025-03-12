@@ -100,3 +100,9 @@ section.container {
     gap: 9px;
   }
 }
+
+@media screen and (min-width: 400px) {
+  section.container.selectAddress {
+    min-height: calc(var(--expand-min-height) - var(--nav-height));
+  }
+}

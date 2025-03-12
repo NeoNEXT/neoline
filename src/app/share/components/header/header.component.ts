@@ -18,7 +18,7 @@ declare var chrome: any;
   styleUrls: ['./header.component.scss'],
 })
 export class HeaderComponent implements OnInit, OnDestroy {
-  private currentUrl = this.router.url;
+  currentUrl = this.router.url;
   showNetworkList = false;
   showMenu = false;
   lang: string;
@@ -83,7 +83,8 @@ export class HeaderComponent implements OnInit, OnDestroy {
       !this.address ||
       this.currentUrl.indexOf('/login') >= 0 ||
       this.currentUrl.indexOf('/wallet/new-guide') >= 0 ||
-      this.router.url.indexOf('/notification') >= 0
+      this.router.url.indexOf('/notification') >= 0 ||
+      this.router.url.indexOf('/ledger') >= 0
     ) {
       return false;
     }

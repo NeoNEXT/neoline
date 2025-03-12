@@ -23,6 +23,13 @@
       src="assets/images/common/menu.svg"
       alt=""
     />
+    <img
+      *ngIf="currentUrl === '/ledger'"
+      (click)="showMenu = !showMenu"
+      class="menu"
+      src="assets/images/common/ledger-menu.svg"
+      alt=""
+    />
   </div>
   <section
     class="pop-ups-veil"

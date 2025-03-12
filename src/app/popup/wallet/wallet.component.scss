@@ -37,3 +37,9 @@ section.container {
     height: calc(100% - 106px); // tab height + nav height: 44+62=106
   }
 }
+
+@media screen and (min-width: 500px) {
+  section.container .content {
+    height: calc(var(--expand-min-height) - var(--nav-height));
+  }
+}

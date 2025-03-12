@@ -141,3 +141,9 @@ section.container {
     }
   }
 }
+
+@media screen and (min-width: 400px) {
+  section.container .content {
+    min-height: calc(var(--expand-min-height) - var(--nav-height));
+  }
+}

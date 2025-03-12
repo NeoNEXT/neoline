@@ -111,3 +111,9 @@ section.container {
     opacity: 0;
   }
 }
+
+@media screen and (min-width: 400px) {
+  section.container {
+    min-height: var(--expand-min-height);
+  }
+}
