@@ -1,9 +1,12 @@
-
 @import "src/styles/pop-ups-menu.scss";
 @import "src/styles/home-top.scss";
 
+:host ::ng-deep app-header header {
+  background: var(--background-color);
+}
+
 section.container {
-  height: 100%;
+  height: calc(100% - 74px);
   overflow-y: scroll;
   .asset-detail {
     background: var(--background-color);

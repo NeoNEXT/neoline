@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { ChainType, RpcNetwork } from '../popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';

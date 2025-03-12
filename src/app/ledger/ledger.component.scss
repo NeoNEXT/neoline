@@ -1,9 +1,4 @@
-::ng-deep {
-  .body {
-    height: auto !important;
-    min-height: 100% !important;
-    overflow-y: auto !important;
-  }
+:host ::ng-deep {
   app-header header {
     border-bottom: none !important;
   }

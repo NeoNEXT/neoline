@@ -1,5 +1,14 @@
 @import "src/styles/tab-container.scss";
 
+:host ::ng-deep nav {
+  .nav {
+    background: var(--background-color);
+    .content {
+      border-bottom: none !important;
+    }
+  }
+}
+
 .tabs-container {
   border-bottom: 1px solid var(--line-color);
 }
