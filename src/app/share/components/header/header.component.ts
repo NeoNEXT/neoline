@@ -21,6 +21,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   currentUrl = this.router.url;
   showNetworkList = false;
   showMenu = false;
+  showExpandView = true;
   lang: string;
   settingStateSub: Unsubscribable;
 
@@ -64,6 +65,13 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
       this.lang = lang;
     });
+    if (chrome.tabs) {
+      chrome.tabs.getCurrent((tab) => {
+        if (tab) {
+          this.showExpandView = false;
+        }
+      });
+    }
   }
 
   ngOnDestroy(): void {

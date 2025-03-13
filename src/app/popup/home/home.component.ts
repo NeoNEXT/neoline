@@ -20,7 +20,7 @@ import {
 import { MatDialog } from '@angular/material/dialog';
 import { PopupAccountListDialogComponent } from '../_dialogs';
 
-declare const chrome: any;
+declare var chrome: any;
 
 @Component({
   templateUrl: 'home.component.html',
@@ -73,7 +73,7 @@ export class PopupHomeComponent implements OnInit {
       this.rateCurrency = res;
     });
     if (chrome.tabs) {
-      chrome.tabs.getCurrent(function (tab) {
+      chrome.tabs.getCurrent((tab) => {
         if (tab) {
           this.showDappAuth = false;
         }

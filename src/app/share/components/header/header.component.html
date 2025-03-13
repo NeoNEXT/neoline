@@ -47,7 +47,7 @@
         "ViewOnExplorer" | translate | async
       }}
     </li>
-    <li (click)="expandView()">
+    <li *ngIf="showExpandView" (click)="expandView()">
       <img theme src="assets/images/account/home-expand.svg" alt="" />{{
         "expandView" | translate | async
       }}
