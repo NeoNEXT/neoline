@@ -199,6 +199,7 @@
   height: 100px;
   max-height: 180px;
   display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
   .item {

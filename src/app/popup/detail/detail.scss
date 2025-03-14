@@ -3,6 +3,7 @@
 
 :host ::ng-deep app-header header {
   background: var(--background-color);
+  border-bottom: none;
 }
 
 section.container {
