@@ -69,7 +69,7 @@ export class Init {
   }
 
   public async getPublicKey(): Promise<AccountPublicKey> {
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTarget.AccountPublicKey);
     }
@@ -150,7 +150,7 @@ export class Init {
     const parameter = {
       hostname: location.hostname,
     };
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.PickAddress, parameter);
     }
@@ -239,7 +239,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.VerifyMessage, parameter);
     }
@@ -258,7 +258,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.VerifyMessageV2, parameter);
     }
@@ -290,7 +290,7 @@ export class Init {
         });
       }
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       (parameter as any).hostname = location.hostname;
       return sendMessage(requestTargetN3.Invoke, parameter);
@@ -307,7 +307,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignMessage, parameter);
     }
@@ -323,7 +323,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignMessageV2, parameter);
     }
@@ -339,7 +339,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignMessageWithoutSalt, parameter);
     }
@@ -355,7 +355,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignMessageWithoutSaltV2, parameter);
     }
@@ -368,7 +368,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignTransaction, parameter);
     }
@@ -387,7 +387,7 @@ export class Init {
         reject(ERRORS.CONNECTION_DENIED);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.Send, parameter);
     }
@@ -436,7 +436,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       (parameter as any).hostname = location.hostname;
       return sendMessage(requestTargetN3.InvokeMultiple, parameter);
@@ -455,7 +455,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       parameter.hostname = location.hostname;
       parameter.icon = getIcon();
@@ -466,7 +466,7 @@ export class Init {
   }
 
   public async switchWalletAccount(): Promise<any> {
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       const parameter: WalletSwitchAccountArg = {
         hostname: location.hostname,

@@ -204,6 +204,7 @@ window.addEventListener(
           case requestTarget.AccountPublicKey:
           case requestTarget.PickAddress:
           case requestTarget.WalletSwitchNetwork:
+          case requestTarget.SwitchRequestChain:
           case requestTarget.WalletSwitchAccount: {
             chrome.runtime.sendMessage(e.data, (response) => {
               if (!chrome.runtime.lastError) {

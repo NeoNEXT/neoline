@@ -42,13 +42,16 @@ export function sendMessage<K>(
 }
 
 export async function checkConnectAndLogin(
-  connectChain?: ChainType
+  connectChain: ChainType
 ): Promise<boolean> {
-  const connected = await connect(connectChain);
-  if (connected === true) {
-    const isLogin = await login();
-    if (isLogin === true) {
-      return true;
+  const isSwitchToRequestChain = await switchToRequestChain(connectChain);
+  if (isSwitchToRequestChain === true) {
+    const connected = await connect(connectChain);
+    if (connected === true) {
+      const isLogin = await login();
+      if (isLogin === true) {
+        return true;
+      }
     }
   }
   return false;
@@ -146,6 +149,43 @@ export function login(): Promise<boolean | any> {
       window.addEventListener('message', callbackFn);
     });
     promise.then((res) => {
+      resolveMain(res);
+    });
+  });
+}
+
+function switchToRequestChain(connectChain: ChainType): Promise<boolean | any> {
+  const ID = getMessageID();
+  return new Promise((resolveMain) => {
+    window.postMessage(
+      {
+        target: requestTarget.SwitchRequestChain,
+        icon: getIcon(),
+        hostname: location.hostname,
+        title: document.title,
+        connectChain,
+        ID,
+      },
+      window.location.origin
+    );
+    const promise = new Promise((resolve) => {
+      const callbackFn = (event) => {
+        if (
+          event.data.return !== undefined &&
+          event.data.return === requestTarget.SwitchRequestChain &&
+          event.data.ID === ID
+        ) {
+          if ((event.data as Object).hasOwnProperty('data')) {
+            resolve(true);
+          } else {
+            resolve(false);
+          }
+          window.removeEventListener('message', callbackFn);
+        }
+      };
+      window.addEventListener('message', callbackFn);
+    });
+    promise.then((res: boolean | any) => {
       resolveMain(res);
     });
   });

@@ -28,6 +28,7 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
   iconSrc = '';
   hostname = '';
   private messageID = '';
+  isSwitchToRequestChain = false;
 
   private switchChainId: number;
   requestChainType: ChainType;
@@ -77,15 +78,34 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
     });
     this.aRouter.queryParams.subscribe((params: any) => {
       this.requestChainType = params.chainType;
-      this.switchChainId = Number(params.chainId);
-      if (this.requestChainType === 'NeoX') {
-        const switchNetwork = this.neoXNetworks.find(
-          (item) => item.chainId === this.switchChainId
-        );
-        this.switchNetworkName = switchNetwork.name;
+      if (params.chainId) {
+        this.switchChainId = Number(params.chainId);
+        if (this.requestChainType === 'NeoX') {
+          const switchNetwork = this.neoXNetworks.find(
+            (item) => item.chainId === this.switchChainId
+          );
+          this.switchNetworkName = switchNetwork.name;
+        } else {
+          this.switchNetworkName = CHAINID_OF_NETWORKTYPE[this.switchChainId];
+        }
       } else {
-        this.switchNetworkName = CHAINID_OF_NETWORKTYPE[this.switchChainId];
+        this.isSwitchToRequestChain = true;
+        switch (this.requestChainType) {
+          case 'Neo2':
+            this.switchChainId = this.n2Networks[0].chainId;
+            this.switchNetworkName = this.n2Networks[0].name;
+            break;
+          case 'Neo3':
+            this.switchChainId = this.n3Networks[0].chainId;
+            this.switchNetworkName = this.n3Networks[0].name;
+            break;
+          case 'NeoX':
+            this.switchChainId = this.neoXNetworks[0].chainId;
+            this.switchNetworkName = this.neoXNetworks[0].name;
+            break;
+        }
       }
+
       this.messageID = params.messageID;
       this.hostname = params.hostname;
       this.iconSrc =
@@ -106,12 +126,13 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
       {
         error: ERRORS.CANCELLED,
         ID: this.messageID,
-        return:
-          this.requestChainType === 'Neo2'
-            ? requestTarget.WalletSwitchNetwork
-            : this.requestChainType === 'Neo3'
-            ? requestTargetN3.WalletSwitchNetwork
-            : requestTargetEVM.request,
+        return: this.isSwitchToRequestChain
+          ? requestTarget.SwitchRequestChain
+          : this.requestChainType === 'Neo2'
+          ? requestTarget.WalletSwitchNetwork
+          : this.requestChainType === 'Neo3'
+          ? requestTargetN3.WalletSwitchNetwork
+          : requestTargetEVM.request,
       },
       true
     );
@@ -176,12 +197,13 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
       {
         data: null,
         ID: this.messageID,
-        return:
-          this.requestChainType === 'Neo2'
-            ? requestTarget.WalletSwitchNetwork
-            : this.requestChainType === 'Neo3'
-            ? requestTargetN3.WalletSwitchNetwork
-            : requestTargetEVM.request,
+        return: this.isSwitchToRequestChain
+          ? requestTarget.SwitchRequestChain
+          : this.requestChainType === 'Neo2'
+          ? requestTarget.WalletSwitchNetwork
+          : this.requestChainType === 'Neo3'
+          ? requestTargetN3.WalletSwitchNetwork
+          : requestTargetEVM.request,
       },
       true
     );
