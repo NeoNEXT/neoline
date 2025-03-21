@@ -22,12 +22,7 @@
       *ngIf="status === STATUS_ENUM.ACCOUNT_NAME"
       [accountData]="selectAccountData"
       [chainType]="chainType"
-      (importSuccess)="status = STATUS_ENUM.IMPORT_SUCCESS"
     >
     </app-account-name>
-
-    <app-import-success
-      *ngIf="status === STATUS_ENUM.IMPORT_SUCCESS"
-    ></app-import-success>
   </div>
 </section>

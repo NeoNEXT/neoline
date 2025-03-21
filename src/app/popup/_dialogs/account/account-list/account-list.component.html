@@ -1,4 +1,11 @@
 <div class="content" #contentDom>
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    theme
+    src="assets/images/common/close.svg"
+    alt=""
+  />
   <div class="my-account">
     {{ "myAccount" | translate | async }}
   </div>

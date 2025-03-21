@@ -5,6 +5,12 @@
   display: flex;
   flex-direction: column;
   position: relative;
+  img.close {
+    position: absolute;
+    right: 16px;
+    top: 16px;
+    cursor: pointer;
+  }
   .my-account {
     flex-shrink: 0;
     height: 48px;
