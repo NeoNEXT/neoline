@@ -1,5 +1,6 @@
 import EventEmitter = require('events');
 import {
+  evmRequireConnectRequestMethods,
   MESSAGE_TYPE,
   NEOX_EVENT,
   requestTargetEVM,
@@ -65,19 +66,19 @@ class NEOLineEVMController extends EventEmitter {
       });
     }
 
-    if (method === MESSAGE_TYPE.ETH_REQUEST_ACCOUNTS) {
+    (args as any).hostInfo = {
+      hostname: location.hostname,
+      icon: getIcon(),
+      origin: location.origin,
+    };
+
+    if (evmRequireConnectRequestMethods.includes(method)) {
       const isAuth = await checkConnectAndLogin(ChainType.NeoX);
       if (isAuth === true) {
         return sendMessage(requestTargetEVM.request, args);
       }
       throw ethErrors.provider.userRejectedRequest().serialize();
     }
-
-    (args as any).hostInfo = {
-      hostname: location.hostname,
-      icon: getIcon(),
-      origin: location.origin,
-    };
 
     return sendMessage(requestTargetEVM.request, args);
   }

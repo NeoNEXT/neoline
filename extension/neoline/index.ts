@@ -59,9 +59,6 @@ const requireConnectRequest = [
   requestTarget.SignMessage,
   requestTarget.Deploy,
   requestTarget.Send,
-  requestTarget.PickAddress,
-  requestTarget.WalletSwitchAccount,
-  requestTarget.WalletSwitchNetwork,
 ];
 
 window.addEventListener(

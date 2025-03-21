@@ -86,13 +86,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
     return false;
   }
 
-  getShowAvatar() {
+  getShowMenu() {
     if (
       !this.address ||
       this.currentUrl.indexOf('/login') >= 0 ||
       this.currentUrl.indexOf('/wallet/new-guide') >= 0 ||
-      this.router.url.indexOf('/notification') >= 0 ||
-      this.router.url.indexOf('/ledger') >= 0
+      this.router.url.indexOf('/notification') >= 0
     ) {
       return false;
     }
@@ -149,6 +148,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
   lock() {
     this.chromeSrc.setPassword('');
     this.router.navigateByUrl('/popup/login');
+  }
+
+  toHome() {
+    if (this.currentUrl === '/ledger') {
+      this.router.navigateByUrl('/popup/home');
+    }
   }
 
   toHelpWebsite() {

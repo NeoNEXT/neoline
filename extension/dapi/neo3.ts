@@ -150,11 +150,7 @@ export class Init {
     const parameter = {
       hostname: location.hostname,
     };
-    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
-    if (isAuth === true) {
-      return sendMessage(requestTargetN3.PickAddress, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
+    return sendMessage(requestTargetN3.PickAddress, parameter);
   }
 
   public getStorage(parameter: N3GetStorageArgs): Promise<N3StorageResponse> {
@@ -455,27 +451,19 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
-    if (isAuth === true) {
-      parameter.hostname = location.hostname;
-      parameter.icon = getIcon();
-      parameter.chainType = ChainType.Neo3;
-      return sendMessage(requestTargetN3.WalletSwitchNetwork, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
+    parameter.hostname = location.hostname;
+    parameter.icon = getIcon();
+    parameter.chainType = ChainType.Neo3;
+    return sendMessage(requestTargetN3.WalletSwitchNetwork, parameter);
   }
 
   public async switchWalletAccount(): Promise<any> {
-    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
-    if (isAuth === true) {
-      const parameter: WalletSwitchAccountArg = {
-        hostname: location.hostname,
-        icon: getIcon(),
-        chainType: ChainType.Neo3,
-      };
-      return sendMessage(requestTargetN3.WalletSwitchAccount, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
+    const parameter: WalletSwitchAccountArg = {
+      hostname: location.hostname,
+      icon: getIcon(),
+      chainType: ChainType.Neo3,
+    };
+    return sendMessage(requestTargetN3.WalletSwitchAccount, parameter);
   }
 
   public addEventListener(type: string, callback: (data: object) => void) {

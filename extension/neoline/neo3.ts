@@ -51,7 +51,6 @@ window.addEventListener('load', () => {
 });
 
 const requireConnectRequest = [
-  requestTargetN3.PickAddress,
   requestTargetN3.VerifyMessage,
   requestTargetN3.VerifyMessageV2,
   requestTargetN3.Invoke,
@@ -62,8 +61,6 @@ const requireConnectRequest = [
   requestTargetN3.SignTransaction,
   requestTargetN3.Send,
   requestTargetN3.InvokeMulti,
-  requestTargetN3.WalletSwitchAccount,
-  requestTargetN3.WalletSwitchNetwork,
   requestTargetN3.Account,
   requestTargetN3.AccountPublicKey,
 ];

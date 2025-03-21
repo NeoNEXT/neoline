@@ -24,6 +24,8 @@ export class PopupWalletSwitchAccountComponent implements OnInit {
   private accountSub: Unsubscribable;
   currentWallet: Wallet2 | Wallet3;
   walletArr: Array<Wallet2 | Wallet3>;
+  private neo2WalletArr: Array<Wallet2>;
+  private neo3WalletArr: Array<Wallet3>;
   constructor(
     private chrome: ChromeService,
     private aRouter: ActivatedRoute,
@@ -32,13 +34,16 @@ export class PopupWalletSwitchAccountComponent implements OnInit {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.currentWallet = state.currentWallet as Wallet2 | Wallet3;
-      const chainType = state.currentChainType;
-      this.walletArr =
-        chainType === 'Neo2' ? state.neo2WalletArr : state.neo3WalletArr;
+      this.neo2WalletArr = state.neo2WalletArr;
+      this.neo3WalletArr = state.neo3WalletArr;
     });
     this.aRouter.queryParams.subscribe((params: any) => {
       this.messageID = params.messageID;
       this.invokeChainType = params.chainType;
+      this.walletArr =
+        this.invokeChainType === 'Neo2'
+          ? this.neo2WalletArr
+          : this.neo3WalletArr;
       this.hostname = params.hostname;
       this.iconSrc =
         this.hostname.indexOf('flamingo') >= 0
