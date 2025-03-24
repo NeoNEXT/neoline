@@ -226,7 +226,7 @@ export class PopupWalletImportComponent
           return;
         }
         const firstAccount = this.nep6Json?.accounts?.[0];
-        if (this.neonWallet.isNEP2(firstAccount?.key) && firstAccount?.label) {
+        if (this.neonWallet.isNEP2(firstAccount?.key)) {
           this.nep6Form.controls.EncrpytedKey.setValue(firstAccount.key);
         } else {
           this.global.snackBarTip('nep6Wrong');
@@ -247,7 +247,9 @@ export class PopupWalletImportComponent
     } else {
       importPwd = this.importMnemonicForm.value.password;
     }
-    if (ethers.Mnemonic.isValidMnemonic(this.importMnemonicForm.value.mnemonic)) {
+    if (
+      ethers.Mnemonic.isValidMnemonic(this.importMnemonicForm.value.mnemonic)
+    ) {
       this.evmService
         .importWalletFromPhrase(
           this.importMnemonicForm.value.mnemonic,
@@ -399,7 +401,7 @@ export class PopupWalletImportComponent
       const newWallet = await this.neon.importEncryptKey(
         item.key,
         filePwd,
-        item.label,
+        item?.label ?? item.address,
         importPwd
       );
       if (newWallet !== 'Wrong password') {
