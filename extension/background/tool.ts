@@ -218,8 +218,8 @@ export function createWindow(url: string, notification = true) {
   chrome.windows.create({
     url: notification ? `index.html#popup/notification/${url}` : url,
     focused: true,
-    width: 386,
-    height: 620,
+    width: 375,
+    height: 630,
     left: 0,
     top: 0,
     type: 'popup',

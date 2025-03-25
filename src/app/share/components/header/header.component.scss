@@ -8,6 +8,10 @@ header {
   padding: 0 16px;
   border-bottom: 1px solid var(--border-color);
   position: relative;
+  &.notification-bg {
+    border-bottom: none;
+    background: var(--background-color);
+  }
   &.theme-bg {
     border-bottom: none;
     img.logo {

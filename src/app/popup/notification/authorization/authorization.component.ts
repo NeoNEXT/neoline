@@ -28,7 +28,6 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
   public wallet: Wallet2 | Wallet3 | EvmWalletJSON;
   private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   private currentChainType: ChainType;
-  private neoXWallet: EvmWalletJSON;
   constructor(
     private chrome: ChromeService,
     private aRouter: ActivatedRoute,
@@ -41,7 +40,6 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.currentWallet = state.currentWallet;
       this.currentChainType = state.currentChainType;
-      this.neoXWallet = state.neoXWalletArr[0];
     });
     this.aRouter.queryParams.subscribe((params: any) => {
       this.hostname = params.hostname;
@@ -50,19 +48,9 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
           ? '/assets/images/flamingo.ico'
           : params.icon;
       this.title = params.title;
-      if (params.connectChainType === 'NeoX') {
-        if (!this.neoXWallet) {
-          this.showCreateNeoX()
-          return;
-        }
-        this.chainType = 'NeoX';
-        this.wallet = this.neoXWallet;
-        this.address = this.neoXWallet.accounts[0].address;
-      } else {
-        this.chainType = this.currentChainType;
-        this.wallet = this.currentWallet;
-        this.address = this.wallet.accounts[0].address;
-      }
+      this.chainType = this.currentChainType;
+      this.wallet = this.currentWallet;
+      this.address = this.wallet.accounts[0].address;
     });
   }
 

@@ -99,6 +99,7 @@ export function getIcon() {
 }
 
 function connect(connectChain?: ChainType): Promise<boolean | any> {
+  const ID = getMessageID();
   return new Promise((resolveMain) => {
     window.postMessage(
       {
@@ -107,6 +108,7 @@ function connect(connectChain?: ChainType): Promise<boolean | any> {
         hostname: location.hostname,
         title: document.title,
         connectChain,
+        ID,
       },
       window.location.origin
     );
@@ -114,7 +116,8 @@ function connect(connectChain?: ChainType): Promise<boolean | any> {
       const callbackFn = (event) => {
         if (
           event.data.return !== undefined &&
-          event.data.return === requestTarget.Connect
+          event.data.return === requestTarget.Connect &&
+          event.data.ID === ID
         ) {
           resolve(event.data.data);
           window.removeEventListener('message', callbackFn);
@@ -129,10 +132,12 @@ function connect(connectChain?: ChainType): Promise<boolean | any> {
 }
 
 export function login(): Promise<boolean | any> {
+  const ID = getMessageID();
   return new Promise((resolveMain) => {
     window.postMessage(
       {
         target: requestTarget.Login,
+        ID,
       },
       window.location.origin
     );
@@ -140,7 +145,8 @@ export function login(): Promise<boolean | any> {
       const callbackFn = (event) => {
         if (
           event.data.return !== undefined &&
-          event.data.return === requestTarget.Login
+          event.data.return === requestTarget.Login &&
+          event.data.ID === ID
         ) {
           resolve(event.data.data);
           window.removeEventListener('message', callbackFn);

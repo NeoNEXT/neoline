@@ -1,4 +1,9 @@
-<header [ngClass]="{ 'theme-bg': checkIsThemeBg() }">
+<header
+  [ngClass]="{
+    'theme-bg': currentUrl.indexOf('/wallet/new-guide') >= 0,
+    'notification-bg': currentUrl.indexOf('/notification') >= 0
+  }"
+>
   <img
     (click)="toHome()"
     theme

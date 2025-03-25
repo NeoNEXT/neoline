@@ -1,5 +1,5 @@
 .container {
-  height: 100%;
+  height: calc(100% - 74px);
   overflow-y: scroll;
   .content {
     .sign-address {

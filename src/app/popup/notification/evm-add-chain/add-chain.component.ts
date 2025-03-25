@@ -108,8 +108,8 @@ export class PopupEvmAddChainComponent implements OnInit, OnDestroy {
     chrome.windows.create({
       url: `index.html#popup/notification/${url}`,
       focused: true,
-      width: 386,
-      height: 620,
+      width: 375,
+      height: 630,
       left: 0,
       top: 0,
       type: 'popup',
