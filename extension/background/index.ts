@@ -212,10 +212,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               windowCallback({
                 return: requestTarget.Connect,
                 data: true,
+                ID: request.ID,
               });
             } else {
               createWindow(
-                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&connectChainType=${request.connectChain}`
+                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&connectChainType=${request.connectChain}&messageID=${request.ID}`
               );
             }
           } else {
@@ -230,6 +231,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               windowCallback({
                 return: requestTarget.Connect,
                 data: true,
+                ID: request.ID,
               });
               // notification(
               //   `${chrome.i18n.getMessage('from')}: ${request.hostname}`,
@@ -252,9 +254,13 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           windowCallback({
             return: requestTarget.Login,
             data: true,
+            ID: request.ID,
           });
         } else {
-          createWindow(`/index.html#popup/login?notification=true`, false);
+          createWindow(
+            `/index.html#popup/login?notification=true&messageID=${request.ID}`,
+            false
+          );
         }
         sendResponse('');
       });

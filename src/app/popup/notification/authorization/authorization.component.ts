@@ -21,6 +21,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
   public hostname = '';
   public title = '';
   public ruleCheck = false;
+  private messageID = '';
 
   private accountSub: Unsubscribable;
   chainType: ChainType;
@@ -48,6 +49,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
           ? '/assets/images/flamingo.ico'
           : params.icon;
       this.title = params.title;
+      this.messageID = params.messageID;
       this.chainType = this.currentChainType;
       this.wallet = this.currentWallet;
       this.address = this.wallet.accounts[0].address;
@@ -59,6 +61,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
       this.chrome.windowCallback({
         data: ERRORS.CANCELLED,
         return: requestTarget.Connect,
+        ID: this.messageID,
       });
     };
   }
@@ -90,6 +93,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
       {
         data: false,
         return: requestTarget.Connect,
+        ID: this.messageID,
       },
       true
     );
@@ -119,6 +123,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
         this.chrome.windowCallback({
           data: true,
           return: requestTarget.Connect,
+          ID: this.messageID,
         });
         this.chrome.windowCallback(
           {
