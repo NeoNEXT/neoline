@@ -40,8 +40,7 @@
     "@ledgerhq/hw-transport-webhid": "^6.28.4",
     "@metamask/eth-sig-util": "^7.0.3",
     "@ngrx/store": "^13.2.0",
-    "@types/crypto-js": "^3.1.47",
-    "@types/elliptic": "^6.4.12",
+    "@types/crypto-js": "^4.2.0",
     "@types/mathjs": "^6.0.5",
     "@types/wif": "^2.0.1",
     "assert": "^2.1.0",
@@ -51,7 +50,7 @@
     "buffer": "^6.0.3",
     "core-js": "^3.6.5",
     "crypto-browserify": "^3.12.0",
-    "crypto-js": "^4.1.1",
+    "crypto-js": "^4.2.0",
     "eth-rpc-errors": "^4.0.3",
     "ethers": "^6.11.1",
     "events": "^3.3.0",
@@ -95,5 +94,9 @@
     "typescript": "~4.6.4",
     "webpack": "^5.88.1",
     "webpack-cli": "^5.1.4"
+  },
+  "overrides": {
+    "elliptic": "6.6.1",
+    "@babel/traverse": "7.23.2"
   }
 }
