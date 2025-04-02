@@ -1,5 +1,9 @@
 .container {
   height: 100%;
+  width: 60%;
+  min-width: 375px;
+  max-width: 700px;
+  margin: 0 auto;
   display: flex;
   flex-direction: column;
   color: var(--title-color);

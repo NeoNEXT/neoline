@@ -276,6 +276,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
       'g'
     );
     event.target.value = value.replace(regex, '$1');
+    this.transferAmount = event.target.value;
   }
   transferAll() {
     if (this.isTransferAllLoading || !this.transferAsset) {

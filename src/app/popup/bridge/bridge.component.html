@@ -147,55 +147,59 @@
 <div class="tx-history" *ngIf="!showConfirmPage && sessionFirstTx?.txId">
   <ng-container *ngIf="sessionFirstTx.type === 'bridge'">
     <div class="item">
-      <mat-spinner
-        *ngIf="!sessionTx.sourceTxID"
-        strokeWidth="2"
-        diameter="17"
-        (click)="openTxModal()"
-      ></mat-spinner>
-      <span
-        *ngIf="sessionTx.sourceTxID"
-        class="checked-icon"
-        (click)="openTxModal()"
-      ></span>
-      <span class="name">
-        {{
-          (sessionTx.sourceChainType === "Neo3"
-            ? !sessionTx.sourceTxID
-              ? "Depositing"
-              : "Deposited"
-            : !sessionTx.sourceTxID
-            ? "Withdrawing"
-            : "Withdrawn"
-          )
-            | translate
-            | async
-        }}
-      </span>
+      <div class="left">
+        <mat-spinner
+          *ngIf="!sessionTx.sourceTxID"
+          strokeWidth="2"
+          diameter="17"
+          (click)="openTxModal()"
+        ></mat-spinner>
+        <span
+          *ngIf="sessionTx.sourceTxID"
+          class="checked-icon"
+          (click)="openTxModal()"
+        ></span>
+        <span class="name">
+          {{
+            (sessionTx.sourceChainType === "Neo3"
+              ? !sessionTx.sourceTxID
+                ? "Depositing"
+                : "Deposited"
+              : !sessionTx.sourceTxID
+              ? "Withdrawing"
+              : "Withdrawn"
+            )
+              | translate
+              | async
+          }}
+        </span>
+      </div>
       <span *ngIf="sessionTx.sourceTxID" (click)="toViewTx()" class="tx">
         {{ "ViewTransaction" | translate | async }}
         <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
       </span>
     </div>
     <div class="item" *ngIf="sessionTx.sourceTxID">
-      <mat-spinner
-        *ngIf="!sessionTx.targetTxID"
-        strokeWidth="2"
-        diameter="17"
-        (click)="openTxModal()"
-      ></mat-spinner>
-      <span
-        *ngIf="sessionTx.targetTxID"
-        class="checked-icon"
-        (click)="openTxModal()"
-      ></span>
-      <span class="name">
-        {{
-          (!sessionTx.targetTxID ? "Transferring" : "Transferred")
-            | translate
-            | async
-        }}
-      </span>
+      <div class="left">
+        <mat-spinner
+          *ngIf="!sessionTx.targetTxID"
+          strokeWidth="2"
+          diameter="17"
+          (click)="openTxModal()"
+        ></mat-spinner>
+        <span
+          *ngIf="sessionTx.targetTxID"
+          class="checked-icon"
+          (click)="openTxModal()"
+        ></span>
+        <span class="name">
+          {{
+            (!sessionTx.targetTxID ? "Transferring" : "Transferred")
+              | translate
+              | async
+          }}
+        </span>
+      </div>
       <span *ngIf="sessionTx.targetTxID" (click)="toViewTx(false)" class="tx">
         {{ "ViewTransaction" | translate | async }}
         <img theme src="/assets/images/bridge/tx-link.svg" alt="" />
