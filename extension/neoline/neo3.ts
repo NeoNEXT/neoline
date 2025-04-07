@@ -23,14 +23,12 @@ declare var chrome: any;
  * Follow-up to add a dapi for the introduction of third-party pages to hide the realization of message sending and receiving.
  * You can also dynamically inject scripts into third-party pages. How to use ts for scripts injected in this way is to be considered.
  */
-const dapiN3 = window.document.createElement('script');
-
-setTimeout(() => {
-  dapiN3.setAttribute('type', 'text/javascript');
-  dapiN3.async = true;
-  dapiN3.src = chrome.runtime.getURL('dapiN3.js');
-  dapiN3.onload = () => {
-    dapiN3.parentNode.removeChild(dapiN3);
+function injectScript(filePath) {
+  const script = document.createElement('script');
+  script.src = chrome.runtime.getURL(filePath);
+  script.type = 'text/javascript';
+  script.onload = () => {
+    script.remove();
     window.postMessage(
       {
         from: 'NeoLineN3',
@@ -39,16 +37,12 @@ setTimeout(() => {
       window.location.origin
     );
   };
-}, 0);
-
-window.addEventListener('load', () => {
-  if (
-    window.document.body != null &&
-    !ExcludeWebsite.find((item) => location.origin.includes(item))
-  ) {
-    window.document.body.appendChild(dapiN3);
+  if (!ExcludeWebsite.find((item) => location.origin.includes(item))) {
+    (document.head || document.documentElement).appendChild(script);
   }
-});
+}
+
+injectScript('dapiN3.js');
 
 const requireConnectRequest = [
   requestTargetN3.VerifyMessage,

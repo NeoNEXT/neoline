@@ -1,4 +1,3 @@
-import { wallet } from '@cityofzion/neon-core-neo3';
 import {
   Provider,
   Networks,
@@ -38,6 +37,7 @@ import {
   getProvider,
   getIcon,
 } from './common';
+import { getN3AddressFromScriptHash, isN3Address } from '../common/utils';
 
 export class Init {
   public EVENT = EVENT;
@@ -79,7 +79,7 @@ export class Init {
   public async AddressToScriptHash(
     parameter: N3AddressToScriptHash
   ): Promise<string> {
-    if (parameter && !wallet.isAddress(parameter.address, 53)) {
+    if (parameter && !isN3Address(parameter.address, 53)) {
       return new Promise((_, reject) => {
         reject(ERRORS.MALFORMED_INPUT);
       });
@@ -93,8 +93,8 @@ export class Init {
   ): Promise<string> {
     if (
       parameter &&
-      !wallet.isAddress(
-        wallet.getAddressFromScriptHash(
+      !isN3Address(
+        getN3AddressFromScriptHash(
           parameter.scriptHash.startsWith('0x')
             ? parameter.scriptHash.substring(2, 44)
             : parameter.scriptHash

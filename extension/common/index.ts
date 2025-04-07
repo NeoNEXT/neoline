@@ -1,4 +1,4 @@
-import { base642hex, hexstring2str } from '@cityofzion/neon-core-neo3/lib/u';
+import { enc } from 'crypto-js';
 import BigNumber from 'bignumber.js';
 import { reverseHex } from './utils';
 
@@ -151,4 +151,56 @@ export function handleNeo3StackStringValue(result): string {
     }
   }
   return res;
+}
+
+function base642hex(input) {
+  return enc.Base64.parse(input).toString(enc.Hex);
+}
+
+/**
+ * Converts an ArrayBuffer to an ASCII string.
+ */
+function ab2str(buf) {
+  return String.fromCharCode.apply(null, Array.from(new Uint8Array(buf)));
+}
+const hexRegex = /^([0-9A-Fa-f]{2})*$/;
+/**
+ * Checks if input is a hexstring. Empty string is considered a hexstring.
+ */
+function isHex(str) {
+  try {
+    return hexRegex.test(str);
+  } catch {
+    return false;
+  }
+}
+/**
+ * Throws an error if input is not hexstring.
+ */
+function ensureHex(str) {
+  if (!isHex(str)) {
+    throw new Error(`Expected a hexstring but got ${str}`);
+  }
+}
+/**
+ * Converts a hexstring into an arrayBuffer.
+ */
+function hexstring2ab(str) {
+  ensureHex(str);
+  if (!str.length) {
+    return new Uint8Array(0);
+  }
+  const iters = str.length / 2;
+  const result = new Uint8Array(iters);
+  for (let i = 0; i < iters; i++) {
+    result[i] = parseInt(str.substring(0, 2), 16);
+    str = str.substring(2);
+  }
+  return result;
+}
+/**
+ * Converts a hexstring to ascii string.
+ */
+function hexstring2str(hexstring) {
+  return ab2str(hexstring2ab(hexstring));
 }
