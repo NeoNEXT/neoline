@@ -5,7 +5,7 @@ import {
   NEOX_EVENT,
   requestTargetEVM,
 } from '../common/data_module_evm';
-import { checkConnectAndLogin, getIcon, sendMessage } from './common';
+import { checkNeoXConnectAndLogin, getIcon, sendMessage } from './common';
 import { ethErrors } from 'eth-rpc-errors';
 import { ChainType } from '../common/constants';
 import { v4 as uuid } from 'uuid';
@@ -73,7 +73,7 @@ class NEOLineEVMController extends EventEmitter {
     };
 
     if (evmRequireConnectRequestMethods.includes(method)) {
-      const isAuth = await checkConnectAndLogin(ChainType.NeoX);
+      const isAuth = await checkNeoXConnectAndLogin(ChainType.NeoX);
       if (isAuth === true) {
         return sendMessage(requestTargetEVM.request, args);
       }

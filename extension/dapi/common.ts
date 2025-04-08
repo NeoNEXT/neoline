@@ -44,6 +44,19 @@ export function sendMessage<K>(
 export async function checkConnectAndLogin(
   connectChain: ChainType
 ): Promise<boolean> {
+  const connected = await connect(connectChain);
+  if (connected === true) {
+    const isLogin = await login();
+    if (isLogin === true) {
+      return true;
+    }
+  }
+  return false;
+}
+
+export async function checkNeoXConnectAndLogin(
+  connectChain: ChainType
+): Promise<boolean> {
   const isSwitchToRequestChain = await switchToRequestChain(connectChain);
   if (isSwitchToRequestChain === true) {
     const connected = await connect(connectChain);
