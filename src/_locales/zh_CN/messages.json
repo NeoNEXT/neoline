@@ -294,7 +294,7 @@
     "message": "搜索结果"
   },
   "searchAssetsInput": {
-    "message": "请输入需要搜索的资产 回车发起搜索"
+    "message": "请输入需要搜索的资产，回车发起搜索"
   },
   "hidden": {
     "message": "隐藏"

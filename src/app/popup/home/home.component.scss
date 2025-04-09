@@ -151,7 +151,23 @@
 }
 
 @media screen and (min-width: 1000px) {
-  .popup-home .popup-home-body .tabs-container .content {
-    gap: 120px;
+  .popup-home {
+    .account-container {
+      padding-top: 50px;
+      .account-content {
+        padding: 44px 0 44px 44px;
+      }
+    }
+    .popup-home-body {
+      .transaction-btn-container {
+        margin-top: 50px;
+      }
+      .claim-line {
+        margin-top: 54px;
+      }
+      .tabs-container .content {
+        gap: 120px;
+      }
+    }
   }
 }
