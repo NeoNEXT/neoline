@@ -239,7 +239,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               // );
             } else {
               createWindow(
-                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`
+                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&messageID=${request.ID}`
               );
             }
           }

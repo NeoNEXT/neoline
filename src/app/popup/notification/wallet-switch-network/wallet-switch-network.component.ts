@@ -31,6 +31,7 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
   hostname = '';
   private messageID = '';
   isSwitchToRequestChain = false;
+  userHasConfirm = false;
 
   private switchChainId: number;
   requestChainType: ChainType;
@@ -122,7 +123,9 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
 
   ngOnInit() {
     window.onbeforeunload = () => {
-      this.refuse();
+      if (this.userHasConfirm === false) {
+        this.refuse();
+      }
     };
   }
 
@@ -170,6 +173,7 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
   }
 
   refuse() {
+    this.userHasConfirm = true;
     this.chrome.windowCallback(
       {
         error: ERRORS.CANCELLED,
@@ -187,6 +191,7 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
   }
 
   confirm() {
+    this.userHasConfirm = true;
     let switchChainType: ChainType = 'NeoX';
     if (this.requestChainType !== 'NeoX') {
       switchChainType = this.switchNetworkName.startsWith('N2')
