@@ -208,14 +208,16 @@
   </ng-container>
   <ng-container *ngIf="sessionFirstTx.type === 'approval'">
     <div class="item">
-      <span class="checked-icon"></span>
-      <span class="name">
-        {{
-          "TokenApproved"
-            | translate : { symbol: sessionFirstTx.asset.symbol }
-            | async
-        }}
-      </span>
+      <div class="left">
+        <span class="checked-icon"></span>
+        <span class="name">
+          {{
+            "TokenApproved"
+              | translate : { symbol: sessionFirstTx.asset.symbol }
+              | async
+          }}
+        </span>
+      </div>
       <span
         (click)="
           toViewApproveTx(sessionFirstTx.neoXExplorer, sessionFirstTx.txId)
