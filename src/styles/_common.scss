@@ -19,7 +19,7 @@
   background: var(--dialog-backdrop-background);
 }
 .custom-dialog-panel {
-  width: 92vw;
+  width: 400px;
   max-width: 92vw !important;
   background: var(--body-background-color);
   border-radius: 4px;
@@ -110,12 +110,14 @@ $network-list: (
 .loading-box {
   background: rgba(0, 0, 0, 0.2);
   position: fixed;
+  left: 0;
   top: 0;
   height: 100%;
   width: 100%;
   z-index: 99999;
-  padding-top: 50%;
-  text-align: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   .content {
     display: inline-flex;
     flex-direction: column;
@@ -131,6 +133,7 @@ $network-list: (
       padding: 24px 30px;
       padding-bottom: 0;
       color: #fff;
+      text-align: center;
     }
     button {
       padding: 0 16px;

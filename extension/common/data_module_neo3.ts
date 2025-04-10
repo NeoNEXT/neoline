@@ -1,6 +1,3 @@
-import { ContractParamJson } from '@cityofzion/neon-core-neo3/lib/sc';
-import { SignerLike } from '@cityofzion/neon-core-neo3/lib/tx';
-
 export enum requestTargetN3 {
   Provider = 'neoline.target_provider_n3',
   Networks = 'neoline.target_networks_n3',
@@ -179,4 +176,187 @@ export interface N3Response {
 export interface N3SendOutput {
   txid: string;
   nodeURL: string;
+}
+
+declare class HexString {
+  get length(): number;
+  get byteLength(): number;
+  assert(value: string): void;
+  /**
+   * Initiate a HexString
+   * @param value - a string that contains only [1-9a-f]. Can be prefixed with 0x.
+   * @param littleEndian - indicate whether value is little endian or not. default to be false.
+   */
+  protected constructor(value: string, littleEndian?: boolean);
+  toString(): string;
+  /**
+   * Export as big endian string
+   */
+  toBigEndian(): string;
+  /**
+   * Export as little endian string
+   */
+  toLittleEndian(): string;
+  /**
+   * Returns a new HexString with internal value reversed hex.
+   */
+  reversed(): HexString;
+  /**
+   * Judge if 2 HexString are equal
+   */
+  equals(other: HexString | string): boolean;
+  /**
+   * XOR with another HexString to get a new one.
+   */
+  xor(other: HexString): HexString;
+  /**
+   * Export as ASCII string
+   */
+  toAscii(): string;
+  /**
+   * Export as number
+   * @param asLittleEndian - whether export as little endian number, default to be false
+   */
+  toNumber(asLittleEndian?: boolean): number;
+  /**
+   * Export to ArrayBuffer in Uint8Array
+   * @param asLittleEndian - whether export as little endian array, default to be false
+   */
+  toArrayBuffer(asLittleEndian?: boolean): Uint8Array;
+  /**
+   * Export as a base64-encoded string.
+   * @param asLittleEndian - whether to encode as little endian, default to be false
+   */
+  toBase64(asLittleEndian?: boolean): string;
+  /**
+   * Get HexString instance from a hex string
+   * @param str - hexstring
+   * @param littleEndian - whether `str` is little endian
+   */
+  static fromHex(str: string, littleEndian: boolean): HexString;
+  static fromHex(str: string | HexString): HexString;
+  /**
+   * Get HexString instance from a ASCII string
+   */
+  static fromAscii(str: string): HexString;
+  /**
+   * Get HexString instance from a number
+   * @param littleEndian - whether `num` is little endian
+   */
+  static fromNumber(num: number): HexString;
+  /**
+   * Get HexString instance from array buffer
+   * @param littleEndian - whether `arr` is little endian
+   */
+  static fromArrayBuffer(
+    arr: ArrayBuffer | ArrayLike<number>,
+    littleEndian?: boolean
+  ): HexString;
+  /**
+   * Get HexString instance from a Base64-encoded string
+   * @param littleEndian - whether the decoded hexstring is little endian
+   */
+  static fromBase64(encodedString: string, littleEndian?: boolean): HexString;
+}
+
+declare enum WitnessScope {
+  None = 0,
+  /**
+   * CalledByEntry means that this condition must hold: EntryScriptHash == CallingScriptHash
+   * No params is needed, as the witness/permission/signature given on first invocation will automatically expire if entering deeper internal invokes
+   * This can be default safe choice for native NEO/GAS (previously used on Neo 2 as "attach" mode)
+   */
+  CalledByEntry = 1,
+  /**
+   * Custom hash for contract-specific
+   */
+  CustomContracts = 16,
+  /**
+   * Custom pubkey for group members, group can be found in contract manifest
+   */
+  CustomGroups = 32,
+  /**
+   * Custom rules for witness to adhere by.
+   */
+  WitnessRules = 64,
+  /**
+   * Global allows this witness in all contexts (default Neo2 behavior)
+   * This cannot be combined with other flags
+   */
+  Global = 128,
+}
+
+interface BooleanWitnessConditionJson {
+  type: 'Boolean';
+  expression: boolean;
+}
+interface NotWitnessConditionJson {
+  type: 'Not';
+  expression: WitnessConditionJson;
+}
+interface AndWitnessConditionJson {
+  type: 'And';
+  expressions: WitnessConditionJson[];
+}
+interface OrWitnessConditionJson {
+  type: 'Or';
+  expressions: WitnessConditionJson[];
+}
+interface ScriptHashWitnessConditionJson {
+  type: 'ScriptHash';
+  hash: string;
+}
+interface GroupWitnessConditionJson {
+  type: 'Group';
+  group: string;
+}
+interface CalledByEntryWitnessConditionJson {
+  type: 'CalledByEntry';
+}
+interface CalledByContractWitnessConditionJson {
+  type: 'CalledByContract';
+  hash: string;
+}
+interface CalledByGroupWitnessConditionJson {
+  type: 'CalledByGroup';
+  group: string;
+}
+
+type WitnessConditionJson =
+  | BooleanWitnessConditionJson
+  | AndWitnessConditionJson
+  | NotWitnessConditionJson
+  | OrWitnessConditionJson
+  | ScriptHashWitnessConditionJson
+  | GroupWitnessConditionJson
+  | CalledByEntryWitnessConditionJson
+  | CalledByContractWitnessConditionJson
+  | CalledByGroupWitnessConditionJson;
+
+interface WitnessRuleJson {
+  action: string;
+  condition: WitnessConditionJson;
+}
+
+interface SignerLike {
+  account: string | HexString;
+  scopes: number | string | WitnessScope;
+  allowedContracts?: (string | HexString)[];
+  allowedGroups?: (string | HexString)[];
+  rules?: WitnessRuleJson[];
+}
+
+type ContractParamMapJson = {
+  key: ContractParamJson;
+  value: ContractParamJson;
+}[];
+interface ContractParamJson {
+  type: string;
+  value?:
+    | string
+    | boolean
+    | number
+    | ContractParamJson[]
+    | ContractParamMapJson
+    | null;
 }

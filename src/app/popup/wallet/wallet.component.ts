@@ -34,6 +34,7 @@ export class PopupWalletComponent implements OnInit {
   getPassword = false;
   isOnePassword = false;
   hasPwdWallet = false;
+  chainName = '';
 
   private accountSub: Unsubscribable;
   private network: RpcNetwork;
@@ -76,6 +77,7 @@ export class PopupWalletComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.getChainName();
     this.chrome.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {
       if (res === true) {
         this.isOnePassword = true;
@@ -89,6 +91,20 @@ export class PopupWalletComponent implements OnInit {
       this.tabType = 'import';
     } else {
       this.tabType = 'create';
+    }
+  }
+
+  private getChainName() {
+    switch (this.neon.selectedChainType) {
+      case 'Neo2':
+        this.chainName = 'Neo Legacy';
+        break;
+      case 'Neo3':
+        this.chainName = 'Neo N3';
+        break;
+      case 'NeoX':
+        this.chainName = 'Neo X (EVM Network)';
+        break;
     }
   }
 
@@ -120,7 +136,7 @@ export class PopupWalletComponent implements OnInit {
       case 'NeoX':
         this.store.dispatch({
           type: ADD_NEOX_WALLET,
-          data: { wallet: newWallet},
+          data: { wallet: newWallet },
         });
         break;
     }

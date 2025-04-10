@@ -1,15 +1,29 @@
 @import "src/styles/theme-default";
 
-
 :host {
   overflow: auto;
 }
 
 .body {
-  width: 100%;
+  width: 60%;
   height: 100%;
-  margin: 0;
+  min-width: 375px;
+  min-height: 600px;
+  margin: 0 auto;
   transform: none;
   background-color: var(--body-background-color);
   z-index: 10;
+  position: relative;
+  &.theme-bg {
+    background: linear-gradient(180deg, #06ccab -29%, #ece5fd 118%);
+  }
+}
+
+@media screen and (min-width: 400px) {
+  .body {
+    border-radius: 24px;
+    height: auto;
+    min-height: 100%;
+    overflow-y: auto;
+  }
 }

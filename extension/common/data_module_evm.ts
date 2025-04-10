@@ -109,3 +109,11 @@ export enum ETH_EOA_SIGN_METHODS {
   PersonalSign = 'personal_sign',
   SignTypedDataV4 = 'eth_signTypedData_v4',
 }
+
+export const evmRequireConnectRequestMethods = [
+  MESSAGE_TYPE.ETH_REQUEST_ACCOUNTS,
+  MESSAGE_TYPE.PERSONAL_SIGN,
+  MESSAGE_TYPE.ETH_SIGN_TYPED_DATA_V4,
+  MESSAGE_TYPE.WATCH_ASSET,
+  'eth_sendTransaction',
+];

@@ -1,4 +1,3 @@
-import { wallet } from '@cityofzion/neon-core-neo3';
 import {
   Provider,
   Networks,
@@ -38,6 +37,7 @@ import {
   getProvider,
   getIcon,
 } from './common';
+import { getN3AddressFromScriptHash, isN3Address } from '../common/utils';
 
 export class Init {
   public EVENT = EVENT;
@@ -69,7 +69,7 @@ export class Init {
   }
 
   public async getPublicKey(): Promise<AccountPublicKey> {
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTarget.AccountPublicKey);
     }
@@ -79,7 +79,7 @@ export class Init {
   public async AddressToScriptHash(
     parameter: N3AddressToScriptHash
   ): Promise<string> {
-    if (parameter && !wallet.isAddress(parameter.address, 53)) {
+    if (parameter && !isN3Address(parameter.address, 53)) {
       return new Promise((_, reject) => {
         reject(ERRORS.MALFORMED_INPUT);
       });
@@ -93,8 +93,8 @@ export class Init {
   ): Promise<string> {
     if (
       parameter &&
-      !wallet.isAddress(
-        wallet.getAddressFromScriptHash(
+      !isN3Address(
+        getN3AddressFromScriptHash(
           parameter.scriptHash.startsWith('0x')
             ? parameter.scriptHash.substring(2, 44)
             : parameter.scriptHash
@@ -150,11 +150,7 @@ export class Init {
     const parameter = {
       hostname: location.hostname,
     };
-    const isAuth = await checkConnectAndLogin();
-    if (isAuth === true) {
-      return sendMessage(requestTargetN3.PickAddress, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
+    return sendMessage(requestTargetN3.PickAddress, parameter);
   }
 
   public getStorage(parameter: N3GetStorageArgs): Promise<N3StorageResponse> {
@@ -239,7 +235,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.VerifyMessage, parameter);
     }
@@ -258,7 +254,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.VerifyMessageV2, parameter);
     }
@@ -290,7 +286,7 @@ export class Init {
         });
       }
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       (parameter as any).hostname = location.hostname;
       return sendMessage(requestTargetN3.Invoke, parameter);
@@ -307,7 +303,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignMessage, parameter);
     }
@@ -323,7 +319,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignMessageV2, parameter);
     }
@@ -339,7 +335,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignMessageWithoutSalt, parameter);
     }
@@ -355,7 +351,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignMessageWithoutSaltV2, parameter);
     }
@@ -368,7 +364,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignTransaction, parameter);
     }
@@ -387,7 +383,7 @@ export class Init {
         reject(ERRORS.CONNECTION_DENIED);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       return sendMessage(requestTargetN3.Send, parameter);
     }
@@ -436,7 +432,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo3);
     if (isAuth === true) {
       (parameter as any).hostname = location.hostname;
       return sendMessage(requestTargetN3.InvokeMultiple, parameter);
@@ -455,27 +451,19 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
-    if (isAuth === true) {
-      parameter.hostname = location.hostname;
-      parameter.icon = getIcon();
-      parameter.chainType = ChainType.Neo3;
-      return sendMessage(requestTargetN3.WalletSwitchNetwork, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
+    parameter.hostname = location.hostname;
+    parameter.icon = getIcon();
+    parameter.chainType = ChainType.Neo3;
+    return sendMessage(requestTargetN3.WalletSwitchNetwork, parameter);
   }
 
   public async switchWalletAccount(): Promise<any> {
-    const isAuth = await checkConnectAndLogin();
-    if (isAuth === true) {
-      const parameter: WalletSwitchAccountArg = {
-        hostname: location.hostname,
-        icon: getIcon(),
-        chainType: ChainType.Neo3,
-      };
-      return sendMessage(requestTargetN3.WalletSwitchAccount, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
+    const parameter: WalletSwitchAccountArg = {
+      hostname: location.hostname,
+      icon: getIcon(),
+      chainType: ChainType.Neo3,
+    };
+    return sendMessage(requestTargetN3.WalletSwitchAccount, parameter);
   }
 
   public addEventListener(type: string, callback: (data: object) => void) {

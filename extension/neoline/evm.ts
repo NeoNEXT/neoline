@@ -11,6 +11,7 @@ import {
 } from '../common/constants';
 import { getWalletType } from '../common/utils';
 import {
+  evmRequireConnectRequestMethods,
   MESSAGE_TYPE,
   NEOX_EVENT,
   requestTargetEVM,
@@ -63,12 +64,24 @@ window.addEventListener(
           }
           const reqMethod = e.data.parameter.method;
           if (
-            currChainType === 'NeoX' ||
-            reqMethod === 'eth_chainId' ||
-            reqMethod === MESSAGE_TYPE.ETH_ACCOUNTS ||
-            reqMethod === MESSAGE_TYPE.ETH_REQUEST_ACCOUNTS ||
-            reqMethod === MESSAGE_TYPE.SWITCH_ETHEREUM_CHAIN
+            currChainType !== 'NeoX' &&
+            evmRequireConnectRequestMethods.includes(reqMethod)
           ) {
+            window.postMessage(
+              {
+                return: e.data.target,
+                error: ethErrors.provider
+                  .chainDisconnected({
+                    message:
+                      'The Provider is not connected to the requested chain.',
+                  })
+                  .serialize(),
+                ID: e.data.ID,
+              },
+              window.location.origin
+            );
+            return;
+          } else {
             if (
               reqMethod === MESSAGE_TYPE.ETH_REQUEST_ACCOUNTS ||
               reqMethod === MESSAGE_TYPE.ETH_ACCOUNTS
@@ -83,21 +96,6 @@ window.addEventListener(
                 );
               }
             });
-            return;
-          } else {
-            window.postMessage(
-              {
-                return: e.data.target,
-                error: ethErrors.provider
-                  .chainDisconnected({
-                    message:
-                      'The Provider is not connected to the requested chain.',
-                  })
-                  .serialize(),
-                ID: e.data.ID,
-              },
-              window.location.origin
-            );
             return;
           }
         });

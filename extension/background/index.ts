@@ -186,6 +186,20 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       );
       return true;
     }
+    case requestTarget.SwitchRequestChain: {
+      if (request.connectChain !== chainType) {
+        createWindow(
+          `wallet-switch-network?chainType=${request.connectChain}&messageID=${request.ID}&icon=${request.icon}&hostname=${request.hostname}`
+        );
+      } else {
+        windowCallback({
+          return: requestTarget.SwitchRequestChain,
+          data: null,
+          ID: request.ID,
+        });
+      }
+      return true;
+    }
     case requestTarget.Connect: {
       getStorage(
         STORAGE_NAME.connectedWebsites,
@@ -198,10 +212,11 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               windowCallback({
                 return: requestTarget.Connect,
                 data: true,
+                ID: request.ID,
               });
             } else {
               createWindow(
-                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&connectChainType=${request.connectChain}`
+                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&connectChainType=${request.connectChain}&messageID=${request.ID}`
               );
             }
           } else {
@@ -216,6 +231,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               windowCallback({
                 return: requestTarget.Connect,
                 data: true,
+                ID: request.ID,
               });
               // notification(
               //   `${chrome.i18n.getMessage('from')}: ${request.hostname}`,
@@ -223,7 +239,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               // );
             } else {
               createWindow(
-                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}`
+                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&messageID=${request.ID}`
               );
             }
           }
@@ -238,9 +254,13 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           windowCallback({
             return: requestTarget.Login,
             data: true,
+            ID: request.ID,
           });
         } else {
-          createWindow(`/index.html#popup/login?notification=true`, false);
+          createWindow(
+            `/index.html#popup/login?notification=true&messageID=${request.ID}`,
+            false
+          );
         }
         sendResponse('');
       });
@@ -1457,8 +1477,16 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           queryString += `${key}=${value}&`;
         }
       }
-      const route = request.target === requestTargetN3.SignMessageV2 || request.target === requestTargetN3.SignMessageWithoutSaltV2 ? 'neo3-signature-v2' : 'neo3-signature';
-      const isSign = request.target === requestTargetN3.SignMessageWithoutSalt || request.target === requestTargetN3.SignMessageWithoutSaltV2 ? '&sign=1': '';
+      const route =
+        request.target === requestTargetN3.SignMessageV2 ||
+        request.target === requestTargetN3.SignMessageWithoutSaltV2
+          ? 'neo3-signature-v2'
+          : 'neo3-signature';
+      const isSign =
+        request.target === requestTargetN3.SignMessageWithoutSalt ||
+        request.target === requestTargetN3.SignMessageWithoutSaltV2
+          ? '&sign=1'
+          : '';
       createWindow(`${route}?${queryString}messageID=${request.ID}${isSign}`);
       sendResponse('');
       return;

@@ -2,7 +2,12 @@ import { Component, OnInit, AfterContentInit, OnDestroy } from '@angular/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { Router, ActivatedRoute } from '@angular/router';
-import { ChromeService, GlobalService, SettingState, UtilServiceState } from '@/app/core';
+import {
+  ChromeService,
+  GlobalService,
+  SettingState,
+  UtilServiceState,
+} from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import {
   PopupConfirmDialogComponent,
@@ -40,6 +45,7 @@ export class PopupLoginComponent
   isOnePassword = false;
   lang = 'en';
 
+  private messageID = '';
   private accountSub: Unsubscribable;
   private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   private allWallet = [];
@@ -47,7 +53,7 @@ export class PopupLoginComponent
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
   constructor(
-    private route: ActivatedRoute,
+    private aRouter: ActivatedRoute,
     private router: Router,
     private chrome: ChromeService,
     private global: GlobalService,
@@ -57,6 +63,9 @@ export class PopupLoginComponent
     private settingState: SettingState,
     private store: Store<AppState>
   ) {
+    this.aRouter.queryParams.subscribe((params: any) => {
+      this.messageID = params.messageID;
+    });
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
@@ -85,6 +94,7 @@ export class PopupLoginComponent
       this.chrome.windowCallback({
         data: ERRORS.CANCELLED,
         return: requestTarget.Login,
+        ID: this.messageID,
       });
     };
   }
@@ -150,11 +160,12 @@ export class PopupLoginComponent
 
   private handleLoginSuccess() {
     this.chrome.setPassword(this.loginForm.value.password);
-    if (this.route.snapshot.queryParams.notification !== undefined) {
+    if (this.aRouter.snapshot.queryParams.notification !== undefined) {
       this.chrome.windowCallback(
         {
           data: true,
           return: requestTarget.Login,
+          ID: this.messageID,
         },
         true
       );
@@ -227,7 +238,7 @@ export class PopupLoginComponent
         );
       }
     }
-    const returnUrl = this.route.snapshot.queryParams.returnUrl || '/popup';
+    const returnUrl = this.aRouter.snapshot.queryParams.returnUrl || '/popup';
     this.router.navigateByUrl(returnUrl);
   }
 
@@ -235,7 +246,7 @@ export class PopupLoginComponent
     if (this.lang === 'en') {
       window.open('https://tutorial.neoline.io/');
     } else {
-      window.open('https://tutorial.neoline.io/v/cn?fallback=true')
+      window.open('https://tutorial.neoline.io/v/cn?fallback=true');
     }
   }
 }

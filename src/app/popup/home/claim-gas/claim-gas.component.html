@@ -1,0 +1,38 @@
+<div class="loading-box" *ngIf="ledgerSignLoading">
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+    <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
+    <button class="cancel pop-ups" (click)="cancelLedgerSign()">
+      {{ "cancel" | translate | async }}
+    </button>
+  </div>
+</div>
+<div class="claim-container" *ngIf="showClaim">
+  <token-logo
+    customClass="claim"
+    [assetId]="claimAssetId"
+    [chainType]="chainType"
+  ></token-logo>
+  <div class="claim-status-box">
+    <p class="number">{{ claimNumber | numberFixed }} GAS</p>
+    <p class="status">{{ claimStatus | translate | async }}</p>
+  </div>
+  <button
+    class="claim-btn"
+    mat-flat-button
+    (click)="claim()"
+    [disabled]="loading || !init || !showClaim"
+  >
+    <ng-container *ngIf="!loading && claimStatus !== 'success'">
+      {{
+        claimStatus !== "confirmed"
+          ? ("syncNow" | translate | async)
+          : ("claim" | translate | async)
+      }}
+    </ng-container>
+    <ng-container *ngIf="claimStatus === 'success' && !loading"
+      ><img theme src="/assets/images/common/selected.svg" alt=""
+    /></ng-container>
+    <mat-spinner *ngIf="loading" strokeWidth="2" diameter="20"></mat-spinner>
+  </button>
+</div>

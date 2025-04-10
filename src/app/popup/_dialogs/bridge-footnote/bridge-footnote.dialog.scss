@@ -47,7 +47,7 @@
   }
 }
 
-::ng-deep .footnote-content {
+:host ::ng-deep .footnote-content {
   .mat-progress-bar {
     height: 10px;
     border-radius: 2px;

@@ -13,6 +13,7 @@ import { NeonService, GlobalService, ChromeService } from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
+import { Router } from '@angular/router';
 
 @Component({
   selector: 'app-account-name',
@@ -22,7 +23,6 @@ import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 export class AccountNameComponent {
   @Input() accountData;
   @Input() chainType: ChainType;
-  @Output() importSuccess = new EventEmitter();
 
   name = '';
 
@@ -30,7 +30,8 @@ export class AccountNameComponent {
     private neon: NeonService,
     private global: GlobalService,
     private chrome: ChromeService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private router: Router
   ) {}
 
   importLedgerWallet() {
@@ -60,7 +61,7 @@ export class AccountNameComponent {
         });
         this.store.dispatch({ type: UPDATE_WALLET, data: tempWallet });
         this.chrome.accountChangeEvent(tempWallet);
-        this.importSuccess.emit();
+        this.router.navigateByUrl('/popup/home');
       } else {
         this.global.snackBarTip('existingWallet');
       }
@@ -83,7 +84,7 @@ export class AccountNameComponent {
         });
         this.store.dispatch({ type: UPDATE_WALLET, data: w });
         this.chrome.accountChangeEvent(w);
-        this.importSuccess.emit();
+        this.router.navigateByUrl('/popup/home');
       } else {
         this.global.snackBarTip('existingWallet');
       }
@@ -98,7 +99,7 @@ export class AccountNameComponent {
         });
         this.store.dispatch({ type: UPDATE_WALLET, data: w });
         this.chrome.accountChangeEvent(w);
-        this.importSuccess.emit();
+        this.router.navigateByUrl('/popup/home');
       } else {
         this.global.snackBarTip('existingWallet');
       }

@@ -5,7 +5,6 @@ import { ShareModule } from '../share';
 import { LedgerComponent } from './ledger.component';
 import { LedgerChainComponent } from './select-chain/select-chain.component';
 import { AddressSelectorComponent } from './address-selector/address-selector.component';
-import { ImportSuccessComponent } from './import-success/import-success.component';
 import { AccountNameComponent } from './account-name/account-name.component';
 
 @NgModule({
@@ -13,7 +12,6 @@ import { AccountNameComponent } from './account-name/account-name.component';
     LedgerComponent,
     LedgerChainComponent,
     AddressSelectorComponent,
-    ImportSuccessComponent,
     AccountNameComponent,
   ],
   imports: [CommonModule, LedgerRoutingModule, ShareModule],

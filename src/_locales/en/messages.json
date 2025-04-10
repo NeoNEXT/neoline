@@ -533,6 +533,9 @@
   "accountDetails": {
     "message": "Account details"
   },
+  "expandView": {
+    "message": "Expand view"
+  },
   "accountAdded": {
     "message": "Account added"
   },
@@ -1034,6 +1037,9 @@
   "AddAccountOrHardwareWallet": {
     "message": "Add account or hardware wallet"
   },
+  "AddAccount": {
+    "message": "Add {{chain}} account"
+  },
   "importWalletTip": {
     "message": "Import mnemonic phrase or private key"
   },
@@ -1135,6 +1141,9 @@
   },
   "notConnected": {
     "message": "Not connected"
+  },
+  "Connected": {
+    "message": "Connected"
   },
   "switchToThisAccount": {
     "message": "Switch to this account"

@@ -218,13 +218,16 @@ export class AssetState {
       this.util.getAssetSymbols([q], this.chainType),
       this.util.getAssetDecimals([q], this.chainType),
     ]).then(([res, symbols, decimals]) => {
-      const asset: Asset = {
-        name: isN3 ? res?.manifest?.name : res?.name,
-        asset_id: res?.hash,
-        symbol: symbols[0],
-        decimals: decimals[0],
-      };
-      return asset;
+      if (res && symbols[0]) {
+        const asset: Asset = {
+          name: isN3 ? res?.manifest?.name : res?.name,
+          asset_id: res?.hash,
+          symbol: symbols[0],
+          decimals: decimals[0],
+        };
+        return asset;
+      }
+      return null;
     });
   }
 

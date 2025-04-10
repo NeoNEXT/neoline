@@ -196,16 +196,27 @@
 }
 
 .tx-history {
-  margin-left: 40px;
-  margin-top: 12px;
+  height: 100px;
+  max-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
   .item {
     display: flex;
     align-items: center;
+    justify-content: space-between;
+    min-width: 250px;
     gap: 10px;
     margin-top: 10px;
     font-size: 12px;
     font-weight: 500;
     color: var(--title-color);
+    .left {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+    }
     .checked-icon {
       display: inline-block;
       width: 16px;
@@ -217,10 +228,6 @@
         background-image: url("/assets/images/third-party/auth-selected.svg");
       }
     }
-  }
-  .name {
-    min-width: 70px;
-    max-width: 100px;
   }
   .tx {
     text-decoration: underline;

@@ -6,7 +6,6 @@ import BN = require('bn.js');
 import SHA256 = require('crypto-js/sha256');
 import hexEncoding = require('crypto-js/enc-hex');
 import { getLocalStorage } from '../common';
-import { tx, wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { ethers } from 'ethers';
 import { ChainType } from './constants';
 
@@ -263,7 +262,7 @@ export function getWalletType() {
   return new Promise<ChainType>((resolve, reject) => {
     getLocalStorage('wallet', (wallet) => {
       let currChainType = ChainType.Neo2;
-      if (wallet && wallet3.isAddress(wallet.accounts[0].address, 53)) {
+      if (wallet && isN3Address(wallet.accounts[0].address, 53)) {
         currChainType = ChainType.Neo3;
       }
       if (ethers.isAddress(wallet.accounts[0].address)) {
@@ -272,4 +271,73 @@ export function getWalletType() {
       resolve(currChainType);
     }).catch((err) => reject(err));
   });
+}
+
+/**
+ * Verifies an address using its checksum. Note that this does not check the address version to be equal to the one in the network.
+ * If you wish to verify the exact address version, pass the version number to verifyAddressVersion.
+ *
+ * @param address - Base58 address
+ * @param verifyAddressVersion - address version to verify against. If set, this will return false if the address version does not match.
+ *
+ * @example
+ * isAddress("not an address"); // false
+ * isAddress("NQ9NEvVrutLL6JDtUMKMrkEG6QpWNxgNBM"); // true
+ * isAddress("ALq7AWrhAueN6mJNqk6FHJjnsEoPRytLdW"); // true
+ *
+ * isAddress("NQ9NEvVrutLL6JDtUMKMrkEG6QpWNxgNBM", 17); // false
+ * isAddress("ALq7AWrhAueN6mJNqk6FHJjnsEoPRytLdW", 17); // true
+ *
+ * isAddress("NQ9NEvVrutLL6JDtUMKMrkEG6QpWNxgNBM", 35); // true
+ * isAddress("ALq7AWrhAueN6mJNqk6FHJjnsEoPRytLdW", 35); // false
+ */
+export function isN3Address(address, verifyAddressVersion = -1) {
+  try {
+    const programHash = ab2hexstring(base58.decode(address));
+    const givenAddressVersion = parseInt(programHash.slice(0, 2), 16);
+    if (
+      verifyAddressVersion >= 0 &&
+      givenAddressVersion !== verifyAddressVersion
+    ) {
+      // Address might have come from a different network such as Neo Legacy.
+      return false;
+    }
+    const shaChecksum = hash256(programHash.slice(0, 42)).slice(0, 8);
+    // We use the checksum to verify the address
+    if (shaChecksum !== programHash.slice(42, 42 + 8)) {
+      return false;
+    }
+    // As other chains use similar checksum methods, we need to attempt to transform the programHash back into the address
+    const scriptHash = reverseHex(programHash.slice(2, 42));
+    if (
+      getN3AddressFromScriptHash(scriptHash, givenAddressVersion) !== address
+    ) {
+      // address is not valid Neo address, could be btc, ltc etc.
+      return false;
+    }
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+function hash256(hex) {
+  const firstSha = sha256(hex);
+  return sha256(firstSha);
+}
+
+/**
+ * Converts a scripthash to address.
+ */
+declare const DEFAULT_ADDRESS_VERSION = 53;
+export function getN3AddressFromScriptHash(
+  scriptHash,
+  addressVersion = DEFAULT_ADDRESS_VERSION
+) {
+  scriptHash = reverseHex(scriptHash);
+  const addressVersionHex = addressVersion.toString(16);
+  const shaChecksum = hash256(addressVersionHex + scriptHash).substr(0, 8);
+  return base58.encode(
+    Buffer.from(addressVersionHex + scriptHash + shaChecksum, 'hex')
+  );
 }

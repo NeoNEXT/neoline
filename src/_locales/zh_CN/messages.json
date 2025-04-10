@@ -294,7 +294,7 @@
     "message": "搜索结果"
   },
   "searchAssetsInput": {
-    "message": "请输入需要搜索的资产 回车发起搜索"
+    "message": "请输入需要搜索的资产，回车发起搜索"
   },
   "hidden": {
     "message": "隐藏"
@@ -532,6 +532,9 @@
   },
   "accountDetails": {
     "message": "账户详情"
+  },
+  "expandView": {
+    "message": "展开视图"
   },
   "accountAdded": {
     "message": "已添加账户"
@@ -1034,6 +1037,9 @@
   "AddAccountOrHardwareWallet": {
     "message": "添加钱包/连接硬件钱包"
   },
+  "AddAccount": {
+    "message": "添加 {{chain}} 钱包"
+  },
   "importWalletTip": {
     "message": "导入助记词或私钥"
   },
@@ -1135,6 +1141,9 @@
   },
   "notConnected": {
     "message": "未连接"
+  },
+  "Connected": {
+    "message": "已连接"
   },
   "switchToThisAccount": {
     "message": "切换到该账户"

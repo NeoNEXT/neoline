@@ -1,22 +1,57 @@
 .content {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: var(--message-box-color);
-  position: relative;
   cursor: pointer;
   img.logo {
-    width: 24px;
-    height: 24px;
+    width: 20px;
+    height: 20px;
     border-radius: 50%;
   }
-  .status {
-    position: absolute;
-    right: 1px;
-    top: 1px;
-    width: 5.4px;
-    height: 5.4px;
-    border-radius: 50%;
-    background: #0abf92;
+  .has-auth {
+    height: 20px;
+    padding: 2px 12px 2px 2px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    background: #e9f0f0;
+    position: relative;
+    &:hover {
+      background: linear-gradient(0deg, rgba(0, 0, 0, 0.1), rgba(0, 0, 0, 0.1)),
+        #e9f0f0;
+    }
+    :host-context([data-theme-style="dark-theme"]) & {
+      background: rgba(255, 255, 255, 0.04);
+      &:hover {
+        background: #686868;
+      }
+    }
+    .status-dot {
+      position: absolute;
+      left: 15px;
+      top: 1px;
+      width: 5.4px;
+      height: 5.4px;
+      border-radius: 50%;
+      background: #0abf92;
+    }
+    img.logo {
+      width: 16px;
+      height: 16px;
+    }
+    .current-status {
+      font-family: NeverMind;
+      font-size: 10px;
+      font-weight: normal;
+      letter-spacing: 0.01em;
+      color: #0ac7b7;
+      &.connected {
+        color: #7d9299;
+      }
+    }
+  }
+}
+
+@media screen and (min-width: 700px) {
+  .content .has-auth .current-status {
+    font-size: 12px;
   }
 }

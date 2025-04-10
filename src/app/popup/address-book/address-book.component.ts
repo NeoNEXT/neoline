@@ -105,9 +105,9 @@ export class PopupAddressBookComponent implements OnInit {
   //#region more modal
   openMoreModal(e: Event, item: AddAddressBookProp) {
     const rect = (e.target as HTMLElement).getBoundingClientRect();
-    const top = rect.top - 35;
-    if (top > 400) {
-      const bottom = 508 - top + 35;
+    const top = rect.top + 30;
+    const bottom = window.innerHeight - rect.bottom + 30;
+    if (bottom < 200) {
       this.moreModalDom.nativeElement.style.bottom = bottom + 'px';
       this.moreModalDom.nativeElement.style.top = 'auto';
     } else {

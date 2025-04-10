@@ -1,13 +1,13 @@
 {
   "name": "neoline",
-  "version": "5.3.2",
+  "version": "5.4.0",
   "engines": {
     "node": "^16.20.1",
     "npm": "~8.19.4"
   },
   "scripts": {
     "ng": "ng",
-    "initneonjs": "npm install @cityofzion/neon-js@npm:@cityofzion/neon-js@4.8.0 && npm install @cityofzion/neon-js-neo3@npm:@cityofzion/neon-js@5.5.1 && npm install @cityofzion/neon-core-neo3@npm:@cityofzion/neon-core@5.5.1",
+    "initneonjs": "npm install @cityofzion/neon-js@npm:@cityofzion/neon-js@4.8.0 && npm install @cityofzion/neon-js-neo3@npm:@cityofzion/neon-js@5.7.0 && npm install @cityofzion/neon-core-neo3@npm:@cityofzion/neon-core@5.7.0",
     "initneonjspr5": "npm install @cityofzion/neon-core-neo3-pr5@npm:@cityofzion/neon-core@5.0.0-next.4",
     "initneonjsrc1": "npm install @cityofzion/neon-core-neo3-rc1@npm:@cityofzion/neon-core@5.0.0-next.7",
     "debug": "ng serve --port 4200 --open true",
@@ -31,17 +31,16 @@
     "@angular/platform-browser": "^13.4.0",
     "@angular/platform-browser-dynamic": "^13.4.0",
     "@angular/router": "^13.4.0",
-    "@cityofzion/neon-core-neo3": "npm:@cityofzion/neon-core@^5.5.1",
+    "@cityofzion/neon-core-neo3": "npm:@cityofzion/neon-core@^5.7.0",
     "@cityofzion/neon-core-neo3-pr5": "npm:@cityofzion/neon-core@^5.0.0-next.4",
     "@cityofzion/neon-core-neo3-rc1": "npm:@cityofzion/neon-core@^5.0.0-next.7",
     "@cityofzion/neon-js": "^4.8.0",
-    "@cityofzion/neon-js-neo3": "npm:@cityofzion/neon-js@^5.5.1",
+    "@cityofzion/neon-js-neo3": "npm:@cityofzion/neon-js@^5.7.0",
     "@ledgerhq/hw-app-eth": "^6.35.6",
     "@ledgerhq/hw-transport-webhid": "^6.28.4",
     "@metamask/eth-sig-util": "^7.0.3",
     "@ngrx/store": "^13.2.0",
-    "@types/crypto-js": "^3.1.47",
-    "@types/elliptic": "^6.4.12",
+    "@types/crypto-js": "^4.2.0",
     "@types/mathjs": "^6.0.5",
     "@types/wif": "^2.0.1",
     "assert": "^2.1.0",
@@ -51,7 +50,7 @@
     "buffer": "^6.0.3",
     "core-js": "^3.6.5",
     "crypto-browserify": "^3.12.0",
-    "crypto-js": "^4.1.1",
+    "crypto-js": "^4.2.0",
     "eth-rpc-errors": "^4.0.3",
     "ethers": "^6.11.1",
     "events": "^3.3.0",
@@ -75,7 +74,7 @@
   "devDependencies": {
     "@angular-builders/custom-webpack": "^13.1.0",
     "@angular-builders/dev-server": "^7.3.1",
-    "@angular-devkit/build-angular": "~13.3.11",
+    "@angular-devkit/build-angular": "^13.3.11",
     "@angular-eslint/builder": "13.5.0",
     "@angular-eslint/eslint-plugin": "13.5.0",
     "@angular-eslint/eslint-plugin-template": "13.5.0",
@@ -95,5 +94,9 @@
     "typescript": "~4.6.4",
     "webpack": "^5.88.1",
     "webpack-cli": "^5.1.4"
+  },
+  "overrides": {
+    "elliptic": "6.6.1",
+    "@babel/traverse": "7.23.2"
   }
 }

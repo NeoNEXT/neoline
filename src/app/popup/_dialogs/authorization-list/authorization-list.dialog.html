@@ -22,7 +22,14 @@
       {{'accountsConnected' | translate | async}} ({{ data.authWalletList.length
       }})
     </p>
-    <ul class="list">
+    <div *ngIf="data.authWalletList.length <= 0" class="no-connect">
+      <img
+        theme
+        src="assets/images/third-party/no-connect-account.svg"
+        alt=""
+      />
+    </div>
+    <ul *ngIf="data.authWalletList.length > 0" class="list">
       <li *ngIf="!currentWalletIsConnected" class="current-not-connect">
         <img class="logo" [avatar]="currentAddress" alt="" />
         <div class="wallet-info">
@@ -83,8 +90,11 @@
   ></section>
   <ul #moreModalDom [hidden]="!moreModalWallet" class="pop-ups-menu">
     <li (click)="disconnectAddress()">
-      <img class="delete" src="assets/images/account/home-delete.svg" alt="" />{{
-      "disconnectThisAccount" | translate | async }}
+      <img
+        class="delete"
+        src="assets/images/account/home-delete.svg"
+        alt=""
+      />{{ "disconnectThisAccount" | translate | async }}
     </li>
   </ul>
 </div>

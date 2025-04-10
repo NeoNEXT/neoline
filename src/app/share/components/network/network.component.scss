@@ -4,12 +4,18 @@
   position: absolute;
   right: 17px;
   top: 65px;
-  width: 343px;
+  width: 73vw;
+  min-width: 343px;
+  max-width: 400px;
+  max-height: 83vh;
+  display: flex;
+  flex-direction: column;
   z-index: 999;
   border-radius: 4px;
   background: var(--body-background-color);
   box-shadow: 0px 4px 16px 0px rgba(0, 0, 0, 0.16);
   .title {
+    flex-shrink: 0;
     height: 48px;
     line-height: 48px;
     padding: 0 16px;
@@ -45,7 +51,7 @@
     }
   }
   .network-list {
-    height: 392px;
+    min-height: 392px;
     overflow-y: scroll;
     position: relative;
     mask-image: -webkit-linear-gradient(
@@ -125,6 +131,7 @@
   button.add-network {
     width: calc(100% - 48px);
     margin: 0 24px 24px;
+    flex-shrink: 0;
   }
   .pop-ups-menu {
     width: 164px;

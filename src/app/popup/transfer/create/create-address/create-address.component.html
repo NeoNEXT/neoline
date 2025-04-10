@@ -1,4 +1,4 @@
-<section class="container">
+<section class="container" [ngClass]="{ selectAddress: !transferTo?.address }">
   <div class="header">
     <button class="address search" *ngIf="!transferTo?.address">
       <img theme src="/assets/images/common/search.svg" alt="" />
@@ -29,7 +29,7 @@
       />
     </button>
   </div>
-  <div class="personal-accounts" *ngIf="!transferTo?.address">
+  <ng-container *ngIf="!transferTo?.address">
     <p class="title">Personal Account</p>
     <ul>
       <li *ngFor="let item of walletArr" (click)="selecteAccount(item)">
@@ -44,5 +44,5 @@
       <img src="/assets/images/transfer/address-book.svg" alt="" />
       {{ "addressBook" | translate | async }}
     </button>
-  </div>
+  </ng-container>
 </section>

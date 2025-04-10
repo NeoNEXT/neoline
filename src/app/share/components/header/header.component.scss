@@ -1,11 +1,19 @@
+@import "src/styles/pop-ups-menu.scss";
+
 header {
   height: 74px;
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 0 16px;
-  background: var(--background-color);
+  border-bottom: 1px solid var(--border-color);
+  position: relative;
+  &.notification-bg {
+    border-bottom: none;
+    background: var(--background-color);
+  }
   &.theme-bg {
+    border-bottom: none;
     img.logo {
       filter: drop-shadow(1000px 0 0 var(--network-color));
       transform: translate(-1000px);
@@ -22,6 +30,15 @@ header {
   img.logo {
     height: 20px;
     margin-right: 25px;
+    &.active {
+      cursor: pointer;
+    }
+  }
+  .right {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
   }
   button.network {
     min-width: 140px;
@@ -58,18 +75,13 @@ header {
       margin-left: 10px;
     }
   }
-  .avatar {
-    width: 32px;
-    height: 32px;
-    border-radius: 50%;
+  img.menu {
     cursor: pointer;
-    img {
-      width: 100%;
-      height: 100%;
-    }
   }
-}
-.popup {
-  width: 100%;
-  height: calc(100% - 74px);
+  .pop-ups-menu {
+    width: 234px;
+    position: absolute;
+    right: 16px;
+    top: 64px;
+  }
 }

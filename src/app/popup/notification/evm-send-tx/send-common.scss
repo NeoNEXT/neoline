@@ -1,7 +1,7 @@
 @import "src/styles/tab-container.scss";
 
 .container {
-  height: 100%;
+  height: calc(100% - 74px);
   overflow: scroll;
   padding-bottom: 20px;
   .header.transfer {

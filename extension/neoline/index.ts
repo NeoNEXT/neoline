@@ -26,29 +26,26 @@ declare var chrome: any;
  * Follow-up to add a dapi for the introduction of third-party pages to hide the realization of message sending and receiving.
  * You can also dynamically inject scripts into third-party pages. How to use ts for scripts injected in this way is to be considered.
  */
-const dapi = window.document.createElement('script');
-dapi.setAttribute('type', 'text/javascript');
-dapi.async = true;
-dapi.src = chrome.runtime.getURL('dapi.js');
-dapi.onload = () => {
-  dapi.parentNode.removeChild(dapi);
-  window.postMessage(
-    {
-      from: 'NeoLine',
-      type: 'dapi_LOADED',
-    },
-    window.location.origin
-  );
-};
-
-window.addEventListener('load', () => {
-  if (
-    window.document.body != null &&
-    !ExcludeWebsite.find((item) => location.origin.includes(item))
-  ) {
-    window.document.body.appendChild(dapi);
+function injectScript(filePath) {
+  const script = document.createElement('script');
+  script.src = chrome.runtime.getURL(filePath);
+  script.type = 'text/javascript';
+  script.onload = () => {
+    script.remove();
+    window.postMessage(
+      {
+        from: 'NeoLine',
+        type: 'dapi_LOADED',
+      },
+      window.location.origin
+    );
+  };
+  if (!ExcludeWebsite.find((item) => location.origin.includes(item))) {
+    (document.head || document.documentElement).appendChild(script);
   }
-});
+}
+
+injectScript('dapi.js');
 
 const requireConnectRequest = [
   requestTarget.Account,
@@ -59,9 +56,6 @@ const requireConnectRequest = [
   requestTarget.SignMessage,
   requestTarget.Deploy,
   requestTarget.Send,
-  requestTarget.PickAddress,
-  requestTarget.WalletSwitchAccount,
-  requestTarget.WalletSwitchNetwork,
 ];
 
 window.addEventListener(
@@ -204,6 +198,7 @@ window.addEventListener(
           case requestTarget.AccountPublicKey:
           case requestTarget.PickAddress:
           case requestTarget.WalletSwitchNetwork:
+          case requestTarget.SwitchRequestChain:
           case requestTarget.WalletSwitchAccount: {
             chrome.runtime.sendMessage(e.data, (response) => {
               if (!chrome.runtime.lastError) {

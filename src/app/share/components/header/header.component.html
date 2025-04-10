@@ -1,0 +1,87 @@
+<header
+  [ngClass]="{
+    'theme-bg': currentUrl.indexOf('/wallet/new-guide') >= 0,
+    'notification-bg': currentUrl.indexOf('/notification') >= 0
+  }"
+>
+  <img
+    (click)="toHome()"
+    theme
+    src="assets/images/logo-word.svg"
+    class="logo"
+    [ngClass]="{ active: currentUrl === '/ledger' }"
+    alt=""
+  />
+  <div class="right">
+    <button
+      class="network"
+      [ngClass]="{ disabled: !getShowMenu() }"
+      (click)="showNetworkList = true"
+    >
+      <span>{{ getNetworkName() }}</span>
+      <img theme src="assets/images/common/triangle-fill.svg" />
+    </button>
+    <img
+      *ngIf="currentUrl !== '/ledger' && getShowMenu()"
+      (click)="showMenu = !showMenu"
+      theme
+      class="menu"
+      src="assets/images/common/menu.svg"
+      alt=""
+    />
+    <img
+      *ngIf="currentUrl === '/ledger'"
+      (click)="showMenu = !showMenu"
+      class="menu"
+      src="assets/images/common/ledger-menu.svg"
+      alt=""
+    />
+  </div>
+  <section
+    class="pop-ups-veil"
+    *ngIf="showMenu"
+    (click)="showMenu = false"
+  ></section>
+  <ul class="pop-ups-menu" *ngIf="showMenu">
+    <li routerLink="/popup/account">
+      <img theme src="assets/images/account/home-account-detail.svg" alt="" />{{
+        "accountDetails" | translate | async
+      }}
+    </li>
+    <li (click)="toWeb()">
+      <img theme src="assets/images/account/home-explorer.svg" alt="" />{{
+        "ViewOnExplorer" | translate | async
+      }}
+    </li>
+    <li *ngIf="showExpandView" (click)="expandView()">
+      <img theme src="assets/images/account/home-expand.svg" alt="" />{{
+        "expandView" | translate | async
+      }}
+    </li>
+    <li (click)="toHelpWebsite()">
+      <img theme src="assets/images/account/home-guide.svg" alt="" />{{
+        "menuGuideAndSupport" | translate | async
+      }}
+    </li>
+    <li routerLink="/popup/setting">
+      <img theme src="assets/images/account/home-setting.svg" />{{
+        "menuSettings" | translate | async
+      }}
+    </li>
+    <li routerLink="/popup/about">
+      <img theme src="assets/images/account/home-about-us.svg" />{{
+        "menuAboutUs" | translate | async
+      }}
+    </li>
+    <li (click)="lock()">
+      <img theme src="assets/images/account/home-lock.svg" alt="" />{{
+        "menuLock" | translate | async
+      }}
+    </li>
+  </ul>
+</header>
+
+<network
+  *ngIf="showNetworkList"
+  (closeEvent)="showNetworkList = false"
+></network>

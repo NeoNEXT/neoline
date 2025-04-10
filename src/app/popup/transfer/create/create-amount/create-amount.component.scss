@@ -1,5 +1,6 @@
 section.container {
   height: 100%;
+  position: relative;
   .content {
     padding: 0 24px;
     .item {
@@ -87,13 +88,16 @@ section.container {
         }
       }
     }
-    .btn-group {
-      margin-top: 37px;
-      button {
-        width: calc(50% - 8px);
-        &:first-child {
-          margin-right: 16px;
-        }
+  }
+  .btn-group {
+    position: absolute;
+    bottom: 24px;
+    left: 24px;
+    right: 24px;
+    button {
+      width: calc(50% - 8px);
+      &:first-child {
+        margin-right: 16px;
       }
     }
   }
@@ -105,5 +109,11 @@ section.container {
   }
   50% {
     opacity: 0;
+  }
+}
+
+@media screen and (min-width: 400px) {
+  section.container {
+    min-height: var(--expand-min-height);
   }
 }

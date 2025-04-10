@@ -88,7 +88,7 @@ export class EvmService {
     const wallet = new ethers.Wallet(privateKey);
     const json = await wallet.encrypt(pwd);
     const accountLike: EvmWalletJSON = JSON.parse(json);
-    accountLike.name = name ?? 'NeoLineUser';
+    accountLike.name = name ?? wallet.address;
     accountLike.accounts = [
       {
         address: wallet.address,

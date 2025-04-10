@@ -13,6 +13,10 @@
     border: 0.5px solid var(--title-color);
     color: var(--title-color);
     font-family: NeverMind-DemiBold;
+    max-width: 200px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
   .connect-amount {
     font-size: 13px;
@@ -32,6 +36,15 @@
     padding-top: 16px;
     padding-bottom: 12px;
     border-bottom: 1px solid var(--line-color);
+  }
+  .no-connect {
+    height: 250px;
+    text-align: center;
+    padding-top: 82px;
+    img {
+      width: 60px;
+      height: 60px;
+    }
   }
   ul.list {
     height: 250px;

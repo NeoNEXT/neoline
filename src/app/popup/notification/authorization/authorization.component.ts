@@ -21,6 +21,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
   public hostname = '';
   public title = '';
   public ruleCheck = false;
+  private messageID = '';
 
   private accountSub: Unsubscribable;
   chainType: ChainType;
@@ -28,7 +29,6 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
   public wallet: Wallet2 | Wallet3 | EvmWalletJSON;
   private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   private currentChainType: ChainType;
-  private neoXWallet: EvmWalletJSON;
   constructor(
     private chrome: ChromeService,
     private aRouter: ActivatedRoute,
@@ -41,7 +41,6 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.currentWallet = state.currentWallet;
       this.currentChainType = state.currentChainType;
-      this.neoXWallet = state.neoXWalletArr[0];
     });
     this.aRouter.queryParams.subscribe((params: any) => {
       this.hostname = params.hostname;
@@ -50,19 +49,10 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
           ? '/assets/images/flamingo.ico'
           : params.icon;
       this.title = params.title;
-      if (params.connectChainType === 'NeoX') {
-        if (!this.neoXWallet) {
-          this.showCreateNeoX()
-          return;
-        }
-        this.chainType = 'NeoX';
-        this.wallet = this.neoXWallet;
-        this.address = this.neoXWallet.accounts[0].address;
-      } else {
-        this.chainType = this.currentChainType;
-        this.wallet = this.currentWallet;
-        this.address = this.wallet.accounts[0].address;
-      }
+      this.messageID = params.messageID;
+      this.chainType = this.currentChainType;
+      this.wallet = this.currentWallet;
+      this.address = this.wallet.accounts[0].address;
     });
   }
 
@@ -71,6 +61,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
       this.chrome.windowCallback({
         data: ERRORS.CANCELLED,
         return: requestTarget.Connect,
+        ID: this.messageID,
       });
     };
   }
@@ -102,6 +93,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
       {
         data: false,
         return: requestTarget.Connect,
+        ID: this.messageID,
       },
       true
     );
@@ -131,6 +123,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
         this.chrome.windowCallback({
           data: true,
           return: requestTarget.Connect,
+          ID: this.messageID,
         });
         this.chrome.windowCallback(
           {

@@ -90,7 +90,7 @@ export class Init {
   }
 
   public async getPublicKey(): Promise<AccountPublicKey> {
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
     if (isAuth === true) {
       return sendMessage(requestTarget.AccountPublicKey);
     }
@@ -163,7 +163,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
     if (isAuth === true) {
       return sendMessage(requestTarget.VerifyMessage, parameter);
     }
@@ -193,7 +193,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
     if (isAuth === true) {
       (parameter as any).hostname = location.hostname;
       return sendMessage(requestTarget.Invoke, parameter);
@@ -229,7 +229,7 @@ export class Init {
         });
       }
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
     if (isAuth === true) {
       (parameter as any).hostname = location.hostname;
       return sendMessage(requestTarget.InvokeMulti, parameter);
@@ -246,7 +246,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
     if (isAuth === true) {
       return sendMessage(requestTarget.SignMessage, parameter);
     }
@@ -269,7 +269,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
     if (isAuth === true) {
       return sendMessage(requestTarget.Deploy, parameter);
     }
@@ -289,7 +289,7 @@ export class Init {
         reject(ERRORS.CONNECTION_DENIED);
       });
     }
-    const isAuth = await checkConnectAndLogin();
+    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
     if (isAuth === true) {
       return sendMessage(requestTarget.Send, parameter);
     }
@@ -320,11 +320,7 @@ export class Init {
     const parameter = {
       hostname: location.hostname,
     };
-    const isAuth = await checkConnectAndLogin();
-    if (isAuth === true) {
-      return sendMessage(requestTarget.PickAddress, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
+    return sendMessage(requestTarget.PickAddress, parameter);
   }
 
   public async switchWalletNetwork(
@@ -339,27 +335,19 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin();
-    if (isAuth === true) {
-      parameter.hostname = location.hostname;
-      parameter.icon = getIcon();
-      parameter.chainType = ChainType.Neo2;
-      return sendMessage(requestTarget.WalletSwitchNetwork, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
+    parameter.hostname = location.hostname;
+    parameter.icon = getIcon();
+    parameter.chainType = ChainType.Neo2;
+    return sendMessage(requestTarget.WalletSwitchNetwork, parameter);
   }
 
   public async switchWalletAccount(): Promise<any> {
-    const isAuth = await checkConnectAndLogin();
-    if (isAuth === true) {
-      const parameter: WalletSwitchAccountArg = {
-        hostname: location.hostname,
-        icon: getIcon(),
-        chainType: ChainType.Neo2,
-      };
-      return sendMessage(requestTarget.WalletSwitchAccount, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
+    const parameter: WalletSwitchAccountArg = {
+      hostname: location.hostname,
+      icon: getIcon(),
+      chainType: ChainType.Neo2,
+    };
+    return sendMessage(requestTarget.WalletSwitchAccount, parameter);
   }
 
   public addEventListener(type: string, callback: (data: object) => void) {

@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 
 //#region mat modules
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -38,7 +39,6 @@ import { NavComponent } from './components/nav/nav.component';
 import { LoadingComponent } from './components/loading/loading.component';
 import { LoadingDotComponent } from './components/loading-dot/loading-dot.component';
 import { PopupNetworkComponent } from './components/network/network.component';
-import { PopupAvatarMenuComponent } from './components/avatar-menu/avatar-menu.component';
 import { CopyComponent } from './components/copy/copy.component';
 import { EvmFeeComponent } from './components/evm-fee/evm-fee.component';
 import { TooltipComponent } from './components/tooltip/tooltip.component';
@@ -47,6 +47,7 @@ import { EvmGasErrorComponent } from './components/evm-gas-error/evm-gas-error.c
 import { EvmPendingWarningComponent } from './components/evm-pending-warning/evm-pending-warning.component';
 import { EvmEstimateErrorComponent } from './components/evm-estimate-error/evm-estimate-error.component';
 import { EvmCustomNonceComponent } from './components/evm-custom-nonce/evm-custom-nonce.component';
+import { HeaderComponent } from './components/header/header.component';
 const COMPONENTS = [
   AssetTxPageComponent,
   NftTxPageComponent,
@@ -54,7 +55,6 @@ const COMPONENTS = [
   NavComponent,
   LoadingComponent,
   LoadingDotComponent,
-  PopupAvatarMenuComponent,
   CopyComponent,
   EvmFeeComponent,
   TooltipComponent,
@@ -63,6 +63,7 @@ const COMPONENTS = [
   EvmPendingWarningComponent,
   EvmEstimateErrorComponent,
   EvmCustomNonceComponent,
+  HeaderComponent,
 ];
 //#endregion
 
@@ -92,7 +93,13 @@ const DIRECTIVE = [AvatarDirective, ErrSrcDirective, ImgThemeDirective];
 
 @NgModule({
   declarations: [...PIPES, ...DIRECTIVE, ...COMPONENTS],
-  imports: [FormsModule, CommonModule, MatIconModule, MatButtonModule],
+  imports: [
+    FormsModule,
+    RouterModule,
+    CommonModule,
+    MatIconModule,
+    MatButtonModule,
+  ],
   exports: [
     FormsModule,
     ReactiveFormsModule,

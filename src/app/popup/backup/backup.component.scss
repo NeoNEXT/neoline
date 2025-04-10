@@ -1,7 +1,5 @@
-
-
 .container {
-  height: calc(100% - 44px);
+  height: calc(100% - var(--nav-height));
   padding: 30px 24px 24px;
   text-align: center;
   position: relative;
@@ -39,5 +37,11 @@
       width: 100%;
       margin-top: 16px;
     }
+  }
+}
+
+@media screen and (min-width: 400px) {
+  .container {
+    min-height: calc(var(--expand-min-height) - var(--nav-height));
   }
 }

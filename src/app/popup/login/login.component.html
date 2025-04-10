@@ -1,3 +1,4 @@
+<app-header></app-header>
 <section class="login">
   <div class="welcome">
     <img class="neo-logo" theme src="assets/images/login/neo-bg.svg" alt="" />
@@ -75,7 +76,9 @@
       </button>
       <p class="get-help">
         {{ "needHelp" | translate | async }}
-        <span class="link" (click)="getHelp()">{{ "contactSupport" | translate | async }}</span>
+        <span class="link" (click)="getHelp()">{{
+          "contactSupport" | translate | async
+        }}</span>
       </p>
     </div>
   </div>

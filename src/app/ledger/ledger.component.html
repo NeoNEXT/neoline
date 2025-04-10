@@ -1,10 +1,9 @@
+<app-header></app-header>
 <section class="main">
   <div class="header">
-    <img class="logo" theme src="/assets/images/logo-word.svg" alt="" />
-    <div class="right">
-      <button>{{ networks[selectedNetworkIndex]?.name }}</button>
-      <img [avatar]="address" />
-    </div>
+    <p class="title">{{ "ImportLedgerWallet" | translate | async }}</p>
+    <img class="logo" src="/assets/images/ledger/neo-bg.svg" alt="" />
+    <div class="bg"></div>
   </div>
   <div class="content">
     <app-ledger-chain
@@ -23,12 +22,7 @@
       *ngIf="status === STATUS_ENUM.ACCOUNT_NAME"
       [accountData]="selectAccountData"
       [chainType]="chainType"
-      (importSuccess)="status = STATUS_ENUM.IMPORT_SUCCESS"
     >
     </app-account-name>
-
-    <app-import-success
-      *ngIf="status === STATUS_ENUM.IMPORT_SUCCESS"
-    ></app-import-success>
   </div>
 </section>

@@ -1,7 +1,7 @@
 @import "src/styles/mat";
 
 section {
-  height: calc(100% + 74px);
+  height: 100%;
   margin-top: -74px;
   background: var(--background-color);
   .welcome {
@@ -115,7 +115,7 @@ section {
         line-height: 12px;
         color: var(--title-color);
         .link {
-          color: #06CCAB;
+          color: #06ccab;
           cursor: pointer;
           &:hover {
             text-decoration: underline;
@@ -123,5 +123,11 @@ section {
         }
       }
     }
+  }
+}
+
+@media screen and (min-width: 400px) {
+  section .wallet-list {
+    min-height: calc(var(--expand-min-height) - 225px);
   }
 }

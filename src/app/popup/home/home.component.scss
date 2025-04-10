@@ -1,135 +1,127 @@
-@import "src/styles/pop-ups-menu.scss";
 @import "src/styles/home-top.scss";
 @import "src/styles/tab-container.scss";
 
 .popup-home {
-  height: 100%;
-  .header {
-    height: 67px;
-    text-align: center;
-    position: relative;
-    border-bottom: 1px solid var(--line-color);
-    home-dapp-auth {
-      position: absolute;
-      left: 20px;
-      top: 22px;
-    }
-    .wallet-info {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      .name {
-        font-family: NeverMind-Medium;
-        font-size: 18px;
-        line-height: 20px;
-        color: var(--important-title-color);
-        max-width: 200px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
+  height: calc(100% - 74px);
+  overflow: scroll;
+  .account-container {
+    width: 88%;
+    max-width: 640px;
+    margin: 0 auto;
+    padding-top: 18px;
+    .account-content {
+      padding: 16px 0 16px 16px;
+      border-radius: 8px;
+      background: #f4f4f4;
+      border: 2px solid #e9f0f0;
+      :host-context([data-theme-style="dark-theme"]) & {
+        background: rgba(255, 255, 255, 0.04);
+        border-color: #303135;
       }
-      .address {
+    }
+    .account-name {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      img.avatar {
+        width: 40px;
+        height: 40px;
+      }
+      .name {
         display: inline-flex;
         align-items: center;
-        height: 30px;
-        padding: 0 16px;
-        border-radius: 14px;
+        cursor: pointer;
+        gap: 6px;
+        span {
+          font-family: NeverMind-Medium;
+          font-size: 18px;
+          color: var(--important-title-color);
+          max-width: 200px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+      }
+      .address-warp {
+        margin-top: 3px;
+        display: flex;
+        align-items: center;
         font-family: NeverMind-Regular;
         font-size: 12px;
         color: var(--title-color);
-        cursor: pointer;
-        &:hover {
-          background: var(--hover-color);
-        }
         img.usb {
           width: 15px;
+          margin-right: 4px;
         }
-        span {
-          margin: 0 8px;
+        .address {
+          margin-right: 6px;
+        }
+        img.copy {
+          cursor: pointer;
+          margin-right: 8px;
         }
       }
     }
-    .menu {
-      position: absolute;
-      right: 16px;
-      bottom: 20px;
-      cursor: pointer;
-    }
-    .pop-ups-menu {
-      width: 234px;
-      position: absolute;
-      right: 16px;
-      top: 64px;
+    .account-value {
+      height: 26px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 20px;
+      font-family: NeverMind;
+      font-size: 26px;
+      font-weight: bold;
+      letter-spacing: 0.01em;
+      color: var(--important-title-color);
+      ul {
+        display: inline-flex;
+        align-items: center;
+        gap: 2px;
+        li {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--title-color);
+        }
+      }
+      img {
+        cursor: pointer;
+      }
     }
   }
   .popup-home-body {
-    height: calc(100% - 67px);
     position: relative;
-    overflow: auto;
     .token-logo {
       margin-block: 16px;
       text-align: center;
     }
 
-    .transaction-btn-container.bridge {
-      padding: 0 26px;
+    .transaction-btn-container {
+      width: 88%;
+      max-width: 640px;
+      margin: 0 auto;
+      margin-top: 32px;
+      padding: 0 30px;
+      &.bridge {
+        padding: 0 6px;
+      }
     }
 
-    .claim-container {
-      height: 48px;
-      margin: 24px;
-      padding: 0 6px;
-      border-radius: 24px;
-      background: var(--message-box-color);
-      display: flex;
-      align-items: center;
-      .claim-status-box {
-        margin-left: 12px;
-        flex: 1 1 auto;
-        .number {
-          font-size: 12px;
-          line-height: 12px;
-          font-family: NeverMind-Medium;
-          color: var(--title-color);
-        }
-        .status {
-          font-size: 10px;
-          line-height: 12px;
-          font-family: NeverMind-Regular;
-          color: var(--tip-color);
-          margin-top: 2px;
-        }
-      }
-      button.claim-btn {
-        width: 67px;
-        height: 36px;
-        border-radius: 18px;
-        background: var(--body-background-color);
-        font-family: NeverMind-Regular;
-        font-size: 14px;
-        color: var(--theme-color);
-        cursor: pointer;
-        mat-spinner {
-          margin: auto;
-        }
-        img {
-          width: 15px;
-          height: 15px;
-          margin: auto;
-          filter: drop-shadow(1000px 0 0 var(--theme-color));
-          transform: translate(-1000px);
-        }
-      }
-    }
     .claim-line {
       margin-top: 24px;
       border: none;
       border-top: 4px solid var(--line-color);
     }
     .tabs-container {
+      .content {
+        padding-left: 24px;
+        display: inline-flex;
+        justify-content: space-between;
+        gap: 24px;
+        span {
+          margin-left: 0;
+        }
+      }
       img.asset-add {
         position: absolute;
         right: 24px;
@@ -155,5 +147,27 @@
   color: var(--theme-color);
   &:hover {
     text-decoration: underline;
+  }
+}
+
+@media screen and (min-width: 1000px) {
+  .popup-home {
+    .account-container {
+      padding-top: 50px;
+      .account-content {
+        padding: 44px 0 44px 44px;
+      }
+    }
+    .popup-home-body {
+      .transaction-btn-container {
+        margin-top: 50px;
+      }
+      .claim-line {
+        margin-top: 54px;
+      }
+      .tabs-container .content {
+        gap: 120px;
+      }
+    }
   }
 }

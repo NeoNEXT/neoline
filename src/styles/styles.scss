@@ -23,6 +23,7 @@ body {
   font-size: 14px;
   font-family: NeverMind-Medium;
   line-height: 1;
+  background-color: var(--html-background-color);
 }
 address,
 dl,
@@ -51,4 +52,9 @@ li {
 input:focus,
 textarea:focus {
   outline: none;
+}
+
+html:root {
+  --nav-height: 62px;
+  --expand-min-height: 600px;
 }

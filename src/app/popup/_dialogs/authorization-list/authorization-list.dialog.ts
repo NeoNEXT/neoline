@@ -53,9 +53,6 @@ export class PopupAuthorizationListDialogComponent {
     e.stopPropagation();
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     let top = rect.top + 30;
-    if (top > 420) {
-      top -= 90;
-    }
     this.moreModalDom.nativeElement.style.top = top + 'px';
     this.moreModalDom.nativeElement.style.bottom = 'auto';
     this.moreModalWallet = item;

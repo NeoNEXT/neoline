@@ -100,19 +100,11 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
       }
       this.myAssets = showAssets;
       this.getAssetsRate();
-      let neoAsset;
-      if (this.chainType === 'Neo2') {
-        neoAsset = this.myAssets.find((m) => m.asset_id === NEO);
-      } else if (this.chainType === 'Neo3') {
-        neoAsset = this.myAssets.find((m) => m.asset_id === NEO3_CONTRACT);
-      } else {
-        neoAsset = moneyAssets[0];
-      }
-      this.backAsset.emit(neoAsset);
       this.isLoading = false;
     });
   }
   async getAssetsRate() {
+    let total = new BigNumber(0);
     for (let i = 0; i < this.myAssets.length; i++) {
       const item = this.myAssets[i];
       item.rateBalance = await this.asset.getAssetAmountRate({
@@ -122,6 +114,10 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
           this.chainType === 'NeoX' ? this.neoXNetwork.chainId : undefined,
         amount: item.balance,
       });
+      if (item.rateBalance) {
+        total = total.plus(item.rateBalance);
+      }
     }
+    this.backAsset.emit(total.toFixed());
   }
 }

@@ -1,10 +1,11 @@
 import EventEmitter = require('events');
 import {
+  evmRequireConnectRequestMethods,
   MESSAGE_TYPE,
   NEOX_EVENT,
   requestTargetEVM,
 } from '../common/data_module_evm';
-import { checkConnectAndLogin, getIcon, sendMessage } from './common';
+import { checkNeoXConnectAndLogin, getIcon, sendMessage } from './common';
 import { ethErrors } from 'eth-rpc-errors';
 import { ChainType } from '../common/constants';
 import { v4 as uuid } from 'uuid';
@@ -65,19 +66,19 @@ class NEOLineEVMController extends EventEmitter {
       });
     }
 
-    if (method === MESSAGE_TYPE.ETH_REQUEST_ACCOUNTS) {
-      const isAuth = await checkConnectAndLogin(ChainType.NeoX);
-      if (isAuth === true) {
-        return sendMessage(requestTargetEVM.request, args);
-      }
-      throw ethErrors.provider.userRejectedRequest().serialize();
-    }
-
     (args as any).hostInfo = {
       hostname: location.hostname,
       icon: getIcon(),
       origin: location.origin,
     };
+
+    if (evmRequireConnectRequestMethods.includes(method)) {
+      const isAuth = await checkNeoXConnectAndLogin(ChainType.NeoX);
+      if (isAuth === true) {
+        return sendMessage(requestTargetEVM.request, args);
+      }
+      throw ethErrors.provider.userRejectedRequest().serialize();
+    }
 
     return sendMessage(requestTargetEVM.request, args);
   }

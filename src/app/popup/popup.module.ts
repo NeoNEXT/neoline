@@ -40,6 +40,7 @@ import {
   PopupHomeBackupComponent,
   PopupHomeDappAuthComponent,
   PopupEvmNftsComponent,
+  PopupClaimGasComponent,
 } from './home';
 import { PopupLoginComponent } from './login/login.component';
 import { PopupNewWalletGuideComponent } from './new-wallet-guide/new-wallet-guide.component';
@@ -64,6 +65,7 @@ const POPUP_COMPONENTS = [
   PopupHomeComponent,
   PopupNftsComponent,
   PopupEvmNftsComponent,
+  PopupClaimGasComponent,
   PopupHomeBackupComponent,
   PopupHomeDappAuthComponent,
   PopupNftTokensComponent,
@@ -106,6 +108,7 @@ import {
   PopupBridgeFootnoteDialogComponent,
   PopupSpeedUpFeeDialogComponent,
   PopupApproveDialogComponent,
+  PopupAccountListDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -134,6 +137,7 @@ const POPUP_DIALOGS = [
   PopupBridgeFootnoteDialogComponent,
   PopupSpeedUpFeeDialogComponent,
   PopupApproveDialogComponent,
+  PopupAccountListDialogComponent,
 ];
 
 //#endregion
