@@ -34,13 +34,7 @@
       "extension_ids": []
     }
   ],
-  "permissions": [
-    "storage",
-    "notifications",
-    "activeTab",
-    "alarms",
-    "unlimitedStorage"
-  ],
+  "permissions": ["storage", "notifications", "activeTab", "alarms"],
   "background": {
     "service_worker": "background.js"
   },
