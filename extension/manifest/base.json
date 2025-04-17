@@ -38,12 +38,7 @@
   "background": {
     "service_worker": "background.js"
   },
-  "externally_connectable": {
-    "matches": ["https://neoline.cn/*"],
-    "ids": ["*"]
-  },
   "content_security_policy": {
     "extension_pages": "frame-ancestors 'none'; script-src 'self'; object-src 'self'"
-  },
-  "minimum_chrome_version": "88"
+  }
 }

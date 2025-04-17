@@ -3,6 +3,8 @@ import { STORAGE_NAME } from './popup/_lib';
 import { ChromeService, SettingState, NeonService } from './core';
 import { NavigationEnd, Router, RouterEvent } from '@angular/router';
 
+declare var chrome: any;
+
 @Component({
   selector: 'neo-line',
   templateUrl: './app.component.html',
@@ -12,15 +14,15 @@ export class AppComponent {
   private currentUrl = this.router.url;
 
   constructor(
-    private chrome: ChromeService,
+    private chromeService: ChromeService,
     private settingState: SettingState,
     private neon: NeonService,
     private router: Router
   ) {
-    this.chrome.getStorage(STORAGE_NAME.lang).subscribe((res) => {
+    this.chromeService.getStorage(STORAGE_NAME.lang).subscribe((res) => {
       this.settingState.changLang(res);
     });
-    this.chrome.getStorage(STORAGE_NAME.theme).subscribe((res) => {
+    this.chromeService.getStorage(STORAGE_NAME.theme).subscribe((res) => {
       this.settingState.changeTheme(res);
     });
     this.neon.initData();
@@ -29,6 +31,19 @@ export class AppComponent {
         this.currentUrl = res.url;
       }
     });
+    // firefox style
+    if (typeof (window as any).InstallTrigger !== 'undefined') {
+      document.body.style.width = '375px';
+      document.body.style.height = '600px';
+      if (chrome.tabs) {
+        chrome.tabs.getCurrent((tab) => {
+          if (tab) {
+            document.body.style.width = '100%';
+            document.body.style.height = '100%';
+          }
+        });
+      }
+    }
   }
 
   checkIsThemeBg() {

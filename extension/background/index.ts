@@ -113,7 +113,9 @@ chrome.alarms.onAlarm.addListener(async () => {
   }
 })();
 
-chrome.runtime.onRestartRequired.addListener(() => resetData());
+if (chrome.runtime.onRestartRequired) {
+  chrome.runtime.onRestartRequired.addListener(() => resetData());
+}
 
 chrome.runtime.onInstalled.addListener(() => resetData());
 
