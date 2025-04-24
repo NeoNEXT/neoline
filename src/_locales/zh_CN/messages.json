@@ -116,16 +116,13 @@
   "sent": {
     "message": "支出"
   },
-  "balance": {
-    "message": "余额"
-  },
   "balancecolon": {
     "message": "余额："
   },
   "transgerTo": {
     "message": "转账给"
   },
-  "Asset": {
+  "AssetUpper": {
     "message": "资产"
   },
   "transferToTip": {
@@ -214,9 +211,6 @@
   },
   "receiptAccount": {
     "message": "收款钱包"
-  },
-  "privacyPolicy": {
-    "message": "隐私政策"
   },
   "termsOfUse": {
     "message": "使用条款"
@@ -440,9 +434,6 @@
   "connectedTip": {
     "message": "已允许连接到 NeoLine 钱包"
   },
-  "from": {
-    "message": "来自"
-  },
   "to": {
     "message": "发给"
   },
@@ -665,10 +656,7 @@
   "TOTAL": {
     "message": "总额："
   },
-  "TRANSFER": {
-    "message": "转账"
-  },
-  "PRIORITYFEE": {
+  "PRIORITYFEEUPPER": {
     "message": "优先费"
   },
   "SYSTEMFEE": {
@@ -734,7 +722,7 @@
   "Fee": {
     "message": "费用"
   },
-  "Yes": {
+  "booleanYes": {
     "message": "是"
   },
   "No": {
@@ -781,9 +769,6 @@
   },
   "NEW": {
     "message": "新建"
-  },
-  "IMPORT": {
-    "message": "导入"
   },
   "EXPORT": {
     "message": "导出"
@@ -1094,9 +1079,6 @@
   "EditAddressBook": {
     "message": "编辑地址"
   },
-  "Address": {
-    "message": "地址"
-  },
   "SelectNetwork": {
     "message": "选择网络"
   },
@@ -1385,9 +1367,6 @@
   "save": {
     "message": "保存"
   },
-  "Loading": {
-    "message": "加载中"
-  },
   "footnoteDesc2": {
     "message": "当桥接服务稳定后，将逐步取消数量限制，并扩大桥接服务范围，包含 NEO 及其他资产。"
   },
@@ -1459,9 +1438,6 @@
   },
   "speedUpTip": {
     "message": "注：NeoLine钱包不会对本次交易收取加速服务费。"
-  },
-  "approve": {
-    "message": "批准"
   },
   "sendToken": {
     "message": "发送"

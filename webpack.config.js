@@ -9,6 +9,27 @@ module.exports = {
   // optimization: {
   //     minimize: false
   // },
+  optimization: process.env.configuration === 'production' ? {
+    splitChunks: {
+      cacheGroups: {
+        ledger: {
+          test: /[\\/]node_modules[\\/]@ledgerhq[\\/]/,
+          name: "ledger",
+          maxSize: 4000000,
+          priority: 20,
+          chunks: "all",
+          enforce: true,
+        },
+        neonjs: {
+          test: /[\\/]node_modules[\\/]@cityofzion[\\/]/,
+          name: "neonjs",
+          priority: 20,
+          chunks: "all",
+          enforce: true,
+        },
+      },
+    },
+  } : {},
   resolve: {
     extensions: [
       "*",
