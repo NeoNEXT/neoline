@@ -1,8 +1,8 @@
 {
   "browser_specific_settings": {
     "gecko": {
-      "id": "webextension@neoline.io",
-      "strict_min_version": "109.0"
+      "id": "extension@neoline.io",
+      "strict_min_version": "115.0"
     }
   },
   "background": {
