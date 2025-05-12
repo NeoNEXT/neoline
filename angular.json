@@ -31,7 +31,6 @@
             "customWebpackConfig": {
               "path": "./webpack.config.js"
             },
-            "indexTransform":"./index-html-transform.js",
             "allowedCommonJsDependencies": [
               "bignumber.js",
               "crypto-js",
