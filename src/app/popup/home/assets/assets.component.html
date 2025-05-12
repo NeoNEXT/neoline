@@ -17,11 +17,14 @@
     [symbol]="asset?.symbol"
     [neoXChainId]="networkId"
   ></token-logo>
-  <div class="item-middle">{{ asset?.symbol }}</div>
+  <div class="item-middle">
+    <p class="asset-name">{{ asset?.symbol }}</p>
+    <p class="asset-id" *ngIf="asset?.price">{{ rateCurrency === 'USD' ? '$' : '¥' }}{{ asset?.price | number }}</p>
+  </div>
   <div class="item-right">
-    <p class="balance">{{ asset?.balance || "0" | numberFixed : 8 }}</p>
+    <p class="balance">{{ asset?.balance || "0" | number: '1.0-8' }}</p>
     <p class="rate" *ngIf="asset?.rateBalance && asset?.rateBalance !== 0">
-      {{ asset?.rateBalance | numberFixed : 2 }}&nbsp;{{ rateCurrency }}
+      {{ asset?.rateBalance | numberFixed : 2 | number }}&nbsp;{{ rateCurrency }}
     </p>
   </div>
 </div>
