@@ -23,7 +23,7 @@ import { NEO, GAS } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 import { ChromeService } from '../services/chrome.service';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';

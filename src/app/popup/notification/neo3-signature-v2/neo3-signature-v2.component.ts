@@ -14,7 +14,7 @@ import { RpcNetwork, ChainType, LedgerStatuses } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 import { interval } from 'rxjs';
 
 @Component({

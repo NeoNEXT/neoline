@@ -16,7 +16,7 @@ import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { tx as tx2 } from '@cityofzion/neon-core/lib';
 import { tx as tx3 } from '@cityofzion/neon-core-neo3/lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 import { HttpService } from './http.service';
 import { GlobalService } from './global.service';
 import { NEO, GAS, Asset } from '@/models/models';

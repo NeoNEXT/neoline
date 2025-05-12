@@ -18,7 +18,7 @@ import { ContractCall, ContractParam } from '@cityofzion/neon-core-neo3/lib/sc';
 import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 
 interface CreateNeo3TxInput {
   invokeArgs: ContractCall[];

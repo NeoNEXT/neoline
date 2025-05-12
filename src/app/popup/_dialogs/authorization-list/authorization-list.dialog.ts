@@ -8,7 +8,7 @@ import {
   UPDATE_WALLET,
 } from '../../_lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 import { EvmWalletJSON } from '../../_lib/evm';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';

@@ -32,7 +32,7 @@ import {
 import { Unsubscribable, map, timer } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import BigNumber from 'bignumber.js';
 import { Neo3InvokeService } from '../transfer/neo3-invoke.service';

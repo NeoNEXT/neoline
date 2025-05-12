@@ -7,7 +7,7 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 import { ChromeService, SettingState } from '@/app/core';
 import { STORAGE_NAME } from '../../_lib';
 import { Unsubscribable } from 'rxjs';

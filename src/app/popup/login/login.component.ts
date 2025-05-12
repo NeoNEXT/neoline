@@ -1,6 +1,6 @@
 import { Component, OnInit, AfterContentInit, OnDestroy } from '@angular/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 import { Router, ActivatedRoute } from '@angular/router';
 import {
   ChromeService,

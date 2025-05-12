@@ -8,7 +8,7 @@ import {
   STORAGE_NAME,
 } from '../../_lib';
 import { Unsubscribable, timer } from 'rxjs';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 import { EvmWalletJSON } from '../../_lib/evm';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { ethers } from 'ethers';

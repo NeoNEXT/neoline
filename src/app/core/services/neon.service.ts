@@ -6,7 +6,7 @@ import Neon2, {
 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Account3, Wallet3 } from '@popup/_lib';
 import { Observable, from, Observer, of, forkJoin } from 'rxjs';
 import { map, catchError, timeout } from 'rxjs/operators';
 import { ChromeService } from './chrome.service';
@@ -514,7 +514,7 @@ export class NeonService {
         return w;
       });
     } else if (this.selectedChainType === 'Neo3') {
-      const account = new wallet3.Account();
+      const account = new Account3();
       account.extra = { hasBackup: false };
       const wif = account.WIF;
       const w = new wallet3.Wallet({
@@ -657,7 +657,7 @@ export class NeonService {
       );
     } else if (this.selectedChainType === 'Neo3') {
       const account = new wallet3.Account(privKey);
-      const w = new wallet3.Wallet({
+      const w = new Wallet3({
         name: name || 'NeoLineUser',
       } as any);
       w.addAccount(account);
@@ -697,7 +697,7 @@ export class NeonService {
       );
     } else if (this.selectedChainType === 'Neo3') {
       const account = new wallet3.Account(wallet3.getPrivateKeyFromWIF(wif));
-      const w = new wallet3.Wallet({
+      const w = new Wallet3({
         name: name || 'NeoLineUser',
       } as any);
       w.addAccount(account);
@@ -734,9 +734,9 @@ export class NeonService {
     } else if (this.selectedChainType === 'Neo3') {
       try {
         const wif = await wallet3.decrypt(encKey, oldPwd);
-        const account = new wallet3.Account(wallet3.getPrivateKeyFromWIF(wif));
+        const account = new Account3(wallet3.getPrivateKeyFromWIF(wif));
         account.label = name;
-        const newWallet = new wallet3.Wallet({
+        const newWallet = new Wallet3({
           name: name || 'NeoLineUser',
         } as any);
         newWallet.addAccount(account);

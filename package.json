@@ -40,7 +40,7 @@
     "@cityofzion/neon-core-neo3-rc1": "npm:@cityofzion/neon-core@^5.0.0-next.7",
     "@cityofzion/neon-js": "^4.8.0",
     "@cityofzion/neon-js-neo3": "npm:@cityofzion/neon-js@^5.7.0",
-    "@ledgerhq/hw-app-eth": "^6.35.6",
+    "@ledgerhq/hw-app-eth": "^6.45.3",
     "@ledgerhq/hw-transport-webhid": "^6.28.4",
     "@metamask/eth-sig-util": "^7.0.3",
     "@ngrx/store": "^13.2.0",
