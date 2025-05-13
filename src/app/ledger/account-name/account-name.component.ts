@@ -8,7 +8,7 @@ import {
   ADD_NEOX_WALLET,
 } from '@/app/popup/_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
-import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
+import { Wallet3 } from '@popup/_lib';
 import { NeonService, GlobalService, ChromeService } from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -89,7 +89,7 @@ export class AccountNameComponent {
         this.global.snackBarTip('existingWallet');
       }
     } else {
-      const w = new wallet3.Wallet({ name: this.name });
+      const w = new Wallet3({ name: this.name });
       w.addAccount(accountLike);
       const isEfficient = this.neon.verifyWallet(w);
       if (isEfficient) {

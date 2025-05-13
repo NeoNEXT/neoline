@@ -1,7 +1,7 @@
 {
   "name": "NeoLine",
   "description": "NEO thin wallet for chrome extension",
-  "version": "5.4.0",
+  "version": "5.5.0",
   "manifest_version": 3,
   "action": {
     "default_popup": "index.html#popup",
@@ -38,12 +38,7 @@
   "background": {
     "service_worker": "background.js"
   },
-  "externally_connectable": {
-    "matches": ["https://neoline.cn/*"],
-    "ids": ["*"]
-  },
   "content_security_policy": {
     "extension_pages": "frame-ancestors 'none'; script-src 'self'; object-src 'self'"
-  },
-  "minimum_chrome_version": "88"
+  }
 }

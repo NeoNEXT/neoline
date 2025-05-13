@@ -10,7 +10,7 @@ import {
 } from '@/app/core';
 import { NEO, GAS } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 import { rpc } from '@cityofzion/neon-core';
 import {
   NEO3_CONTRACT,

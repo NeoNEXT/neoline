@@ -1,5 +1,5 @@
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import {
   ChainType,

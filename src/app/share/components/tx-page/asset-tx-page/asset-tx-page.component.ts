@@ -231,7 +231,8 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
 
   private listenTxsValid(ids: string[]) {
     let req: Unsubscribable;
-    this.listenTxSub = interval(15000).subscribe(() => {
+    let time = this.chainType === 'Neo3' ? 3000 : 15000;
+    this.listenTxSub = interval(time).subscribe(() => {
       req?.unsubscribe();
       req = this.txState.getTxsValid(ids, this.chainType).subscribe((txIds) => {
         if (txIds.length > 0) {

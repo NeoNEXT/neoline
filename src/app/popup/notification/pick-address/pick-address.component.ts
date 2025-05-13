@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ChromeService } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ERRORS, requestTarget } from '@/models/dapi';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { ChainType, STORAGE_NAME } from '../../_lib';
 import { requestTargetN3 } from '@/models/dapi_neo3';

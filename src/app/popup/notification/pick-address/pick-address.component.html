@@ -4,7 +4,7 @@
       chainType === "Neo2" ? "Neo Legacy address list" : "Neo N3 address list"
     }}
   </p>
-  <ul>
+  <ul *ngIf="walletArr.length">
     <li
       *ngFor="let item of walletArr; let i = index"
       [ngClass]="{

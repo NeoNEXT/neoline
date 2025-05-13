@@ -26,7 +26,7 @@ import {
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 import { EvmWalletJSON } from '../../_lib/evm';
 import { PopupConfirmDialogComponent } from '../confirm/confirm.dialog';
 import { Router } from '@angular/router';

@@ -10,7 +10,7 @@ export class PopupAboutComponent implements OnInit, OnDestroy {
   public version = '';
   links = [
     {
-      name: 'privacyPolicy',
+      name: 'PrivacyPolicy',
       enUrl: 'https://neoline.io/en/privacy',
       zhUrl: 'https://neoline.io/privacy',
     },

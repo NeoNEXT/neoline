@@ -1,3 +1,16 @@
+import { Account, Wallet } from '@cityofzion/neon-core-neo3/lib/wallet';
+export declare class Account3 extends Account {
+  extra: {
+    [key: string]: any;
+  };
+}
+export declare class Wallet3 extends Wallet {
+  accounts: Account3[];
+  extra: {
+    [key: string]: any;
+  };
+}
+
 export enum requestTargetN3 {
   Provider = 'neoline.target_provider_n3',
   Networks = 'neoline.target_networks_n3',

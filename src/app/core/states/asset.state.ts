@@ -198,6 +198,24 @@ export class AssetState {
     return rate && amount ? rate.times(amount).toFixed(2) : undefined;
   }
 
+  async getAssetAmountRateAndPrice({
+    chainType,
+    assetId,
+    chainId,
+    amount,
+  }: {
+    chainType: ChainType;
+    assetId: string;
+    chainId?: number;
+    amount: string | number;
+  }) {
+    const price = await this.getAssetRateV2(chainType, assetId, chainId);
+    return {
+      price: price ? price.toFixed(2) : undefined,
+      rate: price && amount ? price.times(amount).toFixed(2) : undefined,
+    };
+  }
+
   //#endregion
 
   //#region other

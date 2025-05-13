@@ -9,7 +9,7 @@ import { Unsubscribable } from 'rxjs';
 import { ethers, HDNodeWallet } from 'ethers';
 import { ChromeService, UtilServiceState } from '@/app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 
 @Component({
   templateUrl: 'backup.component.html',

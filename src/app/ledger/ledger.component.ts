@@ -19,6 +19,7 @@ export class LedgerComponent implements OnDestroy {
   status = STATUS_ENUM.CHAIN_PICK;
   chainType: ChainType;
   selectAccountData;
+  loading = typeof (window as any).InstallTrigger !== 'undefined'; // firefox not support ledger webHID
 
   private accountSub: Unsubscribable;
   public address: string;

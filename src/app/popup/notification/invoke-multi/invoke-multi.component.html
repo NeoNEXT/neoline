@@ -107,7 +107,7 @@
       <li *ngIf="dataJson?.broadcastOverride !== undefined">
         <p class="label">{{ "broadcastOverride" | translate | async }}</p>
         <p class="value">
-          {{ (dataJson.broadcastOverride ? "Yes" : "No") | translate | async }}
+          {{ (dataJson.broadcastOverride ? "booleanYes" : "No") | translate | async }}
         </p>
       </li>
     </ul>

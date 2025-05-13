@@ -19,6 +19,7 @@ export interface Asset {
   watching?: boolean;
   avatar?: string;
   rateBalance?: string;
+  price?: string;
   decimals?: number;
   bridgeDecimals?: number;
   bridgeTargetAssetId?: string;

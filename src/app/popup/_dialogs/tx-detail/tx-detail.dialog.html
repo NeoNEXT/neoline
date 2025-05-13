@@ -61,7 +61,7 @@
   </li>
   <li class="line"></li>
   <li>
-    <p class="label">{{ 'from' | translate | async }}</p>
+    <p class="label">{{ 'From' | translate | async }}</p>
     <div class="value address">
       <p *ngFor="let item of data.tx.from">
         <copy [value]="item" placement="top">{{ item | longStr: 16 }}</copy>

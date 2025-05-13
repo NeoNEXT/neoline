@@ -23,7 +23,7 @@ import {
   LedgerStatuses,
   RpcNetwork,
 } from '../../_lib';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { ContractCall } from '@cityofzion/neon-core-neo3/lib/sc';

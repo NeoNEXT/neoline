@@ -8,7 +8,7 @@ import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet as Wallet3 } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Wallet3 } from '@popup/_lib';
 
 @Component({
   templateUrl: './wallet-switch-account.component.html',

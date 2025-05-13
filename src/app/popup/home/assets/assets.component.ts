@@ -107,13 +107,15 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     let total = new BigNumber(0);
     for (let i = 0; i < this.myAssets.length; i++) {
       const item = this.myAssets[i];
-      item.rateBalance = await this.asset.getAssetAmountRate({
+      const rateAndPrice = await this.asset.getAssetAmountRateAndPrice({
         chainType: this.chainType,
         assetId: item.asset_id,
         chainId:
           this.chainType === 'NeoX' ? this.neoXNetwork.chainId : undefined,
         amount: item.balance,
       });
+      item.rateBalance = rateAndPrice.rate;
+      item.price = rateAndPrice.price;
       if (item.rateBalance) {
         total = total.plus(item.rateBalance);
       }
