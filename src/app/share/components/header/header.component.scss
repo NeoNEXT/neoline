@@ -15,15 +15,15 @@ header {
   &.theme-bg {
     border-bottom: none;
     img.logo {
-      filter: drop-shadow(1000px 0 0 var(--network-color));
-      transform: translate(-1000px);
+      filter: drop-shadow(10000px 0 0 var(--network-color));
+      transform: translate(-10000px);
     }
     button.network {
       border-color: var(--network-color);
       color: var(--network-color);
       img {
-        filter: drop-shadow(1000px 0 0 var(--network-color));
-        transform: translate(-1000px);
+        filter: drop-shadow(10000px 0 0 var(--network-color));
+        transform: translate(-10000px);
       }
     }
   }
@@ -64,8 +64,8 @@ header {
       border: 1px solid var(--theme-color);
       box-shadow: 0px 8px 15px -8px rgba(6, 204, 171, 0.5);
       img {
-        filter: drop-shadow(1000px 0 0 var(--theme-color));
-        transform: translate(-1000px);
+        filter: drop-shadow(10000px 0 0 var(--theme-color));
+        transform: translate(-10000px);
       }
     }
     &.disabled {

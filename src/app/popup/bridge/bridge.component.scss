@@ -238,8 +238,8 @@
     &:hover {
       color: var(--theme-color);
       img {
-        filter: drop-shadow(1000px 0 0 var(--theme-color));
-        transform: translate(-1000px);
+        filter: drop-shadow(10000px 0 0 var(--theme-color));
+        transform: translate(-10000px);
       }
     }
   }

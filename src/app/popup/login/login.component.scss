@@ -80,8 +80,8 @@ section {
         }
       }
       img.arrow {
-        filter: drop-shadow(1000px 0 0 var(--theme-color));
-        transform: rotate(90deg) translate(-1000px);
+        filter: drop-shadow(10000px 0 0 var(--theme-color));
+        transform: rotate(90deg) translate(-10000px);
         transition: all 0.3s;
       }
     }
