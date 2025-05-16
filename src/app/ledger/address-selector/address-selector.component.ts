@@ -11,8 +11,14 @@ import {
   LedgerStatus,
   LedgerStatuses,
   LEDGER_PAGE_SIZE,
+  HardwareDevice,
 } from '@/app/popup/_lib';
-import { LedgerService, SettingState, AssetEVMState } from '@/app/core';
+import {
+  LedgerService,
+  SettingState,
+  AssetEVMState,
+  OneKeyService,
+} from '@/app/core';
 import { interval } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -28,6 +34,7 @@ import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 })
 export class AddressSelectorComponent implements OnInit, OnDestroy {
   @Input() chainType: ChainType;
+  @Input() device: HardwareDevice;
   @Output() selectThisAccount = new EventEmitter();
   getStatusInterval;
   isReady = false;
@@ -51,6 +58,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   neoXChainId: number;
   constructor(
     private ledger: LedgerService,
+    private oneKeyService: OneKeyService,
     private settingState: SettingState,
     private assetEVMState: AssetEVMState,
     private store: Store<AppState>
@@ -142,18 +150,33 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   }
 
   private getLedgerStatus() {
-    this.ledger.getDeviceStatus(this.chainType).then((res) => {
-      if (LedgerStatuses[res]) {
-        this.status = LedgerStatuses[res];
-        this.isReady = this.status === LedgerStatuses.READY;
-        if (this.isReady && this.accounts.length === 0) {
-          this.fetchAccounts(1);
+    if (this.device === 'ledger') {
+      this.ledger.getDeviceStatus(this.chainType).then((res) => {
+        if (LedgerStatuses[res]) {
+          this.status = LedgerStatuses[res];
+          this.isReady = this.status === LedgerStatuses.READY;
+          if (this.isReady && this.accounts.length === 0) {
+            this.fetchAccounts(1);
+          }
+          if (!this.isReady) {
+            this.accounts = [];
+          }
         }
-        if (!this.isReady) {
-          this.accounts = [];
+      });
+    }
+    if (this.device === 'oneKey') {
+      this.oneKeyService.getDeviceStatus().then((res) => {
+        if (res.success) {
+          this.getStatusInterval?.unsubscribe();
+          this.oneKeyService.getPassphraseState().then((state) => {
+            if (state.success && this.accounts.length === 0) {
+              this.isReady = true;
+              this.fetchAccounts(1);
+            }
+          });
         }
-      }
-    });
+      });
+    }
   }
 
   private fetchAccounts(index: number) {
@@ -161,15 +184,28 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
       return;
     }
     this.isLoadingAccount = true;
-    this.ledger
-      .fetchAccounts(index, this.chainType)
-      .then((accounts) => {
-        this.accounts = accounts;
-        this.isLoadingAccount = false;
-      })
-      .catch(() => {
-        this.isLoadingAccount = false;
-      });
+    if (this.device === 'ledger') {
+      this.ledger
+        .fetchAccounts(index, this.chainType)
+        .then((accounts) => {
+          this.accounts = accounts;
+          this.isLoadingAccount = false;
+        })
+        .catch(() => {
+          this.isLoadingAccount = false;
+        });
+    }
+    if (this.device === 'oneKey') {
+      this.oneKeyService
+        .fetchAccounts(index, this.chainType)
+        .then((accounts) => {
+          this.accounts = accounts;
+          this.isLoadingAccount = false;
+        })
+        .catch(() => {
+          this.isLoadingAccount = false;
+        });
+    }
   }
 
   public async jumbToWeb(type: 'privacy' | 'agreement') {

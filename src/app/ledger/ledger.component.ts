@@ -1,10 +1,11 @@
 import { Component, OnDestroy } from '@angular/core';
-import { ChainType, RpcNetwork } from '../popup/_lib';
+import { ChainType, RpcNetwork, HardwareDevice } from '../popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 
 enum STATUS_ENUM {
+  SELECT_HARDWARE,
   CHAIN_PICK,
   ADDRESS_SELECTOR,
   ACCOUNT_NAME,
@@ -16,8 +17,9 @@ enum STATUS_ENUM {
 })
 export class LedgerComponent implements OnDestroy {
   STATUS_ENUM = STATUS_ENUM;
-  status = STATUS_ENUM.CHAIN_PICK;
+  status = STATUS_ENUM.SELECT_HARDWARE;
   chainType: ChainType;
+  device: HardwareDevice = 'oneKey';
   selectAccountData;
   loading = typeof (window as any).InstallTrigger !== 'undefined'; // firefox not support ledger webHID
 
@@ -38,6 +40,11 @@ export class LedgerComponent implements OnDestroy {
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
+  }
+
+  selectDevice(type: HardwareDevice) {
+    this.device = type;
+    this.status = STATUS_ENUM.CHAIN_PICK;
   }
 
   selectChain(chainType: ChainType) {

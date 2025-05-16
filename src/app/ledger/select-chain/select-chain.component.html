@@ -8,7 +8,11 @@
     <li (click)="chain = 'Neo3'" [ngClass]="{ active: chain === 'Neo3' }">
       Neo N3
     </li>
-    <li (click)="chain = 'Neo2'" [ngClass]="{ active: chain === 'Neo2' }">
+    <li
+      *ngIf="device === 'ledger'"
+      (click)="chain = 'Neo2'"
+      [ngClass]="{ active: chain === 'Neo2' }"
+    >
       Neo Legacy
     </li>
   </ul>

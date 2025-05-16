@@ -405,7 +405,9 @@ export class NeonService {
     } else {
       if (
         walletArr.findIndex(
-          (item) => item.accounts[0].address === w.accounts[0].address
+          (item) =>
+            !item.accounts[0].extra.ledgerSLIP44 &&
+            item.accounts[0].address === w.accounts[0].address
         ) >= 0
       ) {
         return false;

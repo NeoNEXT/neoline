@@ -1,0 +1,22 @@
+<section class="main">
+  <p class="title">selectHardware</p>
+  <ul>
+    <li
+      (click)="device = 'ledger'"
+      [ngClass]="{ active: device === 'ledger' }"
+    >
+      Ledger
+    </li>
+    <li
+      (click)="device = 'oneKey'"
+      [ngClass]="{ active: device === 'oneKey' }"
+    >
+      OneKey
+    </li>
+  </ul>
+  <div class="confirm-content">
+    <button class="confirm" (click)="select()">
+      {{ "Next" | translate | async }}
+    </button>
+  </div>
+</section>

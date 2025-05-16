@@ -6,6 +6,8 @@ import {
   UPDATE_WALLET,
   ADD_NEO3_WALLETS,
   ADD_NEOX_WALLET,
+  HardwareDevice,
+  Account3,
 } from '@/app/popup/_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { Wallet3 } from '@popup/_lib';
@@ -22,6 +24,7 @@ import { Router } from '@angular/router';
 })
 export class AccountNameComponent {
   @Input() accountData;
+  @Input() device: HardwareDevice;
   @Input() chainType: ChainType;
 
   name = '';
@@ -49,6 +52,7 @@ export class AccountNameComponent {
               publicKey: account.publicKey,
               ledgerAddressIndex: index,
               ledgerSLIP44: SLIP44[this.chainType],
+              device: this.device,
             },
           },
         ],
@@ -67,11 +71,15 @@ export class AccountNameComponent {
       }
       return;
     }
-    const accountLike = account.export();
+    const accountLike =
+      this.device === 'ledger'
+        ? account.export()
+        : new Account3(account.publicKey).export();
     accountLike.extra = {
       publicKey: account.publicKey,
       ledgerAddressIndex: index,
       ledgerSLIP44: SLIP44[this.chainType],
+      device: this.device,
     };
     if (this.chainType === 'Neo2') {
       const w = new wallet2.Wallet({ name: this.name });

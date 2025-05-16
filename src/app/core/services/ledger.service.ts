@@ -40,11 +40,11 @@ const LedgerReadyStatusCode = 0x9000;
 
 @Injectable()
 export class LedgerService {
-  deviceInstance;
-  ethTransport;
-  accounts = { Neo2: [], Neo3: [], NeoX: [] };
-  sendQueue = [];
-  ledgerInUse = false;
+  private deviceInstance;
+  private ethTransport;
+  private accounts = { Neo2: [], Neo3: [], NeoX: [] };
+  private sendQueue = [];
+  private ledgerInUse = false;
 
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;

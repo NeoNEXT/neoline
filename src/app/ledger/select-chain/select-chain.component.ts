@@ -1,5 +1,5 @@
-import { Component, Output, EventEmitter, OnDestroy } from '@angular/core';
-import { ChainType, STORAGE_NAME } from '@/app/popup/_lib';
+import { Component, Output, EventEmitter, OnDestroy, Input } from '@angular/core';
+import { ChainType, HardwareDevice, STORAGE_NAME } from '@/app/popup/_lib';
 import { ChromeService, GlobalService, SettingState } from '@/app/core';
 import { Unsubscribable } from 'rxjs';
 
@@ -9,6 +9,7 @@ import { Unsubscribable } from 'rxjs';
   styleUrls: ['select-chain.component.scss'],
 })
 export class LedgerChainComponent implements OnDestroy {
+  @Input() device: HardwareDevice;
   @Output() selectChain = new EventEmitter<ChainType>();
   chain: ChainType = 'Neo3';
   settingStateSub: Unsubscribable;
