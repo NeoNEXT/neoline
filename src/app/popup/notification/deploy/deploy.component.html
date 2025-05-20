@@ -5,6 +5,14 @@
   </div>
 </div>
 
+<app-hardware-sign
+  *ngIf="showHardwareSign"
+  [chainType]="chainType"
+  [currentWallet]="wallet"
+  [unsignedTx]="unsignedTx"
+  (backWithSignedTx)="handleHardwareSignedTx($event)"
+></app-hardware-sign>
+
 <div class="container">
   <div class="header transfer">
     <div class="invoke-type">· DEPLOY</div>

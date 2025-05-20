@@ -4,6 +4,14 @@
     <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
   </div>
 </div>
+<app-hardware-sign
+  *ngIf="showHardwareSign"
+  [chainType]="chainType"
+  [currentWallet]="currentWallet"
+  [unsignedTx]="unsignedTx"
+  [magicNumber]="n3Network.magicNumber"
+  (backWithSignedTx)="handleHardwareSignedTx($event)"
+></app-hardware-sign>
 
 <div class="container">
   <div class="header transfer">

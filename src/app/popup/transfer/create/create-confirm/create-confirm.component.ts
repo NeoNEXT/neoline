@@ -1,23 +1,10 @@
-import {
-  Component,
-  Input,
-  OnInit,
-  Output,
-  EventEmitter,
-  OnDestroy,
-} from '@angular/core';
-import {
-  AddressNonceInfo,
-  GAS3_CONTRACT,
-  LedgerStatuses,
-  STORAGE_NAME,
-} from '../../../_lib';
+import { Component, Input, OnInit, Output, EventEmitter } from '@angular/core';
+import { AddressNonceInfo, GAS3_CONTRACT, STORAGE_NAME } from '../../../_lib';
 import { GAS, Transaction } from '@/models/models';
 import { NeoDataJsonProp, NeoXFeeInfoProp, TransferData } from '../interface';
 import {
   AssetState,
   GlobalService,
-  LedgerService,
   TransactionState,
   ChromeService,
   UtilServiceState,
@@ -35,7 +22,6 @@ import { Transaction as Transaction2 } from '@cityofzion/neon-core/lib/tx';
 import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { TransferService } from '../../transfer.service';
 import { Observable } from 'rxjs';
-import { interval } from 'rxjs';
 import { Neo3TransferService } from '../../neo3-transfer.service';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
@@ -47,7 +33,7 @@ export type TabType = 'details' | 'data';
   templateUrl: 'create-confirm.component.html',
   styleUrls: ['create-confirm.component.scss'],
 })
-export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
+export class TransferCreateConfirmComponent implements OnInit {
   @Input() data: TransferData;
   @Output() backAmount = new EventEmitter();
   rateCurrency = '';
@@ -65,7 +51,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
 
   loading = false;
   loadingMsg: string;
-  getStatusInterval;
+  showHardwareSign = false;
 
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   evmHexData: string;
@@ -82,7 +68,6 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private transfer: TransferService,
     private global: GlobalService,
-    private ledger: LedgerService,
     private txState: TransactionState,
     private neo3Transfer: Neo3TransferService,
     private chrome: ChromeService,
@@ -91,9 +76,6 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
     private settingState: SettingState,
     private evmNFTState: EvmNFTState
   ) {}
-  ngOnDestroy(): void {
-    this.getStatusInterval?.unsubscribe();
-  }
 
   async ngOnInit(): Promise<void> {
     this.getDataJson();
@@ -211,12 +193,7 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
       if (this.data.chainType === 'NeoX') {
         await this.getEvmTxData();
       }
-      this.loading = true;
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus();
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus();
-      });
+      this.showHardwareSign = true;
       return;
     }
     switch (this.data.chainType) {
@@ -268,45 +245,18 @@ export class TransferCreateConfirmComponent implements OnInit, OnDestroy {
       this.sendTxParams = newParams;
     }
   }
-  private getLedgerStatus() {
-    this.ledger.getDeviceStatus(this.data.chainType).then(async (res) => {
-      switch (this.data.chainType) {
-        case 'Neo2':
-          this.loadingMsg = LedgerStatuses[res].msg;
-          break;
-        case 'Neo3':
-          this.loadingMsg =
-            LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
-          break;
-        case 'NeoX':
-          this.loadingMsg =
-            LedgerStatuses[res].msgNeoX || LedgerStatuses[res].msg;
-          break;
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      if (this.data.chainType === 'NeoX') {
+        this.evmLedgerTx = tx;
+      } else {
+        this.unsignedTx = tx;
       }
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
-        this.ledger
-          .getLedgerSignedTx(
-            this.data.chainType === 'NeoX' ? this.evmLedgerTx : this.unsignedTx,
-            this.data.currentWallet,
-            this.data.chainType,
-            this.data.network.magicNumber
-          )
-          .then((tx) => {
-            this.loading = false;
-            this.unsignedTx = tx;
-            this.evmLedgerTx = tx;
-            this.resolveSend();
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
-      }
-    });
+      this.resolveSend();
+    }
   }
+
   private async resolveSend() {
     this.loadingMsg = 'Wait';
     try {

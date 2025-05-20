@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
   AssetState,
@@ -6,7 +6,6 @@ import {
   GlobalService,
   ChromeService,
   TransactionState,
-  LedgerService,
   UtilServiceState,
   SettingState,
 } from '@/app/core';
@@ -23,8 +22,6 @@ import { bignumber } from 'mathjs';
 import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { STORAGE_NAME, ChainType } from '../../_lib';
 import BigNumber from 'bignumber.js';
-import { LedgerStatuses } from '../../_lib';
-import { interval } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -37,7 +34,7 @@ type TabType = 'details' | 'data';
   templateUrl: 'transfer.component.html',
   styleUrls: ['transfer.component.scss'],
 })
-export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
+export class PopupNoticeTransferComponent implements OnInit {
   tabType: TabType = 'details';
   NEO = NEO;
   public dataJson: any = {};
@@ -57,19 +54,20 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
   public remark: string = '';
   public loading = false;
   public loadingMsg: string;
+  showHardwareSign = false;
+  unsignedTx;
   private txHashAttributes: TxHashAttribute[] = null;
 
   public fee: number;
   public init = false;
   private broadcastOverride = false;
   private messageID = 0;
-  getStatusInterval;
 
   private accountSub: Unsubscribable;
   public fromAddress: string;
   public n2Network: RpcNetwork;
-  private currentWallet: Wallet2;
-  private chainType: ChainType;
+  currentWallet: Wallet2;
+  chainType: ChainType;
   private neo2WIFArr: string[];
   private neo2WalletArr: Wallet2[];
   constructor(
@@ -81,7 +79,6 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private txState: TransactionState,
     private dialog: MatDialog,
-    private ledger: LedgerService,
     private util: UtilServiceState,
     private settingState: SettingState,
     private store: Store<AppState>
@@ -95,9 +92,6 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
       this.neo2WIFArr = state.neo2WIFArr;
       this.neo2WalletArr = state.neo2WalletArr;
     });
-  }
-  ngOnDestroy(): void {
-    this.getStatusInterval?.unsubscribe();
   }
 
   ngOnInit(): void {
@@ -455,37 +449,18 @@ export class PopupNoticeTransferComponent implements OnInit, OnDestroy {
       });
   }
 
-  private getLedgerStatus(tx) {
-    this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
-      this.loadingMsg = LedgerStatuses[res].msg;
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
-        this.ledger
-          .getLedgerSignedTx(tx, this.currentWallet, this.chainType)
-          .then((tx) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.tx = tx;
-            this.resolveSend(tx);
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
-      }
-    });
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      this.tx = tx;
+      this.resolveSend(tx);
+    }
   }
 
   private getSignTx(tx: Transaction) {
     if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      this.loading = true;
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus(tx);
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus(tx);
-      });
+      this.unsignedTx = tx;
+      this.showHardwareSign = true;
       return;
     }
     this.util

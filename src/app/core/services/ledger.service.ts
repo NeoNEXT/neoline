@@ -197,31 +197,26 @@ export class LedgerService {
           return unsignedTx;
         });
     } else {
-      if (signOnly) {
-        return this.getNeo3Signature({
-          data: serTx,
-          magicNumber,
-          addressIndex: extra.ledgerAddressIndex,
-        });
-      }
-      const verificationScript = wallet3.getVerificationScriptFromPublicKey(
-        extra.publicKey
-      );
       return this.getNeo3Signature({
         data: serTx,
         magicNumber,
         addressIndex: extra.ledgerAddressIndex,
-      })
-        .then((res) => `0c40${res}`)
-        .then((invocationScript) => {
-          (unsignedTx as Transaction3).addWitness(
-            new tx3.Witness({
-              invocationScript,
-              verificationScript,
-            })
-          );
-          return unsignedTx;
-        });
+      }).then((signature) => {
+        if (signOnly) {
+          return signature;
+        }
+        const invocationScript = `0c40${signature}`;
+        const verificationScript = wallet3.getVerificationScriptFromPublicKey(
+          extra.publicKey
+        );
+        (unsignedTx as Transaction3).addWitness(
+          new tx3.Witness({
+            invocationScript,
+            verificationScript,
+          })
+        );
+        return unsignedTx;
+      });
     }
   }
 
@@ -235,16 +230,6 @@ export class LedgerService {
     this.global.snackBarTip(snackError);
   }
 
-  //#region private function
-  private handleSignResult(result) {
-    let v = result['v'];
-    v = v.toString(16);
-    if (v.length < 2) {
-      v = '0' + v;
-    }
-    const data = '0x' + result['r'] + result['s'] + v;
-    return data;
-  }
   async getNeoXSignPersonalMessage(message: string, wallet: EvmWalletJSON) {
     const result = await this.ethTransport.signPersonalMessage(
       `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
@@ -265,6 +250,17 @@ export class LedgerService {
     } catch {
       throw new Error('ledgerNotSupportMethod');
     }
+  }
+
+  //#region private function
+  private handleSignResult(result) {
+    let v = result['v'];
+    v = v.toString(16);
+    if (v.length < 2) {
+      v = '0' + v;
+    }
+    const data = '0x' + result['r'] + result['s'] + v;
+    return data;
   }
 
   private async getNeoXSignature(txData, wallet: EvmWalletJSON) {

@@ -4,6 +4,15 @@
     <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
   </div>
 </div>
+
+<app-hardware-sign
+  *ngIf="showHardwareSign"
+  [chainType]="'NeoX'"
+  [currentWallet]="data.encryptWallet"
+  [unsignedTx]="confirmNewParams"
+  (backWithSignedTx)="handleHardwareSignedTx($event)"
+></app-hardware-sign>
+
 <div class="container">
   <div class="header">{{ 'approval' | translate | async }}</div>
   <div class="content">

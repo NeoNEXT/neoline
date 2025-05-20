@@ -1,35 +1,17 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
-import {
-  GlobalService,
-  LedgerService,
-  ChromeService,
-  AssetState,
-} from '@/app/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
+import { GlobalService, ChromeService, AssetState } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import { PopupEditFeeDialogComponent } from '@/app/popup/_dialogs';
 import { MatDialog } from '@angular/material/dialog';
 import { SignerLike, Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Asset } from '@/models/models';
-import {
-  ChainType,
-  GAS3_CONTRACT,
-  LedgerStatuses,
-  RpcNetwork,
-} from '../../_lib';
+import { ChainType, GAS3_CONTRACT, RpcNetwork } from '../../_lib';
 import { Wallet3 } from '@popup/_lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { ContractCall } from '@cityofzion/neon-core-neo3/lib/sc';
 import { Neo3InvokeService } from '../../transfer/neo3-invoke.service';
 import { u } from '@cityofzion/neon-core-neo3';
-import { interval } from 'rxjs';
 import { ethers } from 'ethers';
 
 export type TabType = 'details' | 'data';
@@ -39,7 +21,7 @@ export type TabType = 'details' | 'data';
   templateUrl: 'neo3-bridge-confirm.component.html',
   styleUrls: ['../bridge-confirm.scss'],
 })
-export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
+export class Neo3BridgeConfirmComponent implements OnInit {
   GAS3_CONTRACT = GAS3_CONTRACT;
   @Input() bridgeAsset: Asset;
   @Input() bridgeAmount: string;
@@ -66,13 +48,12 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
 
   loading = false;
   loadingMsg: string;
-  getStatusInterval;
+  showHardwareSign = false;
   expandTotalFee = false;
 
   constructor(
     private dialog: MatDialog,
     private global: GlobalService,
-    private ledger: LedgerService,
     private chrome: ChromeService,
     private assetState: AssetState,
     private neo3Invoke: Neo3InvokeService
@@ -81,10 +62,6 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
   ngOnInit(): void {
     this.txSerialize = this.unSignedTx.serialize(false);
     this.calculateNeo3TotalFee();
-  }
-
-  ngOnDestroy(): void {
-    this.getStatusInterval?.unsubscribe();
   }
 
   private calculateNeo3TotalFee() {
@@ -162,12 +139,7 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
 
   async confirm() {
     if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      this.loading = true;
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus();
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus();
-      });
+      this.showHardwareSign = true;
       return;
     }
     this.loading = true;
@@ -199,30 +171,10 @@ export class Neo3BridgeConfirmComponent implements OnInit, OnDestroy {
       });
   }
 
-  private getLedgerStatus() {
-    this.ledger.getDeviceStatus('Neo3').then(async (res) => {
-      this.loadingMsg = LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
-        this.ledger
-          .getLedgerSignedTx(
-            this.unSignedTx,
-            this.currentWallet,
-            'Neo3',
-            this.n3Network.magicNumber
-          )
-          .then((tx) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.resolveSend(tx);
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
-      }
-    });
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      this.resolveSend(tx);
+    }
   }
 }

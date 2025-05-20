@@ -1,11 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ChromeService, LedgerService, UtilServiceState } from '@/app/core';
+import { ChromeService, UtilServiceState } from '@/app/core';
 import { ERRORS, requestTarget } from '@/models/dapi';
-import { wallet, u } from '@cityofzion/neon-js';
+import { wallet } from '@cityofzion/neon-js';
 import { randomBytes } from 'crypto';
-import { RpcNetwork, LedgerStatuses, ChainType } from '../../_lib';
-import { interval } from 'rxjs';
+import { RpcNetwork, ChainType } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -15,14 +14,13 @@ import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
   templateUrl: './signature.component.html',
   styleUrls: ['./signature.component.scss'],
 })
-export class PopupNoticeSignComponent implements OnInit, OnDestroy {
+export class PopupNoticeSignComponent implements OnInit {
   public message: string;
   private messageID = 0;
   jsonMessage;
 
-  getStatusInterval;
-  loading = false;
-  loadingMsg = '';
+  showHardwareSign = false;
+  unsignedTx;
 
   publicKey;
   randomSalt;
@@ -30,14 +28,13 @@ export class PopupNoticeSignComponent implements OnInit, OnDestroy {
   private accountSub: Unsubscribable;
   public address: string;
   public n2Network: RpcNetwork;
-  private currentWallet: Wallet2;
-  private chainType: ChainType;
+  currentWallet: Wallet2;
+  chainType: ChainType;
   private neo2WIFArr: string[];
   private neo2WalletArr: Wallet2[];
   constructor(
     private aRouter: ActivatedRoute,
     private chrome: ChromeService,
-    private ledger: LedgerService,
     private utilServiceState: UtilServiceState,
     private store: Store<AppState>
   ) {
@@ -51,10 +48,6 @@ export class PopupNoticeSignComponent implements OnInit, OnDestroy {
       this.neo2WalletArr = state.neo2WalletArr;
     });
   }
-  ngOnDestroy(): void {
-    this.getStatusInterval?.unsubscribe();
-  }
-
   ngOnInit() {
     this.aRouter.queryParams.subscribe(() => {
       const query = this.utilServiceState.parseUrl(location.hash);
@@ -114,43 +107,18 @@ export class PopupNoticeSignComponent implements OnInit, OnDestroy {
     );
   }
 
-  private getLedgerStatus(tx) {
-    this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
-      this.loadingMsg = LedgerStatuses[res].msg;
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
-        this.ledger
-          .getLedgerSignedTx(
-            tx,
-            this.currentWallet,
-            this.chainType,
-            undefined,
-            true
-          )
-          .then((tx) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.sendMessage(tx);
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
-      }
-    });
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      this.sendMessage(tx);
+    }
   }
 
   private getSignTx(tx) {
     if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
       this.publicKey = this.currentWallet.accounts[0]?.extra?.publicKey;
-      this.loading = true;
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus(tx);
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus(tx);
-      });
+      this.unsignedTx = tx;
+      this.showHardwareSign = true;
       return;
     }
     this.utilServiceState

@@ -8,18 +8,11 @@ import { Transaction, TransactionStatus } from '@/models/models';
 import {
   ETH_SOURCE_ASSET_HASH,
   EvmWalletJSON,
-  LedgerStatuses,
   RpcNetwork,
   STORAGE_NAME,
 } from '../../_lib';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
-import {
-  AssetEVMState,
-  ChromeService,
-  GlobalService,
-  LedgerService,
-} from '@/app/core';
-import { interval } from 'rxjs';
+import { AssetEVMState, ChromeService, GlobalService } from '@/app/core';
 import { ethers } from 'ethers';
 import { PopupTransferSuccessDialogComponent } from '../transfer-success/transfer-success.component';
 import BigNumber from 'bignumber.js';
@@ -29,9 +22,10 @@ import BigNumber from 'bignumber.js';
   styleUrls: ['speed-up-fee.dialog.scss'],
 })
 export class PopupSpeedUpFeeDialogComponent implements OnInit {
-  loadingMsg: string;
   loading = false;
-  getStatusInterval;
+  confirmNewParams;
+  private confirmPreExecutionParams;
+  showHardwareSign = false;
   neoXFeeInfo: NeoXFeeInfoProp;
   sendNeoXFeeInfo: NeoXFeeInfoProp;
 
@@ -43,7 +37,6 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
     private chrome: ChromeService,
     private globalService: GlobalService,
     private dialog: MatDialog,
-    private ledger: LedgerService,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       tx: Transaction;
@@ -106,7 +99,6 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
   }
 
   async confirm() {
-    this.loading = true;
     this.sendNeoXFeeInfo = Object.assign({}, this.neoXFeeInfo);
     const { newParams, PreExecutionParams } = this.assetEVMState.getTxParams(
       this.createTxParams,
@@ -115,15 +107,15 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
       this.data.currentWallet.accounts[0].address
     );
 
+    this.confirmNewParams = newParams;
+    this.confirmPreExecutionParams = PreExecutionParams;
+    delete this.confirmNewParams.from;
     if (this.data.currentWallet.accounts[0].extra.ledgerSLIP44) {
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus(PreExecutionParams, newParams);
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus(PreExecutionParams, newParams);
-      });
+      this.showHardwareSign = true;
       return;
     }
 
+    this.loading = true;
     const pwd = await this.chrome.getPassword();
     const wallet = await ethers.Wallet.fromEncryptedJson(
       JSON.stringify(this.data.currentWallet),
@@ -167,28 +159,13 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
     });
   }
 
-  private getLedgerStatus(PreExecutionParams, newParams) {
-    this.ledger.getDeviceStatus('NeoX').then(async (res) => {
-      this.loadingMsg = LedgerStatuses[res].msgNeoX || LedgerStatuses[res].msg;
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
-
-        delete newParams.from;
-        this.ledger
-          .getLedgerSignedTx(newParams as any, this.data.currentWallet, 'NeoX')
-          .then((tx) => {
-            this.loading = false;
-            this.ledgerSendTx(tx, PreExecutionParams);
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
-      }
-    });
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      this.ledgerSendTx(tx, this.confirmPreExecutionParams);
+    }
   }
+
   private ledgerSendTx(signedTx, PreExecutionParams) {
     this.assetEVMState
       .sendTransactionByRPC(signedTx, PreExecutionParams)

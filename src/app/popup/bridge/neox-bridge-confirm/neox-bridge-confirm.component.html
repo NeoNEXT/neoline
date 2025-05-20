@@ -4,6 +4,15 @@
     <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
   </div>
 </div>
+
+<app-hardware-sign
+  *ngIf="showHardwareSign"
+  [chainType]="'NeoX'"
+  [currentWallet]="currentWallet"
+  [unsignedTx]="confirmNewParams"
+  (backWithSignedTx)="handleHardwareSignedTx($event)"
+></app-hardware-sign>
+
 <section class="container">
   <div class="content">
     <div class="bridge-content">

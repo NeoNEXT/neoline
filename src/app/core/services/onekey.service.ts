@@ -1,4 +1,10 @@
-import { ChainType, LEDGER_PAGE_SIZE } from '@/app/popup/_lib';
+import {
+  ChainType,
+  EvmWalletJSON,
+  LEDGER_PAGE_SIZE,
+  RpcNetwork,
+  Wallet3,
+} from '@/app/popup/_lib';
 import { Injectable } from '@angular/core';
 import HardwareSDK from '@onekeyfe/hd-web-sdk';
 import {
@@ -7,6 +13,14 @@ import {
   CoreMessage,
   UI_REQUEST,
 } from '@onekeyfe/hd-core';
+import { ethers } from 'ethers';
+import { Transaction as Transaction2 } from '@cityofzion/neon-core/lib/tx';
+import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
+import { tx as tx3 } from '@cityofzion/neon-core-neo3/lib';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
+import { GlobalService } from './global.service';
+import { AppState } from '@/app/reduers';
+import { Store } from '@ngrx/store';
 
 interface OneKeyDeviceInfo {
   connectId: string; // device connection id
@@ -21,7 +35,15 @@ export class OneKeyService {
   deviceInfo: OneKeyDeviceInfo;
   private accounts = { Neo3: {}, NeoX: {} };
 
-  constructor() {
+  private neoXNetwork: RpcNetwork;
+
+  constructor(private store: Store<AppState>, private global: GlobalService) {
+    const account$ = this.store.select('account');
+    account$.subscribe((state) => {
+      // this.n2Network = state.n2Networks[state.n2NetworkIndex];
+      // this.n3Network = state.n3Networks[state.n3NetworkIndex];
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+    });
     HardwareSDK.HardwareWebSdk.init({
       debug: true,
       fetchConfig: false,
@@ -110,5 +132,75 @@ export class OneKeyService {
     }
     this.accounts[chainType][page] = newAccounts;
     return newAccounts;
+  }
+
+  async signTransaction({
+    chainType,
+    unsignedTx,
+    wallet,
+    magicNumber,
+    signOnly = false,
+  }: {
+    chainType: ChainType;
+    unsignedTx:
+      | Transaction2
+      | Transaction3
+      | string
+      | ethers.TransactionRequest;
+    wallet: Wallet3 | EvmWalletJSON;
+    magicNumber: number;
+    signOnly: boolean;
+  }) {
+    if (chainType === 'NeoX') {
+      (unsignedTx as ethers.Transaction).chainId = this.neoXNetwork.chainId;
+      const res = await HardwareSDK.HardwareWebSdk.evmSignTransaction(
+        this.deviceInfo.connectId,
+        this.deviceInfo.deviceId,
+        {
+          path: `m/44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+          transaction: unsignedTx as any,
+        }
+      );
+      console.log(res);
+    } else {
+      const txIsString = typeof unsignedTx === 'string';
+      const rawTx = txIsString
+        ? unsignedTx
+        : (unsignedTx as any).serialize(false);
+      const res = await HardwareSDK.HardwareWebSdk.neoSignTransaction(
+        this.deviceInfo.connectId,
+        this.deviceInfo.deviceId,
+        {
+          path: `m/44'/888'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+          rawTx,
+          magicNumber,
+        }
+      );
+      if (res.success) {
+        const signature = res.payload.signature;
+        if (signOnly) {
+          return signature;
+        }
+        const invocationScript = `0c40${signature}`;
+        const verificationScript = wallet3.getVerificationScriptFromPublicKey(
+          wallet.accounts[0].extra.publicKey
+        );
+        (unsignedTx as Transaction3).addWitness(
+          new tx3.Witness({
+            invocationScript,
+            verificationScript,
+          })
+        );
+        return unsignedTx;
+      }
+      if (res.success === false) {
+        throw new Error(res.payload.error);
+      }
+    }
+  }
+
+  handleOneKeyError(error: string) {
+    let snackError = 'TransactionDeniedByUser';
+    this.global.snackBarTip(error ?? snackError);
   }
 }

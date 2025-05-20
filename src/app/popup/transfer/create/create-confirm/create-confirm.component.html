@@ -4,6 +4,16 @@
     <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
   </div>
 </div>
+
+<app-hardware-sign
+  *ngIf="showHardwareSign"
+  [chainType]="data.chainType"
+  [currentWallet]="data.currentWallet"
+  [unsignedTx]="data.chainType === 'NeoX' ? evmLedgerTx : unsignedTx"
+  [magicNumber]="data.network.magicNumber"
+  (backWithSignedTx)="handleHardwareSignedTx($event)"
+></app-hardware-sign>
+
 <nav [title]="'transfer'" [customBack]="true" (backEvent)="back()"></nav>
 <section class="container">
   <div class="content">

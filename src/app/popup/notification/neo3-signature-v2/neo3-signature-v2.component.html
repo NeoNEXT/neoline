@@ -1,22 +1,31 @@
-<div class="loading-box" *ngIf="loading">
-  <div class="content">
-    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
-    <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
-  </div>
-</div>
+<app-hardware-sign
+  *ngIf="showHardwareSign"
+  [chainType]="chainType"
+  [currentWallet]="currentWallet"
+  [unsignedTx]="unsignedTx"
+  magicNumber="0"
+  signOnly="true"
+  (backWithSignedTx)="handleHardwareSignedTx($event)"
+></app-hardware-sign>
 
 <div class="container">
   <div class="header">
-    <div class="invoke-type">· {{ isSign ? "SIGNMESSAGEWITHOUTSALTV2" : "SIGNMESSAGEV2" }}</div>
+    <div class="invoke-type">
+      · {{ isSign ? "SIGNMESSAGEWITHOUTSALTV2" : "SIGNMESSAGEV2" }}
+    </div>
     <p class="title">{{ "thSignTitle" | translate | async }}</p>
     <p class="warning">
       {{ "evmSignWarning" | translate | async }}
     </p>
-    <p class="account"><img [avatar]="address" />{{ address | longStr : 10 }}</p>
+    <p class="account">
+      <img [avatar]="address" />{{ address | longStr : 10 }}
+    </p>
   </div>
   <div class="content">
     <p class="hex-label">{{ "message" | translate | async }}</p>
-    <p class="json-box serialize" *ngIf="jsonMessage">{{ jsonMessage | json }}</p>
+    <p class="json-box serialize" *ngIf="jsonMessage">
+      {{ jsonMessage | json }}
+    </p>
     <p class="json-box serialize" *ngIf="!jsonMessage">{{ message }}</p>
   </div>
   <div class="btn-group">
