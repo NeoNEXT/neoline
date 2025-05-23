@@ -803,61 +803,67 @@
   "oneMonthTxs": {
     "message": "只显示最近一个月的交易"
   },
-  "LEDGER": {
-    "message": "连接硬件钱包"
-  },
   "LedgerNotSupportComputer": {
-    "message": "此计算机不支持硬件钱包。"
+    "message": "此计算机不支持 Ledger 钱包。"
   },
   "connectLedgerDevice": {
-    "message": "请连接您的硬件设备"
+    "message": "请连接您的 Ledger 设备"
+  },
+  "connectOneKeyDevice": {
+    "message": "请连接您的 OneKey 设备"
   },
   "openNeoAppOnLedger": {
-    "message": "请在您的硬件设备上打开 NEO 应用。"
+    "message": "请在您的 Ledger 设备上打开 NEO 应用。"
   },
   "openNeo3AppOnLedger": {
-    "message": "请在您的硬件设备上打开 NEO N3 应用。"
+    "message": "请在您的 Ledger 上打开 NEO N3 应用。"
   },
   "openNeoXAppOnLedger": {
-    "message": "请在您的硬件设备上打开 Ethereum 应用。"
+    "message": "请在您的 Ledger 上打开 Ethereum 应用。"
   },
   "LedgerConnectedNeoReady": {
-    "message": "已连接硬件，NEO 应用程序已打开，可以使用。"
+    "message": "Ledger 已连接，NEO 应用程序已打开，可以使用。"
   },
   "LedgerConnectedNeo3Ready": {
-    "message": "已连接硬件，NEO N3 应用程序已打开，可以使用。"
+    "message": "Ledger 已连接，NEO N3 应用程序已打开，可以使用。"
   },
   "LedgerConnectedNeoXReady": {
-    "message": "已连接硬件，Ethereum 应用程序已打开，可以使用。"
+    "message": "Ledger已连接，Ethereum 应用程序已打开，可以使用。"
   },
   "TransactionDeniedByUser": {
     "message": "交易被用户拒绝。"
   },
   "TransactionTooLarge": {
-    "message": "交易太大，硬件无法签署。"
+    "message": "交易太大，Ledger 无法签署。"
   },
   "errorLedgerOpen": {
-    "message": "解析此事务时出错。 请确保您打开了正确的硬件应用程序。"
+    "message": "解析此事务时出错。 请确保您打开了正确的 Ledger 应用程序。"
   },
   "LedgerInstallNeoApp": {
-    "message": "注意：请确保您的硬件已安装最新的 NEO 应用。"
+    "message": "注意：请确保您的 Ledger 已安装最新的 NEO 应用。"
   },
   "LedgerInstallNeo3App": {
-    "message": "注意：请确保您的硬件已安装最新的 NEO N3 应用。"
+    "message": "注意：请确保您的 Ledger 已安装最新的 NEO N3 应用。"
   },
   "LedgerInstallNeoXApp": {
-    "message": "注意：请确保您的硬件已安装最新的 Ethereum 应用。"
+    "message": "注意：请确保您的 Ledger 已安装最新的 Ethereum 应用。"
   },
-  "signTheTransaction": {
-    "message": "请在您的硬件上签名交易"
+  "signLedgerTransaction": {
+    "message": "请在您的 Ledger 上签名交易"
   },
-  "signTheMessage": {
-    "message": "请在您的硬件上签署此消息"
+  "signLedgerMessage": {
+    "message": "请在您的 Ledger 上签署此消息"
+  },
+  "signOneKeyTransaction": {
+    "message": "请在您的 OneKey 上签名交易"
+  },
+  "signOneKeyMessage": {
+    "message": "请在您的 OneKey 上签署此消息"
   },
   "Wait": {
     "message": "Wait"
   },
-  "ImportLedgerWallet": {
+  "ImportHardwareWallet": {
     "message": "导入硬件钱包"
   },
   "Next": {
@@ -896,11 +902,14 @@
   "Imported": {
     "message": "已导入"
   },
-  "plugInLedgerWallet": {
-    "message": "插入 Ledger 钱包"
+  "connectYourDevice": {
+    "message": "关联您的 {{device}}"
   },
   "plugInLedgerWalletTip": {
-    "message": "将您的钱包直接连接到电脑。解锁 Ledger 并打开 Neo/Neo N3/Ethereum 应用程序。关于使用您的硬件钱包设备的更多，"
+    "message": "将您的 Ledger 直接插入电脑，然后解锁并打开 Neo/Neo N3/Ethereum 应用程序。关于使用您的 Ledger 钱包设备的更多，"
+  },
+  "plugInOneKeyWalletTip": {
+    "message": "将您的 OneKey 直接插入电脑并解锁。"
   },
   "clickHere": {
     "message": "点击这里。"
@@ -1031,10 +1040,10 @@
   "createWalletTip": {
     "message": "创建新的助记词钱包"
   },
-  "ledgerWallet": {
+  "hardwareWallet": {
     "message": "硬件钱包"
   },
-  "ledgerWalletTip": {
+  "hardwareWalletTip": {
     "message": "连接您的硬件钱包"
   },
   "enterMnemonic": {
@@ -1489,5 +1498,11 @@
   },
   "TokenApproved": {
     "message": "批准 {{symbol}}"
+  },
+  "connectOneKey": {
+    "message": "请连接并解锁您的 OneKey 设备"
+  },
+  "selectHardware": {
+    "message": "选择希望用于 NeoLine 的硬件钱包。"
   }
 }

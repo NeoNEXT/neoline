@@ -1,6 +1,6 @@
 <div class="content loading" *ngIf="!isReady">
   <img src="/assets/images/ledger/loading.gif" alt="" />
-  <ng-container *ngIf="device === 'ledger'">
+  <ng-container *ngIf="device === 'Ledger'">
     <p class="tip" *ngIf="chainType === 'Neo2'">
       {{ status.msg | translate | async }}
     </p>
@@ -24,9 +24,9 @@
     </p>
     <p class="note reconnect">{{ "reconnectLedger" | translate | async }}</p>
   </ng-container>
-  <ng-container *ngIf="device === 'oneKey'">
+  <ng-container *ngIf="device === 'OneKey'">
     <p class="note">
-      {{ "Please connect and unlock your OneKey device" }}
+      {{ "connectOneKey" | translate | async }}
     </p>
   </ng-container>
 </div>

@@ -47,4 +47,4 @@ export const LedgerStatuses: { [key: string]: LedgerStatus } = {
   },
 };
 
-export type HardwareDevice = 'ledger' | 'oneKey';
+export type HardwareDevice = 'Ledger' | 'OneKey';

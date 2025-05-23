@@ -150,7 +150,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   }
 
   private getLedgerStatus() {
-    if (this.device === 'ledger') {
+    if (this.device === 'Ledger') {
       this.ledger.getDeviceStatus(this.chainType).then((res) => {
         if (LedgerStatuses[res]) {
           this.status = LedgerStatuses[res];
@@ -164,7 +164,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
         }
       });
     }
-    if (this.device === 'oneKey') {
+    if (this.device === 'OneKey') {
       this.oneKeyService.getDeviceStatus().then((res) => {
         if (res.success) {
           this.getStatusInterval?.unsubscribe();
@@ -184,7 +184,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
       return;
     }
     this.isLoadingAccount = true;
-    if (this.device === 'ledger') {
+    if (this.device === 'Ledger') {
       this.ledger
         .fetchAccounts(index, this.chainType)
         .then((accounts) => {
@@ -195,7 +195,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
           this.isLoadingAccount = false;
         });
     }
-    if (this.device === 'oneKey') {
+    if (this.device === 'OneKey') {
       this.oneKeyService
         .fetchAccounts(index, this.chainType)
         .then((accounts) => {

@@ -803,23 +803,23 @@
   "oneMonthTxs": {
     "message": "Only show transactions from the most recent month"
   },
-  "LEDGER": {
-    "message": "Connect hardware wallet"
-  },
   "LedgerNotSupportComputer": {
     "message": "Ledger not supported on this computer."
   },
   "connectLedgerDevice": {
-    "message": "Please connect your ledger device"
+    "message": "Please connect your Ledger device"
+  },
+  "connectOneKeyDevice": {
+    "message": "Please connect your OneKey device"
   },
   "openNeoAppOnLedger": {
-    "message": "Please open the NEO app on your ledger device."
+    "message": "Please open the NEO app on your Ledger device."
   },
   "openNeo3AppOnLedger": {
-    "message": "Please open the NEO N3 app on your ledger device."
+    "message": "Please open the NEO N3 app on your Ledger device."
   },
   "openNeoXAppOnLedger": {
-    "message": "Please open the ethereum app on your ledger device."
+    "message": "Please open the ethereum app on your Ledger device."
   },
   "LedgerConnectedNeoReady": {
     "message": "Ledger connected, NEO app open, ready for use."
@@ -834,31 +834,37 @@
     "message": "Transaction denied by user."
   },
   "TransactionTooLarge": {
-    "message": "Transaction too large for ledger to sign."
+    "message": "Transaction too large for Ledger to sign."
   },
   "errorLedgerOpen": {
-    "message": "There was an error parsing this transaction. Please make sure you have the correct ledger app open."
+    "message": "There was an error parsing this transaction. Please make sure you have the correct Ledger app open."
   },
   "LedgerInstallNeoApp": {
-    "message": "Note: Please ensure your ledger has the latest NEO apps installed."
+    "message": "Note: Please ensure your Ledger has the latest NEO apps installed."
   },
   "LedgerInstallNeo3App": {
-    "message": "Note: Please ensure your ledger has the latest NEO N3 app installed."
+    "message": "Note: Please ensure your Ledger has the latest NEO N3 app installed."
   },
   "LedgerInstallNeoXApp": {
-    "message": "Note: Please ensure your ledger has the latest Ethereum app installed."
+    "message": "Note: Please ensure your Ledger has the latest Ethereum app installed."
   },
-  "signTheTransaction": {
-    "message": "Please sign the transaction on your ledger"
+  "signLedgerTransaction": {
+    "message": "Please sign the transaction on your Ledger"
   },
-  "signTheMessage": {
-    "message": "Please sign the message on your ledger"
+  "signLedgerMessage": {
+    "message": "Please sign the message on your Ledger"
+  },
+  "signOneKeyTransaction": {
+    "message": "Please sign the transaction on your OneKey"
+  },
+  "signOneKeyMessage": {
+    "message": "Please sign the message on your OneKey"
   },
   "Wait": {
     "message": "Wait"
   },
-  "ImportLedgerWallet": {
-    "message": "Import ledger wallet"
+  "ImportHardwareWallet": {
+    "message": "Import hardware wallet"
   },
   "Next": {
     "message": "Next"
@@ -896,17 +902,20 @@
   "Imported": {
     "message": "Imported"
   },
-  "plugInLedgerWallet": {
-    "message": "Plug in ledger wallet"
+  "connectYourDevice": {
+    "message": "Connect your {{device}}"
   },
   "plugInLedgerWalletTip": {
-    "message": "Connect your wallet directly to your computer. Unlock your ledger and open the Neo/Neo N3/Ethereum app. For more on using your hardware wallet device, "
+    "message": "Plug your Ledger directly into your computer, then unlock it and open the Neo/Neo N3/Ethereum app. For more on using your Ledger wallet device, "
+  },
+  "plugInOneKeyWalletTip": {
+    "message": "Plug your OneKey directly into your computer and unlock it."
   },
   "clickHere": {
     "message": "click here."
   },
   "reconnectLedger": {
-    "message": "If the ledger does not respond for a long time, please try to reconnect the ledger"
+    "message": "If the Ledger does not respond for a long time, please try to reconnect the Ledger"
   },
   "inputNeo2AddressTip": {
     "message": "Neo legacy address"
@@ -1031,10 +1040,10 @@
   "createWalletTip": {
     "message": "Create a new mnemonic wallet"
   },
-  "ledgerWallet": {
-    "message": "Ledger wallet"
+  "hardwareWallet": {
+    "message": "Hardware wallet"
   },
-  "ledgerWalletTip": {
+  "hardwareWalletTip": {
     "message": "Connect your hardware wallet"
   },
   "enterMnemonic": {
@@ -1489,5 +1498,11 @@
   },
   "TokenApproved": {
     "message": "{{symbol}} Approved"
+  },
+  "connectOneKey": {
+    "message": "Please connect and unlock your OneKey device"
+  },
+  "selectHardware": {
+    "message": "Select a hardware wallet you would like to use with NeoLine."
   }
 }

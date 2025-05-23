@@ -32,7 +32,7 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
   @Input() currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   @Output() backWithSignedTx = new EventEmitter();
 
-  loadingMsg = LedgerStatuses.DISCONNECTED.msg;
+  loadingMsg = '';
   getStatusInterval;
 
   constructor(
@@ -41,6 +41,10 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit(): void {
+    this.loadingMsg =
+      this.currentWallet.accounts[0].extra?.device === 'OneKey'
+        ? 'connectOneKeyDevice'
+        : 'connectLedgerDevice';
     this.getLedgerStatus();
     this.getStatusInterval = interval(5000).subscribe(() => {
       this.getLedgerStatus();
@@ -57,10 +61,10 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
   }
 
   private getLedgerStatus() {
-    if (this.currentWallet.accounts[0].extra?.device !== 'oneKey') {
+    if (this.currentWallet.accounts[0].extra?.device !== 'OneKey') {
       this.handleLedger();
     }
-    if (this.currentWallet.accounts[0].extra?.device === 'oneKey') {
+    if (this.currentWallet.accounts[0].extra?.device === 'OneKey') {
       this.handleOneKey();
     }
   }
@@ -82,7 +86,9 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
       }
       if (LedgerStatuses[res] === LedgerStatuses.READY) {
         this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
+        this.loadingMsg = this.signMethod
+          ? 'signLedgerMessage'
+          : 'signLedgerTransaction';
         (this.signMethod
           ? this.signMethod === ETH_EOA_SIGN_METHODS.PersonalSign
             ? this.ledger.getNeoXSignPersonalMessage(
@@ -119,7 +125,9 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
         this.getStatusInterval?.unsubscribe();
         this.oneKeyService.getPassphraseState().then((state) => {
           if (state.success) {
-            this.loadingMsg = 'signTheTransaction';
+            this.loadingMsg = this.signMethod
+              ? 'signOneKeyMessage'
+              : 'signOneKeyTransaction';
             (this.signMethod
               ? this.signMethod === ETH_EOA_SIGN_METHODS.PersonalSign
                 ? this.oneKeyService.signEvmPersonalMessage(

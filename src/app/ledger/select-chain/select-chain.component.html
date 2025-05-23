@@ -16,12 +16,17 @@
       Neo Legacy
     </li>
   </ul>
-  <p class="title ledger">{{ "plugInLedgerWallet" | translate | async }}</p>
-  <p class="tip">
+  <p class="title ledger">
+    {{ "connectYourDevice" | translate : { device: device } | async }}
+  </p>
+  <p class="tip" *ngIf="device === 'Ledger'">
     {{ "plugInLedgerWalletTip" | translate | async
     }}<span class="link" (click)="jumbToWeb()">{{
       "clickHere" | translate | async
     }}</span>
+  </p>
+  <p class="tip" *ngIf="device === 'OneKey'">
+    {{ "plugInOneKeyWalletTip" | translate | async }}
   </p>
   <div class="tip-imgs">
     <img

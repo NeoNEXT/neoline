@@ -44,7 +44,7 @@ export class LedgerChainComponent implements OnDestroy {
   }
 
   deviceIsSupportNeo2() {
-    if (this.device === 'ledger') {
+    if (this.device === 'Ledger') {
       return true;
     }
     return false;
@@ -54,9 +54,9 @@ export class LedgerChainComponent implements OnDestroy {
     this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
       if (lang !== 'en') {
         lang = '';
-        window.open(`https://tutorial.neoline.io/ledgerhardwarewallet`);
+        window.open(`https://tutorial.neoline.io/hardware-wallet/ledger-hardware-wallet`);
       } else {
-        window.open(`https://tutorial.neoline.io/v/1/ledger-hardware-wallet`);
+        window.open(`https://tutorial.neoline.io/cn/ying-jian-qian-bao/ledgerhardwarewallet`);
       }
     });
   }

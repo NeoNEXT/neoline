@@ -1,16 +1,10 @@
 <section class="main">
-  <p class="title">selectHardware</p>
+  <p class="title">{{ "selectHardware" | translate | async }}</p>
   <ul>
-    <li
-      (click)="device = 'ledger'"
-      [ngClass]="{ active: device === 'ledger' }"
-    >
+    <li (click)="device = 'Ledger'" [ngClass]="{ active: device === 'Ledger' }">
       Ledger
     </li>
-    <li
-      (click)="device = 'oneKey'"
-      [ngClass]="{ active: device === 'oneKey' }"
-    >
+    <li (click)="device = 'OneKey'" [ngClass]="{ active: device === 'OneKey' }">
       OneKey
     </li>
   </ul>

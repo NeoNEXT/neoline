@@ -19,7 +19,7 @@ export class LedgerComponent implements OnDestroy {
   STATUS_ENUM = STATUS_ENUM;
   status = STATUS_ENUM.SELECT_HARDWARE;
   chainType: ChainType;
-  device: HardwareDevice = 'oneKey';
+  device: HardwareDevice = 'Ledger';
   selectAccountData;
   loading = typeof (window as any).InstallTrigger !== 'undefined'; // firefox not support ledger webHID
 

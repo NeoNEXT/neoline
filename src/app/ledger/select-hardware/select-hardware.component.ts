@@ -8,7 +8,7 @@ import { HardwareDevice } from '@/app/popup/_lib';
 })
 export class LedgerDeviceComponent {
   @Output() selectDevice = new EventEmitter<HardwareDevice>();
-  device: HardwareDevice = 'oneKey';
+  device: HardwareDevice = 'Ledger';
 
   constructor() {}
 
