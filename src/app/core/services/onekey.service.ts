@@ -13,7 +13,7 @@ import {
   CoreMessage,
   UI_REQUEST,
 } from '@onekeyfe/hd-core';
-import { ethers } from 'ethers';
+import { ethers, TypedDataEncoder, TypedDataDomain } from 'ethers';
 import { Transaction as Transaction2 } from '@cityofzion/neon-core/lib/tx';
 import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { tx as tx3 } from '@cityofzion/neon-core-neo3/lib';
@@ -21,6 +21,8 @@ import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { GlobalService } from './global.service';
 import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
+import { BigNumber } from 'bignumber.js';
+import { MessageTypes, TypedMessage } from '@metamask/eth-sig-util';
 
 interface OneKeyDeviceInfo {
   connectId: string; // device connection id
@@ -134,6 +136,13 @@ export class OneKeyService {
     return newAccounts;
   }
 
+  private getHexValue(value: string | number | bigint) {
+    if (typeof value === 'bigint') {
+      return '0x' + value.toString(16);
+    }
+    return value ? '0x' + new BigNumber(value).toString(16) : undefined;
+  }
+
   async signTransaction({
     chainType,
     unsignedTx,
@@ -158,10 +167,37 @@ export class OneKeyService {
         this.deviceInfo.deviceId,
         {
           path: `m/44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
-          transaction: unsignedTx as any,
+          transaction: {
+            ...(unsignedTx as ethers.Transaction),
+            value: this.getHexValue(
+              (unsignedTx as ethers.Transaction).value || 0
+            ),
+            to: (unsignedTx as ethers.Transaction).to,
+            gasLimit: this.getHexValue(
+              (unsignedTx as ethers.Transaction).gasLimit || 0
+            ),
+            nonce: this.getHexValue(
+              (unsignedTx as ethers.Transaction).nonce || 0
+            ),
+            chainId: this.neoXNetwork.chainId,
+            maxFeePerGas: this.getHexValue(
+              (unsignedTx as ethers.Transaction).maxFeePerGas || 0
+            ),
+            maxPriorityFeePerGas: this.getHexValue(
+              (unsignedTx as ethers.Transaction).maxPriorityFeePerGas || 0
+            ),
+          },
         }
       );
-      console.log(res);
+      if (res.success) {
+        return {
+          ...(unsignedTx as ethers.Transaction),
+          signature: res.payload,
+        };
+      }
+      if (res.success === false) {
+        throw new Error(res.payload.error);
+      }
     } else {
       const txIsString = typeof unsignedTx === 'string';
       const rawTx = txIsString
@@ -199,8 +235,67 @@ export class OneKeyService {
     }
   }
 
+  async signEvmPersonalMessage(message: string, wallet: EvmWalletJSON) {
+    const res = await HardwareSDK.HardwareWebSdk.evmSignMessage(
+      this.deviceInfo.connectId,
+      this.deviceInfo.deviceId,
+      {
+        path: `m/44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+        messageHex: Buffer.from(message).toString('hex'),
+      }
+    );
+    if (res.success) {
+      return res.payload;
+    }
+    if (res.success === false) {
+      throw new Error(res.payload.error);
+    }
+  }
+  async signEvmTypedData(
+    typedData: TypedMessage<MessageTypes>,
+    wallet: EvmWalletJSON
+  ) {
+    const { domainHash, messageHash } =
+      this.transformTypedDataPlugin(typedData);
+    const res = await HardwareSDK.HardwareWebSdk.evmSignTypedData(
+      this.deviceInfo.connectId,
+      this.deviceInfo.deviceId,
+      {
+        path: `m/44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+        data: typedData,
+        metamaskV4Compat: true,
+        domainHash,
+        messageHash,
+      }
+    );
+    if (res.success) {
+      return res.payload;
+    }
+    if (res.success === false) {
+      throw new Error(res.payload.error);
+    }
+  }
+
   handleOneKeyError(error: string) {
     let snackError = 'TransactionDeniedByUser';
     this.global.snackBarTip(error ?? snackError);
+  }
+
+  transformTypedDataPlugin(typedData: TypedMessage<MessageTypes>) {
+    const domain: TypedDataDomain = {
+      ...typedData.domain,
+    } as TypedDataDomain;
+    if (domain.salt) {
+      domain.salt = new Uint8Array(domain.salt as ArrayBuffer);
+    }
+    const domainHash = TypedDataEncoder.hashDomain(domain);
+
+    const types = { ...typedData.types };
+    delete types.EIP712Domain;
+    const messageHash = TypedDataEncoder.from(types).hashStruct(
+      typedData.primaryType as string,
+      typedData.message
+    );
+    return { domainHash, messageHash };
   }
 }

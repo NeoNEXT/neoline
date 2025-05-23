@@ -122,11 +122,11 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
             this.loadingMsg = 'signTheTransaction';
             (this.signMethod
               ? this.signMethod === ETH_EOA_SIGN_METHODS.PersonalSign
-                ? this.ledger.getNeoXSignPersonalMessage(
+                ? this.oneKeyService.signEvmPersonalMessage(
                     this.unsignedData,
                     this.currentWallet as EvmWalletJSON
                   )
-                : this.ledger.getNeoXSignTypedData(
+                : this.oneKeyService.signEvmTypedData(
                     this.unsignedData,
                     this.currentWallet as EvmWalletJSON
                   )

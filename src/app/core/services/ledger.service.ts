@@ -28,6 +28,7 @@ import Eth, { ledgerService } from '@ledgerhq/hw-app-eth';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
 import { TypedMessage, MessageTypes } from '@metamask/eth-sig-util';
+import { OneKeyService } from './onekey.service';
 
 export const LedgerStatuses = {
   UNSUPPORTED: 'UNSUPPORTED',
@@ -52,6 +53,7 @@ export class LedgerService {
   constructor(
     private http: HttpService,
     private global: GlobalService,
+    private oneKeyService: OneKeyService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -248,7 +250,14 @@ export class LedgerService {
       );
       return this.handleSignResult(result);
     } catch {
-      throw new Error('ledgerNotSupportMethod');
+      const { domainHash, messageHash } =
+        this.oneKeyService.transformTypedDataPlugin(typedData);
+      const result = await this.ethTransport.signEIP712HashedMessage(
+        `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+        domainHash,
+        messageHash
+      );
+      return this.handleSignResult(result);
     }
   }
 
