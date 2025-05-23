@@ -1,4 +1,4 @@
-import { Component, OnInit, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import {
   SLIP44,
   ChainType,
@@ -7,7 +7,6 @@ import {
   ADD_NEO3_WALLETS,
   ADD_NEOX_WALLET,
   HardwareDevice,
-  Account3,
 } from '@/app/popup/_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { Wallet3 } from '@popup/_lib';
@@ -71,10 +70,7 @@ export class AccountNameComponent {
       }
       return;
     }
-    const accountLike =
-      this.device === 'ledger'
-        ? account.export()
-        : new Account3(account.publicKey).export();
+    const accountLike = account.export();
     accountLike.extra = {
       publicKey: account.publicKey,
       ledgerAddressIndex: index,

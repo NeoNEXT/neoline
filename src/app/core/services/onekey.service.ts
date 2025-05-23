@@ -1,4 +1,5 @@
 import {
+  Account3,
   ChainType,
   EvmWalletJSON,
   LEDGER_PAGE_SIZE,
@@ -126,11 +127,15 @@ export class OneKeyService {
       );
     }
     if (getAddressRes.success) {
-      newAccounts = getAddressRes.payload;
-      newAccounts.forEach((account) => {
-        account.publicKey = account.pub;
-        delete account.pub;
-      });
+      for (const account of getAddressRes.payload) {
+        if (chainType === 'NeoX') {
+          account.publicKey = account.pub;
+          delete account.pub;
+          newAccounts.push(account);
+        } else {
+          newAccounts.push(new Account3(account.pub));
+        }
+      }
     }
     this.accounts[chainType][page] = newAccounts;
     return newAccounts;

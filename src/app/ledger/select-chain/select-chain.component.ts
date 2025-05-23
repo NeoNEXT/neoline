@@ -1,4 +1,10 @@
-import { Component, Output, EventEmitter, OnDestroy, Input } from '@angular/core';
+import {
+  Component,
+  Output,
+  EventEmitter,
+  OnDestroy,
+  Input,
+} from '@angular/core';
 import { ChainType, HardwareDevice, STORAGE_NAME } from '@/app/popup/_lib';
 import { ChromeService, GlobalService, SettingState } from '@/app/core';
 import { Unsubscribable } from 'rxjs';
@@ -35,6 +41,13 @@ export class LedgerChainComponent implements OnDestroy {
     } else {
       this.selectChain.emit(this.chain);
     }
+  }
+
+  deviceIsSupportNeo2() {
+    if (this.device === 'ledger') {
+      return true;
+    }
+    return false;
   }
 
   public async jumbToWeb() {

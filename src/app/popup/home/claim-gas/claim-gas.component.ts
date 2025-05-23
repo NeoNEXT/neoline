@@ -338,9 +338,10 @@ export class PopupClaimGasComponent implements OnInit, OnDestroy {
 
   handleHardwareSignedTx(tx) {
     this.showHardwareSign = false;
-    this.loading = false;
     if (tx) {
       this.handleSignedTx(tx, this.signType);
+    } else {
+      this.loading = false;
     }
   }
 

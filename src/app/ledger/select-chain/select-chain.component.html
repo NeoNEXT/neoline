@@ -9,7 +9,7 @@
       Neo N3
     </li>
     <li
-      *ngIf="device === 'ledger'"
+      *ngIf="deviceIsSupportNeo2()"
       (click)="chain = 'Neo2'"
       [ngClass]="{ active: chain === 'Neo2' }"
     >
