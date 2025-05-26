@@ -5,6 +5,15 @@
   </div>
 </div>
 
+<app-hardware-sign
+  *ngIf="showHardwareSign"
+  [chainType]="'Neo3'"
+  [currentWallet]="currentWallet"
+  [unsignedTx]="tx"
+  [magicNumber]="n3Network.magicNumber"
+  (backWithSignedTx)="handleHardwareSignedTx($event)"
+></app-hardware-sign>
+
 <div class="container">
   <div class="header">
     <div class="invoke-type">· INVOKE</div>

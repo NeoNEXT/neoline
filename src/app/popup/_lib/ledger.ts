@@ -46,3 +46,5 @@ export const LedgerStatuses: { [key: string]: LedgerStatus } = {
     msg: 'errorLedgerOpen',
   },
 };
+
+export type HardwareDevice = 'Ledger' | 'OneKey';

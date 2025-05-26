@@ -8,16 +8,25 @@
     <li (click)="chain = 'Neo3'" [ngClass]="{ active: chain === 'Neo3' }">
       Neo N3
     </li>
-    <li (click)="chain = 'Neo2'" [ngClass]="{ active: chain === 'Neo2' }">
+    <li
+      *ngIf="deviceIsSupportNeo2()"
+      (click)="chain = 'Neo2'"
+      [ngClass]="{ active: chain === 'Neo2' }"
+    >
       Neo Legacy
     </li>
   </ul>
-  <p class="title ledger">{{ "plugInLedgerWallet" | translate | async }}</p>
-  <p class="tip">
+  <p class="title ledger">
+    {{ "connectYourDevice" | translate : { device: device } | async }}
+  </p>
+  <p class="tip" *ngIf="device === 'Ledger'">
     {{ "plugInLedgerWalletTip" | translate | async
     }}<span class="link" (click)="jumbToWeb()">{{
       "clickHere" | translate | async
     }}</span>
+  </p>
+  <p class="tip" *ngIf="device === 'OneKey'">
+    {{ "plugInOneKeyWalletTip" | translate | async }}
   </p>
   <div class="tip-imgs">
     <img

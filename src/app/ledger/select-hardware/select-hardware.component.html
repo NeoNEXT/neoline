@@ -1,0 +1,16 @@
+<section class="main">
+  <p class="title">{{ "selectHardware" | translate | async }}</p>
+  <ul>
+    <li (click)="device = 'Ledger'" [ngClass]="{ active: device === 'Ledger' }">
+      Ledger
+    </li>
+    <li (click)="device = 'OneKey'" [ngClass]="{ active: device === 'OneKey' }">
+      OneKey
+    </li>
+  </ul>
+  <div class="confirm-content">
+    <button class="confirm" (click)="select()">
+      {{ "Next" | translate | async }}
+    </button>
+  </div>
+</section>

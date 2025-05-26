@@ -1,0 +1,46 @@
+section.main {
+  max-width: 696px;
+  padding: 40px 24px;
+  margin: 0 auto;
+  position: relative;
+  .title {
+    color: var(--sub-title-color);
+    font-size: 18px;
+  }
+  ul {
+    margin-top: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    li {
+      width: 100px;
+      height: 90px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 7px;
+      background: var(--message-box-color);
+      border-radius: 10px;
+      border: 1px solid var(--line-color);
+      font-size: 16px;
+      font-family: NeverMind-Regular;
+      cursor: pointer;
+      .evm {
+        font-size: 12px;
+      }
+      &.active {
+        font-family: NeverMind-Medium;
+        border: 1px solid var(--theme-color);
+      }
+    }
+  }
+  .confirm-content {
+    width: 100%;
+    margin-top: 80px;
+    text-align: center;
+    button {
+      width: 327px;
+    }
+  }
+}

@@ -7,25 +7,34 @@
 <app-header></app-header>
 <section class="main">
   <div class="header">
-    <p class="title">{{ "ImportLedgerWallet" | translate | async }}</p>
+    <p class="title">{{ "ImportHardwareWallet" | translate | async }}</p>
     <img class="logo" src="/assets/images/ledger/neo-bg.svg" alt="" />
     <div class="bg"></div>
   </div>
   <div class="content">
+    <app-select-hardware
+      *ngIf="status === STATUS_ENUM.SELECT_HARDWARE"
+      (selectDevice)="selectDevice($event)"
+    >
+    </app-select-hardware>
+
     <app-ledger-chain
       *ngIf="status === STATUS_ENUM.CHAIN_PICK"
+      [device]="device"
       (selectChain)="selectChain($event)"
     >
     </app-ledger-chain>
 
     <app-address-selector
       *ngIf="status === STATUS_ENUM.ADDRESS_SELECTOR"
+      [device]="device"
       [chainType]="chainType"
       (selectThisAccount)="selectAccount($event)"
     ></app-address-selector>
 
     <app-account-name
       *ngIf="status === STATUS_ENUM.ACCOUNT_NAME"
+      [device]="device"
       [accountData]="selectAccountData"
       [chainType]="chainType"
     >

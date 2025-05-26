@@ -6,6 +6,7 @@ import { LedgerComponent } from './ledger.component';
 import { LedgerChainComponent } from './select-chain/select-chain.component';
 import { AddressSelectorComponent } from './address-selector/address-selector.component';
 import { AccountNameComponent } from './account-name/account-name.component';
+import { LedgerDeviceComponent } from './select-hardware/select-hardware.component';
 
 @NgModule({
   declarations: [
@@ -13,6 +14,7 @@ import { AccountNameComponent } from './account-name/account-name.component';
     LedgerChainComponent,
     AddressSelectorComponent,
     AccountNameComponent,
+    LedgerDeviceComponent,
   ],
   imports: [CommonModule, LedgerRoutingModule, ShareModule],
   exports: [],

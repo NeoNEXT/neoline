@@ -5,7 +5,6 @@ import {
   AssetEVMState,
   DappEVMState,
   GlobalService,
-  LedgerService,
   SettingState,
   AssetState,
 } from '@/app/core';
@@ -13,7 +12,6 @@ import {
   AddressNonceInfo,
   EvmTransactionParams,
   EvmTransactionType,
-  LedgerStatuses,
   RpcNetwork,
   STORAGE_NAME,
 } from '../../_lib';
@@ -21,7 +19,7 @@ import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '../../_lib/evm';
 import BigNumber from 'bignumber.js';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
 import { requestTargetEVM } from '@/models/evm';
-import { Unsubscribable, interval } from 'rxjs';
+import { Unsubscribable } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { ethers } from 'ethers';
@@ -55,8 +53,9 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   sendAssetDetail;
 
   loading = false;
-  loadingMsg: string;
-  getStatusInterval;
+  confirmNewParams;
+  private confirmPreExecutionParams;
+  showHardwareSign = false;
   encryptWallet: EvmWalletJSON;
 
   methodName: string;
@@ -79,7 +78,6 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     private dappEVMState: DappEVMState,
     private dialog: MatDialog,
     private globalService: GlobalService,
-    private ledger: LedgerService,
     private settingState: SettingState,
     private assetState: AssetState,
     private store: Store<AppState>
@@ -191,18 +189,17 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
   async confirm(nonce: number) {
     this.customNonce = nonce;
-    this.loading = true;
 
     const { newParams, PreExecutionParams } = this.getTxParams();
+    this.confirmNewParams = newParams;
+    this.confirmPreExecutionParams = PreExecutionParams;
+    delete this.confirmNewParams.from;
     if (this.encryptWallet.accounts[0].extra.ledgerSLIP44) {
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus(PreExecutionParams, newParams);
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus(PreExecutionParams, newParams);
-      });
+      this.showHardwareSign = true;
       return;
     }
 
+    this.loading = true;
     const pwd = await this.chrome.getPassword();
     const wallet = await ethers.Wallet.fromEncryptedJson(
       JSON.stringify(this.encryptWallet),
@@ -470,26 +467,14 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       });
   }
 
-  private getLedgerStatus(PreExecutionParams, newParams) {
-    this.ledger.getDeviceStatus('NeoX').then(async (res) => {
-      this.loadingMsg = LedgerStatuses[res].msgNeoX || LedgerStatuses[res].msg;
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
-
-        delete newParams.from;
-        this.ledger
-          .getLedgerSignedTx(newParams as any, this.encryptWallet, 'NeoX')
-          .then((tx) => {
-            this.loading = false;
-            this.ledgerSendTx(tx, PreExecutionParams, newParams);
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
-      }
-    });
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      this.ledgerSendTx(
+        tx,
+        this.confirmPreExecutionParams,
+        this.confirmNewParams
+      );
+    }
   }
 }

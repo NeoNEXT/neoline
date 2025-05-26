@@ -1,27 +1,34 @@
 <div class="content loading" *ngIf="!isReady">
   <img src="/assets/images/ledger/loading.gif" alt="" />
-  <p class="tip" *ngIf="chainType === 'Neo2'">
-    {{ status.msg | translate | async }}
-  </p>
-  <p class="tip" *ngIf="chainType === 'Neo3'">
-    {{ status.msgNeo3 || status.msg | translate | async }}
-  </p>
-  <p class="tip" *ngIf="chainType === 'NeoX'">
-    {{ status.msgNeoX || status.msg | translate | async }}
-  </p>
-  <p class="note">
-    {{
-      (chainType === "NeoX"
-        ? "LedgerInstallNeoXApp"
-        : chainType === "Neo2"
-        ? "LedgerInstallNeoApp"
-        : "LedgerInstallNeo3App"
-      )
-        | translate
-        | async
-    }}
-  </p>
-  <p class="note reconnect">{{ "reconnectLedger" | translate | async }}</p>
+  <ng-container *ngIf="device === 'Ledger'">
+    <p class="tip" *ngIf="chainType === 'Neo2'">
+      {{ status.msg | translate | async }}
+    </p>
+    <p class="tip" *ngIf="chainType === 'Neo3'">
+      {{ status.msgNeo3 || status.msg | translate | async }}
+    </p>
+    <p class="tip" *ngIf="chainType === 'NeoX'">
+      {{ status.msgNeoX || status.msg | translate | async }}
+    </p>
+    <p class="note">
+      {{
+        (chainType === "NeoX"
+          ? "LedgerInstallNeoXApp"
+          : chainType === "Neo2"
+          ? "LedgerInstallNeoApp"
+          : "LedgerInstallNeo3App"
+        )
+          | translate
+          | async
+      }}
+    </p>
+    <p class="note reconnect">{{ "reconnectLedger" | translate | async }}</p>
+  </ng-container>
+  <ng-container *ngIf="device === 'OneKey'">
+    <p class="note">
+      {{ "connectOneKey" | translate | async }}
+    </p>
+  </ng-container>
 </div>
 <div class="content address" *ngIf="isReady">
   <div class="top">

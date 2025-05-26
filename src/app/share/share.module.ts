@@ -48,6 +48,7 @@ import { EvmPendingWarningComponent } from './components/evm-pending-warning/evm
 import { EvmEstimateErrorComponent } from './components/evm-estimate-error/evm-estimate-error.component';
 import { EvmCustomNonceComponent } from './components/evm-custom-nonce/evm-custom-nonce.component';
 import { HeaderComponent } from './components/header/header.component';
+import { HardwareSignComponent } from './components/hardware-sign/hardware-sign.component';
 const COMPONENTS = [
   AssetTxPageComponent,
   NftTxPageComponent,
@@ -64,6 +65,7 @@ const COMPONENTS = [
   EvmEstimateErrorComponent,
   EvmCustomNonceComponent,
   HeaderComponent,
+  HardwareSignComponent,
 ];
 //#endregion
 
@@ -99,6 +101,7 @@ const DIRECTIVE = [AvatarDirective, ErrSrcDirective, ImgThemeDirective];
     CommonModule,
     MatIconModule,
     MatButtonModule,
+    MatProgressSpinnerModule,
   ],
   exports: [
     FormsModule,

@@ -1,21 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import {
-  ChromeService,
-  GlobalService,
-  LedgerService,
-  UtilServiceState,
-} from '@/app/core';
+import { ChromeService, UtilServiceState } from '@/app/core';
 import { randomBytes } from 'crypto';
 import { wallet, u } from '@cityofzion/neon-core-neo3';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { ERRORS } from '@/models/dapi';
-import { RpcNetwork, ChainType, LedgerStatuses } from '../../_lib';
+import { RpcNetwork, ChainType } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet3 } from '@popup/_lib';
-import { interval } from 'rxjs';
 
 @Component({
   templateUrl: './neo3-signature-v2.component.html',
@@ -27,9 +21,8 @@ export class PopupNoticeNeo3SignV2Component implements OnInit {
   isSign = false;
   jsonMessage;
 
-  getStatusInterval;
-  loading = false;
-  loadingMsg = '';
+  unsignedTx: string;
+  showHardwareSign = false;
 
   publicKey;
   randomSalt;
@@ -37,15 +30,13 @@ export class PopupNoticeNeo3SignV2Component implements OnInit {
   private accountSub: Unsubscribable;
   public address: string;
   public n3Network: RpcNetwork;
-  private chainType: ChainType;
-  private currentWallet: Wallet3;
+  chainType: ChainType;
+  currentWallet: Wallet3;
   private neo3WIFArr: string[];
   private neo3WalletArr: Wallet3[];
   constructor(
     private aRouter: ActivatedRoute,
     private chrome: ChromeService,
-    private global: GlobalService,
-    private ledger: LedgerService,
     private utilServiceState: UtilServiceState,
     private store: Store<AppState>
   ) {
@@ -128,43 +119,18 @@ export class PopupNoticeNeo3SignV2Component implements OnInit {
     );
   }
 
-  private getLedgerStatus(tx) {
-    this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
-      this.loadingMsg = LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
-        this.ledger
-          .getLedgerSignedTx(
-            tx,
-            this.currentWallet,
-            this.chainType,
-            0,
-            true
-          )
-          .then((tx) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.sendMessage(tx);
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
-      }
-    });
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      this.sendMessage(tx);
+    }
   }
 
   private getSignTx(tx) {
     if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
       this.publicKey = this.currentWallet.accounts[0]?.extra?.publicKey;
-      this.loading = true;
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus(tx);
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus(tx);
-      });
+      this.unsignedTx = tx;
+      this.showHardwareSign = true;
       return;
     }
     this.utilServiceState

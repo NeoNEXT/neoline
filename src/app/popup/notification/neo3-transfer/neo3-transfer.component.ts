@@ -1,10 +1,9 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
   AssetState,
   GlobalService,
   ChromeService,
-  LedgerService,
   UtilServiceState,
   SettingState,
 } from '@/app/core';
@@ -23,8 +22,6 @@ import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
 import { STORAGE_NAME, GAS3_CONTRACT, ChainType } from '../../_lib';
 import { Neo3TransferService } from '../../transfer/neo3-transfer.service';
 import BigNumber from 'bignumber.js';
-import { LedgerStatuses } from '../../_lib';
-import { interval } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -36,7 +33,7 @@ type TabType = 'details' | 'data';
   templateUrl: 'neo3-transfer.component.html',
   styleUrls: ['neo3-transfer.component.scss'],
 })
-export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
+export class PopupNoticeNeo3TransferComponent implements OnInit {
   tabType: TabType = 'details';
   NEO = NEO;
   public rpcClient;
@@ -68,13 +65,14 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
   public networkFeeMoney;
 
   public canSend = false;
-  getStatusInterval;
+  showHardwareSign = false;
+  unsignedTx;
 
   private accountSub: Unsubscribable;
   public fromAddress: string;
   public n3Network: RpcNetwork;
-  private currentWallet: Wallet3;
-  private chainType: ChainType;
+  currentWallet: Wallet3;
+  chainType: ChainType;
   private neo3WIFArr: string[];
   private neo3WalletArr: Wallet3[];
   constructor(
@@ -85,7 +83,6 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private dialog: MatDialog,
     private neo3Transfer: Neo3TransferService,
-    private ledger: LedgerService,
     private util: UtilServiceState,
     private settingState: SettingState,
     private store: Store<AppState>
@@ -100,9 +97,6 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
       this.neo3WalletArr = state.neo3WalletArr;
       this.rpcClient = new rpc.RPCClient(this.n3Network.rpcUrl);
     });
-  }
-  ngOnDestroy(): void {
-    this.getStatusInterval?.unsubscribe();
   }
 
   ngOnInit(): void {
@@ -411,42 +405,18 @@ export class PopupNoticeNeo3TransferComponent implements OnInit, OnDestroy {
     )} `;
   }
 
-  private getLedgerStatus(tx) {
-    this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
-      this.loadingMsg = LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
-        this.ledger
-          .getLedgerSignedTx(
-            tx,
-            this.currentWallet,
-            this.chainType,
-            this.n3Network.magicNumber
-          )
-          .then((tx) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.tx = tx;
-            this.resolveSend(tx);
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
-      }
-    });
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      this.tx = tx;
+      this.resolveSend(tx);
+    }
   }
 
   private getSignTx(tx: Transaction3) {
     if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      this.loading = true;
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus(tx);
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus(tx);
-      });
+      this.unsignedTx = tx;
+      this.showHardwareSign = true;
       return;
     }
     this.util

@@ -4,6 +4,15 @@
     <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
   </div>
 </div>
+
+<app-hardware-sign
+  *ngIf="showHardwareSign"
+  [chainType]="'NeoX'"
+  [currentWallet]="encryptWallet"
+  [unsignedTx]="confirmNewParams"
+  (backWithSignedTx)="handleHardwareSignedTx($event)"
+></app-hardware-sign>
+
 <confirm-send-ether
   *ngIf="getTxType() === 'sendEther'"
   [txParams]="txParams"

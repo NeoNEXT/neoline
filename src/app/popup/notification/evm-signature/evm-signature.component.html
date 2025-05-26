@@ -1,9 +1,11 @@
-<div class="loading-box" *ngIf="loading">
-  <div class="content">
-    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
-    <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
-  </div>
-</div>
+<app-hardware-sign
+  *ngIf="showHardwareSign"
+  [chainType]="'NeoX'"
+  [currentWallet]="encryptWallet"
+  [unsignedData]="signMethod === ETH_EOA_SIGN_METHODS.PersonalSign ? challenge : typedData"
+  [signMethod]="signMethod"
+  (backWithSignedTx)="handleHardwareSignedTx($event)"
+></app-hardware-sign>
 
 <div class="container">
   <div class="header">

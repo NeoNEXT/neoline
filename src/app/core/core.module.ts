@@ -19,6 +19,7 @@ import { NftState } from './states/nft.state';
 import { UtilServiceState } from './util/util.service';
 import { HomeService } from './services/home.service';
 import { LedgerService } from './services/ledger.service';
+import { OneKeyService } from './services/onekey.service';
 import { ExtensionService } from './util/extension.service';
 import { EvmService } from './services/evm.service';
 import { AssetEVMState } from './states/asset-evm.state';
@@ -46,6 +47,7 @@ import { EvmNFTState } from './states/evm-nft.state';
     UtilServiceState,
     HomeService,
     LedgerService,
+    OneKeyService,
     ExtensionService,
     EvmService,
     AssetEVMState,

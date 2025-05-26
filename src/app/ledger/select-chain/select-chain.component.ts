@@ -1,5 +1,11 @@
-import { Component, Output, EventEmitter, OnDestroy } from '@angular/core';
-import { ChainType, STORAGE_NAME } from '@/app/popup/_lib';
+import {
+  Component,
+  Output,
+  EventEmitter,
+  OnDestroy,
+  Input,
+} from '@angular/core';
+import { ChainType, HardwareDevice, STORAGE_NAME } from '@/app/popup/_lib';
 import { ChromeService, GlobalService, SettingState } from '@/app/core';
 import { Unsubscribable } from 'rxjs';
 
@@ -9,6 +15,7 @@ import { Unsubscribable } from 'rxjs';
   styleUrls: ['select-chain.component.scss'],
 })
 export class LedgerChainComponent implements OnDestroy {
+  @Input() device: HardwareDevice;
   @Output() selectChain = new EventEmitter<ChainType>();
   chain: ChainType = 'Neo3';
   settingStateSub: Unsubscribable;
@@ -36,13 +43,20 @@ export class LedgerChainComponent implements OnDestroy {
     }
   }
 
+  deviceIsSupportNeo2() {
+    if (this.device === 'Ledger') {
+      return true;
+    }
+    return false;
+  }
+
   public async jumbToWeb() {
     this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
       if (lang !== 'en') {
         lang = '';
-        window.open(`https://tutorial.neoline.io/ledgerhardwarewallet`);
+        window.open(`https://tutorial.neoline.io/hardware-wallet/ledger-hardware-wallet`);
       } else {
-        window.open(`https://tutorial.neoline.io/v/1/ledger-hardware-wallet`);
+        window.open(`https://tutorial.neoline.io/cn/ying-jian-qian-bao/ledgerhardwarewallet`);
       }
     });
   }

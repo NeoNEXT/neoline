@@ -1,12 +1,11 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Component, OnInit } from '@angular/core';
+import { ActivatedRoute } from '@angular/router';
 import {
   GlobalService,
   NeonService,
   ChromeService,
   AssetState,
   TransactionState,
-  LedgerService,
   UtilServiceState,
   SettingState,
 } from '@/app/core';
@@ -29,9 +28,6 @@ import Neon from '@cityofzion/neon-js';
 import { RpcNetwork } from '../../_lib/type';
 import { bignumber } from 'mathjs';
 import { ChainType } from '../../_lib';
-import { BigNumber } from 'bignumber.js';
-import { LedgerStatuses } from '../../_lib';
-import { interval } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -43,7 +39,7 @@ type TabType = 'details' | 'data';
   templateUrl: 'invoke-multi.component.html',
   styleUrls: ['invoke-multi.component.scss'],
 })
-export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
+export class PopupNoticeInvokeMultiComponent implements OnInit {
   tabType: TabType = 'details';
   public dataJson: any = {};
   public feeMoney = '0';
@@ -66,18 +62,18 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
 
   private extraWitness: [] = [];
 
-  getStatusInterval;
+  showHardwareSign = false;
+  unsignedTx;
 
   private accountSub: Unsubscribable;
   public signAddress: string;
   public n2Network: RpcNetwork;
-  private currentWallet: Wallet2;
-  private chainType: ChainType;
+  currentWallet: Wallet2;
+  chainType: ChainType;
   private neo2WIFArr: string[];
   private neo2WalletArr: Array<Wallet2>;
   constructor(
     private aRoute: ActivatedRoute,
-    private router: Router,
     private global: GlobalService,
     private neon: NeonService,
     private dialog: MatDialog,
@@ -85,7 +81,6 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
     private settingState: SettingState,
     private assetState: AssetState,
     private txState: TransactionState,
-    private ledger: LedgerService,
     private util: UtilServiceState,
     private store: Store<AppState>
   ) {
@@ -98,9 +93,6 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
       this.neo2WIFArr = state.neo2WIFArr;
       this.neo2WalletArr = state.neo2WalletArr;
     });
-  }
-  ngOnDestroy(): void {
-    this.getStatusInterval?.unsubscribe();
   }
 
   ngOnInit(): void {
@@ -806,37 +798,18 @@ export class PopupNoticeInvokeMultiComponent implements OnInit, OnDestroy {
     }, 0);
   }
 
-  private getLedgerStatus(tx) {
-    this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
-      this.loadingMsg = LedgerStatuses[res].msg;
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
-        this.ledger
-          .getLedgerSignedTx(tx, this.currentWallet, this.chainType)
-          .then((tx) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.tx = tx;
-            this.resolveSend(tx);
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
-      }
-    });
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      this.tx = tx;
+      this.resolveSend(tx);
+    }
   }
 
   private getSignTx(tx: Transaction) {
     if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      this.loading = true;
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus(tx);
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus(tx);
-      });
+      this.unsignedTx = tx;
+      this.showHardwareSign = true;
       return;
     }
     this.util

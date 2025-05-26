@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ChromeService, LedgerService, GlobalService } from '@/app/core';
-import { LedgerStatuses, STORAGE_NAME } from '../../_lib';
+import { ChromeService, GlobalService } from '@/app/core';
+import { STORAGE_NAME } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { Unsubscribable, interval } from 'rxjs';
+import { Unsubscribable } from 'rxjs';
 import { EvmWalletJSON } from '../../_lib/evm';
 import { ETH_EOA_SIGN_METHODS, requestTargetEVM } from '@/models/evm';
 import { ethers } from 'ethers';
@@ -32,9 +32,7 @@ export class PopupNoticeEvmSignComponent implements OnInit {
   signMethod = ETH_EOA_SIGN_METHODS.PersonalSign;
   typedData: TypedMessage<MessageTypes>;
 
-  loading = false;
-  loadingMsg: string;
-  getStatusInterval;
+  showHardwareSign = false;
   encryptWallet: EvmWalletJSON;
 
   private accountSub: Unsubscribable;
@@ -42,7 +40,6 @@ export class PopupNoticeEvmSignComponent implements OnInit {
   constructor(
     private aRouter: ActivatedRoute,
     private chrome: ChromeService,
-    private ledger: LedgerService,
     private global: GlobalService,
     private store: Store<AppState>
   ) {
@@ -105,12 +102,7 @@ export class PopupNoticeEvmSignComponent implements OnInit {
       (item) => item.accounts[0].address === ethers.getAddress(this.signAddress)
     );
     if (this.encryptWallet.accounts[0].extra.ledgerSLIP44) {
-      this.loading = true;
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus();
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus();
-      });
+      this.showHardwareSign = true;
       return;
     }
     if (this.encryptWallet) {
@@ -153,32 +145,11 @@ export class PopupNoticeEvmSignComponent implements OnInit {
     this.chrome.setStorage(STORAGE_NAME.InvokeArgsArray, this.invokeArgsArray);
   }
 
-  private getLedgerStatus() {
-    this.ledger.getDeviceStatus('NeoX').then(async (res) => {
-      this.loadingMsg = LedgerStatuses[res].msgNeoX || LedgerStatuses[res].msg;
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheMessage';
-
-        (this.signMethod === ETH_EOA_SIGN_METHODS.PersonalSign
-          ? this.ledger.getNeoXSignPersonalMessage(
-              this.challenge,
-              this.encryptWallet
-            )
-          : this.ledger.getNeoXSignTypedData(this.typedData, this.encryptWallet)
-        )
-          .then((tx) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.sendMessage(tx);
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
-      }
-    });
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      this.sendMessage(tx);
+    }
   }
 
   /**

@@ -28,6 +28,7 @@ import Eth, { ledgerService } from '@ledgerhq/hw-app-eth';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
 import { TypedMessage, MessageTypes } from '@metamask/eth-sig-util';
+import { OneKeyService } from './onekey.service';
 
 export const LedgerStatuses = {
   UNSUPPORTED: 'UNSUPPORTED',
@@ -40,11 +41,11 @@ const LedgerReadyStatusCode = 0x9000;
 
 @Injectable()
 export class LedgerService {
-  deviceInstance;
-  ethTransport;
-  accounts = { Neo2: [], Neo3: [], NeoX: [] };
-  sendQueue = [];
-  ledgerInUse = false;
+  private deviceInstance;
+  private ethTransport;
+  private accounts = { Neo2: [], Neo3: [], NeoX: [] };
+  private sendQueue = [];
+  private ledgerInUse = false;
 
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
@@ -52,6 +53,7 @@ export class LedgerService {
   constructor(
     private http: HttpService,
     private global: GlobalService,
+    private oneKeyService: OneKeyService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -197,31 +199,26 @@ export class LedgerService {
           return unsignedTx;
         });
     } else {
-      if (signOnly) {
-        return this.getNeo3Signature({
-          data: serTx,
-          magicNumber,
-          addressIndex: extra.ledgerAddressIndex,
-        });
-      }
-      const verificationScript = wallet3.getVerificationScriptFromPublicKey(
-        extra.publicKey
-      );
       return this.getNeo3Signature({
         data: serTx,
         magicNumber,
         addressIndex: extra.ledgerAddressIndex,
-      })
-        .then((res) => `0c40${res}`)
-        .then((invocationScript) => {
-          (unsignedTx as Transaction3).addWitness(
-            new tx3.Witness({
-              invocationScript,
-              verificationScript,
-            })
-          );
-          return unsignedTx;
-        });
+      }).then((signature) => {
+        if (signOnly) {
+          return signature;
+        }
+        const invocationScript = `0c40${signature}`;
+        const verificationScript = wallet3.getVerificationScriptFromPublicKey(
+          extra.publicKey
+        );
+        (unsignedTx as Transaction3).addWitness(
+          new tx3.Witness({
+            invocationScript,
+            verificationScript,
+          })
+        );
+        return unsignedTx;
+      });
     }
   }
 
@@ -235,16 +232,6 @@ export class LedgerService {
     this.global.snackBarTip(snackError);
   }
 
-  //#region private function
-  private handleSignResult(result) {
-    let v = result['v'];
-    v = v.toString(16);
-    if (v.length < 2) {
-      v = '0' + v;
-    }
-    const data = '0x' + result['r'] + result['s'] + v;
-    return data;
-  }
   async getNeoXSignPersonalMessage(message: string, wallet: EvmWalletJSON) {
     const result = await this.ethTransport.signPersonalMessage(
       `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
@@ -263,8 +250,26 @@ export class LedgerService {
       );
       return this.handleSignResult(result);
     } catch {
-      throw new Error('ledgerNotSupportMethod');
+      const { domainHash, messageHash } =
+        this.oneKeyService.transformTypedDataPlugin(typedData);
+      const result = await this.ethTransport.signEIP712HashedMessage(
+        `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
+        domainHash,
+        messageHash
+      );
+      return this.handleSignResult(result);
     }
+  }
+
+  //#region private function
+  private handleSignResult(result) {
+    let v = result['v'];
+    v = v.toString(16);
+    if (v.length < 2) {
+      v = '0' + v;
+    }
+    const data = '0x' + result['r'] + result['s'] + v;
+    return data;
   }
 
   private async getNeoXSignature(txData, wallet: EvmWalletJSON) {

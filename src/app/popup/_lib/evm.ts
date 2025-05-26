@@ -1,4 +1,5 @@
 import { NetworkType } from './chain';
+import { HardwareDevice } from './ledger';
 import { RpcNetwork } from './type';
 
 export const ETH_SOURCE_ASSET_HASH =
@@ -20,6 +21,7 @@ export interface EvmWalletJSON {
         hasBackup?: boolean;
         ledgerSLIP44?: string;
         ledgerAddressIndex?: number;
+        device?: HardwareDevice;
       };
     }
   ];

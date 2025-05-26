@@ -8,16 +8,14 @@ import {
   ETH_SOURCE_ASSET_HASH,
   EvmTransactionParams,
   EvmWalletJSON,
-  LedgerStatuses,
   RpcNetwork,
 } from '../../_lib';
-import { Unsubscribable, timer, interval } from 'rxjs';
+import { Unsubscribable, timer } from 'rxjs';
 import {
   AssetEVMState,
   AssetState,
   ChromeService,
   GlobalService,
-  LedgerService,
 } from '@/app/core';
 import { ethers } from 'ethers';
 
@@ -41,14 +39,14 @@ export class PopupApproveDialogComponent implements OnInit {
   private fromAddress: string;
 
   loading = false;
-  loadingMsg: string;
-  getStatusInterval;
+  confirmNewParams;
+  private confirmPreExecutionParams;
+  showHardwareSign = false;
 
   constructor(
     private assetEVMState: AssetEVMState,
     private assetState: AssetState,
     private chrome: ChromeService,
-    private ledger: LedgerService,
     private globalService: GlobalService,
     private dialogRef: MatDialogRef<PopupApproveDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
@@ -162,7 +160,6 @@ export class PopupApproveDialogComponent implements OnInit {
   }
 
   async confirm() {
-    this.loading = true;
     const sendTxParams = this.assetEVMState.getTxParams(
       this.txParams,
       this.neoXFeeInfo,
@@ -170,15 +167,15 @@ export class PopupApproveDialogComponent implements OnInit {
       this.fromAddress
     );
     const { newParams, PreExecutionParams } = sendTxParams;
+    this.confirmNewParams = newParams;
+    this.confirmPreExecutionParams = PreExecutionParams;
+    delete this.confirmNewParams.from;
     if (this.data.encryptWallet.accounts[0].extra.ledgerSLIP44) {
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus(PreExecutionParams, newParams);
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus(PreExecutionParams, newParams);
-      });
+      this.showHardwareSign = true;
       return;
     }
 
+    this.loading = true;
     const pwd = await this.chrome.getPassword();
     const wallet = await ethers.Wallet.fromEncryptedJson(
       JSON.stringify(this.data.encryptWallet),
@@ -204,27 +201,15 @@ export class PopupApproveDialogComponent implements OnInit {
         : false;
   }
 
-  private getLedgerStatus(PreExecutionParams, newParams) {
-    this.ledger.getDeviceStatus('NeoX').then(async (res) => {
-      this.loadingMsg = LedgerStatuses[res].msgNeoX || LedgerStatuses[res].msg;
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
-
-        delete newParams.from;
-        this.ledger
-          .getLedgerSignedTx(newParams as any, this.data.encryptWallet, 'NeoX')
-          .then((tx) => {
-            this.loading = false;
-            this.ledgerSendTx(tx, PreExecutionParams, newParams);
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
-      }
-    });
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      this.ledgerSendTx(
+        tx,
+        this.confirmPreExecutionParams,
+        this.confirmNewParams
+      );
+    }
   }
 
   private ledgerSendTx(signedTx, PreExecutionParams, newParams) {

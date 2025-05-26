@@ -5,6 +5,14 @@
   </div>
 </div>
 
+<app-hardware-sign
+  *ngIf="showHardwareSign"
+  [chainType]="'NeoX'"
+  [currentWallet]="data.currentWallet"
+  [unsignedTx]="confirmNewParams"
+  (backWithSignedTx)="handleHardwareSignedTx($event)"
+></app-hardware-sign>
+
 <div class="pop-ups-title">
   {{ (data.isSpeedUp ? 'speedUp' : 'cancelTransaction') | translate | async }}
   <img

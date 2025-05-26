@@ -1,14 +1,6 @@
-import {
-  Component,
-  Input,
-  Output,
-  EventEmitter,
-  OnDestroy,
-  OnInit,
-} from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import {
   GlobalService,
-  LedgerService,
   UtilServiceState,
   ChromeService,
   AssetEVMState,
@@ -20,13 +12,11 @@ import {
   AddressNonceInfo,
   ChainType,
   EvmTransactionParams,
-  LedgerStatuses,
   RpcNetwork,
 } from '../../_lib';
 import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
 import { ethers } from 'ethers';
-import { interval } from 'rxjs';
 
 export type TabType = 'details' | 'data';
 
@@ -35,7 +25,7 @@ export type TabType = 'details' | 'data';
   templateUrl: 'neox-bridge-confirm.component.html',
   styleUrls: ['../bridge-confirm.scss'],
 })
-export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
+export class NeoXBridgeConfirmComponent implements OnInit {
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   @Input() bridgeAsset: Asset;
   @Input() bridgeAmount: string;
@@ -56,13 +46,13 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
   insufficientFunds = false;
 
   loading = false;
-  loadingMsg: string;
-  getStatusInterval;
+  confirmNewParams;
+  private confirmPreExecutionParams;
+  showHardwareSign = false;
   rate = { fee: '', total: '' };
 
   constructor(
     private global: GlobalService,
-    private ledger: LedgerService,
     private util: UtilServiceState,
     private assetState: AssetState,
     private chrome: ChromeService,
@@ -135,10 +125,6 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
     }
   }
 
-  ngOnDestroy(): void {
-    this.getStatusInterval?.unsubscribe();
-  }
-
   back() {
     this.backAmount.emit();
   }
@@ -157,28 +143,25 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
   }
 
   async confirm() {
-    this.loading = true;
-
-    if (this.currentWallet.accounts[0].extra.ledgerSLIP44) {
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus();
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus();
-      });
-      return;
-    }
-
-    const pwd = await this.chrome.getPassword();
-    const wallet = await ethers.Wallet.fromEncryptedJson(
-      JSON.stringify(this.currentWallet),
-      pwd
-    );
-
     const { newParams, PreExecutionParams } = this.assetEVMState.getTxParams(
       this.txParams,
       this.neoXFeeInfo,
       this.customNonce ?? this.nonceInfo.nonce,
       this.txParams.from
+    );
+    this.confirmNewParams = newParams;
+    this.confirmPreExecutionParams = PreExecutionParams;
+    delete this.confirmNewParams.from;
+    if (this.currentWallet.accounts[0].extra.ledgerSLIP44) {
+      this.showHardwareSign = true;
+      return;
+    }
+
+    this.loading = true;
+    const pwd = await this.chrome.getPassword();
+    const wallet = await ethers.Wallet.fromEncryptedJson(
+      JSON.stringify(this.currentWallet),
+      pwd
     );
     this.assetEVMState
       .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
@@ -205,33 +188,10 @@ export class NeoXBridgeConfirmComponent implements OnInit, OnDestroy {
       });
   }
 
-  private getLedgerStatus() {
-    this.ledger.getDeviceStatus('NeoX').then(async (res) => {
-      this.loadingMsg = LedgerStatuses[res].msgNeoX || LedgerStatuses[res].msg;
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
-
-        const { newParams, PreExecutionParams } =
-          this.assetEVMState.getTxParams(
-            this.txParams,
-            this.neoXFeeInfo,
-            this.customNonce ?? this.nonceInfo.nonce,
-            this.txParams.from
-          );
-        delete newParams.from;
-        this.ledger
-          .getLedgerSignedTx(newParams as any, this.currentWallet, 'NeoX')
-          .then((tx) => {
-            this.loading = false;
-            this.ledgerSendTx(tx, PreExecutionParams);
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
-      }
-    });
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      this.ledgerSendTx(tx, this.confirmPreExecutionParams);
+    }
   }
 }

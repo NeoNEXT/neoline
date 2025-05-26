@@ -1,0 +1,9 @@
+<div class="loading-box">
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+    <p class="tip" *ngIf="loadingMsg">{{ loadingMsg | translate | async }}</p>
+    <button class="cancel pop-ups" (click)="cancelLedgerSign()">
+      {{ "cancel" | translate | async }}
+    </button>
+  </div>
+</div>

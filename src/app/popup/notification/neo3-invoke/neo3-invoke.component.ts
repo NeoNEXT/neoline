@@ -1,11 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
   GlobalService,
   ChromeService,
   AssetState,
   NotificationService,
-  LedgerService,
   UtilServiceState,
   SettingState,
 } from '@/app/core';
@@ -24,8 +23,6 @@ import { bignumber } from 'mathjs';
 import { STORAGE_NAME, GAS3_CONTRACT, ChainType } from '../../_lib';
 import { Neo3InvokeService } from '../../transfer/neo3-invoke.service';
 import BigNumber from 'bignumber.js';
-import { LedgerStatuses } from '../../_lib';
-import { interval } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -37,7 +34,7 @@ type TabType = 'details' | 'data';
   templateUrl: 'neo3-invoke.component.html',
   styleUrls: ['neo3-invoke.component.scss'],
 })
-export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
+export class PopupNoticeNeo3InvokeComponent implements OnInit {
   tabType: TabType = 'details';
   public dataJson: any = {};
   public rateCurrency = '';
@@ -66,13 +63,13 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
 
   public canSend = false;
 
-  getStatusInterval;
+  showHardwareSign = false;
   expandTotalFee = false;
 
   private accountSub: Unsubscribable;
   public signAddress: string;
   public n3Network: RpcNetwork;
-  private currentWallet: Wallet3;
+  currentWallet: Wallet3;
   private chainType: ChainType;
   private neo3WIFArr: string[];
   private neo3WalletArr: Wallet3[];
@@ -85,7 +82,6 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
     private settingState: SettingState,
     private neo3Invoke: Neo3InvokeService,
     private notification: NotificationService,
-    private ledger: LedgerService,
     private util: UtilServiceState,
     private store: Store<AppState>
   ) {
@@ -98,9 +94,6 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
       this.neo3WIFArr = state.neo3WIFArr;
       this.neo3WalletArr = state.neo3WalletArr;
     });
-  }
-  ngOnDestroy(): void {
-    this.getStatusInterval?.unsubscribe();
   }
 
   ngOnInit(): void {
@@ -384,54 +377,29 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit, OnDestroy {
     return argStr;
   }
 
-  private getLedgerStatus() {
-    this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
-      this.loadingMsg = LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
-        this.ledger
-          .getLedgerSignedTx(
-            this.tx,
-            this.currentWallet,
-            this.chainType,
-            this.n3Network.magicNumber
-          )
-          .then((tx) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.tx = tx;
-            if (this.signers.length > 1) {
-              const addressSign = this.tx.witnesses[0];
-              const addressIndex = this.tx.signers.findIndex((item) =>
-                item.account
-                  .toString()
-                  .includes(wallet.getScriptHashFromAddress(this.signAddress))
-              );
-              this.tx.witnesses = new Array(this.tx.signers.length).fill(
-                new Witness({ verificationScript: '', invocationScript: '' })
-              );
-              this.tx.witnesses[addressIndex] = addressSign;
-            }
-            this.resolveSend();
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      this.tx = tx;
+      if (this.signers.length > 1) {
+        const addressSign = this.tx.witnesses[0];
+        const addressIndex = this.tx.signers.findIndex((item) =>
+          item.account
+            .toString()
+            .includes(wallet.getScriptHashFromAddress(this.signAddress))
+        );
+        this.tx.witnesses = new Array(this.tx.signers.length).fill(
+          new Witness({ verificationScript: '', invocationScript: '' })
+        );
+        this.tx.witnesses[addressIndex] = addressSign;
       }
-    });
+      this.resolveSend();
+    }
   }
 
   public async getSignTx() {
     if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      this.loading = true;
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus();
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus();
-      });
+      this.showHardwareSign = true;
       return;
     }
     const wif = await this.util.getWIF(

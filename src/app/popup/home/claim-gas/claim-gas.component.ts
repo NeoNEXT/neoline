@@ -4,7 +4,6 @@ import {
   NeonService,
   GlobalService,
   HomeService,
-  LedgerService,
   UtilServiceState,
   SettingState,
 } from '@/app/core';
@@ -14,7 +13,6 @@ import { Wallet3 } from '@popup/_lib';
 import { rpc } from '@cityofzion/neon-core';
 import {
   NEO3_CONTRACT,
-  LedgerStatuses,
   GAS3_CONTRACT,
   ChainType,
   RpcNetwork,
@@ -52,9 +50,9 @@ export class PopupClaimGasComponent implements OnInit, OnDestroy {
   private intervalN3Claim = null;
   showClaim = false;
   init = false;
-  ledgerSignLoading = false;
-  loadingMsg = '';
-  getStatusInterval;
+  showHardwareSign = false;
+  unsignedTx;
+  signType;
   lang = 'en';
 
   private accountSub: Unsubscribable;
@@ -72,7 +70,6 @@ export class PopupClaimGasComponent implements OnInit, OnDestroy {
     private transfer: TransferService,
     private neo3TransferService: Neo3TransferService,
     private homeService: HomeService,
-    private ledger: LedgerService,
     private settingState: SettingState,
     private util: UtilServiceState,
     private store: Store<AppState>
@@ -100,7 +97,6 @@ export class PopupClaimGasComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
-    this.getStatusInterval?.unsubscribe();
     if (this.intervalN3Claim) {
       clearInterval(this.intervalN3Claim);
     }
@@ -208,11 +204,6 @@ export class PopupClaimGasComponent implements OnInit, OnDestroy {
             }
           });
       });
-  }
-  cancelLedgerSign() {
-    this.ledgerSignLoading = false;
-    this.loading = false;
-    this.getStatusInterval?.unsubscribe();
   }
   //#endregion
 
@@ -344,35 +335,14 @@ export class PopupClaimGasComponent implements OnInit, OnDestroy {
         break;
     }
   }
-  private getLedgerStatus(tx, type: 'claimNeo3' | 'claimNeo2' | 'syncNow') {
-    this.ledger.getDeviceStatus(this.chainType).then(async (res) => {
-      this.loadingMsg =
-        this.chainType === 'Neo2'
-          ? LedgerStatuses[res].msg
-          : LedgerStatuses[res].msgNeo3 || LedgerStatuses[res].msg;
-      if (LedgerStatuses[res] === LedgerStatuses.READY) {
-        this.getStatusInterval.unsubscribe();
-        this.loadingMsg = 'signTheTransaction';
-        this.ledger
-          .getLedgerSignedTx(
-            tx,
-            this.currentWallet as Wallet3,
-            this.chainType,
-            this.n3Network.magicNumber
-          )
-          .then((tx) => {
-            this.ledgerSignLoading = false;
-            this.loadingMsg = '';
-            this.handleSignedTx(tx, type);
-          })
-          .catch((error) => {
-            this.loading = false;
-            this.ledgerSignLoading = false;
-            this.loadingMsg = '';
-            this.ledger.handleLedgerError(error);
-          });
-      }
-    });
+
+  handleHardwareSignedTx(tx) {
+    this.showHardwareSign = false;
+    if (tx) {
+      this.handleSignedTx(tx, this.signType);
+    } else {
+      this.loading = false;
+    }
   }
 
   private getSignTx(
@@ -380,12 +350,9 @@ export class PopupClaimGasComponent implements OnInit, OnDestroy {
     type: 'claimNeo3' | 'claimNeo2' | 'syncNow'
   ) {
     if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      this.ledgerSignLoading = true;
-      this.loadingMsg = LedgerStatuses.DISCONNECTED.msg;
-      this.getLedgerStatus(tx, type);
-      this.getStatusInterval = interval(5000).subscribe(() => {
-        this.getLedgerStatus(tx, type);
-      });
+      this.signType = type;
+      this.unsignedTx = tx;
+      this.showHardwareSign = true;
       return;
     }
     this.util
