@@ -5,11 +5,12 @@
       <img class="search" theme src="assets/images/common/search.svg" />
       <input
         [placeholder]="'Search' | translate | async"
+        [(ngModel)]="searchValue"
         (input)="searchAddress($event)"
         type="text"
       />
       <img
-        (click)="searchValue = ''"
+        (click)="clearSearch()"
         *ngIf="searchValue"
         theme
         src="/assets/images/common/close.svg"

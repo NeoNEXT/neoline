@@ -76,6 +76,11 @@ export class PopupAddressBookComponent implements OnInit {
     this.displayAddressArr = this.localAddressArr[this.currentChain.type];
   }
 
+  clearSearch() {
+    this.searchValue = '';
+    this.displayAddressArr = this.localAddressArr[this.currentChain.type];
+  }
+
   searchAddress($event) {
     this.searchSub?.unsubscribe();
     this.searchSub = timer(500).subscribe(() => {

@@ -584,6 +584,7 @@ export class ChromeService {
   ) {
     let isDeleteNeoXConnectedAddress = false;
     let currentIsNeoXConnectedAddress = false;
+    if (!this.crx.isCrx()) return;
     this.getStorage(STORAGE_NAME.connectedWebsites).subscribe(
       (allWebsites: ConnectedWebsitesType) => {
         this.crx.getCurrentWindow().then((tab) => {

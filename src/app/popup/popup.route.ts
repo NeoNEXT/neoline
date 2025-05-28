@@ -15,6 +15,7 @@ import { PopupSettingComponent } from './setting/setting.component';
 import { PopupOnePasswordComponent } from './one-password/one-password.component';
 import { PopupAddressBookComponent } from './address-book/address-book.component';
 import { PopupBridgeComponent } from './bridge/bridge.component';
+import { PopupAccountListComponent } from './account-list/account-list.component';
 
 import {
   PopupLoginGuard,
@@ -37,6 +38,11 @@ const routes: Routes = [
         path: 'account',
         canActivate: [PopupWalletGuard],
         component: PopupAccountComponent,
+      },
+      {
+        path: 'account-list',
+        canActivate: [PopupWalletGuard],
+        component: PopupAccountListComponent,
       },
       {
         path: 'asset',

@@ -51,6 +51,7 @@ import { PopupBridgeComponent } from './bridge/bridge.component';
 import { Neo3BridgeConfirmComponent } from './bridge/neo3-bridge-confirm/neo3-bridge-confirm.component';
 import { NeoXBridgeConfirmComponent } from './bridge/neox-bridge-confirm/neox-bridge-confirm.component';
 import { NeoXBridgeFootnoteComponent } from './bridge/bridge-footnote/bridge-footnote.component';
+import { PopupAccountListComponent } from './account-list/account-list.component';
 
 const POPUP_COMPONENTS = [
   PopupComponent,
@@ -78,6 +79,7 @@ const POPUP_COMPONENTS = [
   Neo3BridgeConfirmComponent,
   NeoXBridgeConfirmComponent,
   NeoXBridgeFootnoteComponent,
+  PopupAccountListComponent,
 ];
 //#endregion
 
@@ -108,7 +110,6 @@ import {
   PopupBridgeFootnoteDialogComponent,
   PopupSpeedUpFeeDialogComponent,
   PopupApproveDialogComponent,
-  PopupAccountListDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -137,7 +138,6 @@ const POPUP_DIALOGS = [
   PopupBridgeFootnoteDialogComponent,
   PopupSpeedUpFeeDialogComponent,
   PopupApproveDialogComponent,
-  PopupAccountListDialogComponent,
 ];
 
 //#endregion

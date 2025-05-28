@@ -18,7 +18,6 @@ import {
   NeoXTestnetNetwork,
 } from '../_lib/evm';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupAccountListDialogComponent } from '../_dialogs';
 
 declare var chrome: any;
 
@@ -86,10 +85,7 @@ export class PopupHomeComponent implements OnInit {
   }
 
   showAccountList() {
-    this.dialog.open(PopupAccountListDialogComponent, {
-      panelClass: 'custom-dialog-panel',
-      backdropClass: 'custom-dialog-backdrop',
-    });
+    this.router.navigateByUrl('/popup/account-list');
   }
 
   showBridge() {

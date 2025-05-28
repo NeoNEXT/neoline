@@ -2,12 +2,10 @@ import {
   Component,
   OnInit,
   OnDestroy,
-  Output,
-  EventEmitter,
   ViewChild,
   ElementRef,
 } from '@angular/core';
-import { MatDialog, MatDialogRef } from '@angular/material/dialog';
+import { MatDialog } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
 import {
@@ -16,7 +14,6 @@ import {
   NeonService,
   GlobalService,
   SettingState,
-  UtilServiceState,
 } from '@/app/core';
 import { Router } from '@angular/router';
 import {
@@ -36,7 +33,7 @@ import {
   PopupExportWalletDialogComponent,
   PopupPasswordDialogComponent,
   PopupSelectDialogComponent,
-} from '../..';
+} from '../_dialogs';
 import { NEO } from '@/models/models';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
@@ -54,10 +51,11 @@ interface WalletListItem {
   templateUrl: 'account-list.component.html',
   styleUrls: ['account-list.component.scss'],
 })
-export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
+export class PopupAccountListComponent implements OnInit, OnDestroy {
   @ViewChild('moreModalDom') moreModalDom: ElementRef;
   @ViewChild('contentDom') contentDom: ElementRef;
 
+  searchValue = '';
   isSearching = false;
   searchWalletRes: WalletListItem[] = [];
   addressBalances = {};
@@ -65,6 +63,14 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
   private searchSub: Unsubscribable;
   settingStateSub: Unsubscribable;
   lang: string;
+
+  selectChainType: ChainType;
+  displayList: WalletListItem[] = [];
+  allWallet: { [chain: string]: WalletListItem[] } = {
+    Neo2: [],
+    Neo3: [],
+    NeoX: [],
+  };
 
   private accountSub: Unsubscribable;
   chainType: ChainType;
@@ -74,20 +80,16 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
   neoXWalletArr: Array<EvmWalletJSON>;
   neoXNetwork: RpcNetwork;
 
-  private displayList: WalletListItem[];
-  private allWallet: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
   moreModalWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   moreModalChainType: ChainType;
   moreModalCanRemove = false;
   constructor(
-    private dialogRef: MatDialogRef<PopupAccountListDialogComponent>,
     private router: Router,
     private chromeSrc: ChromeService,
     private dialog: MatDialog,
     private assetState: AssetState,
     private neon: NeonService,
     private global: GlobalService,
-    private util: UtilServiceState,
     private settingState: SettingState,
     private store: Store<AppState>
   ) {
@@ -99,9 +101,9 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
       this.neo3WalletArr = state.neo3WalletArr;
       this.neoXWalletArr = state.neoXWalletArr;
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      this.initData();
+      this.getBalances();
     });
-    this.initData();
-    this.getBalances();
   }
   ngOnInit(): void {
     this.chromeSrc.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {
@@ -120,52 +122,28 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
   }
 
   private initData() {
-    this.displayList = [
-      {
-        chain: 'NeoX',
-        title: 'Neo X (EVM Network)',
-        walletArr: this.neoXWalletArr,
-        expand: this.chainType === 'NeoX',
-      },
-      {
-        chain: 'Neo3',
-        title: 'Neo N3',
-        walletArr: this.neo3WalletArr,
-        expand: this.chainType === 'Neo3',
-      },
-      {
-        chain: 'Neo2',
-        title: 'Neo Legacy',
-        walletArr: this.neo2WalletArr,
-        expand: this.chainType === 'Neo2',
-      },
-    ];
-    this.searchWalletRes = this.displayList;
-    this.allWallet = (this.neo3WalletArr as any)
-      .concat(this.neo2WalletArr)
-      .concat(this.neoXWalletArr);
+    if (!this.selectChainType) {
+      this.selectChainType = this.chainType;
+    }
+    this.allWallet.Neo2 = this.handleWallet(this.neo2WalletArr, 'Neo2');
+    this.allWallet.Neo3 = this.handleWallet(this.neo3WalletArr, 'Neo3');
+    this.allWallet.NeoX = this.handleWallet(this.neoXWalletArr, 'NeoX');
+    this.getDisplayList();
   }
 
-  close() {
-    this.dialogRef.close();
-  }
-
-  lock() {
-    this.chromeSrc.setPassword('');
-    this.navigate('/popup/login');
+  selectChain(chain: ChainType) {
+    this.selectChainType = chain;
+    this.getDisplayList();
   }
 
   navigate(url: string) {
-    this.close();
     this.router.navigateByUrl(url);
   }
 
-  toHelpWebsite() {
-    if (this.lang !== 'en') {
-      window.open('https://tutorial.neoline.io/v/cn');
-    } else {
-      window.open('https://tutorial.neoline.io/');
-    }
+  clearSearch() {
+    this.searchValue = '';
+    this.isSearching = false;
+    this.getDisplayList();
   }
 
   searchWallet($event) {
@@ -175,31 +153,28 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
       value = value.trim().toLowerCase();
       if (value === '') {
         this.isSearching = false;
-        this.searchWalletRes = this.displayList;
+        this.getDisplayList();
         return;
       }
       this.isSearching = true;
-      const searchNeoX = this.filterWallet(value, this.neoXWalletArr);
-      const searchNeo3 = this.filterWallet(value, this.neo3WalletArr);
-      const searchNeo2 = this.filterWallet(value, this.neo2WalletArr);
       this.searchWalletRes = [
         {
-          chain: 'NeoX',
-          title: 'Neo X (EVM Network)',
-          walletArr: searchNeoX,
-          expand: true,
-        },
-        {
-          chain: 'Neo3',
           title: 'Neo N3',
-          walletArr: searchNeo3,
+          walletArr: this.filterWallet(value, this.neo3WalletArr),
           expand: true,
+          chain: 'Neo3',
         },
         {
-          chain: 'Neo2',
-          title: 'Neo Legacy',
-          walletArr: searchNeo2,
+          title: 'Neo X (EVM Network)',
+          walletArr: this.filterWallet(value, this.neoXWalletArr),
           expand: true,
+          chain: 'NeoX',
+        },
+        {
+          title: 'Neo Legacy',
+          walletArr: this.filterWallet(value, this.neo2WalletArr),
+          expand: true,
+          chain: 'Neo2',
         },
       ];
     });
@@ -216,9 +191,8 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
     );
   }
 
-  async selectAccount(w: Wallet2 | Wallet3) {
+  async selectAccount(w: Wallet2 | Wallet3, chain: ChainType) {
     const hasLoginAddress = await this.chromeSrc.getHasLoginAddress();
-    this.close();
     if (
       w.accounts[0]?.extra?.ledgerSLIP44 ||
       hasLoginAddress[w.accounts[0].address]
@@ -234,7 +208,7 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
     }
     this.dialog
       .open(PopupPasswordDialogComponent, {
-        data: { account: w, chainType: this.chainType },
+        data: { account: w, chainType: chain },
         panelClass: 'custom-dialog-panel',
         backdropClass: 'custom-dialog-backdrop',
       })
@@ -251,7 +225,7 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
     this.wallet = w;
     this.store.dispatch({ type: UPDATE_WALLET, data: w });
     this.chromeSrc.accountChangeEvent(w);
-    this.util.checkNeedRedirectHome();
+    this.router.navigateByUrl('/popup/home');
   }
 
   showAddWallet() {
@@ -285,7 +259,6 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
                       this.toCreate(type);
                     } else {
                       this.global.snackBarTip('switchOnePasswordFirst');
-                      this.close();
                       this.router.navigateByUrl('/popup/one-password');
                     }
                   });
@@ -293,14 +266,11 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
                 this.toCreate(type);
               }
             });
-        } else {
-          this.close();
         }
       });
   }
 
   toCreate(type) {
-    this.close();
     if (type === 'create') {
       this.router.navigateByUrl('/popup/wallet/create');
     } else {
@@ -330,10 +300,20 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
     this.moreModalWallet = item;
     this.moreModalChainType = chainType;
     if (!item.accounts[0]?.extra?.ledgerSLIP44) {
-      const accounts = this.allWallet.filter(
+      const neo2Accounts = this.neo2WalletArr.filter(
         (item) => !item.accounts[0]?.extra?.ledgerSLIP44
       );
-      this.moreModalCanRemove = accounts.length > 1 ? true : false;
+      const neo3Accounts = this.neo3WalletArr.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
+      const neoXAccounts = this.neoXWalletArr.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
+      if (neo2Accounts.length + neo3Accounts.length + neoXAccounts.length > 1) {
+        this.moreModalCanRemove = true;
+      } else {
+        this.moreModalCanRemove = false;
+      }
     } else {
       this.moreModalCanRemove = true;
     }
@@ -341,14 +321,22 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
 
   removeAccount() {
     if (!this.moreModalWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      const accounts = this.allWallet.filter(
+      const neo2Accounts = this.neo2WalletArr.filter(
         (item) => !item.accounts[0]?.extra?.ledgerSLIP44
       );
-      if (accounts.length <= 1) {
+      const neo3Accounts = this.neo3WalletArr.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
+      const neoXAccounts = this.neoXWalletArr.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
+      if (
+        neo2Accounts.length + neo3Accounts.length + neoXAccounts.length <=
+        1
+      ) {
         return;
       }
     }
-    this.close();
     this.dialog
       .open(PopupConfirmDialogComponent, {
         data: 'delWalletConfirm',
@@ -366,11 +354,17 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
                 this.wallet.accounts[0].address
             )
             .subscribe((w) => {
-              this.util.checkNeedRedirectHome();
+              this.moreModalWallet = undefined;
+              this.moreModalChainType = undefined;
+              this.moreModalCanRemove = false;
               if (!w) {
                 this.router.navigateByUrl('/popup/wallet/new-guide');
               }
             });
+        } else {
+          this.moreModalWallet = undefined;
+          this.moreModalChainType = undefined;
+          this.moreModalCanRemove = false;
         }
       });
   }
@@ -475,7 +469,6 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
     document.body.removeChild(element);
   }
   //#endregion
-
   private getBalances() {
     const reqs = [];
     let assetId = '';
@@ -512,5 +505,45 @@ export class PopupAccountListDialogComponent implements OnInit, OnDestroy {
         this.addressBalances[item.accounts[0].address] = balance;
       });
     });
+  }
+  private getDisplayList() {
+    switch (this.selectChainType) {
+      case 'Neo2':
+        this.displayList = this.allWallet.Neo2;
+        break;
+      case 'Neo3':
+        this.displayList = this.allWallet.Neo3;
+        break;
+      case 'NeoX':
+        this.displayList = this.allWallet.NeoX;
+        break;
+    }
+  }
+
+  private handleWallet(
+    walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>,
+    chain: ChainType
+  ): WalletListItem[] {
+    const privateWalletArr = walletArr.filter(
+      (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+    );
+    const ledgerWalletArr = walletArr.filter(
+      (item) =>
+        item.accounts[0]?.extra?.ledgerSLIP44 &&
+        item.accounts[0]?.extra?.device !== 'OneKey'
+    );
+    const oneKeyWalletArr = walletArr.filter(
+      (item) => item.accounts[0]?.extra?.device === 'OneKey'
+    );
+    return [
+      {
+        title: 'Private key',
+        walletArr: privateWalletArr,
+        expand: true,
+        chain,
+      },
+      { title: 'Ledger', walletArr: ledgerWalletArr, expand: true, chain },
+      { title: 'OneKey', walletArr: oneKeyWalletArr, expand: true, chain },
+    ];
   }
 }

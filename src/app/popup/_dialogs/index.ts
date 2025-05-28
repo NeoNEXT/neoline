@@ -12,7 +12,6 @@ export { PopupAddNetworkDialogComponent } from './add-network/add-network.dialog
 export { PopupPasswordDialogComponent } from './password/password.dialog';
 export { PopupQRCodeDialogComponent } from './account/qrcode/qrcode.dialog';
 export { PopupPrivateKeyComponent } from './account/private-key/private-key.dialog';
-export { PopupAccountListDialogComponent } from './account/account-list/account-list.component';
 export { PopupWalletListDialogComponent } from './wallet-list/wallet-list.dialog';
 export { PopupAddWalletDialogComponent } from './add-wallet/add-wallet.dialog';
 export { PopupEditEvmFeeDialogComponent } from './edit-evm-fee/edit-evm-fee.dialog';
