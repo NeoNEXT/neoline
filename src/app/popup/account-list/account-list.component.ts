@@ -354,17 +354,13 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
                 this.wallet.accounts[0].address
             )
             .subscribe((w) => {
-              this.moreModalWallet = undefined;
-              this.moreModalChainType = undefined;
-              this.moreModalCanRemove = false;
+              this.closeMoreModal();
               if (!w) {
                 this.router.navigateByUrl('/popup/wallet/new-guide');
               }
             });
         } else {
-          this.moreModalWallet = undefined;
-          this.moreModalChainType = undefined;
-          this.moreModalCanRemove = false;
+          this.closeMoreModal();
         }
       });
   }
@@ -422,6 +418,7 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
   async exportWallet() {
     if (!this.isOnePassword || this.moreModalChainType === 'NeoX') {
       this.exportThisWallet();
+      this.closeMoreModal();
       return;
     }
     this.dialog
@@ -437,7 +434,14 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
         if (res === 'all') {
           this.exportAllWallet();
         }
+        this.closeMoreModal();
       });
+  }
+
+  private closeMoreModal() {
+    this.moreModalWallet = undefined;
+    this.moreModalChainType = undefined;
+    this.moreModalCanRemove = false;
   }
 
   private exportWalletJson(
