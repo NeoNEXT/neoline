@@ -121,7 +121,7 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
   }
   private handleOneKey() {
     this.oneKeyService.getDeviceStatus().then((res) => {
-      if (res.success) {
+      if (res.success && res.payload.length > 0) {
         this.getStatusInterval?.unsubscribe();
         this.oneKeyService.getPassphraseState().then((state) => {
           if (state.success) {

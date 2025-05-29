@@ -166,7 +166,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
     }
     if (this.device === 'OneKey') {
       this.oneKeyService.getDeviceStatus().then((res) => {
-        if (res.success) {
+        if (res.success && res.payload.length > 0) {
           this.getStatusInterval?.unsubscribe();
           this.oneKeyService.getPassphraseState().then((state) => {
             if (state.success && this.accounts.length === 0) {
