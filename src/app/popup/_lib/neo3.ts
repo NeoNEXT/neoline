@@ -1,5 +1,5 @@
 import { N3MainnetNetwork, N3T4NetworkChainId, N3TestnetNetwork } from './type';
-import { Account, Wallet, WalletJSON } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { Account, Wallet } from '@cityofzion/neon-core-neo3/lib/wallet';
 
 export const NEO3_CONTRACT = '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5';
 export const GAS3_CONTRACT = '0xd2a4cff31913016155e38e474a2c06d08be276cf';
@@ -18,10 +18,22 @@ export class Account3 extends Account {
   extra: {
     [key: string]: any;
   };
+  export() {
+    return {
+      ...super.export(),
+      extra: this.extra,
+    };
+  }
 }
 export class Wallet3 extends Wallet {
   accounts: Account3[];
   extra: {
     [key: string]: any;
   };
+  export() {
+    return {
+      ...super.export(),
+      extra: this.extra,
+    };
+  }
 }
