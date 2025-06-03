@@ -1504,5 +1504,8 @@
   },
   "selectHardware": {
     "message": "Select a hardware wallet you would like to use with NeoLine."
+  },
+  "notice": {
+    "message": "Notification"
   }
 }

@@ -1504,5 +1504,8 @@
   },
   "selectHardware": {
     "message": "选择希望用于 NeoLine 的硬件钱包。"
+  },
+  "notice": {
+    "message": "通知"
   }
 }

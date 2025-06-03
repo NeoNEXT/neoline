@@ -1,0 +1,22 @@
+ul.notice-list {
+  padding: 0 24px;
+  li {
+    padding: 12px 0;
+    .notice-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--title-color);
+    }
+    .notice-content {
+      font-size: 14px;
+      color: var(--sub-title-color);
+      margin-top: 10px;
+    }
+    .notice-time {
+      font-size: 12px;
+      color: var(--tip-color);
+      font-family: NeverMind-Regular;
+      margin-top: 12px;
+    }
+  }
+}

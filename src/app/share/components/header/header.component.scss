@@ -83,5 +83,8 @@ header {
     position: absolute;
     right: 16px;
     top: 64px;
+    .border-bottom {
+      border-bottom: 1px solid var(--line-color);
+    }
   }
 }

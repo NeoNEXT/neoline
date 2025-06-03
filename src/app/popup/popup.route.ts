@@ -16,6 +16,7 @@ import { PopupOnePasswordComponent } from './one-password/one-password.component
 import { PopupAddressBookComponent } from './address-book/address-book.component';
 import { PopupBridgeComponent } from './bridge/bridge.component';
 import { PopupAccountListComponent } from './account-list/account-list.component';
+import { PopupNoticeComponent } from './notice/notice.component';
 
 import {
   PopupLoginGuard,
@@ -98,6 +99,11 @@ const routes: Routes = [
         path: 'bridge',
         canActivate: [PopupWalletGuard],
         component: PopupBridgeComponent,
+      },
+      {
+        path: 'notice',
+        canActivate: [PopupWalletGuard],
+        component: PopupNoticeComponent,
       },
     ],
   },

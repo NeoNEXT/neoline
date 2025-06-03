@@ -52,6 +52,7 @@ import { Neo3BridgeConfirmComponent } from './bridge/neo3-bridge-confirm/neo3-br
 import { NeoXBridgeConfirmComponent } from './bridge/neox-bridge-confirm/neox-bridge-confirm.component';
 import { NeoXBridgeFootnoteComponent } from './bridge/bridge-footnote/bridge-footnote.component';
 import { PopupAccountListComponent } from './account-list/account-list.component';
+import { PopupNoticeComponent } from './notice/notice.component';
 
 const POPUP_COMPONENTS = [
   PopupComponent,
@@ -80,6 +81,7 @@ const POPUP_COMPONENTS = [
   NeoXBridgeConfirmComponent,
   NeoXBridgeFootnoteComponent,
   PopupAccountListComponent,
+  PopupNoticeComponent,
 ];
 //#endregion
 
