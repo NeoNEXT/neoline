@@ -6,7 +6,11 @@ export class ExtensionService {
   constructor() {}
 
   isCrx(): boolean {
-    return !!chrome?.runtime;
+    return (
+      typeof chrome !== 'undefined' &&
+      chrome.runtime &&
+      typeof chrome.runtime.id === 'string'
+    );
   }
 
   getVersion() {

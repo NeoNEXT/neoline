@@ -165,7 +165,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   expandView() {
-    if (chrome.runtime) {
+    if (
+      typeof chrome !== 'undefined' &&
+      chrome.runtime &&
+      typeof chrome.runtime.id === 'string'
+    ) {
       const extensionUrl = chrome.runtime.getURL('/index.html');
       const ledgerUrl = extensionUrl + '#/popup/home';
       chrome.tabs.create({ url: ledgerUrl });

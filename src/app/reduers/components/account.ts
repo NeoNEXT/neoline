@@ -478,7 +478,11 @@ function getWalletJsons(walletArr: Array<Wallet2 | Wallet3>) {
 
 function updateLocalStorage(storageName: STORAGE_NAME, value: any) {
   let storageValue = value;
-  if (chrome?.runtime) {
+  if (
+    typeof chrome !== 'undefined' &&
+    chrome.runtime &&
+    typeof chrome.runtime.id === 'string'
+  ) {
     const saveData = {};
     saveData[storageName] = storageValue;
     if (STORAGE_VALUE_MESSAGE[storageName].isLocal) {
