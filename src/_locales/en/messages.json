@@ -1502,6 +1502,15 @@
   "connectOneKey": {
     "message": "Please connect and unlock your OneKey device"
   },
+  "installOneKeyBridgeTip": {
+    "message": "Open OneKey Bridge app. Please download and open OneKey Bridge desktop app before connecting your hardware device. NeoLine needs it to communicate with your hardware wallet."
+  },
+  "installOneKeyBridgeShortTip": {
+    "message": "Please download and open OneKey Bridge desktop app."
+  },
+  "installOneKeyBridge": {
+    "message": "Install OneKey Bridge"
+  },
   "selectHardware": {
     "message": "Select a hardware wallet you would like to use with NeoLine."
   },

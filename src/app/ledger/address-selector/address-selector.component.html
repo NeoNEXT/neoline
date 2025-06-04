@@ -25,8 +25,14 @@
     <p class="note reconnect">{{ "reconnectLedger" | translate | async }}</p>
   </ng-container>
   <ng-container *ngIf="device === 'OneKey'">
-    <p class="note">
+    <p class="note" *ngIf="hasInstallOneKeyBridge">
       {{ "connectOneKey" | translate | async }}
+    </p>
+    <p class="note" *ngIf="!hasInstallOneKeyBridge">
+      {{ "installOneKeyBridgeTip" | translate | async }}
+      <span class="link" (click)="toInstallOneKeyBridge()">{{
+        "installOneKeyBridge" | translate | async
+      }}</span>
     </p>
   </ng-container>
 </div>

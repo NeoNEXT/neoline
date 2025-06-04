@@ -40,6 +40,8 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   isReady = false;
   status: LedgerStatus = LedgerStatuses.DISCONNECTED;
   savedAddressesObj = {};
+  hasInstallOneKeyBridge = true;
+  lang = 'en';
 
   selectedAccount;
   selectedIndex;
@@ -78,6 +80,9 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
       this.getLedgerStatus();
     });
     this.getSavedAddress();
+    this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
+      this.lang = lang;
+    });
   }
 
   ngOnDestroy(): void {
@@ -166,7 +171,11 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
     }
     if (this.device === 'OneKey') {
       this.oneKeyService.getDeviceStatus().then((res) => {
+        if (!res.success && 'code' in res.payload && res.payload.code === 808) {
+          this.hasInstallOneKeyBridge = false;
+        }
         if (res.success && res.payload.length > 0) {
+          this.hasInstallOneKeyBridge = true;
           this.getStatusInterval?.unsubscribe();
           this.oneKeyService.getPassphraseState().then((state) => {
             if (state.success && this.accounts.length === 0) {
@@ -209,20 +218,18 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   }
 
   public async jumbToWeb(type: 'privacy' | 'agreement') {
-    this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
-      if (lang !== 'en') {
-        lang = '';
-      } else {
-        lang = '/en';
-      }
-      switch (type) {
-        case 'privacy':
-          window.open(`https://neoline.io${lang}/privacy`);
-          break;
-        case 'agreement':
-          window.open(`https://neoline.io${lang}/agreement`);
-          break;
-      }
-    });
+    const prefix = this.lang !== 'en' ? '' : '/en';
+    switch (type) {
+      case 'privacy':
+        window.open(`https://neoline.io${prefix}/privacy`);
+        break;
+      case 'agreement':
+        window.open(`https://neoline.io${prefix}/agreement`);
+        break;
+    }
+  }
+
+  toInstallOneKeyBridge() {
+    this.oneKeyService.toInstallOneKeyBridge(this.lang);
   }
 }

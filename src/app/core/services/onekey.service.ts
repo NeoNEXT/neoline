@@ -43,14 +43,12 @@ export class OneKeyService {
   constructor(private store: Store<AppState>, private global: GlobalService) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
-      // this.n2Network = state.n2Networks[state.n2NetworkIndex];
-      // this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
     });
     HardwareSDK.HardwareWebSdk.init({
       debug: true,
       fetchConfig: false,
-      connectSrc: 'https://jssdk.onekey.so/1.0.26/',
+      connectSrc: 'https://jssdk.onekey.so/1.0.31/',
     });
     HardwareSDK.HardwareWebSdk.on(UI_EVENT, (message: CoreMessage) => {
       // Handle the PIN code input event
@@ -74,11 +72,15 @@ export class OneKeyService {
           },
         });
       }
-
-      if (message.type === UI_REQUEST.REQUEST_BUTTON) {
-        // Confirmation is required on the device, a UI prompt can be displayed
-      }
     });
+  }
+
+  toInstallOneKeyBridge(lang: string) {
+    const url =
+      lang !== 'en'
+        ? 'https://onekey.so/zh_CN/download/'
+        : 'https://onekey.so/download/';
+    window.open(url);
   }
 
   async getDeviceStatus() {

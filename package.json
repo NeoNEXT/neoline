@@ -45,7 +45,7 @@
     "@ledgerhq/hw-transport-webhid": "^6.28.4",
     "@metamask/eth-sig-util": "^8.2.0",
     "@ngrx/store": "^13.2.0",
-    "@onekeyfe/hd-web-sdk": "^1.0.26",
+    "@onekeyfe/hd-web-sdk": "^1.0.31",
     "@types/crypto-js": "^4.2.0",
     "@types/mathjs": "^6.0.5",
     "@types/wif": "^2.0.1",

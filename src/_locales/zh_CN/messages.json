@@ -1502,6 +1502,15 @@
   "connectOneKey": {
     "message": "请连接并解锁您的 OneKey 设备"
   },
+  "installOneKeyBridgeTip": {
+    "message": "需要启动 OneKey Bridge。连接硬件设备前，请下载并启动 OneKey Bridge，NeoLine 才能与硬件通信。"
+  },
+  "installOneKeyBridgeShortTip": {
+    "message": "请下载并启动 OneKey Bridge。"
+  },
+  "installOneKeyBridge": {
+    "message": "安装 OneKey Bridge"
+  },
   "selectHardware": {
     "message": "选择希望用于 NeoLine 的硬件钱包。"
   },

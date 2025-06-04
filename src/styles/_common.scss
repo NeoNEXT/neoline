@@ -134,6 +134,10 @@ $network-list: (
       padding-bottom: 0;
       color: #fff;
       text-align: center;
+      .link {
+        color: var(--theme-color);
+        cursor: pointer;
+      }
     }
     button {
       padding: 0 16px;

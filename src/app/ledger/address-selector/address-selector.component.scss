@@ -16,8 +16,16 @@
     .note {
       font-family: NeverMind-Regular;
       color: var(--tip-color);
-      line-height: 15px;
+      line-height: 1.2;
       margin-top: 20px;
+      .link {
+        color: var(--theme-color);
+        cursor: pointer;
+        text-decoration: none;
+        &:hover {
+          text-decoration: underline;
+        }
+      }
       &.reconnect {
         margin-top: 10px;
       }

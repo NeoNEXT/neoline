@@ -12,7 +12,7 @@ import {
   LedgerStatuses,
   Wallet3,
 } from '@/app/popup/_lib';
-import { LedgerService, OneKeyService } from '@/app/core';
+import { LedgerService, OneKeyService, SettingState } from '@/app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { interval } from 'rxjs';
 import { ETH_EOA_SIGN_METHODS } from '@/models/evm';
@@ -34,10 +34,13 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
 
   loadingMsg = '';
   getStatusInterval;
+  hasInstallOneKeyBridge = true;
+  lang = 'en';
 
   constructor(
     private ledger: LedgerService,
-    private oneKeyService: OneKeyService
+    private oneKeyService: OneKeyService,
+    private setting: SettingState
   ) {}
 
   ngOnInit(): void {
@@ -48,6 +51,9 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
     this.getLedgerStatus();
     this.getStatusInterval = interval(5000).subscribe(() => {
       this.getLedgerStatus();
+    });
+    this.setting.langSub.subscribe((lang) => {
+      this.lang = lang;
     });
   }
 
@@ -121,7 +127,11 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
   }
   private handleOneKey() {
     this.oneKeyService.getDeviceStatus().then((res) => {
+      if (!res.success && 'code' in res.payload && res.payload.code === 808) {
+        this.hasInstallOneKeyBridge = false;
+      }
       if (res.success && res.payload.length > 0) {
+        this.hasInstallOneKeyBridge = true;
         this.getStatusInterval?.unsubscribe();
         this.oneKeyService.getPassphraseState().then((state) => {
           if (state.success) {
@@ -159,5 +169,9 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
         });
       }
     });
+  }
+
+  toInstallOneKeyBridge() {
+    this.oneKeyService.toInstallOneKeyBridge(this.lang);
   }
 }
