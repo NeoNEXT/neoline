@@ -3,13 +3,14 @@ import { Router, RouterEvent, NavigationEnd } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { ChainType, RpcNetwork } from '@/app/popup/_lib';
+import { ChainType, RpcNetwork, STORAGE_NAME } from '@/app/popup/_lib';
 import {
   ChromeService,
   NeonService,
   SettingState,
   UtilServiceState,
 } from '@/app/core';
+import { LOCAL_NOTICE } from '@/app/popup/_lib/setting';
 
 declare var chrome: any;
 @Component({
@@ -24,6 +25,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   showExpandView = true;
   lang: string;
   settingStateSub: Unsubscribable;
+  hasUnreadNotice = false;
 
   private accountSub: Unsubscribable;
   address: string;
@@ -65,6 +67,14 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
       this.lang = lang;
     });
+    this.chromeSrc
+      .getStorage(STORAGE_NAME.noticeLatestId)
+      .subscribe((noticeLatestId) => {
+        if (noticeLatestId !== LOCAL_NOTICE[0].id) {
+          this.hasUnreadNotice = true;
+        }
+      });
+
     if (chrome.tabs) {
       chrome.tabs.getCurrent((tab) => {
         if (tab) {
@@ -154,6 +164,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
     if (this.currentUrl === '/ledger') {
       this.router.navigateByUrl('/popup/home');
     }
+  }
+
+  toNotice() {
+    this.hasUnreadNotice = false;
+    this.chromeSrc.setStorage(STORAGE_NAME.noticeLatestId, LOCAL_NOTICE[0].id);
+    this.router.navigateByUrl('/popup/notice');
   }
 
   toHelpWebsite() {

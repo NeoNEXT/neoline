@@ -54,6 +54,7 @@ export enum STORAGE_NAME {
   rateCurrency = 'rateCurrency',
   theme ='theme', // light or dark theme
   lang = 'lang',
+  noticeLatestId = 'noticeLatestId',
   evmCustomNonce = 'evmCustomNonce',
 
   transaction = 'transaction',
@@ -188,6 +189,11 @@ export const STORAGE_VALUE_MESSAGE = {
     type: STORAGE_VALUE_TYPE.string,
     isLocal: false,
     default: 'light-theme',
+  },
+  noticeLatestId: {
+    type: STORAGE_VALUE_TYPE.number,
+    isLocal: true,
+    default: 0,
   },
   onePassCheckAddresses: {
     type: STORAGE_VALUE_TYPE.object,

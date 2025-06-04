@@ -27,25 +27,29 @@ export const DEFAULT_NFT_LOGO = '/assets/images/default-nft-logo.svg';
 export const UNKNOWN_LOGO_URL = '/assets/images/unknown-logo.svg';
 
 interface LocalNoticeItem {
-  title: string;
-  content: string;
+  id: number;
+  title: {
+    en: string;
+    zh_CN: string;
+  };
+  content: {
+    en: string;
+    zh_CN: string;
+  };
   time: number;
-  more: boolean;
 }
 
 export const LOCAL_NOTICE: LocalNoticeItem[] = [
   {
-    title: 'Support OneKey',
-    content:
-      'Support OneKey wallet to connect to the wallet, and you can use the OneKey wallet to sign transactions.',
-    time: 1748576313097,
-    more: false,
-  },
-  {
-    title: 'Support OneKey2',
-    content:
-      'Support OneKey wallet to connect to the wallet, and you can use the OneKey wallet to sign transactions.',
-    time: 1748576313097,
-    more: false,
+    id: 1,
+    title: {
+      en: 'OneKey hardware wallet support',
+      zh_CN: '支持 OneKey 硬件钱包',
+    },
+    content: {
+      en: `You can now connect and import your OneKey hardware wallet directly into NeoLine. Safely manage your assets, sign transactions, and enjoy enhanced security — all with your OneKey device.`,
+      zh_CN: `您现在可以将 OneKey 硬件钱包直接连接并导入到 NeoLine 中，安全管理资产、签署交易，尽享更高等级的安全体验。`,
+    },
+    time: 1749052800000,
   },
 ];

@@ -36,6 +36,7 @@
       src="assets/images/common/ledger-menu.svg"
       alt=""
     />
+    <span *ngIf="getShowMenu() && hasUnreadNotice" class="unread"></span>
   </div>
   <section
     class="pop-ups-veil"
@@ -43,8 +44,9 @@
     (click)="showMenu = false"
   ></section>
   <ul class="pop-ups-menu" *ngIf="showMenu">
-    <li class="border-bottom"  routerLink="/popup/notice">
-      <img theme src="assets/images/account/home-account-detail.svg" alt="" />{{
+    <li class="border-bottom" (click)="toNotice()">
+      <span *ngIf="hasUnreadNotice" class="unread"></span>
+      <img theme src="assets/images/account/home-notice.svg" alt="" />{{
         "notice" | translate | async
       }}
     </li>
@@ -53,7 +55,7 @@
         "accountDetails" | translate | async
       }}
     </li>
-    <li class="border-bottom"  (click)="toWeb()">
+    <li class="border-bottom" (click)="toWeb()">
       <img theme src="assets/images/account/home-explorer.svg" alt="" />{{
         "ViewOnExplorer" | translate | async
       }}

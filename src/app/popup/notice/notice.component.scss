@@ -1,22 +1,23 @@
 ul.notice-list {
   padding: 0 24px;
   li {
-    padding: 12px 0;
+    padding: 14px 0;
+    line-height: 1.5;
+    border-bottom: 1px solid var(--line-color);
     .notice-title {
-      font-size: 16px;
-      font-weight: 600;
+      font-size: 15px;
+      font-weight: 500;
       color: var(--title-color);
     }
     .notice-content {
       font-size: 14px;
       color: var(--sub-title-color);
-      margin-top: 10px;
+      margin-top: 4px;
     }
     .notice-time {
       font-size: 12px;
       color: var(--tip-color);
-      font-family: NeverMind-Regular;
-      margin-top: 12px;
+      margin-top: 10px;
     }
   }
 }

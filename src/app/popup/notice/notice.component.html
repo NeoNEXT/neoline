@@ -2,8 +2,8 @@
 
 <ul class="notice-list">
   <li *ngFor="let item of noticeList">
-    <p class="notice-title">{{ item.title }}</p>
-    <div class="notice-content">{{ item.content }}</div>
+    <p class="notice-title">{{ item.title[lang] }}</p>
+    <div class="notice-content">{{ item.content[lang] }}</div>
     <p class="notice-time">{{ item.time | date : "yyyy-MM-dd" }}</p>
   </li>
 </ul>

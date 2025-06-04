@@ -39,6 +39,11 @@ header {
     align-items: center;
     justify-content: center;
     gap: 12px;
+    position: relative;
+    .unread {
+      top: 6px;
+      right: 1px;
+    }
   }
   button.network {
     min-width: 140px;
@@ -86,5 +91,20 @@ header {
     .border-bottom {
       border-bottom: 1px solid var(--line-color);
     }
+    li {
+      position: relative;
+      .unread {
+        top: 12px;
+        left: 26px;
+      }
+    }
+  }
+  .unread {
+    display: inline-block;
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background: var(--error-color);
+    position: absolute;
   }
 }
