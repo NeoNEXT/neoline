@@ -1,14 +1,26 @@
 import { Account, Wallet } from '@cityofzion/neon-core-neo3/lib/wallet';
-export declare class Account3 extends Account {
+export class Account3 extends Account {
   extra: {
     [key: string]: any;
   };
+  export() {
+    return {
+      ...super.export(),
+      extra: this.extra,
+    };
+  }
 }
-export declare class Wallet3 extends Wallet {
+export class Wallet3 extends Wallet {
   accounts: Account3[];
   extra: {
     [key: string]: any;
   };
+  export() {
+    return {
+      ...super.export(),
+      extra: this.extra,
+    };
+  }
 }
 
 export enum requestTargetN3 {

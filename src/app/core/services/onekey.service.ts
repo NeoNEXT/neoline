@@ -24,6 +24,7 @@ import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
 import { BigNumber } from 'bignumber.js';
 import { MessageTypes, TypedMessage } from '@metamask/eth-sig-util';
+import { environment } from '@/environments/environment';
 
 interface OneKeyDeviceInfo {
   connectId: string; // device connection id
@@ -46,7 +47,7 @@ export class OneKeyService {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
     });
     HardwareSDK.HardwareWebSdk.init({
-      debug: true,
+      debug: !environment.production,
       fetchConfig: false,
       connectSrc: 'https://jssdk.onekey.so/1.0.31/',
     });

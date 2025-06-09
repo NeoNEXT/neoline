@@ -3,8 +3,8 @@
   [chainType]="chainType"
   [currentWallet]="currentWallet"
   [unsignedTx]="unsignedTx"
-  magicNumber="0"
-  signOnly="true"
+  [magicNumber]="0"
+  [signOnly]="true"
   (backWithSignedTx)="handleHardwareSignedTx($event)"
 ></app-hardware-sign>
 

@@ -50,6 +50,6 @@ export const LOCAL_NOTICE: LocalNoticeItem[] = [
       en: `You can now connect and import your OneKey hardware wallet directly into NeoLine. Safely manage your assets, sign transactions, and enjoy enhanced security — all with your OneKey device.`,
       zh_CN: `您现在可以将 OneKey 硬件钱包直接连接并导入到 NeoLine 中，安全管理资产、签署交易，尽享更高等级的安全体验。`,
     },
-    time: 1749052800000,
+    time: 1749398400000,
   },
 ];

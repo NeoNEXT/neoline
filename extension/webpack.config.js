@@ -86,6 +86,11 @@ module.exports = (env) => {
           },
         ],
       },
+      plugins: [
+        new webpack.ProvidePlugin({
+          Buffer: ["buffer", "Buffer"],
+        }),
+      ],
       performance: {
         maxEntrypointSize: 2000000,
         maxAssetSize: 2000000,
@@ -122,6 +127,11 @@ module.exports = (env) => {
           },
         ],
       },
+      plugins: [
+        new webpack.ProvidePlugin({
+          Buffer: ["buffer", "Buffer"],
+        }),
+      ],
       performance: {
         maxEntrypointSize: 2000000,
         maxAssetSize: 2000000,
@@ -156,6 +166,11 @@ module.exports = (env) => {
           },
         ],
       },
+      plugins: [
+        new webpack.ProvidePlugin({
+          Buffer: ["buffer", "Buffer"],
+        }),
+      ],
       performance: {
         maxEntrypointSize: 2000000,
         maxAssetSize: 2000000,

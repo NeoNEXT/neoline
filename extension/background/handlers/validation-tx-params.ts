@@ -1,7 +1,7 @@
 import { ethErrors } from 'eth-rpc-errors';
 import { ethers } from 'ethers';
 import { abiERC20 } from '../../common/evm/abiERC20';
-const abi_1 = require('@ethersproject/abi');
+import abi_1 from '@ethersproject/abi';
 
 /**
  * Validates the transaction params for required properties and throws in

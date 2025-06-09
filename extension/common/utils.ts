@@ -1,10 +1,11 @@
-import WIF = require('wif');
-import { ec } from 'elliptic';
-import base58 = require('bs58');
-import BN = require('bn.js');
+import WIF from 'wif';
 
-import SHA256 = require('crypto-js/sha256');
-import hexEncoding = require('crypto-js/enc-hex');
+import { ec } from 'elliptic';
+import base58 from 'bs58';
+import BN from 'bn.js';
+
+import SHA256 from 'crypto-js/sha256';
+import hexEncoding from 'crypto-js/enc-hex';
 import { getLocalStorage } from '../common';
 import { ethers } from 'ethers';
 import { ChainType } from './constants';
@@ -329,7 +330,7 @@ function hash256(hex) {
 /**
  * Converts a scripthash to address.
  */
-declare const DEFAULT_ADDRESS_VERSION = 53;
+const DEFAULT_ADDRESS_VERSION = 53;
 export function getN3AddressFromScriptHash(
   scriptHash,
   addressVersion = DEFAULT_ADDRESS_VERSION

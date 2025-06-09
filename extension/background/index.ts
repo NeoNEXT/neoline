@@ -71,7 +71,7 @@ import {
 import { u as u3, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import BigNumber from 'bignumber.js';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import CryptoJS = require('crypto-js');
+import CryptoJS from 'crypto-js';
 import { requestTargetEVM } from '../common/data_module_evm';
 import {
   createWindow,

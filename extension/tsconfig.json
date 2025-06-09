@@ -5,12 +5,14 @@
     "baseUrl": ".",
     "sourceMap": false,
     "declaration": false,
-    "target": "es5",
+    "target": "es2015",
     "lib": ["dom", "es2017"],
     "outDir": "../dist",
     "rootDir": ".",
     "downlevelIteration": true,
     "resolveJsonModule": true,
-    "esModuleInterop": true
+    "esModuleInterop": true,
+    "moduleResolution": "node",
+    "module": "ES2020"
   }
 }
