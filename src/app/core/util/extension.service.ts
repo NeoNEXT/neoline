@@ -132,7 +132,11 @@ export class ExtensionService {
     return new Promise((resolve) => {
       if (chrome.tabs) {
         chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
-          resolve(tabs[0]);
+          if (tabs?.[0].url) {
+            resolve(tabs[0]);
+          } else {
+            resolve(null);
+          }
         });
       } else {
         resolve(null);
