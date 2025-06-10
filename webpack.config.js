@@ -28,6 +28,13 @@ module.exports = (config, options) => {
             chunks: "all",
             enforce: true,
           },
+          onekeyfe: {
+            test: /[\\/]node_modules[\\/]@onekeyfe[\\/]/,
+            name: "onekeyfe",
+            priority: 20,
+            chunks: "all",
+            enforce: true,
+          },
         },
       },
     },
