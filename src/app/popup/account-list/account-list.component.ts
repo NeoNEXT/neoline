@@ -539,7 +539,7 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     const oneKeyWalletArr = walletArr.filter(
       (item) => item.accounts[0]?.extra?.device === 'OneKey'
     );
-    return [
+    const res = [
       {
         title: 'Private key',
         walletArr: privateWalletArr,
@@ -547,7 +547,15 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
         chain,
       },
       { title: 'Ledger', walletArr: ledgerWalletArr, expand: true, chain },
-      { title: 'OneKey', walletArr: oneKeyWalletArr, expand: true, chain },
     ];
+    if (chain !== 'Neo2') {
+      res.push({
+        title: 'OneKey',
+        walletArr: oneKeyWalletArr,
+        expand: true,
+        chain,
+      });
+    }
+    return res;
   }
 }
