@@ -16,7 +16,7 @@
     <button
       class="network"
       [ngClass]="{ disabled: !getShowMenu() }"
-      (click)="showNetworkList = true"
+      (click)="toNetworkList()"
     >
       <span>{{ getNetworkName() }}</span>
       <img theme src="assets/images/common/triangle-fill.svg" />
@@ -87,8 +87,3 @@
     </li>
   </ul>
 </header>
-
-<network
-  *ngIf="showNetworkList"
-  (closeEvent)="showNetworkList = false"
-></network>

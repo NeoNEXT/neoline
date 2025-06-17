@@ -39,19 +39,12 @@ import { Router } from '@angular/router';
 import { Unsubscribable } from 'rxjs';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 
-interface ChainNetwork {
-  chain: ChainType;
-  title: string;
-  expand: boolean;
-  networkArr: RpcNetwork[];
-}
-
 @Component({
-  selector: 'network',
-  templateUrl: 'network.component.html',
-  styleUrls: ['network.component.scss'],
+  selector: 'network-list',
+  templateUrl: 'network-list.component.html',
+  styleUrls: ['network-list.component.scss'],
 })
-export class PopupNetworkComponent implements OnDestroy {
+export class PopupNetworkListComponent implements OnDestroy {
   @ViewChild('moreModalDom') moreModalDom: ElementRef;
   @ViewChild('contentDom') contentDom: ElementRef;
   @Output() closeEvent = new EventEmitter();
@@ -62,6 +55,9 @@ export class PopupNetworkComponent implements OnDestroy {
   lang = 'en';
   isShowPopup = false;
   private showPopupTimeout: any;
+  searchValue = '';
+  isSearching = false;
+  selectChainType: ChainType;
 
   private accountSub: Unsubscribable;
   neo2WalletArr: Wallet2[];
@@ -74,7 +70,6 @@ export class PopupNetworkComponent implements OnDestroy {
   neo3NetworkIndex: number;
   neoXNetworkIndex: number;
   chainType: ChainType;
-  allNetworks: ChainNetwork[];
   constructor(
     private store: Store<AppState>,
     private chromeSer: ChromeService,
@@ -91,6 +86,7 @@ export class PopupNetworkComponent implements OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
+      this.selectChainType = this.chainType;
       this.neo2WalletArr = state.neo2WalletArr;
       this.neo3WalletArr = state.neo3WalletArr;
       this.neoXWalletArr = state.neoXWalletArr;
@@ -111,26 +107,6 @@ export class PopupNetworkComponent implements OnDestroy {
           break;
       }
     });
-    this.allNetworks = [
-      {
-        chain: 'NeoX',
-        title: 'Neo X (EVM Network)',
-        networkArr: this.neoXNetworks,
-        expand: this.chainType === 'NeoX',
-      },
-      {
-        chain: 'Neo3',
-        title: 'Neo N3',
-        networkArr: this.neo3Networks,
-        expand: this.chainType === 'Neo3',
-      },
-      {
-        chain: 'Neo2',
-        title: 'Neo Legacy',
-        networkArr: this.neo2Networks,
-        expand: this.chainType === 'Neo2',
-      },
-    ];
   }
 
   ngOnDestroy(): void {
@@ -331,8 +307,8 @@ export class PopupNetworkComponent implements OnDestroy {
     });
   }
 
-  checkShowMore(list: ChainNetwork, item: RpcNetwork) {
-    if (list.chain === 'Neo3') {
+  checkShowMore(selectChainType: ChainType, item: RpcNetwork) {
+    if (selectChainType === 'Neo3') {
       if (this.chainType === 'Neo3' && this.currentNetwork.id === item.id) {
         return false;
       }
@@ -340,7 +316,7 @@ export class PopupNetworkComponent implements OnDestroy {
         return true;
       }
     }
-    if (list.chain === 'NeoX') {
+    if (selectChainType === 'NeoX') {
       if (this.chainType === 'NeoX' && this.currentNetwork.id === item.id) {
         return false;
       }
@@ -397,5 +373,14 @@ export class PopupNetworkComponent implements OnDestroy {
         'https://tutorial.neoline.io/v/cn/neox-qian-bao-de-chuang-jian-he-shi-yong/ru-he-tong-guo-neoline-tian-jia-he-qie-huan-qi-ta-evm-wang-luo'
       );
     }
+  }
+
+  searchNetwork(value: string) {
+    this.searchValue = value;
+    this.isSearching = true;
+  }
+
+  clearSearch() {
+    this.searchValue = '';
   }
 }

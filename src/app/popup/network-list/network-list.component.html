@@ -1,0 +1,81 @@
+<div class="content" #contentDom>
+  <nav title="Networks"></nav>
+  <button class="search">
+    <img class="search" theme src="assets/images/common/search.svg" />
+    <input
+      [placeholder]="'Search' | translate | async"
+      [(ngModel)]="searchValue"
+      (input)="searchNetwork($event)"
+      type="text"
+    />
+    <img
+      (click)="clearSearch()"
+      *ngIf="searchValue"
+      theme
+      src="/assets/images/common/close.svg"
+      class="clear"
+      alt=""
+    />
+  </button>
+  <div class="tabs-container" *ngIf="!isSearching">
+    <span
+      [class]="{ selected: selectChainType === 'Neo3' }"
+      (click)="selectChainType = 'Neo3'"
+      >Neo N3</span
+    >
+    <span
+      [class]="{ selected: selectChainType === 'NeoX' }"
+      (click)="selectChainType = 'NeoX'"
+      >Neo X</span
+    >
+    <span
+      [class]="{ selected: selectChainType === 'Neo2' }"
+      (click)="selectChainType = 'Neo2'"
+      >Neo Legacy</span
+    >
+  </div>
+  <ul class="network-list">
+    <li
+      *ngFor="
+        let item of selectChainType === 'Neo2'
+          ? neo2Networks
+          : selectChainType === 'Neo3'
+          ? neo3Networks
+          : neoXNetworks;
+        index as index
+      "
+      [ngClass]="{
+        active: chainType === selectChainType && currentNetwork.id === item.id
+      }"
+      (click)="changeNetwork(item, index, selectChainType)"
+    >
+      <span class="select"></span>
+      <span class="flex-1">{{ item.name }}</span>
+      <img
+        *ngIf="checkShowMore(selectChainType, item)"
+        (click)="openMoreModal($event, item, selectChainType, index)"
+        theme
+        src="/assets/images/common/more.svg"
+        alt=""
+      />
+    </li>
+  </ul>
+  <button class="confirm pop-ups add-network" (click)="addNetwork()">
+    {{ "AddNetwork" | translate | async }}
+  </button>
+  <section
+    class="pop-ups-veil"
+    *ngIf="moreModalNetwork"
+    (click)="$event.stopPropagation(); moreModalNetwork = undefined"
+  ></section>
+  <ul #moreModalDom [hidden]="!moreModalNetwork" class="pop-ups-menu">
+    <li (click)="editNetwork()">
+      <img theme src="assets/images/account/home-account-detail.svg" alt="" />
+      {{ "edit" | translate | async }}
+    </li>
+    <li (click)="deleteNetwork()">
+      <img class="delete" src="assets/images/account/home-delete.svg" alt="" />
+      {{ "delete" | translate | async }}
+    </li>
+  </ul>
+</div>

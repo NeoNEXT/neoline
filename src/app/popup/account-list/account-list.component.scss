@@ -12,17 +12,6 @@
     top: 16px;
     cursor: pointer;
   }
-  .my-account {
-    flex-shrink: 0;
-    height: 48px;
-    color: var(--sub-title-color);
-    padding-left: 16px;
-    padding-right: 19px;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    border-bottom: 1px solid var(--line-color);
-  }
   button.search {
     width: calc(100% - 48px);
     height: 44px;

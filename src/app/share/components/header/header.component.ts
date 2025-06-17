@@ -20,7 +20,6 @@ declare var chrome: any;
 })
 export class HeaderComponent implements OnInit, OnDestroy {
   currentUrl = this.router.url;
-  showNetworkList = false;
   showMenu = false;
   showExpandView = true;
   lang: string;
@@ -178,6 +177,10 @@ export class HeaderComponent implements OnInit, OnDestroy {
     } else {
       window.open('https://tutorial.neoline.io/');
     }
+  }
+
+  toNetworkList() {
+    this.router.navigateByUrl('/popup/network-list');
   }
 
   expandView() {

@@ -16,6 +16,7 @@ import { PopupOnePasswordComponent } from './one-password/one-password.component
 import { PopupAddressBookComponent } from './address-book/address-book.component';
 import { PopupBridgeComponent } from './bridge/bridge.component';
 import { PopupAccountListComponent } from './account-list/account-list.component';
+import { PopupNetworkListComponent } from './network-list/network-list.component';
 import { PopupNoticeComponent } from './notice/notice.component';
 
 import {
@@ -44,6 +45,11 @@ const routes: Routes = [
         path: 'account-list',
         canActivate: [PopupWalletGuard],
         component: PopupAccountListComponent,
+      },
+      {
+        path: 'network-list',
+        canActivate: [PopupWalletGuard],
+        component: PopupNetworkListComponent,
       },
       {
         path: 'asset',

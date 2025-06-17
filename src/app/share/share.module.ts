@@ -38,7 +38,6 @@ import { NftTxPageComponent } from './components/tx-page/nft-tx-page/nft-tx-page
 import { NavComponent } from './components/nav/nav.component';
 import { LoadingComponent } from './components/loading/loading.component';
 import { LoadingDotComponent } from './components/loading-dot/loading-dot.component';
-import { PopupNetworkComponent } from './components/network/network.component';
 import { CopyComponent } from './components/copy/copy.component';
 import { EvmFeeComponent } from './components/evm-fee/evm-fee.component';
 import { TooltipComponent } from './components/tooltip/tooltip.component';
@@ -52,7 +51,6 @@ import { HardwareSignComponent } from './components/hardware-sign/hardware-sign.
 const COMPONENTS = [
   AssetTxPageComponent,
   NftTxPageComponent,
-  PopupNetworkComponent,
   NavComponent,
   LoadingComponent,
   LoadingDotComponent,
