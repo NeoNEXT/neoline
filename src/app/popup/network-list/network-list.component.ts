@@ -17,6 +17,7 @@ import {
   UPDATE_NEOX_NETWORKS,
   AddNetworkChainTypeGroups,
   STORAGE_NAME,
+  UPDATE_NEO2_NETWORKS,
 } from '@/app/popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -36,7 +37,7 @@ import { MatDialog } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
 import { Router } from '@angular/router';
-import { Unsubscribable } from 'rxjs';
+import { Unsubscribable, timer } from 'rxjs';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 
 @Component({
@@ -46,17 +47,22 @@ import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 })
 export class PopupNetworkListComponent implements OnDestroy {
   @ViewChild('moreModalDom') moreModalDom: ElementRef;
+  @ViewChild('rpcUrlModalDom') rpcUrlModalDom: ElementRef;
   @ViewChild('contentDom') contentDom: ElementRef;
   @Output() closeEvent = new EventEmitter();
 
   moreModalNetwork: RpcNetwork;
   moreModalNetworkIndex: number;
+  showMoreModal = false;
+  showRpcListModal = false;
   moreModalChainType: ChainType;
   lang = 'en';
   isShowPopup = false;
   private showPopupTimeout: any;
   searchValue = '';
   isSearching = false;
+  private searchSub: Unsubscribable;
+  searchRes: RpcNetwork[] = [];
   selectChainType: ChainType;
 
   private accountSub: Unsubscribable;
@@ -243,7 +249,7 @@ export class PopupNetworkListComponent implements OnDestroy {
   }
 
   deleteNetwork() {
-    this.moreModalNetwork = undefined;
+    this.showMoreModal = false;
     this.dialog
       .open(PopupConfirmDialogComponent, {
         data: 'delNetworkConfirm',
@@ -294,15 +300,14 @@ export class PopupNetworkListComponent implements OnDestroy {
   }
 
   editNetwork() {
-    const tempNetwork = this.moreModalNetwork;
-    this.moreModalNetwork = undefined;
+    this.showMoreModal = false;
     this.dialog.open(PopupAddNetworkDialogComponent, {
       panelClass: 'custom-dialog-panel',
       backdropClass: 'custom-dialog-backdrop',
       data: {
         addChainType: this.moreModalChainType,
         index: this.moreModalNetworkIndex,
-        editNetwork: tempNetwork,
+        editNetwork: this.moreModalNetwork,
       },
     });
   }
@@ -347,6 +352,37 @@ export class PopupNetworkListComponent implements OnDestroy {
       this.moreModalDom.nativeElement.style.top = top + 'px';
       this.moreModalDom.nativeElement.style.bottom = 'auto';
     }
+    this.showMoreModal = true;
+    this.moreModalNetwork = item;
+    this.moreModalNetworkIndex = index;
+    this.moreModalChainType = chainType;
+  }
+
+  openRpcUrlListModal(
+    e: Event,
+    item: RpcNetwork,
+    chainType: ChainType,
+    index: number
+  ) {
+    if (!item.rpcUrlArr || item?.rpcUrlArr?.length <= 1) {
+      return;
+    }
+    e.stopPropagation();
+    const rect = (e.target as HTMLElement).getBoundingClientRect();
+    const contentRect = this.contentDom.nativeElement.getBoundingClientRect();
+
+    const top = rect.top - contentRect.top;
+    const bottom = contentRect.bottom - rect.bottom;
+    const height = Math.min(item.rpcUrlArr.length, 5) * 32 + 8;
+
+    if (bottom > height + 18) {
+      this.rpcUrlModalDom.nativeElement.style.top = top + 18 + 'px';
+      this.rpcUrlModalDom.nativeElement.style.bottom = 'auto';
+    } else{
+      this.rpcUrlModalDom.nativeElement.style.bottom = bottom + 18 + 'px';
+      this.rpcUrlModalDom.nativeElement.style.top = 'auto';
+    }
+    this.showRpcListModal = true;
     this.moreModalNetwork = item;
     this.moreModalNetworkIndex = index;
     this.moreModalChainType = chainType;
@@ -375,12 +411,59 @@ export class PopupNetworkListComponent implements OnDestroy {
     }
   }
 
-  searchNetwork(value: string) {
-    this.searchValue = value;
-    this.isSearching = true;
+  searchNetwork($event) {
+    this.searchSub?.unsubscribe();
+    this.searchSub = timer(500).subscribe(() => {
+      let value = $event.target.value;
+      value = value.trim().toLowerCase();
+      if (value === '') {
+        this.isSearching = false;
+        this.searchRes = undefined;
+        return;
+      }
+      this.isSearching = true;
+      this.searchRes = this.neoXNetworks.filter((item) =>
+        item.name.toLowerCase().includes(value)
+      );
+    });
   }
 
   clearSearch() {
     this.searchValue = '';
+    this.isSearching = false;
+    this.searchRes = undefined;
+  }
+
+  stripProtocol(url: string) {
+    return url.replace(/^https?:\/\//i, '');
+  }
+
+  changeRpcUrl(url: string) {
+    if (this.moreModalNetwork.rpcUrl === url) return;
+    this.moreModalNetwork.rpcUrl = url;
+    switch (this.moreModalChainType) {
+      case 'Neo2':
+        this.neo2Networks[this.moreModalNetworkIndex].rpcUrl = url;
+        this.store.dispatch({
+          type: UPDATE_NEO2_NETWORKS,
+          data: this.neo2Networks,
+        });
+        break;
+      case 'Neo3':
+        this.neo3Networks[this.moreModalNetworkIndex].rpcUrl = url;
+        this.store.dispatch({
+          type: UPDATE_NEO3_NETWORKS,
+          data: this.neo3Networks,
+        });
+        break;
+      case 'NeoX':
+        this.neoXNetworks[this.moreModalNetworkIndex].rpcUrl = url;
+        this.store.dispatch({
+          type: UPDATE_NEOX_NETWORKS,
+          data: this.neoXNetworks,
+        });
+        break;
+    }
+    this.showRpcListModal = false;
   }
 }

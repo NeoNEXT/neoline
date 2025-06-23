@@ -3,7 +3,7 @@
   <button class="search">
     <img class="search" theme src="assets/images/common/search.svg" />
     <input
-      [placeholder]="'Search' | translate | async"
+      [placeholder]="'SearchEVMNetwork' | translate | async"
       [(ngModel)]="searchValue"
       (input)="searchNetwork($event)"
       type="text"
@@ -37,7 +37,9 @@
   <ul class="network-list">
     <li
       *ngFor="
-        let item of selectChainType === 'Neo2'
+        let item of isSearching
+          ? searchRes
+          : selectChainType === 'Neo2'
           ? neo2Networks
           : selectChainType === 'Neo3'
           ? neo3Networks
@@ -50,7 +52,18 @@
       (click)="changeNetwork(item, index, selectChainType)"
     >
       <span class="select"></span>
-      <span class="flex-1">{{ item.name }}</span>
+      <div class="flex-1 middle">
+        <p class="name">{{ item.name }}</p>
+        <p
+          class="url"
+          (click)="openRpcUrlListModal($event, item, selectChainType, index)"
+        >
+          <span class="url-text">{{ stripProtocol(item.rpcUrl) }}</span>
+          <span *ngIf="item?.rpcUrlArr?.length > 1" class="dropdown">
+            <img theme src="/assets/images/common/arrow.svg" alt="" />
+          </span>
+        </p>
+      </div>
       <img
         *ngIf="checkShowMore(selectChainType, item)"
         (click)="openMoreModal($event, item, selectChainType, index)"
@@ -65,10 +78,10 @@
   </button>
   <section
     class="pop-ups-veil"
-    *ngIf="moreModalNetwork"
-    (click)="$event.stopPropagation(); moreModalNetwork = undefined"
+    *ngIf="showMoreModal"
+    (click)="$event.stopPropagation(); showMoreModal = false"
   ></section>
-  <ul #moreModalDom [hidden]="!moreModalNetwork" class="pop-ups-menu">
+  <ul #moreModalDom [hidden]="!showMoreModal" class="pop-ups-menu">
     <li (click)="editNetwork()">
       <img theme src="assets/images/account/home-account-detail.svg" alt="" />
       {{ "edit" | translate | async }}
@@ -76,6 +89,24 @@
     <li (click)="deleteNetwork()">
       <img class="delete" src="assets/images/account/home-delete.svg" alt="" />
       {{ "delete" | translate | async }}
+    </li>
+  </ul>
+  <section
+    class="pop-ups-veil"
+    *ngIf="showRpcListModal"
+    (click)="$event.stopPropagation(); showRpcListModal = false"
+  ></section>
+  <ul
+    #rpcUrlModalDom
+    [hidden]="!showRpcListModal"
+    class="pop-ups-menu url-list"
+  >
+    <li
+      *ngFor="let url of moreModalNetwork?.rpcUrlArr"
+      (click)="changeRpcUrl(url)"
+      [ngClass]="{ active: url === moreModalNetwork.rpcUrl }"
+    >
+      {{ stripProtocol(url) }}
     </li>
   </ul>
 </div>

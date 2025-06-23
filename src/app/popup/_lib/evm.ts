@@ -35,6 +35,7 @@ export const NeoXMainnetNetwork: RpcNetwork = {
   name: 'Neo X Mainnet',
   network: NetworkType.EVM,
   rpcUrl: 'https://mainnet-1.rpc.banelabs.org',
+  rpcUrlArr: ['https://mainnet-1.rpc.banelabs.org'],
   explorer: 'https://neoxscan.ngd.network',
   version: NEOX_NETWORK_VERSION,
 };
@@ -45,6 +46,7 @@ export const NeoXTestnetNetwork: RpcNetwork = {
   name: 'Neo X Testnet',
   network: NetworkType.EVM,
   rpcUrl: 'https://neoxt4seed1.ngd.network',
+  rpcUrlArr: ['https://neoxt4seed1.ngd.network'],
   explorer: 'https://xt4scan.ngd.network',
   version: NEOX_NETWORK_VERSION,
 };
