@@ -1,3 +1,5 @@
+@import "src/styles/pop-ups-menu.scss";
+
 :host {
   max-height: 90vh;
   display: flex;
@@ -12,6 +14,18 @@
   color: #aab9bf;
   img {
     vertical-align: sub;
+  }
+}
+
+.pop-ups-title.add-url {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  img.back {
+    cursor: pointer;
+  }
+  img.close {
+    position: static;
   }
 }
 
@@ -35,6 +49,44 @@
   }
   .form-field {
     width: 100%;
+  }
+  .rpc-url-box {
+    position: relative;
+    .rpc-url {
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      input {
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+    }
+    .pop-ups-menu {
+      max-height: 186px;
+      overflow-y: scroll;
+      position: absolute;
+      right: 0;
+      top: 36px;
+      width: 100%;
+      padding: 4px 0;
+      li {
+        display: block;
+        height: 32px;
+        line-height: 32px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        font-size: 14px;
+        &.add-rpc-url {
+          img {
+            filter: drop-shadow(10000px 0 0 var(--theme-color));
+            transform: translate(-10000px);
+          }
+        }
+      }
+    }
   }
 }
 

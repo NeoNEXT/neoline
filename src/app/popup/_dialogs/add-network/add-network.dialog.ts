@@ -41,6 +41,11 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
   private searchSub: Unsubscribable;
   addNetworkForm: FormGroup;
 
+  showRpcListModal = false;
+  isAddURL = false;
+  newRpcUrl = '';
+  newRpcUrlChainId: number;
+
   private accountSub: Unsubscribable;
   private n3Networks: RpcNetwork[];
   private neoXNetworks: RpcNetwork[];
@@ -108,6 +113,12 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
           this.data.editNetwork ? this.data.editNetwork.rpcUrl : '',
           [Validators.required],
         ],
+        rpcUrlArr: [
+          this.data.editNetwork
+            ? this.data.editNetwork.rpcUrlArr ?? [this.data.editNetwork.rpcUrl]
+            : [],
+          [Validators.required],
+        ],
         chainId: [
           this.data.editNetwork ? this.data.editNetwork.chainId : '',
           [Validators.required],
@@ -127,12 +138,13 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
   }
 
   getMagicNumber() {
+    if (this.data.addChainType === 'NeoX') {
+      this.loading = true;
+    }
     this.searchSub?.unsubscribe();
     this.searchSub = timer(1000).subscribe(() => {
       if (this.data.addChainType === 'Neo3') {
         this.addNetworkForm.controls.magicNumber.setValue('');
-      } else {
-        this.addNetworkForm.controls.chainId.setValue('');
       }
       if (!this.addNetworkForm.value.rpcUrl) {
         return;
@@ -159,6 +171,25 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
               }
             } else {
               if (res) {
+                if (this.addNetworkForm.value.chainId) {
+                  if (this.addNetworkForm.value.chainId == parseInt(res, 16)) {
+                    const rpcurls = this.addNetworkForm.value.rpcUrlArr;
+                    if (!rpcurls.includes(this.addNetworkForm.value.rpcUrl)) {
+                      rpcurls.push(this.addNetworkForm.value.rpcUrl);
+                      this.addNetworkForm.controls.rpcUrlArr.setValue(rpcurls);
+                    }
+                  } else {
+                    this.newRpcUrlChainId = parseInt(res, 16);
+                    this.addNetworkForm.controls.rpcUrl.setErrors({
+                      errorChainIdNotMatch: true,
+                    });
+                  }
+                  this.loading = false;
+                  return;
+                }
+                this.addNetworkForm.controls.rpcUrlArr.setValue([
+                  this.addNetworkForm.value.rpcUrl,
+                ]);
                 this.addNetworkForm.controls.chainId.setValue(
                   parseInt(res, 16)
                 );
@@ -180,9 +211,11 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
                   errorRPC: true,
                 });
               }
+              this.loading = false;
             }
           },
           () => {
+            this.loading = false;
             this.addNetworkForm.controls.rpcUrl.setErrors({ errorRPC: true });
           }
         );
@@ -343,5 +376,22 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
     }
     this.global.snackBarTip('networkModifySucc');
     this.dialogRef.close();
+  }
+
+  changeRpcUrl(url: string) {
+    this.addNetworkForm.controls.rpcUrl.setValue(url);
+    this.showRpcListModal = false;
+  }
+
+  addRpcUrl() {
+    this.newRpcUrl = '';
+    this.showRpcListModal = false;
+    this.isAddURL = true;
+  }
+
+  setRpcUrl() {
+    this.addNetworkForm.controls.rpcUrl.setValue(this.newRpcUrl);
+    this.getMagicNumber();
+    this.isAddURL = false;
   }
 }

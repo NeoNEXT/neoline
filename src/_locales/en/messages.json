@@ -782,6 +782,9 @@
   "Search": {
     "message": "Search..."
   },
+  "SearchEVMNetwork": {
+    "message": "Input EVM network name to search"
+  },
   "Networks": {
     "message": "Networks"
   },
@@ -1516,5 +1519,17 @@
   },
   "notice": {
     "message": "Notification"
+  },
+  "RPC_URL": {
+    "message": "RPC URL"
+  },
+  "AddAURL": {
+    "message": "Add a URL"
+  },
+  "AddRPCURL": {
+    "message": "Add RPC URL"
+  },
+  "RPC_URL_ChainId_Not_Match": {
+    "message": "The RPC URL you have entered returned a different chain ID ({{chainId}})"
   }
 }

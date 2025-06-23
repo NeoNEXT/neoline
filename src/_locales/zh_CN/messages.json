@@ -782,6 +782,9 @@
   "Search": {
     "message": "搜索..."
   },
+  "SearchEVMNetwork": {
+    "message": "输入 EVM 网络名称搜索"
+  },
   "Networks": {
     "message": "网络"
   },
@@ -795,7 +798,7 @@
     "message": "网络名称"
   },
   "New_RPC_URL": {
-    "message": "新增 RPC URL"
+    "message": "新的 RPC URL"
   },
   "Explorer_URL": {
     "message": "区块浏览器(选填)"
@@ -1516,5 +1519,17 @@
   },
   "notice": {
     "message": "通知"
+  },
+  "RPC_URL": {
+    "message": "RPC URL"
+  },
+  "AddAURL": {
+    "message": "添加 URL"
+  },
+  "AddRPCURL": {
+    "message": "添加 RPC URL"
+  },
+  "RPC_URL_ChainId_Not_Match": {
+    "message": "您输入的 RPC URL 返回了不同的链 ID ({{chainId}})"
   }
 }

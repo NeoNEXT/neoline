@@ -1,94 +1,167 @@
-<div class="loading-box" *ngIf="loading">
-  <div class="content">
-    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
-    <p class="tip">Wait</p>
+<ng-container *ngIf="!isAddURL">
+  <div class="loading-box" *ngIf="loading">
+    <div class="content">
+      <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+      <p class="tip">Wait</p>
+    </div>
   </div>
-</div>
-<div class="pop-ups-title">
-  {{ (data.editNetwork ? 'EditNetwork' : 'AddNetwork') | translate | async }}({{
-  data.addChainType === 'NeoX' ? 'EVM' : data.addChainType }})
-  <img
-    class="close"
-    [mat-dialog-close]="false"
-    theme
-    src="assets/images/common/close.svg"
-    alt=""
-  />
-</div>
-
-<div class="add-tip">
-  <img src="assets/images/common/warning.svg" alt="" />
-  {{'AddNetworkTip' | translate | async}}
-</div>
-
-<form class="container" [formGroup]="addNetworkForm">
-  <p class="label">{{ 'NetworkName' | translate | async }}</p>
-  <mat-form-field class="form-field" appearance="outline">
-    <input matInput required formControlName="name" type="text" />
-    <mat-error *ngIf="addNetworkForm.get('name').errors?.required"
-      >{{ "networkNameIsRequired" | translate | async }}
-    </mat-error>
-  </mat-form-field>
-
-  <p class="label">{{ 'New_RPC_URL' | translate | async }}</p>
-  <mat-form-field class="form-field" appearance="outline">
-    <input
-      matInput
-      required
-      (input)="getMagicNumber()"
-      formControlName="rpcUrl"
+  <div class="pop-ups-title">
+    {{ (data.editNetwork ? 'EditNetwork' : 'AddNetwork') | translate | async
+    }}({{ data.addChainType === 'NeoX' ? 'EVM' : data.addChainType }})
+    <img
+      class="close"
+      [mat-dialog-close]="false"
+      theme
+      src="assets/images/common/close.svg"
+      alt=""
     />
-    <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.required">
-      {{ "rpcUrlIsRequired" | translate | async }}
-    </mat-error>
-    <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.errorRPC">
-      {{ "Invalid_RPC_URL" | translate | async }}
-    </mat-error>
-    <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.errorExistChainId">
-      {{ "exist_RPC_URL" | translate | async }}
-    </mat-error>
-  </mat-form-field>
-
-  <div *ngIf="data.addChainType === 'Neo3'">
-    <p class="label">Magic Number</p>
-    <mat-form-field class="form-field" appearance="outline">
-      <input matInput required readonly formControlName="magicNumber" />
-    </mat-form-field>
   </div>
 
-  <div *ngIf="data.addChainType === 'NeoX'">
-    <p class="label">{{ 'ChainID' | translate | async }}</p>
-    <mat-form-field class="form-field" appearance="outline">
-      <input matInput required readonly formControlName="chainId" />
-    </mat-form-field>
+  <div class="add-tip">
+    <img src="assets/images/common/warning.svg" alt="" />
+    {{'AddNetworkTip' | translate | async}}
   </div>
 
-  <div *ngIf="data.addChainType === 'NeoX'">
-    <p class="label">{{ 'Symbol' | translate | async }}</p>
+  <form class="container" [formGroup]="addNetworkForm">
+    <p class="label">{{ 'NetworkName' | translate | async }}</p>
     <mat-form-field class="form-field" appearance="outline">
-      <input matInput required formControlName="symbol" />
-      <mat-error *ngIf="addNetworkForm.get('symbol').errors?.required">
-        {{ "symbolIsRequired" | translate | async }}
+      <input matInput required formControlName="name" type="text" />
+      <mat-error *ngIf="addNetworkForm.get('name').errors?.required"
+        >{{ "networkNameIsRequired" | translate | async }}
       </mat-error>
     </mat-form-field>
+
+    <p class="label">{{ 'RPC_URL' | translate | async }}</p>
+    <mat-form-field class="form-field rpc-url-box" appearance="outline">
+      <div class="rpc-url" (click)="showRpcListModal = true">
+        <input
+          matInput
+          required
+          (input)="getMagicNumber()"
+          formControlName="rpcUrl"
+          [placeholder]="'AddAURL' | translate | async"
+          [readonly]="data.addChainType === 'NeoX'"
+        />
+        <img
+          theme
+          *ngIf="data.addChainType === 'NeoX'"
+          src="assets/images/common/triangle-fill.svg"
+        />
+      </div>
+      <section
+        class="pop-ups-veil"
+        *ngIf="showRpcListModal"
+        (click)="showRpcListModal = false"
+      ></section>
+      <ul
+        class="pop-ups-menu"
+        *ngIf="showRpcListModal"
+        (click)="showRpcListModal = false"
+      >
+        <li
+          *ngFor="let url of addNetworkForm.get('rpcUrlArr').value"
+          (click)="changeRpcUrl(url)"
+          [ngClass]="{ active: url === addNetworkForm.get('rpcUrl').value }"
+        >
+          {{ url }}
+        </li>
+        <li class="add-rpc-url" (click)="addRpcUrl()">
+          <img src="assets/images/asset/plus.svg" alt="" />
+          {{'AddRPCURL' | translate | async}}
+        </li>
+      </ul>
+      <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.required">
+        {{ "rpcUrlIsRequired" | translate | async }}
+      </mat-error>
+      <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.errorRPC">
+        {{ "Invalid_RPC_URL" | translate | async }}
+      </mat-error>
+      <mat-error *ngIf="addNetworkForm.get('rpcUrl').errors?.errorExistChainId">
+        {{ "exist_RPC_URL" | translate | async }}
+      </mat-error>
+      <mat-error
+        *ngIf="addNetworkForm.get('rpcUrl').errors?.errorChainIdNotMatch"
+      >
+        {{ "RPC_URL_ChainId_Not_Match" | translate: { chainId: newRpcUrlChainId
+        } | async }}
+      </mat-error>
+    </mat-form-field>
+
+    <div *ngIf="data.addChainType === 'Neo3'">
+      <p class="label">Magic Number</p>
+      <mat-form-field class="form-field" appearance="outline">
+        <input matInput required readonly formControlName="magicNumber" />
+      </mat-form-field>
+    </div>
+
+    <div *ngIf="data.addChainType === 'NeoX'">
+      <p class="label">{{ 'ChainID' | translate | async }}</p>
+      <mat-form-field class="form-field" appearance="outline">
+        <input matInput required readonly formControlName="chainId" />
+      </mat-form-field>
+    </div>
+
+    <div *ngIf="data.addChainType === 'NeoX'">
+      <p class="label">{{ 'Symbol' | translate | async }}</p>
+      <mat-form-field class="form-field" appearance="outline">
+        <input matInput required formControlName="symbol" />
+        <mat-error *ngIf="addNetworkForm.get('symbol').errors?.required">
+          {{ "symbolIsRequired" | translate | async }}
+        </mat-error>
+      </mat-form-field>
+    </div>
+
+    <p class="label">{{ 'Explorer_URL' | translate | async }}</p>
+    <mat-form-field class="form-field" appearance="outline">
+      <input *ngIf="!data?.addExplorer" matInput formControlName="explorer" />
+      <input
+        *ngIf="data?.addExplorer"
+        cdkFocusInitial
+        matInput
+        formControlName="explorer"
+      />
+    </mat-form-field>
+  </form>
+
+  <button
+    class="confirm pop-ups"
+    [ngClass]="{disabled: addNetworkForm.invalid || loading}"
+    (click)="confirm()"
+  >
+    {{ 'save' | translate | async}}
+  </button>
+</ng-container>
+
+<ng-container *ngIf="isAddURL">
+  <div class="pop-ups-title add-url">
+    <img
+      class="back"
+      theme
+      src="/assets/images/common/nav-arrow.svg"
+      (click)="isAddURL = false"
+    />
+    {{ 'AddAURL' | translate | async }}
+    <img
+      class="close"
+      [mat-dialog-close]="false"
+      theme
+      src="assets/images/common/close.svg"
+      alt=""
+    />
   </div>
 
-  <p class="label">{{ 'Explorer_URL' | translate | async }}</p>
-  <mat-form-field class="form-field" appearance="outline">
-    <input *ngIf="!data?.addExplorer" matInput formControlName="explorer" />
-    <input
-      *ngIf="data?.addExplorer"
-      cdkFocusInitial
-      matInput
-      formControlName="explorer"
-    />
-  </mat-form-field>
-</form>
+  <form class="container">
+    <p class="label">{{ 'New_RPC_URL' | translate | async }}</p>
+    <mat-form-field class="form-field" appearance="outline">
+      <input matInput required [(ngModel)]="newRpcUrl" name="newRpcUrl" />
+    </mat-form-field>
+  </form>
 
-<button
-  class="confirm pop-ups"
-  [ngClass]="{disabled: addNetworkForm.invalid || loading}"
-  (click)="confirm()"
->
-  {{ 'save' | translate | async}}
-</button>
+  <button
+    class="confirm pop-ups"
+    [ngClass]="{disabled: !newRpcUrl}"
+    (click)="setRpcUrl()"
+  >
+    {{ 'AddAURL' | translate | async}}
+  </button>
+</ng-container>

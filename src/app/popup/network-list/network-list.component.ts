@@ -434,10 +434,6 @@ export class PopupNetworkListComponent implements OnDestroy {
     this.searchRes = undefined;
   }
 
-  stripProtocol(url: string) {
-    return url.replace(/^https?:\/\//i, '');
-  }
-
   changeRpcUrl(url: string) {
     if (this.moreModalNetwork.rpcUrl === url) return;
     this.moreModalNetwork.rpcUrl = url;

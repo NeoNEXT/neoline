@@ -58,7 +58,7 @@
           class="url"
           (click)="openRpcUrlListModal($event, item, selectChainType, index)"
         >
-          <span class="url-text">{{ stripProtocol(item.rpcUrl) }}</span>
+          <span class="url-text">{{ item.rpcUrl }}</span>
           <span *ngIf="item?.rpcUrlArr?.length > 1" class="dropdown">
             <img theme src="/assets/images/common/arrow.svg" alt="" />
           </span>
@@ -106,7 +106,7 @@
       (click)="changeRpcUrl(url)"
       [ngClass]="{ active: url === moreModalNetwork.rpcUrl }"
     >
-      {{ stripProtocol(url) }}
+      {{ url }}
     </li>
   </ul>
 </div>
