@@ -72,14 +72,23 @@
       width: 100%;
       padding: 4px 0;
       li {
-        display: block;
         height: 32px;
-        line-height: 32px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
         font-size: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        span {
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+        }
+        img {
+          cursor: pointer;
+          margin-right: 0;
+        }
         &.add-rpc-url {
+          justify-content: left;
           img {
             filter: drop-shadow(10000px 0 0 var(--theme-color));
             transform: translate(-10000px);

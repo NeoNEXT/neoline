@@ -27,7 +27,7 @@ export interface EvmWalletJSON {
   ];
 }
 
-const NEOX_NETWORK_VERSION = 2;
+const NEOX_NETWORK_VERSION = 3;
 export const NeoXMainnetNetwork: RpcNetwork = {
   id: 47763,
   symbol: 'GAS',
@@ -35,9 +35,10 @@ export const NeoXMainnetNetwork: RpcNetwork = {
   name: 'Neo X Mainnet',
   network: NetworkType.EVM,
   rpcUrl: 'https://mainnet-1.rpc.banelabs.org',
-  rpcUrlArr: ['https://mainnet-1.rpc.banelabs.org'],
+  rpcUrlArr: [{ url: 'https://mainnet-1.rpc.banelabs.org', isDefault: true }],
   explorer: 'https://neoxscan.ngd.network',
   version: NEOX_NETWORK_VERSION,
+  isDefault: true,
 };
 export const NeoXTestnetNetwork: RpcNetwork = {
   id: 12227332,
@@ -46,9 +47,10 @@ export const NeoXTestnetNetwork: RpcNetwork = {
   name: 'Neo X Testnet',
   network: NetworkType.EVM,
   rpcUrl: 'https://neoxt4seed1.ngd.network',
-  rpcUrlArr: ['https://neoxt4seed1.ngd.network'],
+  rpcUrlArr: [{ url: 'https://neoxt4seed1.ngd.network', isDefault: true }],
   explorer: 'https://xt4scan.ngd.network',
   version: NEOX_NETWORK_VERSION,
+  isDefault: true,
 };
 export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
   NeoXMainnetNetwork,

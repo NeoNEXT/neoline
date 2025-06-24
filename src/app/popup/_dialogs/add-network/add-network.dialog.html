@@ -59,11 +59,18 @@
         (click)="showRpcListModal = false"
       >
         <li
-          *ngFor="let url of addNetworkForm.get('rpcUrlArr').value"
-          (click)="changeRpcUrl(url)"
-          [ngClass]="{ active: url === addNetworkForm.get('rpcUrl').value }"
+          *ngFor="let item of addNetworkForm.get('rpcUrlArr').value"
+          (click)="changeRpcUrl(item.url)"
+          [ngClass]="{ active: item.url === addNetworkForm.get('rpcUrl').value }"
         >
-          {{ url }}
+          <span>{{ item.url }}</span>
+          <img
+            *ngIf="!item.isDefault"
+            (click)="$event.stopPropagation(); deleteRpcUrl(item.url)"
+            class="delete"
+            src="assets/images/account/home-delete.svg"
+            alt=""
+          />
         </li>
         <li class="add-rpc-url" (click)="addRpcUrl()">
           <img src="assets/images/asset/plus.svg" alt="" />

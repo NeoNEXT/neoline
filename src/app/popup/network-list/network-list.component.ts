@@ -263,7 +263,7 @@ export class PopupNetworkListComponent implements OnDestroy {
             case 'Neo3':
               if (
                 this.moreModalChainType === this.chainType &&
-                this.neo3NetworkIndex > this.moreModalNetworkIndex
+                this.neo3NetworkIndex >= this.moreModalNetworkIndex
               ) {
                 this.neo3NetworkIndex--;
                 this.store.dispatch({
@@ -280,7 +280,7 @@ export class PopupNetworkListComponent implements OnDestroy {
             case 'NeoX':
               if (
                 this.moreModalChainType === this.chainType &&
-                this.neoXNetworkIndex > this.moreModalNetworkIndex
+                this.neoXNetworkIndex >= this.moreModalNetworkIndex
               ) {
                 this.neoXNetworkIndex--;
                 this.store.dispatch({
@@ -314,20 +314,12 @@ export class PopupNetworkListComponent implements OnDestroy {
 
   checkShowMore(selectChainType: ChainType, item: RpcNetwork) {
     if (selectChainType === 'Neo3') {
-      if (this.chainType === 'Neo3' && this.currentNetwork.id === item.id) {
-        return false;
-      }
       if (item?.id > 6) {
         return true;
       }
     }
     if (selectChainType === 'NeoX') {
-      if (this.chainType === 'NeoX' && this.currentNetwork.id === item.id) {
-        return false;
-      }
-      if (!item?.version) {
-        return true;
-      }
+      return true;
     }
     return false;
   }

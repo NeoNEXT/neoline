@@ -132,11 +132,11 @@
     }
   }
   .pop-ups-menu.url-list {
-    width: 280px;
+    width: auto;
     max-height: 186px;
     overflow-y: scroll;
     left: 50px;
-    right: auto;
+    right: 50px;
     &::-webkit-scrollbar {
       display: block;
     }

@@ -86,7 +86,7 @@
       <img theme src="assets/images/account/home-account-detail.svg" alt="" />
       {{ "edit" | translate | async }}
     </li>
-    <li (click)="deleteNetwork()">
+    <li *ngIf="!moreModalNetwork?.isDefault" (click)="deleteNetwork()">
       <img class="delete" src="assets/images/account/home-delete.svg" alt="" />
       {{ "delete" | translate | async }}
     </li>
@@ -102,11 +102,11 @@
     class="pop-ups-menu url-list"
   >
     <li
-      *ngFor="let url of moreModalNetwork?.rpcUrlArr"
-      (click)="changeRpcUrl(url)"
-      [ngClass]="{ active: url === moreModalNetwork.rpcUrl }"
+      *ngFor="let item of moreModalNetwork?.rpcUrlArr"
+      (click)="changeRpcUrl(item.url)"
+      [ngClass]="{ active: item.url === moreModalNetwork.rpcUrl }"
     >
-      {{ url }}
+      {{ item.url }}
     </li>
   </ul>
 </div>

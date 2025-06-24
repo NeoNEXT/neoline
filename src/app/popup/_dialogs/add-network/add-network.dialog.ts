@@ -115,7 +115,9 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
         ],
         rpcUrlArr: [
           this.data.editNetwork
-            ? this.data.editNetwork.rpcUrlArr ?? [this.data.editNetwork.rpcUrl]
+            ? this.data.editNetwork.rpcUrlArr ?? [
+                { url: this.data.editNetwork.rpcUrl },
+              ]
             : [],
           [Validators.required],
         ],
@@ -174,8 +176,12 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
                 if (this.addNetworkForm.value.chainId) {
                   if (this.addNetworkForm.value.chainId == parseInt(res, 16)) {
                     const rpcurls = this.addNetworkForm.value.rpcUrlArr;
-                    if (!rpcurls.includes(this.addNetworkForm.value.rpcUrl)) {
-                      rpcurls.push(this.addNetworkForm.value.rpcUrl);
+                    if (
+                      !rpcurls.find(
+                        (item) => item.url === this.addNetworkForm.value.rpcUrl
+                      )
+                    ) {
+                      rpcurls.push({ url: this.addNetworkForm.value.rpcUrl });
                       this.addNetworkForm.controls.rpcUrlArr.setValue(rpcurls);
                     }
                   } else {
@@ -188,7 +194,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
                   return;
                 }
                 this.addNetworkForm.controls.rpcUrlArr.setValue([
-                  this.addNetworkForm.value.rpcUrl,
+                  { url: this.addNetworkForm.value.rpcUrl },
                 ]);
                 this.addNetworkForm.controls.chainId.setValue(
                   parseInt(res, 16)
@@ -387,6 +393,16 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
     this.newRpcUrl = '';
     this.showRpcListModal = false;
     this.isAddURL = true;
+  }
+
+  deleteRpcUrl(url: string) {
+    const rpcurls = this.addNetworkForm.value.rpcUrlArr;
+    const index = rpcurls.findIndex((item) => item.url === url);
+    rpcurls.splice(index, 1);
+    this.addNetworkForm.controls.rpcUrlArr.setValue(rpcurls);
+    if (this.addNetworkForm.value.rpcUrl === url) {
+      this.addNetworkForm.controls.rpcUrl.setValue(rpcurls[0]);
+    }
   }
 
   setRpcUrl() {
