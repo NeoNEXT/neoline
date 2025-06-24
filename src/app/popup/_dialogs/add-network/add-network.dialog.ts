@@ -1,4 +1,10 @@
-import { Component, OnDestroy, Inject } from '@angular/core';
+import {
+  Component,
+  OnDestroy,
+  Inject,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import {
   RpcNetwork,
   STORAGE_NAME,
@@ -36,6 +42,7 @@ import { Router } from '@angular/router';
   styleUrls: ['add-network.dialog.scss'],
 })
 export class PopupAddNetworkDialogComponent implements OnDestroy {
+  @ViewChild('inputDom') inputDom: ElementRef;
   loading = false;
   getMagicReq;
   private searchSub: Unsubscribable;
@@ -103,6 +110,15 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
         explorer: [this.data.editNetwork ? this.data.editNetwork.explorer : ''],
       });
     } else {
+      let rpcUrlArr = [];
+      if (this.data.editNetwork) {
+        rpcUrlArr = [{ url: this.data.editNetwork.rpcUrl }];
+        if (this.data.editNetwork.rpcUrlArr) {
+          rpcUrlArr = JSON.parse(
+            JSON.stringify(this.data.editNetwork.rpcUrlArr)
+          );
+        }
+      }
       this.addNetworkForm = this.fb.group({
         id: [this.data.editNetwork ? this.data.editNetwork.id : ''],
         name: [
@@ -113,14 +129,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
           this.data.editNetwork ? this.data.editNetwork.rpcUrl : '',
           [Validators.required],
         ],
-        rpcUrlArr: [
-          this.data.editNetwork
-            ? this.data.editNetwork.rpcUrlArr ?? [
-                { url: this.data.editNetwork.rpcUrl },
-              ]
-            : [],
-          [Validators.required],
-        ],
+        rpcUrlArr: [rpcUrlArr, [Validators.required]],
         chainId: [
           this.data.editNetwork ? this.data.editNetwork.chainId : '',
           [Validators.required],
@@ -193,12 +202,6 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
                   this.loading = false;
                   return;
                 }
-                this.addNetworkForm.controls.rpcUrlArr.setValue([
-                  { url: this.addNetworkForm.value.rpcUrl },
-                ]);
-                this.addNetworkForm.controls.chainId.setValue(
-                  parseInt(res, 16)
-                );
                 /* Check if chainId has been added */
                 const existIndex = this.neoXNetworks.findIndex(
                   (item) => item.chainId == parseInt(res, 16)
@@ -211,6 +214,13 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
                   this.addNetworkForm.controls.rpcUrl.setErrors({
                     errorExistChainId: true,
                   });
+                } else {
+                  this.addNetworkForm.controls.rpcUrlArr.setValue([
+                    { url: this.addNetworkForm.value.rpcUrl },
+                  ]);
+                  this.addNetworkForm.controls.chainId.setValue(
+                    parseInt(res, 16)
+                  );
                 }
               } else {
                 this.addNetworkForm.controls.rpcUrl.setErrors({
@@ -384,6 +394,12 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
     this.dialogRef.close();
   }
 
+  toShowRpcListModal() {
+    if (this.data.addChainType === 'NeoX') {
+      this.showRpcListModal = true;
+    }
+  }
+
   changeRpcUrl(url: string) {
     this.addNetworkForm.controls.rpcUrl.setValue(url);
     this.showRpcListModal = false;
@@ -393,6 +409,9 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
     this.newRpcUrl = '';
     this.showRpcListModal = false;
     this.isAddURL = true;
+    setTimeout(() => {
+      this.inputDom?.nativeElement.focus();
+    }, 0);
   }
 
   deleteRpcUrl(url: string) {
@@ -401,7 +420,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
     rpcurls.splice(index, 1);
     this.addNetworkForm.controls.rpcUrlArr.setValue(rpcurls);
     if (this.addNetworkForm.value.rpcUrl === url) {
-      this.addNetworkForm.controls.rpcUrl.setValue(rpcurls[0]);
+      this.addNetworkForm.controls.rpcUrl.setValue(rpcurls[0]?.url);
     }
   }
 

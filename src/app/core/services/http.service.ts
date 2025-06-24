@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, from, of } from 'rxjs';
-import { map, timeout, catchError, retry } from 'rxjs/operators';
+import { map, timeout, catchError } from 'rxjs/operators';
 import { ChromeService } from './chrome.service';
-import { NeonService } from './neon.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import {
@@ -18,7 +17,6 @@ export class HttpService {
   constructor(
     private http: HttpClient,
     private chrome: ChromeService,
-    private neon: NeonService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -81,7 +79,6 @@ export class HttpService {
       catchError(() => of('Request timed out')),
       map((res: any) => {
         if (res === 'Request timed out') {
-          this.neon.getFastRpcUrl(true);
           throw 'Error!';
         }
         return res;
@@ -96,7 +93,6 @@ export class HttpService {
       catchError(() => of('Request timed out')),
       map((res: any) => {
         if (res === 'Request timed out') {
-          this.neon.getFastRpcUrl(true);
           throw 'Error!';
         }
         if (res && res.hasOwnProperty('result')) {
@@ -115,7 +111,6 @@ export class HttpService {
       catchError(() => of(`Request timed out`)),
       map((res: any) => {
         if (res === 'Request timed out') {
-          this.neon.getFastRpcUrl(true);
           throw 'Error!';
         }
         if (res && res.hasOwnProperty('result')) {

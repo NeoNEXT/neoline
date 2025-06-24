@@ -17,8 +17,9 @@
       alt=""
     />
   </button>
-  <div class="tabs-container" *ngIf="!isSearching">
+  <div class="tabs-container">
     <span
+      *ngIf="!isSearching"
       [class]="{ selected: selectChainType === 'Neo3' }"
       (click)="selectChainType = 'Neo3'"
       >Neo N3</span
@@ -29,6 +30,7 @@
       >Neo X</span
     >
     <span
+      *ngIf="!isSearching"
       [class]="{ selected: selectChainType === 'Neo2' }"
       (click)="selectChainType = 'Neo2'"
       >Neo Legacy</span

@@ -92,7 +92,9 @@ export class PopupNetworkListComponent implements OnDestroy {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
-      this.selectChainType = this.chainType;
+      if (!this.selectChainType) {
+        this.selectChainType = this.chainType;
+      }
       this.neo2WalletArr = state.neo2WalletArr;
       this.neo3WalletArr = state.neo3WalletArr;
       this.neoXWalletArr = state.neoXWalletArr;

@@ -33,13 +33,13 @@
 
     <p class="label">{{ 'RPC_URL' | translate | async }}</p>
     <mat-form-field class="form-field rpc-url-box" appearance="outline">
-      <div class="rpc-url" (click)="showRpcListModal = true">
+      <div class="rpc-url" (click)="toShowRpcListModal()">
         <input
           matInput
           required
           (input)="getMagicNumber()"
           formControlName="rpcUrl"
-          [placeholder]="'AddAURL' | translate | async"
+          [placeholder]="data.addChainType === 'NeoX' ? ('AddAURL' | translate | async) : ''"
           [readonly]="data.addChainType === 'NeoX'"
         />
         <img
@@ -160,7 +160,13 @@
   <form class="container">
     <p class="label">{{ 'New_RPC_URL' | translate | async }}</p>
     <mat-form-field class="form-field" appearance="outline">
-      <input matInput required [(ngModel)]="newRpcUrl" name="newRpcUrl" />
+      <input
+        #inputDom
+        matInput
+        required
+        [(ngModel)]="newRpcUrl"
+        name="newRpcUrl"
+      />
     </mat-form-field>
   </form>
 

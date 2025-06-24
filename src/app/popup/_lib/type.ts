@@ -79,7 +79,7 @@ export const N2testnetNetwork: RpcNetwork = {
 
 export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
   N2MainnetNetwork,
-  N2testnetNetwork,
+  // N2testnetNetwork,
 ];
 
 const N3_NETWORK_VERSION = 3;

@@ -35,7 +35,10 @@ export const NeoXMainnetNetwork: RpcNetwork = {
   name: 'Neo X Mainnet',
   network: NetworkType.EVM,
   rpcUrl: 'https://mainnet-1.rpc.banelabs.org',
-  rpcUrlArr: [{ url: 'https://mainnet-1.rpc.banelabs.org', isDefault: true }],
+  rpcUrlArr: [
+    { url: 'https://mainnet-1.rpc.banelabs.org', isDefault: true },
+    { url: 'https://mainnet-2.rpc.banelabs.org', isDefault: true },
+  ],
   explorer: 'https://neoxscan.ngd.network',
   version: NEOX_NETWORK_VERSION,
   isDefault: true,
@@ -47,7 +50,10 @@ export const NeoXTestnetNetwork: RpcNetwork = {
   name: 'Neo X Testnet',
   network: NetworkType.EVM,
   rpcUrl: 'https://neoxt4seed1.ngd.network',
-  rpcUrlArr: [{ url: 'https://neoxt4seed1.ngd.network', isDefault: true }],
+  rpcUrlArr: [
+    { url: 'https://neoxt4seed1.ngd.network', isDefault: true },
+    { url: 'https://testnet.rpc.banelabs.org', isDefault: true },
+  ],
   explorer: 'https://xt4scan.ngd.network',
   version: NEOX_NETWORK_VERSION,
   isDefault: true,
