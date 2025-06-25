@@ -52,7 +52,6 @@ export class PopupNetworkListComponent implements OnDestroy {
   @Output() closeEvent = new EventEmitter();
 
   moreModalNetwork: RpcNetwork;
-  moreModalNetworkIndex: number;
   showMoreModal = false;
   showRpcListModal = false;
   moreModalChainType: ChainType;
@@ -125,27 +124,33 @@ export class PopupNetworkListComponent implements OnDestroy {
     this.closeEvent.emit();
   }
 
-  public changeNetwork(
-    newNetwork: RpcNetwork,
-    index: number,
-    newChain: ChainType
-  ) {
+  public changeNetwork(newNetwork: RpcNetwork, newChain: ChainType) {
     if (
       newChain === this.chainType &&
       newNetwork.id === this.currentNetwork.id
     ) {
       return;
     }
+    const newNetworkIndex = this.getModalNetworkIndex(newNetwork, newChain);
     if (newChain === this.chainType) {
       switch (newChain) {
         case 'Neo2':
-          this.store.dispatch({ type: UPDATE_NEO2_NETWORK_INDEX, data: index });
+          this.store.dispatch({
+            type: UPDATE_NEO2_NETWORK_INDEX,
+            data: newNetworkIndex,
+          });
           break;
         case 'Neo3':
-          this.store.dispatch({ type: UPDATE_NEO3_NETWORK_INDEX, data: index });
+          this.store.dispatch({
+            type: UPDATE_NEO3_NETWORK_INDEX,
+            data: newNetworkIndex,
+          });
           break;
         case 'NeoX':
-          this.store.dispatch({ type: UPDATE_NEOX_NETWORK_INDEX, data: index });
+          this.store.dispatch({
+            type: UPDATE_NEOX_NETWORK_INDEX,
+            data: newNetworkIndex,
+          });
           break;
       }
       this.chromeSer.networkChangeEvent(newNetwork);
@@ -175,13 +180,22 @@ export class PopupNetworkListComponent implements OnDestroy {
     } else {
       switch (newChain) {
         case 'Neo2':
-          this.store.dispatch({ type: UPDATE_NEO2_NETWORK_INDEX, data: index });
+          this.store.dispatch({
+            type: UPDATE_NEO2_NETWORK_INDEX,
+            data: newNetworkIndex,
+          });
           break;
         case 'Neo3':
-          this.store.dispatch({ type: UPDATE_NEO3_NETWORK_INDEX, data: index });
+          this.store.dispatch({
+            type: UPDATE_NEO3_NETWORK_INDEX,
+            data: newNetworkIndex,
+          });
           break;
         case 'NeoX':
-          this.store.dispatch({ type: UPDATE_NEOX_NETWORK_INDEX, data: index });
+          this.store.dispatch({
+            type: UPDATE_NEOX_NETWORK_INDEX,
+            data: newNetworkIndex,
+          });
           break;
       }
       let switchChainWallet;
@@ -261,11 +275,20 @@ export class PopupNetworkListComponent implements OnDestroy {
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
+          const modelNetworkIndex = this.getModalNetworkIndex(
+            this.moreModalNetwork,
+            this.moreModalChainType
+          );
+          if (this.isSearching) {
+            this.searchRes = this.searchRes.filter(
+              (item) => item.id !== this.moreModalNetwork.id
+            );
+          }
           switch (this.moreModalChainType) {
             case 'Neo3':
               if (
                 this.moreModalChainType === this.chainType &&
-                this.neo3NetworkIndex >= this.moreModalNetworkIndex
+                this.neo3NetworkIndex >= modelNetworkIndex
               ) {
                 this.neo3NetworkIndex--;
                 this.store.dispatch({
@@ -273,7 +296,7 @@ export class PopupNetworkListComponent implements OnDestroy {
                   data: this.neo3NetworkIndex,
                 });
               }
-              this.neo3Networks.splice(this.moreModalNetworkIndex, 1);
+              this.neo3Networks.splice(modelNetworkIndex, 1);
               this.store.dispatch({
                 type: UPDATE_NEO3_NETWORKS,
                 data: this.neo3Networks,
@@ -282,7 +305,7 @@ export class PopupNetworkListComponent implements OnDestroy {
             case 'NeoX':
               if (
                 this.moreModalChainType === this.chainType &&
-                this.neoXNetworkIndex >= this.moreModalNetworkIndex
+                this.neoXNetworkIndex >= modelNetworkIndex
               ) {
                 this.neoXNetworkIndex--;
                 this.store.dispatch({
@@ -290,7 +313,7 @@ export class PopupNetworkListComponent implements OnDestroy {
                   data: this.neoXNetworkIndex,
                 });
               }
-              this.neoXNetworks.splice(this.moreModalNetworkIndex, 1);
+              this.neoXNetworks.splice(modelNetworkIndex, 1);
               this.store.dispatch({
                 type: UPDATE_NEOX_NETWORKS,
                 data: this.neoXNetworks,
@@ -303,15 +326,23 @@ export class PopupNetworkListComponent implements OnDestroy {
 
   editNetwork() {
     this.showMoreModal = false;
-    this.dialog.open(PopupAddNetworkDialogComponent, {
-      panelClass: 'custom-dialog-panel',
-      backdropClass: 'custom-dialog-backdrop',
-      data: {
-        addChainType: this.moreModalChainType,
-        index: this.moreModalNetworkIndex,
-        editNetwork: this.moreModalNetwork,
-      },
-    });
+    this.dialog
+      .open(PopupAddNetworkDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
+        data: {
+          addChainType: this.moreModalChainType,
+          index: this.getModalNetworkIndex(
+            this.moreModalNetwork,
+            this.moreModalChainType
+          ),
+          editNetwork: this.moreModalNetwork,
+        },
+      })
+      .afterClosed()
+      .subscribe(() => {
+        this.searchNetwork(this.searchValue);
+      });
   }
 
   checkShowMore(selectChainType: ChainType, item: RpcNetwork) {
@@ -326,12 +357,7 @@ export class PopupNetworkListComponent implements OnDestroy {
     return false;
   }
 
-  openMoreModal(
-    e: Event,
-    item: RpcNetwork,
-    chainType: ChainType,
-    index: number
-  ) {
+  openMoreModal(e: Event, item: RpcNetwork, chainType: ChainType) {
     e.stopPropagation();
     const rect = (e.target as HTMLElement).getBoundingClientRect();
     const contentRect = this.contentDom.nativeElement.getBoundingClientRect();
@@ -348,16 +374,10 @@ export class PopupNetworkListComponent implements OnDestroy {
     }
     this.showMoreModal = true;
     this.moreModalNetwork = item;
-    this.moreModalNetworkIndex = index;
     this.moreModalChainType = chainType;
   }
 
-  openRpcUrlListModal(
-    e: Event,
-    item: RpcNetwork,
-    chainType: ChainType,
-    index: number
-  ) {
+  openRpcUrlListModal(e: Event, item: RpcNetwork, chainType: ChainType) {
     if (!item.rpcUrlArr || item?.rpcUrlArr?.length <= 1) {
       return;
     }
@@ -378,7 +398,6 @@ export class PopupNetworkListComponent implements OnDestroy {
     }
     this.showRpcListModal = true;
     this.moreModalNetwork = item;
-    this.moreModalNetworkIndex = index;
     this.moreModalChainType = chainType;
   }
 
@@ -405,10 +424,9 @@ export class PopupNetworkListComponent implements OnDestroy {
     }
   }
 
-  searchNetwork($event) {
+  searchNetwork(value: string) {
     this.searchSub?.unsubscribe();
     this.searchSub = timer(500).subscribe(() => {
-      let value = $event.target.value;
       value = value.trim().toLowerCase();
       if (value === '') {
         this.isSearching = false;
@@ -431,23 +449,27 @@ export class PopupNetworkListComponent implements OnDestroy {
   changeRpcUrl(url: string) {
     if (this.moreModalNetwork.rpcUrl === url) return;
     this.moreModalNetwork.rpcUrl = url;
+    const modelNetworkIndex = this.getModalNetworkIndex(
+      this.moreModalNetwork,
+      this.moreModalChainType
+    );
     switch (this.moreModalChainType) {
       case 'Neo2':
-        this.neo2Networks[this.moreModalNetworkIndex].rpcUrl = url;
+        this.neo2Networks[modelNetworkIndex].rpcUrl = url;
         this.store.dispatch({
           type: UPDATE_NEO2_NETWORKS,
           data: this.neo2Networks,
         });
         break;
       case 'Neo3':
-        this.neo3Networks[this.moreModalNetworkIndex].rpcUrl = url;
+        this.neo3Networks[modelNetworkIndex].rpcUrl = url;
         this.store.dispatch({
           type: UPDATE_NEO3_NETWORKS,
           data: this.neo3Networks,
         });
         break;
       case 'NeoX':
-        this.neoXNetworks[this.moreModalNetworkIndex].rpcUrl = url;
+        this.neoXNetworks[modelNetworkIndex].rpcUrl = url;
         this.store.dispatch({
           type: UPDATE_NEOX_NETWORKS,
           data: this.neoXNetworks,
@@ -455,5 +477,16 @@ export class PopupNetworkListComponent implements OnDestroy {
         break;
     }
     this.showRpcListModal = false;
+  }
+
+  private getModalNetworkIndex(network: RpcNetwork, chainType: ChainType) {
+    switch (chainType) {
+      case 'Neo2':
+        return this.neo2Networks.findIndex((item) => item.id === network.id);
+      case 'Neo3':
+        return this.neo3Networks.findIndex((item) => item.id === network.id);
+      case 'NeoX':
+        return this.neoXNetworks.findIndex((item) => item.id === network.id);
+    }
   }
 }

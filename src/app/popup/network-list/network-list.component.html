@@ -5,7 +5,7 @@
     <input
       [placeholder]="'SearchEVMNetwork' | translate | async"
       [(ngModel)]="searchValue"
-      (input)="searchNetwork($event)"
+      (input)="searchNetwork($event.target.value)"
       type="text"
     />
     <img
@@ -37,48 +37,76 @@
     >
   </div>
   <ul class="network-list">
-    <li
-      *ngFor="
-        let item of isSearching
-          ? searchRes
-          : selectChainType === 'Neo2'
-          ? neo2Networks
-          : selectChainType === 'Neo3'
-          ? neo3Networks
-          : neoXNetworks;
-        index as index
-      "
-      [ngClass]="{
-        active: chainType === selectChainType && currentNetwork.id === item.id
-      }"
-      (click)="changeNetwork(item, index, selectChainType)"
-    >
-      <span class="select"></span>
-      <chain-logo
-        class="chain-icon"
-        [network]="item"
-        *ngIf="selectChainType === 'NeoX'"
-      ></chain-logo>
-      <div class="flex-1 middle">
-        <p class="name">{{ item.name }}</p>
-        <p
-          class="url"
-          (click)="openRpcUrlListModal($event, item, selectChainType, index)"
-        >
-          <span class="url-text">{{ item.rpcUrl }}</span>
-          <span *ngIf="item?.rpcUrlArr?.length > 1" class="dropdown">
-            <img theme src="/assets/images/common/arrow.svg" alt="" />
-          </span>
-        </p>
-      </div>
-      <img
-        *ngIf="checkShowMore(selectChainType, item)"
-        (click)="openMoreModal($event, item, selectChainType, index)"
-        theme
-        src="/assets/images/common/more.svg"
-        alt=""
-      />
-    </li>
+    <ng-container *ngIf="!isSearching">
+      <li
+        *ngFor="
+          let item of selectChainType === 'Neo2'
+            ? neo2Networks
+            : selectChainType === 'Neo3'
+            ? neo3Networks
+            : neoXNetworks;
+          index as index
+        "
+        [ngClass]="{
+          active: chainType === selectChainType && currentNetwork.id === item.id
+        }"
+        (click)="changeNetwork(item, selectChainType)"
+      >
+        <span class="select"></span>
+        <chain-logo
+          class="chain-icon"
+          [network]="item"
+          *ngIf="selectChainType === 'NeoX'"
+        ></chain-logo>
+        <div class="flex-1 middle">
+          <p class="name">{{ item.name }}</p>
+          <p
+            class="url"
+            (click)="openRpcUrlListModal($event, item, selectChainType)"
+          >
+            <span class="url-text">{{ item.rpcUrl }}</span>
+            <span *ngIf="item?.rpcUrlArr?.length > 1" class="dropdown">
+              <img theme src="/assets/images/common/arrow.svg" alt="" />
+            </span>
+          </p>
+        </div>
+        <img
+          *ngIf="checkShowMore(selectChainType, item)"
+          (click)="openMoreModal($event, item, selectChainType)"
+          theme
+          src="/assets/images/common/more.svg"
+          alt=""
+        />
+      </li>
+    </ng-container>
+    <ng-container *ngIf="isSearching">
+      <li
+        *ngFor="let item of searchRes; index as index"
+        [ngClass]="{
+          active: chainType === 'NeoX' && currentNetwork.id === item.id
+        }"
+        (click)="changeNetwork(item, 'NeoX')"
+      >
+        <span class="select"></span>
+        <chain-logo class="chain-icon" [network]="item"></chain-logo>
+        <div class="flex-1 middle">
+          <p class="name">{{ item.name }}</p>
+          <p class="url" (click)="openRpcUrlListModal($event, item, 'NeoX')">
+            <span class="url-text">{{ item.rpcUrl }}</span>
+            <span *ngIf="item?.rpcUrlArr?.length > 1" class="dropdown">
+              <img theme src="/assets/images/common/arrow.svg" alt="" />
+            </span>
+          </p>
+        </div>
+        <img
+          *ngIf="checkShowMore('NeoX', item)"
+          (click)="openMoreModal($event, item, 'NeoX')"
+          theme
+          src="/assets/images/common/more.svg"
+          alt=""
+        />
+      </li>
+    </ng-container>
   </ul>
   <button class="confirm pop-ups add-network" (click)="addNetwork()">
     {{ "AddNetwork" | translate | async }}

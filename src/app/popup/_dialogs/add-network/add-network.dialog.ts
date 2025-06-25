@@ -374,7 +374,11 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
           this.addNetworkForm.controls.chainId.setValue(0);
           break;
       }
-      this.n3Networks[this.data.index] = this.addNetworkForm.value;
+      const newNetwork = {
+        ...this.data.editNetwork,
+        ...this.addNetworkForm.value,
+      };
+      this.n3Networks[this.data.index] = newNetwork;
       this.store.dispatch({
         type: UPDATE_NEO3_NETWORKS,
         data: this.n3Networks,
@@ -384,7 +388,11 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
       this.addNetworkForm.controls.id.setValue(
         this.addNetworkForm.value.chainId
       );
-      this.neoXNetworks[this.data.index] = this.addNetworkForm.value;
+      const newNetwork = {
+        ...this.data.editNetwork,
+        ...this.addNetworkForm.value,
+      };
+      this.neoXNetworks[this.data.index] = newNetwork;
       this.store.dispatch({
         type: UPDATE_NEOX_NETWORKS,
         data: this.neoXNetworks,
