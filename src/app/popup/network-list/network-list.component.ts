@@ -372,7 +372,7 @@ export class PopupNetworkListComponent implements OnDestroy {
     if (bottom > height + 18) {
       this.rpcUrlModalDom.nativeElement.style.top = top + 18 + 'px';
       this.rpcUrlModalDom.nativeElement.style.bottom = 'auto';
-    } else{
+    } else {
       this.rpcUrlModalDom.nativeElement.style.bottom = bottom + 18 + 'px';
       this.rpcUrlModalDom.nativeElement.style.top = 'auto';
     }

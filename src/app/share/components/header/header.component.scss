@@ -76,6 +76,11 @@ header {
     &.disabled {
       pointer-events: none;
     }
+    .chain-logo {
+      width: 16px;
+      height: 16px;
+      margin-right: 10px;
+    }
     img {
       margin-left: 10px;
     }

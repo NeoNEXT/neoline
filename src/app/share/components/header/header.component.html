@@ -18,7 +18,12 @@
       [ngClass]="{ disabled: !getShowMenu() }"
       (click)="toNetworkList()"
     >
-      <span>{{ getNetworkName() }}</span>
+      <chain-logo
+        *ngIf="currentChainType === 'NeoX'"
+        class="chain-logo"
+        [network]="currentNetwork"
+      ></chain-logo>
+      <span>{{ currentNetwork.name }}</span>
       <img theme src="assets/images/common/triangle-fill.svg" />
     </button>
     <img

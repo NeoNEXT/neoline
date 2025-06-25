@@ -65,8 +65,13 @@
       &:hover {
         background: var(--hover-color);
       }
+      .chain-icon {
+        width: 22px;
+        height: 22px;
+        margin-right: 12px;
+      }
       .middle {
-        width: calc(100% - 70px);
+        width: calc(100% - 105px);
         .name {
           overflow: hidden;
           text-overflow: ellipsis;

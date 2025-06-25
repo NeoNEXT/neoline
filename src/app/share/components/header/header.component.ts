@@ -4,12 +4,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { ChainType, RpcNetwork, STORAGE_NAME } from '@/app/popup/_lib';
-import {
-  ChromeService,
-  NeonService,
-  SettingState,
-  UtilServiceState,
-} from '@/app/core';
+import { ChromeService, SettingState, UtilServiceState } from '@/app/core';
 import { LOCAL_NOTICE } from '@/app/popup/_lib/setting';
 
 declare var chrome: any;
@@ -29,16 +24,11 @@ export class HeaderComponent implements OnInit, OnDestroy {
   private accountSub: Unsubscribable;
   address: string;
   currentChainType: ChainType;
-  n2Network: RpcNetwork;
-  n3Network: RpcNetwork;
-  n3NetworkIndex: number;
-  neoXNetwork: RpcNetwork;
-  neoXNetworkIndex: number;
-
+  currentNetwork: RpcNetwork;
+  currentNetworkIndex: number;
   constructor(
     private store: Store<AppState>,
     private router: Router,
-    private neon: NeonService,
     private util: UtilServiceState,
     private chromeSrc: ChromeService,
     private settingState: SettingState
@@ -49,11 +39,20 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.address = state.currentWallet.accounts[0].address;
       }
       this.currentChainType = state.currentChainType;
-      this.n2Network = state.n2Networks[state.n2NetworkIndex];
-      this.n3Network = state.n3Networks[state.n3NetworkIndex];
-      this.n3NetworkIndex = state.n3NetworkIndex;
-      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
-      this.neoXNetworkIndex = state.neoXNetworkIndex;
+      switch (state.currentChainType) {
+        case 'Neo2':
+          this.currentNetworkIndex = state.n2NetworkIndex;
+          this.currentNetwork = state.n2Networks[state.n2NetworkIndex];
+          break;
+        case 'Neo3':
+          this.currentNetworkIndex = state.n3NetworkIndex;
+          this.currentNetwork = state.n3Networks[state.n3NetworkIndex];
+          break;
+        case 'NeoX':
+          this.currentNetworkIndex = state.neoXNetworkIndex;
+          this.currentNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+          break;
+      }
     });
   }
 
@@ -106,49 +105,12 @@ export class HeaderComponent implements OnInit, OnDestroy {
     }
     return true;
   }
-
-  getNetworkName() {
-    if (!this.address) {
-      switch (this.neon.selectedChainType) {
-        case 'Neo2':
-          return this.n2Network.name;
-        case 'Neo3':
-          return this.n3Network.name;
-        case 'NeoX':
-          return this.neoXNetwork.name;
-      }
-    }
-    switch (this.currentChainType) {
-      case 'Neo2':
-        return this.n2Network.name;
-      case 'Neo3':
-        return this.n3Network.name;
-      case 'NeoX':
-        return this.neoXNetwork.name;
-    }
-  }
-
   toWeb() {
     this.showMenu = false;
-    let network: RpcNetwork;
-    let networkIndex: number;
-    switch (this.currentChainType) {
-      case 'Neo2':
-        network = this.n2Network;
-        break;
-      case 'Neo3':
-        network = this.n3Network;
-        networkIndex = this.n3NetworkIndex;
-        break;
-      case 'NeoX':
-        network = this.neoXNetwork;
-        networkIndex = this.neoXNetworkIndex;
-        break;
-    }
     this.util.toExplorer({
       chain: this.currentChainType,
-      network,
-      networkIndex,
+      network: this.currentNetwork,
+      networkIndex: this.currentNetworkIndex,
       type: 'account',
       value: this.address,
     });

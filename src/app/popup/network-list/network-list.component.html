@@ -54,6 +54,11 @@
       (click)="changeNetwork(item, index, selectChainType)"
     >
       <span class="select"></span>
+      <chain-logo
+        class="chain-icon"
+        [network]="item"
+        *ngIf="selectChainType === 'NeoX'"
+      ></chain-logo>
       <div class="flex-1 middle">
         <p class="name">{{ item.name }}</p>
         <p

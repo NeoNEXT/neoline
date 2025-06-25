@@ -48,6 +48,7 @@ import { EvmEstimateErrorComponent } from './components/evm-estimate-error/evm-e
 import { EvmCustomNonceComponent } from './components/evm-custom-nonce/evm-custom-nonce.component';
 import { HeaderComponent } from './components/header/header.component';
 import { HardwareSignComponent } from './components/hardware-sign/hardware-sign.component';
+import { ChainLogoComponent } from './components/chain-logo/chain-logo.component';
 const COMPONENTS = [
   AssetTxPageComponent,
   NftTxPageComponent,
@@ -64,6 +65,7 @@ const COMPONENTS = [
   EvmCustomNonceComponent,
   HeaderComponent,
   HardwareSignComponent,
+  ChainLogoComponent,
 ];
 //#endregion
 

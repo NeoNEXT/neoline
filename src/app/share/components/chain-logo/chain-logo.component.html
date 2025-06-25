@@ -1,0 +1,5 @@
+<div *ngIf="!hasIcon" class="box name">
+  {{ network?.name[0] }}
+</div>
+
+<img *ngIf="hasIcon" class="box" [src]="iconUrl" alt="" />
