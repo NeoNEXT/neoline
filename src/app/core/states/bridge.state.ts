@@ -52,9 +52,9 @@ export class BridgeState {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
       this.neo3Network = state.n3Networks[state.n3NetworkIndex];
       this.provider?.destroy();
-      this.provider = new ethers.JsonRpcProvider(this.neoXNetwork.rpcUrl);
-      this.provider._detectNetwork().catch(() => {
-        this.provider.destroy();
+      const network = new ethers.Network(this.neoXNetwork.name, this.neoXNetwork.chainId);
+      this.provider = new ethers.JsonRpcProvider(this.neoXNetwork.rpcUrl, network, {
+        staticNetwork: network,
       });
     });
   }
@@ -179,9 +179,6 @@ export class BridgeState {
 
   getTransactionReceipt(hash: string, rpcUrl: string) {
     const tempProvider = new ethers.JsonRpcProvider(rpcUrl);
-    tempProvider._detectNetwork().catch(() => {
-      tempProvider.destroy();
-    });
     return tempProvider.getTransactionReceipt(hash);
   }
 

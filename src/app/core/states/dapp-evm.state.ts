@@ -46,9 +46,9 @@ export class DappEVMState {
     account$.subscribe((state) => {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
       this.provider?.destroy();
-      this.provider = new ethers.JsonRpcProvider(this.neoXNetwork.rpcUrl);
-      this.provider._detectNetwork().catch(() => {
-        this.provider.destroy();
+      const network = new ethers.Network(this.neoXNetwork.name, this.neoXNetwork.chainId);
+      this.provider = new ethers.JsonRpcProvider(this.neoXNetwork.rpcUrl, network, {
+        staticNetwork: network,
       });
     });
   }
