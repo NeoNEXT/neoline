@@ -368,7 +368,7 @@ export class NeonService {
         });
       });
       this.n2Networks[0].rpcUrl = rpcUrls[1][fastIndex[1]];
-      this.n2Networks[1].rpcUrl = rpcUrls[2][fastIndex[2]];
+      // this.n2Networks[1].rpcUrl = rpcUrls[2][fastIndex[2]];
       this.n3Networks[0].rpcUrl = rpcUrls[3][fastIndex[3]];
       this.n3Networks[1].rpcUrl = rpcUrls[6][fastIndex[6]];
       this.store.dispatch({

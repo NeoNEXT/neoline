@@ -21,7 +21,11 @@ export class EvmNFTState {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      this.provider?.destroy();
       this.provider = new ethers.JsonRpcProvider(this.neoXNetwork.rpcUrl);
+      this.provider._detectNetwork().catch(() => {
+        this.provider.destroy();
+      });
     });
   }
 

@@ -115,6 +115,9 @@ async function handleWatchAsset({
 
   const { currNeoXNetwork } = await getCurrentNeoXNetwork();
   const provider = new ethers.JsonRpcProvider(currNeoXNetwork.rpcUrl);
+  provider._detectNetwork().catch(() => {
+    provider.destroy();
+  });
 
   if (await detectIsERC721(asset.address, provider)) {
     throw ethErrors.rpc.invalidParams({
