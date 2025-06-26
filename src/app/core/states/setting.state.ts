@@ -7,7 +7,7 @@ import { ChromeService } from '../services/chrome.service';
 export class SettingState {
   themeSub = new BehaviorSubject<string>('light-theme');
   langSub = new BehaviorSubject<string>('en');
-  langJson = { en: undefined, zh_CN: undefined };
+  langJson;
 
   evmCustomNonceSub = new BehaviorSubject<boolean>(false);
   rateCurrencySub = new BehaviorSubject<string>('USD');

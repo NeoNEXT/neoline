@@ -1,0 +1,2046 @@
+{
+  "hello": {
+    "en": "Hello",
+    "zh_CN": "你好"
+  },
+  "closeWallet": {
+    "en": "Close wallet",
+    "zh_CN": "关闭钱包"
+  },
+  "account": {
+    "en": "Wallets",
+    "zh_CN": "钱包"
+  },
+  "edit": {
+    "en": "Edit",
+    "zh_CN": "编辑"
+  },
+  "assets": {
+    "en": "Assets",
+    "zh_CN": "资产"
+  },
+  "setting": {
+    "en": "SETTINGS",
+    "zh_CN": "设置"
+  },
+  "mainNet": {
+    "en": "MainNet",
+    "zh_CN": "主网"
+  },
+  "testNet": {
+    "en": "TestNet",
+    "zh_CN": "测试网"
+  },
+  "home": {
+    "en": "Home",
+    "zh_CN": "首页"
+  },
+  "about": {
+    "en": "About us",
+    "zh_CN": "关于我们"
+  },
+  "close": {
+    "en": "Close",
+    "zh_CN": "关闭"
+  },
+  "address": {
+    "en": "Address",
+    "zh_CN": "地址"
+  },
+  "copyAddress": {
+    "en": "Copy address",
+    "zh_CN": "复制地址"
+  },
+  "create": {
+    "en": "Create",
+    "zh_CN": "创建"
+  },
+  "import": {
+    "en": "Import",
+    "zh_CN": "导入"
+  },
+  "welcomeCreate": {
+    "en": "Welcome to NeoLine. Create",
+    "zh_CN": "欢迎来到 NeoLine. 创建"
+  },
+  "welcomeImport": {
+    "en": "Welcome to NeoLine. Import",
+    "zh_CN": "欢迎来到 NeoLine. 导入"
+  },
+  "enterWalletName": {
+    "en": "Set wallet name",
+    "zh_CN": "设置钱包名"
+  },
+  "walletNameIsRequired": {
+    "en": "Wallet name is required",
+    "zh_CN": "钱包名必填"
+  },
+  "lengthLimit": {
+    "en": "Length limit",
+    "zh_CN": "长度限制"
+  },
+  "enterPassword": {
+    "en": "Enter password",
+    "zh_CN": "输入密码"
+  },
+  "enterFilePassword": {
+    "en": "Enter file password",
+    "zh_CN": "输入文件密码"
+  },
+  "filePasswordRequired": {
+    "en": "File password is required",
+    "zh_CN": "文件密码必填"
+  },
+  "passwordRequired": {
+    "en": "Password is required",
+    "zh_CN": "密码必填"
+  },
+  "enterConfirmPassword": {
+    "en": "Enter password again",
+    "zh_CN": "再次输入密码"
+  },
+  "confirmError": {
+    "en": "Two passwords are different",
+    "zh_CN": "两次密码不一致"
+  },
+  "creating": {
+    "en": "Creating",
+    "zh_CN": "创建中"
+  },
+  "enterWIF": {
+    "en": "Enter WIF(private key)",
+    "zh_CN": "输入 WIF(私钥)"
+  },
+  "enterEncryptedKey": {
+    "en": "Enter encrypted key",
+    "zh_CN": "输入 Encrypted Key"
+  },
+  "WIFRequired": {
+    "en": "WIF is required",
+    "zh_CN": "WIF 必填"
+  },
+  "EncryptedKeyRequired": {
+    "en": "Encrypted key required",
+    "zh_CN": "Encrypted Key 必填"
+  },
+  "importing": {
+    "en": "Importing",
+    "zh_CN": "导入中"
+  },
+  "language": {
+    "en": "Language",
+    "zh_CN": "语言"
+  },
+  "loading": {
+    "en": "loading...",
+    "zh_CN": "加载中..."
+  },
+  "empty": {
+    "en": "Empty",
+    "zh_CN": "暂无数据"
+  },
+  "receive": {
+    "en": "Receive",
+    "zh_CN": "收款"
+  },
+  "received": {
+    "en": "Received",
+    "zh_CN": "收款"
+  },
+  "allTransfer": {
+    "en": "All",
+    "zh_CN": "全部"
+  },
+  "sent": {
+    "en": "Send",
+    "zh_CN": "支出"
+  },
+  "balancecolon": {
+    "en": "Balance:",
+    "zh_CN": "余额："
+  },
+  "transgerTo": {
+    "en": "Transfer to",
+    "zh_CN": "转账给"
+  },
+  "AssetUpper": {
+    "en": "Asset",
+    "zh_CN": "资产"
+  },
+  "transferToTip": {
+    "en": "Who will receive",
+    "zh_CN": "收款地址"
+  },
+  "amount": {
+    "en": "Amount",
+    "zh_CN": "数量"
+  },
+  "transferAmountTip": {
+    "en": "Amount to transfer out",
+    "zh_CN": "交易数量"
+  },
+  "cancel": {
+    "en": "Cancel",
+    "zh_CN": "取消"
+  },
+  "refuse": {
+    "en": "Refuse",
+    "zh_CN": "拒绝"
+  },
+  "submit": {
+    "en": "Submit",
+    "zh_CN": "提交"
+  },
+  "copy": {
+    "en": "Copy",
+    "zh_CN": "复制"
+  },
+  "showPrivateKey": {
+    "en": "Show private key",
+    "zh_CN": "显示私钥"
+  },
+  "password": {
+    "en": "Password",
+    "zh_CN": "密码"
+  },
+  "verifyPassword": {
+    "en": "Verify your password",
+    "zh_CN": "验证你的密码"
+  },
+  "caution": {
+    "en": "Caution",
+    "zh_CN": "小心"
+  },
+  "transferExportTip": {
+    "en": "Please keep your private key safe, do not show it to anyone",
+    "zh_CN": "请妥善保存您的私钥(WIF)，不要透露给任何人"
+  },
+  "verify": {
+    "en": "Verify",
+    "zh_CN": "验证"
+  },
+  "done": {
+    "en": "Done",
+    "zh_CN": "确认"
+  },
+  "transfer": {
+    "en": "Transfer",
+    "zh_CN": "转账"
+  },
+  "transferHistory": {
+    "en": "History",
+    "zh_CN": "交易记录"
+  },
+  "reocords": {
+    "en": "reocords",
+    "zh_CN": "记录"
+  },
+  "pages": {
+    "en": "pages",
+    "zh_CN": "页"
+  },
+  "transferId": {
+    "en": "TxID",
+    "zh_CN": "交易ID"
+  },
+  "transferVolume": {
+    "en": "Volume",
+    "zh_CN": "交易额"
+  },
+  "size": {
+    "en": "Size",
+    "zh_CN": "大小"
+  },
+  "time": {
+    "en": "Time",
+    "zh_CN": "时间"
+  },
+  "newWallet": {
+    "en": "New wallet",
+    "zh_CN": "新建钱包"
+  },
+  "createTip": {
+    "en": "Welcome to NeoLine, create a new wallet.",
+    "zh_CN": "欢迎来到 NeoLine, 请创建一个新钱包"
+  },
+  "logoutTip": {
+    "en": "Are you sure close wallet?",
+    "zh_CN": "确认关闭钱包吗？"
+  },
+  "yes": {
+    "en": "Yes",
+    "zh_CN": "确认"
+  },
+  "transferInfo": {
+    "en": "Transfer information",
+    "zh_CN": "交易信息"
+  },
+  "paymentAccount": {
+    "en": "Payment wallet",
+    "zh_CN": "付款钱包"
+  },
+  "receiptAccount": {
+    "en": "Receipt wallet",
+    "zh_CN": "收款钱包"
+  },
+  "termsOfUse": {
+    "en": "Terms of use",
+    "zh_CN": "使用条款"
+  },
+  "companyWebsite": {
+    "en": "Official website",
+    "zh_CN": "访问官网"
+  },
+  "contactUs": {
+    "en": "Contact us",
+    "zh_CN": "联系我们"
+  },
+  "FollowUs": {
+    "en": "Follow us",
+    "zh_CN": "关注我们"
+  },
+  "myAccountQRCode": {
+    "en": "My wallet QR code",
+    "zh_CN": "我的钱包二维码"
+  },
+  "complete": {
+    "en": "Complete",
+    "zh_CN": "完成"
+  },
+  "addAssetTip": {
+    "en": "Are you sure to add this asset?",
+    "zh_CN": "是否确认添加此资产？"
+  },
+  "delAssetTip": {
+    "en": "Do you confirm the deletion?",
+    "zh_CN": "是否确认隐藏？"
+  },
+  "modifyNameTitle": {
+    "en": "Modify wallet name",
+    "zh_CN": "修改钱包名"
+  },
+  "modifyNameInput": {
+    "en": "Please enter a new wallet name(length 1-32)",
+    "zh_CN": "请输入新的钱包名(长度1-32字符)"
+  },
+  "connect": {
+    "en": "Connect",
+    "zh_CN": "连接"
+  },
+  "thAuthTitle": {
+    "en": "Connection request",
+    "zh_CN": "连接请求"
+  },
+  "thAuthTip": {
+    "en": "would like to connect to your wallet",
+    "zh_CN": "想要连接你的钱包"
+  },
+  "thAuthNeo2Detail": {
+    "en": "This site is trying to request access to the Neo Legacy API so that it can interact with the Neo Legacy blockchain. Before approving your visit, be sure to double check that you are linking to the correct site.",
+    "zh_CN": "这个站点正在请求访问 Neo Legacy API，以便它可以与 Neo Legacy 区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
+  },
+  "thAuthNeo3Detail": {
+    "en": "This site is trying to request access to the Neo N3 API so that it can interact with the Neo N3 blockchain. Before approving your visit, be sure to double check that you are linking to the correct site.",
+    "zh_CN": "这个站点正在请求访问 Neo N3 API，以便它可以与 Neo N3 区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
+  },
+  "thAuthNeoXDetail": {
+    "en": "This site is trying to request access to the Neo X (EVM Network) API so that it can interact with the Neo X (EVM Network) blockchain. Before approving your visit, be sure to double check that you are linking to the correct site.",
+    "zh_CN": "这个站点正在请求访问 Neo X (EVM Network) API，以便它可以与 Neo X (EVM Network)区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
+  },
+  "thSignTitle": {
+    "en": "This app is requesting your signature.",
+    "zh_CN": "这个应用正在请求你的签名。"
+  },
+  "thSignTxTitle": {
+    "en": "This app is requesting you to sign the transaction.",
+    "zh_CN": "这个应用正在请求你签名该交易。"
+  },
+  "signing": {
+    "en": "Signing",
+    "zh_CN": "正在签名"
+  },
+  "message": {
+    "en": "Message",
+    "zh_CN": "信息"
+  },
+  "signature": {
+    "en": "Signature",
+    "zh_CN": "签名"
+  },
+  "thAssetTip": {
+    "en": "Do you want to add these assets?",
+    "zh_CN": "你想添加这个资产吗?"
+  },
+  "version": {
+    "en": "Version",
+    "zh_CN": "版本"
+  },
+  "addAsset": {
+    "en": "Add asset",
+    "zh_CN": "添加资产"
+  },
+  "searchResult": {
+    "en": "Search result",
+    "zh_CN": "搜索结果"
+  },
+  "searchAssetsInput": {
+    "en": "Please enter asset, enter to search",
+    "zh_CN": "请输入需要搜索的资产，回车发起搜索"
+  },
+  "hidden": {
+    "en": "Hidden",
+    "zh_CN": "隐藏"
+  },
+  "add": {
+    "en": "Add",
+    "zh_CN": "添加"
+  },
+  "added": {
+    "en": "Added",
+    "zh_CN": "已添加"
+  },
+  "myAccounts": {
+    "en": "My accounts",
+    "zh_CN": "我的钱包"
+  },
+  "myAccount": {
+    "en": "My account",
+    "zh_CN": "我的钱包"
+  },
+  "importWallet": {
+    "en": "Import wallet",
+    "zh_CN": "导入钱包"
+  },
+  "exportWallet": {
+    "en": "Export wallet",
+    "zh_CN": "导出钱包"
+  },
+  "createWallet": {
+    "en": "Create wallet",
+    "zh_CN": "创建钱包"
+  },
+  "clearCacheBtn": {
+    "en": "clear",
+    "zh_CN": "清空"
+  },
+  "clearCache": {
+    "en": "Local cache",
+    "zh_CN": "本地缓存"
+  },
+  "clearCacheTip": {
+    "en": "Clear all local cache",
+    "zh_CN": "清空所有本地缓存数据"
+  },
+  "reset": {
+    "en": "Reset",
+    "zh_CN": "重置"
+  },
+  "chooseNep6File": {
+    "en": "Choose nep6 file",
+    "zh_CN": "选择 Nep6 文件"
+  },
+  "welcomeBack": {
+    "en": "Welcome back",
+    "zh_CN": "欢迎回来"
+  },
+  "loginTip": {
+    "en": "Welcome to NeoLine, please login first",
+    "zh_CN": "欢迎来到 NeoLine，请先登录"
+  },
+  "pwdInput": {
+    "en": "Please enter your password",
+    "zh_CN": "请输入您的密码"
+  },
+  "onlySupport": {
+    "en": "Support only for",
+    "zh_CN": "仅支持"
+  },
+  "login": {
+    "en": "Login",
+    "zh_CN": "登录"
+  },
+  "logining": {
+    "en": "Logging in",
+    "zh_CN": "登录中"
+  },
+  "searchAllResult": {
+    "en": "All assets",
+    "zh_CN": "全部资产"
+  },
+  "clearStorageTips": {
+    "en": "Confirm clear cache?",
+    "zh_CN": "确认清除缓存吗"
+  },
+  "viewAll": {
+    "en": "View all",
+    "zh_CN": "查看所有"
+  },
+  "remove": {
+    "en": "Remove",
+    "zh_CN": "清除"
+  },
+  "switch": {
+    "en": "Switch",
+    "zh_CN": "切换"
+  },
+  "delete": {
+    "en": "Delete",
+    "zh_CN": "删除"
+  },
+  "authDelAllTip": {
+    "en": "Clear all authorized sites",
+    "zh_CN": "清除所有批准数据"
+  },
+  "welcomeNeoLine": {
+    "en": "Welcome to NeoLine",
+    "zh_CN": "欢迎来到 NeoLine"
+  },
+  "myAddress": {
+    "en": "NEO address:",
+    "zh_CN": "我的 NEO 地址"
+  },
+  "myQRCode": {
+    "en": "Address QR code",
+    "zh_CN": "我的钱包二维码"
+  },
+  "setLang": {
+    "en": "Languages",
+    "zh_CN": "设置语言"
+  },
+  "WIFPattern": {
+    "en": "Wrong WIF",
+    "zh_CN": "WIF 错误"
+  },
+  "EncryptedKeyPattern": {
+    "en": "Wrong encrypted key",
+    "zh_CN": "Encrypted Key 错误"
+  },
+  "tranSubmit": {
+    "en": "Transaction submitted",
+    "zh_CN": "交易已提交"
+  },
+  "waitConfirm": {
+    "en": "Please wait for confirmation",
+    "zh_CN": "请等待交易确认"
+  },
+  "transaction": {
+    "en": "Transaction",
+    "zh_CN": "交易"
+  },
+  "confirming": {
+    "en": "confirming",
+    "zh_CN": "确认中"
+  },
+  "transactions": {
+    "en": "Transactions",
+    "zh_CN": "交易"
+  },
+  "value": {
+    "en": "value",
+    "zh_CN": "金额"
+  },
+  "noTransaction": {
+    "en": "No transactions",
+    "zh_CN": "无交易"
+  },
+  "wifPrivateKey": {
+    "en": "WIF(private key)",
+    "zh_CN": "WIF(私钥)"
+  },
+  "privateKey": {
+    "en": "Private key",
+    "zh_CN": "私钥"
+  },
+  "delWalletConfirm": {
+    "en": "Are you sure to delete this wallet?",
+    "zh_CN": "确认删除该钱包吗？"
+  },
+  "delAddressConfirm": {
+    "en": "Are you sure to delete this address?",
+    "zh_CN": "确认删除该地址吗？"
+  },
+  "delNetworkConfirm": {
+    "en": "Are you sure to delete this network?",
+    "zh_CN": "确认删除该网络吗？"
+  },
+  "delAllAuthListConfirm": {
+    "en": "Are you sure delete all authorized sites?",
+    "zh_CN": "确认清空所有授权吗？"
+  },
+  "rejected": {
+    "en": "Rejected",
+    "zh_CN": "已拒绝"
+  },
+  "rejectedTip": {
+    "en": "This site has been rejected to connect to your NeoLine wallet. Please go to Authorization Management and delete the corresponding record if you allow it to connect",
+    "zh_CN": "该站点已被拒绝连接到您的 NeoLine 钱包。若要再次授权，请前往授权管理删除对应记录。"
+  },
+  "connectedTip": {
+    "en": "Connected to NeoLine wallet allowed",
+    "zh_CN": "已允许连接到 NeoLine 钱包"
+  },
+  "to": {
+    "en": "To",
+    "zh_CN": "发给"
+  },
+  "currencyUnit": {
+    "en": "Currency unit",
+    "zh_CN": "货币单位"
+  },
+  "privacyData": {
+    "en": "Authorized sites",
+    "zh_CN": "已授权站点"
+  },
+  "clearPrivacyDataBtn": {
+    "en": "clear all authorized sites",
+    "zh_CN": "清除所有已授权站点"
+  },
+  "clearPrivacyDataTip": {
+    "en": "Once these authorized sites cleared, all sites must re-request to view account information or request transfers.",
+    "zh_CN": "清除已授权站点后，所有网站都必须重新申请连接钱包以便获取账户信息或发起转账请求。"
+  },
+  "referSource": {
+    "en": "Reference source",
+    "zh_CN": "参考来源"
+  },
+  "updateTime": {
+    "en": "Update time",
+    "zh_CN": "更新时间"
+  },
+  "importNewWallet": {
+    "en": "Import an existing wallet",
+    "zh_CN": "导入已有钱包"
+  },
+  "createNewWallet": {
+    "en": "Create a new wallet",
+    "zh_CN": "创建新钱包"
+  },
+  "or": {
+    "en": "OR",
+    "zh_CN": "或者"
+  },
+  "firstDigitalIdentity": {
+    "en": "First Digital Identity",
+    "zh_CN": "第一个数字身份"
+  },
+  "createYour": {
+    "en": "Create Your",
+    "zh_CN": "创建您的"
+  },
+  "beijingTime": {
+    "en": "China standard time",
+    "zh_CN": "北京时间"
+  },
+  "priorityFee": {
+    "en": "Priority fee",
+    "zh_CN": "优先处理费"
+  },
+  "priorityFeeTip": {
+    "en": "Optional",
+    "zh_CN": "选填"
+  },
+  "claim": {
+    "en": "Claim",
+    "zh_CN": "认领"
+  },
+  "syncNow": {
+    "en": "Sync",
+    "zh_CN": "同步"
+  },
+  "confirmed": {
+    "en": "Confirmed",
+    "zh_CN": "已确认"
+  },
+  "success": {
+    "en": "Success",
+    "zh_CN": "成功"
+  },
+  "estimated": {
+    "en": "Estimated",
+    "zh_CN": "预估"
+  },
+  "connectChooseAllow": {
+    "en": "Allow and no longer remind",
+    "zh_CN": "下次通过此站点转账时不再提醒"
+  },
+  "darkMode": {
+    "en": "Dark mode",
+    "zh_CN": "暗夜模式"
+  },
+  "myTokens": {
+    "en": "My tokens",
+    "zh_CN": "我的Tokens"
+  },
+  "authorized": {
+    "en": "Authorized",
+    "zh_CN": "已授权"
+  },
+  "systemSettings": {
+    "en": "System settings",
+    "zh_CN": "系统设置"
+  },
+  "lock": {
+    "en": "LOCK",
+    "zh_CN": "锁定"
+  },
+  "noMoreData": {
+    "en": "No more data",
+    "zh_CN": "没有更多数据了"
+  },
+  "generalSettings": {
+    "en": "General settings",
+    "zh_CN": "通用设置"
+  },
+  "ViewOnExplorer": {
+    "en": "View on explorer",
+    "zh_CN": "在浏览器上查看"
+  },
+  "accountDetails": {
+    "en": "Account details",
+    "zh_CN": "账户详情"
+  },
+  "expandView": {
+    "en": "Expand view",
+    "zh_CN": "展开视图"
+  },
+  "accountAdded": {
+    "en": "Account added",
+    "zh_CN": "已添加账户"
+  },
+  "removeAccount": {
+    "en": "Remove account",
+    "zh_CN": "移除账号"
+  },
+  "editFee": {
+    "en": "Edit fee",
+    "zh_CN": "编辑优先费"
+  },
+  "resetWalletConfirm": {
+    "en": "After resetting the wallet, all the original wallet data will be erased and cannot be retrieved. Please confirm resetting the wallet?",
+    "zh_CN": "重置钱包后，原钱包数据将全部被清除，无法找回，请问是否确认重置钱包"
+  },
+  "slow": {
+    "en": "Slow",
+    "zh_CN": "慢"
+  },
+  "medium": {
+    "en": "Medium",
+    "zh_CN": "中"
+  },
+  "fast": {
+    "en": "Fast",
+    "zh_CN": "快"
+  },
+  "customize": {
+    "en": "Customize",
+    "zh_CN": "自定义"
+  },
+  "resetWallet": {
+    "en": "Reset wallet",
+    "zh_CN": "重置钱包"
+  },
+  "transferAddress": {
+    "en": "Transfer address",
+    "zh_CN": "转账地址"
+  },
+  "selectAsset": {
+    "en": "Choose asset",
+    "zh_CN": "选择资产"
+  },
+  "importMethod": {
+    "en": "Import method",
+    "zh_CN": "导入方式"
+  },
+  "importKey": {
+    "en": "Private key import",
+    "zh_CN": "私钥导入"
+  },
+  "importFile": {
+    "en": "File import",
+    "zh_CN": "文件导入"
+  },
+  "personalAccount": {
+    "en": "Personal account",
+    "zh_CN": "个人账户"
+  },
+  "details": {
+    "en": "Details",
+    "zh_CN": "详情"
+  },
+  "data": {
+    "en": "Data",
+    "zh_CN": "数据"
+  },
+  "backUp": {
+    "en": "Back up",
+    "zh_CN": "备份"
+  },
+  "backUpTip": {
+    "en": "Back up reminder",
+    "zh_CN": "备份提示"
+  },
+  "backUpDesc1": {
+    "en": "1. Mastering the private key/secret recovery phrase is equivalent to mastering the ownership of account assets. Please write it down and keep it in a safe place. Do not share it with anyone.",
+    "zh_CN": "1. 掌握私钥/助记词等于掌握了账户资产所有权，请手抄并保存在安全的地方，不要分享给任何人；"
+  },
+  "backUpDesc2": {
+    "en": "2. NeoLine is a decentralized wallet and does not store your private key/secret recovery phrase. If lost, it cannot be recovered.",
+    "zh_CN": "2. NeoLine为去中心化钱包，不会存储您的私钥/助记词，一旦丢失将无法找回。"
+  },
+  "backUpNow": {
+    "en": "Now",
+    "zh_CN": "立即备份"
+  },
+  "backUpLater": {
+    "en": "Later",
+    "zh_CN": "稍后备份"
+  },
+  "donotScreenshot": {
+    "en": "Please do not capture",
+    "zh_CN": "请勿截图"
+  },
+  "donotScreenshotTip": {
+    "en": "Do not share or save screenshots, which may be captured by third party malware and cause asset loss. Pay attention to the safety of the surrounding environment when copying.",
+    "zh_CN": "切勿截图分享和保存，这可能被第三方恶意软件截取，造成资产损失。抄写时注意周边环境安全。"
+  },
+  "iKonw": {
+    "en": "Known",
+    "zh_CN": "我已知道"
+  },
+  "youPrivateKey": {
+    "en": "Your private key",
+    "zh_CN": "您的私钥"
+  },
+  "privateKeyTip": {
+    "en": "Tip: Please keep your private key properly and do not disclose it to anyone",
+    "zh_CN": "提醒：请妥善保管您的私钥，不要透露给任何人"
+  },
+  "backUpsafeTip": {
+    "en": "You haven't backed up your wallet",
+    "zh_CN": "你还未备份钱包"
+  },
+  "backUpTipLater": {
+    "en": "Later",
+    "zh_CN": "稍后提醒"
+  },
+  "backUpSafeDesc": {
+    "en": "If your device is lost, the app is reinstalled, or the app data is deleted, you'll lose access to this wallet and its assets, and can't get them back.",
+    "zh_CN": "若发生设备丢失、应用重装或应用数据删除等情况，你将永久失去此钱包的控制权，且无法恢复其资产。"
+  },
+  "receiveOurNewsletter": {
+    "en": "Receive our newsletter",
+    "zh_CN": "订阅电子报"
+  },
+  "newsletterTip": {
+    "en": "Get the latest updates from the NeoLine team",
+    "zh_CN": "从NeoLine团队获取最新更新"
+  },
+  "newsletterDesc": {
+    "en": "You can unsubscribe from these newsletters at any time.For more information about how to unsubscribe, our privacy practices and how we are committed to protecting and respecting your privacy, please check our ",
+    "zh_CN": "您可以随时取消订阅这些通讯。 有关如何退订，我们的隐私惯例以及我们如何致力于保护和尊重您的隐私的更多信息，请查看我们的"
+  },
+  "privacyPolicyWrods": {
+    "en": "Privacy policy.",
+    "zh_CN": "隐私政策。"
+  },
+  "newsletterPlaceholder": {
+    "en": "E-mail",
+    "zh_CN": "请填写您的邮箱地址"
+  },
+  "signUpToReceiveUpdatesAndAnnouncements": {
+    "en": "Sign up to receive updates and announcements",
+    "zh_CN": "注册以接收更新和公告"
+  },
+  "recommendedAssets": {
+    "en": "Recommended assets",
+    "zh_CN": "推荐资产"
+  },
+  "myAssets": {
+    "en": "My assets",
+    "zh_CN": "我的资产"
+  },
+  "addAssetWarn": {
+    "en": "Please be aware that this asset is not officially verified by the wallet and there will be risks involved in its security.",
+    "zh_CN": "该资产未经钱包官方安全审核，请注意风险！"
+  },
+  "saveChanges": {
+    "en": "Save changes",
+    "zh_CN": "保存修改"
+  },
+  "selectAChain": {
+    "en": "Select a chain",
+    "zh_CN": "选择链"
+  },
+  "TOTAL": {
+    "en": "Total:",
+    "zh_CN": "总额："
+  },
+  "PRIORITYFEEUPPER": {
+    "en": "Priority fee",
+    "zh_CN": "优先费"
+  },
+  "SYSTEMFEE": {
+    "en": "System fee",
+    "zh_CN": "系统费用"
+  },
+  "NETWORKFEE": {
+    "en": "Network fee",
+    "zh_CN": "网络费用"
+  },
+  "GASFEE": {
+    "en": "Gas fee",
+    "zh_CN": "GAS fee"
+  },
+  "None": {
+    "en": "Only sign transactions, and do not allow any contract to use this signature.",
+    "zh_CN": "只对交易签名，不允许任何合约使用该签名。"
+  },
+  "CalledByEntry": {
+    "en": "The default signature.",
+    "zh_CN": "默认签名。"
+  },
+  "CustomContracts": {
+    "en": "Custom contract, the signature can be used in the specified contract.",
+    "zh_CN": "自定义合约，在指定的合约中可以使用该签名。"
+  },
+  "CustomGroups": {
+    "en": "Custom contract group, the signature can be used in the specified contract group.",
+    "zh_CN": "自定义合约组，在指定的合约组中可以使用该签名。"
+  },
+  "Global": {
+    "en": "The risk is extremely high. The contract may transfer all the assets in the address, and only choose when the contract is extremely trusted.",
+    "zh_CN": "风险极高，合约有可能会转移地址中的所有资产，仅在极其信任该合约时选择。"
+  },
+  "Scope": {
+    "en": "Scope",
+    "zh_CN": "作用域"
+  },
+  "NoWallet": {
+    "en": "No wallet, please import or create.",
+    "zh_CN": "没有钱包，请导入或创建。"
+  },
+  "Name": {
+    "en": "Name",
+    "zh_CN": "名称"
+  },
+  "Symbol": {
+    "en": "Symbol",
+    "zh_CN": "货币名称"
+  },
+  "noData": {
+    "en": "No data",
+    "zh_CN": "没有数据"
+  },
+  "Contract": {
+    "en": "Contract",
+    "zh_CN": "合约"
+  },
+  "YourSigningAddress": {
+    "en": "Your signing address",
+    "zh_CN": "您的签名地址"
+  },
+  "ContractScriptHash": {
+    "en": "Contract script hash",
+    "zh_CN": "合约脚本哈希"
+  },
+  "Operation": {
+    "en": "Operation",
+    "zh_CN": "操作"
+  },
+  "InvocationArguments": {
+    "en": "Invocation arguments",
+    "zh_CN": "调用参数"
+  },
+  "broadcastOverride": {
+    "en": "Broadcast override",
+    "zh_CN": "广播覆盖"
+  },
+  "signers": {
+    "en": "Signers",
+    "zh_CN": "签名者"
+  },
+  "Fee": {
+    "en": "Fee",
+    "zh_CN": "费用"
+  },
+  "booleanYes": {
+    "en": "Yes",
+    "zh_CN": "是"
+  },
+  "No": {
+    "en": "No",
+    "zh_CN": "否"
+  },
+  "AttachedAssets": {
+    "en": "Attached assets",
+    "zh_CN": "附属资产"
+  },
+  "AssetIntentOverrideInputs": {
+    "en": "Asset intent override inputs",
+    "zh_CN": "资产想要改写输入"
+  },
+  "AssetIntentOverrideOutputs": {
+    "en": "Asset intent override outputs",
+    "zh_CN": "资产想要改写输出"
+  },
+  "triggerContractAssetVerification": {
+    "en": "Will trigger contract asset verification?",
+    "zh_CN": "将触发合约资产验证"
+  },
+  "TransactionAttributes": {
+    "en": "Transaction attributes",
+    "zh_CN": "交易属性"
+  },
+  "asset": {
+    "en": "asset",
+    "zh_CN": "资产"
+  },
+  "ChainSmartContractDeploy": {
+    "en": "Smart contract invocation",
+    "zh_CN": "智能合约调用"
+  },
+  "PublicKey": {
+    "en": "PublicKey(encoded)",
+    "zh_CN": "公钥(encoded)"
+  },
+  "AddNEP11": {
+    "en": "Add NEP11",
+    "zh_CN": "添加 NEP11"
+  },
+  "myNep11": {
+    "en": "My NEP11",
+    "zh_CN": "我的 NEP11"
+  },
+  "myNft": {
+    "en": "My NFT",
+    "zh_CN": "我的 NFT"
+  },
+  "unlockWallet": {
+    "en": "You need to enter the password of the account to unlock the wallet",
+    "zh_CN": "您需要输入该账户的密码来解锁该钱包"
+  },
+  "ABOUT_US": {
+    "en": "ABOUT US",
+    "zh_CN": "关于我们"
+  },
+  "NEW": {
+    "en": "NEW",
+    "zh_CN": "新建"
+  },
+  "EXPORT": {
+    "en": "EXPORT",
+    "zh_CN": "导出"
+  },
+  "Active": {
+    "en": "Active",
+    "zh_CN": "状态"
+  },
+  "Sort": {
+    "en": "Sort",
+    "zh_CN": "排序"
+  },
+  "Search": {
+    "en": "Search...",
+    "zh_CN": "搜索..."
+  },
+  "SearchEVMNetwork": {
+    "en": "Input EVM network name to search",
+    "zh_CN": "输入 EVM 网络名称搜索"
+  },
+  "Networks": {
+    "en": "Networks",
+    "zh_CN": "网络"
+  },
+  "AddNetwork": {
+    "en": "Add network",
+    "zh_CN": "添加网络"
+  },
+  "EditNetwork": {
+    "en": "Edit network",
+    "zh_CN": "编辑网络"
+  },
+  "NetworkName": {
+    "en": "Network name",
+    "zh_CN": "网络名称"
+  },
+  "New_RPC_URL": {
+    "en": "New RPC URL",
+    "zh_CN": "新的 RPC URL"
+  },
+  "Explorer_URL": {
+    "en": "Block explorer URL(Optional)",
+    "zh_CN": "区块浏览器(选填)"
+  },
+  "oneMonthTxs": {
+    "en": "Only show transactions from the most recent month",
+    "zh_CN": "只显示最近一个月的交易"
+  },
+  "LedgerNotSupportComputer": {
+    "en": "Ledger not supported on this computer.",
+    "zh_CN": "此计算机不支持 Ledger 钱包。"
+  },
+  "connectLedgerDevice": {
+    "en": "Please connect your Ledger device",
+    "zh_CN": "请连接您的 Ledger 设备"
+  },
+  "connectOneKeyDevice": {
+    "en": "Please connect your OneKey device",
+    "zh_CN": "请连接您的 OneKey 设备"
+  },
+  "openNeoAppOnLedger": {
+    "en": "Please open the NEO app on your Ledger device.",
+    "zh_CN": "请在您的 Ledger 设备上打开 NEO 应用。"
+  },
+  "openNeo3AppOnLedger": {
+    "en": "Please open the NEO N3 app on your Ledger device.",
+    "zh_CN": "请在您的 Ledger 上打开 NEO N3 应用。"
+  },
+  "openNeoXAppOnLedger": {
+    "en": "Please open the ethereum app on your Ledger device.",
+    "zh_CN": "请在您的 Ledger 上打开 Ethereum 应用。"
+  },
+  "LedgerConnectedNeoReady": {
+    "en": "Ledger connected, NEO app open, ready for use.",
+    "zh_CN": "Ledger 已连接，NEO 应用程序已打开，可以使用。"
+  },
+  "LedgerConnectedNeo3Ready": {
+    "en": "Ledger connected, NEO N3 app open, ready for use.",
+    "zh_CN": "Ledger 已连接，NEO N3 应用程序已打开，可以使用。"
+  },
+  "LedgerConnectedNeoXReady": {
+    "en": "Ledger connected, Ethereum app open, ready for use.",
+    "zh_CN": "Ledger已连接，Ethereum 应用程序已打开，可以使用。"
+  },
+  "TransactionDeniedByUser": {
+    "en": "Transaction denied by user.",
+    "zh_CN": "交易被用户拒绝。"
+  },
+  "TransactionTooLarge": {
+    "en": "Transaction too large for Ledger to sign.",
+    "zh_CN": "交易太大，Ledger 无法签署。"
+  },
+  "errorLedgerOpen": {
+    "en": "There was an error parsing this transaction. Please make sure you have the correct Ledger app open.",
+    "zh_CN": "解析此事务时出错。 请确保您打开了正确的 Ledger 应用程序。"
+  },
+  "LedgerInstallNeoApp": {
+    "en": "Note: Please ensure your Ledger has the latest NEO apps installed.",
+    "zh_CN": "注意：请确保您的 Ledger 已安装最新的 NEO 应用。"
+  },
+  "LedgerInstallNeo3App": {
+    "en": "Note: Please ensure your Ledger has the latest NEO N3 app installed.",
+    "zh_CN": "注意：请确保您的 Ledger 已安装最新的 NEO N3 应用。"
+  },
+  "LedgerInstallNeoXApp": {
+    "en": "Note: Please ensure your Ledger has the latest Ethereum app installed.",
+    "zh_CN": "注意：请确保您的 Ledger 已安装最新的 Ethereum 应用。"
+  },
+  "signLedgerTransaction": {
+    "en": "Please sign the transaction on your Ledger",
+    "zh_CN": "请在您的 Ledger 上签名交易"
+  },
+  "signLedgerMessage": {
+    "en": "Please sign the message on your Ledger",
+    "zh_CN": "请在您的 Ledger 上签署此消息"
+  },
+  "signOneKeyTransaction": {
+    "en": "Please sign the transaction on your OneKey",
+    "zh_CN": "请在您的 OneKey 上签名交易"
+  },
+  "signOneKeyMessage": {
+    "en": "Please sign the message on your OneKey",
+    "zh_CN": "请在您的 OneKey 上签署此消息"
+  },
+  "Wait": {
+    "en": "Wait",
+    "zh_CN": "Wait"
+  },
+  "ImportHardwareWallet": {
+    "en": "Import hardware wallet",
+    "zh_CN": "导入硬件钱包"
+  },
+  "Next": {
+    "en": "Next",
+    "zh_CN": "下一步"
+  },
+  "selectAccountConnect": {
+    "en": "Select an account",
+    "zh_CN": "选择一个帐户"
+  },
+  "WalletAddress": {
+    "en": "Wallet address",
+    "zh_CN": "钱包地址"
+  },
+  "CreatingImportingWallet": {
+    "en": "Creating/importing a wallet confirms I have read and agree to the ",
+    "zh_CN": "创建/导入钱包代表我已阅读并同意"
+  },
+  "and": {
+    "en": " & ",
+    "zh_CN": "和"
+  },
+  "PrivacyPolicy": {
+    "en": "Privacy policy",
+    "zh_CN": "隐私政策"
+  },
+  "TermsOfService": {
+    "en": "Terms of service",
+    "zh_CN": "服务条款"
+  },
+  "ImportThisAccount": {
+    "en": "Import this account",
+    "zh_CN": "导入这个账户"
+  },
+  "Confirm": {
+    "en": "Confirm",
+    "zh_CN": "确认"
+  },
+  "ImportSuccessful": {
+    "en": "Import successful, please check in NeoLine extension",
+    "zh_CN": "导入成功，请在 NeoLine 插件查看"
+  },
+  "PleaseEnterWalletName": {
+    "en": "Please enter wallet name",
+    "zh_CN": "请输入钱包名"
+  },
+  "Imported": {
+    "en": "Imported",
+    "zh_CN": "已导入"
+  },
+  "connectYourDevice": {
+    "en": "Connect your {{device}}",
+    "zh_CN": "关联您的 {{device}}"
+  },
+  "plugInLedgerWalletTip": {
+    "en": "Plug your Ledger directly into your computer, then unlock it and open the Neo/Neo N3/Ethereum app. For more on using your Ledger wallet device, ",
+    "zh_CN": "将您的 Ledger 直接插入电脑，然后解锁并打开 Neo/Neo N3/Ethereum 应用程序。关于使用您的 Ledger 钱包设备的更多，"
+  },
+  "plugInOneKeyWalletTip": {
+    "en": "Plug your OneKey directly into your computer and unlock it.",
+    "zh_CN": "将您的 OneKey 直接插入电脑并解锁。"
+  },
+  "clickHere": {
+    "en": "click here.",
+    "zh_CN": "点击这里。"
+  },
+  "reconnectLedger": {
+    "en": "If the Ledger does not respond for a long time, please try to reconnect the Ledger",
+    "zh_CN": "如果 Ledger 长时间没反应，请尝试重新连接 Ledger"
+  },
+  "inputNeo2AddressTip": {
+    "en": "Neo legacy address",
+    "zh_CN": "Neo Legacy 地址"
+  },
+  "inputN3NNSAddressTip": {
+    "en": "N3 address or NeoNS Name",
+    "zh_CN": "N3 地址 or NeoNS 名称"
+  },
+  "inputN3AddressTip": {
+    "en": "N3 address",
+    "zh_CN": "N3 地址"
+  },
+  "inputNeoXAddressTip": {
+    "en": "EVM address",
+    "zh_CN": "EVM 地址"
+  },
+  "Copied": {
+    "en": "Copied!",
+    "zh_CN": "已复制！"
+  },
+  "CopyToClipboard": {
+    "en": "Copy to clipboard",
+    "zh_CN": "复制到剪贴板"
+  },
+  "SwitchTo": {
+    "en": "Switch to",
+    "zh_CN": "切换到"
+  },
+  "Network": {
+    "en": "Network",
+    "zh_CN": "网络"
+  },
+  "createOrImportNeo2First": {
+    "en": "Please create or import a Neo Legacy account first",
+    "zh_CN": "请先创建或导入一个 Neo Legacy 账户"
+  },
+  "createOrImportNeo3First": {
+    "en": "Please create or import a Neo N3 account first",
+    "zh_CN": "请先创建或导入一个 Neo N3 账户"
+  },
+  "createOrImportNeoXFirst": {
+    "en": "Please create or import a Neo X (EVM Network) account first",
+    "zh_CN": "请先创建或导入一个 Neo X (EVM Network) 账户"
+  },
+  "OnePasswordPattern": {
+    "en": "One pass setting",
+    "zh_CN": "通用密码设置"
+  },
+  "onePasswordDesc": {
+    "en": "We have optimized wallet passwords and added password mode switching function, which support users before v4.0.0 to set a general password to manage multiple wallet accounts. Click 'Switch Now' to complete the account security verification and switch to the new password management mode.",
+    "zh_CN": "优化钱包密码策略，新增密码模式切换功能，支持 v4.0.0 之前的用户设置一个通用密码管理多个钱包账户。点击立即切换，完成账户安全验证切换到新的密码管理模式。"
+  },
+  "ClickToLearnMore": {
+    "en": "Click to learn more!",
+    "zh_CN": "前往了解更多！"
+  },
+  "OnePasswordTitle": {
+    "en": "Password mode switch",
+    "zh_CN": "密码模式切换"
+  },
+  "onePasswordTip": {
+    "en": "Please enter the passwords corresponding to all accounts correctly to complete the switch, and ensure that the wallet has been backed up safely.",
+    "zh_CN": "请正确输入所有账户对应的密码完成切换，并确保已安全备份钱包。"
+  },
+  "SwitchNow": {
+    "en": "Switch now",
+    "zh_CN": "立即切换"
+  },
+  "enterNewPassword": {
+    "en": "Enter a new password",
+    "zh_CN": "输入新密码"
+  },
+  "enterConfirmNewPassword": {
+    "en": "Enter the new password again",
+    "zh_CN": "再次输入新密码"
+  },
+  "wrongPassword": {
+    "en": "Wrong password",
+    "zh_CN": "密码错误"
+  },
+  "switchNetwork": {
+    "en": "Switch network",
+    "zh_CN": "切换网络"
+  },
+  "switchNetworkTitle": {
+    "en": "Allow this site to switch the network?",
+    "zh_CN": "允许此网站切换网络？"
+  },
+  "switchNetworkDesc": {
+    "en": "This will switch the selected network within NeoLine to a previously added network:",
+    "zh_CN": "这将切换 NeoLine 中选定的网络到以前添加的网络"
+  },
+  "switchAccount": {
+    "en": "Switch account",
+    "zh_CN": "切换账户"
+  },
+  "switchAccountTitle": {
+    "en": "Allow this site to switch the account?",
+    "zh_CN": "允许此网站切换账户？"
+  },
+  "switchAccountDesc": {
+    "en": "This will switch the selected account within NeoLine to a previously added account:",
+    "zh_CN": "这将切换 NeoLine 中选定的账户到以前添加的账户"
+  },
+  "VerificationPassed": {
+    "en": "Verification passed",
+    "zh_CN": "验证通过"
+  },
+  "addressBook": {
+    "en": "Address book",
+    "zh_CN": "地址薄"
+  },
+  "receiveTip1Prefix": {
+    "en": "Currently under",
+    "zh_CN": "当前在"
+  },
+  "receiveTip1Suffix": {
+    "en": "network",
+    "zh_CN": "网络下"
+  },
+  "receiveTip2Prefix": {
+    "en": "Only supports receiving",
+    "zh_CN": "仅支持接收"
+  },
+  "receiveTip2Suffix": {
+    "en": "network assets",
+    "zh_CN": "网络资产"
+  },
+  "ConfirmSecretRecoveryPhrase": {
+    "en": "Confirm secret recovery phrase",
+    "zh_CN": "确认助记词"
+  },
+  "YourSecretRecoveryPhrase": {
+    "en": "Your secret recovery phrase",
+    "zh_CN": "您的助记词"
+  },
+  "ConfirmTheSecretRecoveryPhrasesInOrder": {
+    "en": "Confirm the secret recovery phrases in order",
+    "zh_CN": "请按顺序确认助记词"
+  },
+  "WrongSecretRecoveryPhrase": {
+    "en": "Wrong secret recovery phrase, try again.",
+    "zh_CN": "助记词错误，请重新输入"
+  },
+  "notedItDown": {
+    "en": "I've written it down",
+    "zh_CN": "我已备份完毕"
+  },
+  "AddAccountOrHardwareWallet": {
+    "en": "Add account or hardware wallet",
+    "zh_CN": "添加钱包/连接硬件钱包"
+  },
+  "AddAccount": {
+    "en": "Add {{chain}} account",
+    "zh_CN": "添加 {{chain}} 钱包"
+  },
+  "importWalletTip": {
+    "en": "Import mnemonic phrase or private key",
+    "zh_CN": "导入助记词或私钥"
+  },
+  "createWalletTip": {
+    "en": "Create a new mnemonic wallet",
+    "zh_CN": "创建新的助记词钱包"
+  },
+  "hardwareWallet": {
+    "en": "Hardware wallet",
+    "zh_CN": "硬件钱包"
+  },
+  "hardwareWalletTip": {
+    "en": "Connect your hardware wallet",
+    "zh_CN": "连接您的硬件钱包"
+  },
+  "enterMnemonic": {
+    "en": "Enter secret recovery phrase",
+    "zh_CN": "输入助记词"
+  },
+  "MnemonicRequired": {
+    "en": "Secret recovery phrase is required",
+    "zh_CN": "助记词必填"
+  },
+  "MnemonicPattern": {
+    "en": "Invalid secret recovery phrase",
+    "zh_CN": "助记词无效"
+  },
+  "importMnemonic": {
+    "en": "Secret recovery phrase import",
+    "zh_CN": "助记词导入"
+  },
+  "AddNetworkTip": {
+    "en": "Please add a network only if you completely trust it!",
+    "zh_CN": "请添加你完全受信任的网络！"
+  },
+  "ChainID": {
+    "en": "Chain ID",
+    "zh_CN": "链 ID"
+  },
+  "networkNameIsRequired": {
+    "en": "Network name is required",
+    "zh_CN": "网络名称必填"
+  },
+  "rpcUrlIsRequired": {
+    "en": "RPC URL is required",
+    "zh_CN": "RPC URL 必填"
+  },
+  "Invalid_RPC_URL": {
+    "en": "Invalid RPC URL",
+    "zh_CN": "无效的 RPC URL"
+  },
+  "exist_RPC_URL": {
+    "en": "The chain ID corresponding to this RPC URL already exists",
+    "zh_CN": "此 RPC URL 对应的 Chain ID 已存在"
+  },
+  "symbolIsRequired": {
+    "en": "Symbol is required",
+    "zh_CN": "货币名称必填"
+  },
+  "failed": {
+    "en": "Failed",
+    "zh_CN": "失败"
+  },
+  "AddAddressBook": {
+    "en": "Add address",
+    "zh_CN": "添加地址"
+  },
+  "EditAddressBook": {
+    "en": "Edit address",
+    "zh_CN": "编辑地址"
+  },
+  "SelectNetwork": {
+    "en": "Select network",
+    "zh_CN": "选择网络"
+  },
+  "nameIsRequired": {
+    "en": "Name is required",
+    "zh_CN": "名称必填"
+  },
+  "addressIsRequired": {
+    "en": "Address is required",
+    "zh_CN": "地址必填"
+  },
+  "wrongAddress": {
+    "en": "Wrong address, please try again",
+    "zh_CN": "地址错误，请重新输入"
+  },
+  "addressBookNameLengthTip": {
+    "en": "Maximum 20 characters",
+    "zh_CN": "名字不能超过20个字符"
+  },
+  "addAddressExist": {
+    "en": "Address already exists",
+    "zh_CN": "地址已存在"
+  },
+  "showSecretRecoveryPhrase": {
+    "en": "Show secret recovery phrase",
+    "zh_CN": "显示助记词"
+  },
+  "hideSecretRecoveryPhrase": {
+    "en": "Hide secret recovery phrase",
+    "zh_CN": "隐藏助记词"
+  },
+  "secretRecoveryPhrase": {
+    "en": "Secret recovery phrase",
+    "zh_CN": "助记词"
+  },
+  "secretRecoveryPhraseTip": {
+    "en": "Please keep your secret recovery phrase safe, do not show it to anyone",
+    "zh_CN": "请妥善保存您的助记词，不要透露给任何人"
+  },
+  "yourHove": {
+    "en": "You have",
+    "zh_CN": "您有"
+  },
+  "accountsConnectedToThisSite": {
+    "en": "accounts connected to this site.",
+    "zh_CN": "个账户连接到了该网站。"
+  },
+  "noAccountsConnected": {
+    "en": "No accounts connected.",
+    "zh_CN": "未连接任何账户。"
+  },
+  "accountsConnected": {
+    "en": "Accounts connected",
+    "zh_CN": "已连接账户"
+  },
+  "notConnected": {
+    "en": "Not connected",
+    "zh_CN": "未连接"
+  },
+  "Connected": {
+    "en": "Connected",
+    "zh_CN": "已连接"
+  },
+  "switchToThisAccount": {
+    "en": "Switch to this account",
+    "zh_CN": "切换到该账户"
+  },
+  "permissions": {
+    "en": "Permissions",
+    "zh_CN": "权限"
+  },
+  "permissionsTip": {
+    "en": "You have authorized the following permissions:",
+    "zh_CN": "您已授权以下权限："
+  },
+  "permissionsDesc": {
+    "en": "See address, account balance, activity and suggest transactions to approve.",
+    "zh_CN": "查看您允许的账户的地址（必填）。"
+  },
+  "disconnectThisAccount": {
+    "en": "Disconnect this account",
+    "zh_CN": "断开此账户的连接"
+  },
+  "Bridge": {
+    "en": "Bridge",
+    "zh_CN": "Bridge"
+  },
+  "checkExportWallet": {
+    "en": "Are you sure to export this wallet?",
+    "zh_CN": "确定导出钱包吗?"
+  },
+  "exportAllWallet": {
+    "en": "Export all wallets on this network",
+    "zh_CN": "导出当前网络的所有钱包"
+  },
+  "advancedGasFee": {
+    "en": "Advanced gas fee",
+    "zh_CN": "高级燃料费"
+  },
+  "advancedGasFeeRisk": {
+    "en": "Use this feature to customize the gas price. This can be confusing if you aren’t familiar. Interact at your own risk.",
+    "zh_CN": "使用该功能定制燃料费，如果您不熟悉可能会引起混淆，请谨慎操作，风险自付！"
+  },
+  "maxFee": {
+    "en": "Max fee",
+    "zh_CN": "最高费用"
+  },
+  "maxPriorityFee": {
+    "en": "Priority fee",
+    "zh_CN": "优先费用"
+  },
+  "gasPrice": {
+    "en": "Gas price",
+    "zh_CN": "Gas 价格"
+  },
+  "gasLimit": {
+    "en": "Gas limit",
+    "zh_CN": "Gas 限额"
+  },
+  "maxFeeIsLowPriorityFee": {
+    "en": "Max fee cannot be lower than priority fee",
+    "zh_CN": "最高费用不能低于优先费用"
+  },
+  "maxFeeIsLow": {
+    "en": "Max fee is low for current network conditions",
+    "zh_CN": "对于当前网络条件而言，最高费用较低"
+  },
+  "current": {
+    "en": "current",
+    "zh_CN": "当前"
+  },
+  "maxPriorityFeeIsLow": {
+    "en": "Priority fee is low for current network conditions",
+    "zh_CN": "对于当前网络条件而言，优先费用较低"
+  },
+  "gasPriceIsLow": {
+    "en": "Gas Price is low for current network conditions",
+    "zh_CN": "对于当前网络条件而言，Gas 价格较低"
+  },
+  "gasLimitRange": {
+    "en": "Gas limit must be greater than 20999",
+    "zh_CN": "燃料限额必须大于 20999"
+  },
+  "backupSecretRecoveryPhrase": {
+    "en": "Please back up the secret recovery phrase in handwriting and keep it in a safe place. Don't show it to anyone.",
+    "zh_CN": "请将助记词抄写备份并妥善保管，不要透漏给任何人"
+  },
+  "EstimatedFee": {
+    "en": "Estimated fee",
+    "zh_CN": "预估燃料费"
+  },
+  "Deposit": {
+    "en": "Deposit",
+    "zh_CN": "存入"
+  },
+  "Withdraw": {
+    "en": "Withdraw",
+    "zh_CN": "取出"
+  },
+  "From": {
+    "en": "From",
+    "zh_CN": "来自"
+  },
+  "Balance": {
+    "en": "Balance",
+    "zh_CN": "余额"
+  },
+  "Max": {
+    "en": "MAX",
+    "zh_CN": "最大"
+  },
+  "ToAddress": {
+    "en": "To address",
+    "zh_CN": "接受地址"
+  },
+  "bridgeFee": {
+    "en": "Bridge fee",
+    "zh_CN": "Bridge fee"
+  },
+  "bridgeFeeDesc": {
+    "en": "The bridge contract charges 0.1 GAS, and the platform does not charge any other fees.",
+    "zh_CN": "Bridge 合约收取 0.1 GAS，平台不收取任何其他费用。"
+  },
+  "ActualReceive": {
+    "en": "Actual receive",
+    "zh_CN": "实际收到"
+  },
+  "Approve": {
+    "en": "Approve",
+    "zh_CN": "批准"
+  },
+  "CustomSpendingCap": {
+    "en": "Custom spending cap",
+    "zh_CN": "自定义支出上限"
+  },
+  "EstimatedFeeError": {
+    "en": "We were not able to estimate gas. There might be an error in the contract and this transaction may fail.",
+    "zh_CN": "我们无法估算燃料。合约中可能存在错误，这笔交易可能会失败。"
+  },
+  "Sending": {
+    "en": "Sending",
+    "zh_CN": "正在发送"
+  },
+  "evmSignWarning": {
+    "en": "Only sign this message if you fully understand the content and trust the requesting site.",
+    "zh_CN": "只有在您完全理解内容并信任请求网站的情况下，才能签署此消息。"
+  },
+  "AddNFT": {
+    "en": "Add NFT",
+    "zh_CN": "添加 NFT"
+  },
+  "TokenIdIsRequired": {
+    "en": "Token ID is required",
+    "zh_CN": "Token ID 必填"
+  },
+  "InvalidTokenId": {
+    "en": "Invalid token ID",
+    "zh_CN": "无效的 token ID"
+  },
+  "menuGuideAndSupport": {
+    "en": "Guides and Support",
+    "zh_CN": "指南和支持"
+  },
+  "menuSettings": {
+    "en": "Settings",
+    "zh_CN": "设置"
+  },
+  "menuLock": {
+    "en": "Lock NeoLine",
+    "zh_CN": "锁定 NeoLine"
+  },
+  "menuAboutUs": {
+    "en": "About us",
+    "zh_CN": "关于我们"
+  },
+  "yourAccounts": {
+    "en": "Your accounts",
+    "zh_CN": "你的账户"
+  },
+  "selectAddress": {
+    "en": "Select address",
+    "zh_CN": "选择地址"
+  },
+  "confirmMnemonicTip": {
+    "en": "You can enter your entire mnemonic phrase into any field",
+    "zh_CN": "您可以将整个助记词短语输入到任何字段中"
+  },
+  "FromAddress": {
+    "en": "From address",
+    "zh_CN": "来自"
+  },
+  "YourNeoXReceiveAddress": {
+    "en": "Neo X receive address",
+    "zh_CN": "Neo X 接收地址"
+  },
+  "YourNeo3ReceiveAddress": {
+    "en": "Neo3 N3 receive address",
+    "zh_CN": "Neo3 N3 接收地址"
+  },
+  "addEvmTokenTitle": {
+    "en": "Add suggested tokens",
+    "zh_CN": "添加推荐代币"
+  },
+  "addEvmTokenTip": {
+    "en": "Would you like to import these tokens?",
+    "zh_CN": "您想导入这些代币吗？"
+  },
+  "Token": {
+    "en": "Token",
+    "zh_CN": "代币"
+  },
+  "addEvmChainTitle": {
+    "en": "Allow this site to add a network?",
+    "zh_CN": "允许此网站添加一个网络到 NeoLine 上？"
+  },
+  "addEvmChainTip": {
+    "en": "This will allow this network to be used within NeoLine.",
+    "zh_CN": "这将允许在 NeoLine 中使用此网络。"
+  },
+  "addEvmChainWarning": {
+    "en": "NeoLine does not verify custom networks, please add your trusted network!",
+    "zh_CN": "NeoLine 不验证自定义网络，请添加您信任的网络。"
+  },
+  "NetworkURL": {
+    "en": "Network URL",
+    "zh_CN": "网络 URL"
+  },
+  "CurrencySymbol": {
+    "en": "Currency symbol",
+    "zh_CN": "货币符号"
+  },
+  "BlockExplorerURL": {
+    "en": "Block explorer URL",
+    "zh_CN": "区块浏览器 URL"
+  },
+  "ContractAddress": {
+    "en": "Contract address",
+    "zh_CN": "合约地址"
+  },
+  "ViewTransaction": {
+    "en": "View transaction",
+    "zh_CN": "查看交易"
+  },
+  "ViewInNFTMarket": {
+    "en": "View in NFT market",
+    "zh_CN": "到 NFT 市场查看"
+  },
+  "Depositing": {
+    "en": "Depositing",
+    "zh_CN": "存入中"
+  },
+  "Deposited": {
+    "en": "Deposited",
+    "zh_CN": "已存入"
+  },
+  "Withdrawing": {
+    "en": "Withdrawing",
+    "zh_CN": "提取中"
+  },
+  "Withdrawn": {
+    "en": "Withdrawn",
+    "zh_CN": "已提取"
+  },
+  "Completed": {
+    "en": "Completed",
+    "zh_CN": "完成"
+  },
+  "DepositingTip": {
+    "en": "{{symbol}} will be deposited into your wallet once the transaction is complete.",
+    "zh_CN": "交易完成后，{{symbol}} 将存入您的钱包。"
+  },
+  "DepositedTip": {
+    "en": "{{symbol}} has bee deposited into your Neo X wallet.",
+    "zh_CN": "{{symbol}} 已存入您的 Neo X 钱包。"
+  },
+  "WithdrawingTip": {
+    "en": "{{symbol}} will be withdrawn into your wallet once the transaction is complete.",
+    "zh_CN": "交易完成后，{{symbol}} 将被提取到你的钱包中。"
+  },
+  "WithdrawnTip": {
+    "en": "{{symbol}} has bee withdrawn into your Neo3 wallet.",
+    "zh_CN": "{{symbol}} 已提取至您的 Neo3 钱包。"
+  },
+  "Transferring": {
+    "en": "Transferring",
+    "zh_CN": "转账中"
+  },
+  "Transferred": {
+    "en": "Transferred",
+    "zh_CN": "已转入"
+  },
+  "SpendingCapRequestForYour": {
+    "en": "Spending cap request for your",
+    "zh_CN": "的支出上限请求"
+  },
+  "ViewDetails": {
+    "en": "View details",
+    "zh_CN": "查看详情"
+  },
+  "approveTip": {
+    "en": "Be careful: The third party could spend your entire token balance without further notice or consent. Protect yourself by customizing a lower spending cap.",
+    "zh_CN": "第三方可能会支出您的全部代币余额，无需进一步通知或同意。请自定义较低的支出上限以保护自己。"
+  },
+  "approveCustomTip": {
+    "en": "Only enter a number that you're comfortable with the third party spending now or in the future. You can always increase the spending cap later.",
+    "zh_CN": "仅需输入一个您觉得比较恰当的现在或将来第三方支出的数字。以后您可以随时提高支出上限。"
+  },
+  "useSiteSuggestion": {
+    "en": "Use site suggestion",
+    "zh_CN": "使用网站建议"
+  },
+  "useSuggestion": {
+    "en": "Use suggestion",
+    "zh_CN": "使用建议"
+  },
+  "contractInteraction": {
+    "en": "Contract interaction",
+    "zh_CN": "合约交互"
+  },
+  "save": {
+    "en": "Save",
+    "zh_CN": "保存"
+  },
+  "footnoteDesc2": {
+    "en": "This measure is in place to mitigate risks and ensure a seamless user experience. As the bridge service proves its stability, the provider will gradually lift the GAS amount cap and expand the service to include NEO tokens and other assets.",
+    "zh_CN": "当桥接服务稳定后，将逐步取消数量限制，并扩大桥接服务范围，包含 NEO 及其他资产。"
+  },
+  "footnote": {
+    "en": "Footnote",
+    "zh_CN": "重要提示"
+  },
+  "yourHavePendingTxs": {
+    "en": "You have ({{count}}) pending transaction. This transaction will not process until that one is complete. Learn how to",
+    "zh_CN": "您有 ({{count}}) 笔待处理的交易。 在那笔交易完成之前，这笔交易不会被处理。 学习如何"
+  },
+  "evmInsufficientGas": {
+    "en": "You do not have enough {{symbol}} in your account to pay for transaction fees on {{network}} network. or deposit from another account.",
+    "zh_CN": "您的账户中没有足够的{{symbol}}可以支付{{network}}网络上的交易费用。或从另一个账户存入保证金。"
+  },
+  "approveInitTip": {
+    "en": "This action allows a third party to spend {{symbol}} from your current balance.",
+    "zh_CN": "此操作允许第三方从您的当前余额中支出 {{symbol}}。"
+  },
+  "approveBigTip": {
+    "en": "This allows the third party to spend all your token balance until it reaches the cap or you revoke the spending cap. If this is not intended, consider setting a lower spending cap.",
+    "zh_CN": "此操作允许第三方支出您所有的代币余额，直到达到上限或您撤销支出上限为止。如果不是有意为之，请考虑设置较低的支出上限。"
+  },
+  "approveNormalTip": {
+    "en": "This allows the third party to spend {{amount}} {{symbol}} from your current balance.",
+    "zh_CN": "此操作允许第三方从您的当前余额中支出 {{amount}} {{symbol}}。"
+  },
+  "cancelOrSpeedUpTX": {
+    "en": "cancel or speed up a transaction.",
+    "zh_CN": "取消或加速交易。"
+  },
+  "customNonce": {
+    "en": "Custom nonce",
+    "zh_CN": "自定义 nonce"
+  },
+  "dropped": {
+    "en": "Dropped",
+    "zh_CN": "已丢弃"
+  },
+  "cancelled": {
+    "en": "Cancelled",
+    "zh_CN": "已取消"
+  },
+  "canceling": {
+    "en": "Canceling",
+    "zh_CN": "取消中"
+  },
+  "speedingUp": {
+    "en": "Speeding up",
+    "zh_CN": "加速中"
+  },
+  "speedUp": {
+    "en": "Speed up",
+    "zh_CN": "加速"
+  },
+  "cancelTransaction": {
+    "en": "Cancel transaction",
+    "zh_CN": "取消"
+  },
+  "ActivityLog": {
+    "en": "Activity log",
+    "zh_CN": "活动日志"
+  },
+  "SpeedUpCancellation": {
+    "en": "Speed up this cancellation",
+    "zh_CN": "加速取消该笔交易"
+  },
+  "evmLogCreateTx": {
+    "en": "Transaction created with estimated gas fee of {{gas}} {{symbol}} at {{time}}.",
+    "zh_CN": "已在 {{time}} 提交交易，燃料费预计为 {{gas}} {{symbol}}。"
+  },
+  "evmLogSpeedUpTx": {
+    "en": "Transaction resubmitted with estimated gas fee increased to {{gas}} {{symbol}} at {{time}}.",
+    "zh_CN": "已在 {{time}} 重新提交交易，燃料费预计升至 {{gas}} {{symbol}}。"
+  },
+  "evmLogCancelTx": {
+    "en": "Transaction canceled with estimated gas fee of {{gas}} {{symbol}} at {{time}}.",
+    "zh_CN": "已在 {{time}} 取消交易，燃料费预计为 {{gas}} {{symbol}}。"
+  },
+  "evmLogCompleteTx": {
+    "en": "Transaction confirmed at {{time}}.",
+    "zh_CN": "交易已在 {{time}} 确认。"
+  },
+  "cancelTxDesc": {
+    "en": "By canceling the transaction, you'll also need to pay network fees. Due to network error, the cancellation may be unsuccessful.",
+    "zh_CN": "取消交易需要额外花费网络费用（由于网络原因，取消交易不能保证成功）。"
+  },
+  "speedUpTxDesc": {
+    "en": "Speed up the transaction by increasing the network fee.",
+    "zh_CN": "提高网络费用以加速交易"
+  },
+  "speedUpTip": {
+    "en": "Note: We won't charge you the service fee for accelerating this transaction.",
+    "zh_CN": "注：NeoLine钱包不会对本次交易收取加速服务费。"
+  },
+  "sendToken": {
+    "en": "Send",
+    "zh_CN": "发送"
+  },
+  "sendEther": {
+    "en": "Send",
+    "zh_CN": "发送"
+  },
+  "Activity": {
+    "en": "Activity",
+    "zh_CN": "活动"
+  },
+  "Site": {
+    "en": "Site",
+    "zh_CN": "网站"
+  },
+  "useSiteSuggestions": {
+    "en": "Use website suggestions",
+    "zh_CN": "使用网站建议"
+  },
+  "SiteTip": {
+    "en": "{{host}} has suggested this price.<br /> Max base fee: {{maxFeePerGas}}<br /> Priority fee: {{maxPriorityFee}}<br /> Gas limit: {{gasLimit}}",
+    "zh_CN": "{{host}} 建议了这个价格。<br /> Max base fee: {{maxFeePerGas}}<br /> Priority fee: {{maxPriorityFee}}<br /> Gas limit: {{gasLimit}}"
+  },
+  "SiteLegacyFeeTip": {
+    "en": "{{host}} has suggested this price.<br /> Gas price: {{gasPrice}}<br /> Gas limit: {{gasLimit}}",
+    "zh_CN": "{{host}} 建议了这个价格。<br /> Gas price: {{gasPrice}}<br /> Gas limit: {{gasLimit}}"
+  },
+  "LearnBridge": {
+    "en": "Learn how to bridge?",
+    "zh_CN": "查看 Bridge 教程"
+  },
+  "GetSupport": {
+    "en": "Get Support",
+    "zh_CN": "获取帮助"
+  },
+  "networkTip": {
+    "en": "NeoLine now supports Neo X (EVM Network), and users can easily add any EVM network.",
+    "zh_CN": "NeoLine 现已支持 Neo X (EVM Network)，支持用户添加任何 EVM 网络。"
+  },
+  "learnMore": {
+    "en": "Learn more!",
+    "zh_CN": "点击查看教程！"
+  },
+  "needHelp": {
+    "en": "Need help? Contact",
+    "zh_CN": "需要帮助？请联系"
+  },
+  "contactSupport": {
+    "en": "NeoLine Support",
+    "zh_CN": "NeoLine 支持"
+  },
+  "ConnectionRequest": {
+    "en": "Connection Request",
+    "zh_CN": "连接请求"
+  },
+  "approval": {
+    "en": "Approval",
+    "zh_CN": "批准"
+  },
+  "approving": {
+    "en": "Approving",
+    "zh_CN": "批准中"
+  },
+  "TokenApproved": {
+    "en": "{{symbol}} Approved",
+    "zh_CN": "批准 {{symbol}}"
+  },
+  "connectOneKey": {
+    "en": "Please connect and unlock your OneKey device",
+    "zh_CN": "请连接并解锁您的 OneKey 设备"
+  },
+  "installOneKeyBridgeTip": {
+    "en": "Open OneKey Bridge app. Please download and open OneKey Bridge desktop app before connecting your hardware device. NeoLine needs it to communicate with your hardware wallet.",
+    "zh_CN": "需要启动 OneKey Bridge。连接硬件设备前，请下载并启动 OneKey Bridge，NeoLine 才能与硬件通信。"
+  },
+  "installOneKeyBridgeShortTip": {
+    "en": "Please download and open OneKey Bridge desktop app.",
+    "zh_CN": "请下载并启动 OneKey Bridge。"
+  },
+  "installOneKeyBridge": {
+    "en": "Install OneKey Bridge",
+    "zh_CN": "安装 OneKey Bridge"
+  },
+  "selectHardware": {
+    "en": "Select a hardware wallet you would like to use with NeoLine.",
+    "zh_CN": "选择希望用于 NeoLine 的硬件钱包。"
+  },
+  "notice": {
+    "en": "Notification",
+    "zh_CN": "通知"
+  },
+  "RPC_URL": {
+    "en": "RPC URL",
+    "zh_CN": "RPC URL"
+  },
+  "AddAURL": {
+    "en": "Add a URL",
+    "zh_CN": "添加 URL"
+  },
+  "AddRPCURL": {
+    "en": "Add RPC URL",
+    "zh_CN": "添加 RPC URL"
+  },
+  "RPC_URL_ChainId_Not_Match": {
+    "en": "The RPC URL you have entered returned a different chain ID ({{chainId}})",
+    "zh_CN": "您输入的 RPC URL 返回了不同的链 ID ({{chainId}})"
+  }
+}
