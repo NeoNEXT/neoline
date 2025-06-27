@@ -2,7 +2,6 @@ import {
   Component,
   OnInit,
   Input,
-  OnDestroy,
   OnChanges,
   SimpleChanges,
 } from '@angular/core';
@@ -10,29 +9,23 @@ import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
 import { ChromeService, SettingState } from '@/app/core';
 import { STORAGE_NAME } from '../../_lib';
-import { Unsubscribable } from 'rxjs';
 
 @Component({
   selector: 'app-home-backup',
   templateUrl: 'backup.component.html',
   styleUrls: ['./backup.component.scss'],
 })
-export class PopupHomeBackupComponent implements OnInit, OnDestroy, OnChanges {
+export class PopupHomeBackupComponent implements OnInit, OnChanges {
   @Input() currentWallet: Wallet2 | Wallet3;
   currentHasBackup: boolean = null;
   isBackupLater = false;
 
   showOnePassword: boolean = null;
-  settingStateSub: Unsubscribable;
 
   constructor(
     private chrome: ChromeService,
     private settingState: SettingState
   ) {}
-
-  ngOnDestroy(): void {
-    this.settingStateSub?.unsubscribe();
-  }
 
   ngOnInit(): void {
     this.chrome.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {
@@ -76,16 +69,6 @@ export class PopupHomeBackupComponent implements OnInit, OnDestroy, OnChanges {
   }
 
   toOnePwd() {
-    this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
-      if (lang === 'zh_CN') {
-        window.open(
-          'https://tutorial.neoline.io/v/cn/xin-shou-zhi-nan/neoline-cha-jian-qian-bao-tong-yong-mi-ma-she-zhi'
-        );
-      } else {
-        window.open(
-          'https://tutorial.neoline.io/getting-started/one-pass-setting-for-neoline-extension-wallet'
-        );
-      }
-    });
+    this.settingState.toWeb('onePasswordTutorial');
   }
 }

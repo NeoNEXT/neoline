@@ -17,8 +17,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
   currentUrl = this.router.url;
   showMenu = false;
   showExpandView = true;
-  lang: string;
-  settingStateSub: Unsubscribable;
   hasUnreadNotice = false;
 
   private accountSub: Unsubscribable;
@@ -62,9 +60,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.currentUrl = res.url;
       }
     });
-    this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
-      this.lang = lang;
-    });
     this.chromeSrc
       .getStorage(STORAGE_NAME.noticeLatestId)
       .subscribe((noticeLatestId) => {
@@ -84,7 +79,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
-    this.settingStateSub?.unsubscribe();
   }
 
   checkIsThemeBg() {
@@ -134,11 +128,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   toHelpWebsite() {
-    if (this.lang === 'zh_CN') {
-      window.open('https://tutorial.neoline.io/v/cn');
-    } else {
-      window.open('https://tutorial.neoline.io/');
-    }
+    this.settingState.toWeb('getHelp');
   }
 
   toNetworkList() {

@@ -26,6 +26,7 @@ import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
+import { LinkType } from '@/app/popup/_lib/setting';
 
 @Component({
   selector: 'app-address-selector',
@@ -41,7 +42,6 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   status: LedgerStatus = LedgerStatuses.DISCONNECTED;
   savedAddressesObj = {};
   hasInstallOneKeyBridge = true;
-  lang = 'en';
 
   selectedAccount;
   selectedIndex;
@@ -51,7 +51,6 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   isLoadingAccount = false;
   accountBalance = [];
   getBalanceReq;
-  settingStateSub: Unsubscribable;
 
   private accountSub: Unsubscribable;
   private neo2WalletArr: Wallet2[];
@@ -80,15 +79,11 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
       this.getLedgerStatus();
     });
     this.getSavedAddress();
-    this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
-      this.lang = lang;
-    });
   }
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
     this.getStatusInterval?.unsubscribe();
-    this.settingStateSub?.unsubscribe();
   }
 
   chooseAccount(index: number) {
@@ -217,19 +212,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
     }
   }
 
-  public async jumbToWeb(type: 'privacy' | 'agreement') {
-    const prefix = this.lang === 'zh_CN' ? '' : '/en';
-    switch (type) {
-      case 'privacy':
-        window.open(`https://neoline.io${prefix}/privacy`);
-        break;
-      case 'agreement':
-        window.open(`https://neoline.io${prefix}/agreement`);
-        break;
-    }
-  }
-
-  toInstallOneKeyBridge() {
-    this.oneKeyService.toInstallOneKeyBridge(this.lang);
+  jumbToWeb(type: LinkType) {
+    this.settingState.toWeb(type);
   }
 }

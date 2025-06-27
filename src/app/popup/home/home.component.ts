@@ -28,7 +28,6 @@ declare var chrome: any;
 export class PopupHomeComponent implements OnInit {
   selectedIndex = 0; // asset tab or transaction tab
   rateCurrency: string;
-  lang = 'en';
   hideValue = false;
   totalValue = 0;
   showDappAuth = true;
@@ -65,9 +64,6 @@ export class PopupHomeComponent implements OnInit {
   }
 
   ngOnInit(): void {
-    this.settingState.langSub.subscribe((lang) => {
-      this.lang = lang;
-    });
     this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
@@ -112,26 +108,6 @@ export class PopupHomeComponent implements OnInit {
     }
   }
   getSupport(type: 'asset' | 'txs' = 'asset') {
-    let url: string;
-    switch (type) {
-      case 'asset':
-        if (this.lang === 'zh_CN') {
-          url =
-            'https://tutorial.neoline.io/v/cn/xin-shou-zhi-nan/zi-chan-guan-li';
-        } else {
-          url = 'https://tutorial.neoline.io/getting-started/manage-assets';
-        }
-        break;
-      case 'txs':
-        if (this.lang === 'zh_CN') {
-          url =
-            'https://tutorial.neoline.io/v/cn/neox-qian-bao-de-chuang-jian-he-shi-yong/guan-yu-neoline-activity';
-        } else {
-          url =
-            'https://tutorial.neoline.io/create-and-manage-neo-x-wallet/about-neoline-activity';
-        }
-        break;
-    }
-    window.open(url);
+    this.settingState.toWeb(type === 'asset' ? 'manageAsset' : 'manageTx');
   }
 }

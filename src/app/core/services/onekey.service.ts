@@ -76,14 +76,6 @@ export class OneKeyService {
     });
   }
 
-  toInstallOneKeyBridge(lang: string) {
-    const url =
-      lang === 'zh_CN'
-        ? 'https://onekey.so/zh_CN/download/'
-        : 'https://onekey.so/download/';
-    window.open(url);
-  }
-
   async getDeviceStatus() {
     const deviceResponse = await HardwareSDK.HardwareWebSdk.searchDevices();
     if (deviceResponse.success) {

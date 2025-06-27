@@ -30,7 +30,7 @@
     </p>
     <p class="note" *ngIf="!hasInstallOneKeyBridge">
       {{ "installOneKeyBridgeTip" | translate | async }}
-      <span class="link" (click)="toInstallOneKeyBridge()">{{
+      <span class="link" (click)="jumbToWeb('oneKeyDownload')">{{
         "installOneKeyBridge" | translate | async
       }}</span>
     </p>

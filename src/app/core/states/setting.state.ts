@@ -2,12 +2,14 @@ import { Injectable } from '@angular/core';
 import { STORAGE_NAME } from '@/app/popup/_lib';
 import { BehaviorSubject } from 'rxjs';
 import { ChromeService } from '../services/chrome.service';
+import { LINKS, LinkType } from '@/app/popup/_lib/setting';
 
 @Injectable()
 export class SettingState {
   themeSub = new BehaviorSubject<string>('light-theme');
   langSub = new BehaviorSubject<string>('en');
   langJson;
+  private lang: string;
 
   evmCustomNonceSub = new BehaviorSubject<boolean>(false);
   rateCurrencySub = new BehaviorSubject<string>('USD');
@@ -28,6 +30,7 @@ export class SettingState {
   }
 
   changLang(lang: string) {
+    this.lang = lang;
     this.langSub.next(lang);
   }
 
@@ -42,6 +45,16 @@ export class SettingState {
     this.rateCurrencySub.next(currency);
     if (!init) {
       this.chrome.setStorage(STORAGE_NAME.rateCurrency, currency);
+    }
+  }
+
+  toWeb(type: LinkType) {
+    switch (this.lang) {
+      case 'zh_CN':
+        window.open(LINKS[type].zh_CN);
+        break;
+      default:
+        window.open(LINKS[type].en);
     }
   }
 }

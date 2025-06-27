@@ -1,61 +1,46 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { ChromeService, SettingState } from '@/app/core';
-import { Unsubscribable } from 'rxjs';
+import { LinkType } from '../_lib/setting';
 
 @Component({
   templateUrl: 'about.component.html',
   styleUrls: ['about.component.scss'],
 })
-export class PopupAboutComponent implements OnInit, OnDestroy {
+export class PopupAboutComponent implements OnInit {
   public version = '';
-  links = [
+  links: { name: string; linkType: LinkType }[] = [
     {
       name: 'PrivacyPolicy',
-      enUrl: 'https://neoline.io/en/privacy',
-      zhUrl: 'https://neoline.io/privacy',
+      linkType: 'privacy',
     },
     {
       name: 'termsOfUse',
-      enUrl: 'https://neoline.io/en/agreement',
-      zhUrl: 'https://neoline.io/agreement',
+      linkType: 'agreement',
     },
     {
       name: 'companyWebsite',
-      enUrl: 'https://neoline.io/en',
-      zhUrl: 'https://neoline.io/',
+      linkType: 'companyWebsite',
     },
     {
       name: 'contactUs',
-      enUrl: 'https://t.me/neoline_community',
-      zhUrl: 'https://t.me/neoline_community',
+      linkType: 'contactUs',
     },
     {
       name: 'FollowUs',
-      enUrl: 'https://x.com/NEOLine20',
-      zhUrl: 'https://x.com/NEOLine20',
+      linkType: 'followUs',
     },
   ];
-  settingStateSub: Unsubscribable;
 
   constructor(
     private chrome: ChromeService,
     private settingState: SettingState
   ) {}
-  ngOnDestroy(): void {
-    this.settingStateSub?.unsubscribe();
-  }
 
   ngOnInit(): void {
     this.version = this.chrome.getVersion();
   }
 
-  public async jumbToWeb(index: number) {
-    this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
-      if (lang === 'zh_CN') {
-        window.open(this.links[index].zhUrl);
-      } else {
-        window.open(this.links[index].enUrl);
-      }
-    });
+  jumbToWeb(type: LinkType) {
+    this.settingState.toWeb(type);
   }
 }

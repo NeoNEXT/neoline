@@ -55,7 +55,6 @@ export class PopupNetworkListComponent implements OnDestroy {
   showMoreModal = false;
   showRpcListModal = false;
   moreModalChainType: ChainType;
-  lang = 'en';
   isShowPopup = false;
   private showPopupTimeout: any;
   searchValue = '';
@@ -85,9 +84,6 @@ export class PopupNetworkListComponent implements OnDestroy {
     private neon: NeonService,
     private settingState: SettingState
   ) {
-    this.settingState.langSub.subscribe((lang) => {
-      this.lang = lang;
-    });
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
@@ -413,15 +409,7 @@ export class PopupNetworkListComponent implements OnDestroy {
   }
 
   toWeb() {
-    if (this.lang === 'zh_CN') {
-      window.open(
-        'https://tutorial.neoline.io/v/cn/neox-qian-bao-de-chuang-jian-he-shi-yong/ru-he-tong-guo-neoline-tian-jia-he-qie-huan-qi-ta-evm-wang-luo'
-      );
-    } else {
-      window.open(
-        'https://tutorial.neoline.io/create-and-manage-neo-x-wallet/how-to-add-and-switch-networks'
-      );
-    }
+    this.settingState.toWeb('addSwitchNetwork');
   }
 
   searchNetwork(value: string) {

@@ -35,7 +35,6 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
   loadingMsg = '';
   getStatusInterval;
   hasInstallOneKeyBridge = true;
-  lang = 'en';
 
   constructor(
     private ledger: LedgerService,
@@ -51,9 +50,6 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
     this.getLedgerStatus();
     this.getStatusInterval = interval(5000).subscribe(() => {
       this.getLedgerStatus();
-    });
-    this.setting.langSub.subscribe((lang) => {
-      this.lang = lang;
     });
   }
 
@@ -172,6 +168,6 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
   }
 
   toInstallOneKeyBridge() {
-    this.oneKeyService.toInstallOneKeyBridge(this.lang);
+    this.setting.toWeb('oneKeyDownload');
   }
 }

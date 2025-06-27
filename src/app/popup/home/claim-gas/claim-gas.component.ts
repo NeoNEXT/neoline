@@ -1,11 +1,10 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import {
   AssetState,
   NeonService,
   GlobalService,
   HomeService,
   UtilServiceState,
-  SettingState,
 } from '@/app/core';
 import { NEO, GAS } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
@@ -40,7 +39,7 @@ enum ClaimStatus {
   templateUrl: 'claim-gas.component.html',
   styleUrls: ['claim-gas.component.scss'],
 })
-export class PopupClaimGasComponent implements OnInit, OnDestroy {
+export class PopupClaimGasComponent implements OnDestroy {
   claimAssetId = GAS3_CONTRACT;
   claimNumber = 0;
   claimStatus = 'confirmed';
@@ -53,7 +52,6 @@ export class PopupClaimGasComponent implements OnInit, OnDestroy {
   showHardwareSign = false;
   unsignedTx;
   signType;
-  lang = 'en';
 
   private accountSub: Unsubscribable;
   currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
@@ -70,7 +68,6 @@ export class PopupClaimGasComponent implements OnInit, OnDestroy {
     private transfer: TransferService,
     private neo3TransferService: Neo3TransferService,
     private homeService: HomeService,
-    private settingState: SettingState,
     private util: UtilServiceState,
     private store: Store<AppState>
   ) {
@@ -86,12 +83,6 @@ export class PopupClaimGasComponent implements OnInit, OnDestroy {
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.initData();
-    });
-  }
-
-  ngOnInit(): void {
-    this.settingState.langSub.subscribe((lang) => {
-      this.lang = lang;
     });
   }
 

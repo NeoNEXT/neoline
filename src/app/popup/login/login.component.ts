@@ -43,7 +43,6 @@ export class PopupLoginComponent
   selectWallet: Wallet2 | Wallet3;
   selectChainType: ChainType;
   isOnePassword = false;
-  lang = 'en';
 
   private messageID = '';
   private accountSub: Unsubscribable;
@@ -79,9 +78,6 @@ export class PopupLoginComponent
   }
 
   ngOnInit(): void {
-    this.settingState.langSub.subscribe((lang) => {
-      this.lang = lang;
-    });
     this.chrome.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {
       if (res === true) {
         this.isOnePassword = true;
@@ -243,10 +239,6 @@ export class PopupLoginComponent
   }
 
   getHelp() {
-    if (this.lang === 'zh_CN') {
-      window.open('https://tutorial.neoline.io/v/cn?fallback=true');
-    } else {
-      window.open('https://tutorial.neoline.io/');
-    }
+    this.settingState.toWeb('getHelp');
   }
 }

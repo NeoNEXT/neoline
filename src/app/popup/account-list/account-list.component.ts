@@ -13,7 +13,6 @@ import {
   AssetState,
   NeonService,
   GlobalService,
-  SettingState,
 } from '@/app/core';
 import { Router } from '@angular/router';
 import {
@@ -61,8 +60,6 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
   addressBalances = {};
   isOnePassword = false;
   private searchSub: Unsubscribable;
-  settingStateSub: Unsubscribable;
-  lang: string;
 
   selectChainType: ChainType;
   displayList: WalletListItem[] = [];
@@ -90,7 +87,6 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     private assetState: AssetState,
     private neon: NeonService,
     private global: GlobalService,
-    private settingState: SettingState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -111,14 +107,10 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
         this.isOnePassword = true;
       }
     });
-    this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
-      this.lang = lang;
-    });
   }
 
   ngOnDestroy(): void {
     this.accountSub?.unsubscribe();
-    this.settingStateSub?.unsubscribe();
   }
 
   private initData() {

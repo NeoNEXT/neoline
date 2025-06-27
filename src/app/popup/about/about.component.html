@@ -9,7 +9,7 @@
 <ul class="links">
   <li
     *ngFor="let item of links; index as index"
-    (click)="jumbToWeb(index)"
+    (click)="jumbToWeb(item.linkType)"
     class="item"
   >
     <span>{{ item.name | translate | async }}</span>

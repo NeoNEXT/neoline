@@ -1,3 +1,4 @@
+import { LINKS } from '@/app/popup/_lib/setting';
 import { Component, Input } from '@angular/core';
 
 @Component({
@@ -11,8 +12,6 @@ export class EvmPendingWarningComponent {
   constructor() {}
 
   toWeb() {
-    window.open(
-      `https://tutorial.neoline.io/getting-started/how-to-speed-up-or-cancel-a-pending-transaction`
-    );
+    window.open(LINKS.speedUpCancelTx.en);
   }
 }
