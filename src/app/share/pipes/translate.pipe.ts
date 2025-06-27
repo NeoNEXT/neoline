@@ -11,7 +11,7 @@ export class TranslatePipe implements PipeTransform {
   public transform(value: string, params: { [key: string]: string }) {
     return this.settingState.langSub.pipe(
       map((res) => {
-        let source: string = this.settingState.langJson[value][res];
+        let source: string = this.settingState.langJson[res][value].message;
         if (params) {
           Object.keys(params).forEach((key) => {
             const pattern = new RegExp(`\{\{${key}\}\}`, 'g');

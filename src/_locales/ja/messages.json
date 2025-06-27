@@ -1,0 +1,1535 @@
+{
+  "hello": {
+    "message": "こんにちは"
+  },
+  "closeWallet": {
+    "message": "ウォレットを閉じる"
+  },
+  "account": {
+    "message": "ウォレット"
+  },
+  "edit": {
+    "message": "編集"
+  },
+  "assets": {
+    "message": "資産"
+  },
+  "setting": {
+    "message": "設定"
+  },
+  "mainNet": {
+    "message": "メインネット"
+  },
+  "testNet": {
+    "message": "テストネット"
+  },
+  "home": {
+    "message": "ホーム"
+  },
+  "about": {
+    "message": "私たちについて"
+  },
+  "close": {
+    "message": "閉じる"
+  },
+  "address": {
+    "message": "アドレス"
+  },
+  "copyAddress": {
+    "message": "アドレスをコピー"
+  },
+  "create": {
+    "message": "作成"
+  },
+  "import": {
+    "message": "インポート"
+  },
+  "welcomeCreate": {
+    "message": "NeoLineへようこそ。作成"
+  },
+  "welcomeImport": {
+    "message": "NeoLineへようこそ。インポート"
+  },
+  "enterWalletName": {
+    "message": "ウォレット名を設定"
+  },
+  "walletNameIsRequired": {
+    "message": "ウォレット名は必須です"
+  },
+  "lengthLimit": {
+    "message": "長さ制限"
+  },
+  "enterPassword": {
+    "message": "パスワードを入力"
+  },
+  "enterFilePassword": {
+    "message": "ファイルパスワードを入力"
+  },
+  "filePasswordRequired": {
+    "message": "ファイルパスワードは必須です"
+  },
+  "passwordRequired": {
+    "message": "パスワードは必須です"
+  },
+  "enterConfirmPassword": {
+    "message": "パスワードを再入力"
+  },
+  "confirmError": {
+    "message": "パスワードが一致しません"
+  },
+  "creating": {
+    "message": "作成中"
+  },
+  "enterWIF": {
+    "message": "WIF（秘密鍵）を入力"
+  },
+  "enterEncryptedKey": {
+    "message": "暗号化キーを入力"
+  },
+  "WIFRequired": {
+    "message": "WIFは必須です"
+  },
+  "EncryptedKeyRequired": {
+    "message": "暗号化キーは必須です"
+  },
+  "importing": {
+    "message": "インポート中"
+  },
+  "language": {
+    "message": "言語"
+  },
+  "loading": {
+    "message": "読み込み中..."
+  },
+  "empty": {
+    "message": "データなし"
+  },
+  "receive": {
+    "message": "受取"
+  },
+  "received": {
+    "message": "受取済み"
+  },
+  "allTransfer": {
+    "message": "すべて"
+  },
+  "sent": {
+    "message": "送信"
+  },
+  "balancecolon": {
+    "message": "残高："
+  },
+  "transgerTo": {
+    "message": "転送先"
+  },
+  "AssetUpper": {
+    "message": "資産"
+  },
+  "transferToTip": {
+    "message": "受取人"
+  },
+  "amount": {
+    "message": "数量"
+  },
+  "transferAmountTip": {
+    "message": "転送数量"
+  },
+  "cancel": {
+    "message": "キャンセル"
+  },
+  "refuse": {
+    "message": "拒否"
+  },
+  "submit": {
+    "message": "送信"
+  },
+  "copy": {
+    "message": "コピー"
+  },
+  "showPrivateKey": {
+    "message": "秘密鍵を表示"
+  },
+  "password": {
+    "message": "パスワード"
+  },
+  "verifyPassword": {
+    "message": "パスワードを確認"
+  },
+  "caution": {
+    "message": "注意"
+  },
+  "transferExportTip": {
+    "message": "秘密鍵を安全に保管し、誰にも見せないでください"
+  },
+  "verify": {
+    "message": "確認"
+  },
+  "done": {
+    "message": "完了"
+  },
+  "transfer": {
+    "message": "転送"
+  },
+  "transferHistory": {
+    "message": "取引履歴"
+  },
+  "reocords": {
+    "message": "記録"
+  },
+  "pages": {
+    "message": "ページ"
+  },
+  "transferId": {
+    "message": "取引ID"
+  },
+  "transferVolume": {
+    "message": "取引額"
+  },
+  "size": {
+    "message": "サイズ"
+  },
+  "time": {
+    "message": "時間"
+  },
+  "newWallet": {
+    "message": "新しいウォレット"
+  },
+  "createTip": {
+    "message": "NeoLineへようこそ、新しいウォレットを作成してください。"
+  },
+  "logoutTip": {
+    "message": "ウォレットを閉じますか？"
+  },
+  "yes": {
+    "message": "はい"
+  },
+  "transferInfo": {
+    "message": "取引情報"
+  },
+  "paymentAccount": {
+    "message": "支払いウォレット"
+  },
+  "receiptAccount": {
+    "message": "受取ウォレット"
+  },
+  "termsOfUse": {
+    "message": "利用規約"
+  },
+  "companyWebsite": {
+    "message": "公式サイト"
+  },
+  "contactUs": {
+    "message": "お問い合わせ"
+  },
+  "FollowUs": {
+    "message": "フォロー"
+  },
+  "myAccountQRCode": {
+    "message": "ウォレットQRコード"
+  },
+  "complete": {
+    "message": "完了"
+  },
+  "addAssetTip": {
+    "message": "この資産を追加しますか？"
+  },
+  "delAssetTip": {
+    "message": "削除を確認しますか？"
+  },
+  "modifyNameTitle": {
+    "message": "ウォレット名を変更"
+  },
+  "modifyNameInput": {
+    "message": "新しいウォレット名を入力（1-32文字）"
+  },
+  "connect": {
+    "message": "接続"
+  },
+  "thAuthTitle": {
+    "message": "接続リクエスト"
+  },
+  "thAuthTip": {
+    "message": "ウォレットに接続したい"
+  },
+  "thAuthNeo2Detail": {
+    "message": "このサイトはNeo Legacy APIへのアクセスを要求しており、Neo Legacyブロックチェーンとやり取りできます。承認前に、正しいサイトにリンクしているか確認してください。"
+  },
+  "thAuthNeo3Detail": {
+    "message": "このサイトはNeo N3 APIへのアクセスを要求しており、Neo N3ブロックチェーンとやり取りできます。承認前に、正しいサイトにリンクしているか確認してください。"
+  },
+  "thAuthNeoXDetail": {
+    "message": "このサイトはNeo X (EVM Network) APIへのアクセスを要求しており、Neo X (EVM Network)ブロックチェーンとやり取りできます。承認前に、正しいサイトにリンクしているか確認してください。"
+  },
+  "thSignTitle": {
+    "message": "このアプリは署名を要求しています。"
+  },
+  "thSignTxTitle": {
+    "message": "このアプリは取引の署名を要求しています。"
+  },
+  "signing": {
+    "message": "署名中"
+  },
+  "message": {
+    "message": "メッセージ"
+  },
+  "signature": {
+    "message": "署名"
+  },
+  "thAssetTip": {
+    "message": "この資産を追加しますか？"
+  },
+  "version": {
+    "message": "バージョン"
+  },
+  "addAsset": {
+    "message": "資産を追加"
+  },
+  "searchResult": {
+    "message": "検索結果"
+  },
+  "searchAssetsInput": {
+    "message": "資産を入力し、Enterで検索"
+  },
+  "hidden": {
+    "message": "非表示"
+  },
+  "add": {
+    "message": "追加"
+  },
+  "added": {
+    "message": "追加済み"
+  },
+  "myAccounts": {
+    "message": "マイウォレット"
+  },
+  "myAccount": {
+    "message": "マイウォレット"
+  },
+  "importWallet": {
+    "message": "ウォレットをインポート"
+  },
+  "exportWallet": {
+    "message": "ウォレットをエクスポート"
+  },
+  "createWallet": {
+    "message": "ウォレットを作成"
+  },
+  "clearCacheBtn": {
+    "message": "クリア"
+  },
+  "clearCache": {
+    "message": "ローカルキャッシュ"
+  },
+  "clearCacheTip": {
+    "message": "すべてのローカルキャッシュをクリア"
+  },
+  "reset": {
+    "message": "リセット"
+  },
+  "chooseNep6File": {
+    "message": "Nep6ファイルを選択"
+  },
+  "welcomeBack": {
+    "message": "おかえりなさい"
+  },
+  "loginTip": {
+    "message": "NeoLineへようこそ、まずログインしてください。"
+  },
+  "pwdInput": {
+    "message": "パスワードを入力してください"
+  },
+  "onlySupport": {
+    "message": "のみ対応"
+  },
+  "login": {
+    "message": "ログイン"
+  },
+  "logining": {
+    "message": "ログイン中"
+  },
+  "searchAllResult": {
+    "message": "すべての資産"
+  },
+  "clearStorageTips": {
+    "message": "キャッシュをクリアしますか？"
+  },
+  "viewAll": {
+    "message": "すべて表示"
+  },
+  "remove": {
+    "message": "削除"
+  },
+  "switch": {
+    "message": "切り替え"
+  },
+  "delete": {
+    "message": "削除"
+  },
+  "authDelAllTip": {
+    "message": "すべての承認データをクリア"
+  },
+  "welcomeNeoLine": {
+    "message": "NeoLineへようこそ"
+  },
+  "myAddress": {
+    "message": "NEOアドレス"
+  },
+  "myQRCode": {
+    "message": "ウォレットQRコード"
+  },
+  "setLang": {
+    "message": "言語設定"
+  },
+  "WIFPattern": {
+    "message": "WIFエラー"
+  },
+  "EncryptedKeyPattern": {
+    "message": "暗号化キーエラー"
+  },
+  "tranSubmit": {
+    "message": "取引を送信"
+  },
+  "waitConfirm": {
+    "message": "確認待ち"
+  },
+  "transaction": {
+    "message": "取引"
+  },
+  "confirming": {
+    "message": "確認中"
+  },
+  "transactions": {
+    "message": "取引"
+  },
+  "value": {
+    "message": "金額"
+  },
+  "noTransaction": {
+    "message": "取引なし"
+  },
+  "wifPrivateKey": {
+    "message": "WIF（秘密鍵）"
+  },
+  "privateKey": {
+    "message": "秘密鍵"
+  },
+  "delWalletConfirm": {
+    "message": "このウォレットを削除しますか？"
+  },
+  "delAddressConfirm": {
+    "message": "このアドレスを削除しますか？"
+  },
+  "delNetworkConfirm": {
+    "message": "このネットワークを削除しますか？"
+  },
+  "delAllAuthListConfirm": {
+    "message": "すべての承認をクリアしますか？"
+  },
+  "rejected": {
+    "message": "拒否済み"
+  },
+  "rejectedTip": {
+    "message": "このサイトはNeoLineウォレットへの接続を拒否されました。再度接続を許可する場合は、承認管理から対応する記録を削除してください。"
+  },
+  "connectedTip": {
+    "message": "NeoLineウォレットへの接続を許可"
+  },
+  "to": {
+    "message": "宛先"
+  },
+  "currencyUnit": {
+    "message": "通貨単位"
+  },
+  "privacyData": {
+    "message": "承認済みサイト"
+  },
+  "clearPrivacyDataBtn": {
+    "message": "すべての承認済みサイトをクリア"
+  },
+  "clearPrivacyDataTip": {
+    "message": "承認済みサイトをクリアすると、すべてのサイトは再度リクエストを送信する必要があります。"
+  },
+  "referSource": {
+    "message": "参照元"
+  },
+  "updateTime": {
+    "message": "更新時間"
+  },
+  "importNewWallet": {
+    "message": "既存のウォレットをインポート"
+  },
+  "createNewWallet": {
+    "message": "新しいウォレットを作成"
+  },
+  "or": {
+    "message": "または"
+  },
+  "firstDigitalIdentity": {
+    "message": "最初のデジタルID"
+  },
+  "createYour": {
+    "message": "作成"
+  },
+  "beijingTime": {
+    "message": "中国標準時"
+  },
+  "priorityFee": {
+    "message": "優先手数料"
+  },
+  "priorityFeeTip": {
+    "message": "オプション"
+  },
+  "claim": {
+    "message": "請求"
+  },
+  "syncNow": {
+    "message": "同期"
+  },
+  "confirmed": {
+    "message": "確認済み"
+  },
+  "success": {
+    "message": "成功"
+  },
+  "estimated": {
+    "message": "推定"
+  },
+  "connectChooseAllow": {
+    "message": "許可し、次回から通知しない"
+  },
+  "darkMode": {
+    "message": "ダークモード"
+  },
+  "myTokens": {
+    "message": "マイトークン"
+  },
+  "authorized": {
+    "message": "承認済み"
+  },
+  "systemSettings": {
+    "message": "システム設定"
+  },
+  "lock": {
+    "message": "ロック"
+  },
+  "noMoreData": {
+    "message": "これ以上データなし"
+  },
+  "generalSettings": {
+    "message": "一般設定"
+  },
+  "ViewOnExplorer": {
+    "message": "エクスプローラーで表示"
+  },
+  "accountDetails": {
+    "message": "アカウント詳細"
+  },
+  "expandView": {
+    "message": "ビューを展開"
+  },
+  "accountAdded": {
+    "message": "アカウント追加済み"
+  },
+  "removeAccount": {
+    "message": "アカウントを削除"
+  },
+  "editFee": {
+    "message": "手数料を編集"
+  },
+  "resetWalletConfirm": {
+    "message": "ウォレットをリセットすると、すべてのデータが消去され、復元できません。リセットしますか？"
+  },
+  "slow": {
+    "message": "遅い"
+  },
+  "medium": {
+    "message": "中"
+  },
+  "fast": {
+    "message": "速い"
+  },
+  "customize": {
+    "message": "カスタマイズ"
+  },
+  "resetWallet": {
+    "message": "ウォレットをリセット"
+  },
+  "transferAddress": {
+    "message": "転送アドレス"
+  },
+  "selectAsset": {
+    "message": "資産を選択"
+  },
+  "importMethod": {
+    "message": "インポート方法"
+  },
+  "importKey": {
+    "message": "秘密鍵インポート"
+  },
+  "importFile": {
+    "message": "ファイルインポート"
+  },
+  "personalAccount": {
+    "message": "個人アカウント"
+  },
+  "details": {
+    "message": "詳細"
+  },
+  "data": {
+    "message": "データ"
+  },
+  "backUp": {
+    "message": "バックアップ"
+  },
+  "backUpTip": {
+    "message": "バックアップリマインダー"
+  },
+  "backUpDesc1": {
+    "message": "1. 秘密鍵/リカバリーフレーズを掌握することは、アカウント資産の所有権を掌握することと同じです。手書きで安全な場所に保管し、誰にも共有しないでください。"
+  },
+  "backUpDesc2": {
+    "message": "2. NeoLineは分散型ウォレットであり、秘密鍵/リカバリーフレーズを保存しません。紛失した場合、復元できません。"
+  },
+  "backUpNow": {
+    "message": "今すぐバックアップ"
+  },
+  "backUpLater": {
+    "message": "後でバックアップ"
+  },
+  "donotScreenshot": {
+    "message": "スクリーンショット禁止"
+  },
+  "donotScreenshotTip": {
+    "message": "スクリーンショットを共有または保存しないでください。第三者によって取得され、資産損失を引き起こす可能性があります。コピー時は周囲の安全に注意してください。"
+  },
+  "iKonw": {
+    "message": "了解しました"
+  },
+  "youPrivateKey": {
+    "message": "あなたの秘密鍵"
+  },
+  "privateKeyTip": {
+    "message": "ヒント：秘密鍵を適切に保管し、誰にも開示しないでください。"
+  },
+  "backUpsafeTip": {
+    "message": "ウォレットをバックアップしていません"
+  },
+  "backUpTipLater": {
+    "message": "後でリマインダー"
+  },
+  "backUpSafeDesc": {
+    "message": "デバイス紛失、アプリ再インストール、またはアプリデータ削除が発生した場合、このウォレットとその資産にアクセスできなくなり、復元できません。"
+  },
+  "receiveOurNewsletter": {
+    "message": "ニュースレターを購読"
+  },
+  "newsletterTip": {
+    "message": "NeoLineチームからの最新情報を取得"
+  },
+  "newsletterDesc": {
+    "message": "これらのニュースレターはいつでも購読解除できます。購読解除方法、プライバシー慣行、およびプライバシー保護と尊重に関する詳細は、"
+  },
+  "privacyPolicyWrods": {
+    "message": "プライバシーポリシー"
+  },
+  "newsletterPlaceholder": {
+    "message": "メールアドレスを入力"
+  },
+  "signUpToReceiveUpdatesAndAnnouncements": {
+    "message": "更新とお知らせを受け取るために登録"
+  },
+  "recommendedAssets": {
+    "message": "おすすめ資産"
+  },
+  "myAssets": {
+    "message": "マイ資産"
+  },
+  "addAssetWarn": {
+    "message": "この資産はウォレットによって公式に検証されておらず、セキュリティ上のリスクがあることに注意してください。"
+  },
+  "saveChanges": {
+    "message": "変更を保存"
+  },
+  "selectAChain": {
+    "message": "チェーンを選択"
+  },
+  "TOTAL": {
+    "message": "合計："
+  },
+  "PRIORITYFEEUPPER": {
+    "message": "優先手数料"
+  },
+  "SYSTEMFEE": {
+    "message": "システム手数料"
+  },
+  "NETWORKFEE": {
+    "message": "ネットワーク手数料"
+  },
+  "GASFEE": {
+    "message": "GAS手数料"
+  },
+  "None": {
+    "message": "取引にのみ署名し、この署名を契約で使用することを許可しません。"
+  },
+  "CalledByEntry": {
+    "message": "デフォルトの署名。"
+  },
+  "CustomContracts": {
+    "message": "カスタム契約、指定された契約で署名を使用できます。"
+  },
+  "CustomGroups": {
+    "message": "カスタム契約グループ、指定された契約グループで署名を使用できます。"
+  },
+  "Global": {
+    "message": "リスクが非常に高いです。契約はアドレス内のすべての資産を転送する可能性があり、契約が非常に信頼されている場合にのみ選択してください。"
+  },
+  "Scope": {
+    "message": "スコープ"
+  },
+  "NoWallet": {
+    "message": "ウォレットがありません。インポートまたは作成してください。"
+  },
+  "Name": {
+    "message": "名前"
+  },
+  "Symbol": {
+    "message": "通貨名"
+  },
+  "noData": {
+    "message": "データなし"
+  },
+  "Contract": {
+    "message": "契約"
+  },
+  "YourSigningAddress": {
+    "message": "署名アドレス"
+  },
+  "ContractScriptHash": {
+    "message": "契約スクリプトハッシュ"
+  },
+  "Operation": {
+    "message": "操作"
+  },
+  "InvocationArguments": {
+    "message": "呼び出し引数"
+  },
+  "broadcastOverride": {
+    "message": "ブロードキャスト上書き"
+  },
+  "signers": {
+    "message": "署名者"
+  },
+  "Fee": {
+    "message": "手数料"
+  },
+  "booleanYes": {
+    "message": "はい"
+  },
+  "No": {
+    "message": "いいえ"
+  },
+  "AttachedAssets": {
+    "message": "添付資産"
+  },
+  "AssetIntentOverrideInputs": {
+    "message": "資産意図の上書き入力"
+  },
+  "AssetIntentOverrideOutputs": {
+    "message": "資産意図の上書き出力"
+  },
+  "triggerContractAssetVerification": {
+    "message": "契約資産検証をトリガーしますか？"
+  },
+  "TransactionAttributes": {
+    "message": "取引属性"
+  },
+  "asset": {
+    "message": "資産"
+  },
+  "ChainSmartContractDeploy": {
+    "message": "スマートコントラクト呼び出し"
+  },
+  "PublicKey": {
+    "message": "公開鍵（エンコード済み）"
+  },
+  "AddNEP11": {
+    "message": "NEP11を追加"
+  },
+  "myNep11": {
+    "message": "マイNEP11"
+  },
+  "myNft": {
+    "message": "マイNFT"
+  },
+  "unlockWallet": {
+    "message": "ウォレットを解除するには、アカウントのパスワードを入力する必要があります。"
+  },
+  "ABOUT_US": {
+    "message": "私たちについて"
+  },
+  "NEW": {
+    "message": "新規"
+  },
+  "EXPORT": {
+    "message": "エクスポート"
+  },
+  "Active": {
+    "message": "状態"
+  },
+  "Sort": {
+    "message": "並べ替え"
+  },
+  "Search": {
+    "message": "検索..."
+  },
+  "SearchEVMNetwork": {
+    "message": "EVMネットワーク名を入力して検索"
+  },
+  "Networks": {
+    "message": "ネットワーク"
+  },
+  "AddNetwork": {
+    "message": "ネットワークを追加"
+  },
+  "EditNetwork": {
+    "message": "ネットワークを編集"
+  },
+  "NetworkName": {
+    "message": "ネットワーク名"
+  },
+  "New_RPC_URL": {
+    "message": "新しいRPC URL"
+  },
+  "Explorer_URL": {
+    "message": "ブロックエクスプローラーURL（オプション）"
+  },
+  "oneMonthTxs": {
+    "message": "最近1か月の取引のみ表示"
+  },
+  "LedgerNotSupportComputer": {
+    "message": "このコンピュータはLedgerをサポートしていません。"
+  },
+  "connectLedgerDevice": {
+    "message": "Ledgerデバイスを接続してください"
+  },
+  "connectOneKeyDevice": {
+    "message": "OneKeyデバイスを接続してください"
+  },
+  "openNeoAppOnLedger": {
+    "message": "LedgerデバイスでNEOアプリを開いてください。"
+  },
+  "openNeo3AppOnLedger": {
+    "message": "LedgerデバイスでNEO N3アプリを開いてください。"
+  },
+  "openNeoXAppOnLedger": {
+    "message": "LedgerデバイスでEthereumアプリを開いてください。"
+  },
+  "LedgerConnectedNeoReady": {
+    "message": "Ledger接続済み、NEOアプリ起動、使用準備完了。"
+  },
+  "LedgerConnectedNeo3Ready": {
+    "message": "Ledger接続済み、NEO N3アプリ起動、使用準備完了。"
+  },
+  "LedgerConnectedNeoXReady": {
+    "message": "Ledger接続済み、Ethereumアプリ起動、使用準備完了。"
+  },
+  "TransactionDeniedByUser": {
+    "message": "取引はユーザーによって拒否されました。"
+  },
+  "TransactionTooLarge": {
+    "message": "取引が大きすぎてLedgerで署名できません。"
+  },
+  "errorLedgerOpen": {
+    "message": "この取引の解析中にエラーが発生しました。正しいLedgerアプリが開いていることを確認してください。"
+  },
+  "LedgerInstallNeoApp": {
+    "message": "注意：Ledgerに最新のNEOアプリがインストールされていることを確認してください。"
+  },
+  "LedgerInstallNeo3App": {
+    "message": "注意：Ledgerに最新のNEO N3アプリがインストールされていることを確認してください。"
+  },
+  "LedgerInstallNeoXApp": {
+    "message": "注意：Ledgerに最新のEthereumアプリがインストールされていることを確認してください。"
+  },
+  "signLedgerTransaction": {
+    "message": "Ledgerで取引に署名してください"
+  },
+  "signLedgerMessage": {
+    "message": "Ledgerでメッセージに署名してください"
+  },
+  "signOneKeyTransaction": {
+    "message": "OneKeyで取引に署名してください"
+  },
+  "signOneKeyMessage": {
+    "message": "OneKeyでメッセージに署名してください"
+  },
+  "Wait": {
+    "message": "待機"
+  },
+  "ImportHardwareWallet": {
+    "message": "ハードウェアウォレットをインポート"
+  },
+  "Next": {
+    "message": "次へ"
+  },
+  "selectAccountConnect": {
+    "message": "アカウントを選択"
+  },
+  "WalletAddress": {
+    "message": "ウォレットアドレス"
+  },
+  "CreatingImportingWallet": {
+    "message": "ウォレットの作成/インポートは、以下を読み同意したことを確認します。"
+  },
+  "and": {
+    "message": "および"
+  },
+  "PrivacyPolicy": {
+    "message": "プライバシーポリシー"
+  },
+  "TermsOfService": {
+    "message": "利用規約"
+  },
+  "ImportThisAccount": {
+    "message": "このアカウントをインポート"
+  },
+  "Confirm": {
+    "message": "確認"
+  },
+  "ImportSuccessful": {
+    "message": "インポート成功、NeoLine拡張機能で確認してください"
+  },
+  "PleaseEnterWalletName": {
+    "message": "ウォレット名を入力してください"
+  },
+  "Imported": {
+    "message": "インポート済み"
+  },
+  "connectYourDevice": {
+    "message": "{{device}}を接続"
+  },
+  "plugInLedgerWalletTip": {
+    "message": "Ledgerをコンピュータに直接接続し、ロックを解除してNeo/Neo N3/Ethereumアプリを開いてください。Ledgerウォレットデバイスの使用方法については、"
+  },
+  "plugInOneKeyWalletTip": {
+    "message": "OneKeyをコンピュータに直接接続し、ロックを解除してください。"
+  },
+  "clickHere": {
+    "message": "こちらをクリック。"
+  },
+  "reconnectLedger": {
+    "message": "Ledgerが長時間応答しない場合は、再接続を試してください"
+  },
+  "inputNeo2AddressTip": {
+    "message": "Neo Legacyアドレス"
+  },
+  "inputN3NNSAddressTip": {
+    "message": "N3アドレスまたはNeoNS名"
+  },
+  "inputN3AddressTip": {
+    "message": "N3アドレス"
+  },
+  "inputNeoXAddressTip": {
+    "message": "EVMアドレス"
+  },
+  "Copied": {
+    "message": "コピーしました！"
+  },
+  "CopyToClipboard": {
+    "message": "クリップボードにコピー"
+  },
+  "SwitchTo": {
+    "message": "切り替え"
+  },
+  "Network": {
+    "message": "ネットワーク"
+  },
+  "createOrImportNeo2First": {
+    "message": "まずNeo Legacyアカウントを作成またはインポートしてください"
+  },
+  "createOrImportNeo3First": {
+    "message": "まずNeo N3アカウントを作成またはインポートしてください"
+  },
+  "createOrImportNeoXFirst": {
+    "message": "まずNeo X (EVM Network)アカウントを作成またはインポートしてください"
+  },
+  "OnePasswordPattern": {
+    "message": "共通パスワード設定"
+  },
+  "onePasswordDesc": {
+    "message": "ウォレットパスワード戦略を最適化し、パスワードモード切り替え機能を追加しました。v4.0.0以前のユーザーが複数のウォレットアカウントを管理するための共通パスワードを設定できます。「今すぐ切り替え」をクリックして、アカウントセキュリティ検証を完了し、新しいパスワード管理モードに切り替えてください。"
+  },
+  "ClickToLearnMore": {
+    "message": "詳細はこちら！"
+  },
+  "OnePasswordTitle": {
+    "message": "パスワードモード切り替え"
+  },
+  "onePasswordTip": {
+    "message": "すべてのアカウントに対応するパスワードを正しく入力して切り替えを完了し、ウォレットが安全にバックアップされていることを確認してください。"
+  },
+  "SwitchNow": {
+    "message": "今すぐ切り替え"
+  },
+  "enterNewPassword": {
+    "message": "新しいパスワードを入力"
+  },
+  "enterConfirmNewPassword": {
+    "message": "新しいパスワードを再入力"
+  },
+  "wrongPassword": {
+    "message": "パスワードエラー"
+  },
+  "switchNetwork": {
+    "message": "ネットワークを切り替え"
+  },
+  "switchNetworkTitle": {
+    "message": "このサイトにネットワークの切り替えを許可しますか？"
+  },
+  "switchNetworkDesc": {
+    "message": "NeoLineで選択されたネットワークを以前に追加されたネットワークに切り替えます："
+  },
+  "switchAccount": {
+    "message": "アカウントを切り替え"
+  },
+  "switchAccountTitle": {
+    "message": "このサイトにアカウントの切り替えを許可しますか？"
+  },
+  "switchAccountDesc": {
+    "message": "NeoLineで選択されたアカウントを以前に追加されたアカウントに切り替えます："
+  },
+  "VerificationPassed": {
+    "message": "検証通過"
+  },
+  "addressBook": {
+    "message": "アドレス帳"
+  },
+  "receiveTip1Prefix": {
+    "message": "現在"
+  },
+  "receiveTip1Suffix": {
+    "message": "ネットワーク下"
+  },
+  "receiveTip2Prefix": {
+    "message": "のみ受信可能"
+  },
+  "receiveTip2Suffix": {
+    "message": "ネットワーク資産"
+  },
+  "ConfirmSecretRecoveryPhrase": {
+    "message": "リカバリーフレーズを確認"
+  },
+  "YourSecretRecoveryPhrase": {
+    "message": "あなたのリカバリーフレーズ"
+  },
+  "ConfirmTheSecretRecoveryPhrasesInOrder": {
+    "message": "リカバリーフレーズを順番に確認してください"
+  },
+  "WrongSecretRecoveryPhrase": {
+    "message": "リカバリーフレーズが間違っています。再度入力してください。"
+  },
+  "notedItDown": {
+    "message": "バックアップ完了"
+  },
+  "AddAccountOrHardwareWallet": {
+    "message": "ウォレットを追加/ハードウェアウォレットを接続"
+  },
+  "AddAccount": {
+    "message": "{{chain}}ウォレットを追加"
+  },
+  "importWalletTip": {
+    "message": "ニーモニックフレーズまたは秘密鍵をインポート"
+  },
+  "createWalletTip": {
+    "message": "新しいニーモニックウォレットを作成"
+  },
+  "hardwareWallet": {
+    "message": "ハードウェアウォレット"
+  },
+  "hardwareWalletTip": {
+    "message": "ハードウェアウォレットを接続"
+  },
+  "enterMnemonic": {
+    "message": "リカバリーフレーズを入力"
+  },
+  "MnemonicRequired": {
+    "message": "リカバリーフレーズは必須です"
+  },
+  "MnemonicPattern": {
+    "message": "無効なリカバリーフレーズ"
+  },
+  "importMnemonic": {
+    "message": "リカバリーフレーズインポート"
+  },
+  "AddNetworkTip": {
+    "message": "完全に信頼できるネットワークのみ追加してください！"
+  },
+  "ChainID": {
+    "message": "チェーンID"
+  },
+  "networkNameIsRequired": {
+    "message": "ネットワーク名は必須です"
+  },
+  "rpcUrlIsRequired": {
+    "message": "RPC URLは必須です"
+  },
+  "Invalid_RPC_URL": {
+    "message": "無効なRPC URL"
+  },
+  "exist_RPC_URL": {
+    "message": "このRPC URLに対応するチェーンIDは既に存在します"
+  },
+  "symbolIsRequired": {
+    "message": "通貨名は必須です"
+  },
+  "failed": {
+    "message": "失敗"
+  },
+  "AddAddressBook": {
+    "message": "アドレスを追加"
+  },
+  "EditAddressBook": {
+    "message": "アドレスを編集"
+  },
+  "SelectNetwork": {
+    "message": "ネットワークを選択"
+  },
+  "nameIsRequired": {
+    "message": "名前は必須です"
+  },
+  "addressIsRequired": {
+    "message": "アドレスは必須です"
+  },
+  "wrongAddress": {
+    "message": "アドレスが間違っています。再度入力してください。"
+  },
+  "addressBookNameLengthTip": {
+    "message": "名前は20文字以内"
+  },
+  "addAddressExist": {
+    "message": "アドレスは既に存在します"
+  },
+  "showSecretRecoveryPhrase": {
+    "message": "リカバリーフレーズを表示"
+  },
+  "hideSecretRecoveryPhrase": {
+    "message": "リカバリーフレーズを非表示"
+  },
+  "secretRecoveryPhrase": {
+    "message": "リカバリーフレーズ"
+  },
+  "secretRecoveryPhraseTip": {
+    "message": "リカバリーフレーズを安全に保管し、誰にも見せないでください"
+  },
+  "yourHove": {
+    "message": "あなたは"
+  },
+  "accountsConnectedToThisSite": {
+    "message": "個のアカウントがこのサイトに接続されています。"
+  },
+  "noAccountsConnected": {
+    "message": "接続されたアカウントはありません。"
+  },
+  "accountsConnected": {
+    "message": "接続済みアカウント"
+  },
+  "notConnected": {
+    "message": "未接続"
+  },
+  "Connected": {
+    "message": "接続済み"
+  },
+  "switchToThisAccount": {
+    "message": "このアカウントに切り替え"
+  },
+  "permissions": {
+    "message": "権限"
+  },
+  "permissionsTip": {
+    "message": "以下の権限を許可しました："
+  },
+  "permissionsDesc": {
+    "message": "許可されたアカウントのアドレスを表示（必須）。"
+  },
+  "disconnectThisAccount": {
+    "message": "このアカウントの接続を切断"
+  },
+  "Bridge": {
+    "message": "ブリッジ"
+  },
+  "checkExportWallet": {
+    "message": "このウォレットをエクスポートしますか？"
+  },
+  "exportAllWallet": {
+    "message": "このネットワーク上のすべてのウォレットをエクスポート"
+  },
+  "advancedGasFee": {
+    "message": "高度なガス手数料"
+  },
+  "advancedGasFeeRisk": {
+    "message": "この機能を使用してガス価格をカスタマイズします。慣れていない場合は混乱する可能性があります。自己責任で操作してください。"
+  },
+  "maxFee": {
+    "message": "最大手数料"
+  },
+  "maxPriorityFee": {
+    "message": "優先手数料"
+  },
+  "gasPrice": {
+    "message": "ガス価格"
+  },
+  "gasLimit": {
+    "message": "ガスリミット"
+  },
+  "maxFeeIsLowPriorityFee": {
+    "message": "最大手数料は優先手数料より低くできません"
+  },
+  "maxFeeIsLow": {
+    "message": "現在のネットワーク条件に対して最大手数料が低いです"
+  },
+  "current": {
+    "message": "現在"
+  },
+  "maxPriorityFeeIsLow": {
+    "message": "現在のネットワーク条件に対して優先手数料が低いです"
+  },
+  "gasPriceIsLow": {
+    "message": "現在のネットワーク条件に対してガス価格が低いです"
+  },
+  "gasLimitRange": {
+    "message": "ガスリミットは20999より大きくなければなりません"
+  },
+  "backupSecretRecoveryPhrase": {
+    "message": "リカバリーフレーズを手書きでバックアップし、安全な場所に保管してください。誰にも見せないでください。"
+  },
+  "EstimatedFee": {
+    "message": "推定手数料"
+  },
+  "Deposit": {
+    "message": "預入"
+  },
+  "Withdraw": {
+    "message": "引出"
+  },
+  "From": {
+    "message": "送信元"
+  },
+  "Balance": {
+    "message": "残高"
+  },
+  "Max": {
+    "message": "最大"
+  },
+  "ToAddress": {
+    "message": "受取アドレス"
+  },
+  "bridgeFee": {
+    "message": "ブリッジ手数料"
+  },
+  "bridgeFeeDesc": {
+    "message": "ブリッジ契約は0.1 GASを請求し、プラットフォームは他の手数料を請求しません。"
+  },
+  "ActualReceive": {
+    "message": "実際の受取額"
+  },
+  "Approve": {
+    "message": "承認"
+  },
+  "CustomSpendingCap": {
+    "message": "カスタム支出上限"
+  },
+  "EstimatedFeeError": {
+    "message": "ガスを推定できませんでした。契約にエラーがある可能性があり、この取引は失敗する可能性があります。"
+  },
+  "Sending": {
+    "message": "送信中"
+  },
+  "evmSignWarning": {
+    "message": "内容を完全に理解し、リクエスト元のサイトを信頼する場合にのみ、このメッセージに署名してください。"
+  },
+  "AddNFT": {
+    "message": "NFTを追加"
+  },
+  "TokenIdIsRequired": {
+    "message": "トークンIDは必須です"
+  },
+  "InvalidTokenId": {
+    "message": "無効なトークンID"
+  },
+  "menuGuideAndSupport": {
+    "message": "ガイドとサポート"
+  },
+  "menuSettings": {
+    "message": "設定"
+  },
+  "menuLock": {
+    "message": "NeoLineをロック"
+  },
+  "menuAboutUs": {
+    "message": "私たちについて"
+  },
+  "yourAccounts": {
+    "message": "あなたのアカウント"
+  },
+  "selectAddress": {
+    "message": "アドレスを選択"
+  },
+  "confirmMnemonicTip": {
+    "message": "ニーモニックフレーズ全体を任意のフィールドに入力できます"
+  },
+  "FromAddress": {
+    "message": "送信元アドレス"
+  },
+  "YourNeoXReceiveAddress": {
+    "message": "Neo X受取アドレス"
+  },
+  "YourNeo3ReceiveAddress": {
+    "message": "Neo3 N3受取アドレス"
+  },
+  "addEvmTokenTitle": {
+    "message": "推奨トークンを追加"
+  },
+  "addEvmTokenTip": {
+    "message": "これらのトークンをインポートしますか？"
+  },
+  "Token": {
+    "message": "トークン"
+  },
+  "addEvmChainTitle": {
+    "message": "このサイトにネットワークをNeoLineに追加することを許可しますか？"
+  },
+  "addEvmChainTip": {
+    "message": "これにより、このネットワークをNeoLine内で使用できるようになります。"
+  },
+  "addEvmChainWarning": {
+    "message": "NeoLineはカスタムネットワークを検証しません。信頼できるネットワークを追加してください！"
+  },
+  "NetworkURL": {
+    "message": "ネットワークURL"
+  },
+  "CurrencySymbol": {
+    "message": "通貨記号"
+  },
+  "BlockExplorerURL": {
+    "message": "ブロックエクスプローラーURL"
+  },
+  "ContractAddress": {
+    "message": "契約アドレス"
+  },
+  "ViewTransaction": {
+    "message": "取引を表示"
+  },
+  "ViewInNFTMarket": {
+    "message": "NFT市場で表示"
+  },
+  "Depositing": {
+    "message": "預入中"
+  },
+  "Deposited": {
+    "message": "預入済み"
+  },
+  "Withdrawing": {
+    "message": "引出中"
+  },
+  "Withdrawn": {
+    "message": "引出済み"
+  },
+  "Completed": {
+    "message": "完了"
+  },
+  "DepositingTip": {
+    "message": "取引が完了すると、{{symbol}}がウォレットに預入されます。"
+  },
+  "DepositedTip": {
+    "message": "{{symbol}}がNeo Xウォレットに預入されました。"
+  },
+  "WithdrawingTip": {
+    "message": "取引が完了すると、{{symbol}}がウォレットに引出されます。"
+  },
+  "WithdrawnTip": {
+    "message": "{{symbol}}がNeo3ウォレットに引出されました。"
+  },
+  "Transferring": {
+    "message": "転送中"
+  },
+  "Transferred": {
+    "message": "転送済み"
+  },
+  "SpendingCapRequestForYour": {
+    "message": "の支出上限リクエスト"
+  },
+  "ViewDetails": {
+    "message": "詳細を表示"
+  },
+  "approveTip": {
+    "message": "注意：第三者は通知や同意なしにあなたのトークン残高全体を使用する可能性があります。低い支出上限を設定して自己保護してください。"
+  },
+  "approveCustomTip": {
+    "message": "現在または将来の第三者支出に適した数字のみを入力してください。後でいつでも支出上限を引き上げることができます。"
+  },
+  "useSiteSuggestion": {
+    "message": "サイトの提案を使用"
+  },
+  "useSuggestion": {
+    "message": "提案を使用"
+  },
+  "contractInteraction": {
+    "message": "契約インタラクション"
+  },
+  "save": {
+    "message": "保存"
+  },
+  "footnoteDesc2": {
+    "message": "ブリッジサービスの安定性が証明されると、プロバイダーはGASの数量制限を徐々に解除し、NEOトークンやその他の資産を含むようにサービスを拡大します。"
+  },
+  "footnote": {
+    "message": "重要なお知らせ"
+  },
+  "yourHavePendingTxs": {
+    "message": "{{count}}件の保留中の取引があります。その取引が完了するまで、この取引は処理されません。方法を学ぶ"
+  },
+  "evmInsufficientGas": {
+    "message": "{{network}}ネットワークでの取引手数料を支払うのに十分な{{symbol}}がアカウントにありません。または別のアカウントから預入してください。"
+  },
+  "approveInitTip": {
+    "message": "この操作により、第三者が現在の残高から{{symbol}}を支出できるようになります。"
+  },
+  "approveBigTip": {
+    "message": "これにより、第三者は上限に達するか、支出上限を解除するまで、すべてのトークン残高を使用できます。意図しない場合は、低い支出上限を設定することを検討してください。"
+  },
+  "approveNormalTip": {
+    "message": "この操作により、第三者が現在の残高から{{amount}} {{symbol}}を支出できるようになります。"
+  },
+  "cancelOrSpeedUpTX": {
+    "message": "取引をキャンセルまたは加速。"
+  },
+  "customNonce": {
+    "message": "カスタムナンス"
+  },
+  "dropped": {
+    "message": "破棄済み"
+  },
+  "cancelled": {
+    "message": "キャンセル済み"
+  },
+  "canceling": {
+    "message": "キャンセル中"
+  },
+  "speedingUp": {
+    "message": "加速中"
+  },
+  "speedUp": {
+    "message": "加速"
+  },
+  "cancelTransaction": {
+    "message": "取引をキャンセル"
+  },
+  "ActivityLog": {
+    "message": "アクティビティログ"
+  },
+  "SpeedUpCancellation": {
+    "message": "このキャンセルを加速"
+  },
+  "evmLogCreateTx": {
+    "message": "{{time}}に取引が作成され、ガス手数料は{{gas}} {{symbol}}と推定されます。"
+  },
+  "evmLogSpeedUpTx": {
+    "message": "{{time}}に取引が再送信され、ガス手数料は{{gas}} {{symbol}}に増加しました。"
+  },
+  "evmLogCancelTx": {
+    "message": "{{time}}に取引がキャンセルされ、ガス手数料は{{gas}} {{symbol}}と推定されます。"
+  },
+  "evmLogCompleteTx": {
+    "message": "取引は{{time}}に確認されました。"
+  },
+  "cancelTxDesc": {
+    "message": "取引をキャンセルするには、ネットワーク手数料も支払う必要があります。ネットワークエラーのため、キャンセルが失敗する可能性があります。"
+  },
+  "speedUpTxDesc": {
+    "message": "ネットワーク手数料を増やして取引を加速"
+  },
+  "speedUpTip": {
+    "message": "注：NeoLineウォレットはこの取引の加速サービス料を請求しません。"
+  },
+  "sendToken": {
+    "message": "送信"
+  },
+  "sendEther": {
+    "message": "送信"
+  },
+  "Activity": {
+    "message": "アクティビティ"
+  },
+  "Site": {
+    "message": "サイト"
+  },
+  "useSiteSuggestions": {
+    "message": "サイトの提案を使用"
+  },
+  "SiteTip": {
+    "message": "{{host}}がこの価格を提案しました。<br /> 最大基本手数料: {{maxFeePerGas}}<br /> 優先手数料: {{maxPriorityFee}}<br /> ガスリミット: {{gasLimit}}"
+  },
+  "SiteLegacyFeeTip": {
+    "message": "{{host}}がこの価格を提案しました。<br /> ガス価格: {{gasPrice}}<br /> ガスリミット: {{gasLimit}}"
+  },
+  "LearnBridge": {
+    "message": "ブリッジの使い方を学ぶ"
+  },
+  "GetSupport": {
+    "message": "サポートを取得"
+  },
+  "networkTip": {
+    "message": "NeoLineはNeo X (EVM Network)をサポートしており、ユーザーは簡単に任意のEVMネットワークを追加できます。"
+  },
+  "learnMore": {
+    "message": "詳細を見る！"
+  },
+  "needHelp": {
+    "message": "ヘルプが必要ですか？連絡先"
+  },
+  "contactSupport": {
+    "message": "NeoLineサポート"
+  },
+  "ConnectionRequest": {
+    "message": "接続リクエスト"
+  },
+  "approval": {
+    "message": "承認"
+  },
+  "approving": {
+    "message": "承認中"
+  },
+  "TokenApproved": {
+    "message": "{{symbol}}を承認"
+  },
+  "connectOneKey": {
+    "message": "OneKeyデバイスを接続し、ロックを解除してください"
+  },
+  "installOneKeyBridgeTip": {
+    "message": "OneKey Bridgeアプリを開いてください。ハードウェアデバイスを接続する前に、OneKey Bridgeデスクトップアプリをダウンロードして起動してください。NeoLineはこれを使用してハードウェアウォレットと通信します。"
+  },
+  "installOneKeyBridgeShortTip": {
+    "message": "OneKey Bridgeデスクトップアプリをダウンロードして起動してください。"
+  },
+  "installOneKeyBridge": {
+    "message": "OneKey Bridgeをインストール"
+  },
+  "selectHardware": {
+    "message": "NeoLineで使用したいハードウェアウォレットを選択してください。"
+  },
+  "notice": {
+    "message": "通知"
+  },
+  "RPC_URL": {
+    "message": "RPC URL"
+  },
+  "AddAURL": {
+    "message": "URLを追加"
+  },
+  "AddRPCURL": {
+    "message": "RPC URLを追加"
+  },
+  "RPC_URL_ChainId_Not_Match": {
+    "message": "入力したRPC URLは異なるチェーンID ({{chainId}})を返しました"
+  }
+}

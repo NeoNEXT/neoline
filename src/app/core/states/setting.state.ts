@@ -8,7 +8,7 @@ import { LINKS, LinkType } from '@/app/popup/_lib/setting';
 export class SettingState {
   themeSub = new BehaviorSubject<string>('light-theme');
   langSub = new BehaviorSubject<string>('en');
-  langJson;
+  langJson = { en: undefined, zh_CN: undefined, ja: undefined };
   private lang: string;
 
   evmCustomNonceSub = new BehaviorSubject<boolean>(false);
