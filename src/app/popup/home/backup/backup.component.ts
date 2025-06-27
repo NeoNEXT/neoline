@@ -77,7 +77,7 @@ export class PopupHomeBackupComponent implements OnInit, OnDestroy, OnChanges {
 
   toOnePwd() {
     this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
-      if (lang !== 'en') {
+      if (lang === 'zh_CN') {
         window.open(
           'https://tutorial.neoline.io/v/cn/xin-shou-zhi-nan/neoline-cha-jian-qian-bao-tong-yong-mi-ma-she-zhi'
         );

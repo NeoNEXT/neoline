@@ -243,10 +243,10 @@ export class PopupLoginComponent
   }
 
   getHelp() {
-    if (this.lang === 'en') {
-      window.open('https://tutorial.neoline.io/');
-    } else {
+    if (this.lang === 'zh_CN') {
       window.open('https://tutorial.neoline.io/v/cn?fallback=true');
+    } else {
+      window.open('https://tutorial.neoline.io/');
     }
   }
 }

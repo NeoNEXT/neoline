@@ -24,13 +24,13 @@ export class PopupBridgeFootnoteDialogComponent {
   }
 
   toWeb() {
-    if (this.lang === 'en') {
+    if (this.lang === 'zh_CN') {
       window.open(
-        'https://tutorial.neoline.io/create-and-manage-neo-x-wallet/how-to-bridge-gas-using-the-neoline-chrome-extension'
+        'https://tutorial.neoline.io/v/cn/neox-qian-bao-de-chuang-jian-he-shi-yong/ru-he-shi-yong-neoline-cha-jian-qian-bao-jin-xing-gas-qiao-jie'
       );
     } else {
       window.open(
-        'https://tutorial.neoline.io/v/cn/neox-qian-bao-de-chuang-jian-he-shi-yong/ru-he-shi-yong-neoline-cha-jian-qian-bao-jin-xing-gas-qiao-jie'
+        'https://tutorial.neoline.io/create-and-manage-neo-x-wallet/how-to-bridge-gas-using-the-neoline-chrome-extension'
       );
     }
   }

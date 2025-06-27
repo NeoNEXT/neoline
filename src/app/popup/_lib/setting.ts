@@ -9,6 +9,10 @@ export const LanguagesType: Array<SelectItem> = [
     type: 'zh_CN',
     name: 'zh_CN',
   },
+  {
+    type: 'ja',
+    name: 'ja',
+  },
 ];
 
 export const RateCurrencyType: Array<SelectItem> = [
@@ -31,10 +35,12 @@ interface LocalNoticeItem {
   title: {
     en: string;
     zh_CN: string;
+    ja: string;
   };
   content: {
     en: string;
     zh_CN: string;
+    ja: string;
   };
   time: number;
 }
@@ -45,10 +51,12 @@ export const LOCAL_NOTICE: LocalNoticeItem[] = [
     title: {
       en: 'OneKey hardware wallet support',
       zh_CN: '支持 OneKey 硬件钱包',
+      ja: 'OneKey ハードウェアウォレットのサポート',
     },
     content: {
       en: `You can now connect and import your OneKey hardware wallet directly into NeoLine. Safely manage your assets, sign transactions, and enjoy enhanced security — all with your OneKey device.`,
       zh_CN: `您现在可以将 OneKey 硬件钱包直接连接并导入到 NeoLine 中，安全管理资产、签署交易，尽享更高等级的安全体验。`,
+      ja: `OneKey ハードウェアウォレットを NeoLine に直接接続してインポートできるようになりました。資産を安全に管理し、取引に署名し、OneKey デバイスでさらに強化されたセキュリティを体験できます`,
     },
     time: 1749398400000,
   },

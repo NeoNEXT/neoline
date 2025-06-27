@@ -413,13 +413,13 @@ export class PopupNetworkListComponent implements OnDestroy {
   }
 
   toWeb() {
-    if (this.lang === 'en') {
+    if (this.lang === 'zh_CN') {
       window.open(
-        'https://tutorial.neoline.io/create-and-manage-neo-x-wallet/how-to-add-and-switch-networks'
+        'https://tutorial.neoline.io/v/cn/neox-qian-bao-de-chuang-jian-he-shi-yong/ru-he-tong-guo-neoline-tian-jia-he-qie-huan-qi-ta-evm-wang-luo'
       );
     } else {
       window.open(
-        'https://tutorial.neoline.io/v/cn/neox-qian-bao-de-chuang-jian-he-shi-yong/ru-he-tong-guo-neoline-tian-jia-he-qie-huan-qi-ta-evm-wang-luo'
+        'https://tutorial.neoline.io/create-and-manage-neo-x-wallet/how-to-add-and-switch-networks'
       );
     }
   }

@@ -51,7 +51,7 @@ export class PopupAboutComponent implements OnInit, OnDestroy {
 
   public async jumbToWeb(index: number) {
     this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
-      if (lang !== 'en') {
+      if (lang === 'zh_CN') {
         window.open(this.links[index].zhUrl);
       } else {
         window.open(this.links[index].enUrl);

@@ -218,7 +218,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   }
 
   public async jumbToWeb(type: 'privacy' | 'agreement') {
-    const prefix = this.lang !== 'en' ? '' : '/en';
+    const prefix = this.lang === 'zh_CN' ? '' : '/en';
     switch (type) {
       case 'privacy':
         window.open(`https://neoline.io${prefix}/privacy`);

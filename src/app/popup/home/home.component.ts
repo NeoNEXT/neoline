@@ -115,20 +115,20 @@ export class PopupHomeComponent implements OnInit {
     let url: string;
     switch (type) {
       case 'asset':
-        if (this.lang === 'en') {
-          url = 'https://tutorial.neoline.io/getting-started/manage-assets';
-        } else {
+        if (this.lang === 'zh_CN') {
           url =
             'https://tutorial.neoline.io/v/cn/xin-shou-zhi-nan/zi-chan-guan-li';
+        } else {
+          url = 'https://tutorial.neoline.io/getting-started/manage-assets';
         }
         break;
       case 'txs':
-        if (this.lang === 'en') {
+        if (this.lang === 'zh_CN') {
           url =
-            'https://tutorial.neoline.io/create-and-manage-neo-x-wallet/about-neoline-activity';
+            'https://tutorial.neoline.io/v/cn/neox-qian-bao-de-chuang-jian-he-shi-yong/guan-yu-neoline-activity';
         } else {
           url =
-            ' https://tutorial.neoline.io/v/cn/neox-qian-bao-de-chuang-jian-he-shi-yong/guan-yu-neoline-activity';
+            'https://tutorial.neoline.io/create-and-manage-neo-x-wallet/about-neoline-activity';
         }
         break;
     }

@@ -355,17 +355,32 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       return;
     }
     if (this.getActualReceive() === '-') {
-      let message =
-        this.lang !== 'en'
-          ? `存入数额不能少于 ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`
-          : `Deposit amount shouldn't be less than ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`;
-      if (this.chainType === 'NeoX') {
-        message =
-          this.lang !== 'en'
-            ? `提取数额不能少于 ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`
-            : `Withdraw amount shouldn't be less than ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`;
+      let message;
+      switch (this.lang) {
+        case 'zh_CN':
+          message = `存入数额不能少于 ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`;
+          break;
+        case 'ja':
+          message = `入金額は${this.minBridgeAmount} ${this.bridgeAsset.symbol}未満であってはなりません`;
+          break;
+        default:
+          message = `Deposit amount shouldn't be less than ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`;
+          break;
       }
-      this.globalService.snackBarTip(message);
+      if (this.chainType === 'NeoX') {
+        switch (this.lang) {
+          case 'zh_CN':
+            message = `提取数额不能少于 ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`;
+            break;
+          case 'ja':
+            message = `出金額は${this.minBridgeAmount} ${this.bridgeAsset.symbol}未満であってはなりません`;
+            break;
+          default:
+            message = `Withdraw amount shouldn't be less than ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`;
+            break;
+        }
+      }
+      this.globalService.snackBarTip(message || '');
       return;
     }
     if (

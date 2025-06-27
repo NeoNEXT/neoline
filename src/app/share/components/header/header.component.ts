@@ -134,7 +134,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
 
   toHelpWebsite() {
-    if (this.lang !== 'en') {
+    if (this.lang === 'zh_CN') {
       window.open('https://tutorial.neoline.io/v/cn');
     } else {
       window.open('https://tutorial.neoline.io/');

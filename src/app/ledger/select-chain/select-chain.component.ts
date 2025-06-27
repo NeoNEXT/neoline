@@ -52,7 +52,7 @@ export class LedgerChainComponent implements OnDestroy {
 
   public async jumbToWeb() {
     this.settingStateSub = this.settingState.langSub.subscribe((lang) => {
-      if (lang !== 'en') {
+      if (lang === 'zh_CN') {
         window.open(`https://tutorial.neoline.io/cn/ying-jian-qian-bao/ledgerhardwarewallet`);
       } else {
         window.open(`https://tutorial.neoline.io/hardware-wallet/ledger-hardware-wallet`);
