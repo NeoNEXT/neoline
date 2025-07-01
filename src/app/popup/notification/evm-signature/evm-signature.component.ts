@@ -67,6 +67,9 @@ export class PopupNoticeEvmSignComponent implements OnInit {
           .subscribe((invokeArgsArray) => {
             this.invokeArgsArray = invokeArgsArray;
             const params = invokeArgsArray[messageID];
+            if (!params || params.length <= 0) {
+              return;
+            }
             switch (this.signMethod) {
               case ETH_EOA_SIGN_METHODS.PersonalSign:
                 const text = this.sanitizeString(this.hexToText(params[0]));
@@ -76,6 +79,9 @@ export class PopupNoticeEvmSignComponent implements OnInit {
               case ETH_EOA_SIGN_METHODS.SignTypedDataV4:
                 this.signAddress = params[0];
                 this.typedData = params[1];
+                if (typeof this.typedData === 'string') {
+                  this.typedData = JSON.parse(this.typedData);
+                }
                 break;
             }
           });
