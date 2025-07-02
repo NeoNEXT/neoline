@@ -78,7 +78,6 @@ export class PopupSettingComponent implements OnInit {
       }
       this.rateCurrency = currency;
       this.setting.changRateCurrency(currency);
-      this.global.snackBarTip('rateCurrencySetSucc');
     });
   }
 

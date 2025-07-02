@@ -425,12 +425,6 @@
   "delAllAuthListConfirm": {
     "message": "确认清空所有授权吗？"
   },
-  "rejected": {
-    "message": "已拒绝"
-  },
-  "rejectedTip": {
-    "message": "该站点已被拒绝连接到您的 NeoLine 钱包。若要再次授权，请前往授权管理删除对应记录。"
-  },
   "connectedTip": {
     "message": "已允许连接到 NeoLine 钱包"
   },

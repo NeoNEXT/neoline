@@ -425,12 +425,6 @@
   "delAllAuthListConfirm": {
     "message": "すべての承認をクリアしますか？"
   },
-  "rejected": {
-    "message": "拒否済み"
-  },
-  "rejectedTip": {
-    "message": "このサイトはNeoLineウォレットへの接続を拒否されました。再度接続を許可する場合は、承認管理から対応する記録を削除してください。"
-  },
   "connectedTip": {
     "message": "NeoLineウォレットへの接続を許可"
   },

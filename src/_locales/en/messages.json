@@ -425,12 +425,6 @@
   "delAllAuthListConfirm": {
     "message": "Are you sure delete all authorized sites?"
   },
-  "rejected": {
-    "message": "Rejected"
-  },
-  "rejectedTip": {
-    "message": "This site has been rejected to connect to your NeoLine wallet. Please go to Authorization Management and delete the corresponding record if you allow it to connect"
-  },
   "connectedTip": {
     "message": "Connected to NeoLine wallet allowed"
   },
