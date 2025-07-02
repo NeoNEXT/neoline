@@ -15,14 +15,27 @@ export const LanguagesType: Array<SelectItem> = [
   },
 ];
 
+export type CurrencyType = 'USD' | 'CNY' | 'JPY' | 'KRW' | 'EUR';
 export const RateCurrencyType: Array<SelectItem> = [
   {
-    name: 'USD',
+    name: 'USD - United States Dollar',
     type: 'USD',
   },
   {
-    name: 'CNY',
+    name: 'CNY - Chinese Yuan',
     type: 'CNY',
+  },
+  {
+    name: 'JPY - Japanese Yen',
+    type: 'JPY',
+  },
+  {
+    name: 'KRW - South Korean Won',
+    type: 'KRW',
+  },
+  {
+    name: 'EUR - Euro',
+    type: 'EUR',
   },
 ];
 

@@ -35,10 +35,11 @@
         </div>
       </div>
       <div class="account-value">
-        <span *ngIf="!hideValue"
-          >{{ rateCurrency === "USD" ? "$" : "¥" }}
-          {{ totalValue | number }}</span
-        >
+        <div class="value-container" *ngIf="!hideValue">
+          {{ rateCurrency | currencySymbol }}
+          <span class="value">{{ totalValue | number }}</span>
+          {{ rateCurrency }}
+        </div>
         <ul *ngIf="hideValue">
           <li></li>
           <li></li>

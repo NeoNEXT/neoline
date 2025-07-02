@@ -69,10 +69,20 @@
       gap: 8px;
       margin-top: 20px;
       font-family: NeverMind;
-      font-size: 26px;
+      font-size: 22px;
       font-weight: bold;
       letter-spacing: 0.01em;
       color: var(--important-title-color);
+      .value-container {
+        display: flex;
+        .value {
+          max-width: 200px;
+          overflow: hidden;
+          text-overflow: ellipsis;
+          white-space: nowrap;
+          margin-right: 2px;
+        }
+      }
       ul {
         display: inline-flex;
         align-items: center;
@@ -156,6 +166,12 @@
       padding-top: 50px;
       .account-content {
         padding: 44px 0 44px 44px;
+      }
+      .account-value {
+        font-size: 26px;
+        .value-container .value {
+          max-width: 300px;
+        }
       }
     }
     .popup-home-body {

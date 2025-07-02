@@ -76,6 +76,7 @@ import { NumberFixedPipe } from './pipes/number-fixed.pipe';
 import { LongStrPipe } from './pipes/long-str.pipe';
 import { NftTokenIdPipe } from './pipes/nft-tokenid.pipe';
 import { SanitizerPipe } from './pipes/sanitizer.pipe';
+import { CurrencySymbolPipe } from './pipes/currency-symbol.pipe';
 const PIPES = [
   LanguageNamePipe,
   TranslatePipe,
@@ -83,6 +84,7 @@ const PIPES = [
   LongStrPipe,
   NftTokenIdPipe,
   SanitizerPipe,
+  CurrencySymbolPipe,
 ];
 //#endregion
 
