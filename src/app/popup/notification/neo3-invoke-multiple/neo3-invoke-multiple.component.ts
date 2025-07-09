@@ -228,7 +228,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
           return: requestTargetN3.InvokeMultiple,
           ID: this.messageID,
         });
-        this.global.snackBarTip('transferFailed', err.msg || err);
+        this.global.snackBarTip('txFailed', err.msg || err);
       });
   }
 

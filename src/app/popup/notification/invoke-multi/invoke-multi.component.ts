@@ -307,7 +307,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             return: requestTarget.InvokeMulti,
             ID: this.messageID,
           });
-          this.global.snackBarTip('transferFailed', error.msg || error);
+          this.global.snackBarTip('txFailed', error.msg || error);
           return;
         }
         return this.txState

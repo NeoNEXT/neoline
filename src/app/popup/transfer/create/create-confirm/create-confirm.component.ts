@@ -270,7 +270,7 @@ export class TransferCreateConfirmComponent implements OnInit {
             );
           } catch (error) {
             throw {
-              msg: 'Transaction rejected by RPC node.',
+              message: error?.message ?? 'Transaction rejected by RPC node.',
             };
           }
           txid = '0x' + this.unsignedTx.hash;
@@ -282,7 +282,7 @@ export class TransferCreateConfirmComponent implements OnInit {
             );
           } catch (error) {
             throw {
-              msg: 'Transaction rejected by RPC node.',
+              message: error?.msg ?? 'Transaction rejected by RPC node.',
             };
           }
           txid = res;

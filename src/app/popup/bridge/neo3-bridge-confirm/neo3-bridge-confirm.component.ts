@@ -167,7 +167,7 @@ export class Neo3BridgeConfirmComponent implements OnInit {
       .catch((err) => {
         this.loading = false;
         this.loadingMsg = '';
-        this.global.snackBarTip('transferFailed', err.msg || err);
+        this.global.snackBarTip('txFailed', err.msg || err);
       });
   }
 

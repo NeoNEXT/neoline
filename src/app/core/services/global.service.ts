@@ -33,8 +33,7 @@ export class GlobalService {
   }
 
   public handlePrcError(error, chain: ChainType) {
-    let errorMessage =
-      error?.message || this.notification.content.transferFailed;
+    let errorMessage = error?.message || this.notification.content.txFailed;
     if (chain === 'Neo2' && error?.code === -505) {
       errorMessage = this.notification.content.InsufficientNetworkFee;
     }

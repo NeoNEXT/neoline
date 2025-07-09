@@ -10,7 +10,7 @@ interface NotificationContent {
   wentWrong: string;
   verifyFailed: string;
   checkInput: string;
-  transferFailed: string;
+  txFailed: string;
   nameModifySucc: string;
   networkModifySucc: string;
   walletCreateFailed: string;
@@ -46,7 +46,7 @@ export class NotificationService {
     wentWrong: 'Something went wrong',
     verifyFailed: 'Verify Failed',
     checkInput: 'Please check your input',
-    transferFailed: 'Transfer failed',
+    txFailed: 'Transaction failed',
     nameModifySucc: 'Name modify success!',
     networkModifySucc: 'Network modify success!',
     walletCreateFailed: 'Wallet creation failed',
@@ -79,7 +79,7 @@ export class NotificationService {
     wentWrong: '出了点小问题',
     verifyFailed: '验证失败',
     checkInput: '请检查您的输入',
-    transferFailed: '转账失败',
+    txFailed: '交易失败',
     nameModifySucc: '名称修改成功',
     networkModifySucc: '网络修改成功！',
     walletCreateFailed: '钱包创建失败',
@@ -111,7 +111,7 @@ export class NotificationService {
     wentWrong: '問題が発生しました',
     verifyFailed: '認証に失敗しました',
     checkInput: '入力内容をご確認ください',
-    transferFailed: '送金に失敗しました',
+    txFailed: '取引に失敗しました',
     nameModifySucc: '名前の変更に成功しました！',
     networkModifySucc: 'ネットワークの変更に成功しました！',
     walletCreateFailed: 'ウォレットの作成に失敗しました',

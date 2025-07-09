@@ -231,7 +231,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
           return: requestTargetN3.Invoke,
           ID: this.messageID,
         });
-        this.global.snackBarTip('transferFailed', err.msg || err);
+        this.global.snackBarTip('txFailed', err.msg || err);
       });
   }
 
