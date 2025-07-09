@@ -1,6 +1,6 @@
 import { ErrorStateMatcher } from '@angular/material/core';
 import {
-  FormControl,
+  UntypedFormControl,
   FormGroupDirective,
   NgForm,
   ValidatorFn,
@@ -10,7 +10,7 @@ import {
 
 export class MyErrorStateMatcher implements ErrorStateMatcher {
   isErrorState(
-    control: FormControl | null,
+    control: UntypedFormControl | null,
     form: FormGroupDirective | NgForm | null
   ): boolean {
     return control.parent.errors && control.parent.errors['notSame'];

@@ -252,7 +252,7 @@ export class NeonService {
               wallet3.getPrivateKeyFromWIF(neo3WIFArrRes[index])
             );
             Object.defineProperties(item.accounts[0], {
-              address: { writable: true, readonly: false },
+              address: { writable: true },
             });
             item.accounts[0].address = account.address;
             item.accounts[0].label = account.label;
@@ -261,7 +261,7 @@ export class NeonService {
               walletRes.accounts[0].contract.script
             ) {
               Object.defineProperties(walletRes.accounts[0], {
-                address: { writable: true, readonly: false },
+                address: { writable: true },
               });
               walletRes.accounts[0].address = item.accounts[0].address;
               walletRes.accounts[0].label = item.accounts[0].label;
@@ -400,7 +400,7 @@ export class NeonService {
     if (wallet3.isAddress(w.accounts[0].address, 53)) {
       walletArr = this.neo3WalletArr;
     }
-    if (walletArr === []) {
+    if (walletArr.length === 0) {
       return true;
     } else {
       if (

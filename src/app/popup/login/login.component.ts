@@ -25,7 +25,7 @@ import {
   UPDATE_WALLET,
   STORAGE_NAME,
 } from '../_lib';
-import { FormGroup, Validators, FormBuilder } from '@angular/forms';
+import { UntypedFormGroup, Validators, UntypedFormBuilder } from '@angular/forms';
 import { ethers } from 'ethers';
 import { EvmWalletJSON } from '../_lib/evm';
 
@@ -36,7 +36,7 @@ import { EvmWalletJSON } from '../_lib/evm';
 export class PopupLoginComponent
   implements OnInit, AfterContentInit, OnDestroy
 {
-  loginForm: FormGroup;
+  loginForm: UntypedFormGroup;
   hidePwd: boolean = true;
   loading = false;
   isInit: boolean = true;
@@ -58,7 +58,7 @@ export class PopupLoginComponent
     private global: GlobalService,
     private dialog: MatDialog,
     private util: UtilServiceState,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private settingState: SettingState,
     private store: Store<AppState>
   ) {

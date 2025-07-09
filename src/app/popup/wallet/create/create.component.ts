@@ -7,7 +7,7 @@ import {
   Output,
   Input,
 } from '@angular/core';
-import { FormGroup, Validators, FormBuilder } from '@angular/forms';
+import { UntypedFormGroup, Validators, UntypedFormBuilder } from '@angular/forms';
 import { checkPasswords, MyErrorStateMatcher } from '../confirm-password';
 import { WalletInitConstant, STORAGE_NAME } from '../../_lib';
 
@@ -27,12 +27,12 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
   @Input() hasPwdWallet: boolean;
   @Output() submitThis = new EventEmitter<any>();
 
-  createForm: FormGroup;
+  createForm: UntypedFormGroup;
   matcher = new MyErrorStateMatcher();
   constructor(
     private global: GlobalService,
     private neon: NeonService,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private chrome: ChromeService
   ) {}
 

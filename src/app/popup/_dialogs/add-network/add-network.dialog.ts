@@ -31,7 +31,7 @@ import {
   MatDialogRef,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { Wallet3 } from '@popup/_lib';
 import { EvmWalletJSON } from '../../_lib/evm';
 import { PopupConfirmDialogComponent } from '../confirm/confirm.dialog';
@@ -46,7 +46,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
   loading = false;
   getMagicReq;
   private searchSub: Unsubscribable;
-  addNetworkForm: FormGroup;
+  addNetworkForm: UntypedFormGroup;
 
   showRpcListModal = false;
   isAddURL = false;
@@ -72,7 +72,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
     },
     private homeSer: HomeService,
     private chrome: ChromeService,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private dialog: MatDialog,
     private neon: NeonService,
     private router: Router,

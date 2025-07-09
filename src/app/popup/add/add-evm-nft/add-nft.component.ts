@@ -10,7 +10,7 @@ import {
   NeoXTestnetNetwork,
   RpcNetwork,
 } from '../../_lib';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 
 @Component({
   templateUrl: 'add-nft.component.html',
@@ -19,7 +19,7 @@ import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 export class PopupAddNftComponent implements OnDestroy {
   public watch: NftAsset[] = []; // 用户添加的资产
 
-  addNFTForm: FormGroup;
+  addNFTForm: UntypedFormGroup;
   loading = false;
   addError: string;
 
@@ -30,7 +30,7 @@ export class PopupAddNftComponent implements OnDestroy {
   constructor(
     private chrome: ChromeService,
     private global: GlobalService,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private evmNFTState: EvmNFTState,
     private store: Store<AppState>
   ) {

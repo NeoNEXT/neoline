@@ -1,10 +1,10 @@
 import { UtilServiceState, ChromeService, GlobalService } from '@/app/core';
 import { Component, OnInit } from '@angular/core';
 import {
-  FormGroup,
+  UntypedFormGroup,
   Validators,
-  FormBuilder,
-  FormControl,
+  UntypedFormBuilder,
+  UntypedFormControl,
 } from '@angular/forms';
 import {
   MyErrorStateMatcher,
@@ -35,7 +35,7 @@ export class PopupOnePasswordComponent implements OnInit {
   hideConfirmNewPwd = true;
   loading = false;
 
-  pwdForm: FormGroup;
+  pwdForm: UntypedFormGroup;
   matcher = new MyErrorStateMatcher();
   hideWalletsPwd = [];
   passCheckAddresses = {};
@@ -49,7 +49,7 @@ export class PopupOnePasswordComponent implements OnInit {
   currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   currentChainType: ChainType;
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private util: UtilServiceState,
     private chrome: ChromeService,
     private global: GlobalService,
@@ -99,7 +99,7 @@ export class PopupOnePasswordComponent implements OnInit {
     const len = this.allWalletArr.length;
     this.hideWalletsPwd = new Array(len).fill(true);
     for (let i = 0; i < len; i++) {
-      this.pwdForm.addControl(`password${i}`, new FormControl('', []));
+      this.pwdForm.addControl(`password${i}`, new UntypedFormControl('', []));
     }
   }
 

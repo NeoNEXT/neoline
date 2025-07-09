@@ -1,6 +1,6 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
 import BigNumber from 'bignumber.js';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
@@ -11,7 +11,7 @@ import { ExtensionService } from '@/app/core/util/extension.service';
   styleUrls: ['edit-evm-fee.dialog.scss'],
 })
 export class PopupEditEvmFeeDialogComponent {
-  editEvmFeeForm: FormGroup;
+  editEvmFeeForm: UntypedFormGroup;
   maxFeePerGasIsLow = false;
   maxPriorityFeeIsLow = false;
   maxFeeIsLowPriorityFee = false;
@@ -33,7 +33,7 @@ export class PopupEditEvmFeeDialogComponent {
       symbol: string;
     },
     private extensionService: ExtensionService,
-    private fb: FormBuilder
+    private fb: UntypedFormBuilder
   ) {
     this.extensionService.getCurrentWindow().then((res) => {
       if (res) {

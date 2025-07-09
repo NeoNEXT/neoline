@@ -22,7 +22,11 @@
             "main": "src/main.ts",
             "polyfills": "src/polyfills.ts",
             "tsConfig": "src/tsconfig.app.json",
-            "assets": ["src/favicon.ico", "src/assets", "src/_locales"],
+            "assets": [
+              "src/favicon.ico",
+              "src/assets",
+              "src/_locales"
+            ],
             "styles": [
               "src/styles/theme-default.scss",
               "src/styles/styles.scss"
@@ -53,7 +57,18 @@
               "buffer",
               "@ledgerhq/devices/lib/hid-framing",
               "eth-rpc-errors",
-              "@metamask/eth-sig-util"
+              "@metamask/eth-sig-util",
+              "@cityofzion/neon-js",
+              "@cityofzion/neon-core",
+              "@cityofzion/neon-js-neo3",
+              "@cityofzion/neon-core-neo3",
+              "cross-fetch",
+              "scrypt-js",
+              "js-sha3",
+              "seed-random",
+              "javascript-natural-sort",
+              "tiny-emitter",
+              "escape-latex"
             ]
           },
           "configurations": {
@@ -121,7 +136,10 @@
         "lint": {
           "builder": "@angular-eslint/builder:lint",
           "options": {
-            "lintFilePatterns": ["src/**/*.ts", "src/**/*.html"]
+            "lintFilePatterns": [
+              "src/**/*.ts",
+              "src/**/*.html"
+            ]
           }
         }
       }
@@ -130,6 +148,8 @@
   "defaultProject": "neoline",
   "cli": {
     "analytics": "7ab6edbb-8351-4ba4-a531-a9d01339db83",
-    "defaultCollection": "@angular-eslint/schematics"
+    "schematicCollections": [
+      "@angular-eslint/schematics"
+    ]
   }
 }

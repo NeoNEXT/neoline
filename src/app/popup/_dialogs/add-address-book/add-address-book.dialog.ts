@@ -7,8 +7,8 @@ import {
 } from '../../_lib';
 import {
   AbstractControl,
-  FormBuilder,
-  FormGroup,
+  UntypedFormBuilder,
+  UntypedFormGroup,
   ValidatorFn,
   Validators,
 } from '@angular/forms';
@@ -22,7 +22,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
   styleUrls: ['add-address-book.dialog.scss'],
 })
 export class PopupAddAddressBookDialogComponent {
-  addForm: FormGroup;
+  addForm: UntypedFormGroup;
   loading = false;
 
   ChainTypeGroups = ChainTypeGroups;
@@ -30,7 +30,7 @@ export class PopupAddAddressBookDialogComponent {
   showChainList = false;
 
   constructor(
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private dialogRef: MatDialogRef<PopupAddAddressBookDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {

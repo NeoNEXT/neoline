@@ -18,8 +18,8 @@ import { WalletInitConstant, STORAGE_NAME } from '../../_lib/constant';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import {
-  FormGroup,
-  FormBuilder,
+  UntypedFormGroup,
+  UntypedFormBuilder,
   Validators,
   ValidatorFn,
   AbstractControl,
@@ -84,17 +84,17 @@ export class PopupWalletImportComponent
   limit = WalletInitConstant;
 
   importType: ImportType = 'key';
-  importForm: FormGroup;
+  importForm: UntypedFormGroup;
   hideImportPwd = true;
   hideConfirmPwd = true;
   hideWIF = true;
 
-  importMnemonicForm: FormGroup;
+  importMnemonicForm: UntypedFormGroup;
   hideImportMnemonicPwd = true;
   hideConfirmMnemonicPwd = true;
   hideMnemonic = true;
 
-  nep6Form: FormGroup;
+  nep6Form: UntypedFormGroup;
   nep6Json;
   hideNep6FilePwd = true;
   hideNep6Pwd = true;
@@ -114,7 +114,7 @@ export class PopupWalletImportComponent
     private global: GlobalService,
     private neon: NeonService,
     private cdref: ChangeDetectorRef,
-    private fb: FormBuilder,
+    private fb: UntypedFormBuilder,
     private chrome: ChromeService,
     private evmService: EvmService
   ) {
