@@ -1,5 +1,5 @@
 import { BrowserModule } from '@angular/platform-browser';
-import { NgModule } from '@angular/core';
+import { ErrorHandler, NgModule } from '@angular/core';
 
 import { AppRoutingModule } from './app.route';
 import { AppComponent } from './app.component';
@@ -12,10 +12,12 @@ import { N404Module } from './404';
 import { CoreModule } from './core';
 import { PopupNotificationModule } from './popup/notification/notification.module';
 import { LedgerModule } from './ledger/ledger.module';
+import * as Sentry from '@sentry/angular';
 
 // #region Startup Service
 import { StartupService } from './core';
 import { APP_INITIALIZER } from '@angular/core';
+import { Router } from '@angular/router';
 
 function StartupServiceFactory(startupService: StartupService) {
   return () => startupService.load();
@@ -23,9 +25,19 @@ function StartupServiceFactory(startupService: StartupService) {
 const APPINIT_PROVIDES = [
   StartupService,
   {
+    provide: ErrorHandler,
+    useValue: Sentry.createErrorHandler({
+      showDialog: false,
+    }),
+  },
+  {
+    provide: Sentry.TraceService,
+    deps: [Router],
+  },
+  {
     provide: APP_INITIALIZER,
     useFactory: StartupServiceFactory,
-    deps: [StartupService],
+    deps: [StartupService, Sentry.TraceService],
     multi: true,
   },
 ];

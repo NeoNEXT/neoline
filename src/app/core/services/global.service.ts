@@ -7,6 +7,7 @@ import { NotificationService } from './notification.service';
 import { add, subtract, multiply, bignumber } from 'mathjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { ChainType } from '@/app/popup/_lib';
+import * as Sentry from '@sentry/angular';
 
 @Injectable()
 export class GlobalService {
@@ -33,6 +34,7 @@ export class GlobalService {
   }
 
   public handlePrcError(error, chain: ChainType) {
+    Sentry.captureException({error, chain});
     let errorMessage = error?.message || this.notification.content.txFailed;
     if (chain === 'Neo2' && error?.code === -505) {
       errorMessage = this.notification.content.InsufficientNetworkFee;
@@ -45,6 +47,7 @@ export class GlobalService {
   }
 
   public snackBarTip(msg: string, serverError: any = '', time = 3000) {
+    Sentry.captureException({ msg, serverError });
     let message = this.notification.content[msg] || msg;
     if (serverError instanceof HttpErrorResponse) {
       serverError = serverError.statusText;
