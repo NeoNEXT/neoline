@@ -49,6 +49,7 @@ import { EvmCustomNonceComponent } from './components/evm-custom-nonce/evm-custo
 import { HeaderComponent } from './components/header/header.component';
 import { HardwareSignComponent } from './components/hardware-sign/hardware-sign.component';
 import { ChainLogoComponent } from './components/chain-logo/chain-logo.component';
+import { JsonViewerComponent } from './components/json-viewer/json-viewer.component';
 const COMPONENTS = [
   AssetTxPageComponent,
   NftTxPageComponent,
@@ -66,6 +67,7 @@ const COMPONENTS = [
   HeaderComponent,
   HardwareSignComponent,
   ChainLogoComponent,
+  JsonViewerComponent,
 ];
 //#endregion
 

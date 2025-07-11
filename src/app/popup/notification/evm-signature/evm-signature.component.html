@@ -2,7 +2,9 @@
   *ngIf="showHardwareSign"
   [chainType]="'NeoX'"
   [currentWallet]="encryptWallet"
-  [unsignedData]="signMethod === ETH_EOA_SIGN_METHODS.PersonalSign ? challenge : typedData"
+  [unsignedData]="
+    signMethod === ETH_EOA_SIGN_METHODS.PersonalSign ? challenge : typedData
+  "
   [signMethod]="signMethod"
   (backWithSignedTx)="handleHardwareSignedTx($event)"
 ></app-hardware-sign>
@@ -19,19 +21,36 @@
     </p>
   </div>
   <div class="content">
-    <p class="hex-label">{{ "message" | translate | async }}</p>
+    <p class="hex-label">
+      {{ "message" | translate | async }}
+      <copy
+        [value]="
+          signMethod === ETH_EOA_SIGN_METHODS.PersonalSign
+            ? challenge
+            : strTypeData
+        "
+      >
+        <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+      </copy>
+    </p>
     <p
       class="json-box serialize"
       *ngIf="signMethod === ETH_EOA_SIGN_METHODS.PersonalSign"
     >
       {{ challenge }}
     </p>
-    <p
-      class="json-box serialize"
+    <div
+      class="json-box serialize json-viewer"
       *ngIf="signMethod === ETH_EOA_SIGN_METHODS.SignTypedDataV4"
     >
-      {{ typedData?.message | json }}
-    </p>
+      <ul>
+        <li>
+          <span class="json-key">primaryType</span>:
+          <span class="json-value">{{ typedData?.primaryType }}</span>
+        </li>
+      </ul>
+      <app-json-viewer [data]="typedData?.message"></app-json-viewer>
+    </div>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="cancel()">

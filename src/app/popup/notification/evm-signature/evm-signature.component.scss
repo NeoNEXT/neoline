@@ -5,12 +5,29 @@
     margin-top: 8px;
   }
   .content {
+    height: 300px;
     .hex-label {
       margin-top: 0;
+      display: flex;
+      gap: 8px;
     }
     .json-box {
       color: var(--title-color);
       white-space: pre-wrap;
+    }
+    .json-box.serialize.json-viewer {
+      padding-left: 0;
+      ul {
+        list-style: none;
+        padding-left: 12px;
+        .json-key {
+          color: var(--title-color);
+          font-weight: bold;
+        }
+        .json-value {
+          color: var(--sub-title-color);
+        }
+      }
     }
   }
 }

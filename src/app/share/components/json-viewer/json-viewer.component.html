@@ -1,0 +1,28 @@
+<ng-container *ngIf="isObject(data)">
+  <ul>
+    <li *ngFor="let key of objectKeys(data)">
+      <span class="json-key">{{ key }}</span
+      >:
+      <ng-container
+        *ngIf="isObject(data[key]) || isArray(data[key]); else primitive"
+      >
+        <app-json-viewer [data]="data[key]"></app-json-viewer>
+      </ng-container>
+      <ng-template #primitive>
+        <span class="json-value">
+          {{ key === 'deadline' ? (data[key]*1000 | date: 'yyyy-MM-dd HH:mm:ss') : data[key] }}
+        </span>
+      </ng-template>
+    </li>
+  </ul>
+</ng-container>
+
+<ng-container *ngIf="isArray(data)">
+  <ul>
+    <li *ngFor="let item of data; let i = index">
+      <span class="json-key">{{ i }}</span
+        >:
+      <app-json-viewer [data]="item"></app-json-viewer>
+    </li>
+  </ul>
+</ng-container>

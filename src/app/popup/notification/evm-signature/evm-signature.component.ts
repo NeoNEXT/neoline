@@ -31,6 +31,7 @@ export class PopupNoticeEvmSignComponent implements OnInit {
 
   signMethod = ETH_EOA_SIGN_METHODS.PersonalSign;
   typedData: TypedMessage<MessageTypes>;
+  strTypeData: string;
 
   showHardwareSign = false;
   encryptWallet: EvmWalletJSON;
@@ -82,6 +83,7 @@ export class PopupNoticeEvmSignComponent implements OnInit {
                 if (typeof this.typedData === 'string') {
                   this.typedData = JSON.parse(this.typedData);
                 }
+                this.strTypeData = JSON.stringify(this.typedData);
                 break;
             }
           });

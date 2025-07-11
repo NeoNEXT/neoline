@@ -1,0 +1,11 @@
+ul {
+  list-style: none;
+  padding-left: 12px;
+  .json-key {
+    color: var(--title-color);
+    font-weight: bold;
+  }
+  .json-value {
+    color: var(--sub-title-color);
+  }
+}
