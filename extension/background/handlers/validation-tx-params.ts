@@ -1,7 +1,7 @@
 import { ethErrors } from 'eth-rpc-errors';
 import { ethers } from 'ethers';
 import { abiERC20 } from '../../common/evm/abiERC20';
-import abi_1 from '@ethersproject/abi';
+import { Interface } from '@ethersproject/abi';
 
 /**
  * Validates the transaction params for required properties and throws in
@@ -134,7 +134,7 @@ function validateParamFrom(from) {
  */
 function validateParamData(value) {
   if (value) {
-    const ERC20Interface = new abi_1.Interface(abiERC20);
+    const ERC20Interface = new Interface(abiERC20);
     try {
       ERC20Interface.parseTransaction({ data: value });
       // TODO: Replace `any` with type

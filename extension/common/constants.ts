@@ -139,7 +139,7 @@ export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
   N3TestnetNetwork,
 ];
 
-const NEOX_NETWORK_VERSION = 3;
+const NEOX_NETWORK_VERSION = 4;
 export const NeoXMainnetNetwork: RpcNetwork = {
   id: 47763,
   symbol: 'GAS',
@@ -151,7 +151,7 @@ export const NeoXMainnetNetwork: RpcNetwork = {
     { url: 'https://mainnet-1.rpc.banelabs.org', isDefault: true },
     { url: 'https://mainnet-2.rpc.banelabs.org', isDefault: true },
   ],
-  explorer: 'https://neoxscan.ngd.network',
+  explorer: 'https://xexplorer.neo.org/',
   version: NEOX_NETWORK_VERSION,
   isDefault: true,
 };
