@@ -39,17 +39,26 @@
       class="list-item"
       *ngFor="let list of isSearching ? searchWalletRes : displayList"
     >
-      <p class="list-title">
+      <div class="list-title">
         <span>{{ list.title }}</span>
-        <span class="dropdown" (click)="list.expand = !list.expand">
+        <p class="list-title-right">
           <img
+            *ngIf="isOnePassword"
+            (click)="sortAccount()"
             theme
-            [ngClass]="{ expand: list.expand }"
-            src="/assets/images/common/arrow.svg"
+            src="/assets/images/account/sort.svg"
             alt=""
           />
-        </span>
-      </p>
+          <span class="dropdown" (click)="list.expand = !list.expand">
+            <img
+              theme
+              [ngClass]="{ expand: list.expand }"
+              src="/assets/images/common/arrow.svg"
+              alt=""
+            />
+          </span>
+        </p>
+      </div>
       <ul [hidden]="!list.expand">
         <li
           *ngFor="let item of list.walletArr; index as index"

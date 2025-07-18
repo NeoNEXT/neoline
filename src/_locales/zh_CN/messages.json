@@ -1525,5 +1525,8 @@
   },
   "RPC_URL_ChainId_Not_Match": {
     "message": "您输入的 RPC URL 返回了不同的链 ID ({{chainId}})"
+  },
+  "SortWallets": {
+    "message": "排序钱包"
   }
 }

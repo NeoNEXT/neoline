@@ -32,6 +32,7 @@ import {
   PopupExportWalletDialogComponent,
   PopupPasswordDialogComponent,
   PopupSelectDialogComponent,
+  PopupSortAccountDialogComponent,
 } from '../_dialogs';
 import { NEO } from '@/models/models';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
@@ -39,9 +40,15 @@ import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '@/app/popup/_lib/evm';
 import BigNumber from 'bignumber.js';
 
-interface WalletListItem {
+export interface WalletListItem {
   chain: ChainType;
-  title: string;
+  title:
+    | 'Neo N3'
+    | 'Neo X (EVM Network)'
+    | 'Neo Legacy'
+    | 'Private key'
+    | 'Ledger'
+    | 'OneKey';
   expand: boolean;
   walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
 }
@@ -311,6 +318,18 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     }
   }
 
+  sortAccount() {
+    this.dialog.open(PopupSortAccountDialogComponent, {
+      data: {
+        displayList: this.displayList,
+        wallet: this.wallet,
+        selectChainType: this.selectChainType,
+      },
+      panelClass: 'custom-dialog-panel',
+      backdropClass: 'custom-dialog-backdrop',
+    });
+  }
+
   removeAccount() {
     if (!this.moreModalWallet.accounts[0]?.extra?.ledgerSLIP44) {
       const neo2Accounts = this.neo2WalletArr.filter(
@@ -531,7 +550,7 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     const oneKeyWalletArr = walletArr.filter(
       (item) => item.accounts[0]?.extra?.device === 'OneKey'
     );
-    const res = [
+    const res: WalletListItem[] = [
       {
         title: 'Private key',
         walletArr: privateWalletArr,

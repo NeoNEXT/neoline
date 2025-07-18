@@ -1525,5 +1525,8 @@
   },
   "RPC_URL_ChainId_Not_Match": {
     "message": "入力したRPC URLは異なるチェーンID ({{chainId}})を返しました"
+  },
+  "SortWallets": {
+    "message": "ウォレットを並べ替える"
   }
 }

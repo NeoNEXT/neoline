@@ -1525,5 +1525,8 @@
   },
   "RPC_URL_ChainId_Not_Match": {
     "message": "The RPC URL you have entered returned a different chain ID ({{chainId}})"
+  },
+  "SortWallets": {
+    "message": "Sort wallets"
   }
 }

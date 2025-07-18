@@ -1,5 +1,5 @@
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet3 } from '@popup/_lib';
+import { SORT_WALLETS, Wallet3 } from '@popup/_lib';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import {
   ChainType,
@@ -191,6 +191,11 @@ export default function account(
       return {
         ...state,
         ...updateAllWallets(action.data),
+      };
+    case SORT_WALLETS:
+      return {
+        ...state,
+        ...sortWallets(action.data),
       };
     case ADD_NEO3_NETWORK:
       return {
@@ -431,6 +436,32 @@ function updateAllWallets({
     neo2WIFArr,
     neo3WIFArr,
   };
+}
+
+function sortWallets({
+  chainType,
+  walletArr,
+}: {
+  chainType: ChainType;
+  walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
+}) {
+  switch (chainType) {
+    case 'Neo2':
+      updateLocalStorage(
+        STORAGE_NAME.walletArr,
+        getWalletJsons(walletArr as Wallet2[])
+      );
+      return { neo2WalletArr: walletArr as Wallet2[] };
+    case 'Neo3':
+      updateLocalStorage(
+        STORAGE_NAME['walletArr-Neo3'],
+        getWalletJsons(walletArr as Wallet3[])
+      );
+      return { neo3WalletArr: walletArr as Wallet3[] };
+    case 'NeoX':
+      updateLocalStorage(STORAGE_NAME['walletArr-NeoX'], walletArr);
+      return { neoXWalletArr: walletArr as EvmWalletJSON[] };
+  }
 }
 //#endregion
 
