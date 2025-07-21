@@ -37,15 +37,17 @@ export class PopupSortAccountDialogComponent implements AfterViewInit {
     }
   ) {
     this.data.displayList.forEach((item) => {
+      const temp = { ...item };
+      temp.walletArr = this.handleWalletArr(item.walletArr);
       switch (item.title) {
         case 'Private key':
-          this.privateKeyGroup = item;
+          this.privateKeyGroup = temp;
           break;
         case 'Ledger':
-          this.ledgerGroup = item;
+          this.ledgerGroup = temp;
           break;
         case 'OneKey':
-          this.oneKeyGroup = item;
+          this.oneKeyGroup = temp;
           break;
       }
     });
@@ -99,5 +101,22 @@ export class PopupSortAccountDialogComponent implements AfterViewInit {
       },
     });
     this.dialogRef.close();
+  }
+
+  private handleWalletArr(walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>) {
+    const target = [];
+    walletArr.forEach((item) => {
+      switch (this.data.selectChainType) {
+        case 'Neo2':
+          target.push(new Wallet2(item as any));
+          break;
+        case 'Neo3':
+          target.push(new Wallet3(item as any));
+          break;
+        case 'NeoX':
+          target.push(item);
+      }
+    });
+    return target;
   }
 }
