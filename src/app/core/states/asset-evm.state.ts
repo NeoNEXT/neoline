@@ -24,10 +24,17 @@ export class AssetEVMState {
     account$.subscribe((state) => {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
       this.provider?.destroy();
-      const network = new ethers.Network(this.neoXNetwork.name, this.neoXNetwork.chainId);
-      this.provider = new ethers.JsonRpcProvider(this.neoXNetwork.rpcUrl, network, {
-        staticNetwork: network,
-      });
+      const network = new ethers.Network(
+        this.neoXNetwork.name,
+        this.neoXNetwork.chainId
+      );
+      this.provider = new ethers.JsonRpcProvider(
+        this.neoXNetwork.rpcUrl,
+        network,
+        {
+          staticNetwork: network,
+        }
+      );
     });
   }
 
@@ -262,14 +269,14 @@ export class AssetEVMState {
     try {
       await this.provider.send('eth_call', [PreExecutionParams, 'latest']);
     } catch (error) {
-      throw await this.handleEthersError(error);
+      throw await this.handleEthersTxError(error);
     }
     const wallet = new ethers.Wallet(privateKey, this.provider);
     try {
       const tx = await wallet.sendTransaction(txParams);
       return tx;
     } catch (error) {
-      throw await this.handleEthersError(error);
+      throw await this.handleEthersTxError(error);
     }
   }
 
@@ -292,7 +299,7 @@ export class AssetEVMState {
       try {
         await this.provider.send('eth_call', [PreExecutionParams, 'latest']);
       } catch (error) {
-        throw await this.handleEthersError(error);
+        throw await this.handleEthersTxError(error);
       }
     }
     const serializedTx = ethers.Transaction.from(txRequest).serialized;
@@ -302,7 +309,7 @@ export class AssetEVMState {
       ]);
       return tx;
     } catch (error) {
-      throw await this.handleEthersError(error);
+      throw await this.handleEthersTxError(error);
     }
   }
 
@@ -335,7 +342,7 @@ export class AssetEVMState {
         ]);
         return { status: tx.status, block_time: blockTx.timestamp };
       } catch (error) {
-        throw await this.handleEthersError(error);
+        throw await this.handleEthersTxError(error);
       }
     }
   }
@@ -379,7 +386,7 @@ export class AssetEVMState {
     return data;
   }
 
-  async handleEthersError(err) {
+  async handleEthersTxError(err) {
     const message: string = err?.info?.error?.message ?? err?.error?.message;
     if (
       typeof message === 'string' &&

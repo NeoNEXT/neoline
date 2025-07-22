@@ -31,7 +31,11 @@ import {
   MatDialogRef,
   MAT_DIALOG_DATA,
 } from '@angular/material/dialog';
-import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
+import {
+  UntypedFormBuilder,
+  UntypedFormGroup,
+  Validators,
+} from '@angular/forms';
 import { Wallet3 } from '@popup/_lib';
 import { EvmWalletJSON } from '../../_lib/evm';
 import { PopupConfirmDialogComponent } from '../confirm/confirm.dialog';
@@ -152,17 +156,15 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
     if (this.data.addChainType === 'NeoX') {
       this.loading = true;
     }
+    if (this.data.addChainType === 'Neo3') {
+      this.addNetworkForm.controls.magicNumber.setValue('');
+    }
     this.searchSub?.unsubscribe();
     this.searchSub = timer(1000).subscribe(() => {
-      if (this.data.addChainType === 'Neo3') {
-        this.addNetworkForm.controls.magicNumber.setValue('');
-      }
       if (!this.addNetworkForm.value.rpcUrl) {
         return;
       }
-      if (this.getMagicReq) {
-        this.getMagicReq.unsubscribe();
-      }
+      this.getMagicReq?.unsubscribe();
       this.getMagicReq = this.homeSer
         .getRpcUrlMessage(
           this.addNetworkForm.value.rpcUrl,

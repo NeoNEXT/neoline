@@ -156,7 +156,7 @@ export class PopupNoticeDeployComponent implements OnInit {
             },
             true
           );
-          this.global.handlePrcError(res.error, 'Neo2');
+          this.global.handleRpcError(res.error, 'Neo2');
         } else {
           this.chrome.windowCallback(
             {
@@ -192,7 +192,7 @@ export class PopupNoticeDeployComponent implements OnInit {
           return: requestTarget.Deploy,
           ID: this.messageID,
         });
-        this.global.handlePrcError(err, 'Neo2');
+        this.global.handleRpcError(err, 'Neo2');
       });
   }
 

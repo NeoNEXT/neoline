@@ -312,7 +312,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
         this.loading = false;
         this.loadingMsg = '';
         if (res.error !== undefined) {
-          this.global.handlePrcError(res.error, 'Neo2');
+          this.global.handleRpcError(res.error, 'Neo2');
           this.chrome.windowCallback(
             {
               error: { ...ERRORS.RPC_ERROR, description: res?.error },
@@ -357,7 +357,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
           return: requestTarget.Invoke,
           ID: this.messageID,
         });
-        this.global.handlePrcError(err, 'Neo2');
+        this.global.handleRpcError(err, 'Neo2');
       });
   }
 

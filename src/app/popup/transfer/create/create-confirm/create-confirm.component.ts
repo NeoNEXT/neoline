@@ -399,10 +399,10 @@ export class TransferCreateConfirmComponent implements OnInit {
     } catch (err) {
       switch (this.data.chainType) {
         case 'Neo2':
-          this.global.handlePrcError(err, 'Neo2');
+          this.global.handleRpcError(err, 'Neo2');
           break;
         case 'Neo3':
-          this.global.handlePrcError(err, 'Neo3');
+          this.global.handleRpcError(err, 'Neo3');
           break;
         case 'NeoX':
           this.global.snackBarTip(err);

@@ -33,7 +33,7 @@ export class GlobalService {
     }
   }
 
-  public handlePrcError(error, chain: ChainType) {
+  public handleRpcError(error, chain: ChainType) {
     Sentry.captureException({error, chain});
     let errorMessage = error?.message || this.notification.content.txFailed;
     if (chain === 'Neo2' && error?.code === -505) {

@@ -6,7 +6,12 @@ import {
   OnDestroy,
 } from '@angular/core';
 import { Asset, NEO } from '@/models/models';
-import { AssetState, ChromeService, SettingState } from '@/app/core';
+import {
+  AssetState,
+  ChromeService,
+  GlobalService,
+  SettingState,
+} from '@/app/core';
 import { forkJoin } from 'rxjs';
 import BigNumber from 'bignumber.js';
 import { NEO3_CONTRACT, ChainType, STORAGE_NAME, RpcNetwork } from '../../_lib';
@@ -34,6 +39,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     private asset: AssetState,
     private chrome: ChromeService,
     private settingState: SettingState,
+    private global: GlobalService,
     private store: Store<AppState>
   ) {}
 
@@ -73,35 +79,49 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
       `${this.chainType}-${this.networkId}`,
       this.address
     );
-    forkJoin([getMoneyBalance, getWatch]).subscribe(async (res) => {
-      const [moneyAssets, watch] = [...res];
-      const showAssets = [...moneyAssets];
-      for (const item of watch) {
-        const index = showAssets.findIndex((m) => m.asset_id === item.asset_id);
-        if (index >= 0) {
-          if (item.watching === false) {
-            showAssets.splice(index, 1);
-          }
-        } else {
-          if (item.watching === true) {
-            const balance = await this.asset.getAddressAssetBalance(
-              this.address,
-              item.asset_id,
-              this.chainType
-            );
-            if (new BigNumber(balance).comparedTo(0) > 0) {
-              item.balance = new BigNumber(balance)
-                .shiftedBy(-item.decimals)
-                .toFixed();
+    forkJoin([getMoneyBalance, getWatch]).subscribe(
+      async (res) => {
+        const [moneyAssets, watch] = [...res];
+        const showAssets = [...moneyAssets];
+        for (const item of watch) {
+          const index = showAssets.findIndex(
+            (m) => m.asset_id === item.asset_id
+          );
+          if (index >= 0) {
+            if (item.watching === false) {
+              showAssets.splice(index, 1);
             }
-            showAssets.push(item);
+          } else {
+            if (item.watching === true) {
+              const balance = await this.asset.getAddressAssetBalance(
+                this.address,
+                item.asset_id,
+                this.chainType
+              );
+              if (new BigNumber(balance).comparedTo(0) > 0) {
+                item.balance = new BigNumber(balance)
+                  .shiftedBy(-item.decimals)
+                  .toFixed();
+              }
+              showAssets.push(item);
+            }
           }
         }
+        this.myAssets = showAssets;
+        this.getAssetsRate();
+        this.isLoading = false;
+      },
+      (err) => {
+        this.isLoading = false;
+        let message =
+          err?.value?.[0]?.error?.message ??
+          err?.value?.[0]?.message ??
+          err?.message;
+        message =
+          typeof message === 'string' ? `RPC Error: ${message}` : 'RPC Error';
+        this.global.snackBarTip(message);
       }
-      this.myAssets = showAssets;
-      this.getAssetsRate();
-      this.isLoading = false;
-    });
+    );
   }
   async getAssetsRate() {
     let total = new BigNumber(0);

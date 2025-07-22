@@ -350,7 +350,7 @@ export class PopupNoticeTransferComponent implements OnInit {
           return: requestTarget.Send,
           ID: this.messageID,
         });
-        this.global.handlePrcError(err, 'Neo2');
+        this.global.handleRpcError(err, 'Neo2');
       });
   }
 
