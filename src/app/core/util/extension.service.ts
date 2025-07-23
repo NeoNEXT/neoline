@@ -72,7 +72,7 @@ export class ExtensionService {
 
   setStorage(value) {
     chrome.storage.sync.set(value, () => {
-      console.log('Set storage', value);
+      // console.log('Set storage', value);
     });
   }
   removeStorage(key) {
@@ -94,7 +94,7 @@ export class ExtensionService {
 
   setLocalStorage(value) {
     chrome.storage.local.set(value, () => {
-      console.log('Set local storage', value);
+      // console.log('Set local storage', value);
     });
   }
   removeLocalStorage(key) {
@@ -116,7 +116,7 @@ export class ExtensionService {
 
   setSessionStorage(value) {
     chrome.storage.session.set(value, () => {
-      console.log('Set session storage', value);
+      // console.log('Set session storage', value);
     });
   }
 

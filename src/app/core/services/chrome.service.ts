@@ -636,6 +636,7 @@ export class ChromeService {
     const currentAddress = w.accounts[0].address;
 
     const tab = await this.crx.getCurrentWindow();
+    if (!tab) return;
     const hostname = new URL(tab.url).hostname;
     const allWebsites: ConnectedWebsitesType = await firstValueFrom(
       this.getStorage(STORAGE_NAME.connectedWebsites)

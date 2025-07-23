@@ -518,11 +518,11 @@ function updateLocalStorage(storageName: STORAGE_NAME, value: any) {
     saveData[storageName] = storageValue;
     if (STORAGE_VALUE_MESSAGE[storageName].isLocal) {
       chrome.storage.local.set(saveData, () => {
-        console.log('Set local storage', saveData);
+        // console.log('Set local storage', saveData);
       });
     } else {
       chrome.storage.sync.set(saveData, () => {
-        console.log('Set storage', saveData);
+        // console.log('Set storage', saveData);
       });
     }
   } else {

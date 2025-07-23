@@ -45,7 +45,7 @@ export function getStorage(key, callback) {
 
 export function setStorage(value) {
   chrome.storage.sync.set(value, () => {
-    console.log('Set storage', value);
+    // console.log('Set storage', value);
   });
 }
 export function removeStorage(key) {
@@ -67,7 +67,7 @@ export function getLocalStorage(key, callback): Promise<any> {
 
 export function setLocalStorage(value) {
   chrome.storage.local.set(value, () => {
-    console.log('Set local storage', value);
+    // console.log('Set local storage', value);
   });
 }
 export function removeLocalStorage(key) {
@@ -89,7 +89,7 @@ export function getSessionStorage(key, callback): Promise<any> {
 
 export function setSessionStorage(value) {
   chrome.storage.session.set(value, () => {
-    console.log('Set session storage', value);
+    // console.log('Set session storage', value);
   });
 }
 
