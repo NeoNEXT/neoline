@@ -5,40 +5,32 @@
   overflow: scroll;
   padding-bottom: 20px;
   .header.transfer {
-    text-align: left;
-    display: flex;
-    flex-direction: column;
-    gap: 8px;
     background: var(--background-color);
     padding: 3px 16px 16px;
-    .type {
+    position: relative;
+    text-align: center;
+    padding: 3px 20px 16px 20px;
+    .invoke-type {
+      position: absolute;
+      left: 16px;
+      top: 3px;
       display: inline-block;
-      width: fit-content;
-      min-height: 22px;
+      height: 22px;
       line-height: 22px;
       padding: 0 8px;
       border-radius: 4px;
       border: 0.5px solid var(--title-color);
       font-family: NeverMind-Regular;
       color: var(--important-title-color);
-      word-break: break-all;
-      .address {
-        font-size: 12px;
-      }
     }
-    .asset {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      .amount {
-        margin-top: 0;
-        font-family: NeverMind;
-        font-size: 16px;
-      }
+    .amount {
+      font-family: NeverMind-DemiBold;
+      font-size: 24px;
+      margin-top: 12px;
     }
     .rate {
-      font-size: 12px;
       color: var(--sub-title-color);
+      margin-top: 8px;
     }
     .address-group {
       margin-top: 12px;
@@ -46,12 +38,28 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      &.contract-interaction {
+        padding-top: 24px;
+      }
       .item {
         display: inline-flex;
         align-items: center;
+        .name-group {
+          display: flex;
+          flex-direction: column;
+          text-align: left;
+          gap: 4px;
+          .name {
+            max-width: 100px;
+            color: var(--sub-title-color);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+          }
+        }
       }
       img.avatar {
-        margin-right: 12px;
+        margin-right: 8px;
         width: 30px;
       }
       .contract-avatar {
@@ -89,7 +97,15 @@
       .hex-label {
         font-family: NeverMind-Regular;
         color: var(--sub-title-color);
-        margin-top: 30px;
+        margin-top: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        .value {
+          color: var(--title-color);
+          word-break: break-all;
+          line-height: 22px;
+        }
       }
       .json-box {
         border-radius: 4px;
@@ -114,6 +130,35 @@
       display: flex;
       flex-direction: column;
       gap: 12px;
+      .request-info {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--line-color);
+        .request-info-item {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          .label {
+            font-size: 14px;
+          }
+          .to-address {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+          }
+          .rate {
+            color: var(--sub-title-color);
+            text-align: right;
+            margin-top: 4px;
+          }
+        }
+      }
+      .fee-group {
+        padding-bottom: 12px;
+        border-bottom: 1px solid var(--line-color);
+      }
       .label {
         font-size: 13px;
         font-weight: normal;

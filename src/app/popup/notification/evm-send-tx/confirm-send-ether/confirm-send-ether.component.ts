@@ -1,6 +1,10 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, Input, Output, OnInit } from '@angular/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
-import { AddressNonceInfo, EvmTransactionParams, RpcNetwork } from '@/app/popup/_lib';
+import {
+  AddressNonceInfo,
+  EvmTransactionParams,
+  RpcNetwork,
+} from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 import BigNumber from 'bignumber.js';
 import { DappEVMState } from '@/app/core';
@@ -11,7 +15,7 @@ import { RateType } from '../evm-send-tx.component';
   templateUrl: './confirm-send-ether.component.html',
   styleUrls: ['../send-common.scss'],
 })
-export class PopupNoticeEvmConfirmSendEtherComponent {
+export class PopupNoticeEvmConfirmSendEtherComponent implements OnInit {
   @Input() locationOrigin: string;
   @Input() txParams: EvmTransactionParams;
   @Input() amount: string;
@@ -30,8 +34,15 @@ export class PopupNoticeEvmConfirmSendEtherComponent {
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   customNonce: number;
   neoXFeeInfo: NeoXFeeInfoProp;
+  fromWalletName: string;
+  toWalletName: string;
 
   constructor(private dappEVMState: DappEVMState) {}
+
+  ngOnInit(): void {
+    this.fromWalletName = this.dappEVMState.getWalletName(this.txParams.from);
+    this.toWalletName = this.dappEVMState.getWalletName(this.txParams.to);
+  }
 
   updateEvmFee($event) {
     this.neoXFeeInfo = $event;

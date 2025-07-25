@@ -1528,5 +1528,17 @@
   },
   "SortWallets": {
     "message": "排序钱包"
+  },
+  "RequestFrom": {
+    "message": "请求来自"
+  },
+  "InteractingWith": {
+    "message": "交互地址"
+  },
+  "Method": {
+    "message": "方法"
+  },
+  "Amount": {
+    "message": "数额"
   }
 }

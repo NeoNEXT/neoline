@@ -1,21 +1,16 @@
 <div class="container">
   <div class="header transfer">
-    <p class="origin">{{ locationOrigin }}</p>
-    <div class="type">
-      {{ txParams?.to | longStr : 4 }}: {{ tokenData?.name }}
-    </div>
-    <div class="asset">
-      <token-logo
-        customClass="small"
-        [assetId]="txParams?.to"
-        chainType="NeoX"
-        [symbol]="assetDetails?.symbol"
-        [neoXChainId]="neoXNetwork?.chainId"
-      ></token-logo>
-      <p class="amount">
-        {{ assetDetails?.tokenAmount || 0 }} {{ assetDetails?.symbol }}
-      </p>
-    </div>
+    <div class="invoke-type">· TRANSFER</div>
+    <token-logo
+      customClass="big"
+      [assetId]="txParams?.to"
+      chainType="NeoX"
+      [symbol]="assetDetails?.symbol"
+      [neoXChainId]="neoXNetwork?.chainId"
+    ></token-logo>
+    <p class="amount">
+      {{ assetDetails?.tokenAmount || 0 }} {{ assetDetails?.symbol }}
+    </p>
     <p class="rate">
       {{ sendAssetRate | numberFixed : 2 }} {{ rate.rateCurrency }}
     </p>
@@ -23,14 +18,20 @@
       <copy [value]="txParams?.from">
         <div class="item">
           <img class="avatar" [avatar]="txParams?.from" />
-          <span>{{ txParams?.from | longStr : 4 }}</span>
+          <div class="name-group">
+            <p class="name">{{ fromWalletName }}</p>
+            <p>{{ txParams?.from | longStr : 6 }}</p>
+          </div>
         </div>
       </copy>
       <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
       <copy [value]="assetDetails?.toAddress">
         <div class="item">
           <img class="avatar" [avatar]="assetDetails?.toAddress" />
-          <span>{{ assetDetails?.toAddress | longStr : 4 }}</span>
+          <div class="name-group">
+            <p class="name">{{ toWalletName }}</p>
+            <p>{{ assetDetails?.toAddress | longStr : 6 }}</p>
+          </div>
         </div>
       </copy>
     </div>
@@ -49,6 +50,30 @@
   <div class="content details" *ngIf="tabType === 'details'">
     <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
 
+    <div class="request-info">
+      <div class="request-info-item">
+        <span class="label">{{ "RequestFrom" | translate | async }}</span>
+        <span>{{ locationOrigin }}</span>
+      </div>
+      <div class="request-info-item">
+        <span class="label">{{ "Network" | translate | async }}</span>
+        <span>{{ neoXNetwork.name }}</span>
+      </div>
+      <div *ngIf="txParams?.to" class="request-info-item">
+        <span class="label">{{ "InteractingWith" | translate | async }}</span>
+        <copy [value]="txParams?.to">
+          <span class="to-address">
+            {{ txParams?.to | longStr : 6 }}
+            <img theme src="assets/images/common/copy.svg" />
+          </span>
+        </copy>
+      </div>
+      <div class="request-info-item" *ngIf="tokenData?.name">
+        <span class="label">{{ "Method" | translate | async }}</span>
+        <span>{{ tokenData?.name }}</span>
+      </div>
+    </div>
+
     <div class="fee-group">
       <evm-fee
         [txParams]="txParams"
@@ -61,7 +86,6 @@
       <p class="value-rate">
         {{ rate.fee | numberFixed : 2 }} {{ rate.rateCurrency }}
       </p>
-      <div class="border-line"></div>
     </div>
 
     <evm-custom-nonce
@@ -83,7 +107,12 @@
     <p class="title">
       FUNCTION TYPE: <span class="value">{{ tokenData?.signature }}</span>
     </p>
-    <p class="hex-label">HEX DATA: {{ hexDataLength }} BYTES</p>
+    <p class="hex-label">
+      HEX DATA: <span class="value">{{ hexDataLength }} BYTES</span>
+      <copy [value]="txParams.data">
+        <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+      </copy>
+    </p>
     <p class="json-box serialize">{{ txParams.data }}</p>
   </div>
   <div class="btn-group">

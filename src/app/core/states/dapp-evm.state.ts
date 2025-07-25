@@ -5,6 +5,9 @@ import {
   abiERC1155,
   abiERC20,
   abiERC721,
+  EvmWalletJSON,
+  STORAGE_NAME,
+  AddAddressBookProp,
 } from '@/app/popup/_lib';
 import { AppState } from '@/app/reduers';
 import { Injectable } from '@angular/core';
@@ -24,6 +27,7 @@ import {
 import type BN from 'bn.js';
 import { HttpClient } from '@angular/common/http';
 import { map, of } from 'rxjs';
+import { ChromeService } from '../services/chrome.service';
 
 const abi_1 = require('@ethersproject/abi');
 
@@ -39,18 +43,47 @@ const IPFS_DEFAULT_GATEWAY_URL = 'https://ipfs.io/ipfs/';
 @Injectable()
 export class DappEVMState {
   private neoXNetwork: RpcNetwork;
+  private neoXWalletArr: EvmWalletJSON[];
   provider: ethers.JsonRpcProvider;
+  storageNeoXAddressBook: AddAddressBookProp[];
 
-  constructor(private store: Store<AppState>, private http: HttpClient) {
+  constructor(
+    private store: Store<AppState>,
+    private http: HttpClient,
+    private chrome: ChromeService
+  ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      this.neoXWalletArr = state.neoXWalletArr;
       this.provider?.destroy();
-      const network = new ethers.Network(this.neoXNetwork.name, this.neoXNetwork.chainId);
-      this.provider = new ethers.JsonRpcProvider(this.neoXNetwork.rpcUrl, network, {
-        staticNetwork: network,
-      });
+      const network = new ethers.Network(
+        this.neoXNetwork.name,
+        this.neoXNetwork.chainId
+      );
+      this.provider = new ethers.JsonRpcProvider(
+        this.neoXNetwork.rpcUrl,
+        network,
+        {
+          staticNetwork: network,
+        }
+      );
     });
+    this.chrome
+      .getStorage(STORAGE_NAME.addressBook)
+      .subscribe((res) => {
+        this.storageNeoXAddressBook = res?.NeoX || [];
+      });
+  }
+
+  getWalletName(address: string) {
+    const innerWallet = this.neoXWalletArr.find(
+      (item) => item.accounts[0].address === ethers.getAddress(address)
+    );
+    const addressBook = this.storageNeoXAddressBook.find(
+      (item) => ethers.getAddress(item.address) === ethers.getAddress(address)
+    );
+    return innerWallet?.name ?? addressBook?.name ?? '';
   }
 
   getContractMethodData(data = '') {

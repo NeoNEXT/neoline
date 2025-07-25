@@ -1,42 +1,14 @@
 <div class="container">
   <div class="header transfer">
-    <p class="origin">{{ locationOrigin }}</p>
-    <div class="type">
-      <span class="address">{{ txParams?.to | longStr : 5 }}</span
-      >:
-      {{
-        contractMethodData
-          ? contractMethodData?.name
-          : ("contractInteraction" | translate | async)
-      }}
-    </div>
-    <div class="asset">
-      <token-logo
-        customClass="small"
-        [assetId]="ETH_SOURCE_ASSET_HASH"
-        chainType="NeoX"
-        [symbol]="neoXNetwork?.symbol"
-        [neoXChainId]="neoXNetwork?.chainId"
-      ></token-logo>
-      <p class="amount" *ngIf="getShowAmount()">
-        {{ getShowAmount() }} {{ neoXNetwork?.symbol }}
-      </p>
-    </div>
-    <p class="rate">
-      {{ rate.amount | numberFixed : 2 }} {{ rate.rateCurrency }}
-    </p>
-    <div class="address-group">
+    <div class="invoke-type">· TRANSACTION REQUEST</div>
+    <div class="address-group contract-interaction">
       <copy [value]="txParams?.from">
         <div class="item">
           <img class="avatar" [avatar]="txParams?.from" />
-          <span>{{ txParams?.from | longStr : 4 }}</span>
-        </div>
-      </copy>
-      <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
-      <copy [value]="txParams?.to">
-        <div class="item">
-          <span class="contract-avatar">?</span>
-          <span>{{ txParams?.to | longStr : 4 }}</span>
+          <div class="name-group">
+            <p class="name">{{ fromWalletName }}</p>
+            <p>{{ txParams?.from | longStr : 10 }}</p>
+          </div>
         </div>
       </copy>
     </div>
@@ -55,6 +27,39 @@
   <div class="content details" *ngIf="tabType === 'details'">
     <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
 
+    <div class="request-info">
+      <div class="request-info-item">
+        <span class="label">{{ "RequestFrom" | translate | async }}</span>
+        <span>{{ locationOrigin }}</span>
+      </div>
+      <div class="request-info-item">
+        <span class="label">{{ "Network" | translate | async }}</span>
+        <span>{{ neoXNetwork.name }}</span>
+      </div>
+      <div *ngIf="txParams?.to" class="request-info-item">
+        <span class="label">{{ "InteractingWith" | translate | async }}</span>
+        <copy [value]="txParams?.to">
+          <span class="to-address">
+            {{ txParams?.to | longStr : 6 }}
+            <img theme src="assets/images/common/copy.svg" />
+          </span>
+        </copy>
+      </div>
+      <div class="request-info-item" *ngIf="contractMethodData?.fourByteSig">
+        <span class="label">{{ "Method" | translate | async }}</span>
+        <span>{{ contractMethodData?.fourByteSig }}</span>
+      </div>
+      <div class="request-info-item" *ngIf="getShowAmount()">
+        <span class="label">{{ "Amount" | translate | async }}</span>
+        <div>
+          <p>{{ getShowAmount() }} {{ neoXNetwork?.symbol }}</p>
+          <p class="rate">
+            {{ rate.amount | numberFixed : 2 }} {{ rate.rateCurrency }}
+          </p>
+        </div>
+      </div>
+    </div>
+
     <div class="fee-group">
       <evm-fee
         [txParams]="txParams"
@@ -67,7 +72,6 @@
       <p class="value-rate">
         {{ rate.fee | numberFixed : 2 }} {{ rate.rateCurrency }}
       </p>
-      <div class="border-line"></div>
     </div>
 
     <div class="total-fee" *ngIf="amount">
@@ -108,7 +112,12 @@
     <pre class="json-box serialize" *ngIf="contractMethodData?.params">{{
       contractMethodData?.params | json
     }}</pre>
-    <p class="hex-label">HEX DATA: {{ hexDataLength }} BYTES</p>
+    <div class="hex-label">
+      HEX DATA: <span class="value">{{ hexDataLength }} BYTES</span>
+      <copy [value]="txParams.data">
+        <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+      </copy>
+    </div>
     <p class="json-box serialize">{{ txParams.data }}</p>
   </div>
   <div class="btn-group">

@@ -37,6 +37,7 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   contractMethodData: { fourByteSig: string; name: string; params: any[] };
   hexDataLength: number;
   neoXFeeInfo: NeoXFeeInfoProp;
+  fromWalletName: string;
 
   constructor(
     private dappEVMState: DappEVMState,
@@ -50,6 +51,7 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
       .subscribe((res) => {
         this.contractMethodData = res;
       });
+    this.fromWalletName = this.dappEVMState.getWalletName(this.txParams.from);
   }
 
   getShowAmount() {

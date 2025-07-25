@@ -1528,5 +1528,17 @@
   },
   "SortWallets": {
     "message": "ウォレットを並べ替える"
+  },
+  "RequestFrom": {
+    "message": "リクエスト元"
+  },
+  "InteractingWith": {
+    "message": "インタラクション"
+  },
+  "Method": {
+    "message": "メソッド"
+  },
+  "Amount": {
+    "message": "金額"
   }
 }

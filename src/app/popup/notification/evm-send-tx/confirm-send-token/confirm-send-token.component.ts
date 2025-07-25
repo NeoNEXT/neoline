@@ -41,6 +41,8 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   tokenData;
   hexDataLength: number;
   neoXFeeInfo: NeoXFeeInfoProp;
+  fromWalletName: string;
+  toWalletName: string;
   constructor(
     private dappEVMState: DappEVMState,
     private util: UtilServiceState,
@@ -53,6 +55,7 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
       this.txParams.data
     );
 
+    this.fromWalletName = this.dappEVMState.getWalletName(this.txParams.from);
     this.dappEVMState
       .getAssetDetails(
         this.txParams.to,
@@ -62,6 +65,11 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
       )
       .then((res) => {
         this.assetDetails = res;
+        if (this.assetDetails?.toAddress) {
+          this.toWalletName = this.dappEVMState.getWalletName(
+            this.assetDetails.toAddress
+          );
+        }
         this.returnAssetDetail.emit(this.assetDetails);
 
         this.assetState
