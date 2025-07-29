@@ -7,8 +7,10 @@ import {
 } from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 import BigNumber from 'bignumber.js';
-import { DappEVMState } from '@/app/core';
+import { DappEVMState, UtilServiceState } from '@/app/core';
 import { RateType } from '../evm-send-tx.component';
+
+type TabType = 'details' | 'data';
 
 @Component({
   selector: 'confirm-send-ether',
@@ -32,16 +34,22 @@ export class PopupNoticeEvmConfirmSendEtherComponent implements OnInit {
   @Output() confirmEvent = new EventEmitter();
 
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
+  tabType: TabType = 'details';
+  hexDataLength: number;
   customNonce: number;
   neoXFeeInfo: NeoXFeeInfoProp;
   fromWalletName: string;
   toWalletName: string;
 
-  constructor(private dappEVMState: DappEVMState) {}
+  constructor(
+    private dappEVMState: DappEVMState,
+    private util: UtilServiceState
+  ) {}
 
   ngOnInit(): void {
     this.fromWalletName = this.dappEVMState.getWalletName(this.txParams.from);
     this.toWalletName = this.dappEVMState.getWalletName(this.txParams.to);
+    this.hexDataLength = this.util.getHexDataLength(this.txParams.data);
   }
 
   updateEvmFee($event) {
@@ -62,6 +70,9 @@ export class PopupNoticeEvmConfirmSendEtherComponent implements OnInit {
   }
 
   getShowAmount() {
+    if (this.amount === '0') {
+      return '0';
+    }
     if (!!this.amount) {
       const newAmount = new BigNumber(this.amount).dp(8, 1).toFixed();
       if (newAmount === '0') {
@@ -72,9 +83,14 @@ export class PopupNoticeEvmConfirmSendEtherComponent implements OnInit {
   }
 
   getEvmTotalData() {
-    if (!!this.amount && !!this.neoXFeeInfo?.estimateGas) {
+    if (
+      !!this.amount &&
+      (!!this.neoXFeeInfo?.estimateGas || !!this.siteNeoXFeeInfo?.estimateGas)
+    ) {
       return new BigNumber(this.amount)
-        .plus(this.neoXFeeInfo.estimateGas)
+        .plus(
+          this.neoXFeeInfo?.estimateGas ?? this.siteNeoXFeeInfo?.estimateGas
+        )
         .dp(8, 1)
         .toFixed();
     }

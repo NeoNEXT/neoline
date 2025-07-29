@@ -35,21 +35,31 @@
     </div>
   </div>
   <div class="tabs-container">
-    <span class="selected">
+    <span
+      [class]="{ selected: tabType === 'details' }"
+      (click)="tabType = 'details'"
+    >
       {{ "details" | translate | async }}
     </span>
+    <span
+      *ngIf="txParams.data"
+      [class]="{ selected: tabType === 'data' }"
+      (click)="tabType = 'data'"
+    >
+      {{ "data" | translate | async }}
+    </span>
   </div>
-  <div class="content details">
+  <div class="content details" *ngIf="tabType === 'details'">
     <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
 
     <div class="request-info">
       <div class="request-info-item">
-        <span class="label">{{ "RequestFrom" | translate | async }}</span>
-        <span>{{ locationOrigin }}</span>
-      </div>
-      <div class="request-info-item">
         <span class="label">{{ "Network" | translate | async }}</span>
         <span>{{ neoXNetwork.name }}</span>
+      </div>
+      <div class="request-info-item">
+        <span class="label">{{ "RequestFrom" | translate | async }}</span>
+        <span>{{ locationOrigin }}</span>
       </div>
     </div>
 
@@ -92,6 +102,15 @@
       *ngIf="nonceInfo?.pendingTxs"
       [count]="nonceInfo.pendingTxs"
     ></evm-pending-warning>
+  </div>
+  <div class="content data" *ngIf="tabType === 'data'">
+    <p class="hex-label">
+      HEX DATA: <span class="value">{{ hexDataLength }} BYTES</span>
+      <copy [value]="txParams.data">
+        <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+      </copy>
+    </p>
+    <p class="json-box serialize">{{ txParams.data }}</p>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="exit()">

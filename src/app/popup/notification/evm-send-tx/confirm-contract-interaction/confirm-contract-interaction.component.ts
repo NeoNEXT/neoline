@@ -1,7 +1,11 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
 import { DappEVMState, UtilServiceState } from '@/app/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
-import { AddressNonceInfo, EvmTransactionParams, RpcNetwork } from '@/app/popup/_lib';
+import {
+  AddressNonceInfo,
+  EvmTransactionParams,
+  RpcNetwork,
+} from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 import BigNumber from 'bignumber.js';
 import { RateType } from '../evm-send-tx.component';
@@ -55,6 +59,9 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   }
 
   getShowAmount() {
+    if (this.amount === '0') {
+      return '0';
+    }
     if (!!this.amount) {
       const newAmount = new BigNumber(this.amount).dp(8, 1).toFixed();
       if (newAmount === '0') {
@@ -65,9 +72,14 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   }
 
   getEvmTotalData() {
-    if (!!this.amount && !!this.neoXFeeInfo?.estimateGas) {
+    if (
+      !!this.amount &&
+      (!!this.neoXFeeInfo?.estimateGas || !!this.siteNeoXFeeInfo?.estimateGas)
+    ) {
       return new BigNumber(this.amount)
-        .plus(this.neoXFeeInfo.estimateGas)
+        .plus(
+          this.neoXFeeInfo?.estimateGas ?? this.siteNeoXFeeInfo?.estimateGas
+        )
         .dp(8, 1)
         .toFixed();
     }

@@ -34,11 +34,15 @@ export class GlobalService {
   }
 
   public handleRpcError(error, chain: ChainType) {
-    Sentry.captureException({error, chain});
+    Sentry.captureException({ error, chain });
     let errorMessage = error?.message || this.notification.content.txFailed;
     if (chain === 'Neo2' && error?.code === -505) {
       errorMessage = this.notification.content.InsufficientNetworkFee;
     }
+    errorMessage =
+      errorMessage.length > 260
+        ? errorMessage.slice(0, 260) + '...'
+        : errorMessage;
     this.snackBar.open(errorMessage, this.notification.content.close, {
       horizontalPosition: 'center',
       verticalPosition: 'top',
@@ -57,6 +61,7 @@ export class GlobalService {
     if (serverError !== '') {
       message = message + ': ' + serverError;
     }
+    message = message.length > 260 ? message.slice(0, 260) + '...' : message;
     this.snackBar.open(message, this.notification.content.close, {
       horizontalPosition: 'center',
       verticalPosition: 'top',
