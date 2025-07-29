@@ -1540,5 +1540,11 @@
   },
   "Amount": {
     "message": "金額"
+  },
+  "notConnectWebsiteDesc": {
+    "message": "{{name}} 未接続 {{origin}}"
+  },
+  "connectWebsite": {
+    "message": "アカウントを接続"
   }
 }

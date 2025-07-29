@@ -18,3 +18,22 @@
     alt=""
   />
 </div>
+
+<div
+  class="connect-website"
+  *ngIf="authWalletList.length > 0 && !currentWalletIsConnected"
+>
+  <img class="avatar" [avatar]="currentWallet.accounts[0].address" alt="" />
+  <div>
+    <span>
+      {{
+        "notConnectWebsiteDesc"
+          | translate : { name: currentWallet.name, origin: locationOrigin }
+          | async
+      }}
+    </span>
+    <span class="connect" (click)="connectCurrentWallet()">
+      {{ "connectWebsite" | translate | async }}
+    </span>
+  </div>
+</div>

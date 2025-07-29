@@ -1540,5 +1540,11 @@
   },
   "Amount": {
     "message": "Amount"
+  },
+  "notConnectWebsiteDesc": {
+    "message": "{{name}} is not connected to {{origin}}"
+  },
+  "connectWebsite": {
+    "message": "Connect account"
   }
 }

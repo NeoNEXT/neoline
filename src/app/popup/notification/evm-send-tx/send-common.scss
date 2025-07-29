@@ -140,8 +140,12 @@
           display: flex;
           align-items: center;
           justify-content: space-between;
+          gap: 8px;
+          word-break: break-all;
+          line-height: 1.2;
           .label {
             font-size: 14px;
+            min-width: 80px;
           }
           .to-address {
             display: inline-flex;

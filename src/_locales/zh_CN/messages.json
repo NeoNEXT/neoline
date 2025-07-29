@@ -1540,5 +1540,11 @@
   },
   "Amount": {
     "message": "数额"
+  },
+  "notConnectWebsiteDesc": {
+    "message": "{{name}} 未连接到 {{origin}}"
+  },
+  "connectWebsite": {
+    "message": "连接账户"
   }
 }

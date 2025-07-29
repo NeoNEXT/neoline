@@ -18,6 +18,7 @@ export class PopupHomeDappAuthComponent implements OnChanges {
   @Input() allWallet: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
   @Input() chainType: ChainType;
   hostname: string;
+  locationOrigin: string;
   defaultFavIconUrl = '/assets/images/common/dapp-auth.svg';
   favIconUrl: string;
   hostTitle: string;
@@ -56,6 +57,7 @@ export class PopupHomeDappAuthComponent implements OnChanges {
         if (tabs[0] && tabs[0].url) {
           const url = new URL(tabs[0].url);
           this.hostname = url.hostname;
+          this.locationOrigin = url.origin;
 
           this.getDappAuthList();
         }
@@ -64,6 +66,7 @@ export class PopupHomeDappAuthComponent implements OnChanges {
       this.favIconUrl = '';
       this.hostTitle = document.title;
       this.hostname = location.hostname;
+      this.locationOrigin = location.origin;
       // this.getDappAuthList();
     }
   }
@@ -87,6 +90,48 @@ export class PopupHomeDappAuthComponent implements OnChanges {
       .subscribe(() => {
         this.getDappAuthList();
       });
+  }
+
+  getConnectedAddress() {
+    const addresses = this.authWalletList.reduce((prev, item) => {
+      prev.push(item.accounts[0].address);
+      return prev;
+    }, []);
+    const index = addresses.indexOf(this.currentWallet.accounts[0].address);
+    if (index >= 0) {
+      addresses.splice(index, 1);
+      addresses.unshift(this.currentWallet.accounts[0].address);
+    }
+    return addresses;
+  }
+
+  connectCurrentWallet() {
+    if (!this.allWebsites[this.hostname]) {
+      this.allWebsites[this.hostname] = {
+        icon: this.favIconUrl,
+        title: this.hostTitle,
+        connectedAddress: {
+          [this.currentWallet.accounts[0].address]: {
+            keep: false,
+            chain: this.chainType,
+          },
+        },
+      };
+    } else {
+      this.allWebsites[this.hostname].connectedAddress[
+        this.currentWallet.accounts[0].address
+      ] = {
+        keep: false,
+        chain: this.chainType,
+      };
+    }
+    this.chromeService.setStorage(
+      STORAGE_NAME.connectedWebsites,
+      this.allWebsites
+    );
+    this.currentWalletIsConnected = true;
+    this.authWalletList.unshift(this.currentWallet);
+    this.chromeService.evmAccountChange(this.getConnectedAddress());
   }
 
   private getDappAuthList() {

@@ -50,6 +50,36 @@
   }
 }
 
+.connect-website {
+  max-width: 600px;
+  margin: 0 auto;
+  position: fixed;
+  bottom: 16px;
+  left: 16px;
+  right: 16px;
+  background: #303334;
+  opacity: 0.9;
+  border-radius: 4px;
+  padding: 16px;
+  z-index: 9999999;
+  font-family: NeverMind;
+  font-weight: normal;
+  line-height: 18px;
+  color: #b9babe;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  img.avatar {
+    width: 30px;
+    height: 30px;
+  }
+  .connect {
+    color: var(--theme-color);
+    margin-left: 4px;
+    cursor: pointer;
+  }
+}
+
 @media screen and (min-width: 700px) {
   .content .has-auth .current-status {
     font-size: 12px;

@@ -45,9 +45,9 @@
           </span>
         </copy>
       </div>
-      <div class="request-info-item" *ngIf="contractMethodData?.fourByteSig">
+      <div class="request-info-item" *ngIf="contractMethodData?.name">
         <span class="label">{{ "Method" | translate | async }}</span>
-        <span>{{ contractMethodData?.fourByteSig }}</span>
+        <span>{{ contractMethodData?.name }}</span>
       </div>
       <div class="request-info-item" *ngIf="getShowAmount()">
         <span class="label">{{ "Amount" | translate | async }}</span>
