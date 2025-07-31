@@ -1,0 +1,44 @@
+<div class="pop-ups-title">
+  {{ 'CustomSpendingCap' | translate | async }}
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    theme
+    src="assets/images/common/close.svg"
+    alt=""
+  />
+</div>
+
+<div class="add-tip">
+  <img src="assets/images/common/warning.svg" alt="" />
+  {{'approveCustomTip' | translate | async}}
+</div>
+
+<div class="content">
+  <input
+    type="text"
+    min="0"
+    oninput="value=value.replace(/^\D*(\d*(?:\.\d{0,18})?).*$/g, '$1')"
+    [(ngModel)]="inputAmount"
+  />
+  <div class="balance">
+    {{ "Balance" | translate | async }}: {{ data.approveAssetBalance |
+    numberFixed: 8 }}
+    <span class="max" (click)="useMaxApproveAmount()">
+      {{ "Max" | translate | async }}
+    </span>
+  </div>
+
+  <div class="choose-group">
+    <button class="cancel pop-ups" [mat-dialog-close]="false">
+      {{ 'cancel' | translate | async}}
+    </button>
+    <button
+      class="confirm pop-ups"
+      [ngClass]="{disabled: !inputAmount}"
+      (click)="confirm()"
+    >
+      {{ 'yes' | translate | async}}
+    </button>
+  </div>
+</div>

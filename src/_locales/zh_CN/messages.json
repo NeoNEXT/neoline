@@ -1352,6 +1352,12 @@
   "SpendingCapRequestForYour": {
     "message": "的支出上限请求"
   },
+  "SpendingCapRequest": {
+    "message": "支出上限请求"
+  },
+  "SpendingCap": {
+    "message": "支出上限"
+  },
   "ViewDetails": {
     "message": "查看详情"
   },

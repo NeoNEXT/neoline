@@ -1352,6 +1352,12 @@
   "SpendingCapRequestForYour": {
     "message": "の支出上限リクエスト"
   },
+  "SpendingCapRequest": {
+    "message": "支出上限リクエスト"
+  },
+  "SpendingCap": {
+    "message": "支出上限"
+  },
   "ViewDetails": {
     "message": "詳細を表示"
   },

@@ -1,177 +1,137 @@
 <div class="container">
-  <div class="content">
-    <div class="sign-address">
-      <img class="avatar" [avatar]="txParams?.from" />
-      <div class="item flex-1">
-        <span class="value">{{ encryptWallet.name }}</span>
-        <span class="label">{{ txParams?.from | longStr : 6 }}</span>
-      </div>
-      <div class="item balance">
-        <span class="label">{{ "Balance" | translate | async }}</span>
-        <span class="value">
-          {{ signAddressGasBalance | numberFixed : 8 }}
-          {{ neoXNetwork.symbol }}
-        </span>
-      </div>
+  <div class="header transfer">
+    <div class="invoke-type">
+      · {{ "SpendingCapRequest" | translate | async }}
     </div>
-    <div class="host-info">
-      <div class="host">
-        <img [src]="iconSrc" [appErrorSrc]="'unknown'" alt="" />
-        {{ locationOrigin }}
-      </div>
-    </div>
-    <div class="approve-info">
-      <p class="title" *ngIf="lang === 'en'">
-        {{ "SpendingCapRequestForYour" | translate | async }}
-      </p>
-      <div class="asset">
-        <token-logo
-          customClass="list"
-          [assetId]="txParams.to"
-          [chainType]="'NeoX'"
-          [symbol]="assetDetails?.symbol"
-          [neoXChainId]="neoXNetwork.chainId"
-        ></token-logo>
-        <span>{{ assetDetails?.symbol }}</span>
-        <copy [value]="txParams.to" [showTip]="false">
-          <img theme src="assets/images/common/copy.svg" />
-        </copy>
-        <img
-          *ngIf="neoXNetwork.explorer"
-          (click)="toExplorer()"
-          class="link"
-          theme
-          src="assets/images/bridge/tx-link.svg"
-          alt=""
-        />
-      </div>
-      <p class="title" *ngIf="lang !== 'en'">
-        {{ "SpendingCapRequestForYour" | translate | async }}
-      </p>
-    </div>
-
-    <div class="edit-amount">
-      <p class="title">
-        {{ "CustomSpendingCap" | translate | async }}
-        <tooltip
-          placement="top"
-          [tip]="
-            (inputAmountIsBig ? 'approveTip' : 'approveCustomTip')
-              | translate
-              | async
-          "
-        >
-          <img
-            theme
-            [src]="
-              inputAmountIsBig
-                ? 'assets/images/common/warning-red.svg'
-                : 'assets/images/common/tooltip.svg'
-            "
-            alt=""
-          />
-        </tooltip>
-      </p>
-      <ng-container *ngIf="isEdit">
-        <p
-          class="edit"
-          *ngIf="assetDetails && inputAmount !== assetDetails.tokenAmount"
-          (click)="useDappApproveAmount()"
-        >
-          {{ "useSiteSuggestion" | translate | async }}
-        </p>
-        <div class="input-amount">
-          <input
-            type="text"
-            [(ngModel)]="inputAmount"
-            (input)="handleInputAmountChange()"
-            [ngClass]="{ big: inputAmountIsBig }"
-          />
-          <span class="max" (click)="useMaxApproveAmount()">
-            {{ "Max" | translate | async }}
-          </span>
+    <div class="address-group contract-interaction">
+      <copy [value]="txParams?.from">
+        <div class="item">
+          <img class="avatar" [avatar]="txParams?.from" />
+          <div class="name-group">
+            <p class="name">{{ encryptWallet.name }}</p>
+            <p>{{ txParams?.from | longStr : 10 }}</p>
+          </div>
         </div>
-        <p class="tip" *ngIf="initTip">
-          {{
-            "approveInitTip"
-              | translate : { symbol: assetDetails.symbol }
-              | async
-          }}
-        </p>
-        <p class="tip" *ngIf="!initTip && inputAmountIsBig">
-          {{ "approveBigTip" | translate | async }}
-        </p>
-        <p class="tip" *ngIf="!initTip && !inputAmountIsBig">
-          {{
-            "approveNormalTip"
-              | translate : { amount: inputAmount, symbol: assetDetails.symbol }
-              | async
-          }}
-        </p>
-      </ng-container>
-      <ng-container *ngIf="!isEdit">
-        <p class="edit" (click)="isEdit = true">
-          {{ "edit" | translate | async }}
-        </p>
-        <p class="amount" [ngClass]="{ big: inputAmountIsBig }">
-          {{ inputAmount }} {{ assetDetails?.symbol }}
-        </p>
-      </ng-container>
-    </div>
-
-    <div class="fee" *ngIf="!isEdit">
-      <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
-
-      <div>
-        <evm-fee
-          [txParams]="newTxParams ?? txParams"
-          [symbol]="neoXNetwork.symbol"
-          [siteNeoXFeeInfo]="siteNeoXFeeInfo"
-          [place]="'dapp'"
-          (returnFee)="updateEvmFee($event)"
-        >
-        </evm-fee>
-        <p class="rate">
-          {{ rate.fee | numberFixed : 2 }} {{ rate.rateCurrency }}
-        </p>
-      </div>
-
-      <evm-gas-error
-        *ngIf="insufficientFunds"
-        [networkName]="neoXNetwork.name"
-        [symbol]="neoXNetwork.symbol"
-      ></evm-gas-error>
-      <evm-pending-warning
-        *ngIf="nonceInfo?.pendingTxs"
-        [count]="nonceInfo.pendingTxs"
-      ></evm-pending-warning>
-    </div>
-
-    <div class="nonce">
-      <evm-custom-nonce
-        [default]="nonceInfo?.nonce"
-        (changeNonceEvent)="changeNonce($event)"
-      ></evm-custom-nonce>
-    </div>
-
-    <p class="view-details">
-      <span (click)="showDetail = !showDetail">
-        {{ "ViewDetails" | translate | async }}
-        <img
-          theme
-          src="assets/images/third-party/triangle-fill.svg"
-          [ngClass]="{ active: showDetail }"
-          alt=""
-        />
-      </span>
-    </p>
-    <div class="params-data" *ngIf="showDetail">
-      <p class="title">{{ "data" | translate | async }}</p>
-      <p>Function: {{ tokenData?.name }}</p>
-      <p>{{ txParams.data }}</p>
+      </copy>
     </div>
   </div>
+  <div class="tabs-container">
+    <span
+      [class]="{ selected: tabType === 'details' }"
+      (click)="tabType = 'details'"
+    >
+      {{ "details" | translate | async }}
+    </span>
+    <span [class]="{ selected: tabType === 'data' }" (click)="tabType = 'data'">
+      {{ "data" | translate | async }}
+    </span>
+  </div>
+  <div class="content details" *ngIf="tabType === 'details'">
+    <div class="request-info">
+      <div class="request-info-item">
+        <div class="label">
+          {{ "SpendingCap" | translate | async }}
+          <tooltip
+            placement="top"
+            [tip]="
+              'approveNormalTip'
+                | translate
+                  : { amount: approveAmount, symbol: assetDetails?.symbol }
+                | async
+            "
+          >
+            <img theme src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
+        <div class="edit-amount">
+          <img
+            (click)="openEditApproveCapDialog()"
+            class="edit"
+            src="assets/images/common/edit.svg"
+          />
+          <span>{{ approveAmount }}</span>
+          <div class="asset-logo">
+            <token-logo
+              customClass="list edit-amount"
+              [assetId]="txParams.to"
+              [chainType]="'NeoX'"
+              [symbol]="assetDetails?.symbol"
+              [neoXChainId]="neoXNetwork.chainId"
+            ></token-logo>
+            {{ assetDetails?.symbol }}
+          </div>
+        </div>
+      </div>
+    </div>
 
+    <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
+
+    <div class="request-info">
+      <div class="request-info-item">
+        <span class="label">{{ "Network" | translate | async }}</span>
+        <span>{{ neoXNetwork.name }}</span>
+      </div>
+      <div class="request-info-item">
+        <span class="label">{{ "RequestFrom" | translate | async }}</span>
+        <span>{{ locationOrigin }}</span>
+      </div>
+      <div *ngIf="txParams?.to" class="request-info-item">
+        <span class="label">{{ "InteractingWith" | translate | async }}</span>
+        <copy [value]="txParams?.to">
+          <span class="to-address">
+            {{ txParams?.to | longStr : 6 }}
+            <img theme src="assets/images/common/copy.svg" />
+          </span>
+        </copy>
+      </div>
+      <div class="request-info-item">
+        <span class="label">{{ "Method" | translate | async }}</span>
+        <span>{{ tokenData?.name }}</span>
+      </div>
+    </div>
+
+    <div class="fee-group">
+      <evm-fee
+        [txParams]="newTxParams ?? txParams"
+        [symbol]="neoXNetwork.symbol"
+        [siteNeoXFeeInfo]="siteNeoXFeeInfo"
+        [place]="'dapp'"
+        (returnFee)="updateEvmFee($event)"
+      >
+      </evm-fee>
+      <p class="value-rate">
+        {{ rate.fee | numberFixed : 2 }} {{ rate.rateCurrency }}
+      </p>
+    </div>
+    <evm-custom-nonce
+      [default]="nonceInfo?.nonce"
+      (changeNonceEvent)="changeNonce($event)"
+    ></evm-custom-nonce>
+
+    <evm-gas-error
+      *ngIf="insufficientFunds"
+      [networkName]="neoXNetwork.name"
+      [symbol]="neoXNetwork.symbol"
+    ></evm-gas-error>
+    <evm-pending-warning
+      *ngIf="nonceInfo?.pendingTxs"
+      [count]="nonceInfo.pendingTxs"
+    ></evm-pending-warning>
+  </div>
+
+  <div class="content data" *ngIf="tabType === 'data'">
+    <p class="title">
+      FUNCTION TYPE:
+      <span class="value">{{ tokenData?.name }}</span>
+    </p>
+    <div class="hex-label">
+      HEX DATA: <span class="value">{{ hexDataLength }} BYTES</span>
+      <copy [value]="txParams.data">
+        <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+      </copy>
+    </div>
+    <p class="json-box serialize">{{ txParams.data }}</p>
+  </div>
   <div class="btn-group">
     <button class="cancel" (click)="exit()">
       {{ "cancel" | translate | async }}
@@ -181,7 +141,7 @@
       [ngClass]="{ disabled: !nonceInfo || insufficientFunds }"
       (click)="confirm()"
     >
-      {{ (isEdit ? "Next" : "Approve") | translate | async }}
+      {{ "yes" | translate | async }}
     </button>
   </div>
 </div>

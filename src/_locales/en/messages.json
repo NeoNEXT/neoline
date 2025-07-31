@@ -1352,6 +1352,12 @@
   "SpendingCapRequestForYour": {
     "message": "Spending cap request for your"
   },
+  "SpendingCapRequest": {
+    "message": "Spending cap request"
+  },
+  "SpendingCap": {
+    "message": "Spending cap"
+  },
   "ViewDetails": {
     "message": "View details"
   },

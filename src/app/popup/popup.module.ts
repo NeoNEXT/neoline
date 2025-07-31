@@ -115,6 +115,7 @@ import {
   PopupSpeedUpFeeDialogComponent,
   PopupApproveDialogComponent,
   PopupSortAccountDialogComponent,
+  PopupEditApproveCapDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -144,6 +145,7 @@ const POPUP_DIALOGS = [
   PopupSpeedUpFeeDialogComponent,
   PopupApproveDialogComponent,
   PopupSortAccountDialogComponent,
+  PopupEditApproveCapDialogComponent,
 ];
 
 //#endregion
