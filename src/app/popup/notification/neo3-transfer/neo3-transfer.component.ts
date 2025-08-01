@@ -19,7 +19,12 @@ import {
   PopupTransferSuccessDialogComponent,
 } from '../../_dialogs';
 import { GasFeeSpeed, RpcNetwork } from '../../_lib/type';
-import { STORAGE_NAME, GAS3_CONTRACT, ChainType } from '../../_lib';
+import {
+  STORAGE_NAME,
+  GAS3_CONTRACT,
+  ChainType,
+  AddAddressBookProp,
+} from '../../_lib';
 import { Neo3TransferService } from '../../transfer/neo3-transfer.service';
 import BigNumber from 'bignumber.js';
 import { Store } from '@ngrx/store';
@@ -67,6 +72,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
   public canSend = false;
   showHardwareSign = false;
   unsignedTx;
+  storageNeoXAddressBook: AddAddressBookProp[];
 
   private accountSub: Unsubscribable;
   public fromAddress: string;
@@ -100,6 +106,9 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
   }
 
   ngOnInit(): void {
+    this.chrome.getStorage(STORAGE_NAME.addressBook).subscribe((res) => {
+      this.storageNeoXAddressBook = res?.Neo3 || [];
+    });
     this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
@@ -426,5 +435,15 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
         this.tx = tx;
         this.resolveSend(tx);
       });
+  }
+
+  getWalletName(address: string) {
+    const innerWallet = this.neo3WalletArr.find(
+      (item) => item.accounts[0].address === address
+    );
+    const addressBook = this.storageNeoXAddressBook.find(
+      (item) => item.address === address
+    );
+    return innerWallet?.name ?? addressBook?.name ?? '';
   }
 }

@@ -42,14 +42,20 @@
         <copy [value]="data.from">
           <div class="item">
             <img class="avatar" [avatar]="data.from" />
-            <span>{{ data.from | longStr : 4 }}</span>
+            <div class="name-group">
+              <p class="name">{{ data.currentWallet.name }}</p>
+              <p>{{ data.from | longStr : 4 }}</p>
+            </div>
           </div>
         </copy>
         <img src="assets/images/bridge/arrow.svg" alt="" />
         <copy [value]="data?.to?.address">
           <div class="item">
             <img class="avatar" [avatar]="data?.to?.address" />
-            <span>{{ data?.to?.address | longStr : 4 }}</span>
+            <div class="name-group">
+              <p class="name" *ngIf="data?.to?.name">{{ data.to.name }}</p>
+              <p>{{ data?.to?.address | longStr : 4 }}</p>
+            </div>
           </div>
         </copy>
       </div>

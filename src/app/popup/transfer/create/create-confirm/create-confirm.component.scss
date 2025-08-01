@@ -62,6 +62,19 @@ section.container {
         .item {
           display: inline-flex;
           align-items: center;
+          .name-group {
+            display: flex;
+            flex-direction: column;
+            text-align: left;
+            gap: 4px;
+            .name {
+              max-width: 100px;
+              color: var(--sub-title-color);
+              overflow: hidden;
+              text-overflow: ellipsis;
+              white-space: nowrap;
+            }
+          }
         }
         img.avatar {
           margin-right: 12px;

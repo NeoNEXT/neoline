@@ -23,14 +23,22 @@
       <copy [value]="fromAddress">
         <div class="item">
           <img class="avatar" [avatar]="fromAddress" />
-          <span>{{ fromAddress | longStr : 4 }}</span>
+          <div class="name-group">
+            <p class="name">{{ currentWallet.name }}</p>
+            <p>{{ fromAddress | longStr : 4 }}</p>
+          </div>
         </div>
       </copy>
       <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
       <copy [value]="toAddress">
         <div class="item">
           <img class="avatar" [avatar]="toAddress" />
-          <span>{{ toAddress | longStr : 4 }}</span>
+          <div class="name-group">
+            <p class="name" *ngIf="getWalletName(toAddress)">
+              {{ getWalletName(toAddress) }}
+            </p>
+            <p>{{ toAddress | longStr : 4 }}</p>
+          </div>
         </div>
       </copy>
     </div>
