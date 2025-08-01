@@ -32,7 +32,7 @@
         <div class="label">
           {{ "SpendingCap" | translate | async }}
           <tooltip
-            placement="top"
+            placement="topLeft"
             [tip]="
               'approveNormalTip'
                 | translate
@@ -40,7 +40,7 @@
                 | async
             "
           >
-            <img theme src="assets/images/common/tooltip.svg" alt="" />
+            <img src="assets/images/common/tooltip.svg" alt="" />
           </tooltip>
         </div>
         <div class="edit-amount">
@@ -62,6 +62,20 @@
           </div>
         </div>
       </div>
+      <div class="request-info-item" *ngIf="tokenData?.args?._spender">
+        <div class="label">
+          {{ "Spender" | translate | async }}
+          <tooltip placement="topLeft" [tip]="'spenderTip' | translate | async">
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
+        <copy [value]="tokenData.args._spender">
+          <span class="to-address">
+            {{ tokenData.args._spender | longStr : 6 }}
+            <img theme src="assets/images/common/copy.svg" />
+          </span>
+        </copy>
+      </div>
     </div>
 
     <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
@@ -72,11 +86,27 @@
         <span>{{ neoXNetwork.name }}</span>
       </div>
       <div class="request-info-item">
-        <span class="label">{{ "RequestFrom" | translate | async }}</span>
+        <div class="label">
+          {{ "RequestFrom" | translate | async }}
+          <tooltip
+            placement="topLeft"
+            [tip]="'requestFromTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
         <span>{{ locationOrigin }}</span>
       </div>
       <div *ngIf="txParams?.to" class="request-info-item">
-        <span class="label">{{ "InteractingWith" | translate | async }}</span>
+        <div class="label">
+          {{ "InteractingWith" | translate | async }}
+          <tooltip
+            placement="topLeft"
+            [tip]="'interactionWithTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
         <copy [value]="txParams?.to">
           <span class="to-address">
             {{ txParams?.to | longStr : 6 }}
@@ -85,7 +115,12 @@
         </copy>
       </div>
       <div class="request-info-item">
-        <span class="label">{{ "Method" | translate | async }}</span>
+        <div class="label">
+          {{ "Method" | translate | async }}
+          <tooltip placement="topLeft" [tip]="'methodTip' | translate | async">
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
         <span>{{ tokenData?.name }}</span>
       </div>
     </div>

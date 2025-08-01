@@ -1552,5 +1552,23 @@
   },
   "connectWebsite": {
     "message": "连接账户"
+  },
+  "requestFromTip": {
+    "message": "这是要求您确认的网站。"
+  },
+  "nonceTip": {
+    "message": "这是一个账户的交易编号。第一笔交易的唯一交易标识号为0，然后按顺序递增。"
+  },
+  "interactionWithTip": {
+    "message": "这是您与之交互的合约。通过验证详细信息来保护自己免受诈骗。"
+  },
+  "methodTip": {
+    "message": "基于解码输入数据而执行的功能。"
+  },
+  "Spender": {
+    "message": "消费者"
+  },
+  "spenderTip": {
+    "message": "这是能够代表您花费您的代币的地址。."
   }
 }

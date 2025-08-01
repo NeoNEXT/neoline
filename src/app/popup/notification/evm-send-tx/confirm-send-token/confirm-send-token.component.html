@@ -56,11 +56,27 @@
         <span>{{ neoXNetwork.name }}</span>
       </div>
       <div class="request-info-item">
-        <span class="label">{{ "RequestFrom" | translate | async }}</span>
+        <div class="label">
+          {{ "RequestFrom" | translate | async }}
+          <tooltip
+            placement="topLeft"
+            [tip]="'requestFromTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
         <span>{{ locationOrigin }}</span>
       </div>
       <div *ngIf="txParams?.to" class="request-info-item">
-        <span class="label">{{ "InteractingWith" | translate | async }}</span>
+        <div class="label">
+          {{ "InteractingWith" | translate | async }}
+          <tooltip
+            placement="topLeft"
+            [tip]="'interactionWithTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
         <copy [value]="txParams?.to">
           <span class="to-address">
             {{ txParams?.to | longStr : 6 }}
@@ -69,7 +85,12 @@
         </copy>
       </div>
       <div class="request-info-item" *ngIf="tokenData?.name">
-        <span class="label">{{ "Method" | translate | async }}</span>
+        <div class="label">
+          {{ "Method" | translate | async }}
+          <tooltip placement="topLeft" [tip]="'methodTip' | translate | async">
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
         <span>{{ tokenData?.name }}</span>
       </div>
     </div>

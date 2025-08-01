@@ -1,5 +1,10 @@
 <div class="nonce" *ngIf="isCustomNonce">
-  {{ "customNonce" | translate | async }}:
+  <div class="label">
+    {{ "customNonce" | translate | async }}
+    <tooltip placement="topLeft" [tip]="'nonceTip' | translate | async">
+      <img src="assets/images/common/tooltip.svg" alt="" />
+    </tooltip>
+  </div>
   <input
     type="text"
     [placeholder]="default ?? ''"

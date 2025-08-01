@@ -58,7 +58,15 @@
         <span>{{ neoXNetwork.name }}</span>
       </div>
       <div class="request-info-item">
-        <span class="label">{{ "RequestFrom" | translate | async }}</span>
+        <div class="label">
+          {{ "RequestFrom" | translate | async }}
+          <tooltip
+            placement="topLeft"
+            [tip]="'requestFromTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
         <span>{{ locationOrigin }}</span>
       </div>
     </div>

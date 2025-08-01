@@ -1552,5 +1552,23 @@
   },
   "connectWebsite": {
     "message": "Connect account"
+  },
+  "requestFromTip": {
+    "message": "This is the site asking for your confirmation."
+  },
+  "nonceTip": {
+    "message": "This is the transaction number of an account. Nonce for the first transaction is 0 and it increases in sequential order."
+  },
+  "interactionWithTip": {
+    "message": "This is the contract you're interacting with. Protect yourself from scammers by verifying the details."
+  },
+  "methodTip": {
+    "message": "Function executed based on decoded input data."
+  },
+  "Spender": {
+    "message": "Spender"
+  },
+  "spenderTip": {
+    "message": "This is the address that will be able to spend your tokens on your behalf."
   }
 }

@@ -1552,5 +1552,23 @@
   },
   "connectWebsite": {
     "message": "アカウントを接続"
+  },
+  "requestFromTip": {
+    "message": "これはあなたに確認を求めているサイトです。"
+  },
+  "nonceTip": {
+    "message": "これはアカウントのトランザクション番号です。最初のトランザクションのナンスは0で、順番に増加します。"
+  },
+  "interactionWithTip": {
+    "message": "これはあなたがインタラクションするコントラクトです。詳細を確認して詐欺から保護してください。"
+  },
+  "methodTip": {
+    "message": "デコードされた入力データに基づいて実行される関数。"
+  },
+  "Spender": {
+    "message": "消費者"
+  },
+  "spenderTip": {
+    "message": "これは、あなたの代わりにトークンを支出できるアドレスです。"
   }
 }

@@ -138,7 +138,7 @@
         border-bottom: 1px solid var(--line-color);
         .request-info-item {
           display: flex;
-          align-items: center;
+          align-items: flex-start;
           justify-content: space-between;
           gap: 8px;
           word-break: break-all;
@@ -146,6 +146,9 @@
           .label {
             font-size: 14px;
             min-width: 80px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
           }
           .to-address {
             display: inline-flex;
@@ -156,6 +159,7 @@
             color: var(--sub-title-color);
             text-align: right;
             margin-top: 4px;
+            font-size: 12px;
           }
         }
       }
