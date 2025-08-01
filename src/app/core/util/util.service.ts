@@ -466,22 +466,32 @@ export class UtilServiceState {
       method: 'invokefunction',
       params: [
         NNS_CONTRACT[chainId],
-        'resolve',
+        'ownerOf',
         [
           {
             type: 'String',
             value: domain,
           },
-          {
-            type: 'Integer',
-            value: '16',
-          },
         ],
       ],
     };
     return this.http.rpcPost(this.n3Network.rpcUrl, data).pipe(
-      map((res) => {
-        return this.handleNeo3StackStringValue(res);
+      map((result) => {
+        let address = '';
+        if (result.state === 'HALT' && result.stack?.[0]?.value) {
+          address = result.stack[0].value;
+          if (result.stack[0].type === 'ByteArray') {
+            address = wallet.getAddressFromScriptHash(
+              u.reverseHex(result.stack[0].value)
+            );
+          }
+          if (result.stack[0].type === 'ByteString') {
+            address = wallet.getAddressFromScriptHash(
+              u.reverseHex(base642hex(result.stack[0].value))
+            );
+          }
+        }
+        return address;
       })
     );
   }
