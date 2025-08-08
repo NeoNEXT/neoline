@@ -189,3 +189,5 @@ export enum TokenStandard {
   /** Not a token, but rather the base asset of the selected chain. */
   none = 'NONE',
 }
+
+export const ETHERSCAN_API_KEY = 'U3FRYAE5ZP9C5RA8YNGJC2WA2RW46EZXJ3';

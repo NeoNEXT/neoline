@@ -130,9 +130,12 @@
           : ("contractInteraction" | translate | async)
       }}</span>
     </p>
-    <pre class="json-box serialize" *ngIf="contractMethodData?.params">{{
-      contractMethodData?.params | json
-    }}</pre>
+    <div
+      class="json-box serialize"
+      *ngIf="decodeData || contractMethodData?.params"
+    >
+      <pre>{{ decodeData ?? contractMethodData?.params | json }}</pre>
+    </div>
     <div class="hex-label">
       HEX DATA: <span class="value">{{ hexDataLength }} BYTES</span>
       <copy [value]="txParams.data">

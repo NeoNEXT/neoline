@@ -42,6 +42,7 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   hexDataLength: number;
   neoXFeeInfo: NeoXFeeInfoProp;
   fromWalletName: string;
+  decodeData;
 
   constructor(
     private dappEVMState: DappEVMState,
@@ -50,6 +51,13 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
 
   ngOnInit(): void {
     this.hexDataLength = this.util.getHexDataLength(this.txParams.data);
+    this.dappEVMState.decodeTxData({
+      chainId: this.neoXNetwork.chainId,
+      inputData: this.txParams.data,
+      contract: this.txParams.to,
+    }).subscribe((res) => {
+      this.decodeData = res;
+    });
     this.dappEVMState
       .getContractMethodData(this.txParams.data)
       .subscribe((res) => {

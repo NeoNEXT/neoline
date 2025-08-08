@@ -8,6 +8,7 @@ import {
   EvmWalletJSON,
   STORAGE_NAME,
   AddAddressBookProp,
+  ETHERSCAN_API_KEY,
 } from '@/app/popup/_lib';
 import { AppState } from '@/app/reduers';
 import { Injectable } from '@angular/core';
@@ -26,7 +27,7 @@ import {
 } from '../evm/util';
 import type BN from 'bn.js';
 import { HttpClient } from '@angular/common/http';
-import { map, of } from 'rxjs';
+import { map, Observable, of } from 'rxjs';
 import { ChromeService } from '../services/chrome.service';
 
 const abi_1 = require('@ethersproject/abi');
@@ -46,6 +47,27 @@ export class DappEVMState {
   private neoXWalletArr: EvmWalletJSON[];
   provider: ethers.JsonRpcProvider;
   storageNeoXAddressBook: AddAddressBookProp[];
+
+  private extractProxyValues = (data) => {
+    if (Array.isArray(data)) {
+      return data.map(this.extractProxyValues);
+    } else if (
+      data &&
+      typeof data === 'object' &&
+      !(data instanceof Uint8Array) &&
+      !(data instanceof BigInt)
+    ) {
+      const result = [];
+      let i = 0;
+      while (data.hasOwnProperty(i)) {
+        result.push(this.extractProxyValues(data[i]));
+        i++;
+      }
+      return result.length > 0 ? result : data;
+    } else {
+      return typeof data === 'bigint' ? data.toString() : data;
+    }
+  };
 
   constructor(
     private store: Store<AppState>,
@@ -69,11 +91,38 @@ export class DappEVMState {
         }
       );
     });
-    this.chrome
-      .getStorage(STORAGE_NAME.addressBook)
-      .subscribe((res) => {
-        this.storageNeoXAddressBook = res?.NeoX || [];
-      });
+    this.chrome.getStorage(STORAGE_NAME.addressBook).subscribe((res) => {
+      this.storageNeoXAddressBook = res?.NeoX || [];
+    });
+  }
+
+  decodeTxData({
+    chainId,
+    inputData,
+    contract,
+  }: {
+    chainId: number;
+    inputData: string;
+    contract: string;
+  }) {
+    return this.http
+      .get(
+        `https://api.etherscan.io/v2/api?chainid=${chainId}&module=contract&action=getabi&address=${contract}&apikey=${ETHERSCAN_API_KEY}`
+      )
+      .pipe(
+        map((abiRes: any) => {
+          if (abiRes.status === '1') {
+            const iface = new ethers.Interface(abiRes.result);
+            const data = iface.parseTransaction({ data: inputData });
+            const decodeArg = this.extractProxyValues(data.args);
+            const decodeData = [];
+            data.fragment.inputs.forEach(({ type, name }, index) => {
+              decodeData.push({ name, type, value: decodeArg[index] });
+            });
+            return decodeData;
+          }
+        })
+      );
   }
 
   getWalletName(address: string) {
