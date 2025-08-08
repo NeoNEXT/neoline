@@ -137,7 +137,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.chrome
       .getStorage(STORAGE_NAME.bridgeTransaction)
       .subscribe((tx: TransactionOnBridge[]) => {
-        if (tx.length > 0) {
+        if (tx?.length > 0) {
           this.sessionFirstTx = tx[0];
           if (tx[0].type === 'bridge') {
             this.sessionTx = tx[0];

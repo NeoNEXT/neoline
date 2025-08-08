@@ -10,7 +10,7 @@ import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 })
 export class PopupAddressBookListDialogComponent implements OnInit {
   storageAddressBook: Record<ChainType, AddAddressBookProp[]>;
-  displayAddressArr: AddAddressBookProp[];
+  displayAddressArr: AddAddressBookProp[] = [];
 
   searchValue: string = '';
   private searchSub: Unsubscribable;

@@ -16,7 +16,9 @@ export class PopupAddWalletDialogComponent {
 
   importLedger() {
     this.dialogRef.close();
-    if (
+    if (location.protocol.includes('-extension:')) {
+      this.router.navigateByUrl('/ledger');
+    } else if (
       typeof chrome !== 'undefined' &&
       chrome.runtime &&
       typeof chrome.runtime.id === 'string'

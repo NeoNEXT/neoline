@@ -33,7 +33,7 @@ export class PopupAddressBookComponent implements OnInit {
 
   storageAddressBook: Record<ChainType, AddAddressBookProp[]>;
   localAddressArr: Record<AllChainType, AddAddressBookProp[]>;
-  displayAddressArr: AddAddressBookProp[];
+  displayAddressArr: AddAddressBookProp[] = [];
   moreModalAddress: AddAddressBookProp;
 
   searchValue: string = '';

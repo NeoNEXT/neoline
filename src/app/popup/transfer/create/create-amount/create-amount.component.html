@@ -4,6 +4,7 @@
     [chainType]="chainType"
     [currentNetwork]="currentNetwork"
     [walletArr]="currentWalletArr"
+    [currentWallet]="currentWallet"
     (selecteAccountEvent)="selectAccount($event)"
   ></transfer-create-address>
   <div class="content" *ngIf="transferTo?.address">

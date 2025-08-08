@@ -32,7 +32,13 @@
   <ng-container *ngIf="!transferTo?.address">
     <p class="title">Personal Account</p>
     <ul>
-      <li *ngFor="let item of walletArr" (click)="selecteAccount(item)">
+      <li
+        *ngFor="let item of displayWalletArr"
+        (click)="selecteAccount(item)"
+        [ngClass]="{
+          active: item.accounts[0].address === currentWallet.accounts[0].address
+        }"
+      >
         <img [avatar]="item.accounts[0].address" alt="" />
         <div>
           <p class="label">{{ item.name }}</p>

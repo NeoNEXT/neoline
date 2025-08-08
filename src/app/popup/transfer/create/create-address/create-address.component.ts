@@ -1,4 +1,4 @@
-import { Component, Input, Output, EventEmitter } from '@angular/core';
+import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import {
   ChainType,
   N3MainnetNetwork,
@@ -21,13 +21,15 @@ import { PopupAddressBookListDialogComponent } from '@/app/popup/_dialogs';
   templateUrl: 'create-address.component.html',
   styleUrls: ['create-address.component.scss'],
 })
-export class TransferCreateAddressComponent {
+export class TransferCreateAddressComponent implements OnInit {
   @Input() chainType: ChainType;
   @Input() currentNetwork: RpcNetwork;
+  @Input() currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   @Input() walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
   @Output() selecteAccountEvent = new EventEmitter();
 
   transferTo = { address: '', name: '' };
+  displayWalletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
   private getNnsAddressReq;
   private searchSub: Unsubscribable;
   constructor(
@@ -35,6 +37,15 @@ export class TransferCreateAddressComponent {
     private util: UtilServiceState,
     private dialog: MatDialog
   ) {}
+
+  ngOnInit(): void {
+    const newWalletArr = this.walletArr.filter(
+      (item) =>
+        item.accounts[0].address !== this.currentWallet.accounts[0].address
+    );
+    newWalletArr.unshift(this.currentWallet);
+    this.displayWalletArr = newWalletArr;
+  }
 
   search($event) {
     this.searchSub?.unsubscribe();

@@ -65,7 +65,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
 
   private accountSub: Unsubscribable;
   fromAddress: string;
-  private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
+  currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   chainType: ChainType;
   currentNetwork: RpcNetwork;
   currentWalletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
