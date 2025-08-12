@@ -68,7 +68,9 @@
       <li>
         <p class="label">{{ "InvocationArguments" | translate | async }}</p>
         <div class="value" *ngFor="let item of dataJson.args">
-          <p *ngIf="item?.type">{{ item.type }} - {{ item.value }}</p>
+          <p *ngIf="item?.type">
+            {{ item.type }} - <span>{{ item.value | json }}</span>
+          </p>
           <p *ngIf="!item?.type">{{ item }}</p>
         </div>
       </li>
@@ -134,7 +136,11 @@
       <li *ngIf="dataJson?.broadcastOverride !== undefined">
         <p class="label">{{ "broadcastOverride" | translate | async }}</p>
         <p class="value">
-          {{ (dataJson.broadcastOverride ? "booleanYes" : "No") | translate | async }}
+          {{
+            (dataJson.broadcastOverride ? "booleanYes" : "No")
+              | translate
+              | async
+          }}
         </p>
       </li>
     </ul>

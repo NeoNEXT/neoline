@@ -588,6 +588,7 @@ export class ChromeService {
     this.getStorage(STORAGE_NAME.connectedWebsites).subscribe(
       (allWebsites: ConnectedWebsitesType) => {
         this.crx.getCurrentWindow().then((tab) => {
+          if (!tab) return;
           const hostname = new URL(tab.url).hostname;
           if (
             deleteChainType === 'NeoX' &&

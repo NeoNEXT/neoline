@@ -92,7 +92,9 @@
       <li>
         <p class="label">{{ "InvocationArguments" | translate | async }}</p>
         <div class="value" *ngFor="let item of dataJson.args">
-          <p>{{ item.type }} - {{ item.value }}</p>
+          <p>
+            {{ item.type }} - <span>{{ item.value | json }}</span>
+          </p>
         </div>
       </li>
       <li *ngIf="dataJson?.fee !== undefined">
