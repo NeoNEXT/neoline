@@ -176,3 +176,8 @@ export interface ConnectedWebsitesType {
     };
   };
 }
+
+export interface QRCodeWallet {
+  pubKey: string;
+  xfp: string;
+}

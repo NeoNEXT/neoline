@@ -1,5 +1,10 @@
 import { Component, OnDestroy } from '@angular/core';
-import { ChainType, RpcNetwork, HardwareDevice } from '../popup/_lib';
+import {
+  ChainType,
+  RpcNetwork,
+  HardwareDevice,
+  QRCodeWallet,
+} from '../popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -7,6 +12,7 @@ import { Unsubscribable } from 'rxjs';
 enum STATUS_ENUM {
   SELECT_HARDWARE,
   CHAIN_PICK,
+  SCAN_QRCODE,
   ADDRESS_SELECTOR,
   ACCOUNT_NAME,
   IMPORT_SUCCESS,
@@ -18,9 +24,10 @@ enum STATUS_ENUM {
 export class LedgerComponent implements OnDestroy {
   STATUS_ENUM = STATUS_ENUM;
   status = STATUS_ENUM.SELECT_HARDWARE;
-  chainType: ChainType;
+  chainType: ChainType = 'Neo3';
   device: HardwareDevice = 'Ledger';
   selectAccountData;
+  qrCodeData: QRCodeWallet;
   loading = typeof (window as any).InstallTrigger !== 'undefined'; // firefox not support ledger webHID
 
   private accountSub: Unsubscribable;
@@ -44,7 +51,14 @@ export class LedgerComponent implements OnDestroy {
 
   selectDevice(type: HardwareDevice) {
     this.device = type;
-    this.status = STATUS_ENUM.CHAIN_PICK;
+    this.status =
+      type === 'QRCode' ? STATUS_ENUM.SCAN_QRCODE : STATUS_ENUM.CHAIN_PICK;
+  }
+
+  handleScanQrCode(qrCodeData: QRCodeWallet) {
+    this.qrCodeData = qrCodeData;
+    this.chainType = 'NeoX';
+    this.status = STATUS_ENUM.ADDRESS_SELECTOR;
   }
 
   selectChain(chainType: ChainType) {
@@ -55,5 +69,19 @@ export class LedgerComponent implements OnDestroy {
   selectAccount(data) {
     this.selectAccountData = data;
     this.status = STATUS_ENUM.ACCOUNT_NAME;
+  }
+
+  preStep() {
+    switch (this.status) {
+      case STATUS_ENUM.CHAIN_PICK:
+      case STATUS_ENUM.SCAN_QRCODE:
+        this.status = STATUS_ENUM.SELECT_HARDWARE;
+        break;
+      case STATUS_ENUM.ADDRESS_SELECTOR:
+        this.status = STATUS_ENUM.CHAIN_PICK;
+        break;
+      case STATUS_ENUM.ACCOUNT_NAME:
+        this.status = STATUS_ENUM.ADDRESS_SELECTOR;
+    }
   }
 }

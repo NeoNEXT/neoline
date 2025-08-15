@@ -22,6 +22,7 @@ export interface EvmWalletJSON {
         ledgerSLIP44?: string;
         ledgerAddressIndex?: number;
         device?: HardwareDevice;
+        qrBasedXFP?: string;
       };
     }
   ];

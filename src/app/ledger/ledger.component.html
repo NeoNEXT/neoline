@@ -12,15 +12,45 @@
     <div class="bg"></div>
   </div>
   <div class="content">
+    <div class="nav" *ngIf="status !== STATUS_ENUM.SELECT_HARDWARE">
+      <div class="nav-content">
+        <img
+          (click)="preStep()"
+          class="back"
+          theme
+          src="/assets/images/common/nav-arrow.svg"
+        />
+        <span *ngIf="status === STATUS_ENUM.SCAN_QRCODE">
+          {{ "scanQRCode" | translate | async }}
+        </span>
+        <span *ngIf="status === STATUS_ENUM.CHAIN_PICK">
+          {{ "selectAChain" | translate | async }}
+        </span>
+        <span *ngIf="status === STATUS_ENUM.ADDRESS_SELECTOR">
+          {{ "selectAccountConnect" | translate | async }}
+        </span>
+        <span *ngIf="status === STATUS_ENUM.ACCOUNT_NAME">
+          {{ "enterWalletName" | translate | async }}
+        </span>
+      </div>
+    </div>
     <app-select-hardware
       *ngIf="status === STATUS_ENUM.SELECT_HARDWARE"
+      [device]="device"
       (selectDevice)="selectDevice($event)"
     >
     </app-select-hardware>
 
+    <app-scan-qrcode
+      *ngIf="status === STATUS_ENUM.SCAN_QRCODE"
+      (emitQrCode)="handleScanQrCode($event)"
+    >
+    </app-scan-qrcode>
+
     <app-ledger-chain
       *ngIf="status === STATUS_ENUM.CHAIN_PICK"
       [device]="device"
+      [chainType]="chainType"
       (selectChain)="selectChain($event)"
     >
     </app-ledger-chain>
@@ -29,14 +59,15 @@
       *ngIf="status === STATUS_ENUM.ADDRESS_SELECTOR"
       [device]="device"
       [chainType]="chainType"
+      [qrCodeData]="qrCodeData"
       (selectThisAccount)="selectAccount($event)"
     ></app-address-selector>
 
     <app-account-name
       *ngIf="status === STATUS_ENUM.ACCOUNT_NAME"
       [device]="device"
-      [accountData]="selectAccountData"
       [chainType]="chainType"
+      [accountData]="selectAccountData"
     >
     </app-account-name>
   </div>

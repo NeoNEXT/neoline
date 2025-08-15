@@ -9,8 +9,8 @@ import { ChromeService, GlobalService, SettingState } from '@/app/core';
 })
 export class LedgerChainComponent {
   @Input() device: HardwareDevice;
+  @Input() chainType: ChainType;
   @Output() selectChain = new EventEmitter<ChainType>();
-  chain: ChainType = 'Neo3';
 
   constructor(
     private settingState: SettingState,
@@ -19,16 +19,16 @@ export class LedgerChainComponent {
   ) {}
 
   select() {
-    if (this.chain === 'NeoX') {
+    if (this.chainType === 'NeoX') {
       this.chromeSer.getStorage(STORAGE_NAME.onePassword).subscribe((res) => {
         if (res !== false) {
-          this.selectChain.emit(this.chain);
+          this.selectChain.emit(this.chainType);
         } else {
           this.global.snackBarTip('switchOnePasswordFirst');
         }
       });
     } else {
-      this.selectChain.emit(this.chain);
+      this.selectChain.emit(this.chainType);
     }
   }
 

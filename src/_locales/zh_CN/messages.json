@@ -1570,5 +1570,11 @@
   },
   "spenderTip": {
     "message": "这是能够代表您花费您的代币的地址。."
+  },
+  "scanQRCode": {
+    "message": "扫描二维码"
+  },
+  "scanQRCodeTip": {
+    "message": "将二维码置于摄像头前。屏幕模糊，但不会影响读取。"
   }
 }

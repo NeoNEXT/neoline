@@ -52,6 +52,7 @@ export class AccountNameComponent {
               ledgerAddressIndex: index,
               ledgerSLIP44: SLIP44[this.chainType],
               device: this.device,
+              qrBasedXFP: account?.xfp,
             },
           },
         ],
