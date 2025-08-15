@@ -1,11 +1,16 @@
 <section class="main">
-  <p class="title">{{ "selectAChain" | translate | async }}</p>
   <ul>
-    <li (click)="chain = 'NeoX'" [ngClass]="{ active: chain === 'NeoX' }">
+    <li
+      (click)="chainType = 'NeoX'"
+      [ngClass]="{ active: chainType === 'NeoX' }"
+    >
       <p>Neo X</p>
       <p class="evm">(EVM Network)</p>
     </li>
-    <li (click)="chain = 'Neo3'" [ngClass]="{ active: chain === 'Neo3' }">
+    <li
+      (click)="chainType = 'Neo3'"
+      [ngClass]="{ active: chainType === 'Neo3' }"
+    >
       Neo N3
     </li>
     <li

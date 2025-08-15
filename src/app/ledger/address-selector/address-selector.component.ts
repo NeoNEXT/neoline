@@ -12,6 +12,7 @@ import {
   LedgerStatuses,
   LEDGER_PAGE_SIZE,
   HardwareDevice,
+  QRCodeWallet,
 } from '@/app/popup/_lib';
 import {
   LedgerService,
@@ -27,6 +28,7 @@ import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { LinkType } from '@/app/popup/_lib/setting';
+import { generateAddressFromXpub } from '@keystonehq/bc-ur-registry-eth';
 
 @Component({
   selector: 'app-address-selector',
@@ -36,6 +38,7 @@ import { LinkType } from '@/app/popup/_lib/setting';
 export class AddressSelectorComponent implements OnInit, OnDestroy {
   @Input() chainType: ChainType;
   @Input() device: HardwareDevice;
+  @Input() qrCodeData: QRCodeWallet;
   @Output() selectThisAccount = new EventEmitter();
   getStatusInterval;
   isReady = false;
@@ -47,6 +50,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   selectedIndex;
 
   accounts = [];
+  qrCodeAccounts = [];
   accountPage = 1;
   isLoadingAccount = false;
   accountBalance = [];
@@ -74,10 +78,15 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.getLedgerStatus();
-    this.getStatusInterval = interval(5000).subscribe(() => {
+    if (this.device === 'QRCode') {
+      this.isReady = true;
+      this.accounts = this.getQrCodeAccounts(1);
+    } else {
       this.getLedgerStatus();
-    });
+      this.getStatusInterval = interval(5000).subscribe(() => {
+        this.getLedgerStatus();
+      });
+    }
     this.getSavedAddress();
   }
 
@@ -187,6 +196,10 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
     if (this.isLoadingAccount) {
       return;
     }
+    if (this.device === 'QRCode') {
+      this.accounts = this.getQrCodeAccounts(index);
+      return;
+    }
     this.isLoadingAccount = true;
     if (this.device === 'Ledger') {
       this.ledger
@@ -210,6 +223,24 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
           this.isLoadingAccount = false;
         });
     }
+  }
+
+  private getQrCodeAccounts(page: number) {
+    if (this.qrCodeAccounts[page]) {
+      return this.qrCodeAccounts[page];
+    }
+    const startingIndex = (page - 1) * LEDGER_PAGE_SIZE;
+    const maxIndex = page * LEDGER_PAGE_SIZE;
+    let newAccounts = [];
+    for (let index = startingIndex; index < maxIndex; index++) {
+      const address = generateAddressFromXpub(
+        this.qrCodeData.pubKey,
+        `M/0/${index}`
+      );
+      newAccounts.push({ address, xfp: this.qrCodeData.xfp });
+    }
+    this.qrCodeAccounts[page] = newAccounts;
+    return newAccounts;
   }
 
   jumbToWeb(type: LinkType) {

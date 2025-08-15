@@ -44,5 +44,26 @@ section.main {
   }
   .content {
     height: calc(100% - 254px);
+    .nav {
+      padding-top: 10px;
+      .nav-content {
+        height: 52px;
+        line-height: 52px;
+        font-family: NeverMind-Medium;
+        font-size: 16px;
+        text-align: center;
+        color: var(--title-color);
+        border-bottom: 1px solid var(--line-color);
+        position: relative;
+        img.back {
+          height: 16px;
+          position: absolute;
+          left: 24px;
+          top: 50%;
+          margin-top: -8px;
+          cursor: pointer;
+        }
+      }
+    }
   }
 }

@@ -7,6 +7,7 @@ import { LedgerChainComponent } from './select-chain/select-chain.component';
 import { AddressSelectorComponent } from './address-selector/address-selector.component';
 import { AccountNameComponent } from './account-name/account-name.component';
 import { LedgerDeviceComponent } from './select-hardware/select-hardware.component';
+import { ScanQRCodeComponent } from './scan-qrcode/scan-qrcode.dialog';
 
 @NgModule({
   declarations: [
@@ -15,6 +16,7 @@ import { LedgerDeviceComponent } from './select-hardware/select-hardware.compone
     AddressSelectorComponent,
     AccountNameComponent,
     LedgerDeviceComponent,
+    ScanQRCodeComponent,
   ],
   imports: [CommonModule, LedgerRoutingModule, ShareModule],
   exports: [],

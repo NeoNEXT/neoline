@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter } from '@angular/core';
+import { Component, Output, EventEmitter, Input } from '@angular/core';
 import { HardwareDevice } from '@/app/popup/_lib';
 
 @Component({
@@ -7,8 +7,8 @@ import { HardwareDevice } from '@/app/popup/_lib';
   styleUrls: ['select-hardware.component.scss'],
 })
 export class LedgerDeviceComponent {
+  @Input() device: HardwareDevice;
   @Output() selectDevice = new EventEmitter<HardwareDevice>();
-  device: HardwareDevice = 'Ledger';
 
   constructor() {}
 

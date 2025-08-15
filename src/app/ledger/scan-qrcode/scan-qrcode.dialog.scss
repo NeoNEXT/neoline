@@ -1,0 +1,28 @@
+.content {
+  max-width: 696px;
+  padding: 40px 24px;
+  padding-top: 60px;
+  margin: 0 auto;
+  .code {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    .tip {
+      font-size: 12px;
+      line-height: 18px;
+      color: var(--tip-color);
+      margin-top: 32px;
+    }
+    .error {
+      font-size: 12px;
+      line-height: 18px;
+      color: var(--error-color);
+      margin-top: 24px;
+    }
+  }
+}
+
+#reader {
+  width: 300px;
+  filter: blur(4px);
+}
