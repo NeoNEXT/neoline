@@ -78,7 +78,10 @@ export class LedgerComponent implements OnDestroy {
         this.status = STATUS_ENUM.SELECT_HARDWARE;
         break;
       case STATUS_ENUM.ADDRESS_SELECTOR:
-        this.status = STATUS_ENUM.CHAIN_PICK;
+        this.status =
+          this.device === 'QRCode'
+            ? STATUS_ENUM.SCAN_QRCODE
+            : STATUS_ENUM.CHAIN_PICK;
         break;
       case STATUS_ENUM.ACCOUNT_NAME:
         this.status = STATUS_ENUM.ADDRESS_SELECTOR;

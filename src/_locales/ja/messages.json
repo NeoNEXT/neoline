@@ -1591,5 +1591,8 @@
   },
   "getSignature": {
     "message": "署名を取得"
+  },
+  "invalidQRCode": {
+    "message": "無効なQRコード。ハードウェアウォレットの同期QRコードをスキャンしてください。"
   }
 }

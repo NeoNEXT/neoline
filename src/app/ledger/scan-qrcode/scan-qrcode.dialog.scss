@@ -3,26 +3,36 @@
   padding: 40px 24px;
   padding-top: 60px;
   margin: 0 auto;
+  position: relative;
+  .loading {
+    width: 300px;
+    height: 250px;
+    position: absolute;
+    top: 0;
+    left: 50%;
+    margin-left: -150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
   .code {
     display: flex;
     flex-direction: column;
     align-items: center;
+    gap: 24px;
+    font-size: 12px;
+    line-height: 18px;
     .tip {
-      font-size: 12px;
-      line-height: 18px;
-      color: var(--tip-color);
-      margin-top: 32px;
+      color: var(--sub-title-color);
     }
     .error {
-      font-size: 12px;
-      line-height: 18px;
       color: var(--error-color);
-      margin-top: 24px;
     }
   }
 }
 
 #reader {
   width: 300px;
+  height: 250px;
   filter: blur(4px);
 }

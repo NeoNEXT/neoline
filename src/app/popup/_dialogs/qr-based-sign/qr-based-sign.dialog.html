@@ -19,9 +19,14 @@
 
 <div class="content" [hidden]="!isScanning">
   <div class="code">
+    <div class="loading" *ngIf="loadingScanner">
+      <mat-spinner diameter="34" strokeWidth="4"></mat-spinner>
+    </div>
     <div id="reader"></div>
     <p class="tip">{{ 'scanQRCodeTip' | translate | async }}</p>
-    <p class="error">{{ errorMsg }}</p>
+    <p class="error" *ngIf="!isValidQRCode">
+      {{ 'invalidQRCode' | translate | async }}
+    </p>
   </div>
 </div>
 

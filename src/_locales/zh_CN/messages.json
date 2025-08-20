@@ -1591,5 +1591,8 @@
   },
   "getSignature": {
     "message": "获取签名"
+  },
+  "invalidQRCode": {
+    "message": "二维码无效。请扫描硬件钱包的同步二维码。"
   }
 }

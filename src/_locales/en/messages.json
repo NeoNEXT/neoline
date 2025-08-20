@@ -1591,5 +1591,8 @@
   },
   "getSignature": {
     "message": "Get signature"
+  },
+  "invalidQRCode": {
+    "message": "Invalid QR code. Please scan the sync QR code of your hardware wallet."
   }
 }
