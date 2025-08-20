@@ -48,7 +48,8 @@ export interface WalletListItem {
     | 'Neo Legacy'
     | 'Private key'
     | 'Ledger'
-    | 'OneKey';
+    | 'OneKey'
+    | 'QRCode';
   expand: boolean;
   walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
 }
@@ -545,10 +546,14 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     const ledgerWalletArr = walletArr.filter(
       (item) =>
         item.accounts[0]?.extra?.ledgerSLIP44 &&
-        item.accounts[0]?.extra?.device !== 'OneKey'
+        item.accounts[0]?.extra?.device !== 'OneKey' &&
+        item.accounts[0]?.extra?.device !== 'QRCode'
     );
     const oneKeyWalletArr = walletArr.filter(
       (item) => item.accounts[0]?.extra?.device === 'OneKey'
+    );
+    const qrBasedWalletArr = walletArr.filter(
+      (item) => item.accounts[0]?.extra?.device === 'QRCode'
     );
     const res: WalletListItem[] = [
       {
@@ -563,6 +568,14 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
       res.push({
         title: 'OneKey',
         walletArr: oneKeyWalletArr,
+        expand: true,
+        chain,
+      });
+    }
+    if (chain === 'NeoX' && qrBasedWalletArr.length > 0) {
+      res.push({
+        title: 'QRCode',
+        walletArr: qrBasedWalletArr,
         expand: true,
         chain,
       });

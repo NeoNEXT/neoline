@@ -25,3 +25,4 @@ export { PopupSpeedUpFeeDialogComponent } from './speed-up-fee/speed-up-fee.dial
 export { PopupApproveDialogComponent } from './approve/approve.dialog';
 export { PopupSortAccountDialogComponent } from './sort-account/sort-account.component';
 export { PopupEditApproveCapDialogComponent } from './edit-approve-cap/edit-approve-cap.dialog';
+export { PopupQRBasedSignDialogComponent } from './qr-based-sign/qr-based-sign.dialog';

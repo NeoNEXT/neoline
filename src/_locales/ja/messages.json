@@ -1576,5 +1576,20 @@
   },
   "scanQRCodeTip": {
     "message": "QRコードをカメラの前に置いてください。画面はぼやけていますが、読み取りには影響しません。"
+  },
+  "requestSignature": {
+    "message": "署名リクエスト"
+  },
+  "requestSignatureStep1": {
+    "message": "QRコードをウォレットでスキャン"
+  },
+  "requestSignatureStep2": {
+    "message": "ウォレットで署名したら、'署名を取得'をクリックして署名を受け取ります"
+  },
+  "reject": {
+    "message": "拒否"
+  },
+  "getSignature": {
+    "message": "署名を取得"
   }
 }
