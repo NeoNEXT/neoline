@@ -13,7 +13,8 @@ declare var QRCode: any;
 export class PopupQRBasedSignDialogComponent implements OnInit, OnDestroy {
   scanner: Html5Qrcode;
   isScanning = false;
-  errorMsg = '';
+  isValidQRCode = true;
+  loadingScanner = true;
 
   constructor(
     private evmService: EvmService,
@@ -64,27 +65,26 @@ export class PopupQRBasedSignDialogComponent implements OnInit, OnDestroy {
       if (devices && devices.length) {
         var cameraId = devices[0].id;
         this.scanner = new Html5Qrcode('reader');
+        this.loadingScanner = false;
         this.scanner.start(
           cameraId,
           {
             fps: 10,
-            qrbox: { width: 300, height: 300 },
+            qrbox: { width: 300, height: 250 },
           },
           (decodedText) => {
-            const qrCodeData =
-              this.evmService.getSignDataFromQRCode(decodedText);
-            if (qrCodeData) {
+            try {
+              const qrCodeData =
+                this.evmService.getSignDataFromQRCode(decodedText);
               this.dialogRef.close({
                 ...this.data.unsignedTx,
                 signature: qrCodeData,
               });
-            } else {
-              this.errorMsg = 'Invalid QR Code';
+            } catch {
+              this.isValidQRCode = false;
             }
           },
-          (errorMessage) => {
-            this.errorMsg = errorMessage;
-          }
+          () => {}
         );
       }
     });

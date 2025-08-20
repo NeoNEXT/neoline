@@ -14,41 +14,43 @@ import { EvmService } from '@/app/core';
   styleUrls: ['scan-qrcode.dialog.scss'],
 })
 export class ScanQRCodeComponent implements OnInit, OnDestroy {
-  scanner: Html5Qrcode;
   @Output() emitQrCode = new EventEmitter();
 
-  errorMsg = '';
+  scanner: Html5Qrcode;
+  isValidQRCode = true;
+  loadingScanner = true;
+
   constructor(private evmService: EvmService) {}
   ngOnInit(): void {
     Html5Qrcode.getCameras().then((devices) => {
       if (devices && devices.length) {
         var cameraId = devices[0].id;
         this.scanner = new Html5Qrcode('reader');
+        this.loadingScanner = false;
         this.scanner.start(
           cameraId,
           {
             fps: 10,
-            qrbox: { width: 300, height: 300 },
+            qrbox: { width: 300, height: 250 },
           },
           (decodedText) => {
-            const qrCodeData =
-              this.evmService.getPublicKeyFromQRCode(decodedText);
-            if (qrCodeData) {
-              this.scanner.stop();
+            try {
+              const qrCodeData =
+                this.evmService.getPublicKeyFromQRCode(decodedText);
               this.emitQrCode.emit(qrCodeData);
-            } else {
-              this.errorMsg = 'Invalid QR Code';
+            } catch {
+              this.isValidQRCode = false;
             }
           },
-          (errorMessage) => {
-            this.errorMsg = errorMessage;
-          }
+          () => {}
         );
       }
     });
   }
 
   ngOnDestroy(): void {
-    this.scanner?.clear();
+    this.scanner?.stop().then(() => {
+      this.scanner?.clear();
+    });
   }
 }
