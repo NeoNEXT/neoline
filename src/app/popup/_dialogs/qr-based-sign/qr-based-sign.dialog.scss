@@ -1,0 +1,36 @@
+.content {
+  max-width: 696px;
+  padding: 24px;
+  margin: 0 auto;
+  .code {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 24px;
+    text-align: center;
+    .tip {
+      line-height: 18px;
+      color: var(--sub-title-color);
+    }
+    .error {
+      font-size: 12px;
+      line-height: 18px;
+      color: var(--error-color);
+      margin-top: 24px;
+    }
+  }
+}
+.btn-group {
+  padding: 24px;
+  button {
+    width: calc(50% - 12px);
+    &.cancel {
+      margin-right: 24px;
+    }
+  }
+}
+
+#reader {
+  width: 300px;
+  filter: blur(4px);
+}

@@ -1,0 +1,35 @@
+<div class="pop-ups-title">
+  {{ 'requestSignature' | translate | async }}
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    theme
+    src="assets/images/common/close.svg"
+    alt=""
+  />
+</div>
+
+<div class="content" [hidden]="isScanning">
+  <div class="code">
+    <p class="tip">{{ "requestSignatureStep1" | translate | async }}</p>
+    <div id="popup-tx-qrcode"></div>
+    <p class="tip">{{ "requestSignatureStep2" | translate | async }}</p>
+  </div>
+</div>
+
+<div class="content" [hidden]="!isScanning">
+  <div class="code">
+    <div id="reader"></div>
+    <p class="tip">{{ 'scanQRCodeTip' | translate | async }}</p>
+    <p class="error">{{ errorMsg }}</p>
+  </div>
+</div>
+
+<div class="btn-group">
+  <button class="cancel" [mat-dialog-close]="false">
+    {{ "reject" | translate | async }}
+  </button>
+  <button class="confirm" (click)="confirm()">
+    {{ "getSignature" | translate | async }}
+  </button>
+</div>

@@ -1576,5 +1576,20 @@
   },
   "scanQRCodeTip": {
     "message": "Place the QR code in front of your camera. The screen is blurred, but it will not affect the reading."
+  },
+  "requestSignature": {
+    "message": "Request signature"
+  },
+  "requestSignatureStep1": {
+    "message": "Scan the QR code with your wallet"
+  },
+  "requestSignatureStep2": {
+    "message": "After you've signed with your wallet, click on 'Get Signature' to receive the signature"
+  },
+  "reject": {
+    "message": "Reject"
+  },
+  "getSignature": {
+    "message": "Get signature"
   }
 }

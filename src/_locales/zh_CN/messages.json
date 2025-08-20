@@ -1576,5 +1576,20 @@
   },
   "scanQRCodeTip": {
     "message": "将二维码置于摄像头前。屏幕模糊，但不会影响读取。"
+  },
+  "requestSignature": {
+    "message": "请求签名"
+  },
+  "requestSignatureStep1": {
+    "message": "使用钱包扫描二维码"
+  },
+  "requestSignatureStep2": {
+    "message": "在钱包中签名后，点击“获取签名”以接收签名"
+  },
+  "reject": {
+    "message": "拒绝"
+  },
+  "getSignature": {
+    "message": "获取签名"
   }
 }

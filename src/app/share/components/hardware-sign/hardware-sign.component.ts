@@ -16,7 +16,8 @@ import { LedgerService, OneKeyService, SettingState } from '@/app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { interval } from 'rxjs';
 import { ETH_EOA_SIGN_METHODS } from '@/models/evm';
-
+import { PopupQRBasedSignDialogComponent } from '@/app/popup/_dialogs';
+import { MatDialog } from '@angular/material/dialog';
 @Component({
   selector: 'app-hardware-sign',
   templateUrl: 'hardware-sign.component.html',
@@ -39,18 +40,35 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
   constructor(
     private ledger: LedgerService,
     private oneKeyService: OneKeyService,
-    private setting: SettingState
+    private setting: SettingState,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
-    this.loadingMsg =
-      this.currentWallet.accounts[0].extra?.device === 'OneKey'
-        ? 'connectOneKeyDevice'
-        : 'connectLedgerDevice';
-    this.getLedgerStatus();
-    this.getStatusInterval = interval(5000).subscribe(() => {
+    if (this.currentWallet?.accounts[0].extra?.device === 'QRCode') {
+      this.dialog
+        .open(PopupQRBasedSignDialogComponent, {
+          panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
+          data: {
+            unsignedTx: this.unsignedTx,
+            currentWallet: this.currentWallet,
+          },
+        })
+        .afterClosed()
+        .subscribe((res) => {
+          this.backWithSignedTx.emit(res);
+        });
+    } else {
+      this.loadingMsg =
+        this.currentWallet.accounts[0].extra?.device === 'OneKey'
+          ? 'connectOneKeyDevice'
+          : 'connectLedgerDevice';
       this.getLedgerStatus();
-    });
+      this.getStatusInterval = interval(5000).subscribe(() => {
+        this.getLedgerStatus();
+      });
+    }
   }
 
   ngOnDestroy(): void {

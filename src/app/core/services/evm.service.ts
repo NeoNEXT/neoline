@@ -12,15 +12,18 @@ import {
   ETHSignature,
 } from '@keystonehq/bc-ur-registry-eth';
 import { v4 as uuid } from 'uuid';
-import { QRCodeWallet } from '@/app/popup/_lib';
+import { QRCodeWallet, RpcNetwork } from '@/app/popup/_lib';
 
 @Injectable()
 export class EvmService {
   private neoXWalletArr: EvmWalletJSON[];
+  private neoXNetwork: RpcNetwork;
+
   constructor(private store: Store<AppState>, private chrome: ChromeService) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.neoXWalletArr = state.neoXWalletArr;
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
     });
   }
 
@@ -30,18 +33,23 @@ export class EvmService {
     decoder.receivePart(ur);
     const decodeSig = ETHSignature.fromCBOR(decoder.resultUR().cbor);
     const signData = decodeSig.getSignature().toString('hex');
-    return signData;
+    const sig = ethers.Signature.from('0x' + signData);
+
+    return {
+      r: sig.r,
+      s: sig.s,
+      v: '0x' + sig.v.toString(16),
+    };
   }
 
   generateSignRequest({
     tx,
-    chainId,
     wallet,
   }: {
     tx: ethers.TransactionLike;
-    chainId: number;
     wallet: EvmWalletJSON;
-  }) {
+  }): string {
+    tx.chainId = this.neoXNetwork.chainId;
     const unsignedTx = ethers.Transaction.from(tx).unsignedSerialized;
     const signData = Buffer.from(unsignedTx.slice(2), 'hex');
 
@@ -51,7 +59,7 @@ export class EvmService {
       `M/44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
       wallet.accounts[0].extra.qrBasedXFP,
       uuid(),
-      chainId,
+      this.neoXNetwork.chainId,
       wallet.accounts[0].address,
       'NeoLine'
     );
