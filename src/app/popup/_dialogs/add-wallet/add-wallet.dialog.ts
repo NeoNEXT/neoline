@@ -16,16 +16,16 @@ export class PopupAddWalletDialogComponent {
 
   importLedger() {
     this.dialogRef.close();
-    if (location.protocol.includes('-extension:')) {
-      this.router.navigateByUrl('/ledger');
-    } else if (
-      typeof chrome !== 'undefined' &&
-      chrome.runtime &&
-      typeof chrome.runtime.id === 'string'
-    ) {
-      const extensionUrl = chrome.runtime.getURL('/index.html');
-      const ledgerUrl = extensionUrl + '#/ledger';
-      chrome.tabs.create({ url: ledgerUrl });
+    if (chrome.tabs) {
+      chrome.tabs.getCurrent((tab) => {
+        if (tab) {
+          this.router.navigateByUrl('/ledger');
+        } else {
+          const extensionUrl = chrome.runtime.getURL('/index.html');
+          const ledgerUrl = extensionUrl + '#/ledger';
+          chrome.tabs.create({ url: ledgerUrl });
+        }
+      });
     } else {
       this.router.navigateByUrl('/ledger');
     }
