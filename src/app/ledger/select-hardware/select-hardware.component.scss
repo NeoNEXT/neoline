@@ -6,8 +6,9 @@ section.main {
   .title {
     color: var(--sub-title-color);
     font-size: 18px;
+    line-height: 24px;
   }
-  ul {
+  ul.device-list {
     margin-top: 20px;
     display: flex;
     align-items: center;
@@ -42,15 +43,22 @@ section.main {
           width: 18px;
           height: 18px;
           border-radius: 4px;
-          background: url("/assets/images/common/selected-account.svg")
-            center center no-repeat;
+          background: url("/assets/images/common/selected-account.svg") center
+            center no-repeat;
         }
       }
     }
   }
+  .qr-tip {
+    margin-top: 24px;
+    font-size: 14px;
+    line-height: 18px;
+    color: var(--sub-title-color);
+    font-family: NeverMind-Regular;
+  }
   .confirm-content {
     width: 100%;
-    margin-top: 150px;
+    margin-top: 70px;
     text-align: center;
     button {
       width: 327px;

@@ -237,7 +237,11 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
         this.qrCodeData.pubKey,
         `M/0/${index}`
       );
-      newAccounts.push({ address, xfp: this.qrCodeData.xfp });
+      newAccounts.push({
+        address,
+        xfp: this.qrCodeData.xfp,
+        publicKey: this.qrCodeData.pubKey,
+      });
     }
     this.qrCodeAccounts[page] = newAccounts;
     return newAccounts;

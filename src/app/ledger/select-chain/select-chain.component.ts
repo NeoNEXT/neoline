@@ -1,4 +1,4 @@
-import { Component, Output, EventEmitter, Input } from '@angular/core';
+import { Component, Output, EventEmitter, Input, OnInit } from '@angular/core';
 import { ChainType, HardwareDevice, STORAGE_NAME } from '@/app/popup/_lib';
 import { ChromeService, GlobalService, SettingState } from '@/app/core';
 
@@ -7,7 +7,7 @@ import { ChromeService, GlobalService, SettingState } from '@/app/core';
   templateUrl: 'select-chain.component.html',
   styleUrls: ['select-chain.component.scss'],
 })
-export class LedgerChainComponent {
+export class LedgerChainComponent implements OnInit {
   @Input() device: HardwareDevice;
   @Input() chainType: ChainType;
   @Output() selectChain = new EventEmitter<ChainType>();
@@ -17,6 +17,12 @@ export class LedgerChainComponent {
     private chromeSer: ChromeService,
     private global: GlobalService
   ) {}
+
+  ngOnInit(): void {
+    if (this.chainType === 'Neo2' && !this.deviceIsSupportNeo2()) {
+      this.chainType = 'Neo3';
+    }
+  }
 
   select() {
     if (this.chainType === 'NeoX') {

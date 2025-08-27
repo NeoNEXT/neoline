@@ -1584,7 +1584,7 @@
     "message": "Scan the QR code with your wallet"
   },
   "requestSignatureStep2": {
-    "message": "After you've signed with your wallet, click on 'Get Signature' to receive the signature"
+    "message": "After you've signed with your wallet, click on 'Get signature' to receive the signature"
   },
   "reject": {
     "message": "Reject"
@@ -1594,5 +1594,8 @@
   },
   "invalidQRCode": {
     "message": "Invalid QR code. Please scan the sync QR code of your hardware wallet."
+  },
+  "QRBasedTip": {
+    "message": "QR hardware wallet only supports EVM-compatible chains."
   }
 }

@@ -55,7 +55,7 @@ export class EvmService {
 
     const signRequest = EthSignRequest.constructETHRequest(
       signData,
-      DataType.transaction,
+      DataType.typedTransaction,
       `M/44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
       wallet.accounts[0].extra.qrBasedXFP,
       uuid(),
@@ -72,7 +72,7 @@ export class EvmService {
     decoder.receivePart(ur);
     const cryptoHDKey = decoder.resultRegistryType() as CryptoHDKey;
     const pubKey = cryptoHDKey.getBip32Key();
-    const xfp = cryptoHDKey.getParentFingerprint().toString('hex');
+    const xfp = cryptoHDKey.getOrigin()?.getSourceFingerprint().toString('hex');
     return { pubKey, xfp };
   }
   //#endregion
