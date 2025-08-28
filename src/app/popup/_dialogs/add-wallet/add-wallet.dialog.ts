@@ -17,15 +17,9 @@ export class PopupAddWalletDialogComponent {
   importLedger() {
     this.dialogRef.close();
     if (chrome.tabs) {
-      chrome.tabs.getCurrent((tab) => {
-        if (tab) {
-          this.router.navigateByUrl('/ledger');
-        } else {
-          const extensionUrl = chrome.runtime.getURL('/index.html');
-          const ledgerUrl = extensionUrl + '#/ledger';
-          chrome.tabs.create({ url: ledgerUrl });
-        }
-      });
+      const extensionUrl = chrome.runtime.getURL('/index.html');
+      const ledgerUrl = extensionUrl + '#/ledger';
+      chrome.tabs.create({ url: ledgerUrl });
     } else {
       this.router.navigateByUrl('/ledger');
     }
