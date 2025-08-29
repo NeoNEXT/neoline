@@ -1597,5 +1597,8 @@
   },
   "QRBasedTip": {
     "message": "二维码硬件钱包仅支持 EVM 兼容链。"
+  },
+  "detectContractSecurity": {
+    "message": "使用第三方服务检测合约安全性"
   }
 }

@@ -109,4 +109,11 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   confirm() {
     this.confirmEvent.emit(this.customNonce);
   }
+
+  detectContractSecurity() {
+    this.util.detectContractSecurity(
+      this.neoXNetwork.chainId,
+      this.txParams.to
+    );
+  }
 }

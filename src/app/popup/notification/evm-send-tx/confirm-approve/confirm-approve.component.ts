@@ -129,4 +129,11 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   changeNonce($event) {
     this.customNonce = $event;
   }
+
+  detectContractSecurity() {
+    this.util.detectContractSecurity(
+      this.neoXNetwork.chainId,
+      this.txParams.to
+    );
+  }
 }

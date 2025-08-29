@@ -154,6 +154,17 @@
             display: inline-flex;
             align-items: center;
             gap: 8px;
+            .goplus-icon {
+              display: inline-block;
+              width: 20px;
+              height: 20px;
+              cursor: pointer;
+              background: url("/assets/images/third-party/gopluslabs-icon.svg")
+                center center no-repeat;
+              &:hover {
+                background-image: url("/assets/images/third-party/gopluslabs-icon-active.svg");
+              }
+            }
           }
           .rate {
             color: var(--sub-title-color);

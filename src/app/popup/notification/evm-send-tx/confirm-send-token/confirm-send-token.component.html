@@ -77,12 +77,17 @@
             <img src="assets/images/common/tooltip.svg" alt="" />
           </tooltip>
         </div>
-        <copy [value]="txParams?.to">
-          <span class="to-address">
+        <div class="to-address">
+          <copy [value]="txParams?.to">
             {{ txParams?.to | longStr : 6 }}
-            <img theme src="assets/images/common/copy.svg" />
-          </span>
-        </copy>
+          </copy>
+          <tooltip
+            placement="topRight"
+            [tip]="'detectContractSecurity' | translate | async"
+          >
+            <span class="goplus-icon" (click)="detectContractSecurity()"></span>
+          </tooltip>
+        </div>
       </div>
       <div class="request-info-item" *ngIf="tokenData?.name">
         <div class="label">

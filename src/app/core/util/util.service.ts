@@ -70,6 +70,10 @@ export class UtilServiceState {
     });
   }
 
+  detectContractSecurity(chainId: number, address: string) {
+    window.open(`https://gopluslabs.io/token-security/${chainId}/${address}`);
+  }
+
   toExplorer({
     chain,
     network,

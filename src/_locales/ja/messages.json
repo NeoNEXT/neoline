@@ -1597,5 +1597,8 @@
   },
   "QRBasedTip": {
     "message": "QRハードウェアウォレットは、現在EVM互換チェーンのみサポートされています。"
+  },
+  "detectContractSecurity": {
+    "message": "サードパーティのサービスを使用して契約のセキュリティを検出する"
   }
 }

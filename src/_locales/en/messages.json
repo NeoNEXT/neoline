@@ -1597,5 +1597,8 @@
   },
   "QRBasedTip": {
     "message": "QR hardware wallet only supports EVM-compatible chains."
+  },
+  "detectContractSecurity": {
+    "message": "Use third-party services to detect contract security"
   }
 }
