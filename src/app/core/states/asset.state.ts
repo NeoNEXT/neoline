@@ -211,8 +211,8 @@ export class AssetState {
   }) {
     const price = await this.getAssetRateV2(chainType, assetId, chainId);
     return {
-      price: price ? price.toFixed(2) : undefined,
-      rate: price && amount ? price.times(amount).toFixed(2) : undefined,
+      price: price ? price.dp(2).toFixed() : undefined,
+      rate: price && amount ? price.times(amount).dp(2).toFixed() : undefined,
     };
   }
 

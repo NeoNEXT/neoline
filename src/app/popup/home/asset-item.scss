@@ -1,5 +1,40 @@
-
 @import "src/styles/asset-item";
+
+table.assets-table {
+  display: none;
+  width: 100%;
+  background: transparent;
+  padding: 0 24px;
+  .mat-header-cell {
+    color: var(--tip-color);
+  }
+
+  tr.mat-row {
+    height: 68px;
+    &:hover {
+      background: var(--hover-color);
+    }
+  }
+
+  .mat-cell {
+    color: var(--title-color);
+    font-size: 16px;
+    font-family: NeverMind-Medium;
+    .symbol {
+      height: 34px;
+      display: inline-flex;
+      align-items: center;
+    }
+    .symbol-name {
+      margin-left: 12px;
+    }
+  }
+
+  th.mat-header-cell,
+  td.mat-cell {
+    border-bottom-color: var(--line-color);
+  }
+}
 
 .asset-item {
   padding: 0 24px;
@@ -25,4 +60,13 @@
   margin: 40px 0;
   text-align: center;
   color: var(--tip-color);
+}
+
+@media screen and (min-width: 1000px) {
+  table.assets-table {
+    display: table;
+  }
+  .asset-item {
+    display: none;
+  }
 }

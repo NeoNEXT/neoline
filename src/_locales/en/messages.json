@@ -1600,5 +1600,14 @@
   },
   "detectContractSecurity": {
     "message": "Use third-party services to detect contract security"
+  },
+  "Price": {
+    "message": "Price"
+  },
+  "Portfolio": {
+    "message": "Portfolio"
+  },
+  "Worth": {
+    "message": "Value"
   }
 }

@@ -1,4 +1,78 @@
+<table mat-table [dataSource]="myAssets" class="assets-table">
+  <ng-container matColumnDef="symbol">
+    <th mat-header-cell *matHeaderCellDef>{{ "Token" | translate | async }}</th>
+    <td mat-cell *matCellDef="let element">
+      <div class="symbol">
+        <token-logo
+          customClass="list"
+          [assetId]="element?.asset_id"
+          [imageUrl]="element?.image_url"
+          [chainType]="chainType"
+          [symbol]="element?.symbol"
+          [neoXChainId]="networkId"
+        ></token-logo>
+        <span class="symbol-name">{{ element?.symbol }}</span>
+      </div>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="portfolio">
+    <th mat-header-cell *matHeaderCellDef>
+      {{ "Portfolio" | translate | async }}
+    </th>
+    <td mat-cell *matCellDef="let element">
+      <span *ngIf="element.portfolio">{{ element.portfolio }}%</span>
+      <span *ngIf="!element.portfolio">-</span>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="price">
+    <th mat-header-cell *matHeaderCellDef>{{ "Price" | translate | async }}</th>
+    <td mat-cell *matCellDef="let element">
+      <span *ngIf="element?.price">
+        {{ rateCurrency | currencySymbol }}{{ element.price }}
+      </span>
+      <span *ngIf="!element?.price">-</span>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="balance">
+    <th mat-header-cell *matHeaderCellDef>
+      {{ "Balance" | translate | async }}
+    </th>
+    <td mat-cell *matCellDef="let element">
+      <p>{{ element?.balance || "0" | number : "1.0-8" }}</p>
+    </td>
+  </ng-container>
+
+  <ng-container matColumnDef="value">
+    <th mat-header-cell *matHeaderCellDef>
+      {{ "Worth" | translate | async }}
+    </th>
+    <td mat-cell *matCellDef="let element">
+      <p *ngIf="element?.price">
+        {{ rateCurrency | currencySymbol
+        }}{{ element.rateBalance | numberFixed : 2 | number }}
+      </p>
+      <p *ngIf="!element?.price">-</p>
+    </td>
+  </ng-container>
+
+  <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+  <tr
+    mat-row
+    *matRowDef="let row; columns: displayedColumns"
+    [routerLink]="['/popup/asset']"
+    [queryParams]="{
+      assetId: row.asset_id,
+      symbol: row?.symbol,
+      decimals: row?.decimals
+    }"
+  ></tr>
+</table>
+
 <div class="loading" *ngIf="isLoading">{{ "loading" | translate | async }}</div>
+
 <div
   class="asset-item"
   *ngFor="let asset of myAssets"

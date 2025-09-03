@@ -1600,5 +1600,14 @@
   },
   "detectContractSecurity": {
     "message": "サードパーティのサービスを使用して契約のセキュリティを検出する"
+  },
+  "Price": {
+    "message": "価格"
+  },
+  "Portfolio": {
+    "message": "ポートフォリオ"
+  },
+  "Worth": {
+    "message": "価値"
   }
 }
