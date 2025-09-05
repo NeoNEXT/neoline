@@ -1609,5 +1609,8 @@
   },
   "Worth": {
     "message": "Value"
+  },
+  "contractHasRisk": {
+    "message": "This contract may be risky. Trade with caution."
   }
 }

@@ -55,8 +55,15 @@
           </tooltip>
         </div>
         <div class="to-address">
+          <tooltip
+            *ngIf="contractHasRisk"
+            placement="top"
+            [tip]="'contractHasRisk' | translate | async"
+          >
+            <img src="assets/images/common/warning-red.svg" alt="" />
+          </tooltip>
           <copy [value]="txParams?.to">
-            {{ txParams?.to | longStr : 6 }}
+            {{ contractName ? contractName : (txParams?.to | longStr : 6) }}
           </copy>
           <tooltip
             placement="topRight"

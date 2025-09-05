@@ -1609,5 +1609,8 @@
   },
   "Worth": {
     "message": "价值"
+  },
+  "contractHasRisk": {
+    "message": "该合约可能存在风险，请谨慎交易。"
   }
 }

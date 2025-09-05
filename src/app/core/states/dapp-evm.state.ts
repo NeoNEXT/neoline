@@ -96,7 +96,20 @@ export class DappEVMState {
     });
   }
 
-  decodeTxData({
+  detectContractSecurity(contract: string): Observable<boolean> {
+    return this.http
+      .get(
+        'https://raw.githubusercontent.com/scamsniffer/scam-database/main/blacklist/address.json'
+      )
+      .pipe(
+        map((res: string[]) => {
+          const data = new Set(res ?? []);
+          return data.has(ethers.getAddress(contract));
+        })
+      );
+  }
+
+  getContractNameAndDecodeData({
     chainId,
     inputData,
     contract,
@@ -104,22 +117,24 @@ export class DappEVMState {
     chainId: number;
     inputData: string;
     contract: string;
-  }) {
+  }): Observable<{ contractName: string; decodeData: any[] }> {
     return this.http
       .get(
-        `https://api.etherscan.io/v2/api?chainid=${chainId}&module=contract&action=getabi&address=${contract}&apikey=${ETHERSCAN_API_KEY}`
+        `https://api.etherscan.io/v2/api?chainid=${chainId}&module=contract&action=getsourcecode&address=${contract}&apikey=${ETHERSCAN_API_KEY}`
       )
       .pipe(
-        map((abiRes: any) => {
-          if (abiRes.status === '1') {
-            const iface = new ethers.Interface(abiRes.result);
+        map((sourceCodeRes: any) => {
+          if (sourceCodeRes.status === '1' && sourceCodeRes?.result[0]) {
+            const abi = sourceCodeRes.result[0].ABI;
+            const contractName = sourceCodeRes.result[0].ContractName;
+            const iface = new ethers.Interface(abi);
             const data = iface.parseTransaction({ data: inputData });
             const decodeArg = this.extractProxyValues(data.args);
             const decodeData = [];
             data.fragment.inputs.forEach(({ type, name }, index) => {
               decodeData.push({ name, type, value: decodeArg[index] });
             });
-            return decodeData;
+            return { contractName, decodeData };
           }
         })
       );
