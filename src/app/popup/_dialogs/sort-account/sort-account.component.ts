@@ -21,10 +21,12 @@ export class PopupSortAccountDialogComponent implements AfterViewInit {
   @ViewChild('sortablePrivateKeyList') sortablePrivateKeyListRef!: ElementRef;
   @ViewChild('sortableLedgerList') sortableLedgerListRef!: ElementRef;
   @ViewChild('sortableOneKeyList') sortableOneKeyListRef: ElementRef;
+  @ViewChild('sortableQrCodeList') sortableQrCodeListRef: ElementRef;
 
   privateKeyGroup: WalletListItem;
   ledgerGroup: WalletListItem;
   oneKeyGroup: WalletListItem;
+  qrCodeGroup: WalletListItem;
 
   constructor(
     private dialogRef: MatDialogRef<PopupSortAccountDialogComponent>,
@@ -48,6 +50,9 @@ export class PopupSortAccountDialogComponent implements AfterViewInit {
           break;
         case 'OneKey':
           this.oneKeyGroup = temp;
+          break;
+        case 'QRCode':
+          this.qrCodeGroup = temp;
           break;
       }
     });
@@ -85,6 +90,18 @@ export class PopupSortAccountDialogComponent implements AfterViewInit {
         },
       });
     }
+    if (this.sortableQrCodeListRef) {
+      Sortable.create(this.sortableQrCodeListRef.nativeElement, {
+        animation: 150,
+        onEnd: (evt) => {
+          const movedItem = this.qrCodeGroup.walletArr.splice(
+            evt.oldIndex!,
+            1
+          )[0];
+          this.qrCodeGroup.walletArr.splice(evt.newIndex!, 0, movedItem);
+        },
+      });
+    }
   }
 
   confirm() {
@@ -92,6 +109,7 @@ export class PopupSortAccountDialogComponent implements AfterViewInit {
     walletArr.push(...this.privateKeyGroup.walletArr);
     walletArr.push(...this.ledgerGroup.walletArr);
     walletArr.push(...(this.oneKeyGroup?.walletArr || []));
+    walletArr.push(...(this.qrCodeGroup?.walletArr || []));
 
     this.store.dispatch({
       type: SORT_WALLETS,

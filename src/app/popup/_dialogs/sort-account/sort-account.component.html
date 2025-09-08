@@ -151,6 +151,53 @@
         </li>
       </ul>
     </div>
+    <div class="list-item" *ngIf="qrCodeGroup">
+      <div class="list-title">
+        <span>{{ qrCodeGroup.title }}</span>
+        <span
+          class="dropdown"
+          (click)="qrCodeGroup.expand = !qrCodeGroup.expand"
+        >
+          <img
+            theme
+            [ngClass]="{ expand: qrCodeGroup.expand }"
+            src="/assets/images/common/arrow.svg"
+            alt=""
+          />
+        </span>
+      </div>
+      <ul #sortableQrCodeList [hidden]="!qrCodeGroup.expand">
+        <li
+          *ngFor="let item of qrCodeGroup.walletArr; index as index"
+          [ngClass]="{
+            active: data.wallet.accounts[0].address === item.accounts[0].address
+          }"
+        >
+          <span class="select"></span>
+          <div
+            class="avatar-box"
+            [ngClass]="{ ledger: item.accounts[0]?.extra?.ledgerSLIP44 }"
+          >
+            <img class="avatar" [avatar]="item.accounts[0].address" />
+            <img
+              *ngIf="item.accounts[0]?.extra?.ledgerSLIP44"
+              class="usb"
+              src="/assets/images/ledger/ledger-avatar.png"
+              alt=""
+            />
+          </div>
+          <div>
+            <p class="name">{{ item.name }}</p>
+          </div>
+          <img
+            class="handle"
+            theme
+            src="/assets/images/account/sort.svg"
+            alt=""
+          />
+        </li>
+      </ul>
+    </div>
   </div>
   <button class="confirm pop-ups add-wallet" (click)="confirm()">
     {{ "Confirm" | translate | async }}
