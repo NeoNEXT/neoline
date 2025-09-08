@@ -108,7 +108,13 @@ export function getProvider(): Promise<Provider> {
 }
 
 export function getIcon() {
-  return `${location.protocol}//${location.hostname}/favicon.ico`;
+  const faviconEl: HTMLLinkElement = document.querySelector(
+    'link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]'
+  );
+  if (faviconEl) {
+    return faviconEl?.href;
+  }
+  return `${location.origin}/favicon.ico`;
 }
 
 function connect(connectChain?: ChainType): Promise<boolean | any> {
