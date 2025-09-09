@@ -7,12 +7,13 @@ import {
 } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { Wallet3 } from '@popup/_lib';
+import { Wallet3, WalletListItem } from '@popup/_lib';
 import {
   ChromeService,
   AssetState,
   NeonService,
   GlobalService,
+  UtilServiceState,
 } from '@/app/core';
 import { Router } from '@angular/router';
 import {
@@ -39,20 +40,6 @@ import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '@/app/popup/_lib/evm';
 import BigNumber from 'bignumber.js';
-
-export interface WalletListItem {
-  chain: ChainType;
-  title:
-    | 'Neo N3'
-    | 'Neo X (EVM Network)'
-    | 'Neo Legacy'
-    | 'Private key'
-    | 'Ledger'
-    | 'OneKey'
-    | 'QRCode';
-  expand: boolean;
-  walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
-}
 
 @Component({
   templateUrl: 'account-list.component.html',
@@ -94,6 +81,7 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private assetState: AssetState,
     private neon: NeonService,
+    private util: UtilServiceState,
     private global: GlobalService,
     private store: Store<AppState>
   ) {
@@ -125,9 +113,9 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     if (!this.selectChainType) {
       this.selectChainType = this.chainType;
     }
-    this.allWallet.Neo2 = this.handleWallet(this.neo2WalletArr, 'Neo2');
-    this.allWallet.Neo3 = this.handleWallet(this.neo3WalletArr, 'Neo3');
-    this.allWallet.NeoX = this.handleWallet(this.neoXWalletArr, 'NeoX');
+    this.allWallet.Neo2 = this.util.handleWallet(this.neo2WalletArr, 'Neo2');
+    this.allWallet.Neo3 = this.util.handleWallet(this.neo3WalletArr, 'Neo3');
+    this.allWallet.NeoX = this.util.handleWallet(this.neoXWalletArr, 'NeoX');
     this.getDisplayList();
   }
 
@@ -534,52 +522,5 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
         this.displayList = this.allWallet.NeoX;
         break;
     }
-  }
-
-  private handleWallet(
-    walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>,
-    chain: ChainType
-  ): WalletListItem[] {
-    const privateWalletArr = walletArr.filter(
-      (item) => !item.accounts[0]?.extra?.ledgerSLIP44
-    );
-    const ledgerWalletArr = walletArr.filter(
-      (item) =>
-        item.accounts[0]?.extra?.ledgerSLIP44 &&
-        item.accounts[0]?.extra?.device !== 'OneKey' &&
-        item.accounts[0]?.extra?.device !== 'QRCode'
-    );
-    const oneKeyWalletArr = walletArr.filter(
-      (item) => item.accounts[0]?.extra?.device === 'OneKey'
-    );
-    const qrBasedWalletArr = walletArr.filter(
-      (item) => item.accounts[0]?.extra?.device === 'QRCode'
-    );
-    const res: WalletListItem[] = [
-      {
-        title: 'Private key',
-        walletArr: privateWalletArr,
-        expand: true,
-        chain,
-      },
-      { title: 'Ledger', walletArr: ledgerWalletArr, expand: true, chain },
-    ];
-    if (chain !== 'Neo2') {
-      res.push({
-        title: 'OneKey',
-        walletArr: oneKeyWalletArr,
-        expand: true,
-        chain,
-      });
-    }
-    if (chain === 'NeoX' && qrBasedWalletArr.length > 0) {
-      res.push({
-        title: 'QRCode',
-        walletArr: qrBasedWalletArr,
-        expand: true,
-        chain,
-      });
-    }
-    return res;
   }
 }

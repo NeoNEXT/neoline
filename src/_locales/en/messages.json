@@ -249,16 +249,16 @@
     "message": "Connection request"
   },
   "thAuthTip": {
-    "message": "would like to connect to your wallet"
+    "message": "The site wants to connect your wallet"
   },
-  "thAuthNeo2Detail": {
-    "message": "This site is trying to request access to the Neo Legacy API so that it can interact with the Neo Legacy blockchain. Before approving your visit, be sure to double check that you are linking to the correct site."
+  "thAuthAccounts": {
+    "message": "Accounts"
   },
-  "thAuthNeo3Detail": {
-    "message": "This site is trying to request access to the Neo N3 API so that it can interact with the Neo N3 blockchain. Before approving your visit, be sure to double check that you are linking to the correct site."
+  "selectAccounts": {
+    "message": "Select accounts"
   },
-  "thAuthNeoXDetail": {
-    "message": "This site is trying to request access to the Neo X (EVM Network) API so that it can interact with the Neo X (EVM Network) blockchain. Before approving your visit, be sure to double check that you are linking to the correct site."
+  "selectAll": {
+    "message": "Select all"
   },
   "thSignTitle": {
     "message": "This app is requesting your signature."
@@ -1489,9 +1489,6 @@
   },
   "contactSupport": {
     "message": "NeoLine Support"
-  },
-  "ConnectionRequest": {
-    "message": "Connection Request"
   },
   "approval": {
     "message": "Approval"

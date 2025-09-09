@@ -249,16 +249,16 @@
     "message": "连接请求"
   },
   "thAuthTip": {
-    "message": "想要连接你的钱包"
+    "message": "该网站想要连接你的钱包"
   },
-  "thAuthNeo2Detail": {
-    "message": "这个站点正在请求访问 Neo Legacy API，以便它可以与 Neo Legacy 区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
+  "thAuthAccounts": {
+    "message": "账户"
   },
-  "thAuthNeo3Detail": {
-    "message": "这个站点正在请求访问 Neo N3 API，以便它可以与 Neo N3 区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
+  "selectAccounts": {
+    "message": "选择帐户"
   },
-  "thAuthNeoXDetail": {
-    "message": "这个站点正在请求访问 Neo X (EVM Network) API，以便它可以与 Neo X (EVM Network)区块链进行交互。在批准访问之前，请务必仔细检查您是否链接的是正确的站点。"
+  "selectAll": {
+    "message": "选择全部"
   },
   "thSignTitle": {
     "message": "这个应用正在请求你的签名。"
@@ -1489,9 +1489,6 @@
   },
   "contactSupport": {
     "message": "NeoLine 支持"
-  },
-  "ConnectionRequest": {
-    "message": "连接请求"
   },
   "approval": {
     "message": "批准"

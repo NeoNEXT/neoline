@@ -1,16 +1,33 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { ChromeService, NeonService } from '@/app/core';
+import {
+  AssetState,
+  ChromeService,
+  NeonService,
+  UtilServiceState,
+} from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { ERRORS, EVENT, requestTarget, Account } from '@/models/dapi';
-import { ChainType, ConnectedWebsitesType, STORAGE_NAME } from '../../_lib';
+import { ERRORS, EVENT, requestTarget } from '@/models/dapi';
+import {
+  ChainType,
+  ConnectedWebsitesType,
+  NEO3_CONTRACT,
+  RpcNetwork,
+  STORAGE_NAME,
+  WalletListItem,
+} from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
-import { EvmWalletJSON } from '../../_lib/evm';
+import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '../../_lib/evm';
 import { MatDialog } from '@angular/material/dialog';
-import { PopupConfirmDialogComponent } from '../../_dialogs';
+import {
+  PopupConfirmDialogComponent,
+  PopupSelectAccountsDialogComponent,
+} from '../../_dialogs';
+import { NEO } from '@/models/models';
+import BigNumber from 'bignumber.js';
 
 @Component({
   templateUrl: './authorization.component.html',
@@ -22,25 +39,45 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
   public title = '';
   public ruleCheck = false;
   private messageID = '';
+  selectAccounts: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
+  addressBalances = {};
+  isSelectAll = false;
 
   private accountSub: Unsubscribable;
-  chainType: ChainType;
-  public address = '';
-  public wallet: Wallet2 | Wallet3 | EvmWalletJSON;
   private currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
-  private currentChainType: ChainType;
+  currentChainType: ChainType;
+  currentNetwork: RpcNetwork;
+  allWallets: WalletListItem[] = [];
   constructor(
     private chrome: ChromeService,
     private aRouter: ActivatedRoute,
     private dialog: MatDialog,
     private neon: NeonService,
     private router: Router,
+    private assetState: AssetState,
+    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.currentWallet = state.currentWallet;
+      this.selectAccounts = [this.currentWallet];
       this.currentChainType = state.currentChainType;
+      switch (this.currentChainType) {
+        case 'Neo2':
+          this.currentNetwork = state.n2Networks[state.n2NetworkIndex];
+          this.allWallets = this.util.handleWallet(state.neo2WalletArr, 'Neo2');
+          break;
+        case 'Neo3':
+          this.currentNetwork = state.n3Networks[state.n3NetworkIndex];
+          this.allWallets = this.util.handleWallet(state.neo3WalletArr, 'Neo3');
+          break;
+        case 'NeoX':
+          this.currentNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+          this.allWallets = this.util.handleWallet(state.neoXWalletArr, 'NeoX');
+          break;
+      }
+      this.getBalances();
     });
     this.aRouter.queryParams.subscribe((params: any) => {
       this.hostname = params.hostname;
@@ -50,9 +87,6 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
           : params.icon;
       this.title = params.title;
       this.messageID = params.messageID;
-      this.chainType = this.currentChainType;
-      this.wallet = this.currentWallet;
-      this.address = this.wallet.accounts[0].address;
     });
   }
 
@@ -88,6 +122,34 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
       });
   }
 
+  edit() {
+    this.dialog
+      .open(PopupSelectAccountsDialogComponent, {
+        data: {
+          displayList: this.allWallets,
+          selectAccounts: this.selectAccounts,
+          selectChainType: this.currentChainType,
+          currentNetwork: this.currentNetwork,
+          addressBalances: this.addressBalances,
+          isSelectAll: this.isSelectAll,
+        },
+        panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
+      })
+      .afterClosed()
+      .subscribe(
+        (res: {
+          isSelectAll: boolean;
+          selectAccounts: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
+        }) => {
+          if (res) {
+            this.selectAccounts = res.selectAccounts;
+            this.isSelectAll = res.isSelectAll;
+          }
+        }
+      );
+  }
+
   public refuse() {
     this.chrome.windowCallback(
       {
@@ -106,19 +168,15 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
           res[this.hostname] = {
             icon: this.iconSrc,
             title: this.title,
-            connectedAddress: {
-              [this.address]: {
-                keep: this.ruleCheck,
-                chain: this.chainType,
-              },
-            },
-          };
-        } else {
-          res[this.hostname].connectedAddress[this.address] = {
-            keep: this.ruleCheck,
-            chain: this.chainType,
+            connectedAddress: {},
           };
         }
+        this.selectAccounts.forEach((item) => {
+          res[this.hostname].connectedAddress[item.accounts[0].address] = {
+            keep: this.ruleCheck,
+            chain: this.currentChainType,
+          };
+        });
         this.chrome.setStorage(STORAGE_NAME.connectedWebsites, res);
         this.chrome.windowCallback({
           data: true,
@@ -128,13 +186,51 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
         this.chrome.windowCallback(
           {
             data: {
-              address: this.address || '',
-              label: this.wallet.name || '',
+              address: this.selectAccounts[0].accounts[0].address || '',
+              label: this.selectAccounts[0].name || '',
             },
             return: EVENT.CONNECTED,
           },
           true
         );
       });
+  }
+
+  private getBalances() {
+    const reqs = [];
+    const addresses = [];
+    let assetId = '';
+    switch (this.currentChainType) {
+      case 'Neo2':
+        assetId = NEO;
+        break;
+      case 'Neo3':
+        assetId = NEO3_CONTRACT;
+        break;
+      case 'NeoX':
+        assetId = ETH_SOURCE_ASSET_HASH;
+        break;
+    }
+    this.allWallets.forEach((group) => {
+      group.walletArr.forEach((item) => {
+        const req = this.assetState.getAddressAssetBalance(
+          item.accounts[0].address,
+          assetId,
+          this.currentChainType
+        );
+        reqs.push(req);
+        addresses.push(item.accounts[0].address);
+      });
+    });
+
+    Promise.all(reqs).then((res) => {
+      addresses.forEach((address, index) => {
+        let balance = res[index];
+        if (this.currentChainType === 'NeoX') {
+          balance = new BigNumber(res[index]).shiftedBy(-18).toFixed();
+        }
+        this.addressBalances[address] = balance;
+      });
+    });
   }
 }

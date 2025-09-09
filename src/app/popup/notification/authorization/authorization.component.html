@@ -1,24 +1,9 @@
 <section class="content">
   <div class="header">
-    <p class="title">{{ "ConnectionRequest" | translate | async }}</p>
-    <div class="avatar">
-      <div class="item">
-        <span class="dapp-avatar">
-          <img [src]="iconSrc" [appErrorSrc]="'unknown'" alt="" />
-        </span>
-        <p class="name">{{ title }}</p>
-        <p class="hostname">{{ hostname }}</p>
-      </div>
-      <img
-        class="middle"
-        src="/assets/images/third-party/auth-connect.svg"
-        alt=""
-      />
-      <div class="item">
-        <img class="address" [avatar]="address" alt="" />
-        <p class="name">{{ wallet?.name }}</p>
-      </div>
-    </div>
+    <p class="title">{{ "thAuthTitle" | translate | async }}</p>
+    <img [src]="iconSrc" [appErrorSrc]="'unknown'" alt="" />
+    <p class="hostname">{{ hostname }}</p>
+    <p class="authTip">{{ "thAuthTip" | translate | async }}</p>
   </div>
 
   <div class="separation">
@@ -32,41 +17,41 @@
   </div>
 
   <div class="connect-body">
-    <p class="detail-en">{{ title }} {{ "thAuthTip" | translate | async }}</p>
-    <p class="detail-cn">
-      {{
-        (chainType === "Neo2"
-          ? "thAuthNeo2Detail"
-          : chainType === "Neo3"
-          ? "thAuthNeo3Detail"
-          : "thAuthNeoXDetail"
-        )
-          | translate
-          | async
-      }}
+    <p class="list-title">
+      <span>{{ "thAuthAccounts" | translate | async }}</span>
+      <span (click)="edit()" class="edit">
+        {{ "edit" | translate | async }}
+      </span>
     </p>
-    <div class="choose-auth-rule">
-      <span
-        class="select-radio"
-        [ngClass]="{ selected: ruleCheck }"
-        (click)="ruleCheck = !ruleCheck"
-      ></span>
-      <div class="rule-select">
-        <span class="rule-value">
-          {{ "connectChooseAllow" | translate | async }}
-        </span>
-      </div>
-    </div>
+    <ul class="account-list">
+      <li *ngFor="let item of selectAccounts">
+        <img class="avatar" [avatar]="item.accounts[0].address" />
+        <div class="name">
+          <p class="label">{{ item.name }}</p>
+          <p class="address">
+            {{ item.accounts[0].address | longStr : 6 }}
+          </p>
+        </div>
+        <p class="balance">
+          <span class="balance-value">
+            {{ addressBalances[item.accounts[0].address] | number : "1.0-8" }}
+          </span>
+          {{ currentChainType === "NeoX" ? currentNetwork.symbol : "NEO" }}
+        </p>
+      </li>
+    </ul>
+
     <div class="submit-group">
       <button class="cancel" (click)="refuse()">
         {{ "refuse" | translate | async }}
       </button>
-      <button class="confirm" (click)="connect()">
+      <button
+        [ngClass]="{ disabled: selectAccounts.length <= 0 }"
+        class="confirm"
+        (click)="connect()"
+      >
         {{ "connect" | translate | async }}
       </button>
-    </div>
-    <div class="secure">
-      <img theme src="/assets/images/third-party/auth-secure.svg" alt="" />
     </div>
   </div>
 </section>

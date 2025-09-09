@@ -1,0 +1,72 @@
+<div class="content">
+  <div class="pop-ups-title">
+    {{ "selectAccounts" | translate | async }} ({{ data.selectChainType }})
+    <img
+      class="close"
+      [mat-dialog-close]="false"
+      theme
+      src="assets/images/common/close.svg"
+      alt=""
+    />
+  </div>
+  <div class="wallet-list">
+    <p class="select-all" (click)="selectAll()">
+      <span class="select" [ngClass]="{ active: data.isSelectAll }"></span>
+      {{ "selectAll" | translate | async }}
+    </p>
+    <div class="list-item" *ngFor="let group of data.displayList">
+      <div class="list-title">
+        <span>{{ group.title }}</span>
+        <span class="dropdown" (click)="group.expand = !group.expand">
+          <img
+            theme
+            [ngClass]="{ expand: group.expand }"
+            src="/assets/images/common/arrow.svg"
+            alt=""
+          />
+        </span>
+      </div>
+      <ul [hidden]="!group.expand">
+        <li
+          *ngFor="let item of group.walletArr; index as index"
+          (click)="selectThisAccount(item)"
+          [ngClass]="{ active: selectAddresses[item.accounts[0].address] }"
+        >
+          <span class="select"></span>
+          <div
+            class="avatar-box"
+            [ngClass]="{ ledger: item.accounts[0]?.extra?.ledgerSLIP44 }"
+          >
+            <img class="avatar" [avatar]="item.accounts[0].address" />
+            <img
+              *ngIf="item.accounts[0]?.extra?.ledgerSLIP44"
+              class="usb"
+              src="/assets/images/ledger/ledger-avatar.png"
+              alt=""
+            />
+          </div>
+          <div class="middle-name">
+            <p class="name">{{ item.name }}</p>
+            <p class="address">{{ item.accounts[0].address | longStr : 6 }}</p>
+          </div>
+          <p class="balance">
+            <span class="balance-value">
+              {{
+                data.addressBalances[item.accounts[0].address]
+                  | number : "1.0-8"
+              }}
+            </span>
+            {{
+              data.selectChainType === "NeoX"
+                ? data.currentNetwork.symbol
+                : "NEO"
+            }}
+          </p>
+        </li>
+      </ul>
+    </div>
+  </div>
+  <button class="confirm pop-ups add-wallet" (click)="confirm()">
+    {{ "Confirm" | translate | async }}
+  </button>
+</div>

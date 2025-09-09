@@ -249,16 +249,16 @@
     "message": "接続リクエスト"
   },
   "thAuthTip": {
-    "message": "ウォレットに接続したい"
+    "message": "ウェブサイトはあなたのウォレットに接続しようとしています"
   },
-  "thAuthNeo2Detail": {
-    "message": "このサイトはNeo Legacy APIへのアクセスを要求しており、Neo Legacyブロックチェーンとやり取りできます。承認前に、正しいサイトにリンクしているか確認してください。"
+  "thAuthAccounts": {
+    "message": "アカウント"
   },
-  "thAuthNeo3Detail": {
-    "message": "このサイトはNeo N3 APIへのアクセスを要求しており、Neo N3ブロックチェーンとやり取りできます。承認前に、正しいサイトにリンクしているか確認してください。"
+  "selectAccounts": {
+    "message": "アカウントを選択"
   },
-  "thAuthNeoXDetail": {
-    "message": "このサイトはNeo X (EVM Network) APIへのアクセスを要求しており、Neo X (EVM Network)ブロックチェーンとやり取りできます。承認前に、正しいサイトにリンクしているか確認してください。"
+  "selectAll": {
+    "message": "すべて選択"
   },
   "thSignTitle": {
     "message": "このアプリは署名を要求しています。"
@@ -1489,9 +1489,6 @@
   },
   "contactSupport": {
     "message": "NeoLineサポート"
-  },
-  "ConnectionRequest": {
-    "message": "接続リクエスト"
   },
   "approval": {
     "message": "承認"

@@ -16,6 +16,7 @@ import {
   DEFAULT_NEO3_ASSETS,
   NNS_CONTRACT,
   RpcNetwork,
+  WalletListItem,
 } from '@/app/popup/_lib';
 import { map } from 'rxjs/operators';
 import BigNumber from 'bignumber.js';
@@ -517,5 +518,52 @@ export class UtilServiceState {
     return (currentWallet.accounts[0] as any).decrypt(pwd).then((res) => {
       return res.WIF;
     });
+  }
+
+  handleWallet(
+    walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>,
+    chain: ChainType
+  ): WalletListItem[] {
+    const privateWalletArr = walletArr.filter(
+      (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+    );
+    const ledgerWalletArr = walletArr.filter(
+      (item) =>
+        item.accounts[0]?.extra?.ledgerSLIP44 &&
+        item.accounts[0]?.extra?.device !== 'OneKey' &&
+        item.accounts[0]?.extra?.device !== 'QRCode'
+    );
+    const oneKeyWalletArr = walletArr.filter(
+      (item) => item.accounts[0]?.extra?.device === 'OneKey'
+    );
+    const qrBasedWalletArr = walletArr.filter(
+      (item) => item.accounts[0]?.extra?.device === 'QRCode'
+    );
+    const res: WalletListItem[] = [
+      {
+        title: 'Private key',
+        walletArr: privateWalletArr,
+        expand: true,
+        chain,
+      },
+      { title: 'Ledger', walletArr: ledgerWalletArr, expand: true, chain },
+    ];
+    if (chain !== 'Neo2') {
+      res.push({
+        title: 'OneKey',
+        walletArr: oneKeyWalletArr,
+        expand: true,
+        chain,
+      });
+    }
+    if (chain === 'NeoX' && qrBasedWalletArr.length > 0) {
+      res.push({
+        title: 'QRCode',
+        walletArr: qrBasedWalletArr,
+        expand: true,
+        chain,
+      });
+    }
+    return res;
   }
 }

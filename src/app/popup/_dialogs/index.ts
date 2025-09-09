@@ -26,3 +26,4 @@ export { PopupApproveDialogComponent } from './approve/approve.dialog';
 export { PopupSortAccountDialogComponent } from './sort-account/sort-account.component';
 export { PopupEditApproveCapDialogComponent } from './edit-approve-cap/edit-approve-cap.dialog';
 export { PopupQRBasedSignDialogComponent } from './qr-based-sign/qr-based-sign.dialog';
+export { PopupSelectAccountsDialogComponent } from './select-accounts/select-accounts.component';

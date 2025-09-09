@@ -7,8 +7,7 @@ import {
 } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import { ChainType, EvmWalletJSON, SORT_WALLETS, Wallet3 } from '@popup/_lib';
-import { WalletListItem } from '../../account-list/account-list.component';
+import { ChainType, EvmWalletJSON, SORT_WALLETS, Wallet3, WalletListItem } from '@popup/_lib';
 import Sortable from 'sortablejs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';

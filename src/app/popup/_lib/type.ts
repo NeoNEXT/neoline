@@ -1,4 +1,6 @@
 import { ChainType, NetworkType } from './chain';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { EvmWalletJSON, Wallet3 } from '@popup/_lib';
 
 export interface GasFeeSpeed {
   slow_price: string;
@@ -180,4 +182,18 @@ export interface ConnectedWebsitesType {
 export interface QRCodeWallet {
   pubKey: string;
   xfp: string;
+}
+
+export interface WalletListItem {
+  chain: ChainType;
+  title:
+    | 'Neo N3'
+    | 'Neo X (EVM Network)'
+    | 'Neo Legacy'
+    | 'Private key'
+    | 'Ledger'
+    | 'OneKey'
+    | 'QRCode';
+  expand: boolean;
+  walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
 }
