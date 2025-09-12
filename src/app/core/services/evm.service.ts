@@ -13,6 +13,7 @@ import {
 } from '@keystonehq/bc-ur-registry-eth';
 import { v4 as uuid } from 'uuid';
 import { QRCodeWallet, RpcNetwork } from '@/app/popup/_lib';
+import { ETH_EOA_SIGN_METHODS } from '@/models/evm';
 
 @Injectable()
 export class EvmService {
@@ -33,29 +34,48 @@ export class EvmService {
     decoder.receivePart(ur);
     const decodeSig = ETHSignature.fromCBOR(decoder.resultUR().cbor);
     const signData = decodeSig.getSignature().toString('hex');
-    const sig = ethers.Signature.from('0x' + signData);
 
-    return {
-      r: sig.r,
-      s: sig.s,
-      v: '0x' + sig.v.toString(16),
-    };
+    return '0x' + signData;
   }
 
   generateSignRequest({
+    signMethod,
     tx,
+    personalMessage,
+    typedData,
     wallet,
   }: {
-    tx: ethers.TransactionLike;
+    signMethod:
+      | ETH_EOA_SIGN_METHODS.PersonalSign
+      | ETH_EOA_SIGN_METHODS.SignTypedDataV4
+      | undefined;
+    tx?: ethers.TransactionLike;
+    personalMessage?: string;
+    typedData;
     wallet: EvmWalletJSON;
-  }): string {
-    tx.chainId = this.neoXNetwork.chainId;
-    const unsignedTx = ethers.Transaction.from(tx).unsignedSerialized;
-    const signData = Buffer.from(unsignedTx.slice(2), 'hex');
+  }): string[] {
+    let signData: Buffer;
+    let dataType: DataType;
+    switch (signMethod) {
+      case ETH_EOA_SIGN_METHODS.PersonalSign:
+        signData = Buffer.from(personalMessage);
+        dataType = DataType.personalMessage;
+        break;
+      case ETH_EOA_SIGN_METHODS.SignTypedDataV4:
+        signData = Buffer.from(JSON.stringify(typedData), 'utf8');
+        dataType = DataType.typedData;
+        break;
+      default:
+        tx.chainId = this.neoXNetwork.chainId;
+        const unsignedTx = ethers.Transaction.from(tx).unsignedSerialized;
+        signData = Buffer.from(unsignedTx.slice(2), 'hex');
+        dataType = DataType.typedTransaction;
+        break;
+    }
 
     const signRequest = EthSignRequest.constructETHRequest(
       signData,
-      DataType.typedTransaction,
+      dataType,
       `M/44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
       wallet.accounts[0].extra.qrBasedXFP,
       uuid(),
@@ -63,8 +83,12 @@ export class EvmService {
       wallet.accounts[0].address,
       'NeoLine'
     );
-    const data = signRequest.toUREncoder(1000).nextPart();
-    return data.toLocaleUpperCase();
+    const encoder = signRequest.toUREncoder(300);
+    const parts: string[] = [];
+    for (let i = 0; i < encoder.fragmentsLength; i++) {
+      parts.push(encoder.nextPart().toUpperCase());
+    }
+    return parts;
   }
 
   getPublicKeyFromQRCode(ur: string): QRCodeWallet {

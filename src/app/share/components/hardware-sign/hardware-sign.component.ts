@@ -52,7 +52,9 @@ export class HardwareSignComponent implements OnInit, OnDestroy {
           backdropClass: 'custom-dialog-backdrop',
           data: {
             unsignedTx: this.unsignedTx,
+            unsignedData: this.unsignedData,
             currentWallet: this.currentWallet,
+            signMethod: this.signMethod,
           },
         })
         .afterClosed()
