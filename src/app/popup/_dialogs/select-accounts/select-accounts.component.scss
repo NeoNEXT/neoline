@@ -24,6 +24,7 @@
       gap: 8px;
       margin-bottom: 8px;
       margin-top: 16px;
+      color: var(--title-color);
     }
     .select {
       display: inline-block;
@@ -138,13 +139,14 @@
         .address {
           font-family: NeverMind-Regular;
           font-size: 12px;
-          color: var(--title-color);
+          color: var(--sub-title-color);
           margin-top: 8px;
         }
       }
       .balance {
         display: flex;
         gap: 3px;
+        color: var(--title-color);
         .balance-value {
           max-width: 100px;
           overflow: hidden;
