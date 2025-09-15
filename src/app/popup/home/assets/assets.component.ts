@@ -29,13 +29,6 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
   rateCurrency: string;
   myAssets: Asset[];
   isLoading = false;
-  displayedColumns: string[] = [
-    'symbol',
-    'portfolio',
-    'balance',
-    'price',
-    'value',
-  ];
 
   private accountSub: Unsubscribable;
   private chainType: ChainType;
@@ -143,22 +136,8 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
       });
       item.rateBalance = rateAndPrice.rate;
       item.price = rateAndPrice.price;
-      if (rateAndPrice.price === '0') {
-        item.price = undefined;
-      }
       if (item.rateBalance) {
         total = total.plus(item.rateBalance);
-      }
-    }
-    if (total.comparedTo(0) !== 0) {
-      for (let i = 0; i < this.myAssets.length; i++) {
-        const item = this.myAssets[i];
-        if (item.rateBalance && item.rateBalance !== '0') {
-          item.portfolio = new BigNumber(item.rateBalance)
-            .dividedBy(total)
-            .shiftedBy(2)
-            .toFixed(2);
-        }
       }
     }
     this.backAsset.emit(total.toFixed());

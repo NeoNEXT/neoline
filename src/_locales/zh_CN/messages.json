@@ -1598,15 +1598,6 @@
   "detectContractSecurity": {
     "message": "使用第三方服务检测合约安全性"
   },
-  "Price": {
-    "message": "价格"
-  },
-  "Portfolio": {
-    "message": "投资组合"
-  },
-  "Worth": {
-    "message": "价值"
-  },
   "contractHasRisk": {
     "message": "该合约可能存在风险，请谨慎交易。"
   }

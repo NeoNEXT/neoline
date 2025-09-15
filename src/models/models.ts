@@ -24,7 +24,6 @@ export interface Asset {
   bridgeDecimals?: number;
   bridgeTargetAssetId?: string;
   image_url?: string;
-  portfolio?: string;
 }
 
 export interface NftToken {

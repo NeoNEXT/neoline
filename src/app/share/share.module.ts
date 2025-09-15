@@ -16,7 +16,6 @@ import { MatSlideToggleModule } from '@angular/material/slide-toggle';
 import { MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { MatTableModule } from '@angular/material/table';
 const MATMODULES = [
   MatToolbarModule,
   MatInputModule,
@@ -30,7 +29,6 @@ const MATMODULES = [
   MatSnackBarModule,
   MatProgressSpinnerModule,
   MatProgressBarModule,
-  MatTableModule,
 ];
 //#endregion
 
@@ -108,7 +106,6 @@ const DIRECTIVE = [AvatarDirective, ErrSrcDirective, ImgThemeDirective];
     MatIconModule,
     MatButtonModule,
     MatProgressSpinnerModule,
-    MatTableModule,
   ],
   exports: [
     FormsModule,

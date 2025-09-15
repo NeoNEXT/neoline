@@ -1598,15 +1598,6 @@
   "detectContractSecurity": {
     "message": "Use third-party services to detect contract security"
   },
-  "Price": {
-    "message": "Price"
-  },
-  "Portfolio": {
-    "message": "Portfolio"
-  },
-  "Worth": {
-    "message": "Value"
-  },
   "contractHasRisk": {
     "message": "This contract may be risky. Trade with caution."
   }
