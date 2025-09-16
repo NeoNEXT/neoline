@@ -1600,5 +1600,11 @@
   },
   "contractHasRisk": {
     "message": "This contract may be risky. Trade with caution."
+  },
+  "cameraPermissionDenied": {
+    "message": "Camera permission denied. Please allow camera access in your browser settings."
+  },
+  "cameraError": {
+    "message": "Camera error. Please check if the camera is working."
   }
 }

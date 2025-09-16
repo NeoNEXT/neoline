@@ -19,33 +19,42 @@ export class ScanQRCodeComponent implements OnInit, OnDestroy {
   scanner: Html5Qrcode;
   isValidQRCode = true;
   loadingScanner = true;
+  cameraError = false;
+  cameraPermission = true;
 
   constructor(private evmService: EvmService) {}
   ngOnInit(): void {
-    Html5Qrcode.getCameras().then((devices) => {
-      if (devices && devices.length) {
-        var cameraId = devices[0].id;
-        this.scanner = new Html5Qrcode('reader');
-        this.loadingScanner = false;
-        this.scanner.start(
-          cameraId,
-          {
-            fps: 10,
-            qrbox: { width: 300, height: 250 },
-          },
-          (decodedText) => {
-            try {
-              const qrCodeData =
-                this.evmService.getPublicKeyFromQRCode(decodedText);
-              this.emitQrCode.emit(qrCodeData);
-            } catch {
-              this.isValidQRCode = false;
-            }
-          },
-          () => {}
-        );
-      }
-    });
+    Html5Qrcode.getCameras()
+      .then((devices) => {
+        if (devices && devices.length) {
+          var cameraId = devices[0].id;
+          this.scanner = new Html5Qrcode('reader');
+          this.loadingScanner = false;
+          this.scanner.start(
+            cameraId,
+            {
+              fps: 10,
+              qrbox: { width: 300, height: 250 },
+            },
+            (decodedText) => {
+              try {
+                const qrCodeData =
+                  this.evmService.getPublicKeyFromQRCode(decodedText);
+                this.emitQrCode.emit(qrCodeData);
+              } catch {
+                this.isValidQRCode = false;
+              }
+            },
+            () => {}
+          );
+        }
+      })
+      .catch((error) => {
+        this.cameraError = true;
+        if (error.code === 0) { // NotAllowedError
+          this.cameraPermission = false;
+        }
+      });
   }
 
   ngOnDestroy(): void {

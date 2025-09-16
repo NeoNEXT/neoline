@@ -1600,5 +1600,11 @@
   },
   "contractHasRisk": {
     "message": "该合约可能存在风险，请谨慎交易。"
+  },
+  "cameraPermissionDenied": {
+    "message": "摄像头权限被拒绝。请在浏览器设置中允许摄像头访问。"
+  },
+  "cameraError": {
+    "message": "摄像头错误。请检查摄像头是否正常。"
   }
 }
