@@ -1541,7 +1541,7 @@
   "Method": {
     "message": "方法"
   },
-  "Amount": {
+  "AmountUpper": {
     "message": "数额"
   },
   "notConnectWebsiteDesc": {

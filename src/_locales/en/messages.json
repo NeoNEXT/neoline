@@ -1541,7 +1541,7 @@
   "Method": {
     "message": "Method"
   },
-  "Amount": {
+  "AmountUpper": {
     "message": "Amount"
   },
   "notConnectWebsiteDesc": {

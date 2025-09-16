@@ -1541,7 +1541,7 @@
   "Method": {
     "message": "メソッド"
   },
-  "Amount": {
+  "AmountUpper": {
     "message": "金額"
   },
   "notConnectWebsiteDesc": {
