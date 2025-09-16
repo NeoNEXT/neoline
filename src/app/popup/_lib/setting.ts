@@ -60,6 +60,20 @@ interface LocalNoticeItem {
 
 export const LOCAL_NOTICE: LocalNoticeItem[] = [
   {
+    id: 2,
+    title: {
+      en: 'Support QR-based hardware wallets',
+      zh_CN: '支持二维码硬件钱包',
+      ja: 'QRベースのハードウェアウォレットをサポート',
+    },
+    content: {
+      en: `NeoLine now supports QR-based hardware wallets. You can import accounts and sign transactions by scanning QR codes, ensuring that your secret always remain securely stored on your offline device.`,
+      zh_CN: `NeoLine 现在支持二维码硬件钱包。您可以通过扫描二维码导入账户和签署交易，确保您的密钥始终安全地存储在离线设备上。`,
+      ja: 'NeoLine は QR ベースのハードウェアウォレットに対応しました。QR コードをスキャンしてアカウントをインポートし、トランザクションに署名できるため、秘密鍵は常にオフラインデバイス上で安全に保管されます。',
+    },
+    time: 1757952000000,
+  },
+  {
     id: 1,
     title: {
       en: 'OneKey hardware wallet support',
