@@ -23,6 +23,12 @@ import {
   getAssetDecimal,
   getSessionStorage,
   handleNeo3StackNumberValue,
+  removeLocalStorage,
+  clearLocalStorage,
+  removeStorage,
+  clearStorage,
+  setSessionStorage,
+  clearSessionStorage,
 } from '../common';
 import {
   WitnessScope,
@@ -1733,6 +1739,72 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   }
   return true;
 });
+
+//#region storage message from popup
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+  switch (request.type) {
+    case 'localStorage':
+      switch (request.method) {
+        case 'get':
+          getLocalStorage(request.data, (result) => {
+            sendResponse(result);
+          });
+          return true;
+        case 'set':
+          setLocalStorage(request.data);
+          sendResponse('');
+          return true;
+        case 'remove':
+          removeLocalStorage(request.data);
+          sendResponse('');
+          return true;
+        case 'clear':
+          clearLocalStorage();
+          sendResponse('');
+          return true;
+      }
+      break;
+    case 'syncStorage':
+      switch (request.method) {
+        case 'get':
+          getStorage(request.data, (result) => {
+            sendResponse(result);
+          });
+          return true;
+        case 'set':
+          setStorage(request.data);
+          sendResponse('');
+          return true;
+        case 'remove':
+          removeStorage(request.data);
+          sendResponse('');
+          return true;
+        case 'clear':
+          clearStorage();
+          sendResponse('');
+          return true;
+      }
+      break;
+    case 'sessionStorage':
+      switch (request.method) {
+        case 'get':
+          getSessionStorage(request.data, (result) => {
+            sendResponse(result);
+          });
+          return true;
+        case 'set':
+          setSessionStorage(request.data);
+          sendResponse('');
+          return true;
+        case 'clear':
+          clearSessionStorage();
+          sendResponse('');
+          return true;
+      }
+      break;
+  }
+});
+//#endregion
 
 chrome.notifications.onClicked.addListener((id: string) => {
   chrome.windows.create({

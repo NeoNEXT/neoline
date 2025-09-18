@@ -65,63 +65,131 @@ export class ExtensionService {
   }
 
   getStorage(key, callback) {
-    chrome.storage.sync.get([key], (result) => {
-      callback(result[key]);
-    });
+    chrome.runtime.sendMessage(
+      {
+        type: 'syncStorage',
+        method: 'get',
+        data: key,
+      },
+      (result) => {
+        callback(result);
+      }
+    );
   }
 
   setStorage(value) {
-    chrome.storage.sync.set(value, () => {
-      // console.log('Set storage', value);
-    });
+    chrome.runtime.sendMessage(
+      {
+        type: 'syncStorage',
+        method: 'set',
+        data: value,
+      },
+      () => {}
+    );
   }
   removeStorage(key) {
-    chrome.storage.sync.remove(key);
+    chrome.runtime.sendMessage(
+      {
+        type: 'syncStorage',
+        method: 'remove',
+        data: key,
+      },
+      () => {}
+    );
   }
 
   clearStorage() {
-    chrome.storage.sync.clear();
+    chrome.runtime.sendMessage(
+      {
+        type: 'syncStorage',
+        method: 'clear',
+      },
+      () => {}
+    );
   }
 
   getLocalStorage(key, callback): Promise<any> {
     return new Promise((resolve) => {
-      chrome.storage.local.get([key], (result) => {
-        callback(result[key]);
-        resolve(result[key]);
-      });
+      chrome.runtime.sendMessage(
+        {
+          type: 'localStorage',
+          method: 'get',
+          data: key,
+        },
+        (result) => {
+          callback(result);
+          resolve(result);
+        }
+      );
     });
   }
 
   setLocalStorage(value) {
-    chrome.storage.local.set(value, () => {
-      // console.log('Set local storage', value);
-    });
+    chrome.runtime.sendMessage(
+      {
+        type: 'localStorage',
+        method: 'set',
+        data: value,
+      },
+      () => {}
+    );
   }
   removeLocalStorage(key) {
-    chrome.storage.local.remove(key);
+    chrome.runtime.sendMessage(
+      {
+        type: 'localStorage',
+        method: 'remove',
+        data: key,
+      },
+      () => {}
+    );
   }
 
   clearLocalStorage() {
-    chrome.storage.local.clear();
+    chrome.runtime.sendMessage(
+      {
+        type: 'localStorage',
+        method: 'clear',
+      },
+      () => {}
+    );
   }
 
   getSessionStorage(key, callback): Promise<any> {
     return new Promise((resolve) => {
-      chrome.storage.session.get([key], (result) => {
-        callback(result[key]);
-        resolve(result[key]);
-      });
+      chrome.runtime.sendMessage(
+        {
+          type: 'sessionStorage',
+          method: 'get',
+          data: key,
+        },
+        (result) => {
+          callback(result);
+          resolve(result);
+        }
+      );
     });
   }
 
   setSessionStorage(value) {
-    chrome.storage.session.set(value, () => {
-      // console.log('Set session storage', value);
-    });
+    chrome.runtime.sendMessage(
+      {
+        type: 'sessionStorage',
+        method: 'set',
+        data: value,
+      },
+      () => {}
+    );
   }
 
   clearSessionStorage() {
-    chrome.storage.session.clear();
+    chrome.runtime.sendMessage(
+      {
+        type: 'sessionStorage',
+        method: 'clear',
+      },
+      () => {}
+    );
   }
 
   getCurrentWindow(): Promise<{

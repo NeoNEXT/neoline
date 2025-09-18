@@ -53,3 +53,13 @@ import 'zone.js';  // Included with Angular CLI.
 /***************************************************************************************************
  * APPLICATION IMPORTS
  */
+
+(function () {
+  if ((window as any).chrome && (window as any).chrome.storage) {
+    Object.defineProperty((window as any).chrome, "storage", {
+      get() {
+        throw new Error("chrome storage api is not allowed");
+      },
+    });
+  }
+})();

@@ -93,6 +93,10 @@ export function setSessionStorage(value) {
   });
 }
 
+export function clearSessionStorage() {
+  chrome.storage.session.clear();
+}
+
 export function notification(id: string, title = '', msg = '') {
   chrome.notifications.create(id, {
     type: 'basic',
