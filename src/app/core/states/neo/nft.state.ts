@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
-import { HttpService } from '../services/http.service';
+import { HttpService } from '../../services/http.service';
 import { NftAsset, NftTransaction } from '@/models/models';
-import { UtilServiceState } from '../util/util.service';
+import { UtilServiceState } from '../util.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { RpcNetwork } from '@/app/popup/_lib';

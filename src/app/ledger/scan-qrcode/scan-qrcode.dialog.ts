@@ -6,7 +6,7 @@ import {
   Output,
 } from '@angular/core';
 import { Html5Qrcode } from 'html5-qrcode';
-import { EvmService } from '@/app/core';
+import { QRBasedService } from '@/app/core';
 
 @Component({
   selector: 'app-scan-qrcode',
@@ -22,7 +22,7 @@ export class ScanQRCodeComponent implements OnInit, OnDestroy {
   cameraError = false;
   cameraPermission = true;
 
-  constructor(private evmService: EvmService) {}
+  constructor(private qrBasedService: QRBasedService) {}
   ngOnInit(): void {
     Html5Qrcode.getCameras()
       .then((devices) => {
@@ -39,7 +39,7 @@ export class ScanQRCodeComponent implements OnInit, OnDestroy {
             (decodedText) => {
               try {
                 const qrCodeData =
-                  this.evmService.getPublicKeyFromQRCode(decodedText);
+                  this.qrBasedService.getPublicKeyFromQRCode(decodedText);
                 this.emitQrCode.emit(qrCodeData);
               } catch {
                 this.isValidQRCode = false;
@@ -51,7 +51,8 @@ export class ScanQRCodeComponent implements OnInit, OnDestroy {
       })
       .catch((error) => {
         this.cameraError = true;
-        if (error.code === 0) { // NotAllowedError
+        if (error.code === 0) {
+          // NotAllowedError
           this.cameraPermission = false;
         }
       });

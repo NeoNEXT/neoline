@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpService } from '../services/http.service';
-import { GlobalService } from '../services/global.service';
-import { ChromeService } from '../services/chrome.service';
-import { AssetEVMState } from './asset-evm.state';
+import { HttpService } from '../../services/http.service';
+import { GlobalService } from '../../services/global.service';
+import { ChromeService } from '../../services/chrome.service';
+import { AssetEVMState } from '../evm/asset.state';
 import { Observable, from, of, forkJoin, firstValueFrom } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Asset, NEO, GAS, UTXO } from 'src/models/models';
@@ -19,12 +19,12 @@ import {
   NetworkType,
 } from '@popup/_lib';
 import BigNumber from 'bignumber.js';
-import { UtilServiceState } from '../util/util.service';
+import { UtilServiceState } from '../util.service';
 import { wallet as wallet3, u } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { ethers } from 'ethers';
-import { SettingState } from './setting.state';
+import { SettingState } from '../setting.state';
 
 interface CoinRatesItem {
   rates: { [assetId: string]: string };

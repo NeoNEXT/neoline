@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpService } from './http.service';
+import { HttpService } from '../services/http.service';
 import { map } from 'rxjs/operators';
 import { Observable } from 'rxjs';
 import { AppState } from '@/app/reduers';
@@ -7,7 +7,7 @@ import { Store } from '@ngrx/store';
 import { ChainType } from '@/app/popup/_lib';
 
 @Injectable()
-export class HomeService {
+export class HomeState {
   loading = false;
   showClaim = false;
   claimNumber = 0;

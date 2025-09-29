@@ -17,7 +17,7 @@ import {
   UPDATE_WALLET,
 } from '../../_lib';
 import {
-  HomeService,
+  HomeState,
   ChromeService,
   NeonService,
   GlobalService,
@@ -74,7 +74,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
       editNetwork?: RpcNetwork;
       addExplorer?: boolean;
     },
-    private homeSer: HomeService,
+    private homeState: HomeState,
     private chrome: ChromeService,
     private fb: UntypedFormBuilder,
     private dialog: MatDialog,
@@ -165,7 +165,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
         return;
       }
       this.getMagicReq?.unsubscribe();
-      this.getMagicReq = this.homeSer
+      this.getMagicReq = this.homeState
         .getRpcUrlMessage(
           this.addNetworkForm.value.rpcUrl,
           this.data.addChainType

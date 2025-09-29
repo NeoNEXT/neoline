@@ -4,14 +4,14 @@ import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import type BN from 'bn.js';
-import { DappEVMState } from './dapp-evm.state';
+import { DappEVMState } from './dapp.state';
 import { NftAsset, NftToken } from '@/models/models';
-import { AssetEVMState } from './asset-evm.state';
+import { AssetEVMState } from './asset.state';
 
 @Injectable()
 export class EvmNFTState {
   private neoXNetwork: RpcNetwork;
-  provider: ethers.JsonRpcProvider;
+  private provider: ethers.JsonRpcProvider;
 
   constructor(
     private store: Store<AppState>,

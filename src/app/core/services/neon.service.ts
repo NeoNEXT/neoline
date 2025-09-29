@@ -7,7 +7,7 @@ import Neon2, {
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Account3, Wallet3 } from '@popup/_lib';
-import { Observable, from, Observer, of, forkJoin } from 'rxjs';
+import { Observable, from, of, forkJoin } from 'rxjs';
 import { map, catchError, timeout } from 'rxjs/operators';
 import { ChromeService } from './chrome.service';
 import { GlobalService } from './global.service';
@@ -43,6 +43,7 @@ import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import { DEFAULT_NEOX_RPC_NETWORK, EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { EvmService } from './evm.service';
+import { parseWallet } from '../utils/wallet';
 
 @Injectable()
 export class NeonService {
@@ -80,7 +81,7 @@ export class NeonService {
   public walletIsOpen(): Observable<Wallet2 | Wallet3 | EvmWalletJSON> {
     return this.chrome.getStorage(STORAGE_NAME.wallet).pipe(
       map((res) => {
-        const w = this.parseWallet(res);
+        const w = parseWallet(res);
         return w;
       })
     );
@@ -144,7 +145,7 @@ export class NeonService {
         neoXNetworkIndexRes,
       ]) => {
         // wallet
-        walletRes = this.parseWallet(walletRes);
+        walletRes = parseWallet(walletRes);
         if (!walletRes) {
           return;
         }
@@ -152,7 +153,7 @@ export class NeonService {
         if (neo2WalletArrRes && neo2WalletArrRes.length > 0) {
           const tempArr = [];
           neo2WalletArrRes.forEach((item) => {
-            tempArr.push(this.parseWallet(item));
+            tempArr.push(parseWallet(item));
           });
           neo2WalletArrRes = tempArr;
         }
@@ -160,7 +161,7 @@ export class NeonService {
         if (neo3WalletArrRes && neo3WalletArrRes.length > 0) {
           const tempArr = [];
           neo3WalletArrRes.forEach((item) => {
-            tempArr.push(this.parseWallet(item));
+            tempArr.push(parseWallet(item));
           });
           neo3WalletArrRes = tempArr;
         }
@@ -412,27 +413,6 @@ export class NeonService {
       } else {
         return true;
       }
-    }
-  }
-  public parseWallet(src: any): Wallet2 | Wallet3 | EvmWalletJSON {
-    try {
-      let isNeo3 = false;
-      if (!src.accounts[0].address) {
-        return null;
-      }
-      if (ethers.isAddress(src.accounts[0].address)) {
-        return src;
-      }
-      if (wallet3.isAddress(src.accounts[0].address, 53)) {
-        isNeo3 = true;
-      }
-      const w = isNeo3 ? new Wallet3(src) : new Wallet2(src);
-      if (!w.accounts.length) {
-        return null;
-      }
-      return w;
-    } catch (e) {
-      return null;
     }
   }
   //#endregion

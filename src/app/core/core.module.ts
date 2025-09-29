@@ -11,21 +11,22 @@ import {
   OpenedWalletGuard,
   PopupLoginGuard,
 } from './guards/wallet.guard';
-import { AssetState } from './states/asset.state';
-import { TransactionState } from './states/transaction.state';
+import { AssetState } from './states/neo/asset.state';
+import { TransactionState } from './states/neo/transaction.state';
 import { MatDialogModule } from '@angular/material/dialog';
 import { SettingState } from './states/setting.state';
-import { NftState } from './states/nft.state';
-import { UtilServiceState } from './util/util.service';
-import { HomeService } from './services/home.service';
-import { LedgerService } from './services/ledger.service';
-import { OneKeyService } from './services/onekey.service';
-import { ExtensionService } from './util/extension.service';
+import { NftState } from './states/neo/nft.state';
+import { UtilServiceState } from './states/util.service';
+import { HomeState } from './states/home.state';
+import { LedgerService } from './services/hardware/ledger.service';
+import { OneKeyService } from './services/hardware/onekey.service';
+import { ExtensionService } from './services/extension.service';
+import { QRBasedService } from './services/hardware/qrbased.service';
 import { EvmService } from './services/evm.service';
-import { AssetEVMState } from './states/asset-evm.state';
-import { DappEVMState } from './states/dapp-evm.state';
+import { AssetEVMState } from './states/evm/asset.state';
+import { DappEVMState } from './states/evm/dapp.state';
 import { BridgeState } from './states/bridge.state';
-import { EvmNFTState } from './states/evm-nft.state';
+import { EvmNFTState } from './states/evm/nft.state';
 
 @NgModule({
   declarations: [],
@@ -45,7 +46,7 @@ import { EvmNFTState } from './states/evm-nft.state';
     SettingState,
     NftState,
     UtilServiceState,
-    HomeService,
+    HomeState,
     LedgerService,
     OneKeyService,
     ExtensionService,
@@ -54,6 +55,7 @@ import { EvmNFTState } from './states/evm-nft.state';
     DappEVMState,
     BridgeState,
     EvmNFTState,
+    QRBasedService,
   ],
 })
 export class CoreModule {}

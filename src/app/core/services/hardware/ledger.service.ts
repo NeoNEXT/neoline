@@ -17,8 +17,6 @@ import { tx as tx2 } from '@cityofzion/neon-core/lib';
 import { tx as tx3 } from '@cityofzion/neon-core-neo3/lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
-import { HttpService } from './http.service';
-import { GlobalService } from './global.service';
 import { NEO, GAS, Asset } from '@/models/models';
 import { map } from 'rxjs/operators';
 import BigNumber from 'bignumber.js';
@@ -28,7 +26,9 @@ import Eth, { ledgerService } from '@ledgerhq/hw-app-eth';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
 import { TypedMessage, MessageTypes } from '@metamask/eth-sig-util';
-import { OneKeyService } from './onekey.service';
+import { HttpService } from '../http.service';
+import { GlobalService } from '../global.service';
+import { transformTypedDataPlugin } from '../../utils/hardware';
 
 export const LedgerStatuses = {
   UNSUPPORTED: 'UNSUPPORTED',
@@ -53,7 +53,6 @@ export class LedgerService {
   constructor(
     private http: HttpService,
     private global: GlobalService,
-    private oneKeyService: OneKeyService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -250,8 +249,7 @@ export class LedgerService {
       );
       return this.handleSignResult(result);
     } catch {
-      const { domainHash, messageHash } =
-        this.oneKeyService.transformTypedDataPlugin(typedData);
+      const { domainHash, messageHash } = transformTypedDataPlugin(typedData);
       const result = await this.ethTransport.signEIP712HashedMessage(
         `44'/60'/0'/0/${wallet.accounts[0].extra.ledgerAddressIndex}`,
         domainHash,

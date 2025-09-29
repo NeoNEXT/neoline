@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpService } from '../services/http.service';
+import { HttpService } from '../../services/http.service';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ChainType, RpcNetwork } from '@popup/_lib';
 import { Transaction, NEO, GAS } from '@/models/models';
 import BigNumber from 'bignumber.js';
-import { UtilServiceState } from '../util/util.service';
+import { UtilServiceState } from '../util.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 

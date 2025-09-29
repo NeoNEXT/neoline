@@ -3,7 +3,7 @@ import {
   AssetState,
   NeonService,
   GlobalService,
-  HomeService,
+  HomeState,
   UtilServiceState,
 } from '@/app/core';
 import { NEO, GAS } from '@/models/models';
@@ -67,7 +67,7 @@ export class PopupClaimGasComponent implements OnDestroy {
     private global: GlobalService,
     private transfer: TransferService,
     private neo3TransferService: Neo3TransferService,
-    private homeService: HomeService,
+    private homeState: HomeState,
     private util: UtilServiceState,
     private store: Store<AppState>
   ) {
@@ -92,10 +92,10 @@ export class PopupClaimGasComponent implements OnDestroy {
       clearInterval(this.intervalN3Claim);
     }
     if (this.chainType === 'Neo3') {
-      this.homeService.claimTxTime = new Date().getTime();
-      this.homeService.claimNumber = this.claimNumber;
-      this.homeService.showClaim = this.showClaim;
-      this.homeService.loading = this.loading;
+      this.homeState.claimTxTime = new Date().getTime();
+      this.homeState.claimNumber = this.claimNumber;
+      this.homeState.showClaim = this.showClaim;
+      this.homeState.loading = this.loading;
     }
   }
 
@@ -111,12 +111,12 @@ export class PopupClaimGasComponent implements OnDestroy {
     this.claimAssetId = this.chainType === 'Neo2' ? GAS : GAS3_CONTRACT;
     if (
       this.chainType === 'Neo3' &&
-      this.homeService.loading &&
-      new Date().getTime() - this.homeService.claimTxTime < 20000
+      this.homeState.loading &&
+      new Date().getTime() - this.homeState.claimTxTime < 20000
     ) {
-      this.loading = this.homeService.loading;
-      this.showClaim = this.homeService.showClaim;
-      this.claimNumber = this.homeService.claimNumber;
+      this.loading = this.homeState.loading;
+      this.showClaim = this.homeState.showClaim;
+      this.claimNumber = this.homeState.claimNumber;
       this.getN3ClaimTxStatus();
     }
     this.initClaim();
@@ -182,8 +182,8 @@ export class PopupClaimGasComponent implements OnDestroy {
     const queryTxInterval = interval(5000)
       .pipe(take(5))
       .subscribe(() => {
-        this.homeService
-          .getN3RawTransaction(this.homeService.claimGasHash)
+        this.homeState
+          .getN3RawTransaction(this.homeState.claimGasHash)
           .then((res) => {
             if (res.blocktime) {
               queryTxInterval.unsubscribe();
@@ -237,7 +237,7 @@ export class PopupClaimGasComponent implements OnDestroy {
     } else if (this.chainType === 'Neo3') {
       if (
         this.loading &&
-        new Date().getTime() - this.homeService.claimTxTime < 20000
+        new Date().getTime() - this.homeState.claimTxTime < 20000
       ) {
         return;
       }
@@ -291,7 +291,7 @@ export class PopupClaimGasComponent implements OnDestroy {
         break;
       case 'claimNeo3':
         this.neo3TransferService.sendNeo3Tx(tx as Transaction3).then((hash) => {
-          this.homeService.claimGasHash = hash;
+          this.homeState.claimGasHash = hash;
           this.getN3ClaimTxStatus();
         });
         break;

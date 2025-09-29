@@ -16,7 +16,7 @@ import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import { map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
-import { UtilServiceState } from '../util/util.service';
+import { UtilServiceState } from './util.service';
 import BigNumber from 'bignumber.js';
 import { sc, wallet } from '@cityofzion/neon-core-neo3/lib';
 
@@ -40,7 +40,7 @@ export class BridgeState {
   };
   private neoXNetwork: RpcNetwork;
   private neo3Network: RpcNetwork;
-  provider: ethers.JsonRpcProvider;
+  private provider: ethers.JsonRpcProvider;
 
   constructor(
     private store: Store<AppState>,

@@ -1,6 +1,6 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
 import { Html5Qrcode } from 'html5-qrcode';
-import { EvmService } from '@/app/core';
+import { QRBasedService } from '@/app/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { EvmWalletJSON } from '../../_lib';
 import { ETH_EOA_SIGN_METHODS } from '@/models/evm';
@@ -20,7 +20,7 @@ export class PopupQRBasedSignDialogComponent implements OnInit, OnDestroy {
   loadingScanner = true;
 
   constructor(
-    private evmService: EvmService,
+    private qrBasedService: QRBasedService,
     private dialogRef: MatDialogRef<PopupQRBasedSignDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -35,7 +35,7 @@ export class PopupQRBasedSignDialogComponent implements OnInit, OnDestroy {
   ) {}
   ngOnInit(): void {
     if (QRCode) {
-      const parts = this.evmService.generateSignRequest({
+      const parts = this.qrBasedService.generateSignRequest({
         signMethod: this.data.signMethod,
         tx: this.data.unsignedTx,
         personalMessage: this.data.unsignedData,
@@ -91,7 +91,7 @@ export class PopupQRBasedSignDialogComponent implements OnInit, OnDestroy {
           (decodedText) => {
             try {
               const signData =
-                this.evmService.getSignDataFromQRCode(decodedText);
+                this.qrBasedService.getSignDataFromQRCode(decodedText);
               switch (this.data.signMethod) {
                 case ETH_EOA_SIGN_METHODS.PersonalSign:
                 case ETH_EOA_SIGN_METHODS.SignTypedDataV4:

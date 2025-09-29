@@ -14,17 +14,18 @@ import {
   CoreMessage,
   UI_REQUEST,
 } from '@onekeyfe/hd-core';
-import { ethers, TypedDataEncoder, TypedDataDomain } from 'ethers';
+import { ethers } from 'ethers';
 import { Transaction as Transaction2 } from '@cityofzion/neon-core/lib/tx';
 import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { tx as tx3 } from '@cityofzion/neon-core-neo3/lib';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
-import { GlobalService } from './global.service';
+import { GlobalService } from '../global.service';
 import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
 import { BigNumber } from 'bignumber.js';
 import { MessageTypes, TypedMessage } from '@metamask/eth-sig-util';
 import { environment } from '@/environments/environment';
+import { transformTypedDataPlugin } from '../../utils/hardware';
 
 interface OneKeyDeviceInfo {
   connectId: string; // device connection id
@@ -36,7 +37,7 @@ interface OneKeyDeviceInfo {
 
 @Injectable()
 export class OneKeyService {
-  deviceInfo: OneKeyDeviceInfo;
+  private deviceInfo: OneKeyDeviceInfo;
   private accounts = { Neo3: {}, NeoX: {} };
 
   private neoXNetwork: RpcNetwork;
@@ -255,8 +256,7 @@ export class OneKeyService {
     typedData: TypedMessage<MessageTypes>,
     wallet: EvmWalletJSON
   ) {
-    const { domainHash, messageHash } =
-      this.transformTypedDataPlugin(typedData);
+    const { domainHash, messageHash } = transformTypedDataPlugin(typedData);
     const res = await HardwareSDK.HardwareWebSdk.evmSignTypedData(
       this.deviceInfo.connectId,
       this.deviceInfo.deviceId,
@@ -279,23 +279,5 @@ export class OneKeyService {
   handleOneKeyError(error: string) {
     let snackError = 'TransactionDeniedByUser';
     this.global.snackBarTip(error ?? snackError);
-  }
-
-  transformTypedDataPlugin(typedData: TypedMessage<MessageTypes>) {
-    const domain: TypedDataDomain = {
-      ...typedData.domain,
-    } as TypedDataDomain;
-    if (domain.salt) {
-      domain.salt = new Uint8Array(domain.salt as ArrayBuffer);
-    }
-    const domainHash = TypedDataEncoder.hashDomain(domain);
-
-    const types = { ...typedData.types };
-    delete types.EIP712Domain;
-    const messageHash = TypedDataEncoder.from(types).hashStruct(
-      typedData.primaryType as string,
-      typedData.message
-    );
-    return { domainHash, messageHash };
   }
 }

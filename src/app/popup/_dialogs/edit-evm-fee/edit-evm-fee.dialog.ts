@@ -4,7 +4,7 @@ import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
 import BigNumber from 'bignumber.js';
 import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
-import { ExtensionService } from '@/app/core/util/extension.service';
+import { ExtensionService } from '@/app/core';
 
 @Component({
   templateUrl: 'edit-evm-fee.dialog.html',

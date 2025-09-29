@@ -6,24 +6,19 @@ import {
   Router,
 } from '@angular/router';
 import { Observable } from 'rxjs';
-import { NeonService } from '../services/neon.service';
 import { GlobalService } from '../services/global.service';
 import { ChromeService } from '../services/chrome.service';
+import { STORAGE_NAME } from '@/app/popup/_lib/constant';
+import { parseWallet } from '../utils/wallet';
 
 @Injectable()
 export class PopupLoginGuard implements CanActivate {
-  constructor(
-    private neon: NeonService,
-    private router: Router,
-    private chrome: ChromeService
-  ) {}
-  canActivate(
-    route: ActivatedRouteSnapshot,
-    state: RouterStateSnapshot
-  ): Observable<boolean> | Promise<boolean> | boolean {
+  constructor(private router: Router, private chrome: ChromeService) {}
+  canActivate(): Observable<boolean> | Promise<boolean> | boolean {
     return new Promise((resolve) => {
-      this.neon.walletIsOpen().subscribe((res: any) => {
-        if (!res) {
+      this.chrome.getStorage(STORAGE_NAME.wallet).subscribe((res) => {
+        const w = parseWallet(res);
+        if (!w) {
           this.router.navigateByUrl('/popup/wallet/new-guide');
         } else {
           this.chrome.getPassword().then((pwd) => {
@@ -41,18 +36,15 @@ export class PopupLoginGuard implements CanActivate {
 
 @Injectable()
 export class OpenedWalletGuard implements CanActivate {
-  constructor(
-    private neon: NeonService,
-    private chrome: ChromeService,
-    private router: Router
-  ) {}
+  constructor(private chrome: ChromeService, private router: Router) {}
   canActivate(
     route: ActivatedRouteSnapshot,
     state: RouterStateSnapshot
   ): Observable<boolean> | Promise<boolean> | boolean {
     return new Promise((resolve) => {
-      this.neon.walletIsOpen().subscribe((res: any) => {
-        if (!res) {
+      this.chrome.getStorage(STORAGE_NAME.wallet).subscribe((res) => {
+        const w = parseWallet(res);
+        if (!w) {
           resolve(true);
         } else {
           this.chrome.getPassword().then((pwd) => {
@@ -73,7 +65,6 @@ export class OpenedWalletGuard implements CanActivate {
 @Injectable()
 export class PopupWalletGuard implements CanActivate {
   constructor(
-    private neon: NeonService,
     private router: Router,
     private global: GlobalService,
     private chrome: ChromeService
@@ -83,8 +74,9 @@ export class PopupWalletGuard implements CanActivate {
     state: RouterStateSnapshot
   ): Observable<boolean> | Promise<boolean> | boolean {
     return new Promise((resolve) => {
-      this.neon.walletIsOpen().subscribe((res: any) => {
-        if (!res) {
+      this.chrome.getStorage(STORAGE_NAME.wallet).subscribe((res) => {
+        const w = parseWallet(res);
+        if (!w) {
           this.global.log('Wallet has not opened yet.');
           this.router.navigate(['/popup/wallet/new-guide'], {
             queryParams: { returnUrl: state.url },

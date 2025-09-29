@@ -24,11 +24,11 @@ import {
   isEqualCaseInsensitive,
   safelyExecute,
   timeoutFetch,
-} from '../evm/util';
+} from '../../utils/evm-dapp';
 import type BN from 'bn.js';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable, of } from 'rxjs';
-import { ChromeService } from '../services/chrome.service';
+import { ChromeService } from '../../services/chrome.service';
 
 const abi_1 = require('@ethersproject/abi');
 
@@ -45,8 +45,8 @@ const IPFS_DEFAULT_GATEWAY_URL = 'https://ipfs.io/ipfs/';
 export class DappEVMState {
   private neoXNetwork: RpcNetwork;
   private neoXWalletArr: EvmWalletJSON[];
-  provider: ethers.JsonRpcProvider;
-  storageNeoXAddressBook: AddAddressBookProp[];
+  private provider: ethers.JsonRpcProvider;
+  private storageNeoXAddressBook: AddAddressBookProp[];
 
   private extractProxyValues = (data) => {
     if (Array.isArray(data)) {

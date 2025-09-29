@@ -12,14 +12,13 @@ import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
-import { HttpClient } from '@angular/common/http';
 
 @Injectable()
 export class AssetEVMState {
   private neoXNetwork: RpcNetwork;
-  provider: ethers.JsonRpcProvider;
+  private provider: ethers.JsonRpcProvider;
 
-  constructor(private store: Store<AppState>, private http: HttpClient) {
+  constructor(private store: Store<AppState>) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];

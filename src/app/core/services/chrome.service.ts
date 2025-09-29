@@ -13,7 +13,7 @@ import {
   ChainType,
   ConnectedWebsitesType,
 } from '@/app/popup/_lib';
-import { ExtensionService } from '../util/extension.service';
+import { ExtensionService } from './extension.service';
 import CryptoJS from 'crypto-js';
 import { ethers } from 'ethers';
 import { firstValueFrom } from 'rxjs';
