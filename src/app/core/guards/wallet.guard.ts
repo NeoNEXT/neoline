@@ -9,7 +9,7 @@ import { Observable } from 'rxjs';
 import { GlobalService } from '../services/global.service';
 import { ChromeService } from '../services/chrome.service';
 import { STORAGE_NAME } from '@/app/popup/_lib/constant';
-import { parseWallet } from '../utils/wallet';
+import { parseWallet } from '../utils/app';
 
 @Injectable()
 export class PopupLoginGuard implements CanActivate {

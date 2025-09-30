@@ -7,10 +7,10 @@ import {
   GlobalService,
   TransactionState,
   ChromeService,
-  UtilServiceState,
   EvmNFTState,
   SettingState,
   AssetEVMState,
+  Neo3Service,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import {
@@ -25,6 +25,7 @@ import { Observable } from 'rxjs';
 import { Neo3TransferService } from '../../neo3-transfer.service';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
+import { getHexDataLength } from '@/app/core/utils/evm';
 
 export type TabType = 'details' | 'data';
 
@@ -68,11 +69,11 @@ export class TransferCreateConfirmComponent implements OnInit {
     private dialog: MatDialog,
     private transfer: TransferService,
     private global: GlobalService,
+    private neo3Service: Neo3Service,
     private txState: TransactionState,
     private neo3Transfer: Neo3TransferService,
     private chrome: ChromeService,
     private assetEvmState: AssetEVMState,
-    private util: UtilServiceState,
     private settingState: SettingState,
     private evmNFTState: EvmNFTState
   ) {}
@@ -399,10 +400,10 @@ export class TransferCreateConfirmComponent implements OnInit {
     } catch (err) {
       switch (this.data.chainType) {
         case 'Neo2':
-          this.global.handleRpcError(err, 'Neo2');
+          this.neo3Service.handleRpcError(err, 'Neo2');
           break;
         case 'Neo3':
-          this.global.handleRpcError(err, 'Neo3');
+          this.neo3Service.handleRpcError(err, 'Neo3');
           break;
         case 'NeoX':
           this.global.snackBarTip(err);
@@ -555,7 +556,7 @@ export class TransferCreateConfirmComponent implements OnInit {
         toAddress: this.data.to.address,
         transferAmount: amountBN,
       });
-      this.evmHexDataLength = this.util.getHexDataLength(this.evmHexData);
+      this.evmHexDataLength = getHexDataLength(this.evmHexData);
     } else if (this.data.chainType === 'NeoX' && this.data.isNFT) {
       this.evmHexData = this.evmNFTState.getTransferData({
         asset: this.data.nftAsset,
@@ -563,7 +564,7 @@ export class TransferCreateConfirmComponent implements OnInit {
         fromAddress: this.data.from,
         toAddress: this.data.to.address,
       });
-      this.evmHexDataLength = this.util.getHexDataLength(this.evmHexData);
+      this.evmHexDataLength = getHexDataLength(this.evmHexData);
     }
   }
   //#endregion

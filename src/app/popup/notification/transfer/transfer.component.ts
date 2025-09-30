@@ -2,12 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
   AssetState,
-  NeonService,
   GlobalService,
   ChromeService,
   TransactionState,
-  UtilServiceState,
   SettingState,
+  Neo3Service,
+  NeoAssetInfoState,
 } from '@/app/core';
 import { NEO, GAS, Asset } from '@/models/models';
 import { tx as tx2, u } from '@cityofzion/neon-js';
@@ -27,6 +27,7 @@ import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { TransferService } from '../../transfer/transfer.service';
+import { parseNeo2TxHashAttr } from '@/app/core/utils/neo';
 
 type TabType = 'details' | 'data';
 
@@ -74,14 +75,14 @@ export class PopupNoticeTransferComponent implements OnInit {
     private aRoute: ActivatedRoute,
     private asset: AssetState,
     private transfer: TransferService,
-    private neon: NeonService,
     private global: GlobalService,
+    private neo3Service: Neo3Service,
     private chrome: ChromeService,
     private txState: TransactionState,
     private dialog: MatDialog,
-    private util: UtilServiceState,
     private settingState: SettingState,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private neoAssetInfoState: NeoAssetInfoState
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -167,7 +168,7 @@ export class PopupNoticeTransferComponent implements OnInit {
   }
 
   async getAssetDetail() {
-    const symbols = await this.util.getAssetSymbols(
+    const symbols = await this.neoAssetInfoState.getAssetSymbols(
       [this.assetId],
       this.chainType
     );
@@ -178,7 +179,7 @@ export class PopupNoticeTransferComponent implements OnInit {
       this.chainType
     );
     if (new BigNumber(balance).comparedTo(0) > 0) {
-      const decimals = await this.util.getAssetDecimals(
+      const decimals = await this.neoAssetInfoState.getAssetDecimals(
         [this.assetId],
         this.chainType
       );
@@ -242,7 +243,7 @@ export class PopupNoticeTransferComponent implements OnInit {
               }
               if (this.txHashAttributes !== null) {
                 this.txHashAttributes.forEach((item, index) => {
-                  const info = this.neon.parseNeo2TxHashAttr(
+                  const info = parseNeo2TxHashAttr(
                     this.txHashAttributes[index],
                     true
                   );
@@ -350,7 +351,7 @@ export class PopupNoticeTransferComponent implements OnInit {
           return: requestTarget.Send,
           ID: this.messageID,
         });
-        this.global.handleRpcError(err, 'Neo2');
+        this.neo3Service.handleRpcError(err, 'Neo2');
       });
   }
 
@@ -463,7 +464,7 @@ export class PopupNoticeTransferComponent implements OnInit {
       this.showHardwareSign = true;
       return;
     }
-    this.util
+    this.global
       .getWIF(this.neo2WIFArr, this.neo2WalletArr, this.currentWallet)
       .then((wif) => {
         tx.sign(wif);

@@ -4,7 +4,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from 'src/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { ChainType, RpcNetwork, STORAGE_NAME } from '@/app/popup/_lib';
-import { ChromeService, SettingState, UtilServiceState } from '@/app/core';
+import { ChromeService, GlobalService, SettingState } from '@/app/core';
 import { LOCAL_NOTICE } from '@/app/popup/_lib/setting';
 
 declare var chrome: any;
@@ -27,9 +27,9 @@ export class HeaderComponent implements OnInit, OnDestroy {
   constructor(
     private store: Store<AppState>,
     private router: Router,
-    private util: UtilServiceState,
     private chromeSrc: ChromeService,
-    private settingState: SettingState
+    private settingState: SettingState,
+    private global: GlobalService
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -101,7 +101,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
   }
   toWeb() {
     this.showMenu = false;
-    this.util.toExplorer({
+    this.global.toExplorer({
       chain: this.currentChainType,
       network: this.currentNetwork,
       networkIndex: this.currentNetworkIndex,

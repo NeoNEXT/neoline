@@ -20,3 +20,19 @@ export function transformTypedDataPlugin(
   );
   return { domainHash, messageHash };
 }
+
+export function detectContractSecurityToThirdPartySite(
+  chainId: number,
+  address: string
+) {
+  window.open(`https://gopluslabs.io/token-security/${chainId}/${address}`);
+}
+
+export function getHexDataLength(henData: string) {
+  if (!henData) return;
+  let value = henData.startsWith('0x') ? henData.substring(2) : henData;
+  if (value.length >= 2 && value.length % 2 === 0) {
+    return value.length / 2;
+  }
+  return 0;
+}

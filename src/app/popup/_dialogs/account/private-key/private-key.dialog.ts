@@ -1,5 +1,5 @@
 import { Component, OnInit, Inject } from '@angular/core';
-import { GlobalService, UtilServiceState } from '@/app/core';
+import { GlobalService, Neo3Service } from '@/app/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ChainType } from '@/app/popup/_lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
@@ -21,8 +21,8 @@ export class PopupPrivateKeyComponent implements OnInit {
 
   constructor(
     private global: GlobalService,
+    private neo3Service: Neo3Service,
     private dialogRef: MatDialogRef<PopupPrivateKeyComponent>,
-    private util: UtilServiceState,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
@@ -67,7 +67,7 @@ export class PopupPrivateKeyComponent implements OnInit {
     }
     const account =
       this.data.chainType === 'Neo3'
-        ? this.util.getNeo3Account(this.data.currentWallet.accounts[0])
+        ? this.neo3Service.getNeo3Account(this.data.currentWallet.accounts[0])
         : this.data.currentWallet.accounts[0];
     account
       .decrypt(this.pwd)

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ChromeService, UtilServiceState } from '@/app/core';
+import { ChromeService, GlobalService } from '@/app/core';
 import { ERRORS, requestTarget } from '@/models/dapi';
 import { wallet } from '@cityofzion/neon-js';
 import { randomBytes } from 'crypto';
@@ -9,6 +9,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { parseUrl } from '@/app/core/utils/app';
 
 @Component({
   templateUrl: './signature.component.html',
@@ -35,7 +36,7 @@ export class PopupNoticeSignComponent implements OnInit {
   constructor(
     private aRouter: ActivatedRoute,
     private chrome: ChromeService,
-    private utilServiceState: UtilServiceState,
+    private global: GlobalService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -50,7 +51,7 @@ export class PopupNoticeSignComponent implements OnInit {
   }
   ngOnInit() {
     this.aRouter.queryParams.subscribe(() => {
-      const query = this.utilServiceState.parseUrl(location.hash);
+      const query = parseUrl(location.hash);
       this.messageID = query.messageID;
       this.message = query.message;
       if (query?.isJsonObject === 'true') {
@@ -121,7 +122,7 @@ export class PopupNoticeSignComponent implements OnInit {
       this.showHardwareSign = true;
       return;
     }
-    this.utilServiceState
+    this.global
       .getWIF(this.neo2WIFArr, this.neo2WalletArr, this.currentWallet)
       .then((wif) => {
         const privateKey = wallet.getPrivateKeyFromWIF(wif);

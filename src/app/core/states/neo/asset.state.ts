@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { HttpService } from '../../services/http.service';
-import { GlobalService } from '../../services/global.service';
 import { ChromeService } from '../../services/chrome.service';
 import { AssetEVMState } from '../evm/asset.state';
 import { Observable, from, of, forkJoin, firstValueFrom } from 'rxjs';
@@ -19,12 +18,14 @@ import {
   NetworkType,
 } from '@popup/_lib';
 import BigNumber from 'bignumber.js';
-import { UtilServiceState } from '../util.service';
 import { wallet as wallet3, u } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { ethers } from 'ethers';
 import { SettingState } from '../setting.state';
+import { environment } from '@/environments/environment';
+import { handleNeo3StackNumberValue } from '../../utils/neo';
+import { NeoAssetInfoState } from './asset-info.state';
 
 interface CoinRatesItem {
   rates: { [assetId: string]: string };
@@ -40,6 +41,7 @@ const initCoinRates: Record<ChainType | 'fiat', CoinRatesItem> = {
 
 @Injectable()
 export class AssetState {
+  private apiDomain: string;
   private coinRatesV2 = JSON.parse(JSON.stringify(initCoinRates));
   private rateCurrency: string;
 
@@ -56,13 +58,13 @@ export class AssetState {
   private neoXNetwork: RpcNetwork;
   constructor(
     private http: HttpService,
-    private global: GlobalService,
     private chrome: ChromeService,
     private assetEVMState: AssetEVMState,
-    private util: UtilServiceState,
     private setting: SettingState,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private neoAssetInfoState: NeoAssetInfoState
   ) {
+    this.apiDomain = environment.mainApiBase;
     this.setting.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
@@ -118,7 +120,7 @@ export class AssetState {
 
   //#region rate
   private getFiatRate(): Observable<any> {
-    return this.http.get(`${this.global.apiDomain}/v1/fiat/rates`);
+    return this.http.get(`${this.apiDomain}/v1/fiat/rates`);
   }
 
   private getRatesV2(chainType: ChainType) {
@@ -126,11 +128,9 @@ export class AssetState {
       case 'Neo2':
       case 'Neo3':
         const chain = chainType === 'Neo3' ? 'neo3' : 'neo';
-        return this.http.get(
-          `${this.global.apiDomain}/v2/coin/rates?chain=${chain}`
-        );
+        return this.http.get(`${this.apiDomain}/v2/coin/rates?chain=${chain}`);
       case 'NeoX':
-        return this.http.get(`${this.global.apiDomain}/v1/evm/rates`);
+        return this.http.get(`${this.apiDomain}/v1/evm/rates`);
     }
   }
 
@@ -233,8 +233,8 @@ export class AssetState {
     const rpcUrl = isN3 ? this.n3Network.rpcUrl : this.n2Network.rpcUrl;
     return Promise.all([
       this.http.rpcPost(rpcUrl, data).toPromise(),
-      this.util.getAssetSymbols([q], this.chainType),
-      this.util.getAssetDecimals([q], this.chainType),
+      this.neoAssetInfoState.getAssetSymbols([q], this.chainType),
+      this.neoAssetInfoState.getAssetDecimals([q], this.chainType),
     ]).then(([res, symbols, decimals]) => {
       if (res && symbols[0]) {
         const asset: Asset = {
@@ -352,7 +352,7 @@ export class AssetState {
     const rpcUrl =
       chainType === 'Neo2' ? this.n2Network.rpcUrl : this.n3Network.rpcUrl;
     const balanceRes = await this.http.rpcPost(rpcUrl, data).toPromise();
-    return this.util.handleNeo3StackNumberValue(balanceRes);
+    return handleNeo3StackNumberValue(balanceRes);
   }
   //#endregion
 
@@ -368,7 +368,7 @@ export class AssetState {
     if (this.allNeoGasFeeSpeed[this.n2Network.network]) {
       return of(this.allNeoGasFeeSpeed[this.n2Network.network]);
     }
-    return this.http.get(`${this.global.apiDomain}/v1/neo2/fees`).pipe(
+    return this.http.get(`${this.apiDomain}/v1/neo2/fees`).pipe(
       map((res: any) => {
         if (res) {
           this.allNeoGasFeeSpeed[this.n2Network.network] = res;
@@ -380,7 +380,7 @@ export class AssetState {
   }
 
   private fetchNeo3GasFee(): Observable<any> {
-    return this.http.get(`${this.global.apiDomain}/v1/neo3/fees`).pipe(
+    return this.http.get(`${this.apiDomain}/v1/neo3/fees`).pipe(
       map((res: any) => {
         if (res) {
           res.slow_price = bignumber(res.slow_price)
@@ -459,8 +459,8 @@ export class AssetState {
         asset_id: asset_hash,
       });
     });
-    const symbols = await this.util.getAssetSymbols(contracts, 'Neo2');
-    const decimals = await this.util.getAssetDecimals(contracts, 'Neo2');
+    const symbols = await this.neoAssetInfoState.getAssetSymbols(contracts, 'Neo2');
+    const decimals = await this.neoAssetInfoState.getAssetDecimals(contracts, 'Neo2');
     result.forEach((item, index) => {
       result[index].symbol = symbols[index];
       result[index].decimals = decimals[index];

@@ -4,7 +4,6 @@ import {
   ChromeService,
   EvmNFTState,
   GlobalService,
-  UtilServiceState,
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NftAsset, NftToken } from '@/models/models';
@@ -39,7 +38,6 @@ export class PopupNftDetailComponent implements OnDestroy {
     private evmNFTState: EvmNFTState,
     private chrome: ChromeService,
     private global: GlobalService,
-    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -152,7 +150,7 @@ export class PopupNftDetailComponent implements OnDestroy {
 
   toWeb() {
     this.showMenu = false;
-    this.util.toExplorer({
+    this.global.toExplorer({
       chain: this.chainType,
       network: this.currentNetwork,
       networkIndex: this.currentNetworkIndex,

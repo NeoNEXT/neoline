@@ -8,7 +8,7 @@ import {
   RpcNetwork,
   ChainType,
 } from '../../_lib';
-import { UtilServiceState } from '@/app/core';
+import { GlobalService } from '@/app/core';
 
 @Component({
   templateUrl: 'nft-token-detail.dialog.html',
@@ -17,7 +17,7 @@ import { UtilServiceState } from '@/app/core';
 export class PopupNftTokenDetailDialogComponent {
   OPENSEA_ALL_CHAINS = OPENSEA_ALL_CHAINS;
   constructor(
-    private util: UtilServiceState,
+    private global: GlobalService,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       nftToken: NftToken;
@@ -60,7 +60,7 @@ export class PopupNftTokenDetailDialogComponent {
   }
 
   toWeb(contract: string) {
-    this.util.toExplorer({
+    this.global.toExplorer({
       chain: this.data.chainType,
       network: this.data.network,
       networkIndex: this.data.networkIndex,

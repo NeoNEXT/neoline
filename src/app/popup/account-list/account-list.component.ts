@@ -13,7 +13,6 @@ import {
   AssetState,
   NeonService,
   GlobalService,
-  UtilServiceState,
 } from '@/app/core';
 import { Router } from '@angular/router';
 import {
@@ -40,6 +39,7 @@ import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '@/app/popup/_lib/evm';
 import BigNumber from 'bignumber.js';
+import { handleWallet } from '@/app/core/utils/app';
 
 @Component({
   templateUrl: 'account-list.component.html',
@@ -81,7 +81,6 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private assetState: AssetState,
     private neon: NeonService,
-    private util: UtilServiceState,
     private global: GlobalService,
     private store: Store<AppState>
   ) {
@@ -113,9 +112,9 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     if (!this.selectChainType) {
       this.selectChainType = this.chainType;
     }
-    this.allWallet.Neo2 = this.util.handleWallet(this.neo2WalletArr, 'Neo2');
-    this.allWallet.Neo3 = this.util.handleWallet(this.neo3WalletArr, 'Neo3');
-    this.allWallet.NeoX = this.util.handleWallet(this.neoXWalletArr, 'NeoX');
+    this.allWallet.Neo2 = handleWallet(this.neo2WalletArr, 'Neo2');
+    this.allWallet.Neo3 = handleWallet(this.neo3WalletArr, 'Neo3');
+    this.allWallet.NeoX = handleWallet(this.neoXWalletArr, 'NeoX');
     this.getDisplayList();
   }
 

@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { DappEVMState, AssetEVMState, UtilServiceState } from '@/app/core';
+import { DappEVMState, AssetEVMState } from '@/app/core';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import {
   AddressNonceInfo,
@@ -11,6 +11,7 @@ import { ethers } from 'ethers';
 import { RateType } from '../evm-send-tx.component';
 import { PopupEditApproveCapDialogComponent } from '@/app/popup/_dialogs';
 import { MatDialog } from '@angular/material/dialog';
+import { detectContractSecurityToThirdPartySite, getHexDataLength } from '@/app/core/utils/evm';
 
 type TabType = 'details' | 'data';
 
@@ -51,12 +52,11 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   constructor(
     private dappEVMState: DappEVMState,
     private assetEVMState: AssetEVMState,
-    private dialog: MatDialog,
-    private util: UtilServiceState
+    private dialog: MatDialog
   ) {}
 
   ngOnInit(): void {
-    this.hexDataLength = this.util.getHexDataLength(this.txParams.data);
+    this.hexDataLength = getHexDataLength(this.txParams.data);
     this.tokenData = this.dappEVMState.parseStandardTokenTransactionData(
       this.txParams.data
     );
@@ -131,9 +131,6 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   }
 
   detectContractSecurity() {
-    this.util.detectContractSecurity(
-      this.neoXNetwork.chainId,
-      this.txParams.to
-    );
+    detectContractSecurityToThirdPartySite(this.neoXNetwork.chainId, this.txParams.to);
   }
 }

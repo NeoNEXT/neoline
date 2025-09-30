@@ -25,7 +25,6 @@ import {
   ChromeService,
   NeonService,
   GlobalService,
-  UtilServiceState,
   SettingState,
 } from '@/app/core';
 import {
@@ -80,7 +79,6 @@ export class PopupNetworkListComponent implements OnDestroy {
     private dialog: MatDialog,
     private router: Router,
     private global: GlobalService,
-    private util: UtilServiceState,
     private neon: NeonService,
     private settingState: SettingState
   ) {
@@ -150,7 +148,7 @@ export class PopupNetworkListComponent implements OnDestroy {
           break;
       }
       this.chromeSer.networkChangeEvent(newNetwork);
-      this.util.checkNeedRedirectHome();
+      this.global.checkNeedRedirectHome();
       this.close();
       return;
     }
@@ -209,7 +207,7 @@ export class PopupNetworkListComponent implements OnDestroy {
       this.store.dispatch({ type: UPDATE_WALLET, data: switchChainWallet });
       this.chromeSer.accountChangeEvent(switchChainWallet);
       this.chromeSer.networkChangeEvent(newNetwork);
-      this.util.checkNeedRedirectHome();
+      this.global.checkNeedRedirectHome();
       this.close();
     }
   }

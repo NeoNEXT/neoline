@@ -12,13 +12,12 @@ import {
   Witness,
 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from, throwError } from 'rxjs';
-import { AssetState, NotificationService, UtilServiceState } from '@app/core';
+import { AssetState, Neo3Service, NotificationService } from '@app/core';
 import BigNumber from 'bignumber.js';
 import { ContractCall, ContractParam } from '@cityofzion/neon-core-neo3/lib/sc';
 import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { Wallet3 } from '@popup/_lib';
 
 interface CreateNeo3TxInput {
   invokeArgs: ContractCall[];
@@ -37,8 +36,8 @@ export class Neo3InvokeService {
   constructor(
     public assetState: AssetState,
     public notification: NotificationService,
-    private util: UtilServiceState,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private neo3Service: Neo3Service
   ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
@@ -129,7 +128,7 @@ export class Neo3InvokeService {
         );
         return;
       }
-      const invokeFunctionResponse = await neo3This.util.n3InvokeScript(
+      const invokeFunctionResponse = await neo3This.neo3Service.n3InvokeScript(
         u.HexString.fromHex(script).toBase64(),
         signerJson
       );

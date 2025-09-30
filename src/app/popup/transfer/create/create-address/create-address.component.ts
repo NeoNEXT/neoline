@@ -7,7 +7,7 @@ import {
 } from '@/app/popup/_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
-import { GlobalService, UtilServiceState } from '@/app/core';
+import { GlobalService, Neo3Service } from '@/app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
 import { timer, Unsubscribable } from 'rxjs';
@@ -34,8 +34,8 @@ export class TransferCreateAddressComponent implements OnInit {
   private searchSub: Unsubscribable;
   constructor(
     private global: GlobalService,
-    private util: UtilServiceState,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private neo3Service: Neo3Service
   ) {}
 
   ngOnInit(): void {
@@ -69,7 +69,7 @@ export class TransferCreateAddressComponent implements OnInit {
           this.currentNetwork.chainId === N3MainnetNetwork.chainId
         ) {
           this.getNnsAddressReq?.unsubscribe();
-          this.getNnsAddressReq = this.util
+          this.getNnsAddressReq = this.neo3Service
             .getN3NnsAddress(address.toLowerCase(), this.currentNetwork.chainId)
             .subscribe((nnsAddress) => {
               if (wallet3.isAddress(nnsAddress, 53)) {

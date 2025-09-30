@@ -12,7 +12,6 @@ import {
   GlobalService,
   ChromeService,
   NftState,
-  UtilServiceState,
   AssetEVMState,
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
@@ -78,8 +77,6 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private neo3Transfer: Neo3TransferService,
     private nftState: NftState,
-    private util: UtilServiceState,
-    private assetEVMState: AssetEVMState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -110,7 +107,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
 
   //#region init
   private getCurrentWIF(WIFArr: string[]) {
-    this.util
+    this.global
       .getWIF(WIFArr, this.currentWalletArr, this.currentWallet)
       .then((res) => (this.currentWIF = res));
   }

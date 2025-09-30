@@ -2,12 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
   GlobalService,
-  NeonService,
   ChromeService,
   AssetState,
   TransactionState,
-  UtilServiceState,
   SettingState,
+  Neo3Service,
 } from '@/app/core';
 import {
   Transaction,
@@ -32,6 +31,10 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import {
+  getNeo2VerificationSignatureForSmartContract,
+  parseNeo2TxHashAttr,
+} from '@/app/core/utils/neo';
 
 type TabType = 'details' | 'data';
 
@@ -75,13 +78,12 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
   constructor(
     private aRoute: ActivatedRoute,
     private global: GlobalService,
-    private neon: NeonService,
+    private neo3Service: Neo3Service,
     private dialog: MatDialog,
     private chrome: ChromeService,
     private settingState: SettingState,
     private assetState: AssetState,
     private txState: TransactionState,
-    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -290,7 +292,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         );
         return Promise.all(
           triggerContracts.map((scriptHash) =>
-            this.neon.getNeo2VerificationSignatureForSmartContract(scriptHash)
+            getNeo2VerificationSignatureForSmartContract(scriptHash)
           )
         );
       })
@@ -321,7 +323,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
             this.loading = false;
             this.loadingMsg = '';
             if (res.error !== undefined) {
-              this.global.handleRpcError(res.error, 'Neo2');
+              this.neo3Service.handleRpcError(res.error, 'Neo2');
               this.chrome.windowCallback(
                 {
                   error: { ...ERRORS.RPC_ERROR, description: res?.error },
@@ -365,7 +367,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
               return: requestTarget.InvokeMulti,
               ID: this.messageID,
             });
-            this.global.handleRpcError(err, 'Neo2');
+            this.neo3Service.handleRpcError(err, 'Neo2');
           });
       });
   }
@@ -557,7 +559,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     const fromScript = wallet.getScriptHashFromAddress(this.signAddress);
     if (this.txHashAttributes !== null) {
       this.txHashAttributes.forEach((item, index) => {
-        this.txHashAttributes[index] = this.neon.parseNeo2TxHashAttr(
+        this.txHashAttributes[index] = parseNeo2TxHashAttr(
           this.txHashAttributes[index]
         );
         const info = this.txHashAttributes[index];
@@ -812,7 +814,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
       this.showHardwareSign = true;
       return;
     }
-    this.util
+    this.global
       .getWIF(this.neo2WIFArr, this.neo2WalletArr, this.currentWallet)
       .then((wif) => {
         tx.sign(wif);

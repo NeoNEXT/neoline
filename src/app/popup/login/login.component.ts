@@ -5,8 +5,8 @@ import { Router, ActivatedRoute } from '@angular/router';
 import {
   ChromeService,
   GlobalService,
+  Neo3Service,
   SettingState,
-  UtilServiceState,
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import {
@@ -57,10 +57,10 @@ export class PopupLoginComponent
     private chrome: ChromeService,
     private global: GlobalService,
     private dialog: MatDialog,
-    private util: UtilServiceState,
     private fb: UntypedFormBuilder,
     private settingState: SettingState,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private neo3Service: Neo3Service
   ) {
     this.aRouter.queryParams.subscribe((params: any) => {
       this.messageID = params.messageID;
@@ -128,7 +128,7 @@ export class PopupLoginComponent
           account = this.selectWallet.accounts[0];
           break;
         case 'Neo3':
-          account = this.util.getNeo3Account(this.selectWallet.accounts[0]);
+          account = this.neo3Service.getNeo3Account(this.selectWallet.accounts[0]);
           break;
         case 'NeoX':
           ethers.Wallet.fromEncryptedJson(

@@ -5,9 +5,9 @@ import { map } from 'rxjs/operators';
 import { ChainType, RpcNetwork } from '@popup/_lib';
 import { Transaction, NEO, GAS } from '@/models/models';
 import BigNumber from 'bignumber.js';
-import { UtilServiceState } from '../util.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
+import { NeoAssetInfoState } from './asset-info.state';
 
 @Injectable()
 export class TransactionState {
@@ -16,7 +16,7 @@ export class TransactionState {
   private n3Network: RpcNetwork;
   constructor(
     private http: HttpService,
-    private util: UtilServiceState,
+    private neoAssetInfoState: NeoAssetInfoState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -312,11 +312,16 @@ export class TransactionState {
       }
     );
     // return of(result).toPromise();
-    await this.util.getAssetSymbols(Array.from(contracts), 'Neo2');
-    await this.util.getAssetDecimals(Array.from(contracts), 'Neo2');
+    await this.neoAssetInfoState.getAssetSymbols(Array.from(contracts), 'Neo2');
+    await this.neoAssetInfoState.getAssetDecimals(
+      Array.from(contracts),
+      'Neo2'
+    );
     result.forEach((item, index) => {
-      result[index].symbol = this.util.n2AssetSymbol.get(item.asset_id);
-      const decimals = this.util.n2AssetDecimal.get(item.asset_id);
+      result[index].symbol = this.neoAssetInfoState.n2AssetSymbol.get(
+        item.asset_id
+      );
+      const decimals = this.neoAssetInfoState.n2AssetDecimal.get(item.asset_id);
       result[index].value = new BigNumber(result[index].value)
         .shiftedBy(-decimals)
         .toFixed();
@@ -394,11 +399,16 @@ export class TransactionState {
     }
     const contracts: Set<string> = new Set();
     result.forEach((item) => contracts.add(item.asset_id));
-    await this.util.getAssetSymbols(Array.from(contracts), 'Neo3');
-    await this.util.getAssetDecimals(Array.from(contracts), 'Neo3');
+    await this.neoAssetInfoState.getAssetSymbols(Array.from(contracts), 'Neo3');
+    await this.neoAssetInfoState.getAssetDecimals(
+      Array.from(contracts),
+      'Neo3'
+    );
     result.forEach((item, index) => {
-      result[index].symbol = this.util.n3AssetSymbol.get(item.asset_id);
-      const decimals = this.util.n3AssetDecimal.get(item.asset_id);
+      result[index].symbol = this.neoAssetInfoState.n3AssetSymbol.get(
+        item.asset_id
+      );
+      const decimals = this.neoAssetInfoState.n3AssetDecimal.get(item.asset_id);
       result[index].value = new BigNumber(result[index].value)
         .shiftedBy(-decimals)
         .toFixed();

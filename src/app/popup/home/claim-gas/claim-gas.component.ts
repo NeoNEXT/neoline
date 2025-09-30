@@ -1,11 +1,5 @@
 import { Component, OnDestroy } from '@angular/core';
-import {
-  AssetState,
-  NeonService,
-  GlobalService,
-  HomeState,
-  UtilServiceState,
-} from '@/app/core';
+import { AssetState, NeonService, GlobalService, HomeState } from '@/app/core';
 import { NEO, GAS } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
@@ -68,7 +62,6 @@ export class PopupClaimGasComponent implements OnDestroy {
     private transfer: TransferService,
     private neo3TransferService: Neo3TransferService,
     private homeState: HomeState,
-    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -346,7 +339,7 @@ export class PopupClaimGasComponent implements OnDestroy {
       this.showHardwareSign = true;
       return;
     }
-    this.util
+    this.global
       .getWIF(
         this.currentWIFArr,
         this.currentWalletArr,

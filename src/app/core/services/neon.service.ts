@@ -1,9 +1,5 @@
 import { Injectable } from '@angular/core';
-import Neon2, {
-  wallet as wallet2,
-  tx as tx2,
-  rpc as rpc2,
-} from '@cityofzion/neon-js';
+import Neon2, { wallet as wallet2, tx as tx2 } from '@cityofzion/neon-js';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Account3, Wallet3 } from '@popup/_lib';
@@ -15,7 +11,7 @@ import { Transaction, TransactionInput } from '@cityofzion/neon-core/lib/tx';
 import { UTXO, ClaimItem, GAS } from '@/models/models';
 import { Fixed8 } from '@cityofzion/neon-core/lib/u';
 import { sc, u } from '@cityofzion/neon-core';
-import { EVENT, TxHashAttribute } from '@/models/dapi';
+import { EVENT } from '@/models/dapi';
 import { bignumber } from 'mathjs';
 import {
   ChainType,
@@ -36,14 +32,13 @@ import {
   DEFAULT_N3_RPC_NETWORK,
   UPDATE_NEOX_NETWORKS,
 } from '@popup/_lib';
-import { str2hexstring } from '@cityofzion/neon-core-neo3/lib/u';
 import { HttpClient } from '@angular/common/http';
 import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import { DEFAULT_NEOX_RPC_NETWORK, EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { EvmService } from './evm.service';
-import { parseWallet } from '../utils/wallet';
+import { parseWallet } from '../utils/app';
 
 @Injectable()
 export class NeonService {
@@ -56,7 +51,6 @@ export class NeonService {
   private neoXWalletArr: EvmWalletJSON[];
   private neo2WIFArr: string[];
   private n2Networks: RpcNetwork[];
-  private n2NetworkIndex: number;
   private n3Networks: RpcNetwork[];
   constructor(
     private chrome: ChromeService,
@@ -69,7 +63,6 @@ export class NeonService {
     account$.subscribe((state) => {
       this.n2Networks = state.n2Networks;
       this.n3Networks = state.n3Networks;
-      this.n2NetworkIndex = state.n2NetworkIndex;
       this.neo2WalletArr = state.neo2WalletArr;
       this.neo3WalletArr = state.neo3WalletArr;
       this.neoXWalletArr = state.neoXWalletArr;
@@ -78,14 +71,6 @@ export class NeonService {
   }
 
   //#region init
-  public walletIsOpen(): Observable<Wallet2 | Wallet3 | EvmWalletJSON> {
-    return this.chrome.getStorage(STORAGE_NAME.wallet).pipe(
-      map((res) => {
-        const w = parseWallet(res);
-        return w;
-      })
-    );
-  }
   public initData() {
     const getWallet = this.chrome.getStorage(STORAGE_NAME.wallet);
     const getNeo2WIFArr = this.chrome.getStorage(STORAGE_NAME.WIFArr);
@@ -822,88 +807,6 @@ export class NeonService {
       : `From NeoLine at ${new Date().getTime()}`;
     newTx.addAttribute(tx2.TxAttrUsage.Remark1, u.str2hexstring(remark));
     return newTx;
-  }
-  //#endregion
-
-  //#region other method
-  private zeroPad(
-    input: string | any[] | sc.OpCode,
-    length: number,
-    padEnd?: boolean
-  ) {
-    const zero = '0';
-    input = String(input);
-
-    if (length - input.length <= 0) {
-      return input;
-    }
-
-    if (padEnd) {
-      return input + zero.repeat(length - input.length);
-    }
-
-    return zero.repeat(length - input.length) + input;
-  }
-  public parseNeo2TxHashAttr(
-    { type, value, txAttrUsage }: TxHashAttribute,
-    isAddressToHex = false
-  ): TxHashAttribute {
-    let parsedValue = this.zeroPad(value, 64, true);
-    switch (type) {
-      case 'Boolean':
-        parsedValue = this.zeroPad(
-          !!value ? sc.OpCode.PUSHT : sc.OpCode.PUSHF,
-          64,
-          true
-        );
-        break;
-      case 'Address':
-        parsedValue = this.zeroPad(
-          u.reverseHex(wallet2.getScriptHashFromAddress(value)),
-          64,
-          true
-        );
-        break;
-      case 'Integer':
-        const h = Number(value).toString(16);
-        parsedValue = this.zeroPad(
-          u.reverseHex(h.length % 2 ? '0' + h : h),
-          64,
-          true
-        );
-        break;
-      case 'String':
-        parsedValue = this.zeroPad(u.ab2hexstring(u.str2ab(value)), 64, true);
-        break;
-    }
-
-    if (isAddressToHex && (txAttrUsage as any) === 'Remark14') {
-      parsedValue = str2hexstring(value);
-    }
-
-    return {
-      type,
-      value: parsedValue,
-      txAttrUsage,
-    };
-  }
-  public isAsset(assetId: string): boolean {
-    return assetId.startsWith('0x')
-      ? assetId.length === 66
-      : assetId.length === 64;
-  }
-  public getNeo2VerificationSignatureForSmartContract(
-    ScriptHash: string
-  ): Promise<any> {
-    return rpc2.Query.getContractState(ScriptHash)
-      .execute(this.n2Networks[this.n2NetworkIndex].rpcUrl)
-      .then(({ result }) => {
-        const { parameters } = result;
-        return new tx2.Witness({
-          invocationScript: '00'.repeat(parameters.length),
-          verificationScript: '',
-        });
-      });
   }
   //#endregion
 

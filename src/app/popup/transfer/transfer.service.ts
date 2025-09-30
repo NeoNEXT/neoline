@@ -9,6 +9,7 @@ import { Neo3TransferService } from './neo3-transfer.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { ChainType } from '../_lib';
+import { isAsset } from '@/app/core/utils/neo';
 
 @Injectable()
 export class TransferService {
@@ -59,7 +60,7 @@ export class TransferService {
           );
       });
     }
-    if (this.neon.isAsset(asset)) {
+    if (isAsset(asset)) {
       return new Observable((observer) => {
         this.assetState.getNeo2Utxo(from, asset).subscribe((balance) => {
           try {

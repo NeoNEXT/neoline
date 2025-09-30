@@ -7,7 +7,7 @@ import { ChainType } from '../_lib';
 import { EvmWalletJSON } from '../_lib/evm';
 import { Unsubscribable } from 'rxjs';
 import { ethers, HDNodeWallet } from 'ethers';
-import { ChromeService, UtilServiceState } from '@/app/core';
+import { ChromeService, GlobalService } from '@/app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
 
@@ -27,21 +27,21 @@ export class PopupBackupComponent implements OnDestroy {
     private store: Store<AppState>,
     private dialog: MatDialog,
     private chrome: ChromeService,
-    private util: UtilServiceState
+    private global: GlobalService
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
       if (this.chainType === 'Neo2') {
-        this.util
+        this.global
           .getWIF(state.neo2WIFArr, state.neo2WalletArr, state.currentWallet)
           .then((wif) => {
             this.WIF = wif;
           });
       }
       if (this.chainType === 'Neo3') {
-        this.util
+        this.global
           .getWIF(state.neo3WIFArr, state.neo3WalletArr, state.currentWallet)
           .then((wif) => {
             this.WIF = wif;

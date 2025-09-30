@@ -4,8 +4,8 @@ import {
   AssetState,
   GlobalService,
   ChromeService,
-  UtilServiceState,
   SettingState,
+  NeoAssetInfoState,
 } from '@/app/core';
 import { NEO } from '@/models/models';
 import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
@@ -89,9 +89,9 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
     private chrome: ChromeService,
     private dialog: MatDialog,
     private neo3Transfer: Neo3TransferService,
-    private util: UtilServiceState,
     private settingState: SettingState,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private neoAssetInfoState: NeoAssetInfoState
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -163,7 +163,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
   }
 
   async getAssetDetail() {
-    const symbols = await this.util.getAssetSymbols(
+    const symbols = await this.neoAssetInfoState.getAssetSymbols(
       [this.assetId],
       this.chainType
     );
@@ -174,7 +174,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
       this.chainType
     );
     if (new BigNumber(balance).comparedTo(0) > 0) {
-      const decimals = await this.util.getAssetDecimals(
+      const decimals = await this.neoAssetInfoState.getAssetDecimals(
         [this.assetId],
         this.chainType
       );
@@ -428,7 +428,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
       this.showHardwareSign = true;
       return;
     }
-    this.util
+    this.global
       .getWIF(this.neo3WIFArr, this.neo3WalletArr, this.currentWallet)
       .then((wif) => {
         tx.sign(wif, this.n3Network.magicNumber);

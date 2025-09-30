@@ -5,7 +5,6 @@ import {
   ChromeService,
   AssetState,
   NotificationService,
-  UtilServiceState,
   SettingState,
 } from '@/app/core';
 import { Transaction, Witness } from '@cityofzion/neon-core-neo3/lib/tx';
@@ -82,7 +81,6 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
     private settingState: SettingState,
     private neo3Invoke: Neo3InvokeService,
     private notification: NotificationService,
-    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -402,7 +400,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
       this.showHardwareSign = true;
       return;
     }
-    const wif = await this.util.getWIF(
+    const wif = await this.global.getWIF(
       this.neo3WIFArr,
       this.neo3WalletArr,
       this.currentWallet

@@ -1,7 +1,6 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import {
   GlobalService,
-  UtilServiceState,
   ChromeService,
   AssetEVMState,
   AssetState,
@@ -17,6 +16,7 @@ import {
 import { ETH_SOURCE_ASSET_HASH, EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
 import { ethers } from 'ethers';
+import { getHexDataLength } from '@/app/core/utils/evm';
 
 export type TabType = 'details' | 'data';
 
@@ -53,7 +53,6 @@ export class NeoXBridgeConfirmComponent implements OnInit {
 
   constructor(
     private global: GlobalService,
-    private util: UtilServiceState,
     private assetState: AssetState,
     private chrome: ChromeService,
     private assetEVMState: AssetEVMState
@@ -61,7 +60,7 @@ export class NeoXBridgeConfirmComponent implements OnInit {
 
   ngOnInit(): void {
     this.calculateTotalAmount();
-    this.hexDataLength = this.util.getHexDataLength(this.txParams.data);
+    this.hexDataLength = getHexDataLength(this.txParams.data);
     this.assetEVMState
       .getNonceInfo(this.currentWallet.accounts[0].address)
       .then((res) => {

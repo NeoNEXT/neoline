@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { DappEVMState, UtilServiceState, AssetState } from '@/app/core';
+import { DappEVMState, AssetState } from '@/app/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import {
   AddressNonceInfo,
@@ -8,6 +8,10 @@ import {
 } from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 import { RateType } from '../evm-send-tx.component';
+import {
+  detectContractSecurityToThirdPartySite,
+  getHexDataLength,
+} from '@/app/core/utils/evm';
 
 type TabType = 'details' | 'data';
 
@@ -45,12 +49,11 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   toWalletName: string;
   constructor(
     private dappEVMState: DappEVMState,
-    private util: UtilServiceState,
     private assetState: AssetState
   ) {}
 
   ngOnInit(): void {
-    this.hexDataLength = this.util.getHexDataLength(this.txParams.data);
+    this.hexDataLength = getHexDataLength(this.txParams.data);
     this.tokenData = this.dappEVMState.parseStandardTokenTransactionData(
       this.txParams.data
     );
@@ -103,7 +106,7 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   }
 
   detectContractSecurity() {
-    this.util.detectContractSecurity(
+    detectContractSecurityToThirdPartySite(
       this.neoXNetwork.chainId,
       this.txParams.to
     );

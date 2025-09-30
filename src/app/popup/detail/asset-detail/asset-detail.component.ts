@@ -4,7 +4,6 @@ import {
   ChromeService,
   GlobalService,
   SettingState,
-  UtilServiceState,
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NEO, GAS, Asset } from '@/models/models';
@@ -51,7 +50,6 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private global: GlobalService,
     private router: Router,
-    private util: UtilServiceState,
     private settingState: SettingState,
     private store: Store<AppState>
   ) {
@@ -190,7 +188,7 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
         break;
     }
     if (this.chainType === 'NeoX' && this.assetId === ETH_SOURCE_ASSET_HASH) {
-      this.util.toExplorer({
+      this.global.toExplorer({
         chain: this.chainType,
         network,
         networkIndex,
@@ -199,7 +197,7 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
       });
       return;
     }
-    this.util.toExplorer({
+    this.global.toExplorer({
       chain: this.chainType,
       network,
       networkIndex,

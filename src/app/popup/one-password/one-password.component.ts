@@ -1,4 +1,4 @@
-import { UtilServiceState, ChromeService, GlobalService } from '@/app/core';
+import { ChromeService, GlobalService, Neo3Service } from '@/app/core';
 import { Component, OnInit } from '@angular/core';
 import {
   UntypedFormGroup,
@@ -50,10 +50,10 @@ export class PopupOnePasswordComponent implements OnInit {
   currentChainType: ChainType;
   constructor(
     private fb: UntypedFormBuilder,
-    private util: UtilServiceState,
     private chrome: ChromeService,
     private global: GlobalService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private neo3Service: Neo3Service
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -111,7 +111,7 @@ export class PopupOnePasswordComponent implements OnInit {
     const account =
       chainType === 'Neo2'
         ? item.accounts[0]
-        : this.util.getNeo3Account(item.accounts[0]);
+        : this.neo3Service.getNeo3Account(item.accounts[0]);
     account
       .decrypt(this.pwdForm.value[`password${index}`])
       .then(() => {

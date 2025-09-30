@@ -5,7 +5,7 @@ import {
   ChromeService,
   AssetState,
   TransactionState,
-  UtilServiceState,
+  Neo3Service,
 } from '@/app/core';
 import {
   Transaction,
@@ -63,11 +63,11 @@ export class PopupNoticeDeployComponent implements OnInit {
   constructor(
     private aRoute: ActivatedRoute,
     private global: GlobalService,
+    private neo3Service: Neo3Service,
     private dialog: MatDialog,
     private chrome: ChromeService,
     private assetState: AssetState,
     private txState: TransactionState,
-    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -156,7 +156,7 @@ export class PopupNoticeDeployComponent implements OnInit {
             },
             true
           );
-          this.global.handleRpcError(res.error, 'Neo2');
+          this.neo3Service.handleRpcError(res.error, 'Neo2');
         } else {
           this.chrome.windowCallback(
             {
@@ -192,7 +192,7 @@ export class PopupNoticeDeployComponent implements OnInit {
           return: requestTarget.Deploy,
           ID: this.messageID,
         });
-        this.global.handleRpcError(err, 'Neo2');
+        this.neo3Service.handleRpcError(err, 'Neo2');
       });
   }
 
@@ -377,7 +377,7 @@ export class PopupNoticeDeployComponent implements OnInit {
       this.showHardwareSign = true;
       return;
     }
-    this.util
+    this.global
       .getWIF(this.neo2WIFArr, this.neo2WalletArr, this.wallet)
       .then((wif) => {
         tx.sign(wif);

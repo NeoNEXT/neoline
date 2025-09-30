@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { TransactionState, UtilServiceState } from '@/app/core';
+import { GlobalService, TransactionState } from '@/app/core';
 import { NEO, GAS, TransactionStatus } from '@/models/models';
 import { ChainType, RpcNetwork, ETH_SOURCE_ASSET_HASH } from '../../_lib';
 import BigNumber from 'bignumber.js';
@@ -14,7 +14,7 @@ export class PopupTxDetailDialogComponent implements OnInit {
   ETH_SOURCE_ASSET_HASH = ETH_SOURCE_ASSET_HASH;
   showActivityLog = false;
   constructor(
-    private util: UtilServiceState,
+    private global: GlobalService,
     private dialogRef: MatDialogRef<PopupTxDetailDialogComponent>,
     private txState: TransactionState,
     @Inject(MAT_DIALOG_DATA)
@@ -52,7 +52,7 @@ export class PopupTxDetailDialogComponent implements OnInit {
   }
 
   toWeb(txId: string) {
-    this.util.toExplorer({
+    this.global.toExplorer({
       chain: this.data.chainType,
       network: this.data.network,
       networkIndex: this.data.networkIndex,

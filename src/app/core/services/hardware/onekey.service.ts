@@ -25,7 +25,7 @@ import { Store } from '@ngrx/store';
 import { BigNumber } from 'bignumber.js';
 import { MessageTypes, TypedMessage } from '@metamask/eth-sig-util';
 import { environment } from '@/environments/environment';
-import { transformTypedDataPlugin } from '../../utils/hardware';
+import { transformTypedDataPlugin } from '../../utils/evm';
 
 interface OneKeyDeviceInfo {
   connectId: string; // device connection id

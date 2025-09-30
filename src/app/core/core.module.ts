@@ -1,32 +1,41 @@
 import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { GlobalService } from './services/global.service';
-import { NeonService } from './services/neon.service';
-import { ChromeService } from './services/chrome.service';
-import { NotificationService } from './services/notification.service';
 import { HttpClientModule } from '@angular/common/http';
-import { HttpService } from './services/http.service';
+import { MatDialogModule } from '@angular/material/dialog';
+
 import {
   PopupWalletGuard,
   OpenedWalletGuard,
   PopupLoginGuard,
 } from './guards/wallet.guard';
-import { AssetState } from './states/neo/asset.state';
-import { TransactionState } from './states/neo/transaction.state';
-import { MatDialogModule } from '@angular/material/dialog';
-import { SettingState } from './states/setting.state';
-import { NftState } from './states/neo/nft.state';
-import { UtilServiceState } from './states/util.service';
-import { HomeState } from './states/home.state';
+
+// services
 import { LedgerService } from './services/hardware/ledger.service';
 import { OneKeyService } from './services/hardware/onekey.service';
-import { ExtensionService } from './services/extension.service';
 import { QRBasedService } from './services/hardware/qrbased.service';
+
+import { GlobalService } from './services/global.service';
+import { NeonService } from './services/neon.service';
+import { ChromeService } from './services/chrome.service';
+import { NotificationService } from './services/notification.service';
+import { HttpService } from './services/http.service';
+import { ExtensionService } from './services/extension.service';
 import { EvmService } from './services/evm.service';
+import { Neo3Service } from './services/neo3.service';
+
+// states
+import { AssetState } from './states/neo/asset.state';
+import { TransactionState } from './states/neo/transaction.state';
+import { NftState } from './states/neo/nft.state';
+import { NeoAssetInfoState } from './states/neo/asset-info.state';
+
 import { AssetEVMState } from './states/evm/asset.state';
 import { DappEVMState } from './states/evm/dapp.state';
-import { BridgeState } from './states/bridge.state';
 import { EvmNFTState } from './states/evm/nft.state';
+
+import { SettingState } from './states/setting.state';
+import { HomeState } from './states/home.state';
+import { BridgeState } from './states/bridge.state';
 
 @NgModule({
   declarations: [],
@@ -45,7 +54,6 @@ import { EvmNFTState } from './states/evm/nft.state';
     NotificationService,
     SettingState,
     NftState,
-    UtilServiceState,
     HomeState,
     LedgerService,
     OneKeyService,
@@ -56,6 +64,8 @@ import { EvmNFTState } from './states/evm/nft.state';
     BridgeState,
     EvmNFTState,
     QRBasedService,
+    Neo3Service,
+    NeoAssetInfoState,
   ],
 })
 export class CoreModule {}

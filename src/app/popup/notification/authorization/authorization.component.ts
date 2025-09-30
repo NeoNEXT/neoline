@@ -3,7 +3,6 @@ import {
   AssetState,
   ChromeService,
   NeonService,
-  UtilServiceState,
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ERRORS, EVENT, requestTarget } from '@/models/dapi';
@@ -28,6 +27,7 @@ import {
 } from '../../_dialogs';
 import { NEO } from '@/models/models';
 import BigNumber from 'bignumber.js';
+import { handleWallet } from '@/app/core/utils/app';
 
 @Component({
   templateUrl: './authorization.component.html',
@@ -55,7 +55,6 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
     private neon: NeonService,
     private router: Router,
     private assetState: AssetState,
-    private util: UtilServiceState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -66,15 +65,15 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
       switch (this.currentChainType) {
         case 'Neo2':
           this.currentNetwork = state.n2Networks[state.n2NetworkIndex];
-          this.allWallets = this.util.handleWallet(state.neo2WalletArr, 'Neo2');
+          this.allWallets = handleWallet(state.neo2WalletArr, 'Neo2');
           break;
         case 'Neo3':
           this.currentNetwork = state.n3Networks[state.n3NetworkIndex];
-          this.allWallets = this.util.handleWallet(state.neo3WalletArr, 'Neo3');
+          this.allWallets = handleWallet(state.neo3WalletArr, 'Neo3');
           break;
         case 'NeoX':
           this.currentNetwork = state.neoXNetworks[state.neoXNetworkIndex];
-          this.allWallets = this.util.handleWallet(state.neoXWalletArr, 'NeoX');
+          this.allWallets = handleWallet(state.neoXWalletArr, 'NeoX');
           break;
       }
       this.getBalances();

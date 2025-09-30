@@ -28,7 +28,7 @@ import { ethers } from 'ethers';
 import { TypedMessage, MessageTypes } from '@metamask/eth-sig-util';
 import { HttpService } from '../http.service';
 import { GlobalService } from '../global.service';
-import { transformTypedDataPlugin } from '../../utils/hardware';
+import { transformTypedDataPlugin } from '../../utils/evm';
 
 export const LedgerStatuses = {
   UNSUPPORTED: 'UNSUPPORTED',

@@ -16,9 +16,12 @@ import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import { map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
-import { UtilServiceState } from './util.service';
 import BigNumber from 'bignumber.js';
 import { sc, wallet } from '@cityofzion/neon-core-neo3/lib';
+import {
+  handleNeo3StackNumber,
+  handleNeo3StackNumberValue,
+} from '../utils/neo';
 
 @Injectable()
 export class BridgeState {
@@ -42,20 +45,23 @@ export class BridgeState {
   private neo3Network: RpcNetwork;
   private provider: ethers.JsonRpcProvider;
 
-  constructor(
-    private store: Store<AppState>,
-    private http: HttpClient,
-    private utilService: UtilServiceState
-  ) {
+  constructor(private store: Store<AppState>, private http: HttpClient) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
       this.neo3Network = state.n3Networks[state.n3NetworkIndex];
       this.provider?.destroy();
-      const network = new ethers.Network(this.neoXNetwork.name, this.neoXNetwork.chainId);
-      this.provider = new ethers.JsonRpcProvider(this.neoXNetwork.rpcUrl, network, {
-        staticNetwork: network,
-      });
+      const network = new ethers.Network(
+        this.neoXNetwork.name,
+        this.neoXNetwork.chainId
+      );
+      this.provider = new ethers.JsonRpcProvider(
+        this.neoXNetwork.rpcUrl,
+        network,
+        {
+          staticNetwork: network,
+        }
+      );
     });
   }
 
@@ -83,7 +89,7 @@ export class BridgeState {
     };
     return this.http.post(this.neo3Network.rpcUrl, data).pipe(
       map((res: any) => {
-        const fee = this.utilService.handleNeo3StackNumberValue(res.result);
+        const fee = handleNeo3StackNumberValue(res.result);
         return new BigNumber(fee).shiftedBy(-8).toFixed();
       })
     );
@@ -98,7 +104,7 @@ export class BridgeState {
     };
     return this.http.post(this.neo3Network.rpcUrl, data).pipe(
       map((res: any) => {
-        const data = this.utilService.handleNeo3StackNumberValue(res.result);
+        const data = handleNeo3StackNumberValue(res.result);
         return new BigNumber(data).shiftedBy(-8).toFixed();
       })
     );
@@ -124,11 +130,11 @@ export class BridgeState {
         let percentage: string;
         if (res.state === 'HALT') {
           if (value?.[1]) {
-            used = this.utilService.handleNeo3StackNumber(value[1]);
+            used = handleNeo3StackNumber(value[1]);
             used = new BigNumber(used).shiftedBy(-8).toFixed(0);
           }
           if (value?.[4]?.value?.[4]) {
-            total = this.utilService.handleNeo3StackNumber(value[4].value[4]);
+            total = handleNeo3StackNumber(value[4].value[4]);
             total = new BigNumber(total).shiftedBy(-8).toFixed(0);
           }
         }

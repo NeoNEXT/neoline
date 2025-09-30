@@ -1,17 +1,17 @@
 import { Injectable } from '@angular/core';
 import { HttpService } from '../../services/http.service';
 import { NftAsset, NftTransaction } from '@/models/models';
-import { UtilServiceState } from '../util.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { RpcNetwork } from '@/app/popup/_lib';
+import { NeoAssetInfoState } from './asset-info.state';
 
 @Injectable()
 export class NftState {
   private n3Network: RpcNetwork;
   constructor(
     private http: HttpService,
-    private util: UtilServiceState,
+    private neoAssetInfoState: NeoAssetInfoState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -43,7 +43,9 @@ export class NftState {
     const res = await this.http
       .rpcPost(this.n3Network.rpcUrl, data)
       .toPromise();
-    const nftAsset: NftAsset = res.balance.find((m) => m.assethash === contract);
+    const nftAsset: NftAsset = res.balance.find(
+      (m) => m.assethash === contract
+    );
     if (!nftAsset) {
       return undefined;
     }
@@ -52,7 +54,7 @@ export class NftState {
       nftAsset.tokens[index].symbol = nftAsset.symbol;
       tokenIds.push(m.tokenid);
     });
-    const propertiesRes = await this.util.getN3NftProperties(
+    const propertiesRes = await this.neoAssetInfoState.getN3NftProperties(
       nftAsset.assethash,
       tokenIds
     );
@@ -155,7 +157,7 @@ export class NftState {
       .rpcPost(this.n3Network.rpcUrl, data)
       .toPromise();
     if ((res?.manifest?.supportedstandards || []).includes('NEP-11')) {
-      const symbols = await this.util.getAssetSymbols([res?.hash], 'Neo3');
+      const symbols = await this.neoAssetInfoState.getAssetSymbols([res?.hash], 'Neo3');
       const target: NftAsset = {
         name: res?.manifest.name,
         assethash: res?.hash,
