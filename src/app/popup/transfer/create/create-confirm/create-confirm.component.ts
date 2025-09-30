@@ -7,7 +7,7 @@ import {
   GlobalService,
   TransactionState,
   ChromeService,
-  EvmNFTState,
+  EvmNFTService,
   SettingState,
   Neo3Service,
   EvmTxService,
@@ -75,7 +75,7 @@ export class TransferCreateConfirmComponent implements OnInit {
     private neo3Transfer: Neo3TransferService,
     private chrome: ChromeService,
     private settingState: SettingState,
-    private evmNFTState: EvmNFTState,
+    private evmNFTService: EvmNFTService,
     private evmTxService: EvmTxService
   ) {}
 
@@ -218,7 +218,7 @@ export class TransferCreateConfirmComponent implements OnInit {
     const { maxFeePerGas, maxPriorityFeePerGas, gasPrice, gasLimit } =
       neoXFeeInfo;
     if (isNFT) {
-      const { newParams } = this.evmNFTState.getTransferTxRequest({
+      const { newParams } = this.evmNFTService.getTransferTxRequest({
         asset: nftAsset,
         token: nftToken,
         fromAddress: from,
@@ -304,7 +304,7 @@ export class TransferCreateConfirmComponent implements OnInit {
               neoXFeeInfo;
             if (this.data.isNFT) {
               const { PreExecutionParams, newParams } =
-                this.evmNFTState.getTransferTxRequest({
+                this.evmNFTService.getTransferTxRequest({
                   asset: nftAsset,
                   token: nftToken,
                   fromAddress: from,
@@ -559,7 +559,7 @@ export class TransferCreateConfirmComponent implements OnInit {
       });
       this.evmHexDataLength = getHexDataLength(this.evmHexData);
     } else if (this.data.chainType === 'NeoX' && this.data.isNFT) {
-      this.evmHexData = this.evmNFTState.getTransferData({
+      this.evmHexData = this.evmNFTService.getTransferData({
         asset: this.data.nftAsset,
         token: this.data.nftToken,
         fromAddress: this.data.from,

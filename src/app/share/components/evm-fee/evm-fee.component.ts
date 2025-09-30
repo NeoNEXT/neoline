@@ -1,4 +1,4 @@
-import { EvmGasService, EvmNFTState } from '@/app/core';
+import { EvmGasService, EvmNFTService } from '@/app/core';
 import { PopupEditEvmFeeDialogComponent } from '@/app/popup/_dialogs';
 import { Asset, NftAsset, NftToken } from '@/models/models';
 import {
@@ -43,7 +43,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
   isUseSiteFee = true;
 
   constructor(
-    private evmNFTState: EvmNFTState,
+    private evmNFTService: EvmNFTService,
     private dialog: MatDialog,
     private evmGasService: EvmGasService
   ) {}
@@ -118,7 +118,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
               this.txParams
             );
           } else if (this.transferNFT) {
-            networkGasLimit = await this.evmNFTState.estimateGasOfTransfer({
+            networkGasLimit = await this.evmNFTService.estimateGasOfTransfer({
               asset: this.nftAsset,
               token: this.transferNFT,
               fromAddress: this.fromAddress,

@@ -4,11 +4,11 @@ import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import type BN from 'bn.js';
-import { DappEVMState } from './dapp.state';
+import { DappEVMState } from '../../states/evm/dapp.state';
 import { NftAsset, NftToken } from '@/models/models';
-import { EvmTxService } from '../../services/evm/tx.service';
+import { EvmTxService } from './tx.service';
 @Injectable()
-export class EvmNFTState {
+export class EvmNFTService {
   private neoXNetwork: RpcNetwork;
   private provider: ethers.JsonRpcProvider;
 
@@ -21,10 +21,17 @@ export class EvmNFTState {
     account$.subscribe((state) => {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
       this.provider?.destroy();
-      const network = new ethers.Network(this.neoXNetwork.name, this.neoXNetwork.chainId);
-      this.provider = new ethers.JsonRpcProvider(this.neoXNetwork.rpcUrl, network, {
-        staticNetwork: network,
-      });
+      const network = new ethers.Network(
+        this.neoXNetwork.name,
+        this.neoXNetwork.chainId
+      );
+      this.provider = new ethers.JsonRpcProvider(
+        this.neoXNetwork.rpcUrl,
+        network,
+        {
+          staticNetwork: network,
+        }
+      );
     });
   }
 
@@ -60,7 +67,12 @@ export class EvmNFTState {
       gasLimit,
       gasPrice,
     };
-    return this.evmTxService.getTxParams(txParams, neoXFeeInfo, nonce, fromAddress);
+    return this.evmTxService.getTxParams(
+      txParams,
+      neoXFeeInfo,
+      nonce,
+      fromAddress
+    );
   }
 
   async estimateGasOfTransfer({

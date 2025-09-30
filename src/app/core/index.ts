@@ -15,6 +15,7 @@ export { EvmWalletService } from './services/evm/wallet.service';
 export { EvmAssetService } from './services/evm/asset.service';
 export { EvmGasService } from './services/evm/gas.service';
 export { EvmTxService } from './services/evm/tx.service';
+export { EvmNFTService } from './services/evm/nft.service';
 
 export { NeoWalletService } from './services/neo/wallet.service';
 export { Neo3Service } from './services/neo/neo3.service';
@@ -34,7 +35,6 @@ export { NftState } from './states/neo/nft.state';
 export { NeoAssetInfoState } from './states/neo/asset-info.state';
 
 export { DappEVMState } from './states/evm/dapp.state';
-export { EvmNFTState } from './states/evm/nft.state';
 
 export { SettingState } from './states/setting.state';
 export { HomeState } from './states/home.state';

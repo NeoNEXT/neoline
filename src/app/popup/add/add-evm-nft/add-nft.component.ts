@@ -1,5 +1,5 @@
 import { Component, OnDestroy } from '@angular/core';
-import { ChromeService, GlobalService, EvmNFTState } from '@/app/core';
+import { ChromeService, EvmNFTService, GlobalService } from '@/app/core';
 import { NftAsset, NftToken } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -31,7 +31,7 @@ export class PopupAddNftComponent implements OnDestroy {
     private chrome: ChromeService,
     private global: GlobalService,
     private fb: UntypedFormBuilder,
-    private evmNFTState: EvmNFTState,
+    private evmNFTService: EvmNFTService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -60,7 +60,7 @@ export class PopupAddNftComponent implements OnDestroy {
     this.loading = true;
     const tokenAddress = this.addNFTForm.value.address;
     const tokenId = this.addNFTForm.value.tokenId;
-    this.evmNFTState
+    this.evmNFTService
       .watchNft(tokenAddress, tokenId, this.address)
       .then((res) => {
         if (res.name === undefined || res.symbol === undefined) {

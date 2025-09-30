@@ -2,8 +2,8 @@ import { Component, OnDestroy } from '@angular/core';
 import {
   NftState,
   ChromeService,
-  EvmNFTState,
   GlobalService,
+  EvmNFTService,
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NftAsset, NftToken } from '@/models/models';
@@ -35,10 +35,10 @@ export class PopupNftDetailComponent implements OnDestroy {
     private aRouter: ActivatedRoute,
     private nftState: NftState,
     private router: Router,
-    private evmNFTState: EvmNFTState,
     private chrome: ChromeService,
     private global: GlobalService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private evmNFTService: EvmNFTService
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -117,7 +117,7 @@ export class PopupNftDetailComponent implements OnDestroy {
     }
     let haveOwnerNFT = false;
     for (let i = 0; i < this.nft.tokens.length; i++) {
-      const isOwner = await this.evmNFTState.isNftOwner(
+      const isOwner = await this.evmNFTService.isNftOwner(
         this.address,
         this.nftContract,
         this.nft.tokens[i].tokenid,
