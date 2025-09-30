@@ -4,7 +4,7 @@ import {
   AssetState,
   GlobalService,
   ChromeService,
-  TransactionState,
+  NeoTxService,
   SettingState,
   Neo3Service,
   NeoAssetInfoState,
@@ -78,7 +78,7 @@ export class PopupNoticeTransferComponent implements OnInit {
     private global: GlobalService,
     private neo3Service: Neo3Service,
     private chrome: ChromeService,
-    private txState: TransactionState,
+    private neoTxService: NeoTxService,
     private dialog: MatDialog,
     private settingState: SettingState,
     private store: Store<AppState>,
@@ -301,7 +301,7 @@ export class PopupNoticeTransferComponent implements OnInit {
     }
     this.loadingMsg = 'Wait';
     this.loading = true;
-    return this.txState
+    return this.neoTxService
       .rpcSendRawTransaction(tx.serialize(true))
       .then(async (res) => {
         if (!res) {

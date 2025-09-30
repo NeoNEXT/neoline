@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpService } from '../../services/http.service';
+import { HttpService } from '../http.service';
 import { Observable, forkJoin, of } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { ChainType, RpcNetwork } from '@popup/_lib';
@@ -7,10 +7,10 @@ import { Transaction, NEO, GAS } from '@/models/models';
 import BigNumber from 'bignumber.js';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { NeoAssetInfoState } from './asset-info.state';
+import { NeoAssetInfoState } from '../../states/neo/asset-info.state';
 
 @Injectable()
-export class TransactionState {
+export class NeoTxService {
   private chainType: ChainType;
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;

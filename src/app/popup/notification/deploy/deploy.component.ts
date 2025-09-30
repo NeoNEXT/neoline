@@ -4,7 +4,7 @@ import {
   GlobalService,
   ChromeService,
   AssetState,
-  TransactionState,
+  NeoTxService,
   Neo3Service,
 } from '@/app/core';
 import {
@@ -67,7 +67,7 @@ export class PopupNoticeDeployComponent implements OnInit {
     private dialog: MatDialog,
     private chrome: ChromeService,
     private assetState: AssetState,
-    private txState: TransactionState,
+    private neoTxService: NeoTxService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -137,7 +137,7 @@ export class PopupNoticeDeployComponent implements OnInit {
       );
       return;
     }
-    return this.txState
+    return this.neoTxService
       .rpcSendRawTransaction(transaction.serialize(true))
       .then(async (res) => {
         if (!res) {

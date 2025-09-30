@@ -4,7 +4,7 @@ import {
   GlobalService,
   ChromeService,
   AssetState,
-  TransactionState,
+  NeoTxService,
   SettingState,
   Neo3Service,
 } from '@/app/core';
@@ -86,7 +86,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
     private chrome: ChromeService,
     private assetState: AssetState,
     private settingState: SettingState,
-    private txState: TransactionState,
+    private neoTxService: NeoTxService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -301,7 +301,7 @@ export class PopupNoticeInvokeComponent implements OnInit {
       this.global.snackBarTip('txFailed', error.msg || error);
       return;
     }
-    return this.txState
+    return this.neoTxService
       .rpcSendRawTransaction(serialize)
       .then(async (res) => {
         if (!res) {

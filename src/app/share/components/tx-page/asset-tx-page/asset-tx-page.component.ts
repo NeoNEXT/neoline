@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
-import { TransactionState, ChromeService, EvmTxService } from '@/app/core';
+import { NeoTxService, ChromeService, EvmTxService } from '@/app/core';
 import { Transaction, TransactionStatus } from '@/models/models';
 import { forkJoin, Unsubscribable, interval } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -42,7 +42,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
   private networkId: number;
   constructor(
     private chrome: ChromeService,
-    private txState: TransactionState,
+    private neoTxService: NeoTxService,
     private dialog: MatDialog,
     private store: Store<AppState>,
     private evmTxService: EvmTxService
@@ -86,7 +86,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
   private getAllTxs() {
     this.loading = true;
     if (this.assetId === '') {
-      this.txState.getAllTxs(this.address).then((res) => {
+      this.neoTxService.getAllTxs(this.address).then((res) => {
         this.txData = res || [];
         this.loading = false;
       });
@@ -186,7 +186,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
   }
 
   private handleTxs(validTxs?: string[]) {
-    const httpReq1 = this.txState.getAssetTxs(this.address, this.assetId);
+    const httpReq1 = this.neoTxService.getAssetTxs(this.address, this.assetId);
     let httpReq2;
     let txIdArray = [];
     const networkName = `${this.chainType}-${this.networkId}`;
@@ -198,7 +198,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
         mResolve(validTxs ?? validTxs);
       });
     } else {
-      httpReq2 = this.txState.getTxsValid(txIdArray, this.chainType);
+      httpReq2 = this.neoTxService.getTxsValid(txIdArray, this.chainType);
     }
     forkJoin([httpReq1, httpReq2]).subscribe((result: any) => {
       let txData = result[0] || [];
@@ -234,12 +234,14 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
     let time = this.chainType === 'Neo3' ? 3000 : 15000;
     this.listenTxSub = interval(time).subscribe(() => {
       req?.unsubscribe();
-      req = this.txState.getTxsValid(ids, this.chainType).subscribe((txIds) => {
-        if (txIds.length > 0) {
-          this.listenTxSub?.unsubscribe();
-          this.handleTxs(txIds);
-        }
-      });
+      req = this.neoTxService
+        .getTxsValid(ids, this.chainType)
+        .subscribe((txIds) => {
+          if (txIds.length > 0) {
+            this.listenTxSub?.unsubscribe();
+            this.handleTxs(txIds);
+          }
+        });
     });
   }
 

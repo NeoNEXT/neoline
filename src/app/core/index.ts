@@ -21,6 +21,7 @@ export { NeoWalletService } from './services/neo/wallet.service';
 export { Neo3Service } from './services/neo/neo3.service';
 export { Neo2TxService } from './services/neo/neo2-tx.service';
 export { NeoNFTService } from './services/neo/nft.service';
+export { NeoTxService } from './services/neo/tx.service';
 
 export { GlobalService } from './services/global.service';
 export { ChromeService } from './services/chrome.service';
@@ -31,7 +32,6 @@ export { InitService } from './services/init.service';
 
 // states
 export { AssetState } from './states/neo/asset.state';
-export { TransactionState } from './states/neo/transaction.state';
 export { NeoAssetInfoState } from './states/neo/asset-info.state';
 
 export { DappEVMState } from './states/evm/dapp.state';

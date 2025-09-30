@@ -3,7 +3,7 @@ import {
   GlobalService,
   NotificationService,
   BridgeState,
-  TransactionState,
+  NeoTxService,
   ChromeService,
   SettingState,
   EvmTxService,
@@ -109,7 +109,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     private globalService: GlobalService,
     public notification: NotificationService,
     private bridgeState: BridgeState,
-    private transactionState: TransactionState,
+    private neoTxService: NeoTxService,
     private settingState: SettingState,
     private dialog: MatDialog,
     private chrome: ChromeService,
@@ -586,7 +586,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   private waitNeo3SourceTxComplete(hash: string) {
     this.getSourceTxReceiptInterval?.unsubscribe();
     this.getSourceTxReceiptInterval = interval(3000).subscribe(() => {
-      this.transactionState
+      this.neoTxService
         .getApplicationLog(hash, this.sessionTx.sourceRpcUrl)
         .subscribe((res) => {
           this.sessionTx.sourceTxID = hash;

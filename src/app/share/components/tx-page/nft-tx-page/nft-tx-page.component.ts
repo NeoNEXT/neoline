@@ -2,7 +2,7 @@ import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import {
   NeoNFTService,
   ChromeService,
-  TransactionState,
+  NeoTxService,
   EvmTxService,
 } from '@/app/core';
 import {
@@ -53,7 +53,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private neoNFTService: NeoNFTService,
     private chrome: ChromeService,
-    private txState: TransactionState,
+    private neoTxService: NeoTxService,
     private store: Store<AppState>,
     private evmTxService: EvmTxService
   ) {}
@@ -168,7 +168,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
         mResolve(validTxs ?? validTxs);
       });
     } else {
-      httpReq2 = this.txState.getTxsValid(txIdArray, 'Neo3');
+      httpReq2 = this.neoTxService.getTxsValid(txIdArray, 'Neo3');
     }
     forkJoin([httpReq1, httpReq2]).subscribe((result: any) => {
       let txData = result[0] || [];
@@ -205,7 +205,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
     let time = this.chainType === 'Neo3' ? 3000 : 15000;
     this.listenTxSub = interval(time).subscribe(() => {
       req?.unsubscribe();
-      req = this.txState.getTxsValid(ids, 'Neo3').subscribe((txIds) => {
+      req = this.neoTxService.getTxsValid(ids, 'Neo3').subscribe((txIds) => {
         if (txIds.length > 0) {
           this.listenTxSub?.unsubscribe();
           this.handleTxs(txIds);

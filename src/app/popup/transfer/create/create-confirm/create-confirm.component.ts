@@ -5,13 +5,12 @@ import { NeoDataJsonProp, NeoXFeeInfoProp, TransferData } from '../interface';
 import {
   AssetState,
   GlobalService,
-  TransactionState,
+  NeoTxService,
   ChromeService,
   EvmNFTService,
   SettingState,
   Neo3Service,
   EvmTxService,
-  EvmAssetService,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import {
@@ -71,7 +70,7 @@ export class TransferCreateConfirmComponent implements OnInit {
     private transfer: TransferService,
     private global: GlobalService,
     private neo3Service: Neo3Service,
-    private txState: TransactionState,
+    private neoTxService: NeoTxService,
     private neo3Transfer: Neo3TransferService,
     private chrome: ChromeService,
     private settingState: SettingState,
@@ -267,7 +266,7 @@ export class TransferCreateConfirmComponent implements OnInit {
       switch (this.data.chainType) {
         case 'Neo2':
           try {
-            res = await this.txState.rpcSendRawTransaction(
+            res = await this.neoTxService.rpcSendRawTransaction(
               this.unsignedTx.serialize(true)
             );
           } catch (error) {

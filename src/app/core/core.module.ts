@@ -24,6 +24,7 @@ import { NeoWalletService } from './services/neo/wallet.service';
 import { Neo3Service } from './services/neo/neo3.service';
 import { Neo2TxService } from './services/neo/neo2-tx.service';
 import { NeoNFTService } from './services/neo/nft.service';
+import { NeoTxService } from './services/neo/tx.service';
 
 import { GlobalService } from './services/global.service';
 import { ChromeService } from './services/chrome.service';
@@ -34,7 +35,6 @@ import { InitService } from './services/init.service';
 
 // states
 import { AssetState } from './states/neo/asset.state';
-import { TransactionState } from './states/neo/transaction.state';
 import { NeoAssetInfoState } from './states/neo/asset-info.state';
 
 import { DappEVMState } from './states/evm/dapp.state';
@@ -56,7 +56,6 @@ import { SelectChainState } from './states/select-chain.state';
     OpenedWalletGuard,
     PopupLoginGuard,
     AssetState,
-    TransactionState,
     NotificationService,
     SettingState,
     HomeState,
@@ -78,6 +77,7 @@ import { SelectChainState } from './states/select-chain.state';
     NeoWalletService,
     Neo2TxService,
     NeoNFTService,
+    NeoTxService,
   ],
 })
 export class CoreModule {}

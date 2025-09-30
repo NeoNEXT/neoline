@@ -1,6 +1,6 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import { GlobalService, TransactionState } from '@/app/core';
+import { GlobalService, NeoTxService } from '@/app/core';
 import { NEO, GAS, TransactionStatus } from '@/models/models';
 import { ChainType, RpcNetwork, ETH_SOURCE_ASSET_HASH } from '../../_lib';
 import BigNumber from 'bignumber.js';
@@ -16,7 +16,7 @@ export class PopupTxDetailDialogComponent implements OnInit {
   constructor(
     private global: GlobalService,
     private dialogRef: MatDialogRef<PopupTxDetailDialogComponent>,
-    private txState: TransactionState,
+    private neoTxService: NeoTxService,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       tx: any;
@@ -31,10 +31,12 @@ export class PopupTxDetailDialogComponent implements OnInit {
   ngOnInit(): void {
     if (this.data.isNFT === false) {
       if (this.data.tx.assetId === NEO || this.data.tx.assetId === GAS) {
-        this.txState.getNeo2TxDetail(this.data.tx.txid).subscribe((res) => {
-          this.data.tx.from = res.vin;
-          this.data.tx.to = res.vout;
-        });
+        this.neoTxService
+          .getNeo2TxDetail(this.data.tx.txid)
+          .subscribe((res) => {
+            this.data.tx.from = res.vin;
+            this.data.tx.to = res.vout;
+          });
       }
     }
   }
