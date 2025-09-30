@@ -3,7 +3,6 @@ import { AddressNonceInfo, GAS3_CONTRACT, STORAGE_NAME } from '../../../_lib';
 import { GAS, Transaction } from '@/models/models';
 import { NeoDataJsonProp, NeoXFeeInfoProp, TransferData } from '../interface';
 import {
-  AssetState,
   GlobalService,
   NeoTxService,
   ChromeService,
@@ -11,6 +10,7 @@ import {
   SettingState,
   Neo3Service,
   EvmTxService,
+  RateState,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import {
@@ -65,7 +65,6 @@ export class TransferCreateConfirmComponent implements OnInit {
   sendNeoXFeeInfo: NeoXFeeInfoProp;
 
   constructor(
-    private assetState: AssetState,
     private dialog: MatDialog,
     private transfer: TransferService,
     private global: GlobalService,
@@ -75,7 +74,8 @@ export class TransferCreateConfirmComponent implements OnInit {
     private chrome: ChromeService,
     private settingState: SettingState,
     private evmNFTService: EvmNFTService,
-    private evmTxService: EvmTxService
+    private evmTxService: EvmTxService,
+    private rateState: RateState
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -89,7 +89,7 @@ export class TransferCreateConfirmComponent implements OnInit {
       this.rate.fee = await this.getGasRate(this.data.fee);
     }
     if (!this.data.isNFT) {
-      this.assetState
+      this.rateState
         .getAssetAmountRate({
           chainType: this.data.chainType,
           assetId: this.data.asset.asset_id,
@@ -572,7 +572,7 @@ export class TransferCreateConfirmComponent implements OnInit {
   //#region rate
   private async getGasRate(value: string) {
     if (!this.gasPrice) {
-      this.gasPrice = await this.assetState.getAssetRateV2(
+      this.gasPrice = await this.rateState.getAssetRateV2(
         this.data.chainType,
         this.data.chainType === 'Neo2'
           ? GAS

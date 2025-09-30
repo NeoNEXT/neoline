@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Asset } from '@/models/models';
-import { AssetState, ChromeService, GlobalService } from '@/app/core';
+import { ChromeService, GlobalService, NeoAssetService } from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -21,7 +21,7 @@ export class PopupAddAssetComponent implements OnDestroy {
   private address: string;
   private chainType: ChainType;
   constructor(
-    private asset: AssetState,
+    private neoAssetService: NeoAssetService,
     private chrome: ChromeService,
     private global: GlobalService,
     private store: Store<AppState>
@@ -41,7 +41,7 @@ export class PopupAddAssetComponent implements OnDestroy {
           this.networkId = state.neoXNetworks[state.neoXNetworkIndex].id;
           break;
       }
-      this.asset
+      this.neoAssetService
         .getAddressBalances(this.address)
         .then((res) => (this.moneyBalance = res));
       this.chrome
@@ -78,7 +78,7 @@ export class PopupAddAssetComponent implements OnDestroy {
     }
     this.isLoading = true;
     this.searchAsset = undefined;
-    this.asset
+    this.neoAssetService
       .searchAsset(this.searchValue)
       .then((res) => {
         this.searchAsset = res;

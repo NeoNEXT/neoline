@@ -4,7 +4,7 @@ import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable } from 'rxjs';
 import { GAS } from '@/models/models';
 import { wallet } from '@cityofzion/neon-core';
-import { GlobalService, AssetState, Neo2TxService } from '@/app/core';
+import { GlobalService, Neo2TxService, NeoAssetService } from '@/app/core';
 import { Neo3TransferService } from './neo3-transfer.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -17,9 +17,9 @@ export class TransferService {
   constructor(
     private global: GlobalService,
     private neo3TransferService: Neo3TransferService,
-    private assetState: AssetState,
     private neo2TxService: Neo2TxService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private neoAssetService: NeoAssetService
   ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
@@ -62,7 +62,7 @@ export class TransferService {
     }
     if (isAsset(asset)) {
       return new Observable((observer) => {
-        this.assetState.getNeo2Utxo(from, asset).subscribe((balance) => {
+        this.neoAssetService.getNeo2Utxo(from, asset).subscribe((balance) => {
           try {
             const newTx = this.neo2TxService.createNeo2Tx(
               from,
@@ -124,7 +124,7 @@ export class TransferService {
     fee: number = 0
   ): Observable<Transaction> {
     return new Observable((observer) => {
-      this.assetState.getNeo2Utxo(from, GAS).subscribe((res) => {
+      this.neoAssetService.getNeo2Utxo(from, GAS).subscribe((res) => {
         let curr = 0.0;
         for (const item of res) {
           curr = this.global.mathAdd(curr, parseFloat(item.value) || 0);

@@ -2,7 +2,7 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import {
   GlobalService,
   ChromeService,
-  AssetState,
+  RateState,
   EvmTxService,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
@@ -53,7 +53,7 @@ export class NeoXBridgeConfirmComponent implements OnInit {
 
   constructor(
     private global: GlobalService,
-    private assetState: AssetState,
+    private rateState: RateState,
     private chrome: ChromeService,
     private evmTxService: EvmTxService
   ) {}
@@ -73,7 +73,7 @@ export class NeoXBridgeConfirmComponent implements OnInit {
       this.totalAmount = new BigNumber(this.bridgeAmount)
         .plus(this.neoXFeeInfo.estimateGas)
         .toFixed();
-      this.assetState
+      this.rateState
         .getAssetRateV2(
           'NeoX',
           this.bridgeAsset.asset_id,
@@ -88,12 +88,12 @@ export class NeoXBridgeConfirmComponent implements OnInit {
     } else {
       ethers
         .resolveProperties({
-          gasRate: this.assetState.getAssetRateV2(
+          gasRate: this.rateState.getAssetRateV2(
             'NeoX',
             ETH_SOURCE_ASSET_HASH,
             this.neoXNetwork.chainId
           ),
-          bridgeAssetRate: this.assetState.getAssetRateV2(
+          bridgeAssetRate: this.rateState.getAssetRateV2(
             'NeoX',
             this.bridgeAsset.asset_id,
             this.neoXNetwork.chainId

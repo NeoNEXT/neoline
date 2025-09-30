@@ -7,9 +7,10 @@ import {
 } from '@angular/core';
 import { Asset, NEO } from '@/models/models';
 import {
-  AssetState,
+  RateState,
   ChromeService,
   GlobalService,
+  NeoAssetService,
   SettingState,
 } from '@/app/core';
 import { forkJoin } from 'rxjs';
@@ -36,11 +37,12 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
   private networkId: number;
   private neoXNetwork: RpcNetwork;
   constructor(
-    private asset: AssetState,
+    private neoAssetService: NeoAssetService,
     private chrome: ChromeService,
     private settingState: SettingState,
     private global: GlobalService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private rateState: RateState
   ) {}
 
   ngOnInit(): void {
@@ -74,7 +76,9 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
   getAssets() {
     this.myAssets = [];
     this.isLoading = true;
-    const getMoneyBalance = this.asset.getAddressBalances(this.address);
+    const getMoneyBalance = this.neoAssetService.getAddressBalances(
+      this.address
+    );
     const getWatch = this.chrome.getWatch(
       `${this.chainType}-${this.networkId}`,
       this.address
@@ -93,7 +97,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
             }
           } else {
             if (item.watching === true) {
-              const balance = await this.asset.getAddressAssetBalance(
+              const balance = await this.neoAssetService.getAddressAssetBalance(
                 this.address,
                 item.asset_id,
                 this.chainType
@@ -127,7 +131,7 @@ export class PopupAssetsComponent implements OnInit, OnDestroy {
     let total = new BigNumber(0);
     for (let i = 0; i < this.myAssets.length; i++) {
       const item = this.myAssets[i];
-      const rateAndPrice = await this.asset.getAssetAmountRateAndPrice({
+      const rateAndPrice = await this.rateState.getAssetAmountRateAndPrice({
         chainType: this.chainType,
         assetId: item.asset_id,
         chainId:

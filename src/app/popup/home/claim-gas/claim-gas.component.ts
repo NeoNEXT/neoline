@@ -1,5 +1,5 @@
 import { Component, OnDestroy } from '@angular/core';
-import { AssetState, GlobalService, HomeState } from '@/app/core';
+import { NeoGasService, GlobalService, HomeState } from '@/app/core';
 import { NEO, GAS } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
@@ -56,7 +56,7 @@ export class PopupClaimGasComponent implements OnDestroy {
   private n2Network: RpcNetwork;
   n3Network: RpcNetwork;
   constructor(
-    private assetState: AssetState,
+    private neoGasService: NeoGasService,
     private global: GlobalService,
     private transfer: TransferService,
     private neo3TransferService: Neo3TransferService,
@@ -126,7 +126,7 @@ export class PopupClaimGasComponent implements OnDestroy {
       return;
     }
     if (this.chainType === 'Neo2') {
-      this.assetState
+      this.neoGasService
         .claimNeo2GAS(this.claimsData, this.currentWallet as Wallet2)
         .then((tx) => {
           if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
@@ -211,7 +211,7 @@ export class PopupClaimGasComponent implements OnDestroy {
       clearInterval(this.intervalN3Claim);
     }
     if (this.chainType === 'Neo2') {
-      this.assetState.fetchClaim(this.address).subscribe((res: any) => {
+      this.neoGasService.fetchClaim(this.address).subscribe((res: any) => {
         this.claimsData = res.claimable;
         if (res.available > 0) {
           this.claimNumber = res.available;
@@ -241,7 +241,7 @@ export class PopupClaimGasComponent implements OnDestroy {
   }
 
   private getN3UnclaimedGas() {
-    this.assetState.getUnclaimedGas(this.address).subscribe((res) => {
+    this.neoGasService.getUnclaimedGas(this.address).subscribe((res) => {
       if (res?.unclaimed && res?.unclaimed !== '0') {
         this.claimNumber = new BigNumber(res?.unclaimed)
           .shiftedBy(-8)
@@ -259,7 +259,7 @@ export class PopupClaimGasComponent implements OnDestroy {
 
   private initInterval() {
     this.intervalClaim = setInterval(() => {
-      this.assetState.fetchClaim(this.address).subscribe((claimRes: any) => {
+      this.neoGasService.fetchClaim(this.address).subscribe((claimRes: any) => {
         if (Number(claimRes.available) === 0) {
           this.loading = false;
           this.claimNumber = claimRes.unavailable;
@@ -295,7 +295,7 @@ export class PopupClaimGasComponent implements OnDestroy {
           if (result.error === undefined || result.error === null) {
             if (this.intervalClaim === null) {
               this.intervalClaim = setInterval(() => {
-                this.assetState
+                this.neoGasService
                   .fetchClaim(this.address)
                   .subscribe((claimRes: any) => {
                     if (Number(claimRes.available) !== 0) {

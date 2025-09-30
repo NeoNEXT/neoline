@@ -12,7 +12,7 @@ import {
 } from '../../_lib';
 import { Unsubscribable, timer } from 'rxjs';
 import {
-  AssetState,
+  RateState,
   ChromeService,
   EvmTxService,
   GlobalService,
@@ -44,7 +44,7 @@ export class PopupApproveDialogComponent implements OnInit {
   showHardwareSign = false;
 
   constructor(
-    private assetState: AssetState,
+    private rateState: RateState,
     private chrome: ChromeService,
     private evmTxService: EvmTxService,
     private globalService: GlobalService,
@@ -129,7 +129,7 @@ export class PopupApproveDialogComponent implements OnInit {
   }
 
   private getGasRate() {
-    this.assetState
+    this.rateState
       .getAssetRateV2(
         'NeoX',
         ETH_SOURCE_ASSET_HASH,

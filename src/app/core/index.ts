@@ -22,6 +22,8 @@ export { Neo3Service } from './services/neo/neo3.service';
 export { Neo2TxService } from './services/neo/neo2-tx.service';
 export { NeoNFTService } from './services/neo/nft.service';
 export { NeoTxService } from './services/neo/tx.service';
+export { NeoAssetService } from './services/neo/asset.service';
+export { NeoGasService } from './services/neo/gas.service';
 
 export { GlobalService } from './services/global.service';
 export { ChromeService } from './services/chrome.service';
@@ -31,7 +33,6 @@ export { ExtensionService } from './services/extension.service';
 export { InitService } from './services/init.service';
 
 // states
-export { AssetState } from './states/neo/asset.state';
 export { NeoAssetInfoState } from './states/neo/asset-info.state';
 
 export { DappEVMState } from './states/evm/dapp.state';
@@ -40,3 +41,4 @@ export { SettingState } from './states/setting.state';
 export { HomeState } from './states/home.state';
 export { BridgeState } from './states/bridge.state';
 export { SelectChainState } from './states/select-chain.state';
+export { RateState } from './states/rate.state';

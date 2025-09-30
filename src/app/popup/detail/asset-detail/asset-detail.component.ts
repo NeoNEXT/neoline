@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import {
-  AssetState,
+  NeoAssetService,
   ChromeService,
   GlobalService,
   SettingState,
+  RateState,
 } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { NEO, GAS, Asset } from '@/models/models';
@@ -44,14 +45,15 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
   private neoXNetwork: RpcNetwork;
   private neoXNetworkIndex: number;
   constructor(
-    private assetState: AssetState,
+    private neoAssetService: NeoAssetService,
     private aRouter: ActivatedRoute,
     private chrome: ChromeService,
     private dialog: MatDialog,
     private global: GlobalService,
     private router: Router,
     private settingState: SettingState,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private rateState: RateState
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -80,11 +82,13 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
   initData() {
     this.aRouter.queryParams.subscribe((params) => {
       this.assetId = params.assetId;
-      this.assetState.getAssetDetail(this.address, this.assetId).then((res) => {
-        this.balance = res;
-        this.getAssetDetail();
-        this.getCanHide();
-      });
+      this.neoAssetService
+        .getAssetDetail(this.address, this.assetId)
+        .then((res) => {
+          this.balance = res;
+          this.getAssetDetail();
+          this.getCanHide();
+        });
     });
   }
 
@@ -117,7 +121,7 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
   }
 
   async getAssetDetail() {
-    const balance = await this.assetState.getAddressAssetBalance(
+    const balance = await this.neoAssetService.getAddressAssetBalance(
       this.address,
       this.assetId,
       this.chainType
@@ -129,7 +133,7 @@ export class PopupAssetDetailComponent implements OnInit, OnDestroy {
   }
 
   getAssetRate() {
-    this.assetState
+    this.rateState
       .getAssetAmountRate({
         chainType: this.chainType,
         assetId: this.balance.asset_id,

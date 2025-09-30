@@ -9,8 +9,8 @@ import {
 import {
   ChromeService,
   GlobalService,
-  AssetState,
   SettingState,
+  RateState,
 } from '@app/core';
 import { STORAGE_NAME } from '../_lib';
 import { LanguagesType, RateCurrencyType } from '../_lib/setting';
@@ -30,7 +30,7 @@ export class PopupSettingComponent implements OnInit {
   constructor(
     private chrome: ChromeService,
     private global: GlobalService,
-    private asset: AssetState,
+    private rateState: RateState,
     private dialog: MatDialog,
     private setting: SettingState
   ) {}
@@ -91,7 +91,7 @@ export class PopupSettingComponent implements OnInit {
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
-          this.asset.clearCache();
+          this.rateState.clearCache();
           this.global.snackBarTip('clearSuccess');
         }
       });

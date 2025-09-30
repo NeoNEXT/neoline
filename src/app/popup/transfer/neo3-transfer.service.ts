@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { rpc, sc, tx, u, wallet } from '@cityofzion/neon-core-neo3/lib';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from } from 'rxjs';
-import { AssetState, NotificationService } from '@app/core';
+import { NeoAssetService, NotificationService } from '@app/core';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
 import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
@@ -28,9 +28,9 @@ export class Neo3TransferService {
   private neo3WalletArr: Wallet3[];
   private n3Network: RpcNetwork;
   constructor(
-    public assetState: AssetState,
     public notification: NotificationService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private neoAssetService: NeoAssetService
   ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
@@ -44,7 +44,7 @@ export class Neo3TransferService {
     params: CreateNeo3TxInput,
     isTransferAll = false
   ): Observable<Transaction> {
-    const assetStateTemp = this.assetState;
+    const assetStateTemp = this.neoAssetService;
     const notificationTemp = this.notification;
     const rpcClientTemp = this.rpcClient;
     const neo3This = this;
@@ -162,7 +162,9 @@ export class Neo3TransferService {
             'Transfer script errored out! You might not have sufficient funds for this transfer.',
         };
       }
-      const requiredSystemFee = u.BigInteger.fromNumber(invokeFunctionResponse.gasconsumed);
+      const requiredSystemFee = u.BigInteger.fromNumber(
+        invokeFunctionResponse.gasconsumed
+      );
       if (
         inputs.systemFee &&
         inputs.systemFee.compare(requiredSystemFee) >= 0

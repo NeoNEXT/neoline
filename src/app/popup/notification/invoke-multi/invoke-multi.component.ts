@@ -3,10 +3,12 @@ import { ActivatedRoute } from '@angular/router';
 import {
   GlobalService,
   ChromeService,
-  AssetState,
   NeoTxService,
   SettingState,
   Neo3Service,
+  RateState,
+  NeoGasService,
+  NeoAssetService,
 } from '@/app/core';
 import {
   Transaction,
@@ -82,8 +84,10 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     private dialog: MatDialog,
     private chrome: ChromeService,
     private settingState: SettingState,
-    private assetState: AssetState,
+    private rateState: RateState,
     private neoTxService: NeoTxService,
+    private neoGasService: NeoGasService,
+    private neoAssetService: NeoAssetService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -119,7 +123,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         }
       }
       if (Number(this.pramsData.fee) > 0) {
-        this.assetState
+        this.rateState
           .getAssetAmountRate({
             chainType: 'Neo2',
             assetId: GAS,
@@ -189,7 +193,9 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
       } else {
         this.fee = 0;
         if (this.showFeeEdit) {
-          const tempGasFeeSpeed = await this.assetState.getGasFee().toPromise();
+          const tempGasFeeSpeed = await this.neoGasService
+            .getGasFee()
+            .toPromise();
           this.fee = bignumber(this.minFee)
             .add(bignumber(tempGasFeeSpeed.propose_price))
             .toNumber();
@@ -584,10 +590,14 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
       this.assetIntentOverrides.inputs.length
     ) {
       this.utxos = this.utxos.concat(
-        await this.assetState.getNeo2Utxo(this.signAddress, NEO).toPromise()
+        await this.neoAssetService
+          .getNeo2Utxo(this.signAddress, NEO)
+          .toPromise()
       );
       this.utxos = this.utxos.concat(
-        await this.assetState.getNeo2Utxo(this.signAddress, GAS).toPromise()
+        await this.neoAssetService
+          .getNeo2Utxo(this.signAddress, GAS)
+          .toPromise()
       );
     }
     if (addScriptHash !== '') {
@@ -628,7 +638,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     fee: number = 0
   ): Promise<InvocationTransaction> {
     return new Promise((mResolve, reject) => {
-      this.assetState
+      this.neoAssetService
         .getNeo2Utxo(this.signAddress, assetid)
         .subscribe((balances: any) => {
           if (!balances || balances?.length === 0) {
@@ -680,7 +690,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
     fee: number = 0
   ): Promise<InvocationTransaction> {
     return new Promise((mResolve) => {
-      this.assetState.getNeo2Utxo(from, GAS).subscribe((res) => {
+      this.neoAssetService.getNeo2Utxo(from, GAS).subscribe((res) => {
         let curr = 0.0;
         for (const item of res) {
           curr = this.global.mathAdd(curr, parseFloat(item.value) || 0);
@@ -759,7 +769,7 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
           if (res === 0 || res === '0') {
             this.feeMoney = '0';
           } else {
-            this.assetState
+            this.rateState
               .getAssetAmountRate({
                 chainType: 'Neo2',
                 assetId: GAS,

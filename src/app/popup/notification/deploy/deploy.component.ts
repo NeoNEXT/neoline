@@ -3,9 +3,11 @@ import { ActivatedRoute } from '@angular/router';
 import {
   GlobalService,
   ChromeService,
-  AssetState,
   NeoTxService,
   Neo3Service,
+  NeoGasService,
+  RateState,
+  NeoAssetService,
 } from '@/app/core';
 import {
   Transaction,
@@ -66,8 +68,10 @@ export class PopupNoticeDeployComponent implements OnInit {
     private neo3Service: Neo3Service,
     private dialog: MatDialog,
     private chrome: ChromeService,
-    private assetState: AssetState,
+    private neoGasService: NeoGasService,
+    private rateState: RateState,
     private neoTxService: NeoTxService,
+    private neoAssetService: NeoAssetService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -89,13 +93,13 @@ export class PopupNoticeDeployComponent implements OnInit {
       if (this.pramsData.networkFee) {
         this.fee = this.pramsData.networkFee;
       } else {
-        this.assetState.getGasFee().subscribe((res: GasFeeSpeed) => {
+        this.neoGasService.getGasFee().subscribe((res: GasFeeSpeed) => {
           this.fee = res.propose_price;
           this.signTx();
         });
       }
       if (Number(this.pramsData.fee) > 0) {
-        this.feeMoney = await this.assetState.getAssetAmountRate({
+        this.feeMoney = await this.rateState.getAssetAmountRate({
           chainType: 'Neo2',
           assetId: GAS,
           amount: this.fee,
@@ -256,7 +260,7 @@ export class PopupNoticeDeployComponent implements OnInit {
     fee: number = 0
   ): Promise<InvocationTransaction> {
     return new Promise((resolve, reject) => {
-      this.assetState.getNeo2Utxo(from, GAS).subscribe((res) => {
+      this.neoAssetService.getNeo2Utxo(from, GAS).subscribe((res) => {
         let curr = 0.0;
         for (const item of res) {
           curr = this.global.mathAdd(curr, parseFloat(item.value) || 0);
@@ -324,7 +328,7 @@ export class PopupNoticeDeployComponent implements OnInit {
           if (res === 0 || res === '0') {
             this.feeMoney = '0';
           } else {
-            this.assetState
+            this.rateState
               .getAssetAmountRate({
                 chainType: 'Neo2',
                 assetId: GAS,

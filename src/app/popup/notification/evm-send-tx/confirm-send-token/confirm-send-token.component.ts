@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { DappEVMState, AssetState } from '@/app/core';
+import { DappEVMState, RateState } from '@/app/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import {
   AddressNonceInfo,
@@ -49,7 +49,7 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   toWalletName: string;
   constructor(
     private dappEVMState: DappEVMState,
-    private assetState: AssetState
+    private rateState: RateState
   ) {}
 
   ngOnInit(): void {
@@ -75,7 +75,7 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
         }
         this.returnAssetDetail.emit(this.assetDetails);
 
-        this.assetState
+        this.rateState
           .getAssetAmountRate({
             chainType: 'NeoX',
             assetId: this.txParams.to,

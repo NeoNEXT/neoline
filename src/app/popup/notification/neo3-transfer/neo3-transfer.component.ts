@@ -1,11 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
-  AssetState,
+  RateState,
   GlobalService,
   ChromeService,
   SettingState,
   NeoAssetInfoState,
+  NeoGasService,
+  NeoAssetService,
 } from '@/app/core';
 import { NEO } from '@/models/models';
 import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
@@ -83,7 +85,6 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
   private neo3WalletArr: Wallet3[];
   constructor(
     private aRoute: ActivatedRoute,
-    private asset: AssetState,
     private transfer: TransferService,
     private global: GlobalService,
     private chrome: ChromeService,
@@ -91,7 +92,10 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
     private neo3Transfer: Neo3TransferService,
     private settingState: SettingState,
     private store: Store<AppState>,
-    private neoAssetInfoState: NeoAssetInfoState
+    private neoAssetInfoState: NeoAssetInfoState,
+    private neoAssetService: NeoAssetService,
+    private neoGasService: NeoGasService,
+    private rateState: RateState
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -153,7 +157,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
       if (params.fee) {
         this.fee = params.fee;
       } else {
-        this.asset.getGasFee().subscribe((res: GasFeeSpeed) => {
+        this.neoGasService.getGasFee().subscribe((res: GasFeeSpeed) => {
           this.fee = res.propose_price;
         });
       }
@@ -168,7 +172,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
       this.chainType
     );
     this.symbol = symbols[0];
-    const balance = await this.asset.getAddressAssetBalance(
+    const balance = await this.neoAssetService.getAddressAssetBalance(
       this.fromAddress,
       this.assetId,
       this.chainType
@@ -335,7 +339,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
   }
 
   public async getAssetRate() {
-    const gasPrice = await this.asset.getAssetRateV2('Neo3', GAS3_CONTRACT);
+    const gasPrice = await this.rateState.getAssetRateV2('Neo3', GAS3_CONTRACT);
     if (gasPrice) {
       this.feeMoney = new BigNumber(this.fee).times(gasPrice).toFixed();
       this.systemFeeMoney = new BigNumber(this.systemFee)
@@ -347,7 +351,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
       if (this.symbol === 'GAS') {
         this.money = new BigNumber(this.amount).times(gasPrice).toFixed();
       } else {
-        this.money = await this.asset.getAssetAmountRate({
+        this.money = await this.rateState.getAssetAmountRate({
           chainType: 'Neo3',
           assetId: this.assetId,
           amount: this.amount,
@@ -389,7 +393,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
           if (res === 0 || res === '0') {
             this.feeMoney = '0';
           } else {
-            this.asset
+            this.rateState
               .getAssetAmountRate({
                 chainType: 'Neo3',
                 assetId: GAS3_CONTRACT,

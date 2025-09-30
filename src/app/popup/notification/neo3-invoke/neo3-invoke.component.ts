@@ -3,9 +3,10 @@ import { ActivatedRoute } from '@angular/router';
 import {
   GlobalService,
   ChromeService,
-  AssetState,
   NotificationService,
   SettingState,
+  NeoGasService,
+  RateState,
 } from '@/app/core';
 import { Transaction, Witness } from '@cityofzion/neon-core-neo3/lib/tx';
 import { tx, wallet } from '@cityofzion/neon-js-neo3';
@@ -77,11 +78,12 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
     private global: GlobalService,
     private dialog: MatDialog,
     private chrome: ChromeService,
-    private assetState: AssetState,
     private settingState: SettingState,
     private neo3Invoke: Neo3InvokeService,
     private notification: NotificationService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private rateState: RateState,
+    private neoGasService: NeoGasService
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -131,7 +133,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
           } else {
             this.fee = '0';
             if (this.showFeeEdit) {
-              const res_1 = await this.assetState.getGasFee().toPromise();
+              const res_1 = await this.neoGasService.getGasFee().toPromise();
               this.fee = bignumber(this.minFee)
                 .add(bignumber(res_1.propose_price))
                 .toFixed();
@@ -161,7 +163,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
     this.totalFee = new BigNumber(this.systemFee)
       .plus(new BigNumber(this.networkFee))
       .toFixed();
-    this.assetState
+    this.rateState
       .getAssetAmountRate({
         chainType: 'Neo3',
         assetId: GAS3_CONTRACT,

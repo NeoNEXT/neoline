@@ -12,7 +12,7 @@ import {
   Witness,
 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from, throwError } from 'rxjs';
-import { AssetState, Neo3Service, NotificationService } from '@app/core';
+import { Neo3Service, NotificationService, NeoAssetService } from '@app/core';
 import BigNumber from 'bignumber.js';
 import { ContractCall, ContractParam } from '@cityofzion/neon-core-neo3/lib/sc';
 import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
@@ -34,10 +34,10 @@ export class Neo3InvokeService {
   private address: string;
   private n3Network: RpcNetwork;
   constructor(
-    public assetState: AssetState,
     public notification: NotificationService,
     private store: Store<AppState>,
-    private neo3Service: Neo3Service
+    private neo3Service: Neo3Service,
+    private neoAssetService: NeoAssetService
   ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
@@ -218,7 +218,7 @@ export class Neo3InvokeService {
     systemFee,
     networkFee
   ): Promise<boolean> {
-    const gasAmount = await this.assetState.getAddressAssetBalance(
+    const gasAmount = await this.neoAssetService.getAddressAssetBalance(
       fromAddress,
       GAS3_CONTRACT,
       'Neo3'

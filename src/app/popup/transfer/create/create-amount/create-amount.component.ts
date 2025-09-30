@@ -8,10 +8,11 @@ import {
 import { ActivatedRoute } from '@angular/router';
 import { GAS, Asset, NftToken, NftAsset } from '@/models/models';
 import {
-  AssetState,
   GlobalService,
   ChromeService,
   NeoNFTService,
+  NeoAssetService,
+  NeoGasService,
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import {
@@ -70,13 +71,14 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
   private currentWIF: string;
   constructor(
     private aRoute: ActivatedRoute,
-    private asset: AssetState,
     private dialog: MatDialog,
     private global: GlobalService,
     private chrome: ChromeService,
     private neo3Transfer: Neo3TransferService,
     private neoNFTService: NeoNFTService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private neoAssetService: NeoAssetService,
+    private neoGasService: NeoGasService
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -121,7 +123,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
             : this.chainType === 'Neo3'
             ? GAS3_CONTRACT
             : ETH_SOURCE_ASSET_HASH;
-        this.asset
+        this.neoAssetService
           .getAddressAssetBalance(this.fromAddress, gasAssetId, this.chainType)
           .then((res) => {
             if (this.chainType === 'NeoX') {
@@ -159,7 +161,9 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     }
   }
   private async getAddressAllBalances(params) {
-    const getMoneyBalance = this.asset.getAddressBalances(this.fromAddress);
+    const getMoneyBalance = this.neoAssetService.getAddressBalances(
+      this.fromAddress
+    );
     const getWatch = this.chrome.getWatch(
       `${this.chainType}-${this.currentNetwork.id}`,
       this.fromAddress
@@ -177,7 +181,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
             }
           } else {
             if (item.watching === true) {
-              const balance = await this.asset.getAddressAssetBalance(
+              const balance = await this.neoAssetService.getAddressAssetBalance(
                 this.fromAddress,
                 item.asset_id,
                 this.chainType
@@ -375,7 +379,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     return 'customize';
   }
   private getGasFeeSpeed() {
-    this.asset.getGasFee().subscribe((res: GasFeeSpeed) => {
+    this.neoGasService.getGasFee().subscribe((res: GasFeeSpeed) => {
       this.gasFeeSpeed = res;
       this.priorityFee = res.propose_price;
     });

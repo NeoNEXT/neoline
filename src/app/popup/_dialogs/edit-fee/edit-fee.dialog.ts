@@ -1,7 +1,7 @@
 import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { GasFeeSpeed } from '@popup/_lib/type';
-import { AssetState } from '@app/core';
+import { NeoGasService } from '@app/core';
 import { bignumber } from 'mathjs';
 
 @Component({
@@ -15,7 +15,7 @@ export class PopupEditFeeDialogComponent {
   gasFeeSpeed: GasFeeSpeed;
   constructor(
     private dialogRef: MatDialogRef<PopupEditFeeDialogComponent>,
-    private assetState: AssetState,
+    private neoGasService: NeoGasService,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       fee: number;
@@ -34,7 +34,7 @@ export class PopupEditFeeDialogComponent {
   }
 
   getGasFee() {
-    this.assetState.getGasFee().subscribe((res) => {
+    this.neoGasService.getGasFee().subscribe((res) => {
       this.gasFeeSpeed = res;
       this.updateGasFeeSpeed();
     });

@@ -1,13 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
-  AssetState,
   GlobalService,
   ChromeService,
   NeoTxService,
   SettingState,
   Neo3Service,
   NeoAssetInfoState,
+  NeoGasService,
+  NeoAssetService,
+  RateState,
 } from '@/app/core';
 import { NEO, GAS, Asset } from '@/models/models';
 import { tx as tx2, u } from '@cityofzion/neon-js';
@@ -73,7 +75,6 @@ export class PopupNoticeTransferComponent implements OnInit {
   private neo2WalletArr: Wallet2[];
   constructor(
     private aRoute: ActivatedRoute,
-    private asset: AssetState,
     private transfer: TransferService,
     private global: GlobalService,
     private neo3Service: Neo3Service,
@@ -82,7 +83,10 @@ export class PopupNoticeTransferComponent implements OnInit {
     private dialog: MatDialog,
     private settingState: SettingState,
     private store: Store<AppState>,
-    private neoAssetInfoState: NeoAssetInfoState
+    private neoAssetInfoState: NeoAssetInfoState,
+    private neoGasService: NeoGasService,
+    private neoAssetService: NeoAssetService,
+    private rateState: RateState
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -146,13 +150,13 @@ export class PopupNoticeTransferComponent implements OnInit {
       if (params.fee) {
         this.fee = parseFloat(params.fee);
       } else {
-        this.asset.getGasFee().subscribe((res: GasFeeSpeed) => {
+        this.neoGasService.getGasFee().subscribe((res: GasFeeSpeed) => {
           this.fee = Number(res.propose_price);
         });
       }
       this.remark = params.remark || '';
       if (this.assetId !== undefined && this.assetId !== '') {
-        this.asset
+        this.neoAssetService
           .getAssetDetail(this.fromAddress, this.assetId)
           .then((res: Asset) => {
             this.init = true;
@@ -173,7 +177,7 @@ export class PopupNoticeTransferComponent implements OnInit {
       this.chainType
     );
     this.symbol = symbols[0];
-    const balance = await this.asset.getAddressAssetBalance(
+    const balance = await this.neoAssetService.getAddressAssetBalance(
       this.fromAddress,
       this.assetId,
       this.chainType
@@ -217,7 +221,7 @@ export class PopupNoticeTransferComponent implements OnInit {
       return;
     }
     this.creating = true;
-    this.asset
+    this.neoAssetService
       .getAssetDetail(this.fromAddress, this.assetId)
       .then((res: Asset) => {
         this.loading = false;
@@ -379,13 +383,13 @@ export class PopupNoticeTransferComponent implements OnInit {
 
   public async getAssetRate() {
     if (Number(this.fee) > 0) {
-      this.feeMoney = await this.asset.getAssetAmountRate({
+      this.feeMoney = await this.rateState.getAssetAmountRate({
         chainType: 'Neo2',
         assetId: GAS,
         amount: this.fee,
       });
     }
-    this.money = await this.asset.getAssetAmountRate({
+    this.money = await this.rateState.getAssetAmountRate({
       chainType: 'Neo2',
       assetId: this.assetId,
       amount: this.amount,
@@ -430,7 +434,7 @@ export class PopupNoticeTransferComponent implements OnInit {
           if (res === 0 || res === '0') {
             this.feeMoney = '0';
           } else {
-            this.asset
+            this.rateState
               .getAssetAmountRate({
                 chainType: 'Neo2',
                 assetId: GAS,

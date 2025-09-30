@@ -1,5 +1,5 @@
 import {
-  AssetState,
+  RateState,
   GlobalService,
   NotificationService,
   BridgeState,
@@ -8,6 +8,7 @@ import {
   SettingState,
   EvmTxService,
   EvmGasService,
+  NeoAssetService,
 } from '@/app/core';
 import { Asset } from '@/models/models';
 import { Component, OnDestroy, OnInit } from '@angular/core';
@@ -104,7 +105,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   neoXWalletArr: EvmWalletJSON[];
   currentBridgeNetwork: BridgeNetwork;
   constructor(
-    private assetState: AssetState,
+    private rateState: RateState,
     private neo3Invoke: Neo3InvokeService,
     private globalService: GlobalService,
     public notification: NotificationService,
@@ -115,7 +116,8 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private store: Store<AppState>,
     private evmTxService: EvmTxService,
-    private evmGasService: EvmGasService
+    private evmGasService: EvmGasService,
+    private neoAssetService: NeoAssetService
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -204,7 +206,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   private getAssetRate() {
     this.handleInputSub?.unsubscribe();
     this.handleInputSub = timer(500).subscribe(async () => {
-      this.bridgeAsset.rateBalance = await this.assetState.getAssetAmountRate({
+      this.bridgeAsset.rateBalance = await this.rateState.getAssetAmountRate({
         chainType: this.chainType,
         assetId: this.bridgeAsset.asset_id,
         chainId:
@@ -699,7 +701,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     }
   }
   private async getBridgeAssetBalance() {
-    const balance = await this.assetState.getAddressAssetBalance(
+    const balance = await this.neoAssetService.getAddressAssetBalance(
       this.currentWallet.accounts[0].address,
       this.bridgeAsset.asset_id,
       this.chainType

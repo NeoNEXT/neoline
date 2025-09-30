@@ -1,5 +1,5 @@
 import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
-import { GlobalService, ChromeService, AssetState } from '@/app/core';
+import { GlobalService, ChromeService, RateState } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import { PopupEditFeeDialogComponent } from '@/app/popup/_dialogs';
 import { MatDialog } from '@angular/material/dialog';
@@ -55,7 +55,7 @@ export class Neo3BridgeConfirmComponent implements OnInit {
     private dialog: MatDialog,
     private global: GlobalService,
     private chrome: ChromeService,
-    private assetState: AssetState,
+    private rateState: RateState,
     private neo3Invoke: Neo3InvokeService
   ) {}
 
@@ -70,7 +70,7 @@ export class Neo3BridgeConfirmComponent implements OnInit {
         .plus(this.systemFee)
         .plus(this.bridgeAmount)
         .toFixed();
-      this.assetState.getAssetRateV2('Neo3', GAS3_CONTRACT).then((gasRate) => {
+      this.rateState.getAssetRateV2('Neo3', GAS3_CONTRACT).then((gasRate) => {
         if (gasRate) {
           this.rate.priorityFee = gasRate.times(this.priorityFee).toFixed(2);
           this.rate.networkFee = gasRate.times(this.networkFee).toFixed(2);
@@ -84,11 +84,11 @@ export class Neo3BridgeConfirmComponent implements OnInit {
         .toFixed();
       ethers
         .resolveProperties({
-          bridgeAssetRate: this.assetState.getAssetRateV2(
+          bridgeAssetRate: this.rateState.getAssetRateV2(
             'Neo3',
             this.bridgeAsset.asset_id
           ),
-          gasRate: this.assetState.getAssetRateV2('Neo3', GAS3_CONTRACT),
+          gasRate: this.rateState.getAssetRateV2('Neo3', GAS3_CONTRACT),
         })
         .then(({ bridgeAssetRate, gasRate }) => {
           if (gasRate) {

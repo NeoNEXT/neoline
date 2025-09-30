@@ -5,7 +5,7 @@ import {
   DappEVMState,
   GlobalService,
   SettingState,
-  AssetState,
+  RateState,
   EvmAssetService,
   EvmTxService,
   EvmGasService,
@@ -80,7 +80,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     private dialog: MatDialog,
     private globalService: GlobalService,
     private settingState: SettingState,
-    private assetState: AssetState,
+    private rateState: RateState,
     private store: Store<AppState>,
     private evmTxService: EvmTxService,
     private evmAssetService: EvmAssetService,
@@ -359,7 +359,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     // send amount
     if (this.txParams.value) {
       this.amount = new BigNumber(value).shiftedBy(-18).toFixed();
-      this.assetState
+      this.rateState
         .getAssetAmountRate({
           chainType: 'NeoX',
           assetId: ETH_SOURCE_ASSET_HASH,
@@ -458,7 +458,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   }
 
   getAllRate() {
-    this.assetState
+    this.rateState
       .getAssetRateV2('NeoX', ETH_SOURCE_ASSET_HASH, this.neoXNetwork.chainId)
       .then((res) => {
         if (res) {

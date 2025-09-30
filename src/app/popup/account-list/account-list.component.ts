@@ -10,9 +10,9 @@ import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3, WalletListItem } from '@popup/_lib';
 import {
   ChromeService,
-  AssetState,
   GlobalService,
   NeoWalletService,
+  NeoAssetService,
 } from '@/app/core';
 import { Router } from '@angular/router';
 import {
@@ -79,7 +79,7 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     private router: Router,
     private chromeSrc: ChromeService,
     private dialog: MatDialog,
-    private assetState: AssetState,
+    private neoAssetService: NeoAssetService,
     private global: GlobalService,
     private store: Store<AppState>,
     private neoWalletService: NeoWalletService
@@ -491,7 +491,7 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
         break;
     }
     walletArr.forEach((item) => {
-      const req = this.assetState.getAddressAssetBalance(
+      const req = this.neoAssetService.getAddressAssetBalance(
         item.accounts[0].address,
         assetId,
         this.chainType

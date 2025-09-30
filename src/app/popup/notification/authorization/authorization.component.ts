@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { AssetState, ChromeService, SelectChainState } from '@/app/core';
+import { ChromeService, SelectChainState, NeoAssetService } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ERRORS, EVENT, requestTarget } from '@/models/dapi';
 import {
@@ -49,7 +49,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
     private aRouter: ActivatedRoute,
     private dialog: MatDialog,
     private router: Router,
-    private assetState: AssetState,
+    private neoAssetService: NeoAssetService,
     private store: Store<AppState>,
     private selectChainState: SelectChainState
   ) {
@@ -208,7 +208,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
     }
     this.allWallets.forEach((group) => {
       group.walletArr.forEach((item) => {
-        const req = this.assetState.getAddressAssetBalance(
+        const req = this.neoAssetService.getAddressAssetBalance(
           item.accounts[0].address,
           assetId,
           this.currentChainType

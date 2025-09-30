@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Asset, NEO, GAS } from '@/models/models';
-import { AssetState, ChromeService, GlobalService } from '@/app/core';
+import { ChromeService, GlobalService, NeoAssetService } from '@/app/core';
 import { forkJoin } from 'rxjs';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -23,7 +23,7 @@ export class PopupMyAssetsComponent implements OnDestroy {
   private address: string;
   chainType: ChainType;
   constructor(
-    private asset: AssetState,
+    private neoAssetService: NeoAssetService,
     private chrome: ChromeService,
     private global: GlobalService,
     private store: Store<AppState>
@@ -48,7 +48,9 @@ export class PopupMyAssetsComponent implements OnDestroy {
   }
 
   private initData() {
-    const getMoneyBalance = this.asset.getAddressBalances(this.address);
+    const getMoneyBalance = this.neoAssetService.getAddressBalances(
+      this.address
+    );
     const getWatch = this.chrome.getWatch(
       `${this.chainType}-${this.networkId}`,
       this.address
