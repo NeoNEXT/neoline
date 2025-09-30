@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { HttpService } from '../../services/http.service';
+import { HttpService } from '../services/http.service';
 import {
   ChainType,
   DEFAULT_NEO2_ASSETS,
@@ -11,7 +11,7 @@ import {
 import { NEO, GAS } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { handleNeo3StackNumberValue, handleNeo3StackStringValue } from '../../utils/neo';
+import { handleNeo3StackNumberValue, handleNeo3StackStringValue } from '../utils/neo';
 
 @Injectable()
 export class NeoAssetInfoState {

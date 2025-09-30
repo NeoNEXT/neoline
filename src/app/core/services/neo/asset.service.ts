@@ -18,7 +18,7 @@ import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { handleNeo3StackNumberValue } from '../../utils/neo';
-import { NeoAssetInfoState } from '../../states/neo/asset-info.state';
+import { NeoAssetInfoState } from '../../states/neo-asset-info.state';
 import { EvmAssetService } from '../evm/asset.service';
 
 @Injectable()

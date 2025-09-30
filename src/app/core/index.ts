@@ -35,8 +35,7 @@ export { InitService } from './services/init.service';
 export { BridgeService } from './services/bridge.service';
 
 // states
-export { NeoAssetInfoState } from './states/neo/asset-info.state';
-
+export { NeoAssetInfoState } from './states/neo-asset-info.state';
 export { SettingState } from './states/setting.state';
 export { HomeState } from './states/home.state';
 export { SelectChainState } from './states/select-chain.state';

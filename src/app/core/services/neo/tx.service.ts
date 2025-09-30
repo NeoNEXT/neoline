@@ -7,7 +7,7 @@ import { Transaction, NEO, GAS } from '@/models/models';
 import BigNumber from 'bignumber.js';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { NeoAssetInfoState } from '../../states/neo/asset-info.state';
+import { NeoAssetInfoState } from '../../states/neo-asset-info.state';
 
 @Injectable()
 export class NeoTxService {

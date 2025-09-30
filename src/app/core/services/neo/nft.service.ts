@@ -4,7 +4,7 @@ import { NftAsset, NftTransaction } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { RpcNetwork } from '@/app/popup/_lib';
-import { NeoAssetInfoState } from '../../states/neo/asset-info.state';
+import { NeoAssetInfoState } from '../../states/neo-asset-info.state';
 
 @Injectable()
 export class NeoNFTService {

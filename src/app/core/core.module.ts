@@ -38,8 +38,7 @@ import { InitService } from './services/init.service';
 import { BridgeService } from './services/bridge.service';
 
 // states
-import { NeoAssetInfoState } from './states/neo/asset-info.state';
-
+import { NeoAssetInfoState } from './states/neo-asset-info.state';
 import { SettingState } from './states/setting.state';
 import { HomeState } from './states/home.state';
 import { SelectChainState } from './states/select-chain.state';
