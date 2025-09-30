@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpService } from '../../services/http.service';
 import { ChromeService } from '../../services/chrome.service';
-import { AssetEVMState } from '../evm/asset.state';
 import { Observable, from, of, forkJoin, firstValueFrom } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { Asset, NEO, GAS, UTXO, ClaimItem } from 'src/models/models';
@@ -18,7 +17,7 @@ import {
   NetworkType,
 } from '@popup/_lib';
 import BigNumber from 'bignumber.js';
-import { wallet as wallet3} from '@cityofzion/neon-core-neo3';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { ethers } from 'ethers';
@@ -30,6 +29,7 @@ import { tx as tx2 } from '@cityofzion/neon-js';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Transaction } from '@cityofzion/neon-core/lib/tx';
 import { GlobalService } from '../../services/global.service';
+import { EvmAssetService } from '../../services/evm/asset.service';
 
 interface CoinRatesItem {
   rates: { [assetId: string]: string };
@@ -66,11 +66,11 @@ export class AssetState {
   constructor(
     private http: HttpService,
     private chrome: ChromeService,
-    private assetEVMState: AssetEVMState,
     private setting: SettingState,
     private store: Store<AppState>,
     private global: GlobalService,
-    private neoAssetInfoState: NeoAssetInfoState
+    private neoAssetInfoState: NeoAssetInfoState,
+    private evmAssetService: EvmAssetService
   ) {
     this.apiDomain = environment.mainApiBase;
     this.setting.rateCurrencySub.subscribe((res) => {
@@ -284,7 +284,7 @@ export class AssetState {
   //#region other
   async searchAsset(q: string): Promise<Asset> {
     if (this.chainType === 'NeoX') {
-      return this.assetEVMState.searchNeoXAsset(q);
+      return this.evmAssetService.searchNeoXAsset(q);
     }
     const data = {
       jsonrpc: '2.0',
@@ -374,7 +374,7 @@ export class AssetState {
     if (chain === 'Neo2' || this.chainType === 'Neo2') {
       return this.getNeo2AddressBalances(address);
     }
-    return this.assetEVMState.getNeoXAddressBalances(address);
+    return this.evmAssetService.getNeoXAddressBalances(address);
   }
 
   async getAddressAssetBalance(
@@ -383,7 +383,7 @@ export class AssetState {
     chainType: ChainType
   ) {
     if (chainType === 'NeoX') {
-      return this.assetEVMState.getNeoXAddressAssetBalance(address, assetId);
+      return this.evmAssetService.getNeoXAddressAssetBalance(address, assetId);
     }
     if (chainType === 'Neo2' && (assetId === NEO || assetId === GAS)) {
       const nativeData = {

@@ -2,11 +2,13 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
   ChromeService,
-  AssetEVMState,
   DappEVMState,
   GlobalService,
   SettingState,
   AssetState,
+  EvmAssetService,
+  EvmTxService,
+  EvmGasService,
 } from '@/app/core';
 import {
   AddressNonceInfo,
@@ -74,13 +76,15 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   constructor(
     private aRoute: ActivatedRoute,
     private chrome: ChromeService,
-    private assetEVMState: AssetEVMState,
     private dappEVMState: DappEVMState,
     private dialog: MatDialog,
     private globalService: GlobalService,
     private settingState: SettingState,
     private assetState: AssetState,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private evmTxService: EvmTxService,
+    private evmAssetService: EvmAssetService,
+    private evmGasService: EvmGasService
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -179,7 +183,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
     this.sendNeoXFeeInfo = Object.assign({}, this.neoXFeeInfo);
 
-    return this.assetEVMState.getTxParams(
+    return this.evmTxService.getTxParams(
       currentTxParams,
       this.sendNeoXFeeInfo,
       this.customNonce ?? this.nonceInfo.nonce,
@@ -206,7 +210,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       pwd
     );
 
-    this.assetEVMState
+    this.evmTxService
       .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
       .then((tx) => {
         this.loading = false;
@@ -305,7 +309,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   }
 
   private ledgerSendTx(signedTx, PreExecutionParams, newParams) {
-    this.assetEVMState
+    this.evmTxService
       .sendTransactionByRPC(signedTx, PreExecutionParams)
       .then((txHash) => {
         this.loading = false;
@@ -348,7 +352,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     const { from, value } = this.txParams;
 
     // get nonce info
-    this.assetEVMState.getNonceInfo(from).then((res) => {
+    this.evmTxService.getNonceInfo(from).then((res) => {
       this.nonceInfo = res;
     });
 
@@ -374,7 +378,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     );
 
     // from address SOURCE_ASSET balance
-    const balance = await this.assetEVMState.getNeoXAddressAssetBalance(
+    const balance = await this.evmAssetService.getNeoXAddressAssetBalance(
       from,
       ETH_SOURCE_ASSET_HASH
     );
@@ -408,7 +412,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     } else {
       let networkGasLimit: bigint;
       try {
-        networkGasLimit = await this.assetEVMState.estimateGas(
+        networkGasLimit = await this.evmGasService.estimateGas(
           this.getTxType() === 'approve' && this.approveNewTxParams
             ? this.approveNewTxParams
             : this.txParams

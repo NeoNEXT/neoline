@@ -12,9 +12,9 @@ import {
 } from '../../_lib';
 import { Unsubscribable, timer } from 'rxjs';
 import {
-  AssetEVMState,
   AssetState,
   ChromeService,
+  EvmTxService,
   GlobalService,
 } from '@/app/core';
 import { ethers } from 'ethers';
@@ -44,9 +44,9 @@ export class PopupApproveDialogComponent implements OnInit {
   showHardwareSign = false;
 
   constructor(
-    private assetEVMState: AssetEVMState,
     private assetState: AssetState,
     private chrome: ChromeService,
+    private evmTxService: EvmTxService,
     private globalService: GlobalService,
     private dialogRef: MatDialogRef<PopupApproveDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
@@ -63,7 +63,7 @@ export class PopupApproveDialogComponent implements OnInit {
   ngOnInit(): void {
     this.fromAddress = this.data.encryptWallet.accounts[0].address;
     this.inputAmount = this.data.amount;
-    this.assetEVMState.getNonceInfo(this.fromAddress).then((res) => {
+    this.evmTxService.getNonceInfo(this.fromAddress).then((res) => {
       this.nonceInfo = res;
     });
     this.getTxParams();
@@ -72,7 +72,7 @@ export class PopupApproveDialogComponent implements OnInit {
   private getTxParams() {
     if (!this.inputAmount) return;
     const amount = new BigNumber(this.inputAmount).toFixed();
-    const approveData = this.assetEVMState.getApproveERC20Data({
+    const approveData = this.evmTxService.getApproveERC20Data({
       assetAddress: this.data.asset.asset_id,
       toAddress: this.data.spender,
       approveAmount: ethers.parseUnits(amount, this.data.asset.decimals),
@@ -160,7 +160,7 @@ export class PopupApproveDialogComponent implements OnInit {
   }
 
   async confirm() {
-    const sendTxParams = this.assetEVMState.getTxParams(
+    const sendTxParams = this.evmTxService.getTxParams(
       this.txParams,
       this.neoXFeeInfo,
       this.customNonce ?? this.nonceInfo.nonce,
@@ -182,7 +182,7 @@ export class PopupApproveDialogComponent implements OnInit {
       pwd
     );
 
-    this.assetEVMState
+    this.evmTxService
       .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
       .then((tx) => {
         this.loading = false;
@@ -213,7 +213,7 @@ export class PopupApproveDialogComponent implements OnInit {
   }
 
   private ledgerSendTx(signedTx, PreExecutionParams, newParams) {
-    this.assetEVMState
+    this.evmTxService
       .sendTransactionByRPC(signedTx, PreExecutionParams)
       .then((txHash) => {
         this.loading = false;

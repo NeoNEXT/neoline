@@ -17,8 +17,8 @@ import {
 import {
   LedgerService,
   SettingState,
-  AssetEVMState,
   OneKeyService,
+  EvmAssetService,
 } from '@/app/core';
 import { interval } from 'rxjs';
 import { Store } from '@ngrx/store';
@@ -65,8 +65,8 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
     private ledger: LedgerService,
     private oneKeyService: OneKeyService,
     private settingState: SettingState,
-    private assetEVMState: AssetEVMState,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private evmAssetService: EvmAssetService
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -99,7 +99,7 @@ export class AddressSelectorComponent implements OnInit, OnDestroy {
     this.selectedAccount = this.accounts[index];
     this.selectedIndex = (this.accountPage - 1) * LEDGER_PAGE_SIZE + index;
     if (this.chainType === 'NeoX') {
-      this.assetEVMState
+      this.evmAssetService
         .getNeoXAddressBalances(this.selectedAccount.address)
         .then((res) => {
           this.accountBalance = res;

@@ -9,8 +9,9 @@ import {
   ChromeService,
   EvmNFTState,
   SettingState,
-  AssetEVMState,
   Neo3Service,
+  EvmTxService,
+  EvmAssetService,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import {
@@ -73,9 +74,9 @@ export class TransferCreateConfirmComponent implements OnInit {
     private txState: TransactionState,
     private neo3Transfer: Neo3TransferService,
     private chrome: ChromeService,
-    private assetEvmState: AssetEVMState,
     private settingState: SettingState,
-    private evmNFTState: EvmNFTState
+    private evmNFTState: EvmNFTState,
+    private evmTxService: EvmTxService
   ) {}
 
   async ngOnInit(): Promise<void> {
@@ -231,7 +232,7 @@ export class TransferCreateConfirmComponent implements OnInit {
       this.evmLedgerTx = newParams;
       this.sendTxParams = newParams;
     } else {
-      const { newParams } = this.assetEvmState.getTransferErc20TxRequest({
+      const { newParams } = this.evmTxService.getTransferErc20TxRequest({
         asset: asset,
         toAddress: to.address,
         transferAmount: amount,
@@ -292,7 +293,7 @@ export class TransferCreateConfirmComponent implements OnInit {
           this.loading = true;
           const { currentWIF } = this.data;
           if (this.data.currentWallet.accounts[0].extra.ledgerSLIP44) {
-            txid = await this.assetEvmState.sendTransactionByRPC(
+            txid = await this.evmTxService.sendTransactionByRPC(
               this.evmLedgerTx
             );
           } else {
@@ -315,14 +316,14 @@ export class TransferCreateConfirmComponent implements OnInit {
                   nonce: this.customNonce ?? this.nonceInfo.nonce,
                 });
               this.sendTxParams = newParams;
-              res = await this.assetEvmState.sendDappTransaction(
+              res = await this.evmTxService.sendDappTransaction(
                 PreExecutionParams,
                 newParams,
                 currentWIF
               );
             } else {
               const { PreExecutionParams, newParams } =
-                this.assetEvmState.getTransferErc20TxRequest({
+                this.evmTxService.getTransferErc20TxRequest({
                   asset,
                   toAddress: to.address,
                   transferAmount: amount,
@@ -334,7 +335,7 @@ export class TransferCreateConfirmComponent implements OnInit {
                   fromAddress: from,
                 });
               this.sendTxParams = newParams;
-              res = await this.assetEvmState.sendDappTransaction(
+              res = await this.evmTxService.sendDappTransaction(
                 PreExecutionParams,
                 newParams,
                 currentWIF
@@ -535,7 +536,7 @@ export class TransferCreateConfirmComponent implements OnInit {
 
     // get nonce
     if (this.data.chainType === 'NeoX') {
-      this.assetEvmState.getNonceInfo(this.data.from).then((res) => {
+      this.evmTxService.getNonceInfo(this.data.from).then((res) => {
         this.nonceInfo = res;
       });
     }
@@ -551,7 +552,7 @@ export class TransferCreateConfirmComponent implements OnInit {
           .shiftedBy(this.data.asset.decimals)
           .toFixed(0, 1)
       );
-      this.evmHexData = this.assetEvmState.getTransferERC20Data({
+      this.evmHexData = this.evmTxService.getTransferERC20Data({
         asset: this.data.asset,
         toAddress: this.data.to.address,
         transferAmount: amountBN,

@@ -1,4 +1,4 @@
-import { AssetEVMState, EvmNFTState } from '@/app/core';
+import { EvmGasService, EvmNFTState } from '@/app/core';
 import { PopupEditEvmFeeDialogComponent } from '@/app/popup/_dialogs';
 import { Asset, NftAsset, NftToken } from '@/models/models';
 import {
@@ -43,9 +43,9 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
   isUseSiteFee = true;
 
   constructor(
-    private assetEVMState: AssetEVMState,
     private evmNFTState: EvmNFTState,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private evmGasService: EvmGasService
   ) {}
 
   ngOnInit(): void {
@@ -114,7 +114,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
         let estimateGasError = false;
         try {
           if (this.place === 'dapp') {
-            networkGasLimit = await this.assetEVMState.estimateGas(
+            networkGasLimit = await this.evmGasService.estimateGas(
               this.txParams
             );
           } else if (this.transferNFT) {
@@ -125,7 +125,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
               toAddress: this.transferToAddress,
             });
           } else {
-            networkGasLimit = await this.assetEVMState.estimateGasOfTransfer({
+            networkGasLimit = await this.evmGasService.estimateGasOfTransfer({
               asset: this.transferAsset,
               fromAddress: this.fromAddress,
               toAddress: this.transferToAddress,
@@ -136,7 +136,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
           networkGasLimit = BigInt(42750000);
           estimateGasError = true;
         }
-        this.assetEVMState.getGasInfo(networkGasLimit).then((res) => {
+        this.evmGasService.getGasInfo(networkGasLimit).then((res) => {
           res.estimateGasError = estimateGasError;
           this.sourceNeoXFeeInfo = res;
           if (

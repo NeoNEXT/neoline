@@ -3,7 +3,7 @@ import {
   NftState,
   ChromeService,
   TransactionState,
-  AssetEVMState,
+  EvmTxService,
 } from '@/app/core';
 import {
   NftTransaction,
@@ -54,8 +54,8 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
     private nftState: NftState,
     private chrome: ChromeService,
     private txState: TransactionState,
-    private assetEVMState: AssetEVMState,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private evmTxService: EvmTxService
   ) {}
 
   ngOnInit(): void {
@@ -82,7 +82,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
     this.txData = [];
     this.accountSub?.unsubscribe();
     this.listenTxSub?.unsubscribe();
-    this.assetEVMState.removeWaitTxListen();
+    this.evmTxService.removeWaitTxListen();
   }
 
   private getAllTxs() {
@@ -131,7 +131,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
             item?.status === TransactionStatus.Canceling ||
             item?.status === TransactionStatus.Accelerating
           ) {
-            const res = await this.assetEVMState.waitForTx(item.txid);
+            const res = await this.evmTxService.waitForTx(item.txid);
             this.txData[i].status =
               this.txData[i].status === TransactionStatus.Canceling
                 ? TransactionStatus.Cancelled

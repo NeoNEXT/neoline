@@ -1,5 +1,4 @@
 import {
-  AssetEVMState,
   AssetState,
   GlobalService,
   NotificationService,
@@ -7,6 +6,8 @@ import {
   TransactionState,
   ChromeService,
   SettingState,
+  EvmTxService,
+  EvmGasService,
 } from '@/app/core';
 import { Asset } from '@/models/models';
 import { Component, OnDestroy, OnInit } from '@angular/core';
@@ -104,7 +105,6 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   currentBridgeNetwork: BridgeNetwork;
   constructor(
     private assetState: AssetState,
-    private assetEVMState: AssetEVMState,
     private neo3Invoke: Neo3InvokeService,
     private globalService: GlobalService,
     public notification: NotificationService,
@@ -113,7 +113,9 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     private settingState: SettingState,
     private dialog: MatDialog,
     private chrome: ChromeService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private evmTxService: EvmTxService,
+    private evmGasService: EvmGasService
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -242,11 +244,11 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     });
     let networkGasLimit;
     try {
-      networkGasLimit = await this.assetEVMState.estimateGas(txParams);
+      networkGasLimit = await this.evmGasService.estimateGas(txParams);
     } catch {
       networkGasLimit = BigInt(42750000);
     }
-    this.neoXFeeInfo = await this.assetEVMState.getGasInfo(networkGasLimit);
+    this.neoXFeeInfo = await this.evmGasService.getGasInfo(networkGasLimit);
   }
 
   private calculateNeoN3Fee() {
@@ -466,11 +468,11 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       this.neoXTxParams = txParams;
       let networkGasLimit;
       try {
-        networkGasLimit = await this.assetEVMState.estimateGas(txParams);
+        networkGasLimit = await this.evmGasService.estimateGas(txParams);
       } catch {
         networkGasLimit = BigInt(42750000);
       }
-      this.neoXFeeInfo = await this.assetEVMState.getGasInfo(networkGasLimit);
+      this.neoXFeeInfo = await this.evmGasService.getGasInfo(networkGasLimit);
       if (this.bridgeAsset.asset_id === ETH_SOURCE_ASSET_HASH) {
         const tAmount = new BigNumber(this.bridgeAsset.balance)
           .minus(this.bridgeAmount)
@@ -805,7 +807,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       .subscribe((res) => {
         if (res) {
           this.isApproving = true;
-          this.assetEVMState.waitForTx(res).then((txInfo) => {
+          this.evmTxService.waitForTx(res).then((txInfo) => {
             this.isApproving = false;
             this.isApproveBtn = false;
             if (txInfo.status) {

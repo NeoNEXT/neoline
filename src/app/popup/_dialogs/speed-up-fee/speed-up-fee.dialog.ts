@@ -12,7 +12,7 @@ import {
   STORAGE_NAME,
 } from '../../_lib';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
-import { AssetEVMState, ChromeService, GlobalService } from '@/app/core';
+import { ChromeService, EvmTxService, GlobalService } from '@/app/core';
 import { ethers } from 'ethers';
 import { PopupTransferSuccessDialogComponent } from '../transfer-success/transfer-success.component';
 import BigNumber from 'bignumber.js';
@@ -33,10 +33,10 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
   customNeoXFeeInfo: NeoXFeeInfoProp;
   constructor(
     private dialogRef: MatDialogRef<PopupSpeedUpFeeDialogComponent>,
-    private assetEVMState: AssetEVMState,
     private chrome: ChromeService,
     private globalService: GlobalService,
     private dialog: MatDialog,
+    private evmTxService: EvmTxService,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       tx: Transaction;
@@ -100,7 +100,7 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
 
   async confirm() {
     this.sendNeoXFeeInfo = Object.assign({}, this.neoXFeeInfo);
-    const { newParams, PreExecutionParams } = this.assetEVMState.getTxParams(
+    const { newParams, PreExecutionParams } = this.evmTxService.getTxParams(
       this.createTxParams,
       this.sendNeoXFeeInfo,
       this.data.tx.nonce,
@@ -121,7 +121,7 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
       JSON.stringify(this.data.currentWallet),
       pwd
     );
-    this.assetEVMState
+    this.evmTxService
       .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
       .then((tx) => {
         this.loading = false;
@@ -167,7 +167,7 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
   }
 
   private ledgerSendTx(signedTx, PreExecutionParams) {
-    this.assetEVMState
+    this.evmTxService
       .sendTransactionByRPC(signedTx, PreExecutionParams)
       .then((txHash) => {
         this.loading = false;

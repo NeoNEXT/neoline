@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { DappEVMState, AssetEVMState } from '@/app/core';
+import { DappEVMState, EvmAssetService, EvmTxService } from '@/app/core';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import {
   AddressNonceInfo,
@@ -11,7 +11,10 @@ import { ethers } from 'ethers';
 import { RateType } from '../evm-send-tx.component';
 import { PopupEditApproveCapDialogComponent } from '@/app/popup/_dialogs';
 import { MatDialog } from '@angular/material/dialog';
-import { detectContractSecurityToThirdPartySite, getHexDataLength } from '@/app/core/utils/evm';
+import {
+  detectContractSecurityToThirdPartySite,
+  getHexDataLength,
+} from '@/app/core/utils/evm';
 
 type TabType = 'details' | 'data';
 
@@ -51,7 +54,8 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   neoXFeeInfo: NeoXFeeInfoProp;
   constructor(
     private dappEVMState: DappEVMState,
-    private assetEVMState: AssetEVMState,
+    private evmTxService: EvmTxService,
+    private evmAssetService: EvmAssetService,
     private dialog: MatDialog
   ) {}
 
@@ -72,7 +76,7 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
         this.returnAssetDetail.emit(this.assetDetails);
 
         this.approveAmount = this.assetDetails.tokenAmount;
-        this.assetEVMState
+        this.evmAssetService
           .getNeoXAddressAssetBalance(this.txParams.from, this.txParams.to)
           .then((res) => {
             this.approveAssetBalance = ethers.formatUnits(
@@ -97,7 +101,7 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
       .subscribe((res) => {
         if (res) {
           this.approveAmount = res;
-          const newData = this.assetEVMState.getApproveERC20Data({
+          const newData = this.evmTxService.getApproveERC20Data({
             assetAddress: this.txParams.to,
             toAddress: this.assetDetails.toAddress,
             approveAmount: ethers.parseUnits(
@@ -131,6 +135,9 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   }
 
   detectContractSecurity() {
-    detectContractSecurityToThirdPartySite(this.neoXNetwork.chainId, this.txParams.to);
+    detectContractSecurityToThirdPartySite(
+      this.neoXNetwork.chainId,
+      this.txParams.to
+    );
   }
 }

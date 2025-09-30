@@ -1,5 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
-import { AssetEVMState, ChromeService } from '@/app/core';
+import { ChromeService, EvmAssetService } from '@/app/core';
 import { ActivatedRoute } from '@angular/router';
 import { requestTargetEVM } from '@/models/evm';
 import { RpcNetwork } from '../../_lib';
@@ -30,8 +30,8 @@ export class PopupEvmAddAssetComponent implements OnInit, OnDestroy {
     private chromeService: ChromeService,
     private aRouter: ActivatedRoute,
     private chrome: ChromeService,
-    private assetEVMState: AssetEVMState,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private evmAssetService: EvmAssetService
   ) {
     this.aRouter.queryParams.subscribe((params: any) => {
       this.queryParams = Object.assign({}, params);
@@ -59,7 +59,7 @@ export class PopupEvmAddAssetComponent implements OnInit, OnDestroy {
 
   private getBalance() {
     if (!this.currentWallet || !this.queryParams?.asset_id) return;
-    this.assetEVMState
+    this.evmAssetService
       .getNeoXAddressAssetBalance(
         this.currentWallet.accounts[0].address,
         this.queryParams.asset_id

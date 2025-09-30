@@ -6,8 +6,7 @@ import { ethers } from 'ethers';
 import type BN from 'bn.js';
 import { DappEVMState } from './dapp.state';
 import { NftAsset, NftToken } from '@/models/models';
-import { AssetEVMState } from './asset.state';
-
+import { EvmTxService } from '../../services/evm/tx.service';
 @Injectable()
 export class EvmNFTState {
   private neoXNetwork: RpcNetwork;
@@ -15,8 +14,8 @@ export class EvmNFTState {
 
   constructor(
     private store: Store<AppState>,
-    private assetEVMState: AssetEVMState,
-    private dappEVMState: DappEVMState
+    private dappEVMState: DappEVMState,
+    private evmTxService: EvmTxService
   ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
@@ -61,7 +60,7 @@ export class EvmNFTState {
       gasLimit,
       gasPrice,
     };
-    return this.assetEVMState.getTxParams(txParams, neoXFeeInfo, nonce, fromAddress);
+    return this.evmTxService.getTxParams(txParams, neoXFeeInfo, nonce, fromAddress);
   }
 
   async estimateGasOfTransfer({

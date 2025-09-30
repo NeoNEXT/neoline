@@ -12,7 +12,6 @@ import {
   GlobalService,
   ChromeService,
   NftState,
-  AssetEVMState,
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import {

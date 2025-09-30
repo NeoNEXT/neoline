@@ -1,5 +1,5 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
-import { TransactionState, ChromeService, AssetEVMState } from '@/app/core';
+import { TransactionState, ChromeService, EvmTxService } from '@/app/core';
 import { Transaction, TransactionStatus } from '@/models/models';
 import { forkJoin, Unsubscribable, interval } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -44,8 +44,8 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private txState: TransactionState,
     private dialog: MatDialog,
-    private assetEVMState: AssetEVMState,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private evmTxService: EvmTxService
   ) {}
   ngOnInit(): void {
     const account$ = this.store.select('account');
@@ -80,7 +80,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
     this.txData = [];
     this.accountSub?.unsubscribe();
     this.listenTxSub?.unsubscribe();
-    this.assetEVMState.removeWaitTxListen();
+    this.evmTxService.removeWaitTxListen();
   }
 
   private getAllTxs() {
@@ -143,7 +143,7 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
           item?.status === TransactionStatus.Canceling ||
           item?.status === TransactionStatus.Accelerating
         ) {
-          this.assetEVMState.waitForTx(item.txid).then((res) => {
+          this.evmTxService.waitForTx(item.txid).then((res) => {
             this.txData[i].status =
               this.txData[i].status === TransactionStatus.Canceling
                 ? TransactionStatus.Cancelled

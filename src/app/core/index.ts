@@ -12,6 +12,9 @@ export { OneKeyService } from './services/hardware/onekey.service';
 export { QRBasedService } from './services/hardware/qrbased.service';
 
 export { EvmWalletService } from './services/evm/wallet.service';
+export { EvmAssetService } from './services/evm/asset.service';
+export { EvmGasService } from './services/evm/gas.service';
+export { EvmTxService } from './services/evm/tx.service';
 
 export { NeoWalletService } from './services/neo/wallet.service';
 export { Neo3Service } from './services/neo/neo3.service';
@@ -30,7 +33,6 @@ export { TransactionState } from './states/neo/transaction.state';
 export { NftState } from './states/neo/nft.state';
 export { NeoAssetInfoState } from './states/neo/asset-info.state';
 
-export { AssetEVMState } from './states/evm/asset.state';
 export { DappEVMState } from './states/evm/dapp.state';
 export { EvmNFTState } from './states/evm/nft.state';
 

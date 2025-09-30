@@ -2,8 +2,8 @@ import { Component, Input, Output, EventEmitter, OnInit } from '@angular/core';
 import {
   GlobalService,
   ChromeService,
-  AssetEVMState,
   AssetState,
+  EvmTxService,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import { Asset } from '@/models/models';
@@ -55,13 +55,13 @@ export class NeoXBridgeConfirmComponent implements OnInit {
     private global: GlobalService,
     private assetState: AssetState,
     private chrome: ChromeService,
-    private assetEVMState: AssetEVMState
+    private evmTxService: EvmTxService
   ) {}
 
   ngOnInit(): void {
     this.calculateTotalAmount();
     this.hexDataLength = getHexDataLength(this.txParams.data);
-    this.assetEVMState
+    this.evmTxService
       .getNonceInfo(this.currentWallet.accounts[0].address)
       .then((res) => {
         this.nonceInfo = res;
@@ -142,7 +142,7 @@ export class NeoXBridgeConfirmComponent implements OnInit {
   }
 
   async confirm() {
-    const { newParams, PreExecutionParams } = this.assetEVMState.getTxParams(
+    const { newParams, PreExecutionParams } = this.evmTxService.getTxParams(
       this.txParams,
       this.neoXFeeInfo,
       this.customNonce ?? this.nonceInfo.nonce,
@@ -162,7 +162,7 @@ export class NeoXBridgeConfirmComponent implements OnInit {
       JSON.stringify(this.currentWallet),
       pwd
     );
-    this.assetEVMState
+    this.evmTxService
       .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
       .then((tx) => {
         this.backAmount.emit({ hash: tx.hash, chain: 'NeoX' });
@@ -175,7 +175,7 @@ export class NeoXBridgeConfirmComponent implements OnInit {
   }
 
   private ledgerSendTx(signedTx, PreExecutionParams) {
-    this.assetEVMState
+    this.evmTxService
       .sendTransactionByRPC(signedTx, PreExecutionParams)
       .then((txHash) => {
         this.backAmount.emit({ hash: txHash, chain: 'NeoX' });
