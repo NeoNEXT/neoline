@@ -1,11 +1,6 @@
-import { Component, Inject, OnInit } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
-import {
-  ChromeService,
-  AssetState,
-  NeonService,
-  SettingState,
-} from '@app/core';
+import { ChromeService, SettingState, SelectChainState } from '@app/core';
 import { ChainType, SelectItem, STORAGE_NAME } from '@popup/_lib';
 
 @Component({
@@ -16,9 +11,8 @@ export class PopupSelectDialogComponent {
   constructor(
     private dialogRef: MatDialogRef<PopupSelectDialogComponent>,
     private chromeSer: ChromeService,
-    private assetSer: AssetState,
-    private neonService: NeonService,
     private settingState: SettingState,
+    private selectChainState: SelectChainState,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       optionGroup: SelectItem[];
@@ -52,7 +46,7 @@ export class PopupSelectDialogComponent {
         this.dialogRef.close(option);
         break;
       case 'chain':
-        this.neonService.selectChainType(option as ChainType);
+        this.selectChainState.selectChainType(option as ChainType);
         this.dialogRef.close(option);
     }
   }

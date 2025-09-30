@@ -19,8 +19,8 @@ import {
 import {
   HomeState,
   ChromeService,
-  NeonService,
   GlobalService,
+  SelectChainState,
 } from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -77,10 +77,10 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
     private chrome: ChromeService,
     private fb: UntypedFormBuilder,
     private dialog: MatDialog,
-    private neon: NeonService,
     private router: Router,
     private global: GlobalService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private selectChainState: SelectChainState
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -344,7 +344,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
           .afterClosed()
           .subscribe((confirm) => {
             if (confirm) {
-              this.neon.selectChainType(this.data.addChainType);
+              this.selectChainState.selectChainType(this.data.addChainType);
               this.router.navigateByUrl('/popup/wallet/create');
             }
           });

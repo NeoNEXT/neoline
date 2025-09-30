@@ -4,7 +4,7 @@ import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable } from 'rxjs';
 import { GAS } from '@/models/models';
 import { wallet } from '@cityofzion/neon-core';
-import { NeonService, GlobalService, AssetState } from '@/app/core';
+import { GlobalService, AssetState, Neo2TxService } from '@/app/core';
 import { Neo3TransferService } from './neo3-transfer.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -15,10 +15,10 @@ import { isAsset } from '@/app/core/utils/neo';
 export class TransferService {
   private chainType: ChainType;
   constructor(
-    private neon: NeonService,
     private global: GlobalService,
     private neo3TransferService: Neo3TransferService,
     private assetState: AssetState,
+    private neo2TxService: Neo2TxService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -64,7 +64,7 @@ export class TransferService {
       return new Observable((observer) => {
         this.assetState.getNeo2Utxo(from, asset).subscribe((balance) => {
           try {
-            const newTx = this.neon.createNeo2Tx(
+            const newTx = this.neo2TxService.createNeo2Tx(
               from,
               to,
               balance,
@@ -92,7 +92,7 @@ export class TransferService {
       });
     } else {
       return new Observable((observer) => {
-        const newTx = this.neon.createNeo2TxForNEP5(
+        const newTx = this.neo2TxService.createNeo2TxForNEP5(
           from,
           to,
           asset,

@@ -5,7 +5,7 @@ import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 
 @Injectable()
-export class EvmService {
+export class EvmWalletService {
   private neoXWalletArr: EvmWalletJSON[];
 
   constructor(private store: Store<AppState>) {

@@ -1,9 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import {
-  AssetState,
-  ChromeService,
-  NeonService,
-} from '@/app/core';
+import { AssetState, ChromeService, SelectChainState } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ERRORS, EVENT, requestTarget } from '@/models/dapi';
 import {
@@ -52,10 +48,10 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private aRouter: ActivatedRoute,
     private dialog: MatDialog,
-    private neon: NeonService,
     private router: Router,
     private assetState: AssetState,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private selectChainState: SelectChainState
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -113,7 +109,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
-          this.neon.selectChainType('NeoX');
+          this.selectChainState.selectChainType('NeoX');
           this.router.navigateByUrl('/popup/wallet/create');
         } else {
           this.refuse();

@@ -395,31 +395,6 @@ export class ChromeService {
       this.crx.notification(title, msg);
     }
   }
-
-  public httpGet(
-    url: string,
-    callback: (arg0: any) => void,
-    headers: object = null
-  ) {
-    try {
-      this.crx.httpGet(url, callback, headers);
-    } catch (e) {
-      console.log('not in crx env');
-    }
-  }
-
-  public httpPost(
-    url: string,
-    data: any,
-    callback: (arg0: any) => void,
-    headers: object = null
-  ) {
-    try {
-      this.crx.httpPost(url, data, callback, headers);
-    } catch (e) {
-      console.log('not in crx env');
-    }
-  }
   //#endregion
 
   //#region storage

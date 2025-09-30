@@ -14,14 +14,18 @@ import { LedgerService } from './services/hardware/ledger.service';
 import { OneKeyService } from './services/hardware/onekey.service';
 import { QRBasedService } from './services/hardware/qrbased.service';
 
+import { EvmWalletService } from './services/evm/wallet.service';
+
+import { NeoWalletService } from './services/neo/wallet.service';
+import { Neo3Service } from './services/neo/neo3.service';
+import { Neo2TxService } from './services/neo/neo2-tx.service';
+
 import { GlobalService } from './services/global.service';
-import { NeonService } from './services/neon.service';
 import { ChromeService } from './services/chrome.service';
 import { NotificationService } from './services/notification.service';
 import { HttpService } from './services/http.service';
 import { ExtensionService } from './services/extension.service';
-import { EvmService } from './services/evm.service';
-import { Neo3Service } from './services/neo3.service';
+import { InitService } from './services/init.service';
 
 // states
 import { AssetState } from './states/neo/asset.state';
@@ -36,6 +40,7 @@ import { EvmNFTState } from './states/evm/nft.state';
 import { SettingState } from './states/setting.state';
 import { HomeState } from './states/home.state';
 import { BridgeState } from './states/bridge.state';
+import { SelectChainState } from './states/select-chain.state';
 
 @NgModule({
   declarations: [],
@@ -43,7 +48,6 @@ import { BridgeState } from './states/bridge.state';
   exports: [],
   providers: [
     GlobalService,
-    NeonService,
     ChromeService,
     HttpService,
     PopupWalletGuard,
@@ -58,7 +62,7 @@ import { BridgeState } from './states/bridge.state';
     LedgerService,
     OneKeyService,
     ExtensionService,
-    EvmService,
+    EvmWalletService,
     AssetEVMState,
     DappEVMState,
     BridgeState,
@@ -66,6 +70,10 @@ import { BridgeState } from './states/bridge.state';
     QRBasedService,
     Neo3Service,
     NeoAssetInfoState,
+    SelectChainState,
+    InitService,
+    NeoWalletService,
+    Neo2TxService,
   ],
 })
 export class CoreModule {}

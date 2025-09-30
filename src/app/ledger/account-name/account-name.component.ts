@@ -10,7 +10,7 @@ import {
 } from '@/app/popup/_lib';
 import { wallet as wallet2 } from '@cityofzion/neon-js';
 import { Wallet3 } from '@popup/_lib';
-import { NeonService, GlobalService, ChromeService } from '@/app/core';
+import { GlobalService, ChromeService, NeoWalletService } from '@/app/core';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
@@ -29,11 +29,11 @@ export class AccountNameComponent {
   name = '';
 
   constructor(
-    private neon: NeonService,
     private global: GlobalService,
     private chrome: ChromeService,
     private store: Store<AppState>,
-    private router: Router
+    private router: Router,
+    private neoWalletService: NeoWalletService
   ) {}
 
   importLedgerWallet() {
@@ -57,7 +57,7 @@ export class AccountNameComponent {
           },
         ],
       };
-      const isEfficient = this.neon.verifyWallet(tempWallet);
+      const isEfficient = this.neoWalletService.verifyWallet(tempWallet);
       if (isEfficient) {
         this.store.dispatch({
           type: ADD_NEOX_WALLET,
@@ -81,7 +81,7 @@ export class AccountNameComponent {
     if (this.chainType === 'Neo2') {
       const w = new wallet2.Wallet({ name: this.name });
       w.addAccount(accountLike);
-      const isEfficient = this.neon.verifyWallet(w);
+      const isEfficient = this.neoWalletService.verifyWallet(w);
       if (isEfficient) {
         this.store.dispatch({
           type: ADD_NEO2_WALLETS,
@@ -96,7 +96,7 @@ export class AccountNameComponent {
     } else {
       const w = new Wallet3({ name: this.name });
       w.addAccount(accountLike);
-      const isEfficient = this.neon.verifyWallet(w);
+      const isEfficient = this.neoWalletService.verifyWallet(w);
       if (isEfficient) {
         this.store.dispatch({
           type: ADD_NEO3_WALLETS,

@@ -1,8 +1,9 @@
 import {
   GlobalService,
-  NeonService,
   ChromeService,
-  EvmService,
+  SelectChainState,
+  EvmWalletService,
+  NeoWalletService,
 } from '@/app/core';
 import {
   AfterContentInit,
@@ -112,13 +113,14 @@ export class PopupWalletImportComponent
   matcher = new MyErrorStateMatcher();
   constructor(
     private global: GlobalService,
-    private neon: NeonService,
     private cdref: ChangeDetectorRef,
     private fb: UntypedFormBuilder,
     private chrome: ChromeService,
-    private evmService: EvmService
+    private evmService: EvmWalletService,
+    private neoWalletService: NeoWalletService,
+    private selectChainState: SelectChainState
   ) {
-    switch (this.neon.selectedChainType) {
+    switch (this.selectChainState.selectedChainType) {
       case 'Neo2':
         this.neonWallet = wallet2;
         break;
@@ -129,7 +131,7 @@ export class PopupWalletImportComponent
   }
 
   ngOnInit() {
-    if (this.neon.selectedChainType === 'NeoX') {
+    if (this.selectChainState.selectedChainType === 'NeoX') {
       if (
         this.neoXWalletArr.some((item) => item.accounts[0].extra.isHDWallet)
       ) {
@@ -141,7 +143,13 @@ export class PopupWalletImportComponent
     if (this.isOnePassword && this.password) {
       this.importForm = this.fb.group({
         name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
-        WIF: ['', [Validators.required, checkWIF(this.neon.selectedChainType)]],
+        WIF: [
+          '',
+          [
+            Validators.required,
+            checkWIF(this.selectChainState.selectedChainType),
+          ],
+        ],
       });
       this.importMnemonicForm = this.fb.group({
         name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
@@ -158,7 +166,10 @@ export class PopupWalletImportComponent
           name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
           WIF: [
             '',
-            [Validators.required, checkWIF(this.neon.selectedChainType)],
+            [
+              Validators.required,
+              checkWIF(this.selectChainState.selectedChainType),
+            ],
           ],
           password: [
             '',
@@ -214,7 +225,7 @@ export class PopupWalletImportComponent
       reader.readAsText(nep6File, 'UTF-8');
       reader.onload = (evt: any) => {
         this.nep6Json = JSON.parse(evt.target.result);
-        if (this.neon.selectedChainType === 'NeoX') {
+        if (this.selectChainState.selectedChainType === 'NeoX') {
           if (ethers.isKeystoreJson(JSON.stringify(this.nep6Json))) {
             this.nep6Form.controls.EncrpytedKey.setValue(
               JSON.stringify(this.nep6Json)
@@ -258,7 +269,7 @@ export class PopupWalletImportComponent
         )
         .then((res: any) => {
           this.loading = false;
-          if (this.neon.verifyWallet(res)) {
+          if (this.neoWalletService.verifyWallet(res)) {
             this.setPassword(importPwd);
             this.submitThis.emit(res);
           } else {
@@ -276,12 +287,12 @@ export class PopupWalletImportComponent
     } else {
       importPwd = this.importForm.value.password;
     }
-    if (this.neon.selectedChainType === 'NeoX') {
+    if (this.selectChainState.selectedChainType === 'NeoX') {
       this.importNeoXKey(importPwd);
       return;
     }
     if (this.neonWallet.isPrivateKey(this.importForm.value.WIF)) {
-      this.neon
+      this.neoWalletService
         .importPrivateKey(
           this.importForm.value.WIF,
           importPwd,
@@ -289,7 +300,7 @@ export class PopupWalletImportComponent
         )
         .subscribe((res: any) => {
           this.loading = false;
-          if (this.neon.verifyWallet(res)) {
+          if (this.neoWalletService.verifyWallet(res)) {
             this.setPassword(importPwd);
             this.submitThis.emit(res);
           } else {
@@ -297,7 +308,7 @@ export class PopupWalletImportComponent
           }
         });
     } else {
-      this.neon
+      this.neoWalletService
         .importWIF(
           this.importForm.value.WIF,
           importPwd,
@@ -306,7 +317,7 @@ export class PopupWalletImportComponent
         .subscribe(
           (res: any) => {
             this.loading = false;
-            if (this.neon.verifyWallet(res)) {
+            if (this.neoWalletService.verifyWallet(res)) {
               this.setPassword(importPwd);
               this.submitThis.emit(res);
             } else {
@@ -331,7 +342,7 @@ export class PopupWalletImportComponent
       )
       .then((res: EvmWalletJSON) => {
         this.loading = false;
-        if (this.neon.verifyWallet(res)) {
+        if (this.neoWalletService.verifyWallet(res)) {
           this.setPassword(pwd);
           this.submitThis.emit(res);
         } else {
@@ -363,7 +374,7 @@ export class PopupWalletImportComponent
           this.nep6Json?.name
         );
         this.loading = false;
-        if (this.neon.verifyWallet(newWallet)) {
+        if (this.neoWalletService.verifyWallet(newWallet)) {
           this.setPassword(importPwd);
           this.submitFile.emit({ walletArr: [newWallet] });
         } else {
@@ -378,7 +389,7 @@ export class PopupWalletImportComponent
   }
 
   async importFile() {
-    if (this.neon.selectedChainType === 'NeoX') {
+    if (this.selectChainState.selectedChainType === 'NeoX') {
       this.importNeoXFile();
       return;
     }
@@ -398,21 +409,21 @@ export class PopupWalletImportComponent
     const newWIFArr = [];
     let isErrorPwd = false;
     for (const item of accounts) {
-      const newWallet = await this.neon.importEncryptKey(
+      const newWallet = await this.neoWalletService.importEncryptKey(
         item.key,
         filePwd,
         item?.label ?? item.address,
         importPwd
       );
       if (newWallet !== 'Wrong password') {
-        if (this.neon.verifyWallet(newWallet)) {
+        if (this.neoWalletService.verifyWallet(newWallet)) {
           newWIFArr.push(
             this.isOnePassword || !this.hasPwdWallet
               ? ''
               : newWallet.accounts[0].WIF
           );
           const pushWallet =
-            this.neon.selectedChainType === 'Neo2'
+            this.selectChainState.selectedChainType === 'Neo2'
               ? new wallet2.Wallet(newWallet.export())
               : new wallet3.Wallet(newWallet.export());
           newWalletArr.push(pushWallet);

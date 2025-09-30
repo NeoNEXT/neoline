@@ -1,10 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import {
-  GlobalService,
-  NftState,
-  NeonService,
-  ChromeService,
-} from '@/app/core';
+import { GlobalService, NftState, ChromeService } from '@/app/core';
 import { NftAsset } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';

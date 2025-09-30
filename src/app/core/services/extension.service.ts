@@ -32,29 +32,6 @@ export class ExtensionService {
     });
   }
 
-  httpGet(url, callback, headers?) {
-    fetch(url, { headers })
-      .then((response) => response.json())
-      .then((data) => {
-        callback(data);
-      });
-  }
-
-  httpPost(url, data, callback, headers?) {
-    fetch(url, {
-      method: 'POST',
-      headers: {
-        ...headers,
-        'Content-Type': 'application/json;charset=UTF-8',
-      },
-      body: JSON.stringify(data),
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        callback(data);
-      });
-  }
-
   notification(title = '', msg = '') {
     chrome.notifications.create(null, {
       type: 'basic',

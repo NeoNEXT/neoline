@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ChromeService, NeonService } from '@/app/core';
+import { ChromeService, SelectChainState } from '@/app/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { ERRORS, requestTarget } from '@/models/dapi';
 import {
@@ -51,8 +51,8 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
     private aRouter: ActivatedRoute,
     private dialog: MatDialog,
     private router: Router,
-    private neon: NeonService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private selectChainState: SelectChainState
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -163,7 +163,7 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
         .afterClosed()
         .subscribe((confirm) => {
           if (confirm) {
-            this.neon.selectChainType(switchChainType);
+            this.selectChainState.selectChainType(switchChainType);
             this.router.navigateByUrl('/popup/wallet/create');
           } else {
             this.refuse();

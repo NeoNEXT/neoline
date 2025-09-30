@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
-import { ChromeService, NeonService } from '@/app/core';
+import { ChromeService, SelectChainState } from '@/app/core';
 import {
   RpcNetwork,
   ChainType,
@@ -44,12 +44,12 @@ export class PopupWalletComponent implements OnInit {
     private route: ActivatedRoute,
     private router: Router,
     private chrome: ChromeService,
-    private neon: NeonService,
+    private selectChainState: SelectChainState,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
-      switch (this.neon.selectedChainType) {
+      switch (this.selectChainState.selectedChainType) {
         case 'Neo2':
           this.network = state.n2Networks[state.n2NetworkIndex];
           break;
@@ -95,7 +95,7 @@ export class PopupWalletComponent implements OnInit {
   }
 
   private getChainName() {
-    switch (this.neon.selectedChainType) {
+    switch (this.selectChainState.selectedChainType) {
       case 'Neo2':
         this.chainName = 'Neo Legacy';
         break;
@@ -116,7 +116,7 @@ export class PopupWalletComponent implements OnInit {
   }
 
   public updateLocalWallet(newWallet: any) {
-    const newChainType = this.neon.selectedChainType;
+    const newChainType = this.selectChainState.selectedChainType;
     const wif =
       this.isOnePassword || !this.hasPwdWallet ? '' : newWallet.accounts[0].wif;
     delete newWallet.accounts[0].wif;
@@ -165,7 +165,7 @@ export class PopupWalletComponent implements OnInit {
   }
 
   public handleFileWallet({ walletArr, wifArr }) {
-    if (this.neon.selectedChainType !== this.chainType) {
+    if (this.selectChainState.selectedChainType !== this.chainType) {
       this.chrome.networkChangeEvent(this.network);
     }
     const newCurrentWallet = walletArr[walletArr.length - 1];
@@ -173,7 +173,7 @@ export class PopupWalletComponent implements OnInit {
       type: UPDATE_WALLET,
       data: newCurrentWallet,
     });
-    if (this.neon.selectedChainType === 'NeoX') {
+    if (this.selectChainState.selectedChainType === 'NeoX') {
       this.store.dispatch({
         type: ADD_NEOX_WALLET,
         data: { wallet: newCurrentWallet },
@@ -181,7 +181,7 @@ export class PopupWalletComponent implements OnInit {
     } else {
       this.store.dispatch({
         type:
-          this.neon.selectedChainType === 'Neo2'
+          this.selectChainState.selectedChainType === 'Neo2'
             ? ADD_NEO2_WALLETS
             : ADD_NEO3_WALLETS,
         data: { wallet: walletArr, wif: wifArr },
@@ -194,7 +194,7 @@ export class PopupWalletComponent implements OnInit {
     }
     this.chrome.setHasLoginAddress(newCurrentWallet.accounts[0].address);
     this.chrome.accountChangeEvent(
-      this.neon.selectedChainType === 'NeoX'
+      this.selectChainState.selectedChainType === 'NeoX'
         ? newCurrentWallet
         : newCurrentWallet.export()
     );

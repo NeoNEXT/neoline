@@ -1,5 +1,5 @@
 import { Component, OnDestroy } from '@angular/core';
-import { AssetState, NeonService, GlobalService, HomeState } from '@/app/core';
+import { AssetState, GlobalService, HomeState } from '@/app/core';
 import { NEO, GAS } from '@/models/models';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
@@ -57,7 +57,6 @@ export class PopupClaimGasComponent implements OnDestroy {
   n3Network: RpcNetwork;
   constructor(
     private assetState: AssetState,
-    private neon: NeonService,
     private global: GlobalService,
     private transfer: TransferService,
     private neo3TransferService: Neo3TransferService,
@@ -127,7 +126,7 @@ export class PopupClaimGasComponent implements OnDestroy {
       return;
     }
     if (this.chainType === 'Neo2') {
-      this.neon
+      this.assetState
         .claimNeo2GAS(this.claimsData, this.currentWallet as Wallet2)
         .then((tx) => {
           if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {

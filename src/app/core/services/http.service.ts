@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, from, of } from 'rxjs';
+import { Observable, of } from 'rxjs';
 import { map, timeout, catchError, retry } from 'rxjs/operators';
-import { ChromeService } from './chrome.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import {
@@ -14,11 +13,7 @@ import {
 @Injectable()
 export class HttpService {
   private network: RpcNetwork;
-  constructor(
-    private http: HttpClient,
-    private chrome: ChromeService,
-    private store: Store<AppState>
-  ) {
+  constructor(private http: HttpClient, private store: Store<AppState>) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       const chainType = state.currentChainType;
@@ -37,40 +32,15 @@ export class HttpService {
     ) {
       networkStr = 'mainnet';
     }
-    if (this.chrome.check) {
-      return from(
-        new Promise((resolve, reject) => {
-          this.chrome.httpGet(
-            url,
-            (res) => {
-              if (res.status === 'success') {
-                resolve(res.data);
-              } else {
-                reject((res && res.msg) || res);
-              }
-            },
-            {
-              Network: networkStr,
-            }
-          );
-        })
-      );
-    }
-    return this.http
-      .get(url, {
-        headers: {
-          Network: networkStr,
-        },
+    return this.http.get(url, { headers: { Network: networkStr } }).pipe(
+      map((res: any) => {
+        if (res && res.status === 'success') {
+          return res.data;
+        } else {
+          throw (res && res.msg) || res;
+        }
       })
-      .pipe(
-        map((res: any) => {
-          if (res && res.status === 'success') {
-            return res.data;
-          } else {
-            throw (res && res.msg) || res;
-          }
-        })
-      );
+    );
   }
 
   public rpcPostReturnAllData(url: string, data: any): Observable<any> {
@@ -100,26 +70,6 @@ export class HttpService {
           return res.result;
         } else if (res && res.hasOwnProperty('error')) {
           throw res.error;
-        } else {
-          throw res;
-        }
-      })
-    );
-  }
-
-  public n3RpcPost(url: string, data: any): Observable<any> {
-    return this.http.post(url, data).pipe(
-      timeout(5000),
-      retry(3),
-      catchError(() => of(`Request timed out`)),
-      map((res: any) => {
-        if (res === 'Request timed out') {
-          throw { message: res };
-        }
-        if (res && res.hasOwnProperty('result')) {
-          return res.result;
-        } else if (res && res.hasOwnProperty('error')) {
-          return res.error;
         } else {
           throw res;
         }

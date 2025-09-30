@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { STORAGE_NAME } from './popup/_lib';
-import { ChromeService, SettingState, NeonService } from './core';
+import { ChromeService, InitService, SettingState } from './core';
 import { NavigationEnd, Router, RouterEvent } from '@angular/router';
 
 declare var chrome: any;
@@ -16,7 +16,7 @@ export class AppComponent {
   constructor(
     private chromeService: ChromeService,
     private settingState: SettingState,
-    private neon: NeonService,
+    private initService: InitService,
     private router: Router
   ) {
     this.chromeService.getStorage(STORAGE_NAME.lang).subscribe((res) => {
@@ -25,7 +25,7 @@ export class AppComponent {
     this.chromeService.getStorage(STORAGE_NAME.theme).subscribe((res) => {
       this.settingState.changeTheme(res);
     });
-    this.neon.initData();
+    this.initService.initData();
     this.router.events.subscribe((res: RouterEvent) => {
       if (res instanceof NavigationEnd) {
         this.currentUrl = res.url;

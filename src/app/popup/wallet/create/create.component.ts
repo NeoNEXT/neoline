@@ -1,4 +1,4 @@
-import { GlobalService, NeonService, ChromeService } from '@/app/core';
+import { GlobalService, ChromeService, NeoWalletService } from '@/app/core';
 import {
   AfterContentInit,
   Component,
@@ -7,7 +7,11 @@ import {
   Output,
   Input,
 } from '@angular/core';
-import { UntypedFormGroup, Validators, UntypedFormBuilder } from '@angular/forms';
+import {
+  UntypedFormGroup,
+  Validators,
+  UntypedFormBuilder,
+} from '@angular/forms';
 import { checkPasswords, MyErrorStateMatcher } from '../confirm-password';
 import { WalletInitConstant, STORAGE_NAME } from '../../_lib';
 
@@ -31,9 +35,9 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
   matcher = new MyErrorStateMatcher();
   constructor(
     private global: GlobalService,
-    private neon: NeonService,
     private fb: UntypedFormBuilder,
-    private chrome: ChromeService
+    private chrome: ChromeService,
+    private neoWalletService: NeoWalletService
   ) {}
 
   ngOnInit() {
@@ -70,25 +74,27 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
     } else {
       createPwd = this.createForm.value.password;
     }
-    this.neon.createWallet(createPwd, this.createForm.value.name).then(
-      (res: any) => {
-        if (this.neon.verifyWallet(res)) {
-          if (!this.hasPwdWallet) {
-            this.chrome.setStorage(STORAGE_NAME.onePassword, true);
-            this.chrome.setPassword(createPwd);
+    this.neoWalletService
+      .createWallet(createPwd, this.createForm.value.name)
+      .then(
+        (res: any) => {
+          if (this.neoWalletService.verifyWallet(res)) {
+            if (!this.hasPwdWallet) {
+              this.chrome.setStorage(STORAGE_NAME.onePassword, true);
+              this.chrome.setPassword(createPwd);
+            }
+            this.submitThis.emit(res);
+          } else {
+            this.global.snackBarTip('existingWallet');
           }
-          this.submitThis.emit(res);
-        } else {
-          this.global.snackBarTip('existingWallet');
+          this.loading = false;
+        },
+        (err: any) => {
+          this.global.log('create wallet faild', err);
+          this.global.snackBarTip('walletCreateFailed');
+          this.loading = false;
         }
-        this.loading = false;
-      },
-      (err: any) => {
-        this.global.log('create wallet faild', err);
-        this.global.snackBarTip('walletCreateFailed');
-        this.loading = false;
-      }
-    );
+      );
   }
 
   public cancel() {

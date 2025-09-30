@@ -7,7 +7,7 @@ import {
   PopupConfirmDialogComponent,
 } from '@popup/_dialogs';
 
-import { GlobalService, ChromeService, NeonService } from '@app/core';
+import { GlobalService, ChromeService, NeoWalletService } from '@app/core';
 import { wallet } from '@cityofzion/neon-core';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
@@ -15,7 +15,6 @@ import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import {
   ChainType,
-  RpcNetwork,
   UPDATE_WALLET,
   UPDATE_NEO2_WALLET_NAME,
   UPDATE_NEO3_WALLET_NAME,
@@ -51,25 +50,19 @@ export class PopupAccountComponent implements OnDestroy {
   private neo2WalletArr: Wallet2[];
   private neo3WalletArr: Wallet3[];
   private neoXWalletArr: EvmWalletJSON[];
-  private neo2Network: RpcNetwork;
-  private neo3Network: RpcNetwork;
-  private neoXNetwork: RpcNetwork;
   constructor(
     private global: GlobalService,
     private dialog: MatDialog,
     private chrome: ChromeService,
     private aRouter: ActivatedRoute,
-    private neon: NeonService,
     private router: Router,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private neoWalletService: NeoWalletService
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.currentWallet = state.currentWallet;
       this.currentChainType = state.currentChainType;
-      this.neo2Network = state.n2Networks[state.n2NetworkIndex];
-      this.neo3Network = state.n3Networks[state.n3NetworkIndex];
-      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
       this.neo2WIFArr = state.neo2WIFArr;
       this.neo3WIFArr = state.neo3WIFArr;
       this.neo2WalletArr = state.neo2WalletArr;
@@ -254,7 +247,7 @@ export class PopupAccountComponent implements OnDestroy {
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
-          this.neon
+          this.neoWalletService
             .delWallet(
               this.operateWallet,
               this.operateChainType,

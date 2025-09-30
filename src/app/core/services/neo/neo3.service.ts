@@ -3,7 +3,7 @@ import { wallet } from '@cityofzion/neon-core-neo3';
 import { wallet as walletPr5 } from '@cityofzion/neon-core-neo3-pr5';
 import { wallet as walletRc1 } from '@cityofzion/neon-core-neo3-rc1';
 import { base642hex, hex2base64 } from '@cityofzion/neon-core-neo3/lib/u';
-import { HttpService } from '../services/http.service';
+import { HttpService } from '../http.service';
 import { ChainType, NNS_CONTRACT, RpcNetwork } from '@/app/popup/_lib';
 import { map } from 'rxjs/operators';
 import { Store } from '@ngrx/store';
@@ -12,9 +12,9 @@ import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { MatSnackBar } from '@angular/material/snack-bar';
-import { NotificationService } from './notification.service';
+import { NotificationService } from '../notification.service';
 import * as Sentry from '@sentry/angular';
-import { handleNeo3StackStringValue } from '../utils/neo';
+import { handleNeo3StackStringValue } from '../../utils/neo';
 
 @Injectable()
 export class Neo3Service {
@@ -61,7 +61,20 @@ export class Neo3Service {
       method: 'invokescript',
       params: [script, signers],
     };
-    return this.http.n3RpcPost(this.n3Network.rpcUrl, data).toPromise();
+    return this.http
+      .rpcPostReturnAllData(this.n3Network.rpcUrl, data)
+      .pipe(
+        map((res) => {
+          if (res && res.hasOwnProperty('result')) {
+            return res.result;
+          } else if (res && res.hasOwnProperty('error')) {
+            return res.error;
+          } else {
+            throw res;
+          }
+        })
+      )
+      .toPromise();
   }
 
   getN3NnsAddress(domain: string, chainId: number) {

@@ -11,8 +11,8 @@ import { Wallet3, WalletListItem } from '@popup/_lib';
 import {
   ChromeService,
   AssetState,
-  NeonService,
   GlobalService,
+  NeoWalletService,
 } from '@/app/core';
 import { Router } from '@angular/router';
 import {
@@ -80,9 +80,9 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     private chromeSrc: ChromeService,
     private dialog: MatDialog,
     private assetState: AssetState,
-    private neon: NeonService,
     private global: GlobalService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private neoWalletService: NeoWalletService
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -345,7 +345,7 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
-          this.neon
+          this.neoWalletService
             .delWallet(
               this.moreModalWallet,
               this.moreModalChainType,

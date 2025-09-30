@@ -23,9 +23,9 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import {
   ChromeService,
-  NeonService,
   GlobalService,
   SettingState,
+  SelectChainState,
 } from '@/app/core';
 import {
   PopupAddNetworkDialogComponent,
@@ -79,8 +79,8 @@ export class PopupNetworkListComponent implements OnDestroy {
     private dialog: MatDialog,
     private router: Router,
     private global: GlobalService,
-    private neon: NeonService,
-    private settingState: SettingState
+    private settingState: SettingState,
+    private selectChainState: SelectChainState
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -228,7 +228,7 @@ export class PopupNetworkListComponent implements OnDestroy {
       .subscribe((confirm) => {
         if (confirm) {
           this.close();
-          this.neon.selectChainType(newChain);
+          this.selectChainState.selectChainType(newChain);
           this.router.navigateByUrl('/popup/wallet/create');
         }
       });

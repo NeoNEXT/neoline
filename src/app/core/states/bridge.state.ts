@@ -22,6 +22,7 @@ import {
   handleNeo3StackNumber,
   handleNeo3StackNumberValue,
 } from '../utils/neo';
+import { HttpService } from '../services/http.service';
 
 @Injectable()
 export class BridgeState {
@@ -45,7 +46,11 @@ export class BridgeState {
   private neo3Network: RpcNetwork;
   private provider: ethers.JsonRpcProvider;
 
-  constructor(private store: Store<AppState>, private http: HttpClient) {
+  constructor(
+    private store: Store<AppState>,
+    private httpClient: HttpClient,
+    private http: HttpService
+  ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
@@ -74,7 +79,7 @@ export class BridgeState {
     if (storageTx.asset.bridgeTargetAssetId) {
       suffixAddress = `/${storageTx.asset.bridgeTargetAssetId}`;
     }
-    return this.http.get(
+    return this.httpClient.get(
       `${
         this.BridgeParams[storageTx.network].bridgeTxHostOnNeo3BridgeNeoX
       }${suffixAddress}/${depositId}`
@@ -87,9 +92,9 @@ export class BridgeState {
       params: [this.BridgeParams[network].n3BridgeContract, 'nativeDepositFee'],
       id: 1,
     };
-    return this.http.post(this.neo3Network.rpcUrl, data).pipe(
+    return this.http.rpcPost(this.neo3Network.rpcUrl, data).pipe(
       map((res: any) => {
-        const fee = handleNeo3StackNumberValue(res.result);
+        const fee = handleNeo3StackNumberValue(res);
         return new BigNumber(fee).shiftedBy(-8).toFixed();
       })
     );
@@ -102,9 +107,9 @@ export class BridgeState {
       params: [this.BridgeParams[network].n3BridgeContract, 'maxNativeDeposit'],
       id: 1,
     };
-    return this.http.post(this.neo3Network.rpcUrl, data).pipe(
+    return this.http.rpcPost(this.neo3Network.rpcUrl, data).pipe(
       map((res: any) => {
-        const data = handleNeo3StackNumberValue(res.result);
+        const data = handleNeo3StackNumberValue(res);
         return new BigNumber(data).shiftedBy(-8).toFixed();
       })
     );
@@ -121,9 +126,8 @@ export class BridgeState {
       network === BridgeNetwork.MainNet
         ? N3MainnetNetwork.rpcUrl
         : N3TestnetNetwork.rpcUrl;
-    return this.http.post(neo3RPC, data).pipe(
+    return this.http.rpcPost(neo3RPC, data).pipe(
       map((res: any) => {
-        res = res.result;
         const value = res.stack?.[0]?.value;
         let used: string;
         let total: string;
@@ -204,7 +208,7 @@ export class BridgeState {
     if (storageTx.asset.bridgeTargetAssetId) {
       data.params['TokenHash'] = storageTx.asset.bridgeTargetAssetId;
     }
-    return this.http.post(
+    return this.httpClient.post(
       this.BridgeParams[storageTx.network].bridgeTxHostOnNeoXBridgeNeo3,
       data
     );

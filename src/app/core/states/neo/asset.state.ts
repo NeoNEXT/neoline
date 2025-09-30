@@ -4,7 +4,7 @@ import { ChromeService } from '../../services/chrome.service';
 import { AssetEVMState } from '../evm/asset.state';
 import { Observable, from, of, forkJoin, firstValueFrom } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { Asset, NEO, GAS, UTXO } from 'src/models/models';
+import { Asset, NEO, GAS, UTXO, ClaimItem } from 'src/models/models';
 import { map } from 'rxjs/operators';
 import { GasFeeSpeed, RpcNetwork } from '@popup/_lib/type';
 import { bignumber } from 'mathjs';
@@ -18,7 +18,7 @@ import {
   NetworkType,
 } from '@popup/_lib';
 import BigNumber from 'bignumber.js';
-import { wallet as wallet3, u } from '@cityofzion/neon-core-neo3';
+import { wallet as wallet3} from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { ethers } from 'ethers';
@@ -26,6 +26,10 @@ import { SettingState } from '../setting.state';
 import { environment } from '@/environments/environment';
 import { handleNeo3StackNumberValue } from '../../utils/neo';
 import { NeoAssetInfoState } from './asset-info.state';
+import { tx as tx2 } from '@cityofzion/neon-js';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { Transaction } from '@cityofzion/neon-core/lib/tx';
+import { GlobalService } from '../../services/global.service';
 
 interface CoinRatesItem {
   rates: { [assetId: string]: string };
@@ -56,12 +60,16 @@ export class AssetState {
   private n2Network: RpcNetwork;
   private n3Network: RpcNetwork;
   private neoXNetwork: RpcNetwork;
+  private neo2WIFArr: string[];
+  private neo2WalletArr: Wallet2[];
+
   constructor(
     private http: HttpService,
     private chrome: ChromeService,
     private assetEVMState: AssetEVMState,
     private setting: SettingState,
     private store: Store<AppState>,
+    private global: GlobalService,
     private neoAssetInfoState: NeoAssetInfoState
   ) {
     this.apiDomain = environment.mainApiBase;
@@ -74,6 +82,8 @@ export class AssetState {
       this.n2Network = state.n2Networks[state.n2NetworkIndex];
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
+      this.neo2WalletArr = state.neo2WalletArr;
+      this.neo2WIFArr = state.neo2WIFArr;
     });
   }
 
@@ -105,6 +115,59 @@ export class AssetState {
         return result;
       })
     );
+  }
+  public async claimNeo2GAS(
+    claims: Array<ClaimItem>,
+    currentWallet: Wallet2
+  ): Promise<Array<Transaction>> {
+    const claimArr = [[]];
+    const valueArr = [];
+    let count = 0;
+    let txCount = 0;
+    let itemValue = 0;
+    claims.forEach((item) => {
+      count++;
+      claimArr[txCount].push({
+        prevHash: item.txid.length === 66 ? item.txid.slice(2) : item.txid,
+        prevIndex: item.n,
+      });
+      itemValue = this.global.mathAdd(itemValue, Number(item.unclaimed));
+      if (count >= 20) {
+        txCount++;
+        count = 0;
+        claimArr[txCount] = [];
+        valueArr.push(itemValue);
+        itemValue = 0;
+      }
+    });
+    if (itemValue !== 0) {
+      valueArr.push(itemValue);
+    }
+    let wif =
+      this.neo2WIFArr[
+        this.neo2WalletArr.findIndex(
+          (item) =>
+            item.accounts[0].address === currentWallet.accounts[0].address
+        )
+      ];
+    if (!wif && !currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
+      const pwd = await this.chrome.getPassword();
+      wif = (await (currentWallet.accounts[0] as any).decrypt(pwd)).WIF;
+    }
+    const txArr = [];
+    claimArr.forEach((item, index) => {
+      const newTx = new tx2.ClaimTransaction({
+        claims: item,
+      });
+      newTx.addIntent(
+        'GAS',
+        valueArr[index],
+        currentWallet.accounts[0].address
+      );
+      wif && newTx.sign(wif);
+      txArr.push(newTx);
+    });
+    return txArr;
   }
   //neo3
   public getUnclaimedGas(address: string): Observable<any> {
@@ -459,8 +522,14 @@ export class AssetState {
         asset_id: asset_hash,
       });
     });
-    const symbols = await this.neoAssetInfoState.getAssetSymbols(contracts, 'Neo2');
-    const decimals = await this.neoAssetInfoState.getAssetDecimals(contracts, 'Neo2');
+    const symbols = await this.neoAssetInfoState.getAssetSymbols(
+      contracts,
+      'Neo2'
+    );
+    const decimals = await this.neoAssetInfoState.getAssetDecimals(
+      contracts,
+      'Neo2'
+    );
     result.forEach((item, index) => {
       result[index].symbol = symbols[index];
       result[index].decimals = decimals[index];
