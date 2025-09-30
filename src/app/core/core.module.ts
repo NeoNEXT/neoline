@@ -35,13 +35,13 @@ import { NotificationService } from './services/notification.service';
 import { HttpService } from './services/http.service';
 import { ExtensionService } from './services/extension.service';
 import { InitService } from './services/init.service';
+import { BridgeService } from './services/bridge.service';
 
 // states
 import { NeoAssetInfoState } from './states/neo/asset-info.state';
 
 import { SettingState } from './states/setting.state';
 import { HomeState } from './states/home.state';
-import { BridgeState } from './states/bridge.state';
 import { SelectChainState } from './states/select-chain.state';
 import { RateState } from './states/rate.state';
 
@@ -68,9 +68,9 @@ import { RateState } from './states/rate.state';
     EvmTxService,
     EvmNFTService,
     EvmDappService,
-    BridgeState,
     QRBasedService,
     Neo3Service,
+    BridgeService,
     NeoAssetInfoState,
     SelectChainState,
     InitService,

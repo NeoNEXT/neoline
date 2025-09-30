@@ -32,12 +32,12 @@ export { NotificationService } from './services/notification.service';
 export { HttpService } from './services/http.service';
 export { ExtensionService } from './services/extension.service';
 export { InitService } from './services/init.service';
+export { BridgeService } from './services/bridge.service';
 
 // states
 export { NeoAssetInfoState } from './states/neo/asset-info.state';
 
 export { SettingState } from './states/setting.state';
 export { HomeState } from './states/home.state';
-export { BridgeState } from './states/bridge.state';
 export { SelectChainState } from './states/select-chain.state';
 export { RateState } from './states/rate.state';

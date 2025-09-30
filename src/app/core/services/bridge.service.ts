@@ -22,26 +22,11 @@ import {
   handleNeo3StackNumber,
   handleNeo3StackNumberValue,
 } from '../utils/neo';
-import { HttpService } from '../services/http.service';
+import { HttpService } from './http.service';
+import { BridgeParams } from '@/app/popup/_lib/bridge';
 
 @Injectable()
-export class BridgeState {
-  readonly BridgeParams = {
-    [BridgeNetwork.MainNet]: {
-      n3BridgeContract: '0xbb19cfc864b73159277e1fd39694b3fd5fc613d2',
-      bridgeTxHostOnNeo3BridgeNeoX:
-        'https://xexplorer.neo.org:8877/api/v1/transactions/deposits',
-      neoXBridgeContract: '0x1212000000000000000000000000000000000004',
-      bridgeTxHostOnNeoXBridgeNeo3: 'https://neofura.ngd.network/',
-    },
-    [BridgeNetwork.TestNet]: {
-      n3BridgeContract: '0x2ba94444d43c9a084a5660982a9f95f43f07422e',
-      bridgeTxHostOnNeo3BridgeNeoX:
-        'https://xt4scan.ngd.network:8877/api/v1/transactions/deposits',
-      neoXBridgeContract: '0x1212000000000000000000000000000000000004',
-      bridgeTxHostOnNeoXBridgeNeo3: 'https://testmagnet.ngd.network/',
-    },
-  };
+export class BridgeService {
   private neoXNetwork: RpcNetwork;
   private neo3Network: RpcNetwork;
   private provider: ethers.JsonRpcProvider;
@@ -81,7 +66,7 @@ export class BridgeState {
     }
     return this.httpClient.get(
       `${
-        this.BridgeParams[storageTx.network].bridgeTxHostOnNeo3BridgeNeoX
+        BridgeParams[storageTx.network].bridgeTxHostOnNeo3BridgeNeoX
       }${suffixAddress}/${depositId}`
     );
   }
@@ -89,7 +74,7 @@ export class BridgeState {
     const data = {
       jsonrpc: '2.0',
       method: 'invokefunction',
-      params: [this.BridgeParams[network].n3BridgeContract, 'nativeDepositFee'],
+      params: [BridgeParams[network].n3BridgeContract, 'nativeDepositFee'],
       id: 1,
     };
     return this.http.rpcPost(this.neo3Network.rpcUrl, data).pipe(
@@ -104,7 +89,7 @@ export class BridgeState {
     const data = {
       jsonrpc: '2.0',
       method: 'invokefunction',
-      params: [this.BridgeParams[network].n3BridgeContract, 'maxNativeDeposit'],
+      params: [BridgeParams[network].n3BridgeContract, 'maxNativeDeposit'],
       id: 1,
     };
     return this.http.rpcPost(this.neo3Network.rpcUrl, data).pipe(
@@ -119,7 +104,7 @@ export class BridgeState {
     const data = {
       jsonrpc: '2.0',
       method: 'invokefunction',
-      params: [this.BridgeParams[network].n3BridgeContract, 'getNativeBridge'],
+      params: [BridgeParams[network].n3BridgeContract, 'getNativeBridge'],
       id: 1,
     };
     const neo3RPC =
@@ -200,7 +185,7 @@ export class BridgeState {
       jsonrpc: '2.0',
       method: 'GetBridgeTxByNonce',
       params: {
-        ContractHash: this.BridgeParams[storageTx.network].n3BridgeContract,
+        ContractHash: BridgeParams[storageTx.network].n3BridgeContract,
         Nonce: nonce,
       },
       id: 1,
@@ -209,7 +194,7 @@ export class BridgeState {
       data.params['TokenHash'] = storageTx.asset.bridgeTargetAssetId;
     }
     return this.httpClient.post(
-      this.BridgeParams[storageTx.network].bridgeTxHostOnNeoXBridgeNeo3,
+      BridgeParams[storageTx.network].bridgeTxHostOnNeoXBridgeNeo3,
       data
     );
   }
@@ -222,7 +207,7 @@ export class BridgeState {
     );
     const data = contract.interface.encodeFunctionData('allowance', [
       address,
-      this.BridgeParams[network].neoXBridgeContract,
+      BridgeParams[network].neoXBridgeContract,
     ]);
     return this.provider
       .call({
@@ -258,7 +243,7 @@ export class BridgeState {
     const invokeArgs = [
       {
         operation: 'depositNative',
-        scriptHash: this.BridgeParams[currentBridgeNetwork].n3BridgeContract,
+        scriptHash: BridgeParams[currentBridgeNetwork].n3BridgeContract,
         args: [
           sc.ContractParam.hash160(fromAddress),
           sc.ContractParam.fromJson({
@@ -274,7 +259,7 @@ export class BridgeState {
       {
         account: wallet.getScriptHashFromAddress(fromAddress),
         allowedContracts: [
-          this.BridgeParams[currentBridgeNetwork].n3BridgeContract,
+          BridgeParams[currentBridgeNetwork].n3BridgeContract,
           GAS3_CONTRACT,
         ],
         allowedGroups: [],
@@ -321,7 +306,7 @@ export class BridgeState {
 
     const txParams = {
       from: fromAddress,
-      to: this.BridgeParams[currentBridgeNetwork].neoXBridgeContract,
+      to: BridgeParams[currentBridgeNetwork].neoXBridgeContract,
       value,
       data,
     };

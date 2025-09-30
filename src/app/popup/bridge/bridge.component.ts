@@ -2,13 +2,13 @@ import {
   RateState,
   GlobalService,
   NotificationService,
-  BridgeState,
   NeoTxService,
   ChromeService,
   SettingState,
   EvmTxService,
   EvmGasService,
   NeoAssetService,
+  BridgeService,
 } from '@/app/core';
 import { Asset } from '@/models/models';
 import { Component, OnDestroy, OnInit } from '@angular/core';
@@ -48,7 +48,11 @@ import {
   PopupBridgeProgressDialogComponent,
   PopupSelectAddressDialogComponent,
 } from '../_dialogs';
-import { Neo3BridgeAssetList, NeoXBridgeAssetList } from '../_lib/bridge';
+import {
+  BridgeParams,
+  Neo3BridgeAssetList,
+  NeoXBridgeAssetList,
+} from '../_lib/bridge';
 
 const MIN_BRIDGE_AMOUNT = 1;
 
@@ -109,7 +113,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     private neo3Invoke: Neo3InvokeService,
     private globalService: GlobalService,
     public notification: NotificationService,
-    private bridgeState: BridgeState,
+    private bridgeService: BridgeService,
     private neoTxService: NeoTxService,
     private settingState: SettingState,
     private dialog: MatDialog,
@@ -174,7 +178,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       this.bridgeAssetList = Neo3BridgeAssetList[this.currentBridgeNetwork];
       this.bridgeAsset = this.bridgeAssetList[0];
       // bridge fee
-      this.bridgeState
+      this.bridgeService
         .getGasDepositFee(this.currentBridgeNetwork)
         .subscribe((res) => {
           if (res) {
@@ -183,7 +187,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           }
         });
       // max deposit fee
-      this.bridgeState
+      this.bridgeService
         .getMaxGasDeposit(this.currentBridgeNetwork)
         .subscribe((res) => {
           if (res) {
@@ -236,7 +240,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   }
 
   private async calculateNeoXFee() {
-    const txParams = this.bridgeState.getNeoXTxParams({
+    const txParams = this.bridgeService.getNeoXTxParams({
       bridgeAsset: this.bridgeAsset,
       bridgeAmount: this.bridgeAmount ?? this.minBridgeAmount,
       fromAddress: this.currentWallet.accounts[0].address,
@@ -254,7 +258,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   }
 
   private calculateNeoN3Fee() {
-    const { invokeArgs, signers } = this.bridgeState.getNeoN3TxParams({
+    const { invokeArgs, signers } = this.bridgeService.getNeoN3TxParams({
       bridgeAsset: this.bridgeAsset,
       bridgeAmount: this.bridgeAmount ?? this.minBridgeAmount,
       fromAddress: this.currentWallet.accounts[0].address,
@@ -404,7 +408,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
 
     this.loading = true;
     if (this.chainType === 'Neo3') {
-      const { invokeArgs, signers } = this.bridgeState.getNeoN3TxParams({
+      const { invokeArgs, signers } = this.bridgeService.getNeoN3TxParams({
         bridgeAsset: this.bridgeAsset,
         bridgeAmount: this.bridgeAmount,
         fromAddress: this.currentWallet.accounts[0].address,
@@ -459,7 +463,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           }
         );
     } else {
-      const txParams = this.bridgeState.getNeoXTxParams({
+      const txParams = this.bridgeService.getNeoXTxParams({
         bridgeAsset: this.bridgeAsset,
         bridgeAmount: this.bridgeAmount,
         fromAddress: this.currentWallet.accounts[0].address,
@@ -619,7 +623,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   private waitNeo3TargetTxComplete(depositId: number) {
     this.getTargetTxReceiptInterval?.unsubscribe();
     this.getTargetTxReceiptInterval = interval(5000).subscribe(() => {
-      this.bridgeState
+      this.bridgeService
         .getBridgeTxOnNeo3BridgeNeoX(depositId, this.sessionTx)
         .subscribe((res: any) => {
           if (res.txid) {
@@ -640,7 +644,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   private waitNeoXSourceTxComplete(hash: string) {
     this.getSourceTxReceiptInterval?.unsubscribe();
     this.getSourceTxReceiptInterval = interval(3000).subscribe(() => {
-      this.bridgeState
+      this.bridgeService
         .getTransactionReceipt(hash, this.sessionTx.sourceRpcUrl)
         .then((res) => {
           if (res) {
@@ -666,7 +670,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   private waitNeoXTargetTxComplete(nonce: number) {
     this.getTargetTxReceiptInterval?.unsubscribe();
     this.getTargetTxReceiptInterval = interval(3000).subscribe(() => {
-      this.bridgeState
+      this.bridgeService
         .getBridgeTxOnNeoXBridgeNeo3(nonce, this.sessionTx)
         .subscribe((res: any) => {
           if (res.result) {
@@ -770,7 +774,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       this.bridgeAmount &&
       this.bridgeAsset.asset_id !== ETH_SOURCE_ASSET_HASH
     ) {
-      this.bridgeState
+      this.bridgeService
         .getAllowance(
           this.bridgeAsset,
           this.currentWallet.accounts[0].address,
@@ -795,9 +799,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         data: {
           asset: this.bridgeAsset,
           encryptWallet: this.currentWallet,
-          spender:
-            this.bridgeState.BridgeParams[this.currentBridgeNetwork]
-              .neoXBridgeContract,
+          spender: BridgeParams[this.currentBridgeNetwork].neoXBridgeContract,
           amount: this.bridgeAmount,
           lang: this.lang,
           rateCurrency: this.rateCurrency,

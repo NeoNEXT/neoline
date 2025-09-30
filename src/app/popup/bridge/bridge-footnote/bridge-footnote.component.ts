@@ -1,8 +1,8 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { BridgeState } from '@/app/core';
 import { BridgeNetwork } from '../../_lib';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupBridgeFootnoteDialogComponent } from '../../_dialogs';
+import { BridgeService } from '@/app/core';
 
 @Component({
   selector: 'bridge-footnote',
@@ -14,10 +14,13 @@ export class NeoXBridgeFootnoteComponent implements OnInit {
 
   bridgeData: { used: string; total: string; percentage: string };
 
-  constructor(private bridgeState: BridgeState, private dialog: MatDialog) {}
+  constructor(
+    private bridgeService: BridgeService,
+    private dialog: MatDialog
+  ) {}
 
   ngOnInit(): void {
-    this.bridgeState
+    this.bridgeService
       .getGasBridgeProgress(this.currentBridgeNetwork)
       .subscribe((res) => {
         this.bridgeData = res;
