@@ -4,7 +4,7 @@ import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import type BN from 'bn.js';
-import { DappEVMState } from '../../states/evm/dapp.state';
+import { EvmDappService } from './dapp.service';
 import { NftAsset, NftToken } from '@/models/models';
 import { EvmTxService } from './tx.service';
 @Injectable()
@@ -14,7 +14,7 @@ export class EvmNFTService {
 
   constructor(
     private store: Store<AppState>,
-    private dappEVMState: DappEVMState,
+    private evmDappService: EvmDappService,
     private evmTxService: EvmTxService
   ) {
     const account$ = this.store.select('account');
@@ -136,7 +136,7 @@ export class EvmNFTService {
   async watchNft(tokenAddress: string, tokenId: string, userAddress: string) {
     await this.validateWatchNft(tokenAddress, tokenId, userAddress);
 
-    const nftMetadata = await this.dappEVMState.getNFTTokenStandardAndDetails(
+    const nftMetadata = await this.evmDappService.getNFTTokenStandardAndDetails(
       tokenAddress,
       userAddress,
       tokenId

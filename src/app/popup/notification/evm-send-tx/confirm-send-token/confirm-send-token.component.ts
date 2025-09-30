@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { DappEVMState, RateState } from '@/app/core';
+import { EvmDappService, RateState } from '@/app/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import {
   AddressNonceInfo,
@@ -48,18 +48,18 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   fromWalletName: string;
   toWalletName: string;
   constructor(
-    private dappEVMState: DappEVMState,
+    private evmDappService: EvmDappService,
     private rateState: RateState
   ) {}
 
   ngOnInit(): void {
     this.hexDataLength = getHexDataLength(this.txParams.data);
-    this.tokenData = this.dappEVMState.parseStandardTokenTransactionData(
+    this.tokenData = this.evmDappService.parseStandardTokenTransactionData(
       this.txParams.data
     );
 
-    this.fromWalletName = this.dappEVMState.getWalletName(this.txParams.from);
-    this.dappEVMState
+    this.fromWalletName = this.evmDappService.getWalletName(this.txParams.from);
+    this.evmDappService
       .getAssetDetails(
         this.txParams.to,
         this.txParams.from,
@@ -69,7 +69,7 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
       .then((res) => {
         this.assetDetails = res;
         if (this.assetDetails?.toAddress) {
-          this.toWalletName = this.dappEVMState.getWalletName(
+          this.toWalletName = this.evmDappService.getWalletName(
             this.assetDetails.toAddress
           );
         }

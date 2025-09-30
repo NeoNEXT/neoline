@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { DappEVMState } from '@/app/core';
+import { EvmDappService } from '@/app/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import {
   AddressNonceInfo,
@@ -50,16 +50,16 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   contractName: string;
   contractIsRisk = false;
 
-  constructor(private dappEVMState: DappEVMState) {}
+  constructor(private evmDappService: EvmDappService) {}
 
   ngOnInit(): void {
     this.hexDataLength = getHexDataLength(this.txParams.data);
-    this.dappEVMState
+    this.evmDappService
       .detectContractSecurity(this.txParams.to)
       .subscribe((res) => {
         this.contractIsRisk = res;
       });
-    this.dappEVMState
+    this.evmDappService
       .getContractNameAndDecodeData({
         chainId: this.neoXNetwork.chainId,
         inputData: this.txParams.data,
@@ -69,12 +69,12 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
         this.decodeData = res.decodeData;
         this.contractName = res.contractName;
       });
-    this.dappEVMState
+    this.evmDappService
       .getContractMethodData(this.txParams.data)
       .subscribe((res) => {
         this.contractMethodData = res;
       });
-    this.fromWalletName = this.dappEVMState.getWalletName(this.txParams.from);
+    this.fromWalletName = this.evmDappService.getWalletName(this.txParams.from);
   }
 
   getShowAmount() {

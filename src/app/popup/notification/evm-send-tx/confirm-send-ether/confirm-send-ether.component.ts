@@ -7,7 +7,7 @@ import {
 } from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 import BigNumber from 'bignumber.js';
-import { DappEVMState } from '@/app/core';
+import { EvmDappService } from '@/app/core';
 import { RateType } from '../evm-send-tx.component';
 import { getHexDataLength } from '@/app/core/utils/evm';
 
@@ -42,11 +42,11 @@ export class PopupNoticeEvmConfirmSendEtherComponent implements OnInit {
   fromWalletName: string;
   toWalletName: string;
 
-  constructor(private dappEVMState: DappEVMState) {}
+  constructor(private evmDappService: EvmDappService) {}
 
   ngOnInit(): void {
-    this.fromWalletName = this.dappEVMState.getWalletName(this.txParams.from);
-    this.toWalletName = this.dappEVMState.getWalletName(this.txParams.to);
+    this.fromWalletName = this.evmDappService.getWalletName(this.txParams.from);
+    this.toWalletName = this.evmDappService.getWalletName(this.txParams.to);
     this.hexDataLength = getHexDataLength(this.txParams.data);
   }
 

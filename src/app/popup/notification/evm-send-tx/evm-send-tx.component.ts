@@ -2,7 +2,7 @@ import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import {
   ChromeService,
-  DappEVMState,
+  EvmDappService,
   GlobalService,
   SettingState,
   RateState,
@@ -76,7 +76,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
   constructor(
     private aRoute: ActivatedRoute,
     private chrome: ChromeService,
-    private dappEVMState: DappEVMState,
+    private evmDappService: EvmDappService,
     private dialog: MatDialog,
     private globalService: GlobalService,
     private settingState: SettingState,
@@ -344,7 +344,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
   private async initData() {
     // method
-    const { type } = await this.dappEVMState.determineTransactionType(
+    const { type } = await this.evmDappService.determineTransactionType(
       this.txParams
     );
     this.methodName = type;

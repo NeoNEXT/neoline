@@ -19,6 +19,7 @@ import { EvmAssetService } from './services/evm/asset.service';
 import { EvmGasService } from './services/evm/gas.service';
 import { EvmTxService } from './services/evm/tx.service';
 import { EvmNFTService } from './services/evm/nft.service';
+import { EvmDappService } from './services/evm/dapp.service';
 
 import { NeoWalletService } from './services/neo/wallet.service';
 import { Neo3Service } from './services/neo/neo3.service';
@@ -37,8 +38,6 @@ import { InitService } from './services/init.service';
 
 // states
 import { NeoAssetInfoState } from './states/neo/asset-info.state';
-
-import { DappEVMState } from './states/evm/dapp.state';
 
 import { SettingState } from './states/setting.state';
 import { HomeState } from './states/home.state';
@@ -68,7 +67,7 @@ import { RateState } from './states/rate.state';
     EvmGasService,
     EvmTxService,
     EvmNFTService,
-    DappEVMState,
+    EvmDappService,
     BridgeState,
     QRBasedService,
     Neo3Service,

@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { DappEVMState, EvmAssetService, EvmTxService } from '@/app/core';
+import { EvmAssetService, EvmDappService, EvmTxService } from '@/app/core';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import {
   AddressNonceInfo,
@@ -53,7 +53,7 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   approveAssetBalance: string;
   neoXFeeInfo: NeoXFeeInfoProp;
   constructor(
-    private dappEVMState: DappEVMState,
+    private evmDappService: EvmDappService,
     private evmTxService: EvmTxService,
     private evmAssetService: EvmAssetService,
     private dialog: MatDialog
@@ -61,10 +61,10 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
 
   ngOnInit(): void {
     this.hexDataLength = getHexDataLength(this.txParams.data);
-    this.tokenData = this.dappEVMState.parseStandardTokenTransactionData(
+    this.tokenData = this.evmDappService.parseStandardTokenTransactionData(
       this.txParams.data
     );
-    this.dappEVMState
+    this.evmDappService
       .getAssetDetails(
         this.txParams.to,
         this.txParams.from,

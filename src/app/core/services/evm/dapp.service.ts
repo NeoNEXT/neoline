@@ -28,7 +28,7 @@ import {
 import type BN from 'bn.js';
 import { HttpClient } from '@angular/common/http';
 import { map, Observable, of } from 'rxjs';
-import { ChromeService } from '../../services/chrome.service';
+import { ChromeService } from '../chrome.service';
 
 const abi_1 = require('@ethersproject/abi');
 
@@ -42,7 +42,7 @@ const ERC1155_INTERFACE_ID = '0xd9b67a26';
 const IPFS_DEFAULT_GATEWAY_URL = 'https://ipfs.io/ipfs/';
 
 @Injectable()
-export class DappEVMState {
+export class EvmDappService {
   private neoXNetwork: RpcNetwork;
   private neoXWalletArr: EvmWalletJSON[];
   private provider: ethers.JsonRpcProvider;
@@ -174,70 +174,40 @@ export class DappEVMState {
     );
   }
 
-  /**
-   * @typedef EthersContractCall
-   * @type object
-   * @property {any[]} args - The args/params to the function call.
-   * An array-like object with numerical and string indices.
-   * @property {string} name - The name of the function.
-   * @property {string} signature - The function signature.
-   * @property {string} sighash - The function signature hash.
-   * @property {EthersBigNumber} value - The ETH value associated with the call.
-   * @property {FunctionFragment} functionFragment - The Ethers function fragment
-   * representation of the function.
-   */
-
-  private getMethodFrom4Byte(fourBytePrefix) {
-    return this.http
-      .get(
-        `https://www.4byte.directory/api/v1/signatures/?hex_signature=${fourBytePrefix}`
-      )
-      .pipe(
-        map((fourByteResponse: any) => {
-          fourByteResponse.results.sort((a, b) => {
-            return new Date(a.created_at).getTime() <
-              new Date(b.created_at).getTime()
-              ? -1
-              : 1;
-          });
-          return fourByteResponse.results[0]?.text_signature;
-        })
+  async getNFTTokenStandardAndDetails(
+    tokenAddress: string,
+    userAddress?: string,
+    tokenId?: string
+  ): Promise<{
+    standard: string;
+    tokenURI?: string | undefined;
+    symbol?: string | undefined;
+    name?: string | undefined;
+    image?: string | undefined;
+  }> {
+    // ERC721
+    try {
+      return await this.getERC721Details(
+        tokenAddress,
+        IPFS_DEFAULT_GATEWAY_URL,
+        tokenId
       );
-  }
+    } catch {
+      // Ignore
+    }
 
-  private parseMethodFrom4Byte(signature) {
-    const rawName = signature.match(/^([^)(]*)\((.*)\)([^)(]*)$/u);
-    let parsedName;
-    if (rawName) {
-      parsedName =
-        rawName[1].charAt(0).toUpperCase() +
-        rawName[1]
-          .slice(1)
-          .split(/(?=[A-Z])/u)
-          .join(' ');
-    } else {
-      parsedName = '';
-    }
-    if (rawName) {
-      const match = signature.match(
-        new RegExp(`${rawName[1]}\\(+([a-z1-9,()\\[\\]]+)\\)`, 'u')
+    // ERC1155
+    try {
+      return await this.getERC1155Details(
+        tokenAddress,
+        IPFS_DEFAULT_GATEWAY_URL,
+        tokenId
       );
-      let matches;
-      let args = [];
-      if (match) {
-        matches = match[1].match(/[A-z1-9]+/gu);
-        if (matches) {
-          args = matches.map((arg) => {
-            return { type: arg };
-          });
-        }
-      }
-      return {
-        name: parsedName,
-        args,
-      };
+    } catch {
+      // Ignore
     }
-    return {};
+
+    throw new Error('Unable to determine contract standard');
   }
 
   async getAssetDetails(
@@ -416,42 +386,6 @@ export class DappEVMState {
     return { contractCode, isContractAddress };
   }
 
-  async getNFTTokenStandardAndDetails(
-    tokenAddress: string,
-    userAddress?: string,
-    tokenId?: string
-  ): Promise<{
-    standard: string;
-    tokenURI?: string | undefined;
-    symbol?: string | undefined;
-    name?: string | undefined;
-    image?: string | undefined;
-  }> {
-    // ERC721
-    try {
-      return await this.getERC721Details(
-        tokenAddress,
-        IPFS_DEFAULT_GATEWAY_URL,
-        tokenId
-      );
-    } catch {
-      // Ignore
-    }
-
-    // ERC1155
-    try {
-      return await this.getERC1155Details(
-        tokenAddress,
-        IPFS_DEFAULT_GATEWAY_URL,
-        tokenId
-      );
-    } catch {
-      // Ignore
-    }
-
-    throw new Error('Unable to determine contract standard');
-  }
-
   /**
    * @param tokenAddress - ERC721 asset contract address.
    */
@@ -497,6 +431,59 @@ export class DappEVMState {
     }
 
     throw new Error('Unable to determine contract standard');
+  }
+
+  private getMethodFrom4Byte(fourBytePrefix) {
+    return this.http
+      .get(
+        `https://www.4byte.directory/api/v1/signatures/?hex_signature=${fourBytePrefix}`
+      )
+      .pipe(
+        map((fourByteResponse: any) => {
+          fourByteResponse.results.sort((a, b) => {
+            return new Date(a.created_at).getTime() <
+              new Date(b.created_at).getTime()
+              ? -1
+              : 1;
+          });
+          return fourByteResponse.results[0]?.text_signature;
+        })
+      );
+  }
+
+  private parseMethodFrom4Byte(signature) {
+    const rawName = signature.match(/^([^)(]*)\((.*)\)([^)(]*)$/u);
+    let parsedName;
+    if (rawName) {
+      parsedName =
+        rawName[1].charAt(0).toUpperCase() +
+        rawName[1]
+          .slice(1)
+          .split(/(?=[A-Z])/u)
+          .join(' ');
+    } else {
+      parsedName = '';
+    }
+    if (rawName) {
+      const match = signature.match(
+        new RegExp(`${rawName[1]}\\(+([a-z1-9,()\\[\\]]+)\\)`, 'u')
+      );
+      let matches;
+      let args = [];
+      if (match) {
+        matches = match[1].match(/[A-z1-9]+/gu);
+        if (matches) {
+          args = matches.map((arg) => {
+            return { type: arg };
+          });
+        }
+      }
+      return {
+        name: parsedName,
+        args,
+      };
+    }
+    return {};
   }
   //#endregion
 
