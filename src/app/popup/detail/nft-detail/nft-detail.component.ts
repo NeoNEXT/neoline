@@ -1,7 +1,7 @@
 import { Component, OnDestroy } from '@angular/core';
 import {
-  NftState,
   ChromeService,
+  NeoNFTService,
   GlobalService,
   EvmNFTService,
 } from '@/app/core';
@@ -33,7 +33,7 @@ export class PopupNftDetailComponent implements OnDestroy {
   chainType: ChainType;
   constructor(
     private aRouter: ActivatedRoute,
-    private nftState: NftState,
+    private neoNFTService: NeoNFTService,
     private router: Router,
     private chrome: ChromeService,
     private global: GlobalService,
@@ -83,22 +83,24 @@ export class PopupNftDetailComponent implements OnDestroy {
         });
       return;
     }
-    this.nftState.getNftTokens(this.address, this.nftContract).then((res) => {
-      this.nft = res;
-      if (!this.nft) {
-        this.chrome
-          .getNftWatch(
-            `${this.chainType}-${this.currentNetwork.id}`,
-            this.address
-          )
-          .subscribe((res2) => {
-            this.nft = res2.find((m) => m.assethash === this.nftContract);
-            this.handleToken();
-          });
-      } else {
-        this.handleToken();
-      }
-    });
+    this.neoNFTService
+      .getNftTokens(this.address, this.nftContract)
+      .then((res) => {
+        this.nft = res;
+        if (!this.nft) {
+          this.chrome
+            .getNftWatch(
+              `${this.chainType}-${this.currentNetwork.id}`,
+              this.address
+            )
+            .subscribe((res2) => {
+              this.nft = res2.find((m) => m.assethash === this.nftContract);
+              this.handleToken();
+            });
+        } else {
+          this.handleToken();
+        }
+      });
   }
 
   private handleToken() {

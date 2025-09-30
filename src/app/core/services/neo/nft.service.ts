@@ -1,13 +1,13 @@
 import { Injectable } from '@angular/core';
-import { HttpService } from '../../services/http.service';
+import { HttpService } from '../http.service';
 import { NftAsset, NftTransaction } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { RpcNetwork } from '@/app/popup/_lib';
-import { NeoAssetInfoState } from './asset-info.state';
+import { NeoAssetInfoState } from '../../states/neo/asset-info.state';
 
 @Injectable()
-export class NftState {
+export class NeoNFTService {
   private n3Network: RpcNetwork;
   constructor(
     private http: HttpService,

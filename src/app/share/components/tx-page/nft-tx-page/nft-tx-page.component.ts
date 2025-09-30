@@ -1,6 +1,6 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
 import {
-  NftState,
+  NeoNFTService,
   ChromeService,
   TransactionState,
   EvmTxService,
@@ -51,7 +51,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
   chainType: ChainType;
   constructor(
     private dialog: MatDialog,
-    private nftState: NftState,
+    private neoNFTService: NeoNFTService,
     private chrome: ChromeService,
     private txState: TransactionState,
     private store: Store<AppState>,
@@ -153,7 +153,7 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
   }
 
   private handleTxs(validTxs?: string[]) {
-    const httpReq1 = this.nftState.getNftTransactions(
+    const httpReq1 = this.neoNFTService.getNftTransactions(
       this.address,
       this.nftContract
     );

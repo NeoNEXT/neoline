@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { GlobalService, NftState, ChromeService } from '@/app/core';
+import { GlobalService, NeoNFTService, ChromeService } from '@/app/core';
 import { NftAsset } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -21,7 +21,7 @@ export class PopupNftsComponent implements OnInit, OnDestroy {
   private chainType: ChainType;
   constructor(
     public global: GlobalService,
-    private nftState: NftState,
+    private neoNFTService: NeoNFTService,
     private chrome: ChromeService,
     private store: Store<AppState>
   ) {}
@@ -48,7 +48,7 @@ export class PopupNftsComponent implements OnInit, OnDestroy {
     const getWatch = this.chrome
       .getNftWatch(`${this.chainType}-${this.n3Network.id}`, this.address)
       .toPromise();
-    const getNfts = this.nftState.getAddressNfts(this.address);
+    const getNfts = this.neoNFTService.getAddressNfts(this.address);
     Promise.all([getNfts, getWatch]).then(([moneyAssets, watch]) => {
       let showAssets = [...moneyAssets];
       watch.forEach((item) => {

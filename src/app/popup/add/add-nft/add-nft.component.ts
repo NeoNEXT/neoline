@@ -1,5 +1,5 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
-import { NftState, ChromeService, GlobalService } from '@/app/core';
+import { ChromeService, GlobalService, NeoNFTService } from '@/app/core';
 import { NftAsset } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -23,7 +23,7 @@ export class PopupAddNftComponent implements OnDestroy {
   private n3NetworkId: number;
   private chainType: ChainType;
   constructor(
-    private nftState: NftState,
+    private neoNFTService: NeoNFTService,
     private chrome: ChromeService,
     private global: GlobalService,
     private store: Store<AppState>
@@ -38,7 +38,7 @@ export class PopupAddNftComponent implements OnDestroy {
         .subscribe((res) => {
           this.watch = res;
         });
-      this.nftState
+      this.neoNFTService
         .getAddressNfts(this.address)
         .then((res) => (this.moneyNft = res));
     });
@@ -50,7 +50,7 @@ export class PopupAddNftComponent implements OnDestroy {
 
   public searchCurrency() {
     this.isLoading = true;
-    this.nftState.searchNft(this.searchValue).then(
+    this.neoNFTService.searchNft(this.searchValue).then(
       (res) => {
         this.searchNft = res;
         const moneyIndex = this.moneyNft.findIndex(

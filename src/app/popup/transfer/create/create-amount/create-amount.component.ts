@@ -11,7 +11,7 @@ import {
   AssetState,
   GlobalService,
   ChromeService,
-  NftState,
+  NeoNFTService,
 } from '@/app/core';
 import { MatDialog } from '@angular/material/dialog';
 import {
@@ -75,7 +75,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     private global: GlobalService,
     private chrome: ChromeService,
     private neo3Transfer: Neo3TransferService,
-    private nftState: NftState,
+    private neoNFTService: NeoNFTService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -137,7 +137,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
   }
   private getNftTokens() {
     if (this.chainType === 'Neo3') {
-      this.nftState
+      this.neoNFTService
         .getNftTokens(this.fromAddress, this.nftContract)
         .then((res) => {
           this.nftAsset = res;
