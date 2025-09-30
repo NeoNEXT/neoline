@@ -21,6 +21,7 @@ module.exports = (env) => {
           crypto: require.resolve("crypto-browserify"),
           stream: require.resolve("stream-browserify"),
           url: require.resolve("url"),
+          vm: false,
         },
       },
       module: {
