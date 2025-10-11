@@ -18,15 +18,20 @@ import {
   PopupEditFeeDialogComponent,
   PopupTransferSuccessDialogComponent,
 } from '../../_dialogs';
-import { RpcNetwork } from '../../_lib/type';
 import { bignumber } from 'mathjs';
-import { STORAGE_NAME, GAS3_CONTRACT, ChainType } from '../../_lib';
+import {
+  STORAGE_NAME,
+  GAS3_CONTRACT,
+  ChainType,
+  Neo3InvokeMultipleParams,
+  Wallet3,
+  RpcNetwork,
+} from '@/app/popup/_lib';
 import { Neo3InvokeService } from '../../transfer/neo3-invoke.service';
 import BigNumber from 'bignumber.js';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { Wallet3 } from '@popup/_lib';
 
 type TabType = 'details' | 'data';
 
@@ -36,23 +41,18 @@ type TabType = 'details' | 'data';
 })
 export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
   tabType: TabType = 'details';
-  public dataJson: any = {};
+  invokeParams: Neo3InvokeMultipleParams;
+
   public rateCurrency = '';
   public txSerialize = '';
   public showFeeEdit: boolean = true;
 
-  private pramsData: any;
   public tx: Transaction;
-  public invokeArgs: any[] = [];
-  public signers: any[] = [];
-  public minFee = 0;
-  public broadcastOverride = null;
   public loading = false;
   public loadingMsg: string;
   private messageID = 0;
   public invokeArgsArray: any[] = [];
 
-  public fee = null;
   public systemFee;
   public networkFee;
   public totalFee;
@@ -108,30 +108,18 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
           if (!params || params.length <= 0) {
             return;
           }
-          this.dataJson = {
-            ...params,
-            messageID: undefined,
-            hostname: undefined,
-          };
-          this.pramsData = params;
-          this.pramsData.invokeArgs.forEach((item) => {
-            item = this.neo3Invoke.createInvokeInputs(item);
-            this.invokeArgs.push({
-              ...this.neo3Invoke.createInvokeInputs(item),
-            });
-          });
-          this.broadcastOverride = this.pramsData.broadcastOverride || false;
-          this.signers = this.pramsData.signers;
-          if (params.minReqFee) {
-            this.minFee = Number(params.minReqFee);
-          }
+          this.invokeParams = params;
+          this.invokeParams.broadcastOverride =
+            this.invokeParams.broadcastOverride || false;
+
+          this.invokeParams.minReqFee = this.invokeParams.minReqFee || '0';
           if (params.fee) {
-            this.fee = bignumber(params.fee).toFixed();
+            this.invokeParams.fee = bignumber(params.fee).toFixed();
           } else {
-            this.fee = '0';
+            this.invokeParams.fee = '0';
             if (this.showFeeEdit) {
               const res_1 = await this.neoGasService.getGasFee().toPromise();
-              this.fee = bignumber(this.minFee)
+              this.invokeParams.fee = bignumber(this.invokeParams.minReqFee)
                 .add(bignumber(res_1.propose_price))
                 .toFixed();
             }
@@ -171,7 +159,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
   }
 
   private async resolveSend() {
-    if (this.broadcastOverride) {
+    if (this.invokeParams.broadcastOverride) {
       this.loading = false;
       this.loadingMsg = '';
       this.chrome.windowCallback(
@@ -259,19 +247,18 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         panelClass: 'custom-dialog-panel',
         backdropClass: 'custom-dialog-backdrop',
         data: {
-          fee: this.fee,
-          minFee: this.minFee,
+          fee: this.invokeParams.fee,
+          minFee: this.invokeParams.minReqFee,
         },
       })
       .afterClosed()
       .subscribe((res) => {
         if (res || res === 0) {
-          this.fee = res;
-          this.dataJson.fee = res;
+          this.invokeParams.fee = res;
           this.getAssetRate();
           this.signTx();
-          if (res < this.minFee) {
-            this.fee = this.minFee;
+          if (res < this.invokeParams.minReqFee) {
+            this.invokeParams.fee = this.invokeParams.minReqFee;
           }
         }
       });
@@ -282,11 +269,14 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
       this.loading = true;
       this.neo3Invoke
         .createNeo3Tx({
-          invokeArgs: this.invokeArgs,
-          signers: this.signers,
-          networkFee: this.fee,
-          systemFee: this.pramsData.extraSystemFee,
-          overrideSystemFee: this.pramsData.overrideSystemFee,
+          invokeArgs: this.invokeParams.invokeArgs.map((item) => {
+            item.args = this.neo3Invoke.handleInvokeArgs(item.args);
+            return item;
+          }),
+          signers: this.invokeParams.signers,
+          networkFee: this.invokeParams.fee,
+          systemFee: this.invokeParams.extraSystemFee,
+          overrideSystemFee: this.invokeParams.overrideSystemFee,
         })
         .subscribe(
           async (unSignTx: Transaction) => {
@@ -338,13 +328,13 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
   }
 
   private prompt() {
-    if (this.signers[0].scopes === tx.WitnessScope.Global) {
+    if (this.invokeParams.signers[0].scopes === tx.WitnessScope.Global) {
       this.dialog
         .open(PopupDapiPromptComponent, {
           panelClass: 'custom-dialog-panel',
           backdropClass: 'custom-dialog-backdrop',
           data: {
-            scopes: this.signers[0].scopes,
+            scopes: this.invokeParams.signers[0].scopes,
           },
         })
         .afterClosed()
@@ -356,7 +346,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
     this.showHardwareSign = false;
     if (tx) {
       this.tx = tx;
-      if (this.signers.length > 1) {
+      if (this.invokeParams.signers.length > 1) {
         const addressSign = this.tx.witnesses[0];
         const addressIndex = this.tx.signers.findIndex((item) =>
           item.account
@@ -383,14 +373,14 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
       this.currentWallet
     );
     this.tx.sign(wif, this.n3Network.magicNumber);
-    if (this.signers.length > 1) {
+    if (this.invokeParams.signers.length > 1) {
       const addressSign = this.tx.witnesses[0];
-      const addressIndex = this.signers.findIndex((item) =>
+      const addressIndex = this.invokeParams.signers.findIndex((item) =>
         item.account
           .toString()
           .includes(wallet.getScriptHashFromAddress(this.signAddress))
       );
-      this.tx.witnesses = new Array(this.signers.length).fill(
+      this.tx.witnesses = new Array(this.invokeParams.signers.length).fill(
         new Witness({ verificationScript: '', invocationScript: '' })
       );
       this.tx.witnesses[addressIndex] = addressSign;

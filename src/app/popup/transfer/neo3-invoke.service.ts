@@ -197,21 +197,16 @@ export class Neo3InvokeService {
     return Buffer.from(str, 'hex').toString('base64');
   }
 
-  public createInvokeInputs(data) {
-    const { args, scriptHash, operation } = data;
-    return {
-      scriptHash,
-      operation,
-      args: args.map((item) => {
-        if (item && item.type && item.type === 'Address') {
-          return sc.ContractParam.hash160(item.value.toString());
-        } else if (item) {
-          return ContractParam.fromJson(item);
-        } else {
-          return null;
-        }
-      }),
-    };
+  public handleInvokeArgs(args: any[]) {
+    return args.map((item) => {
+      if (item && item.type && item.type === 'Address') {
+        return sc.ContractParam.hash160(item.value.toString());
+      } else if (item) {
+        return ContractParam.fromJson(item);
+      } else {
+        return null;
+      }
+    });
   }
   async isEnoughFee(
     fromAddress: string,

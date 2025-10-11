@@ -21,9 +21,15 @@
       {{ n3Network.network }}
       {{ "ChainSmartContractDeploy" | translate | async }}
     </p>
-    <p class="account">
-      <img [avatar]="signAddress" />{{ signAddress | longStr : 10 }}
-    </p>
+    <copy [value]="signAddress">
+      <div class="account">
+        <img class="avatar" [avatar]="signAddress" />
+        <div class="name-group">
+          <p class="name">{{ currentWallet.name }}</p>
+          <p>{{ signAddress | longStr : 10 }}</p>
+        </div>
+      </div>
+    </copy>
   </div>
   <div class="tabs-container">
     <span
@@ -46,7 +52,9 @@
           src="assets/images/common/edit.svg"
         />
       </p>
-      <p class="value">{{ (showFeeEdit ? fee : 0) | numberFixed }} GAS</p>
+      <p class="value">
+        {{ (showFeeEdit ? invokeParams.fee : 0) | numberFixed }} GAS
+      </p>
       <div class="border-line"></div>
     </li>
     <li>
@@ -81,7 +89,7 @@
         <p class="label">{{ "YourSigningAddress" | translate | async }}</p>
         <p class="value">{{ signAddress }}</p>
       </li>
-      <ng-container *ngFor="let invokeItem of dataJson.invokeArgs">
+      <ng-container *ngFor="let invokeItem of invokeParams.invokeArgs">
         <li>
           <p class="label">{{ "ContractScriptHash" | translate | async }}</p>
           <p class="value">{{ invokeItem.scriptHash }}</p>
@@ -99,15 +107,15 @@
           </div>
         </li>
       </ng-container>
-      <li *ngIf="dataJson?.fee !== undefined">
+      <li *ngIf="invokeParams?.fee !== undefined">
         <p class="label">{{ "Fee" | translate | async }}</p>
-        <p class="value">{{ dataJson?.fee }}</p>
+        <p class="value">{{ invokeParams?.fee }}</p>
       </li>
-      <li *ngIf="dataJson?.broadcastOverride !== undefined">
+      <li *ngIf="invokeParams?.broadcastOverride !== undefined">
         <p class="label">{{ "broadcastOverride" | translate | async }}</p>
         <p class="value">
           {{
-            (dataJson.broadcastOverride ? "booleanYes" : "No")
+            (invokeParams.broadcastOverride ? "booleanYes" : "No")
               | translate
               | async
           }}
@@ -115,7 +123,7 @@
       </li>
       <li>
         <p class="label">{{ "signers" | translate | async }}</p>
-        <div class="value" *ngFor="let item of dataJson.signers">
+        <div class="value" *ngFor="let item of invokeParams.signers">
           <p>account - {{ item.account }}</p>
           <p>scopes - {{ item.scopes }}</p>
           <p *ngIf="item?.allowedContracts">

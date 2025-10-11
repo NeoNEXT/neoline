@@ -1,5 +1,5 @@
 import { ETH_SOURCE_ASSET_HASH } from './evm';
-import { GAS3_CONTRACT } from './neo3';
+import { GAS3_CONTRACT } from './neo3-account';
 import { BridgeNetwork } from './transaction';
 
 export const Neo3BridgeAssetList = {

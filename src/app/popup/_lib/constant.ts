@@ -1,6 +1,6 @@
 import { Asset, NEO, GAS } from '@/models/models';
 import { DEFAULT_NEOX_RPC_NETWORK } from './evm';
-import { NEO3_CONTRACT, GAS3_CONTRACT } from './neo3';
+import { NEO3_CONTRACT, GAS3_CONTRACT } from './neo3-account';
 import {
   DEFAULT_N2_RPC_NETWORK,
   DEFAULT_N3_RPC_NETWORK,
