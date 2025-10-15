@@ -53,6 +53,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
   private messageID = 0;
   public invokeArgsArray: any[] = [];
 
+  public fee = null;
   public systemFee;
   public networkFee;
   public totalFee;
@@ -98,28 +99,24 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
       this.rateCurrency = res;
     });
     this.aRoute.queryParams.subscribe(async ({ messageID }) => {
-      let params: any;
       this.messageID = messageID;
       this.chrome
         .getStorage(STORAGE_NAME.InvokeArgsArray)
         .subscribe(async (invokeArgsArray) => {
           this.invokeArgsArray = invokeArgsArray;
-          params = invokeArgsArray[this.messageID];
-          if (!params || params.length <= 0) {
+          this.invokeParams = invokeArgsArray[this.messageID];
+          if (!this.invokeParams) {
             return;
           }
-          this.invokeParams = params;
-          this.invokeParams.broadcastOverride =
-            this.invokeParams.broadcastOverride || false;
-
           this.invokeParams.minReqFee = this.invokeParams.minReqFee || '0';
-          if (params.fee) {
-            this.invokeParams.fee = bignumber(params.fee).toFixed();
+
+          if (this.invokeParams.fee) {
+            this.fee = bignumber(this.invokeParams.fee).toFixed();
           } else {
-            this.invokeParams.fee = '0';
+            this.fee = '0';
             if (this.showFeeEdit) {
               const res_1 = await this.neoGasService.getGasFee().toPromise();
-              this.invokeParams.fee = bignumber(this.invokeParams.minReqFee)
+              this.fee = bignumber(this.invokeParams.minReqFee)
                 .add(bignumber(res_1.propose_price))
                 .toFixed();
             }
@@ -247,18 +244,18 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         panelClass: 'custom-dialog-panel',
         backdropClass: 'custom-dialog-backdrop',
         data: {
-          fee: this.invokeParams.fee,
+          fee: this.fee,
           minFee: this.invokeParams.minReqFee,
         },
       })
       .afterClosed()
       .subscribe((res) => {
         if (res || res === 0) {
-          this.invokeParams.fee = res;
+          this.fee = res;
           this.getAssetRate();
           this.signTx();
           if (res < this.invokeParams.minReqFee) {
-            this.invokeParams.fee = this.invokeParams.minReqFee;
+            this.fee = this.invokeParams.minReqFee;
           }
         }
       });
@@ -274,7 +271,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             return item;
           }),
           signers: this.invokeParams.signers,
-          networkFee: this.invokeParams.fee,
+          networkFee: this.fee,
           systemFee: this.invokeParams.extraSystemFee,
           overrideSystemFee: this.invokeParams.overrideSystemFee,
         })
