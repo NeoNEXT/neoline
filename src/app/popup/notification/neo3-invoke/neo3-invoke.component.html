@@ -42,107 +42,149 @@
       {{ "data" | translate | async }}
     </span>
   </div>
-  <ul class="content details" *ngIf="tabType === 'details'">
-    <li>
-      <p class="label">
-        {{ "GASFEE" | translate | async
-        }}<img
-          class="edit"
-          (click)="editFee()"
-          src="assets/images/common/edit.svg"
-        />
-      </p>
-      <p class="value">
-        {{ (showFeeEdit ? fee : 0) | numberFixed }} GAS
-      </p>
-      <div class="border-line"></div>
-    </li>
-    <li>
-      <p class="label">{{ "TOTAL" | translate | async }}</p>
-      <p class="value dropdown">
-        {{ totalFee | numberFixed }} GAS
+  <div class="content details" *ngIf="tabType === 'details'">
+    <div class="request-info">
+      <div class="request-info-item">
+        <div class="label">
+          {{ "InteractingWith" | translate | async }}
+          <tooltip
+            placement="bottomLeft"
+            [tip]="'interactionWithTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
+        <div>
+          <copy [value]="invokeParams.scriptHash" placement="left">
+            {{ invokeParams?.contractName }}
+          </copy>
+        </div>
+      </div>
+      <div class="request-info-item">
+        <div class="label">
+          {{ "Operation" | translate | async }}
+          <tooltip
+            placement="bottomLeft"
+            [tip]="'operationTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
+        <span>{{ invokeParams.operation }}</span>
+      </div>
+      <div class="request-info-item">
+        <div class="label">
+          {{ "InvocationArguments" | translate | async }}
+          <tooltip
+            placement="bottomLeft"
+            [tip]="'InvocationArgumentsTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
         <img
-          (click)="expandTotalFee = !expandTotalFee"
           class="arrow"
-          [ngClass]="{ expand: expandTotalFee }"
-          [class.expand]="expandTotalFee"
-          src="assets/images/common/support-arrow.svg"
+          [ngClass]="{ active: invokeParams.expandArgs }"
+          (click)="invokeParams.expandArgs = !invokeParams.expandArgs"
+          theme
+          src="/assets/images/common/arrow.svg"
           alt=""
         />
-      </p>
-      <p class="value-rate">
-        {{ totalMoney | numberFixed : 2 }} {{ rateCurrency }}
-      </p>
-    </li>
-    <li [hidden]="!expandTotalFee">
-      <p class="label">{{ "SYSTEMFEE" | translate | async }}</p>
-      <p class="value">{{ systemFee | numberFixed }} GAS</p>
-    </li>
-    <li [hidden]="!expandTotalFee">
-      <p class="label">{{ "NETWORKFEE" | translate | async }}</p>
-      <p class="value">{{ networkFee | numberFixed }} GAS</p>
-    </li>
-  </ul>
-  <div class="content data" *ngIf="tabType === 'data'">
-    <ul>
-      <li>
-        <p class="label">{{ "YourSigningAddress" | translate | async }}</p>
-        <p class="value">{{ signAddress }}</p>
-      </li>
-      <li>
-        <p class="label">{{ "ContractScriptHash" | translate | async }}</p>
-        <p class="value">{{ invokeParams.scriptHash }}</p>
-      </li>
-      <li>
-        <p class="label">{{ "Operation" | translate | async }}</p>
-        <p class="value">{{ invokeParams.operation }}</p>
-      </li>
-      <li>
-        <p class="label">{{ "InvocationArguments" | translate | async }}</p>
-        <div class="value" *ngFor="let item of invokeParams.args">
-          <p>
-            {{ item.type }} - <span>{{ item.value | json }}</span>
-          </p>
+      </div>
+      <pre *ngIf="invokeParams.expandArgs">{{ invokeParams.args | json }}</pre>
+    </div>
+    <div class="request-info">
+      <div class="request-info-item">
+        <div class="label">
+          {{ "signers" | translate | async }}
+          <tooltip
+            placement="bottomLeft"
+            [tip]="'signersTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
         </div>
-      </li>
-      <li *ngIf="invokeParams?.fee !== undefined">
-        <p class="label">{{ "Fee" | translate | async }}</p>
-        <p class="value">{{ invokeParams?.fee }}</p>
-      </li>
-      <li *ngIf="invokeParams?.broadcastOverride !== undefined">
-        <p class="label">{{ "broadcastOverride" | translate | async }}</p>
-        <p class="value">
+        <img
+          class="arrow"
+          [ngClass]="{ active: invokeParams.expandSigners }"
+          (click)="invokeParams.expandSigners = !invokeParams.expandSigners"
+          theme
+          src="/assets/images/common/arrow.svg"
+          alt=""
+        />
+      </div>
+      <pre *ngIf="invokeParams.expandSigners">{{
+        invokeParams.signers | json
+      }}</pre>
+      <div
+        class="request-info-item"
+        *ngIf="invokeParams?.broadcastOverride !== undefined"
+      >
+        <div class="label">
+          {{ "broadcastOverride" | translate | async }}
+          <tooltip
+            placement="bottomLeft"
+            [tip]="'broadcastOverrideTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
+        <span>
           {{
             (invokeParams.broadcastOverride ? "booleanYes" : "No")
               | translate
               | async
-          }}
+          }}</span
+        >
+      </div>
+    </div>
+    <ul>
+      <li>
+        <p class="label">
+          {{ "GASFEE" | translate | async
+          }}<img
+            class="edit"
+            (click)="editFee()"
+            src="assets/images/common/edit.svg"
+          />
         </p>
+        <p class="value">{{ fee | numberFixed }} GAS</p>
+        <div class="border-line"></div>
       </li>
       <li>
-        <p class="label">{{ "signers" | translate | async }}</p>
-        <div class="value" *ngFor="let item of invokeParams.signers">
-          <p>account - {{ item.account }}</p>
-          <p>scopes - {{ item.scopes }}</p>
-          <p *ngIf="item?.allowedContracts">
-            allowedContracts -
-            <span *ngFor="let contract of item?.allowedContracts"
-              >{{ contract }},
-            </span>
-          </p>
-          <p *ngIf="item?.allowedGroups">
-            allowedGroups -
-            <span *ngFor="let publicKey of item?.allowedGroups"
-              >{{ publicKey }},
-            </span>
-          </p>
-          <p *ngIf="item?.rules">
-            rules - <span>{{ item.rules | json }}</span>
-          </p>
-        </div>
+        <p class="label">{{ "TOTAL" | translate | async }}</p>
+        <p class="value dropdown">
+          {{ totalFee | numberFixed }} GAS
+          <img
+            (click)="expandTotalFee = !expandTotalFee"
+            class="arrow"
+            [ngClass]="{ expand: expandTotalFee }"
+            [class.expand]="expandTotalFee"
+            src="assets/images/common/support-arrow.svg"
+            alt=""
+          />
+        </p>
+        <p class="value-rate">
+          {{ totalMoney | numberFixed : 2 }} {{ rateCurrency }}
+        </p>
+      </li>
+      <li [hidden]="!expandTotalFee">
+        <p class="label">{{ "SYSTEMFEE" | translate | async }}</p>
+        <p class="value">{{ systemFee | numberFixed }} GAS</p>
+      </li>
+      <li [hidden]="!expandTotalFee">
+        <p class="label">{{ "NETWORKFEE" | translate | async }}</p>
+        <p class="value">{{ networkFee | numberFixed }} GAS</p>
       </li>
     </ul>
-    <p class="hex-label">HEX</p>
+  </div>
+  <div class="content data" *ngIf="tabType === 'data'">
+    <div class="hex-label n3-invoke">
+      HEX
+      <copy [value]="txSerialize" placement="right">
+        <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+      </copy>
+    </div>
     <p class="json-box serialize">{{ txSerialize }}</p>
   </div>
   <div class="btn-group">

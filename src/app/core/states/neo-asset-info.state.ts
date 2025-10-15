@@ -7,11 +7,16 @@ import {
   GAS3_CONTRACT,
   DEFAULT_NEO3_ASSETS,
   RpcNetwork,
+  N3ContractManifest,
 } from '@/app/popup/_lib';
 import { NEO, GAS } from '@/models/models';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { handleNeo3StackNumberValue, handleNeo3StackStringValue } from '../utils/neo';
+import {
+  handleNeo3StackNumberValue,
+  handleNeo3StackStringValue,
+} from '../utils/neo';
+import { map, Observable, of } from 'rxjs';
 
 @Injectable()
 export class NeoAssetInfoState {
@@ -20,6 +25,7 @@ export class NeoAssetInfoState {
   public n3AssetSymbol: Map<string, string> = new Map();
   public n3AssetDecimal: Map<string, number> = new Map();
   public n3AssetName: Map<string, string> = new Map();
+  private n3ContractInfo: Map<string, N3ContractManifest> = new Map();
   public n3NftProperties = {};
 
   private n2Network: RpcNetwork;
@@ -209,5 +215,44 @@ export class NeoAssetInfoState {
         });
         return propertiesRes;
       });
+  }
+
+  getContractManifests(contracts: string[]): Observable<N3ContractManifest[]> {
+    const requestDatas = [];
+    const requestIndexs = [];
+    const contractInfoRes = [];
+    contracts.forEach((hash, index) => {
+      if (this.n3ContractInfo.has(hash)) {
+        contractInfoRes[index] = this.n3ContractInfo.get(hash);
+      } else {
+        const data = {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'getcontractstate',
+          params: [hash],
+        };
+        requestDatas.push(data);
+        requestIndexs.push(index);
+      }
+    });
+    if (requestDatas.length === 0) {
+      return of(contractInfoRes);
+    }
+    return this.http
+      .rpcPostReturnAllData(this.n3Network.rpcUrl, requestDatas)
+      .pipe(
+        map((res) => {
+          res.forEach((item, index) => {
+            let info: N3ContractManifest;
+            if (item.result?.manifest) {
+              info = item.result.manifest;
+            }
+            const sourceIndex = requestIndexs[index];
+            this.n3ContractInfo.set(contracts[sourceIndex], info);
+            contractInfoRes[sourceIndex] = info;
+          });
+          return contractInfoRes;
+        })
+      );
   }
 }

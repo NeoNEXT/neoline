@@ -1559,9 +1559,6 @@
   "interactionWithTip": {
     "message": "这是您与之交互的合约。通过验证详细信息来保护自己免受诈骗。"
   },
-  "methodTip": {
-    "message": "基于解码输入数据而执行的功能。"
-  },
   "Spender": {
     "message": "消费者"
   },
@@ -1606,5 +1603,20 @@
   },
   "cameraError": {
     "message": "摄像头错误。请检查摄像头是否正常。"
+  },
+  "scriptHashTip": {
+    "message": "调用智能合约的脚本哈希"
+  },
+  "operationTip": {
+    "message": "调用智能合约的操作"
+  },
+  "InvocationArgumentsTip": {
+    "message": "调用智能合约的参数"
+  },
+  "signersTip": {
+    "message": "发送者和签名有效范围"
+  },
+  "broadcastOverrideTip": {
+    "message": "如果 dApp 想要负责广播已签名的交易，而不是钱包提供商"
   }
 }

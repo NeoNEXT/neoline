@@ -7,6 +7,7 @@ import {
   NotificationService,
   SettingState,
   RateState,
+  NeoAssetInfoState,
 } from '@/app/core';
 import { Transaction, Witness } from '@cityofzion/neon-core-neo3/lib/tx';
 import { tx, wallet } from '@cityofzion/neon-js-neo3';
@@ -43,30 +44,29 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
   tabType: TabType = 'details';
   invokeParams: Neo3InvokeMultipleParams;
 
-  public rateCurrency = '';
-  public txSerialize = '';
-  public showFeeEdit: boolean = true;
+  rateCurrency = '';
+  txSerialize = '';
 
-  public tx: Transaction;
-  public loading = false;
-  public loadingMsg: string;
+  tx: Transaction;
+  loading = false;
+  loadingMsg: string;
   private messageID = 0;
-  public invokeArgsArray: any[] = [];
+  private invokeArgsArray: any[] = [];
 
-  public fee = null;
-  public systemFee;
-  public networkFee;
-  public totalFee;
-  public totalMoney;
+  fee = null;
+  systemFee;
+  networkFee;
+  totalFee;
+  totalMoney;
 
-  public canSend = false;
+  canSend = false;
 
   showHardwareSign = false;
   expandTotalFee = false;
 
   private accountSub: Unsubscribable;
-  public signAddress: string;
-  public n3Network: RpcNetwork;
+  signAddress: string;
+  n3Network: RpcNetwork;
   currentWallet: Wallet3;
   private chainType: ChainType;
   private neo3WIFArr: string[];
@@ -81,6 +81,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
     private settingState: SettingState,
     private store: Store<AppState>,
     private neoGasService: NeoGasService,
+    private neoAssetInfoState: NeoAssetInfoState,
     private rateState: RateState
   ) {
     const account$ = this.store.select('account');
@@ -108,18 +109,17 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
           if (!this.invokeParams) {
             return;
           }
+          this.getContractManifest();
           this.invokeParams.minReqFee = this.invokeParams.minReqFee || '0';
 
           if (this.invokeParams.fee) {
             this.fee = bignumber(this.invokeParams.fee).toFixed();
           } else {
             this.fee = '0';
-            if (this.showFeeEdit) {
-              const res_1 = await this.neoGasService.getGasFee().toPromise();
-              this.fee = bignumber(this.invokeParams.minReqFee)
-                .add(bignumber(res_1.propose_price))
-                .toFixed();
-            }
+            const res_1 = await this.neoGasService.getGasFee().toPromise();
+            this.fee = bignumber(this.invokeParams.minReqFee)
+              .add(bignumber(res_1.propose_price))
+              .toFixed();
           }
           this.signTx();
           this.prompt();
@@ -266,10 +266,10 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
       this.loading = true;
       this.neo3Invoke
         .createNeo3Tx({
-          invokeArgs: this.invokeParams.invokeArgs.map((item) => {
-            item.args = this.neo3Invoke.handleInvokeArgs(item.args);
-            return item;
-          }),
+          invokeArgs: this.invokeParams.invokeArgs.map((item) => ({
+            ...item,
+            args: this.neo3Invoke.handleInvokeArgs(item.args),
+          })),
           signers: this.invokeParams.signers,
           networkFee: this.fee,
           systemFee: this.invokeParams.extraSystemFee,
@@ -383,5 +383,26 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
       this.tx.witnesses[addressIndex] = addressSign;
     }
     this.resolveSend();
+  }
+
+  private getContractManifest() {
+    const scriptHashes = this.invokeParams.invokeArgs.map(
+      (item) => item.scriptHash
+    );
+    this.neoAssetInfoState
+      .getContractManifests(scriptHashes)
+      .subscribe((res) => {
+        this.invokeParams.invokeArgs.forEach((invokeItem, index) => {
+          invokeItem.contractName = res[index].name;
+          const method = res[index].abi.methods.find(
+            (item) => item.name === invokeItem.operation
+          );
+          if (method) {
+            invokeItem.args.forEach((item, index) => {
+              item.name = method.parameters[index].name;
+            });
+          }
+        });
+      });
   }
 }

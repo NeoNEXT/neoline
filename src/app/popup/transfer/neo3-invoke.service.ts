@@ -14,13 +14,12 @@ import {
 import { Observable, from, throwError } from 'rxjs';
 import { Neo3Service, NotificationService, NeoAssetService } from '@app/core';
 import BigNumber from 'bignumber.js';
-import { ContractCall, ContractParam } from '@cityofzion/neon-core-neo3/lib/sc';
 import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 
 interface CreateNeo3TxInput {
-  invokeArgs: ContractCall[];
+  invokeArgs: sc.ContractCall[];
   signers: SignerLike[];
   networkFee: string;
   systemFee?: any;
@@ -202,7 +201,7 @@ export class Neo3InvokeService {
       if (item && item.type && item.type === 'Address') {
         return sc.ContractParam.hash160(item.value.toString());
       } else if (item) {
-        return ContractParam.fromJson(item);
+        return sc.ContractParam.fromJson(item);
       } else {
         return null;
       }

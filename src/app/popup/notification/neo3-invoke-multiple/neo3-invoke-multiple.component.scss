@@ -1,1 +1,10 @@
 @import '../common-scss/common.scss';
+
+.container {
+  height: calc(100% - 74px);
+  overflow: scroll;
+  padding-bottom: 20px;
+  .content {
+    height: auto;
+  }
+}

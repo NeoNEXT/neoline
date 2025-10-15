@@ -1606,5 +1606,20 @@
   },
   "cameraError": {
     "message": "Camera error. Please check if the camera is working."
+  },
+  "scriptHashTip": {
+    "message": "The script hash of the smart contract to invoke"
+  },
+  "operationTip": {
+    "message": "Operation on the smart contract to call"
+  },
+  "InvocationArgumentsTip": {
+    "message": "Any input arguments for the operation"
+  },
+  "signersTip": {
+    "message": "Sender and the effective scope of signature"
+  },
+  "broadcastOverrideTip": {
+    "message": "In the case that the dApp would like to be responsible for broadcasting the signed transaction rather than the wallet provider"
   }
 }

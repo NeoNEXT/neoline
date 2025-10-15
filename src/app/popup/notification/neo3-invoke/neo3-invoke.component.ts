@@ -7,7 +7,7 @@ import {
   SettingState,
   NeoGasService,
   RateState,
-  NeoAssetService,
+  NeoAssetInfoState,
 } from '@/app/core';
 import { Transaction, Witness } from '@cityofzion/neon-core-neo3/lib/tx';
 import { tx, wallet } from '@cityofzion/neon-js-neo3';
@@ -44,31 +44,28 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
   tabType: TabType = 'details';
   invokeParams: Neo3InvokeParams;
 
-  public rateCurrency = '';
-  public txSerialize = '';
-  public showFeeEdit: boolean = true;
+  rateCurrency = '';
+  txSerialize = '';
 
-  public tx: Transaction;
-  public loading = false;
-  public loadingMsg: string;
+  tx: Transaction;
+  loading = false;
+  loadingMsg: string;
   private messageID = 0;
-  public invokeArgsArray: any[] = [];
-  contractName: string;
+  private invokeArgsArray: any[] = [];
 
-  public fee = null;
-  public systemFee;
-  public networkFee;
-  public totalFee;
-  public totalMoney;
+  fee = null;
+  systemFee;
+  networkFee;
+  totalFee;
+  totalMoney;
 
-  public canSend = false;
-
+  canSend = false;
   showHardwareSign = false;
   expandTotalFee = false;
 
   private accountSub: Unsubscribable;
-  public signAddress: string;
-  public n3Network: RpcNetwork;
+  signAddress: string;
+  n3Network: RpcNetwork;
   currentWallet: Wallet3;
   private chainType: ChainType;
   private neo3WIFArr: string[];
@@ -83,7 +80,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
     private notification: NotificationService,
     private store: Store<AppState>,
     private rateState: RateState,
-    private neoAssetService: NeoAssetService,
+    private neoAssetInfoState: NeoAssetInfoState,
     private neoGasService: NeoGasService
   ) {
     const account$ = this.store.select('account');
@@ -111,18 +108,17 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
           if (!this.invokeParams) {
             return;
           }
+          this.getContractManifest();
           this.invokeParams.minReqFee = this.invokeParams.minReqFee || '0';
 
           if (this.invokeParams.fee) {
             this.fee = bignumber(this.invokeParams.fee).toFixed();
           } else {
             this.fee = '0';
-            if (this.showFeeEdit) {
-              const res_1 = await this.neoGasService.getGasFee().toPromise();
-              this.fee = bignumber(this.invokeParams.minReqFee)
-                .add(bignumber(res_1.propose_price))
-                .toFixed();
-            }
+            const res_1 = await this.neoGasService.getGasFee().toPromise();
+            this.fee = bignumber(this.invokeParams.minReqFee)
+              .add(bignumber(res_1.propose_price))
+              .toFixed();
           }
           this.prompt();
           this.signTx();
@@ -397,5 +393,21 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
       this.tx.witnesses[addressIndex] = addressSign;
     }
     this.resolveSend();
+  }
+
+  private getContractManifest() {
+    this.neoAssetInfoState
+      .getContractManifests([this.invokeParams.scriptHash])
+      .subscribe(([res]) => {
+        this.invokeParams.contractName = res.name;
+        const method = res.abi.methods.find(
+          (item) => item.name === this.invokeParams.operation
+        );
+        if (method) {
+          this.invokeParams.args.forEach((item, index) => {
+            item.name = method.parameters[index].name;
+          });
+        }
+      });
   }
 }

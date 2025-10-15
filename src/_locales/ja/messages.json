@@ -1606,5 +1606,20 @@
   },
   "cameraError": {
     "message": "カメラエラー。カメラが正常に動作しているかどうかを確認してください。"
+  },
+  "scriptHashTip": {
+    "message": "呼び出すスマートコントラクトのスクリプトハッシュ"
+  },
+  "operationTip": {
+    "message": "呼び出すスマートコントラクトの操作"
+  },
+  "InvocationArgumentsTip": {
+    "message": "操作の任意の入力引数"
+  },
+  "signersTip": {
+    "message": "送信者と署名の有効範囲"
+  },
+  "broadcastOverrideTip": {
+    "message": "dAppがウォレットプロバイダーではなく署名されたトランザクションのブロードキャストを担当したい場合"
   }
 }
