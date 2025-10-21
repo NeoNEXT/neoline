@@ -56,7 +56,11 @@
         </div>
         <div>
           <copy [value]="invokeParams.scriptHash" placement="left">
-            {{ invokeParams?.contractName }}
+            {{
+              invokeParams?.contractName
+                ? invokeParams.contractName
+                : (invokeParams.scriptHash | longStr : 6)
+            }}
           </copy>
         </div>
       </div>

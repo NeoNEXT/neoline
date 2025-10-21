@@ -393,14 +393,16 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
       .getContractManifests(scriptHashes)
       .subscribe((res) => {
         this.invokeParams.invokeArgs.forEach((invokeItem, index) => {
-          invokeItem.contractName = res[index].name;
-          const method = res[index].abi.methods.find(
-            (item) => item.name === invokeItem.operation
-          );
-          if (method) {
-            invokeItem.args.forEach((item, index) => {
-              item.name = method.parameters[index].name;
-            });
+          if (res[index]) {
+            invokeItem.contractName = res[index].name;
+            const method = res[index].abi.methods.find(
+              (item) => item.name === invokeItem.operation
+            );
+            if (method) {
+              invokeItem.args.forEach((item, index) => {
+                item.name = method.parameters[index].name;
+              });
+            }
           }
         });
       });
