@@ -29,7 +29,6 @@ export const AddNetworkChainTypeGroups: ChainSelectItem[] = [
 
 export enum NetworkType {
   MainNet = 'MainNet',
-  TestNet = 'TestNet',
   N3MainNet = 'N3MainNet',
   N3TestNet = 'N3TestNet',
   N3PrivateNet = 'N3PrivateNet',
@@ -39,7 +38,6 @@ export enum NetworkType {
 export const CHAINID_OF_NETWORKTYPE = {
   0: 'N3 private network',
   1: 'N2 Mainnet',
-  2: 'N2 Testnet',
   3: 'N3 Mainnet',
   6: 'N3 Testnet',
 };

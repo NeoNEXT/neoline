@@ -39,7 +39,6 @@ export interface RpcNetwork {
 
 export const DEFAULT_NETWORKS = [
   'MainNet',
-  'TestNet',
   'N3MainNet',
   'N3TestNet',
   'N3PrivateNet',
@@ -63,25 +62,8 @@ export const N2MainnetNetwork: RpcNetwork = {
   version: N2_NETWORK_VERSION,
 };
 
-export const N2testnetNetwork: RpcNetwork = {
-  rpcUrl: 'http://seed5.ngd.network:20332',
-  rpcUrlArr: [
-    { url: 'http://seed3.ngd.network:20332' },
-    { url: 'http://seed4.ngd.network:20332' },
-    { url: 'http://seed5.ngd.network:20332' },
-    { url: 'http://seed8.ngd.network:20332' },
-  ],
-  name: 'N2 Testnet',
-  explorer: '',
-  network: NetworkType.TestNet,
-  chainId: 2,
-  id: 2,
-  version: N2_NETWORK_VERSION,
-};
-
 export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
   N2MainnetNetwork,
-  // N2testnetNetwork,
 ];
 
 const N3_NETWORK_VERSION = 3;
@@ -139,12 +121,6 @@ export const DEFAULT_RPC_URLS = {
       'http://seed2.ngd.network:10332',
       'http://seed6.ngd.network:10332',
       'http://seed8.ngd.network:10332',
-    ],
-    [N2testnetNetwork.chainId]: [
-      'http://seed3.ngd.network:20332',
-      'http://seed4.ngd.network:20332',
-      'http://seed5.ngd.network:20332',
-      'http://seed8.ngd.network:20332',
     ],
     [N3MainnetNetwork.chainId]: [
       'http://seed1.neo.org:10332',
