@@ -23,10 +23,18 @@
       <mat-spinner diameter="34" strokeWidth="4"></mat-spinner>
     </div>
     <div id="reader"></div>
-    <p class="tip">{{ 'scanQRCodeTip' | translate | async }}</p>
-    <p class="error" *ngIf="!isValidQRCode">
-      {{ 'invalidQRCode' | translate | async }}
-    </p>
+    <ng-container *ngIf="cameraError">
+      <p class="error">
+        {{ (cameraPermission ? 'cameraError' : 'cameraPermissionDenied') |
+        translate | async }}
+      </p>
+    </ng-container>
+    <ng-container *ngIf="!cameraError">
+      <p class="tip">{{ 'scanQRCodeTip' | translate | async }}</p>
+      <p class="error" *ngIf="!isValidQRCode">
+        {{ 'invalidQRCode' | translate | async }}
+      </p>
+    </ng-container>
   </div>
 </div>
 

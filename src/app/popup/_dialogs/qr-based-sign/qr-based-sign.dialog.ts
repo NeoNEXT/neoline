@@ -18,6 +18,8 @@ export class PopupQRBasedSignDialogComponent implements OnInit, OnDestroy {
   isScanning = false;
   isValidQRCode = true;
   loadingScanner = true;
+  cameraError = false;
+  cameraPermission = true;
 
   constructor(
     private qrBasedService: QRBasedService,
@@ -115,6 +117,12 @@ export class PopupQRBasedSignDialogComponent implements OnInit, OnDestroy {
           },
           () => {}
         );
+      }
+    }).catch((error) => {
+      this.cameraError = true;
+      if (error.code === 0) {
+        // NotAllowedError
+        this.cameraPermission = false;
       }
     });
   }
