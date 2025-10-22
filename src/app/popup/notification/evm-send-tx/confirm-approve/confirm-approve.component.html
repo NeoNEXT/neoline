@@ -49,7 +49,14 @@
             class="edit"
             src="assets/images/common/edit.svg"
           />
-          <span>{{ approveAmount }}</span>
+          <span *ngIf="approveAmount.length <= 10">{{ approveAmount }}</span>
+          <tooltip
+            *ngIf="approveAmount.length > 10"
+            placement="top"
+            [tip]="approveAmount"
+          >
+            <span>{{ approveAmount.slice(0, 10) }}...</span>
+          </tooltip>
           <div class="asset-logo">
             <token-logo
               customClass="list edit-amount"
