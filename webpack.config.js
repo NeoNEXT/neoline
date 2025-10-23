@@ -78,7 +78,6 @@ module.exports = (config, options) => {
         https: require.resolve("https-browserify"),
         http: require.resolve("stream-http"),
         assert: require.resolve("assert/"),
-        vm: require.resolve("vm-browserify"),
       },
     },
     plugins: [
