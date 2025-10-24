@@ -5,6 +5,7 @@ import { str2hexstring } from '@cityofzion/neon-core-neo3/lib/u';
 
 import { base642hex, hexstring2str } from '@cityofzion/neon-core-neo3/lib/u';
 import BigNumber from 'bignumber.js';
+import { RpcNetwork } from '@/app/popup/_lib/type';
 
 export function parseNeo2TxHashAttr(
   { type, value, txAttrUsage }: TxHashAttribute,
@@ -52,10 +53,11 @@ export function isAsset(assetId: string): boolean {
     : assetId.length === 64;
 }
 export function getNeo2VerificationSignatureForSmartContract(
-  ScriptHash: string
+  ScriptHash: string,
+  network: RpcNetwork
 ): Promise<any> {
   return rpc2.Query.getContractState(ScriptHash)
-    .execute(this.n2Networks[this.n2NetworkIndex].rpcUrl)
+    .execute(network.rpcUrl)
     .then(({ result }) => {
       const { parameters } = result;
       return new tx2.Witness({

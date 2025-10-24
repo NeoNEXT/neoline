@@ -298,7 +298,10 @@ export class PopupNoticeInvokeMultiComponent implements OnInit {
         );
         return Promise.all(
           triggerContracts.map((scriptHash) =>
-            getNeo2VerificationSignatureForSmartContract(scriptHash)
+            getNeo2VerificationSignatureForSmartContract(
+              scriptHash,
+              this.n2Network
+            )
           )
         );
       })

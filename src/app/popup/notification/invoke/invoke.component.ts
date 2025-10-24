@@ -245,7 +245,10 @@ export class PopupNoticeInvokeComponent implements OnInit {
     this.loadingMsg = 'Wait';
     if (this.triggerContractVerification) {
       transaction.scripts = [
-        await getNeo2VerificationSignatureForSmartContract(this.scriptHash),
+        await getNeo2VerificationSignatureForSmartContract(
+          this.scriptHash,
+          this.n2Network
+        ),
         ...transaction.scripts,
       ];
     }
