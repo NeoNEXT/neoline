@@ -106,7 +106,9 @@ export class NeoAssetService {
 
   async getAssetDetail(address: string, assetId: string): Promise<Asset> {
     const balance = await this.getAddressBalances(address);
-    let asset = balance.find((e) => e.asset_id === assetId);
+    let asset = balance.find((e) =>
+      assetId.toLowerCase().includes(e.asset_id.toLowerCase())
+    );
     if (asset) return asset;
     let networkId: number;
     switch (this.chainType) {
@@ -123,7 +125,9 @@ export class NeoAssetService {
     const watching = await this.chrome
       .getWatch(`${this.chainType}-${networkId}`, address)
       .toPromise();
-    return watching.find((w) => w.asset_id === assetId);
+    return watching.find((w) =>
+      assetId.toLowerCase().includes(w.asset_id.toLowerCase())
+    );
   }
 
   async getAddressBalances(

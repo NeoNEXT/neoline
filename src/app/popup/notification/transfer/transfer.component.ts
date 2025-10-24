@@ -202,8 +202,6 @@ export class PopupNoticeTransferComponent implements OnInit {
   }
 
   public submit() {
-    this.loading = true;
-    this.loadingMsg = 'Loading';
     if (
       this.balance.balance === undefined ||
       bignumber(this.balance.balance).comparedTo(0) < 1
@@ -220,12 +218,12 @@ export class PopupNoticeTransferComponent implements OnInit {
       this.global.snackBarTip('balanceLack');
       return;
     }
+    this.loading = true;
+    this.loadingMsg = 'loading';
     this.creating = true;
     this.neoAssetService
       .getAssetDetail(this.fromAddress, this.assetId)
       .then((res: Asset) => {
-        this.loading = false;
-        this.loadingMsg = '';
         this.balance = res;
         this.transfer
           .create(
@@ -239,6 +237,8 @@ export class PopupNoticeTransferComponent implements OnInit {
           )
           .subscribe(
             (tx: Transaction) => {
+              this.loading = false;
+              this.loadingMsg = '';
               if (this.remark !== '') {
                 tx.addAttribute(
                   tx2.TxAttrUsage.Remark2,
@@ -262,6 +262,8 @@ export class PopupNoticeTransferComponent implements OnInit {
               this.resolveSign(tx);
             },
             () => {
+              this.loading = false;
+              this.loadingMsg = '';
               this.creating = false;
               this.global.snackBarTip('wentWrong');
             }

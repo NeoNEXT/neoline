@@ -342,3 +342,9 @@ export function getN3AddressFromScriptHash(
     Buffer.from(addressVersionHex + scriptHash + shaChecksum, 'hex')
   );
 }
+
+export function isN3Asset(assetId: string): boolean {
+  return assetId.startsWith('0x')
+    ? assetId.length === 42
+    : assetId.length === 40;
+}

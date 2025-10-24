@@ -73,6 +73,7 @@ import {
   str2hexstring,
   verify,
   reverseHex,
+  isN3Asset,
 } from '../common/utils';
 import { u as u3, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import BigNumber from 'bignumber.js';
@@ -884,8 +885,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTarget.Send: {
       const parameter = request.parameter as SendArgs;
-      let assetID = parameter.asset.length < 10 ? '' : parameter.asset;
-      const symbol = parameter.asset.length >= 10 ? '' : parameter.asset;
+      let assetID = parameter.asset;
       const data = {
         jsonrpc: '2.0',
         method: 'getnep5balances',
@@ -893,19 +893,15 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         id: 1,
       };
       let isNep5 = true;
-      if (
-        assetID === NEO ||
-        assetID === GAS ||
-        symbol.toLowerCase() === 'neo' ||
-        symbol.toLowerCase() === 'gas'
-      ) {
-        if (symbol.toLowerCase() === 'neo') {
-          assetID = NEO;
-        }
-        if (symbol.toLowerCase() === 'gas') {
-          assetID = GAS;
-        }
-        request.parameter.asset = assetID;
+      if (assetID.toLowerCase() === 'neo') {
+        assetID = NEO;
+      }
+      if (assetID.toLowerCase() === 'gas') {
+        assetID = GAS;
+      }
+      assetID = assetID.startsWith('0x') ? assetID : '0x' + assetID;
+      request.parameter.asset = assetID;
+      if (assetID === NEO || assetID === GAS) {
         isNep5 = false;
         data.method = 'getaccountstate';
       }
@@ -1575,14 +1571,23 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTargetN3.Send: {
       const parameter = request.parameter as N3SendArgs;
-      let assetID = parameter.asset.length < 10 ? '' : parameter.asset;
-      const symbol = parameter.asset.length >= 10 ? '' : parameter.asset;
-      if (symbol.toLowerCase() === 'neo') {
+      let assetID = parameter.asset;
+      if (assetID.toLowerCase() === 'neo') {
         assetID = NEO3;
       }
-      if (symbol.toLowerCase() === 'gas') {
+      if (assetID.toLowerCase() === 'gas') {
         assetID = GAS3;
       }
+      if (!isN3Asset(assetID)) {
+        windowCallback({
+          return: requestTargetN3.Send,
+          error: ERRORS.MALFORMED_INPUT,
+          ID: request.ID,
+        });
+        sendResponse('');
+        return;
+      }
+      assetID = assetID.startsWith('0x') ? assetID : '0x' + assetID;
       request.parameter.asset = assetID;
       const data = {
         jsonrpc: '2.0',
@@ -1593,7 +1598,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       httpPost(currN3Network.rpcUrl, data, (res) => {
         const index = res?.result?.balance
           ? res?.result?.balance.findIndex((item) =>
-              assetID.includes(item.assethash)
+              assetID.toLowerCase().includes(item.assethash.toLowerCase())
             )
           : -1;
         if (index < 0) {

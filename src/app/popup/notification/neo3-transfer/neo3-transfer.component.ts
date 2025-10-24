@@ -53,7 +53,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
   public totalMoney = '';
 
   public balance: any;
-  public creating = false;
+  private creating = false;
   public toAddress: string = '';
   public assetId: string = '';
   public symbol: string = '';
@@ -197,10 +197,8 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
 
   public submit() {
     this.loading = true;
-    this.loadingMsg = 'Loading';
+    this.loadingMsg = 'loading';
     this.creating = true;
-    this.loading = false;
-    this.loadingMsg = '';
     this.transfer
       .create(
         this.fromAddress,
@@ -213,6 +211,8 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
       )
       .subscribe(
         (tx: any) => {
+          this.loading = false;
+          this.loadingMsg = '';
           this.systemFee = tx.systemFee.toDecimal(8);
           this.networkFee = tx.networkFee.toDecimal(8);
           this.getAssetRate();
@@ -220,6 +220,8 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
           this.resolveSign(tx);
         },
         (err) => {
+          this.loading = false;
+          this.loadingMsg = '';
           this.creating = false;
           this.canSend = false;
           this.global.snackBarTip(err);
