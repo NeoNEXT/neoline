@@ -19,11 +19,13 @@
     "build:firefox": "ng build --configuration production && yarn build:crx:firefox",
     "lint": "ng lint",
     "test": "ng test",
+    "test:ci": "ng test --watch=false --browsers=ChromeHeadless",
     "http": "http-server dist",
     "build:crx:chrome": "yarn webpack --config extension/webpack.config.js --env platform=chrome",
     "build:crx:firefox": "yarn webpack --config extension/webpack.config.js --env platform=firefox",
     "webpack": "node --max_old_space_size=4096 node_modules/webpack/bin/webpack.js",
-    "postinstall": "node patch.js"
+    "postinstall": "node patch.js",
+    "prepare": "husky install"
   },
   "private": true,
   "dependencies": {
@@ -98,6 +100,7 @@
     "eslint": "^8.23.0",
     "html5-qrcode": "^2.3.8",
     "http-server": "^0.12.3",
+    "husky": "^8.0.0",
     "jasmine-core": "^5.10.0",
     "karma": "^6.4.4",
     "karma-chrome-launcher": "^3.2.0",
