@@ -8,6 +8,6 @@ export class NftTokenIdPipe implements PipeTransform {
     if (value && value.length > 12) {
       return value.slice(0, 6) + '...';
     }
-    return value;
+    return value ? value : '-';
   }
 }

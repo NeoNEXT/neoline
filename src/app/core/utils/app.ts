@@ -7,12 +7,15 @@ import { ethers } from 'ethers';
 
 
 export function parseUrl(url: string): any {
+  const target = {};
+  if (url.indexOf('?') === -1) {
+    return target;
+  }
   const query = url.slice(url.indexOf('?') + 1);
   const pairs = query.split('&');
-  const target = {};
   pairs.forEach((p) => {
-    const temp = p.split('=');
-    target[temp[0]] = decodeURIComponent(temp[1]);
+    const temp = p.indexOf('=');
+    target[p.slice(0, temp)] = decodeURIComponent(p.slice(temp + 1));
   });
   return target;
 }

@@ -6,12 +6,13 @@ import { Pipe, PipeTransform } from '@angular/core';
 export class LanguageNamePipe implements PipeTransform {
   public transform(value: string) {
     switch (value) {
-      case 'en':
-        return 'English';
       case 'zh_CN':
         return '简体中文';
       case 'ja':
         return '日本語';
+      case 'en':
+      default:
+        return 'English';
     }
   }
 }
