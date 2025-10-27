@@ -4,6 +4,7 @@ export {
   PopupWalletGuard,
   OpenedWalletGuard,
   PopupLoginGuard,
+  PopupNeo2WalletGuard,
 } from './guards/wallet.guard';
 
 // services

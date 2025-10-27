@@ -7,6 +7,7 @@ import {
   PopupWalletGuard,
   OpenedWalletGuard,
   PopupLoginGuard,
+  PopupNeo2WalletGuard,
 } from './guards/wallet.guard';
 
 // services
@@ -55,6 +56,7 @@ import { RateState } from './states/rate.state';
     PopupWalletGuard,
     OpenedWalletGuard,
     PopupLoginGuard,
+    PopupNeo2WalletGuard,
     NotificationService,
     SettingState,
     HomeState,

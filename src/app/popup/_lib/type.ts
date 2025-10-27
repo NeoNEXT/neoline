@@ -45,14 +45,12 @@ export const DEFAULT_NETWORKS = [
   'EVM',
 ];
 
-const N2_NETWORK_VERSION = 3;
+const N2_NETWORK_VERSION = 4;
 export const N2MainnetNetwork: RpcNetwork = {
   rpcUrl: 'http://seed1.ngd.network:10332',
   rpcUrlArr: [
     { url: 'http://seed1.ngd.network:10332' },
     { url: 'http://seed2.ngd.network:10332' },
-    { url: 'http://seed6.ngd.network:10332' },
-    { url: 'http://seed8.ngd.network:10332' },
   ],
   name: 'N2 Mainnet',
   explorer: 'https://neo2.neotube.io/',

@@ -45,7 +45,7 @@
     <p class="asset-money">
       {{ balance?.rateBalance | numberFixed : 2 }} {{ rateCurrency }}
     </p>
-    <div class="transaction-btn-container">
+    <div class="transaction-btn-container" *ngIf="chainType !== 'Neo2'">
       <div class="item receive" [routerLink]="['/popup/transfer/receive']">
         <img theme src="assets/images/transfer/receive.svg" alt="" />
         {{ "receive" | translate | async }}

@@ -8,20 +8,14 @@ import {
   GetBalanceArgs,
   InvokeReadArgs,
   InvokeReadMultiArgs,
-  InvokeMultiArgs,
   TransactionInputArgs,
   TransactionDetails,
-  SendArgs,
-  InvokeArgs,
   GetBlockInputArgs,
-  SendOutput,
   ERRORS,
   GetStorageArgs,
   StorageResponse,
   VerifyMessageArgs,
   Response,
-  DeployArgs,
-  DeployOutput,
   Provider,
   WalletSwitchNetworkArg,
   WalletSwitchAccountArg,
@@ -182,61 +176,6 @@ export class Init {
     }
   }
 
-  public async invoke(parameter: InvokeArgs) {
-    if (
-      parameter.scriptHash === undefined ||
-      parameter.scriptHash === '' ||
-      parameter.operation === undefined ||
-      parameter.operation === ''
-    ) {
-      return new Promise((_, reject) => {
-        reject(ERRORS.MALFORMED_INPUT);
-      });
-    }
-    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
-    if (isAuth === true) {
-      (parameter as any).hostname = location.hostname;
-      return sendMessage(requestTarget.Invoke, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
-  }
-
-  public async invokeMulti(parameter: InvokeMultiArgs) {
-    if (parameter.invokeArgs === undefined) {
-      return new Promise((_, reject) => {
-        reject(ERRORS.MALFORMED_INPUT);
-      });
-    } else {
-      if (
-        parameter.invokeArgs instanceof Array &&
-        parameter.invokeArgs.length > 0
-      ) {
-        parameter.invokeArgs.forEach((item) => {
-          if (
-            item.scriptHash === undefined ||
-            item.scriptHash === '' ||
-            item.operation === undefined ||
-            item.operation === ''
-          ) {
-            return new Promise((_, reject) => {
-              reject(ERRORS.MALFORMED_INPUT);
-            });
-          }
-        });
-      } else {
-        return new Promise((_, reject) => {
-          reject(ERRORS.MALFORMED_INPUT);
-        });
-      }
-    }
-    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
-    if (isAuth === true) {
-      (parameter as any).hostname = location.hostname;
-      return sendMessage(requestTarget.InvokeMulti, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
-  }
-
   public async signMessage(parameter: {
     message: string;
     isJsonObject?: boolean;
@@ -249,49 +188,6 @@ export class Init {
     const isAuth = await checkConnectAndLogin(ChainType.Neo2);
     if (isAuth === true) {
       return sendMessage(requestTarget.SignMessage, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
-  }
-
-  public async deploy(parameter: DeployArgs): Promise<DeployOutput> {
-    if (
-      parameter.author === undefined ||
-      parameter.code === undefined ||
-      parameter.description === undefined ||
-      parameter.email === undefined ||
-      parameter.name === undefined ||
-      parameter.parameterList === undefined ||
-      parameter.returnType === undefined ||
-      parameter.version === undefined ||
-      parameter.networkFee === undefined
-    ) {
-      return new Promise((_, reject) => {
-        reject(ERRORS.MALFORMED_INPUT);
-      });
-    }
-    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
-    if (isAuth === true) {
-      return sendMessage(requestTarget.Deploy, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
-  }
-
-  public async send(parameter: SendArgs): Promise<SendOutput> {
-    if (
-      parameter === undefined ||
-      parameter.toAddress === undefined ||
-      parameter.fromAddress === undefined ||
-      parameter.asset === undefined ||
-      parameter.amount === undefined ||
-      parameter.network === undefined
-    ) {
-      return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
-      });
-    }
-    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
-    if (isAuth === true) {
-      return sendMessage(requestTarget.Send, parameter);
     }
     return Promise.reject(ERRORS.CONNECTION_DENIED);
   }

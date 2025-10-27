@@ -97,3 +97,22 @@ export class PopupWalletGuard implements CanActivate {
     });
   }
 }
+
+@Injectable()
+export class PopupNeo2WalletGuard implements CanActivate {
+  constructor(private chrome: ChromeService) {}
+  canActivate(
+    route: ActivatedRouteSnapshot,
+    state: RouterStateSnapshot
+  ): Observable<boolean> | Promise<boolean> | boolean {
+    return new Promise((resolve) => {
+      this.chrome.getStorage(STORAGE_NAME.chainType).subscribe((chainType) => {
+        if (chainType === 'Neo2') {
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
+    });
+  }
+}

@@ -66,7 +66,11 @@
     </div>
   </div>
   <div class="popup-home-body">
-    <div class="transaction-btn-container" [ngClass]="{ bridge: showBridge() }">
+    <div
+      class="transaction-btn-container"
+      [ngClass]="{ bridge: showBridge() }"
+      *ngIf="chainType !== 'Neo2'"
+    >
       <div class="item receive" [routerLink]="['/popup/transfer/receive']">
         <img theme src="assets/images/transfer/receive.svg" alt="" />
         {{ "receive" | translate | async }}
