@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
-import { of, forkJoin } from 'rxjs';
-import { map, catchError, timeout } from 'rxjs/operators';
+import { forkJoin } from 'rxjs';
 import { ChromeService } from './chrome.service';
 import {
   ChainType,
@@ -10,7 +9,6 @@ import {
   UPDATE_NEO3_NETWORKS,
   UPDATE_NEO3_NETWORK_INDEX,
   UPDATE_WALLET,
-  RpcNetwork,
   UPDATE_NEO2_NETWORKS,
   UPDATE_NEO3_WALLETS_ADDRESS,
   N3T4NetworkChainId,
@@ -18,7 +16,6 @@ import {
   DEFAULT_N3_RPC_NETWORK,
   UPDATE_NEOX_NETWORKS,
 } from '@popup/_lib';
-import { HttpClient } from '@angular/common/http';
 import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
@@ -27,22 +24,7 @@ import { parseWallet } from '../utils/app';
 
 @Injectable()
 export class InitService {
-  private hasGetFastRpc = false;
-  private loadingGetFastRpc = false;
-
-  private n2Networks: RpcNetwork[];
-  private n3Networks: RpcNetwork[];
-  constructor(
-    private chrome: ChromeService,
-    private http: HttpClient,
-    private store: Store<AppState>
-  ) {
-    const account$ = this.store.select('account');
-    account$.subscribe((state) => {
-      this.n2Networks = state.n2Networks;
-      this.n3Networks = state.n3Networks;
-    });
-  }
+  constructor(private chrome: ChromeService, private store: Store<AppState>) {}
 
   public initData() {
     const getWallet = this.chrome.getStorage(STORAGE_NAME.wallet);
@@ -148,12 +130,10 @@ export class InitService {
           },
         });
         //#region update default network
-        let getFastRPCFlag = false;
         if (
           !n2NetworksRes[0].version ||
           n2NetworksRes[0].version !== DEFAULT_N2_RPC_NETWORK[0].version
         ) {
-          getFastRPCFlag = true;
           n2NetworksRes = DEFAULT_N2_RPC_NETWORK;
           this.store.dispatch({
             type: UPDATE_NEO2_NETWORKS,
@@ -164,7 +144,6 @@ export class InitService {
           !n3NetworksRes[0].version ||
           n3NetworksRes[0].version !== DEFAULT_N3_RPC_NETWORK[0].version
         ) {
-          getFastRPCFlag = true;
           if (!n3NetworksRes[0].version) {
             if (n3NetworksRes[1].chainId === N3T4NetworkChainId) {
               n3NetworksRes.splice(0, 3);
@@ -181,7 +160,6 @@ export class InitService {
             data: n3NetworksRes,
           });
         }
-        this.getFastRpcUrl(getFastRPCFlag);
         if (
           neoXNetworksRes[0].version !== DEFAULT_NEOX_RPC_NETWORK[0].version
         ) {
@@ -237,113 +215,4 @@ export class InitService {
       }
     );
   }
-
-  //#region private
-  private async getRpcUrls(force = false) {
-    if (this.hasGetFastRpc && !force) {
-      return null;
-    }
-    const defaultRpcUrls = await this.chrome
-      .getStorage(STORAGE_NAME.rpcUrls)
-      .toPromise();
-    const headers = {};
-    if (defaultRpcUrls.lastModified) {
-      headers['If-Modified-Since'] = defaultRpcUrls.lastModified;
-    }
-    try {
-      const responseRpcUrl = await this.http
-        .get('https://cdn.neoline.io/nodelist.json', {
-          headers,
-          observe: 'response',
-        })
-        .pipe(
-          map((res) => {
-            const lastModified = res.headers.get('Last-Modified');
-            this.chrome.setStorage(STORAGE_NAME.rpcUrls, {
-              nodes: res.body,
-              lastModified,
-            });
-            return res.body;
-          })
-        )
-        .toPromise();
-      return responseRpcUrl;
-    } catch (error) {
-      const shouldFindNode = await this.chrome.getShouldFindNode();
-      if (shouldFindNode !== false || force) {
-        return defaultRpcUrls.nodes;
-      }
-      return null;
-    }
-  }
-  private async getFastRpcUrl(force = false) {
-    if (this.loadingGetFastRpc && !force) {
-      return;
-    }
-    this.loadingGetFastRpc = true;
-    const rpcUrls = await this.getRpcUrls(force);
-    if (rpcUrls === null) {
-      this.loadingGetFastRpc = false;
-      return;
-    }
-    const data = {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'getversion',
-      params: [],
-    };
-    const startTime = new Date().getTime();
-    const netReqs = { 1: [], 2: [], 3: [], 4: [], 6: [] };
-    const spendTiems = { 1: [], 2: [], 3: [], 4: [], 6: [] };
-    const fastIndex = { 1: 0, 2: 0, 3: 0, 4: 0, 6: 0 };
-    Object.keys(rpcUrls).forEach((key) => {
-      netReqs[key] = [];
-      spendTiems[key] = [];
-      fastIndex[key] = 0;
-      rpcUrls[key].forEach((item, index) => {
-        const req = this.http.post(item, data).pipe(
-          catchError(() => of(null)),
-          timeout(5000),
-          catchError(() => of(null)),
-          map((res) => {
-            spendTiems[key][index] = res
-              ? new Date().getTime() - startTime
-              : -1;
-            return res;
-          })
-        );
-        netReqs[key].push(req);
-      });
-    });
-    forkJoin([
-      ...netReqs[1],
-      ...netReqs[2],
-      ...netReqs[3],
-      ...netReqs[6],
-    ]).subscribe(() => {
-      Object.keys(spendTiems).forEach((key) => {
-        spendTiems[key].forEach((time, index) => {
-          if (time !== -1 && time < spendTiems[key][fastIndex[key]]) {
-            fastIndex[key] = index;
-          }
-        });
-      });
-      this.n2Networks[0].rpcUrl = rpcUrls[1][fastIndex[1]];
-      // this.n2Networks[1].rpcUrl = rpcUrls[2][fastIndex[2]];
-      this.n3Networks[0].rpcUrl = rpcUrls[3][fastIndex[3]];
-      this.n3Networks[1].rpcUrl = rpcUrls[6][fastIndex[6]];
-      this.store.dispatch({
-        type: UPDATE_NEO3_NETWORKS,
-        data: this.n3Networks,
-      });
-      this.store.dispatch({
-        type: UPDATE_NEO2_NETWORKS,
-        data: this.n2Networks,
-      });
-      this.loadingGetFastRpc = false;
-      this.hasGetFastRpc = true;
-      this.chrome.setShouldFindNode(false);
-    });
-  }
-  //#endregion
 }
