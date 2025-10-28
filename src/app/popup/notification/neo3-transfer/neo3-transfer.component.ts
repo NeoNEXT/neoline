@@ -43,7 +43,7 @@ type TabType = 'details' | 'data';
 export class PopupNoticeNeo3TransferComponent implements OnInit {
   tabType: TabType = 'details';
   NEO = NEO;
-  public rpcClient;
+  private rpcClient;
   public dataJson: any = {};
   public rateCurrency = '';
   public txSerialize = '';

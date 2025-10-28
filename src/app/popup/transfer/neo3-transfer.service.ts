@@ -2,13 +2,13 @@ import { Injectable } from '@angular/core';
 import { rpc, sc, tx, u, wallet } from '@cityofzion/neon-core-neo3/lib';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from } from 'rxjs';
-import { NeoAssetService, NotificationService } from '@app/core';
+import { NeoAssetService } from '@/app/core/services/neo/asset.service';
+import { NotificationService } from '@/app/core/services/notification.service';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
 import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { Wallet3 } from '@popup/_lib';
 
 interface CreateNeo3TxInput {
   addressFrom: string;
@@ -22,11 +22,9 @@ interface CreateNeo3TxInput {
 
 @Injectable()
 export class Neo3TransferService {
-  rpcClient;
-
-  private address: string;
-  private neo3WalletArr: Wallet3[];
+  private rpcClient;
   private n3Network: RpcNetwork;
+
   constructor(
     public notification: NotificationService,
     private store: Store<AppState>,
@@ -34,8 +32,6 @@ export class Neo3TransferService {
   ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
-      this.address = state.currentWallet?.accounts[0]?.address;
-      this.neo3WalletArr = state.neo3WalletArr;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.rpcClient = new rpc.RPCClient(this.n3Network.rpcUrl);
     });

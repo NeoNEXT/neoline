@@ -12,7 +12,8 @@ import {
   Witness,
 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { Observable, from, throwError } from 'rxjs';
-import { Neo3Service, NotificationService, NeoAssetService } from '@app/core';
+import { Neo3Service } from '@/app/core/services/neo/neo3.service';
+import { NeoAssetService } from '@/app/core/services/neo/asset.service';
 import BigNumber from 'bignumber.js';
 import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
 import { Store } from '@ngrx/store';
@@ -28,12 +29,11 @@ interface CreateNeo3TxInput {
 
 @Injectable()
 export class Neo3InvokeService {
-  rpcClient;
-
+  private rpcClient;
   private address: string;
   private n3Network: RpcNetwork;
+
   constructor(
-    public notification: NotificationService,
     private store: Store<AppState>,
     private neo3Service: Neo3Service,
     private neoAssetService: NeoAssetService
