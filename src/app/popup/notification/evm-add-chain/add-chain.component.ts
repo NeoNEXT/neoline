@@ -105,11 +105,12 @@ export class PopupEvmAddChainComponent implements OnInit, OnDestroy {
     });
     window.close();
     const url = `wallet-switch-network?chainType=NeoX&chainId=${this.queryParams.chainId}&messageID=${this.messageID}&icon=${this.iconSrc}&hostname=${this.hostname}`;
+    const isWindows = navigator.userAgent.includes('Windows');
     chrome.windows.create({
       url: `index.html#popup/notification/${url}`,
       focused: true,
-      width: 375,
-      height: 630,
+      width: isWindows ? 391 : 375,
+      height: isWindows ? 639 : 630,
       left: 0,
       top: 0,
       type: 'popup',

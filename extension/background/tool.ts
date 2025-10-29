@@ -215,11 +215,12 @@ export function windowCallback(data) {
 }
 
 export function createWindow(url: string, notification = true) {
+  const isWindows = navigator.userAgent.includes('Windows');
   chrome.windows.create({
     url: notification ? `index.html#popup/notification/${url}` : url,
     focused: true,
-    width: 375,
-    height: 630,
+    width: isWindows ? 391 : 375,
+    height: isWindows ? 639 : 630,
     left: 0,
     top: 0,
     type: 'popup',
