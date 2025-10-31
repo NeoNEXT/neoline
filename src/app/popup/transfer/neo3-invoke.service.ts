@@ -219,7 +219,7 @@ export class Neo3InvokeService {
     );
     const requireGasAmount = new BigNumber(systemFee).plus(
       new BigNumber(networkFee)
-    );
+    ).shiftedBy(8);
     if (requireGasAmount.comparedTo(new BigNumber(gasAmount)) > 0) {
       return false;
     }
