@@ -23,7 +23,6 @@ export class PopupNftDetailComponent implements OnDestroy {
   previouslyOwnedNft: NftToken[] = [];
   neoXNftsOfAddress: NftAsset[];
   selectedTab: 'tokens' | 'previouslyOwned' | 'transactions' = 'tokens';
-  // 菜单
   showMenu = false;
 
   private accountSub: Unsubscribable;

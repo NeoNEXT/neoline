@@ -42,8 +42,9 @@ export class NeoWalletService {
   }
 
   /**
+   * Verify if the wallet address exists
    * 判断钱包地址是否存在
-   * @param w 钱包地址
+   * @param w Wallet address
    */
   public verifyWallet(w: Wallet2 | Wallet3 | EvmWalletJSON): boolean {
     let walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON> =

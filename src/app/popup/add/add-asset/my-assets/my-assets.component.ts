@@ -13,9 +13,9 @@ import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
   styleUrls: ['../../my-assets.scss'],
 })
 export class PopupMyAssetsComponent implements OnDestroy {
-  myAssets: Array<Asset> = []; // 所有的资产
-  private watch: Asset[] = []; // 用户添加的资产
-  private moneyAssets: Asset[] = []; // 有钱的资产
+  myAssets: Array<Asset> = []; // all assets
+  private watch: Asset[] = []; // user added assets
+  private moneyAssets: Asset[] = []; // assets with money
   isLoading = false;
 
   private accountSub: Unsubscribable;

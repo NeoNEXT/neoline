@@ -228,7 +228,7 @@ export class Neo3TransferService {
           console.log('\u001b[32m  ✓ Token funds found \u001b[0m');
         }
 
-        // 如果转的是 gas
+        // If the transfer is GAS
         if (inputs.tokenScriptHash.indexOf(NEW_GAS) >= 0) {
           const totalRequirements = new BigNumber(inputs.amountToTransfer)
             .shiftedBy(-8)
@@ -282,7 +282,7 @@ export class Neo3TransferService {
     return result;
   }
 
-  // 字符串转base64
+  // Convert string to base64
   public hexToBase64(str: string) {
     return Buffer.from(str, 'hex').toString('base64');
   }

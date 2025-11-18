@@ -284,7 +284,7 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     }
     this.isTransferAll = true;
     this.isTransferAllLoading = true;
-    // 不是 GAS 资产时
+    // When the asset is not GAS
     if (
       this.transferAsset.asset_id !== GAS &&
       this.transferAsset.asset_id !== GAS3_CONTRACT &&
@@ -311,18 +311,20 @@ export class TransferCreateAmountComponent implements OnInit, OnDestroy {
     );
     let tempAmount;
     if (tAmount.comparedTo(0) <= 0) {
-      this.priorityFee = '0'; // 优先费大于全部资产时，小费重设为0
+      // When the priority fee is greater than the total assets, the priority fee is reset to 0
+      // 优先费大于全部资产时，小费重设为 0
+      this.priorityFee = '0';
       tempAmount = this.transferAsset.balance;
     } else {
       tempAmount = tAmount.toFixed(this.transferAsset.decimals, 1);
     }
-    // neo2 的 GAS
+    // neo2's GAS
     if (this.transferAsset.asset_id === GAS) {
       this.transferAmount = tempAmount;
       this.isTransferAllLoading = false;
       return;
     }
-    // neo3 的GAS
+    // neo3's GAS
     const param = {
       addressFrom: this.fromAddress,
       addressTo: this.fromAddress,

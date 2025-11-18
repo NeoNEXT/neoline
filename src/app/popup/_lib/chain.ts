@@ -1,9 +1,10 @@
 import { ChainSelectItem } from './type';
 
 /**
- * 链类型
- * - `neo2`
- * - `neo3`
+ * Chain type
+ * - `Neo2`
+ * - `Neo3`
+ * - `NeoX`
  */
 export type ChainType = 'Neo2' | 'Neo3' | 'NeoX';
 

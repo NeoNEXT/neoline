@@ -11,7 +11,7 @@ import { ChainType } from '../../_lib';
   styleUrls: ['../add-asset.scss'],
 })
 export class PopupAddNftComponent implements OnDestroy {
-  public watch: NftAsset[] = []; // 用户添加的资产
+  public watch: NftAsset[] = []; // user added assets
   private moneyNft: NftAsset[] = [];
 
   public isLoading = false;

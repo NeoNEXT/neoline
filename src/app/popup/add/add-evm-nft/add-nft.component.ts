@@ -17,7 +17,7 @@ import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms
   styleUrls: ['./add-nft.component.scss'],
 })
 export class PopupAddNftComponent implements OnDestroy {
-  public watch: NftAsset[] = []; // 用户添加的资产
+  public watch: NftAsset[] = []; // user added assets
 
   addNFTForm: UntypedFormGroup;
   loading = false;
