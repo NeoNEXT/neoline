@@ -31,7 +31,11 @@
       <copy [value]="data.tx.txid" placement="top">
         <span>{{ data.tx.txid | longStr: 16 }}</span>
       </copy>
-      <tooltip tip="{{'ViewOnExplorer' | translate | async}}" placement="topRight">
+      <tooltip
+        *ngIf="data.chainType !== 'Neo2'"
+        tip="{{'ViewOnExplorer' | translate | async}}"
+        placement="topRight"
+      >
         <img
           (click)="toWeb(data.tx.txid)"
           theme

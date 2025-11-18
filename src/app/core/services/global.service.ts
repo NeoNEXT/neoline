@@ -99,13 +99,12 @@ export class GlobalService {
     type: 'account' | 'token' | 'NFT' | 'tx';
     value: string;
   }) {
-    let openEditDialog = false;
     const explorer = network?.explorer.endsWith('/')
       ? network.explorer.slice(0, -1)
       : network.explorer;
-    switch (chain) {
-      case 'Neo2':
-        if (explorer) {
+    if (explorer) {
+      switch (chain) {
+        case 'Neo2':
           if (type === 'account') {
             window.open(`${explorer}/address/${value}/page/1`);
           } else if (type === 'tx') {
@@ -116,10 +115,8 @@ export class GlobalService {
               `${explorer}/${isNep5 ? 'nep5' : 'asset'}/${value}/page/1`
             );
           }
-        }
-        break;
-      case 'Neo3':
-        if (explorer) {
+          break;
+        case 'Neo3':
           if (type === 'account') {
             window.open(`${explorer}/address/${value}`);
           } else if (type === 'tx') {
@@ -129,12 +126,8 @@ export class GlobalService {
           } else if (type === 'NFT') {
             window.open(`${explorer}/tokens/nft/${value}`);
           }
-        } else {
-          openEditDialog = true;
-        }
-        break;
-      case 'NeoX':
-        if (explorer) {
+          break;
+        case 'NeoX':
           if (type === 'account') {
             window.open(`${explorer}/address/${value}`);
           } else if (type === 'tx') {
@@ -142,12 +135,10 @@ export class GlobalService {
           } else if (type === 'token' || type === 'NFT') {
             window.open(`${explorer}/token/${value}`);
           }
-        } else {
-          openEditDialog = true;
-        }
-        break;
+          break;
+      }
     }
-    if (openEditDialog) {
+    if (!explorer && chain !== 'Neo2') {
       this.dialog.open(PopupAddNetworkDialogComponent, {
         panelClass: 'custom-dialog-panel',
         backdropClass: 'custom-dialog-backdrop',

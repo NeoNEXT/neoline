@@ -60,7 +60,11 @@
         "accountDetails" | translate | async
       }}
     </li>
-    <li class="border-bottom" (click)="toWeb()">
+    <li
+      *ngIf="currentChainType !== 'Neo2'"
+      class="border-bottom"
+      (click)="toWeb()"
+    >
       <img theme src="assets/images/account/home-explorer.svg" alt="" />{{
         "ViewOnExplorer" | translate | async
       }}

@@ -54,7 +54,7 @@ export interface RpcNetwork {
   isDefault?: boolean;
 }
 
-const N2_NETWORK_VERSION = 4;
+const N2_NETWORK_VERSION = 5;
 export const N2MainnetNetwork: RpcNetwork = {
   rpcUrl: 'http://seed1.ngd.network:10332',
   rpcUrlArr: [
@@ -62,7 +62,7 @@ export const N2MainnetNetwork: RpcNetwork = {
     { url: 'http://seed2.ngd.network:10332' },
   ],
   name: 'N2 Mainnet',
-  explorer: 'https://neo2.neotube.io/',
+  explorer: '',
   network: NetworkType.MainNet,
   chainId: 1,
   id: 1,

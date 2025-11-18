@@ -16,7 +16,11 @@
         [symbol]="balance?.symbol"
         [neoXChainId]="networkId"
       ></token-logo>
-      <div class="more" (click)="showMenu = !showMenu">
+      <div
+        class="more"
+        [ngClass]="{'hide': chainType === 'Neo2' && !canHideBalance}"
+        (click)="showMenu = !showMenu"
+      >
         <span></span>
         <span></span>
         <span></span>
@@ -32,7 +36,7 @@
             "hidden" | translate | async
           }}{{ " " + balance?.symbol }}
         </li>
-        <li (click)="toWeb()">
+        <li *ngIf="chainType !== 'Neo2'" (click)="toWeb()">
           <img theme src="assets/images/account/home-explorer.svg" alt="" />{{
             "ViewOnExplorer" | translate | async
           }}
