@@ -42,7 +42,7 @@
       {{ "data" | translate | async }}
     </span>
   </div>
-  <div class="content details" *ngIf="tabType === 'details'">
+  <div class="content details" *ngIf="tabType === 'details' && invokeParams">
     <div class="request-info">
       <div class="request-info-item">
         <div class="label">
@@ -95,7 +95,20 @@
           alt=""
         />
       </div>
-      <pre *ngIf="invokeParams.expandArgs">{{ invokeParams.args | json }}</pre>
+      <div class="param-list" *ngIf="invokeParams.expandArgs">
+        <div
+          class="param-item"
+          *ngFor="let item of invokeParams.argsObj; index as index"
+        >
+          <div class="param-label">
+            {{ item.name ?? "Param" }} #{{ index + 1 }}
+            <tooltip placement="right" [tip]="item.type">
+              <img src="assets/images/common/tooltip.svg" alt="" />
+            </tooltip>
+          </div>
+          <span class="param-value">{{ item.value }}</span>
+        </div>
+      </div>
     </div>
     <div class="request-info">
       <div class="request-info-item">
@@ -117,9 +130,12 @@
           alt=""
         />
       </div>
-      <pre *ngIf="invokeParams.expandSigners">{{
-        invokeParams.signers | json
-      }}</pre>
+      <div class="param-list" *ngIf="invokeParams.expandSigners">
+        <div class="param-item" *ngFor="let item of invokeParams.signersObj">
+          <div class="param-label">{{ item.name }}</div>
+          <span class="param-value">{{ item.value }}</span>
+        </div>
+      </div>
       <div
         class="request-info-item"
         *ngIf="invokeParams?.broadcastOverride !== undefined"

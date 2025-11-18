@@ -129,9 +129,31 @@
             }
           }
         }
-        pre {
-          white-space: pre-wrap;
-          word-break: break-all;
+        .param-list {
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          padding-left: 8px;
+          .param-item {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 10px;
+            font-size: 13px;
+            font-family: NeverMind-Regular;
+            .param-label {
+              flex-shrink: 0;
+              min-width: 100px;
+              color: var(--sub-title-color);
+              display: inline-flex;
+              gap: 4px;
+            }
+            .param-value {
+              line-height: 1.2;
+              word-break: break-all;
+              text-align: right;
+            }
+          }
         }
       }
       li {

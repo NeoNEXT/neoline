@@ -33,6 +33,7 @@ import BigNumber from 'bignumber.js';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
+import { convertValueToString, convertSignersToObj } from '@/app/core/utils/dapp';
 
 type TabType = 'details' | 'data';
 
@@ -110,6 +111,9 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
             return;
           }
           this.getContractManifest();
+          this.invokeParams.signersObj = convertSignersToObj(
+            this.invokeParams.signers
+          );
           this.invokeParams.minReqFee = this.invokeParams.minReqFee || '0';
 
           if (this.invokeParams.fee) {
@@ -393,17 +397,19 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
       .getContractManifests(scriptHashes)
       .subscribe((res) => {
         this.invokeParams.invokeArgs.forEach((invokeItem, index) => {
+          let method;
           if (res[index]) {
             invokeItem.contractName = res[index].name;
-            const method = res[index].abi.methods.find(
+            method = res[index].abi.methods.find(
               (item) => item.name === invokeItem.operation
             );
-            if (method) {
-              invokeItem.args.forEach((item, index) => {
-                item.name = method.parameters[index].name;
-              });
-            }
           }
+          invokeItem.argsObj = [];
+          invokeItem.args.forEach((item, index) => {
+            const name = method ? method.parameters[index].name : '';
+            const value = convertValueToString(item);
+            invokeItem.argsObj.push({ name, value, type: item.type });
+          });
         });
       });
   }

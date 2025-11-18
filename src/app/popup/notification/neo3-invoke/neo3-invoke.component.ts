@@ -33,6 +33,7 @@ import BigNumber from 'bignumber.js';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
+import { convertValueToString, convertSignersToObj } from '@/app/core/utils/dapp';
 
 type TabType = 'details' | 'data';
 
@@ -109,6 +110,9 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
             return;
           }
           this.getContractManifest();
+          this.invokeParams.signersObj = convertSignersToObj(
+            this.invokeParams.signers
+          );
           this.invokeParams.minReqFee = this.invokeParams.minReqFee || '0';
 
           if (this.invokeParams.fee) {
@@ -399,15 +403,19 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
     this.neoAssetInfoState
       .getContractManifests([this.invokeParams.scriptHash])
       .subscribe(([res]) => {
-        this.invokeParams.contractName = res.name;
-        const method = res.abi.methods.find(
-          (item) => item.name === this.invokeParams.operation
-        );
-        if (method) {
-          this.invokeParams.args.forEach((item, index) => {
-            item.name = method.parameters[index].name;
-          });
+        let method;
+        if (res) {
+          this.invokeParams.contractName = res.name;
+          method = res.abi.methods.find(
+            (item) => item.name === this.invokeParams.operation
+          );
         }
+        this.invokeParams.argsObj = [];
+        this.invokeParams.args.forEach((item, index) => {
+          const name = method ? method.parameters[index].name : '';
+          const value = convertValueToString(item);
+          this.invokeParams.argsObj.push({ name, value, type: item.type });
+        });
       });
   }
 }

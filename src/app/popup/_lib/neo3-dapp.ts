@@ -7,6 +7,7 @@ interface Neo3Params {
   overrideSystemFee?: string;
   broadcastOverride?: boolean;
   signers: tx.SignerLike[];
+  signersObj?: { name: string; value: string; }[]
 }
 
 export interface Neo3InvokeParams extends Neo3Params {
@@ -15,7 +16,8 @@ export interface Neo3InvokeParams extends Neo3Params {
   contractName?: string;
   expandArgs?: boolean;
   expandSigners?: boolean;
-  args: (sc.ContractParamJson & { name?: string })[];
+  args: sc.ContractParamJson[];
+  argsObj?: { name: string; value: string; type: string }[];
 }
 
 export interface Neo3InvokeMultipleParams extends Neo3Params {
@@ -23,7 +25,8 @@ export interface Neo3InvokeMultipleParams extends Neo3Params {
     contractName?: string;
     expandArgs?: boolean;
     expandSigners?: boolean;
-    args: (sc.ContractParamJson & { name?: string })[];
+    args: sc.ContractParamJson[];
+    argsObj?: { name: string; value: string; type: string }[];
   })[];
 }
 
