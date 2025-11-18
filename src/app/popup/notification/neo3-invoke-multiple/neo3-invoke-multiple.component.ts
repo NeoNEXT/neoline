@@ -33,7 +33,10 @@ import BigNumber from 'bignumber.js';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
-import { convertValueToString, convertSignersToObj } from '@/app/core/utils/dapp';
+import {
+  convertValueToString,
+  convertSignersToObj,
+} from '@/app/core/utils/dapp';
 
 type TabType = 'details' | 'data';
 
@@ -394,12 +397,19 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
       (item) => item.scriptHash
     );
     this.neoAssetInfoState
+      .getAssetSymbols(scriptHashes, this.chainType)
+      .then((symbols) => {
+        this.invokeParams.invokeArgs.forEach((invokeItem, index) => {
+          invokeItem.contractName = symbols[index];
+        });
+      });
+
+    this.neoAssetInfoState
       .getContractManifests(scriptHashes)
       .subscribe((res) => {
         this.invokeParams.invokeArgs.forEach((invokeItem, index) => {
           let method;
           if (res[index]) {
-            invokeItem.contractName = res[index].name;
             method = res[index].abi.methods.find(
               (item) => item.name === invokeItem.operation
             );
