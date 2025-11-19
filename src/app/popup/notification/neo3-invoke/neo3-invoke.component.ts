@@ -404,16 +404,11 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
 
   private getContractManifest() {
     this.neoAssetInfoState
-      .getAssetSymbols([this.invokeParams.scriptHash], this.chainType)
-      .then((symbols) => {
-        this.invokeParams.contractName = symbols[0];
-      });
-
-    this.neoAssetInfoState
       .getContractManifests([this.invokeParams.scriptHash])
       .subscribe(([res]) => {
         let method;
         if (res) {
+          this.invokeParams.contractName = res.name;
           method = res.abi.methods.find(
             (item) => item.name === this.invokeParams.operation
           );
