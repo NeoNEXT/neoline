@@ -29,6 +29,7 @@ import { TypedMessage, MessageTypes } from '@metamask/eth-sig-util';
 import { HttpService } from '../http.service';
 import { GlobalService } from '../global.service';
 import { transformTypedDataPlugin } from '../../utils/evm';
+import * as Sentry from '@sentry/angular';
 
 export const LedgerStatuses = {
   UNSUPPORTED: 'UNSUPPORTED',
@@ -227,7 +228,7 @@ export class LedgerService {
     if (error && error.message) {
       snackError = error.message;
     }
-    console.log(snackError);
+    Sentry.captureMessage(`handleLedgerError: ${snackError}`);
     this.global.snackBarTip(snackError);
   }
 

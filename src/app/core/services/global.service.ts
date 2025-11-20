@@ -3,7 +3,6 @@ import { MatSnackBar } from '@angular/material/snack-bar';
 import { NotificationService } from './notification.service';
 import { add, subtract, bignumber } from 'mathjs';
 import { HttpErrorResponse } from '@angular/common/http';
-import * as Sentry from '@sentry/angular';
 import { MatDialog } from '@angular/material/dialog';
 import { ChromeService } from './chrome.service';
 import { Router } from '@angular/router';
@@ -32,7 +31,6 @@ export class GlobalService {
   }
 
   public snackBarTip(msg: string, serverError: any = '', time = 3000) {
-    Sentry.captureException({ msg, serverError });
     let message = this.notification.content[msg] || msg;
     if (serverError instanceof HttpErrorResponse) {
       serverError = serverError.statusText;

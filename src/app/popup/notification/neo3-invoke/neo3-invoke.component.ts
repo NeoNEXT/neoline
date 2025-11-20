@@ -215,7 +215,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
         this.loading = false;
         this.loadingMsg = '';
         this.chrome.windowCallback({
-          error: { ...ERRORS.RPC_ERROR, description: err?.error },
+          error: { ...ERRORS.RPC_ERROR, description: err?.msg },
           return: requestTargetN3.Invoke,
           ID: this.messageID,
         });

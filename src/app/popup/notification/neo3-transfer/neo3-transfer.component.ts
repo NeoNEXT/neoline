@@ -305,12 +305,11 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
         });
       })
       .catch((err) => {
-        console.log(err);
         this.loading = false;
         this.loadingMsg = '';
         this.creating = false;
         this.chrome.windowCallback({
-          error: { ...ERRORS.RPC_ERROR, description: err?.error },
+          error: { ...ERRORS.RPC_ERROR, description: err?.msg },
           return: requestTargetN3.Send,
           ID: this.messageID,
         });

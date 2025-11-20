@@ -26,6 +26,7 @@ import { BigNumber } from 'bignumber.js';
 import { MessageTypes, TypedMessage } from '@metamask/eth-sig-util';
 import { environment } from '@/environments/environment';
 import { transformTypedDataPlugin } from '../../utils/evm';
+import * as Sentry from '@sentry/angular';
 
 interface OneKeyDeviceInfo {
   connectId: string; // device connection id
@@ -278,6 +279,7 @@ export class OneKeyService {
 
   handleOneKeyError(error: string) {
     let snackError = 'TransactionDeniedByUser';
+    Sentry.captureMessage(`handleOneKeyError: ${error ?? snackError}`);
     this.global.snackBarTip(error ?? snackError);
   }
 }

@@ -14,11 +14,11 @@ export class TranslatePipe implements PipeTransform {
       map((res) => {
         let source: string = this.settingState.langJson[res]?.[value]?.message;
         if (!source) {
-          Sentry.captureException({
-            error: 'Translate pipe error, message not found',
-            value,
-            params,
-          });
+          Sentry.captureMessage(
+            `Translate pipe error, message not found. value: ${value}, params: ${JSON.stringify(
+              params
+            )}`
+          );
           return value;
         }
         if (params) {

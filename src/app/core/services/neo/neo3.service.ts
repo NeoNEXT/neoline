@@ -13,7 +13,6 @@ import { Wallet3 } from '@popup/_lib';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { NotificationService } from '../notification.service';
-import * as Sentry from '@sentry/angular';
 import { handleNeo3StackStringValue } from '../../utils/neo';
 
 @Injectable()
@@ -38,7 +37,6 @@ export class Neo3Service {
   }
 
   public handleRpcError(error, chain: ChainType) {
-    Sentry.captureException({ error, chain });
     let errorMessage = error?.message || this.notification.content.txFailed;
     if (chain === 'Neo2' && error?.code === -505) {
       errorMessage = this.notification.content.InsufficientNetworkFee;
