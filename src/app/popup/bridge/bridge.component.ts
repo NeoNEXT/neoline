@@ -407,10 +407,14 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     }
 
     if (
-      this.chainType === 'Neo3' &&
       new BigNumber(this.bridgeAmount).comparedTo(this.bridgeInfo.maxBridge) > 0
     ) {
-      this.globalService.snackBarTip('exceedDepositLimit');
+      this.globalService.snackBarTip(
+        this.chainType === 'Neo3'
+          ? 'exceedDepositLimit'
+          : 'exceedWithdrawalLimit',
+        `${this.bridgeInfo.maxBridge} ${this.bridgeAsset.symbol}`
+      );
       return;
     }
 

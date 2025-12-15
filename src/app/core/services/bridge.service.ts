@@ -25,7 +25,7 @@ import {
 } from '../utils/neo';
 import { HttpService } from './http.service';
 import { BridgeParams } from '@/app/popup/_lib/bridge';
-import { Observable, of } from 'rxjs';
+import { from, Observable, of } from 'rxjs';
 
 @Injectable()
 export class BridgeService {
@@ -35,24 +35,21 @@ export class BridgeService {
   private depositInfo: {
     [network: string]: {
       [assetId: string]: {
-        depositFee: string;
-        minDeposit: string;
-        maxDeposit: string;
+        bridgeFee: string;
+        minBridge: string;
+        maxBridge: string;
       };
     };
   } = {};
-  private withdrawInfo = {
-    [ETH_SOURCE_ASSET_HASH]: {
-      withdrawFee: '0.1',
-      minWithdraw: '1.1',
-      maxWithdraw: '1000000000000.1',
-    },
-    token: {
-      withdrawFee: '0.1',
-      minWithdraw: '1',
-      maxWithdraw: '1000000000000',
-    },
-  };
+  private withdrawInfo: {
+    [network: string]: {
+      [assetId: string]: {
+        bridgeFee: string;
+        minBridge: string;
+        maxBridge: string;
+      };
+    };
+  } = {};
 
   constructor(
     private store: Store<AppState>,
@@ -90,7 +87,7 @@ export class BridgeService {
     if (chain === 'Neo3') {
       return this.getDepositInfo(network, asset);
     } else {
-      return this.getWithdrawInfo(network, asset);
+      return from(this.getWithdrawInfo(network, asset));
     }
   }
 
@@ -119,12 +116,8 @@ export class BridgeService {
     maxBridge: string;
   }> {
     const assetId = asset.asset_id;
-    if (this.depositInfo?.[network]?.[assetId]?.depositFee !== undefined) {
-      return of({
-        bridgeFee: this.depositInfo[network][assetId].depositFee,
-        minBridge: this.depositInfo[network][assetId].minDeposit,
-        maxBridge: this.depositInfo[network][assetId].maxDeposit,
-      });
+    if (this.depositInfo?.[network]?.[assetId]?.bridgeFee !== undefined) {
+      return of(this.depositInfo[network][assetId]);
     }
     const contractParams =
       assetId === GAS3_CONTRACT ? [] : [{ type: 'Hash160', value: assetId }];
@@ -171,34 +164,30 @@ export class BridgeService {
           }
           if (!this.depositInfo[network][assetId]) {
             this.depositInfo[network][assetId] = {
-              depositFee: '',
-              minDeposit: '',
-              maxDeposit: '',
+              bridgeFee: '',
+              minBridge: '',
+              maxBridge: '',
             };
           }
           if (feeRes.result) {
             const fee = handleNeo3StackNumberValue(feeRes.result);
-            this.depositInfo[network][assetId].depositFee = new BigNumber(fee)
+            this.depositInfo[network][assetId].bridgeFee = new BigNumber(fee)
               .shiftedBy(-8)
               .toFixed();
           }
           if (minRes.result) {
             const min = handleNeo3StackNumberValue(minRes.result);
-            this.depositInfo[network][assetId].minDeposit = new BigNumber(min)
+            this.depositInfo[network][assetId].minBridge = new BigNumber(min)
               .shiftedBy(-asset.decimals)
               .toFixed();
           }
           if (maxRes.result) {
             const max = handleNeo3StackNumberValue(maxRes.result);
-            this.depositInfo[network][assetId].maxDeposit = new BigNumber(max)
+            this.depositInfo[network][assetId].maxBridge = new BigNumber(max)
               .shiftedBy(-asset.decimals)
               .toFixed();
           }
-          return {
-            bridgeFee: this.depositInfo[network][assetId].depositFee,
-            minBridge: this.depositInfo[network][assetId].minDeposit,
-            maxBridge: this.depositInfo[network][assetId].maxDeposit,
-          };
+          return this.depositInfo[network][assetId];
         })
       );
   }
@@ -248,14 +237,16 @@ export class BridgeService {
     toScriptHash,
     maxFee,
     amount,
+    currentBridgeNetwork,
   }: {
     asset: Asset;
     toScriptHash: string;
     maxFee: bigint;
     amount: string;
+    currentBridgeNetwork: BridgeNetwork;
   }) {
     const contract = new ethers.Contract(
-      asset.asset_id,
+      BridgeParams[currentBridgeNetwork].neoXBridgeContract,
       abiNeoXBridgeNeo3,
       this.provider
     );
@@ -278,26 +269,65 @@ export class BridgeService {
   private getWithdrawInfo(
     network: BridgeNetwork,
     asset: Asset
-  ): Observable<{
+  ): Promise<{
     bridgeFee: string;
     minBridge: string;
     maxBridge: string;
   }> {
+    if (
+      this.withdrawInfo?.[network]?.[asset.asset_id]?.bridgeFee !== undefined
+    ) {
+      return Promise.resolve(this.withdrawInfo[network][asset.asset_id]);
+    }
+    const contract = new ethers.Contract(
+      BridgeParams[network].neoXBridgeContract,
+      abiNeoXBridgeNeo3,
+      this.provider
+    );
+    if (!this.withdrawInfo[network]) {
+      this.withdrawInfo[network] = {};
+    }
+    if (!this.withdrawInfo[network][asset.asset_id]) {
+      this.withdrawInfo[network][asset.asset_id] = {
+        bridgeFee: '',
+        minBridge: '',
+        maxBridge: '',
+      };
+    }
     if (asset.asset_id === ETH_SOURCE_ASSET_HASH) {
-      return of({
-        bridgeFee: this.withdrawInfo[ETH_SOURCE_ASSET_HASH].withdrawFee,
-        minBridge: this.withdrawInfo[ETH_SOURCE_ASSET_HASH].minWithdraw,
-        maxBridge: this.withdrawInfo[ETH_SOURCE_ASSET_HASH].maxWithdraw,
+      return contract.nativeBridge().then((res) => {
+        this.withdrawInfo[network][ETH_SOURCE_ASSET_HASH].bridgeFee =
+          new BigNumber(res.config.fee).shiftedBy(-18).toFixed();
+        this.withdrawInfo[network][ETH_SOURCE_ASSET_HASH].minBridge =
+          new BigNumber(res.config.minAmount)
+            .shiftedBy(-18)
+            .plus(this.withdrawInfo[network][ETH_SOURCE_ASSET_HASH].bridgeFee)
+            .toFixed();
+        this.withdrawInfo[network][ETH_SOURCE_ASSET_HASH].maxBridge =
+          new BigNumber(res.config.maxAmount).shiftedBy(-18).toFixed();
+        return this.withdrawInfo[network][ETH_SOURCE_ASSET_HASH];
       });
     } else {
-      return of({
-        bridgeFee: this.withdrawInfo.token.withdrawFee,
-        minBridge: this.withdrawInfo.token.minWithdraw,
-        maxBridge: this.withdrawInfo.token.maxWithdraw,
+      return contract.tokenBridges(asset.asset_id).then((res) => {
+        this.withdrawInfo[network][asset.asset_id].bridgeFee = new BigNumber(
+          res.config.fee
+        )
+          .shiftedBy(-18)
+          .toFixed();
+        this.withdrawInfo[network][asset.asset_id].minBridge = new BigNumber(
+          res.config.minAmount
+        )
+          .shiftedBy(-asset.decimals)
+          .toFixed();
+        this.withdrawInfo[network][asset.asset_id].maxBridge = new BigNumber(
+          res.config.maxAmount
+        )
+          .shiftedBy(-asset.decimals)
+          .toFixed();
+        return this.withdrawInfo[network][asset.asset_id];
       });
     }
   }
-
   getTransactionReceipt(hash: string, rpcUrl: string) {
     const tempProvider = new ethers.JsonRpcProvider(rpcUrl);
     return tempProvider.getTransactionReceipt(hash);
@@ -428,6 +458,7 @@ export class BridgeService {
       toScriptHash: wallet.getScriptHashFromAddress(toAddress),
       maxFee: ethers.parseUnits(bridgeFee, bridgeAsset.decimals),
       amount: bridgeAmount,
+      currentBridgeNetwork,
     });
 
     const txParams = {

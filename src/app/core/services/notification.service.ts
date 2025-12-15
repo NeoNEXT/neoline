@@ -32,6 +32,7 @@ interface NotificationContent {
   switchOnePasswordFirst: string;
   copied: string;
   exceedDepositLimit: string;
+  exceedWithdrawalLimit: string;
 }
 
 @Injectable()
@@ -69,6 +70,7 @@ export class NotificationService {
       'Please switch to the new password management mode first.',
     copied: 'Copied!',
     exceedDepositLimit: 'Exceeding the maximum deposit limit',
+    exceedWithdrawalLimit: 'Exceeding the maximum withdrawal limit',
   };
   private CN: NotificationContent = {
     close: '关闭',
@@ -101,6 +103,7 @@ export class NotificationService {
     switchOnePasswordFirst: '请先切换到新的密码管理模式',
     copied: '已复制！',
     exceedDepositLimit: '超过最大存入值',
+    exceedWithdrawalLimit: '超过最大取出值',
   };
   private JA: NotificationContent = {
     close: '閉じる',
@@ -135,6 +138,7 @@ export class NotificationService {
       'まずは新しいパスワード管理モードに切り替えてください',
     copied: 'コピーしました！',
     exceedDepositLimit: '最大入金制限を超えています',
+    exceedWithdrawalLimit: '最大出金制限を超えています',
   };
   constructor(private settingState: SettingState) {
     this.content = this.EN;
