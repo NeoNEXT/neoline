@@ -1,5 +1,5 @@
 import { ETH_SOURCE_ASSET_HASH } from './evm';
-import { GAS3_CONTRACT } from './neo3-account';
+import { GAS3_CONTRACT, NEO3_CONTRACT } from './neo3-account';
 import { BridgeNetwork } from './transaction';
 
 export const Neo3BridgeAssetList = {
@@ -11,7 +11,7 @@ export const Neo3BridgeAssetList = {
       symbol: 'GAS',
     },
     {
-      asset_id: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
+      asset_id: NEO3_CONTRACT,
       decimals: 0,
       bridgeDecimals: 0,
       bridgeTargetAssetId: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
@@ -26,7 +26,7 @@ export const Neo3BridgeAssetList = {
       symbol: 'GAS',
     },
     {
-      asset_id: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
+      asset_id: NEO3_CONTRACT,
       decimals: 0,
       bridgeDecimals: 0,
       bridgeTargetAssetId: '0xab0a26b8d903f36acb4bf9663f8d2de0672433cd',
@@ -54,7 +54,7 @@ export const NeoXBridgeAssetList = {
       asset_id: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
       decimals: 18,
       bridgeDecimals: 0,
-      bridgeTargetAssetId: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
+      bridgeTargetAssetId: NEO3_CONTRACT,
       symbol: 'NEO',
     },
   ],
@@ -69,7 +69,7 @@ export const NeoXBridgeAssetList = {
       asset_id: '0xAB0A26b8d903f36acb4Bf9663f8D2De0672433cd',
       decimals: 18,
       bridgeDecimals: 0,
-      bridgeTargetAssetId: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
+      bridgeTargetAssetId: NEO3_CONTRACT,
       symbol: 'NEO',
     },
     {

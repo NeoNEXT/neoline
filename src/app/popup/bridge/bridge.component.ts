@@ -54,8 +54,6 @@ import {
   NeoXBridgeAssetList,
 } from '../_lib/bridge';
 
-const MIN_BRIDGE_AMOUNT = 1;
-
 @Component({
   templateUrl: 'bridge.component.html',
   styleUrls: ['bridge.component.scss'],
@@ -73,8 +71,11 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   bridgeAmount: string;
   handleInputSub: Unsubscribable;
   toAddress: string;
-  bridgeFee = '0.1';
-  minBridgeAmount = '1.1';
+  bridgeInfo: {
+    bridgeFee: string;
+    minBridge: string;
+    maxBridge: string;
+  };
   private gasBalance: string;
 
   getSourceTxReceiptInterval;
@@ -92,7 +93,6 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   priorityFee = '0.0001';
   invokeArgs: ContractCall[];
   signers: SignerLike[];
-  maxGasDeposit: string;
 
   // neoX
   neoXFeeInfo: NeoXFeeInfoProp;
@@ -177,23 +177,6 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
           : BridgeNetwork.TestNet;
       this.bridgeAssetList = Neo3BridgeAssetList[this.currentBridgeNetwork];
       this.bridgeAsset = this.bridgeAssetList[0];
-      // bridge fee
-      this.bridgeService
-        .getGasDepositFee(this.currentBridgeNetwork)
-        .subscribe((res) => {
-          if (res) {
-            this.bridgeFee = res;
-            this.getMinBridgeAmount();
-          }
-        });
-      // max deposit fee
-      this.bridgeService
-        .getMaxGasDeposit(this.currentBridgeNetwork)
-        .subscribe((res) => {
-          if (res) {
-            this.maxGasDeposit = res;
-          }
-        });
     }
     if (this.chainType === 'NeoX') {
       this.currentBridgeNetwork =
@@ -203,6 +186,15 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       this.bridgeAssetList = NeoXBridgeAssetList[this.currentBridgeNetwork];
       this.bridgeAsset = this.bridgeAssetList[0];
     }
+    this.bridgeService
+      .getBridgeInfo(
+        this.chainType,
+        this.currentBridgeNetwork,
+        this.bridgeAsset
+      )
+      .subscribe((res) => {
+        this.bridgeInfo = res;
+      });
     // balance
     await this.getBridgeAssetBalance();
   }
@@ -221,31 +213,47 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   }
 
   getActualReceive() {
-    if (
-      this.bridgeAmount &&
-      new BigNumber(this.bridgeAmount).comparedTo(this.minBridgeAmount) >= 0
-    ) {
-      if (this.bridgeAsset.symbol === 'GAS') {
-        return new BigNumber(this.bridgeAmount)
-          .minus(this.bridgeFee)
-          .dp(this.bridgeAsset.decimals, 1)
-          .toFixed();
-      } else {
+    if (this.chainType === 'Neo3') {
+      if (
+        this.bridgeAmount &&
+        new BigNumber(this.bridgeAmount).comparedTo(
+          this.bridgeInfo.minBridge
+        ) >= 0
+      ) {
         return new BigNumber(this.bridgeAmount)
           .dp(this.bridgeAsset.decimals, 1)
           .toFixed();
       }
+      return '-';
+    } else {
+      if (
+        this.bridgeAmount &&
+        new BigNumber(this.bridgeAmount).comparedTo(
+          this.bridgeInfo.minBridge
+        ) >= 0
+      ) {
+        if (this.bridgeAsset.symbol === 'GAS') {
+          return new BigNumber(this.bridgeAmount)
+            .minus(this.bridgeInfo.bridgeFee)
+            .dp(this.bridgeAsset.decimals, 1)
+            .toFixed();
+        } else {
+          return new BigNumber(this.bridgeAmount)
+            .dp(this.bridgeAsset.decimals, 1)
+            .toFixed();
+        }
+      }
+      return '-';
     }
-    return '-';
   }
 
   private async calculateNeoXFee() {
     const txParams = this.bridgeService.getNeoXTxParams({
       bridgeAsset: this.bridgeAsset,
-      bridgeAmount: this.bridgeAmount ?? this.minBridgeAmount,
+      bridgeAmount: this.bridgeAmount ?? this.bridgeInfo.minBridge,
       fromAddress: this.currentWallet.accounts[0].address,
       toAddress: this.toAddress ?? 'NL1Frwvb3jo8sWyqN6NCfwg2o2Y2pQ9ttT', // 0x0000000000000000000000000000000000000001
-      bridgeFee: this.bridgeFee,
+      bridgeFee: this.bridgeInfo.bridgeFee,
       currentBridgeNetwork: this.currentBridgeNetwork,
     });
     let networkGasLimit;
@@ -260,10 +268,10 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
   private calculateNeoN3Fee() {
     const { invokeArgs, signers } = this.bridgeService.getNeoN3TxParams({
       bridgeAsset: this.bridgeAsset,
-      bridgeAmount: this.bridgeAmount ?? this.minBridgeAmount,
+      bridgeAmount: this.bridgeAmount ?? this.bridgeInfo.minBridge,
       fromAddress: this.currentWallet.accounts[0].address,
       toAddress: this.toAddress ?? '0x0000000000000000000000000000000000000001',
-      bridgeFee: this.bridgeFee,
+      bridgeFee: this.bridgeInfo.bridgeFee,
       currentBridgeNetwork: this.currentBridgeNetwork,
     });
 
@@ -366,25 +374,25 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       let message;
       switch (this.lang) {
         case 'zh_CN':
-          message = `存入数额不能少于 ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`;
+          message = `存入数额不能少于 ${this.bridgeInfo.minBridge} ${this.bridgeAsset.symbol}`;
           break;
         case 'ja':
-          message = `入金額は${this.minBridgeAmount} ${this.bridgeAsset.symbol}未満であってはなりません`;
+          message = `入金額は${this.bridgeInfo.minBridge} ${this.bridgeAsset.symbol}未満であってはなりません`;
           break;
         default:
-          message = `Deposit amount shouldn't be less than ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`;
+          message = `Deposit amount shouldn't be less than ${this.bridgeInfo.minBridge} ${this.bridgeAsset.symbol}`;
           break;
       }
       if (this.chainType === 'NeoX') {
         switch (this.lang) {
           case 'zh_CN':
-            message = `提取数额不能少于 ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`;
+            message = `提取数额不能少于 ${this.bridgeInfo.minBridge} ${this.bridgeAsset.symbol}`;
             break;
           case 'ja':
-            message = `出金額は${this.minBridgeAmount} ${this.bridgeAsset.symbol}未満であってはなりません`;
+            message = `出金額は${this.bridgeInfo.minBridge} ${this.bridgeAsset.symbol}未満であってはなりません`;
             break;
           default:
-            message = `Withdraw amount shouldn't be less than ${this.minBridgeAmount} ${this.bridgeAsset.symbol}`;
+            message = `Withdraw amount shouldn't be less than ${this.bridgeInfo.minBridge} ${this.bridgeAsset.symbol}`;
             break;
         }
       }
@@ -400,7 +408,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
 
     if (
       this.chainType === 'Neo3' &&
-      new BigNumber(this.bridgeAmount).comparedTo(this.maxGasDeposit) > 0
+      new BigNumber(this.bridgeAmount).comparedTo(this.bridgeInfo.maxBridge) > 0
     ) {
       this.globalService.snackBarTip('exceedDepositLimit');
       return;
@@ -413,7 +421,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         bridgeAmount: this.bridgeAmount,
         fromAddress: this.currentWallet.accounts[0].address,
         toAddress: this.toAddress,
-        bridgeFee: this.bridgeFee,
+        bridgeFee: this.bridgeInfo.bridgeFee,
         currentBridgeNetwork: this.currentBridgeNetwork,
       });
       this.invokeArgs = invokeArgs;
@@ -468,7 +476,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         bridgeAmount: this.bridgeAmount,
         fromAddress: this.currentWallet.accounts[0].address,
         toAddress: this.toAddress,
-        bridgeFee: this.bridgeFee,
+        bridgeFee: this.bridgeInfo.bridgeFee,
         currentBridgeNetwork: this.currentBridgeNetwork,
       });
       this.neoXTxParams = txParams;
@@ -492,7 +500,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         }
       } else {
         const tAmount = new BigNumber(this.gasBalance)
-          .minus(this.bridgeFee)
+          .minus(this.bridgeInfo.bridgeFee)
           .minus(this.neoXFeeInfo.estimateGas);
         if (tAmount.comparedTo(0) < 0) {
           this.globalService.snackBarTip(
@@ -738,19 +746,17 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.bridgeAsset = asset;
     this.bridgeAmount = '';
     this.isShowAssetList = false;
-    this.getMinBridgeAmount();
+    this.bridgeService
+      .getBridgeInfo(
+        this.chainType,
+        this.currentBridgeNetwork,
+        this.bridgeAsset
+      )
+      .subscribe((res) => {
+        this.bridgeInfo = res;
+      });
     this.checkShowApprove();
     await this.getBridgeAssetBalance();
-  }
-
-  private getMinBridgeAmount() {
-    if (this.bridgeAsset.symbol === 'GAS') {
-      this.minBridgeAmount = new BigNumber(this.bridgeFee)
-        .plus(MIN_BRIDGE_AMOUNT)
-        .toFixed();
-    } else {
-      this.minBridgeAmount = MIN_BRIDGE_AMOUNT.toString();
-    }
   }
 
   checkBridgeAmount(event) {

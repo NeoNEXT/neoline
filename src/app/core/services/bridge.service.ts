@@ -8,6 +8,7 @@ import {
   ETH_SOURCE_ASSET_HASH,
   abiERC20,
   GAS3_CONTRACT,
+  ChainType,
 } from '@/app/popup/_lib';
 import { AppState } from '@/app/reduers';
 import { Asset } from '@/models/models';
@@ -24,12 +25,34 @@ import {
 } from '../utils/neo';
 import { HttpService } from './http.service';
 import { BridgeParams } from '@/app/popup/_lib/bridge';
+import { Observable, of } from 'rxjs';
 
 @Injectable()
 export class BridgeService {
   private neoXNetwork: RpcNetwork;
   private neo3Network: RpcNetwork;
   private provider: ethers.JsonRpcProvider;
+  private depositInfo: {
+    [network: string]: {
+      [assetId: string]: {
+        depositFee: string;
+        minDeposit: string;
+        maxDeposit: string;
+      };
+    };
+  } = {};
+  private withdrawInfo = {
+    [ETH_SOURCE_ASSET_HASH]: {
+      withdrawFee: '0.1',
+      minWithdraw: '1.1',
+      maxWithdraw: '1000000000000.1',
+    },
+    token: {
+      withdrawFee: '0.1',
+      minWithdraw: '1',
+      maxWithdraw: '1000000000000',
+    },
+  };
 
   constructor(
     private store: Store<AppState>,
@@ -55,6 +78,22 @@ export class BridgeService {
     });
   }
 
+  getBridgeInfo(
+    chain: ChainType,
+    network: BridgeNetwork,
+    asset: Asset
+  ): Observable<{
+    bridgeFee: string;
+    minBridge: string;
+    maxBridge: string;
+  }> {
+    if (chain === 'Neo3') {
+      return this.getDepositInfo(network, asset);
+    } else {
+      return this.getWithdrawInfo(network, asset);
+    }
+  }
+
   //#region neo3 => neoX
   getBridgeTxOnNeo3BridgeNeoX(
     depositId: number,
@@ -70,34 +109,98 @@ export class BridgeService {
       }${suffixAddress}/${depositId}`
     );
   }
-  getGasDepositFee(network: BridgeNetwork) {
-    const data = {
-      jsonrpc: '2.0',
-      method: 'invokefunction',
-      params: [BridgeParams[network].n3BridgeContract, 'nativeDepositFee'],
-      id: 1,
-    };
-    return this.http.rpcPost(this.neo3Network.rpcUrl, data).pipe(
-      map((res: any) => {
-        const fee = handleNeo3StackNumberValue(res);
-        return new BigNumber(fee).shiftedBy(-8).toFixed();
-      })
-    );
-  }
 
-  getMaxGasDeposit(network: BridgeNetwork) {
-    const data = {
+  private getDepositInfo(
+    network: BridgeNetwork,
+    asset: Asset
+  ): Observable<{
+    bridgeFee: string;
+    minBridge: string;
+    maxBridge: string;
+  }> {
+    const assetId = asset.asset_id;
+    if (this.depositInfo?.[network]?.[assetId]?.depositFee !== undefined) {
+      return of({
+        bridgeFee: this.depositInfo[network][assetId].depositFee,
+        minBridge: this.depositInfo[network][assetId].minDeposit,
+        maxBridge: this.depositInfo[network][assetId].maxDeposit,
+      });
+    }
+    const contractParams =
+      assetId === GAS3_CONTRACT ? [] : [{ type: 'Hash160', value: assetId }];
+    const feeData = {
       jsonrpc: '2.0',
       method: 'invokefunction',
-      params: [BridgeParams[network].n3BridgeContract, 'maxNativeDeposit'],
+      params: [
+        BridgeParams[network].n3BridgeContract,
+        assetId === GAS3_CONTRACT ? 'nativeDepositFee' : 'tokenDepositFee',
+        contractParams,
+      ],
       id: 1,
     };
-    return this.http.rpcPost(this.neo3Network.rpcUrl, data).pipe(
-      map((res: any) => {
-        const data = handleNeo3StackNumberValue(res);
-        return new BigNumber(data).shiftedBy(-8).toFixed();
-      })
-    );
+    const minData = {
+      jsonrpc: '2.0',
+      method: 'invokefunction',
+      params: [
+        BridgeParams[network].n3BridgeContract,
+        assetId === GAS3_CONTRACT ? 'minNativeDeposit' : 'minTokenDeposit',
+        contractParams,
+      ],
+      id: 1,
+    };
+    const maxData = {
+      jsonrpc: '2.0',
+      method: 'invokefunction',
+      params: [
+        BridgeParams[network].n3BridgeContract,
+        assetId === GAS3_CONTRACT ? 'maxNativeDeposit' : 'maxTokenDeposit',
+        contractParams,
+      ],
+      id: 1,
+    };
+    return this.http
+      .rpcPostReturnAllData(this.neo3Network.rpcUrl, [
+        feeData,
+        minData,
+        maxData,
+      ])
+      .pipe(
+        map(([feeRes, minRes, maxRes]) => {
+          if (!this.depositInfo[network]) {
+            this.depositInfo[network] = {};
+          }
+          if (!this.depositInfo[network][assetId]) {
+            this.depositInfo[network][assetId] = {
+              depositFee: '',
+              minDeposit: '',
+              maxDeposit: '',
+            };
+          }
+          if (feeRes.result) {
+            const fee = handleNeo3StackNumberValue(feeRes.result);
+            this.depositInfo[network][assetId].depositFee = new BigNumber(fee)
+              .shiftedBy(-8)
+              .toFixed();
+          }
+          if (minRes.result) {
+            const min = handleNeo3StackNumberValue(minRes.result);
+            this.depositInfo[network][assetId].minDeposit = new BigNumber(min)
+              .shiftedBy(-asset.decimals)
+              .toFixed();
+          }
+          if (maxRes.result) {
+            const max = handleNeo3StackNumberValue(maxRes.result);
+            this.depositInfo[network][assetId].maxDeposit = new BigNumber(max)
+              .shiftedBy(-asset.decimals)
+              .toFixed();
+          }
+          return {
+            bridgeFee: this.depositInfo[network][assetId].depositFee,
+            minBridge: this.depositInfo[network][assetId].minDeposit,
+            maxBridge: this.depositInfo[network][assetId].maxDeposit,
+          };
+        })
+      );
   }
 
   getGasBridgeProgress(network: BridgeNetwork) {
@@ -170,6 +273,29 @@ export class BridgeService {
       ]);
     }
     return data;
+  }
+
+  private getWithdrawInfo(
+    network: BridgeNetwork,
+    asset: Asset
+  ): Observable<{
+    bridgeFee: string;
+    minBridge: string;
+    maxBridge: string;
+  }> {
+    if (asset.asset_id === ETH_SOURCE_ASSET_HASH) {
+      return of({
+        bridgeFee: this.withdrawInfo[ETH_SOURCE_ASSET_HASH].withdrawFee,
+        minBridge: this.withdrawInfo[ETH_SOURCE_ASSET_HASH].minWithdraw,
+        maxBridge: this.withdrawInfo[ETH_SOURCE_ASSET_HASH].maxWithdraw,
+      });
+    } else {
+      return of({
+        bridgeFee: this.withdrawInfo.token.withdrawFee,
+        minBridge: this.withdrawInfo.token.minWithdraw,
+        maxBridge: this.withdrawInfo.token.maxWithdraw,
+      });
+    }
   }
 
   getTransactionReceipt(hash: string, rpcUrl: string) {
