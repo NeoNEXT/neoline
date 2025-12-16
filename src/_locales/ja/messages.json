@@ -1221,7 +1221,7 @@
     "message": "ブリッジ手数料"
   },
   "bridgeFeeDesc": {
-    "message": "ブリッジ契約は0.1 GASを請求し、プラットフォームは他の手数料を請求しません。"
+    "message": "ブリッジ契約は{{bridgeFee}} GASを請求し、プラットフォームは他の手数料を請求しません。"
   },
   "ActualReceive": {
     "message": "実際の受取額"

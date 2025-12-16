@@ -113,7 +113,14 @@
     <li>
       <span class="label">
         {{ "bridgeFee" | translate | async }}
-        <tooltip [tip]="'bridgeFeeDesc' | translate | async" placement="right">
+        <tooltip
+          [tip]="
+            'bridgeFeeDesc'
+              | translate : { bridgeFee: bridgeInfo?.bridgeFee }
+              | async
+          "
+          placement="right"
+        >
           <img src="assets/images/common/tooltip.svg" alt="" />
         </tooltip>
       </span>

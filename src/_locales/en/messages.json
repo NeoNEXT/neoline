@@ -1221,7 +1221,7 @@
     "message": "Bridge fee"
   },
   "bridgeFeeDesc": {
-    "message": "The bridge contract charges 0.1 GAS, and the platform does not charge any other fees."
+    "message": "The bridge contract charges {{bridgeFee}} GAS, and the platform does not charge any other fees."
   },
   "ActualReceive": {
     "message": "Actual receive"

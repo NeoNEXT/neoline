@@ -1221,7 +1221,7 @@
     "message": "Bridge fee"
   },
   "bridgeFeeDesc": {
-    "message": "Bridge 合约收取 0.1 GAS，平台不收取任何其他费用。"
+    "message": "Bridge 合约收取 {{bridgeFee}} GAS，平台不收取任何其他费用。"
   },
   "ActualReceive": {
     "message": "实际收到"

@@ -17,6 +17,13 @@ export const Neo3BridgeAssetList = {
       bridgeTargetAssetId: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
       symbol: 'NEO',
     },
+    {
+      asset_id: '0x57d1761945697a2257be76b756dcc9c19b512ff1',
+      decimals: 8,
+      bridgeDecimals: 18,
+      bridgeTargetAssetId: '0xE816deE05cf6D0F2a57EB4C489241D8326B5d106',
+      symbol: 'NDMEME',
+    },
   ],
   [BridgeNetwork.TestNet]: [
     {
@@ -56,6 +63,13 @@ export const NeoXBridgeAssetList = {
       bridgeDecimals: 0,
       bridgeTargetAssetId: NEO3_CONTRACT,
       symbol: 'NEO',
+    },
+    {
+      asset_id: '0xE816deE05cf6D0F2a57EB4C489241D8326B5d106',
+      decimals: 18,
+      bridgeDecimals: 8,
+      bridgeTargetAssetId: '0x57d1761945697a2257be76b756dcc9c19b512ff1',
+      symbol: 'NDMEME',
     },
   ],
   [BridgeNetwork.TestNet]: [
