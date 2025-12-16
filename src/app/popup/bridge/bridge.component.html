@@ -26,7 +26,7 @@
         [neoXChainId]="neoXNetwork.chainId"
         customClass="bridge"
       ></token-logo>
-      {{ bridgeAsset.symbol }}
+      {{ bridgeAsset?.symbol }}
       <img class="arrow" theme src="assets/images/common/arrow.svg" alt="" />
     </div>
     <ul
@@ -59,8 +59,8 @@
       <span>{{ "From" | translate | async }}</span>
       <p class="balance">
         <img theme src="assets/images/login/wallet.svg" alt="" />
-        {{ bridgeAsset.balance || 0 | numberFixed : 8 }}
-        {{ bridgeAsset.symbol }}
+        {{ bridgeAsset?.balance || 0 | numberFixed : 8 }}
+        {{ bridgeAsset?.symbol }}
         <span class="max" (click)="bridgeAll()">{{
           "Max" | translate | async
         }}</span>
@@ -78,8 +78,8 @@
         />
         <p class="rate">
           {{
-            bridgeAmount && bridgeAsset.rateBalance
-              ? bridgeAsset.rateBalance + " " + rateCurrency
+            bridgeAmount && bridgeAsset?.rateBalance
+              ? bridgeAsset?.rateBalance + " " + rateCurrency
               : ""
           }}
         </p>
@@ -128,7 +128,7 @@
     </li>
     <li>
       <span class="label">{{ "ActualReceive" | translate | async }}</span>
-      <p>{{ getActualReceive() }} {{ bridgeAsset.symbol }}</p>
+      <p>{{ getActualReceive() }} {{ bridgeAsset?.symbol }}</p>
     </li>
   </ul>
   <button
@@ -147,7 +147,7 @@
   >
     <loading-dot *ngIf="isApproving"></loading-dot>
     {{ (isApproving ? "approving" : "Approve") | translate | async }}
-    {{ isApproving ? "" : bridgeAsset.symbol }}
+    {{ isApproving ? "" : bridgeAsset?.symbol }}
   </button>
 </div>
 

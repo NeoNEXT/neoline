@@ -48,11 +48,7 @@ import {
   PopupBridgeProgressDialogComponent,
   PopupSelectAddressDialogComponent,
 } from '../_dialogs';
-import {
-  BridgeParams,
-  Neo3BridgeAssetList,
-  NeoXBridgeAssetList,
-} from '../_lib/bridge';
+import { BridgeParams } from '../_lib/bridge';
 
 @Component({
   templateUrl: 'bridge.component.html',
@@ -169,34 +165,36 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
     this.settingStateSub?.unsubscribe();
   }
 
-  private async initData() {
+  private initData() {
     if (this.chainType === 'Neo3') {
       this.currentBridgeNetwork =
         this.n3Network.chainId === N3MainnetNetwork.chainId
           ? BridgeNetwork.MainNet
           : BridgeNetwork.TestNet;
-      this.bridgeAssetList = Neo3BridgeAssetList[this.currentBridgeNetwork];
-      this.bridgeAsset = this.bridgeAssetList[0];
     }
     if (this.chainType === 'NeoX') {
       this.currentBridgeNetwork =
         this.neoXNetwork.chainId === NeoXMainnetNetwork.chainId
           ? BridgeNetwork.MainNet
           : BridgeNetwork.TestNet;
-      this.bridgeAssetList = NeoXBridgeAssetList[this.currentBridgeNetwork];
-      this.bridgeAsset = this.bridgeAssetList[0];
     }
     this.bridgeService
-      .getBridgeInfo(
-        this.chainType,
-        this.currentBridgeNetwork,
-        this.bridgeAsset
-      )
-      .subscribe((res) => {
-        this.bridgeInfo = res;
+      .getBridgeAssetList(this.currentBridgeNetwork)
+      .subscribe(async (res) => {
+        this.bridgeAssetList = this.chainType === 'Neo3' ? res.neo3 : res.neox;
+        this.bridgeAsset = this.bridgeAssetList[0];
+        this.bridgeService
+          .getBridgeInfo(
+            this.chainType,
+            this.currentBridgeNetwork,
+            this.bridgeAsset
+          )
+          .subscribe((res) => {
+            this.bridgeInfo = res;
+          });
+        // balance
+        await this.getBridgeAssetBalance();
       });
-    // balance
-    await this.getBridgeAssetBalance();
   }
 
   private getAssetRate() {

@@ -15,7 +15,7 @@ import { Asset } from '@/models/models';
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
-import { map } from 'rxjs/operators';
+import { catchError, map } from 'rxjs/operators';
 import { HttpClient } from '@angular/common/http';
 import BigNumber from 'bignumber.js';
 import { sc, wallet } from '@cityofzion/neon-core-neo3/lib';
@@ -24,7 +24,12 @@ import {
   handleNeo3StackNumberValue,
 } from '../utils/neo';
 import { HttpService } from './http.service';
-import { BridgeParams } from '@/app/popup/_lib/bridge';
+import {
+  BridgeParams,
+  BRIDGE_ASSET_LIST_URL,
+  BRIDGE_TOKENS_MAINNET,
+  BRIDGE_TOKENS_TESTNET,
+} from '@/app/popup/_lib/bridge';
 import { from, Observable, of } from 'rxjs';
 
 @Injectable()
@@ -32,6 +37,12 @@ export class BridgeService {
   private neoXNetwork: RpcNetwork;
   private neo3Network: RpcNetwork;
   private provider: ethers.JsonRpcProvider;
+  private bridgeAssetList: {
+    [network: string]: { neo3: Asset[]; neox: Asset[] };
+  } = {
+    [BridgeNetwork.MainNet]: undefined,
+    [BridgeNetwork.TestNet]: undefined,
+  };
   private depositInfo: {
     [network: string]: {
       [assetId: string]: {
@@ -73,6 +84,27 @@ export class BridgeService {
         }
       );
     });
+  }
+
+  getBridgeAssetList(network: BridgeNetwork) {
+    if (this.bridgeAssetList[network]) {
+      return of(this.bridgeAssetList[network]);
+    }
+    return this.httpClient
+      .get<{ neo3: Asset[]; neox: Asset[] }>(BRIDGE_ASSET_LIST_URL[network])
+      .pipe(
+        catchError(() =>
+          of(
+            network === BridgeNetwork.MainNet
+              ? BRIDGE_TOKENS_MAINNET
+              : BRIDGE_TOKENS_TESTNET
+          )
+        ),
+        map((res) => {
+          this.bridgeAssetList[network] = res;
+          return res;
+        })
+      );
   }
 
   getBridgeInfo(

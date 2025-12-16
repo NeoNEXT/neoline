@@ -1,97 +1,103 @@
-import { ETH_SOURCE_ASSET_HASH } from './evm';
-import { GAS3_CONTRACT, NEO3_CONTRACT } from './neo3-account';
+import { Asset } from '@/models/models';
 import { BridgeNetwork } from './transaction';
 
-export const Neo3BridgeAssetList = {
-  [BridgeNetwork.MainNet]: [
+export const BRIDGE_ASSET_LIST_URL = {
+  [BridgeNetwork.MainNet]:
+    'https://neoline.io/assets/bridge/tokens_mainnet.json',
+  [BridgeNetwork.TestNet]:
+    'https://neoline.io/assets/bridge/tokens_testnet.json',
+};
+
+export const BRIDGE_TOKENS_MAINNET: { neo3: Asset[]; neox: Asset[] } = {
+  neo3: [
     {
-      asset_id: GAS3_CONTRACT,
+      symbol: 'GAS',
+      asset_id: '0xd2a4cff31913016155e38e474a2c06d08be276cf',
       decimals: 8,
       bridgeDecimals: 8,
-      symbol: 'GAS',
     },
     {
-      asset_id: NEO3_CONTRACT,
+      symbol: 'NEO',
+      asset_id: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
       decimals: 0,
       bridgeDecimals: 0,
       bridgeTargetAssetId: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
-      symbol: 'NEO',
     },
     {
+      symbol: 'NDMEME',
       asset_id: '0x57d1761945697a2257be76b756dcc9c19b512ff1',
       decimals: 8,
-      bridgeDecimals: 18,
+      bridgeDecimals: 8,
       bridgeTargetAssetId: '0xE816deE05cf6D0F2a57EB4C489241D8326B5d106',
-      symbol: 'NDMEME',
     },
   ],
-  [BridgeNetwork.TestNet]: [
+  neox: [
     {
-      asset_id: GAS3_CONTRACT,
-      decimals: 8,
-      bridgeDecimals: 8,
       symbol: 'GAS',
-    },
-    {
-      asset_id: NEO3_CONTRACT,
-      decimals: 0,
-      bridgeDecimals: 0,
-      bridgeTargetAssetId: '0xab0a26b8d903f36acb4bf9663f8d2de0672433cd',
-      symbol: 'NEO',
-    },
-    {
-      asset_id: '0x5b53998b399d10cd25727269e865acc785ef5c1a',
-      decimals: 8,
-      bridgeDecimals: 8,
-      bridgeTargetAssetId: '0xba7e9465d241caabe431a79b2f863f5b2ebaebb3',
-      symbol: 'FLM',
-    },
-  ],
-};
-
-export const NeoXBridgeAssetList = {
-  [BridgeNetwork.MainNet]: [
-    {
-      asset_id: ETH_SOURCE_ASSET_HASH,
+      asset_id: '0x0000000000000000000000000000000000000000',
       decimals: 18,
       bridgeDecimals: 8,
-      symbol: 'GAS',
     },
     {
+      symbol: 'NEO',
       asset_id: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
       decimals: 18,
       bridgeDecimals: 0,
-      bridgeTargetAssetId: NEO3_CONTRACT,
-      symbol: 'NEO',
+      bridgeTargetAssetId: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
     },
     {
+      symbol: 'NDMEME',
       asset_id: '0xE816deE05cf6D0F2a57EB4C489241D8326B5d106',
       decimals: 18,
       bridgeDecimals: 8,
       bridgeTargetAssetId: '0x57d1761945697a2257be76b756dcc9c19b512ff1',
-      symbol: 'NDMEME',
     },
   ],
-  [BridgeNetwork.TestNet]: [
+};
+
+export const BRIDGE_TOKENS_TESTNET: { neo3: Asset[]; neox: Asset[] } = {
+  neo3: [
     {
-      asset_id: ETH_SOURCE_ASSET_HASH,
+      symbol: 'GAS',
+      asset_id: '0xd2a4cff31913016155e38e474a2c06d08be276cf',
+      decimals: 8,
+      bridgeDecimals: 8,
+    },
+    {
+      symbol: 'NEO',
+      asset_id: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
+      decimals: 0,
+      bridgeDecimals: 0,
+      bridgeTargetAssetId: '0xab0a26b8d903f36acb4bf9663f8d2de0672433cd',
+    },
+    {
+      symbol: 'FLM',
+      asset_id: '0x5b53998b399d10cd25727269e865acc785ef5c1a',
+      decimals: 8,
+      bridgeDecimals: 8,
+      bridgeTargetAssetId: '0xba7e9465d241caabe431a79b2f863f5b2ebaebb3',
+    },
+  ],
+  neox: [
+    {
+      symbol: 'GAS',
+      asset_id: '0x0000000000000000000000000000000000000000',
       decimals: 18,
       bridgeDecimals: 8,
-      symbol: 'GAS',
     },
     {
-      asset_id: '0xAB0A26b8d903f36acb4Bf9663f8D2De0672433cd',
+      symbol: 'NEO',
+      asset_id: '0xab0a26b8d903f36acb4bf9663f8d2de0672433cd',
       decimals: 18,
       bridgeDecimals: 0,
-      bridgeTargetAssetId: NEO3_CONTRACT,
-      symbol: 'NEO',
+      bridgeTargetAssetId: '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5',
     },
     {
-      asset_id: '0xba7e9465D241CaAbe431A79b2F863f5B2ebAEBB3',
+      symbol: 'FLM',
+      asset_id: '0xba7e9465d241caabe431a79b2f863f5b2ebaebb3',
       decimals: 8,
       bridgeDecimals: 8,
       bridgeTargetAssetId: '0x5b53998b399d10cd25727269e865acc785ef5c1a',
-      symbol: 'FLM',
     },
   ],
 };
