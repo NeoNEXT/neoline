@@ -98,6 +98,11 @@ export const All_CHAIN_TOKENS = {
       address: '0xc28736dc83f4fd43d6fb832Fd93c3eE7bB26828f',
       logo: TOKEN_IMAGE_URL_PREFIX + `neo.png`,
     },
+    '0xE816deE05cf6D0F2a57EB4C489241D8326B5d106': {
+      symbol: 'NDMEME',
+      address: '0xE816deE05cf6D0F2a57EB4C489241D8326B5d106',
+      logo: TOKEN_IMAGE_URL_PREFIX + 'ndmeme.svg',
+    },
   },
   [CHAIN_IDS.Ethereum]: {
     [ETH_SOURCE_ASSET_HASH]: {
