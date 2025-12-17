@@ -9,6 +9,7 @@ import {
   abiERC20,
   GAS3_CONTRACT,
   ChainType,
+  BRIDGE_EVENTS_ABI,
 } from '@/app/popup/_lib';
 import { AppState } from '@/app/reduers';
 import { Asset } from '@/models/models';
@@ -363,6 +364,22 @@ export class BridgeService {
   getTransactionReceipt(hash: string, rpcUrl: string) {
     const tempProvider = new ethers.JsonRpcProvider(rpcUrl);
     return tempProvider.getTransactionReceipt(hash);
+  }
+
+  getNonceFromTransactionReceipt(receipt: any, asset: Asset) {
+    const iface = new ethers.Interface(BRIDGE_EVENTS_ABI);
+    for (let log of receipt.logs) {
+      const decoded = iface.parseLog({ data: log.data, topics: log.topics });
+      if (!decoded) continue;
+      const eventName =
+        asset.asset_id === ETH_SOURCE_ASSET_HASH
+          ? 'NativeWithdrawal'
+          : 'TokenWithdrawal';
+      if (decoded.name === eventName) {
+        return new BigNumber(decoded.args.nonce).toNumber();
+      }
+    }
+    return null;
   }
 
   getBridgeTxOnNeoXBridgeNeo3(

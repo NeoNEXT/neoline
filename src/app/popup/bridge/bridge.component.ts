@@ -665,17 +665,12 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
                 hash;
             }
             this.getSourceTxReceiptInterval.unsubscribe();
-            const topicsIndex =
-              this.sessionTx.asset.asset_id === ETH_SOURCE_ASSET_HASH ? 1 : 2;
-            for (let log of res.logs) {
-              if (
-                log.address ===
-                BridgeParams[this.sessionTx.network].neoXBridgeContract
-              ) {
-                const nonce = new BigNumber(log.topics[topicsIndex]).toNumber();
-                this.waitNeoXTargetTxComplete(nonce);
-                break;
-              }
+            const nonce = this.bridgeService.getNonceFromTransactionReceipt(
+              res,
+              this.sessionTx.asset
+            );
+            if (nonce) {
+              this.waitNeoXTargetTxComplete(nonce);
             }
           }
         });
