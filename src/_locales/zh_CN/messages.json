@@ -1559,6 +1559,9 @@
   "interactionWithTip": {
     "message": "这是您与之交互的合约。通过验证详细信息来保护自己免受诈骗。"
   },
+  "methodTip": {
+    "message": "解码输入数据后得到的执行函数。"
+  },
   "Spender": {
     "message": "消费者"
   },
