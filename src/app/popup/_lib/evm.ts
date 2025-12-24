@@ -101,7 +101,7 @@ export const All_CHAIN_TOKENS = {
     '0xE816deE05cf6D0F2a57EB4C489241D8326B5d106': {
       symbol: 'NDMEME',
       address: '0xE816deE05cf6D0F2a57EB4C489241D8326B5d106',
-      logo: TOKEN_IMAGE_URL_PREFIX + 'ndmeme.svg',
+      logo: 'https://cdn.neoline.io/logo/neo3/0x57d1761945697a2257be76b756dcc9c19b512ff1.png',
     },
   },
   [CHAIN_IDS.Ethereum]: {
