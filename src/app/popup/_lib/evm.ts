@@ -15,16 +15,23 @@ export interface EvmWalletJSON {
     {
       address: string;
       extra: {
+        /** for private key wallet */
         publicKey: string;
+
+        /** for create account */
+        // publicKey: string;
         isHDWallet?: boolean;
         hdWalletIndex?: number;
         hasBackup?: boolean;
+
+        /** for hardware wallet */
+        // publicKey: string;
         ledgerSLIP44?: string;
         ledgerAddressIndex?: number;
         device?: HardwareDevice;
-        qrBasedXFP?: string;
+        qrBasedXFP?: string; // for qr based wallet
       };
-    }
+    },
   ];
 }
 
@@ -433,6 +440,6 @@ export const OPENSEA_TESTNET_CHAINS: OpenseaChains = {
 export const OPENSEA_ALL_CHAINS: OpenseaChains = Object.assign(
   {},
   OPENSEA_MAINNET_CHAINS,
-  OPENSEA_TESTNET_CHAINS
+  OPENSEA_TESTNET_CHAINS,
 );
 //#endregion
