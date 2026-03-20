@@ -4,7 +4,8 @@
 
 import { getStorage, getLocalStorage } from '../common/index';
 import { ERRORS } from '../common/data_module_neo2';
-import { requestTargetN3 } from '../common/data_module_neo3';
+import { requestTargetN3, EVENT as EVENT_N3 } from '../common/data_module_neo3';
+import { Account } from '../common/data_module_neo3_v2';
 import {
   ConnectedWebsitesType,
   DEFAULT_N3_RPC_NETWORK,
@@ -12,6 +13,7 @@ import {
   STORAGE_NAME,
 } from '../common/constants';
 import { getWalletType } from '../common/utils';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 
 declare var chrome: any;
 
@@ -34,8 +36,9 @@ function injectScript(filePath) {
         from: 'NeoLineN3',
         type: 'dapi_LOADED',
       },
-      window.location.origin
+      window.location.origin,
     );
+    initDApi();
   };
   if (!ExcludeWebsite.find((item) => location.origin.includes(item))) {
     (document.head || document.documentElement).appendChild(script);
@@ -43,6 +46,7 @@ function injectScript(filePath) {
 }
 
 injectScript('dapiN3.js');
+injectScript('dapiN3V2.js');
 
 const requireConnectRequest = [
   requestTargetN3.VerifyMessage,
@@ -56,6 +60,7 @@ const requireConnectRequest = [
   requestTargetN3.Send,
   requestTargetN3.InvokeMulti,
   requestTargetN3.Account,
+  requestTargetN3.Accounts,
   requestTargetN3.AccountPublicKey,
 ];
 
@@ -82,11 +87,54 @@ window.addEventListener(
               error: ERRORS.CONNECTION_DENIED,
               ID: e.data.ID,
             },
-            window.location.origin
+            window.location.origin,
           );
           return;
         }
         switch (e.data.target) {
+          case requestTargetN3.Accounts: {
+            const neo3WalletArr = await getLocalStorage(
+              STORAGE_NAME['walletArr-Neo3'],
+              () => {},
+            );
+            const currentWallet = await getLocalStorage(
+              STORAGE_NAME.wallet,
+              () => {},
+            );
+            const accounts: Account[] = [];
+            Object.keys(connectedAddress).forEach((address) => {
+              if (connectedAddress[address].chain === 'Neo3') {
+                const wallet = neo3WalletArr.find(
+                  (item) => item.accounts[0].address === address,
+                );
+                if (wallet) {
+                  const account = {
+                    address,
+                    label: wallet.name,
+                    hash: wallet3.getScriptHashFromAddress(address),
+                    extra: {
+                      isLedger: !!wallet.accounts[0].extra?.ledgerSLIP44,
+                    },
+                  };
+                  if (currentWallet.accounts[0].address === address) {
+                    accounts.unshift(account);
+                  } else {
+                    accounts.push(account);
+                  }
+                }
+              }
+            });
+
+            window.postMessage(
+              {
+                return: requestTargetN3.Accounts,
+                data: accounts,
+                ID: e.data.ID,
+              },
+              window.location.origin,
+            );
+            return;
+          }
           case requestTargetN3.PickAddress:
           case requestTargetN3.AddressToScriptHash:
           case requestTargetN3.ScriptHashToAddress:
@@ -95,7 +143,7 @@ window.addEventListener(
             chrome.runtime.sendMessage(e.data, (response) => {
               if (!chrome.runtime.lastError) {
                 return Promise.resolve(
-                  'Dummy response to keep the console quiet'
+                  'Dummy response to keep the console quiet',
                 );
               }
             });
@@ -141,11 +189,11 @@ window.addEventListener(
                       chrome.runtime.sendMessage(e.data, (response) => {
                         if (!chrome.runtime.lastError) {
                           return Promise.resolve(
-                            'Dummy response to keep the console quiet'
+                            'Dummy response to keep the console quiet',
                           );
                         }
                       });
-                    }
+                    },
                   );
                 });
                 return;
@@ -156,15 +204,46 @@ window.addEventListener(
                     error: ERRORS.CHAIN_NOT_MATCH,
                     ID: e.data.ID,
                   },
-                  window.location.origin
+                  window.location.origin,
                 );
                 return;
               }
             });
           }
         }
-      }
+      },
     );
   },
-  false
+  false,
 );
+
+async function initDApi() {
+  const n3Networks = await getLocalStorage(STORAGE_NAME.n3Networks, () => {});
+  const n3SelectedNetworkIndex = await getLocalStorage(
+    STORAGE_NAME.n3SelectedNetworkIndex,
+    () => {},
+  );
+  const currentNetwork =
+    n3Networks[n3SelectedNetworkIndex] || DEFAULT_N3_RPC_NETWORK[0];
+
+  const allWebsites = await new Promise<ConnectedWebsitesType>((resolve) => {
+    getStorage(
+      STORAGE_NAME.connectedWebsites,
+      (result: ConnectedWebsitesType) => resolve(result),
+    );
+  });
+  const item = Object.values(
+    allWebsites[location.hostname].connectedAddress,
+  ).find((item) => item.chain === 'Neo3');
+
+  window.postMessage(
+    {
+      return: EVENT_N3.INIT_DAPI,
+      data: {
+        connected: item !== undefined,
+        currentNetwork,
+      },
+    },
+    window.location.origin,
+  );
+}

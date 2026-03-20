@@ -144,6 +144,8 @@ module.exports = (env) => {
         dapiEVM: "./extension/dapi/evm.ts",
         common: "./extension/common/index.ts",
         data_module_evm: "./extension/common/data_module_evm.ts",
+        dapiN3V2: "./extension/dapi/neo3-v2.ts",
+        data_module_neo3_v2: "./extension/common/data_module_neo3_v2.ts",
       },
       output: {
         filename: "[name].js",

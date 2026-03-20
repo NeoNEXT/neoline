@@ -1,0 +1,682 @@
+import EventEmitter from 'events';
+import {
+  requestTarget,
+  ERRORS as LEGACY_ERRORS,
+  EVENT,
+} from '../common/data_module_neo2';
+import { requestTargetN3, EVENT as EVENT_N3 } from '../common/data_module_neo3';
+import {
+  Account,
+  Address,
+  ApplicationLog,
+  Argument,
+  AuthenticationChallengePayload,
+  AuthenticationResponsePayload,
+  Base64Encoded,
+  Block,
+  ContractParametersContext,
+  EventNameEnum,
+  FeeOptions,
+  Integer,
+  InvocationArguments,
+  InvocationResult,
+  Network,
+  NetworkEnum,
+  SignedMessage,
+  Signer,
+  SignOptions,
+  Token,
+  Transaction,
+  UInt160,
+  UInt256,
+} from '../common/data_module_neo3_v2';
+import { checkNeoXConnectAndLogin, sendMessage } from './common';
+import {
+  ChainType,
+  N3MainnetNetwork,
+  N3TestnetNetwork,
+} from '../common/constants';
+import { httpPostPromise } from '../common';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+
+type LegacyAccount = {
+  address: string;
+  label?: string;
+};
+
+type LegacySignResult = {
+  publicKey: string;
+  data: string;
+};
+
+type LegacyInvokeResult = {
+  txid: string;
+  signedTx?: string;
+};
+
+type LegacyBalanceResult = Record<
+  string,
+  Array<{ contract: string; amount: string }>
+>;
+
+let currentN3RpcUrl = N3MainnetNetwork.rpcUrl;
+
+class NEOLineN3Controller extends EventEmitter {
+  name = 'NeoLine';
+  version = '1.0';
+  dapiVersion = '1.0';
+  compatibility = ['NEP-11', 'NEP-17', 'NEP-21'];
+  connected = false;
+  network: Network = NetworkEnum.MAINNET;
+  supportedNetworks: Network[] = [NetworkEnum.MAINNET, NetworkEnum.TESTNET];
+  icon =
+    'data:image/svg+xml;charset=utf-8;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbG5zOnhsaW5rPSJodHRwOi8vd3d3LnczLm9yZy8xOTk5L3hsaW5rIiBmaWxsPSJub25lIiB2ZXJzaW9uPSIxLjEiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZGVmcz48bGluZWFyR3JhZGllbnQgeDE9IjAuMzAxMDc0MTc3MDI2NzQ4NjYiIHkxPSIxLjA0NjU4NDI0ODU0Mjc4NTYiIHgyPSIwLjY5ODkyNTY3Mzk2MTYzOTQiIHkyPSItMC4wNDY1NDUyNDEwMjgwNzA0NSIgaWQ9Im1hc3Rlcl9zdmcwXzEzN18wMDkyNSI+PHN0b3Agb2Zmc2V0PSIwJSIgc3RvcC1jb2xvcj0iIzhERDlEMiIgc3RvcC1vcGFjaXR5PSIxIi8+PHN0b3Agb2Zmc2V0PSIxMDAlIiBzdG9wLWNvbG9yPSIjMDZDQ0FCIiBzdG9wLW9wYWNpdHk9IjEiLz48L2xpbmVhckdyYWRpZW50PjwvZGVmcz48Zz48Zz48cGF0aCBkPSJNNjAsMTIuNjI5OUw2MCw0Ny4zNzAxQzYwLjAwMjQsNDkuMzIyMSw1OS41NTA1LDUxLjI0NzksNTguNjc5OSw1Mi45OTUxQzU4LjY0MTgsNTMuMDcyNCw1OC42MDE5LDUzLjE0OTIsNTguNTYyNyw1My4yMjUzQzU2LjM4NDgsNTcuMzg4MSw1Mi4wNzMxLDU5Ljk5Nyw0Ny4zNzEzLDU5Ljk5N0wxMi42Mjk5LDU5Ljk5N0M1LjY1Mzk5LDYwLjAwMTIsLTAuMDAyNTkwMTgsNTQuMzQ1OSwwLDQ3LjM3MDFMMCwxMi42Mjk5QzAsNS42NTQyOSw1LjY1NDMsMCwxMi42Mjk5LDBMNDcuMzcwMSwwQzU0LjM0NTcsMCw2MCw1LjY1NDI5LDYwLDEyLjYyOTlaIiBmaWxsPSJ1cmwoI21hc3Rlcl9zdmcwXzEzN18wMDkyNSkiIGZpbGwtb3BhY2l0eT0iMSIvPjwvZz48Zz48cGF0aCBkPSIiIGZpbGw9IiMwMDAwMDAiIGZpbGwtb3BhY2l0eT0iMSIvPjwvZz48Zz48cGF0aCBkPSIiIGZpbGw9IiMwMDAwMDAiIGZpbGwtb3BhY2l0eT0iMSIvPjwvZz48Zz48Zz48cGF0aCBkPSJNMTEuOTQwMjIyNzQwMTczMzQsMTYuODk2NjIwMzU2MTQwMTM2TDExLjk0MDIyMjc0MDE3MzM0LDQzLjUyOTIxMDM1NjE0MDEzTDI5LjI1MTEyMjc0MDE3MzM0LDQ5Ljg1NDQxMDM1NjE0MDEzNkwyOS4yNTExMjI3NDAxNzMzNCwyMi44ODkwMTAzNTYxNDAxMzdMNDguMDU5NzIyNzQwMTczMzQsMTUuODk4MTkwMzU2MTQwMTM3TDMwLjkxNTIyMjc0MDE3MzM0LDkuOTA1ODEwMzU2MTQwMTM3TDExLjk0MDIyMjc0MDE3MzM0LDE2Ljg5NjYyMDM1NjE0MDEzNloiIGZpbGw9IiNGRkZGRkYiIGZpbGwtb3BhY2l0eT0iMC4yMDAwMDAwMDI5ODAyMzIyNCIvPjwvZz48Zz48cGF0aCBkPSJNMzAuNTgyNDM4NDY4OTMzMTA1LDIzLjg4NzQ0NzMzNDEzNjk2NUwzMC41ODI0Mzg0Njg5MzMxMDUsMzguMjAyNDU3MzM0MTM2OTY2TDQ4LjA1OTczODQ2ODkzMzEwNSw0NC41Mjc2NTczMzQxMzY5Nkw0OC4wNTk3Mzg0Njg5MzMxMDUsMTcuMzk1ODU3MzM0MTM2OTYzTDMwLjU4MjQzODQ2ODkzMzEwNSwyMy44ODc0NDczMzQxMzY5NjVaIiBmaWxsPSIjRkZGRkZGIiBmaWxsLW9wYWNpdHk9IjAuMjAwMDAwMDAyOTgwMjMyMjQiLz48L2c+PC9nPjxnPjxwYXRoIGQ9Ik0zOC4yMDMwNTg5MTcyMzYzMjYsMzguODkwMzM3MDc4ODU3NDJDMzcuNDgyMDU4OTE3MjM2MzMsMzguODkwMzM3MDc4ODU3NDIsMzYuODk3NTU4OTE3MjM2MzI0LDM4LjMwNTgzNzA3ODg1NzQyLDM2Ljg5NzU1ODkxNzIzNjMyNCwzNy41ODQ4MzcwNzg4NTc0MkwzNi44OTc1NTg5MTcyMzYzMjQsMzAuNjYyNjA3MDc4ODU3NDIzQzM2Ljg5NjA1ODkxNzIzNjMzLDI4LjQ5MjI4NzA3ODg1NzQyMywzNS4xMzYyNTg5MTcyMzYzMjYsMjYuNzMzNjg3MDc4ODU3NDIsMzIuOTY1OTM4OTE3MjM2MzMsMjYuNzMzNjg3MDc4ODU3NDJDMzAuNzk1NjA4OTE3MjM2MzMsMjYuNzMzNjg3MDc4ODU3NDIsMjkuMDM1Nzg4OTE3MjM2MzI4LDI4LjQ5MjI4NzA3ODg1NzQyMywyOS4wMzQyOTg5MTcyMzYzMjcsMzAuNjYyNjA3MDc4ODU3NDIzTDI5LjAzNDI5ODkxNzIzNjMyNywzNy41ODQ4MzcwNzg4NTc0MkMyOS4wMzQyOTg5MTcyMzYzMjcsMzguMzA1ODM3MDc4ODU3NDIsMjguNDQ5ODE4OTE3MjM2MzMsMzguODkwMzM3MDc4ODU3NDIsMjcuNzI4ODI4OTE3MjM2MzI4LDM4Ljg5MDMzNzA3ODg1NzQyQzI3LjAwNzgzNjkxNzIzNjMzLDM4Ljg5MDMzNzA3ODg1NzQyLDI2LjQyMzM1ODkxNzIzNjMyOCwzOC4zMDU4MzcwNzg4NTc0MiwyNi40MjMzNTg5MTcyMzYzMjgsMzcuNTg0ODM3MDc4ODU3NDJMMjYuNDIzMzU4OTE3MjM2MzI4LDMwLjY2MjYwNzA3ODg1NzQyM0MyNi40MjMzNTcxMjkwOTYzMjgsMjcuMDQ5MjQ3MDc4ODU3NDIzLDI5LjM1MjU2ODkxNzIzNjMzLDI0LjEyMDAzNzA3ODg1NzQyMiwzMi45NjU5Mzg5MTcyMzYzMywyNC4xMjAwMzcwNzg4NTc0MjJDMzYuNTc5MjU4OTE3MjM2MzMsMjQuMTIwMDM3MDc4ODU3NDIyLDM5LjUwODU1ODkxNzIzNjMzLDI3LjA0OTI0NzA3ODg1NzQyMywzOS41MDg1NTg5MTcyMzYzMywzMC42NjI2MDcwNzg4NTc0MjNMMzkuNTA4NTU4OTE3MjM2MzMsMzcuNTg0ODM3MDc4ODU3NDJDMzkuNTA4NTU4OTE3MjM2MzMsMzguMzA1ODM3MDc4ODU3NDIsMzguOTI0MDU4OTE3MjM2MzMsMzguODkwMzM3MDc4ODU3NDIsMzguMjAzMDU4OTE3MjM2MzI2LDM4Ljg5MDMzNzA3ODg1NzQyWiIgZmlsbD0iI0ZGRkZGRiIgZmlsbC1vcGFjaXR5PSIxIi8+PC9nPjxnPjxwYXRoIGQ9Ik01Ni4xNTk5MTE0NDQwOTE4LDMxLjUwNTE5MTMzOTExMTMyN0M1Ni4xNTk0MTE0NDQwOTE3OTUsMjYuNTYzNzYxMzM5MTExMzI3LDUxLjQ3MTgxMTQ0NDA5MTgsMjIuOTY3NjExMzM5MTExMzMsNDYuNjk4OTAxNDQ0MDkxNzk2LDI0LjI0Njk4MTMzOTExMTMzQzQxLjkyNTk1MTQ0NDA5MTc5NCwyNS41MjYzNjEzMzkxMTEzMywzOS42NjU1MDE0NDQwOTE3OTUsMzAuOTg0ODkxMzM5MTExMzMsNDIuMTM2NTcxNDQ0MDkxOCwzNS4yNjQwOTEzMzkxMTEzM0M0NC42MDc2NDE0NDQwOTE4LDM5LjU0MzI5MTMzOTExMTMzLDUwLjQ2NTIyMTQ0NDA5MTc5Niw0MC4zMTM5OTEzMzkxMTEzMjUsNTMuOTU5MTExNDQ0MDkxNzk2LDM2LjgxOTU5MTMzOTExMTMzQzU0LjQ1NTUxMTQ0NDA5MTgsMzYuMzA3NTkxMzM5MTExMzI2LDU0LjQ0OTIxMTQ0NDA5MTc5NCwzNS40OTE4OTEzMzkxMTEzMjYsNTMuOTQ0ODExNDQ0MDkxOCwzNC45ODc2OTEzMzkxMTEzM0M1My40NDA0MTE0NDQwOTE3OTQsMzQuNDgzMzkxMzM5MTExMzMsNTIuNjI0NzExNDQ0MDkxOCwzNC40NzcyOTEzMzkxMTEzMyw1Mi4xMTI4MTE0NDQwOTE4LDM0Ljk3Mzg5MTMzOTExMTMyNkM0OS45NDIzMTE0NDQwOTE4LDM3LjE0MjY5MTMzOTExMTMzLDQ2LjMzNTY5MTQ0NDA5MTc5LDM2LjgwNzU5MTMzOTExMTMyNiw0NC42MDE5MDE0NDQwOTE3OTQsMzQuMjc2MDkxMzM5MTExMzNDNDIuODY4MTExNDQ0MDkxNzk1LDMxLjc0NDYwMTMzOTExMTMyNyw0My44NTkwOTE0NDQwOTE3OTYsMjguMjYwNjQxMzM5MTExMzI3LDQ2LjY2NTYzMTQ0NDA5MTc5NCwyNy4wMjA2MjEzMzkxMTEzM0M0OS40NzIxODE0NDQwOTE3OTUsMjUuNzgwNTkxMzM5MTExMzMsNTIuNzE1MjExNDQ0MDkxNzksMjcuMzkzODExMzM5MTExMzI3LDUzLjQxOTQxMTQ0NDA5MTc5LDMwLjM4MDE5MTMzOTExMTMyN0w1MC4zNzI1NzE0NDQwOTE4LDMwLjM4MDE5MTMzOTExMTMyN0M0OS42NzYxNDE0NDQwOTE4LDMwLjM2NTA3MTMzOTExMTMyOCw0OS4xMDM0MzE0NDQwOTE4LDMwLjkyNTQ5MTMzOTExMTMzLDQ5LjEwMzQzMTQ0NDA5MTgsMzEuNjIyMDgxMzM5MTExMzNDNDkuMTAzNDMxNDQ0MDkxOCwzMi4zMTg2ODEzMzkxMTEzMyw0OS42NzYxNDE0NDQwOTE4LDMyLjg3OTEwMTMzOTExMTMzLDUwLjM3MjU3MTQ0NDA5MTgsMzIuODYzOTgxMzM5MTExMzNMNTQuODM4MDExNDQ0MDkxOCwzMi44NjM5ODEzMzkxMTEzM0M1NS4yMTMxMTE0NDQwOTE3OTQsMzIuODYzOTIxMzM5MTExMzMsNTUuNTY4MTExNDQ0MDkxOCwzMi42OTQxOTEzMzkxMTEzMyw1NS44MDM2MTE0NDQwOTE4LDMyLjQwMjI2MTMzOTExMTMzQzU2LjAzMzExMTQ0NDA5MTc5NCwzMi4xNjAwNjEzMzkxMTEzMyw1Ni4xNjA3MTE0NDQwOTE3OTUsMzEuODM4ODYxMzM5MTExMzMsNTYuMTU5OTExNDQ0MDkxOCwzMS41MDUxOTEzMzkxMTEzMjdaIiBmaWxsPSIjRkZGRkZGIiBmaWxsLW9wYWNpdHk9IjEiLz48L2c+PGc+PHBhdGggZD0iTTE4LjU2NjQ1OTIzNzY3MDg5OCwzOC44OTk3MDI0MDE3MzM0TDEyLjQ4MzI1OTIzNzY3MDg5OCwzOC44OTk3MDI0MDE3MzM0QzkuMjM1MzE5MjM3NjcwODk5LDM4Ljg5NTkwMjQwMTczMzM5NSw2LjYwMzQxMDAzNzY3MDg5OSwzNi4yNjM3MDI0MDE3MzM0LDYuNTk5ODU5MjM3NjcwODk4LDMzLjAxNTgwMjQwMTczMzM5Nkw2LjU5OTg1OTIzNzY3MDg5OCwxNi43ODk0MjI0MDE3MzMzOTdDNi42MTQ5MDI4Mzc2NzA4OTksMTYuMDc5MzYyNDAxNzMzNCw3LjE5NDgyMTIzNzY3MDg5OCwxNS41MTE2MDI0MDE3MzMzOTgsNy45MDUwMzkyMzc2NzA4OTg0LDE1LjUxMTYwMjQwMTczMzM5OEM4LjYxNTI0OTIzNzY3MDg5OCwxNS41MTE2MDI0MDE3MzMzOTgsOS4xOTUxNjkyMzc2NzA4OTgsMTYuMDc5MzYyNDAxNzMzNCw5LjIxMDIwOTIzNzY3MDg5OSwxNi43ODk0MjI0MDE3MzMzOTdMOS4yMTAyMDkyMzc2NzA4OTksMzMuMDE1ODAyNDAxNzMzMzk2QzkuMjEyMTQ5MjM3NjcwODk4LDM0LjgyMjYwMjQwMTczMzQsMTAuNjc2NDA5MjM3NjcwOSwzNi4yODY5MDI0MDE3MzM0LDEyLjQ4MzI1OTIzNzY3MDg5OCwzNi4yODg4MDI0MDE3MzM0TDE4LjU2NjQ1OTIzNzY3MDg5OCwzNi4yODg4MDI0MDE3MzM0QzIwLjM3MzI1OTIzNzY3MDksMzYuMjg2OTAyNDAxNzMzNCwyMS44Mzc1NTkyMzc2NzA5LDM0LjgyMjYwMjQwMTczMzQsMjEuODM5NDU5MjM3NjcwODk4LDMzLjAxNTgwMjQwMTczMzM5NkwyMS44Mzk0NTkyMzc2NzA4OTgsMjUuNDY0MjEyNDAxNzMzNEMyMS44Mzk0NTkyMzc2NzA4OTgsMjQuNzQzMjIyNDAxNzMzMzk4LDIyLjQyMzk1OTIzNzY3MDksMjQuMTU4NzQyNDAxNzMzNCwyMy4xNDQ5NTkyMzc2NzA5LDI0LjE1ODc0MjQwMTczMzRDMjMuODY1OTU5MjM3NjcwOSwyNC4xNTg3NDI0MDE3MzM0LDI0LjQ1MDQ1OTIzNzY3MDksMjQuNzQzMjIyNDAxNzMzMzk4LDI0LjQ1MDQ1OTIzNzY3MDksMjUuNDY0MjEyNDAxNzMzNEwyNC40NTA0NTkyMzc2NzA5LDMzLjAxNTgwMjQwMTczMzM5NkMyNC40NDY1NTkyMzc2NzA4OTcsMzYuMjYzODAyNDAxNzMzNCwyMS44MTQ0NTkyMzc2NzA5LDM4Ljg5NTkwMjQwMTczMzM5NSwxOC41NjY0NTkyMzc2NzA4OTgsMzguODk5NzAyNDAxNzMzNFoiIGZpbGw9IiNGRkZGRkYiIGZpbGwtb3BhY2l0eT0iMSIvPjwvZz48ZyB0cmFuc2Zvcm09Im1hdHJpeCgwLjcwNzEwNjc2OTA4NDkzMDQsMC43MDcxMDY3NjkwODQ5MzA0LC0wLjcwNzEwNjc2OTA4NDkzMDQsMC43MDcxMDY3NjkwODQ5MzA0LDE5LjE4NTk1ODY5ODAwOTAxNywtMTEuMjUzNjM2MjAwNjQ2OTUyKSI+PHJlY3QgeD0iMjMuMTc3MzIwNDgwMzQ2NjgiIHk9IjE3LjUzMjY4MjQxODgyMzI0MiIgd2lkdGg9IjMuOTE1ODE4MjE0NDE2NTA0IiBoZWlnaHQ9IjMuOTE1ODE4MjE0NDE2NTA0IiByeD0iMS45NTc5MDkxMDcyMDgyNTIiIGZpbGw9IiNGRkZGRkYiIGZpbGwtb3BhY2l0eT0iMSIvPjwvZz48Zz48cGF0aCBkPSJNNTguNjc5NzU1MTQ5NDU5ODQsNTEuOTYwMzQ3OTg3MDYwNTQ0TDU4LjY3OTc1NTE0OTQ1OTg0LDUyLjk5ODA0Nzk4NzA2MDU0NUM1OC42NDE2NTUxNDk0NTk4NCw1My4wNzUzODc5ODcwNjA1NDUsNTguNjAxODU1MTQ5NDU5ODQsNTMuMTUyMTQ3OTg3MDYwNTQ1LDU4LjU2MjU1NTE0OTQ1OTg0LDUzLjIyODMxNzk4NzA2MDU1QzU2LjM4NDY1NTE0OTQ1OTg0LDU3LjM5MTA2Nzk4NzA2MDU0NSw1Mi4wNzI5NTUxNDk0NTk4NCw1OS45OTk5Njc5ODcwNjA1NCw0Ny4zNzExNTUxNDk0NTk4NCw1OS45OTk5Njc5ODcwNjA1NEwxMi42Mjk3NTUxNDk0NTk4NCw1OS45OTk5Njc5ODcwNjA1NEM4LjY0NzA0NTE0OTQ1OTgzOSw2MC4wMDMwNjc5ODcwNjA1NSw0Ljg5Njg3NTE0OTQ1OTgzOSw1OC4xMjQ3Njc5ODcwNjA1NSwyLjUxNDE1NTE0OTQ1OTgzOSw1NC45MzMzOTc5ODcwNjA1NDVDMy4xMTU5MTMxNDk0NTk4MzksNTMuNDc2NzU3OTg3MDYwNTQ1LDQuMjc5NTg1MTQ5NDU5ODM5LDUyLjM1NTI3Nzk4NzA2MDU0Niw1Ljk0NTQwNTE0OTQ1OTgzOSw1MS43NjkzMzc5ODcwNjA1NDVDNi41Njc5NzUxNDk0NTk4MzksNTEuNTU0OTg3OTg3MDYwNTUsNy4yMTQzMzUxNDk0NTk4Mzg0LDUxLjQxNzI1Nzk4NzA2MDU0NSw3Ljg3MDIwNTE0OTQ1OTgzOSw1MS4zNTkxODc5ODcwNjA1NDRMNTEuODI4NDU1MTQ5NDU5ODQsNDUuOTUyNzQyNzg3MDYwNTQ0QzU0LjE0OTg1NTE0OTQ1OTg0LDQ1LjY2NTA0ODk4NzA2MDU0NCw1Ni40NTczNTUxNDk0NTk4MzYsNDYuNzA1MDg2OTg3MDYwNTUsNTcuNzE4MjU1MTQ5NDU5ODM2LDQ4LjY3MzgzNzk4NzA2MDU0NEM1OC4zNDczNTUxNDk0NTk4NCw0OS42NTQ0Mzc5ODcwNjA1NSw1OC42ODExNTUxNDk0NTk4NCw1MC43OTUyOTc5ODcwNjA1NSw1OC42Nzk3NTUxNDk0NTk4NCw1MS45NjAzNDc5ODcwNjA1NDRaIiBmaWxsPSIjRkZGRkZGIiBmaWxsLW9wYWNpdHk9IjEiLz48L2c+PGc+PHBhdGggZD0iTTU4LjU2Mjc5MzEwMzQwODgxNSw1My4yMjgyNTE4NTA1ODU5MzRDNTYuMzg0MTkzMTAzNDA4ODEsNTcuMzkxMDcxODUwNTg1OTQsNTIuMDcyNTkzMTAzNDA4ODEsNTkuOTk5OTMxODUwNTg1OTQsNDcuMzcxMzkzMTAzNDA4ODEsNTkuOTk5OTMxODUwNTg1OTRMMTIuNjI5OTkzMTAzNDA4ODEzLDU5Ljk5OTkzMTg1MDU4NTk0QzguMDgwMzQzMTAzNDA4ODEzLDU5Ljk5NTUzMTg1MDU4NTkzNCwzLjg4MzE3MzEwMzQwODgxMzMsNTcuNTQ5NTMxODUwNTg1OTM2LDEuNjM2NTkzMTAzNDA4ODEzNSw1My41OTMyOTE4NTA1ODU5MzVDMi40MTg2NjcxMDM0MDg4MTM2LDUyLjQ1MTcxNzg1MDU4NTkzNiwzLjcxMzYxMzEwMzQwODgxMzYsNTEuNzY5Mjc5MDAzMTM1OTM1LDUuMDk3NzIzMTAzNDA4ODEzLDUxLjc2OTI3NTQyNjg1NTkzNEw1NS4zNzk5OTMxMDM0MDg4MTUsNTEuNzY5Mjc1NDI2ODU1OTM0QzU2LjYwMjk5MzEwMzQwODgxNCw1MS43Njc4NjI4MDA1ODU5NCw1Ny43NjU1OTMxMDM0MDg4MSw1Mi4zMDA3ODg4NTA1ODU5NCw1OC41NjI3OTMxMDM0MDg4MTUsNTMuMjI4MjUxODUwNTg1OTM0WiIgZmlsbD0iI0NFRjVFRCIgZmlsbC1vcGFjaXR5PSIxIi8+PC9nPjwvZz48L3N2Zz4=';
+  website = 'https://neoline.io/';
+  extra = null;
+
+  constructor() {
+    super();
+    this.setMaxListeners(100);
+  }
+
+  async authenticate(
+    payload: AuthenticationChallengePayload,
+  ): Promise<AuthenticationResponsePayload> {
+    assertAuthenticationPayload(payload);
+    const [account] = await this.getAccounts();
+    const signResult = await this.signMessage(
+      JSON.stringify(payload),
+      account.hash,
+      { isBase64Encoded: false },
+    );
+
+    return {
+      algorithm: 'ECDSA-P256',
+      network: pickNetwork(payload.networks, this.network),
+      pubkey: signResult.pubkey,
+      address: account.address,
+      nonce: payload.nonce,
+      timestamp: payload.timestamp,
+      signature: signResult.signature,
+    };
+  }
+
+  async getAccounts(): Promise<Account[]> {
+    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
+    if (isAuth !== true) {
+      throw normalizeError(LEGACY_ERRORS.CONNECTION_DENIED);
+    }
+    const accounts = await sendMessage<Account[]>(
+      requestTargetN3.Accounts,
+    ).catch((error) => {
+      throw normalizeError(error);
+    });
+    return accounts;
+  }
+
+  async pickAddress(prompt?: string): Promise<Address> {
+    const result = await sendMessage<string | LegacyAccount>(
+      requestTargetN3.PickAddress,
+      {
+        prompt,
+        hostname: location.hostname,
+      },
+    ).catch((error) => {
+      throw normalizeError(error);
+    });
+
+    return typeof result === 'string' ? result : result.address;
+  }
+
+  async getBalance(asset: UInt160, account: UInt160): Promise<Integer> {
+    if (!asset || !account) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+
+    const address = await wallet3.getAddressFromScriptHash(
+      stripHexPrefix(account),
+    );
+    const result = await sendMessage<LegacyBalanceResult>(
+      requestTargetN3.Balance,
+      {
+        params: [{ address, contracts: [asset] }],
+      },
+    ).catch((error) => {
+      throw normalizeError(error);
+    });
+    const matched = (result?.[address] || []).find(
+      (item) => item.contract?.toLowerCase() === asset.toLowerCase(),
+    );
+
+    return matched?.amount || '0';
+  }
+
+  async send(
+    asset: UInt160,
+    from: UInt160,
+    to: UInt160,
+    amount: Integer,
+    data?: Argument,
+  ): Promise<UInt256> {
+    if (!asset || !from || !to || !amount) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+
+    const toAddress = await wallet3.getAddressFromScriptHash(
+      stripHexPrefix(to),
+    );
+    const fromAddress = await wallet3.getAddressFromScriptHash(
+      stripHexPrefix(from),
+    );
+    const result = await sendMessage<LegacyInvokeResult>(requestTargetN3.Send, {
+      fromAddress,
+      toAddress,
+      asset,
+      amount,
+      data,
+      remark: '',
+      fee: '0',
+      broadcastOverride: false,
+    }).catch((error) => {
+      throw normalizeError(error);
+    });
+
+    return result.txid;
+  }
+
+  async call(invocation: InvocationArguments): Promise<InvocationResult> {
+    assertInvocation(invocation);
+    const signers = await this.getDefaultSigners();
+    const result = await sendMessage<any>(requestTargetN3.InvokeRead, {
+      scriptHash: invocation.hash,
+      operation: invocation.operation,
+      args: invocation.args || [],
+      signers,
+    }).catch((error) => {
+      throw normalizeError(error);
+    });
+
+    return {
+      script: result.script,
+      state: result.state,
+      gasconsumed: String(result.gasconsumed),
+      exception: result.exception,
+      notifications: result.notifications || [],
+      stack: result.stack || [],
+    };
+  }
+
+  async invoke(
+    invocations: InvocationArguments[],
+    signers?: Signer[],
+    fee?: FeeOptions,
+  ): Promise<UInt256> {
+    const { target, parameter } = await this.toInvokeRequest(
+      invocations,
+      signers,
+      fee,
+      false,
+    );
+    const result = await sendMessage<LegacyInvokeResult>(
+      target,
+      parameter,
+    ).catch((error) => {
+      throw normalizeError(error);
+    });
+
+    return result.txid;
+  }
+
+  async makeTransaction(
+    invocations: InvocationArguments[],
+    signers?: Signer[],
+    fee?: FeeOptions,
+  ): Promise<ContractParametersContext> {
+    const { target, parameter } = await this.toInvokeRequest(
+      invocations,
+      signers,
+      fee,
+      true,
+    );
+    const result = await sendMessage<LegacyInvokeResult>(
+      target,
+      parameter,
+    ).catch((error) => {
+      throw normalizeError(error);
+    });
+
+    if (!result.signedTx) {
+      throw normalizeError(LEGACY_ERRORS.DEFAULT);
+    }
+
+    return {
+      type: 'Neo.Network.P2P.Payloads.Transaction',
+      hash: result.txid,
+      data: toBase64(stripHexPrefix(result.signedTx)),
+      items: {},
+      network: this.network,
+    };
+  }
+
+  async sign(
+    context: ContractParametersContext,
+  ): Promise<ContractParametersContext> {
+    if (!context?.data) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+
+    const signed = await sendMessage<any>(requestTargetN3.SignTransaction, {
+      transaction: JSON.parse(Buffer.from(context.data, 'base64').toString()),
+      magicNumber: context.network,
+    }).catch((error) => {
+      throw normalizeError(error);
+    });
+
+    return {
+      ...context,
+      hash: signed.hash || context.hash,
+      data: toBase64(
+        typeof signed.serialize === 'function'
+          ? signed.serialize(true)
+          : stripHexPrefix(signed.script || ''),
+      ),
+    };
+  }
+
+  async signMessage(
+    message: string | Base64Encoded,
+    account?: UInt160,
+    options?: SignOptions,
+  ): Promise<SignedMessage> {
+    if (!message) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+    if (options?.isTypedData) {
+      throw {
+        code: 10001,
+        message: 'Typed data is not supported',
+      };
+    }
+
+    const payload = options?.isBase64Encoded ? message : toBase64(message);
+    const result = await sendMessage<LegacySignResult>(
+      requestTargetN3.SignMessage,
+      {
+        message: Buffer.from(payload, 'base64').toString(),
+        account,
+        options,
+      },
+    ).catch((error) => {
+      throw normalizeError(error);
+    });
+    const current = account || (await this.getAccounts())[0].hash;
+
+    return {
+      payload,
+      signature: result.data,
+      account: current,
+      pubkey: result.publicKey,
+    };
+  }
+
+  async relay(context: ContractParametersContext): Promise<UInt256> {
+    if (!context?.data) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+
+    const result = (await httpPostPromise(currentN3RpcUrl, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'sendrawtransaction',
+      params: [context.data],
+    }).catch((error) => {
+      throw normalizeError(error);
+    })) as any;
+
+    if (typeof result === 'string') {
+      return result;
+    }
+    if (result?.hash) {
+      return result.hash;
+    }
+
+    return context.hash;
+  }
+
+  async getBlock(hashOrIndex: UInt256 | number): Promise<Block> {
+    if (hashOrIndex === undefined || hashOrIndex === null) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+
+    return sendMessage<Block>(requestTargetN3.Block, {
+      blockHeight: String(hashOrIndex),
+    }).catch((error) => {
+      throw normalizeError(error);
+    });
+  }
+
+  async getBlockCount(): Promise<number> {
+    const result = (await httpPostPromise(currentN3RpcUrl, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'getblockcount',
+      params: [],
+    }).catch((error) => {
+      throw normalizeError(error);
+    })) as number;
+
+    return Number(result);
+  }
+
+  async getTransaction(txid: UInt256): Promise<Transaction> {
+    if (!txid) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+
+    const result = await sendMessage<any>(requestTargetN3.Transaction, {
+      txid,
+    }).catch((error) => {
+      throw normalizeError(error);
+    });
+
+    return {
+      hash: result.hash || result.txid,
+      size: result.size,
+      blockHash: result.blockhash || '',
+      blockTime: result.blocktime || 0,
+      confirmations: result.confirmations || 0,
+      version: result.version,
+      nonce: result.nonce,
+      systemFee: String(result.sysfee ?? result.sys_fee ?? 0),
+      networkFee: String(result.netfee ?? result.net_fee ?? 0),
+      validUntilBlock: result.validuntilblock,
+      sender: result.sender || '',
+      signers: result.signers || [],
+      attributes: result.attributes || [],
+      script: toBase64(stripHexPrefix(result.script || '')),
+    };
+  }
+
+  async getApplicationLog(txid: UInt256): Promise<ApplicationLog> {
+    if (!txid) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+
+    return sendMessage<ApplicationLog>(requestTargetN3.ApplicationLog, {
+      txid,
+    }).catch((error) => {
+      throw normalizeError(error);
+    });
+  }
+
+  async getStorage(hash: UInt160, key: Base64Encoded): Promise<Base64Encoded> {
+    if (!hash || key === undefined) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+
+    const response = (await httpPostPromise(currentN3RpcUrl, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'getstorage',
+      params: [hash, base64ToHex(key)],
+    }).catch((error) => {
+      throw normalizeError(error);
+    })) as string;
+
+    return Buffer.from(response || '', 'hex').toString('base64');
+  }
+
+  async getTokenInfo(hash: UInt160): Promise<Token> {
+    if (!hash) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+
+    const rpcUrl = currentN3RpcUrl;
+    const [symbol, decimals, totalSupply] = (await Promise.all([
+      httpPostPromise(rpcUrl, {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'invokefunction',
+        params: [hash, 'symbol'],
+      }),
+      httpPostPromise(rpcUrl, {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'invokefunction',
+        params: [hash, 'decimals'],
+      }),
+      httpPostPromise(rpcUrl, {
+        jsonrpc: '2.0',
+        id: 1,
+        method: 'invokefunction',
+        params: [hash, 'totalSupply'],
+      }),
+    ]).catch((error) => {
+      throw normalizeError(error);
+    })) as [any, any, any];
+
+    return {
+      symbol: stackItemToString(symbol?.stack?.[0]),
+      decimals: Number(stackItemToInteger(decimals?.stack?.[0])),
+      totalSupply: stackItemToInteger(totalSupply?.stack?.[0]),
+    };
+  }
+
+  private async getDefaultSigners(): Promise<Signer[]> {
+    const [account] = await this.getAccounts();
+
+    return [
+      {
+        account: account.hash,
+        scopes: 'CalledByEntry',
+      },
+    ];
+  }
+
+  private async toInvokeRequest(
+    invocations: InvocationArguments[],
+    signers?: Signer[],
+    fee?: FeeOptions,
+    broadcastOverride?: boolean,
+  ) {
+    if (!Array.isArray(invocations) || invocations.length === 0) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+
+    invocations.forEach(assertInvocation);
+    const effectiveSigners = signers?.length
+      ? signers
+      : await this.getDefaultSigners();
+    const extraSystemFee = fee?.suggestedSystemFee ?? fee?.extraSystemFee;
+
+    if (invocations.length === 1) {
+      const [invocation] = invocations;
+      return {
+        target: requestTargetN3.Invoke,
+        parameter: {
+          scriptHash: invocation.hash,
+          operation: invocation.operation,
+          args: invocation.args || [],
+          signers: effectiveSigners,
+          extraSystemFee,
+          broadcastOverride,
+          hostname: location.hostname,
+        },
+      };
+    }
+
+    return {
+      target: requestTargetN3.InvokeMultiple,
+      parameter: {
+        invokeArgs: invocations.map((item) => ({
+          scriptHash: item.hash,
+          operation: item.operation,
+          args: item.args || [],
+          abortOnFail: item.abortOnFail,
+        })),
+        signers: effectiveSigners,
+        extraSystemFee,
+        broadcastOverride,
+        hostname: location.hostname,
+      },
+    };
+  }
+}
+
+const provider = new Proxy(new NEOLineN3Controller(), {
+  get: (instance, property) => instance[property],
+  deleteProperty: () => true,
+});
+
+window.addEventListener('message', (event) => {
+  const response = event.data;
+
+  switch (response.return) {
+    case EVENT_N3.INIT_DAPI:
+      const { connected, currentNetwork } = response.data;
+      provider.connected = connected;
+      provider.network = currentNetwork.magicNumber;
+      currentN3RpcUrl = currentNetwork.rpcUrl;
+      break;
+    case EVENT.ACCOUNT_CHANGED:
+      provider.connected = Array.isArray(response.data)
+        ? response.data.length > 0
+        : !!response.data;
+      provider.emit(EventNameEnum.ACCOUNTS_CHANGED, response.data);
+      break;
+    case EVENT.NETWORK_CHANGED:
+      const { chainId } = response.data || {};
+      let network: Network | undefined;
+
+      if (chainId === N3MainnetNetwork.chainId) {
+        network = N3MainnetNetwork.magicNumber;
+        currentN3RpcUrl = N3MainnetNetwork.rpcUrl;
+      } else if (chainId === N3TestnetNetwork.chainId) {
+        network = N3TestnetNetwork.magicNumber;
+        currentN3RpcUrl = N3TestnetNetwork.rpcUrl;
+      }
+
+      if (network != null) {
+        provider.network = network;
+        provider.emit(EventNameEnum.NETWORK_CHANGED, network);
+      }
+      break;
+  }
+});
+
+window.addEventListener('Neo.DapiProvider.request', announceProvider);
+announceProvider();
+
+function announceProvider() {
+  window.dispatchEvent(
+    new CustomEvent('Neo.DapiProvider.ready', {
+      detail: Object.freeze({ provider }),
+    }),
+  );
+}
+
+function assertAuthenticationPayload(payload: AuthenticationChallengePayload) {
+  if (
+    !payload ||
+    payload.action !== 'Authentication' ||
+    payload.grant_type !== 'Signature' ||
+    !Array.isArray(payload.allowed_algorithms) ||
+    !payload.domain ||
+    !Array.isArray(payload.networks) ||
+    !payload.nonce ||
+    payload.timestamp === undefined
+  ) {
+    throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+  }
+}
+
+function assertInvocation(invocation: InvocationArguments) {
+  if (!invocation?.hash || !invocation?.operation) {
+    throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+  }
+}
+
+function pickNetwork(networks: Network[], current: Network) {
+  if (Array.isArray(networks) && networks.includes(current)) {
+    return current;
+  }
+
+  return networks?.[0] || current;
+}
+
+function looksLikeUInt160(value: string) {
+  return /^0x[0-9a-fA-F]{40}$/.test(value);
+}
+
+function normalizeError(error: any) {
+  switch (error?.type) {
+    case 'MALFORMED_INPUT':
+      return {
+        code: 10002,
+        message: error.description,
+        data: error.data,
+      };
+    case 'RPC_ERROR':
+      return {
+        code: 10008,
+        message: error.description,
+        data: error.data,
+      };
+    case 'INSUFFICIENT_FUNDS':
+      return {
+        code: 10007,
+        message: error.description,
+        data: error.data,
+      };
+    case 'CONNECTION_DENIED':
+      return {
+        code: 10006,
+        message: error.description,
+        data: error.data,
+      };
+    default:
+      return {
+        code: 10000,
+        message: error?.description || error?.message || 'Unknown error',
+        data: error?.data ?? error,
+      };
+  }
+}
+
+function stackItemToString(item: any) {
+  if (!item) {
+    return '';
+  }
+  if (item.type === 'ByteString') {
+    return Buffer.from(item.value, 'base64').toString();
+  }
+  if (item.type === 'ByteArray') {
+    return Buffer.from(item.value, 'hex').toString();
+  }
+
+  return String(item.value ?? '');
+}
+
+function stackItemToInteger(item: any) {
+  if (!item) {
+    return '0';
+  }
+
+  return String(item.value ?? '0');
+}
+
+function base64ToHex(value: string) {
+  return Buffer.from(value, 'base64').toString('hex');
+}
+
+function toBase64(value: string) {
+  return Buffer.from(value, isHex(value) ? 'hex' : 'utf8').toString('base64');
+}
+
+function stripHexPrefix(value: string) {
+  return value.startsWith('0x') ? value.slice(2) : value;
+}
+
+function isHex(value: string) {
+  return /^[0-9a-fA-F]*$/.test(value);
+}

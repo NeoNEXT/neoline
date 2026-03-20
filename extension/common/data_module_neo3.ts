@@ -27,6 +27,7 @@ export enum requestTargetN3 {
   Provider = 'neoline.target_provider_n3',
   Networks = 'neoline.target_networks_n3',
   Account = 'neoline.target_account_n3',
+  Accounts = 'neoline.target_accounts_n3',
   AccountPublicKey = 'neoline.target_public_key_n3',
   Storage = 'neoline.target_storage_n3',
   InvokeRead = 'neoline.target_invoke_read_n3',
@@ -58,6 +59,7 @@ export enum requestTargetN3 {
 
 export enum EVENT {
   READY = 'NEOLine.N3.EVENT.READY',
+  INIT_DAPI = 'NEOLine.N3.EVENT.INIT_DAPI'
 }
 
 // requets params

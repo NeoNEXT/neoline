@@ -18,6 +18,9 @@ import CryptoJS from 'crypto-js';
 import { ethers } from 'ethers';
 import { firstValueFrom } from 'rxjs';
 import { NEOX_EVENT } from '@/models/evm';
+import { Wallet3 } from '@popup/_lib';
+import { getScriptHashFromAddress } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 
 @Injectable()
 export class ChromeService {
@@ -54,7 +57,7 @@ export class ChromeService {
         return of(rs);
       } catch (e) {
         return throwError(
-          'please set watch to local storage when debug mode on'
+          'please set watch to local storage when debug mode on',
         );
       }
     } else {
@@ -72,7 +75,7 @@ export class ChromeService {
           } catch (e) {
             reject('failed');
           }
-        })
+        }),
       );
     }
   }
@@ -83,7 +86,7 @@ export class ChromeService {
         return of(rs);
       } catch (e) {
         return throwError(
-          'please set watch to local storage when debug mode on'
+          'please set watch to local storage when debug mode on',
         );
       }
     } else {
@@ -97,7 +100,7 @@ export class ChromeService {
           } catch (e) {
             reject('failed');
           }
-        })
+        }),
       );
     }
   }
@@ -130,7 +133,7 @@ export class ChromeService {
   }
   public getNftWatch(
     networkName: string,
-    address: string
+    address: string,
   ): Observable<NftAsset[]> {
     if (!this.check) {
       try {
@@ -144,7 +147,7 @@ export class ChromeService {
         return of(rs);
       } catch (e) {
         return throwError(
-          'please set watch to local storage when debug mode on'
+          'please set watch to local storage when debug mode on',
         );
       }
     } else {
@@ -161,7 +164,7 @@ export class ChromeService {
           } catch (e) {
             reject('failed');
           }
-        })
+        }),
       );
     }
   }
@@ -173,7 +176,7 @@ export class ChromeService {
         return of(rs);
       } catch (e) {
         return throwError(
-          'please set watch to local storage when debug mode on'
+          'please set watch to local storage when debug mode on',
         );
       }
     } else {
@@ -187,14 +190,14 @@ export class ChromeService {
           } catch (e) {
             reject('failed');
           }
-        })
+        }),
       );
     }
   }
   public setNftWatch(
     networkName: string,
     address?: string,
-    watch?: NftAsset[]
+    watch?: NftAsset[],
   ) {
     this.getAllNftWatch().subscribe((watchObject) => {
       const saveWatch = watchObject || {};
@@ -290,12 +293,12 @@ export class ChromeService {
   public async getShouldFindNode(): Promise<boolean> {
     if (!this.check) {
       return Promise.resolve(
-        sessionStorage.getItem('shouldFindNode') === 'false' ? false : true
+        sessionStorage.getItem('shouldFindNode') === 'false' ? false : true,
       );
     } else {
       return (await this.crx.getSessionStorage(
         STORAGE_NAME.shouldFindNode,
-        (res) => res
+        (res) => res,
       )) === false
         ? false
         : true;
@@ -313,13 +316,13 @@ export class ChromeService {
   public async getHasLoginAddress(): Promise<any> {
     if (!this.check) {
       return Promise.resolve(
-        JSON.parse(sessionStorage.getItem('hasLoginAddress') || '{}')
+        JSON.parse(sessionStorage.getItem('hasLoginAddress') || '{}'),
       );
     } else {
       return (
         (await this.crx.getSessionStorage(
           STORAGE_NAME.hasLoginAddress,
-          (res) => res
+          (res) => res,
         )) || {}
       );
     }
@@ -331,7 +334,7 @@ export class ChromeService {
       if (!this.check) {
         sessionStorage.setItem(
           'hasLoginAddress',
-          JSON.stringify(hasLoginAddress)
+          JSON.stringify(hasLoginAddress),
         );
       } else {
         this.crx.setSessionStorage({
@@ -348,12 +351,12 @@ export class ChromeService {
       return Promise.resolve(
         sessionStorage.getItem(STORAGE_NAME.isBackupLater) === 'true'
           ? true
-          : false
+          : false,
       );
     } else {
       return (await this.crx.getSessionStorage(
         STORAGE_NAME.isBackupLater,
-        (res) => res
+        (res) => res,
       )) === true
         ? true
         : false;
@@ -489,7 +492,7 @@ export class ChromeService {
   public getStorage(storageName: STORAGE_NAME): Observable<any> {
     if (!this.check) {
       return of(
-        this.handleStorageValue(storageName, localStorage.getItem(storageName))
+        this.handleStorageValue(storageName, localStorage.getItem(storageName)),
       );
     }
     return from(
@@ -505,7 +508,7 @@ export class ChromeService {
         } catch (e) {
           reject('failed');
         }
-      })
+      }),
     );
   }
   public removeStorage(storageName: STORAGE_NAME) {
@@ -535,6 +538,15 @@ export class ChromeService {
           });
         }
       });
+    } else if (wallet3.isAddress(w?.accounts[0]?.address), 53) {
+      this.getN3ConnectedAccounts(w).then((data) => {
+        if (data) {
+          this.windowCallback({
+            data,
+            return: EVENT.ACCOUNT_CHANGED,
+          });
+        }
+      });
     } else {
       this.windowCallback({
         data: {
@@ -555,7 +567,7 @@ export class ChromeService {
   removeConnectWebsiteOfAddress(
     deleteAddress: string,
     deleteChainType: ChainType,
-    currentAddress?: string
+    currentAddress?: string,
   ) {
     let isDeleteNeoXConnectedAddress = false;
     let currentIsNeoXConnectedAddress = false;
@@ -595,7 +607,7 @@ export class ChromeService {
                 if (item.chain === 'NeoX') {
                   connectedAddress.push(address);
                 }
-              }
+              },
             );
             if (currentIsNeoXConnectedAddress) {
               const index = connectedAddress.indexOf(currentAddress);
@@ -605,9 +617,10 @@ export class ChromeService {
             this.evmAccountChange(connectedAddress);
           }
         });
-      }
+      },
     );
   }
+
   private async getEvmConnectedAccounts(w: EvmWalletJSON) {
     const currentAddress = w.accounts[0].address;
 
@@ -615,7 +628,7 @@ export class ChromeService {
     if (!tab) return;
     const hostname = new URL(tab.url).hostname;
     const allWebsites: ConnectedWebsitesType = await firstValueFrom(
-      this.getStorage(STORAGE_NAME.connectedWebsites)
+      this.getStorage(STORAGE_NAME.connectedWebsites),
     );
 
     if (allWebsites[hostname].connectedAddress?.[currentAddress]) {
@@ -629,6 +642,48 @@ export class ChromeService {
       const index = connectedAddress.indexOf(currentAddress);
       connectedAddress.splice(index, 1);
       connectedAddress.unshift(currentAddress);
+      return connectedAddress;
+    }
+    return;
+  }
+
+  private async getN3ConnectedAccounts(w: Wallet3) {
+    const currentAddress = w.accounts[0].address;
+
+    const tab = await this.crx.getCurrentWindow();
+    if (!tab) return;
+    const hostname = new URL(tab.url).hostname;
+    const allWebsites: ConnectedWebsitesType = await firstValueFrom(
+      this.getStorage(STORAGE_NAME.connectedWebsites),
+    );
+
+    const neo3WalletArr = await firstValueFrom(
+      this.getStorage(STORAGE_NAME['walletArr-Neo3']),
+    );
+
+    if (allWebsites[hostname].connectedAddress?.[currentAddress]) {
+      const connectedAddress = [];
+      Object.keys(allWebsites[hostname].connectedAddress).forEach((address) => {
+        const item = allWebsites[hostname].connectedAddress[address];
+        if (item.chain === 'Neo3') {
+          const wallet = neo3WalletArr.find(
+            (w) => w.accounts[0].address === address,
+          );
+          if (wallet) {
+            connectedAddress.push({
+              hash: '0x' + getScriptHashFromAddress(address),
+              address,
+              label: wallet.name,
+            });
+          }
+        }
+      });
+      const index = connectedAddress.findIndex(
+        (item) => item.address === currentAddress,
+      );
+      const temp = connectedAddress[index];
+      connectedAddress.splice(index, 1);
+      connectedAddress.unshift(temp);
       return connectedAddress;
     }
     return;

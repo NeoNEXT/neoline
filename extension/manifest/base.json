@@ -29,7 +29,7 @@
   ],
   "web_accessible_resources": [
     {
-      "resources": ["dapi.js", "dapiN3.js", "dapiEVM.js"],
+      "resources": ["dapi.js", "dapiN3.js", "dapiN3V2.js", "dapiEVM.js"],
       "matches": ["http://*/*", "https://*/*"],
       "extension_ids": []
     }
