@@ -1571,6 +1571,20 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTargetN3.Send: {
       const parameter = request.parameter as N3SendArgs;
+      const wallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
+      if (
+        wallet !== undefined &&
+        wallet.accounts[0].address !== parameter.fromAddress
+      ) {
+        windowCallback({
+          return: requestTargetN3.Send,
+          error: ERRORS.MALFORMED_INPUT,
+          ID: request.ID,
+        });
+        sendResponse('');
+        return;
+      }
+
       let assetID = parameter.asset;
       if (assetID.toLowerCase() === 'neo') {
         assetID = NEO3;
@@ -1589,73 +1603,57 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       }
       assetID = assetID.startsWith('0x') ? assetID : '0x' + assetID;
       request.parameter.asset = assetID;
-      const data = {
-        jsonrpc: '2.0',
-        method: 'getnep17balances',
-        params: [parameter.fromAddress],
-        id: 1,
-      };
-      httpPost(currN3Network.rpcUrl, data, (res) => {
-        const index = res?.result?.balance
-          ? res?.result?.balance.findIndex((item) =>
-              assetID.toLowerCase().includes(item.assethash.toLowerCase())
-            )
-          : -1;
-        if (index < 0) {
-          windowCallback({
-            return: requestTargetN3.Send,
-            error: ERRORS.INSUFFICIENT_FUNDS,
-            ID: request.ID,
-          });
-          sendResponse('');
-          return;
-        }
-        let assetBalance = res?.result?.balance[index].amount;
-        const decimalsData = {
+
+      const [balanceRes, decimalsRes] = await Promise.all([
+        httpPostPromise(currN3Network.rpcUrl, {
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'invokefunction',
+          params: [
+            assetID,
+            'balanceOf',
+            [
+              {
+                type: 'Hash160',
+                value: wallet3.getScriptHashFromAddress(parameter.fromAddress),
+              },
+            ],
+          ],
+        }),
+        httpPostPromise(currN3Network.rpcUrl, {
           jsonrpc: '2.0',
           id: 1,
           method: 'invokefunction',
           params: [assetID, 'decimals'],
-        };
-        httpPost(currN3Network.rpcUrl, decimalsData, (decimalsRes) => {
-          const decimals = handleNeo3StackNumberValue(decimalsRes);
-          assetBalance = new BigNumber(assetBalance).shiftedBy(-decimals);
-          if (assetBalance.comparedTo(new BigNumber(parameter.amount)) >= 0) {
-            let queryString = '';
-            for (const key in parameter) {
-              if (parameter.hasOwnProperty(key)) {
-                const value = parameter[key];
-                queryString += `${key}=${value}&`;
-              }
-            }
-            getLocalStorage(STORAGE_NAME.wallet, (wallet) => {
-              if (
-                wallet !== undefined &&
-                wallet.accounts[0].address !== parameter.fromAddress
-              ) {
-                windowCallback({
-                  return: requestTargetN3.Send,
-                  error: ERRORS.MALFORMED_INPUT,
-                  ID: request.ID,
-                });
-                sendResponse('');
-              } else {
-                createWindow(
-                  `neo3-transfer?${queryString}messageID=${request.ID}`
-                );
-              }
-            });
-          } else {
-            windowCallback({
-              return: requestTargetN3.Send,
-              error: ERRORS.INSUFFICIENT_FUNDS,
-              ID: request.ID,
-            });
-            sendResponse('');
-            return;
+        }),
+      ]);
+      const balance = handleNeo3StackNumberValue(balanceRes);
+      const decimals = handleNeo3StackNumberValue(decimalsRes);
+      const assetBalance = new BigNumber(balance).shiftedBy(-decimals);
+      if (parameter.version === 2) {
+        parameter.amount = new BigNumber(parameter.amount)
+          .shiftedBy(-decimals)
+          .toFixed();
+        request.parameter.amount = parameter.amount;
+      }
+      if (assetBalance.comparedTo(new BigNumber(parameter.amount)) >= 0) {
+        let queryString = '';
+        for (const key in parameter) {
+          if (parameter.hasOwnProperty(key)) {
+            const value = parameter[key];
+            queryString += `${key}=${value}&`;
           }
+        }
+        createWindow(`neo3-transfer?${queryString}messageID=${request.ID}`);
+      } else {
+        windowCallback({
+          return: requestTargetN3.Send,
+          error: ERRORS.INSUFFICIENT_FUNDS,
+          ID: request.ID,
         });
-      });
+        sendResponse('');
+        return;
+      }
       return true;
     }
     case requestTargetN3.AddressToScriptHash: {

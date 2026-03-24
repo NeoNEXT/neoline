@@ -1,9 +1,5 @@
 import EventEmitter from 'events';
-import {
-  requestTarget,
-  ERRORS as LEGACY_ERRORS,
-  EVENT,
-} from '../common/data_module_neo2';
+import { ERRORS as LEGACY_ERRORS, EVENT } from '../common/data_module_neo2';
 import { requestTargetN3, EVENT as EVENT_N3 } from '../common/data_module_neo3';
 import {
   Account,
@@ -36,8 +32,13 @@ import {
   N3MainnetNetwork,
   N3TestnetNetwork,
 } from '../common/constants';
-import { httpPostPromise } from '../common';
+import {
+  handleNeo3StackNumberValue,
+  handleNeo3StackStringValue,
+  httpPostPromise,
+} from '../common';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+import BigNumber from 'bignumber.js';
 
 type LegacyAccount = {
   address: string;
@@ -133,22 +134,16 @@ class NEOLineN3Controller extends EventEmitter {
       throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
     }
 
-    const address = await wallet3.getAddressFromScriptHash(
-      stripHexPrefix(account),
-    );
-    const result = await sendMessage<LegacyBalanceResult>(
-      requestTargetN3.Balance,
-      {
-        params: [{ address, contracts: [asset] }],
-      },
-    ).catch((error) => {
+    const result = (await httpPostPromise(currentN3RpcUrl, {
+      jsonrpc: '2.0',
+      id: 1,
+      method: 'invokefunction',
+      params: [asset, 'balanceOf', [{ type: 'Hash160', value: account }]],
+    }).catch((error) => {
       throw normalizeError(error);
-    });
-    const matched = (result?.[address] || []).find(
-      (item) => item.contract?.toLowerCase() === asset.toLowerCase(),
-    );
+    })) as Integer;
 
-    return matched?.amount || '0';
+    return handleNeo3StackNumberValue(result);
   }
 
   async send(
@@ -159,6 +154,9 @@ class NEOLineN3Controller extends EventEmitter {
     data?: Argument,
   ): Promise<UInt256> {
     if (!asset || !from || !to || !amount) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+    if (!isValidIntegerAmount(amount)) {
       throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
     }
 
@@ -174,7 +172,7 @@ class NEOLineN3Controller extends EventEmitter {
       asset,
       amount,
       data,
-      remark: '',
+      version: 2,
       fee: '0',
       broadcastOverride: false,
     }).catch((error) => {
@@ -186,24 +184,16 @@ class NEOLineN3Controller extends EventEmitter {
 
   async call(invocation: InvocationArguments): Promise<InvocationResult> {
     assertInvocation(invocation);
-    const signers = await this.getDefaultSigners();
     const result = await sendMessage<any>(requestTargetN3.InvokeRead, {
       scriptHash: invocation.hash,
       operation: invocation.operation,
       args: invocation.args || [],
-      signers,
+      signers: [],
     }).catch((error) => {
       throw normalizeError(error);
     });
 
-    return {
-      script: result.script,
-      state: result.state,
-      gasconsumed: String(result.gasconsumed),
-      exception: result.exception,
-      notifications: result.notifications || [],
-      stack: result.stack || [],
-    };
+    return result;
   }
 
   async invoke(
@@ -456,21 +446,10 @@ class NEOLineN3Controller extends EventEmitter {
     })) as [any, any, any];
 
     return {
-      symbol: stackItemToString(symbol?.stack?.[0]),
-      decimals: Number(stackItemToInteger(decimals?.stack?.[0])),
-      totalSupply: stackItemToInteger(totalSupply?.stack?.[0]),
+      symbol: handleNeo3StackStringValue(symbol),
+      decimals: Number(handleNeo3StackNumberValue(decimals)),
+      totalSupply: handleNeo3StackNumberValue(totalSupply),
     };
-  }
-
-  private async getDefaultSigners(): Promise<Signer[]> {
-    const [account] = await this.getAccounts();
-
-    return [
-      {
-        account: account.hash,
-        scopes: 'CalledByEntry',
-      },
-    ];
   }
 
   private async toInvokeRequest(
@@ -484,10 +463,7 @@ class NEOLineN3Controller extends EventEmitter {
     }
 
     invocations.forEach(assertInvocation);
-    const effectiveSigners = signers?.length
-      ? signers
-      : await this.getDefaultSigners();
-    const extraSystemFee = fee?.suggestedSystemFee ?? fee?.extraSystemFee;
+    // const extraSystemFee = fee?.suggestedSystemFee ?? fee?.extraSystemFee;
 
     if (invocations.length === 1) {
       const [invocation] = invocations;
@@ -497,8 +473,8 @@ class NEOLineN3Controller extends EventEmitter {
           scriptHash: invocation.hash,
           operation: invocation.operation,
           args: invocation.args || [],
-          signers: effectiveSigners,
-          extraSystemFee,
+          signers: signers || [],
+          extraSystemFee: fee?.extraSystemFee,
           broadcastOverride,
           hostname: location.hostname,
         },
@@ -514,8 +490,8 @@ class NEOLineN3Controller extends EventEmitter {
           args: item.args || [],
           abortOnFail: item.abortOnFail,
         })),
-        signers: effectiveSigners,
-        extraSystemFee,
+        signers: signers || [],
+        extraSystemFee: fee?.extraSystemFee,
         broadcastOverride,
         hostname: location.hostname,
       },
@@ -596,16 +572,24 @@ function assertInvocation(invocation: InvocationArguments) {
   }
 }
 
+function isValidIntegerAmount(amount: Integer): boolean {
+  if (typeof amount === 'number') {
+    return Number.isSafeInteger(amount);
+  }
+
+  if (typeof amount === 'string') {
+    return /^-?\d+$/.test(amount) && new BigNumber(amount).isInteger();
+  }
+
+  return false;
+}
+
 function pickNetwork(networks: Network[], current: Network) {
   if (Array.isArray(networks) && networks.includes(current)) {
     return current;
   }
 
   return networks?.[0] || current;
-}
-
-function looksLikeUInt160(value: string) {
-  return /^0x[0-9a-fA-F]{40}$/.test(value);
 }
 
 function normalizeError(error: any) {
@@ -641,28 +625,6 @@ function normalizeError(error: any) {
         data: error?.data ?? error,
       };
   }
-}
-
-function stackItemToString(item: any) {
-  if (!item) {
-    return '';
-  }
-  if (item.type === 'ByteString') {
-    return Buffer.from(item.value, 'base64').toString();
-  }
-  if (item.type === 'ByteArray') {
-    return Buffer.from(item.value, 'hex').toString();
-  }
-
-  return String(item.value ?? '');
-}
-
-function stackItemToInteger(item: any) {
-  if (!item) {
-    return '0';
-  }
-
-  return String(item.value ?? '0');
 }
 
 function base64ToHex(value: string) {

@@ -160,6 +160,7 @@ export interface N3SendArgs {
   fee: string;
   network: string;
   broadcastOverride: boolean;
+  version?: number; // version 2: NEP-21
 }
 
 // result

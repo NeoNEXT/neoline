@@ -5,6 +5,8 @@ export type Address = string;
 export type UInt160 = string;
 export type UInt256 = string;
 export type ECPoint = string;
+// NEP-21 methods use on-chain base units for token amounts.
+// Example: with 8 decimals, sending 1 token should pass "100000000".
 export type Integer = number | string;
 type HexString = string;
 export type Network = number;
