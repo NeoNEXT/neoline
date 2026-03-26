@@ -235,11 +235,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
-    if (isAuth === true) {
-      return sendMessage(requestTargetN3.VerifyMessage, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
+    return sendMessage(requestTargetN3.VerifyMessage, parameter);
   }
 
   public async verifyMessageV2(
@@ -254,11 +250,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
-    if (isAuth === true) {
-      return sendMessage(requestTargetN3.VerifyMessageV2, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
+    return sendMessage(requestTargetN3.VerifyMessageV2, parameter);
   }
 
   public async invoke(parameter: N3InvokeArgs) {

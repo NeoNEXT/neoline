@@ -49,8 +49,6 @@ injectScript('dapiN3.js');
 injectScript('dapiN3V2.js');
 
 const requireConnectRequest = [
-  requestTargetN3.VerifyMessage,
-  requestTargetN3.VerifyMessageV2,
   requestTargetN3.Invoke,
   requestTargetN3.SignMessage,
   requestTargetN3.SignMessageV2,
@@ -73,14 +71,14 @@ window.addEventListener(
     getStorage(
       STORAGE_NAME.connectedWebsites,
       async (allWebsites: ConnectedWebsitesType) => {
-        const currWallet = await getLocalStorage('wallet', () => {});
         allWebsites = allWebsites || {};
         const hostname = new URL(e.origin).hostname;
         const connectedAddress =
           allWebsites?.[hostname]?.connectedAddress || {};
+        const isConnectedToAnyNeo3Account = Object.values(connectedAddress).some((item) => item.chain === 'Neo3');
         if (
           requireConnectRequest.includes(e.data.target) &&
-          !connectedAddress[currWallet?.accounts[0]?.address]
+          !isConnectedToAnyNeo3Account
         ) {
           window.postMessage(
             {

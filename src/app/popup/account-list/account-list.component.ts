@@ -238,20 +238,16 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
               if (!chain) {
                 return;
               }
-              if (chain === 'NeoX') {
-                this.chromeSrc
-                  .getStorage(STORAGE_NAME.onePassword)
-                  .subscribe((res) => {
-                    if (res !== false) {
-                      this.toCreate(type);
-                    } else {
-                      this.global.snackBarTip('switchOnePasswordFirst');
-                      this.router.navigateByUrl('/popup/one-password');
-                    }
-                  });
-              } else {
-                this.toCreate(type);
-              }
+              this.chromeSrc
+                .getStorage(STORAGE_NAME.onePassword)
+                .subscribe((res) => {
+                  if (res !== false) {
+                    this.toCreate(type);
+                  } else {
+                    this.global.snackBarTip('switchOnePasswordFirst');
+                    this.router.navigateByUrl('/popup/one-password');
+                  }
+                });
             });
         }
       });

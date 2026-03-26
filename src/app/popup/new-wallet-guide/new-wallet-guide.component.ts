@@ -32,19 +32,15 @@ export class PopupNewWalletGuideComponent {
         if (!chain) {
           return;
         }
-        if (chain === 'NeoX') {
-          this.chromeSrc
-            .getStorage(STORAGE_NAME.onePassword)
-            .subscribe((res) => {
-              if (res !== false) {
-                this.toCreate(type);
-              } else {
-                this.global.snackBarTip('switchOnePasswordFirst');
-              }
-            });
-        } else {
-          this.toCreate(type);
-        }
+        this.chromeSrc
+          .getStorage(STORAGE_NAME.onePassword)
+          .subscribe((res) => {
+            if (res !== false) {
+              this.toCreate(type);
+            } else {
+              this.global.snackBarTip('switchOnePasswordFirst');
+            }
+          });
       });
   }
 

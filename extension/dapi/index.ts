@@ -157,11 +157,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
-    if (isAuth === true) {
-      return sendMessage(requestTarget.VerifyMessage, parameter);
-    }
-    return Promise.reject(ERRORS.CONNECTION_DENIED);
+    return sendMessage(requestTarget.VerifyMessage, parameter);
   }
 
   public getTransaction(

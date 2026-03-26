@@ -3,7 +3,7 @@
  */
 
 import { getStorage, getLocalStorage } from '../common/index';
-import { requestTarget, Account, ERRORS } from '../common/data_module_neo2';
+import { requestTarget, ERRORS } from '../common/data_module_neo2';
 import { getWalletType } from '../common/utils';
 import {
   ConnectedWebsitesType,
@@ -50,7 +50,6 @@ injectScript('dapi.js');
 const requireConnectRequest = [
   requestTarget.Account,
   requestTarget.AccountPublicKey,
-  requestTarget.VerifyMessage,
   requestTarget.Invoke,
   requestTarget.InvokeMulti,
   requestTarget.SignMessage,
@@ -65,14 +64,14 @@ window.addEventListener(
     getStorage(
       STORAGE_NAME.connectedWebsites,
       async (allWebsites: ConnectedWebsitesType) => {
-        const currWallet = await getLocalStorage('wallet', () => {});
         allWebsites = allWebsites || {};
         const hostname = new URL(e.origin).hostname;
         const connectedAddress =
           allWebsites?.[hostname]?.connectedAddress || {};
+        const isConnectedToAnyNeo2Account = Object.values(connectedAddress).some((item) => item.chain === 'Neo2');
         if (
           requireConnectRequest.includes(e.data.target) &&
-          !connectedAddress[currWallet?.accounts[0]?.address]
+          !isConnectedToAnyNeo2Account
         ) {
           window.postMessage(
             {

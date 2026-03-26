@@ -170,18 +170,19 @@ class NEOLineN3Controller extends EventEmitter {
     const fromAddress = await wallet3.getAddressFromScriptHash(
       stripHexPrefix(from),
     );
-    const result = await sendMessage<LegacyInvokeResult>(requestTargetN3.Send, {
-      fromAddress,
-      toAddress,
-      asset,
-      amount,
-      data,
-      version: 2,
-      fee: '0',
-      broadcastOverride: false,
-    }).catch((error) => {
-      throw normalizeError(error);
-    });
+    const result = await this.sendAuthorizedMessage<LegacyInvokeResult>(
+      requestTargetN3.Send,
+      {
+        fromAddress,
+        toAddress,
+        asset,
+        amount,
+        data,
+        version: 2,
+        fee: '0',
+        broadcastOverride: false,
+      },
+    );
 
     return result.txid;
   }
@@ -209,12 +210,10 @@ class NEOLineN3Controller extends EventEmitter {
       fee,
       false,
     );
-    const result = await sendMessage<LegacyInvokeResult>(
+    const result = await this.sendAuthorizedMessage<LegacyInvokeResult>(
       target,
       parameter,
-    ).catch((error) => {
-      throw normalizeError(error);
-    });
+    );
 
     return result.txid;
   }
@@ -230,12 +229,10 @@ class NEOLineN3Controller extends EventEmitter {
       fee,
       true,
     );
-    const result = await sendMessage<LegacyInvokeResult>(
+    const result = await this.sendAuthorizedMessage<LegacyInvokeResult>(
       target,
       parameter,
-    ).catch((error) => {
-      throw normalizeError(error);
-    });
+    );
 
     if (!result.signedTx) {
       throw normalizeError(LEGACY_ERRORS.DEFAULT);
@@ -257,12 +254,13 @@ class NEOLineN3Controller extends EventEmitter {
       throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
     }
 
-    const signed = await sendMessage<any>(requestTargetN3.SignTransaction, {
-      transaction: JSON.parse(Buffer.from(context.data, 'base64').toString()),
-      magicNumber: context.network,
-    }).catch((error) => {
-      throw normalizeError(error);
-    });
+    const signed = await this.sendAuthorizedMessage<any>(
+      requestTargetN3.SignTransaction,
+      {
+        transaction: JSON.parse(Buffer.from(context.data, 'base64').toString()),
+        magicNumber: context.network,
+      },
+    );
 
     return {
       ...context,

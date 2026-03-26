@@ -214,44 +214,19 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       getStorage(
         STORAGE_NAME.connectedWebsites,
         async (res: ConnectedWebsitesType) => {
-          if (request?.connectChain === 'NeoX') {
-            const connectedNeoXIndex = Object.values(
-              res?.[request.hostname]?.connectedAddress || {}
-            ).findIndex((item) => item.chain === 'NeoX');
-            if (connectedNeoXIndex >= 0) {
-              windowCallback({
-                return: requestTarget.Connect,
-                data: true,
-                ID: request.ID,
-              });
-            } else {
-              createWindow(
-                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&connectChainType=${request.connectChain}&messageID=${request.ID}`
-              );
-            }
+          const isConnectedToAnyAccount = Object.values(
+            res?.[request.hostname]?.connectedAddress || {}
+          ).some((item) => item.chain === request.connectChain);
+          if (isConnectedToAnyAccount) {
+            windowCallback({
+              return: requestTarget.Connect,
+              data: true,
+              ID: request.ID,
+            });
           } else {
-            const currWallet = await getLocalStorage(
-              STORAGE_NAME.wallet,
-              () => {}
+            createWindow(
+              `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&messageID=${request.ID}`
             );
-            const currAddress = currWallet.accounts[0].address;
-            const existHost =
-              res?.[request.hostname]?.connectedAddress?.[currAddress];
-            if (existHost) {
-              windowCallback({
-                return: requestTarget.Connect,
-                data: true,
-                ID: request.ID,
-              });
-              // notification(
-              //   `${chrome.i18n.getMessage('from')}: ${request.hostname}`,
-              //   chrome.i18n.getMessage('connectedTip')
-              // );
-            } else {
-              createWindow(
-                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&messageID=${request.ID}`
-              );
-            }
           }
           sendResponse('');
         }
