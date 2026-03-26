@@ -92,6 +92,7 @@ import {
 } from './tool';
 import { walletHandlerMap, ethereumRPCHandler } from './handlers';
 import { ethErrors } from 'eth-rpc-errors';
+import { remove0xPrefix } from '@cityofzion/neon-core-neo3/lib/u';
 
 /**
  * Background methods support.
@@ -1486,13 +1487,33 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         request.target === requestTargetN3.SignMessageWithoutSaltV2
           ? 'neo3-signature-v2'
           : 'neo3-signature';
-      const isSign =
+      const saltSignal =
         request.target === requestTargetN3.SignMessageWithoutSalt ||
         request.target === requestTargetN3.SignMessageWithoutSaltV2
-          ? '&sign=1'
+          ? '&withoutSalt=1'
           : '';
-      createWindow(`${route}?${queryString}messageID=${request.ID}${isSign}`);
+      createWindow(`${route}?${queryString}messageID=${request.ID}${saltSignal}`);
       sendResponse('');
+      return;
+    }
+    case requestTargetN3.SignMessageV3: {
+      const params = request.parameter;
+      getStorage(STORAGE_NAME.connectedWebsites, async (res: ConnectedWebsitesType) => {
+        const address = wallet3.getAddressFromScriptHash(remove0xPrefix(params.account));
+        if (res?.[params.hostname]?.connectedAddress?.[address]) {
+          const localData = (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+          const newData = { ...localData, [request.ID]: params };
+          setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
+          createWindow(`neo3-signature-v3?messageID=${request.ID}`);
+        } else {
+          windowCallback({
+            ID: request.ID,
+            return: requestTargetN3.SignMessageV3,
+            error: { ...ERRORS.MALFORMED_INPUT, description: 'The requested account has not been authorized by the user.' },
+          });
+        }
+        sendResponse('');
+      })
       return;
     }
     case requestTargetN3.SignTransaction: {

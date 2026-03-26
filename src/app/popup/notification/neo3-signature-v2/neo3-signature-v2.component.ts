@@ -19,7 +19,7 @@ import { parseUrl } from '@/app/core/utils/app';
 export class PopupNoticeNeo3SignV2Component implements OnInit {
   public message: string;
   private messageID = 0;
-  isSign = false;
+  withoutSalt = false;
   jsonMessage;
 
   unsignedTx: string;
@@ -60,11 +60,11 @@ export class PopupNoticeNeo3SignV2Component implements OnInit {
       if (query?.isJsonObject === 'true') {
         this.jsonMessage = JSON.parse(this.message);
       }
-      this.isSign = query?.sign === '1' ? true : false;
+      this.withoutSalt = query?.withoutSalt === '1' ? true : false;
       window.onbeforeunload = () => {
         this.chrome.windowCallback({
           error: ERRORS.CANCELLED,
-          return: this.isSign
+          return: this.withoutSalt
             ? requestTargetN3.SignMessageWithoutSaltV2
             : requestTargetN3.SignMessageV2,
           ID: this.messageID,
@@ -77,7 +77,7 @@ export class PopupNoticeNeo3SignV2Component implements OnInit {
     this.chrome.windowCallback(
       {
         error: ERRORS.CANCELLED,
-        return: this.isSign
+        return: this.withoutSalt
           ? requestTargetN3.SignMessageWithoutSaltV2
           : requestTargetN3.SignMessageV2,
         ID: this.messageID,
@@ -88,7 +88,7 @@ export class PopupNoticeNeo3SignV2Component implements OnInit {
 
   public signature() {
     this.randomSalt = randomBytes(16).toString('hex');
-    const str = this.isSign ? this.message : this.randomSalt + this.message;
+    const str = this.withoutSalt ? this.message : this.randomSalt + this.message;
     const parameterHexString = Buffer.from(str).toString('hex');
     const lengthHex = u.num2VarInt(parameterHexString.length / 2);
     const concatenatedString = lengthHex + parameterHexString;
@@ -105,12 +105,12 @@ export class PopupNoticeNeo3SignV2Component implements OnInit {
       salt: this.randomSalt,
       message: this.message,
     };
-    if (this.isSign) {
+    if (this.withoutSalt) {
       delete data.salt;
     }
     this.chrome.windowCallback(
       {
-        return: this.isSign
+        return: this.withoutSalt
           ? requestTargetN3.SignMessageWithoutSaltV2
           : requestTargetN3.SignMessageV2,
         data,

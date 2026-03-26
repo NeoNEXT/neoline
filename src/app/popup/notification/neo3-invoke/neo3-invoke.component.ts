@@ -276,6 +276,7 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
               scriptHash: this.invokeParams.scriptHash,
               operation: this.invokeParams.operation,
               args: this.neo3Invoke.handleInvokeArgs(this.invokeParams.args),
+              abortOnFail: this.invokeParams.abortOnFail,
             },
           ],
           signers: this.invokeParams.signers,

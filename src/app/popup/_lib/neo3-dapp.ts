@@ -18,6 +18,7 @@ export interface Neo3InvokeParams extends Neo3Params {
   expandSigners?: boolean;
   args: sc.ContractParamJson[];
   argsObj?: { name: string; value: string; type: string }[];
+  abortOnFail?: boolean;
 }
 
 export interface Neo3InvokeMultipleParams extends Neo3Params {
@@ -27,6 +28,7 @@ export interface Neo3InvokeMultipleParams extends Neo3Params {
     expandSigners?: boolean;
     args: sc.ContractParamJson[];
     argsObj?: { name: string; value: string; type: string }[];
+    abortOnFail?: boolean;
   })[];
 }
 

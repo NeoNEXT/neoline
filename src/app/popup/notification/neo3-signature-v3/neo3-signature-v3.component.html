@@ -1,22 +1,23 @@
+<app-hardware-sign *ngIf="showHardwareSign" [chainType]="chainType" [currentWallet]="signWallet"
+  [unsignedTx]="params.message" [magicNumber]="0" [signOnly]="true"
+  (backWithSignedTx)="handleHardwareSignedTx($event)"></app-hardware-sign>
+
 <div class="container">
   <div class="header">
     <div class="invoke-type">
-      · {{ withoutSalt ? "SIGNMESSAGEWITHOUTSALT" : "SIGNMESSAGE" }}
+      · {{ "SIGNMESSAGE" }}
     </div>
     <p class="title">{{ "thSignTitle" | translate | async }}</p>
     <p class="warning">
       {{ "evmSignWarning" | translate | async }}
     </p>
     <p class="account">
-      <img [avatar]="address" />{{ address | longStr : 10 }}
+      <img [avatar]="signAddress" />{{ signAddress | longStr : 10 }}
     </p>
   </div>
   <div class="content">
     <p class="hex-label">{{ "message" | translate | async }}</p>
-    <p class="json-box serialize" *ngIf="jsonMessage">
-      {{ jsonMessage | json }}
-    </p>
-    <p class="json-box serialize" *ngIf="!jsonMessage">{{ message }}</p>
+    <p class="json-box serialize">{{ params.message }}</p>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="cancel()">

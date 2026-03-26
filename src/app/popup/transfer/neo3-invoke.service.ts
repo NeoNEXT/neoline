@@ -19,8 +19,12 @@ import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 
+interface InvokeArg extends sc.ContractCall {
+  abortOnFail?: boolean;
+}
+
 interface CreateNeo3TxInput {
-  invokeArgs: sc.ContractCall[];
+  invokeArgs: InvokeArg[];
   signers: SignerLike[];
   networkFee: string;
   systemFee?: any;
@@ -69,7 +73,25 @@ export class Neo3InvokeService {
     const vars: any = {};
     let script: string = '';
     try {
-      script = sc.createScript(...params.invokeArgs);
+      const hasAbortOnFail = params.invokeArgs.some((item) => item.abortOnFail);
+      if (hasAbortOnFail) {
+        const sb = new sc.ScriptBuilder();
+        for (const item of params.invokeArgs) {
+          if (!item.scriptHash) {
+              throw new Error("No scriptHash found!");
+          }
+          if (!item.operation) {
+              throw new Error("No operation found!");
+          }
+          sb.emitContractCall(item);
+          if (item.abortOnFail) {
+            sb.emit(sc.OpCode.ASSERT);
+          }
+        }
+        script = sb.build();
+      } else {
+        script = sc.createScript(...params.invokeArgs);
+      }
     } catch (error) {
       return throwError({
         type: 'scriptError',

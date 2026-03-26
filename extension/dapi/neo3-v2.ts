@@ -11,6 +11,8 @@ import {
   Base64Encoded,
   Block,
   ContractParametersContext,
+  ErrorCode,
+  DApiError,
   EventNameEnum,
   FeeOptions,
   Integer,
@@ -39,6 +41,7 @@ import {
 } from '../common';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import BigNumber from 'bignumber.js';
+import { hex2base64 } from '@cityofzion/neon-core-neo3/lib/u';
 
 type LegacyAccount = {
   address: string;
@@ -103,16 +106,7 @@ class NEOLineN3Controller extends EventEmitter {
   }
 
   async getAccounts(): Promise<Account[]> {
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
-    if (isAuth !== true) {
-      throw normalizeError(LEGACY_ERRORS.CONNECTION_DENIED);
-    }
-    const accounts = await sendMessage<Account[]>(
-      requestTargetN3.Accounts,
-    ).catch((error) => {
-      throw normalizeError(error);
-    });
-    return accounts;
+    return this.sendAuthorizedMessage<Account[]>(requestTargetN3.Accounts);
   }
 
   async pickAddress(prompt?: string): Promise<Address> {
@@ -130,7 +124,12 @@ class NEOLineN3Controller extends EventEmitter {
   }
 
   async getBalance(asset: UInt160, account: UInt160): Promise<Integer> {
-    if (!asset || !account) {
+    if (
+      !asset ||
+      !account ||
+      !wallet3.isScriptHash(asset) ||
+      !wallet3.isScriptHash(account)
+    ) {
       throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
     }
 
@@ -140,7 +139,7 @@ class NEOLineN3Controller extends EventEmitter {
       method: 'invokefunction',
       params: [asset, 'balanceOf', [{ type: 'Hash160', value: account }]],
     }).catch((error) => {
-      throw normalizeError(error);
+      throw returnRPCError(error);
     })) as Integer;
 
     return handleNeo3StackNumberValue(result);
@@ -156,7 +155,12 @@ class NEOLineN3Controller extends EventEmitter {
     if (!asset || !from || !to || !amount) {
       throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
     }
-    if (!isValidIntegerAmount(amount)) {
+    if (
+      !isValidIntegerAmount(amount) ||
+      !wallet3.isScriptHash(asset) ||
+      !wallet3.isScriptHash(from) ||
+      !wallet3.isScriptHash(to)
+    ) {
       throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
     }
 
@@ -184,7 +188,7 @@ class NEOLineN3Controller extends EventEmitter {
 
   async call(invocation: InvocationArguments): Promise<InvocationResult> {
     assertInvocation(invocation);
-    const result = await sendMessage<any>(requestTargetN3.InvokeRead, {
+    return await sendMessage<any>(requestTargetN3.InvokeRead, {
       scriptHash: invocation.hash,
       operation: invocation.operation,
       args: invocation.args || [],
@@ -192,8 +196,6 @@ class NEOLineN3Controller extends EventEmitter {
     }).catch((error) => {
       throw normalizeError(error);
     });
-
-    return result;
   }
 
   async invoke(
@@ -242,7 +244,7 @@ class NEOLineN3Controller extends EventEmitter {
     return {
       type: 'Neo.Network.P2P.Payloads.Transaction',
       hash: result.txid,
-      data: toBase64(stripHexPrefix(result.signedTx)),
+      data: stripHexPrefix(result.signedTx),
       items: {},
       network: this.network,
     };
@@ -265,7 +267,7 @@ class NEOLineN3Controller extends EventEmitter {
     return {
       ...context,
       hash: signed.hash || context.hash,
-      data: toBase64(
+      data: hex2base64(
         typeof signed.serialize === 'function'
           ? signed.serialize(true)
           : stripHexPrefix(signed.script || ''),
@@ -281,32 +283,26 @@ class NEOLineN3Controller extends EventEmitter {
     if (!message) {
       throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
     }
+    if (account && !wallet3.isScriptHash(account)) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+
     if (options?.isTypedData) {
       throw {
-        code: 10001,
+        code: ErrorCode.UNSUPPORTED,
         message: 'Typed data is not supported',
       };
     }
 
-    const payload = options?.isBase64Encoded ? message : toBase64(message);
-    const result = await sendMessage<LegacySignResult>(
-      requestTargetN3.SignMessage,
+    return this.sendAuthorizedMessage<SignedMessage>(
+      requestTargetN3.SignMessageV3,
       {
-        message: Buffer.from(payload, 'base64').toString(),
+        message,
         account,
         options,
+        hostname: location.hostname,
       },
-    ).catch((error) => {
-      throw normalizeError(error);
-    });
-    const current = account || (await this.getAccounts())[0].hash;
-
-    return {
-      payload,
-      signature: result.data,
-      account: current,
-      pubkey: result.publicKey,
-    };
+    );
   }
 
   async relay(context: ContractParametersContext): Promise<UInt256> {
@@ -320,7 +316,7 @@ class NEOLineN3Controller extends EventEmitter {
       method: 'sendrawtransaction',
       params: [context.data],
     }).catch((error) => {
-      throw normalizeError(error);
+      throw returnRPCError(error);
     })) as any;
 
     if (typeof result === 'string') {
@@ -338,6 +334,14 @@ class NEOLineN3Controller extends EventEmitter {
       throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
     }
 
+    if (typeof hashOrIndex !== 'number' && typeof hashOrIndex !== 'string') {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+
+    if (typeof hashOrIndex === 'string' && !isUint256(hashOrIndex)) {
+      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    }
+
     return sendMessage<Block>(requestTargetN3.Block, {
       blockHeight: String(hashOrIndex),
     }).catch((error) => {
@@ -352,43 +356,26 @@ class NEOLineN3Controller extends EventEmitter {
       method: 'getblockcount',
       params: [],
     }).catch((error) => {
-      throw normalizeError(error);
+      throw returnRPCError(error);
     })) as number;
 
-    return Number(result);
+    return result;
   }
 
   async getTransaction(txid: UInt256): Promise<Transaction> {
-    if (!txid) {
+    if (!txid || !isUint256(txid)) {
       throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
     }
 
-    const result = await sendMessage<any>(requestTargetN3.Transaction, {
+    return await sendMessage<any>(requestTargetN3.Transaction, {
       txid,
     }).catch((error) => {
       throw normalizeError(error);
     });
-
-    return {
-      hash: result.hash || result.txid,
-      size: result.size,
-      blockHash: result.blockhash || '',
-      blockTime: result.blocktime || 0,
-      confirmations: result.confirmations || 0,
-      version: result.version,
-      nonce: result.nonce,
-      systemFee: String(result.sysfee ?? result.sys_fee ?? 0),
-      networkFee: String(result.netfee ?? result.net_fee ?? 0),
-      validUntilBlock: result.validuntilblock,
-      sender: result.sender || '',
-      signers: result.signers || [],
-      attributes: result.attributes || [],
-      script: toBase64(stripHexPrefix(result.script || '')),
-    };
   }
 
   async getApplicationLog(txid: UInt256): Promise<ApplicationLog> {
-    if (!txid) {
+    if (!txid || !isUint256(txid)) {
       throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
     }
 
@@ -400,20 +387,18 @@ class NEOLineN3Controller extends EventEmitter {
   }
 
   async getStorage(hash: UInt160, key: Base64Encoded): Promise<Base64Encoded> {
-    if (!hash || key === undefined) {
+    if (!hash || key === undefined || !wallet3.isScriptHash(hash)) {
       throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
     }
 
-    const response = (await httpPostPromise(currentN3RpcUrl, {
+    return (await httpPostPromise(currentN3RpcUrl, {
       jsonrpc: '2.0',
       id: 1,
       method: 'getstorage',
-      params: [hash, base64ToHex(key)],
+      params: [hash, key],
     }).catch((error) => {
-      throw normalizeError(error);
+      throw returnRPCError(error);
     })) as string;
-
-    return Buffer.from(response || '', 'hex').toString('base64');
   }
 
   async getTokenInfo(hash: UInt160): Promise<Token> {
@@ -442,7 +427,7 @@ class NEOLineN3Controller extends EventEmitter {
         params: [hash, 'totalSupply'],
       }),
     ]).catch((error) => {
-      throw normalizeError(error);
+      throw returnRPCError(error);
     })) as [any, any, any];
 
     return {
@@ -473,8 +458,10 @@ class NEOLineN3Controller extends EventEmitter {
           scriptHash: invocation.hash,
           operation: invocation.operation,
           args: invocation.args || [],
+          abortOnFail: invocation.abortOnFail,
           signers: signers || [],
           extraSystemFee: fee?.extraSystemFee,
+          overrideSystemFee: fee?.suggestedSystemFee,
           broadcastOverride,
           hostname: location.hostname,
         },
@@ -492,10 +479,25 @@ class NEOLineN3Controller extends EventEmitter {
         })),
         signers: signers || [],
         extraSystemFee: fee?.extraSystemFee,
+        overrideSystemFee: fee?.suggestedSystemFee,
         broadcastOverride,
         hostname: location.hostname,
       },
     };
+  }
+
+  private async sendAuthorizedMessage<T>(
+    target: requestTargetN3,
+    parameter?: any,
+  ): Promise<T> {
+    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
+    if (isAuth !== true) {
+      throw normalizeError(LEGACY_ERRORS.CONNECTION_DENIED);
+    }
+
+    return sendMessage<T>(target, parameter).catch((error) => {
+      throw normalizeError(error);
+    });
   }
 }
 
@@ -584,6 +586,10 @@ function isValidIntegerAmount(amount: Integer): boolean {
   return false;
 }
 
+function isUint256(param: UInt256): boolean {
+  return typeof param === 'string' && /^(0x)?[0-9a-fA-F]{64}$/.test(param);
+}
+
 function pickNetwork(networks: Network[], current: Network) {
   if (Array.isArray(networks) && networks.includes(current)) {
     return current;
@@ -592,53 +598,53 @@ function pickNetwork(networks: Network[], current: Network) {
   return networks?.[0] || current;
 }
 
-function normalizeError(error: any) {
-  switch (error?.type) {
-    case 'MALFORMED_INPUT':
-      return {
-        code: 10002,
-        message: error.description,
-        data: error.data,
+function normalizeError(legacyError: any): DApiError {
+  let error: DApiError = {
+    code: ErrorCode.UNKNOWN,
+    message: 'Unknown error',
+  };
+  switch (legacyError?.type) {
+    case LEGACY_ERRORS.MALFORMED_INPUT.type:
+      error = {
+        code: ErrorCode.INVALID,
+        message: LEGACY_ERRORS.MALFORMED_INPUT.description,
       };
-    case 'RPC_ERROR':
-      return {
-        code: 10008,
-        message: error.description,
-        data: error.data,
+      break;
+    case LEGACY_ERRORS.RPC_ERROR.type:
+      error = {
+        code: ErrorCode.RPC_ERROR,
+        message: LEGACY_ERRORS.RPC_ERROR.description,
       };
-    case 'INSUFFICIENT_FUNDS':
-      return {
-        code: 10007,
-        message: error.description,
-        data: error.data,
+      break;
+    case LEGACY_ERRORS.INSUFFICIENT_FUNDS.type:
+      error = {
+        code: ErrorCode.INSUFFICIENT_FUNDS,
+        message: LEGACY_ERRORS.INSUFFICIENT_FUNDS.description,
       };
-    case 'CONNECTION_DENIED':
-      return {
-        code: 10006,
-        message: error.description,
-        data: error.data,
+      break;
+    case LEGACY_ERRORS.CANCELLED.type:
+      error = {
+        code: ErrorCode.CANCELED,
+        message: LEGACY_ERRORS.CANCELLED.description,
       };
-    default:
-      return {
-        code: 10000,
-        message: error?.description || error?.message || 'Unknown error',
-        data: error?.data ?? error,
+      break;
+    case LEGACY_ERRORS.CONNECTION_DENIED.type:
+      error = {
+        code: ErrorCode.INVALID,
+        message: LEGACY_ERRORS.CONNECTION_DENIED.description,
       };
+      break;
   }
+  if (error.message !== legacyError.description) {
+    error.data = legacyError.description;
+  }
+  return error;
 }
 
-function base64ToHex(value: string) {
-  return Buffer.from(value, 'base64').toString('hex');
-}
-
-function toBase64(value: string) {
-  return Buffer.from(value, isHex(value) ? 'hex' : 'utf8').toString('base64');
+function returnRPCError(error) {
+  return normalizeError({ ...LEGACY_ERRORS.RPC_ERROR, description: error });
 }
 
 function stripHexPrefix(value: string) {
   return value.startsWith('0x') ? value.slice(2) : value;
-}
-
-function isHex(value: string) {
-  return /^[0-9a-fA-F]*$/.test(value);
 }

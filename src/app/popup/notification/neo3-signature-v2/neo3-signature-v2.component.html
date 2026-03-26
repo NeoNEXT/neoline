@@ -11,7 +11,7 @@
 <div class="container">
   <div class="header">
     <div class="invoke-type">
-      · {{ isSign ? "SIGNMESSAGEWITHOUTSALTV2" : "SIGNMESSAGEV2" }}
+      · {{ withoutSalt ? "SIGNMESSAGEWITHOUTSALTV2" : "SIGNMESSAGEV2" }}
     </div>
     <p class="title">{{ "thSignTitle" | translate | async }}</p>
     <p class="warning">

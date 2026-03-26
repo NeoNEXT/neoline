@@ -1,0 +1,16 @@
+@import "../common-scss/common.scss";
+
+.container {
+  .header .account {
+    margin-top: 8px;
+  }
+  .content {
+    .hex-label {
+      margin-top: 0;
+    }
+    .json-box {
+      color: var(--title-color);
+      white-space: pre-wrap;
+    }
+  }
+}

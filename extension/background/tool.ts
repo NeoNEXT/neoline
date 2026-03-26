@@ -187,17 +187,7 @@ export function resetData() {
     [STORAGE_NAME.hasLoginAddress]: {},
     [STORAGE_NAME.InvokeArgsArray]: {},
   });
-  getStorage(STORAGE_NAME.connectedWebsites, (res: ConnectedWebsitesType) => {
-    res = res || {};
-    Object.keys(res).forEach((hostname) => {
-      Object.keys(res[hostname]?.connectedAddress || {}).forEach((address) => {
-        if (res[hostname].connectedAddress[address].keep === false) {
-          delete res[hostname].connectedAddress[address];
-        }
-      });
-    });
-    setStorage({ [STORAGE_NAME.connectedWebsites]: res });
-  });
+  setStorage({ [STORAGE_NAME.connectedWebsites]: {} });
 }
 
 export function windowCallback(data) {
