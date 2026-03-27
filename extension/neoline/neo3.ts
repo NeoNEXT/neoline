@@ -25,7 +25,7 @@ declare var chrome: any;
  * Follow-up to add a dapi for the introduction of third-party pages to hide the realization of message sending and receiving.
  * You can also dynamically inject scripts into third-party pages. How to use ts for scripts injected in this way is to be considered.
  */
-function injectScript(filePath) {
+function injectScript(filePath, onLoad?: () => void) {
   const script = document.createElement('script');
   script.src = chrome.runtime.getURL(filePath);
   script.type = 'text/javascript';
@@ -38,7 +38,7 @@ function injectScript(filePath) {
       },
       window.location.origin,
     );
-    initDApi();
+    onLoad?.();
   };
   if (!ExcludeWebsite.find((item) => location.origin.includes(item))) {
     (document.head || document.documentElement).appendChild(script);
@@ -46,7 +46,9 @@ function injectScript(filePath) {
 }
 
 injectScript('dapiN3.js');
-injectScript('dapiN3V2.js');
+injectScript('dapiN3V2.js', () => {
+  initDApi();
+});
 
 const requireConnectRequest = [
   requestTargetN3.Invoke,
@@ -72,13 +74,13 @@ window.addEventListener(
       STORAGE_NAME.connectedWebsites,
       async (allWebsites: ConnectedWebsitesType) => {
         allWebsites = allWebsites || {};
+        const currWallet = await getLocalStorage('wallet', () => {});
         const hostname = new URL(e.origin).hostname;
         const connectedAddress =
           allWebsites?.[hostname]?.connectedAddress || {};
-        const isConnectedToAnyNeo3Account = Object.values(connectedAddress).some((item) => item.chain === 'Neo3');
         if (
           requireConnectRequest.includes(e.data.target) &&
-          !isConnectedToAnyNeo3Account
+          !connectedAddress[currWallet?.accounts[0]?.address]
         ) {
           window.postMessage(
             {
@@ -232,9 +234,11 @@ async function initDApi() {
       (result: ConnectedWebsitesType) => resolve(result),
     );
   });
-  const item = Object.values(
-    allWebsites[location.hostname].connectedAddress,
-  ).find((item) => item.chain === 'Neo3');
+  const connectedAddress =
+    allWebsites?.[location.hostname]?.connectedAddress || {};
+  const item = Object.values(connectedAddress).find(
+    (item) => item.chain === 'Neo3',
+  );
 
   window.postMessage(
     {

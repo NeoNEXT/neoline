@@ -66,12 +66,12 @@ window.addEventListener(
       async (allWebsites: ConnectedWebsitesType) => {
         allWebsites = allWebsites || {};
         const hostname = new URL(e.origin).hostname;
+        const currWallet = await getLocalStorage('wallet', () => {});
         const connectedAddress =
           allWebsites?.[hostname]?.connectedAddress || {};
-        const isConnectedToAnyNeo2Account = Object.values(connectedAddress).some((item) => item.chain === 'Neo2');
         if (
           requireConnectRequest.includes(e.data.target) &&
-          !isConnectedToAnyNeo2Account
+          !connectedAddress[currWallet?.accounts[0]?.address]
         ) {
           window.postMessage(
             {

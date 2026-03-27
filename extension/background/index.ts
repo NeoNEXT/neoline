@@ -216,19 +216,44 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       getStorage(
         STORAGE_NAME.connectedWebsites,
         async (res: ConnectedWebsitesType) => {
-          const isConnectedToAnyAccount = Object.values(
-            res?.[request.hostname]?.connectedAddress || {}
-          ).some((item) => item.chain === request.connectChain);
-          if (isConnectedToAnyAccount) {
-            windowCallback({
-              return: requestTarget.Connect,
-              data: true,
-              ID: request.ID,
-            });
+          if (request?.connectChain === 'NeoX') {
+            const connectedNeoXIndex = Object.values(
+              res?.[request.hostname]?.connectedAddress || {}
+            ).findIndex((item) => item.chain === 'NeoX');
+            if (connectedNeoXIndex >= 0) {
+              windowCallback({
+                return: requestTarget.Connect,
+                data: true,
+                ID: request.ID,
+              });
+            } else {
+              createWindow(
+                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&connectChainType=${request.connectChain}&messageID=${request.ID}`
+              );
+            }
           } else {
-            createWindow(
-              `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&messageID=${request.ID}`
+            const currWallet = await getLocalStorage(
+              STORAGE_NAME.wallet,
+              () => {}
             );
+            const currAddress = currWallet.accounts[0].address;
+            const existHost =
+              res?.[request.hostname]?.connectedAddress?.[currAddress];
+            if (existHost) {
+              windowCallback({
+                return: requestTarget.Connect,
+                data: true,
+                ID: request.ID,
+              });
+              // notification(
+              //   `${chrome.i18n.getMessage('from')}: ${request.hostname}`,
+              //   chrome.i18n.getMessage('connectedTip')
+              // );
+            } else {
+              createWindow(
+                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&messageID=${request.ID}`
+              );
+            }
           }
           sendResponse('');
         }
@@ -1457,6 +1482,18 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTargetN3.SignMessageV3: {
       const params = request.parameter;
+
+      if (!params.account) {
+        const localData =
+          (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+        const newData = { ...localData, [request.ID]: params };
+        setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
+        createWindow(`neo3-signature-v3?messageID=${request.ID}`);
+
+        sendResponse('');
+        return;
+      }
+
       const address = wallet3.getAddressFromScriptHash(
         remove0xPrefix(params.account),
       );
@@ -1486,13 +1523,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         hostname: request.hostname,
       });
 
-      if (isAuth) {
-        const localData =
-          (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
-        const newData = { ...localData, [request.ID]: params };
-        setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
-        createWindow(`neo3-signature-v3?messageID=${request.ID}`);
-      } else {
+      if (!isAuth) {
         windowCallback({
           ID: request.ID,
           return: requestTargetN3.SignMessageV3,
@@ -1579,16 +1610,15 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     case requestTargetN3.Send: {
       const parameter = request.parameter as N3SendArgs;
 
-      const isAuth = await checkAccountIsAuth({
-        address: parameter.fromAddress,
-        chainType: 'Neo3',
-        hostname: request.hostname,
-      });
-      if (!isAuth) {
+      const wallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
+      if (
+        wallet !== undefined &&
+        wallet.accounts[0].address !== parameter.fromAddress
+      ) {
         windowCallback({
-          ID: request.ID,
           return: requestTargetN3.Send,
-          error: ERRORS.UNAUTHORIZED,
+          error: ERRORS.MALFORMED_INPUT,
+          ID: request.ID,
         });
         sendResponse('');
         return;
