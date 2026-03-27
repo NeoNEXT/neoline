@@ -89,6 +89,8 @@ import {
   waitTxs,
   resetData,
   windowCallback,
+  checkAccountIsAuth,
+  checkSignV3ParamValid,
 } from './tool';
 import { walletHandlerMap, ethereumRPCHandler } from './handlers';
 import { ethErrors } from 'eth-rpc-errors';
@@ -301,7 +303,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           data: [],
           ID: request.ID,
           return: requestTarget.AccountPublicKey,
-          error: { ...ERRORS.DEFAULT, description: error?.message || error },
+          error: { ...ERRORS.UNKNOWN, description: error?.message || error },
         });
       }
       return;
@@ -1473,22 +1475,49 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTargetN3.SignMessageV3: {
       const params = request.parameter;
-      getStorage(STORAGE_NAME.connectedWebsites, async (res: ConnectedWebsitesType) => {
-        const address = wallet3.getAddressFromScriptHash(remove0xPrefix(params.account));
-        if (res?.[params.hostname]?.connectedAddress?.[address]) {
-          const localData = (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
-          const newData = { ...localData, [request.ID]: params };
-          setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
-          createWindow(`neo3-signature-v3?messageID=${request.ID}`);
-        } else {
-          windowCallback({
-            ID: request.ID,
-            return: requestTargetN3.SignMessageV3,
-            error: { ...ERRORS.MALFORMED_INPUT, description: 'The requested account has not been authorized by the user.' },
-          });
-        }
+      const address = wallet3.getAddressFromScriptHash(
+        remove0xPrefix(params.account),
+      );
+
+      const paramValid = await checkSignV3ParamValid({
+        address,
+        isLedgerCompatible: params.options?.isLedgerCompatible,
+      });
+
+      if (!paramValid) {
+        windowCallback({
+          ID: request.ID,
+          return: requestTargetN3.SignMessageV3,
+          error: {
+            ...ERRORS.MALFORMED_INPUT,
+            description:
+              "Ledger signing requires 'isLedgerCompatible' to be true.",
+          },
+        });
         sendResponse('');
-      })
+        return;
+      }
+
+      const isAuth = await checkAccountIsAuth({
+        address,
+        chainType: 'Neo3',
+        hostname: params.hostname,
+      });
+
+      if (isAuth) {
+        const localData =
+          (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+        const newData = { ...localData, [request.ID]: params };
+        setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
+        createWindow(`neo3-signature-v3?messageID=${request.ID}`);
+      } else {
+        windowCallback({
+          ID: request.ID,
+          return: requestTargetN3.SignMessageV3,
+          error: ERRORS.UNAUTHORIZED,
+        });
+      }
+      sendResponse('');
       return;
     }
     case requestTargetN3.SignTransaction: {

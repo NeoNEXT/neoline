@@ -17,6 +17,9 @@ import {
 } from '../common';
 import { getWalletType } from '../common/utils';
 import { EVENT } from '../common/data_module_neo2';
+import { Wallet3 } from '../common/data_module_neo3';
+import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+
 /**
  * Background methods support.
  * Call window.NeoLineBackground to use.
@@ -26,7 +29,7 @@ declare var chrome;
 export async function getChainType() {
   let chainType: ChainType = await getLocalStorage(
     STORAGE_NAME.chainType,
-    () => {}
+    () => {},
   );
 
   if (!chainType) {
@@ -127,12 +130,12 @@ export async function listenBlock(currNetwork: RpcNetwork) {
                 clearTimeout(timer);
               }
             },
-            '*'
+            '*',
           );
         });
       }
     },
-    '*'
+    '*',
   );
 }
 
@@ -160,7 +163,7 @@ export async function waitTxs(currNetwork: RpcNetwork, chainType: ChainType) {
         notification(
           explorerUrl,
           'Confirmed transaction',
-          `Transaction ${sliceTxid} confirmed! View on NeoTube`
+          `Transaction ${sliceTxid} confirmed! View on NeoTube`,
         );
         windowCallback({
           data: {
@@ -226,7 +229,7 @@ export function createWindow(url: string, notification = true) {
  */
 export function findNetworkConfigurationBy(
   rpcInfo: Partial<RpcNetwork>,
-  neoXNetworks: RpcNetwork[]
+  neoXNetworks: RpcNetwork[],
 ): RpcNetwork | null {
   const networkConfiguration = neoXNetworks.find((configuration) => {
     return Object.keys(rpcInfo).some((key) => {
@@ -235,4 +238,57 @@ export function findNetworkConfigurationBy(
   });
 
   return networkConfiguration || null;
+}
+
+export function checkAccountIsAuth({
+  address,
+  chainType,
+  hostname,
+}: {
+  address: string;
+  chainType: ChainType;
+  hostname: string;
+}) {
+  return new Promise<boolean>(async (resolve) => {
+    let walletArr: Array<Wallet2 | Wallet3>;
+    if (chainType === 'Neo2') {
+      walletArr =
+        (await getLocalStorage(STORAGE_NAME['walletArr-Neo2'], () => {})) || [];
+    } else if (chainType === 'Neo3') {
+      walletArr =
+        (await getLocalStorage(STORAGE_NAME['walletArr-Neo3'], () => {})) || [];
+    }
+    if (!walletArr.find((item) => item.accounts[0].address === address)) {
+      resolve(false);
+      return;
+    }
+    getStorage(STORAGE_NAME.connectedWebsites, (res: ConnectedWebsitesType) => {
+      resolve(!!res?.[hostname]?.connectedAddress?.[address]);
+    });
+  });
+}
+
+export function checkSignV3ParamValid({
+  address,
+  isLedgerCompatible,
+}: {
+  address: string;
+  isLedgerCompatible: boolean;
+}) {
+  return new Promise<boolean>(async (resolve) => {
+    const walletArr: Wallet3[] =
+      (await getLocalStorage(STORAGE_NAME['walletArr-Neo3'], () => {})) || [];
+    const signWallet = walletArr.find(
+      (item) => item.accounts[0].address === address,
+    );
+
+    if (
+      signWallet &&
+      signWallet.accounts[0].extra?.ledgerSLIP44 &&
+      isLedgerCompatible === false
+    ) {
+      resolve(false);
+    }
+    resolve(true);
+  });
 }

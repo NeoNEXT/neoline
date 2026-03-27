@@ -30,7 +30,7 @@ import {
   N3AddressToScriptHash,
   N3ScriptHashToAddress,
 } from '../common/data_module_neo3';
-import { ChainType, ALL_CHAINID } from '../common/constants';
+import { ALL_CHAINID } from '../common/constants';
 import {
   checkNeoXConnectAndLogin,
   sendMessage,
@@ -61,7 +61,7 @@ export class Init {
   }
 
   public async getAccount(): Promise<Account> {
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
+    const isAuth = await checkNeoXConnectAndLogin('Neo3');
     if (isAuth === true) {
       return sendMessage(requestTarget.Account);
     }
@@ -69,7 +69,7 @@ export class Init {
   }
 
   public async getPublicKey(): Promise<AccountPublicKey> {
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
+    const isAuth = await checkNeoXConnectAndLogin('Neo3');
     if (isAuth === true) {
       return sendMessage(requestTarget.AccountPublicKey);
     }
@@ -278,7 +278,7 @@ export class Init {
         });
       }
     }
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
+    const isAuth = await checkNeoXConnectAndLogin('Neo3');
     if (isAuth === true) {
       (parameter as any).hostname = location.hostname;
       return sendMessage(requestTargetN3.Invoke, parameter);
@@ -295,7 +295,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
+    const isAuth = await checkNeoXConnectAndLogin('Neo3');
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignMessage, parameter);
     }
@@ -311,7 +311,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
+    const isAuth = await checkNeoXConnectAndLogin('Neo3');
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignMessageV2, parameter);
     }
@@ -327,7 +327,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
+    const isAuth = await checkNeoXConnectAndLogin('Neo3');
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignMessageWithoutSalt, parameter);
     }
@@ -343,7 +343,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
+    const isAuth = await checkNeoXConnectAndLogin('Neo3');
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignMessageWithoutSaltV2, parameter);
     }
@@ -356,7 +356,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
+    const isAuth = await checkNeoXConnectAndLogin('Neo3');
     if (isAuth === true) {
       return sendMessage(requestTargetN3.SignTransaction, parameter);
     }
@@ -375,7 +375,7 @@ export class Init {
         reject(ERRORS.CONNECTION_DENIED);
       });
     }
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
+    const isAuth = await checkNeoXConnectAndLogin('Neo3');
     if (isAuth === true) {
       return sendMessage(requestTargetN3.Send, parameter);
     }
@@ -424,7 +424,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
+    const isAuth = await checkNeoXConnectAndLogin('Neo3');
     if (isAuth === true) {
       (parameter as any).hostname = location.hostname;
       return sendMessage(requestTargetN3.InvokeMultiple, parameter);
@@ -445,7 +445,7 @@ export class Init {
     }
     parameter.hostname = location.hostname;
     parameter.icon = getIcon();
-    parameter.chainType = ChainType.Neo3;
+    parameter.chainType = 'Neo3';
     return sendMessage(requestTargetN3.WalletSwitchNetwork, parameter);
   }
 
@@ -453,7 +453,7 @@ export class Init {
     const parameter: WalletSwitchAccountArg = {
       hostname: location.hostname,
       icon: getIcon(),
-      chainType: ChainType.Neo3,
+      chainType: 'Neo3',
     };
     return sendMessage(requestTargetN3.WalletSwitchAccount, parameter);
   }

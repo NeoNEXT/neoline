@@ -1,6 +1,6 @@
 {
   "compileOnSave": true,
-  "include": ["./"],
+  "include": ["./", "../cross-runtime/**/*"],
   "compilerOptions": {
     "baseUrl": ".",
     "sourceMap": false,
@@ -8,7 +8,7 @@
     "target": "es2015",
     "lib": ["dom", "es2017"],
     "outDir": "../dist",
-    "rootDir": ".",
+    "rootDir": "..",
     "downlevelIteration": true,
     "resolveJsonModule": true,
     "esModuleInterop": true,

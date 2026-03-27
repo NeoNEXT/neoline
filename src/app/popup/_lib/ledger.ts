@@ -1,3 +1,5 @@
+export { HardwareDevice} from '@cross-runtime/constants';
+
 export const SLIP44 = {
   Neo2: '80000378',
   Neo3: '80000378_next',
@@ -46,5 +48,3 @@ export const LedgerStatuses: { [key: string]: LedgerStatus } = {
     msg: 'errorLedgerOpen',
   },
 };
-
-export type HardwareDevice = 'Ledger' | 'OneKey' | 'QRCode';

@@ -1,0 +1,219 @@
+export const NEO =
+  '0xc56f33fc6ecfcd0c225c4ab356fee59390af8560be0e930faebe74a6daff7c9b';
+export const GAS =
+  '0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7';
+export const NEO3 = '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5';
+export const GAS3 = '0xd2a4cff31913016155e38e474a2c06d08be276cf';
+
+export type HardwareDevice = 'Ledger' | 'OneKey' | 'QRCode';
+
+export const DEFAULT_NETWORKS = [
+  'MainNet',
+  'N3MainNet',
+  'N3TestNet',
+  'N3PrivateNet',
+  'EVM',
+];
+
+export type ChainType = 'Neo2' | 'Neo3' | 'NeoX';
+
+export enum NetworkType {
+  MainNet = 'MainNet',
+  N3MainNet = 'N3MainNet',
+  N3TestNet = 'N3TestNet',
+  N3PrivateNet = 'N3PrivateNet',
+  EVM = 'EVM',
+}
+
+interface RpcUrlItem {
+  url: string;
+  isDefault?: boolean;
+}
+export interface RpcNetwork {
+  name: string;
+  rpcUrl: string;
+  rpcUrlArr?: RpcUrlItem[];
+  network: NetworkType;
+  explorer?: string;
+  magicNumber?: number;
+  chainId: number;
+  id: number;
+  // evm
+  symbol?: string;
+  version?: number;
+  isDefault?: boolean;
+}
+
+const N2_NETWORK_VERSION = 5;
+export const N2MainnetNetwork: RpcNetwork = {
+  rpcUrl: 'http://seed1.ngd.network:10332',
+  rpcUrlArr: [
+    { url: 'http://seed1.ngd.network:10332' },
+    { url: 'http://seed2.ngd.network:10332' },
+  ],
+  name: 'N2 Mainnet',
+  explorer: '',
+  network: NetworkType.MainNet,
+  chainId: 1,
+  id: 1,
+  version: N2_NETWORK_VERSION,
+};
+
+export const DEFAULT_N2_RPC_NETWORK: RpcNetwork[] = [
+  N2MainnetNetwork,
+];
+
+const N3_NETWORK_VERSION = 3;
+export const N3MainnetNetwork: RpcNetwork = {
+  rpcUrl: 'http://seed1.neo.org:10332',
+  rpcUrlArr: [
+    { url: 'http://seed1.neo.org:10332' },
+    { url: 'http://seed2.neo.org:10332' },
+    { url: 'http://seed3.neo.org:10332' },
+    { url: 'http://seed4.neo.org:10332' },
+    { url: 'http://seed5.neo.org:10332' },
+    { url: 'https://n3seed1.ngd.network:10332' },
+    { url: 'https://n3seed2.ngd.network:10332' },
+    { url: 'https://neo3-mainnet.neoline.io' },
+  ],
+  name: 'N3 Mainnet',
+  magicNumber: 860833102,
+  explorer: 'https://neotube.io/',
+  network: NetworkType.N3MainNet,
+  chainId: 3,
+  id: 3,
+  version: N3_NETWORK_VERSION,
+};
+
+export const N3TestnetNetwork: RpcNetwork = {
+  rpcUrl: 'http://seed3t5.neo.org:20332',
+  rpcUrlArr: [
+    { url: 'http://seed1t5.neo.org:20332' },
+    { url: 'http://seed2t5.neo.org:20332' },
+    { url: 'http://seed3t5.neo.org:20332' },
+    { url: 'http://seed4t5.neo.org:20332' },
+    { url: 'http://seed5t5.neo.org:20332' },
+  ],
+  name: 'N3 Testnet',
+  magicNumber: 894710606,
+  explorer: 'https://testnet.neotube.io/',
+  network: NetworkType.N3TestNet,
+  chainId: 6,
+  id: 6,
+  version: N3_NETWORK_VERSION,
+};
+
+export const DEFAULT_N3_RPC_NETWORK: RpcNetwork[] = [
+  N3MainnetNetwork,
+  N3TestnetNetwork,
+];
+
+const NEOX_NETWORK_VERSION = 4;
+export const NeoXMainnetNetwork: RpcNetwork = {
+  id: 47763,
+  symbol: 'GAS',
+  chainId: 47763,
+  name: 'Neo X Mainnet',
+  network: NetworkType.EVM,
+  rpcUrl: 'https://mainnet-1.rpc.banelabs.org',
+  rpcUrlArr: [
+    { url: 'https://mainnet-1.rpc.banelabs.org', isDefault: true },
+    { url: 'https://mainnet-2.rpc.banelabs.org', isDefault: true },
+  ],
+  explorer: 'https://xexplorer.neo.org/',
+  version: NEOX_NETWORK_VERSION,
+  isDefault: true,
+};
+export const NeoXTestnetNetwork: RpcNetwork = {
+  id: 12227332,
+  symbol: 'GAS',
+  chainId: 12227332,
+  name: 'Neo X Testnet',
+  network: NetworkType.EVM,
+  rpcUrl: 'https://neoxt4seed1.ngd.network',
+  rpcUrlArr: [
+    { url: 'https://neoxt4seed1.ngd.network', isDefault: true },
+    { url: 'https://testnet.rpc.banelabs.org', isDefault: true },
+  ],
+  explorer: 'https://xt4scan.ngd.network',
+  version: NEOX_NETWORK_VERSION,
+  isDefault: true,
+};
+export const DEFAULT_NEOX_RPC_NETWORK: RpcNetwork[] = [
+  NeoXMainnetNetwork,
+  NeoXTestnetNetwork,
+];
+
+const N3PrivateNetworkChainId = 0;
+export const EVMNetworkChainId = -1;
+
+export const ALL_CHAINID = [
+  N3PrivateNetworkChainId,
+  N2MainnetNetwork.chainId,
+  N3MainnetNetwork.chainId,
+  N3TestnetNetwork.chainId,
+];
+
+export const DEFAULT_RPC_URLS = {
+  lastModified: null,
+  nodes: {
+    [N2MainnetNetwork.chainId]: [
+      'http://seed1.ngd.network:10332',
+      'http://seed2.ngd.network:10332',
+      'http://seed6.ngd.network:10332',
+      'http://seed8.ngd.network:10332',
+    ],
+    [N3MainnetNetwork.chainId]: [
+      'http://seed1.neo.org:10332',
+      'http://seed2.neo.org:10332',
+      'http://seed3.neo.org:10332',
+      'http://seed4.neo.org:10332',
+      'http://seed5.neo.org:10332',
+      'https://n3seed1.ngd.network:10332',
+      'https://n3seed2.ngd.network:10332',
+      'https://neo3-mainnet.neoline.io',
+    ],
+    [N3TestnetNetwork.chainId]: [
+      'http://seed1t5.neo.org:20332',
+      'http://seed2t5.neo.org:20332',
+      'http://seed3t5.neo.org:20332',
+      'http://seed4t5.neo.org:20332',
+      'http://seed5t5.neo.org:20332',
+    ],
+  },
+};
+
+export const SECRET_PASSPHRASE = 'secret key neoline';
+
+export enum STORAGE_NAME {
+  InvokeArgsArray = 'InvokeArgsArray',
+  hasLoginAddress = 'hasLoginAddress',
+  shouldFindNode = 'shouldFindNode',
+  n2Networks = 'n2Networks',
+  n3Networks = 'n3Networks',
+  neoXNetworks = 'neoXNetworks',
+  n2SelectedNetworkIndex = 'n2SelectedNetworkIndex',
+  n3SelectedNetworkIndex = 'n3SelectedNetworkIndex',
+  neoXSelectedNetworkIndex = 'neoXSelectedNetworkIndex',
+  chainType = 'chainType',
+  wallet = 'wallet',
+  walletArr = 'walletArr',
+  'walletArr-Neo3' = 'walletArr-Neo3',
+  'walletArr-NeoX' = 'walletArr-NeoX',
+  WIFArr = 'WIFArr',
+  'WIFArr-Neo3' = 'WIFArr-Neo3',
+  connectedWebsites = 'connectedWebsitesV2',
+}
+
+export interface ConnectedWebsitesType {
+  [hostname: string]: {
+    title: string;
+    icon: string;
+    connectedAddress: {
+      [address: string]: {
+        keep: boolean;
+        chain: ChainType;
+      };
+    };
+  };
+}

@@ -2,13 +2,7 @@ import { ethErrors } from 'eth-rpc-errors';
 import { getCurrentNeoXNetwork } from '../tool';
 import { ethers } from 'ethers';
 import { validate } from 'jsonschema';
-
-type SignTypedDataMessageV3V4 = {
-  types: Record<string, unknown>;
-  domain: Record<string, unknown>;
-  primaryType: string;
-  message: unknown;
-};
+import type { SignTypedDataMessageV3V4 } from '../../../cross-runtime/evm-shared';
 
 export async function validateSigTypedDataV4Params(
   params: [string, SignTypedDataMessageV3V4]

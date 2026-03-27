@@ -11,8 +11,8 @@ import {
   Base64Encoded,
   Block,
   ContractParametersContext,
-  ErrorCode,
-  DApiError,
+  NEP21ErrorCode,
+  NEP21Error,
   EventNameEnum,
   FeeOptions,
   Integer,
@@ -30,7 +30,6 @@ import {
 } from '../common/data_module_neo3_v2';
 import { checkNeoXConnectAndLogin, sendMessage } from './common';
 import {
-  ChainType,
   N3MainnetNetwork,
   N3TestnetNetwork,
 } from '../common/constants';
@@ -235,7 +234,7 @@ class NEOLineN3Controller extends EventEmitter {
     );
 
     if (!result.signedTx) {
-      throw normalizeError(LEGACY_ERRORS.DEFAULT);
+      throw normalizeError(LEGACY_ERRORS.FAILED);
     }
 
     return {
@@ -287,17 +286,23 @@ class NEOLineN3Controller extends EventEmitter {
 
     if (options?.isTypedData) {
       throw {
-        code: ErrorCode.UNSUPPORTED,
+        code: NEP21ErrorCode.UNSUPPORTED,
         message: 'Typed data is not supported',
       };
     }
+
+    const newOptions = {
+      isBase64Encoded: options?.isBase64Encoded ?? false,
+      isLedgerCompatible: options.isLedgerCompatible ?? false,
+      isTypedData: options.isTypedData ?? false,
+    };
 
     return this.sendAuthorizedMessage<SignedMessage>(
       requestTargetN3.SignMessageV3,
       {
         message,
         account,
-        options,
+        options: newOptions,
         hostname: location.hostname,
       },
     );
@@ -488,7 +493,7 @@ class NEOLineN3Controller extends EventEmitter {
     target: requestTargetN3,
     parameter?: any,
   ): Promise<T> {
-    const isAuth = await checkNeoXConnectAndLogin(ChainType.Neo3);
+    const isAuth = await checkNeoXConnectAndLogin('Neo3');
     if (isAuth !== true) {
       throw normalizeError(LEGACY_ERRORS.CONNECTION_DENIED);
     }
@@ -513,6 +518,7 @@ window.addEventListener('message', (event) => {
       provider.connected = connected;
       provider.network = currentNetwork.magicNumber;
       currentN3RpcUrl = currentNetwork.rpcUrl;
+      announceProvider();
       break;
     case EVENT.ACCOUNT_CHANGED:
       provider.connected = Array.isArray(response.data)
@@ -541,7 +547,6 @@ window.addEventListener('message', (event) => {
 });
 
 window.addEventListener('Neo.DapiProvider.request', announceProvider);
-announceProvider();
 
 function announceProvider() {
   window.dispatchEvent(
@@ -596,44 +601,63 @@ function pickNetwork(networks: Network[], current: Network) {
   return networks?.[0] || current;
 }
 
-function normalizeError(legacyError: any): DApiError {
-  let error: DApiError = {
-    code: ErrorCode.UNKNOWN,
-    message: 'Unknown error',
-  };
+function normalizeError(legacyError: any): NEP21Error {
+  let error: NEP21Error;
   switch (legacyError?.type) {
+    case LEGACY_ERRORS.CHAIN_NOT_MATCH.type:
+      error = {
+        code: NEP21ErrorCode.UNSUPPORTED,
+        message: LEGACY_ERRORS.CHAIN_NOT_MATCH.description,
+      };
+      break;
+    case LEGACY_ERRORS.UNAUTHORIZED.type:
+      error = {
+        code: NEP21ErrorCode.UNSUPPORTED,
+        message: LEGACY_ERRORS.UNAUTHORIZED.description,
+      };
+      break;
     case LEGACY_ERRORS.MALFORMED_INPUT.type:
       error = {
-        code: ErrorCode.INVALID,
+        code: NEP21ErrorCode.INVALID,
         message: LEGACY_ERRORS.MALFORMED_INPUT.description,
       };
       break;
-    case LEGACY_ERRORS.RPC_ERROR.type:
+    case LEGACY_ERRORS.FAILED.type:
       error = {
-        code: ErrorCode.RPC_ERROR,
-        message: LEGACY_ERRORS.RPC_ERROR.description,
+        code: NEP21ErrorCode.FAILED,
+        message: LEGACY_ERRORS.FAILED.description,
+      };
+      break;
+    case LEGACY_ERRORS.CANCELLED.type:
+    case LEGACY_ERRORS.CONNECTION_DENIED.type:
+      error = {
+        code: NEP21ErrorCode.CANCELED,
+        message: LEGACY_ERRORS.CANCELLED.description,
       };
       break;
     case LEGACY_ERRORS.INSUFFICIENT_FUNDS.type:
       error = {
-        code: ErrorCode.INSUFFICIENT_FUNDS,
+        code: NEP21ErrorCode.INSUFFICIENT_FUNDS,
         message: LEGACY_ERRORS.INSUFFICIENT_FUNDS.description,
       };
       break;
-    case LEGACY_ERRORS.CANCELLED.type:
+    case LEGACY_ERRORS.RPC_ERROR.type:
       error = {
-        code: ErrorCode.CANCELED,
-        message: LEGACY_ERRORS.CANCELLED.description,
+        code: NEP21ErrorCode.RPC_ERROR,
+        message: LEGACY_ERRORS.RPC_ERROR.description,
       };
       break;
-    case LEGACY_ERRORS.CONNECTION_DENIED.type:
+    default:
       error = {
-        code: ErrorCode.INVALID,
-        message: LEGACY_ERRORS.CONNECTION_DENIED.description,
+        code: NEP21ErrorCode.UNKNOWN,
+        message: LEGACY_ERRORS.UNKNOWN.description,
       };
       break;
   }
-  if (error.message !== legacyError.description) {
+  if (
+    legacyError?.type !== LEGACY_ERRORS.CONNECTION_DENIED.type &&
+    error.message !== legacyError.description
+  ) {
     error.data = legacyError.description;
   }
   return error;

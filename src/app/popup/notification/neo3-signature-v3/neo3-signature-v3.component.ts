@@ -52,6 +52,7 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neo3WIFArr = state.neo3WIFArr;
       this.neo3WalletArr = state.neo3WalletArr;
+      this.getSignWallet();
     });
   }
 
@@ -64,34 +65,11 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
         .subscribe((invokeArgsArray) => {
           this.invokeArgsArray = invokeArgsArray;
           this.params = invokeArgsArray[this.messageID];
-          if (!this.params || this.params.message) {
+          if (!this.params) {
             return;
           }
-          this.signAddress = wallet.getAddressFromScriptHash(
-            u.remove0xPrefix(this.params.account),
-          );
-          this.signWallet = this.neo3WalletArr.find(
-            (item) => item.accounts[0].address === this.signAddress,
-          );
+          this.getSignWallet();
           this.displayMessage = this.formatMessage(this.params.message);
-
-          if (
-            this.signWallet.accounts[0]?.extra?.ledgerSLIP44 &&
-            this.params.options.isLedgerCompatible === false
-          ) {
-            this.chrome.windowCallback(
-              {
-                error: {
-                  ...ERRORS.MALFORMED_INPUT,
-                  description:
-                    "Ledger signing requires 'isLedgerCompatible' to be true.",
-                },
-                return: requestTargetN3.SignMessageV3,
-                ID: this.messageID,
-              },
-              true,
-            );
-          }
         });
     });
     window.onbeforeunload = () => {
@@ -101,6 +79,17 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
         this.invokeArgsArray,
       );
     };
+  }
+
+  private getSignWallet() {
+    if (!this.signAddress && this.neo3WalletArr && this.params?.account) {
+      this.signAddress = wallet.getAddressFromScriptHash(
+        u.remove0xPrefix(this.params.account),
+      );
+      this.signWallet = this.neo3WalletArr.find(
+        (item) => item.accounts[0].address === this.signAddress,
+      );
+    }
   }
 
   cancel() {

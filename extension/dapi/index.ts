@@ -21,7 +21,7 @@ import {
   WalletSwitchAccountArg,
 } from '../common/data_module_neo2';
 export { EVENT, ERRORS } from '../common/data_module_neo2';
-import { ChainType, ALL_CHAINID } from '../common/constants';
+import { ALL_CHAINID } from '../common/constants';
 import {
   checkConnectAndLogin,
   sendMessage,
@@ -76,7 +76,7 @@ export class Init {
   }
 
   public async getAccount(): Promise<Account> {
-    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
+    const isAuth = await checkConnectAndLogin('Neo2');
     if (isAuth === true) {
       return sendMessage(requestTarget.Account);
     }
@@ -84,7 +84,7 @@ export class Init {
   }
 
   public async getPublicKey(): Promise<AccountPublicKey> {
-    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
+    const isAuth = await checkConnectAndLogin('Neo2');
     if (isAuth === true) {
       return sendMessage(requestTarget.AccountPublicKey);
     }
@@ -181,7 +181,7 @@ export class Init {
         reject(ERRORS.MALFORMED_INPUT);
       });
     }
-    const isAuth = await checkConnectAndLogin(ChainType.Neo2);
+    const isAuth = await checkConnectAndLogin('Neo2');
     if (isAuth === true) {
       return sendMessage(requestTarget.SignMessage, parameter);
     }
@@ -229,7 +229,7 @@ export class Init {
     }
     parameter.hostname = location.hostname;
     parameter.icon = getIcon();
-    parameter.chainType = ChainType.Neo2;
+    parameter.chainType = 'Neo2';
     return sendMessage(requestTarget.WalletSwitchNetwork, parameter);
   }
 
@@ -237,7 +237,7 @@ export class Init {
     const parameter: WalletSwitchAccountArg = {
       hostname: location.hostname,
       icon: getIcon(),
-      chainType: ChainType.Neo2,
+      chainType: 'Neo2',
     };
     return sendMessage(requestTarget.WalletSwitchAccount, parameter);
   }

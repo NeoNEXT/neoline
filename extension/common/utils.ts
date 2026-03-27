@@ -262,12 +262,12 @@ export function isPublicKey(key, encoded) {
 export function getWalletType() {
   return new Promise<ChainType>((resolve, reject) => {
     getLocalStorage('wallet', (wallet) => {
-      let currChainType = ChainType.Neo2;
+      let currChainType: ChainType = 'Neo2';
       if (wallet && isN3Address(wallet.accounts[0].address, 53)) {
-        currChainType = ChainType.Neo3;
+        currChainType = 'Neo3';
       }
       if (ethers.isAddress(wallet.accounts[0].address)) {
-        currChainType = ChainType.NeoX;
+        currChainType = 'NeoX';
       }
       resolve(currChainType);
     }).catch((err) => reject(err));

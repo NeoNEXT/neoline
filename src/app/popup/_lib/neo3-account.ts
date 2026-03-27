@@ -1,9 +1,12 @@
 import { N3MainnetNetwork, N3T4NetworkChainId, N3TestnetNetwork } from './type';
-import { Account, Wallet } from '@cityofzion/neon-core-neo3/lib/wallet';
-import { HardwareDevice } from './ledger';
 
-export const NEO3_CONTRACT = '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5';
-export const GAS3_CONTRACT = '0xd2a4cff31913016155e38e474a2c06d08be276cf';
+export {
+  NEO3 as NEO3_CONTRACT,
+  GAS3 as GAS3_CONTRACT,
+} from '@cross-runtime/constants';
+
+export { Account3, Wallet3 } from '@cross-runtime/neo3-shared';
+
 export const NEW_POLICY_CONTRACT = '0xcc5e4edd9f5f8dba8bb65734541df7a1c081c67b';
 
 const N3_NNS_CONTRACT = '0x50ac1c37690cc2cfc594472833cf57505d5f46de';
@@ -14,35 +17,3 @@ export const NNS_CONTRACT = {
   [N3T4NetworkChainId]: N3T4_NNS_CONTRACT,
   [N3TestnetNetwork.chainId]: N3T5_NNS_CONTRACT,
 };
-
-export class Account3 extends Account {
-  extra: {
-    [key: string]: any;
-    /** for create account */
-    hasBackup?: boolean;
-
-    /** for hardware account */
-    publicKey?: string;
-    ledgerSLIP44?: string;
-    ledgerAddressIndex?: number;
-    device?: HardwareDevice;
-  };
-  export() {
-    return {
-      ...super.export(),
-      extra: this.extra,
-    };
-  }
-}
-export class Wallet3 extends Wallet {
-  accounts: Account3[];
-  extra: {
-    [key: string]: any;
-  };
-  export() {
-    return {
-      ...super.export(),
-      extra: this.extra,
-    };
-  }
-}

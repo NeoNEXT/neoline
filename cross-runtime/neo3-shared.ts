@@ -1,0 +1,69 @@
+import { Account, Wallet } from '@cityofzion/neon-core-neo3/lib/wallet';
+import { HardwareDevice } from './constants';
+
+export enum requestTargetN3 {
+  Provider = 'neoline.target_provider_n3',
+  Networks = 'neoline.target_networks_n3',
+  Account = 'neoline.target_account_n3',
+  Accounts = 'neoline.target_accounts_n3',
+  AccountPublicKey = 'neoline.target_public_key_n3',
+  Storage = 'neoline.target_storage_n3',
+  InvokeRead = 'neoline.target_invoke_read_n3',
+  InvokeReadMulti = 'neoline.target_invoke_read_multi_n3',
+  VerifyMessage = 'neoline.target_verify_message_n3',
+  VerifyMessageV2 = 'neoline.target_verify_message_v2_n3',
+  Transaction = 'neoline.target_transaction_n3',
+  Block = 'neoline.target_block_n3',
+  ApplicationLog = 'neoline.target_application_log_n3',
+  Invoke = 'neoline.target_invoke_n3',
+  InvokeMulti = 'neoline.target_invoke_multi_n3',
+  SignMessage = 'neoline.target_sign_message_n3',
+  SignMessageV2 = 'neoline.target_sign_message_v2_n3',
+  SignMessageV3 = 'neoline.target_sign_message_v3_n3',
+  SignMessageWithoutSalt = 'neoline.target_sign_message_without_salt_n3',
+  SignMessageWithoutSaltV2 = 'neoline.target_sign_message_without_salt_v2_n3',
+  SignTransaction = 'neoline.target_sign_transaction_n3',
+  Deploy = 'neoline.target_deploy_n3',
+  Send = 'neoline.target_send_n3',
+  Connect = 'neoline.target_connect_n3',
+  Login = 'neoline.target_login_n3',
+  Balance = 'neoline.target_balance_n3',
+  InvokeMultiple = 'neoline.target_invoke_multiple_n3',
+  PickAddress = 'neoline.target_pick_address_n3',
+  AddressToScriptHash = 'neoline.target_address_toScriptHash_n3',
+  ScriptHashToAddress = 'neoline.target_scriptHash_toAddress_n3',
+  WalletSwitchNetwork = 'neoline.target_wallet_switch_network_n3',
+  WalletSwitchAccount = 'neoline.target_wallet_switch_account_n3',
+}
+
+export class Account3 extends Account {
+  extra: {
+    [key: string]: any;
+    /** for create account */
+    hasBackup?: boolean;
+
+    /** for hardware account */
+    publicKey?: string;
+    ledgerSLIP44?: string;
+    ledgerAddressIndex?: number;
+    device?: HardwareDevice;
+  };
+  export() {
+    return {
+      ...super.export(),
+      extra: this.extra,
+    };
+  }
+}
+export class Wallet3 extends Wallet {
+  accounts: Account3[];
+  extra: {
+    [key: string]: any;
+  };
+  export() {
+    return {
+      ...super.export(),
+      extra: this.extra,
+    };
+  }
+}

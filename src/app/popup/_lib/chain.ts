@@ -1,5 +1,7 @@
 import { ChainSelectItem } from './type';
 
+export { NetworkType } from '@cross-runtime/constants';
+
 /**
  * Chain type
  * - `Neo2`
@@ -27,14 +29,6 @@ export const AddNetworkChainTypeGroups: ChainSelectItem[] = [
   ChainTypeGroups[0],
   ChainTypeGroups[1],
 ];
-
-export enum NetworkType {
-  MainNet = 'MainNet',
-  N3MainNet = 'N3MainNet',
-  N3TestNet = 'N3TestNet',
-  N3PrivateNet = 'N3PrivateNet',
-  EVM = 'EVM',
-}
 
 export const CHAINID_OF_NETWORKTYPE = {
   0: 'N3 private network',

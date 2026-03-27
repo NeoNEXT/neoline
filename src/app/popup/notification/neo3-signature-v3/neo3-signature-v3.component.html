@@ -17,7 +17,7 @@
   </div>
   <div class="content">
     <p class="hex-label">{{ "message" | translate | async }}</p>
-    <p class="json-box serialize">{{ params.message }}</p>
+    <p class="json-box serialize">{{ displayMessage }}</p>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="cancel()">

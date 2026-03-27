@@ -92,7 +92,7 @@ export function getProvider(): Promise<Provider> {
     });
     promise.then((res: any) => {
       if (res === undefined || res === null) {
-        rejectMain(ERRORS.DEFAULT);
+        rejectMain(ERRORS.NO_PROVIDER);
       } else {
         const returnResult: Provider = {
           name: res.name,
