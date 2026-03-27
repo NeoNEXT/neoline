@@ -1,4 +1,4 @@
-<app-hardware-sign *ngIf="showHardwareSign" [chainType]="chainType" [currentWallet]="signWallet"
+<app-hardware-sign *ngIf="showHardwareSign" [chainType]="chainType" [currentWallet]="currentWallet"
   [unsignedTx]="params.message" [magicNumber]="0" [signOnly]="true"
   (backWithSignedTx)="handleHardwareSignedTx($event)"></app-hardware-sign>
 
@@ -12,7 +12,7 @@
       {{ "evmSignWarning" | translate | async }}
     </p>
     <p class="account">
-      <img [avatar]="signAddress" />{{ signAddress | longStr : 10 }}
+      <img [avatar]="address" />{{ address | longStr : 10 }}
     </p>
   </div>
   <div class="content">

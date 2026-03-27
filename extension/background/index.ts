@@ -89,8 +89,6 @@ import {
   waitTxs,
   resetData,
   windowCallback,
-  checkAccountIsAuth,
-  checkSignV3ParamValid,
 } from './tool';
 import { walletHandlerMap, ethereumRPCHandler } from './handlers';
 import { ethErrors } from 'eth-rpc-errors';
@@ -1494,41 +1492,21 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         return;
       }
 
+      const wallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
       const address = wallet3.getAddressFromScriptHash(
         remove0xPrefix(params.account),
       );
-
-      const paramValid = await checkSignV3ParamValid({
-        address,
-        isLedgerCompatible: params.options?.isLedgerCompatible,
-      });
-
-      if (!paramValid) {
+      if (
+        wallet !== undefined &&
+        wallet.accounts[0].address !== address
+      ) {
         windowCallback({
-          ID: request.ID,
           return: requestTargetN3.SignMessageV3,
-          error: {
-            ...ERRORS.MALFORMED_INPUT,
-            description:
-              "Ledger signing requires 'isLedgerCompatible' to be true.",
-          },
+          error: ERRORS.MALFORMED_INPUT,
+          ID: request.ID,
         });
         sendResponse('');
         return;
-      }
-
-      const isAuth = await checkAccountIsAuth({
-        address,
-        chainType: 'Neo3',
-        hostname: request.hostname,
-      });
-
-      if (!isAuth) {
-        windowCallback({
-          ID: request.ID,
-          return: requestTargetN3.SignMessageV3,
-          error: ERRORS.UNAUTHORIZED,
-        });
       }
       sendResponse('');
       return;
