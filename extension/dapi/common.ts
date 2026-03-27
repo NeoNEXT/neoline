@@ -7,12 +7,15 @@ import { ChainType } from '../common/constants';
 
 export function sendMessage<K>(
   target: requestTarget | requestTargetN3 | requestTargetEVM,
-  parameter?: any
+  parameter?: any,
 ): Promise<K> {
   const ID = getMessageID();
   return new Promise((resolveMain, rejectMain) => {
     const request = parameter ? { target, parameter, ID } : { target, ID };
-    window.postMessage(request, window.location.origin);
+    window.postMessage(
+      { ...request, hostname: location.hostname },
+      window.location.origin,
+    );
     const promise = new Promise((resolve, reject) => {
       const callbackFn = (event) => {
         const returnData = event.data;
@@ -42,30 +45,17 @@ export function sendMessage<K>(
 }
 
 export async function checkConnectAndLogin(
-  connectChain: ChainType
+  connectChain: ChainType,
 ): Promise<boolean> {
-  const connected = await connect(connectChain);
-  if (connected === true) {
-    const isLogin = await login();
-    if (isLogin === true) {
-      return true;
-    }
-  }
-  return false;
+  return await connect(connectChain);
 }
 
 export async function checkNeoXConnectAndLogin(
-  connectChain: ChainType
+  connectChain: ChainType,
 ): Promise<boolean> {
   const isSwitchToRequestChain = await switchToRequestChain(connectChain);
   if (isSwitchToRequestChain === true) {
-    const connected = await connect(connectChain);
-    if (connected === true) {
-      const isLogin = await login();
-      if (isLogin === true) {
-        return true;
-      }
-    }
+    return await connect(connectChain);
   }
   return false;
 }
@@ -76,7 +66,7 @@ export function getProvider(): Promise<Provider> {
       {
         target: requestTarget.Provider,
       },
-      window.location.origin
+      window.location.origin,
     );
     const promise = new Promise((resolve) => {
       const callbackFn = (event) => {
@@ -109,7 +99,7 @@ export function getProvider(): Promise<Provider> {
 
 export function getIcon() {
   const faviconEl: HTMLLinkElement = document.querySelector(
-    'link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]'
+    'link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]',
   );
   if (faviconEl) {
     return faviconEl?.href;
@@ -129,7 +119,7 @@ function connect(connectChain?: ChainType): Promise<boolean | any> {
         connectChain,
         ID,
       },
-      window.location.origin
+      window.location.origin,
     );
     const promise = new Promise((resolve) => {
       const callbackFn = (event) => {
@@ -150,35 +140,6 @@ function connect(connectChain?: ChainType): Promise<boolean | any> {
   });
 }
 
-export function login(): Promise<boolean | any> {
-  const ID = getMessageID();
-  return new Promise((resolveMain) => {
-    window.postMessage(
-      {
-        target: requestTarget.Login,
-        ID,
-      },
-      window.location.origin
-    );
-    const promise = new Promise((resolve) => {
-      const callbackFn = (event) => {
-        if (
-          event.data.return !== undefined &&
-          event.data.return === requestTarget.Login &&
-          event.data.ID === ID
-        ) {
-          resolve(event.data.data);
-          window.removeEventListener('message', callbackFn);
-        }
-      };
-      window.addEventListener('message', callbackFn);
-    });
-    promise.then((res) => {
-      resolveMain(res);
-    });
-  });
-}
-
 function switchToRequestChain(connectChain: ChainType): Promise<boolean | any> {
   const ID = getMessageID();
   return new Promise((resolveMain) => {
@@ -191,7 +152,7 @@ function switchToRequestChain(connectChain: ChainType): Promise<boolean | any> {
         connectChain,
         ID,
       },
-      window.location.origin
+      window.location.origin,
     );
     const promise = new Promise((resolve) => {
       const callbackFn = (event) => {

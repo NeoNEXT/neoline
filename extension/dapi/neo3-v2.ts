@@ -29,10 +29,7 @@ import {
   UInt256,
 } from '../common/data_module_neo3_v2';
 import { checkNeoXConnectAndLogin, sendMessage } from './common';
-import {
-  N3MainnetNetwork,
-  N3TestnetNetwork,
-} from '../common/constants';
+import { N3MainnetNetwork, N3TestnetNetwork } from '../common/constants';
 import {
   handleNeo3StackNumberValue,
   handleNeo3StackStringValue,
@@ -303,7 +300,6 @@ class NEOLineN3Controller extends EventEmitter {
         message,
         account,
         options: newOptions,
-        hostname: location.hostname,
       },
     );
   }

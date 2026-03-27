@@ -193,7 +193,6 @@ window.addEventListener(
             return;
           }
           case requestTarget.Connect:
-          case requestTarget.Login:
           case requestTarget.AccountPublicKey:
           case requestTarget.PickAddress:
           case requestTarget.WalletSwitchNetwork:

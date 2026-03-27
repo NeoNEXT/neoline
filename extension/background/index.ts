@@ -235,24 +235,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       );
       return true;
     }
-    case requestTarget.Login: {
-      getSessionStorage('password', (pwd) => {
-        if (pwd) {
-          windowCallback({
-            return: requestTarget.Login,
-            data: true,
-            ID: request.ID,
-          });
-        } else {
-          createWindow(
-            `/index.html#popup/login?notification=true&messageID=${request.ID}`,
-            false
-          );
-        }
-        sendResponse('');
-      });
-      return true;
-    }
     case requestTarget.AccountPublicKey: {
       try {
         const walletArrStorage =
@@ -1501,7 +1483,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       const isAuth = await checkAccountIsAuth({
         address,
         chainType: 'Neo3',
-        hostname: params.hostname,
+        hostname: request.hostname,
       });
 
       if (isAuth) {
@@ -1596,15 +1578,17 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTargetN3.Send: {
       const parameter = request.parameter as N3SendArgs;
-      const wallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
-      if (
-        wallet !== undefined &&
-        wallet.accounts[0].address !== parameter.fromAddress
-      ) {
+
+      const isAuth = await checkAccountIsAuth({
+        address: parameter.fromAddress,
+        chainType: 'Neo3',
+        hostname: request.hostname,
+      });
+      if (!isAuth) {
         windowCallback({
-          return: requestTargetN3.Send,
-          error: ERRORS.MALFORMED_INPUT,
           ID: request.ID,
+          return: requestTargetN3.Send,
+          error: ERRORS.UNAUTHORIZED,
         });
         sendResponse('');
         return;
