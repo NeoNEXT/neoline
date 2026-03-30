@@ -3,9 +3,9 @@ import { N3MainnetNetwork, N3T4NetworkChainId, N3TestnetNetwork } from './type';
 export {
   NEO3 as NEO3_CONTRACT,
   GAS3 as GAS3_CONTRACT,
-} from '@cross-runtime/constants';
+} from '../../../../cross-runtime/constants';
 
-export { Account3, Wallet3 } from '@cross-runtime/neo3-shared';
+export { Account3, Wallet3 } from '../../../../cross-runtime/neo3-shared';
 
 export const NEW_POLICY_CONTRACT = '0xcc5e4edd9f5f8dba8bb65734541df7a1c081c67b';
 

@@ -1,4 +1,4 @@
-export { HardwareDevice} from '@cross-runtime/constants';
+export { HardwareDevice } from '../../../../cross-runtime/constants';
 
 export const SLIP44 = {
   Neo2: '80000378',

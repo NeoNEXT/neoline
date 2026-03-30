@@ -1,6 +1,6 @@
 import { ChainSelectItem } from './type';
 
-export { NetworkType } from '@cross-runtime/constants';
+export { NetworkType } from '../../../../cross-runtime/constants';
 
 /**
  * Chain type

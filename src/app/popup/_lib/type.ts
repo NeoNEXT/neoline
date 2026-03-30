@@ -12,9 +12,9 @@ export {
   DEFAULT_N3_RPC_NETWORK,
   DEFAULT_RPC_URLS,
   ConnectedWebsitesType,
-} from '@cross-runtime/constants';
+} from '../../../../cross-runtime/constants';
 
-import { Wallet3 } from '@cross-runtime/neo3-shared';
+import { Wallet3 } from '../../../../cross-runtime/neo3-shared';
 
 export interface GasFeeSpeed {
   slow_price: string;
