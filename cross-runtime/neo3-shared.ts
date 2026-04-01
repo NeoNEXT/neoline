@@ -23,6 +23,7 @@ export enum requestTargetN3 {
   SignMessageWithoutSalt = 'neoline.target_sign_message_without_salt_n3',
   SignMessageWithoutSaltV2 = 'neoline.target_sign_message_without_salt_v2_n3',
   SignTransaction = 'neoline.target_sign_transaction_n3',
+  CreateTransaction = 'neoline.target_create_transaction_n3',
   Deploy = 'neoline.target_deploy_n3',
   Send = 'neoline.target_send_n3',
   Connect = 'neoline.target_connect_n3',

@@ -113,8 +113,14 @@ window.addEventListener(
                     address,
                     label: wallet.name,
                     hash: wallet3.getScriptHashFromAddress(address),
+                    // 暴露 contract 信息，方便 dAPI 签名流程后续重建单签或多签 witness。
+                    // Expose contract information so the dAPI signing flow can rebuild single-sig or multi-sig witnesses later.
+                    // contract: wallet.accounts[0].contract,
                     extra: {
                       isLedger: !!wallet.accounts[0].extra?.ledgerSLIP44,
+                      // 保留钱包公钥，供 detached signature 流程使用。
+                      // Keep the wallet public key for detached signature flows.
+                      // publicKey: wallet.accounts[0].extra?.publicKey,
                     },
                   };
                   if (currentWallet.accounts[0].address === address) {
@@ -160,6 +166,7 @@ window.addEventListener(
           case requestTargetN3.InvokeReadMulti:
           case requestTargetN3.Invoke:
           case requestTargetN3.InvokeMultiple:
+          case requestTargetN3.CreateTransaction:
           case requestTargetN3.Send:
           case requestTargetN3.VerifyMessage:
           case requestTargetN3.VerifyMessageV2:

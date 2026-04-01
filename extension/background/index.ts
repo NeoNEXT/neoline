@@ -54,6 +54,7 @@ import {
 import {
   N3ApplicationLogArgs,
   N3GetBlockInputArgs,
+  N3CreateTransactionArgs,
   N3GetStorageArgs,
   N3InvokeArgs,
   N3InvokeMultipleArgs,
@@ -89,10 +90,12 @@ import {
   waitTxs,
   resetData,
   windowCallback,
+  canCurrentWalletSignTransaction,
 } from './tool';
 import { walletHandlerMap, ethereumRPCHandler } from './handlers';
 import { ethErrors } from 'eth-rpc-errors';
 import { remove0xPrefix } from '@cityofzion/neon-core-neo3/lib/u';
+import { createNeo3Tx, handleInvokeArgs } from './neo3-tx';
 
 /**
  * Background methods support.
@@ -1512,18 +1515,78 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       return;
     }
     case requestTargetN3.SignTransaction: {
-      const params = request.parameter;
-      let queryString = '';
-      for (const key in params) {
-        if (params.hasOwnProperty(key)) {
-          const value =
-            key === 'transaction' ? JSON.stringify(params[key]) : params[key];
-          queryString += `${key}=${value}&`;
+      try {
+        const params = request.parameter || {};
+        const currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
+        if (!canCurrentWalletSignTransaction(params, currWallet)) {
+          windowCallback({
+            return: requestTargetN3.SignTransaction,
+            error: {
+              ...ERRORS.MALFORMED_INPUT,
+              description: 'Current account is not a signer in this transaction',
+            },
+            ID: request.ID,
+          });
+          sendResponse('');
+          return;
         }
+
+        const localData =
+          (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+        const newData = { ...localData, [request.ID]: params };
+        setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
+        createWindow(`neo3-sign-transaction?messageID=${request.ID}`);
+      } catch (error) {
+        windowCallback({
+          return: requestTargetN3.SignTransaction,
+          error: {
+            ...ERRORS.MALFORMED_INPUT,
+            description: error?.message || error,
+          },
+          ID: request.ID,
+        });
       }
-      createWindow(
-        `neo3-sign-transaction?${queryString}messageID=${request.ID}`
-      );
+      sendResponse('');
+      return;
+    }
+    case requestTargetN3.CreateTransaction: {
+      try {
+        const params = request.parameter as N3CreateTransactionArgs;
+        const transaction = await createNeo3Tx({
+          rpcUrl: currN3Network.rpcUrl,
+          invokeArgs: (params.invokeArgs || []).map((item) => ({
+            scriptHash: item.scriptHash,
+            operation: item.operation,
+            args: handleInvokeArgs(item.args),
+            abortOnFail: item.abortOnFail,
+          })),
+          signers: params.signers || [],
+          networkFee: '0',
+          systemFee: params.extraSystemFee,
+          overrideSystemFee: params.overrideSystemFee,
+        });
+
+        windowCallback({
+          return: requestTargetN3.CreateTransaction,
+          ID: request.ID,
+          data: transaction.serialize(false),
+          error: null,
+        });
+      } catch (error) {
+        windowCallback({
+          return: requestTargetN3.CreateTransaction,
+          ID: request.ID,
+          data: null,
+          error: {
+            ...ERRORS.RPC_ERROR,
+            description:
+              error?.error?.message ||
+              error?.error?.exception ||
+              error?.message ||
+              error,
+          },
+        });
+      }
       sendResponse('');
       return;
     }

@@ -4,6 +4,7 @@
   [currentWallet]="currentWallet"
   [unsignedTx]="tx"
   [magicNumber]="magicNumber ?? n3Network.magicNumber"
+  [signOnly]="signatureOnly"
   (backWithSignedTx)="handleHardwareSignedTx($event)"
 ></app-hardware-sign>
 <div class="container">

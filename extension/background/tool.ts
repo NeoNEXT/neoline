@@ -1,6 +1,5 @@
 import {
   ChainType,
-  ConnectedWebsitesType,
   DEFAULT_N2_RPC_NETWORK,
   DEFAULT_N3_RPC_NETWORK,
   DEFAULT_NEOX_RPC_NETWORK,
@@ -15,10 +14,10 @@ import {
   setLocalStorage,
   setStorage,
 } from '../common';
-import { getWalletType } from '../common/utils';
+import { getScriptHashFromAddress, getWalletType } from '../common/utils';
 import { EVENT } from '../common/data_module_neo2';
 import { Wallet3 } from '../common/data_module_neo3';
-import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
+import { tx as tx3} from '@cityofzion/neon-core-neo3/lib';
 
 /**
  * Background methods support.
@@ -238,4 +237,53 @@ export function findNetworkConfigurationBy(
   });
 
   return networkConfiguration || null;
+}
+
+function normalizeSignerHash(hash: any) {
+  return String(hash || '')
+    .replace(/^0x/i, '')
+    .toLowerCase();
+}
+
+function deserializeSignTransactionPayload(parameter: any) {
+  if (parameter?.context?.data) {
+    try {
+      return tx3.Transaction.deserialize(
+        Buffer.from(parameter.context.data, 'base64').toString('hex')
+      );
+    } catch (_) {
+      return new tx3.Transaction(
+        JSON.parse(Buffer.from(parameter.context.data, 'base64').toString())
+      );
+    }
+  }
+
+  if (parameter?.transaction) {
+    return new tx3.Transaction(parameter.transaction);
+  }
+
+  throw new Error('Missing transaction payload');
+}
+
+export function canCurrentWalletSignTransaction(parameter: any, currentWallet: Wallet3) {
+  const currentAddress = currentWallet?.accounts?.[0]?.address;
+  if (!currentAddress) {
+    return false;
+  }
+
+  const currentHash = normalizeSignerHash(getScriptHashFromAddress(currentAddress));
+  const transaction = deserializeSignTransactionPayload(parameter);
+  const hasSigner = (transaction.signers || []).some(
+    (signer) => normalizeSignerHash(signer.account?.toBigEndian?.()) === currentHash
+  );
+
+  if (!hasSigner) {
+    return false;
+  }
+
+  if (parameter?.context?.items) {
+    return !!parameter.context.items[currentHash];
+  }
+
+  return true;
 }

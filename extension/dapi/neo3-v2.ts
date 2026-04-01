@@ -35,7 +35,7 @@ import {
   handleNeo3StackStringValue,
   httpPostPromise,
 } from '../common';
-import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+import { tx, wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import BigNumber from 'bignumber.js';
 import { hex2base64 } from '@cityofzion/neon-core-neo3/lib/u';
 
@@ -126,7 +126,7 @@ class NEOLineN3Controller extends EventEmitter {
       !wallet3.isScriptHash(asset) ||
       !wallet3.isScriptHash(account)
     ) {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+      throw normalizeError({...LEGACY_ERRORS.MALFORMED_INPUT, description: `'asset' and 'account' must be valid script hashes`});
     }
 
     const result = (await httpPostPromise(currentN3RpcUrl, {
@@ -151,13 +151,30 @@ class NEOLineN3Controller extends EventEmitter {
     if (!asset || !from || !to || !amount) {
       throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
     }
-    if (
-      !isValidIntegerAmount(amount) ||
-      !wallet3.isScriptHash(asset) ||
-      !wallet3.isScriptHash(from) ||
-      !wallet3.isScriptHash(to)
-    ) {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+
+    if (!isValidIntegerAmount(amount)) {
+      throw normalizeError({
+        ...LEGACY_ERRORS.MALFORMED_INPUT,
+        description: `'amount' must be a positive integer in string format`,
+      });
+    }
+    if (!wallet3.isScriptHash(asset)) {
+      throw normalizeError({
+        ...LEGACY_ERRORS.MALFORMED_INPUT,
+        description: `'asset' must be a valid script hash`,
+      });
+    }
+    if (!wallet3.isScriptHash(from)) {
+      throw normalizeError({
+        ...LEGACY_ERRORS.MALFORMED_INPUT,
+        description: `'from' must be a valid script hash`,
+      });
+    }
+    if (!wallet3.isScriptHash(to)) {
+      throw normalizeError({
+        ...LEGACY_ERRORS.MALFORMED_INPUT,
+        description: `'to' must be a valid script hash`,
+      });
     }
 
     const toAddress = await wallet3.getAddressFromScriptHash(
@@ -219,54 +236,46 @@ class NEOLineN3Controller extends EventEmitter {
     signers?: Signer[],
     fee?: FeeOptions,
   ): Promise<ContractParametersContext> {
-    const { target, parameter } = await this.toInvokeRequest(
+    const parameter = await this.toCreateTransactionRequest(
       invocations,
       signers,
       fee,
-      true,
     );
-    const result = await this.sendAuthorizedMessage<LegacyInvokeResult>(
-      target,
+    const unsignedTx = await sendMessage<string>(
+      requestTargetN3.CreateTransaction,
       parameter,
-    );
+    ).catch((error) => {
+      throw normalizeError(error);
+    });
 
-    if (!result.signedTx) {
+    if (!unsignedTx) {
       throw normalizeError(LEGACY_ERRORS.FAILED);
     }
 
-    return {
-      type: 'Neo.Network.P2P.Payloads.Transaction',
-      hash: result.txid,
-      data: stripHexPrefix(result.signedTx),
-      items: {},
-      network: this.network,
-    };
+    const accounts = await sendMessage<Account[]>(requestTargetN3.Accounts)
+      .catch(() => []);
+
+    // 优先使用当前已打开账户里的 contract script；当前 provider 无法识别的 signer 先保留空 script，后续由对应钱包在 sign(context) 时补齐。
+    // Prefer the contract script from the currently opened account; leave the script empty for signers the current provider cannot resolve yet, and let the corresponding wallet fill it in during sign(context).
+    return buildContractParametersContext(unsignedTx, this.network, {
+      accounts,
+    });
   }
 
   async sign(
     context: ContractParametersContext,
   ): Promise<ContractParametersContext> {
-    if (!context?.data) {
+    if (!context?.data || context.type !== 'Neo.Network.P2P.Payloads.Transaction') {
       throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
     }
 
-    const signed = await this.sendAuthorizedMessage<any>(
+    return this.sendAuthorizedMessage<ContractParametersContext>(
       requestTargetN3.SignTransaction,
       {
-        transaction: JSON.parse(Buffer.from(context.data, 'base64').toString()),
-        magicNumber: context.network,
+        context,
+        hostname: location.hostname,
       },
     );
-
-    return {
-      ...context,
-      hash: signed.hash || context.hash,
-      data: hex2base64(
-        typeof signed.serialize === 'function'
-          ? signed.serialize(true)
-          : stripHexPrefix(signed.script || ''),
-      ),
-    };
   }
 
   async signMessage(
@@ -275,10 +284,10 @@ class NEOLineN3Controller extends EventEmitter {
     options?: SignOptions,
   ): Promise<SignedMessage> {
     if (!message) {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+      throw normalizeError({...LEGACY_ERRORS.MALFORMED_INPUT, description: `'message' is required`});
     }
     if (account && !wallet3.isScriptHash(account)) {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+      throw normalizeError({...LEGACY_ERRORS.MALFORMED_INPUT, description: `'account' must be a valid script hash`});
     }
 
     if (options?.isTypedData) {
@@ -443,11 +452,33 @@ class NEOLineN3Controller extends EventEmitter {
     broadcastOverride?: boolean,
   ) {
     if (!Array.isArray(invocations) || invocations.length === 0) {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+      throw normalizeError({...LEGACY_ERRORS.MALFORMED_INPUT, description: `'invocations' must be a non-empty array`});
+    }
+
+    if (fee.extraSystemFee && !isValidIntegerAmount(fee.extraSystemFee)) {
+      throw normalizeError({
+        ...LEGACY_ERRORS.MALFORMED_INPUT,
+        description: `''extraSystemFee' must be a positive integer in string format`,
+      });
+    }
+
+    if (
+      fee.suggestedSystemFee &&
+      !isValidIntegerAmount(fee.suggestedSystemFee)
+    ) {
+      throw normalizeError({
+        ...LEGACY_ERRORS.MALFORMED_INPUT,
+        description: `'suggestedSystemFee' must be a positive integer in string format`,
+      });
     }
 
     invocations.forEach(assertInvocation);
-    // const extraSystemFee = fee?.suggestedSystemFee ?? fee?.extraSystemFee;
+    const extraSystemFee = fee?.extraSystemFee
+      ? new BigNumber(fee.extraSystemFee).shiftedBy(-8).toFixed()
+      : undefined;
+    const suggestedSystemFee = fee?.suggestedSystemFee
+      ? new BigNumber(fee.suggestedSystemFee).shiftedBy(-8).toFixed()
+      : undefined;
 
     if (invocations.length === 1) {
       const [invocation] = invocations;
@@ -459,8 +490,8 @@ class NEOLineN3Controller extends EventEmitter {
           args: invocation.args || [],
           abortOnFail: invocation.abortOnFail,
           signers: signers || [],
-          extraSystemFee: fee?.extraSystemFee,
-          overrideSystemFee: fee?.suggestedSystemFee,
+          extraSystemFee: extraSystemFee,
+          overrideSystemFee: suggestedSystemFee,
           broadcastOverride,
           hostname: location.hostname,
         },
@@ -482,6 +513,55 @@ class NEOLineN3Controller extends EventEmitter {
         broadcastOverride,
         hostname: location.hostname,
       },
+    };
+  }
+
+  private async toCreateTransactionRequest(
+    invocations: InvocationArguments[],
+    signers?: Signer[],
+    fee?: FeeOptions,
+  ) {
+    if (!Array.isArray(invocations) || invocations.length === 0) {
+      throw normalizeError({
+        ...LEGACY_ERRORS.MALFORMED_INPUT,
+        description: `'invocations' must be a non-empty array`,
+      });
+    }
+
+    if (fee?.extraSystemFee && !isValidIntegerAmount(fee.extraSystemFee)) {
+      throw normalizeError({
+        ...LEGACY_ERRORS.MALFORMED_INPUT,
+        description: `''extraSystemFee' must be a positive integer in string format`,
+      });
+    }
+
+    if (
+      fee?.suggestedSystemFee &&
+      !isValidIntegerAmount(fee.suggestedSystemFee)
+    ) {
+      throw normalizeError({
+        ...LEGACY_ERRORS.MALFORMED_INPUT,
+        description: `'suggestedSystemFee' must be a positive integer in string format`,
+      });
+    }
+
+    invocations.forEach(assertInvocation);
+
+    return {
+      invokeArgs: invocations.map((item) => ({
+        scriptHash: item.hash,
+        operation: item.operation,
+        args: item.args || [],
+        abortOnFail: item.abortOnFail,
+      })),
+      signers: signers || [],
+      extraSystemFee: fee?.extraSystemFee
+        ? new BigNumber(fee.extraSystemFee).shiftedBy(-8).toFixed()
+        : undefined,
+      overrideSystemFee: fee?.suggestedSystemFee
+        ? new BigNumber(fee.suggestedSystemFee).shiftedBy(-8).toFixed()
+        : undefined,
+      hostname: location.hostname,
     };
   }
 
@@ -665,4 +745,221 @@ function returnRPCError(error) {
 
 function stripHexPrefix(value: string) {
   return value.startsWith('0x') ? value.slice(2) : value;
+}
+
+function buildContractParametersContext(
+  serializedTx: string,
+  network: Network,
+  options: {
+    accounts?: Account[];
+    seedItems?: ContractParametersContext['items'];
+    requireAllScripts?: boolean;
+  } = {},
+  hash?: UInt256,
+): ContractParametersContext {
+  const transaction = tx.Transaction.deserialize(stripHexPrefix(serializedTx));
+  const accountsByHash = createAccountMap(options.accounts || []);
+  const items = transaction.signers.reduce((acc, signer, index) => {
+    const account = signer.account.toBigEndian();
+    const seedItem = options.seedItems?.[account];
+    const accountInfo = accountsByHash[account];
+    const witness = transaction.witnesses.find((item) => {
+      try {
+        return item.scriptHash === account;
+      } catch (_) {
+        return false;
+      }
+    });
+    const witnessVerificationScript = ensureSignerVerificationScript(
+      account,
+      witness?.verificationScript?.toBigEndian(),
+    );
+    const seedVerificationScript = ensureSignerVerificationScript(
+      account,
+      decodeContextScript(seedItem?.script),
+    );
+    const accountVerificationScript = ensureSignerVerificationScript(
+      account,
+      decodeContextScript(accountInfo?.contract?.script),
+    );
+    const verificationScript =
+      witnessVerificationScript ||
+      seedVerificationScript ||
+      accountVerificationScript ||
+      '';
+    const base64VerificationScript = verificationScript
+      ? Buffer.from(verificationScript, 'hex').toString('base64')
+      : '';
+
+    if (options.requireAllScripts && !verificationScript) {
+      throw {
+        code: NEP21ErrorCode.UNSUPPORTED,
+        message: `Unable to resolve verification script for signer ${account}`,
+      };
+    }
+
+    const invocationScript = witness?.invocationScript?.toBigEndian() || '';
+    let signatures: Record<string, string> = {
+      ...(verificationScript ? (seedItem?.signatures || {}) : {}),
+    };
+
+    if (verificationScript && invocationScript) {
+      try {
+        // 把已有 invocation script 还原成 publicKey -> signature 的映射。
+        // Reconstruct the existing invocation script into a publicKey -> signature map.
+        const publicKeys =
+          wallet3.getPublicKeysFromVerificationScript(verificationScript);
+        const signedValues =
+          wallet3.getSignaturesFromInvocationScript(invocationScript);
+
+        signatures = publicKeys.reduce((output, publicKey, signatureIndex) => {
+          const signature = signedValues[signatureIndex];
+          if (signature) {
+            output[publicKey] = Buffer.from(signature, 'hex').toString(
+              'base64',
+            );
+          }
+          return output;
+        }, { ...(seedItem?.signatures || {}) });
+      } catch (_) {}
+    }
+
+    acc[account] = {
+      script: base64VerificationScript,
+      parameters: buildContextParameters(
+        verificationScript,
+        verificationScript ? seedItem?.parameters : [],
+        accountInfo?.contract?.parameters,
+        signatures,
+      ),
+      signatures,
+    };
+
+    return acc;
+  }, {});
+
+  return {
+    type: 'Neo.Network.P2P.Payloads.Transaction',
+    hash: hash || transaction.hash(),
+    data: hex2base64(transaction.serialize(true)),
+    items,
+    network,
+  };
+}
+
+function createAccountMap(accounts: Account[]) {
+  return accounts.reduce((acc, account) => {
+    acc[account.hash] = account;
+    return acc;
+  }, {} as Record<string, Account>);
+}
+
+function decodeContextScript(script?: string) {
+  if (!script) {
+    return '';
+  }
+
+  const normalized = stripHexPrefix(script);
+
+  if (/^[0-9a-fA-F]+$/.test(normalized) && normalized.length % 2 === 0) {
+    // 有些调用方直接传 hex，NEP-21 context 里通常则是 base64。
+    // Some callers pass hex directly, while NEP-21 contexts usually use base64.
+    return normalized;
+  }
+
+  return Buffer.from(script, 'base64').toString('hex');
+}
+
+function ensureSignerVerificationScript(
+  signerHash: string,
+  verificationScript?: string,
+) {
+  if (!verificationScript) {
+    return '';
+  }
+
+  try {
+    return wallet3.getScriptHashFromVerificationScript(verificationScript) ===
+      stripHexPrefix(signerHash)
+      ? verificationScript
+      : '';
+  } catch (_) {
+    return '';
+  }
+}
+
+function buildContextParameters(
+  verificationScript: string,
+  seedParameters: Argument[] = [],
+  contractParameters: Array<{ type: Argument['type']; name?: string }> = [],
+  signatures: Record<string, string> = {},
+): Argument[] {
+  const orderedSignatureValues = getOrderedSignatureValues(
+    verificationScript,
+    signatures,
+  );
+  // 优先复用调用方或账户自带的参数模板，保持 parameter name 稳定。
+  // Reuse the caller-provided or account-level parameter template first to keep parameter names stable.
+  const template =
+    seedParameters.length > 0
+      ? seedParameters
+      : contractParameters.map((parameter) => ({
+          name: parameter.name,
+          type: parameter.type,
+        }));
+
+  if (template.length > 0) {
+    return template.map((parameter, index) => ({
+      ...parameter,
+      value:
+        parameter.type === 'Signature'
+          ? orderedSignatureValues[index]
+          : parameter.value,
+    }));
+  }
+
+  if (!verificationScript) {
+    return [];
+  }
+
+  try {
+    const publicKeys =
+      wallet3.getPublicKeysFromVerificationScript(verificationScript);
+
+    if (publicKeys.length === 0) {
+      return [];
+    }
+
+    const threshold =
+      publicKeys.length > 1
+        ? wallet3.getSigningThresholdFromVerificationScript(verificationScript) || 1
+        : 1;
+
+    return Array.from({ length: threshold }, (_, index) => ({
+      type: 'Signature' as const,
+      value: orderedSignatureValues[index],
+    }));
+  } catch (_) {
+    return [];
+  }
+}
+
+function getOrderedSignatureValues(
+  verificationScript: string,
+  signatures: Record<string, string>,
+) {
+  if (!verificationScript) {
+    return Object.values(signatures);
+  }
+
+  try {
+    // 让 parameter 顺序与 verification script 对齐，保证多签槽位顺序稳定。
+    // Align parameter order with the verification script so multi-sig slots stay stable.
+    return wallet3
+      .getPublicKeysFromVerificationScript(verificationScript)
+      .map((publicKey) => signatures[publicKey])
+      .filter(Boolean);
+  } catch (_) {
+    return Object.values(signatures);
+  }
 }

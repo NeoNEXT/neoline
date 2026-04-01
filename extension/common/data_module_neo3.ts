@@ -94,6 +94,20 @@ export interface N3InvokeMultipleArgs {
   signers: SignerLike[];
 }
 
+export interface N3CreateTransactionArg {
+  scriptHash: string;
+  operation: string;
+  args: ContractParamJson[];
+  abortOnFail?: boolean;
+}
+
+export interface N3CreateTransactionArgs {
+  invokeArgs: N3CreateTransactionArg[];
+  signers: SignerLike[];
+  extraSystemFee?: string;
+  overrideSystemFee?: string;
+}
+
 export interface N3SendArgs {
   fromAddress: string;
   toAddress: string;
