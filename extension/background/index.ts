@@ -1575,6 +1575,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           networkFee: '0',
           systemFee: params.extraSystemFee,
           overrideSystemFee: params.overrideSystemFee,
+          attributes: params.attributes,
+          validUntilBlock: params.validUntilBlock,
         });
 
         windowCallback({

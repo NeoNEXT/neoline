@@ -283,6 +283,8 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
           networkFee: this.fee,
           systemFee: this.invokeParams.extraSystemFee,
           overrideSystemFee: this.invokeParams.overrideSystemFee,
+          attributes: this.invokeParams.attributes,
+          validUntilBlock: this.invokeParams.validUntilBlock,
         })
         .subscribe(
           async (unSignTx: Transaction) => {

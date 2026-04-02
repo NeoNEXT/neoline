@@ -1,4 +1,5 @@
 export { Account3, Wallet3, requestTargetN3 } from '../../cross-runtime/neo3-shared';
+import { TransactionAttributeJson } from '@cityofzion/neon-core-neo3/lib/tx/components';
 
 export enum EVENT {
   READY = 'NEOLine.N3.EVENT.READY',
@@ -78,6 +79,8 @@ export interface N3InvokeArgs {
   args: ContractParamJson[];
   fee?: string;
   signers: SignerLike[];
+  attributes?: TransactionAttributeJson[];
+  validUntilBlock?: number;
 }
 
 export interface N3InvokeMultiArg {
@@ -92,6 +95,8 @@ export interface N3InvokeMultipleArgs {
   invokeArgs: Array<N3InvokeMultiArg>;
   fee?: string;
   signers: SignerLike[];
+  attributes?: TransactionAttributeJson[];
+  validUntilBlock?: number;
 }
 
 export interface N3CreateTransactionArg {
@@ -106,6 +111,8 @@ export interface N3CreateTransactionArgs {
   signers: SignerLike[];
   extraSystemFee?: string;
   overrideSystemFee?: string;
+  attributes?: TransactionAttributeJson[];
+  validUntilBlock?: number;
 }
 
 export interface N3SendArgs {

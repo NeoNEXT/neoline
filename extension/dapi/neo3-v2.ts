@@ -14,7 +14,7 @@ import {
   NEP21ErrorCode,
   NEP21Error,
   EventNameEnum,
-  FeeOptions,
+  TransactionOptions,
   Integer,
   InvocationArguments,
   InvocationResult,
@@ -38,6 +38,7 @@ import {
 import { tx, wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import BigNumber from 'bignumber.js';
 import { hex2base64 } from '@cityofzion/neon-core-neo3/lib/u';
+import { TransactionAttributeJson } from '@cityofzion/neon-core-neo3/lib/tx';
 
 type LegacyAccount = {
   address: string;
@@ -210,12 +211,14 @@ class NEOLineN3Controller extends EventEmitter {
   async invoke(
     invocations: InvocationArguments[],
     signers?: Signer[],
-    fee?: FeeOptions,
+    attributes?: TransactionAttributeJson[],
+    options?: TransactionOptions,
   ): Promise<UInt256> {
     const { target, parameter } = await this.toInvokeRequest(
       invocations,
       signers,
-      fee,
+      attributes,
+      options,
       false,
     );
     const result = await this.sendAuthorizedMessage<LegacyInvokeResult>(
@@ -229,12 +232,14 @@ class NEOLineN3Controller extends EventEmitter {
   async makeTransaction(
     invocations: InvocationArguments[],
     signers?: Signer[],
-    fee?: FeeOptions,
+    attributes?: TransactionAttributeJson[],
+    options?: TransactionOptions,
   ): Promise<ContractParametersContext> {
     const parameter = await this.toCreateTransactionRequest(
       invocations,
       signers,
-      fee,
+      attributes,
+      options,
     );
     const unsignedTx = await sendMessage<string>(
       requestTargetN3.CreateTransaction,
@@ -443,36 +448,22 @@ class NEOLineN3Controller extends EventEmitter {
   private async toInvokeRequest(
     invocations: InvocationArguments[],
     signers?: Signer[],
-    fee?: FeeOptions,
+    attributes?: TransactionAttributeJson[],
+    options?: TransactionOptions,
     broadcastOverride?: boolean,
   ) {
     if (!Array.isArray(invocations) || invocations.length === 0) {
       throw normalizeError({...LEGACY_ERRORS.MALFORMED_INPUT, description: `'invocations' must be a non-empty array`});
     }
 
-    if (fee.extraSystemFee && !isValidIntegerAmount(fee.extraSystemFee)) {
-      throw normalizeError({
-        ...LEGACY_ERRORS.MALFORMED_INPUT,
-        description: `''extraSystemFee' must be a positive integer in string format`,
-      });
-    }
-
-    if (
-      fee.suggestedSystemFee &&
-      !isValidIntegerAmount(fee.suggestedSystemFee)
-    ) {
-      throw normalizeError({
-        ...LEGACY_ERRORS.MALFORMED_INPUT,
-        description: `'suggestedSystemFee' must be a positive integer in string format`,
-      });
-    }
+    assertSupportedTransactionOptions(attributes, options);
 
     invocations.forEach(assertInvocation);
-    const extraSystemFee = fee?.extraSystemFee
-      ? new BigNumber(fee.extraSystemFee).shiftedBy(-8).toFixed()
+    const extraSystemFee = options?.extraSystemFee
+      ? new BigNumber(options.extraSystemFee).shiftedBy(-8).toFixed()
       : undefined;
-    const suggestedSystemFee = fee?.suggestedSystemFee
-      ? new BigNumber(fee.suggestedSystemFee).shiftedBy(-8).toFixed()
+    const suggestedSystemFee = options?.suggestedSystemFee
+      ? new BigNumber(options.suggestedSystemFee).shiftedBy(-8).toFixed()
       : undefined;
 
     if (invocations.length === 1) {
@@ -485,8 +476,10 @@ class NEOLineN3Controller extends EventEmitter {
           args: invocation.args || [],
           abortOnFail: invocation.abortOnFail,
           signers: signers || [],
+          attributes: attributes || [],
           extraSystemFee: extraSystemFee,
           overrideSystemFee: suggestedSystemFee,
+          validUntilBlock: options?.validUntilBlock,
           broadcastOverride,
           hostname: location.hostname,
         },
@@ -503,8 +496,10 @@ class NEOLineN3Controller extends EventEmitter {
           abortOnFail: item.abortOnFail,
         })),
         signers: signers || [],
-        extraSystemFee: fee?.extraSystemFee,
-        overrideSystemFee: fee?.suggestedSystemFee,
+        attributes: attributes || [],
+        extraSystemFee: extraSystemFee,
+        overrideSystemFee: suggestedSystemFee,
+        validUntilBlock: options?.validUntilBlock,
         broadcastOverride,
         hostname: location.hostname,
       },
@@ -514,7 +509,8 @@ class NEOLineN3Controller extends EventEmitter {
   private async toCreateTransactionRequest(
     invocations: InvocationArguments[],
     signers?: Signer[],
-    fee?: FeeOptions,
+    attributes?: TransactionAttributeJson[],
+    options?: TransactionOptions,
   ) {
     if (!Array.isArray(invocations) || invocations.length === 0) {
       throw normalizeError({
@@ -523,22 +519,7 @@ class NEOLineN3Controller extends EventEmitter {
       });
     }
 
-    if (fee?.extraSystemFee && !isValidIntegerAmount(fee.extraSystemFee)) {
-      throw normalizeError({
-        ...LEGACY_ERRORS.MALFORMED_INPUT,
-        description: `''extraSystemFee' must be a positive integer in string format`,
-      });
-    }
-
-    if (
-      fee?.suggestedSystemFee &&
-      !isValidIntegerAmount(fee.suggestedSystemFee)
-    ) {
-      throw normalizeError({
-        ...LEGACY_ERRORS.MALFORMED_INPUT,
-        description: `'suggestedSystemFee' must be a positive integer in string format`,
-      });
-    }
+    assertSupportedTransactionOptions(attributes, options);
 
     invocations.forEach(assertInvocation);
 
@@ -550,12 +531,14 @@ class NEOLineN3Controller extends EventEmitter {
         abortOnFail: item.abortOnFail,
       })),
       signers: signers || [],
-      extraSystemFee: fee?.extraSystemFee
-        ? new BigNumber(fee.extraSystemFee).shiftedBy(-8).toFixed()
+      attributes: attributes || [],
+      extraSystemFee: options?.extraSystemFee
+        ? new BigNumber(options.extraSystemFee).shiftedBy(-8).toFixed()
         : undefined,
-      overrideSystemFee: fee?.suggestedSystemFee
-        ? new BigNumber(fee.suggestedSystemFee).shiftedBy(-8).toFixed()
+      overrideSystemFee: options?.suggestedSystemFee
+        ? new BigNumber(options.suggestedSystemFee).shiftedBy(-8).toFixed()
         : undefined,
+      validUntilBlock: options?.validUntilBlock,
       hostname: location.hostname,
     };
   }
@@ -645,6 +628,48 @@ function assertAuthenticationPayload(payload: AuthenticationChallengePayload) {
 function assertInvocation(invocation: InvocationArguments) {
   if (!invocation?.hash || !invocation?.operation) {
     throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+  }
+}
+
+function assertSupportedTransactionOptions(
+  attributes?: TransactionAttributeJson[],
+  options?: TransactionOptions,
+) {
+  if (attributes !== undefined && !Array.isArray(attributes)) {
+    throw normalizeError({
+      ...LEGACY_ERRORS.MALFORMED_INPUT,
+      description: `'attributes' must be an array`,
+    });
+  }
+
+  if (
+    options?.extraSystemFee !== undefined &&
+    !isValidIntegerAmount(options.extraSystemFee)
+  ) {
+    throw normalizeError({
+      ...LEGACY_ERRORS.MALFORMED_INPUT,
+      description: `'extraSystemFee' must be a positive integer in string format`,
+    });
+  }
+
+  if (
+    options?.suggestedSystemFee !== undefined &&
+    !isValidIntegerAmount(options.suggestedSystemFee)
+  ) {
+    throw normalizeError({
+      ...LEGACY_ERRORS.MALFORMED_INPUT,
+      description: `'suggestedSystemFee' must be a positive integer in string format`,
+    });
+  }
+
+  if (
+    options?.validUntilBlock !== undefined &&
+    (!Number.isInteger(options.validUntilBlock) || options.validUntilBlock < 0)
+  ) {
+    throw normalizeError({
+      ...LEGACY_ERRORS.MALFORMED_INPUT,
+      description: `'validUntilBlock' must be a non-negative integer`,
+    });
   }
 }
 

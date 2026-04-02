@@ -1,10 +1,13 @@
 import { sc, tx } from '@cityofzion/neon-core-neo3/lib';
+import { TransactionAttributeJson } from '@cityofzion/neon-core-neo3/lib/tx/components';
 
 interface Neo3Params {
   fee?: string;
   minReqFee?: string;
   extraSystemFee?: string;
   overrideSystemFee?: string;
+  attributes?: TransactionAttributeJson[];
+  validUntilBlock?: number;
   broadcastOverride?: boolean;
   signers: tx.SignerLike[];
   signersObj?: { name: string; value: string; }[]

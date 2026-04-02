@@ -9,6 +9,10 @@ import {
   Transaction,
   Witness,
 } from '@cityofzion/neon-core-neo3/lib/tx';
+import {
+  TransactionAttribute,
+  TransactionAttributeJson,
+} from '@cityofzion/neon-core-neo3/lib/tx/components';
 import BigNumber from 'bignumber.js';
 
 interface InvokeArg extends sc.ContractCall {
@@ -22,6 +26,8 @@ interface CreateNeo3TxInput {
   networkFee?: string;
   systemFee?: string;
   overrideSystemFee?: string;
+  attributes?: TransactionAttributeJson[];
+  validUntilBlock?: number;
 }
 
 // 这里只是为了给 RPC 估算手续费提供结构合法的 witness，因此固定的临时私钥就够了。
@@ -159,7 +165,10 @@ export async function createNeo3Tx(
 
   const transaction = new tx.Transaction({
     signers: params.signers,
-    validUntilBlock: currentHeight + 30,
+    attributes: (params.attributes || []).map((attribute) =>
+      TransactionAttribute.fromJson(attribute).export(),
+    ),
+    validUntilBlock: params.validUntilBlock ?? currentHeight + 30,
     script,
   });
 

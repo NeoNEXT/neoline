@@ -11,6 +11,10 @@ import {
   Transaction,
   Witness,
 } from '@cityofzion/neon-core-neo3/lib/tx';
+import {
+  TransactionAttribute,
+  TransactionAttributeJson,
+} from '@cityofzion/neon-core-neo3/lib/tx/components';
 import { Observable, from, throwError } from 'rxjs';
 import { Neo3Service } from '@/app/core/services/neo/neo3.service';
 import { NeoAssetService } from '@/app/core/services/neo/asset.service';
@@ -29,6 +33,8 @@ interface CreateNeo3TxInput {
   networkFee: string;
   systemFee?: any;
   overrideSystemFee?: any;
+  attributes?: TransactionAttributeJson[];
+  validUntilBlock?: number;
 }
 
 @Injectable()
@@ -112,7 +118,10 @@ export class Neo3InvokeService {
       const currentHeight = await rpcClientTemp.getBlockCount();
       vars.tx = new tx.Transaction({
         signers: params.signers,
-        validUntilBlock: currentHeight + 30,
+        attributes: (params.attributes || []).map((attribute) =>
+          TransactionAttribute.fromJson(attribute).export(),
+        ),
+        validUntilBlock: params.validUntilBlock ?? currentHeight + 30,
         systemFee: vars.systemFee,
         script,
       });

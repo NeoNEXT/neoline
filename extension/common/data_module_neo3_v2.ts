@@ -209,9 +209,10 @@ export type InvocationResult = {
   stack: StackItem[];
 };
 
-export type FeeOptions = {
+export type TransactionOptions = {
   suggestedSystemFee?: Integer;
   extraSystemFee?: Integer;
+  validUntilBlock?: number;
 };
 
 export type ContractParametersContext = {
