@@ -19,6 +19,7 @@ import { PopupPickAddressComponent } from './pick-address/pick-address.component
 import { PopupNoticeNeo3SignComponent } from './neo3-signature/neo3-signature.component';
 import { PopupNoticeNeo3SignV2Component } from './neo3-signature-v2/neo3-signature-v2.component';
 import { PopupNoticeNeo3SignV3Component } from './neo3-signature-v3/neo3-signature-v3.component';
+import { PopupNoticeNeo3AuthenticateComponent } from './neo3-authenticate/neo3-authenticate.component';
 import { PopupNoticeNeo3SignTransactionComponent } from './neo3-sign-transaction/neo3-sign-transaction.component';
 import { PopupWalletSwitchNetworkComponent } from './wallet-switch-network/wallet-switch-network.component';
 import { PopupWalletSwitchAccountComponent } from './wallet-switch-accout/wallet-switch-account.component';
@@ -49,6 +50,7 @@ import {
     PopupNoticeNeo3SignComponent,
     PopupNoticeNeo3SignV2Component,
     PopupNoticeNeo3SignV3Component,
+    PopupNoticeNeo3AuthenticateComponent,
     PopupNoticeNeo3SignTransactionComponent,
     PopupWalletSwitchNetworkComponent,
     PopupWalletSwitchAccountComponent,

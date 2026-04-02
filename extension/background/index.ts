@@ -1514,6 +1514,17 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       sendResponse('');
       return;
     }
+    case requestTargetN3.Authenticate: {
+      const params = request.parameter;
+      const localData =
+        (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+      const newData = { ...localData, [request.ID]: params };
+      setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
+      createWindow(`neo3-authenticate?messageID=${request.ID}`);
+
+      sendResponse('');
+      return;
+    }
     case requestTargetN3.SignTransaction: {
       try {
         const params = request.parameter || {};

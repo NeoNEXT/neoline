@@ -1,0 +1,32 @@
+@import "../common-scss/common.scss";
+
+.container {
+  .header .account {
+    margin-top: 8px;
+  }
+
+  .content.details {
+    .request-info {
+      background: var(--box-color);
+      border-radius: 8px;
+      padding: 16px;
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 16px;
+
+      .request-info-item {
+        align-items: flex-start;
+
+        .label {
+          min-width: 92px;
+        }
+
+        > span:last-child {
+          color: var(--important-title-color);
+          text-align: right;
+          word-break: break-word;
+        }
+      }
+    }
+  }
+}

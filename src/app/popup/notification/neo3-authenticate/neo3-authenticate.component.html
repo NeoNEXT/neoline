@@ -1,0 +1,42 @@
+<div class="container">
+  <div class="header">
+    <div class="invoke-type">
+      · {{ "AUTHENTICATE" }}
+    </div>
+    <p class="title">{{ "thSignTitle" | translate | async }}</p>
+    <p class="warning">
+      {{ "evmSignWarning" | translate | async }}
+    </p>
+    <p class="account">
+      <img [avatar]="address" />{{ address | longStr : 10 }}
+    </p>
+  </div>
+  <div class="content details">
+    <div class="request-info">
+      <div class="request-info-item">
+        <span class="label">Domain</span>
+        <span>{{ payload?.domain }}</span>
+      </div>
+      <div class="request-info-item">
+        <span class="label">Network</span>
+        <span>{{ displayNetworks }}</span>
+      </div>
+      <div class="request-info-item">
+        <span class="label">Nonce</span>
+        <span>{{ payload?.nonce }}</span>
+      </div>
+      <div class="request-info-item">
+        <span class="label">Timestamp</span>
+        <span>{{ payload?.timestamp * 1000 | date :  "yyyy-MM-dd HH:mm:ss" }}</span>
+      </div>
+    </div>
+  </div>
+  <div class="btn-group">
+    <button class="cancel" (click)="cancel()">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button class="confirm" (click)="authenticate()">
+      {{ "yes" | translate | async }}
+    </button>
+  </div>
+</div>

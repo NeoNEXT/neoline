@@ -83,22 +83,17 @@ class NEOLineN3Controller extends EventEmitter {
     payload: AuthenticationChallengePayload,
   ): Promise<AuthenticationResponsePayload> {
     assertAuthenticationPayload(payload);
-    const [account] = await this.getAccounts();
-    const signResult = await this.signMessage(
-      JSON.stringify(payload),
-      account.hash,
-      { isBase64Encoded: false },
-    );
+    if (!payload.allowed_algorithms.includes('ECDSA-P256')) {
+      throw {
+        code: NEP21ErrorCode.UNSUPPORTED,
+        message: 'Unsupported algorithm. Only ECDSA-P256 is supported.',
+      };
+    }
 
-    return {
-      algorithm: 'ECDSA-P256',
-      network: pickNetwork(payload.networks, this.network),
-      pubkey: signResult.pubkey,
-      address: account.address,
-      nonce: payload.nonce,
-      timestamp: payload.timestamp,
-      signature: signResult.signature,
-    };
+    return this.sendAuthorizedMessage<AuthenticationResponsePayload>(
+      requestTargetN3.Authenticate,
+      payload,
+    );
   }
 
   async getAccounts(): Promise<Account[]> {
@@ -655,11 +650,15 @@ function assertInvocation(invocation: InvocationArguments) {
 
 function isValidIntegerAmount(amount: Integer): boolean {
   if (typeof amount === 'number') {
-    return Number.isSafeInteger(amount);
+    return Number.isSafeInteger(amount) && amount >= 0;
   }
 
   if (typeof amount === 'string') {
-    return /^-?\d+$/.test(amount) && new BigNumber(amount).isInteger();
+    return (
+      /^\d+$/.test(amount) &&
+      new BigNumber(amount).isFinite() &&
+      new BigNumber(amount).isInteger()
+    );
   }
 
   return false;
@@ -684,6 +683,12 @@ function normalizeError(legacyError: any): NEP21Error {
       error = {
         code: NEP21ErrorCode.UNSUPPORTED,
         message: LEGACY_ERRORS.CHAIN_NOT_MATCH.description,
+      };
+      break;
+    case LEGACY_ERRORS.UNSUPPORTED.type:
+      error = {
+        code: NEP21ErrorCode.UNSUPPORTED,
+        message: LEGACY_ERRORS.UNSUPPORTED.description,
       };
       break;
     case LEGACY_ERRORS.UNAUTHORIZED.type:

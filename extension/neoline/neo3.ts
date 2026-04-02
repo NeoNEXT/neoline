@@ -55,6 +55,7 @@ const requireConnectRequest = [
   requestTargetN3.SignMessage,
   requestTargetN3.SignMessageV2,
   requestTargetN3.SignMessageV3,
+  requestTargetN3.Authenticate,
   requestTargetN3.SignMessageWithoutSalt,
   requestTargetN3.SignMessageWithoutSaltV2,
   requestTargetN3.SignTransaction,
@@ -175,6 +176,7 @@ window.addEventListener(
           case requestTargetN3.SignMessage:
           case requestTargetN3.SignMessageV2:
           case requestTargetN3.SignMessageV3:
+          case requestTargetN3.Authenticate:
           case requestTargetN3.SignTransaction: {
             getLocalStorage('chainType', async (res) => {
               let currChainType = res;

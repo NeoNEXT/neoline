@@ -52,6 +52,11 @@ export const ERRORS = {
     description: 'unknown error',
     data: null,
   },
+  UNSUPPORTED: {
+    type: 'UNSUPPORTED',
+    description: 'The requested feature or operation is not supported.',
+    data: null,
+  }
 };
 
 export enum EVENT {
