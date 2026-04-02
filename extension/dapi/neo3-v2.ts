@@ -45,20 +45,10 @@ type LegacyAccount = {
   label?: string;
 };
 
-type LegacySignResult = {
-  publicKey: string;
-  data: string;
-};
-
 type LegacyInvokeResult = {
   txid: string;
   signedTx?: string;
 };
-
-type LegacyBalanceResult = Record<
-  string,
-  Array<{ contract: string; amount: string }>
->;
 
 let currentN3RpcUrl = N3MainnetNetwork.rpcUrl;
 
@@ -693,13 +683,6 @@ function isUint256(param: UInt256): boolean {
   return typeof param === 'string' && /^(0x)?[0-9a-fA-F]{64}$/.test(param);
 }
 
-function pickNetwork(networks: Network[], current: Network) {
-  if (Array.isArray(networks) && networks.includes(current)) {
-    return current;
-  }
-
-  return networks?.[0] || current;
-}
 
 function normalizeError(legacyError: any): NEP21Error {
   let error: NEP21Error;
@@ -789,7 +772,7 @@ function buildContractParametersContext(
 ): ContractParametersContext {
   const transaction = tx.Transaction.deserialize(stripHexPrefix(serializedTx));
   const accountsByHash = createAccountMap(options.accounts || []);
-  const items = transaction.signers.reduce((acc, signer, index) => {
+  const items = transaction.signers.reduce((acc, signer) => {
     const account = signer.account.toBigEndian();
     const seedItem = options.seedItems?.[account];
     const accountInfo = accountsByHash[account];

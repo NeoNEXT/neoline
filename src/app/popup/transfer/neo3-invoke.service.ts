@@ -118,13 +118,14 @@ export class Neo3InvokeService {
       const currentHeight = await rpcClientTemp.getBlockCount();
       vars.tx = new tx.Transaction({
         signers: params.signers,
-        attributes: (params.attributes || []).map((attribute) =>
-          TransactionAttribute.fromJson(attribute).export(),
-        ),
         validUntilBlock: params.validUntilBlock ?? currentHeight + 30,
         systemFee: vars.systemFee,
         script,
       });
+      const attributes = (params.attributes || []).map((attribute) =>
+        TransactionAttribute.fromJson(attribute),
+      );
+      vars.tx.attributes = attributes;
 
       console.log('\u001b[32m  ✓ Transaction created \u001b[0m');
     }

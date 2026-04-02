@@ -162,15 +162,16 @@ export async function createNeo3Tx(
   const signerJson = toRpcSigners(params.signers);
   const script = toInvokeScript(params.invokeArgs);
   const currentHeight = await rpcClient.getBlockCount();
+  const attributes = (params.attributes || []).map((attribute) =>
+    TransactionAttribute.fromJson(attribute),
+  );
 
   const transaction = new tx.Transaction({
     signers: params.signers,
-    attributes: (params.attributes || []).map((attribute) =>
-      TransactionAttribute.fromJson(attribute).export(),
-    ),
     validUntilBlock: params.validUntilBlock ?? currentHeight + 30,
     script,
   });
+  transaction.attributes = attributes;
 
   if (params.overrideSystemFee) {
     transaction.systemFee = u.BigInteger.fromDecimal(
