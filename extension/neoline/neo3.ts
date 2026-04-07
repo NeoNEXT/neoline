@@ -79,9 +79,10 @@ window.addEventListener(
         const hostname = new URL(e.origin).hostname;
         const connectedAddress =
           allWebsites?.[hostname]?.connectedAddress || {};
+        const currentWalletAddress = currWallet?.accounts?.[0]?.address;
         if (
           requireConnectRequest.includes(e.data.target) &&
-          !connectedAddress[currWallet?.accounts[0]?.address]
+          !connectedAddress[currentWalletAddress]
         ) {
           window.postMessage(
             {
@@ -124,7 +125,7 @@ window.addEventListener(
                       // publicKey: wallet.accounts[0].extra?.publicKey,
                     },
                   };
-                  if (currentWallet.accounts[0].address === address) {
+                  if (currentWallet?.accounts?.[0]?.address === address) {
                     accounts.unshift(account);
                   } else {
                     accounts.push(account);
@@ -229,11 +230,13 @@ window.addEventListener(
 );
 
 async function initDApi() {
-  const n3Networks = await getLocalStorage(STORAGE_NAME.n3Networks, () => {});
-  const n3SelectedNetworkIndex = await getLocalStorage(
+  const n3Networks =
+    (await getLocalStorage(STORAGE_NAME.n3Networks, () => {})) ||
+    DEFAULT_N3_RPC_NETWORK;
+  const n3SelectedNetworkIndex = (await getLocalStorage(
     STORAGE_NAME.n3SelectedNetworkIndex,
     () => {},
-  );
+  )) ?? 0;
   const currentNetwork =
     n3Networks[n3SelectedNetworkIndex] || DEFAULT_N3_RPC_NETWORK[0];
 

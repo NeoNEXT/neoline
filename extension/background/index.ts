@@ -238,7 +238,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               STORAGE_NAME.wallet,
               () => {}
             );
-            const currAddress = currWallet.accounts[0].address;
+            const currAddress = currWallet?.accounts?.[0].address;
             const existHost =
               res?.[request.hostname]?.connectedAddress?.[currAddress];
             if (existHost) {
@@ -1506,7 +1506,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       ) {
         windowCallback({
           return: requestTargetN3.SignMessageV3,
-          error: ERRORS.MALFORMED_INPUT,
+          error: { ...ERRORS.MALFORMED_INPUT, description: 'Current account is not the signer' },
           ID: request.ID,
         });
         sendResponse('');
@@ -1665,7 +1665,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       ) {
         windowCallback({
           return: requestTargetN3.Send,
-          error: ERRORS.MALFORMED_INPUT,
+          error: { ...ERRORS.MALFORMED_INPUT, description: 'Current account is not the sender' },
           ID: request.ID,
         });
         sendResponse('');

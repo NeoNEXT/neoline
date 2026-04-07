@@ -742,69 +742,36 @@ function isUint256(param: UInt256): boolean {
 }
 
 function normalizeError(legacyError: any): NEP21Error {
-  let error: NEP21Error;
+  let error: NEP21Error = {
+    code: NEP21ErrorCode.UNKNOWN,
+    message: legacyError.description,
+    data: legacyError.data,
+  };
   switch (legacyError?.type) {
     case LEGACY_ERRORS.CHAIN_NOT_MATCH.type:
-      error = {
-        code: NEP21ErrorCode.UNSUPPORTED,
-        message: LEGACY_ERRORS.CHAIN_NOT_MATCH.description,
-      };
-      break;
     case LEGACY_ERRORS.UNSUPPORTED.type:
-      error = {
-        code: NEP21ErrorCode.UNSUPPORTED,
-        message: LEGACY_ERRORS.UNSUPPORTED.description,
-      };
-      break;
     case LEGACY_ERRORS.UNAUTHORIZED.type:
-      error = {
-        code: NEP21ErrorCode.UNSUPPORTED,
-        message: LEGACY_ERRORS.UNAUTHORIZED.description,
-      };
+      error.code = NEP21ErrorCode.UNSUPPORTED;
       break;
     case LEGACY_ERRORS.MALFORMED_INPUT.type:
-      error = {
-        code: NEP21ErrorCode.INVALID,
-        message: LEGACY_ERRORS.MALFORMED_INPUT.description,
-      };
+      error.code = NEP21ErrorCode.INVALID;
       break;
     case LEGACY_ERRORS.FAILED.type:
-      error = {
-        code: NEP21ErrorCode.FAILED,
-        message: LEGACY_ERRORS.FAILED.description,
-      };
+      error.code = NEP21ErrorCode.FAILED;
       break;
     case LEGACY_ERRORS.CANCELLED.type:
     case LEGACY_ERRORS.CONNECTION_DENIED.type:
-      error = {
-        code: NEP21ErrorCode.CANCELED,
-        message: LEGACY_ERRORS.CANCELLED.description,
-      };
+      error.code = NEP21ErrorCode.CANCELED;
       break;
     case LEGACY_ERRORS.INSUFFICIENT_FUNDS.type:
-      error = {
-        code: NEP21ErrorCode.INSUFFICIENT_FUNDS,
-        message: LEGACY_ERRORS.INSUFFICIENT_FUNDS.description,
-      };
+      error.code = NEP21ErrorCode.INSUFFICIENT_FUNDS;
       break;
     case LEGACY_ERRORS.RPC_ERROR.type:
-      error = {
-        code: NEP21ErrorCode.RPC_ERROR,
-        message: LEGACY_ERRORS.RPC_ERROR.description,
-      };
+      error.code = NEP21ErrorCode.RPC_ERROR;
       break;
     default:
-      error = {
-        code: NEP21ErrorCode.UNKNOWN,
-        message: LEGACY_ERRORS.UNKNOWN.description,
-      };
+      error.code = NEP21ErrorCode.UNKNOWN;
       break;
-  }
-  if (
-    legacyError?.type !== LEGACY_ERRORS.CONNECTION_DENIED.type &&
-    error.message !== legacyError.description
-  ) {
-    error.data = legacyError.description;
   }
   return error;
 }
