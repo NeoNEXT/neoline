@@ -102,7 +102,8 @@ describe('Neo3TransferService', () => {
           done();
         },
         error: (error) => {
-          expect(error.msg).toBe('script error');
+          expect(error.type).toBe('RPC_ERROR');
+          expect(error.description).toBe('script error');
           done();
         },
       });
@@ -127,7 +128,8 @@ describe('Neo3TransferService', () => {
           done();
         },
         error: (error) => {
-          expect(error.msg).toBe(
+          expect(error.type).toBe('INSUFFICIENT_FUNDS');
+          expect(error.description).toBe(
             'Insufficient GAS to pay for fees! Required 0.00123556 but only had 0.001'
           );
           done();
@@ -154,7 +156,8 @@ describe('Neo3TransferService', () => {
           done();
         },
         error: (error) => {
-          expect(error.msg).toBe('Not enough balance 0.0018');
+          expect(error.type).toBe('INSUFFICIENT_FUNDS');
+          expect(error.description).toBe('Not enough balance 0.0018');
           done();
         },
       });
@@ -179,7 +182,10 @@ describe('Neo3TransferService', () => {
           done();
         },
         error: (error) => {
-          expect(error.msg).toBe('Insufficient balance when gas fee added 0.003');
+          expect(error.type).toBe('INSUFFICIENT_FUNDS');
+          expect(error.description).toBe(
+            'Insufficient balance when gas fee added 0.003'
+          );
           done();
         },
       });

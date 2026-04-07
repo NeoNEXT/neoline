@@ -14,6 +14,8 @@ import {
   TransactionAttributeJson,
 } from '@cityofzion/neon-core-neo3/lib/tx/components';
 import BigNumber from 'bignumber.js';
+import { ERRORS } from '../common/data_module_neo2';
+import { normalizeNeoDapiError } from '../../cross-runtime/neo-dapi-error';
 
 interface InvokeArg extends sc.ContractCall {
   abortOnFail?: boolean;
@@ -33,6 +35,10 @@ interface CreateNeo3TxInput {
 // 这里只是为了给 RPC 估算手续费提供结构合法的 witness，因此固定的临时私钥就够了。
 // This is only used to provide a structurally valid witness for RPC fee estimation, so a fixed temporary private key is sufficient.
 const DUMMY_NETWORK_FEE_WIF = 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
+
+function asCreateNeo3TxError(error: any, fallback = ERRORS.UNKNOWN) {
+  return normalizeNeoDapiError(error, fallback);
+}
 
 function toInvokeScript(invokeArgs: InvokeArg[]) {
   const hasAbortOnFail = invokeArgs.some((item) => item.abortOnFail);
@@ -158,57 +164,97 @@ export function handleInvokeArgs(args: any[]) {
 export async function createNeo3Tx(
   params: CreateNeo3TxInput,
 ): Promise<Transaction> {
-  const rpcClient = new rpc.RPCClient(params.rpcUrl);
-  const signerJson = toRpcSigners(params.signers);
-  const script = toInvokeScript(params.invokeArgs);
-  const currentHeight = await rpcClient.getBlockCount();
-  const attributes = (params.attributes || []).map((attribute) =>
-    TransactionAttribute.fromJson(attribute),
-  );
+  try {
+    const rpcClient = new rpc.RPCClient(params.rpcUrl);
+    let signerJson;
+    let script;
+    let currentHeight;
+    let attributes;
 
-  const transaction = new tx.Transaction({
-    signers: params.signers,
-    validUntilBlock: params.validUntilBlock ?? currentHeight + 30,
-    script,
-  });
-  transaction.attributes = attributes;
-
-  if (params.overrideSystemFee) {
-    transaction.systemFee = u.BigInteger.fromDecimal(
-      params.overrideSystemFee,
-      8,
-    );
-  } else {
-    // 在挂真实签名前先预执行脚本，用于推导 system fee。
-    // Pre-execute the script before attaching real signatures to derive the system fee.
-    const invokeScriptResponse: any = await rpcClient.invokeScript(
-      u.HexString.fromHex(script).toBase64(),
-      signerJson,
-    );
-    if (invokeScriptResponse.state !== 'HALT') {
-      throw {
-        type: 'rpcError',
-        error: invokeScriptResponse,
-      };
+    try {
+      signerJson = toRpcSigners(params.signers);
+      script = toInvokeScript(params.invokeArgs);
+      attributes = (params.attributes || []).map((attribute) =>
+        TransactionAttribute.fromJson(attribute),
+      );
+    } catch (error) {
+      throw asCreateNeo3TxError(error, ERRORS.MALFORMED_INPUT);
     }
 
-    const requiredSystemFee = u.BigInteger.fromNumber(
-      new BigNumber(invokeScriptResponse.gasconsumed).times(1.01).toFixed(0),
-    );
-    transaction.systemFee = requiredSystemFee.add(
-      u.BigInteger.fromDecimal(params.systemFee || 0, 8),
-    );
+    try {
+      currentHeight = await rpcClient.getBlockCount();
+    } catch (error) {
+      throw asCreateNeo3TxError(error, ERRORS.RPC_ERROR);
+    }
+
+    const transaction = new tx.Transaction({
+      signers: params.signers,
+      validUntilBlock: params.validUntilBlock ?? currentHeight + 30,
+      script,
+    });
+    transaction.attributes = attributes;
+
+    if (params.overrideSystemFee) {
+      try {
+        transaction.systemFee = u.BigInteger.fromDecimal(
+          params.overrideSystemFee,
+          8,
+        );
+      } catch (error) {
+        throw asCreateNeo3TxError(error, ERRORS.MALFORMED_INPUT);
+      }
+    } else {
+      // 在挂真实签名前先预执行脚本，用于推导 system fee。
+      // Pre-execute the script before attaching real signatures to derive the system fee.
+      let invokeScriptResponse: any;
+      try {
+        invokeScriptResponse = await rpcClient.invokeScript(
+          u.HexString.fromHex(script).toBase64(),
+          signerJson,
+        );
+      } catch (error) {
+        throw asCreateNeo3TxError(error, ERRORS.RPC_ERROR);
+      }
+      if (invokeScriptResponse.state !== 'HALT') {
+        throw asCreateNeo3TxError(invokeScriptResponse, ERRORS.RPC_ERROR);
+      }
+
+      try {
+        const requiredSystemFee = u.BigInteger.fromNumber(
+          new BigNumber(invokeScriptResponse.gasconsumed)
+            .times(1.01)
+            .toFixed(0),
+        );
+        transaction.systemFee = requiredSystemFee.add(
+          u.BigInteger.fromDecimal(params.systemFee || 0, 8),
+        );
+      } catch (error) {
+        throw asCreateNeo3TxError(error, ERRORS.MALFORMED_INPUT);
+      }
+    }
+
+    // network fee 依赖 witness 结构，因此要在交易主体确定后再估算。
+    // Network fee depends on the witness structure, so estimate it only after the transaction body is finalized.
+    let networkFeeEstimate;
+    try {
+      networkFeeEstimate = await calculateNetworkFee(
+        rpcClient,
+        transaction,
+      );
+    } catch (error) {
+      throw asCreateNeo3TxError(error, ERRORS.RPC_ERROR);
+    }
+
+    try {
+      transaction.networkFee = u.BigInteger.fromNumber(networkFeeEstimate).add(
+        u.BigInteger.fromDecimal(params.networkFee || 0, 8),
+      );
+    } catch (error) {
+      throw asCreateNeo3TxError(error, ERRORS.MALFORMED_INPUT);
+    }
+
+    return transaction;
+  } catch (error) {
+    throw asCreateNeo3TxError(error, ERRORS.UNKNOWN);
   }
-
-  // network fee 依赖 witness 结构，因此要在交易主体确定后再估算。
-  // Network fee depends on the witness structure, so estimate it only after the transaction body is finalized.
-  const networkFeeEstimate = await calculateNetworkFee(
-    rpcClient,
-    transaction,
-  );
-  transaction.networkFee = u.BigInteger.fromNumber(networkFeeEstimate).add(
-    u.BigInteger.fromDecimal(params.networkFee || 0, 8),
-  );
-
-  return transaction;
 }

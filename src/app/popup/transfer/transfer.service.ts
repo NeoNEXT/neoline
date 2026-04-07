@@ -8,7 +8,7 @@ import { GlobalService, Neo2TxService, NeoAssetService } from '@/app/core';
 import { Neo3TransferService } from './neo3-transfer.service';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { ChainType } from '../_lib';
+import { ChainType, getErrorMessage } from '../_lib';
 import { isAsset } from '@/app/core/utils/neo';
 
 @Injectable()
@@ -54,7 +54,7 @@ export class TransferService {
               observer.complete();
             },
             (error) => {
-              observer.error(error.msg);
+              observer.error(getErrorMessage(error));
               observer.complete();
             }
           );

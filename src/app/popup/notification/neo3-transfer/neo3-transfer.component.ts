@@ -26,6 +26,7 @@ import {
   GAS3_CONTRACT,
   ChainType,
   AddAddressBookProp,
+  getErrorMessage,
 } from '../../_lib';
 import { Neo3TransferService } from '../../transfer/neo3-transfer.service';
 import BigNumber from 'bignumber.js';
@@ -313,7 +314,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
           return: requestTargetN3.Send,
           ID: this.messageID,
         });
-        this.global.snackBarTip('txFailed', err.msg || err);
+        this.global.snackBarTip('txFailed', getErrorMessage(err));
       });
   }
 

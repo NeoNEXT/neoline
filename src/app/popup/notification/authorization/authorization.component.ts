@@ -88,7 +88,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
   ngOnInit() {
     window.onbeforeunload = () => {
       this.chrome.windowCallback({
-        data: ERRORS.CANCELLED,
+        error: ERRORS.CANCELLED,
         return: requestTarget.Connect,
         ID: this.messageID,
       });
@@ -148,7 +148,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
   public refuse() {
     this.chrome.windowCallback(
       {
-        data: false,
+        error: ERRORS.CANCELLED,
         return: requestTarget.Connect,
         ID: this.messageID,
       },

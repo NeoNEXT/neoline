@@ -20,6 +20,8 @@ import { Neo3Service } from '@/app/core/services/neo/neo3.service';
 import { NeoAssetService } from '@/app/core/services/neo/asset.service';
 import BigNumber from 'bignumber.js';
 import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
+import { ERRORS } from '@/models/dapi';
+import { NeoDapiError, normalizeNeoDapiError } from '@cross-runtime/neo-dapi-error';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 
@@ -35,6 +37,10 @@ interface CreateNeo3TxInput {
   overrideSystemFee?: any;
   attributes?: TransactionAttributeJson[];
   validUntilBlock?: number;
+}
+
+function asNeo3InvokeTxError(error: any, fallback: NeoDapiError) {
+  return normalizeNeoDapiError(error, fallback);
 }
 
 @Injectable()
@@ -99,10 +105,7 @@ export class Neo3InvokeService {
         script = sc.createScript(...params.invokeArgs);
       }
     } catch (error) {
-      return throwError({
-        type: 'scriptError',
-        error,
-      });
+      return throwError(() => asNeo3InvokeTxError(error, ERRORS.MALFORMED_INPUT));
     }
 
     /**
@@ -114,8 +117,12 @@ export class Neo3InvokeService {
      */
 
     async function createTransaction() {
-      // We retrieve the current block height as we need to
-      const currentHeight = await rpcClientTemp.getBlockCount();
+      let currentHeight;
+      try {
+        currentHeight = await rpcClientTemp.getBlockCount();
+      } catch (error) {
+        throw asNeo3InvokeTxError(error, ERRORS.RPC_ERROR);
+      }
       vars.tx = new tx.Transaction({
         signers: params.signers,
         validUntilBlock: params.validUntilBlock ?? currentHeight + 30,
@@ -136,7 +143,12 @@ export class Neo3InvokeService {
      * signatures) and also the cost of running the verification of signatures.
      */
     async function checkNetworkFee() {
-      const networkFeeEstimate = await neo3This.calculateNetworkFee(vars.tx);
+      let networkFeeEstimate;
+      try {
+        networkFeeEstimate = await neo3This.calculateNetworkFee(vars.tx);
+      } catch (error) {
+        throw asNeo3InvokeTxError(error, ERRORS.RPC_ERROR);
+      }
 
       vars.tx.networkFee = u.BigInteger.fromNumber(networkFeeEstimate).add(
         u.BigInteger.fromDecimal(params.networkFee || 0, 8)
@@ -159,15 +171,17 @@ export class Neo3InvokeService {
         );
         return;
       }
-      const invokeFunctionResponse = await neo3This.neo3Service.n3InvokeScript(
-        u.HexString.fromHex(script).toBase64(),
-        signerJson
-      );
+      let invokeFunctionResponse;
+      try {
+        invokeFunctionResponse = await neo3This.neo3Service.n3InvokeScript(
+          u.HexString.fromHex(script).toBase64(),
+          signerJson
+        );
+      } catch (error) {
+        throw asNeo3InvokeTxError(error, ERRORS.RPC_ERROR);
+      }
       if (invokeFunctionResponse.state !== 'HALT') {
-        throw {
-          type: 'rpcError',
-          error: invokeFunctionResponse,
-        };
+        throw asNeo3InvokeTxError(invokeFunctionResponse, ERRORS.RPC_ERROR);
       }
       // Some contracts may have uncertain system fees
       const requiredSystemFee = u.BigInteger.fromNumber(
@@ -188,6 +202,9 @@ export class Neo3InvokeService {
         .then(() => {
           return vars.tx;
         })
+        .catch((error) =>
+          Promise.reject(asNeo3InvokeTxError(error, ERRORS.UNKNOWN))
+        )
     );
   }
 

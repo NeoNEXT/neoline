@@ -109,7 +109,7 @@ export function getIcon() {
 
 function connect(connectChain?: ChainType): Promise<boolean | any> {
   const ID = getMessageID();
-  return new Promise((resolveMain) => {
+  return new Promise((resolveMain, rejectMain) => {
     window.postMessage(
       {
         target: requestTarget.Connect,
@@ -121,28 +121,30 @@ function connect(connectChain?: ChainType): Promise<boolean | any> {
       },
       window.location.origin,
     );
-    const promise = new Promise((resolve) => {
+    const promise = new Promise((resolve, reject) => {
       const callbackFn = (event) => {
         if (
           event.data.return !== undefined &&
           event.data.return === requestTarget.Connect &&
           event.data.ID === ID
         ) {
-          resolve(event.data.data);
+          if (event.data.error) {
+            reject(event.data.error);
+          } else {
+            resolve(event.data.data === true);
+          }
           window.removeEventListener('message', callbackFn);
         }
       };
       window.addEventListener('message', callbackFn);
     });
-    promise.then((res: boolean | any) => {
-      resolveMain(res);
-    });
+    promise.then(resolveMain).catch(rejectMain);
   });
 }
 
 function switchToRequestChain(connectChain: ChainType): Promise<boolean | any> {
   const ID = getMessageID();
-  return new Promise((resolveMain) => {
+  return new Promise((resolveMain, rejectMain) => {
     window.postMessage(
       {
         target: requestTarget.SwitchRequestChain,
@@ -171,8 +173,6 @@ function switchToRequestChain(connectChain: ChainType): Promise<boolean | any> {
       };
       window.addEventListener('message', callbackFn);
     });
-    promise.then((res: boolean | any) => {
-      resolveMain(res);
-    });
+    promise.then(resolveMain).catch(rejectMain);
   });
 }

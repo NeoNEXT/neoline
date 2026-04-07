@@ -7,6 +7,12 @@ import { NotificationService } from '@/app/core/services/notification.service';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
 import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
+import { ERRORS } from '@/models/dapi';
+import {
+  createNeoDapiError,
+  NeoDapiError,
+  normalizeNeoDapiError,
+} from '@cross-runtime/neo-dapi-error';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 
@@ -20,6 +26,14 @@ interface CreateNeo3TxInput {
   nftTokenId?: any;
 }
 
+function asNeo3TransferTxError(error: any, fallback: NeoDapiError) {
+  return normalizeNeoDapiError(error, fallback);
+}
+
+function asNeo3TransferInsufficientFunds(description: string) {
+  return createNeoDapiError(ERRORS.INSUFFICIENT_FUNDS, description);
+}
+
 @Injectable()
 export class Neo3TransferService {
   private rpcClient;
@@ -28,7 +42,7 @@ export class Neo3TransferService {
   constructor(
     public notification: NotificationService,
     private store: Store<AppState>,
-    private neoAssetService: NeoAssetService
+    private neoAssetService: NeoAssetService,
   ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
@@ -38,7 +52,7 @@ export class Neo3TransferService {
   }
   createNeo3Tx(
     params: CreateNeo3TxInput,
-    isTransferAll = false
+    isTransferAll = false,
   ): Observable<Transaction> {
     const assetStateTemp = this.neoAssetService;
     const notificationTemp = this.notification;
@@ -99,11 +113,16 @@ export class Neo3TransferService {
       console.log(
         `Sending ${inputs.amountToTransfer} token \n` +
           `from ${inputs.fromAccountAddress} \n` +
-          `to ${inputs.toAccountAddress}`
+          `to ${inputs.toAccountAddress}`,
       );
 
       // We retrieve the current block height as we need to
-      const currentHeight = await rpcClientTemp.getBlockCount();
+      let currentHeight;
+      try {
+        currentHeight = await rpcClientTemp.getBlockCount();
+      } catch (error) {
+        throw asNeo3TransferTxError(error, ERRORS.RPC_ERROR);
+      }
       vars.tx = new tx.Transaction({
         signers: [
           {
@@ -125,13 +144,18 @@ export class Neo3TransferService {
      * signatures) and also the cost of running the verification of signatures.
      */
     async function checkNetworkFee() {
-      const networkFeeEstimate = await neo3This.calculateNetworkFee(vars.tx);
+      let networkFeeEstimate;
+      try {
+        networkFeeEstimate = await neo3This.calculateNetworkFee(vars.tx);
+      } catch (error) {
+        throw asNeo3TransferTxError(error, ERRORS.RPC_ERROR);
+      }
 
       vars.tx.networkFee = u.BigInteger.fromNumber(networkFeeEstimate).add(
-        inputs.networkFee
+        inputs.networkFee,
       );
       console.log(
-        `\u001b[32m  ✓ Network Fee set: ${vars.tx.networkFee} \u001b[0m`
+        `\u001b[32m  ✓ Network Fee set: ${vars.tx.networkFee} \u001b[0m`,
       );
     }
 
@@ -140,26 +164,25 @@ export class Neo3TransferService {
      * can easily get this number by using invokeScript with the appropriate signers.
      */
     async function checkSystemFee() {
-      const invokeFunctionResponse = await rpcClientTemp.invokeScript(
-        neo3This.hexToBase64(script),
-        [
-          {
-            account: inputs.scriptHash,
-            scopes: tx.WitnessScope[tx.WitnessScope.CalledByEntry],
-          },
-        ]
-      );
+      let invokeFunctionResponse;
+      try {
+        invokeFunctionResponse = await rpcClientTemp.invokeScript(
+          neo3This.hexToBase64(script),
+          [
+            {
+              account: inputs.scriptHash,
+              scopes: tx.WitnessScope[tx.WitnessScope.CalledByEntry],
+            },
+          ],
+        );
+      } catch (error) {
+        throw asNeo3TransferTxError(error, ERRORS.RPC_ERROR);
+      }
       if (invokeFunctionResponse.state !== 'HALT') {
-        throw {
-          msg:
-            invokeFunctionResponse?.error ||
-            invokeFunctionResponse?.message ||
-            invokeFunctionResponse?.exception ||
-            'Transfer script errored out! You might not have sufficient funds for this transfer.',
-        };
+        throw asNeo3TransferTxError(invokeFunctionResponse, ERRORS.RPC_ERROR);
       }
       const requiredSystemFee = u.BigInteger.fromNumber(
-        invokeFunctionResponse.gasconsumed
+        invokeFunctionResponse.gasconsumed,
       );
       if (
         inputs.systemFee &&
@@ -167,13 +190,13 @@ export class Neo3TransferService {
       ) {
         vars.tx.systemFee = inputs.systemFee;
         console.log(
-          `  i Node indicates ${requiredSystemFee} systemFee but using user provided value of ${inputs.systemFee}`
+          `  i Node indicates ${requiredSystemFee} systemFee but using user provided value of ${inputs.systemFee}`,
         );
       } else {
         vars.tx.systemFee = requiredSystemFee;
       }
       console.log(
-        `\u001b[32m  ✓ SystemFee set: ${vars.tx.systemFee.toString()}\u001b[0m`
+        `\u001b[32m  ✓ SystemFee set: ${vars.tx.systemFee.toString()}\u001b[0m`,
       );
     }
 
@@ -190,20 +213,16 @@ export class Neo3TransferService {
       let gasAmount = await assetStateTemp.getAddressAssetBalance(
         inputs.fromAccountAddress,
         GAS3_CONTRACT,
-        'Neo3'
+        'Neo3',
       );
       gasAmount = new BigNumber(gasAmount).shiftedBy(-8).toFixed();
       if (new BigNumber(gasAmount).comparedTo(gasRequirements) < 0) {
-        throw {
-          msg: `${
-            notificationTemp.content.insufficientBalance
-          } ${gasRequirements} ${
-            notificationTemp.content.butOnlyHad
-          } ${gasAmount.toString()}`,
-        };
+        throw asNeo3TransferInsufficientFunds(
+          `${notificationTemp.content.insufficientBalance} ${gasRequirements} ${notificationTemp.content.butOnlyHad} ${gasAmount.toString()}`,
+        );
       } else {
         console.log(
-          `\u001b[32m  ✓ Sufficient GAS for fees found (${gasRequirements}) \u001b[0m`
+          `\u001b[32m  ✓ Sufficient GAS for fees found (${gasRequirements}) \u001b[0m`,
         );
       }
       if (!params.nftTokenId) {
@@ -211,19 +230,19 @@ export class Neo3TransferService {
         const balanceAmountInt = await assetStateTemp.getAddressAssetBalance(
           inputs.fromAccountAddress,
           inputs.tokenScriptHash,
-          'Neo3'
+          'Neo3',
         );
         const balanceAmount = new BigNumber(balanceAmountInt)
           .shiftedBy(-params.decimals)
           .toFixed();
         if (
           new BigNumber(balanceAmountInt).comparedTo(
-            new BigNumber(inputs.amountToTransfer)
+            new BigNumber(inputs.amountToTransfer),
           ) < 0
         ) {
-          throw {
-            msg: `${notificationTemp.content.balanceLack} ${balanceAmount}`,
-          };
+          throw asNeo3TransferInsufficientFunds(
+            `${notificationTemp.content.balanceLack} ${balanceAmount}`,
+          );
         } else {
           console.log('\u001b[32m  ✓ Token funds found \u001b[0m');
         }
@@ -234,9 +253,9 @@ export class Neo3TransferService {
             .shiftedBy(-8)
             .plus(gasRequirements);
           if (new BigNumber(balanceAmount).comparedTo(totalRequirements) < 0) {
-            throw {
-              msg: `${notificationTemp.content.insufficientSystemFee} ${balanceAmount}`,
-            };
+            throw asNeo3TransferInsufficientFunds(
+              `${notificationTemp.content.insufficientSystemFee} ${balanceAmount}`,
+            );
           }
         }
       }
@@ -250,6 +269,9 @@ export class Neo3TransferService {
           .then(() => {
             return vars.tx;
           })
+          .catch((error) =>
+            Promise.reject(asNeo3TransferTxError(error, ERRORS.UNKNOWN)),
+          ),
       );
     }
 
@@ -261,6 +283,9 @@ export class Neo3TransferService {
         .then(() => {
           return vars.tx;
         })
+        .catch((error) =>
+          Promise.reject(asNeo3TransferTxError(error, ERRORS.UNKNOWN)),
+        ),
     );
   }
 
@@ -275,7 +300,7 @@ export class Neo3TransferService {
 
   async sendNeo3Tx(tx1: Transaction): Promise<any> {
     const result = await this.rpcClient.sendRawTransaction(
-      this.hexToBase64(tx1.serialize(true))
+      this.hexToBase64(tx1.serialize(true)),
     );
 
     console.log('\n\n--- Transaction hash ---');

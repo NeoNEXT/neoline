@@ -14,3 +14,5 @@ export * from './dapp';
 export * from './address-book';
 export * from './evm';
 export * from './neo3-dapp';
+export * from './error';
+export * from '@cross-runtime/neo-dapi-error';

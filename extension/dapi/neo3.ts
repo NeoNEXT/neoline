@@ -129,7 +129,7 @@ export class Init {
   public getBlock(parameter: N3GetBlockInputArgs) {
     if (parameter.blockHeight === undefined) {
       return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
+        reject(ERRORS.MALFORMED_INPUT);
       });
     } else {
       return sendMessage(requestTargetN3.Block, parameter);
@@ -139,7 +139,7 @@ export class Init {
   public getApplicationLog(parameter: N3ApplicationLogArgs) {
     if (parameter.txid === undefined) {
       return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
+        reject(ERRORS.MALFORMED_INPUT);
       });
     } else {
       return sendMessage(requestTargetN3.ApplicationLog, parameter);

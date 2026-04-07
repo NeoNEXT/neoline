@@ -20,6 +20,7 @@ import {
   ChainType,
   EvmTransactionParams,
   GAS3_CONTRACT,
+  getErrorMessage,
   N3MainnetNetwork,
   N3TestnetNetwork,
   RpcNetwork,
@@ -706,13 +707,7 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
 
   private handleCreateNeo3TxError(error) {
     this.loading = false;
-    if (error?.type === 'scriptError') {
-      this.globalService.snackBarTip('checkInput');
-    } else {
-      this.globalService.snackBarTip(
-        error?.error?.message || error?.error?.exception || 'rpcError'
-      );
-    }
+    this.globalService.snackBarTip('txFailed', getErrorMessage(error));
   }
   private async getBridgeAssetBalance() {
     const balance = await this.neoAssetService.getAddressAssetBalance(

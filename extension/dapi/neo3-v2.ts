@@ -112,7 +112,10 @@ class NEOLineN3Controller extends EventEmitter {
       !wallet3.isScriptHash(asset) ||
       !wallet3.isScriptHash(account)
     ) {
-      throw normalizeError({...LEGACY_ERRORS.MALFORMED_INPUT, description: `'asset' and 'account' must be valid script hashes`});
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'asset' and 'account' must be valid script hashes`,
+      };
     }
 
     const result = (await httpPostPromise(currentN3RpcUrl, {
@@ -135,32 +138,35 @@ class NEOLineN3Controller extends EventEmitter {
     data?: Argument,
   ): Promise<UInt256> {
     if (!asset || !from || !to || !amount) {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'asset', 'from', 'to' and 'amount' must be provided`,
+      };
     }
 
     if (!isValidIntegerAmount(amount)) {
-      throw normalizeError({
-        ...LEGACY_ERRORS.MALFORMED_INPUT,
-        description: `'amount' must be a positive integer in string format`,
-      });
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'amount' must be a positive integer in string format`,
+      };
     }
     if (!wallet3.isScriptHash(asset)) {
-      throw normalizeError({
-        ...LEGACY_ERRORS.MALFORMED_INPUT,
-        description: `'asset' must be a valid script hash`,
-      });
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'asset' must be a valid script hash`,
+      };
     }
     if (!wallet3.isScriptHash(from)) {
-      throw normalizeError({
-        ...LEGACY_ERRORS.MALFORMED_INPUT,
-        description: `'from' must be a valid script hash`,
-      });
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'from' must be a valid script hash`,
+      };
     }
     if (!wallet3.isScriptHash(to)) {
-      throw normalizeError({
-        ...LEGACY_ERRORS.MALFORMED_INPUT,
-        description: `'to' must be a valid script hash`,
-      });
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'to' must be a valid script hash`,
+      };
     }
 
     const toAddress = await wallet3.getAddressFromScriptHash(
@@ -239,11 +245,15 @@ class NEOLineN3Controller extends EventEmitter {
     });
 
     if (!unsignedTx) {
-      throw normalizeError(LEGACY_ERRORS.FAILED);
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `Failed to create transaction`,
+      };
     }
 
-    const accounts = await sendMessage<Account[]>(requestTargetN3.Accounts)
-      .catch(() => []);
+    const accounts = await sendMessage<Account[]>(
+      requestTargetN3.Accounts,
+    ).catch(() => []);
 
     // 优先使用当前已打开账户里的 contract script；当前 provider 无法识别的 signer 先保留空 script，后续由对应钱包在 sign(context) 时补齐。
     // Prefer the contract script from the currently opened account; leave the script empty for signers the current provider cannot resolve yet, and let the corresponding wallet fill it in during sign(context).
@@ -255,8 +265,14 @@ class NEOLineN3Controller extends EventEmitter {
   async sign(
     context: ContractParametersContext,
   ): Promise<ContractParametersContext> {
-    if (!context?.data || context.type !== 'Neo.Network.P2P.Payloads.Transaction') {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    if (
+      !context?.data ||
+      context.type !== 'Neo.Network.P2P.Payloads.Transaction'
+    ) {
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `Invalid context data or type. Expected a transaction context with type 'Neo.Network.P2P.Payloads.Transaction'.`,
+      };
     }
 
     return this.sendAuthorizedMessage<ContractParametersContext>(
@@ -274,10 +290,16 @@ class NEOLineN3Controller extends EventEmitter {
     options?: SignOptions,
   ): Promise<SignedMessage> {
     if (!message) {
-      throw normalizeError({...LEGACY_ERRORS.MALFORMED_INPUT, description: `'message' is required`});
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'message' is required`,
+      };
     }
     if (account && !wallet3.isScriptHash(account)) {
-      throw normalizeError({...LEGACY_ERRORS.MALFORMED_INPUT, description: `'account' must be a valid script hash`});
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'account' must be a valid script hash`,
+      };
     }
 
     if (options?.isTypedData) {
@@ -305,7 +327,10 @@ class NEOLineN3Controller extends EventEmitter {
 
   async relay(context: ContractParametersContext): Promise<UInt256> {
     if (!context?.data) {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'context.data' is required`,
+      };
     }
 
     const result = (await httpPostPromise(currentN3RpcUrl, {
@@ -329,15 +354,24 @@ class NEOLineN3Controller extends EventEmitter {
 
   async getBlock(hashOrIndex: UInt256 | number): Promise<Block> {
     if (hashOrIndex === undefined || hashOrIndex === null) {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `block index or hash is required`,
+      };
     }
 
     if (typeof hashOrIndex !== 'number' && typeof hashOrIndex !== 'string') {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `block index or hash must be a number or string`,
+      };
     }
 
     if (typeof hashOrIndex === 'string' && !isUint256(hashOrIndex)) {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `block hash must be a valid uint256`,
+      };
     }
 
     return sendMessage<Block>(requestTargetN3.Block, {
@@ -362,7 +396,10 @@ class NEOLineN3Controller extends EventEmitter {
 
   async getTransaction(txid: UInt256): Promise<Transaction> {
     if (!txid || !isUint256(txid)) {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'txid' must be a valid uint256`,
+      };
     }
 
     return await sendMessage<any>(requestTargetN3.Transaction, {
@@ -374,7 +411,10 @@ class NEOLineN3Controller extends EventEmitter {
 
   async getApplicationLog(txid: UInt256): Promise<ApplicationLog> {
     if (!txid || !isUint256(txid)) {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'txid' must be a valid uint256`,
+      };
     }
 
     return sendMessage<ApplicationLog>(requestTargetN3.ApplicationLog, {
@@ -386,7 +426,10 @@ class NEOLineN3Controller extends EventEmitter {
 
   async getStorage(hash: UInt160, key: Base64Encoded): Promise<Base64Encoded> {
     if (!hash || key === undefined || !wallet3.isScriptHash(hash)) {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'hash' must be a valid script hash`,
+      };
     }
 
     return (await httpPostPromise(currentN3RpcUrl, {
@@ -400,8 +443,11 @@ class NEOLineN3Controller extends EventEmitter {
   }
 
   async getTokenInfo(hash: UInt160): Promise<Token> {
-    if (!hash) {
-      throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    if (!hash || !wallet3.isScriptHash(hash)) {
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'hash' must be a valid script hash`,
+      };
     }
 
     const rpcUrl = currentN3RpcUrl;
@@ -443,7 +489,10 @@ class NEOLineN3Controller extends EventEmitter {
     broadcastOverride?: boolean,
   ) {
     if (!Array.isArray(invocations) || invocations.length === 0) {
-      throw normalizeError({...LEGACY_ERRORS.MALFORMED_INPUT, description: `'invocations' must be a non-empty array`});
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'invocations' must be a non-empty array`,
+      };
     }
 
     assertSupportedTransactionOptions(attributes, options);
@@ -503,10 +552,10 @@ class NEOLineN3Controller extends EventEmitter {
     options?: TransactionOptions,
   ) {
     if (!Array.isArray(invocations) || invocations.length === 0) {
-      throw normalizeError({
-        ...LEGACY_ERRORS.MALFORMED_INPUT,
-        description: `'invocations' must be a non-empty array`,
-      });
+      throw {
+        code: NEP21ErrorCode.INVALID,
+        message: `'invocations' must be a non-empty array`,
+      };
     }
 
     assertSupportedTransactionOptions(attributes, options);
@@ -539,7 +588,10 @@ class NEOLineN3Controller extends EventEmitter {
   ): Promise<T> {
     const isAuth = await checkNeoXConnectAndLogin('Neo3');
     if (isAuth !== true) {
-      throw normalizeError(LEGACY_ERRORS.CONNECTION_DENIED);
+      throw {
+        code: NEP21ErrorCode.CANCELED,
+        message: `The user cancelled the request`,
+      };
     }
 
     return sendMessage<T>(target, parameter).catch((error) => {
@@ -611,13 +663,19 @@ function assertAuthenticationPayload(payload: AuthenticationChallengePayload) {
     !payload.nonce ||
     payload.timestamp === undefined
   ) {
-    throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    throw {
+      code: NEP21ErrorCode.INVALID,
+      message: `'payload' must be a valid authentication challenge payload`,
+    };
   }
 }
 
 function assertInvocation(invocation: InvocationArguments) {
   if (!invocation?.hash || !invocation?.operation) {
-    throw normalizeError(LEGACY_ERRORS.MALFORMED_INPUT);
+    throw {
+      code: NEP21ErrorCode.INVALID,
+      message: `'invocation' must be a valid invocation arguments`,
+    };
   }
 }
 
@@ -626,40 +684,40 @@ function assertSupportedTransactionOptions(
   options?: TransactionOptions,
 ) {
   if (attributes !== undefined && !Array.isArray(attributes)) {
-    throw normalizeError({
-      ...LEGACY_ERRORS.MALFORMED_INPUT,
-      description: `'attributes' must be an array`,
-    });
+    throw {
+      code: NEP21ErrorCode.INVALID,
+      message: `'attributes' must be an array`,
+    };
   }
 
   if (
     options?.extraSystemFee !== undefined &&
     !isValidIntegerAmount(options.extraSystemFee)
   ) {
-    throw normalizeError({
-      ...LEGACY_ERRORS.MALFORMED_INPUT,
-      description: `'extraSystemFee' must be a positive integer in string format`,
-    });
+    throw {
+      code: NEP21ErrorCode.INVALID,
+      message: `'extraSystemFee' must be a positive integer in string format`,
+    };
   }
 
   if (
     options?.suggestedSystemFee !== undefined &&
     !isValidIntegerAmount(options.suggestedSystemFee)
   ) {
-    throw normalizeError({
-      ...LEGACY_ERRORS.MALFORMED_INPUT,
-      description: `'suggestedSystemFee' must be a positive integer in string format`,
-    });
+    throw {
+      code: NEP21ErrorCode.INVALID,
+      message: `'suggestedSystemFee' must be a positive integer in string format`,
+    };
   }
 
   if (
     options?.validUntilBlock !== undefined &&
     (!Number.isInteger(options.validUntilBlock) || options.validUntilBlock < 0)
   ) {
-    throw normalizeError({
-      ...LEGACY_ERRORS.MALFORMED_INPUT,
-      description: `'validUntilBlock' must be a non-negative integer`,
-    });
+    throw {
+      code: NEP21ErrorCode.INVALID,
+      message: `'validUntilBlock' must be a non-negative integer`,
+    };
   }
 }
 
@@ -682,7 +740,6 @@ function isValidIntegerAmount(amount: Integer): boolean {
 function isUint256(param: UInt256): boolean {
   return typeof param === 'string' && /^(0x)?[0-9a-fA-F]{64}$/.test(param);
 }
-
 
 function normalizeError(legacyError: any): NEP21Error {
   let error: NEP21Error;
@@ -753,7 +810,11 @@ function normalizeError(legacyError: any): NEP21Error {
 }
 
 function returnRPCError(error) {
-  return normalizeError({ ...LEGACY_ERRORS.RPC_ERROR, description: error });
+  return {
+    code: NEP21ErrorCode.RPC_ERROR,
+    message: LEGACY_ERRORS.RPC_ERROR.description,
+    data: error,
+  };
 }
 
 function stripHexPrefix(value: string) {
@@ -813,7 +874,7 @@ function buildContractParametersContext(
 
     const invocationScript = witness?.invocationScript?.toBigEndian() || '';
     let signatures: Record<string, string> = {
-      ...(verificationScript ? (seedItem?.signatures || {}) : {}),
+      ...(verificationScript ? seedItem?.signatures || {} : {}),
     };
 
     if (verificationScript && invocationScript) {
@@ -825,15 +886,18 @@ function buildContractParametersContext(
         const signedValues =
           wallet3.getSignaturesFromInvocationScript(invocationScript);
 
-        signatures = publicKeys.reduce((output, publicKey, signatureIndex) => {
-          const signature = signedValues[signatureIndex];
-          if (signature) {
-            output[publicKey] = Buffer.from(signature, 'hex').toString(
-              'base64',
-            );
-          }
-          return output;
-        }, { ...(seedItem?.signatures || {}) });
+        signatures = publicKeys.reduce(
+          (output, publicKey, signatureIndex) => {
+            const signature = signedValues[signatureIndex];
+            if (signature) {
+              output[publicKey] = Buffer.from(signature, 'hex').toString(
+                'base64',
+              );
+            }
+            return output;
+          },
+          { ...(seedItem?.signatures || {}) },
+        );
       } catch (_) {}
     }
 
@@ -861,10 +925,13 @@ function buildContractParametersContext(
 }
 
 function createAccountMap(accounts: Account[]) {
-  return accounts.reduce((acc, account) => {
-    acc[account.hash] = account;
-    return acc;
-  }, {} as Record<string, Account>);
+  return accounts.reduce(
+    (acc, account) => {
+      acc[account.hash] = account;
+      return acc;
+    },
+    {} as Record<string, Account>,
+  );
 }
 
 function decodeContextScript(script?: string) {
@@ -945,7 +1012,9 @@ function buildContextParameters(
 
     const threshold =
       publicKeys.length > 1
-        ? wallet3.getSigningThresholdFromVerificationScript(verificationScript) || 1
+        ? wallet3.getSigningThresholdFromVerificationScript(
+            verificationScript,
+          ) || 1
         : 1;
 
     return Array.from({ length: threshold }, (_, index) => ({

@@ -78,6 +78,7 @@ import {
 } from '../common/utils';
 import { u as u3, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import BigNumber from 'bignumber.js';
+import { normalizeNeoDapiError } from '../../cross-runtime/neo-dapi-error';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import CryptoJS from 'crypto-js';
 import { requestTargetEVM } from '../common/data_module_evm';
@@ -1316,7 +1317,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           if (!res.error) {
             returnRes.data = res.result;
           } else {
-            returnRes.error = res.error;
+            returnRes.error = normalizeNeoDapiError(res.error, ERRORS.RPC_ERROR);
           }
           windowCallback(returnRes);
           sendResponse('');
@@ -1590,14 +1591,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           return: requestTargetN3.CreateTransaction,
           ID: request.ID,
           data: null,
-          error: {
-            ...ERRORS.RPC_ERROR,
-            description:
-              error?.error?.message ||
-              error?.error?.exception ||
-              error?.message ||
-              error,
-          },
+          error,
         });
       }
       sendResponse('');

@@ -24,6 +24,7 @@ import {
   STORAGE_NAME,
   GAS3_CONTRACT,
   ChainType,
+  getErrorMessage,
   Neo3InvokeParams,
   RpcNetwork,
   Wallet3,
@@ -317,25 +318,11 @@ export class PopupNoticeNeo3InvokeComponent implements OnInit {
           },
           (error) => {
             console.log(error);
-            let description;
-            if (error?.type === 'scriptError') {
-              description = this.notification.content.checkInput;
-              this.global.snackBarTip('checkInput');
-            } else {
-              description =
-                error?.error?.message ||
-                error?.error?.exception ||
-                this.notification.content.rpcError;
-              this.global.snackBarTip(
-                error?.error?.message || error?.error?.exception || 'rpcError'
-              );
-            }
+
             this.loading = false;
+            this.global.snackBarTip('txFailed', getErrorMessage(error));
             this.chrome.windowCallback({
-              error: {
-                type: 'RPC_ERROR',
-                description,
-              },
+              error,
               return: requestTargetN3.Invoke,
               ID: this.messageID,
             });

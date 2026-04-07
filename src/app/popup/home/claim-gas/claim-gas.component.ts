@@ -9,6 +9,7 @@ import {
   GAS3_CONTRACT,
   ChainType,
   RpcNetwork,
+  getErrorMessage,
 } from '../../_lib';
 import BigNumber from 'bignumber.js';
 import { Neo3TransferService } from '../../transfer/neo3-transfer.service';
@@ -164,7 +165,7 @@ export class PopupClaimGasComponent implements OnDestroy {
         },
         (error) => {
           this.loading = false;
-          this.global.snackBarTip(error.msg);
+          this.global.snackBarTip(getErrorMessage(error));
         }
       );
     }

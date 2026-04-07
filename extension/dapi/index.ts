@@ -190,7 +190,7 @@ export class Init {
   public getBlock(parameter: GetBlockInputArgs) {
     if (parameter.blockHeight === undefined) {
       return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
+        reject(ERRORS.MALFORMED_INPUT);
       });
     } else {
       return sendMessage(requestTarget.Block, parameter);
@@ -200,7 +200,7 @@ export class Init {
   public getApplicationLog(parameter: TransactionInputArgs) {
     if (parameter.txid === undefined) {
       return new Promise((_, reject) => {
-        reject(ERRORS.CONNECTION_DENIED);
+        reject(ERRORS.MALFORMED_INPUT);
       });
     } else {
       return sendMessage(requestTarget.ApplicationLog, parameter);
