@@ -27,6 +27,7 @@ import {
   sendMessage,
   getProvider,
   getIcon,
+  login,
 } from './common';
 
 export class Init {
@@ -217,6 +218,7 @@ export class Init {
   public async switchWalletNetwork(
     parameter: WalletSwitchNetworkArg
   ): Promise<any> {
+    await login();
     if (
       parameter.chainId === undefined ||
       !ALL_CHAINID.includes(parameter.chainId)

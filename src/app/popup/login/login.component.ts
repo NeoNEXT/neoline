@@ -86,6 +86,13 @@ export class PopupLoginComponent
     this.loginForm = this.fb.group({
       password: ['', [Validators.required]],
     });
+    window.onbeforeunload = () => {
+      this.chrome.windowCallback({
+        data: ERRORS.CANCELLED,
+        return: requestTarget.Login,
+        ID: this.messageID,
+      });
+    };
   }
 
   ngOnDestroy(): void {
@@ -149,6 +156,16 @@ export class PopupLoginComponent
 
   private handleLoginSuccess() {
     this.chrome.setPassword(this.loginForm.value.password);
+    if (this.aRouter.snapshot.queryParams.notification !== undefined) {
+      this.chrome.windowCallback(
+        {
+          data: true,
+          return: requestTarget.Login,
+          ID: this.messageID,
+        },
+        true
+      );
+    }
     this.loading = false;
     this.handleWallet();
   }

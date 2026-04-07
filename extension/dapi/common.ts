@@ -47,7 +47,14 @@ export function sendMessage<K>(
 export async function checkConnectAndLogin(
   connectChain: ChainType,
 ): Promise<boolean> {
-  return await connect(connectChain);
+  const connected = await connect(connectChain);
+  if (connected === true) {
+    const isLogin = await login();
+    if (isLogin === true) {
+      return true;
+    }
+  }
+  return false;
 }
 
 export async function checkNeoXConnectAndLogin(
@@ -55,7 +62,13 @@ export async function checkNeoXConnectAndLogin(
 ): Promise<boolean> {
   const isSwitchToRequestChain = await switchToRequestChain(connectChain);
   if (isSwitchToRequestChain === true) {
-    return await connect(connectChain);
+    const connected = await connect(connectChain);
+    if (connected === true) {
+      const isLogin = await login();
+      if (isLogin === true) {
+        return true;
+      }
+    }
   }
   return false;
 }
@@ -139,6 +152,35 @@ function connect(connectChain?: ChainType): Promise<boolean | any> {
       window.addEventListener('message', callbackFn);
     });
     promise.then(resolveMain).catch(rejectMain);
+  });
+}
+
+export function login(): Promise<boolean | any> {
+  const ID = getMessageID();
+  return new Promise((resolveMain) => {
+    window.postMessage(
+      {
+        target: requestTarget.Login,
+        ID,
+      },
+      window.location.origin,
+    );
+    const promise = new Promise((resolve) => {
+      const callbackFn = (event) => {
+        if (
+          event.data.return !== undefined &&
+          event.data.return === requestTarget.Login &&
+          event.data.ID === ID
+        ) {
+          resolve(event.data.data);
+          window.removeEventListener('message', callbackFn);
+        }
+      };
+      window.addEventListener('message', callbackFn);
+    });
+    promise.then((res) => {
+      resolveMain(res);
+    });
   });
 }
 

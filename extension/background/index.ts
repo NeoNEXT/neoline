@@ -262,6 +262,24 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       );
       return true;
     }
+    case requestTarget.Login: {
+      getSessionStorage('password', (pwd) => {
+        if (pwd) {
+          windowCallback({
+            return: requestTarget.Login,
+            data: true,
+            ID: request.ID,
+          });
+        } else {
+          createWindow(
+            `/index.html#popup/login?notification=true&messageID=${request.ID}`,
+            false
+          );
+        }
+        sendResponse('');
+      });
+      return true;
+    }
     case requestTarget.AccountPublicKey: {
       try {
         const walletArrStorage =
@@ -1657,7 +1675,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     }
     case requestTargetN3.Send: {
       const parameter = request.parameter as N3SendArgs;
-
       const wallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
       if (
         wallet !== undefined &&

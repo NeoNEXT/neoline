@@ -88,6 +88,7 @@ export enum requestTarget {
   Deploy = 'neoline.target_deploy',
   Send = 'neoline.target_send',
   Connect = 'neoline.target_connect',
+  Login = 'neoline.target_login',
   PickAddress = 'neoline.target_pick_address',
   WalletSwitchNetwork = 'neoline.target_wallet_switch_network',
   WalletSwitchAccount = 'neoline.target_wallet_switch_account',
