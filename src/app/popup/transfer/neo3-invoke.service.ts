@@ -21,7 +21,7 @@ import { NeoAssetService } from '@/app/core/services/neo/asset.service';
 import BigNumber from 'bignumber.js';
 import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
 import { ERRORS } from '@/models/dapi';
-import { NeoDapiError, normalizeNeoDapiError } from '@cross-runtime/neo-dapi-error';
+import { createNeoDapiError } from '@cross-runtime/neo-dapi-error';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 
@@ -37,10 +37,6 @@ interface CreateNeo3TxInput {
   overrideSystemFee?: any;
   attributes?: TransactionAttributeJson[];
   validUntilBlock?: number;
-}
-
-function asNeo3InvokeTxError(error: any, fallback: NeoDapiError) {
-  return normalizeNeoDapiError(error, fallback);
 }
 
 @Injectable()
@@ -105,7 +101,7 @@ export class Neo3InvokeService {
         script = sc.createScript(...params.invokeArgs);
       }
     } catch (error) {
-      return throwError(() => asNeo3InvokeTxError(error, ERRORS.MALFORMED_INPUT));
+      return throwError(() => createNeoDapiError(ERRORS.MALFORMED_INPUT, error));
     }
 
     /**
@@ -121,7 +117,7 @@ export class Neo3InvokeService {
       try {
         currentHeight = await rpcClientTemp.getBlockCount();
       } catch (error) {
-        throw asNeo3InvokeTxError(error, ERRORS.RPC_ERROR);
+        throw createNeoDapiError(ERRORS.RPC_ERROR, error);
       }
       vars.tx = new tx.Transaction({
         signers: params.signers,
@@ -147,7 +143,7 @@ export class Neo3InvokeService {
       try {
         networkFeeEstimate = await neo3This.calculateNetworkFee(vars.tx);
       } catch (error) {
-        throw asNeo3InvokeTxError(error, ERRORS.RPC_ERROR);
+        throw createNeoDapiError(ERRORS.RPC_ERROR, error);
       }
 
       vars.tx.networkFee = u.BigInteger.fromNumber(networkFeeEstimate).add(
@@ -178,10 +174,10 @@ export class Neo3InvokeService {
           signerJson
         );
       } catch (error) {
-        throw asNeo3InvokeTxError(error, ERRORS.RPC_ERROR);
+        throw createNeoDapiError(ERRORS.RPC_ERROR, error);
       }
       if (invokeFunctionResponse.state !== 'HALT') {
-        throw asNeo3InvokeTxError(invokeFunctionResponse, ERRORS.RPC_ERROR);
+        throw createNeoDapiError(ERRORS.RPC_ERROR, invokeFunctionResponse);
       }
       // Some contracts may have uncertain system fees
       const requiredSystemFee = u.BigInteger.fromNumber(
@@ -203,7 +199,7 @@ export class Neo3InvokeService {
           return vars.tx;
         })
         .catch((error) =>
-          Promise.reject(asNeo3InvokeTxError(error, ERRORS.UNKNOWN))
+          Promise.reject(createNeoDapiError(ERRORS.UNKNOWN, error))
         )
     );
   }

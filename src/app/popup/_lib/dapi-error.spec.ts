@@ -1,44 +1,43 @@
 import { ERRORS } from '@/models/dapi';
-import { normalizeNeoDapiError } from '@cross-runtime/neo-dapi-error';
+import { createNeoDapiError } from '@cross-runtime/neo-dapi-error';
 
-describe('normalizeNeoDapiError', () => {
-  it('preserves known Neo dAPI errors', () => {
-    const error = {
-      ...ERRORS.INSUFFICIENT_FUNDS,
-      description: 'custom insufficient funds',
-      data: { amount: '1' },
+describe('createNeoDapiError', () => {
+  it('preserves the base error metadata for rpc errors', () => {
+    const original = {
+      code: -32602,
+      message: 'Invalid params - Unknown transaction/blockhash',
     };
+    const error = createNeoDapiError(ERRORS.RPC_ERROR, original);
 
-    expect(normalizeNeoDapiError(error, ERRORS.FAILED)).toEqual(error);
+    expect(error).toEqual({
+      ...ERRORS.RPC_ERROR,
+      data: original,
+    });
   });
 
-  it('maps legacy insufficient-funds strings to structured errors', () => {
-    const error = normalizeNeoDapiError(
-      'no enough GAS to fee',
-      ERRORS.FAILED,
-    );
+  it('preserves the base error metadata for malformed input errors', () => {
+    const original = new Error('txid is required');
+    const error = createNeoDapiError(ERRORS.MALFORMED_INPUT, original);
 
-    expect(error.type).toBe(ERRORS.INSUFFICIENT_FUNDS.type);
-    expect(error.description).toBe('no enough GAS to fee');
-    expect(error.data).toBe('no enough GAS to fee');
+    expect(error).toEqual({
+      ...ERRORS.MALFORMED_INPUT,
+      data: original,
+    });
   });
 
-  it('uses the provided fallback for rpc-like errors', () => {
-    const error = normalizeNeoDapiError(
-      { message: 'rpc exploded' },
-      ERRORS.RPC_ERROR,
-    );
-
-    expect(error.type).toBe(ERRORS.RPC_ERROR.type);
-    expect(error.description).toBe('rpc exploded');
-    expect(error.data).toEqual({ message: 'rpc exploded' });
+  it('stores string payloads in data unchanged', () => {
+    const error = createNeoDapiError(ERRORS.UNKNOWN, 'boom');
+    expect(error).toEqual({
+      ...ERRORS.UNKNOWN,
+      data: 'boom',
+    });
   });
 
-  it('uses the provided fallback for unknown errors', () => {
-    const error = normalizeNeoDapiError(new Error('boom'), ERRORS.FAILED);
-
-    expect(error.type).toBe(ERRORS.FAILED.type);
-    expect(error.description).toBe('boom');
-    expect(error.data).toEqual(new Error('boom'));
+  it('normalizes undefined payloads to null', () => {
+    const error = createNeoDapiError(ERRORS.UNKNOWN, undefined);
+    expect(error).toEqual({
+      ...ERRORS.UNKNOWN,
+      data: null,
+    });
   });
 });

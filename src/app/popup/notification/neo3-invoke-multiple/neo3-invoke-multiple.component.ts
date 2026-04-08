@@ -28,6 +28,7 @@ import {
   Neo3InvokeMultipleParams,
   Wallet3,
   RpcNetwork,
+  createNeoDapiError,
 } from '@/app/popup/_lib';
 import { Neo3InvokeService } from '../../transfer/neo3-invoke.service';
 import BigNumber from 'bignumber.js';
@@ -217,7 +218,7 @@ export class PopupNoticeNeo3InvokeMultipleComponent implements OnInit {
         this.loading = false;
         this.loadingMsg = '';
         this.chrome.windowCallback({
-          error: { ...ERRORS.RPC_ERROR, description: err?.msg },
+          error: createNeoDapiError(ERRORS.RPC_ERROR, err),
           return: requestTargetN3.InvokeMultiple,
           ID: this.messageID,
         });

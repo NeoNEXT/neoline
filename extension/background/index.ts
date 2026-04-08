@@ -78,7 +78,7 @@ import {
 } from '../common/utils';
 import { u as u3, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import BigNumber from 'bignumber.js';
-import { normalizeNeoDapiError } from '../../cross-runtime/neo-dapi-error';
+import { createNeoDapiError } from '../../cross-runtime/neo-dapi-error';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import CryptoJS from 'crypto-js';
 import { requestTargetEVM } from '../common/data_module_evm';
@@ -1139,10 +1139,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               return: requestTargetN3.Transaction,
               data: null,
               ID: request.ID,
-              error: {
-                ...ERRORS.RPC_ERROR,
-                description: res?.error?.message || res?.error,
-              },
+              error: createNeoDapiError(ERRORS.RPC_ERROR, res.error),
             });
           }
           sendResponse('');
@@ -1152,7 +1149,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           return: requestTargetN3.Transaction,
           data: null,
           ID: request.ID,
-          error,
+          error: createNeoDapiError(ERRORS.RPC_ERROR, error),
         });
         sendResponse('');
       }
@@ -1177,7 +1174,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               error:
                 response.error === undefined
                   ? null
-                  : { ...ERRORS.RPC_ERROR, description: response?.error },
+                  : createNeoDapiError(ERRORS.RPC_ERROR, response.error),
             });
             sendResponse('');
           },
@@ -1188,7 +1185,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           return: requestTargetN3.Block,
           data: null,
           ID: request.ID,
-          error,
+          error: createNeoDapiError(ERRORS.RPC_ERROR, error),
         });
         sendResponse('');
       }
@@ -1212,8 +1209,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               ID: request.ID,
               error:
                 response.error === undefined
-                  ? null
-                  : { ...ERRORS.RPC_ERROR, description: response?.error },
+                ? null
+                : createNeoDapiError(ERRORS.RPC_ERROR, response.error),
             });
             sendResponse('');
           },
@@ -1224,7 +1221,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           return: requestTargetN3.ApplicationLog,
           data: null,
           ID: request.ID,
-          error,
+          error: createNeoDapiError(ERRORS.RPC_ERROR, error),
         });
         sendResponse('');
       }
@@ -1252,7 +1249,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               error:
                 response.error === undefined
                   ? null
-                  : { ...ERRORS.RPC_ERROR, description: response?.error },
+                  : createNeoDapiError(ERRORS.RPC_ERROR, response.error),
             });
             sendResponse('');
           },
@@ -1263,7 +1260,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           return: requestTargetN3.Storage,
           data: null,
           ID: request.ID,
-          error,
+          error: createNeoDapiError(ERRORS.RPC_ERROR, error),
         });
         sendResponse('');
       }
@@ -1335,7 +1332,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           if (!res.error) {
             returnRes.data = res.result;
           } else {
-            returnRes.error = normalizeNeoDapiError(res.error, ERRORS.RPC_ERROR);
+            returnRes.error = createNeoDapiError(ERRORS.RPC_ERROR, res.error);
           }
           windowCallback(returnRes);
           sendResponse('');
@@ -1431,7 +1428,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           data: [],
           ID: request.ID,
           return: requestTargetN3.InvokeReadMulti,
-          error,
+          error: createNeoDapiError(ERRORS.RPC_ERROR, error),
         });
         sendResponse('');
       }

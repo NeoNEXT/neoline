@@ -8,11 +8,7 @@ import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
 import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
 import { ERRORS } from '@/models/dapi';
-import {
-  createNeoDapiError,
-  NeoDapiError,
-  normalizeNeoDapiError,
-} from '@cross-runtime/neo-dapi-error';
+import { createNeoDapiError } from '@cross-runtime/neo-dapi-error';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 
@@ -26,13 +22,6 @@ interface CreateNeo3TxInput {
   nftTokenId?: any;
 }
 
-function asNeo3TransferTxError(error: any, fallback: NeoDapiError) {
-  return normalizeNeoDapiError(error, fallback);
-}
-
-function asNeo3TransferInsufficientFunds(description: string) {
-  return createNeoDapiError(ERRORS.INSUFFICIENT_FUNDS, description);
-}
 
 @Injectable()
 export class Neo3TransferService {
@@ -121,7 +110,7 @@ export class Neo3TransferService {
       try {
         currentHeight = await rpcClientTemp.getBlockCount();
       } catch (error) {
-        throw asNeo3TransferTxError(error, ERRORS.RPC_ERROR);
+        throw createNeoDapiError(ERRORS.RPC_ERROR, error);
       }
       vars.tx = new tx.Transaction({
         signers: [
@@ -148,7 +137,7 @@ export class Neo3TransferService {
       try {
         networkFeeEstimate = await neo3This.calculateNetworkFee(vars.tx);
       } catch (error) {
-        throw asNeo3TransferTxError(error, ERRORS.RPC_ERROR);
+        throw createNeoDapiError(ERRORS.RPC_ERROR, error);
       }
 
       vars.tx.networkFee = u.BigInteger.fromNumber(networkFeeEstimate).add(
@@ -176,10 +165,10 @@ export class Neo3TransferService {
           ],
         );
       } catch (error) {
-        throw asNeo3TransferTxError(error, ERRORS.RPC_ERROR);
+        throw createNeoDapiError(ERRORS.RPC_ERROR, error);
       }
       if (invokeFunctionResponse.state !== 'HALT') {
-        throw asNeo3TransferTxError(invokeFunctionResponse, ERRORS.RPC_ERROR);
+        throw createNeoDapiError(ERRORS.RPC_ERROR, invokeFunctionResponse);
       }
       const requiredSystemFee = u.BigInteger.fromNumber(
         invokeFunctionResponse.gasconsumed,
@@ -217,7 +206,8 @@ export class Neo3TransferService {
       );
       gasAmount = new BigNumber(gasAmount).shiftedBy(-8).toFixed();
       if (new BigNumber(gasAmount).comparedTo(gasRequirements) < 0) {
-        throw asNeo3TransferInsufficientFunds(
+        throw createNeoDapiError(
+          ERRORS.INSUFFICIENT_FUNDS,
           `${notificationTemp.content.insufficientBalance} ${gasRequirements} ${notificationTemp.content.butOnlyHad} ${gasAmount.toString()}`,
         );
       } else {
@@ -240,7 +230,8 @@ export class Neo3TransferService {
             new BigNumber(inputs.amountToTransfer),
           ) < 0
         ) {
-          throw asNeo3TransferInsufficientFunds(
+          throw createNeoDapiError(
+            ERRORS.INSUFFICIENT_FUNDS,
             `${notificationTemp.content.balanceLack} ${balanceAmount}`,
           );
         } else {
@@ -253,7 +244,8 @@ export class Neo3TransferService {
             .shiftedBy(-8)
             .plus(gasRequirements);
           if (new BigNumber(balanceAmount).comparedTo(totalRequirements) < 0) {
-            throw asNeo3TransferInsufficientFunds(
+            throw createNeoDapiError(
+              ERRORS.INSUFFICIENT_FUNDS,
               `${notificationTemp.content.insufficientSystemFee} ${balanceAmount}`,
             );
           }
@@ -270,7 +262,7 @@ export class Neo3TransferService {
             return vars.tx;
           })
           .catch((error) =>
-            Promise.reject(asNeo3TransferTxError(error, ERRORS.UNKNOWN)),
+            Promise.reject(createNeoDapiError(ERRORS.UNKNOWN, error)),
           ),
       );
     }
@@ -284,7 +276,7 @@ export class Neo3TransferService {
           return vars.tx;
         })
         .catch((error) =>
-          Promise.reject(asNeo3TransferTxError(error, ERRORS.UNKNOWN)),
+          Promise.reject(createNeoDapiError(ERRORS.UNKNOWN, error)),
         ),
     );
   }

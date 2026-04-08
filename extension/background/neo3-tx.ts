@@ -15,7 +15,7 @@ import {
 } from '@cityofzion/neon-core-neo3/lib/tx/components';
 import BigNumber from 'bignumber.js';
 import { ERRORS } from '../common/data_module_neo2';
-import { normalizeNeoDapiError } from '../../cross-runtime/neo-dapi-error';
+import { createNeoDapiError } from '../../cross-runtime/neo-dapi-error';
 
 interface InvokeArg extends sc.ContractCall {
   abortOnFail?: boolean;
@@ -35,10 +35,6 @@ interface CreateNeo3TxInput {
 // 这里只是为了给 RPC 估算手续费提供结构合法的 witness，因此固定的临时私钥就够了。
 // This is only used to provide a structurally valid witness for RPC fee estimation, so a fixed temporary private key is sufficient.
 const DUMMY_NETWORK_FEE_WIF = 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
-
-function asCreateNeo3TxError(error: any, fallback = ERRORS.UNKNOWN) {
-  return normalizeNeoDapiError(error, fallback);
-}
 
 function toInvokeScript(invokeArgs: InvokeArg[]) {
   const hasAbortOnFail = invokeArgs.some((item) => item.abortOnFail);
@@ -178,13 +174,13 @@ export async function createNeo3Tx(
         TransactionAttribute.fromJson(attribute),
       );
     } catch (error) {
-      throw asCreateNeo3TxError(error, ERRORS.MALFORMED_INPUT);
+      throw createNeoDapiError(ERRORS.MALFORMED_INPUT, error);
     }
 
     try {
       currentHeight = await rpcClient.getBlockCount();
     } catch (error) {
-      throw asCreateNeo3TxError(error, ERRORS.RPC_ERROR);
+      throw createNeoDapiError(ERRORS.RPC_ERROR, error);
     }
 
     const transaction = new tx.Transaction({
@@ -201,7 +197,7 @@ export async function createNeo3Tx(
           8,
         );
       } catch (error) {
-        throw asCreateNeo3TxError(error, ERRORS.MALFORMED_INPUT);
+        throw createNeoDapiError(ERRORS.MALFORMED_INPUT, error);
       }
     } else {
       // 在挂真实签名前先预执行脚本，用于推导 system fee。
@@ -213,10 +209,10 @@ export async function createNeo3Tx(
           signerJson,
         );
       } catch (error) {
-        throw asCreateNeo3TxError(error, ERRORS.RPC_ERROR);
+        throw createNeoDapiError(ERRORS.RPC_ERROR, error);
       }
       if (invokeScriptResponse.state !== 'HALT') {
-        throw asCreateNeo3TxError(invokeScriptResponse, ERRORS.RPC_ERROR);
+        throw createNeoDapiError(ERRORS.RPC_ERROR, invokeScriptResponse);
       }
 
       try {
@@ -229,7 +225,7 @@ export async function createNeo3Tx(
           u.BigInteger.fromDecimal(params.systemFee || 0, 8),
         );
       } catch (error) {
-        throw asCreateNeo3TxError(error, ERRORS.MALFORMED_INPUT);
+        throw createNeoDapiError(ERRORS.MALFORMED_INPUT, error);
       }
     }
 
@@ -242,7 +238,7 @@ export async function createNeo3Tx(
         transaction,
       );
     } catch (error) {
-      throw asCreateNeo3TxError(error, ERRORS.RPC_ERROR);
+      throw createNeoDapiError(ERRORS.RPC_ERROR, error);
     }
 
     try {
@@ -250,11 +246,11 @@ export async function createNeo3Tx(
         u.BigInteger.fromDecimal(params.networkFee || 0, 8),
       );
     } catch (error) {
-      throw asCreateNeo3TxError(error, ERRORS.MALFORMED_INPUT);
+      throw createNeoDapiError(ERRORS.MALFORMED_INPUT, error);
     }
 
     return transaction;
   } catch (error) {
-    throw asCreateNeo3TxError(error, ERRORS.UNKNOWN);
+    throw createNeoDapiError(ERRORS.UNKNOWN, error);
   }
 }

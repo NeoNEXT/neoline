@@ -27,6 +27,7 @@ import {
   ChainType,
   AddAddressBookProp,
   getErrorMessage,
+  createNeoDapiError,
 } from '../../_lib';
 import { Neo3TransferService } from '../../transfer/neo3-transfer.service';
 import BigNumber from 'bignumber.js';
@@ -310,7 +311,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
         this.loadingMsg = '';
         this.creating = false;
         this.chrome.windowCallback({
-          error: { ...ERRORS.RPC_ERROR, description: err?.msg },
+          error: createNeoDapiError(ERRORS.RPC_ERROR, err),
           return: requestTargetN3.Send,
           ID: this.messageID,
         });
