@@ -35,7 +35,7 @@ import {
   handleNeo3StackStringValue,
   httpPostPromise,
 } from '../common';
-import { sc, tx, wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+import { sc, tx, u, wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import BigNumber from 'bignumber.js';
 import { hex2base64 } from '@cityofzion/neon-core-neo3/lib/u';
 import { TransactionAttributeJson } from '@cityofzion/neon-core-neo3/lib/tx';
@@ -324,6 +324,24 @@ class NEOLineN3Controller extends EventEmitter {
       isLedgerCompatible: options.isLedgerCompatible ?? false,
       isTypedData: options.isTypedData ?? false,
     };
+
+    if (newOptions.isLedgerCompatible) {
+      let hexMessage: string;
+      if (newOptions.isBase64Encoded) {
+        hexMessage = u.base642hex(message);
+      } else {
+        hexMessage = u.str2hexstring(message);
+      }
+      try {
+        tx.Transaction.deserialize(hexMessage);
+      } catch (error) {
+        throw {
+          code: NEP21ErrorCode.INVALID,
+          message:
+            "Invalid 'message' for ledger-compatible signing. When 'options.isLedgerCompatible' is true, provide a serialized Neo3 transaction (set 'options.isBase64Encoded' to match the message format).",
+        }
+      }
+    }
 
     return this.sendAuthorizedMessage<SignedMessage>(
       requestTargetN3.SignMessageV3,

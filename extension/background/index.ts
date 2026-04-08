@@ -1500,8 +1500,8 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     case requestTargetN3.SignMessageV3: {
       const params = request.parameter;
 
+      const currentWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
       if (params.account) {
-        const currentWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
         const address = wallet3.getAddressFromScriptHash(
           remove0xPrefix(params.account),
         );
@@ -1517,6 +1517,19 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           sendResponse('');
           return;
         }
+      }
+      if (!params.options?.isLedgerCompatible && currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
+        windowCallback({
+          return: requestTargetN3.SignMessageV3,
+          error: {
+            ...ERRORS.MALFORMED_INPUT,
+            description:
+              "Ledger account requires 'options.isLedgerCompatible = true'. Please set this option and retry.",
+          },
+          ID: request.ID,
+        });
+        sendResponse('');
+        return;
       }
       const localData =
         (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};

@@ -29,6 +29,7 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
   private invokeArgsArray;
   params: RequestParams;
   displayMessage;
+  hexMessage: string;
 
   showHardwareSign = false;
 
@@ -70,6 +71,11 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
             return;
           }
           this.displayMessage = this.formatMessage(this.params.message);
+          if (this.params.options.isBase64Encoded) {
+            this.hexMessage = u.base642hex(this.params.message);
+          } else {
+            this.hexMessage = u.str2hexstring(this.params.message);
+          }
         });
     });
     window.onbeforeunload = () => {
@@ -110,13 +116,7 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
       .then((wif) => {
         const privateKey = wallet.getPrivateKeyFromWIF(wif);
         this.publicKey = wallet.getPublicKeyFromPrivateKey(privateKey);
-        let message;
-        if (this.params.options.isLedgerCompatible) {
-          message = u.num2hexstring(0, 4, true) + u.sha256(this.params.message);
-        } else {
-          message = u.str2hexstring(this.params.message);
-        }
-        this.sendMessage(wallet.sign(message, privateKey));
+        this.sendMessage(wallet.sign(this.hexMessage, privateKey));
       });
   }
 

@@ -1,5 +1,5 @@
 <app-hardware-sign *ngIf="showHardwareSign" [chainType]="chainType" [currentWallet]="currentWallet"
-  [unsignedTx]="params.message" [magicNumber]="0" [signOnly]="true"
+  [unsignedTx]="hexMessage" [magicNumber]="n3Network.magicNumber" [signOnly]="true"
   (backWithSignedTx)="handleHardwareSignedTx($event)"></app-hardware-sign>
 
 <div class="container">
