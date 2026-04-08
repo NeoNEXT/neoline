@@ -11,6 +11,7 @@ import { ERRORS } from '@/models/dapi';
 import { createNeoDapiError } from '@cross-runtime/neo-dapi-error';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
+import { ContractParamLike } from '@cityofzion/neon-core-neo3/lib/sc';
 
 interface CreateNeo3TxInput {
   addressFrom: string;
@@ -20,6 +21,7 @@ interface CreateNeo3TxInput {
   networkFee: string | number;
   decimals: number;
   nftTokenId?: any;
+  data?: ContractParamLike;
 }
 
 
@@ -92,7 +94,7 @@ export class Neo3TransferService {
           sc.ContractParam.hash160(inputs.fromAccountAddress),
           sc.ContractParam.hash160(inputs.toAccountAddress),
           sc.ContractParam.integer(inputs.amountToTransfer),
-          sc.ContractParam.any(null),
+          params.data ? sc.ContractParam.fromJson(params.data) : sc.ContractParam.any(null),
         ],
       });
     }

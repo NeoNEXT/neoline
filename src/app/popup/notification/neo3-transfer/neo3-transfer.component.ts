@@ -185,15 +185,16 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
     this.loadingMsg = 'loading';
     this.creating = true;
     this.transfer
-      .create(
-        this.fromAddress,
-        this.invokeParams.toAddress,
-        this.invokeParams.asset,
-        this.invokeParams.amount,
-        this.fee,
-        this.balance.decimals,
-        this.invokeParams.broadcastOverride,
-      )
+      .create({
+        from: this.fromAddress,
+        to: this.invokeParams.toAddress,
+        asset: this.invokeParams.asset,
+        amount: this.invokeParams.amount,
+        fee: this.fee,
+        decimals: this.balance.decimals,
+        broadcastOverride: this.invokeParams.broadcastOverride,
+        data: this.invokeParams.data,
+      })
       .subscribe(
         (tx: any) => {
           this.loading = false;

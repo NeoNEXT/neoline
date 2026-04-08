@@ -26,16 +26,27 @@ export class TransferService {
       this.chainType = state.currentChainType;
     });
   }
-  public create(
-    from: string,
-    to: string,
-    asset: string,
-    amount: string,
-    fee: number | string = 0,
-    decimals: number = 0,
-    broadcastOverride: boolean = false,
-    nftTokenId?: string
-  ): Observable<Transaction | Transaction3> {
+  public create({
+    from,
+    to,
+    asset,
+    amount,
+    fee = 0,
+    decimals = 0,
+    broadcastOverride = false,
+    nftTokenId,
+    data,
+  }: {
+    from: string;
+    to: string;
+    asset: string;
+    amount: string;
+    fee?: number | string;
+    decimals?: number;
+    broadcastOverride?: boolean;
+    nftTokenId?: string;
+    data?: any;
+  }): Observable<Transaction | Transaction3> {
     if (this.chainType === 'Neo3') {
       return new Observable((observer) => {
         this.neo3TransferService
@@ -47,6 +58,7 @@ export class TransferService {
             networkFee: fee,
             decimals,
             nftTokenId,
+            data,
           })
           .subscribe(
             (tx) => {

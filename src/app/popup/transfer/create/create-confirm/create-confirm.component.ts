@@ -453,25 +453,25 @@ export class TransferCreateConfirmComponent implements OnInit {
     this.loading = true;
     let createTxReq: Observable<Transaction2 | Transaction3>;
     if (this.data.isNFT) {
-      createTxReq = this.transfer.create(
-        this.data.from,
-        this.data.to.address,
-        this.data.nftContract,
-        this.data.amount,
-        this.data.fee || 0,
-        0,
-        false,
-        this.data.nftToken.tokenid
-      );
+      createTxReq = this.transfer.create({
+        from: this.data.from,
+        to: this.data.to.address,
+        asset: this.data.nftContract,
+        amount: this.data.amount,
+        fee: this.data.fee || 0,
+        decimals: 0,
+        broadcastOverride: false,
+        nftTokenId: this.data.nftToken.tokenid
+      });
     } else {
-      createTxReq = this.transfer.create(
-        this.data.from,
-        this.data.to.address,
-        this.data.asset.asset_id,
-        this.data.amount,
-        this.data.fee || '0',
-        this.data.asset.decimals
-      );
+      createTxReq = this.transfer.create({
+        from: this.data.from,
+        to: this.data.to.address,
+        asset: this.data.asset.asset_id,
+        amount: this.data.amount,
+        fee: this.data.fee || '0',
+        decimals: this.data.asset.decimals
+      });
     }
     createTxReq.subscribe(
       async (res: Transaction2 | Transaction3) => {

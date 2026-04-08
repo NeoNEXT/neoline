@@ -193,18 +193,25 @@ export class PopupClaimGasComponent implements OnDestroy {
 
   //#region claim
   private syncNow() {
-    this.transfer.create(this.address, this.address, NEO, '1').subscribe(
-      async (res) => {
-        this.getSignTx(res, 'syncNow');
-      },
-      (err) => {
-        if (this.chainType === 'Neo3' && err) {
-          this.global.snackBarTip('wentWrong', err, 10000);
-        } else {
-          this.global.snackBarTip('wentWrong', err);
-        }
-      }
-    );
+    this.transfer
+      .create({
+        from: this.address,
+        to: this.address,
+        asset: NEO,
+        amount: '1',
+      })
+      .subscribe(
+        async (res) => {
+          this.getSignTx(res, 'syncNow');
+        },
+        (err) => {
+          if (this.chainType === 'Neo3' && err) {
+            this.global.snackBarTip('wentWrong', err, 10000);
+          } else {
+            this.global.snackBarTip('wentWrong', err);
+          }
+        },
+      );
   }
 
   private initClaim() {

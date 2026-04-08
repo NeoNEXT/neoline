@@ -35,7 +35,7 @@ import {
   handleNeo3StackStringValue,
   httpPostPromise,
 } from '../common';
-import { tx, wallet as wallet3 } from '@cityofzion/neon-core-neo3';
+import { sc, tx, wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import BigNumber from 'bignumber.js';
 import { hex2base64 } from '@cityofzion/neon-core-neo3/lib/u';
 import { TransactionAttributeJson } from '@cityofzion/neon-core-neo3/lib/tx';
@@ -167,6 +167,18 @@ class NEOLineN3Controller extends EventEmitter {
         code: NEP21ErrorCode.INVALID,
         message: `'to' must be a valid script hash`,
       };
+    }
+
+    if (data) {
+      try {
+        sc.ContractParam.fromJson(data);
+      } catch (error) {
+        throw {
+          code: NEP21ErrorCode.INVALID,
+          message: `'data' must be a valid contract parameter`,
+          data: error
+        };
+      }
     }
 
     const toAddress = await wallet3.getAddressFromScriptHash(

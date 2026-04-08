@@ -226,15 +226,15 @@ export class PopupNoticeTransferComponent implements OnInit {
       .then((res: Asset) => {
         this.balance = res;
         this.transfer
-          .create(
-            this.fromAddress,
-            this.toAddress,
-            this.assetId,
-            this.amount,
-            this.fee,
-            res.decimals,
-            this.broadcastOverride
-          )
+          .create({
+            from: this.fromAddress,
+            to: this.toAddress,
+            asset: this.assetId,
+            amount: this.amount,
+            fee: this.fee,
+            decimals: res.decimals,
+            broadcastOverride: this.broadcastOverride
+          })
           .subscribe(
             (tx: Transaction) => {
               this.loading = false;
