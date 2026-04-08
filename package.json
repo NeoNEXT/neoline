@@ -1,6 +1,6 @@
 {
   "name": "neoline",
-  "version": "5.7.7",
+  "version": "5.8.0",
   "engines": {
     "node": "^16.20.1",
     "npm": "~8.19.4"
