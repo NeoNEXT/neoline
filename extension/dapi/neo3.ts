@@ -23,7 +23,6 @@ import {
   N3GetStorageArgs,
   N3StorageResponse,
   N3Response,
-  N3SendArgs,
   N3SendOutput,
   N3VerifyMessageArgs,
   EVENT,
@@ -38,6 +37,7 @@ import {
   getIcon,
 } from './common';
 import { getN3AddressFromScriptHash, isN3Address } from '../common/utils';
+import { N3SendArgs } from '../../cross-runtime/neo3-shared';
 
 export class Init {
   public EVENT = EVENT;

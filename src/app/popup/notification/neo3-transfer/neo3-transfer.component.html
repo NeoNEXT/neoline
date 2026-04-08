@@ -17,7 +17,7 @@
   <div class="header transfer">
     <div class="invoke-type">· TRANSFER</div>
     <token-logo customClass="big" [assetId]="NEO" chainType="Neo3"></token-logo>
-    <p class="amount">-{{ amount }} {{ symbol }}</p>
+    <p class="amount">-{{ invokeParams.amount }} {{ symbol }}</p>
     <p class="rate">-{{ money | numberFixed : 2 }} {{ rateCurrency }}</p>
     <div class="address-group">
       <copy [value]="fromAddress">
@@ -30,14 +30,14 @@
         </div>
       </copy>
       <img theme src="assets/images/third-party/transfer-arrow.svg" alt="" />
-      <copy [value]="toAddress">
+      <copy [value]="invokeParams.toAddress">
         <div class="item">
-          <img class="avatar" [avatar]="toAddress" />
+          <img class="avatar" [avatar]="invokeParams.toAddress" />
           <div class="name-group">
-            <p class="name" *ngIf="getWalletName(toAddress)">
-              {{ getWalletName(toAddress) }}
+            <p class="name" *ngIf="getWalletName(invokeParams.toAddress)">
+              {{ getWalletName(invokeParams.toAddress) }}
             </p>
-            <p>{{ toAddress | longStr : 4 }}</p>
+            <p>{{ invokeParams.toAddress | longStr : 4 }}</p>
           </div>
         </div>
       </copy>
@@ -87,7 +87,7 @@
   </ul>
   <div class="content data" *ngIf="tabType === 'data'">
     <div class="json-box">
-      <pre>{{ dataJson | json }}</pre>
+      <pre>{{ invokeParams | json }}</pre>
     </div>
     <p class="hex-label">HEX</p>
     <p class="json-box serialize">{{ txSerialize }}</p>

@@ -115,18 +115,6 @@ export interface N3CreateTransactionArgs {
   validUntilBlock?: number;
 }
 
-export interface N3SendArgs {
-  fromAddress: string;
-  toAddress: string;
-  asset: string;
-  amount: string;
-  remark: string;
-  fee: string;
-  network: string;
-  broadcastOverride: boolean;
-  version?: number; // version 2: NEP-21
-}
-
 // result
 export interface N3Balance {
   contract: string;

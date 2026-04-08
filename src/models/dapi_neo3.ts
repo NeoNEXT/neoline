@@ -1,4 +1,4 @@
-export { requestTargetN3 } from '../../cross-runtime/neo3-shared';
+export { requestTargetN3, N3SendArgs } from '../../cross-runtime/neo3-shared';
 
 export enum AuthType {
   None = 'None',

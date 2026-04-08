@@ -1,3 +1,4 @@
+import { ContractParamLike } from '@cityofzion/neon-core-neo3/lib/sc';
 import { Account, Wallet } from '@cityofzion/neon-core-neo3/lib/wallet';
 import { HardwareDevice } from './constants';
 
@@ -36,6 +37,17 @@ export enum requestTargetN3 {
   ScriptHashToAddress = 'neoline.target_scriptHash_toAddress_n3',
   WalletSwitchNetwork = 'neoline.target_wallet_switch_network_n3',
   WalletSwitchAccount = 'neoline.target_wallet_switch_account_n3',
+}
+
+export interface N3SendArgs {
+  fromAddress: string;
+  toAddress: string;
+  asset: string;
+  amount: string;
+  fee?: string;
+  broadcastOverride?: boolean;
+  version?: number; // version 2: NEP-21
+  data?: ContractParamLike; // version 2: NEP-21, extra data for transfer, will be passed to onNEP21Payment of recipient if it's a smart contract
 }
 
 export class Account3 extends Account {

@@ -184,8 +184,6 @@ class NEOLineN3Controller extends EventEmitter {
         amount,
         data,
         version: 2,
-        fee: '0',
-        broadcastOverride: false,
       },
     );
 

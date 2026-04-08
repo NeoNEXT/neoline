@@ -59,7 +59,6 @@ import {
   N3InvokeArgs,
   N3InvokeMultipleArgs,
   N3InvokeReadArgs,
-  N3SendArgs,
   N3TransactionArgs,
   N3VerifyMessageArgs,
   requestTargetN3,
@@ -97,6 +96,7 @@ import { walletHandlerMap, ethereumRPCHandler } from './handlers';
 import { ethErrors } from 'eth-rpc-errors';
 import { remove0xPrefix } from '@cityofzion/neon-core-neo3/lib/u';
 import { createNeo3Tx, handleInvokeArgs } from './neo3-tx';
+import { N3SendArgs } from '../../cross-runtime/neo3-shared';
 
 /**
  * Background methods support.
@@ -1732,26 +1732,23 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         parameter.amount = new BigNumber(parameter.amount)
           .shiftedBy(-decimals)
           .toFixed();
+        delete parameter.version;
         request.parameter.amount = parameter.amount;
       }
       if (assetBalance.comparedTo(new BigNumber(parameter.amount)) >= 0) {
-        let queryString = '';
-        for (const key in parameter) {
-          if (parameter.hasOwnProperty(key)) {
-            const value = parameter[key];
-            queryString += `${key}=${value}&`;
-          }
-        }
-        createWindow(`neo3-transfer?${queryString}messageID=${request.ID}`);
+        const localData =
+        (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+        const newData = { ...localData, [request.ID]: parameter };
+        setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
+        createWindow(`neo3-transfer?messageID=${request.ID}`);
       } else {
         windowCallback({
           return: requestTargetN3.Send,
           error: ERRORS.INSUFFICIENT_FUNDS,
           ID: request.ID,
         });
-        sendResponse('');
-        return;
       }
+      sendResponse('');
       return true;
     }
     case requestTargetN3.AddressToScriptHash: {

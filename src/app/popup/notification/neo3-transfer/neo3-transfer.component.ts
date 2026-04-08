@@ -13,7 +13,7 @@ import { NEO } from '@/models/models';
 import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
 import { TransferService } from '@/app/popup/transfer/transfer.service';
 import { ERRORS } from '@/models/dapi';
-import { requestTargetN3 } from '@/models/dapi_neo3';
+import { N3SendArgs, requestTargetN3 } from '@/models/dapi_neo3';
 import { rpc } from '@cityofzion/neon-core-neo3/lib';
 import { MatDialog } from '@angular/material/dialog';
 import {
@@ -56,18 +56,15 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
 
   public balance: any;
   private creating = false;
-  public toAddress: string = '';
-  public assetId: string = '';
   public symbol: string = '';
-  public amount: string = '0';
-  public remark: string = '';
   public loading = false;
   public loadingMsg: string;
 
   public fee: string;
   public init = false;
-  private broadcastOverride = false;
   private messageID = 0;
+  private invokeArgsArray: any[] = [];
+  invokeParams: N3SendArgs;
   public systemFee;
   public networkFee;
   public systemFeeMoney;
@@ -97,7 +94,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
     private neoAssetInfoState: NeoAssetInfoState,
     private neoAssetService: NeoAssetService,
     private neoGasService: NeoGasService,
-    private rateState: RateState
+    private rateState: RateState,
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -118,74 +115,60 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
     this.settingState.rateCurrencySub.subscribe((res) => {
       this.rateCurrency = res;
     });
-    this.aRoute.queryParams.subscribe(async (params: any) => {
-      const pramsData = JSON.parse(JSON.stringify(params));
-      this.dataJson = JSON.stringify(params);
-      this.messageID = params.messageID;
-      if (JSON.stringify(params) === '{}') {
-        return;
-      }
-      for (const key in pramsData) {
-        if (Object.prototype.hasOwnProperty.call(pramsData, key)) {
-          let tempObject: any;
-          try {
-            tempObject = pramsData[key]
-              .replace(/([a-zA-Z0-9]+?):/g, '"$1":')
-              .replace(/'/g, '"');
-            tempObject = JSON.parse(tempObject);
-          } catch (error) {
-            tempObject = pramsData[key];
+    this.aRoute.queryParams.subscribe(async ({ messageID }) => {
+      this.messageID = messageID;
+      this.chrome
+        .getStorage(STORAGE_NAME.InvokeArgsArray)
+        .subscribe(async (invokeArgsArray) => {
+          this.invokeArgsArray = invokeArgsArray;
+          this.invokeParams = invokeArgsArray[messageID];
+          if (!this.invokeParams) {
+            return;
           }
-          pramsData[key] = tempObject;
-        }
-      }
-      this.dataJson = pramsData;
-      this.dataJson.messageID = undefined;
-      this.broadcastOverride =
-        params.broadcastOverride === 'true' ||
-        params.broadcastOverride === true;
-      window.onbeforeunload = () => {
-        this.chrome.windowCallback({
-          error: ERRORS.CANCELLED,
-          return: requestTargetN3.Send,
-          ID: this.messageID,
+          if (this.invokeParams.fee) {
+            this.fee = this.invokeParams.fee;
+          } else {
+            this.neoGasService.getGasFee().subscribe((res: GasFeeSpeed) => {
+              this.fee = res.propose_price;
+            });
+          }
+          this.getAssetDetail();
         });
-      };
-      this.toAddress = params.toAddress || '';
-      this.assetId = params.asset || '';
-      this.amount = params.amount || 0;
-      this.symbol = params.symbol || '';
-      this.fee = params.fee || 0;
-      if (params.fee) {
-        this.fee = params.fee;
-      } else {
-        this.neoGasService.getGasFee().subscribe((res: GasFeeSpeed) => {
-          this.fee = res.propose_price;
-        });
-      }
-      this.remark = params.remark || '';
-      this.getAssetDetail();
     });
+    window.onbeforeunload = () => {
+      if (this.chrome.check) {
+        delete this.invokeArgsArray[this.messageID];
+        this.chrome.setStorage(
+          STORAGE_NAME.InvokeArgsArray,
+          this.invokeArgsArray,
+        );
+      }
+      this.chrome.windowCallback({
+        error: ERRORS.CANCELLED,
+        return: requestTargetN3.Send,
+        ID: this.messageID,
+      });
+    };
   }
 
   async getAssetDetail() {
     const symbols = await this.neoAssetInfoState.getAssetSymbols(
-      [this.assetId],
-      this.chainType
+      [this.invokeParams.asset],
+      this.chainType,
     );
     this.symbol = symbols[0];
     const balance = await this.neoAssetService.getAddressAssetBalance(
       this.fromAddress,
-      this.assetId,
-      this.chainType
+      this.invokeParams.asset,
+      this.chainType,
     );
     if (new BigNumber(balance).comparedTo(0) > 0) {
       const decimals = await this.neoAssetInfoState.getAssetDecimals(
-        [this.assetId],
-        this.chainType
+        [this.invokeParams.asset],
+        this.chainType,
       );
       this.balance = {
-        asset_id: this.assetId,
+        asset_id: this.invokeParams.asset,
         balance: new BigNumber(balance).shiftedBy(-decimals[0]).toFixed(),
         symbol: symbols[0],
         decimals: decimals[0],
@@ -204,12 +187,12 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
     this.transfer
       .create(
         this.fromAddress,
-        this.toAddress,
-        this.assetId,
-        this.amount,
+        this.invokeParams.toAddress,
+        this.invokeParams.asset,
+        this.invokeParams.amount,
         this.fee,
         this.balance.decimals,
-        this.broadcastOverride
+        this.invokeParams.broadcastOverride,
       )
       .subscribe(
         (tx: any) => {
@@ -227,7 +210,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
           this.creating = false;
           this.canSend = false;
           this.global.snackBarTip(err);
-        }
+        },
       );
   }
 
@@ -238,7 +221,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
         return: requestTargetN3.Send,
         ID: this.messageID,
       },
-      true
+      true,
     );
   }
 
@@ -249,7 +232,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
   }
 
   private resolveSend(tx: Transaction3) {
-    if (this.broadcastOverride) {
+    if (this.invokeParams.broadcastOverride) {
       this.loading = false;
       this.loadingMsg = '';
       this.chrome.windowCallback(
@@ -261,7 +244,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
           return: requestTargetN3.Send,
           ID: this.messageID,
         },
-        true
+        true,
       );
       return;
     }
@@ -278,10 +261,10 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
         this.loading = false;
         this.loadingMsg = '';
         this.creating = false;
-        if (this.fromAddress !== this.toAddress) {
+        if (this.invokeParams.fromAddress !== this.invokeParams.toAddress) {
           const txTarget = {
             txid: TxHash,
-            value: -this.amount,
+            value: -this.invokeParams.amount,
             block_time: Math.floor(new Date().getTime() / 1000),
           };
           this.pushTransaction(txTarget);
@@ -297,7 +280,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
         const setData = {};
         setData[`TxArr_${this.chainType}-${this.n3Network.id}`] =
           (await this.chrome.getLocalStorage(
-            `TxArr_${this.chainType}-${this.n3Network.id}`
+            `TxArr_${this.chainType}-${this.n3Network.id}`,
           )) || [];
         setData[`TxArr_${this.chainType}-${this.n3Network.id}`].push(TxHash);
         this.chrome.setLocalStorage(setData);
@@ -322,7 +305,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
   public pushTransaction(transaction: object) {
     const networkName = `${this.chainType}-${this.n3Network.id}`;
     const address = this.fromAddress;
-    const assetId = this.assetId;
+    const assetId = this.invokeParams.asset;
     this.chrome.getStorage(STORAGE_NAME.transaction).subscribe((res) => {
       if (res === null || res === undefined) {
         res = {};
@@ -351,13 +334,15 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
       this.networkFeeMoney = new BigNumber(this.networkFee)
         .times(gasPrice)
         .toFixed();
-      if (this.symbol === 'GAS') {
-        this.money = new BigNumber(this.amount).times(gasPrice).toFixed();
+      if (this.invokeParams.asset === GAS3_CONTRACT) {
+        this.money = new BigNumber(this.invokeParams.amount)
+          .times(gasPrice)
+          .toFixed();
       } else {
         this.money = await this.rateState.getAssetAmountRate({
           chainType: 'Neo3',
-          assetId: this.assetId,
-          amount: this.amount,
+          assetId: this.invokeParams.asset,
+          amount: this.invokeParams.amount,
         });
       }
     }
@@ -370,7 +355,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
         return: requestTargetN3.Send,
         ID: this.messageID,
       },
-      true
+      true,
     );
   }
 
@@ -417,7 +402,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
   public getAddressSub(address: string) {
     return `${address.substr(0, 3)}...${address.substr(
       address.length - 4,
-      address.length - 1
+      address.length - 1,
     )} `;
   }
 
@@ -446,10 +431,10 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
 
   getWalletName(address: string) {
     const innerWallet = this.neo3WalletArr.find(
-      (item) => item.accounts[0].address === address
+      (item) => item.accounts[0].address === address,
     );
     const addressBook = this.storageNeoXAddressBook.find(
-      (item) => item.address === address
+      (item) => item.address === address,
     );
     return innerWallet?.name ?? addressBook?.name ?? '';
   }
