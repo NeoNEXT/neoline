@@ -1500,33 +1500,30 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     case requestTargetN3.SignMessageV3: {
       const params = request.parameter;
 
-      if (!params.account) {
-        const localData =
-          (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
-        const newData = { ...localData, [request.ID]: params };
-        setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
-        createWindow(`neo3-signature-v3?messageID=${request.ID}`);
-
-        sendResponse('');
-        return;
+      if (params.account) {
+        const currentWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
+        const address = wallet3.getAddressFromScriptHash(
+          remove0xPrefix(params.account),
+        );
+        if (
+          currentWallet !== undefined &&
+          currentWallet.accounts[0].address !== address
+        ) {
+          windowCallback({
+            return: requestTargetN3.SignMessageV3,
+            error: { ...ERRORS.MALFORMED_INPUT, description: 'Current account is not the signer' },
+            ID: request.ID,
+          });
+          sendResponse('');
+          return;
+        }
       }
+      const localData =
+        (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
+      const newData = { ...localData, [request.ID]: params };
+      setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
+      createWindow(`neo3-signature-v3?messageID=${request.ID}`);
 
-      const wallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
-      const address = wallet3.getAddressFromScriptHash(
-        remove0xPrefix(params.account),
-      );
-      if (
-        wallet !== undefined &&
-        wallet.accounts[0].address !== address
-      ) {
-        windowCallback({
-          return: requestTargetN3.SignMessageV3,
-          error: { ...ERRORS.MALFORMED_INPUT, description: 'Current account is not the signer' },
-          ID: request.ID,
-        });
-        sendResponse('');
-        return;
-      }
       sendResponse('');
       return;
     }
