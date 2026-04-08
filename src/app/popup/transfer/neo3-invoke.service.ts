@@ -19,9 +19,8 @@ import { Observable, from, throwError } from 'rxjs';
 import { Neo3Service } from '@/app/core/services/neo/neo3.service';
 import { NeoAssetService } from '@/app/core/services/neo/asset.service';
 import BigNumber from 'bignumber.js';
-import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
+import { createNeoDapiError, GAS3_CONTRACT, RpcNetwork } from '../_lib';
 import { ERRORS } from '@/models/dapi';
-import { createNeoDapiError } from '@cross-runtime/neo-dapi-error';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 
@@ -199,7 +198,11 @@ export class Neo3InvokeService {
           return vars.tx;
         })
         .catch((error) =>
-          Promise.reject(createNeoDapiError(ERRORS.UNKNOWN, error))
+          Promise.reject(
+            error?.type && error?.description
+              ? error
+              : createNeoDapiError(ERRORS.UNKNOWN, error)
+          )
         )
     );
   }

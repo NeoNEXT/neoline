@@ -321,8 +321,8 @@ class NEOLineN3Controller extends EventEmitter {
 
     const newOptions = {
       isBase64Encoded: options?.isBase64Encoded ?? false,
-      isLedgerCompatible: options.isLedgerCompatible ?? false,
-      isTypedData: options.isTypedData ?? false,
+      isLedgerCompatible: options?.isLedgerCompatible ?? false,
+      isTypedData: options?.isTypedData ?? false,
     };
 
     if (newOptions.isLedgerCompatible) {

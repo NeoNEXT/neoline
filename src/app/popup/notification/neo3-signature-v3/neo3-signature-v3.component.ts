@@ -125,7 +125,7 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
       payload: this.params.message,
       signature: u.hex2base64(SignedData),
       account: this.params.account,
-      pubKey: this.publicKey,
+      pubkey: this.publicKey,
     };
     this.chrome.windowCallback(
       {

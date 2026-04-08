@@ -1,3 +1,5 @@
+export { createNeoDapiError } from '../../../../cross-runtime/neo-dapi-error';
+
 export function getErrorMessage(error: any, fallback = 'Unknown error'): string {
   if (error instanceof Error) {
     return error.message || fallback;

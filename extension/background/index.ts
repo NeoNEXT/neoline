@@ -1501,13 +1501,14 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       const params = request.parameter;
 
       const currentWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
+      const currentAddress = currentWallet?.accounts?.[0]?.address;
       if (params.account) {
         const address = wallet3.getAddressFromScriptHash(
           remove0xPrefix(params.account),
         );
         if (
-          currentWallet !== undefined &&
-          currentWallet.accounts[0].address !== address
+          currentAddress !== undefined &&
+          currentAddress !== address
         ) {
           windowCallback({
             return: requestTargetN3.SignMessageV3,
@@ -1518,7 +1519,10 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           return;
         }
       }
-      if (!params.options?.isLedgerCompatible && currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
+      if (
+        !params.options?.isLedgerCompatible &&
+        currentWallet?.accounts?.[0]?.extra?.ledgerSLIP44
+      ) {
         windowCallback({
           return: requestTargetN3.SignMessageV3,
           error: {

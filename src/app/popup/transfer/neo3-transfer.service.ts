@@ -6,9 +6,8 @@ import { NeoAssetService } from '@/app/core/services/neo/asset.service';
 import { NotificationService } from '@/app/core/services/notification.service';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
-import { GAS3_CONTRACT, RpcNetwork } from '../_lib';
+import { createNeoDapiError, GAS3_CONTRACT, RpcNetwork } from '../_lib';
 import { ERRORS } from '@/models/dapi';
-import { createNeoDapiError } from '@cross-runtime/neo-dapi-error';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { ContractParamLike } from '@cityofzion/neon-core-neo3/lib/sc';
@@ -264,7 +263,11 @@ export class Neo3TransferService {
             return vars.tx;
           })
           .catch((error) =>
-            Promise.reject(createNeoDapiError(ERRORS.UNKNOWN, error)),
+            Promise.reject(
+              error?.type && error?.description
+                ? error
+                : createNeoDapiError(ERRORS.UNKNOWN, error)
+            ),
           ),
       );
     }
@@ -278,7 +281,11 @@ export class Neo3TransferService {
           return vars.tx;
         })
         .catch((error) =>
-          Promise.reject(createNeoDapiError(ERRORS.UNKNOWN, error)),
+          Promise.reject(
+            error?.type && error?.description
+              ? error
+              : createNeoDapiError(ERRORS.UNKNOWN, error)
+          ),
         ),
     );
   }
