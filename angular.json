@@ -73,6 +73,7 @@
           },
           "configurations": {
             "production": {
+              "indexTransform": "./index-html-transform.js",
               "fileReplacements": [
                 {
                   "replace": "src/environments/environment.ts",

@@ -83,7 +83,7 @@ export class PopupNoticeNeo3SignComponent implements OnInit {
       this.global.snackBarTip('LedgerUnSupportSignError');
       this.chrome.windowCallback({
         error: {
-          ...ERRORS.UNKNOWN,
+          ...ERRORS.UNSUPPORTED,
           description: `error: 'There was an error signing this transaction. Ledger does not support this method.`,
         },
         return: this.withoutSalt

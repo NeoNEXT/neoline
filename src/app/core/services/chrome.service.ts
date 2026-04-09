@@ -630,11 +630,13 @@ export class ChromeService {
     const allWebsites: ConnectedWebsitesType = await firstValueFrom(
       this.getStorage(STORAGE_NAME.connectedWebsites),
     );
+    const connectedAddressBucket =
+      allWebsites?.[hostname]?.connectedAddress || {};
 
-    if (allWebsites[hostname].connectedAddress?.[currentAddress]) {
+    if (connectedAddressBucket[currentAddress]) {
       const connectedAddress = [];
-      Object.keys(allWebsites[hostname].connectedAddress).forEach((address) => {
-        const item = allWebsites[hostname].connectedAddress[address];
+      Object.keys(connectedAddressBucket).forEach((address) => {
+        const item = connectedAddressBucket[address];
         if (item.chain === 'NeoX') {
           connectedAddress.push(address);
         }
@@ -660,11 +662,13 @@ export class ChromeService {
     const neo3WalletArr = await firstValueFrom(
       this.getStorage(STORAGE_NAME['walletArr-Neo3']),
     );
+    const connectedAddressBucket =
+      allWebsites?.[hostname]?.connectedAddress || {};
 
-    if (allWebsites[hostname].connectedAddress?.[currentAddress]) {
+    if (connectedAddressBucket[currentAddress]) {
       const connectedAddress = [];
-      Object.keys(allWebsites[hostname].connectedAddress).forEach((address) => {
-        const item = allWebsites[hostname].connectedAddress[address];
+      Object.keys(connectedAddressBucket).forEach((address) => {
+        const item = connectedAddressBucket[address];
         if (item.chain === 'Neo3') {
           const wallet = neo3WalletArr.find(
             (w) => w.accounts[0].address === address,

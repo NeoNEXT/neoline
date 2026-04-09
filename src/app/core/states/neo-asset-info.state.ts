@@ -125,7 +125,8 @@ export class NeoAssetInfoState {
       .toPromise()
       .then((res) => {
         res.forEach((item, index) => {
-          const decimal = handleNeo3StackNumberValue(item.result);
+          let decimalStr = handleNeo3StackNumberValue(item.result);
+          const decimal = Number(decimalStr);
           const sourceIndex = requestIndexs[index];
           if (chainType === 'Neo2') {
             this.n2AssetDecimal.set(contracts[sourceIndex], decimal);

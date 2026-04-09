@@ -67,16 +67,16 @@ export function getNeo2VerificationSignatureForSmartContract(
     });
 }
 
-export function handleNeo3StackNumberValue(result): number {
-  let res = 0;
+export function handleNeo3StackNumberValue(result): string {
+  let res = '0';
   if (result.state === 'HALT' && result.stack?.[0]?.value) {
     res = result.stack[0].value;
     if (result.stack[0].type === 'Integer') {
-      res = Number(result.stack[0].value || 0);
+      res = result.stack[0].value;
     }
     if (result.stack[0].type === 'ByteArray') {
       const hexStr = u.reverseHex(result.stack[0].value);
-      res = new BigNumber(hexStr || 0, 16).toNumber();
+      res = new BigNumber(hexStr || 0, 16).toString();
     }
   }
   return res;

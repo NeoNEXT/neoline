@@ -251,6 +251,10 @@ export async function createNeo3Tx(
 
     return transaction;
   } catch (error) {
-    throw createNeoDapiError(ERRORS.UNKNOWN, error);
+    if (error.type && error.description) {
+      throw error;
+    } else {
+      throw createNeoDapiError(ERRORS.UNKNOWN, error)
+    }
   }
 }
