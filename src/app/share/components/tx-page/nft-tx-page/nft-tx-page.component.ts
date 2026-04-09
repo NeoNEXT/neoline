@@ -152,6 +152,10 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
       });
   }
 
+  trackByTx(index: number, item: Transaction): string {
+    return item.txid + (item.tokenid ? `-${item.tokenid}` : '');
+  }
+
   private handleTxs(validTxs?: string[]) {
     const httpReq1 = this.neoNFTService.getNftTransactions(
       this.address,

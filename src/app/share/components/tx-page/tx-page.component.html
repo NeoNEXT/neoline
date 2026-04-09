@@ -1,7 +1,7 @@
 <div class="popup-home-tx-page">
   <div
     class="tx-item"
-    *ngFor="let item of txData; let i = index"
+    *ngFor="let item of txData; let i = index; trackBy: trackByTx"
     (click)="showDetail(item, assetId === '' ? item.symbol : symbol)"
   >
     <div class="head">

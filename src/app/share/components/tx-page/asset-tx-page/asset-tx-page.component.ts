@@ -185,6 +185,10 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
     return txArr;
   }
 
+  trackByTx(index: number, item: Transaction): string {
+    return item.txid;
+  }
+
   private handleTxs(validTxs?: string[]) {
     const httpReq1 = this.neoTxService.getAssetTxs(this.address, this.assetId);
     let httpReq2;

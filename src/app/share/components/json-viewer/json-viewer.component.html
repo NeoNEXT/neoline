@@ -1,6 +1,6 @@
 <ng-container *ngIf="isObject(data)">
   <ul>
-    <li *ngFor="let key of objectKeys(data)">
+    <li *ngFor="let key of objectKeys; trackBy: trackByKey">
       <span class="json-key">{{ key }}</span
       >:
       <ng-container
@@ -19,7 +19,7 @@
 
 <ng-container *ngIf="isArray(data)">
   <ul>
-    <li *ngFor="let item of data; let i = index">
+    <li *ngFor="let item of data; let i = index; trackBy: trackByIndex">
       <span class="json-key">{{ i }}</span
         >:
       <app-json-viewer [data]="item"></app-json-viewer>
