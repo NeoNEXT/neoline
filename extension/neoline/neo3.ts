@@ -160,7 +160,7 @@ window.addEventListener(
           }
           case requestTargetN3.Balance:
           case requestTargetN3.Transaction:
-
+          case requestTargetN3.BlockCount:
           case requestTargetN3.Block:
           case requestTargetN3.ApplicationLog:
           case requestTargetN3.Storage:
@@ -178,7 +178,8 @@ window.addEventListener(
           case requestTargetN3.SignMessageV2:
           case requestTargetN3.SignMessageV3:
           case requestTargetN3.Authenticate:
-          case requestTargetN3.SignTransaction: {
+          case requestTargetN3.SignTransaction:
+          case requestTargetN3.Relay: {
             getLocalStorage('chainType', async (res) => {
               let currChainType = res;
               if (!currChainType) {

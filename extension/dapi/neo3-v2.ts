@@ -33,7 +33,6 @@ import { N3MainnetNetwork, N3TestnetNetwork } from '../common/constants';
 import {
   handleNeo3StackNumberValue,
   handleNeo3StackStringValue,
-  httpPostPromise,
 } from '../common';
 import { sc, tx, u, wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import BigNumber from 'bignumber.js';
@@ -49,8 +48,6 @@ type LegacyInvokeResult = {
   txid: string;
   signedTx?: string;
 };
-
-let currentN3RpcUrl = N3MainnetNetwork.rpcUrl;
 
 class NEOLineN3Controller extends EventEmitter {
   name = 'NeoLine';
@@ -118,14 +115,11 @@ class NEOLineN3Controller extends EventEmitter {
       };
     }
 
-    const result = (await httpPostPromise(currentN3RpcUrl, {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'invokefunction',
-      params: [asset, 'balanceOf', [{ type: 'Hash160', value: account }]],
-    }).catch((error) => {
-      throw returnRPCError(error);
-    })) as Integer;
+    const result = await this.call({
+      hash: asset,
+      operation: 'balanceOf',
+      args: [{ type: 'Hash160', value: account }],
+    });
 
     return handleNeo3StackNumberValue(result);
   }
@@ -361,14 +355,11 @@ class NEOLineN3Controller extends EventEmitter {
       };
     }
 
-    const result = (await httpPostPromise(currentN3RpcUrl, {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'sendrawtransaction',
-      params: [context.data],
+    const result = await sendMessage<any>(requestTargetN3.Relay, {
+      data: context.data,
     }).catch((error) => {
-      throw returnRPCError(error);
-    })) as any;
+      throw normalizeError(error);
+    });
 
     if (typeof result === 'string') {
       return result;
@@ -410,16 +401,9 @@ class NEOLineN3Controller extends EventEmitter {
   }
 
   async getBlockCount(): Promise<number> {
-    const result = (await httpPostPromise(currentN3RpcUrl, {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'getblockcount',
-      params: [],
-    }).catch((error) => {
-      throw returnRPCError(error);
-    })) as number;
-
-    return result;
+    return sendMessage<number>(requestTargetN3.BlockCount).catch((error) => {
+      throw normalizeError(error);
+    });
   }
 
   async getTransaction(txid: UInt256): Promise<Transaction> {
@@ -460,14 +444,13 @@ class NEOLineN3Controller extends EventEmitter {
       };
     }
 
-    return (await httpPostPromise(currentN3RpcUrl, {
-      jsonrpc: '2.0',
-      id: 1,
-      method: 'getstorage',
-      params: [hash, key],
+    return await sendMessage<{ result: Base64Encoded }>(requestTargetN3.Storage, {
+      scriptHash: hash,
+      key,
+      keyEncoding: 'base64',
     }).catch((error) => {
-      throw returnRPCError(error);
-    })) as string;
+      throw normalizeError(error);
+    }).then((response) => response.result);
   }
 
   async getTokenInfo(hash: UInt160): Promise<Token> {
@@ -478,29 +461,20 @@ class NEOLineN3Controller extends EventEmitter {
       };
     }
 
-    const rpcUrl = currentN3RpcUrl;
-    const [symbol, decimals, totalSupply] = (await Promise.all([
-      httpPostPromise(rpcUrl, {
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'invokefunction',
-        params: [hash, 'symbol'],
+    const [symbol, decimals, totalSupply] = await Promise.all([
+      this.call({
+        hash,
+        operation: 'symbol',
       }),
-      httpPostPromise(rpcUrl, {
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'invokefunction',
-        params: [hash, 'decimals'],
+      this.call({
+        hash,
+        operation: 'decimals',
       }),
-      httpPostPromise(rpcUrl, {
-        jsonrpc: '2.0',
-        id: 1,
-        method: 'invokefunction',
-        params: [hash, 'totalSupply'],
+      this.call({
+        hash,
+        operation: 'totalSupply',
       }),
-    ]).catch((error) => {
-      throw returnRPCError(error);
-    })) as [any, any, any];
+    ]);
 
     return {
       symbol: handleNeo3StackStringValue(symbol),
@@ -641,7 +615,6 @@ window.addEventListener('message', (event) => {
       const { connected, currentNetwork } = response.data;
       provider.connected = connected;
       provider.network = currentNetwork.magicNumber;
-      currentN3RpcUrl = currentNetwork.rpcUrl;
       announceProvider();
       break;
     case EVENT.ACCOUNT_CHANGED:
@@ -656,10 +629,8 @@ window.addEventListener('message', (event) => {
 
       if (chainId === N3MainnetNetwork.chainId) {
         network = N3MainnetNetwork.magicNumber;
-        currentN3RpcUrl = N3MainnetNetwork.rpcUrl;
       } else if (chainId === N3TestnetNetwork.chainId) {
         network = N3TestnetNetwork.magicNumber;
-        currentN3RpcUrl = N3TestnetNetwork.rpcUrl;
       }
 
       if (network != null) {
@@ -802,14 +773,6 @@ function normalizeError(legacyError: any): NEP21Error {
       break;
   }
   return error;
-}
-
-function returnRPCError(error) {
-  return {
-    code: NEP21ErrorCode.RPC_ERROR,
-    message: LEGACY_ERRORS.RPC_ERROR.description,
-    data: error,
-  };
 }
 
 function stripHexPrefix(value: string) {

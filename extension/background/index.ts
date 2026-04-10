@@ -54,6 +54,7 @@ import {
 import {
   N3ApplicationLogArgs,
   N3GetBlockInputArgs,
+  N3RelayArgs,
   N3CreateTransactionArgs,
   N3GetStorageArgs,
   N3InvokeArgs,
@@ -1155,6 +1156,41 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       }
       return;
     }
+    case requestTargetN3.BlockCount: {
+      try {
+        httpPost(
+          request.nodeUrl,
+          {
+            jsonrpc: '2.0',
+            method: 'getblockcount',
+            params: [],
+            id: 1,
+          },
+          (response) => {
+            windowCallback({
+              return: requestTargetN3.BlockCount,
+              data: response.error !== undefined ? null : response.result,
+              ID: request.ID,
+              error:
+                response.error === undefined
+                  ? null
+                  : createNeoDapiError(ERRORS.RPC_ERROR, response.error),
+            });
+            sendResponse('');
+          },
+          null
+        );
+      } catch (error) {
+        windowCallback({
+          return: requestTargetN3.BlockCount,
+          data: null,
+          ID: request.ID,
+          error: createNeoDapiError(ERRORS.RPC_ERROR, error),
+        });
+        sendResponse('');
+      }
+      return;
+    }
     case requestTargetN3.Block: {
       try {
         const parameter = request.parameter as N3GetBlockInputArgs;
@@ -1235,7 +1271,12 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           {
             jsonrpc: '2.0',
             method: 'getstorage',
-            params: [parameter.scriptHash, str2hexstring(parameter.key)],
+            params: [
+              parameter.scriptHash,
+              parameter.keyEncoding === 'base64'
+                ? parameter.key
+                : str2hexstring(parameter.key),
+            ],
             id: 1,
           },
           (response) => {
@@ -1258,6 +1299,42 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       } catch (error) {
         windowCallback({
           return: requestTargetN3.Storage,
+          data: null,
+          ID: request.ID,
+          error: createNeoDapiError(ERRORS.RPC_ERROR, error),
+        });
+        sendResponse('');
+      }
+      return;
+    }
+    case requestTargetN3.Relay: {
+      try {
+        const parameter = request.parameter as N3RelayArgs;
+        httpPost(
+          request.nodeUrl,
+          {
+            jsonrpc: '2.0',
+            method: 'sendrawtransaction',
+            params: [parameter.data],
+            id: 1,
+          },
+          (response) => {
+            windowCallback({
+              return: requestTargetN3.Relay,
+              data: response.error !== undefined ? null : response.result,
+              ID: request.ID,
+              error:
+                response.error === undefined
+                  ? null
+                  : createNeoDapiError(ERRORS.RPC_ERROR, response.error),
+            });
+            sendResponse('');
+          },
+          null
+        );
+      } catch (error) {
+        windowCallback({
+          return: requestTargetN3.Relay,
           data: null,
           ID: request.ID,
           error: createNeoDapiError(ERRORS.RPC_ERROR, error),

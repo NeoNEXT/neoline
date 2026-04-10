@@ -48,6 +48,12 @@ export interface N3ApplicationLogArgs {
 export interface N3GetStorageArgs {
   scriptHash: string;
   key: string;
+  keyEncoding?: 'utf8' | 'base64';
+  network?: string;
+}
+
+export interface N3RelayArgs {
+  data: string;
   network?: string;
 }
 
