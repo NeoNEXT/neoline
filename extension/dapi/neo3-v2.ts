@@ -78,7 +78,7 @@ class NEOLineN3Controller extends EventEmitter {
       };
     }
 
-    return this.sendAuthorizedMessage<AuthenticationResponsePayload>(
+    return sendAuthorizedMessage<AuthenticationResponsePayload>(
       requestTargetN3.Authenticate,
       payload,
     );
@@ -191,7 +191,7 @@ class NEOLineN3Controller extends EventEmitter {
     const fromAddress = await wallet3.getAddressFromScriptHash(
       stripHexPrefix(from),
     );
-    const result = await this.sendAuthorizedMessage<LegacyInvokeResult>(
+    const result = await sendAuthorizedMessage<LegacyInvokeResult>(
       requestTargetN3.Send,
       {
         fromAddress,
@@ -224,14 +224,14 @@ class NEOLineN3Controller extends EventEmitter {
     attributes?: TransactionAttributeJson[],
     options?: TransactionOptions,
   ): Promise<UInt256> {
-    const { target, parameter } = await this.toInvokeRequest(
+    const { target, parameter } = await toInvokeRequest(
       invocations,
       signers,
       attributes,
       options,
       false,
     );
-    const result = await this.sendAuthorizedMessage<LegacyInvokeResult>(
+    const result = await sendAuthorizedMessage<LegacyInvokeResult>(
       target,
       parameter,
     );
@@ -245,7 +245,7 @@ class NEOLineN3Controller extends EventEmitter {
     attributes?: TransactionAttributeJson[],
     options?: TransactionOptions,
   ): Promise<ContractParametersContext> {
-    const parameter = await this.toCreateTransactionRequest(
+    const parameter = await toCreateTransactionRequest(
       invocations,
       signers,
       attributes,
@@ -272,7 +272,7 @@ class NEOLineN3Controller extends EventEmitter {
       };
     }
 
-    return this.sendAuthorizedMessage<ContractParametersContext>(
+    return sendAuthorizedMessage<ContractParametersContext>(
       requestTargetN3.SignTransaction,
       {
         context,
@@ -330,7 +330,7 @@ class NEOLineN3Controller extends EventEmitter {
       }
     }
 
-    return this.sendAuthorizedMessage<SignedMessage>(
+    return sendAuthorizedMessage<SignedMessage>(
       requestTargetN3.SignMessageV3,
       {
         message,
@@ -481,123 +481,6 @@ class NEOLineN3Controller extends EventEmitter {
     };
   }
 
-  private async toInvokeRequest(
-    invocations: InvocationArguments[],
-    signers?: Signer[],
-    attributes?: TransactionAttributeJson[],
-    options?: TransactionOptions,
-    broadcastOverride?: boolean,
-  ) {
-    if (!Array.isArray(invocations) || invocations.length === 0) {
-      throw {
-        code: NEP21ErrorCode.INVALID,
-        message: `'invocations' must be a non-empty array`,
-      };
-    }
-
-    assertSupportedTransactionOptions(attributes, options);
-
-    invocations.forEach(assertInvocation);
-    const extraSystemFee = options?.extraSystemFee
-      ? new BigNumber(options.extraSystemFee).shiftedBy(-8).toFixed()
-      : undefined;
-    const suggestedSystemFee = options?.suggestedSystemFee
-      ? new BigNumber(options.suggestedSystemFee).shiftedBy(-8).toFixed()
-      : undefined;
-
-    if (invocations.length === 1) {
-      const [invocation] = invocations;
-      return {
-        target: requestTargetN3.Invoke,
-        parameter: {
-          scriptHash: invocation.hash,
-          operation: invocation.operation,
-          args: invocation.args || [],
-          abortOnFail: invocation.abortOnFail,
-          signers: signers || [],
-          attributes: attributes || [],
-          extraSystemFee: extraSystemFee,
-          overrideSystemFee: suggestedSystemFee,
-          validUntilBlock: options?.validUntilBlock,
-          broadcastOverride,
-          hostname: location.hostname,
-        },
-      };
-    }
-
-    return {
-      target: requestTargetN3.InvokeMultiple,
-      parameter: {
-        invokeArgs: invocations.map((item) => ({
-          scriptHash: item.hash,
-          operation: item.operation,
-          args: item.args || [],
-          abortOnFail: item.abortOnFail,
-        })),
-        signers: signers || [],
-        attributes: attributes || [],
-        extraSystemFee: extraSystemFee,
-        overrideSystemFee: suggestedSystemFee,
-        validUntilBlock: options?.validUntilBlock,
-        broadcastOverride,
-        hostname: location.hostname,
-      },
-    };
-  }
-
-  private async toCreateTransactionRequest(
-    invocations: InvocationArguments[],
-    signers?: Signer[],
-    attributes?: TransactionAttributeJson[],
-    options?: TransactionOptions,
-  ) {
-    if (!Array.isArray(invocations) || invocations.length === 0) {
-      throw {
-        code: NEP21ErrorCode.INVALID,
-        message: `'invocations' must be a non-empty array`,
-      };
-    }
-
-    assertSupportedTransactionOptions(attributes, options);
-
-    invocations.forEach(assertInvocation);
-
-    return {
-      invokeArgs: invocations.map((item) => ({
-        scriptHash: item.hash,
-        operation: item.operation,
-        args: item.args || [],
-        abortOnFail: item.abortOnFail,
-      })),
-      signers: signers || [],
-      attributes: attributes || [],
-      extraSystemFee: options?.extraSystemFee
-        ? new BigNumber(options.extraSystemFee).shiftedBy(-8).toFixed()
-        : undefined,
-      overrideSystemFee: options?.suggestedSystemFee
-        ? new BigNumber(options.suggestedSystemFee).shiftedBy(-8).toFixed()
-        : undefined,
-      validUntilBlock: options?.validUntilBlock,
-      hostname: location.hostname,
-    };
-  }
-
-  private async sendAuthorizedMessage<T>(
-    target: requestTargetN3,
-    parameter?: any,
-  ): Promise<T> {
-    const isAuth = await checkNeoXConnectAndLogin('Neo3');
-    if (isAuth !== true) {
-      throw {
-        code: NEP21ErrorCode.CANCELED,
-        message: `The user cancelled the request`,
-      };
-    }
-
-    return sendMessage<T>(target, parameter).catch((error) => {
-      throw normalizeError(error);
-    });
-  }
 }
 
 const provider = new Proxy(new NEOLineN3Controller(), {
@@ -674,6 +557,124 @@ function assertInvocation(invocation: InvocationArguments) {
       message: `'invocation' must be a valid invocation arguments`,
     };
   }
+}
+
+async function toInvokeRequest(
+  invocations: InvocationArguments[],
+  signers?: Signer[],
+  attributes?: TransactionAttributeJson[],
+  options?: TransactionOptions,
+  broadcastOverride?: boolean,
+) {
+  if (!Array.isArray(invocations) || invocations.length === 0) {
+    throw {
+      code: NEP21ErrorCode.INVALID,
+      message: `'invocations' must be a non-empty array`,
+    };
+  }
+
+  assertSupportedTransactionOptions(attributes, options);
+
+  invocations.forEach(assertInvocation);
+  const extraSystemFee = options?.extraSystemFee
+    ? new BigNumber(options.extraSystemFee).shiftedBy(-8).toFixed()
+    : undefined;
+  const suggestedSystemFee = options?.suggestedSystemFee
+    ? new BigNumber(options.suggestedSystemFee).shiftedBy(-8).toFixed()
+    : undefined;
+
+  if (invocations.length === 1) {
+    const [invocation] = invocations;
+    return {
+      target: requestTargetN3.Invoke,
+      parameter: {
+        scriptHash: invocation.hash,
+        operation: invocation.operation,
+        args: invocation.args || [],
+        abortOnFail: invocation.abortOnFail,
+        signers: signers || [],
+        attributes: attributes || [],
+        extraSystemFee: extraSystemFee,
+        overrideSystemFee: suggestedSystemFee,
+        validUntilBlock: options?.validUntilBlock,
+        broadcastOverride,
+        hostname: location.hostname,
+      },
+    };
+  }
+
+  return {
+    target: requestTargetN3.InvokeMultiple,
+    parameter: {
+      invokeArgs: invocations.map((item) => ({
+        scriptHash: item.hash,
+        operation: item.operation,
+        args: item.args || [],
+        abortOnFail: item.abortOnFail,
+      })),
+      signers: signers || [],
+      attributes: attributes || [],
+      extraSystemFee: extraSystemFee,
+      overrideSystemFee: suggestedSystemFee,
+      validUntilBlock: options?.validUntilBlock,
+      broadcastOverride,
+      hostname: location.hostname,
+    },
+  };
+}
+
+async function toCreateTransactionRequest(
+  invocations: InvocationArguments[],
+  signers?: Signer[],
+  attributes?: TransactionAttributeJson[],
+  options?: TransactionOptions,
+) {
+  if (!Array.isArray(invocations) || invocations.length === 0) {
+    throw {
+      code: NEP21ErrorCode.INVALID,
+      message: `'invocations' must be a non-empty array`,
+    };
+  }
+
+  assertSupportedTransactionOptions(attributes, options);
+
+  invocations.forEach(assertInvocation);
+
+  return {
+    invokeArgs: invocations.map((item) => ({
+      scriptHash: item.hash,
+      operation: item.operation,
+      args: item.args || [],
+      abortOnFail: item.abortOnFail,
+    })),
+    signers: signers || [],
+    attributes: attributes || [],
+    extraSystemFee: options?.extraSystemFee
+      ? new BigNumber(options.extraSystemFee).shiftedBy(-8).toFixed()
+      : undefined,
+    overrideSystemFee: options?.suggestedSystemFee
+      ? new BigNumber(options.suggestedSystemFee).shiftedBy(-8).toFixed()
+      : undefined,
+    validUntilBlock: options?.validUntilBlock,
+    hostname: location.hostname,
+  };
+}
+
+async function sendAuthorizedMessage<T>(
+  target: requestTargetN3,
+  parameter?: any,
+): Promise<T> {
+  const isAuth = await checkNeoXConnectAndLogin('Neo3');
+  if (isAuth !== true) {
+    throw {
+      code: NEP21ErrorCode.CANCELED,
+      message: `The user cancelled the request`,
+    };
+  }
+
+  return sendMessage<T>(target, parameter).catch((error) => {
+    throw normalizeError(error);
+  });
 }
 
 function assertSupportedTransactionOptions(
