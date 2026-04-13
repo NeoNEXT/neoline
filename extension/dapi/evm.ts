@@ -71,7 +71,7 @@ class NEOLineEVMController extends EventEmitter {
     };
 
     if (evmRequireConnectRequestMethods.includes(method)) {
-      const isAuth = await checkNeoXConnectAndLogin('NeoX');
+      const isAuth = await checkNeoXConnectAndLogin('NeoX', true);
       if (isAuth === true) {
         return sendMessage(requestTargetEVM.request, args);
       }

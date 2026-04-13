@@ -19,7 +19,7 @@
   <div class="connect-body">
     <p class="list-title">
       <span>{{ "thAuthAccounts" | translate | async }}</span>
-      <span (click)="edit()" class="edit">
+      <span *ngIf="allowEdit" (click)="edit()" class="edit">
         {{ "edit" | translate | async }}
       </span>
     </p>

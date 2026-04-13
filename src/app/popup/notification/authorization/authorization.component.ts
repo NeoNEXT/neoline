@@ -33,6 +33,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
   public iconSrc = '';
   public hostname = '';
   public title = '';
+  public allowEdit = false;
   public ruleCheck = false;
   private messageID = '';
   selectAccounts: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
@@ -81,6 +82,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
           ? '/assets/images/flamingo.ico'
           : params.icon;
       this.title = params.title;
+      this.allowEdit = params.allowEdit === 'true';
       this.messageID = params.messageID;
     });
   }

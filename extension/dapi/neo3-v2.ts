@@ -85,7 +85,17 @@ class NEOLineN3Controller extends EventEmitter {
   }
 
   async getAccounts(): Promise<Account[]> {
-    return this.sendAuthorizedMessage<Account[]>(requestTargetN3.Accounts);
+    const isAuth = await checkNeoXConnectAndLogin('Neo3', true);
+    if (isAuth !== true) {
+      throw {
+        code: NEP21ErrorCode.CANCELED,
+        message: `The user cancelled the request`,
+      };
+    }
+
+    return sendMessage<Account[]>(requestTargetN3.Accounts).catch((error) => {
+      throw normalizeError(error);
+    });
   }
 
   async pickAddress(prompt?: string): Promise<Address> {
@@ -170,7 +180,7 @@ class NEOLineN3Controller extends EventEmitter {
         throw {
           code: NEP21ErrorCode.INVALID,
           message: `'data' must be a valid contract parameter`,
-          data: error
+          data: error,
         };
       }
     }
@@ -241,28 +251,11 @@ class NEOLineN3Controller extends EventEmitter {
       attributes,
       options,
     );
-    const unsignedTx = await sendMessage<string>(
+    return await sendMessage<ContractParametersContext>(
       requestTargetN3.CreateTransaction,
       parameter,
     ).catch((error) => {
       throw normalizeError(error);
-    });
-
-    if (!unsignedTx) {
-      throw {
-        code: NEP21ErrorCode.INVALID,
-        message: `Failed to create transaction`,
-      };
-    }
-
-    const accounts = await sendMessage<Account[]>(
-      requestTargetN3.Accounts,
-    ).catch(() => []);
-
-    // 优先使用当前已打开账户里的 contract script；当前 provider 无法识别的 signer 先保留空 script，后续由对应钱包在 sign(context) 时补齐。
-    // Prefer the contract script from the currently opened account; leave the script empty for signers the current provider cannot resolve yet, and let the corresponding wallet fill it in during sign(context).
-    return buildContractParametersContext(unsignedTx, this.network, {
-      accounts,
     });
   }
 
@@ -333,7 +326,7 @@ class NEOLineN3Controller extends EventEmitter {
           code: NEP21ErrorCode.INVALID,
           message:
             "Invalid 'message' for ledger-compatible signing. When 'options.isLedgerCompatible' is true, provide a serialized Neo3 transaction (set 'options.isBase64Encoded' to match the message format).",
-        }
+        };
       }
     }
 
@@ -444,13 +437,18 @@ class NEOLineN3Controller extends EventEmitter {
       };
     }
 
-    return await sendMessage<{ result: Base64Encoded }>(requestTargetN3.Storage, {
-      scriptHash: hash,
-      key,
-      keyEncoding: 'base64',
-    }).catch((error) => {
-      throw normalizeError(error);
-    }).then((response) => response.result);
+    return await sendMessage<{ result: Base64Encoded }>(
+      requestTargetN3.Storage,
+      {
+        scriptHash: hash,
+        key,
+        keyEncoding: 'base64',
+      },
+    )
+      .catch((error) => {
+        throw normalizeError(error);
+      })
+      .then((response) => response.result);
   }
 
   async getTokenInfo(hash: UInt160): Promise<Token> {
@@ -777,229 +775,4 @@ function normalizeError(legacyError: any): NEP21Error {
 
 function stripHexPrefix(value: string) {
   return value.startsWith('0x') ? value.slice(2) : value;
-}
-
-function buildContractParametersContext(
-  serializedTx: string,
-  network: Network,
-  options: {
-    accounts?: Account[];
-    seedItems?: ContractParametersContext['items'];
-    requireAllScripts?: boolean;
-  } = {},
-  hash?: UInt256,
-): ContractParametersContext {
-  const transaction = tx.Transaction.deserialize(stripHexPrefix(serializedTx));
-  const accountsByHash = createAccountMap(options.accounts || []);
-  const items = transaction.signers.reduce((acc, signer) => {
-    const account = signer.account.toBigEndian();
-    const seedItem = options.seedItems?.[account];
-    const accountInfo = accountsByHash[account];
-    const witness = transaction.witnesses.find((item) => {
-      try {
-        return item.scriptHash === account;
-      } catch (_) {
-        return false;
-      }
-    });
-    const witnessVerificationScript = ensureSignerVerificationScript(
-      account,
-      witness?.verificationScript?.toBigEndian(),
-    );
-    const seedVerificationScript = ensureSignerVerificationScript(
-      account,
-      decodeContextScript(seedItem?.script),
-    );
-    const accountVerificationScript = ensureSignerVerificationScript(
-      account,
-      decodeContextScript(accountInfo?.contract?.script),
-    );
-    const verificationScript =
-      witnessVerificationScript ||
-      seedVerificationScript ||
-      accountVerificationScript ||
-      '';
-    const base64VerificationScript = verificationScript
-      ? Buffer.from(verificationScript, 'hex').toString('base64')
-      : '';
-
-    if (options.requireAllScripts && !verificationScript) {
-      throw {
-        code: NEP21ErrorCode.UNSUPPORTED,
-        message: `Unable to resolve verification script for signer ${account}`,
-      };
-    }
-
-    const invocationScript = witness?.invocationScript?.toBigEndian() || '';
-    let signatures: Record<string, string> = {
-      ...(verificationScript ? seedItem?.signatures || {} : {}),
-    };
-
-    if (verificationScript && invocationScript) {
-      try {
-        // 把已有 invocation script 还原成 publicKey -> signature 的映射。
-        // Reconstruct the existing invocation script into a publicKey -> signature map.
-        const publicKeys =
-          wallet3.getPublicKeysFromVerificationScript(verificationScript);
-        const signedValues =
-          wallet3.getSignaturesFromInvocationScript(invocationScript);
-
-        signatures = publicKeys.reduce(
-          (output, publicKey, signatureIndex) => {
-            const signature = signedValues[signatureIndex];
-            if (signature) {
-              output[publicKey] = Buffer.from(signature, 'hex').toString(
-                'base64',
-              );
-            }
-            return output;
-          },
-          { ...(seedItem?.signatures || {}) },
-        );
-      } catch (_) {}
-    }
-
-    acc[account] = {
-      script: base64VerificationScript,
-      parameters: buildContextParameters(
-        verificationScript,
-        verificationScript ? seedItem?.parameters : [],
-        accountInfo?.contract?.parameters,
-        signatures,
-      ),
-      signatures,
-    };
-
-    return acc;
-  }, {});
-
-  return {
-    type: 'Neo.Network.P2P.Payloads.Transaction',
-    hash: hash || transaction.hash(),
-    data: hex2base64(transaction.serialize(true)),
-    items,
-    network,
-  };
-}
-
-function createAccountMap(accounts: Account[]) {
-  return accounts.reduce(
-    (acc, account) => {
-      acc[account.hash] = account;
-      return acc;
-    },
-    {} as Record<string, Account>,
-  );
-}
-
-function decodeContextScript(script?: string) {
-  if (!script) {
-    return '';
-  }
-
-  const normalized = stripHexPrefix(script);
-
-  if (/^[0-9a-fA-F]+$/.test(normalized) && normalized.length % 2 === 0) {
-    // 有些调用方直接传 hex，NEP-21 context 里通常则是 base64。
-    // Some callers pass hex directly, while NEP-21 contexts usually use base64.
-    return normalized;
-  }
-
-  return Buffer.from(script, 'base64').toString('hex');
-}
-
-function ensureSignerVerificationScript(
-  signerHash: string,
-  verificationScript?: string,
-) {
-  if (!verificationScript) {
-    return '';
-  }
-
-  try {
-    return wallet3.getScriptHashFromVerificationScript(verificationScript) ===
-      stripHexPrefix(signerHash)
-      ? verificationScript
-      : '';
-  } catch (_) {
-    return '';
-  }
-}
-
-function buildContextParameters(
-  verificationScript: string,
-  seedParameters: Argument[] = [],
-  contractParameters: Array<{ type: Argument['type']; name?: string }> = [],
-  signatures: Record<string, string> = {},
-): Argument[] {
-  const orderedSignatureValues = getOrderedSignatureValues(
-    verificationScript,
-    signatures,
-  );
-  // 优先复用调用方或账户自带的参数模板，保持 parameter name 稳定。
-  // Reuse the caller-provided or account-level parameter template first to keep parameter names stable.
-  const template =
-    seedParameters.length > 0
-      ? seedParameters
-      : contractParameters.map((parameter) => ({
-          name: parameter.name,
-          type: parameter.type,
-        }));
-
-  if (template.length > 0) {
-    return template.map((parameter, index) => ({
-      ...parameter,
-      value:
-        parameter.type === 'Signature'
-          ? orderedSignatureValues[index]
-          : parameter.value,
-    }));
-  }
-
-  if (!verificationScript) {
-    return [];
-  }
-
-  try {
-    const publicKeys =
-      wallet3.getPublicKeysFromVerificationScript(verificationScript);
-
-    if (publicKeys.length === 0) {
-      return [];
-    }
-
-    const threshold =
-      publicKeys.length > 1
-        ? wallet3.getSigningThresholdFromVerificationScript(
-            verificationScript,
-          ) || 1
-        : 1;
-
-    return Array.from({ length: threshold }, (_, index) => ({
-      type: 'Signature' as const,
-      value: orderedSignatureValues[index],
-    }));
-  } catch (_) {
-    return [];
-  }
-}
-
-function getOrderedSignatureValues(
-  verificationScript: string,
-  signatures: Record<string, string>,
-) {
-  if (!verificationScript) {
-    return Object.values(signatures);
-  }
-
-  try {
-    // 让 parameter 顺序与 verification script 对齐，保证多签槽位顺序稳定。
-    // Align parameter order with the verification script so multi-sig slots stay stable.
-    return wallet3
-      .getPublicKeysFromVerificationScript(verificationScript)
-      .map((publicKey) => signatures[publicKey])
-      .filter(Boolean);
-  } catch (_) {
-    return Object.values(signatures);
-  }
 }

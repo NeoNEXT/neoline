@@ -46,8 +46,9 @@ export function sendMessage<K>(
 
 export async function checkConnectAndLogin(
   connectChain: ChainType,
+  allowEdit = false,
 ): Promise<boolean> {
-  const connected = await connect(connectChain);
+  const connected = await connect(connectChain, allowEdit);
   if (connected === true) {
     const isLogin = await login();
     if (isLogin === true) {
@@ -59,10 +60,11 @@ export async function checkConnectAndLogin(
 
 export async function checkNeoXConnectAndLogin(
   connectChain: ChainType,
+  allowEdit = false,
 ): Promise<boolean> {
   const isSwitchToRequestChain = await switchToRequestChain(connectChain);
   if (isSwitchToRequestChain === true) {
-    const connected = await connect(connectChain);
+    const connected = await connect(connectChain, allowEdit);
     if (connected === true) {
       const isLogin = await login();
       if (isLogin === true) {
@@ -120,7 +122,10 @@ export function getIcon() {
   return `${location.origin}/favicon.ico`;
 }
 
-function connect(connectChain?: ChainType): Promise<boolean | any> {
+function connect(
+  connectChain: ChainType,
+  allowEdit: boolean,
+): Promise<boolean | any> {
   const ID = getMessageID();
   return new Promise((resolveMain, rejectMain) => {
     window.postMessage(
@@ -130,6 +135,7 @@ function connect(connectChain?: ChainType): Promise<boolean | any> {
         hostname: location.hostname,
         title: document.title,
         connectChain,
+        allowEdit,
         ID,
       },
       window.location.origin,

@@ -231,7 +231,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               });
             } else {
               createWindow(
-                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&connectChainType=${request.connectChain}&messageID=${request.ID}`
+                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&allowEdit=${request.allowEdit}&connectChainType=${request.connectChain}&messageID=${request.ID}`
               );
             }
           } else {
@@ -254,7 +254,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               // );
             } else {
               createWindow(
-                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&messageID=${request.ID}`
+                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&allowEdit=${request.allowEdit}&messageID=${request.ID}`
               );
             }
           }
@@ -1686,10 +1686,30 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           validUntilBlock: params.validUntilBlock,
         });
 
+        const items = transaction.signers.reduce((acc, signer) => {
+          const account = signer.account.toBigEndian();
+
+          acc[account] = {
+            script: '',
+            parameters: [],
+            signatures: {},
+          };
+
+          return acc;
+        }, {});
+
+        const returnData = {
+          type: 'Neo.Network.P2P.Payloads.Transaction',
+          hash: transaction.hash(),
+          data: u3.hex2base64(transaction.serialize(false)),
+          items,
+          network: currN3Network.magicNumber,
+        };
+
         windowCallback({
           return: requestTargetN3.CreateTransaction,
           ID: request.ID,
-          data: transaction.serialize(false),
+          data: returnData,
           error: null,
         });
       } catch (error) {

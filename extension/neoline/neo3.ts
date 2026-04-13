@@ -62,7 +62,6 @@ const requireConnectRequest = [
   requestTargetN3.Send,
   requestTargetN3.InvokeMulti,
   requestTargetN3.Account,
-  requestTargetN3.Accounts,
   requestTargetN3.AccountPublicKey,
 ];
 
