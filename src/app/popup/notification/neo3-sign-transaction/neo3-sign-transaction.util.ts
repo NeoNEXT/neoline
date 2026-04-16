@@ -1,4 +1,5 @@
 import { tx, wallet } from '@cityofzion/neon-core-neo3/lib';
+import { resolveNeo3TransactionSigner } from '@cross-runtime/neo3-signing';
 
 type ContextArgument = {
   name?: string;
@@ -39,12 +40,6 @@ type AccountLike = {
 
 function stripHexPrefix(value: string) {
   return value.startsWith('0x') ? value.slice(2) : value;
-}
-
-function normalizeContextAccountHash(hash?: string) {
-  return String(hash || '')
-    .replace(/^0x/i, '')
-    .toLowerCase();
 }
 
 function hex2base64(value: string) {
@@ -110,13 +105,17 @@ function buildContextParameters(
     verificationScript,
     signatures
   );
+  const normalizedSeedParameters = (seedParameters || []).filter(Boolean);
+  const normalizedContractParameters = (contractParameters || [])
+    .filter(Boolean)
+    .map((parameter) => ({
+      name: parameter.name,
+      type: parameter.type,
+    }));
   const template =
-    seedParameters.length > 0
-      ? seedParameters
-      : contractParameters.map((parameter) => ({
-          name: parameter.name,
-          type: parameter.type,
-        }));
+    normalizedSeedParameters.length > 0
+      ? normalizedSeedParameters
+      : normalizedContractParameters;
 
   if (template.length > 0) {
     return template.map((parameter, index) => ({
@@ -211,16 +210,22 @@ function applyContextItemsToTransaction(
   context: ContractParametersContextLike,
   account?: AccountLike
 ) {
-  const accountHash = account
-    ? normalizeContextAccountHash(wallet.getScriptHashFromAddress(account.address))
-    : '';
+  const accountSigner = account
+    ? resolveNeo3TransactionSigner({
+        account,
+        signers: transaction.signers,
+        contextItems: context.items,
+      })
+    : null;
 
   transaction.signers.forEach((signer) => {
     const signerHash = signer.account.toBigEndian();
     const item = context.items?.[signerHash];
     const verificationScript =
       decodeContextScript(item?.script) ||
-      (signerHash === accountHash ? decodeContextScript(account?.contract?.script) : '');
+      (signerHash === accountSigner?.signerHash
+        ? accountSigner.verificationScript
+        : '');
 
     if (!item || !verificationScript || !item.signatures) {
       return;
@@ -259,9 +264,13 @@ export function buildContractParametersContext(
   account?: AccountLike
 ): ContractParametersContextLike {
   const transaction = tx.Transaction.deserialize(stripHexPrefix(serializedTx));
-  const accountHash = account
-    ? normalizeContextAccountHash(wallet.getScriptHashFromAddress(account.address))
-    : '';
+  const accountSigner = account
+    ? resolveNeo3TransactionSigner({
+        account,
+        signers: transaction.signers,
+        contextItems: seedItems,
+      })
+    : null;
 
   const items = transaction.signers.reduce((acc, signer) => {
     const signerHash = signer.account.toBigEndian();
@@ -282,11 +291,8 @@ export function buildContractParametersContext(
       decodeContextScript(seedItem?.script)
     );
     const accountVerificationScript =
-      signerHash === accountHash
-        ? ensureSignerVerificationScript(
-            signerHash,
-            decodeContextScript(account?.contract?.script)
-          )
+      signerHash === accountSigner?.signerHash
+        ? ensureSignerVerificationScript(signerHash, accountSigner.verificationScript)
         : '';
     const verificationScript =
       witnessVerificationScript ||
@@ -321,7 +327,7 @@ export function buildContractParametersContext(
       parameters: buildContextParameters(
         verificationScript,
         verificationScript ? seedItem?.parameters : [],
-        signerHash === accountHash ? account?.contract?.parameters : [],
+        signerHash === accountSigner?.signerHash ? account?.contract?.parameters : [],
         signatures
       ),
       signatures,
@@ -344,17 +350,23 @@ export function buildSignedContext(params: {
   publicKey: string;
   signature: string;
 }) {
-  const accountHash = normalizeContextAccountHash(
-    wallet.getScriptHashFromAddress(params.account.address)
-  );
-  const signableItem = params.context.items?.[accountHash];
+  const transaction = deserializeContextTransaction(params.context);
+  const currentSigner = resolveNeo3TransactionSigner({
+    account: params.account,
+    signers: transaction.signers,
+    contextItems: params.context.items,
+  });
+  if (!currentSigner) {
+    throw new Error('Current account is not a signer in this transaction context');
+  }
+
+  const signableItem = params.context.items?.[currentSigner.signerHash];
   if (!signableItem) {
     throw new Error('Current account is not a signer in this transaction context');
   }
 
   const verificationScript =
-    decodeContextScript(signableItem.script) ||
-    decodeContextScript(params.account.contract?.script);
+    decodeContextScript(signableItem.script) || currentSigner.verificationScript;
   if (!verificationScript) {
     throw new Error('No verification script found for this transaction context');
   }
@@ -369,7 +381,7 @@ export function buildSignedContext(params: {
     : params.signature;
   const updatedItems = {
     ...params.context.items,
-    [accountHash]: {
+    [currentSigner.signerHash]: {
       ...signableItem,
       signatures: {
         ...(signableItem.signatures || {}),
@@ -379,7 +391,7 @@ export function buildSignedContext(params: {
   };
 
   const signedTransaction = applyContextItemsToTransaction(
-    deserializeContextTransaction(params.context),
+    transaction,
     {
       ...params.context,
       items: updatedItems,

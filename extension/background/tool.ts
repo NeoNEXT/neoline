@@ -14,10 +14,11 @@ import {
   setLocalStorage,
   setStorage,
 } from '../common';
-import { getScriptHashFromAddress, getWalletType } from '../common/utils';
+import { getWalletType } from '../common/utils';
 import { EVENT } from '../common/data_module_neo2';
 import { Wallet3 } from '../common/data_module_neo3';
 import { tx as tx3} from '@cityofzion/neon-core-neo3/lib';
+import { resolveNeo3TransactionSigner } from '../../cross-runtime/neo3-signing';
 
 /**
  * Background methods support.
@@ -239,12 +240,6 @@ export function findNetworkConfigurationBy(
   return networkConfiguration || null;
 }
 
-function normalizeSignerHash(hash: any) {
-  return String(hash || '')
-    .replace(/^0x/i, '')
-    .toLowerCase();
-}
-
 function deserializeSignTransactionPayload(parameter: any) {
   if (parameter?.context?.data) {
     try {
@@ -266,23 +261,23 @@ function deserializeSignTransactionPayload(parameter: any) {
 }
 
 export function canCurrentWalletSignTransaction(parameter: any, currentWallet: Wallet3) {
-  const currentAddress = currentWallet?.accounts?.[0]?.address;
-  if (!currentAddress) {
+  const currentAccount = currentWallet?.accounts?.[0];
+  if (!currentAccount) {
     return false;
   }
 
-  const currentHash = normalizeSignerHash(getScriptHashFromAddress(currentAddress));
   const transaction = deserializeSignTransactionPayload(parameter);
-  const hasSigner = (transaction.signers || []).some(
-    (signer) => normalizeSignerHash(signer.account?.toBigEndian?.()) === currentHash
-  );
-
-  if (!hasSigner) {
+  const currentSigner = resolveNeo3TransactionSigner({
+    account: currentAccount,
+    signers: transaction.signers || [],
+    contextItems: parameter?.context?.items,
+  });
+  if (!currentSigner) {
     return false;
   }
 
   if (parameter?.context?.items) {
-    return !!parameter.context.items[currentHash];
+    return !!parameter.context.items[currentSigner.signerHash];
   }
 
   return true;
