@@ -1,5 +1,8 @@
 import { tx, wallet } from '@cityofzion/neon-core-neo3/lib';
-import { resolveNeo3TransactionSigner } from '@cross-runtime/neo3-signing';
+import {
+  decodeNeo3VerificationScript,
+  resolveNeo3TransactionSigner,
+} from '@cross-runtime/neo3-signing';
 
 type ContextArgument = {
   name?: string;
@@ -44,19 +47,6 @@ function stripHexPrefix(value: string) {
 
 function hex2base64(value: string) {
   return Buffer.from(stripHexPrefix(value), 'hex').toString('base64');
-}
-
-function decodeContextScript(script?: string) {
-  if (!script) {
-    return '';
-  }
-
-  const normalized = stripHexPrefix(script);
-  if (/^[0-9a-fA-F]+$/.test(normalized) && normalized.length % 2 === 0) {
-    return normalized;
-  }
-
-  return Buffer.from(script, 'base64').toString('hex');
 }
 
 function ensureSignerVerificationScript(
@@ -222,7 +212,7 @@ function applyContextItemsToTransaction(
     const signerHash = signer.account.toBigEndian();
     const item = context.items?.[signerHash];
     const verificationScript =
-      decodeContextScript(item?.script) ||
+      decodeNeo3VerificationScript(item?.script) ||
       (signerHash === accountSigner?.signerHash
         ? accountSigner.verificationScript
         : '');
@@ -288,7 +278,7 @@ export function buildContractParametersContext(
     );
     const seedVerificationScript = ensureSignerVerificationScript(
       signerHash,
-      decodeContextScript(seedItem?.script)
+      decodeNeo3VerificationScript(seedItem?.script)
     );
     const accountVerificationScript =
       signerHash === accountSigner?.signerHash
@@ -366,7 +356,8 @@ export function buildSignedContext(params: {
   }
 
   const verificationScript =
-    decodeContextScript(signableItem.script) || currentSigner.verificationScript;
+    decodeNeo3VerificationScript(signableItem.script) ||
+    currentSigner.verificationScript;
   if (!verificationScript) {
     throw new Error('No verification script found for this transaction context');
   }

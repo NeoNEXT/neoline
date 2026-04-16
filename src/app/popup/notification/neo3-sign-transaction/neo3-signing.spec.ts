@@ -59,4 +59,26 @@ describe('resolveNeo3TransactionSigner', () => {
     expect(match?.usesContractSigner).toBeTrue();
     expect(match?.publicKey).toBe(memberAccount.publicKey);
   });
+
+  it('returns null when neither the account hash nor the contract hash matches', () => {
+    const { walletAccount } = createMultisigWalletAccount();
+    const transaction = new tx.Transaction({
+      signers: [
+        {
+          account: 'f'.repeat(40),
+          scopes: tx.WitnessScope.CalledByEntry,
+        },
+      ],
+      validUntilBlock: 123,
+      script: '11',
+    });
+
+    const match = resolveNeo3TransactionSigner({
+      account: walletAccount,
+      signers: transaction.signers,
+      contextItems: {},
+    });
+
+    expect(match).toBeNull();
+  });
 });

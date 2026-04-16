@@ -280,5 +280,9 @@ export function canCurrentWalletSignTransaction(parameter: any, currentWallet: W
     return !!parameter.context.items[currentSigner.signerHash];
   }
 
+  if (currentSigner.usesContractSigner && !parameter?.context) {
+    return false;
+  }
+
   return true;
 }

@@ -10,8 +10,15 @@ type AccountLike = {
   };
 };
 
+type SignerAccountLike =
+  | string
+  | {
+      toBigEndian?: () => string;
+      toString?: () => string;
+    };
+
 type SignerLike = {
-  account?: any;
+  account?: SignerAccountLike;
 };
 
 export type Neo3TransactionSignerMatch = {
@@ -23,7 +30,7 @@ export type Neo3TransactionSignerMatch = {
   publicKey?: string;
 };
 
-export function normalizeNeo3SignerHash(hash: any): string {
+export function normalizeNeo3SignerHash(hash: unknown): string {
   return String(hash || '')
     .replace(/^0x/i, '')
     .toLowerCase();
@@ -66,10 +73,11 @@ export function getNeo3ContractHash(contractScript?: string) {
 }
 
 function getTransactionSignerHash(signer: SignerLike) {
+  const signerAccount = signer?.account;
   return normalizeNeo3SignerHash(
-    signer?.account?.toBigEndian?.() ??
-      signer?.account?.toString?.() ??
-      signer?.account,
+    typeof signerAccount === 'string'
+      ? signerAccount
+      : signerAccount?.toBigEndian?.() ?? signerAccount?.toString?.(),
   );
 }
 
@@ -83,9 +91,10 @@ export function resolveNeo3TransactionSigner(params: {
     params.account?.contract?.script,
   );
   const contractHash = getNeo3ContractHash(params.account?.contract?.script);
-  const candidateHashes = [accountHash, contractHash].filter(
-    (hash, index, hashes) => !!hash && hashes.indexOf(hash) === index,
-  );
+  const candidateHashes = [accountHash];
+  if (contractHash && contractHash !== accountHash) {
+    candidateHashes.push(contractHash);
+  }
   if (candidateHashes.length === 0) {
     return null;
   }
