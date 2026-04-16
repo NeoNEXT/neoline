@@ -10,6 +10,7 @@ import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet3 } from '@popup/_lib';
+import { resolveNeo3TransactionSigner } from '@cross-runtime/neo3-signing';
 import {
   buildSignedContext,
   ContractParametersContextLike,
@@ -142,29 +143,6 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
     );
   }
 
-  private normalizeScriptHash(hash: any): string {
-    return String(hash || '')
-      .replace(/^0x/i, '')
-      .toLowerCase();
-  }
-
-  private getSignerAccountHash(signer: any): string {
-    if (!signer) {
-      return '';
-    }
-    const signerHash =
-      signer?.account?.toBigEndian?.() ??
-      signer?.account?.toString?.() ??
-      signer?.account;
-    return this.normalizeScriptHash(signerHash);
-  }
-
-  private getCurrentWalletAccountHash() {
-    return this.normalizeScriptHash(
-      wallet.getScriptHashFromAddress(this.currentWallet.accounts[0].address),
-    );
-  }
-
   private sendNotSignableError(description: string) {
     this.clearStoredParams();
     this.chrome.windowCallback(
@@ -186,21 +164,39 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
       return null;
     }
 
-    const currentAccountHash = this.getCurrentWalletAccountHash();
-    const isSigner = (this.tx.signers || []).some(
-      (signer) => this.getSignerAccountHash(signer) === currentAccountHash,
-    );
-    if (!isSigner) {
+    const currentSigner = resolveNeo3TransactionSigner({
+      account: this.currentWallet.accounts[0],
+      signers: this.tx.signers || [],
+      contextItems: this.context?.items,
+    });
+    if (!currentSigner) {
       this.sendNotSignableError(
         'Current account is not a signer in this transaction',
       );
       return null;
     }
 
-    return {
-      accountHash: currentAccountHash,
-      publicKey: this.currentWallet.accounts[0]?.extra?.publicKey,
-    };
+    if (
+      this.context?.items &&
+      !Object.prototype.hasOwnProperty.call(
+        this.context.items,
+        currentSigner.signerHash,
+      )
+    ) {
+      this.sendNotSignableError(
+        'Current account is not a signer in this transaction context',
+      );
+      return null;
+    }
+
+    if (currentSigner.usesContractSigner && !this.signatureOnly) {
+      this.sendNotSignableError(
+        'Multisig transaction signing requires a transaction context',
+      );
+      return null;
+    }
+
+    return currentSigner;
   }
 
   private sendSignedContext(signature: string, publicKey: string) {
