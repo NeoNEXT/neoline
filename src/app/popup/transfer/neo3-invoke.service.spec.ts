@@ -147,7 +147,9 @@ describe('Neo3InvokeService', () => {
         },
         error: (error) => {
           expect(error.type).toBe('RPC_ERROR');
-          expect(error.description).toBe('script error');
+          expect(error.description).toBe(
+            'An RPC error occurred when submitting the request'
+          );
           expect(error.data.state).toBe('FAULT');
           expect(error.data.error).toBe('script error');
           done();
