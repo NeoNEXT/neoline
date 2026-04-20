@@ -1635,20 +1635,19 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     case requestTargetN3.SignTransaction: {
       try {
         const params = request.parameter || {};
-        const currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
-        if (!canCurrentWalletSignTransaction(params, currWallet)) {
+        const currentWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
+        if (!canCurrentWalletSignTransaction(params, currentWallet)) {
           windowCallback({
             return: requestTargetN3.SignTransaction,
             error: {
               ...ERRORS.MALFORMED_INPUT,
-              description: 'Current account is not a signer in this transaction',
+              description: 'Current account cannot sign this transaction context',
             },
             ID: request.ID,
           });
           sendResponse('');
           return;
         }
-
         const localData =
           (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
         const newData = { ...localData, [request.ID]: params };

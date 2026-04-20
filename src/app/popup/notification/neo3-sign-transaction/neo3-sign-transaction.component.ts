@@ -142,29 +142,6 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
     );
   }
 
-  private normalizeScriptHash(hash: any): string {
-    return String(hash || '')
-      .replace(/^0x/i, '')
-      .toLowerCase();
-  }
-
-  private getSignerAccountHash(signer: any): string {
-    if (!signer) {
-      return '';
-    }
-    const signerHash =
-      signer?.account?.toBigEndian?.() ??
-      signer?.account?.toString?.() ??
-      signer?.account;
-    return this.normalizeScriptHash(signerHash);
-  }
-
-  private getCurrentWalletAccountHash() {
-    return this.normalizeScriptHash(
-      wallet.getScriptHashFromAddress(this.currentWallet.accounts[0].address),
-    );
-  }
-
   private sendNotSignableError(description: string) {
     this.clearStoredParams();
     this.chrome.windowCallback(
@@ -178,29 +155,6 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
       },
       true,
     );
-  }
-
-  private verifyCurrentWalletCanSign() {
-    if (!this.currentWallet?.accounts?.[0] || !this.tx) {
-      this.sendNotSignableError('Current wallet is unavailable');
-      return null;
-    }
-
-    const currentAccountHash = this.getCurrentWalletAccountHash();
-    const isSigner = (this.tx.signers || []).some(
-      (signer) => this.getSignerAccountHash(signer) === currentAccountHash,
-    );
-    if (!isSigner) {
-      this.sendNotSignableError(
-        'Current account is not a signer in this transaction',
-      );
-      return null;
-    }
-
-    return {
-      accountHash: currentAccountHash,
-      publicKey: this.currentWallet.accounts[0]?.extra?.publicKey,
-    };
   }
 
   private sendSignedContext(signature: string, publicKey: string) {
@@ -232,18 +186,15 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
   handleHardwareSignedTx(tx) {
     this.showHardwareSign = false;
     if (tx) {
-      const currentSigner = this.verifyCurrentWalletCanSign();
-      if (!currentSigner) {
-        return;
-      }
       if (this.signatureOnly) {
-        if (!currentSigner.publicKey) {
+        const publicKey = this.currentWallet?.accounts?.[0]?.extra?.publicKey;
+        if (!publicKey) {
           this.sendNotSignableError(
             'Current wallet public key is required for signatureOnly flow',
           );
           return;
         }
-        this.sendSignedContext(tx, currentSigner.publicKey);
+        this.sendSignedContext(tx, publicKey);
         return;
       }
       this.tx = tx;
@@ -252,8 +203,8 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
   }
 
   public getSignTx() {
-    const currentSigner = this.verifyCurrentWalletCanSign();
-    if (!currentSigner) {
+    if (!this.currentWallet?.accounts?.[0] || !this.tx) {
+      this.sendNotSignableError('Current wallet is unavailable');
       return;
     }
     if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
@@ -266,7 +217,7 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
         if (this.signatureOnly) {
           const privateKey = wallet.getPrivateKeyFromWIF(wif);
           const publicKey =
-            currentSigner.publicKey ||
+            this.currentWallet.accounts[0]?.extra?.publicKey ||
             wallet.getPublicKeyFromPrivateKey(privateKey);
           const signature = wallet.sign(
             this.tx.getMessageForSigning(

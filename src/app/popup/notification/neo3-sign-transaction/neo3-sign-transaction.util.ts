@@ -47,6 +47,26 @@ function normalizeContextAccountHash(hash?: string) {
     .toLowerCase();
 }
 
+function normalizePublicKey(publicKey?: string) {
+  return String(publicKey || '')
+    .replace(/^0x/i, '')
+    .trim()
+    .toLowerCase();
+}
+
+function normalizeContextItems<T = any>(items: Record<string, T> = {}) {
+  return Object.entries(items || {}).reduce((acc, [hash, item]) => {
+    const normalizedHash = normalizeContextAccountHash(hash);
+    if (!normalizedHash || !item) {
+      return acc;
+    }
+    if (!Object.prototype.hasOwnProperty.call(acc, normalizedHash)) {
+      acc[normalizedHash] = item;
+    }
+    return acc;
+  }, {} as Record<string, T>);
+}
+
 function hex2base64(value: string) {
   return Buffer.from(stripHexPrefix(value), 'hex').toString('base64');
 }
@@ -211,13 +231,14 @@ function applyContextItemsToTransaction(
   context: ContractParametersContextLike,
   account?: AccountLike
 ) {
+  const normalizedItems = normalizeContextItems(context.items);
   const accountHash = account
     ? normalizeContextAccountHash(wallet.getScriptHashFromAddress(account.address))
     : '';
 
   transaction.signers.forEach((signer) => {
-    const signerHash = signer.account.toBigEndian();
-    const item = context.items?.[signerHash];
+    const signerHash = normalizeContextAccountHash(signer.account.toBigEndian());
+    const item = normalizedItems[signerHash];
     const verificationScript =
       decodeContextScript(item?.script) ||
       (signerHash === accountHash ? decodeContextScript(account?.contract?.script) : '');
@@ -240,6 +261,74 @@ function applyContextItemsToTransaction(
   return transaction;
 }
 
+type SignableContextItem = {
+  signerHash: string;
+  item: ContractParametersContextLike['items'][string];
+  verificationScript: string;
+};
+
+function hasPublicKeyInVerificationScript(
+  verificationScript: string,
+  publicKey: string
+) {
+  try {
+    const targetPublicKey = normalizePublicKey(publicKey);
+    const publicKeys = wallet
+      .getPublicKeysFromVerificationScript(verificationScript)
+      .map((key) => normalizePublicKey(key));
+    return !!targetPublicKey && publicKeys.includes(targetPublicKey);
+  } catch (_) {
+    return false;
+  }
+}
+
+export function findSignableContextItem(params: {
+  context: ContractParametersContextLike;
+  accountHash: string;
+  publicKey: string;
+  account?: AccountLike;
+}): SignableContextItem | null {
+  const normalizedAccountHash = normalizeContextAccountHash(params.accountHash);
+  const entries = Object.entries(normalizeContextItems(params.context.items)).filter(
+    ([, item]) => !!item
+  ) as [string, ContractParametersContextLike['items'][string]][];
+
+  // 1) 有 item.script：按验证脚本里是否包含当前 pubkey 匹配
+  // 1) If item.script exists, match by whether the verification script contains the current public key.
+  const scriptedEntries = entries
+    .map(([signerHash, item]) => ({
+      signerHash,
+      item,
+      verificationScript: decodeContextScript(item.script),
+    }))
+    .filter((entry) => !!entry.verificationScript);
+
+  for (const entry of scriptedEntries) {
+    if (
+      hasPublicKeyInVerificationScript(entry.verificationScript, params.publicKey)
+    ) {
+      return entry;
+    }
+  }
+
+  // 2) item.script 为空时，优先按当前账户 hash 精确命中 context item。
+  // 2) If item.script is empty, prefer an exact context item match by the current account hash.
+  const noScriptEntry = entries.find(([signerHash, item]) => {
+    return !decodeContextScript(item.script) && signerHash === normalizedAccountHash;
+  });
+
+  if (noScriptEntry) {
+    const [signerHash, item] = noScriptEntry;
+    return {
+      signerHash,
+      item,
+      verificationScript: decodeContextScript(params.account?.contract?.script),
+    };
+  }
+
+  return null;
+}
+
 export function deserializeContextTransaction(
   context: ContractParametersContextLike
 ) {
@@ -259,13 +348,14 @@ export function buildContractParametersContext(
   account?: AccountLike
 ): ContractParametersContextLike {
   const transaction = tx.Transaction.deserialize(stripHexPrefix(serializedTx));
+  const normalizedSeedItems = normalizeContextItems(seedItems);
   const accountHash = account
     ? normalizeContextAccountHash(wallet.getScriptHashFromAddress(account.address))
     : '';
 
   const items = transaction.signers.reduce((acc, signer) => {
-    const signerHash = signer.account.toBigEndian();
-    const seedItem = seedItems?.[signerHash];
+    const signerHash = normalizeContextAccountHash(signer.account.toBigEndian());
+    const seedItem = normalizedSeedItems[signerHash];
     const witness = transaction.witnesses.find((item) => {
       try {
         return item.scriptHash === signerHash;
@@ -299,20 +389,22 @@ export function buildContractParametersContext(
 
     const invocationScript = witness?.invocationScript?.toBigEndian() || '';
     let signatures: Record<string, string> = {
-      ...(verificationScript ? seedItem?.signatures || {} : {}),
+      ...(seedItem?.signatures || {}),
     };
 
     if (verificationScript && invocationScript) {
       try {
         const publicKeys = wallet.getPublicKeysFromVerificationScript(verificationScript);
-        const signedValues = wallet.getSignaturesFromInvocationScript(invocationScript);
-        signatures = publicKeys.reduce((output, publicKey, signatureIndex) => {
-          const signature = signedValues[signatureIndex];
+        if (publicKeys.length === 1) {
+          const signedValues = wallet.getSignaturesFromInvocationScript(invocationScript);
+          const signature = signedValues[0];
           if (signature) {
-            output[publicKey] = Buffer.from(signature, 'hex').toString('base64');
+            signatures = {
+              ...(seedItem?.signatures || {}),
+              [publicKeys[0]]: Buffer.from(signature, 'hex').toString('base64'),
+            };
           }
-          return output;
-        }, { ...(seedItem?.signatures || {}) });
+        }
       } catch (_) {}
     }
 
@@ -344,23 +436,20 @@ export function buildSignedContext(params: {
   publicKey: string;
   signature: string;
 }) {
+  const normalizedItems = normalizeContextItems(params.context.items);
   const accountHash = normalizeContextAccountHash(
     wallet.getScriptHashFromAddress(params.account.address)
   );
-  const signableItem = params.context.items?.[accountHash];
-  if (!signableItem) {
-    throw new Error('Current account is not a signer in this transaction context');
-  }
-
-  const verificationScript =
-    decodeContextScript(signableItem.script) ||
-    decodeContextScript(params.account.contract?.script);
-  if (!verificationScript) {
-    throw new Error('No verification script found for this transaction context');
-  }
-
-  const publicKeys = wallet.getPublicKeysFromVerificationScript(verificationScript);
-  if (!publicKeys.includes(params.publicKey)) {
+  const signable = findSignableContextItem({
+    context: {
+      ...params.context,
+      items: normalizedItems,
+    },
+    accountHash,
+    publicKey: params.publicKey,
+    account: params.account,
+  });
+  if (!signable) {
     throw new Error('Current account cannot sign this transaction context');
   }
 
@@ -368,11 +457,11 @@ export function buildSignedContext(params: {
     ? Buffer.from(params.signature, 'hex').toString('base64')
     : params.signature;
   const updatedItems = {
-    ...params.context.items,
-    [accountHash]: {
-      ...signableItem,
+    ...normalizedItems,
+    [signable.signerHash]: {
+      ...signable.item,
       signatures: {
-        ...(signableItem.signatures || {}),
+        ...(signable.item.signatures || {}),
         [params.publicKey]: signatureBase64,
       },
     },

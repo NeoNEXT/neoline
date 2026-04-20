@@ -6,6 +6,7 @@ import { NeoAssetService } from '@/app/core/services/neo/asset.service';
 import { BehaviorSubject, of } from 'rxjs';
 import { sc } from '@cityofzion/neon-core-neo3/lib';
 import { N3MainnetNetwork } from '@/app/popup/_lib';
+import { ERRORS } from '@/models/dapi';
 
 describe('Neo3InvokeService', () => {
   let service: Neo3InvokeService;
@@ -147,7 +148,7 @@ describe('Neo3InvokeService', () => {
         },
         error: (error) => {
           expect(error.type).toBe('RPC_ERROR');
-          expect(error.description).toBe('script error');
+          expect(error.description).toBe(ERRORS.RPC_ERROR.description);
           expect(error.data.state).toBe('FAULT');
           expect(error.data.error).toBe('script error');
           done();
