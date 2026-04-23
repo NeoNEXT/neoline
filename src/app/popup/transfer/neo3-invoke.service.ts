@@ -120,7 +120,7 @@ export class Neo3InvokeService {
       }
       vars.tx = new tx.Transaction({
         signers: params.signers,
-        validUntilBlock: params.validUntilBlock ?? currentHeight + 30,
+        validUntilBlock: params.validUntilBlock ?? currentHeight + 200,
         systemFee: vars.systemFee,
         script,
       });

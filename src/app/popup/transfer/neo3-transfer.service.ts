@@ -120,7 +120,7 @@ export class Neo3TransferService {
             scopes: tx.WitnessScope.CalledByEntry,
           },
         ],
-        validUntilBlock: currentHeight + 30,
+        validUntilBlock: currentHeight + 200,
         systemFee: vars.systemFee,
         script,
       });

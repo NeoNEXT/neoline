@@ -172,7 +172,7 @@ export class PopupClaimGasComponent implements OnDestroy {
   }
 
   private getN3ClaimTxStatus() {
-    const queryTxInterval = interval(5000)
+    const queryTxInterval = interval(3000)
       .pipe(take(5))
       .subscribe(() => {
         this.homeState

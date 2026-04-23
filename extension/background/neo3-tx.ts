@@ -185,7 +185,7 @@ export async function createNeo3Tx(
 
     const transaction = new tx.Transaction({
       signers: params.signers,
-      validUntilBlock: params.validUntilBlock ?? currentHeight + 30,
+      validUntilBlock: params.validUntilBlock ?? currentHeight + 200,
       script,
     });
     transaction.attributes = attributes;
