@@ -1621,5 +1621,8 @@
   },
   "broadcastOverrideTip": {
     "message": "如果 dApp 想要负责广播已签名的交易，而不是钱包提供商"
+  },
+  "discover": {
+    "message": "发现"
   }
 }

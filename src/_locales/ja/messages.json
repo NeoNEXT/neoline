@@ -1621,5 +1621,8 @@
   },
   "broadcastOverrideTip": {
     "message": "dAppがウォレットプロバイダーではなく署名されたトランザクションのブロードキャストを担当したい場合"
+  },
+  "discover": {
+    "message": "ディスカバリ"
   }
 }

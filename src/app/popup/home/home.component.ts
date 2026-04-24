@@ -110,4 +110,12 @@ export class PopupHomeComponent implements OnInit {
   getSupport(type: 'asset' | 'txs' = 'asset') {
     this.settingState.toWeb(type === 'asset' ? 'manageAsset' : 'manageTx');
   }
+
+  toDiscover() {
+    if (chrome.tabs) {
+      chrome.tabs.create({ url: 'https://app.neoline.io' });
+    } else {
+      window.open('https://app.neoline.io', '_blank');
+    }
+  }
 }

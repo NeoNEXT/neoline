@@ -1621,5 +1621,8 @@
   },
   "broadcastOverrideTip": {
     "message": "In the case that the dApp would like to be responsible for broadcasting the signed transaction rather than the wallet provider"
+  },
+  "discover": {
+    "message": "Discover"
   }
 }

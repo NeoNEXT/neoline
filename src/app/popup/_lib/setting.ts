@@ -60,6 +60,20 @@ interface LocalNoticeItem {
 
 export const LOCAL_NOTICE: LocalNoticeItem[] = [
   {
+    id: 3,
+    title: {
+      en: 'NeoLine Web dApp is Now Live',
+      zh_CN: 'NeoLine Web dApp 现已上线',
+      ja: 'NeoLine Web dApp が正式に公開されました',
+    },
+    content: {
+      en: `A new "Discover" entry has been added to the NeoLine homepage, allowing users to access https://app.neoline.io and manage their Neo assets in one place. The dApp currently supports features including asset overview, send and receive, bridge, and governance voting. More features will be introduced over time to further enhance the user experience.`,
+      zh_CN: `NeoLine 首页现已新增 "发现" 入口，用户可通过该入口访问 https://app.neoline.io，在一个平台上统一管理 Neo 资产。当前支持资产总览、转账收发、跨链桥以及治理投票等功能。未来还将持续推出更多功能，进一步提升使用体验。`,
+      ja: `NeoLine のホームページに新たに "ディスカバリ" 入口が追加されました。この入口から https://app.neoline.io にアクセスし、Neo資産を一つのプラットフォームで管理できます。現在、資産一覧、送受信、ブリッジ、ガバナンス投票などの機能に対応しています。今後もさらなる機能追加を予定しており、ユーザー体験の向上を図っていきます。`,
+    },
+    time: 1776960000000,
+  },
+  {
     id: 2,
     title: {
       en: 'Support QR-based hardware wallets',

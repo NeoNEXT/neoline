@@ -63,7 +63,6 @@
       }
     }
     .account-value {
-      height: 26px;
       display: flex;
       align-items: center;
       gap: 8px;
@@ -96,6 +95,32 @@
       }
       img {
         cursor: pointer;
+      }
+      .discover-link {
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--theme-color);
+        text-decoration: none;
+        padding: 3px 8px;
+        border-radius: 6px;
+        background: rgba(0, 201, 160, 0.08);
+        border: 1px solid rgba(0, 201, 160, 0.2);
+        transition: background 0.15s, border-color 0.15s, transform 0.12s;
+        white-space: nowrap;
+        cursor: pointer;
+        flex-shrink: 0;
+        &:hover {
+          background: rgba(0, 201, 160, 0.16);
+          border-color: rgba(0, 201, 160, 0.4);
+          transform: translateY(-1px);
+        }
+        svg {
+          opacity: 0.75;
+          flex-shrink: 0;
+        }
       }
     }
   }
