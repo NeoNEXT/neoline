@@ -10,6 +10,8 @@ import {
   GAS3_CONTRACT,
   ChainType,
   BRIDGE_EVENTS_ABI,
+  NeoXMainnetNetwork,
+  NeoXTestnetNetwork,
 } from '@/app/popup/_lib';
 import { AppState } from '@/app/reduers';
 import { Asset } from '@/models/models';
@@ -225,7 +227,14 @@ export class BridgeService {
       );
   }
 
-  getGasBridgeProgress(network: BridgeNetwork) {
+  getBridgeProgress(network: BridgeNetwork, asset: Asset) {
+    if (asset.asset_id === GAS3_CONTRACT) {
+      return this.getNativeBridgeProgress(network);
+    }
+    return from(this.getTokenBridgeProgress(network, asset));
+  }
+
+  private getNativeBridgeProgress(network: BridgeNetwork) {
     const data = {
       jsonrpc: '2.0',
       method: 'invokefunction',
@@ -261,6 +270,42 @@ export class BridgeService {
         return { used, total, percentage };
       })
     );
+  }
+
+  private async getTokenBridgeProgress(
+    network: BridgeNetwork,
+    asset: Asset
+  ): Promise<{ used: string; total: string; percentage: string }> {
+    const list = await this.getBridgeAssetList(network).toPromise();
+    const neoxAsset = list.neox.find(
+      (a) => a.asset_id === asset.bridgeTargetAssetId
+    );
+    if (!neoxAsset) {
+      return { used: undefined, total: undefined, percentage: undefined };
+    }
+    const neoxRpc =
+      network === BridgeNetwork.MainNet
+        ? NeoXMainnetNetwork.rpcUrl
+        : NeoXTestnetNetwork.rpcUrl;
+    const provider = new ethers.JsonRpcProvider(neoxRpc);
+    const erc20 = new ethers.Contract(neoxAsset.asset_id, abiERC20, provider);
+    const [balance, totalSupply] = await Promise.all([
+      erc20.balanceOf(BridgeParams[network].neoXBridgeContract),
+      erc20.totalSupply(),
+    ]);
+    const decimals = neoxAsset.decimals ?? 0;
+    const totalBN = new BigNumber(totalSupply.toString()).shiftedBy(-decimals);
+    const usedBN = new BigNumber(totalSupply.toString())
+      .minus(balance.toString())
+      .shiftedBy(-decimals);
+    const percentage = totalBN.isZero()
+      ? '0'
+      : usedBN.div(totalBN).shiftedBy(2).toFixed(2, 1);
+    return {
+      used: usedBN.toFixed(0),
+      total: totalBN.toFixed(0),
+      percentage,
+    };
   }
   //#endregion
 

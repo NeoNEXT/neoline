@@ -1,17 +1,17 @@
-<div class="bridge-footnote-title-content" *ngIf="bridgeData">
+<div class="bridge-footnote-title-content" *ngIf="currentProgress">
   <p class="title">
     <span class="name">
-      Bridge GAS
+      Bridge {{ currentSymbol }}
       <img
         (click)="showModal()"
         src="assets/images/common/tooltip.svg"
         alt=""
       />
     </span>
-    <span class="percentage">{{ bridgeData.percentage }}%</span>
+    <span class="percentage">{{ currentProgress.percentage }}%</span>
   </p>
   <mat-progress-bar
     mode="determinate"
-    [value]="bridgeData.percentage"
+    [value]="currentProgress.percentage"
   ></mat-progress-bar>
 </div>

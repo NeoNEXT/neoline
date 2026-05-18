@@ -9,32 +9,52 @@
   />
 </div>
 <div class="footnote-content">
-  <p *ngIf="lang === 'en'">
+  <p *ngIf="lang === 'en' && bridgeData.gas">
     Please note that for the initial phase of the Neo X main net launch, only
     the GAS bilaterally bridging service will be available. There will be a cap
-    of <span class="important">{{ bridgeData.total | number }} GAS</span>
+    of
+    <span class="important">{{ bridgeData.gas.total | number }} GAS</span>
     bridged from N3 to X for the first weeks to ensure the bridge service
     operates properly and smoothly.
   </p>
-  <p *ngIf="lang !== 'en'">
+  <p *ngIf="lang !== 'en' && bridgeData.gas">
     在 Neo X 主网启动的初期阶段，只提供 GAS
     双向桥接服务。为了确保服务的正常运行，对 Neo N3 到 Neo X 的桥接 GAS
     数量进行了限制，上限为<span class="important"
-      >{{ bridgeData.total | number }}</span
+      >{{ bridgeData.gas.total | number }}</span
     >。
   </p>
   <p class="desc">{{ 'footnoteDesc2' | translate | async }}</p>
-  <div class="percentage">
+  <div class="percentage" *ngIf="bridgeData.gas">
     <p class="title">
-      <span>Bridge GAS</span>
-      <span>{{ bridgeData.used | number }}/{{ bridgeData.total |number}}</span>
+      <span>Bridged GAS</span>
+      <span
+        >{{ bridgeData.gas.used | number }}/{{ bridgeData.gas.total | number
+        }}</span
+      >
     </p>
     <mat-progress-bar
       class="progress-bar"
       mode="determinate"
-      [value]="bridgeData.percentage"
+      [value]="bridgeData.gas.percentage"
     ></mat-progress-bar>
-    <p class="value">{{bridgeData.percentage}}%</p>
+    <p class="value">{{ bridgeData.gas.percentage }}%</p>
+  </div>
+
+  <div class="percentage" *ngIf="bridgeData.neo">
+    <p class="title">
+      <span>Bridged NEO</span>
+      <span
+        >{{ bridgeData.neo.used | number }}/{{ bridgeData.neo.total | number
+        }}</span
+      >
+    </p>
+    <mat-progress-bar
+      class="progress-bar"
+      mode="determinate"
+      [value]="bridgeData.neo.percentage"
+    ></mat-progress-bar>
+    <p class="value">{{ bridgeData.neo.percentage }}%</p>
   </div>
 
   <p class="get-help" (click)="toWeb()">
