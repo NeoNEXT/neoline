@@ -52,7 +52,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
     private router: Router,
     private neoAssetService: NeoAssetService,
     private store: Store<AppState>,
-    private selectChainState: SelectChainState
+    private selectChainState: SelectChainState,
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -143,7 +143,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
             this.selectAccounts = res.selectAccounts;
             this.isSelectAll = res.isSelectAll;
           }
-        }
+        },
       );
   }
 
@@ -154,7 +154,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
         return: requestTarget.Connect,
         ID: this.messageID,
       },
-      true
+      true,
     );
   }
   public connect() {
@@ -188,9 +188,39 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
             },
             return: EVENT.CONNECTED,
           },
-          true
+          true,
         );
+        this.emitDappAccountChange(res);
       });
+  }
+
+  private emitDappAccountChange(allWebsites: ConnectedWebsitesType) {
+    if (this.currentChainType !== 'NeoX' && this.currentChainType !== 'Neo3') {
+      return;
+    }
+    const currentAddress = this.currentWallet.accounts[0].address;
+    const connectedMap = allWebsites[this.hostname]?.connectedAddress || {};
+    const addresses = Object.keys(connectedMap).filter(
+      (address) => connectedMap[address].chain === this.currentChainType,
+    );
+    if (this.currentChainType === 'NeoX') {
+      const index = addresses.indexOf(currentAddress);
+      if (index >= 0) {
+        addresses.splice(index, 1);
+        addresses.unshift(currentAddress);
+      }
+      this.chrome.evmAccountChange(addresses);
+    } else {
+      const flatWallets = this.allWallets.reduce<
+        Array<Wallet2 | Wallet3 | EvmWalletJSON>
+      >((prev, group) => prev.concat(group.walletArr), []);
+      const wallets = addresses
+        .map((address) =>
+          flatWallets.find((w) => w.accounts[0].address === address),
+        )
+        .filter((w): w is Wallet3 => !!w);
+      this.chrome.neo3AccountChange(wallets, currentAddress);
+    }
   }
 
   private getBalances() {
@@ -213,7 +243,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
         const req = this.neoAssetService.getAddressAssetBalance(
           item.accounts[0].address,
           assetId,
-          this.currentChainType
+          this.currentChainType,
         );
         reqs.push(req);
         addresses.push(item.accounts[0].address);

@@ -131,7 +131,18 @@ export class PopupHomeDappAuthComponent implements OnChanges {
     );
     this.currentWalletIsConnected = true;
     this.authWalletList.unshift(this.currentWallet);
-    this.chromeService.evmAccountChange(this.getConnectedAddress());
+    this.emitDappAccountChange();
+  }
+
+  private emitDappAccountChange() {
+    if (this.chainType === 'NeoX') {
+      this.chromeService.evmAccountChange(this.getConnectedAddress());
+    } else if (this.chainType === 'Neo3') {
+      this.chromeService.neo3AccountChange(
+        this.authWalletList as Wallet3[],
+        this.currentWallet.accounts[0].address
+      );
+    }
   }
 
   private getDappAuthList() {

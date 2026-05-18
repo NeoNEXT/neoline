@@ -538,7 +538,7 @@ export class ChromeService {
           });
         }
       });
-    } else if (wallet3.isAddress(w?.accounts[0]?.address), 53) {
+    } else if (wallet3.isAddress(w?.accounts[0]?.address, 53)) {
       this.getN3ConnectedAccounts(w).then((data) => {
         if (data) {
           this.windowCallback({
@@ -561,6 +561,32 @@ export class ChromeService {
     this.windowCallback({
       data,
       return: NEOX_EVENT.EVM_ACCOUNT_CHANGED,
+    });
+  }
+
+  neo3AccountChange(wallets: Wallet3[], currentAddress?: string) {
+    if (!this.check) return;
+
+    const data = wallets.map((w) => {
+      const address = w.accounts[0].address;
+      return {
+        hash: '0x' + getScriptHashFromAddress(address),
+        address,
+        label: w.name,
+        extra: {
+          isLedger: !!w.accounts[0].extra?.ledgerSLIP44,
+        },
+      };
+    });
+    const index = data.findIndex((item) => item.address === currentAddress);
+    if (index >= 0) {
+      const [currentAccount] = data.splice(index, 1);
+      data.unshift(currentAccount);
+    }
+
+    this.windowCallback({
+      data,
+      return: EVENT.ACCOUNT_CHANGED,
     });
   }
 
@@ -678,6 +704,9 @@ export class ChromeService {
               hash: '0x' + getScriptHashFromAddress(address),
               address,
               label: wallet.name,
+              extra: {
+                isLedger: !!w.accounts[0].extra?.ledgerSLIP44,
+              },
             });
           }
         }

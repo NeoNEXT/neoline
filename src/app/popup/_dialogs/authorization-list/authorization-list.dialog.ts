@@ -73,7 +73,7 @@ export class PopupAuthorizationListDialogComponent {
       STORAGE_NAME.connectedWebsites,
       this.data.allWebsites
     );
-    this.chrome.evmAccountChange(this.getConnectedAddress());
+    this.emitDappAccountChange();
   }
 
   getConnectedAddress() {
@@ -123,6 +123,17 @@ export class PopupAuthorizationListDialogComponent {
     );
     this.currentWalletIsConnected = true;
     this.data.authWalletList.unshift(this.data.currentWallet);
-    this.chrome.evmAccountChange(this.getConnectedAddress());
+    this.emitDappAccountChange();
+  }
+
+  private emitDappAccountChange() {
+    if (this.data.chainType === 'NeoX') {
+      this.chrome.evmAccountChange(this.getConnectedAddress());
+    } else if (this.data.chainType === 'Neo3') {
+      this.chrome.neo3AccountChange(
+        this.data.authWalletList as Wallet3[],
+        this.currentAddress
+      );
+    }
   }
 }
