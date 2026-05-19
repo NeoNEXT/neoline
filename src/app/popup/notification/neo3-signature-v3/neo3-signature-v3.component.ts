@@ -39,6 +39,7 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
   public n3Network: RpcNetwork;
   chainType: ChainType;
   currentWallet: Wallet3;
+  signerWallet: Wallet3;
   private neo3WIFArr: string[];
   private neo3WalletArr: Wallet3[];
   constructor(
@@ -51,11 +52,29 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.currentWallet = state.currentWallet as Wallet3;
-      this.address = state.currentWallet?.accounts[0]?.address;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neo3WIFArr = state.neo3WIFArr;
       this.neo3WalletArr = state.neo3WalletArr;
+      this.resolveSignerWallet();
     });
+  }
+
+  private resolveSignerWallet() {
+    const accountScriptHash = this.params?.account;
+    if (accountScriptHash) {
+      const scriptHash = accountScriptHash.startsWith('0x')
+        ? accountScriptHash.slice(2)
+        : accountScriptHash;
+      const signerAddress = wallet.getAddressFromScriptHash(scriptHash);
+      const matched = this.neo3WalletArr?.find(
+        (w) => w.accounts[0].address === signerAddress,
+      );
+      this.signerWallet = matched ?? this.currentWallet;
+      this.address = signerAddress;
+    } else {
+      this.signerWallet = this.currentWallet;
+      this.address = this.currentWallet?.accounts[0]?.address;
+    }
   }
 
   ngOnInit() {
@@ -70,6 +89,7 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
           if (!this.params) {
             return;
           }
+          this.resolveSignerWallet();
           this.displayMessage = this.formatMessage(this.params.message);
           if (this.params.options.isBase64Encoded) {
             this.hexMessage = u.base642hex(this.params.message);
@@ -106,13 +126,14 @@ export class PopupNoticeNeo3SignV3Component implements OnInit {
   }
 
   signature() {
-    if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
-      this.publicKey = this.currentWallet.accounts[0]?.extra?.publicKey;
+    const signer = this.signerWallet ?? this.currentWallet;
+    if (signer.accounts[0]?.extra?.ledgerSLIP44) {
+      this.publicKey = signer.accounts[0]?.extra?.publicKey;
       this.showHardwareSign = true;
       return;
     }
     this.global
-      .getWIF(this.neo3WIFArr, this.neo3WalletArr, this.currentWallet)
+      .getWIF(this.neo3WIFArr, this.neo3WalletArr, signer)
       .then((wif) => {
         const privateKey = wallet.getPrivateKeyFromWIF(wif);
         this.publicKey = wallet.getPublicKeyFromPrivateKey(privateKey);

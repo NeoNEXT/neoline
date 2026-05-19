@@ -7,7 +7,7 @@
 <app-hardware-sign
   *ngIf="showHardwareSign"
   [chainType]="chainType"
-  [currentWallet]="currentWallet"
+  [currentWallet]="signerWallet || currentWallet"
   [unsignedTx]="unsignedTx"
   [magicNumber]="n3Network.magicNumber"
   (backWithSignedTx)="handleHardwareSignedTx($event)"
@@ -24,7 +24,7 @@
         <div class="item">
           <img class="avatar" [avatar]="fromAddress" />
           <div class="name-group">
-            <p class="name">{{ currentWallet.name }}</p>
+            <p class="name">{{ (signerWallet || currentWallet)?.name }}</p>
             <p>{{ fromAddress | longStr : 4 }}</p>
           </div>
         </div>

@@ -105,6 +105,23 @@ import { N3SendArgs } from '../../cross-runtime/neo3-shared';
  */
 declare var chrome;
 
+async function canSignWithOnePasswordMode(
+  signerAddress: string,
+  hostname: string,
+  chain: 'Neo3' | 'Neo2' | 'NeoX',
+): Promise<boolean> {
+  if (!signerAddress || !hostname) return false;
+  const onePassword = await getLocalStorage('onePassword', () => {});
+  if (!onePassword) return false;
+  const allWebsites = await new Promise<ConnectedWebsitesType>((resolve) => {
+    getStorage(STORAGE_NAME.connectedWebsites, (res: ConnectedWebsitesType) => {
+      resolve(res);
+    });
+  });
+  const connected = allWebsites?.[hostname]?.connectedAddress?.[signerAddress];
+  return !!connected && connected.chain === chain;
+}
+
 chrome.alarms.create({ periodInMinutes: 1 });
 chrome.alarms.onAlarm.addListener(async () => {
   const { currN2Network } = await getCurrentNeo2Network();
@@ -1587,13 +1604,20 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
           currentAddress !== undefined &&
           currentAddress !== address
         ) {
-          windowCallback({
-            return: requestTargetN3.SignMessageV3,
-            error: { ...ERRORS.MALFORMED_INPUT, description: 'Current account is not the signer' },
-            ID: request.ID,
-          });
-          sendResponse('');
-          return;
+          const allowOnePassSign = await canSignWithOnePasswordMode(
+            address,
+            request.hostname,
+            'Neo3',
+          );
+          if (!allowOnePassSign) {
+            windowCallback({
+              return: requestTargetN3.SignMessageV3,
+              error: { ...ERRORS.MALFORMED_INPUT, description: 'Current account is not the signer' },
+              ID: request.ID,
+            });
+            sendResponse('');
+            return;
+          }
         }
       }
       if (
@@ -1787,13 +1811,20 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         wallet !== undefined &&
         wallet.accounts[0].address !== parameter.fromAddress
       ) {
-        windowCallback({
-          return: requestTargetN3.Send,
-          error: { ...ERRORS.MALFORMED_INPUT, description: 'Current account is not the sender' },
-          ID: request.ID,
-        });
-        sendResponse('');
-        return;
+        const allowOnePassSign = await canSignWithOnePasswordMode(
+          parameter.fromAddress,
+          request.hostname,
+          'Neo3',
+        );
+        if (!allowOnePassSign) {
+          windowCallback({
+            return: requestTargetN3.Send,
+            error: { ...ERRORS.MALFORMED_INPUT, description: 'Current account is not the sender' },
+            ID: request.ID,
+          });
+          sendResponse('');
+          return;
+        }
       }
 
       let assetID = parameter.asset;

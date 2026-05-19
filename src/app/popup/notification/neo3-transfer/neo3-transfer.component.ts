@@ -79,6 +79,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
   public fromAddress: string;
   public n3Network: RpcNetwork;
   currentWallet: Wallet3;
+  signerWallet: Wallet3;
   chainType: ChainType;
   private neo3WIFArr: string[];
   private neo3WalletArr: Wallet3[];
@@ -100,12 +101,26 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.currentWallet = state.currentWallet as Wallet3;
-      this.fromAddress = state.currentWallet?.accounts[0]?.address;
       this.n3Network = state.n3Networks[state.n3NetworkIndex];
       this.neo3WIFArr = state.neo3WIFArr;
       this.neo3WalletArr = state.neo3WalletArr;
       this.rpcClient = new rpc.RPCClient(this.n3Network.rpcUrl);
+      this.resolveSignerWallet();
     });
+  }
+
+  private resolveSignerWallet() {
+    const signerAddress = this.invokeParams?.fromAddress;
+    if (signerAddress) {
+      const matched = this.neo3WalletArr?.find(
+        (w) => w.accounts[0].address === signerAddress,
+      );
+      this.signerWallet = matched ?? this.currentWallet;
+      this.fromAddress = signerAddress;
+    } else {
+      this.signerWallet = this.currentWallet;
+      this.fromAddress = this.currentWallet?.accounts[0]?.address;
+    }
   }
 
   ngOnInit(): void {
@@ -125,6 +140,7 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
           if (!this.invokeParams) {
             return;
           }
+          this.resolveSignerWallet();
           if (this.invokeParams.fee) {
             this.fee = this.invokeParams.fee;
           } else {
@@ -416,13 +432,14 @@ export class PopupNoticeNeo3TransferComponent implements OnInit {
   }
 
   private getSignTx(tx: Transaction3) {
-    if (this.currentWallet.accounts[0]?.extra?.ledgerSLIP44) {
+    const signer = this.signerWallet ?? this.currentWallet;
+    if (signer.accounts[0]?.extra?.ledgerSLIP44) {
       this.unsignedTx = tx;
       this.showHardwareSign = true;
       return;
     }
     this.global
-      .getWIF(this.neo3WIFArr, this.neo3WalletArr, this.currentWallet)
+      .getWIF(this.neo3WIFArr, this.neo3WalletArr, signer)
       .then((wif) => {
         tx.sign(wif, this.n3Network.magicNumber);
         this.tx = tx;
