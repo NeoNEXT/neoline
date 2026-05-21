@@ -6,7 +6,7 @@ import { requestTargetN3 } from '@/models/dapi_neo3';
 import { ERRORS } from '@/models/dapi';
 import { wallet } from '@cityofzion/neon-core-neo3';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
-import { RpcNetwork, ChainType, STORAGE_NAME } from '../../_lib';
+import { RpcNetwork, ChainType, STORAGE_NAME, N3TestnetNetwork, N3MainnetNetwork } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -43,6 +43,7 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
   public serializeTx: string;
   private messageID = 0;
   public magicNumber;
+  magicName: string;
   public signatureOnly = false;
   private invokeArgsArray = {};
   private signTransactionParams: any;
@@ -96,6 +97,12 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
           this.magicNumber = Number(
             this.signTransactionParams.magicNumber ?? this.context?.network,
           );
+          if (N3TestnetNetwork.magicNumber === this.magicNumber) {
+            this.magicName = N3TestnetNetwork.name;
+          }
+          if (N3MainnetNetwork.magicNumber === this.magicNumber) {
+            this.magicName = N3MainnetNetwork.name;
+          }
 
           try {
             if (this.context) {

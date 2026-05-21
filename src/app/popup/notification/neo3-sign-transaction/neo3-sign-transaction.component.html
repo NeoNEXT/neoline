@@ -26,6 +26,12 @@
     </span>
   </div>
   <div class="content details" *ngIf="hasDetailsTab && tabType === 'details'">
+    <div class="request-info" *ngIf="magicNumber">
+      <div class="request-info-item">
+        <div class="label">Magic Number</div>
+        <div>{{ magicNumber }}<span *ngIf="magicName">({{ magicName }})</span></div>
+      </div>
+    </div>
     <div class="request-info" *ngFor="let call of decompiledCalls">
       <div class="request-info-item">
         <div class="label">
@@ -125,7 +131,7 @@
     <ul *ngIf="magicNumber">
       <li>
         <p class="label">Magic Number</p>
-        <p class="value">{{ magicNumber }}</p>
+        <p class="value">{{ magicNumber }}<span *ngIf="magicName">({{ magicName }})</span></p>
       </li>
     </ul>
     <p class="hex-label">{{ "transaction" | translate | async }}</p>
