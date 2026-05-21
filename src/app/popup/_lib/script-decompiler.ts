@@ -59,8 +59,9 @@ function getOpSpec(opByte: number): OpSpec | undefined {
   };
 }
 
-// Whitelist of opcodes that don't taint the structured-call extraction.
-// SYSCALL is conditionally whitelisted only when its hash is Contract.Call.
+// Opcodes that don't need stack modeling for structured-call extraction.
+// Opcodes with stack effects are handled explicitly in applyStack().
+// SYSCALL is conditionally accepted only when its hash is Contract.Call.
 const WHITELIST = new Set<number>([
   // PUSH-family
   OpCode.PUSHINT8, OpCode.PUSHINT16, OpCode.PUSHINT32,
@@ -159,7 +160,12 @@ export function analyzeScript(script: string | Uint8Array): ScriptAnalysis {
     return { calls: [], incomplete: true, disassembly: '' };
   }
 
-  const stack: StackItem[] = [];
+  const state: StackState = {
+    stack: [],
+    staticSlots: [],
+    localSlots: [],
+    argSlots: [],
+  };
   const calls: DecompiledCall[] = [];
   const lines: string[] = [];
   let incomplete = false;
@@ -212,9 +218,9 @@ export function analyzeScript(script: string | Uint8Array): ScriptAnalysis {
 
     lines.push(formatLine(opStart, spec.name, formatOperand(spec, operand)));
 
-    // ----- structured semantic pass (only if still on the whitelist) -----
+    // ----- structured semantic pass (only while the parser still trusts it)
     if (incomplete) continue; // disassembly only from here on
-    const ok = applyStack(opByte, spec, operand, stack, calls);
+    const ok = applyStack(opByte, spec, operand, state, calls);
     if (!ok) incomplete = true;
   }
 
@@ -238,15 +244,23 @@ type StackItem =
   | { kind: 'struct'; value: StackItem[] }
   | { kind: 'map'; value: { key: StackItem; value: StackItem }[] };
 
+interface StackState {
+  stack: StackItem[];
+  staticSlots: StackItem[];
+  localSlots: StackItem[];
+  argSlots: StackItem[];
+}
+
 const EMPTY = new Uint8Array(0);
 
 function applyStack(
   opByte: number,
   spec: OpSpec,
   operand: Uint8Array,
-  stack: StackItem[],
+  state: StackState,
   calls: DecompiledCall[],
 ): boolean {
+  const { stack } = state;
   if (spec.code >= OpCode.PUSH0 && spec.code <= OpCode.PUSH16) {
     stack.push({ kind: 'int', value: BigInt(spec.code - OpCode.PUSH0) });
     return true;
@@ -291,8 +305,18 @@ function applyStack(
     stack.push({ kind: 'map', value: [] });
     return true;
   }
+  if (spec.code === OpCode.NEWARRAY || spec.code === OpCode.NEWSTRUCT) {
+    const n = toNumber(stack.pop());
+    if (!isSafeCollectionSize(n)) return false;
+    stack.push({
+      kind: spec.code === OpCode.NEWARRAY ? 'array' : 'struct',
+      value: buildNullArray(n),
+    });
+    return true;
+  }
   if (spec.code === OpCode.PACK) {
     const n = toNumber(stack.pop());
+    if (!isSafeCollectionSize(n)) return false;
     const arr: StackItem[] = [];
     for (let i = 0; i < n; i++) arr.push(stack.pop() ?? { kind: 'null' });
     stack.push({ kind: 'array', value: arr });
@@ -300,6 +324,7 @@ function applyStack(
   }
   if (spec.code === OpCode.PACKSTRUCT) {
     const n = toNumber(stack.pop());
+    if (!isSafeCollectionSize(n)) return false;
     const arr: StackItem[] = [];
     for (let i = 0; i < n; i++) arr.push(stack.pop() ?? { kind: 'null' });
     stack.push({ kind: 'struct', value: arr });
@@ -307,6 +332,7 @@ function applyStack(
   }
   if (spec.code === OpCode.PACKMAP) {
     const n = toNumber(stack.pop());
+    if (!isSafeCollectionSize(n)) return false;
     const entries: { key: StackItem; value: StackItem }[] = [];
     for (let i = 0; i < n; i++) {
       const key = stack.pop() ?? { kind: 'null' };
@@ -314,6 +340,149 @@ function applyStack(
       entries.push({ key, value });
     }
     stack.push({ kind: 'map', value: entries });
+    return true;
+  }
+  if (spec.code === OpCode.APPEND) {
+    const item = stack.pop() ?? { kind: 'null' };
+    const collection = stack.pop();
+    if (collection?.kind !== 'array' && collection?.kind !== 'struct') {
+      return false;
+    }
+    collection.value.push(item);
+    return true;
+  }
+  if (spec.code === OpCode.SETITEM) {
+    const value = stack.pop() ?? { kind: 'null' };
+    const key = stack.pop() ?? { kind: 'null' };
+    const collection = stack.pop();
+    if (collection?.kind === 'array' || collection?.kind === 'struct') {
+      const idx = toNumber(key);
+      if (!Number.isInteger(idx) || idx < 0) return false;
+      collection.value[idx] = value;
+      return true;
+    }
+    if (collection?.kind === 'map') {
+      collection.value.push({ key, value });
+      return true;
+    }
+    return false;
+  }
+  if (spec.code === OpCode.PICKITEM) {
+    const key = stack.pop() ?? { kind: 'null' };
+    const collection = stack.pop();
+    if (collection?.kind === 'array' || collection?.kind === 'struct') {
+      stack.push(collection.value[toNumber(key)] ?? { kind: 'null' });
+      return true;
+    }
+    if (collection?.kind === 'map') {
+      const found = collection.value.find((entry) =>
+        stackItemsEqual(entry.key, key),
+      );
+      stack.push(found?.value ?? { kind: 'null' });
+      return true;
+    }
+    return false;
+  }
+  if (spec.code === OpCode.SIZE) {
+    const item = stack.pop();
+    if (!item) return false;
+    if (
+      item.kind === 'bytes' ||
+      item.kind === 'array' ||
+      item.kind === 'struct'
+    ) {
+      stack.push({ kind: 'int', value: BigInt(item.value.length) });
+      return true;
+    }
+    if (item.kind === 'map') {
+      stack.push({ kind: 'int', value: BigInt(item.value.length) });
+      return true;
+    }
+    return false;
+  }
+  if (spec.code === OpCode.DROP) {
+    stack.pop();
+    return true;
+  }
+  if (spec.code === OpCode.DUP) {
+    const item = stack[stack.length - 1];
+    if (!item) return false;
+    stack.push(item);
+    return true;
+  }
+  if (spec.code === OpCode.NIP) {
+    if (stack.length < 2) return false;
+    stack.splice(stack.length - 2, 1);
+    return true;
+  }
+  if (spec.code === OpCode.CLEAR) {
+    stack.length = 0;
+    return true;
+  }
+  if (spec.code === OpCode.OVER) {
+    if (stack.length < 2) return false;
+    stack.push(stack[stack.length - 2]);
+    return true;
+  }
+  if (spec.code === OpCode.PICK) {
+    const n = toNumber(stack.pop());
+    if (!Number.isInteger(n) || n < 0 || n >= stack.length) return false;
+    stack.push(stack[stack.length - 1 - n]);
+    return true;
+  }
+  if (spec.code === OpCode.SWAP) {
+    if (stack.length < 2) return false;
+    const last = stack.length - 1;
+    [stack[last], stack[last - 1]] = [stack[last - 1], stack[last]];
+    return true;
+  }
+  if (spec.code === OpCode.DEPTH) {
+    stack.push({ kind: 'int', value: BigInt(stack.length) });
+    return true;
+  }
+  if (spec.code === OpCode.INITSSLOT) {
+    state.staticSlots = buildNullArray(operand[0] || 0);
+    return true;
+  }
+  if (spec.code === OpCode.INITSLOT) {
+    state.localSlots = buildNullArray(operand[0] || 0);
+    state.argSlots = buildNullArray(operand[1] || 0);
+    return true;
+  }
+  if (isSlotLoad(spec.code, OpCode.LDSFLD0, OpCode.LDSFLD6, OpCode.LDSFLD)) {
+    const idx = getSlotIndex(spec.code, operand, OpCode.LDSFLD0, OpCode.LDSFLD);
+    const item = readSlot(state.staticSlots, idx);
+    if (!item) return false;
+    stack.push(item);
+    return true;
+  }
+  if (isSlotStore(spec.code, OpCode.STSFLD0, OpCode.STSFLD6, OpCode.STSFLD)) {
+    const idx = getSlotIndex(spec.code, operand, OpCode.STSFLD0, OpCode.STSFLD);
+    writeSlot(state.staticSlots, idx, stack.pop());
+    return true;
+  }
+  if (isSlotLoad(spec.code, OpCode.LDLOC0, OpCode.LDLOC6, OpCode.LDLOC)) {
+    const idx = getSlotIndex(spec.code, operand, OpCode.LDLOC0, OpCode.LDLOC);
+    const item = readSlot(state.localSlots, idx);
+    if (!item) return false;
+    stack.push(item);
+    return true;
+  }
+  if (isSlotStore(spec.code, OpCode.STLOC0, OpCode.STLOC6, OpCode.STLOC)) {
+    const idx = getSlotIndex(spec.code, operand, OpCode.STLOC0, OpCode.STLOC);
+    writeSlot(state.localSlots, idx, stack.pop());
+    return true;
+  }
+  if (isSlotLoad(spec.code, OpCode.LDARG0, OpCode.LDARG6, OpCode.LDARG)) {
+    const idx = getSlotIndex(spec.code, operand, OpCode.LDARG0, OpCode.LDARG);
+    const item = readSlot(state.argSlots, idx);
+    if (!item) return false;
+    stack.push(item);
+    return true;
+  }
+  if (isSlotStore(spec.code, OpCode.STARG0, OpCode.STARG6, OpCode.STARG)) {
+    const idx = getSlotIndex(spec.code, operand, OpCode.STARG0, OpCode.STARG);
+    writeSlot(state.argSlots, idx, stack.pop());
     return true;
   }
   if (spec.code === OpCode.SYSCALL) {
@@ -344,11 +513,78 @@ function applyStack(
     stack.push({ kind: 'null' });
     return true;
   }
+  if (spec.code === OpCode.ASSERT) {
+    stack.pop();
+    return true;
+  }
+  if (spec.code === OpCode.ABORTMSG || spec.code === OpCode.THROW) {
+    stack.pop();
+    return true;
+  }
+  if (spec.code === OpCode.ASSERTMSG) {
+    stack.pop();
+    stack.pop();
+    return true;
+  }
   // Terminator-class ops we whitelisted purely for "doesn't ruin already-
   // extracted calls" reasons: NOP / ABORT / ASSERT / THROW / RET / ABORTMSG /
   // ASSERTMSG. They MAY consume stack items but never produce new calls.
   if (WHITELIST.has(opByte)) return true;
   return false;
+}
+
+function buildNullArray(length: number): StackItem[] {
+  return Array.from({ length }, () => ({ kind: 'null' }) as StackItem);
+}
+
+function readSlot(slots: StackItem[], index: number): StackItem | undefined {
+  return index in slots ? slots[index] : undefined;
+}
+
+function writeSlot(slots: StackItem[], index: number, item?: StackItem) {
+  slots[index] = item ?? { kind: 'null' };
+}
+
+function isSafeCollectionSize(length: number): boolean {
+  return Number.isInteger(length) && length >= 0 && length <= 1024;
+}
+
+function isSlotLoad(
+  code: OpCode,
+  firstFixed: OpCode,
+  lastFixed: OpCode,
+  variable: OpCode,
+): boolean {
+  return (code >= firstFixed && code <= lastFixed) || code === variable;
+}
+
+function isSlotStore(
+  code: OpCode,
+  firstFixed: OpCode,
+  lastFixed: OpCode,
+  variable: OpCode,
+): boolean {
+  return (code >= firstFixed && code <= lastFixed) || code === variable;
+}
+
+function getSlotIndex(
+  code: OpCode,
+  operand: Uint8Array,
+  firstFixed: OpCode,
+  variable: OpCode,
+): number {
+  return code === variable ? operand[0] || 0 : code - firstFixed;
+}
+
+function stackItemsEqual(a: StackItem, b: StackItem): boolean {
+  if (a.kind !== b.kind) return false;
+  if (a.kind === 'int' && b.kind === 'int') return a.value === b.value;
+  if (a.kind === 'bool' && b.kind === 'bool') return a.value === b.value;
+  if (a.kind === 'null' && b.kind === 'null') return true;
+  if (a.kind === 'bytes' && b.kind === 'bytes') {
+    return bytesToHex(a.value) === bytesToHex(b.value);
+  }
+  return a === b;
 }
 
 function scriptHashFromItem(item: StackItem): string {

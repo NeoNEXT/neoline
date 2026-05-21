@@ -140,7 +140,7 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
     });
   }
 
-  get hasDetailsTab(): boolean {
+  get hasDetails(): boolean {
     return this.decompiledCalls.length > 0;
   }
 
@@ -154,7 +154,6 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
     const scriptHex = this.tx?.script?.toString();
     if (!scriptHex) {
       this.decompiledCalls = [];
-      this.tabType = 'data';
       return;
     }
     const result = analyzeScript(scriptHex);
@@ -164,7 +163,6 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
       argsObj: buildDecompiledArgVMs(call),
     }));
     if (!this.decompiledCalls.length) {
-      this.tabType = 'data';
       return;
     }
     this.resolveContractNames();

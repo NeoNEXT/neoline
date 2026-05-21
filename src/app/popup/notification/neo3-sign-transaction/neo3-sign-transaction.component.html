@@ -13,9 +13,8 @@
     <p class="title">{{ "thSignTxTitle" | translate | async }}</p>
     <p class="account"><img [avatar]="address" />{{ address | longStr : 10 }}</p>
   </div>
-  <div class="tabs-container" [ngClass]="{ 'single-tab': !hasDetailsTab }">
+  <div class="tabs-container" *ngIf="hasDetails">
     <span
-      *ngIf="hasDetailsTab"
       [class]="{ selected: tabType === 'details' }"
       (click)="tabType = 'details'"
     >
@@ -25,7 +24,7 @@
       {{ "data" | translate | async }}
     </span>
   </div>
-  <div class="content details" *ngIf="hasDetailsTab && tabType === 'details'">
+  <div class="content details" *ngIf="hasDetails && tabType === 'details'">
     <div class="request-info" *ngIf="magicNumber">
       <div class="request-info-item">
         <div class="label">Magic Number</div>
@@ -127,7 +126,7 @@
       </div>
     </div>
   </div>
-  <div class="content data" *ngIf="tabType === 'data'">
+  <div class="content data" *ngIf="!hasDetails || (hasDetails && tabType === 'data')">
     <ul *ngIf="magicNumber">
       <li>
         <p class="label">Magic Number</p>
