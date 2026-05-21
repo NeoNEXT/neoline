@@ -13,7 +13,115 @@
     <p class="title">{{ "thSignTxTitle" | translate | async }}</p>
     <p class="account"><img [avatar]="address" />{{ address | longStr : 10 }}</p>
   </div>
-  <div class="content data">
+  <div class="tabs-container" [ngClass]="{ 'single-tab': !hasDetailsTab }">
+    <span
+      *ngIf="hasDetailsTab"
+      [class]="{ selected: tabType === 'details' }"
+      (click)="tabType = 'details'"
+    >
+      {{ "details" | translate | async }}
+    </span>
+    <span [class]="{ selected: tabType === 'data' }" (click)="tabType = 'data'">
+      {{ "data" | translate | async }}
+    </span>
+  </div>
+  <div class="content details" *ngIf="hasDetailsTab && tabType === 'details'">
+    <div class="request-info" *ngFor="let call of decompiledCalls">
+      <div class="request-info-item">
+        <div class="label">
+          {{ "InteractingWith" | translate | async }}
+          <tooltip
+            placement="bottomLeft"
+            [tip]="'interactionWithTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
+        <div>
+          <copy [value]="call.hash" placement="left">
+            {{ call.contractName ? call.contractName : (call.hash | longStr : 6) }}
+          </copy>
+        </div>
+      </div>
+      <div class="request-info-item">
+        <div class="label">
+          {{ "Operation" | translate | async }}
+          <tooltip
+            placement="bottomLeft"
+            [tip]="'operationTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
+        <span>{{ call.method }}</span>
+      </div>
+      <div class="request-info-item">
+        <div class="label">{{ "callFlags" | translate | async }}</div>
+        <span>{{ call.callFlagsLabel }}</span>
+      </div>
+      <div class="request-info-item" *ngIf="call.argsObj?.length">
+        <div class="label">
+          {{ "InvocationArguments" | translate | async }}
+          <tooltip
+            placement="bottomLeft"
+            [tip]="'InvocationArgumentsTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
+        <img
+          class="arrow"
+          [ngClass]="{ active: call.expandArgs }"
+          (click)="call.expandArgs = !call.expandArgs"
+          theme
+          src="/assets/images/common/arrow.svg"
+          alt=""
+        />
+      </div>
+      <div class="param-list" *ngIf="call.expandArgs">
+        <div
+          class="param-item"
+          *ngFor="let item of call.argsObj; index as index"
+        >
+          <div class="param-label">
+            {{ item.name }}
+            <tooltip placement="right" [tip]="item.type">
+              <img src="assets/images/common/tooltip.svg" alt="" />
+            </tooltip>
+          </div>
+          <span class="param-value">{{ item.value }}</span>
+        </div>
+      </div>
+    </div>
+    <div class="request-info" *ngIf="signersObj.length">
+      <div class="request-info-item">
+        <div class="label">
+          {{ "signers" | translate | async }}
+          <tooltip
+            placement="bottomLeft"
+            [tip]="'signersTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
+        <img
+          class="arrow"
+          [ngClass]="{ active: expandSigners }"
+          (click)="expandSigners = !expandSigners"
+          theme
+          src="/assets/images/common/arrow.svg"
+          alt=""
+        />
+      </div>
+      <div class="param-list" *ngIf="expandSigners">
+        <div class="param-item" *ngFor="let item of signersObj">
+          <div class="param-label">{{ item.name }}</div>
+          <span class="param-value">{{ item.value }}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="content data" *ngIf="tabType === 'data'">
     <ul *ngIf="magicNumber">
       <li>
         <p class="label">Magic Number</p>

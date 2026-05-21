@@ -154,14 +154,18 @@ describe('dapp', () => {
     expect(result).toEqual([
       {
         name: 'account',
-        value: '"0x127981b74544585839052fc7f2fdc126c92fa47e"',
+        value: '0x127981b74544585839052fc7f2fdc126c92fa47e',
       },
-      { name: 'scopes', value: '16' },
       {
         name: 'allowedContracts',
         value:
           '["0xd2a4cff31913016155e38e474a2c06d08be276cf","0x3b9d5bb5c79f94b2074fa1bd89e2a1d13fb55a21"]',
       },
+      {
+        name: 'allowedGroups',
+        value: '[]',
+      },
+      { name: 'scopes', value: 'CustomContracts' },
       {
         name: 'rules',
         value:
@@ -188,14 +192,18 @@ describe('dapp', () => {
     expect(result).toEqual([
       {
         name: 'account',
-        value: '"0x127981b74544585839052fc7f2fdc126c92fa47e"',
+        value: '0x127981b74544585839052fc7f2fdc126c92fa47e',
       },
-      { name: 'scopes', value: '32' },
+      {
+        name: 'allowedContracts',
+        value: '[]',
+      },
       {
         name: 'allowedGroups',
         value:
           '["03e8d1c79cd13af77b4f8386781edca264354ba6fdd2d562e2f1d1e45df1a3d55e"]',
       },
+      { name: 'scopes', value: 'CustomGroups' },
     ]);
   });
 });

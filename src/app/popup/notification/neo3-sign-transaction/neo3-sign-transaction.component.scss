@@ -1,11 +1,15 @@
 @import "../common-scss/common.scss";
 
-.container .content {
-  height: 320px;
-  ul {
-    margin-bottom: 30px;
+.container {
+  height: calc(100% - 74px);
+  overflow: scroll;
+  padding-bottom: 20px;
+  .tabs-container.single-tab {
+    span {
+      width: 100%;
+    }
   }
-  .hex-label:first-child {
-    margin-top: 0;
+  .content {
+    height: auto;
   }
 }

@@ -713,6 +713,9 @@
   "signers": {
     "message": "签名者"
   },
+  "callFlags": {
+    "message": "调用标志"
+  },
   "Fee": {
     "message": "费用"
   },

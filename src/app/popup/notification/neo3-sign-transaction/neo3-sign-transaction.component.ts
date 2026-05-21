@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ChromeService, GlobalService } from '@/app/core';
+import { ChromeService, GlobalService, NeoAssetInfoState } from '@/app/core';
+import { convertSignersToObj } from '@/app/core/utils/dapp';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { ERRORS } from '@/models/dapi';
 import { wallet } from '@cityofzion/neon-core-neo3';
@@ -15,6 +16,22 @@ import {
   ContractParametersContextLike,
   deserializeContextTransaction,
 } from './neo3-sign-transaction.util';
+import {
+  analyzeScript,
+  DecompiledCall,
+} from '../../_lib/script-decompiler';
+import {
+  buildDecompiledArgVMs,
+  DecompiledArgVM,
+} from './neo3-sign-transaction.arg-hints';
+
+type TabType = 'details' | 'data';
+
+interface DecompiledCallVM extends DecompiledCall {
+  contractName?: string;
+  expandArgs?: boolean;
+  argsObj: DecompiledArgVM[];
+}
 
 @Component({
   templateUrl: './neo3-sign-transaction.component.html',
@@ -33,6 +50,11 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
 
   showHardwareSign = false;
 
+  tabType: TabType = 'details';
+  decompiledCalls: DecompiledCallVM[] = [];
+  signersObj: { name: string; value: string }[] = [];
+  expandSigners = false;
+
   private accountSub: Unsubscribable;
   public address: string;
   public n3Network: RpcNetwork;
@@ -45,6 +67,7 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
     private chrome: ChromeService,
     private global: GlobalService,
     private store: Store<AppState>,
+    private neoAssetInfoState: NeoAssetInfoState,
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -83,6 +106,8 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
               this.tx = new Transaction(this.txJson);
             }
             this.serializeTx = this.tx.serialize(false);
+            this.buildSignersObj();
+            this.analyzeTxScript();
           } catch (error) {
             this.chrome.windowCallback(
               {
@@ -106,6 +131,66 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
         });
       };
     });
+  }
+
+  get hasDetailsTab(): boolean {
+    return this.decompiledCalls.length > 0;
+  }
+
+  private buildSignersObj() {
+    this.signersObj = convertSignersToObj(
+      this.tx?.signers?.map((signer) => signer.export()) || [],
+    );
+  }
+
+  private analyzeTxScript() {
+    const scriptHex = this.tx?.script?.toString();
+    if (!scriptHex) {
+      this.decompiledCalls = [];
+      this.tabType = 'data';
+      return;
+    }
+    const result = analyzeScript(scriptHex);
+    this.decompiledCalls = result.calls.map((call) => ({
+      ...call,
+      expandArgs: false,
+      argsObj: buildDecompiledArgVMs(call),
+    }));
+    if (!this.decompiledCalls.length) {
+      this.tabType = 'data';
+      return;
+    }
+    this.resolveContractNames();
+  }
+
+  private resolveContractNames() {
+    if (!this.decompiledCalls.length) {
+      return;
+    }
+    const hashes = Array.from(
+      new Set(this.decompiledCalls.map((c) => c.hash).filter(Boolean)),
+    );
+    if (!hashes.length) {
+      return;
+    }
+    this.neoAssetInfoState
+      .getContractManifests(hashes)
+      .subscribe((manifests) => {
+        this.decompiledCalls.forEach((call) => {
+          const idx = hashes.indexOf(call.hash);
+          const manifest = idx >= 0 ? manifests[idx] : undefined;
+          if (!manifest) {
+            return;
+          }
+          call.contractName = manifest.name;
+          const method = manifest.abi?.methods?.find(
+            (m) => m.name === call.method,
+          );
+          if (method) {
+            call.argsObj = buildDecompiledArgVMs(call, method.parameters);
+          }
+        });
+      });
   }
 
   private clearStoredParams() {
