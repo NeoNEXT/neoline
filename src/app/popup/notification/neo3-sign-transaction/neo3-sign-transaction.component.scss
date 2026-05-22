@@ -6,5 +6,12 @@
   padding-bottom: 20px;
   .content {
     height: auto;
+    &.details {
+      ul.fee-details li .value.dropdown {
+        color: var(--second-color);
+        display: flex;
+        align-items: center;
+      }
+    }
   }
 }

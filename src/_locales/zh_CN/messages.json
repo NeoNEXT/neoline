@@ -650,6 +650,9 @@
   "TOTAL": {
     "message": "总额："
   },
+  "TOTALFEE": {
+    "message": "总费用"
+  },
   "PRIORITYFEEUPPER": {
     "message": "优先费"
   },

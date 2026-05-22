@@ -1,16 +1,30 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ChromeService, GlobalService, NeoAssetInfoState } from '@/app/core';
+import {
+  ChromeService,
+  GlobalService,
+  NeoAssetInfoState,
+  RateState,
+  SettingState,
+} from '@/app/core';
 import { convertSignersToObj } from '@/app/core/utils/dapp';
 import { requestTargetN3 } from '@/models/dapi_neo3';
 import { ERRORS } from '@/models/dapi';
 import { wallet } from '@cityofzion/neon-core-neo3';
 import { Transaction } from '@cityofzion/neon-core-neo3/lib/tx';
-import { RpcNetwork, ChainType, STORAGE_NAME, N3TestnetNetwork, N3MainnetNetwork } from '../../_lib';
+import {
+  RpcNetwork,
+  ChainType,
+  STORAGE_NAME,
+  N3TestnetNetwork,
+  N3MainnetNetwork,
+  GAS3_CONTRACT,
+} from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
 import { Wallet3 } from '@popup/_lib';
+import BigNumber from 'bignumber.js';
 import {
   buildSignedContext,
   ContractParametersContextLike,
@@ -55,6 +69,12 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
   decompiledCalls: DecompiledCallVM[] = [];
   signersObj: { name: string; value: string }[] = [];
   expandSigners = false;
+  systemFee = '0';
+  networkFee = '0';
+  totalFee = '0';
+  totalFeeMoney = '0';
+  expandTotalFee = false;
+  rateCurrency = '';
 
   private accountSub: Unsubscribable;
   public address: string;
@@ -69,6 +89,8 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
     private global: GlobalService,
     private store: Store<AppState>,
     private neoAssetInfoState: NeoAssetInfoState,
+    private settingState: SettingState,
+    private rateState: RateState,
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -82,6 +104,9 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.settingState.rateCurrencySub.subscribe((res) => {
+      this.rateCurrency = res;
+    });
     this.aRouter.queryParams.subscribe(({ messageID }) => {
       this.messageID = messageID;
       this.chrome
@@ -113,6 +138,7 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
               this.tx = new Transaction(this.txJson);
             }
             this.serializeTx = this.tx.serialize(false);
+            this.resolveFees();
             this.buildSignersObj();
             this.analyzeTxScript();
           } catch (error) {
@@ -148,6 +174,29 @@ export class PopupNoticeNeo3SignTransactionComponent implements OnInit {
     this.signersObj = convertSignersToObj(
       this.tx?.signers?.map((signer) => signer.export()) || [],
     );
+  }
+
+  private async resolveFees() {
+    this.systemFee = this.tx?.systemFee?.toDecimal(8) || '0';
+    this.networkFee = this.tx?.networkFee?.toDecimal(8) || '0';
+    this.totalFee = new BigNumber(this.systemFee)
+      .plus(this.networkFee)
+      .toFixed();
+    try {
+      const gasRate = await this.rateState.getAssetRateV2(
+        'Neo3',
+        GAS3_CONTRACT,
+      );
+      if (!gasRate) {
+        this.totalFeeMoney = '0';
+        return;
+      }
+      this.totalFeeMoney = new BigNumber(this.totalFee)
+        .times(gasRate)
+        .toFixed();
+    } catch {
+      this.totalFeeMoney = '0';
+    }
   }
 
   private analyzeTxScript() {

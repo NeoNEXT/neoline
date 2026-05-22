@@ -125,6 +125,32 @@
         </div>
       </div>
     </div>
+    <ul class="fee-details">
+      <li>
+        <p class="label">{{ "TOTALFEE" | translate | async }}</p>
+        <p class="value dropdown">
+          {{ totalFee | numberFixed }} GAS
+          <img
+            (click)="expandTotalFee = !expandTotalFee"
+            class="arrow"
+            [class.expand]="expandTotalFee"
+            src="assets/images/common/support-arrow.svg"
+            alt=""
+          />
+        </p>
+        <p class="value-rate">
+          {{ totalFeeMoney | numberFixed : 2 }} {{ rateCurrency }}
+        </p>
+      </li>
+      <li [hidden]="!expandTotalFee">
+        <p class="label">{{ "SYSTEMFEE" | translate | async }}</p>
+        <p class="value">{{ systemFee | numberFixed }} GAS</p>
+      </li>
+      <li [hidden]="!expandTotalFee">
+        <p class="label">{{ "NETWORKFEE" | translate | async }}</p>
+        <p class="value">{{ networkFee | numberFixed }} GAS</p>
+      </li>
+    </ul>
   </div>
   <div class="content data" *ngIf="!hasDetails || (hasDetails && tabType === 'data')">
     <ul *ngIf="magicNumber">

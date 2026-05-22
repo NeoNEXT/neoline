@@ -650,6 +650,9 @@
   "TOTAL": {
     "message": "合計："
   },
+  "TOTALFEE": {
+    "message": "合計手数料"
+  },
   "PRIORITYFEEUPPER": {
     "message": "優先手数料"
   },

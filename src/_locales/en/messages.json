@@ -650,6 +650,9 @@
   "TOTAL": {
     "message": "Total:"
   },
+  "TOTALFEE": {
+    "message": "Total fee"
+  },
   "PRIORITYFEEUPPER": {
     "message": "Priority fee"
   },
