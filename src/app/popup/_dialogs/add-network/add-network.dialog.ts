@@ -345,7 +345,7 @@ export class PopupAddNetworkDialogComponent implements OnDestroy {
           .subscribe((confirm) => {
             if (confirm) {
               this.selectChainState.selectChainType(this.data.addChainType);
-              this.router.navigateByUrl('/popup/wallet/create');
+              this.router.navigateByUrl('/popup/wallet/import');
             }
           });
       }

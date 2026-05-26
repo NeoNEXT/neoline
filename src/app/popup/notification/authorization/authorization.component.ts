@@ -112,7 +112,7 @@ export class PopupNoticeAuthComponent implements OnInit, OnDestroy {
       .subscribe((confirm) => {
         if (confirm) {
           this.selectChainState.selectChainType('NeoX');
-          this.router.navigateByUrl('/popup/wallet/create');
+          this.router.navigateByUrl('/popup/wallet/import');
         } else {
           this.refuse();
         }

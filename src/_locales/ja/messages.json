@@ -945,13 +945,13 @@
     "message": "ネットワーク"
   },
   "createOrImportNeo2First": {
-    "message": "まずNeo Legacyアカウントを作成またはインポートしてください"
+    "message": "まずNeo Legacyアカウントをインポートしてください"
   },
   "createOrImportNeo3First": {
-    "message": "まずNeo N3アカウントを作成またはインポートしてください"
+    "message": "まずNeo N3アカウントをインポートしてください"
   },
   "createOrImportNeoXFirst": {
-    "message": "まずNeo X (EVM Network)アカウントを作成またはインポートしてください"
+    "message": "まずNeo X (EVM Network)アカウントをインポートしてください"
   },
   "OnePasswordPattern": {
     "message": "共通パスワード設定"

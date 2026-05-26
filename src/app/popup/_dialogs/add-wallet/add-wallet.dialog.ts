@@ -24,7 +24,7 @@ export class PopupAddWalletDialogComponent {
       this.router.navigateByUrl('/ledger');
     }
   }
-  to(type: 'create' | 'import') {
+  to(type: 'import') {
     this.dialogRef.close(type);
   }
 }

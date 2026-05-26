@@ -945,13 +945,13 @@
     "message": "Network"
   },
   "createOrImportNeo2First": {
-    "message": "Please create or import a Neo Legacy account first"
+    "message": "Please import a Neo Legacy account first"
   },
   "createOrImportNeo3First": {
-    "message": "Please create or import a Neo N3 account first"
+    "message": "Please import a Neo N3 account first"
   },
   "createOrImportNeoXFirst": {
-    "message": "Please create or import a Neo X (EVM Network) account first"
+    "message": "Please import a Neo X (EVM Network) account first"
   },
   "OnePasswordPattern": {
     "message": "One pass setting"

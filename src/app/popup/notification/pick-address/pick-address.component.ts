@@ -123,7 +123,7 @@ export class PopupPickAddressComponent implements OnInit {
     }
   }
 
-  to(type: 'create' | 'import') {
+  to(type: 'import') {
     const params = `type=dapi&hostname=${this.hostname}&chainType=${this.chainType}&messageID=${this.messageID}`;
     this.dialog
       .open(PopupSelectDialogComponent, {
@@ -144,9 +144,7 @@ export class PopupPickAddressComponent implements OnInit {
         if (!chain) {
           return;
         }
-        if (type === 'create') {
-          this.router.navigateByUrl(`/popup/wallet/create?${params}`);
-        } else {
+        if (type === 'import') {
           this.router.navigateByUrl(`/popup/wallet/import?${params}`);
         }
       });

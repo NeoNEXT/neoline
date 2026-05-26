@@ -164,7 +164,7 @@ export class PopupWalletSwitchNetworkComponent implements OnInit {
         .subscribe((confirm) => {
           if (confirm) {
             this.selectChainState.selectChainType(switchChainType);
-            this.router.navigateByUrl('/popup/wallet/create');
+            this.router.navigateByUrl('/popup/wallet/import');
           } else {
             this.refuse();
           }

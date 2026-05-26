@@ -46,9 +46,13 @@ export class PopupNewWalletGuideComponent {
 
   private toCreate(type: 'create' | 'import') {
     if (type === 'create') {
-      this.router.navigateByUrl('/popup/wallet/create');
+      this.router.navigateByUrl('/popup/wallet/create', {
+        state: { fromNewGuide: true },
+      });
     } else {
-      this.router.navigateByUrl('/popup/wallet/import');
+      this.router.navigateByUrl('/popup/wallet/import', {
+        state: { fromNewGuide: true },
+      });
     }
   }
 }

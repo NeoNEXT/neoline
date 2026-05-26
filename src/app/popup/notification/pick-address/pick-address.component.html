@@ -26,9 +26,6 @@
   </ul>
   <div *ngIf="!walletArr.length" class="no-wallet">
     <div class="detail">{{ "NoWallet" | translate | async }}</div>
-    <button class="cancel" (click)="to('create')">
-      {{ "createWallet" | translate | async }}
-    </button>
     <button class="confirm" (click)="to('import')">
       {{ "importWallet" | translate | async }}
     </button>

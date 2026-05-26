@@ -945,13 +945,13 @@
     "message": "网络"
   },
   "createOrImportNeo2First": {
-    "message": "请先创建或导入一个 Neo Legacy 账户"
+    "message": "请先导入一个 Neo Legacy 账户"
   },
   "createOrImportNeo3First": {
-    "message": "请先创建或导入一个 Neo N3 账户"
+    "message": "请先导入一个 Neo N3 账户"
   },
   "createOrImportNeoXFirst": {
-    "message": "请先创建或导入一个 Neo X (EVM Network) 账户"
+    "message": "请先导入一个 Neo X (EVM Network) 账户"
   },
   "OnePasswordPattern": {
     "message": "通用密码设置"

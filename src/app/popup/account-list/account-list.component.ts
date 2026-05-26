@@ -313,9 +313,7 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
   }
 
   toCreate(type) {
-    if (type === 'create') {
-      this.router.navigateByUrl('/popup/wallet/create');
-    } else {
+    if (type === 'import') {
       this.router.navigateByUrl('/popup/wallet/import');
     }
   }

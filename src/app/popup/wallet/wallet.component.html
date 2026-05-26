@@ -3,7 +3,7 @@
     [needTranslate]="false"
     [title]="'AddAccount' | translate : { chain: chainName } | async"
   ></nav>
-  <div class="tab">
+  <div class="tab" *ngIf="!hideCreateTab">
     <span
       [ngClass]="{ active: tabType === 'create' }"
       (click)="tabType = 'create'"
@@ -17,7 +17,7 @@
   </div>
   <div class="content">
     <wallet-create
-      *ngIf="getPassword"
+      *ngIf="getPassword && !hideCreateTab"
       [hidden]="tabType === 'import'"
       [password]="password"
       [isOnePassword]="isOnePassword"

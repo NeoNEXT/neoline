@@ -229,7 +229,7 @@ export class PopupNetworkListComponent implements OnDestroy {
         if (confirm) {
           this.close();
           this.selectChainState.selectChainType(newChain);
-          this.router.navigateByUrl('/popup/wallet/create');
+          this.router.navigateByUrl('/popup/wallet/import');
         }
       });
   }
