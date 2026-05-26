@@ -132,13 +132,17 @@ export class PopupWalletImportComponent
   }
 
   ngOnInit() {
-    if (
-      (this.selectChainState.selectedChainType === 'Neo3' ||
-        this.selectChainState.selectedChainType === 'NeoX') &&
-      this.isOnePassword &&
-      this.password
-    ) {
-      this.importTypeList = ['key', 'file', 'mnemonic'];
+    if (this.selectChainState.selectedChainType === 'NeoX') {
+      if (this.isOnePassword || !this.hasPwdWallet) { // 当前还没有没有钱包或者者是一个密码模式，才允许导入助记词
+        this.importTypeList = ['key', 'mnemonic'];
+      } else {
+        this.importTypeList = ['key'];
+      }
+    }
+    if (this.selectChainState.selectedChainType === 'Neo3') {
+      if (this.isOnePassword || !this.hasPwdWallet) {
+        this.importTypeList = ['key', 'file', 'mnemonic'];
+      }
     }
     if (this.isOnePassword && this.password) {
       this.importForm = this.fb.group({
@@ -181,7 +185,13 @@ export class PopupWalletImportComponent
       this.importMnemonicForm = this.fb.group(
         {
           mnemonic: ['', [Validators.required, checkMnemonic()]],
-        }
+          password: [
+            '',
+            [Validators.required, Validators.pattern(/^.{8,128}$/)],
+          ],
+          confirmPassword: ['', [Validators.required]],
+        },
+        { validators: checkPasswords }
       );
       this.nep6Form = this.fb.group(
         {
@@ -243,23 +253,25 @@ export class PopupWalletImportComponent
   }
 
   importMnemonic() {
-    if (
-      !this.isOnePassword ||
-      !this.password ||
-      this.importMnemonicForm.invalid ||
-      this.loading
-    ) {
+    if (this.importMnemonicForm.invalid || this.loading) {
       return;
     }
     this.loading = true;
+    let importPwd;
+    if (this.isOnePassword && this.password) {
+      importPwd = this.password;
+    } else {
+      importPwd = this.importMnemonicForm.value.password;
+    }
     this.neoWalletService
       .importMnemonic(
         this.importMnemonicForm.value.mnemonic,
-        this.password
+        importPwd
       )
       .then((res: any) => {
         this.loading = false;
         if (this.neoWalletService.verifyWallet(res)) {
+          this.setPassword(importPwd);
           this.submitThis.emit(res);
         } else {
           this.global.snackBarTip('existingWallet');
