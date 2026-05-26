@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { ethers } from 'ethers';
 import { bytesToHex } from '@noble/hashes/utils';
-import { v4 as uuid } from 'uuid';
 import { Account3, Wallet3 } from '@popup/_lib';
 import { derivePathNist256p1 } from '../../utils/slip10-nist256p1';
 
@@ -11,7 +10,7 @@ export class NeoHdWalletToolService {
     phrase: string,
     password: string,
     accountName = 'account 1',
-    hdWalletId = uuid(),
+    hdWalletId = 'Wallet 1',
   ): Promise<Wallet3> {
     const mnemonic = this.getMnemonic(phrase);
     const encryptedJson = await ethers.HDNodeWallet.fromMnemonic(

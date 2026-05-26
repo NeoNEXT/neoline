@@ -3,11 +3,11 @@ import { AppState } from '@/app/reduers';
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
-import { v4 as uuid } from 'uuid';
+import { getNextHDWalletId } from '../../utils/app';
 
 @Injectable()
 export class EvmWalletService {
-  private neoXWalletArr: EvmWalletJSON[];
+  private neoXWalletArr: EvmWalletJSON[] = [];
 
   constructor(private store: Store<AppState>) {
     const account$ = this.store.select('account');
@@ -38,7 +38,7 @@ export class EvmWalletService {
       mnemonic: ethers.Wallet.createRandom().mnemonic,
       pwd,
       name: name || 'NeoLineUser',
-      hdWalletId: uuid(),
+      hdWalletId: getNextHDWalletId(this.neoXWalletArr),
       hdWalletIndex: 0,
       encryptedJson: undefined,
       hasBackup: false,
@@ -55,7 +55,7 @@ export class EvmWalletService {
       mnemonic,
       pwd,
       name,
-      hdWalletId: uuid(),
+      hdWalletId: getNextHDWalletId(this.neoXWalletArr),
       hdWalletIndex: 0,
       encryptedJson: undefined,
     });

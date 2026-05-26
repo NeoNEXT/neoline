@@ -22,6 +22,7 @@ import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { EvmWalletService } from '../evm/wallet.service';
 import { SelectChainState } from '../../states/select-chain.state';
 import { NeoHdWalletToolService } from './neo-hd-wallet-tool.service';
+import { getNextHDWalletId } from '../../utils/app';
 
 @Injectable()
 export class NeoWalletService {
@@ -216,7 +217,9 @@ export class NeoWalletService {
     if (this.selectChainState.selectedChainType === 'Neo3') {
       return this.neoHdWalletToolService.getFirstWalletFromPhrase(
         phrase,
-        key
+        key,
+        'account 1',
+        getNextHDWalletId(this.neo3WalletArr || [])
       );
     }
     if (this.selectChainState.selectedChainType === 'NeoX') {

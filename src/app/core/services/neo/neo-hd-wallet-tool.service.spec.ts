@@ -17,7 +17,7 @@ describe('NeoHdWalletToolService', () => {
 
     expect(wallet.name).toBe('account 1');
     expect(extra.isHDWallet).toBeTrue();
-    expect(extra.hdWalletId).toBeTruthy();
+    expect(extra.hdWalletId).toBe('Wallet 1');
     expect(extra.hdWalletIndex).toBe(0);
     expect(extra.encryptedJson).toBeTruthy();
     expect(extra.publicKey).toBe(wallet.accounts[0].publicKey);

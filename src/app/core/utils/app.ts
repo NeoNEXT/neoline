@@ -5,6 +5,7 @@ import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import { ethers } from 'ethers';
 
+const HD_WALLET_ID_PREFIX = 'Wallet ';
 
 export function parseUrl(url: string): any {
   const target = {};
@@ -78,7 +79,7 @@ export function handleWallet(
       let group = hdWalletGroupMap.get(extra.hdWalletId);
       if (!group) {
         group = {
-          title: `Wallet ${hdWalletGroups.length + 1}`,
+          title: extra.hdWalletId,
           walletArr: [],
           expand: true,
           chain,
@@ -118,4 +119,23 @@ export function handleWallet(
     });
   }
   return res;
+}
+
+export function getNextHDWalletId(
+  walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>
+): string {
+  let maxIndex = 0;
+  walletArr.forEach((item) => {
+    const extra = item.accounts[0]?.extra;
+    if (!extra?.isHDWallet || typeof extra.hdWalletId !== 'string') {
+      return;
+    }
+    const match = new RegExp(`^${HD_WALLET_ID_PREFIX}(\\d+)$`).exec(
+      extra.hdWalletId
+    );
+    if (match) {
+      maxIndex = Math.max(maxIndex, Number(match[1]));
+    }
+  });
+  return `${HD_WALLET_ID_PREFIX}${maxIndex + 1}`;
 }

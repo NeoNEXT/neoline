@@ -1,4 +1,4 @@
-import { handleWallet, parseUrl } from './app';
+import { getNextHDWalletId, handleWallet, parseUrl } from './app';
 
 describe('parseUrl', () => {
   it('should parse simple query parameters correctly', () => {
@@ -44,7 +44,7 @@ describe('handleWallet', () => {
     const privateWallet = wallet('private', 'Nprivate');
     const hdWalletA0 = wallet('account 1', 'NA0', {
       isHDWallet: true,
-      hdWalletId: 'group-a',
+      hdWalletId: 'Wallet 1',
       hdWalletIndex: 0,
     });
     const ledgerWallet = wallet('ledger', 'Nledger', {
@@ -52,12 +52,12 @@ describe('handleWallet', () => {
     });
     const hdWalletB0 = wallet('account 1', 'NB0', {
       isHDWallet: true,
-      hdWalletId: 'group-b',
+      hdWalletId: 'Wallet 2',
       hdWalletIndex: 0,
     });
     const hdWalletA1 = wallet('account 2', 'NA1', {
       isHDWallet: true,
-      hdWalletId: 'group-a',
+      hdWalletId: 'Wallet 1',
       hdWalletIndex: 1,
     });
 
@@ -75,11 +75,29 @@ describe('handleWallet', () => {
     ]);
     expect(result[0].walletArr).toEqual([privateWallet]);
     expect(result[1].isHDWalletGroup).toBeTrue();
-    expect(result[1].hdWalletId).toBe('group-a');
+    expect(result[1].hdWalletId).toBe('Wallet 1');
     expect(result[1].walletArr).toEqual([hdWalletA0, hdWalletA1]);
     expect(result[2].isHDWalletGroup).toBeTrue();
-    expect(result[2].hdWalletId).toBe('group-b');
+    expect(result[2].hdWalletId).toBe('Wallet 2');
     expect(result[2].walletArr).toEqual([hdWalletB0]);
     expect(result[3].walletArr).toEqual([ledgerWallet]);
+  });
+
+  it('creates the next HD wallet id from the current maximum Wallet index', () => {
+    const privateWallet = wallet('private', 'Nprivate');
+    const hdWalletA = wallet('account 1', 'NA0', {
+      isHDWallet: true,
+      hdWalletId: 'Wallet 1',
+      hdWalletIndex: 0,
+    });
+    const hdWalletC = wallet('account 1', 'NC0', {
+      isHDWallet: true,
+      hdWalletId: 'Wallet 3',
+      hdWalletIndex: 0,
+    });
+
+    expect(getNextHDWalletId([privateWallet, hdWalletA, hdWalletC])).toBe(
+      'Wallet 4'
+    );
   });
 });
