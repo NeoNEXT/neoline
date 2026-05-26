@@ -26,6 +26,7 @@ export class PopupSortAccountDialogComponent implements AfterViewInit {
   ledgerGroup: WalletListItem;
   oneKeyGroup: WalletListItem;
   qrCodeGroup: WalletListItem;
+  otherGroups: WalletListItem[] = [];
 
   constructor(
     private dialogRef: MatDialogRef<PopupSortAccountDialogComponent>,
@@ -52,6 +53,9 @@ export class PopupSortAccountDialogComponent implements AfterViewInit {
           break;
         case 'QRCode':
           this.qrCodeGroup = temp;
+          break;
+        default:
+          this.otherGroups.push(temp);
           break;
       }
     });
@@ -105,10 +109,28 @@ export class PopupSortAccountDialogComponent implements AfterViewInit {
 
   confirm() {
     const walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON> = [];
-    walletArr.push(...this.privateKeyGroup.walletArr);
-    walletArr.push(...this.ledgerGroup.walletArr);
-    walletArr.push(...(this.oneKeyGroup?.walletArr || []));
-    walletArr.push(...(this.qrCodeGroup?.walletArr || []));
+    this.data.displayList.forEach((item) => {
+      switch (item.title) {
+        case 'Private key':
+          walletArr.push(...(this.privateKeyGroup?.walletArr || []));
+          break;
+        case 'Ledger':
+          walletArr.push(...(this.ledgerGroup?.walletArr || []));
+          break;
+        case 'OneKey':
+          walletArr.push(...(this.oneKeyGroup?.walletArr || []));
+          break;
+        case 'QRCode':
+          walletArr.push(...(this.qrCodeGroup?.walletArr || []));
+          break;
+        default:
+          walletArr.push(
+            ...(this.otherGroups.find((group) => group.title === item.title)
+              ?.walletArr || [])
+          );
+          break;
+      }
+    });
 
     this.store.dispatch({
       type: SORT_WALLETS,

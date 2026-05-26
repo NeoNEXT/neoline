@@ -1037,6 +1037,9 @@
   "AddAccount": {
     "message": "添加 {{chain}} 钱包"
   },
+  "addAccount": {
+    "message": "添加账户"
+  },
   "importWalletTip": {
     "message": "导入助记词或私钥"
   },
@@ -1060,6 +1063,9 @@
   },
   "importMnemonic": {
     "message": "助记词导入"
+  },
+  "previewAddress": {
+    "message": "地址"
   },
   "AddNetworkTip": {
     "message": "请添加你完全受信任的网络！"

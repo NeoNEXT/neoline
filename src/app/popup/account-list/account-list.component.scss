@@ -164,6 +164,24 @@
           }
         }
       }
+      .add-hd-account {
+        height: 48px;
+        margin: 0 24px 12px 50px;
+        display: inline-flex;
+        align-items: center;
+        gap: 12px;
+        color: var(--theme-color);
+        font-family: NeverMind-Medium;
+        cursor: pointer;
+        &:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        img {
+          width: 18px;
+          height: 18px;
+        }
+      }
     }
   }
   button.add-wallet {

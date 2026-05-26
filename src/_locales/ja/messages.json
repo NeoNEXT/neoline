@@ -1037,6 +1037,9 @@
   "AddAccount": {
     "message": "{{chain}}ウォレットを追加"
   },
+  "addAccount": {
+    "message": "アカウントを追加"
+  },
   "importWalletTip": {
     "message": "ニーモニックフレーズまたは秘密鍵をインポート"
   },
@@ -1060,6 +1063,9 @@
   },
   "importMnemonic": {
     "message": "リカバリーフレーズインポート"
+  },
+  "previewAddress": {
+    "message": "アドレス"
   },
   "AddNetworkTip": {
     "message": "完全に信頼できるネットワークのみ追加してください！"

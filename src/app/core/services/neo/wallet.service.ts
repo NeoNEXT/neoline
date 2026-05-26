@@ -21,6 +21,7 @@ import { ethers } from 'ethers';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { EvmWalletService } from '../evm/wallet.service';
 import { SelectChainState } from '../../states/select-chain.state';
+import { NeoHdWalletToolService } from './neo-hd-wallet-tool.service';
 
 @Injectable()
 export class NeoWalletService {
@@ -31,6 +32,7 @@ export class NeoWalletService {
     private chrome: ChromeService,
     private evmService: EvmWalletService,
     private selectChainState: SelectChainState,
+    private neoHdWalletToolService: NeoHdWalletToolService,
     private store: Store<AppState>
   ) {
     const account$ = this.store.select('account');
@@ -207,6 +209,51 @@ export class NeoWalletService {
   //#endregion
 
   //#region import wallet
+  public importMnemonic(
+    phrase: string,
+    key: string
+  ): Promise<Wallet3 | EvmWalletJSON> {
+    if (this.selectChainState.selectedChainType === 'Neo3') {
+      return this.neoHdWalletToolService.getFirstWalletFromPhrase(
+        phrase,
+        key
+      );
+    }
+    if (this.selectChainState.selectedChainType === 'NeoX') {
+      return this.evmService.importWalletFromPhrase(phrase, key);
+    }
+  }
+
+  public getFirstMnemonicAddress(phrase: string): Promise<string> {
+    if (this.selectChainState.selectedChainType === 'Neo3') {
+      return this.neoHdWalletToolService.getFirstAddressFromMnemonic(phrase);
+    }
+    if (this.selectChainState.selectedChainType === 'NeoX') {
+      return Promise.resolve(this.evmService.getFirstAddressFromPhrase(phrase));
+    }
+    return Promise.reject(new Error('Mnemonic import is not supported'));
+  }
+
+  public deriveNextHDWallet(
+    maxIndexWallet: Wallet3 | EvmWalletJSON,
+    password: string,
+    chainType: ChainType
+  ): Promise<Wallet3 | EvmWalletJSON> {
+    if (chainType === 'Neo3') {
+      return this.neoHdWalletToolService.deriveNextWallet(
+        maxIndexWallet as Wallet3,
+        password
+      );
+    }
+    if (chainType === 'NeoX') {
+      return this.evmService.deriveNextWallet(
+        maxIndexWallet as EvmWalletJSON,
+        password
+      );
+    }
+    return Promise.reject(new Error('Mnemonic account is not supported'));
+  }
+
   /**
    * Create a new wallet include given private key and encrypt by given password.
    * 创建包含指定私钥的新钱包，并进行加密

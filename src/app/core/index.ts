@@ -21,6 +21,7 @@ export { EvmDappService } from './services/evm/dapp.service';
 
 export { NeoWalletService } from './services/neo/wallet.service';
 export { Neo3Service } from './services/neo/neo3.service';
+export { NeoHdWalletToolService } from './services/neo/neo-hd-wallet-tool.service';
 export { Neo2TxService } from './services/neo/neo2-tx.service';
 export { NeoNFTService } from './services/neo/nft.service';
 export { NeoTxService } from './services/neo/tx.service';

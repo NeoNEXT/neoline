@@ -58,6 +58,13 @@ export class Account3 extends Account {
     /** for create account */
     hasBackup?: boolean;
 
+    /** for HD wallet account */
+    isHDWallet?: boolean;
+    hdWalletId?: string;
+    hdWalletIndex?: number;
+    /** encrypted mnemonic carrier for HD wallets */
+    encryptedJson?: string;
+
     /** for hardware account */
     publicKey?: string;
     ledgerSLIP44?: string;

@@ -46,8 +46,16 @@ export function handleWallet(
   walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>,
   chain: ChainType
 ): WalletListItem[] {
+  const hdWalletGroups: WalletListItem[] = [];
+  const hdWalletGroupMap = new Map<string, WalletListItem>();
+  const isGroupedHDWallet = (item: Wallet2 | Wallet3 | EvmWalletJSON) => {
+    const extra = item.accounts[0]?.extra;
+    return chain !== 'Neo2' && extra?.isHDWallet && !!extra.hdWalletId;
+  };
   const privateWalletArr = walletArr.filter(
-    (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+    (item) =>
+      !item.accounts[0]?.extra?.ledgerSLIP44 &&
+      !isGroupedHDWallet(item)
   );
   const ledgerWalletArr = walletArr.filter(
     (item) =>
@@ -61,6 +69,28 @@ export function handleWallet(
   const qrBasedWalletArr = walletArr.filter(
     (item) => item.accounts[0]?.extra?.device === 'QRCode'
   );
+  if (chain !== 'Neo2') {
+    walletArr.forEach((item) => {
+      const extra = item.accounts[0]?.extra;
+      if (!isGroupedHDWallet(item)) {
+        return;
+      }
+      let group = hdWalletGroupMap.get(extra.hdWalletId);
+      if (!group) {
+        group = {
+          title: `Wallet ${hdWalletGroups.length + 1}`,
+          walletArr: [],
+          expand: true,
+          chain,
+          isHDWalletGroup: true,
+          hdWalletId: extra.hdWalletId,
+        };
+        hdWalletGroupMap.set(extra.hdWalletId, group);
+        hdWalletGroups.push(group);
+      }
+      group.walletArr.push(item);
+    });
+  }
   const res: WalletListItem[] = [
     {
       title: 'Private key',
@@ -68,6 +98,7 @@ export function handleWallet(
       expand: true,
       chain,
     },
+    ...hdWalletGroups,
     { title: 'Ledger', walletArr: ledgerWalletArr, expand: true, chain },
   ];
   if (chain !== 'Neo2') {

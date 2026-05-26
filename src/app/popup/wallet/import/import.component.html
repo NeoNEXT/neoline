@@ -153,18 +153,6 @@
   </form>
   <form [hidden]="importType !== 'mnemonic'" [formGroup]="importMnemonicForm">
     <mat-form-field class="form-field" appearance="fill">
-      <img matPrefix theme src="/assets/images/login/wallet.svg" alt="" />
-      <mat-label>{{ "enterWalletName" | translate | async }}</mat-label>
-      <input matInput required formControlName="name" />
-      <mat-error *ngIf="importMnemonicForm.get('name').errors?.required">
-        {{ "walletNameIsRequired" | translate | async }}
-      </mat-error>
-      <mat-error *ngIf="importMnemonicForm.get('name').errors?.pattern">
-        {{ "lengthLimit" | translate | async }}:
-        {{ limit?.nameLimitation[0] }}-{{ limit?.nameLimitation[1] }}
-      </mat-error>
-    </mat-form-field>
-    <mat-form-field class="form-field" appearance="fill">
       <img matPrefix theme src="/assets/images/login/key.svg" alt="" />
       <mat-label>{{ "enterMnemonic" | translate | async }}</mat-label>
       <input
@@ -172,6 +160,7 @@
         required
         formControlName="mnemonic"
         [type]="hideMnemonic ? 'password' : 'text'"
+        (input)="updateMnemonicPreview()"
         (keyup.enter)="
           !isInit && !importMnemonicForm.invalid && !loading
             ? importMnemonic()
@@ -198,69 +187,13 @@
         {{ "MnemonicPattern" | translate | async }}
       </mat-error>
     </mat-form-field>
-    <mat-form-field
-      *ngIf="!isOnePassword"
-      class="form-field"
-      appearance="fill"
-      focused="true"
+    <div
+      class="mnemonic-preview"
+      *ngIf="mnemonicPreviewAddress"
     >
-      <img matPrefix theme src="/assets/images/login/lock.svg" alt="" />
-      <mat-label>{{ "enterPassword" | translate | async }}</mat-label>
-      <input
-        matInput
-        required
-        formControlName="password"
-        [type]="hideImportMnemonicPwd ? 'password' : 'text'"
-      />
-      <img
-        class="suffix"
-        (click)="hideImportMnemonicPwd = !hideImportMnemonicPwd"
-        matSuffix
-        theme
-        [src]="
-          hideImportMnemonicPwd
-            ? 'assets/images/login/eye-hide.svg'
-            : 'assets/images/login/eye-view.svg'
-        "
-      />
-      <mat-error *ngIf="importMnemonicForm.get('password').errors?.required">
-        {{ "passwordRequired" | translate | async }}
-      </mat-error>
-      <mat-error *ngIf="importMnemonicForm.get('password').errors?.pattern">
-        {{ "lengthLimit" | translate | async }}:
-        {{ limit?.passwordLimitation[0] }}-{{ limit?.passwordLimitation[1] }}
-      </mat-error>
-    </mat-form-field>
-    <mat-form-field
-      *ngIf="!isOnePassword"
-      class="form-field"
-      appearance="fill"
-      focused="true"
-    >
-      <img matPrefix theme src="/assets/images/login/lock.svg" />
-      <mat-label>{{ "enterConfirmPassword" | translate | async }}</mat-label>
-      <input
-        matInput
-        required
-        formControlName="confirmPassword"
-        [errorStateMatcher]="matcher"
-        [type]="hideConfirmMnemonicPwd ? 'password' : 'text'"
-      />
-      <img
-        class="suffix"
-        (click)="hideConfirmMnemonicPwd = !hideConfirmMnemonicPwd"
-        matSuffix
-        theme
-        [src]="
-          hideConfirmMnemonicPwd
-            ? 'assets/images/login/eye-hide.svg'
-            : 'assets/images/login/eye-view.svg'
-        "
-      />
-      <mat-error *ngIf="importMnemonicForm.hasError('notSame')">
-        {{ "confirmError" | translate | async }}
-      </mat-error>
-    </mat-form-field>
+      <p>{{ "previewAddress" | translate | async }}</p>
+      <span>{{ mnemonicPreviewAddress }}</span>
+    </div>
   </form>
   <div [hidden]="importType !== 'file'" class="import-nep6-file">
     <button class="confirm pop-ups choose-file">

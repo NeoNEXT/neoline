@@ -58,7 +58,7 @@ function checkWIF(chainType: ChainType): ValidatorFn {
 
 function checkMnemonic(): ValidatorFn {
   return (control: AbstractControl): { [key: string]: any } | null => {
-    const mnemonic = control.value;
+    const mnemonic = control.value?.trim().replace(/\s+/g, ' ');
     if (!mnemonic) {
       return null;
     }
@@ -94,6 +94,7 @@ export class PopupWalletImportComponent
   hideImportMnemonicPwd = true;
   hideConfirmMnemonicPwd = true;
   hideMnemonic = true;
+  mnemonicPreviewAddress = '';
 
   nep6Form: UntypedFormGroup;
   nep6Json;
@@ -131,14 +132,13 @@ export class PopupWalletImportComponent
   }
 
   ngOnInit() {
-    if (this.selectChainState.selectedChainType === 'NeoX') {
-      if (
-        this.neoXWalletArr.some((item) => item.accounts[0].extra.isHDWallet)
-      ) {
-        this.importTypeList = ['key'];
-      } else {
-        this.importTypeList = ['key', 'mnemonic'];
-      }
+    if (
+      (this.selectChainState.selectedChainType === 'Neo3' ||
+        this.selectChainState.selectedChainType === 'NeoX') &&
+      this.isOnePassword &&
+      this.password
+    ) {
+      this.importTypeList = ['key', 'file', 'mnemonic'];
     }
     if (this.isOnePassword && this.password) {
       this.importForm = this.fb.group({
@@ -152,7 +152,6 @@ export class PopupWalletImportComponent
         ],
       });
       this.importMnemonicForm = this.fb.group({
-        name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
         mnemonic: ['', [Validators.required, checkMnemonic()]],
       });
       this.nep6Form = this.fb.group({
@@ -181,15 +180,8 @@ export class PopupWalletImportComponent
       );
       this.importMnemonicForm = this.fb.group(
         {
-          name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
           mnemonic: ['', [Validators.required, checkMnemonic()]],
-          password: [
-            '',
-            [Validators.required, Validators.pattern(/^.{8,128}$/)],
-          ],
-          confirmPassword: ['', [Validators.required]],
-        },
-        { validators: checkPasswords }
+        }
       );
       this.nep6Form = this.fb.group(
         {
@@ -251,32 +243,56 @@ export class PopupWalletImportComponent
   }
 
   importMnemonic() {
-    this.loading = true;
-    let importPwd;
-    if (this.isOnePassword && this.password) {
-      importPwd = this.password;
-    } else {
-      importPwd = this.importMnemonicForm.value.password;
-    }
     if (
-      ethers.Mnemonic.isValidMnemonic(this.importMnemonicForm.value.mnemonic)
+      !this.isOnePassword ||
+      !this.password ||
+      this.importMnemonicForm.invalid ||
+      this.loading
     ) {
-      this.evmService
-        .importWalletFromPhrase(
-          this.importMnemonicForm.value.mnemonic,
-          importPwd,
-          this.importMnemonicForm.value.name
-        )
-        .then((res: any) => {
-          this.loading = false;
-          if (this.neoWalletService.verifyWallet(res)) {
-            this.setPassword(importPwd);
-            this.submitThis.emit(res);
-          } else {
-            this.global.snackBarTip('existingWallet');
-          }
-        });
+      return;
     }
+    this.loading = true;
+    this.neoWalletService
+      .importMnemonic(
+        this.importMnemonicForm.value.mnemonic,
+        this.password
+      )
+      .then((res: any) => {
+        this.loading = false;
+        if (this.neoWalletService.verifyWallet(res)) {
+          this.submitThis.emit(res);
+        } else {
+          this.global.snackBarTip('existingWallet');
+        }
+      })
+      .catch((err: any) => {
+        this.global.log('import mnemonic wallet failed', err);
+        this.global.snackBarTip('walletImportFailed');
+        this.loading = false;
+      });
+  }
+
+  updateMnemonicPreview() {
+    this.mnemonicPreviewAddress = '';
+    if (this.importMnemonicForm.get('mnemonic').invalid) {
+      return;
+    }
+    this.neoWalletService
+      .getFirstMnemonicAddress(this.importMnemonicForm.value.mnemonic)
+      .then((address) => {
+        const mnemonic = this.importMnemonicForm.value.mnemonic
+          ?.trim()
+          .replace(/\s+/g, ' ');
+        if (
+          this.importMnemonicForm.get('mnemonic').valid &&
+          ethers.Mnemonic.isValidMnemonic(mnemonic)
+        ) {
+          this.mnemonicPreviewAddress = address;
+        }
+      })
+      .catch(() => {
+        this.mnemonicPreviewAddress = '';
+      });
   }
 
   importKey() {

@@ -96,6 +96,15 @@
           />
         </li>
       </ul>
+      <button
+        class="add-hd-account"
+        *ngIf="list.isHDWalletGroup && list.expand && !isSearching"
+        (click)="addHDAccount($event, list)"
+        [disabled]="addingHdWalletId === list.hdWalletId"
+      >
+        <img theme src="/assets/images/asset/plus.svg" alt="" />
+        <span>{{ "addAccount" | translate | async }}</span>
+      </button>
     </div>
   </div>
   <button class="confirm pop-ups add-wallet" (click)="showAddWallet()">

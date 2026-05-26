@@ -1037,6 +1037,9 @@
   "AddAccount": {
     "message": "Add {{chain}} account"
   },
+  "addAccount": {
+    "message": "Add account"
+  },
   "importWalletTip": {
     "message": "Import mnemonic phrase or private key"
   },
@@ -1060,6 +1063,9 @@
   },
   "importMnemonic": {
     "message": "Secret recovery phrase import"
+  },
+  "previewAddress": {
+    "message": "Address"
   },
   "AddNetworkTip": {
     "message": "Please add a network only if you completely trust it!"

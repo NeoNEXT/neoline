@@ -21,7 +21,10 @@ export interface EvmWalletJSON {
         /** for create account */
         // publicKey: string;
         isHDWallet?: boolean;
+        hdWalletId?: string;
         hdWalletIndex?: number;
+        /** ethers keystore, used by private key and HD wallets */
+        encryptedJson?: string;
         hasBackup?: boolean;
 
         /** for hardware wallet */

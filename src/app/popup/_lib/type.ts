@@ -38,14 +38,9 @@ export interface QRCodeWallet {
 }
 export interface WalletListItem {
   chain: ChainType;
-  title:
-    | 'Neo N3'
-    | 'Neo X (EVM Network)'
-    | 'Neo Legacy'
-    | 'Private key'
-    | 'Ledger'
-    | 'OneKey'
-    | 'QRCode';
+  title: string;
   expand: boolean;
   walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>;
+  isHDWalletGroup?: boolean;
+  hdWalletId?: string;
 }

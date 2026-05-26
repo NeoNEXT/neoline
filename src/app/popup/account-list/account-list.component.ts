@@ -18,6 +18,8 @@ import { Router } from '@angular/router';
 import {
   ChainType,
   UPDATE_WALLET,
+  ADD_NEO3_WALLETS,
+  ADD_NEOX_WALLET,
   NEO3_CONTRACT,
   STORAGE_NAME,
   RpcNetwork,
@@ -71,6 +73,7 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
   neo3WalletArr: Array<Wallet3>;
   neoXWalletArr: Array<EvmWalletJSON>;
   neoXNetwork: RpcNetwork;
+  addingHdWalletId = '';
 
   moreModalWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   moreModalChainType: ChainType;
@@ -178,7 +181,7 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     );
   }
 
-  async selectAccount(w: Wallet2 | Wallet3, chain: ChainType) {
+  async selectAccount(w: Wallet2 | Wallet3 | EvmWalletJSON, chain: ChainType) {
     const hasLoginAddress = await this.chromeSrc.getHasLoginAddress();
     if (
       w.accounts[0]?.extra?.ledgerSLIP44 ||
@@ -208,11 +211,67 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
       });
   }
 
-  private changeAccount(w: Wallet2 | Wallet3) {
+  private changeAccount(w: Wallet2 | Wallet3 | EvmWalletJSON) {
     this.wallet = w;
     this.store.dispatch({ type: UPDATE_WALLET, data: w });
     this.chromeSrc.accountChangeEvent(w);
     this.router.navigateByUrl('/popup/home');
+  }
+
+  async addHDAccount(e: Event, list: WalletListItem) {
+    e.stopPropagation();
+    if (
+      this.addingHdWalletId ||
+      !list.isHDWalletGroup ||
+      !list.hdWalletId ||
+      (list.chain !== 'Neo3' && list.chain !== 'NeoX')
+    ) {
+      return;
+    }
+    const pwd = await this.chromeSrc.getPassword();
+    if (!this.isOnePassword || !pwd) {
+      this.global.snackBarTip('switchOnePasswordFirst');
+      return;
+    }
+    const maxIndexWallet = list.walletArr.reduce((target, item) => {
+      const targetIndex = target.accounts[0].extra?.hdWalletIndex ?? -1;
+      const itemIndex = item.accounts[0].extra?.hdWalletIndex ?? -1;
+      return itemIndex > targetIndex ? item : target;
+    });
+
+    this.addingHdWalletId = list.hdWalletId;
+    try {
+      const newWallet = await this.neoWalletService.deriveNextHDWallet(
+        maxIndexWallet as Wallet3 | EvmWalletJSON,
+        pwd,
+        list.chain
+      );
+      if (!this.neoWalletService.verifyWallet(newWallet)) {
+        this.global.snackBarTip('existingWallet');
+        return;
+      }
+      if (list.chain === 'Neo3') {
+        this.store.dispatch({
+          type: ADD_NEO3_WALLETS,
+          data: { wallet: [newWallet], wif: [''] },
+        });
+      } else {
+        this.store.dispatch({
+          type: ADD_NEOX_WALLET,
+          data: { wallet: newWallet },
+        });
+      }
+      this.store.dispatch({ type: UPDATE_WALLET, data: newWallet });
+      this.chromeSrc.setHasLoginAddress(newWallet.accounts[0].address);
+      this.chromeSrc.accountChangeEvent(
+        list.chain === 'NeoX' ? newWallet : (newWallet as Wallet3).export()
+      );
+    } catch (err) {
+      this.global.log('add hd account failed', err);
+      this.global.snackBarTip('walletImportFailed');
+    } finally {
+      this.addingHdWalletId = '';
+    }
   }
 
   showAddWallet() {

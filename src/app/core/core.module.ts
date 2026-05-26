@@ -24,6 +24,7 @@ import { EvmDappService } from './services/evm/dapp.service';
 
 import { NeoWalletService } from './services/neo/wallet.service';
 import { Neo3Service } from './services/neo/neo3.service';
+import { NeoHdWalletToolService } from './services/neo/neo-hd-wallet-tool.service';
 import { Neo2TxService } from './services/neo/neo2-tx.service';
 import { NeoNFTService } from './services/neo/nft.service';
 import { NeoTxService } from './services/neo/tx.service';
@@ -71,6 +72,7 @@ import { RateState } from './states/rate.state';
     EvmDappService,
     QRBasedService,
     Neo3Service,
+    NeoHdWalletToolService,
     BridgeService,
     NeoAssetInfoState,
     SelectChainState,

@@ -46,8 +46,13 @@ export class PopupPrivateKeyComponent implements OnInit {
     }
     this.loading = true;
     if (this.data.chainType === 'NeoX') {
+      const encryptedJson =
+        this.data.showMnemonic &&
+        this.data.currentWallet.accounts[0]?.extra?.encryptedJson
+          ? this.data.currentWallet.accounts[0].extra.encryptedJson
+          : JSON.stringify(this.data.currentWallet);
       ethers.Wallet.fromEncryptedJson(
-        JSON.stringify(this.data.currentWallet),
+        encryptedJson,
         this.pwd
       )
         .then((res) => {
@@ -58,6 +63,26 @@ export class PopupPrivateKeyComponent implements OnInit {
           } else {
             this.wif = res.privateKey;
           }
+        })
+        .catch((err) => {
+          this.loading = false;
+          this.global.snackBarTip('verifyFailed', err);
+        });
+      return;
+    }
+    if (this.data.chainType === 'Neo3' && this.data.showMnemonic) {
+      const encryptedJson =
+        this.data.currentWallet.accounts[0]?.extra?.encryptedJson;
+      if (!encryptedJson) {
+        this.loading = false;
+        this.global.snackBarTip('verifyFailed');
+        return;
+      }
+      ethers.Wallet.fromEncryptedJson(encryptedJson, this.pwd)
+        .then((res) => {
+          this.loading = false;
+          this.verified = true;
+          this.wif = (res as ethers.HDNodeWallet).mnemonic.phrase;
         })
         .catch((err) => {
           this.loading = false;
