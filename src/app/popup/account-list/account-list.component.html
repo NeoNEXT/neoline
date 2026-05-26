@@ -64,7 +64,9 @@
           *ngFor="let item of list.walletArr; index as index"
           (click)="selectAccount(item, list.chain)"
           [ngClass]="{
-            active: wallet.accounts[0].address === item.accounts[0].address
+            active: wallet.accounts[0].address === item.accounts[0].address,
+            'new-account':
+              newHDAccountAddress === item.accounts[0].address
           }"
         >
           <span class="select"></span>
@@ -102,7 +104,7 @@
         (click)="addHDAccount($event, list)"
         [disabled]="addingHdWalletId === list.hdWalletId"
       >
-        <img theme src="/assets/images/asset/plus.svg" alt="" />
+        <span class="add-icon"></span>
         <span>{{ "addAccount" | translate | async }}</span>
       </button>
     </div>

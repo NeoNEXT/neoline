@@ -112,6 +112,9 @@
           &:hover {
             background: var(--hover-color);
           }
+          &.new-account {
+            animation: showNewAccount 0.4s ease-out forwards;
+          }
           .select {
             display: inline-block;
             width: 18px;
@@ -165,21 +168,54 @@
         }
       }
       .add-hd-account {
-        height: 48px;
-        margin: 0 24px 12px 50px;
+        height: 36px;
+        margin: 12px 24px 16px 70px;
+        padding: 0 16px;
+        border: 1px solid var(--theme-color);
+        border-radius: 4px;
+        background: transparent;
         display: inline-flex;
         align-items: center;
-        gap: 12px;
+        justify-content: center;
+        gap: 8px;
         color: var(--theme-color);
         font-family: NeverMind-Medium;
         cursor: pointer;
+        transition: background 0.2s, opacity 0.2s, transform 0.2s;
+        &:hover:not(:disabled) {
+          background: rgba(6, 204, 171, 0.08);
+        }
+        &:active:not(:disabled) {
+          transform: scale(0.98);
+        }
         &:disabled {
           opacity: 0.6;
           cursor: not-allowed;
         }
-        img {
-          width: 18px;
-          height: 18px;
+        .add-icon {
+          width: 14px;
+          height: 14px;
+          position: relative;
+          flex-shrink: 0;
+          &::before,
+          &::after {
+            content: "";
+            position: absolute;
+            background: currentColor;
+            border-radius: 1px;
+          }
+          &::before {
+            width: 14px;
+            height: 2px;
+            top: 6px;
+            left: 0;
+          }
+          &::after {
+            width: 2px;
+            height: 14px;
+            top: 0;
+            left: 6px;
+          }
         }
       }
     }
@@ -199,5 +235,16 @@
       height: 48px;
       font-size: 14px;
     }
+  }
+}
+
+@keyframes showNewAccount {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
   }
 }

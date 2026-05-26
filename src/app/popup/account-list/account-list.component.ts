@@ -74,6 +74,7 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
   neoXWalletArr: Array<EvmWalletJSON>;
   neoXNetwork: RpcNetwork;
   addingHdWalletId = '';
+  newHDAccountAddress = '';
 
   moreModalWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   moreModalChainType: ChainType;
@@ -250,6 +251,7 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
         this.global.snackBarTip('existingWallet');
         return;
       }
+      this.newHDAccountAddress = newWallet.accounts[0].address;
       if (list.chain === 'Neo3') {
         this.store.dispatch({
           type: ADD_NEO3_WALLETS,
@@ -266,6 +268,11 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
       this.chromeSrc.accountChangeEvent(
         list.chain === 'NeoX' ? newWallet : (newWallet as Wallet3).export()
       );
+      setTimeout(() => {
+        if (this.newHDAccountAddress === newWallet.accounts[0].address) {
+          this.newHDAccountAddress = '';
+        }
+      }, 500);
     } catch (err) {
       this.global.log('add hd account failed', err);
       this.global.snackBarTip('walletImportFailed');
