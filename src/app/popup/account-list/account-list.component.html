@@ -133,7 +133,10 @@
       }}
     </li>
     <li
-      *ngIf="!moreModalWallet?.accounts?.[0].extra?.ledgerSLIP44"
+      *ngIf="
+        !moreModalWallet?.accounts?.[0].extra?.ledgerSLIP44 &&
+        !moreModalWallet?.accounts?.[0].extra?.isHDWallet
+      "
       (click)="exportWallet()"
     >
       <img theme src="assets/images/avatar-menu/wallet-export.svg" alt="" />{{

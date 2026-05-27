@@ -427,6 +427,7 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
   //#region wallet
   private exportThisWallet() {
     if (this.moreModalWallet.accounts[0]?.extra?.ledgerSLIP44) return;
+    if (this.moreModalWallet.accounts[0]?.extra?.isHDWallet) return;
     if (this.moreModalChainType !== 'NeoX') {
       const exportJson = JSON.stringify(
         (this.moreModalWallet as Wallet2).export()
@@ -451,7 +452,10 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     if (this.moreModalChainType === 'Neo2') {
       const neo2ExportWallet = new wallet2.Wallet({ name: 'NeoLineUser' });
       for (const item of this.neo2WalletArr as Wallet2[]) {
-        if (item.accounts[0]?.extra?.ledgerSLIP44) {
+        if (
+          item.accounts[0]?.extra?.ledgerSLIP44 ||
+          item.accounts[0]?.extra?.isHDWallet
+        ) {
           continue;
         }
         const account = item.accounts[0];
@@ -463,7 +467,10 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
     } else if (this.moreModalChainType === 'Neo3') {
       const neo3ExportWallet = new wallet3.Wallet({ name: 'NeoLineUser' });
       for (const item of this.neo3WalletArr as Wallet3[]) {
-        if (item.accounts[0]?.extra?.ledgerSLIP44) {
+        if (
+          item.accounts[0]?.extra?.ledgerSLIP44 ||
+          item.accounts[0]?.extra?.isHDWallet
+        ) {
           continue;
         }
         const account = item.accounts[0];

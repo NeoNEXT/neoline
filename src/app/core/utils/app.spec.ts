@@ -137,7 +137,7 @@ describe('migrateLegacyNeoXHDWallets', () => {
     expect(extra.encryptedJson).toBe(JSON.stringify(legacyWallet));
   });
 
-  it('removes top-level keystore fields from current NeoX HD wallets', () => {
+  it('leaves NeoX HD wallets with an HD wallet id unchanged', () => {
     const wallet = {
       name: 'account 1',
       address: '0xabc',
@@ -159,18 +159,8 @@ describe('migrateLegacyNeoXHDWallets', () => {
     } as any;
 
     const result = migrateLegacyNeoXHDWallets([wallet]);
-    const migratedWallet = result.walletArr[0];
-
-    expect(result.changed).toBeTrue();
-    expect(Object.keys(migratedWallet)).toEqual(['name', 'accounts']);
-    expect(migratedWallet.accounts[0].extra).toEqual({
-      publicKey: '0xpub',
-      isHDWallet: true,
-      hdWalletId: 'Wallet 2',
-      hdWalletIndex: 0,
-      encryptedJson: '{}',
-      hasBackup: true,
-    });
+    expect(result.changed).toBeFalse();
+    expect(result.walletArr[0]).toBe(wallet);
   });
 
   it('leaves lightweight NeoX HD wallets unchanged', () => {
