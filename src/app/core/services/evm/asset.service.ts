@@ -10,23 +10,12 @@ import { ethers } from 'ethers';
 export class EvmAssetService {
   private neoXNetwork: RpcNetwork;
   private provider: ethers.JsonRpcProvider;
+  private providerNetworkKey = '';
 
   constructor(private store: Store<AppState>) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
-      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
-      this.provider?.destroy();
-      const network = new ethers.Network(
-        this.neoXNetwork.name,
-        this.neoXNetwork.chainId
-      );
-      this.provider = new ethers.JsonRpcProvider(
-        this.neoXNetwork.rpcUrl,
-        network,
-        {
-          staticNetwork: network,
-        }
-      );
+      this.updateProvider(state.neoXNetworks[state.neoXNetworkIndex]);
     });
   }
 
@@ -82,5 +71,30 @@ export class EvmAssetService {
       decimals: ethers.toNumber(decimals),
     };
     return asset;
+  }
+
+  private updateProvider(neoXNetwork: RpcNetwork) {
+    if (!neoXNetwork) {
+      return;
+    }
+    this.neoXNetwork = neoXNetwork;
+    const providerNetworkKey = this.getProviderNetworkKey(neoXNetwork);
+    if (this.provider && this.providerNetworkKey === providerNetworkKey) {
+      return;
+    }
+    this.provider?.destroy();
+    const network = new ethers.Network(neoXNetwork.name, neoXNetwork.chainId);
+    this.provider = new ethers.JsonRpcProvider(neoXNetwork.rpcUrl, network, {
+      staticNetwork: network,
+    });
+    this.providerNetworkKey = providerNetworkKey;
+  }
+
+  private getProviderNetworkKey(neoXNetwork: RpcNetwork): string {
+    return [
+      neoXNetwork.rpcUrl,
+      neoXNetwork.chainId,
+      neoXNetwork.name,
+    ].join('|');
   }
 }
