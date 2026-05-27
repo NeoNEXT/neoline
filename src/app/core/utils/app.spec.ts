@@ -1,4 +1,9 @@
-import { getNextHDWalletId, handleWallet, parseUrl } from './app';
+import {
+  getNextHDWalletId,
+  handleWallet,
+  migrateLegacyNeoXHDWallets,
+  parseUrl,
+} from './app';
 
 describe('parseUrl', () => {
   it('should parse simple query parameters correctly', () => {
@@ -99,5 +104,56 @@ describe('handleWallet', () => {
     expect(getNextHDWalletId([privateWallet, hdWalletA, hdWalletC])).toBe(
       'Wallet 4'
     );
+  });
+});
+
+describe('migrateLegacyNeoXHDWallets', () => {
+  it('assigns legacy NeoX HD wallets to Wallet 1 and stores a carrier', () => {
+    const legacyWallet = {
+      name: 'account 1',
+      address: '0xabc',
+      crypto: {},
+      accounts: [
+        {
+          address: '0xabc',
+          extra: {
+            publicKey: '0xpub',
+            isHDWallet: true,
+            hdWalletIndex: 0,
+          },
+        },
+      ],
+    } as any;
+
+    const result = migrateLegacyNeoXHDWallets([legacyWallet]);
+    const extra = result.walletArr[0].accounts[0].extra;
+
+    expect(result.changed).toBeTrue();
+    expect(extra.hdWalletId).toBe('Wallet 1');
+    expect(extra.hdWalletIndex).toBe(0);
+    expect(extra.encryptedJson).toBe(JSON.stringify(legacyWallet));
+  });
+
+  it('leaves current NeoX HD wallets unchanged', () => {
+    const wallet = {
+      name: 'account 1',
+      accounts: [
+        {
+          address: '0xabc',
+          extra: {
+            publicKey: '0xpub',
+            isHDWallet: true,
+            hdWalletId: 'Wallet 2',
+            hdWalletIndex: 0,
+            encryptedJson: '{}',
+          },
+        },
+      ],
+    } as any;
+
+    const result = migrateLegacyNeoXHDWallets([wallet]);
+
+    expect(result.changed).toBeFalse();
+    expect(result.walletArr[0]).toBe(wallet);
   });
 });

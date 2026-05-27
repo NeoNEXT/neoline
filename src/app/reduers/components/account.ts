@@ -386,14 +386,20 @@ function updateWalletBackupStatus(
   chainType: ChainType
 ): any {
   const targetWalletArr = [...sourceWalletArr];
-  if (chainType === 'Neo2' || chainType === 'Neo3') {
+  if (chainType === 'Neo2') {
     targetWalletArr.find(
       (item) => item.accounts[0].address === data.address
     ).accounts[0].extra.hasBackup = true;
   }
-  if (chainType === 'NeoX') {
+  if (chainType === 'Neo3' || chainType === 'NeoX') {
     targetWalletArr.forEach((item) => {
-      if (item.accounts[0].extra.isHDWallet) {
+      const extra = item.accounts[0].extra;
+      const isSameHDWalletGroup =
+        data.hdWalletId &&
+        extra?.isHDWallet &&
+        extra.hdWalletId === data.hdWalletId;
+      const isSameAccount = item.accounts[0].address === data.address;
+      if (isSameHDWalletGroup || (!data.hdWalletId && isSameAccount)) {
         item.accounts[0].extra.hasBackup = true;
       }
     });

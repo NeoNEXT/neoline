@@ -53,6 +53,39 @@ export function parseWallet(src: any): Wallet2 | Wallet3 | EvmWalletJSON {
   }
 }
 
+export function migrateLegacyNeoXHDWallets(
+  walletArr: EvmWalletJSON[] = []
+): { walletArr: EvmWalletJSON[]; changed: boolean } {
+  let changed = false;
+  const targetWalletArr = walletArr.map((item) => {
+    const account = item.accounts[0];
+    const extra = account?.extra;
+    if (!extra?.isHDWallet || extra.hdWalletId) {
+      return item;
+    }
+    changed = true;
+    const encryptedJson = extra.encryptedJson || JSON.stringify(item);
+    return {
+      ...item,
+      accounts: [
+        {
+          ...account,
+          extra: {
+            ...extra,
+            hdWalletId: 'Wallet 1',
+            hdWalletIndex:
+              typeof extra.hdWalletIndex === 'number'
+                ? extra.hdWalletIndex
+                : 0,
+            encryptedJson,
+          },
+        },
+      ],
+    } as EvmWalletJSON;
+  });
+  return { walletArr: targetWalletArr, changed };
+}
+
 export function handleWallet(
   walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>,
   chain: ChainType

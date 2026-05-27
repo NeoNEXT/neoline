@@ -20,7 +20,7 @@ import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
 import { DEFAULT_NEOX_RPC_NETWORK } from '@/app/popup/_lib/evm';
-import { parseWallet } from '../utils/app';
+import { migrateLegacyNeoXHDWallets, parseWallet } from '../utils/app';
 
 @Injectable()
 export class InitService {
@@ -104,6 +104,28 @@ export class InitService {
             tempArr.push(parseWallet(item));
           });
           neo3WalletArrRes = tempArr;
+        }
+        const neoXMigration = migrateLegacyNeoXHDWallets(
+          neoXWalletArrRes || []
+        );
+        neoXWalletArrRes = neoXMigration.walletArr;
+        if (neoXMigration.changed) {
+          this.chrome.setStorage(
+            STORAGE_NAME['walletArr-NeoX'],
+            neoXWalletArrRes
+          );
+        }
+        if (ethers.isAddress(walletRes.accounts[0].address)) {
+          const migratedCurrentWallet = neoXWalletArrRes.find(
+            (item) =>
+              item.accounts[0].address === walletRes.accounts[0].address
+          );
+          if (migratedCurrentWallet) {
+            walletRes = migratedCurrentWallet;
+            if (neoXMigration.changed) {
+              this.chrome.setStorage(STORAGE_NAME.wallet, walletRes);
+            }
+          }
         }
         const address = walletRes.accounts[0].address;
         const chainType: ChainType = ethers.isAddress(address)

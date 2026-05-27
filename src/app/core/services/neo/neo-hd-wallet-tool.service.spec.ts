@@ -23,6 +23,22 @@ describe('NeoHdWalletToolService', () => {
     expect(extra.publicKey).toBe(wallet.accounts[0].publicKey);
   });
 
+  it('creates a new N3 HD wallet that requires mnemonic backup', async () => {
+    const wallet = await service.createWallet(
+      password,
+      'My account',
+      'Wallet 2'
+    );
+    const extra = wallet.accounts[0].extra;
+
+    expect(wallet.name).toBe('My account');
+    expect(extra.isHDWallet).toBeTrue();
+    expect(extra.hdWalletId).toBe('Wallet 2');
+    expect(extra.hdWalletIndex).toBe(0);
+    expect(extra.encryptedJson).toBeTruthy();
+    expect(extra.hasBackup).toBeFalse();
+  });
+
   it('derives the next N3 account from the same mnemonic carrier', async () => {
     const firstWallet = await service.getFirstWalletFromPhrase(
       phrase,
@@ -41,5 +57,16 @@ describe('NeoHdWalletToolService', () => {
     expect(nextWallet.accounts[0].extra.encryptedJson).toBe(
       firstWallet.accounts[0].extra.encryptedJson
     );
+  });
+
+  it('preserves group backup status when deriving the next N3 account', async () => {
+    const firstWallet = await service.getFirstWalletFromPhrase(
+      phrase,
+      password
+    );
+    firstWallet.accounts[0].extra.hasBackup = true;
+    const nextWallet = await service.deriveNextWallet(firstWallet, password);
+
+    expect(nextWallet.accounts[0].extra.hasBackup).toBeTrue();
   });
 });

@@ -94,17 +94,11 @@ export class NeoWalletService {
         return w;
       });
     } else if (this.selectChainState.selectedChainType === 'Neo3') {
-      const account = new Account3();
-      account.extra = { hasBackup: false };
-      const wif = account.WIF;
-      const w = new wallet3.Wallet({
-        name: name || 'NeoLineUser',
-      } as any);
-      w.addAccount(account);
-      return w.accounts[0].encrypt(key).then(() => {
-        (w.accounts[0] as any).wif = wif;
-        return w;
-      });
+      return this.neoHdWalletToolService.createWallet(
+        key,
+        name || 'account 1',
+        getNextHDWalletId(this.neo3WalletArr || [])
+      );
     } else if (this.selectChainState.selectedChainType === 'NeoX') {
       return this.evmService.createWallet(key, name);
     }

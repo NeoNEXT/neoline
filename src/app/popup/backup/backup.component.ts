@@ -33,6 +33,10 @@ export class PopupBackupComponent implements OnDestroy {
     this.accountSub = account$.subscribe((state) => {
       this.chainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
+      if (this.isMnemonicWallet(this.currentWallet)) {
+        this.getMnemonic(this.currentWallet);
+        return;
+      }
       if (this.chainType === 'Neo2') {
         this.global
           .getWIF(state.neo2WIFArr, state.neo2WalletArr, state.currentWallet)
@@ -46,9 +50,6 @@ export class PopupBackupComponent implements OnDestroy {
           .then((wif) => {
             this.WIF = wif;
           });
-      }
-      if (this.chainType === 'NeoX') {
-        this.getMnemonic(state.neoXWalletArr);
       }
     });
   }
@@ -67,7 +68,7 @@ export class PopupBackupComponent implements OnDestroy {
       .afterClosed()
       .subscribe((confirm) => {
         if (confirm) {
-          if (this.chainType === 'NeoX') {
+          if (this.isMnemonicWallet(this.currentWallet)) {
             this.pageState = 'mnemonic';
           } else {
             this.pageState = 'privateKey';
@@ -76,16 +77,27 @@ export class PopupBackupComponent implements OnDestroy {
       });
   }
 
-  private getMnemonic(neoXWalletArr: EvmWalletJSON[]) {
-    const createWallet = neoXWalletArr.find(
-      (item) => item.accounts[0].extra.isHDWallet
-    );
+  private getMnemonic(currentWallet: Wallet2 | Wallet3 | EvmWalletJSON) {
+    const encryptedJson =
+      currentWallet.accounts[0]?.extra?.encryptedJson ||
+      (this.chainType === 'NeoX' ? JSON.stringify(currentWallet) : '');
+    if (!encryptedJson) {
+      this.mnemonic = '';
+      return;
+    }
     this.chrome.getPassword().then((pwd) => {
-      ethers.Wallet.fromEncryptedJson(JSON.stringify(createWallet), pwd).then(
-        (res: HDNodeWallet) => {
-          this.mnemonic = res.mnemonic.phrase;
-        }
-      );
+      ethers.Wallet.fromEncryptedJson(encryptedJson, pwd)
+        .then((res: HDNodeWallet) => {
+          this.mnemonic = res.mnemonic?.phrase || '';
+        })
+        .catch((err) => {
+          this.global.log('get mnemonic failed', err);
+          this.mnemonic = '';
+        });
     });
+  }
+
+  private isMnemonicWallet(wallet: Wallet2 | Wallet3 | EvmWalletJSON): boolean {
+    return wallet?.accounts[0]?.extra?.isHDWallet === true;
   }
 }

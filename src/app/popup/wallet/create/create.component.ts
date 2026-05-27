@@ -1,4 +1,8 @@
-import { GlobalService, ChromeService, NeoWalletService } from '@/app/core';
+import {
+  GlobalService,
+  ChromeService,
+  NeoWalletService,
+} from '@/app/core';
 import {
   AfterContentInit,
   Component,
@@ -41,14 +45,18 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
   ) {}
 
   ngOnInit() {
+    const nameValidators = [
+      Validators.required,
+      Validators.pattern(/^.{1,32}$/),
+    ];
     if (this.isOnePassword && this.password) {
       this.createForm = this.fb.group({
-        name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
+        name: ['', nameValidators],
       });
     } else {
       this.createForm = this.fb.group(
         {
-          name: ['', [Validators.required, Validators.pattern(/^.{1,32}$/)]],
+          name: ['', nameValidators],
           password: [
             '',
             [Validators.required, Validators.pattern(/^.{8,128}$/)],
@@ -67,6 +75,9 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
   }
 
   public submitCreate(): void {
+    if (this.createForm.invalid || this.loading) {
+      return;
+    }
     this.loading = true;
     let createPwd;
     if (this.isOnePassword && this.password) {

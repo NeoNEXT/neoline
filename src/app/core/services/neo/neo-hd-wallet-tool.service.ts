@@ -6,6 +6,26 @@ import { derivePathNist256p1 } from '../../utils/slip10-nist256p1';
 
 @Injectable()
 export class NeoHdWalletToolService {
+  async createWallet(
+    password: string,
+    accountName = 'account 1',
+    hdWalletId = 'Wallet 1',
+  ): Promise<Wallet3> {
+    const mnemonic = ethers.Wallet.createRandom().mnemonic;
+    const encryptedJson = await ethers.HDNodeWallet.fromMnemonic(
+      mnemonic,
+    ).encrypt(password);
+    return this.deriveWalletFromMnemonic({
+      mnemonic,
+      password,
+      accountName,
+      encryptedJson,
+      hdWalletId,
+      hdWalletIndex: 0,
+      hasBackup: false,
+    });
+  }
+
   async getFirstWalletFromPhrase(
     phrase: string,
     password: string,
@@ -37,6 +57,7 @@ export class NeoHdWalletToolService {
       encryptedJson: meta.encryptedJson,
       hdWalletId: meta.hdWalletId,
       hdWalletIndex,
+      hasBackup: meta.hasBackup,
     });
   }
 
@@ -53,6 +74,7 @@ export class NeoHdWalletToolService {
     encryptedJson,
     hdWalletId,
     hdWalletIndex,
+    hasBackup,
   }: {
     mnemonic: ethers.Mnemonic;
     password: string;
@@ -60,6 +82,7 @@ export class NeoHdWalletToolService {
     encryptedJson: string;
     hdWalletId: string;
     hdWalletIndex: number;
+    hasBackup?: boolean;
   }) {
     const account = new Account3(await this.getPrivateKey(mnemonic, hdWalletIndex));
     account.label = accountName;
@@ -69,6 +92,7 @@ export class NeoHdWalletToolService {
       hdWalletIndex,
       encryptedJson,
       publicKey: account.publicKey,
+      hasBackup,
     };
 
     const wallet = new Wallet3({ name: accountName });
@@ -101,6 +125,7 @@ export class NeoHdWalletToolService {
       hdWalletId: extra.hdWalletId as string,
       hdWalletIndex: extra.hdWalletIndex as number,
       encryptedJson: extra.encryptedJson as string,
+      hasBackup: extra.hasBackup as boolean | undefined,
     };
   }
 

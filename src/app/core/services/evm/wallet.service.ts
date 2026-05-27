@@ -37,7 +37,7 @@ export class EvmWalletService {
     return this.createWalletFromMnemonic({
       mnemonic: ethers.Wallet.createRandom().mnemonic,
       pwd,
-      name: name || 'NeoLineUser',
+      name: name || 'account 1',
       hdWalletId: getNextHDWalletId(this.neoXWalletArr),
       hdWalletIndex: 0,
       encryptedJson: undefined,
