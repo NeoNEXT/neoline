@@ -7,6 +7,16 @@ import { ethers } from 'ethers';
 
 const HD_WALLET_ID_PREFIX = 'Wallet ';
 
+function getHDWalletIdIndex(hdWalletId?: string): number {
+  if (typeof hdWalletId !== 'string') {
+    return Number.MAX_SAFE_INTEGER;
+  }
+  const match = new RegExp(`^${HD_WALLET_ID_PREFIX}(\\d+)$`).exec(
+    hdWalletId
+  );
+  return match ? Number(match[1]) : Number.MAX_SAFE_INTEGER;
+}
+
 export function parseUrl(url: string): any {
   const target = {};
   if (url.indexOf('?') === -1) {
@@ -90,6 +100,20 @@ export function handleWallet(
         hdWalletGroups.push(group);
       }
       group.walletArr.push(item);
+    });
+    hdWalletGroups.sort(
+      (a, b) =>
+        getHDWalletIdIndex(a.hdWalletId) - getHDWalletIdIndex(b.hdWalletId)
+    );
+    hdWalletGroups.forEach((group) => {
+      group.walletArr.sort((a, b) => {
+        const aIndex = a.accounts[0]?.extra?.hdWalletIndex;
+        const bIndex = b.accounts[0]?.extra?.hdWalletIndex;
+        return (
+          (typeof aIndex === 'number' ? aIndex : Number.MAX_SAFE_INTEGER) -
+          (typeof bIndex === 'number' ? bIndex : Number.MAX_SAFE_INTEGER)
+        );
+      });
     });
   }
   const res: WalletListItem[] = [

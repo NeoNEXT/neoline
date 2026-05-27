@@ -40,7 +40,7 @@ describe('handleWallet', () => {
     } as any;
   }
 
-  it('groups HD wallets by hdWalletId and numbers only HD groups', () => {
+  it('groups HD wallets by hdWalletId and sorts them by wallet and account index', () => {
     const privateWallet = wallet('private', 'Nprivate');
     const hdWalletA0 = wallet('account 1', 'NA0', {
       isHDWallet: true,
@@ -62,7 +62,7 @@ describe('handleWallet', () => {
     });
 
     const result = handleWallet(
-      [privateWallet, hdWalletA0, ledgerWallet, hdWalletB0, hdWalletA1],
+      [privateWallet, hdWalletB0, hdWalletA1, ledgerWallet, hdWalletA0],
       'Neo3'
     );
 
