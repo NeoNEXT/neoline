@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { ChromeService, GlobalService } from '@/app/core';
+import { ChromeService, EvmWalletService, GlobalService } from '@/app/core';
 import { STORAGE_NAME } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -42,7 +42,8 @@ export class PopupNoticeEvmSignComponent implements OnInit {
     private aRouter: ActivatedRoute,
     private chrome: ChromeService,
     private global: GlobalService,
-    private store: Store<AppState>
+    private store: Store<AppState>,
+    private evmWalletService: EvmWalletService
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -116,18 +117,20 @@ export class PopupNoticeEvmSignComponent implements OnInit {
     if (this.encryptWallet) {
       try {
         const pwd = await this.chrome.getPassword();
-        const wallet = await ethers.Wallet.fromEncryptedJson(
-          JSON.stringify(this.encryptWallet),
+        const privateKey = await this.evmWalletService.getPrivateKey(
+          this.encryptWallet,
           pwd
         );
         let data: string;
         switch (this.signMethod) {
           case ETH_EOA_SIGN_METHODS.PersonalSign:
-            data = await wallet.signMessage(this.challenge);
+            data = await new ethers.Wallet(privateKey).signMessage(
+              this.challenge
+            );
             break;
           case ETH_EOA_SIGN_METHODS.SignTypedDataV4:
             data = signTypedData({
-              privateKey: Buffer.from(wallet.privateKey.slice(2), 'hex'),
+              privateKey: Buffer.from(privateKey.slice(2), 'hex'),
               data: this.typedData,
               version: SignTypedDataVersion.V4,
             });

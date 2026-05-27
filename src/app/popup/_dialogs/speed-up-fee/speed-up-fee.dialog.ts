@@ -12,8 +12,12 @@ import {
   STORAGE_NAME,
 } from '../../_lib';
 import { NeoXFeeInfoProp } from '../../transfer/create/interface';
-import { ChromeService, EvmTxService, GlobalService } from '@/app/core';
-import { ethers } from 'ethers';
+import {
+  ChromeService,
+  EvmTxService,
+  EvmWalletService,
+  GlobalService,
+} from '@/app/core';
 import { PopupTransferSuccessDialogComponent } from '../transfer-success/transfer-success.component';
 import BigNumber from 'bignumber.js';
 
@@ -37,6 +41,7 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
     private globalService: GlobalService,
     private dialog: MatDialog,
     private evmTxService: EvmTxService,
+    private evmWalletService: EvmWalletService,
     @Inject(MAT_DIALOG_DATA)
     public data: {
       tx: Transaction;
@@ -117,12 +122,12 @@ export class PopupSpeedUpFeeDialogComponent implements OnInit {
 
     this.loading = true;
     const pwd = await this.chrome.getPassword();
-    const wallet = await ethers.Wallet.fromEncryptedJson(
-      JSON.stringify(this.data.currentWallet),
+    const privateKey = await this.evmWalletService.getPrivateKey(
+      this.data.currentWallet,
       pwd
     );
     this.evmTxService
-      .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
+      .sendDappTransaction(PreExecutionParams, newParams, privateKey)
       .then((tx) => {
         this.loading = false;
         this.updateLocalTx(tx.hash);

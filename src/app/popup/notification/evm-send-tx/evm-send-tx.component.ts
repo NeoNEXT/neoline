@@ -9,6 +9,7 @@ import {
   EvmAssetService,
   EvmTxService,
   EvmGasService,
+  EvmWalletService,
 } from '@/app/core';
 import {
   AddressNonceInfo,
@@ -84,7 +85,8 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     private store: Store<AppState>,
     private evmTxService: EvmTxService,
     private evmAssetService: EvmAssetService,
-    private evmGasService: EvmGasService
+    private evmGasService: EvmGasService,
+    private evmWalletService: EvmWalletService
   ) {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
@@ -205,13 +207,13 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
 
     this.loading = true;
     const pwd = await this.chrome.getPassword();
-    const wallet = await ethers.Wallet.fromEncryptedJson(
-      JSON.stringify(this.encryptWallet),
+    const privateKey = await this.evmWalletService.getPrivateKey(
+      this.encryptWallet,
       pwd
     );
 
     this.evmTxService
-      .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
+      .sendDappTransaction(PreExecutionParams, newParams, privateKey)
       .then((tx) => {
         this.loading = false;
         this.updateLocalTx(tx.hash, newParams);

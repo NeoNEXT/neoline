@@ -6,8 +6,8 @@ import { Store } from '@ngrx/store';
 import { ChainType } from '../_lib';
 import { EvmWalletJSON } from '../_lib/evm';
 import { Unsubscribable } from 'rxjs';
-import { ethers, HDNodeWallet } from 'ethers';
-import { ChromeService, GlobalService } from '@/app/core';
+import { ethers } from 'ethers';
+import { ChromeService, EvmWalletService, GlobalService } from '@/app/core';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
 
@@ -27,6 +27,7 @@ export class PopupBackupComponent implements OnDestroy {
     private store: Store<AppState>,
     private dialog: MatDialog,
     private chrome: ChromeService,
+    private evmWalletService: EvmWalletService,
     private global: GlobalService
   ) {
     const account$ = this.store.select('account');
@@ -78,16 +79,29 @@ export class PopupBackupComponent implements OnDestroy {
   }
 
   private getMnemonic(currentWallet: Wallet2 | Wallet3 | EvmWalletJSON) {
+    if (this.chainType === 'NeoX') {
+      this.chrome.getPassword().then((pwd) => {
+        this.evmWalletService
+          .getMnemonicPhrase(currentWallet as EvmWalletJSON, pwd)
+          .then((mnemonic) => {
+            this.mnemonic = mnemonic;
+          })
+          .catch((err) => {
+            this.global.log('get mnemonic failed', err);
+            this.mnemonic = '';
+          });
+      });
+      return;
+    }
     const encryptedJson =
-      currentWallet.accounts[0]?.extra?.encryptedJson ||
-      (this.chainType === 'NeoX' ? JSON.stringify(currentWallet) : '');
+      currentWallet.accounts[0]?.extra?.encryptedJson || '';
     if (!encryptedJson) {
       this.mnemonic = '';
       return;
     }
     this.chrome.getPassword().then((pwd) => {
       ethers.Wallet.fromEncryptedJson(encryptedJson, pwd)
-        .then((res: HDNodeWallet) => {
+        .then((res: ethers.HDNodeWallet) => {
           this.mnemonic = res.mnemonic?.phrase || '';
         })
         .catch((err) => {

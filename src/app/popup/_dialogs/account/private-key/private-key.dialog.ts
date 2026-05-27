@@ -1,5 +1,5 @@
 import { Component, OnInit, Inject } from '@angular/core';
-import { GlobalService, Neo3Service } from '@/app/core';
+import { EvmWalletService, GlobalService, Neo3Service } from '@/app/core';
 import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
 import { ChainType } from '@/app/popup/_lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
@@ -22,6 +22,7 @@ export class PopupPrivateKeyComponent implements OnInit {
   constructor(
     private global: GlobalService,
     private neo3Service: Neo3Service,
+    private evmWalletService: EvmWalletService,
     private dialogRef: MatDialogRef<PopupPrivateKeyComponent>,
     @Inject(MAT_DIALOG_DATA)
     public data: {
@@ -46,23 +47,20 @@ export class PopupPrivateKeyComponent implements OnInit {
     }
     this.loading = true;
     if (this.data.chainType === 'NeoX') {
-      const encryptedJson =
-        this.data.showMnemonic &&
-        this.data.currentWallet.accounts[0]?.extra?.encryptedJson
-          ? this.data.currentWallet.accounts[0].extra.encryptedJson
-          : JSON.stringify(this.data.currentWallet);
-      ethers.Wallet.fromEncryptedJson(
-        encryptedJson,
-        this.pwd
-      )
+      const valueReq = this.data.showMnemonic
+        ? this.evmWalletService.getMnemonicPhrase(
+            this.data.currentWallet as EvmWalletJSON,
+            this.pwd
+          )
+        : this.evmWalletService.getPrivateKey(
+            this.data.currentWallet as EvmWalletJSON,
+            this.pwd
+          );
+      valueReq
         .then((res) => {
           this.loading = false;
           this.verified = true;
-          if (this.data.showMnemonic) {
-            this.wif = (res as ethers.HDNodeWallet).mnemonic.phrase;
-          } else {
-            this.wif = res.privateKey;
-          }
+          this.wif = res;
         })
         .catch((err) => {
           this.loading = false;

@@ -108,7 +108,7 @@ describe('handleWallet', () => {
 });
 
 describe('migrateLegacyNeoXHDWallets', () => {
-  it('assigns legacy NeoX HD wallets to Wallet 1 and stores a carrier', () => {
+  it('assigns legacy NeoX HD wallets to Wallet 1 and stores a carrier in lightweight shape', () => {
     const legacyWallet = {
       name: 'account 1',
       address: '0xabc',
@@ -129,12 +129,51 @@ describe('migrateLegacyNeoXHDWallets', () => {
     const extra = result.walletArr[0].accounts[0].extra;
 
     expect(result.changed).toBeTrue();
+    expect(Object.keys(result.walletArr[0])).toEqual(['name', 'accounts']);
+    expect(result.walletArr[0].name).toBe('account 1');
+    expect(result.walletArr[0].accounts[0].address).toBe('0xabc');
     expect(extra.hdWalletId).toBe('Wallet 1');
     expect(extra.hdWalletIndex).toBe(0);
     expect(extra.encryptedJson).toBe(JSON.stringify(legacyWallet));
   });
 
-  it('leaves current NeoX HD wallets unchanged', () => {
+  it('removes top-level keystore fields from current NeoX HD wallets', () => {
+    const wallet = {
+      name: 'account 1',
+      address: '0xabc',
+      Crypto: {},
+      version: 3,
+      accounts: [
+        {
+          address: '0xabc',
+          extra: {
+            publicKey: '0xpub',
+            isHDWallet: true,
+            hdWalletId: 'Wallet 2',
+            hdWalletIndex: 0,
+            encryptedJson: '{}',
+            hasBackup: true,
+          },
+        },
+      ],
+    } as any;
+
+    const result = migrateLegacyNeoXHDWallets([wallet]);
+    const migratedWallet = result.walletArr[0];
+
+    expect(result.changed).toBeTrue();
+    expect(Object.keys(migratedWallet)).toEqual(['name', 'accounts']);
+    expect(migratedWallet.accounts[0].extra).toEqual({
+      publicKey: '0xpub',
+      isHDWallet: true,
+      hdWalletId: 'Wallet 2',
+      hdWalletIndex: 0,
+      encryptedJson: '{}',
+      hasBackup: true,
+    });
+  });
+
+  it('leaves lightweight NeoX HD wallets unchanged', () => {
     const wallet = {
       name: 'account 1',
       accounts: [

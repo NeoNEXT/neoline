@@ -23,7 +23,7 @@ export interface EvmWalletJSON {
         isHDWallet?: boolean;
         hdWalletId?: string;
         hdWalletIndex?: number;
-        /** ethers keystore, used by private key and HD wallets */
+        /** ethers keystore for private key wallets, mnemonic carrier for HD wallets */
         encryptedJson?: string;
         hasBackup?: boolean;
 

@@ -73,16 +73,10 @@ export class EvmWalletService {
     if (!extra.encryptedJson) {
       throw new Error('This NeoX account does not contain HD carrier');
     }
-    const hdWallet = (await ethers.Wallet.fromEncryptedJson(
-      extra.encryptedJson,
-      pwd
-    )) as ethers.HDNodeWallet;
-    if (!hdWallet.mnemonic) {
-      throw new Error('This NeoX account is not HD wallet');
-    }
+    const mnemonic = await this.getMnemonicFromHDWallet(maxIndexWallet, pwd);
     const hdWalletIndex = extra.hdWalletIndex + 1;
     return this.createWalletFromMnemonic({
-      mnemonic: hdWallet.mnemonic,
+      mnemonic,
       pwd,
       name: name || `account ${hdWalletIndex + 1}`,
       hdWalletId: extra.hdWalletId,
@@ -98,6 +92,30 @@ export class EvmWalletService {
       mnemonic,
       `m/44'/60'/0'/0/0`
     ).address;
+  }
+
+  async getPrivateKey(wallet: EvmWalletJSON, pwd: string): Promise<string> {
+    if (wallet.accounts[0]?.extra?.isHDWallet) {
+      const extra = wallet.accounts[0].extra;
+      if (extra.hdWalletIndex === undefined) {
+        throw new Error('This NeoX account does not contain HD index');
+      }
+      const mnemonic = await this.getMnemonicFromHDWallet(wallet, pwd);
+      return ethers.HDNodeWallet.fromMnemonic(
+        mnemonic,
+        `m/44'/60'/0'/0/${extra.hdWalletIndex}`
+      ).privateKey;
+    }
+    const decryptWallet = await ethers.Wallet.fromEncryptedJson(
+      JSON.stringify(wallet),
+      pwd
+    );
+    return decryptWallet.privateKey;
+  }
+
+  async getMnemonicPhrase(wallet: EvmWalletJSON, pwd: string): Promise<string> {
+    const mnemonic = await this.getMnemonicFromHDWallet(wallet, pwd);
+    return mnemonic.phrase;
   }
 
   async importWalletFromPrivateKey(
@@ -145,23 +163,40 @@ export class EvmWalletService {
       mnemonic,
       `m/44'/60'/0'/0/${hdWalletIndex}`
     );
-    const accountJson = await account.encrypt(pwd);
-    const accountLike: EvmWalletJSON = JSON.parse(accountJson);
-    accountLike.name = name;
-    accountLike.accounts = [
-      {
-        address: account.address,
-        extra: {
-          publicKey: account.publicKey,
-          isHDWallet: true,
-          hdWalletId,
-          hdWalletIndex,
-          encryptedJson: carrierJson,
-          hasBackup,
+    return {
+      name,
+      accounts: [
+        {
+          address: account.address,
+          extra: {
+            publicKey: account.publicKey,
+            isHDWallet: true,
+            hdWalletId,
+            hdWalletIndex,
+            encryptedJson: carrierJson,
+            hasBackup,
+          },
         },
-      },
-    ];
-    return accountLike;
+      ],
+    } as EvmWalletJSON;
+  }
+
+  private async getMnemonicFromHDWallet(
+    wallet: EvmWalletJSON,
+    pwd: string
+  ): Promise<ethers.Mnemonic> {
+    const encryptedJson = wallet.accounts[0]?.extra?.encryptedJson;
+    if (!encryptedJson) {
+      throw new Error('This NeoX account does not contain HD carrier');
+    }
+    const hdWallet = (await ethers.Wallet.fromEncryptedJson(
+      encryptedJson,
+      pwd
+    )) as ethers.HDNodeWallet;
+    if (!hdWallet.mnemonic) {
+      throw new Error('This NeoX account is not HD wallet');
+    }
+    return hdWallet.mnemonic;
   }
 
   private getMnemonic(phrase: string): ethers.Mnemonic {

@@ -66,18 +66,17 @@ export function migrateLegacyNeoXHDWallets(
     changed = true;
     const encryptedJson = extra.encryptedJson || JSON.stringify(item);
     return {
-      ...item,
+      name: item.name || `account ${extra.hdWalletIndex + 1}`,
       accounts: [
         {
-          ...account,
+          address: account.address,
           extra: {
-            ...extra,
+            publicKey: extra.publicKey,
+            isHDWallet: true,
             hdWalletId: 'Wallet 1',
-            hdWalletIndex:
-              typeof extra.hdWalletIndex === 'number'
-                ? extra.hdWalletIndex
-                : 0,
+            hdWalletIndex: extra.hdWalletIndex,
             encryptedJson,
+            hasBackup: extra.hasBackup,
           },
         },
       ],

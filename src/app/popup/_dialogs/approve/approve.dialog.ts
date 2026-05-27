@@ -15,6 +15,7 @@ import {
   RateState,
   ChromeService,
   EvmTxService,
+  EvmWalletService,
   GlobalService,
 } from '@/app/core';
 import { ethers } from 'ethers';
@@ -47,6 +48,7 @@ export class PopupApproveDialogComponent implements OnInit {
     private rateState: RateState,
     private chrome: ChromeService,
     private evmTxService: EvmTxService,
+    private evmWalletService: EvmWalletService,
     private globalService: GlobalService,
     private dialogRef: MatDialogRef<PopupApproveDialogComponent>,
     @Inject(MAT_DIALOG_DATA)
@@ -177,13 +179,13 @@ export class PopupApproveDialogComponent implements OnInit {
 
     this.loading = true;
     const pwd = await this.chrome.getPassword();
-    const wallet = await ethers.Wallet.fromEncryptedJson(
-      JSON.stringify(this.data.encryptWallet),
+    const privateKey = await this.evmWalletService.getPrivateKey(
+      this.data.encryptWallet,
       pwd
     );
 
     this.evmTxService
-      .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
+      .sendDappTransaction(PreExecutionParams, newParams, privateKey)
       .then((tx) => {
         this.loading = false;
         this.dialogRef.close(tx.hash);

@@ -5,6 +5,7 @@ import { add, subtract, bignumber } from 'mathjs';
 import { HttpErrorResponse } from '@angular/common/http';
 import { MatDialog } from '@angular/material/dialog';
 import { ChromeService } from './chrome.service';
+import { EvmWalletService } from './evm/wallet.service';
 import { Router } from '@angular/router';
 import { ChainType, RpcNetwork } from '@/app/popup/_lib';
 import { NEO, GAS } from '@/models/models';
@@ -20,6 +21,7 @@ export class GlobalService {
     private snackBar: MatSnackBar,
     private notification: NotificationService,
     private chrome: ChromeService,
+    private evmWalletService: EvmWalletService,
     private router: Router,
     private dialog: MatDialog
   ) {}
@@ -72,12 +74,10 @@ export class GlobalService {
     }
     const pwd = await this.chrome.getPassword();
     if (ethers.isAddress(currentWallet.accounts[0].address)) {
-      return ethers.Wallet.fromEncryptedJson(
-        JSON.stringify(currentWallet),
+      return this.evmWalletService.getPrivateKey(
+        currentWallet as EvmWalletJSON,
         pwd
-      ).then((wallet) => {
-        return wallet.privateKey;
-      });
+      );
     }
     return (currentWallet.accounts[0] as any).decrypt(pwd).then((res) => {
       return res.WIF;

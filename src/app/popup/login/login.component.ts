@@ -4,6 +4,7 @@ import { Wallet3 } from '@popup/_lib';
 import { Router, ActivatedRoute } from '@angular/router';
 import {
   ChromeService,
+  EvmWalletService,
   GlobalService,
   Neo3Service,
   SettingState,
@@ -26,7 +27,6 @@ import {
   STORAGE_NAME,
 } from '../_lib';
 import { UntypedFormGroup, Validators, UntypedFormBuilder } from '@angular/forms';
-import { ethers } from 'ethers';
 import { EvmWalletJSON } from '../_lib/evm';
 
 @Component({
@@ -40,7 +40,7 @@ export class PopupLoginComponent
   hidePwd: boolean = true;
   loading = false;
   isInit: boolean = true;
-  selectWallet: Wallet2 | Wallet3;
+  selectWallet: Wallet2 | Wallet3 | EvmWalletJSON;
   selectChainType: ChainType;
   isOnePassword = false;
 
@@ -60,7 +60,8 @@ export class PopupLoginComponent
     private fb: UntypedFormBuilder,
     private settingState: SettingState,
     private store: Store<AppState>,
-    private neo3Service: Neo3Service
+    private neo3Service: Neo3Service,
+    private evmWalletService: EvmWalletService
   ) {
     this.aRouter.queryParams.subscribe((params: any) => {
       this.messageID = params.messageID;
@@ -72,7 +73,7 @@ export class PopupLoginComponent
       this.currentChainType = state.currentChainType;
       this.selectChainType = state.currentChainType;
       this.currentWallet = state.currentWallet;
-      this.selectWallet = state.currentWallet as Wallet2 | Wallet3;
+      this.selectWallet = state.currentWallet as Wallet2 | Wallet3 | EvmWalletJSON;
       this.allWallet = (state.neo3WalletArr as any).concat(state.neo2WalletArr);
     });
   }
@@ -131,10 +132,11 @@ export class PopupLoginComponent
           account = this.neo3Service.getNeo3Account(this.selectWallet.accounts[0]);
           break;
         case 'NeoX':
-          ethers.Wallet.fromEncryptedJson(
-            JSON.stringify(this.selectWallet),
-            this.loginForm.value.password
-          )
+          this.evmWalletService
+            .getPrivateKey(
+              this.selectWallet as EvmWalletJSON,
+              this.loginForm.value.password
+            )
             .then(() => {
               this.handleLoginSuccess();
             })
@@ -226,7 +228,12 @@ export class PopupLoginComponent
       this.currentWallet.accounts[0].address
     ) {
       this.store.dispatch({ type: UPDATE_WALLET, data: this.selectWallet });
-      this.chrome.accountChangeEvent(this.selectWallet.export());
+      // NeoX wallets are stored as JSON (no `.export()` method).
+      const walletForEvent =
+        this.selectChainType === 'NeoX'
+          ? (this.selectWallet as EvmWalletJSON)
+          : (this.selectWallet as Wallet2 | Wallet3).export();
+      this.chrome.accountChangeEvent(walletForEvent);
       this.chrome.setHasLoginAddress(this.selectWallet.accounts[0].address);
       if (this.selectChainType !== this.currentChainType) {
         this.chrome.networkChangeEvent(

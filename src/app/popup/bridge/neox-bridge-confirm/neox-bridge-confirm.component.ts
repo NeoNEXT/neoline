@@ -4,6 +4,7 @@ import {
   ChromeService,
   RateState,
   EvmTxService,
+  EvmWalletService,
 } from '@/app/core';
 import { BigNumber } from 'bignumber.js';
 import { Asset } from '@/models/models';
@@ -55,7 +56,8 @@ export class NeoXBridgeConfirmComponent implements OnInit {
     private global: GlobalService,
     private rateState: RateState,
     private chrome: ChromeService,
-    private evmTxService: EvmTxService
+    private evmTxService: EvmTxService,
+    private evmWalletService: EvmWalletService
   ) {}
 
   ngOnInit(): void {
@@ -158,12 +160,12 @@ export class NeoXBridgeConfirmComponent implements OnInit {
 
     this.loading = true;
     const pwd = await this.chrome.getPassword();
-    const wallet = await ethers.Wallet.fromEncryptedJson(
-      JSON.stringify(this.currentWallet),
+    const privateKey = await this.evmWalletService.getPrivateKey(
+      this.currentWallet,
       pwd
     );
     this.evmTxService
-      .sendDappTransaction(PreExecutionParams, newParams, wallet.privateKey)
+      .sendDappTransaction(PreExecutionParams, newParams, privateKey)
       .then((tx) => {
         this.backAmount.emit({ hash: tx.hash, chain: 'NeoX' });
         this.loading = false;
