@@ -19,6 +19,10 @@ describe('LanguageNamePipe', () => {
     expect(pipe.transform('ja')).toBe('日本語');
   });
 
+  it('should return 한국어 for ko', () => {
+    expect(pipe.transform('ko')).toBe('한국어');
+  });
+
   it('should return English for en', () => {
     expect(pipe.transform('en')).toBe('English');
   });

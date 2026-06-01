@@ -13,6 +13,10 @@ export const LanguagesType: Array<SelectItem> = [
     type: 'ja',
     name: 'ja',
   },
+  {
+    type: 'ko',
+    name: 'ko',
+  },
 ];
 
 export type CurrencyType = 'USD' | 'CNY' | 'JPY' | 'KRW' | 'EUR';
@@ -49,11 +53,13 @@ interface LocalNoticeItem {
     en: string;
     zh_CN: string;
     ja: string;
+    ko: string;
   };
   content: {
     en: string;
     zh_CN: string;
     ja: string;
+    ko: string;
   };
   time: number;
 }
@@ -65,11 +71,13 @@ export const LOCAL_NOTICE: LocalNoticeItem[] = [
       en: 'NeoLine Web dApp is Now Live',
       zh_CN: 'NeoLine Web dApp 现已上线',
       ja: 'NeoLine Web dApp が正式に公開されました',
+      ko: 'NeoLine Web dApp 출시',
     },
     content: {
       en: `A new "Discover" entry has been added to the NeoLine homepage, allowing users to access https://app.neoline.io and manage their Neo assets in one place. The dApp currently supports features including asset overview, send and receive, bridge, and governance voting. More features will be introduced over time to further enhance the user experience.`,
       zh_CN: `NeoLine 首页现已新增 "发现" 入口，用户可通过该入口访问 https://app.neoline.io，在一个平台上统一管理 Neo 资产。当前支持资产总览、转账收发、跨链桥以及治理投票等功能。未来还将持续推出更多功能，进一步提升使用体验。`,
       ja: `NeoLine のホームページに新たに "ディスカバリ" 入口が追加されました。この入口から https://app.neoline.io にアクセスし、Neo資産を一つのプラットフォームで管理できます。現在、資産一覧、送受信、ブリッジ、ガバナンス投票などの機能に対応しています。今後もさらなる機能追加を予定しており、ユーザー体験の向上を図っていきます。`,
+      ko: `NeoLine 홈페이지에 새로운 "디스커버" 진입점이 추가되어 사용자는 https://app.neoline.io 에 접속해 Neo 자산을 한곳에서 관리할 수 있습니다. 현재 dApp은 자산 개요, 송수신, 브리지, 거버넌스 투표 등의 기능을 지원합니다. 앞으로도 사용자 경험을 높이기 위해 더 많은 기능이 추가될 예정입니다.`,
     },
     time: 1776960000000,
   },
@@ -79,11 +87,13 @@ export const LOCAL_NOTICE: LocalNoticeItem[] = [
       en: 'Support QR-based hardware wallets',
       zh_CN: '支持二维码硬件钱包',
       ja: 'QRベースのハードウェアウォレットをサポート',
+      ko: 'QR 기반 하드웨어 지갑 지원',
     },
     content: {
       en: `NeoLine now supports QR-based hardware wallets. You can import accounts and sign transactions by scanning QR codes, ensuring that your secret always remain securely stored on your offline device.`,
       zh_CN: `NeoLine 现在支持二维码硬件钱包。您可以通过扫描二维码导入账户和签署交易，确保您的密钥始终安全地存储在离线设备上。`,
       ja: 'NeoLine は QR ベースのハードウェアウォレットに対応しました。QR コードをスキャンしてアカウントをインポートし、トランザクションに署名できるため、秘密鍵は常にオフラインデバイス上で安全に保管されます。',
+      ko: 'NeoLine은 이제 QR 기반 하드웨어 지갑을 지원합니다. QR 코드를 스캔하여 계정을 가져오고 트랜잭션에 서명할 수 있으므로 비밀 키는 항상 오프라인 기기에 안전하게 보관됩니다.',
     },
     time: 1757952000000,
   },
@@ -93,11 +103,13 @@ export const LOCAL_NOTICE: LocalNoticeItem[] = [
       en: 'OneKey hardware wallet support',
       zh_CN: '支持 OneKey 硬件钱包',
       ja: 'OneKey ハードウェアウォレットのサポート',
+      ko: 'OneKey 하드웨어 지갑 지원',
     },
     content: {
       en: `You can now connect and import your OneKey hardware wallet directly into NeoLine. Safely manage your assets, sign transactions, and enjoy enhanced security — all with your OneKey device.`,
       zh_CN: `您现在可以将 OneKey 硬件钱包直接连接并导入到 NeoLine 中，安全管理资产、签署交易，尽享更高等级的安全体验。`,
       ja: `OneKey ハードウェアウォレットを NeoLine に直接接続してインポートできるようになりました。資産を安全に管理し、取引に署名し、OneKey デバイスでさらに強化されたセキュリティを体験できます`,
+      ko: `이제 OneKey 하드웨어 지갑을 NeoLine에 직접 연결하고 가져올 수 있습니다. OneKey 기기로 자산을 안전하게 관리하고 트랜잭션에 서명하며 강화된 보안을 경험하세요.`,
     },
     time: 1749398400000,
   },

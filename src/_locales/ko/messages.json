@@ -1,0 +1,1640 @@
+{
+  "hello": {
+    "message": "안녕하세요"
+  },
+  "closeWallet": {
+    "message": "지갑 닫기"
+  },
+  "account": {
+    "message": "지갑"
+  },
+  "edit": {
+    "message": "편집"
+  },
+  "assets": {
+    "message": "자산"
+  },
+  "setting": {
+    "message": "설정"
+  },
+  "mainNet": {
+    "message": "메인넷"
+  },
+  "testNet": {
+    "message": "테스트넷"
+  },
+  "home": {
+    "message": "홈"
+  },
+  "about": {
+    "message": "회사 소개"
+  },
+  "close": {
+    "message": "닫기"
+  },
+  "address": {
+    "message": "주소"
+  },
+  "copyAddress": {
+    "message": "주소 복사"
+  },
+  "create": {
+    "message": "생성"
+  },
+  "import": {
+    "message": "가져오기"
+  },
+  "welcomeCreate": {
+    "message": "NeoLine에 오신 것을 환영합니다. 생성"
+  },
+  "welcomeImport": {
+    "message": "NeoLine에 오신 것을 환영합니다. 가져오기"
+  },
+  "enterWalletName": {
+    "message": "지갑 이름 설정"
+  },
+  "walletNameIsRequired": {
+    "message": "지갑 이름은 필수입니다"
+  },
+  "lengthLimit": {
+    "message": "길이 제한"
+  },
+  "enterPassword": {
+    "message": "비밀번호 입력"
+  },
+  "enterFilePassword": {
+    "message": "파일 비밀번호 입력"
+  },
+  "filePasswordRequired": {
+    "message": "파일 비밀번호는 필수입니다"
+  },
+  "passwordRequired": {
+    "message": "비밀번호는 필수입니다"
+  },
+  "enterConfirmPassword": {
+    "message": "비밀번호 다시 입력"
+  },
+  "confirmError": {
+    "message": "두 비밀번호가 일치하지 않습니다"
+  },
+  "creating": {
+    "message": "생성 중"
+  },
+  "enterWIF": {
+    "message": "WIF(개인 키) 입력"
+  },
+  "enterEncryptedKey": {
+    "message": "암호화된 키 입력"
+  },
+  "WIFRequired": {
+    "message": "WIF는 필수입니다"
+  },
+  "EncryptedKeyRequired": {
+    "message": "암호화된 키는 필수입니다"
+  },
+  "importing": {
+    "message": "가져오는 중"
+  },
+  "language": {
+    "message": "언어"
+  },
+  "loading": {
+    "message": "로딩 중..."
+  },
+  "empty": {
+    "message": "비어 있음"
+  },
+  "receive": {
+    "message": "받기"
+  },
+  "received": {
+    "message": "받음"
+  },
+  "allTransfer": {
+    "message": "전체"
+  },
+  "sent": {
+    "message": "보내기"
+  },
+  "balancecolon": {
+    "message": "잔액:"
+  },
+  "transgerTo": {
+    "message": "다음으로 전송"
+  },
+  "AssetUpper": {
+    "message": "자산"
+  },
+  "transferToTip": {
+    "message": "받는 사람"
+  },
+  "amount": {
+    "message": "수량"
+  },
+  "transferAmountTip": {
+    "message": "전송할 수량"
+  },
+  "cancel": {
+    "message": "취소"
+  },
+  "refuse": {
+    "message": "거절"
+  },
+  "submit": {
+    "message": "제출"
+  },
+  "copy": {
+    "message": "복사"
+  },
+  "showPrivateKey": {
+    "message": "개인 키 표시"
+  },
+  "password": {
+    "message": "비밀번호"
+  },
+  "verifyPassword": {
+    "message": "비밀번호 확인"
+  },
+  "caution": {
+    "message": "주의"
+  },
+  "transferExportTip": {
+    "message": "개인 키를 안전하게 보관하고 누구에게도 보여주지 마세요"
+  },
+  "verify": {
+    "message": "확인"
+  },
+  "done": {
+    "message": "완료"
+  },
+  "transfer": {
+    "message": "전송"
+  },
+  "transferHistory": {
+    "message": "기록"
+  },
+  "reocords": {
+    "message": "기록"
+  },
+  "pages": {
+    "message": "페이지"
+  },
+  "transferId": {
+    "message": "TxID"
+  },
+  "transferVolume": {
+    "message": "수량"
+  },
+  "size": {
+    "message": "크기"
+  },
+  "time": {
+    "message": "시간"
+  },
+  "newWallet": {
+    "message": "새 지갑"
+  },
+  "createTip": {
+    "message": "NeoLine에 오신 것을 환영합니다. 새 지갑을 생성하세요."
+  },
+  "logoutTip": {
+    "message": "지갑을 닫으시겠습니까?"
+  },
+  "yes": {
+    "message": "예"
+  },
+  "transferInfo": {
+    "message": "전송 정보"
+  },
+  "paymentAccount": {
+    "message": "보내는 지갑"
+  },
+  "receiptAccount": {
+    "message": "받는 지갑"
+  },
+  "termsOfUse": {
+    "message": "이용 약관"
+  },
+  "companyWebsite": {
+    "message": "공식 웹사이트"
+  },
+  "contactUs": {
+    "message": "문의하기"
+  },
+  "FollowUs": {
+    "message": "팔로우하기"
+  },
+  "myAccountQRCode": {
+    "message": "내 지갑 QR 코드"
+  },
+  "complete": {
+    "message": "완료"
+  },
+  "addAssetTip": {
+    "message": "이 자산을 추가하시겠습니까?"
+  },
+  "delAssetTip": {
+    "message": "삭제를 확인하시겠습니까?"
+  },
+  "modifyNameTitle": {
+    "message": "지갑 이름 수정"
+  },
+  "modifyNameInput": {
+    "message": "새 지갑 이름을 입력하세요(길이 1-32)"
+  },
+  "connect": {
+    "message": "연결"
+  },
+  "thAuthTitle": {
+    "message": "연결 요청"
+  },
+  "thAuthTip": {
+    "message": "이 사이트가 지갑 연결을 요청합니다"
+  },
+  "thAuthAccounts": {
+    "message": "계정"
+  },
+  "selectAccounts": {
+    "message": "계정 선택"
+  },
+  "selectAll": {
+    "message": "전체 선택"
+  },
+  "thSignTitle": {
+    "message": "이 앱이 서명을 요청합니다."
+  },
+  "thSignTxTitle": {
+    "message": "이 앱이 트랜잭션 서명을 요청합니다."
+  },
+  "signing": {
+    "message": "서명 중"
+  },
+  "message": {
+    "message": "메시지"
+  },
+  "signature": {
+    "message": "서명"
+  },
+  "thAssetTip": {
+    "message": "이 자산들을 추가하시겠습니까?"
+  },
+  "version": {
+    "message": "버전"
+  },
+  "addAsset": {
+    "message": "자산 추가"
+  },
+  "searchResult": {
+    "message": "검색 결과"
+  },
+  "searchAssetsInput": {
+    "message": "자산을 입력하고 Enter로 검색하세요"
+  },
+  "hidden": {
+    "message": "숨김"
+  },
+  "add": {
+    "message": "추가"
+  },
+  "added": {
+    "message": "추가됨"
+  },
+  "myAccounts": {
+    "message": "내 계정"
+  },
+  "myAccount": {
+    "message": "내 계정"
+  },
+  "importWallet": {
+    "message": "지갑 가져오기"
+  },
+  "exportWallet": {
+    "message": "지갑 내보내기"
+  },
+  "createWallet": {
+    "message": "지갑 생성"
+  },
+  "clearCacheBtn": {
+    "message": "지우기"
+  },
+  "clearCache": {
+    "message": "로컬 캐시"
+  },
+  "clearCacheTip": {
+    "message": "모든 로컬 캐시 지우기"
+  },
+  "reset": {
+    "message": "초기화"
+  },
+  "chooseNep6File": {
+    "message": "nep6 파일 선택"
+  },
+  "welcomeBack": {
+    "message": "다시 오신 것을 환영합니다"
+  },
+  "loginTip": {
+    "message": "NeoLine에 오신 것을 환영합니다. 먼저 로그인하세요"
+  },
+  "pwdInput": {
+    "message": "비밀번호를 입력하세요"
+  },
+  "onlySupport": {
+    "message": "다음만 지원"
+  },
+  "login": {
+    "message": "로그인"
+  },
+  "logining": {
+    "message": "로그인 중"
+  },
+  "searchAllResult": {
+    "message": "모든 자산"
+  },
+  "clearStorageTips": {
+    "message": "캐시를 지우시겠습니까?"
+  },
+  "viewAll": {
+    "message": "전체 보기"
+  },
+  "remove": {
+    "message": "제거"
+  },
+  "switch": {
+    "message": "전환"
+  },
+  "delete": {
+    "message": "삭제"
+  },
+  "authDelAllTip": {
+    "message": "모든 승인된 사이트 지우기"
+  },
+  "welcomeNeoLine": {
+    "message": "NeoLine에 오신 것을 환영합니다"
+  },
+  "myAddress": {
+    "message": "NEO 주소:"
+  },
+  "myQRCode": {
+    "message": "주소 QR 코드"
+  },
+  "setLang": {
+    "message": "언어"
+  },
+  "WIFPattern": {
+    "message": "잘못된 WIF"
+  },
+  "EncryptedKeyPattern": {
+    "message": "잘못된 암호화 키"
+  },
+  "tranSubmit": {
+    "message": "트랜잭션이 제출되었습니다"
+  },
+  "waitConfirm": {
+    "message": "확인을 기다려 주세요"
+  },
+  "transaction": {
+    "message": "트랜잭션"
+  },
+  "confirming": {
+    "message": "확인 중"
+  },
+  "transactions": {
+    "message": "트랜잭션"
+  },
+  "value": {
+    "message": "값"
+  },
+  "noTransaction": {
+    "message": "트랜잭션 없음"
+  },
+  "wifPrivateKey": {
+    "message": "WIF(개인 키)"
+  },
+  "privateKey": {
+    "message": "개인 키"
+  },
+  "delWalletConfirm": {
+    "message": "이 지갑을 삭제하시겠습니까?"
+  },
+  "delAddressConfirm": {
+    "message": "이 주소를 삭제하시겠습니까?"
+  },
+  "delNetworkConfirm": {
+    "message": "이 네트워크를 삭제하시겠습니까?"
+  },
+  "delAllAuthListConfirm": {
+    "message": "모든 승인된 사이트를 삭제하시겠습니까?"
+  },
+  "connectedTip": {
+    "message": "NeoLine 지갑 연결 허용됨"
+  },
+  "to": {
+    "message": "받는 주소"
+  },
+  "currencyUnit": {
+    "message": "통화 단위"
+  },
+  "privacyData": {
+    "message": "승인된 사이트"
+  },
+  "clearPrivacyDataBtn": {
+    "message": "모든 승인된 사이트 지우기"
+  },
+  "clearPrivacyDataTip": {
+    "message": "이 승인된 사이트를 지우면 모든 사이트가 계정 정보 보기 또는 전송 요청을 다시 요청해야 합니다."
+  },
+  "referSource": {
+    "message": "참조 출처"
+  },
+  "updateTime": {
+    "message": "업데이트 시간"
+  },
+  "importNewWallet": {
+    "message": "기존 지갑 가져오기"
+  },
+  "createNewWallet": {
+    "message": "새 지갑 생성"
+  },
+  "or": {
+    "message": "또는"
+  },
+  "firstDigitalIdentity": {
+    "message": "첫 디지털 신원"
+  },
+  "createYour": {
+    "message": "생성하기"
+  },
+  "beijingTime": {
+    "message": "중국 표준시"
+  },
+  "priorityFee": {
+    "message": "우선 수수료"
+  },
+  "priorityFeeTip": {
+    "message": "선택 사항"
+  },
+  "claim": {
+    "message": "청구"
+  },
+  "syncNow": {
+    "message": "동기화"
+  },
+  "confirmed": {
+    "message": "확인됨"
+  },
+  "success": {
+    "message": "성공"
+  },
+  "estimated": {
+    "message": "예상"
+  },
+  "connectChooseAllow": {
+    "message": "허용하고 다시 묻지 않기"
+  },
+  "darkMode": {
+    "message": "다크 모드"
+  },
+  "myTokens": {
+    "message": "내 토큰"
+  },
+  "authorized": {
+    "message": "승인됨"
+  },
+  "systemSettings": {
+    "message": "시스템 설정"
+  },
+  "lock": {
+    "message": "잠금"
+  },
+  "noMoreData": {
+    "message": "더 이상 데이터가 없습니다"
+  },
+  "generalSettings": {
+    "message": "일반 설정"
+  },
+  "ViewOnExplorer": {
+    "message": "탐색기에서 보기"
+  },
+  "accountDetails": {
+    "message": "계정 상세"
+  },
+  "expandView": {
+    "message": "확장 보기"
+  },
+  "accountAdded": {
+    "message": "계정이 추가되었습니다"
+  },
+  "removeAccount": {
+    "message": "계정 제거"
+  },
+  "editFee": {
+    "message": "수수료 편집"
+  },
+  "resetWalletConfirm": {
+    "message": "지갑을 초기화하면 기존 지갑 데이터가 모두 삭제되며 복구할 수 없습니다. 지갑 초기화를 확인하시겠습니까?"
+  },
+  "slow": {
+    "message": "느림"
+  },
+  "medium": {
+    "message": "보통"
+  },
+  "fast": {
+    "message": "빠름"
+  },
+  "customize": {
+    "message": "사용자 지정"
+  },
+  "resetWallet": {
+    "message": "지갑 초기화"
+  },
+  "transferAddress": {
+    "message": "전송 주소"
+  },
+  "selectAsset": {
+    "message": "자산 선택"
+  },
+  "importMethod": {
+    "message": "가져오기 방법"
+  },
+  "importKey": {
+    "message": "개인 키 가져오기"
+  },
+  "importFile": {
+    "message": "파일 가져오기"
+  },
+  "personalAccount": {
+    "message": "개인 계정"
+  },
+  "details": {
+    "message": "상세"
+  },
+  "data": {
+    "message": "데이터"
+  },
+  "backUp": {
+    "message": "백업"
+  },
+  "backUpTip": {
+    "message": "백업 알림"
+  },
+  "backUpDesc1": {
+    "message": "1. 개인 키/비밀 복구 구문을 소유하는 것은 계정 자산의 소유권을 갖는 것과 같습니다. 이를 기록해 안전한 장소에 보관하고 누구와도 공유하지 마세요."
+  },
+  "backUpDesc2": {
+    "message": "2. NeoLine은 탈중앙화 지갑이며 개인 키/비밀 복구 구문을 저장하지 않습니다. 분실하면 복구할 수 없습니다."
+  },
+  "backUpNow": {
+    "message": "지금"
+  },
+  "backUpLater": {
+    "message": "나중에"
+  },
+  "donotScreenshot": {
+    "message": "캡처하지 마세요"
+  },
+  "donotScreenshotTip": {
+    "message": "스크린샷을 공유하거나 저장하지 마세요. 제3자 악성 소프트웨어에 캡처되어 자산 손실이 발생할 수 있습니다. 복사할 때 주변 환경의 안전에 주의하세요."
+  },
+  "iKonw": {
+    "message": "확인함"
+  },
+  "youPrivateKey": {
+    "message": "내 개인 키"
+  },
+  "privateKeyTip": {
+    "message": "팁: 개인 키를 안전하게 보관하고 누구에게도 공개하지 마세요"
+  },
+  "backUpsafeTip": {
+    "message": "지갑을 백업하지 않았습니다"
+  },
+  "backUpTipLater": {
+    "message": "나중에"
+  },
+  "backUpSafeDesc": {
+    "message": "기기를 분실하거나 앱을 다시 설치하거나 앱 데이터가 삭제되면 이 지갑과 자산에 접근할 수 없으며 복구할 수 없습니다."
+  },
+  "receiveOurNewsletter": {
+    "message": "뉴스레터 받기"
+  },
+  "newsletterTip": {
+    "message": "NeoLine 팀의 최신 업데이트 받기"
+  },
+  "newsletterDesc": {
+    "message": "이 뉴스레터는 언제든지 구독을 취소할 수 있습니다. 구독 취소 방법, 개인정보 처리 방식 및 개인정보 보호 약속에 대한 자세한 내용은 다음을 확인하세요: "
+  },
+  "privacyPolicyWrods": {
+    "message": "개인정보 처리방침."
+  },
+  "newsletterPlaceholder": {
+    "message": "이메일"
+  },
+  "signUpToReceiveUpdatesAndAnnouncements": {
+    "message": "업데이트 및 공지 수신 신청"
+  },
+  "recommendedAssets": {
+    "message": "추천 자산"
+  },
+  "myAssets": {
+    "message": "내 자산"
+  },
+  "addAssetWarn": {
+    "message": "이 자산은 지갑에서 공식적으로 검증되지 않았으며 보안상 위험이 있을 수 있음을 유의하세요."
+  },
+  "saveChanges": {
+    "message": "변경 사항 저장"
+  },
+  "selectAChain": {
+    "message": "체인 선택"
+  },
+  "TOTAL": {
+    "message": "합계:"
+  },
+  "TOTALFEE": {
+    "message": "총 수수료"
+  },
+  "PRIORITYFEEUPPER": {
+    "message": "우선 수수료"
+  },
+  "SYSTEMFEE": {
+    "message": "시스템 수수료"
+  },
+  "NETWORKFEE": {
+    "message": "네트워크 수수료"
+  },
+  "GASFEE": {
+    "message": "가스 수수료"
+  },
+  "None": {
+    "message": "트랜잭션에만 서명하며 어떤 컨트랙트도 이 서명을 사용할 수 없습니다."
+  },
+  "CalledByEntry": {
+    "message": "기본 서명입니다."
+  },
+  "CustomContracts": {
+    "message": "사용자 지정 컨트랙트입니다. 이 서명은 지정된 컨트랙트에서 사용할 수 있습니다."
+  },
+  "CustomGroups": {
+    "message": "사용자 지정 컨트랙트 그룹입니다. 이 서명은 지정된 컨트랙트 그룹에서 사용할 수 있습니다."
+  },
+  "Global": {
+    "message": "위험이 매우 높습니다. 컨트랙트가 주소의 모든 자산을 전송할 수 있으므로 컨트랙트를 완전히 신뢰할 때만 선택하세요."
+  },
+  "Scope": {
+    "message": "범위"
+  },
+  "NoWallet": {
+    "message": "지갑이 없습니다. 가져오거나 생성하세요."
+  },
+  "Name": {
+    "message": "이름"
+  },
+  "Symbol": {
+    "message": "심볼"
+  },
+  "noData": {
+    "message": "데이터 없음"
+  },
+  "Contract": {
+    "message": "컨트랙트"
+  },
+  "YourSigningAddress": {
+    "message": "서명 주소"
+  },
+  "ContractScriptHash": {
+    "message": "컨트랙트 스크립트 해시"
+  },
+  "Operation": {
+    "message": "작업"
+  },
+  "InvocationArguments": {
+    "message": "호출 인수"
+  },
+  "broadcastOverride": {
+    "message": "브로드캐스트 재정의"
+  },
+  "signers": {
+    "message": "서명자"
+  },
+  "callFlags": {
+    "message": "CallFlags"
+  },
+  "Fee": {
+    "message": "수수료"
+  },
+  "booleanYes": {
+    "message": "예"
+  },
+  "No": {
+    "message": "아니요"
+  },
+  "AttachedAssets": {
+    "message": "첨부 자산"
+  },
+  "AssetIntentOverrideInputs": {
+    "message": "자산 의도 재정의 입력"
+  },
+  "AssetIntentOverrideOutputs": {
+    "message": "자산 의도 재정의 출력"
+  },
+  "triggerContractAssetVerification": {
+    "message": "컨트랙트 자산 검증을 트리거할까요?"
+  },
+  "TransactionAttributes": {
+    "message": "트랜잭션 속성"
+  },
+  "asset": {
+    "message": "자산"
+  },
+  "ChainSmartContractDeploy": {
+    "message": "스마트 컨트랙트 호출"
+  },
+  "PublicKey": {
+    "message": "PublicKey(인코딩됨)"
+  },
+  "AddNEP11": {
+    "message": "NEP11 추가"
+  },
+  "myNep11": {
+    "message": "내 NEP11"
+  },
+  "myNft": {
+    "message": "내 NFT"
+  },
+  "unlockWallet": {
+    "message": "지갑 잠금을 해제하려면 계정 비밀번호를 입력해야 합니다"
+  },
+  "ABOUT_US": {
+    "message": "회사 소개"
+  },
+  "NEW": {
+    "message": "새로 만들기"
+  },
+  "EXPORT": {
+    "message": "내보내기"
+  },
+  "Active": {
+    "message": "활성"
+  },
+  "Sort": {
+    "message": "정렬"
+  },
+  "Search": {
+    "message": "검색..."
+  },
+  "SearchEVMNetwork": {
+    "message": "검색할 EVM 네트워크 이름 입력"
+  },
+  "Networks": {
+    "message": "네트워크"
+  },
+  "AddNetwork": {
+    "message": "네트워크 추가"
+  },
+  "EditNetwork": {
+    "message": "네트워크 편집"
+  },
+  "NetworkName": {
+    "message": "네트워크 이름"
+  },
+  "New_RPC_URL": {
+    "message": "새 RPC URL"
+  },
+  "Explorer_URL": {
+    "message": "블록 탐색기 URL(선택 사항)"
+  },
+  "oneMonthTxs": {
+    "message": "최근 한 달의 트랜잭션만 표시"
+  },
+  "LedgerNotSupportComputer": {
+    "message": "이 컴퓨터에서는 Ledger가 지원되지 않습니다."
+  },
+  "connectLedgerDevice": {
+    "message": "Ledger 기기를 연결하세요"
+  },
+  "connectOneKeyDevice": {
+    "message": "OneKey 기기를 연결하세요"
+  },
+  "openNeoAppOnLedger": {
+    "message": "Ledger 기기에서 NEO 앱을 여세요."
+  },
+  "openNeo3AppOnLedger": {
+    "message": "Ledger 기기에서 NEO N3 앱을 여세요."
+  },
+  "openNeoXAppOnLedger": {
+    "message": "Ledger 기기에서 Ethereum 앱을 여세요."
+  },
+  "LedgerConnectedNeoReady": {
+    "message": "Ledger가 연결되었고 NEO 앱이 열려 있어 사용할 준비가 되었습니다."
+  },
+  "LedgerConnectedNeo3Ready": {
+    "message": "Ledger가 연결되었고 NEO N3 앱이 열려 있어 사용할 준비가 되었습니다."
+  },
+  "LedgerConnectedNeoXReady": {
+    "message": "Ledger가 연결되었고 Ethereum 앱이 열려 있어 사용할 준비가 되었습니다."
+  },
+  "TransactionDeniedByUser": {
+    "message": "사용자가 트랜잭션을 거부했습니다."
+  },
+  "TransactionTooLarge": {
+    "message": "트랜잭션이 너무 커서 Ledger가 서명할 수 없습니다."
+  },
+  "errorLedgerOpen": {
+    "message": "이 트랜잭션을 파싱하는 중 오류가 발생했습니다. 올바른 Ledger 앱이 열려 있는지 확인하세요."
+  },
+  "LedgerInstallNeoApp": {
+    "message": "참고: Ledger에 최신 NEO 앱이 설치되어 있는지 확인하세요."
+  },
+  "LedgerInstallNeo3App": {
+    "message": "참고: Ledger에 최신 NEO N3 앱이 설치되어 있는지 확인하세요."
+  },
+  "LedgerInstallNeoXApp": {
+    "message": "참고: Ledger에 최신 Ethereum 앱이 설치되어 있는지 확인하세요."
+  },
+  "signLedgerTransaction": {
+    "message": "Ledger에서 트랜잭션에 서명하세요"
+  },
+  "signLedgerMessage": {
+    "message": "Ledger에서 메시지에 서명하세요"
+  },
+  "signOneKeyTransaction": {
+    "message": "OneKey에서 트랜잭션에 서명하세요"
+  },
+  "signOneKeyMessage": {
+    "message": "OneKey에서 메시지에 서명하세요"
+  },
+  "Wait": {
+    "message": "대기"
+  },
+  "ImportHardwareWallet": {
+    "message": "하드웨어 지갑 가져오기"
+  },
+  "Next": {
+    "message": "다음"
+  },
+  "selectAccountConnect": {
+    "message": "계정 선택"
+  },
+  "WalletAddress": {
+    "message": "지갑 주소"
+  },
+  "CreatingImportingWallet": {
+    "message": "지갑을 생성/가져오면 다음을 읽고 동의한 것으로 간주됩니다: "
+  },
+  "and": {
+    "message": " 및 "
+  },
+  "PrivacyPolicy": {
+    "message": "개인정보 처리방침"
+  },
+  "TermsOfService": {
+    "message": "서비스 약관"
+  },
+  "ImportThisAccount": {
+    "message": "이 계정 가져오기"
+  },
+  "Confirm": {
+    "message": "확인"
+  },
+  "ImportSuccessful": {
+    "message": "가져오기에 성공했습니다. NeoLine 확장 프로그램에서 확인하세요"
+  },
+  "PleaseEnterWalletName": {
+    "message": "지갑 이름을 입력하세요"
+  },
+  "Imported": {
+    "message": "가져옴"
+  },
+  "connectYourDevice": {
+    "message": "{{device}} 연결"
+  },
+  "plugInLedgerWalletTip": {
+    "message": "Ledger를 컴퓨터에 직접 연결한 다음 잠금을 해제하고 Neo/Neo N3/Ethereum 앱을 여세요. Ledger 지갑 기기 사용에 대한 자세한 내용은 "
+  },
+  "plugInOneKeyWalletTip": {
+    "message": "OneKey를 컴퓨터에 직접 연결하고 잠금을 해제하세요."
+  },
+  "clickHere": {
+    "message": "여기를 클릭하세요."
+  },
+  "reconnectLedger": {
+    "message": "Ledger가 오랫동안 응답하지 않으면 Ledger를 다시 연결해 보세요"
+  },
+  "inputNeo2AddressTip": {
+    "message": "Neo 레거시 주소"
+  },
+  "inputN3NNSAddressTip": {
+    "message": "N3 주소 또는 NeoNS 이름"
+  },
+  "inputN3AddressTip": {
+    "message": "N3 주소"
+  },
+  "inputNeoXAddressTip": {
+    "message": "EVM 주소"
+  },
+  "Copied": {
+    "message": "복사됨!"
+  },
+  "CopyToClipboard": {
+    "message": "클립보드에 복사"
+  },
+  "SwitchTo": {
+    "message": "다음으로 전환"
+  },
+  "Network": {
+    "message": "네트워크"
+  },
+  "createOrImportNeo2First": {
+    "message": "먼저 Neo Legacy 계정을 가져오세요"
+  },
+  "createOrImportNeo3First": {
+    "message": "먼저 Neo N3 계정을 가져오세요"
+  },
+  "createOrImportNeoXFirst": {
+    "message": "먼저 Neo X(EVM 네트워크) 계정을 가져오세요"
+  },
+  "OnePasswordPattern": {
+    "message": "통합 비밀번호 설정"
+  },
+  "onePasswordDesc": {
+    "message": "지갑 비밀번호를 최적화하고 비밀번호 모드 전환 기능을 추가했습니다. v4.0.0 이전 사용자는 여러 지갑 계정을 관리하기 위한 통합 비밀번호를 설정할 수 있습니다. 계정 보안 검증을 완료하고 새 비밀번호 관리 모드로 전환하려면 \"지금 전환\"을 클릭하세요."
+  },
+  "ClickToLearnMore": {
+    "message": "자세히 알아보기!"
+  },
+  "OnePasswordTitle": {
+    "message": "비밀번호 모드 전환"
+  },
+  "onePasswordTip": {
+    "message": "전환을 완료하려면 모든 계정에 해당하는 비밀번호를 정확히 입력하고 지갑이 안전하게 백업되었는지 확인하세요."
+  },
+  "SwitchNow": {
+    "message": "지금 전환"
+  },
+  "enterNewPassword": {
+    "message": "새 비밀번호 입력"
+  },
+  "enterConfirmNewPassword": {
+    "message": "새 비밀번호 다시 입력"
+  },
+  "wrongPassword": {
+    "message": "잘못된 비밀번호"
+  },
+  "switchNetwork": {
+    "message": "네트워크 전환"
+  },
+  "switchNetworkTitle": {
+    "message": "이 사이트가 네트워크를 전환하도록 허용하시겠습니까?"
+  },
+  "switchNetworkDesc": {
+    "message": "NeoLine 내에서 선택한 네트워크를 이전에 추가한 네트워크로 전환합니다:"
+  },
+  "switchAccount": {
+    "message": "계정 전환"
+  },
+  "switchAccountTitle": {
+    "message": "이 사이트가 계정을 전환하도록 허용하시겠습니까?"
+  },
+  "switchAccountDesc": {
+    "message": "NeoLine 내에서 선택한 계정을 이전에 추가한 계정으로 전환합니다:"
+  },
+  "VerificationPassed": {
+    "message": "검증 통과"
+  },
+  "addressBook": {
+    "message": "주소록"
+  },
+  "receiveTip1Prefix": {
+    "message": "현재"
+  },
+  "receiveTip1Suffix": {
+    "message": "네트워크"
+  },
+  "receiveTip2Prefix": {
+    "message": "수신은"
+  },
+  "receiveTip2Suffix": {
+    "message": "네트워크 자산만 지원합니다"
+  },
+  "ConfirmSecretRecoveryPhrase": {
+    "message": "비밀 복구 구문 확인"
+  },
+  "YourSecretRecoveryPhrase": {
+    "message": "내 비밀 복구 구문"
+  },
+  "ConfirmTheSecretRecoveryPhrasesInOrder": {
+    "message": "비밀 복구 구문을 순서대로 확인하세요"
+  },
+  "WrongSecretRecoveryPhrase": {
+    "message": "잘못된 비밀 복구 구문입니다. 다시 시도하세요."
+  },
+  "notedItDown": {
+    "message": "기록했습니다"
+  },
+  "AddAccountOrHardwareWallet": {
+    "message": "계정 또는 하드웨어 지갑 추가"
+  },
+  "AddAccount": {
+    "message": "{{chain}} 계정 추가"
+  },
+  "addAccount": {
+    "message": "계정 추가"
+  },
+  "importWalletTip": {
+    "message": "니모닉 구문 또는 개인 키 가져오기"
+  },
+  "createWalletTip": {
+    "message": "새 니모닉 지갑 생성"
+  },
+  "hardwareWallet": {
+    "message": "하드웨어 지갑"
+  },
+  "hardwareWalletTip": {
+    "message": "하드웨어 지갑 연결"
+  },
+  "enterMnemonic": {
+    "message": "비밀 복구 구문 입력"
+  },
+  "MnemonicRequired": {
+    "message": "비밀 복구 구문은 필수입니다"
+  },
+  "MnemonicPattern": {
+    "message": "유효하지 않은 비밀 복구 구문"
+  },
+  "importMnemonic": {
+    "message": "비밀 복구 구문 가져오기"
+  },
+  "previewAddress": {
+    "message": "주소"
+  },
+  "AddNetworkTip": {
+    "message": "완전히 신뢰하는 경우에만 네트워크를 추가하세요!"
+  },
+  "ChainID": {
+    "message": "체인 ID"
+  },
+  "networkNameIsRequired": {
+    "message": "네트워크 이름은 필수입니다"
+  },
+  "rpcUrlIsRequired": {
+    "message": "RPC URL은 필수입니다"
+  },
+  "Invalid_RPC_URL": {
+    "message": "유효하지 않은 RPC URL"
+  },
+  "exist_RPC_URL": {
+    "message": "이 RPC URL에 해당하는 체인 ID가 이미 존재합니다"
+  },
+  "symbolIsRequired": {
+    "message": "심볼은 필수입니다"
+  },
+  "failed": {
+    "message": "실패"
+  },
+  "AddAddressBook": {
+    "message": "주소 추가"
+  },
+  "EditAddressBook": {
+    "message": "주소 편집"
+  },
+  "SelectNetwork": {
+    "message": "네트워크 선택"
+  },
+  "nameIsRequired": {
+    "message": "이름은 필수입니다"
+  },
+  "addressIsRequired": {
+    "message": "주소는 필수입니다"
+  },
+  "wrongAddress": {
+    "message": "잘못된 주소입니다. 다시 시도하세요"
+  },
+  "addressBookNameLengthTip": {
+    "message": "최대 20자"
+  },
+  "addAddressExist": {
+    "message": "주소가 이미 존재합니다"
+  },
+  "showSecretRecoveryPhrase": {
+    "message": "비밀 복구 구문 표시"
+  },
+  "hideSecretRecoveryPhrase": {
+    "message": "비밀 복구 구문 숨기기"
+  },
+  "secretRecoveryPhrase": {
+    "message": "비밀 복구 구문"
+  },
+  "secretRecoveryPhraseTip": {
+    "message": "비밀 복구 구문을 안전하게 보관하고 누구에게도 보여주지 마세요"
+  },
+  "yourHove": {
+    "message": "보유 중인"
+  },
+  "accountsConnectedToThisSite": {
+    "message": "계정이 이 사이트에 연결되어 있습니다."
+  },
+  "noAccountsConnected": {
+    "message": "연결된 계정이 없습니다."
+  },
+  "accountsConnected": {
+    "message": "연결된 계정"
+  },
+  "notConnected": {
+    "message": "연결되지 않음"
+  },
+  "Connected": {
+    "message": "연결됨"
+  },
+  "switchToThisAccount": {
+    "message": "이 계정으로 전환"
+  },
+  "permissions": {
+    "message": "권한"
+  },
+  "permissionsTip": {
+    "message": "다음 권한을 승인했습니다:"
+  },
+  "permissionsDesc": {
+    "message": "주소, 계정 잔액, 활동을 보고 승인할 트랜잭션을 제안합니다."
+  },
+  "disconnectThisAccount": {
+    "message": "이 계정 연결 해제"
+  },
+  "Bridge": {
+    "message": "브리지"
+  },
+  "checkExportWallet": {
+    "message": "이 지갑을 내보내시겠습니까?"
+  },
+  "exportAllWallet": {
+    "message": "이 네트워크의 모든 지갑 내보내기"
+  },
+  "advancedGasFee": {
+    "message": "고급 가스 수수료"
+  },
+  "advancedGasFeeRisk": {
+    "message": "이 기능을 사용하면 가스 가격을 사용자 지정할 수 있습니다. 익숙하지 않다면 혼란스러울 수 있습니다. 본인 책임하에 사용하세요."
+  },
+  "maxFee": {
+    "message": "최대 수수료"
+  },
+  "maxPriorityFee": {
+    "message": "우선 수수료"
+  },
+  "gasPrice": {
+    "message": "가스 가격"
+  },
+  "gasLimit": {
+    "message": "가스 한도"
+  },
+  "maxFeeIsLowPriorityFee": {
+    "message": "최대 수수료는 우선 수수료보다 낮을 수 없습니다"
+  },
+  "maxFeeIsLow": {
+    "message": "현재 네트워크 상황에 비해 최대 수수료가 낮습니다"
+  },
+  "current": {
+    "message": "현재"
+  },
+  "maxPriorityFeeIsLow": {
+    "message": "현재 네트워크 상황에 비해 우선 수수료가 낮습니다"
+  },
+  "gasPriceIsLow": {
+    "message": "현재 네트워크 상황에 비해 가스 가격이 낮습니다"
+  },
+  "gasLimitRange": {
+    "message": "가스 한도는 20999보다 커야 합니다"
+  },
+  "backupSecretRecoveryPhrase": {
+    "message": "비밀 복구 구문을 손으로 적어 안전한 장소에 보관하세요. 누구에게도 보여주지 마세요."
+  },
+  "EstimatedFee": {
+    "message": "예상 수수료"
+  },
+  "Deposit": {
+    "message": "입금"
+  },
+  "Withdraw": {
+    "message": "출금"
+  },
+  "From": {
+    "message": "보내는 곳"
+  },
+  "Balance": {
+    "message": "잔액"
+  },
+  "Max": {
+    "message": "최대"
+  },
+  "ToAddress": {
+    "message": "받는 주소"
+  },
+  "bridgeFee": {
+    "message": "브리지 수수료"
+  },
+  "bridgeFeeDesc": {
+    "message": "브리지 컨트랙트는 {{bridgeFee}} GAS를 부과하며, 플랫폼은 다른 수수료를 부과하지 않습니다."
+  },
+  "ActualReceive": {
+    "message": "실제 수령"
+  },
+  "Approve": {
+    "message": "승인"
+  },
+  "CustomSpendingCap": {
+    "message": "사용자 지정 지출 한도"
+  },
+  "EstimatedFeeError": {
+    "message": "가스를 예측할 수 없습니다. 컨트랙트에 오류가 있을 수 있으며 이 트랜잭션은 실패할 수 있습니다."
+  },
+  "Sending": {
+    "message": "전송 중"
+  },
+  "evmSignWarning": {
+    "message": "내용을 완전히 이해하고 요청한 사이트를 신뢰할 때만 이 메시지에 서명하세요."
+  },
+  "AddNFT": {
+    "message": "NFT 추가"
+  },
+  "TokenIdIsRequired": {
+    "message": "토큰 ID는 필수입니다"
+  },
+  "InvalidTokenId": {
+    "message": "유효하지 않은 토큰 ID"
+  },
+  "menuGuideAndSupport": {
+    "message": "가이드 및 지원"
+  },
+  "menuSettings": {
+    "message": "설정"
+  },
+  "menuLock": {
+    "message": "NeoLine 잠금"
+  },
+  "menuAboutUs": {
+    "message": "회사 소개"
+  },
+  "yourAccounts": {
+    "message": "내 계정"
+  },
+  "selectAddress": {
+    "message": "주소 선택"
+  },
+  "confirmMnemonicTip": {
+    "message": "전체 니모닉 구문을 아무 입력란에나 입력할 수 있습니다"
+  },
+  "FromAddress": {
+    "message": "보내는 주소"
+  },
+  "YourNeoXReceiveAddress": {
+    "message": "Neo X 수신 주소"
+  },
+  "YourNeo3ReceiveAddress": {
+    "message": "Neo3 N3 수신 주소"
+  },
+  "addEvmTokenTitle": {
+    "message": "제안된 토큰 추가"
+  },
+  "addEvmTokenTip": {
+    "message": "이 토큰들을 가져오시겠습니까?"
+  },
+  "Token": {
+    "message": "토큰"
+  },
+  "addEvmChainTitle": {
+    "message": "이 사이트가 네트워크를 추가하도록 허용하시겠습니까?"
+  },
+  "addEvmChainTip": {
+    "message": "이 네트워크를 NeoLine에서 사용할 수 있게 됩니다."
+  },
+  "addEvmChainWarning": {
+    "message": "NeoLine은 사용자 지정 네트워크를 검증하지 않습니다. 신뢰하는 네트워크만 추가하세요!"
+  },
+  "NetworkURL": {
+    "message": "네트워크 URL"
+  },
+  "CurrencySymbol": {
+    "message": "통화 심볼"
+  },
+  "BlockExplorerURL": {
+    "message": "블록 탐색기 URL"
+  },
+  "ContractAddress": {
+    "message": "컨트랙트 주소"
+  },
+  "ViewTransaction": {
+    "message": "트랜잭션 보기"
+  },
+  "ViewInNFTMarket": {
+    "message": "NFT 마켓에서 보기"
+  },
+  "Depositing": {
+    "message": "입금 중"
+  },
+  "Deposited": {
+    "message": "입금됨"
+  },
+  "Withdrawing": {
+    "message": "출금 중"
+  },
+  "Withdrawn": {
+    "message": "출금됨"
+  },
+  "Completed": {
+    "message": "완료됨"
+  },
+  "DepositingTip": {
+    "message": "트랜잭션이 완료되면 {{symbol}}이 지갑에 입금됩니다."
+  },
+  "DepositedTip": {
+    "message": "{{symbol}}이 Neo X 지갑에 입금되었습니다."
+  },
+  "WithdrawingTip": {
+    "message": "트랜잭션이 완료되면 {{symbol}}이 지갑으로 출금됩니다."
+  },
+  "WithdrawnTip": {
+    "message": "{{symbol}}이 Neo3 지갑으로 출금되었습니다."
+  },
+  "Transferring": {
+    "message": "전송 중"
+  },
+  "Transferred": {
+    "message": "전송됨"
+  },
+  "SpendingCapRequestForYour": {
+    "message": "내 계정에 대한 지출 한도 요청"
+  },
+  "SpendingCapRequest": {
+    "message": "지출 한도 요청"
+  },
+  "SpendingCap": {
+    "message": "지출 한도"
+  },
+  "ViewDetails": {
+    "message": "상세 보기"
+  },
+  "approveTip": {
+    "message": "주의: 제3자가 추가 알림이나 동의 없이 전체 토큰 잔액을 사용할 수 있습니다. 더 낮은 지출 한도를 설정해 자신을 보호하세요."
+  },
+  "approveCustomTip": {
+    "message": "제3자가 현재 또는 향후 사용해도 괜찮다고 생각하는 숫자만 입력하세요. 지출 한도는 나중에 언제든지 늘릴 수 있습니다."
+  },
+  "useSiteSuggestion": {
+    "message": "사이트 제안 사용"
+  },
+  "useSuggestion": {
+    "message": "제안 사용"
+  },
+  "contractInteraction": {
+    "message": "컨트랙트 상호작용"
+  },
+  "save": {
+    "message": "저장"
+  },
+  "footnoteDesc2": {
+    "message": "이 조치는 위험을 완화하고 원활한 사용자 경험을 보장하기 위한 것입니다. 브리지 서비스의 안정성이 입증되면 제공자는 GAS 금액 한도를 점진적으로 해제하고 NEO 토큰 및 기타 자산까지 서비스를 확대할 예정입니다."
+  },
+  "footnote": {
+    "message": "각주"
+  },
+  "yourHavePendingTxs": {
+    "message": "대기 중인 트랜잭션이 ({{count}})개 있습니다. 해당 트랜잭션이 완료될 때까지 이 트랜잭션은 처리되지 않습니다. 방법 알아보기:"
+  },
+  "evmInsufficientGas": {
+    "message": "{{network}} 네트워크에서 트랜잭션 수수료를 지불할 만큼 계정에 {{symbol}}이 충분하지 않습니다. 또는 다른 계정에서 입금하세요."
+  },
+  "approveInitTip": {
+    "message": "이 작업은 제3자가 현재 잔액에서 {{symbol}}을 사용할 수 있도록 허용합니다."
+  },
+  "approveBigTip": {
+    "message": "이는 지출 한도에 도달하거나 지출 한도를 철회할 때까지 제3자가 전체 토큰 잔액을 사용할 수 있게 합니다. 의도한 것이 아니라면 더 낮은 지출 한도를 설정하는 것을 고려하세요."
+  },
+  "approveNormalTip": {
+    "message": "이는 제3자가 현재 잔액에서 {{amount}} {{symbol}}을 사용할 수 있게 합니다."
+  },
+  "cancelOrSpeedUpTX": {
+    "message": "트랜잭션을 취소하거나 속도를 높이는 방법."
+  },
+  "customNonce": {
+    "message": "사용자 지정 nonce"
+  },
+  "dropped": {
+    "message": "드롭됨"
+  },
+  "cancelled": {
+    "message": "취소됨"
+  },
+  "canceling": {
+    "message": "취소 중"
+  },
+  "speedingUp": {
+    "message": "속도 높이는 중"
+  },
+  "speedUp": {
+    "message": "속도 높이기"
+  },
+  "cancelTransaction": {
+    "message": "트랜잭션 취소"
+  },
+  "ActivityLog": {
+    "message": "활동 로그"
+  },
+  "SpeedUpCancellation": {
+    "message": "이 취소 속도 높이기"
+  },
+  "evmLogCreateTx": {
+    "message": "트랜잭션이 {{time}}에 예상 가스 수수료 {{gas}} {{symbol}}로 생성되었습니다."
+  },
+  "evmLogSpeedUpTx": {
+    "message": "트랜잭션이 {{time}}에 예상 가스 수수료를 {{gas}} {{symbol}}로 높여 다시 제출되었습니다."
+  },
+  "evmLogCancelTx": {
+    "message": "트랜잭션이 {{time}}에 예상 가스 수수료 {{gas}} {{symbol}}로 취소되었습니다."
+  },
+  "evmLogCompleteTx": {
+    "message": "트랜잭션이 {{time}}에 확인되었습니다."
+  },
+  "cancelTxDesc": {
+    "message": "트랜잭션을 취소해도 네트워크 수수료를 지불해야 합니다. 네트워크 오류로 인해 취소가 실패할 수 있습니다."
+  },
+  "speedUpTxDesc": {
+    "message": "네트워크 수수료를 높여 트랜잭션 속도를 높입니다."
+  },
+  "speedUpTip": {
+    "message": "참고: 이 트랜잭션 가속에 대한 서비스 수수료는 부과하지 않습니다."
+  },
+  "sendToken": {
+    "message": "보내기"
+  },
+  "sendEther": {
+    "message": "보내기"
+  },
+  "Activity": {
+    "message": "활동"
+  },
+  "Site": {
+    "message": "사이트"
+  },
+  "useSiteSuggestions": {
+    "message": "웹사이트 제안 사용"
+  },
+  "SiteTip": {
+    "message": "{{host}}에서 이 가격을 제안했습니다.<br /> 최대 기본 수수료: {{maxFeePerGas}}<br /> 우선 수수료: {{maxPriorityFee}}<br /> 가스 한도: {{gasLimit}}"
+  },
+  "SiteLegacyFeeTip": {
+    "message": "{{host}}에서 이 가격을 제안했습니다.<br /> 가스 가격: {{gasPrice}}<br /> 가스 한도: {{gasLimit}}"
+  },
+  "LearnBridge": {
+    "message": "브리지 방법 알아보기"
+  },
+  "GetSupport": {
+    "message": "지원 받기"
+  },
+  "networkTip": {
+    "message": "NeoLine은 이제 Neo X(EVM 네트워크)를 지원하며 사용자는 모든 EVM 네트워크를 쉽게 추가할 수 있습니다."
+  },
+  "learnMore": {
+    "message": "자세히 알아보기!"
+  },
+  "needHelp": {
+    "message": "도움이 필요하신가요? 문의:"
+  },
+  "contactSupport": {
+    "message": "NeoLine 지원"
+  },
+  "approval": {
+    "message": "승인"
+  },
+  "approving": {
+    "message": "승인 중"
+  },
+  "TokenApproved": {
+    "message": "{{symbol}} 승인됨"
+  },
+  "connectOneKey": {
+    "message": "OneKey 기기를 연결하고 잠금을 해제하세요"
+  },
+  "installOneKeyBridgeTip": {
+    "message": "OneKey Bridge 앱을 여세요. 하드웨어 기기를 연결하기 전에 OneKey Bridge 데스크톱 앱을 다운로드하고 실행하세요. NeoLine은 하드웨어 지갑과 통신하기 위해 이 앱이 필요합니다."
+  },
+  "installOneKeyBridgeShortTip": {
+    "message": "OneKey Bridge 데스크톱 앱을 다운로드하고 실행하세요."
+  },
+  "installOneKeyBridge": {
+    "message": "OneKey Bridge 설치"
+  },
+  "selectHardware": {
+    "message": "NeoLine과 함께 사용할 하드웨어 지갑을 선택하세요."
+  },
+  "notice": {
+    "message": "알림"
+  },
+  "RPC_URL": {
+    "message": "RPC URL"
+  },
+  "AddAURL": {
+    "message": "URL 추가"
+  },
+  "AddRPCURL": {
+    "message": "RPC URL 추가"
+  },
+  "RPC_URL_ChainId_Not_Match": {
+    "message": "입력한 RPC URL이 다른 체인 ID({{chainId}})를 반환했습니다"
+  },
+  "SortWallets": {
+    "message": "지갑 정렬"
+  },
+  "RequestFrom": {
+    "message": "요청 출처"
+  },
+  "InteractingWith": {
+    "message": "상호작용 대상"
+  },
+  "Method": {
+    "message": "메서드"
+  },
+  "AmountUpper": {
+    "message": "수량"
+  },
+  "notConnectWebsiteDesc": {
+    "message": "{{name}}이(가) {{origin}}에 연결되어 있지 않습니다"
+  },
+  "connectWebsite": {
+    "message": "계정 연결"
+  },
+  "requestFromTip": {
+    "message": "확인을 요청하는 사이트입니다."
+  },
+  "nonceTip": {
+    "message": "계정의 트랜잭션 번호입니다. 첫 번째 트랜잭션의 nonce는 0이며 순차적으로 증가합니다."
+  },
+  "interactionWithTip": {
+    "message": "상호작용하는 컨트랙트입니다. 세부 정보를 확인해 자신을 보호하세요."
+  },
+  "methodTip": {
+    "message": "디코딩된 입력 데이터를 기반으로 실행되는 함수입니다."
+  },
+  "Spender": {
+    "message": "사용자"
+  },
+  "spenderTip": {
+    "message": "사용자를 대신해 토큰을 사용할 수 있는 주소입니다."
+  },
+  "scanQRCode": {
+    "message": "QR 코드 스캔"
+  },
+  "scanQRCodeTip": {
+    "message": "카메라 앞에 QR 코드를 놓으세요. 화면은 흐리게 보이지만 읽는 데 영향을 주지 않습니다."
+  },
+  "requestSignature": {
+    "message": "서명 요청"
+  },
+  "requestSignatureStep1": {
+    "message": "지갑으로 QR 코드를 스캔하세요"
+  },
+  "requestSignatureStep2": {
+    "message": "지갑에서 서명한 후 \"서명 받기\"를 클릭해 서명을 받으세요"
+  },
+  "reject": {
+    "message": "거부"
+  },
+  "getSignature": {
+    "message": "서명 받기"
+  },
+  "invalidQRCode": {
+    "message": "유효하지 않은 QR 코드입니다. 하드웨어 지갑의 동기화 QR 코드를 스캔하세요."
+  },
+  "QRBasedTip": {
+    "message": "QR 하드웨어 지갑은 EVM 호환 체인만 지원합니다."
+  },
+  "detectContractSecurity": {
+    "message": "제3자 서비스를 사용해 컨트랙트 보안 탐지"
+  },
+  "contractHasRisk": {
+    "message": "이 컨트랙트에는 위험이 있을 수 있습니다. 주의해서 거래하세요."
+  },
+  "cameraPermissionDenied": {
+    "message": "카메라 권한이 거부되었습니다. 브라우저 설정에서 카메라 접근을 허용하세요."
+  },
+  "cameraError": {
+    "message": "카메라 오류입니다. 카메라가 정상적으로 작동하는지 확인하세요."
+  },
+  "scriptHashTip": {
+    "message": "호출할 스마트 컨트랙트의 스크립트 해시"
+  },
+  "operationTip": {
+    "message": "호출할 스마트 컨트랙트의 작업"
+  },
+  "InvocationArgumentsTip": {
+    "message": "작업에 대한 입력 인수"
+  },
+  "signersTip": {
+    "message": "발신자 및 서명의 유효 범위"
+  },
+  "broadcastOverrideTip": {
+    "message": "dApp이 지갑 제공자 대신 서명된 트랜잭션 브로드캐스트를 담당하려는 경우"
+  },
+  "discover": {
+    "message": "디스커버"
+  }
+}

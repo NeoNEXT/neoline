@@ -134,10 +134,16 @@ chrome.alarms.onAlarm.addListener(async () => {
 });
 
 (function init() {
-  if (chrome.runtime.getManifest().current_locale === 'zh_CN') {
+  const currentLocale = chrome.i18n.getMessage('@@ui_locale');
+  const supportedLocaleLang =
+    currentLocale === 'zh_CN' || currentLocale === 'ko' || currentLocale === 'ja'
+      ? currentLocale
+      : undefined;
+
+  if (supportedLocaleLang) {
     getStorage('lang', (res) => {
       if (res === undefined) {
-        setStorage({ lang: 'zh_CN' });
+        setStorage({ lang: supportedLocaleLang });
       }
     });
   }

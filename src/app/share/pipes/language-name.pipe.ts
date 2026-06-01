@@ -10,6 +10,8 @@ export class LanguageNamePipe implements PipeTransform {
         return '简体中文';
       case 'ja':
         return '日本語';
+      case 'ko':
+        return '한국어';
       case 'en':
       default:
         return 'English';

@@ -378,6 +378,9 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         case 'ja':
           message = `入金額は${this.bridgeInfo.minBridge} ${this.bridgeAsset.symbol}未満であってはなりません`;
           break;
+        case 'ko':
+          message = `입금 수량은 ${this.bridgeInfo.minBridge} ${this.bridgeAsset.symbol}보다 적을 수 없습니다`;
+          break;
         default:
           message = `Deposit amount shouldn't be less than ${this.bridgeInfo.minBridge} ${this.bridgeAsset.symbol}`;
           break;
@@ -389,6 +392,9 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
             break;
           case 'ja':
             message = `出金額は${this.bridgeInfo.minBridge} ${this.bridgeAsset.symbol}未満であってはなりません`;
+            break;
+          case 'ko':
+            message = `출금 수량은 ${this.bridgeInfo.minBridge} ${this.bridgeAsset.symbol}보다 적을 수 없습니다`;
             break;
           default:
             message = `Withdraw amount shouldn't be less than ${this.bridgeInfo.minBridge} ${this.bridgeAsset.symbol}`;

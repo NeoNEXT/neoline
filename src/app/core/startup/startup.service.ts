@@ -17,12 +17,14 @@ export class StartupService {
       zip(
         this.httpClient.get('_locales/en/messages.json'),
         this.httpClient.get('_locales/zh_CN/messages.json'),
-        this.httpClient.get('_locales/ja/messages.json')
+        this.httpClient.get('_locales/ja/messages.json'),
+        this.httpClient.get('_locales/ko/messages.json')
       ).subscribe(
-        ([langEnData, langZhData, langJaData]) => {
+        ([langEnData, langZhData, langJaData, langKoData]) => {
           this.settingState.langJson['en'] = langEnData;
           this.settingState.langJson['zh_CN'] = langZhData;
           this.settingState.langJson['ja'] = langJaData;
+          this.settingState.langJson['ko'] = langKoData;
         },
         () => {},
         () => {

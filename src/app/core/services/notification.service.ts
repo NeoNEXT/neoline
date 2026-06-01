@@ -140,6 +140,40 @@ export class NotificationService {
     exceedDepositLimit: '最大入金制限を超えています',
     exceedWithdrawalLimit: '最大出金制限を超えています',
   };
+  private KO: NotificationContent = {
+    close: '닫기',
+    hiddenSucc: '숨기기 성공!',
+    clearSuccess: '지우기 성공!',
+    addSucc: '추가 성공!',
+    balanceLack: '잔액 부족',
+    wentWrong: '문제가 발생했습니다',
+    verifyFailed: '검증 실패',
+    checkInput: '입력 내용을 확인하세요',
+    txFailed: '트랜잭션 실패',
+    nameModifySucc: '이름 변경 성공!',
+    networkModifySucc: '네트워크 변경 성공!',
+    walletCreateFailed: '지갑 생성 실패',
+    walletImportFailed: '지갑 가져오기 실패 또는 이미 존재합니다',
+    existingWallet: '지갑이 이미 존재합니다',
+    wrongAddress: '올바른 주소를 입력하세요',
+    nep6Wrong: '올바른 파일을 선택하세요',
+    insufficientBalance: '수수료 지불에 필요한 GAS가 부족합니다! 필요량',
+    butOnlyHad: '보유량',
+    insufficientSystemFee: '가스 수수료를 포함하면 잔액이 부족합니다',
+    rpcError: 'RPC 오류',
+    InsufficientNetworkFee: '네트워크 수수료 부족',
+    InsufficientGas: '수수료를 지불할 GAS가 부족합니다',
+    TransactionDeniedByUser: '사용자가 트랜잭션을 거부했습니다.',
+    LedgerUnSupportSignError:
+      '이 트랜잭션 서명 중 오류가 발생했습니다. Ledger는 이 방식을 지원하지 않습니다.',
+    switchSucc: '전환 성공!',
+    PleaseEnterWalletName: '지갑 이름을 입력하세요',
+    AddressAdded: '주소가 추가되었습니다',
+    switchOnePasswordFirst: '먼저 새 비밀번호 관리 모드로 전환하세요',
+    copied: '복사됨!',
+    exceedDepositLimit: '최대 입금 한도를 초과했습니다',
+    exceedWithdrawalLimit: '최대 출금 한도를 초과했습니다',
+  };
   constructor(private settingState: SettingState) {
     this.content = this.EN;
     this.settingState.langSub.subscribe((res) => {
@@ -149,6 +183,9 @@ export class NotificationService {
           break;
         case 'ja':
           this.content = this.JA;
+          break;
+        case 'ko':
+          this.content = this.KO;
           break;
         default:
           this.content = this.EN;

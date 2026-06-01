@@ -16,6 +16,9 @@ describe('TranslatePipe (isolated from SettingState)', () => {
       zh_CN: {
         HELLO: { message: '你好 {{name}}' },
       },
+      ko: {
+        HELLO: { message: '안녕하세요 {{name}}' },
+      },
       ja: {},
     };
 
@@ -59,6 +62,14 @@ describe('TranslatePipe (isolated from SettingState)', () => {
     mockSettingState.langSub.next('zh_CN');
     pipe.transform('HELLO', { name: '小明' }).subscribe((value) => {
       expect(value).toBe('你好 小明');
+      done();
+    });
+  });
+
+  it('should handle ko language', (done) => {
+    mockSettingState.langSub.next('ko');
+    pipe.transform('HELLO', { name: 'Min' }).subscribe((value) => {
+      expect(value).toBe('안녕하세요 Min');
       done();
     });
   });
