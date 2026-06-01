@@ -23,7 +23,7 @@ import { Store } from '@ngrx/store';
   styleUrls: ['backup-mnemonic.component.scss'],
 })
 export class PopupBackupMnemonicComponent implements OnInit, OnChanges {
-  @Input() mnemonic: string;
+  @Input() mnemonic!: string;
   @Input() currentWallet: Wallet3 | EvmWalletJSON;
   @Input() chainType: ChainType;
 
@@ -47,11 +47,7 @@ export class PopupBackupMnemonicComponent implements OnInit, OnChanges {
   }
 
   private setWordList() {
-    if (this.mnemonic) {
-      this.wordList = this.mnemonic.split(' ');
-    } else {
-      this.wordList = [];
-    }
+    this.wordList = this.mnemonic.split(' ');
   }
 
   onPaste(event: ClipboardEvent) {

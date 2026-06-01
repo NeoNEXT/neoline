@@ -289,6 +289,9 @@ export class PopupWalletImportComponent
     if (this.importMnemonicForm.get('mnemonic').invalid) {
       return;
     }
+    const requestedMnemonic = this.importMnemonicForm.value.mnemonic
+      ?.trim()
+      .replace(/\s+/g, ' ');
     this.neoWalletService
       .getFirstMnemonicAddress(this.importMnemonicForm.value.mnemonic)
       .then((address) => {
@@ -296,6 +299,7 @@ export class PopupWalletImportComponent
           ?.trim()
           .replace(/\s+/g, ' ');
         if (
+          mnemonic === requestedMnemonic &&
           this.importMnemonicForm.get('mnemonic').valid &&
           ethers.Mnemonic.isValidMnemonic(mnemonic)
         ) {
