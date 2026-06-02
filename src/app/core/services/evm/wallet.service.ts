@@ -58,6 +58,8 @@ export class EvmWalletService {
       hdWalletId: getNextHDWalletId(this.neoXWalletArr),
       hdWalletIndex: 0,
       encryptedJson: undefined,
+      // 导入助记词是恢复流程，视为已备份，不再进入备份确认
+      hasBackup: true,
     });
   }
 

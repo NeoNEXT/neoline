@@ -1045,7 +1045,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         params = parameter.params;
       } else {
         const currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
-        if (!wallet3.isAddress(currWallet.accounts[0].address, 53)) {
+        if (!wallet3.isAddress(currWallet?.accounts?.[0]?.address, 53)) {
           return;
         }
         params = [{ address: currWallet.accounts[0].address, contracts: [] }];

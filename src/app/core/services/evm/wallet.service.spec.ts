@@ -24,14 +24,17 @@ describe('EvmWalletService', () => {
 
     expect(Object.keys(wallet)).toEqual(['name', 'accounts']);
     expect(wallet.name).toBe('account 1');
+    // 已知答案向量：该助记词在 m/44'/60'/0'/0/0 上的地址（anvil/hardhat 账户 0），可独立验证
     expect(wallet.accounts[0].address).toBe(
-      service.getFirstAddressFromPhrase(phrase)
+      '0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266'
     );
     expect(extra.isHDWallet).toBeTrue();
     expect(extra.hdWalletId).toBe('Wallet 1');
     expect(extra.hdWalletIndex).toBe(0);
     expect(extra.encryptedJson).toBeTruthy();
     expect(extra.publicKey).toBeTruthy();
+    // 导入是恢复流程，应标记为已备份（回归防护）
+    expect(extra.hasBackup).toBeTrue();
   });
 
   it('derives private keys from lightweight NeoX HD wallets', async () => {

@@ -264,12 +264,20 @@ export class PopupWalletImportComponent
       importPwd = this.importMnemonicForm.value.password;
     }
     // 先免密判断助记词是否已属于当前链某个现存助记词钱包组（含 index0 被删的情况）
-    const sameHDWallet = await this.neoWalletService.getSameHDWalletByMnemonic(
-      this.importMnemonicForm.value.mnemonic
-    );
-    if (sameHDWallet) {
+    try {
+      const sameHDWallet =
+        await this.neoWalletService.getSameHDWalletByMnemonic(
+          this.importMnemonicForm.value.mnemonic
+        );
+      if (sameHDWallet) {
+        this.loading = false;
+        this.global.snackBarExistWalletTip(sameHDWallet);
+        return;
+      }
+    } catch (err) {
+      this.global.log('check existing mnemonic wallet failed', err);
       this.loading = false;
-      this.global.snackBarExistWalletTip(sameHDWallet);
+      this.global.snackBarTip('walletImportFailed');
       return;
     }
     this.neoWalletService

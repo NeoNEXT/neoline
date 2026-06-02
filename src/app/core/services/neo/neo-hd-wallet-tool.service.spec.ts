@@ -21,6 +21,8 @@ describe('NeoHdWalletToolService', () => {
     expect(extra.hdWalletIndex).toBe(0);
     expect(extra.encryptedJson).toBeTruthy();
     expect(extra.publicKey).toBe(wallet.accounts[0].publicKey);
+    // 导入是恢复流程，应标记为已备份（回归防护）
+    expect(extra.hasBackup).toBeTrue();
   });
 
   it('creates a new N3 HD wallet that requires mnemonic backup', async () => {
