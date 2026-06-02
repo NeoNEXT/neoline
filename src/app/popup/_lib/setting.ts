@@ -66,6 +66,22 @@ interface LocalNoticeItem {
 
 export const LOCAL_NOTICE: LocalNoticeItem[] = [
   {
+    id: 4,
+    title: {
+      en: 'Mnemonic import for Neo N3 / NeoX and Korean language support',
+      zh_CN: '支持 Neo N3 / NeoX 助记词导入及韩语',
+      ja: 'Neo N3 / NeoX のニーモニックインポートと韓国語に対応',
+      ko: 'Neo N3 / NeoX 니모닉 가져오기 및 한국어 지원',
+    },
+    content: {
+      en: `NeoLine now supports importing Neo N3 and NeoX wallets using a mnemonic phrase, making it easier to recover and manage your accounts. In addition, Korean is now available as an interface language.`,
+      zh_CN: `NeoLine 现已支持通过助记词导入 Neo N3 和 NeoX 钱包，让您更便捷地恢复和管理账户。此外，界面语言新增韩语支持。`,
+      ja: `NeoLine はニーモニックフレーズを使用した Neo N3 および NeoX ウォレットのインポートに対応しました。アカウントの復元と管理がより簡単になります。さらに、インターフェース言語として韓国語が利用可能になりました。`,
+      ko: `NeoLine은 이제 니모닉 구문을 사용하여 Neo N3 및 NeoX 지갑을 가져올 수 있어 계정 복구와 관리가 더욱 편리해졌습니다. 또한 인터페이스 언어로 한국어를 지원합니다.`,
+    },
+    time: 1780358400000,
+  },
+  {
     id: 3,
     title: {
       en: 'NeoLine Web dApp is Now Live',
