@@ -16,6 +16,7 @@ interface NotificationContent {
   walletCreateFailed: string;
   walletImportFailed: string;
   existingWallet: string;
+  existingMnemonicWallet: string;
   wrongAddress: string;
   nep6Wrong: string;
   insufficientBalance: string;
@@ -53,6 +54,7 @@ export class NotificationService {
     walletCreateFailed: 'Wallet creation failed',
     walletImportFailed: 'Wallet import failed or wallet already exists',
     existingWallet: 'Wallet {name} ({address}) already exists',
+    existingMnemonicWallet: 'Wallet group {name} already exists',
     wrongAddress: 'Please enter a legal address',
     nep6Wrong: 'Choose the correct file',
     insufficientBalance: 'Insufficient GAS to pay for fees! Required',
@@ -87,6 +89,7 @@ export class NotificationService {
     walletCreateFailed: '钱包创建失败',
     walletImportFailed: '钱包导入失败或钱包已经存在',
     existingWallet: '钱包 {name}（{address}）已经存在',
+    existingMnemonicWallet: '钱包组 {name} 已经存在',
     wrongAddress: '请输入合法地址',
     nep6Wrong: '请选择正确的文件',
     insufficientBalance: 'GAS 不足以支付费用！需要',
@@ -120,6 +123,7 @@ export class NotificationService {
     walletCreateFailed: 'ウォレットの作成に失敗しました',
     walletImportFailed: 'ウォレットのインポートに失敗、または既に存在します',
     existingWallet: 'ウォレット {name}（{address}）は既に存在します',
+    existingMnemonicWallet: 'ウォレットグループ {name} は既に存在します',
     wrongAddress: '正しいアドレスを入力してください',
     nep6Wrong: '正しいファイルを選択してください',
     insufficientBalance: '手数料を支払うためのGASが不足しています！必要量：',
@@ -155,6 +159,7 @@ export class NotificationService {
     walletCreateFailed: '지갑 생성 실패',
     walletImportFailed: '지갑 가져오기 실패 또는 이미 존재합니다',
     existingWallet: '지갑 {name}({address})이(가) 이미 존재합니다',
+    existingMnemonicWallet: '지갑 그룹 {name}이(가) 이미 존재합니다',
     wrongAddress: '올바른 주소를 입력하세요',
     nep6Wrong: '올바른 파일을 선택하세요',
     insufficientBalance: '수수료 지불에 필요한 GAS가 부족합니다! 필요량',

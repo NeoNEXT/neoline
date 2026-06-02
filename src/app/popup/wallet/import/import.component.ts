@@ -271,7 +271,7 @@ export class PopupWalletImportComponent
         );
       if (sameHDWallet) {
         this.loading = false;
-        this.global.snackBarExistWalletTip(sameHDWallet);
+        this.global.snackBarExistWalletTip(sameHDWallet, 3000, true);
         return;
       }
     } catch (err) {

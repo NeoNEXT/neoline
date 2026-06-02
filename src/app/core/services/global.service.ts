@@ -52,16 +52,27 @@ export class GlobalService {
 
   public snackBarExistWalletTip(
     wallet: Wallet2 | Wallet3 | EvmWalletJSON,
-    time = 3000
+    time = 3000,
+    isMnemonic = false
   ) {
-    const address = wallet?.accounts[0]?.address ?? '';
-    const shortAddress =
-      address.length > 12
-        ? address.slice(0, 6) + '...' + address.slice(-6)
-        : address;
-    const message = (this.notification.content.existingWallet as string)
-      .replace('{name}', wallet?.name ?? '')
-      .replace('{address}', shortAddress);
+    let message: string;
+    if (isMnemonic) {
+      // 助记词钱包组提示展示的是组标识 hdWalletId（Wallet n），而非命中账户的名称
+      const hdWalletId =
+        (wallet?.accounts[0]?.extra?.hdWalletId as string) ?? '';
+      message = (
+        this.notification.content.existingMnemonicWallet as string
+      ).replace('{name}', hdWalletId);
+    } else {
+      const address = wallet?.accounts[0]?.address ?? '';
+      const shortAddress =
+        address.length > 12
+          ? address.slice(0, 6) + '...' + address.slice(-6)
+          : address;
+      message = (this.notification.content.existingWallet as string)
+        .replace('{name}', wallet?.name ?? '')
+        .replace('{address}', shortAddress);
+    }
     // 不使用 duration 自动关闭，改为手动计时：鼠标悬停时暂停，移出后重新计时关闭
     const snackBarRef = this.snackBar.open(
       message,
