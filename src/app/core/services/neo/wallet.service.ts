@@ -45,11 +45,14 @@ export class NeoWalletService {
   }
 
   /**
-   * Verify if the wallet address exists
-   * 判断钱包地址是否存在
+   * Find the existing wallet that has the same address as w.
+   * 查找与 w 地址相同的已存在钱包
    * @param w Wallet address
+   * @returns the matched wallet or null if not exists
    */
-  public verifyWallet(w: Wallet2 | Wallet3 | EvmWalletJSON): boolean {
+  public getSameWallet(
+    w: Wallet2 | Wallet3 | EvmWalletJSON
+  ): Wallet2 | Wallet3 | EvmWalletJSON | null {
     let walletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON> =
       this.neo2WalletArr;
     if (ethers.isAddress(w.accounts[0].address)) {
@@ -58,19 +61,20 @@ export class NeoWalletService {
     if (wallet3.isAddress(w.accounts[0].address, 53)) {
       walletArr = this.neo3WalletArr;
     }
-    if (walletArr.length === 0) {
-      return true;
-    } else {
-      if (
-        walletArr.findIndex(
-          (item) => item.accounts[0].address === w.accounts[0].address
-        ) >= 0
-      ) {
-        return false;
-      } else {
-        return true;
-      }
-    }
+    return (
+      walletArr.find(
+        (item) => item.accounts[0].address === w.accounts[0].address
+      ) || null
+    );
+  }
+
+  /**
+   * Verify if the wallet address exists
+   * 判断钱包地址是否存在
+   * @param w Wallet address
+   */
+  public verifyWallet(w: Wallet2 | Wallet3 | EvmWalletJSON): boolean {
+    return this.getSameWallet(w) === null;
   }
 
   //#region create/delete wallet
@@ -229,6 +233,48 @@ export class NeoWalletService {
       return Promise.resolve(this.evmService.getFirstAddressFromPhrase(phrase));
     }
     return Promise.reject(new Error('Mnemonic import is not supported'));
+  }
+
+  /**
+   * Find an existing HD wallet group on the current chain that was derived from
+   * the same mnemonic, even when its first (index 0) derived account has been
+   * deleted. Detected by re-deriving the candidate mnemonic at each existing HD
+   * account's hdWalletIndex and comparing addresses — no decryption of the
+   * encrypted mnemonic carrier is required.
+   * 查找当前链下由同一助记词派生的已存在助记词钱包组（即使其 index0 账户已被删除）。
+   * 通过用候选助记词在现存账户的 hdWalletIndex 处派生地址并比对来判定，不解密助记词加密载体。
+   * @param phrase candidate mnemonic
+   * @returns the matched existing account, or null if not exists
+   */
+  public async getSameHDWalletByMnemonic(
+    phrase: string
+  ): Promise<Wallet3 | EvmWalletJSON | null> {
+    const chainType = this.selectChainState.selectedChainType;
+    let walletArr: Array<Wallet3 | EvmWalletJSON>;
+    if (chainType === 'Neo3') {
+      walletArr = this.neo3WalletArr;
+    } else if (chainType === 'NeoX') {
+      walletArr = this.neoXWalletArr;
+    } else {
+      return null;
+    }
+    for (const wallet of walletArr || []) {
+      const extra = wallet.accounts?.[0]?.extra;
+      if (!extra?.isHDWallet || extra.hdWalletIndex === undefined) {
+        continue;
+      }
+      const derivedAddress =
+        chainType === 'Neo3'
+          ? await this.neoHdWalletToolService.getAddressFromMnemonic(
+              phrase,
+              extra.hdWalletIndex
+            )
+          : this.evmService.getAddressFromPhrase(phrase, extra.hdWalletIndex);
+      if (derivedAddress === wallet.accounts[0].address) {
+        return wallet;
+      }
+    }
+    return null;
   }
 
   public deriveNextHDWallet(

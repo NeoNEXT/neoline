@@ -247,8 +247,9 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
         pwd,
         list.chain
       );
-      if (!this.neoWalletService.verifyWallet(newWallet)) {
-        this.global.snackBarTip('existingWallet');
+      const sameWallet = this.neoWalletService.getSameWallet(newWallet);
+      if (sameWallet) {
+        this.global.snackBarExistWalletTip(sameWallet);
         return;
       }
       this.newHDAccountAddress = newWallet.accounts[0].address;

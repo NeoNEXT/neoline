@@ -96,7 +96,9 @@ export class PopupWalletCreateComponent implements OnInit, AfterContentInit {
             }
             this.submitThis.emit(res);
           } else {
-            this.global.snackBarTip('existingWallet');
+            this.global.snackBarExistWalletTip(
+              this.neoWalletService.getSameWallet(res) || res
+            );
           }
           this.loading = false;
         },

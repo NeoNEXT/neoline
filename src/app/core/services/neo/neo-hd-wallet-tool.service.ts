@@ -62,8 +62,15 @@ export class NeoHdWalletToolService {
   }
 
   async getFirstAddressFromMnemonic(phrase: string): Promise<string> {
+    return this.getAddressFromMnemonic(phrase, 0);
+  }
+
+  async getAddressFromMnemonic(
+    phrase: string,
+    hdWalletIndex: number,
+  ): Promise<string> {
     const mnemonic = this.getMnemonic(phrase);
-    const privateKey = await this.getPrivateKey(mnemonic, 0);
+    const privateKey = await this.getPrivateKey(mnemonic, hdWalletIndex);
     return new Account3(privateKey).address;
   }
 

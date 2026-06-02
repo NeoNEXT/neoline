@@ -50,6 +50,42 @@ export class GlobalService {
     });
   }
 
+  public snackBarExistWalletTip(
+    wallet: Wallet2 | Wallet3 | EvmWalletJSON,
+    time = 3000
+  ) {
+    const address = wallet?.accounts[0]?.address ?? '';
+    const shortAddress =
+      address.length > 12
+        ? address.slice(0, 6) + '...' + address.slice(-6)
+        : address;
+    const message = (this.notification.content.existingWallet as string)
+      .replace('{name}', wallet?.name ?? '')
+      .replace('{address}', shortAddress);
+    // 不使用 duration 自动关闭，改为手动计时：鼠标悬停时暂停，移出后重新计时关闭
+    const snackBarRef = this.snackBar.open(
+      message,
+      this.notification.content.close,
+      {
+        horizontalPosition: 'center',
+        verticalPosition: 'top',
+      }
+    );
+    const container: HTMLElement | undefined = (
+      snackBarRef.containerInstance as any
+    )?._elementRef?.nativeElement;
+    if (!container) {
+      setTimeout(() => snackBarRef.dismiss(), time);
+      return;
+    }
+    let timer = setTimeout(() => snackBarRef.dismiss(), time);
+    container.addEventListener('mouseenter', () => clearTimeout(timer));
+    container.addEventListener('mouseleave', () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => snackBarRef.dismiss(), 1000);
+    });
+  }
+
   public mathAdd(a: number, b: number): number {
     return parseFloat(add(bignumber(a), bignumber(b)).toString());
   }

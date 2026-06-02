@@ -67,7 +67,9 @@ export class AccountNameComponent {
         this.chrome.accountChangeEvent(tempWallet);
         this.router.navigateByUrl('/popup/home');
       } else {
-        this.global.snackBarTip('existingWallet');
+        this.global.snackBarExistWalletTip(
+          this.neoWalletService.getSameWallet(tempWallet) || tempWallet
+        );
       }
       return;
     }
@@ -91,7 +93,9 @@ export class AccountNameComponent {
         this.chrome.accountChangeEvent(w);
         this.router.navigateByUrl('/popup/home');
       } else {
-        this.global.snackBarTip('existingWallet');
+        this.global.snackBarExistWalletTip(
+          this.neoWalletService.getSameWallet(w) || w
+        );
       }
     } else {
       const w = new Wallet3({ name: this.name });
@@ -106,7 +110,9 @@ export class AccountNameComponent {
         this.chrome.accountChangeEvent(w);
         this.router.navigateByUrl('/popup/home');
       } else {
-        this.global.snackBarTip('existingWallet');
+        this.global.snackBarExistWalletTip(
+          this.neoWalletService.getSameWallet(w) || w
+        );
       }
     }
   }

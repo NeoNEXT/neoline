@@ -252,7 +252,7 @@ export class PopupWalletImportComponent
     }
   }
 
-  importMnemonic() {
+  async importMnemonic() {
     if (this.importMnemonicForm.invalid || this.loading) {
       return;
     }
@@ -262,6 +262,15 @@ export class PopupWalletImportComponent
       importPwd = this.password;
     } else {
       importPwd = this.importMnemonicForm.value.password;
+    }
+    // 先免密判断助记词是否已属于当前链某个现存助记词钱包组（含 index0 被删的情况）
+    const sameHDWallet = await this.neoWalletService.getSameHDWalletByMnemonic(
+      this.importMnemonicForm.value.mnemonic
+    );
+    if (sameHDWallet) {
+      this.loading = false;
+      this.global.snackBarExistWalletTip(sameHDWallet);
+      return;
     }
     this.neoWalletService
       .importMnemonic(
@@ -274,7 +283,9 @@ export class PopupWalletImportComponent
           this.setPassword(importPwd);
           this.submitThis.emit(res);
         } else {
-          this.global.snackBarTip('existingWallet');
+          this.global.snackBarExistWalletTip(
+            this.neoWalletService.getSameWallet(res) || res
+          );
         }
       })
       .catch((err: any) => {
@@ -336,7 +347,9 @@ export class PopupWalletImportComponent
             this.setPassword(importPwd);
             this.submitThis.emit(res);
           } else {
-            this.global.snackBarTip('existingWallet');
+            this.global.snackBarExistWalletTip(
+              this.neoWalletService.getSameWallet(res) || res
+            );
           }
         });
     } else {
@@ -353,7 +366,9 @@ export class PopupWalletImportComponent
               this.setPassword(importPwd);
               this.submitThis.emit(res);
             } else {
-              this.global.snackBarTip('existingWallet');
+              this.global.snackBarExistWalletTip(
+                this.neoWalletService.getSameWallet(res) || res
+              );
             }
           },
           (err: any) => {
@@ -378,7 +393,9 @@ export class PopupWalletImportComponent
           this.setPassword(pwd);
           this.submitThis.emit(res);
         } else {
-          this.global.snackBarTip('existingWallet');
+          this.global.snackBarExistWalletTip(
+            this.neoWalletService.getSameWallet(res) || res
+          );
         }
       });
   }
@@ -410,7 +427,9 @@ export class PopupWalletImportComponent
           this.setPassword(importPwd);
           this.submitFile.emit({ walletArr: [newWallet] });
         } else {
-          this.global.snackBarTip('existingWallet');
+          this.global.snackBarExistWalletTip(
+            this.neoWalletService.getSameWallet(newWallet) || newWallet
+          );
         }
       })
       .catch(() => {

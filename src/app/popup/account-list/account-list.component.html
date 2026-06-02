@@ -43,7 +43,7 @@
         <span>{{ list.title }}</span>
         <p class="list-title-right">
           <img
-            *ngIf="isOnePassword"
+            *ngIf="isOnePassword && !list.isHDWalletGroup"
             (click)="sortAccount()"
             theme
             src="/assets/images/account/sort.svg"

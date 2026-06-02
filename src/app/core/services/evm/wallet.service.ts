@@ -87,10 +87,14 @@ export class EvmWalletService {
   }
 
   getFirstAddressFromPhrase(phrase: string): string {
+    return this.getAddressFromPhrase(phrase, 0);
+  }
+
+  getAddressFromPhrase(phrase: string, hdWalletIndex: number): string {
     const mnemonic = this.getMnemonic(phrase);
     return ethers.HDNodeWallet.fromMnemonic(
       mnemonic,
-      `m/44'/60'/0'/0/0`
+      `m/44'/60'/0'/0/${hdWalletIndex}`
     ).address;
   }
 
