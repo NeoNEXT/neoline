@@ -1654,5 +1654,11 @@
   },
   "estimatedBalanceChangesLoading": {
     "message": "正在预估变化…"
+  },
+  "estimatedBalanceChangesSend": {
+    "message": "您发送"
+  },
+  "estimatedBalanceChangesReceive": {
+    "message": "您接收"
   }
 }

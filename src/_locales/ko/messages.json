@@ -1654,5 +1654,11 @@
   },
   "estimatedBalanceChangesLoading": {
     "message": "변경 사항을 예측하는 중…"
+  },
+  "estimatedBalanceChangesSend": {
+    "message": "보내기"
+  },
+  "estimatedBalanceChangesReceive": {
+    "message": "받기"
   }
 }

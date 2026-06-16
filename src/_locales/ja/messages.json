@@ -1654,5 +1654,11 @@
   },
   "estimatedBalanceChangesLoading": {
     "message": "変化を予測しています…"
+  },
+  "estimatedBalanceChangesSend": {
+    "message": "送信"
+  },
+  "estimatedBalanceChangesReceive": {
+    "message": "受信"
   }
 }

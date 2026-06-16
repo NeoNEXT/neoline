@@ -1654,5 +1654,11 @@
   },
   "estimatedBalanceChangesLoading": {
     "message": "Estimating changes…"
+  },
+  "estimatedBalanceChangesSend": {
+    "message": "You send"
+  },
+  "estimatedBalanceChangesReceive": {
+    "message": "You receive"
   }
 }

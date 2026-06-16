@@ -1,6 +1,14 @@
 <section class="balance-changes">
   <div class="header">
-    <p class="title">{{ "estimatedBalanceChanges" | translate | async }}</p>
+    <div class="title-group">
+      <p class="title">{{ "estimatedBalanceChanges" | translate | async }}</p>
+      <tooltip
+        placement="topLeft"
+        [tip]="'estimatedBalanceChangesTip' | translate | async"
+      >
+        <img src="assets/images/common/tooltip.svg" alt="" />
+      </tooltip>
+    </div>
     <span class="no-changes-tag" *ngIf="noChanges">
       {{ "estimatedBalanceChangesNoChanges" | translate | async }}
     </span>
@@ -27,21 +35,28 @@
     </p>
 
     <ng-container *ngIf="!reverted && !unavailable">
-      <p class="description">
-        {{ "estimatedBalanceChangesTip" | translate | async }}
-      </p>
       <div class="change" *ngFor="let change of changes">
-        <span
-          class="amount"
-          [class.incoming]="change.direction === 'in'"
-          [class.outgoing]="change.direction === 'out'"
-        >
-          {{ change.direction === "in" ? "+" : "-" }}{{ change.amount }}
-          {{ change.symbol || (change.contractAddress | longStr : 6) }}
-          <ng-container *ngIf="change.tokenId">#{{ change.tokenId }}</ng-container>
+        <span class="direction-label">
+          {{
+            (change.direction === "in"
+              ? "estimatedBalanceChangesReceive"
+              : "estimatedBalanceChangesSend"
+            ) | translate | async
+          }}
         </span>
-        <span class="fiat" *ngIf="change.fiat">
-          ≈ {{ change.fiat }} {{ rateCurrency }}
+        <span class="change-values">
+          <span
+            class="amount"
+            [class.incoming]="change.direction === 'in'"
+            [class.outgoing]="change.direction === 'out'"
+          >
+            {{ change.direction === "in" ? "+" : "-" }}{{ change.amount }}
+            {{ change.symbol || (change.contractAddress | longStr : 6) }}
+            <ng-container *ngIf="change.tokenId">#{{ change.tokenId }}</ng-container>
+          </span>
+          <span class="fiat" *ngIf="change.fiat">
+            ≈ {{ change.fiat }} {{ rateCurrency }}
+          </span>
         </span>
       </div>
     </ng-container>
