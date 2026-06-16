@@ -50,6 +50,7 @@ import { HeaderComponent } from './components/header/header.component';
 import { HardwareSignComponent } from './components/hardware-sign/hardware-sign.component';
 import { ChainLogoComponent } from './components/chain-logo/chain-logo.component';
 import { JsonViewerComponent } from './components/json-viewer/json-viewer.component';
+import { EvmBalanceChangesComponent } from './components/evm-balance-changes/evm-balance-changes.component';
 const COMPONENTS = [
   AssetTxPageComponent,
   NftTxPageComponent,
@@ -68,6 +69,7 @@ const COMPONENTS = [
   HardwareSignComponent,
   ChainLogoComponent,
   JsonViewerComponent,
+  EvmBalanceChangesComponent,
 ];
 //#endregion
 

@@ -1636,5 +1636,20 @@
   },
   "discover": {
     "message": "Discover"
+  },
+  "estimatedBalanceChanges": {
+    "message": "Estimated changes"
+  },
+  "estimatedBalanceChangesTip": {
+    "message": "Estimated changes are what might happen if you complete this transaction. This is just a prediction, not a guarantee."
+  },
+  "estimatedBalanceChangesNoChanges": {
+    "message": "No changes"
+  },
+  "estimatedBalanceChangesFailed": {
+    "message": "This transaction is likely to fail"
+  },
+  "estimatedBalanceChangesUnavailable": {
+    "message": "Simulation is not available for this transaction"
   }
 }

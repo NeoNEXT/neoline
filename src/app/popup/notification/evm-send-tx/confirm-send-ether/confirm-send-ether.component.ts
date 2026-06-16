@@ -10,6 +10,7 @@ import BigNumber from 'bignumber.js';
 import { EvmDappService } from '@/app/core';
 import { RateType } from '../evm-send-tx.component';
 import { getHexDataLength } from '@/app/core/utils/evm';
+import { SimulationResult } from '@/app/core/utils/evm-simulation';
 
 type TabType = 'details' | 'data';
 
@@ -41,6 +42,7 @@ export class PopupNoticeEvmConfirmSendEtherComponent implements OnInit {
   neoXFeeInfo: NeoXFeeInfoProp;
   fromWalletName: string;
   toWalletName: string;
+  balanceSimulation: SimulationResult = { status: 'loading', changes: [] };
 
   constructor(private evmDappService: EvmDappService) {}
 
@@ -48,6 +50,11 @@ export class PopupNoticeEvmConfirmSendEtherComponent implements OnInit {
     this.fromWalletName = this.evmDappService.getWalletName(this.txParams.from);
     this.toWalletName = this.evmDappService.getWalletName(this.txParams.to);
     this.hexDataLength = getHexDataLength(this.txParams.data);
+    this.evmDappService
+      .simulateBalanceChanges(this.txParams)
+      .subscribe((res) => {
+        this.balanceSimulation = res;
+      });
   }
 
   updateEvmFee($event) {

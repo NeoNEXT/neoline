@@ -51,6 +51,9 @@
   </div>
   <div class="content details" *ngIf="tabType === 'details'">
     <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
+    <evm-balance-changes
+      [result]="balanceSimulation"
+    ></evm-balance-changes>
 
     <div class="request-info">
       <div class="request-info-item">

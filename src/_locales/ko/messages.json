@@ -1636,5 +1636,20 @@
   },
   "discover": {
     "message": "디스커버"
+  },
+  "estimatedBalanceChanges": {
+    "message": "예상 변화"
+  },
+  "estimatedBalanceChangesTip": {
+    "message": "예상 변화는 이 거래를 완료할 경우 발생할 수 있는 변화입니다. 이는 예측일 뿐 보장이 아닙니다."
+  },
+  "estimatedBalanceChangesNoChanges": {
+    "message": "변경 없음"
+  },
+  "estimatedBalanceChangesFailed": {
+    "message": "이 거래는 실패할 가능성이 있습니다"
+  },
+  "estimatedBalanceChangesUnavailable": {
+    "message": "이 거래의 시뮬레이션은 지원되지 않습니다"
   }
 }

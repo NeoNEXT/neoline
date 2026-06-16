@@ -13,6 +13,7 @@ import {
   detectContractSecurityToThirdPartySite,
   getHexDataLength,
 } from '@/app/core/utils/evm';
+import { SimulationResult } from '@/app/core/utils/evm-simulation';
 
 type TabType = 'details' | 'data';
 
@@ -49,11 +50,20 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   decodeData;
   contractName: string;
   contractIsRisk = false;
+  balanceSimulation: SimulationResult = { status: 'loading', changes: [] };
 
   constructor(private evmDappService: EvmDappService) {}
 
   ngOnInit(): void {
     this.hexDataLength = getHexDataLength(this.txParams.data);
+    this.evmDappService
+      .simulateBalanceChanges(this.txParams)
+      .subscribe((res) => {
+        console.log('res');
+        console.log(res);
+
+        this.balanceSimulation = res;
+      });
     this.evmDappService
       .detectContractSecurity(this.txParams.to)
       .subscribe((res) => {

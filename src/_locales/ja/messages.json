@@ -1636,5 +1636,20 @@
   },
   "discover": {
     "message": "ディスカバリ"
+  },
+  "estimatedBalanceChanges": {
+    "message": "予想される変化"
+  },
+  "estimatedBalanceChangesTip": {
+    "message": "予想される変化は、この取引を完了した場合に起こりうる変化です。これは予測であり、保証ではありません。"
+  },
+  "estimatedBalanceChangesNoChanges": {
+    "message": "変更なし"
+  },
+  "estimatedBalanceChangesFailed": {
+    "message": "この取引は失敗する可能性があります"
+  },
+  "estimatedBalanceChangesUnavailable": {
+    "message": "この取引のシミュレーションには対応していません"
   }
 }

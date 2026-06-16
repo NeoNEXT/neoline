@@ -9,6 +9,7 @@ import {
   STORAGE_NAME,
   AddAddressBookProp,
   ETHERSCAN_API_KEY,
+  EvmTransactionParams,
 } from '@/app/popup/_lib';
 import { AppState } from '@/app/reduers';
 import { Injectable } from '@angular/core';
@@ -27,8 +28,16 @@ import {
 } from '../../utils/evm-dapp';
 import type BN from 'bn.js';
 import { HttpClient } from '@angular/common/http';
-import { map, Observable, of } from 'rxjs';
+import { catchError, from, map, Observable, of, switchMap } from 'rxjs';
 import { ChromeService } from '../chrome.service';
+import {
+  buildSimulationParams,
+  EvmEstimatedBalanceChange,
+  extractSimulationCall,
+  parseSimulatedBalanceChanges,
+  RawSimulatedBalanceChange,
+  SimulationResult,
+} from '../../utils/evm-simulation';
 
 const abi_1 = require('@ethersproject/abi');
 
@@ -107,6 +116,109 @@ export class EvmDappService {
           return data.has(ethers.getAddress(contract));
         })
       );
+  }
+
+  /**
+   * Dry-run a transaction via `eth_simulateV1` and report the outcome for the
+   * signing account. Unlike static calldata decoding, this reflects the real
+   * execution result, so swaps and complex contract calls surface their actual
+   * incoming/outgoing assets — and reverts are detected before signing.
+   *
+   * Emits a {@link SimulationResult}: `success` with net changes (possibly
+   * empty), `reverted` with a reason, or `unavailable` when the node could not
+   * run the simulation.
+   */
+  simulateBalanceChanges(
+    txParams: EvmTransactionParams
+  ): Observable<SimulationResult> {
+    if (!txParams?.from) {
+      return of({ status: 'unavailable', changes: [] });
+    }
+    const params = buildSimulationParams({
+      from: txParams.from,
+      to: txParams.to,
+      value: txParams.value,
+      data: txParams.data,
+    });
+    const nativeSymbol = this.neoXNetwork.symbol;
+    return from(this.provider.send('eth_simulateV1', params)).pipe(
+      switchMap((result: any): Observable<SimulationResult> => {
+        const outcome = extractSimulationCall(result);
+        if (!outcome) {
+          return of({ status: 'unavailable', changes: [] });
+        }
+        if (outcome.reverted) {
+          return of({
+            status: 'reverted',
+            changes: [],
+            revertReason: outcome.revertReason,
+          });
+        }
+        const rawChanges = parseSimulatedBalanceChanges(
+          outcome.logs,
+          txParams.from
+        );
+        if (!rawChanges.length) {
+          return of({ status: 'success', changes: [] });
+        }
+        return from(
+          this.formatSimulatedChanges(rawChanges, txParams.from, nativeSymbol)
+        ).pipe(map((changes) => ({ status: 'success', changes })));
+      }),
+      catchError(() => of<SimulationResult>({ status: 'unavailable', changes: [] }))
+    );
+  }
+
+  private async formatSimulatedChanges(
+    rawChanges: RawSimulatedBalanceChange[],
+    userAddress: string,
+    nativeSymbol: string
+  ): Promise<EvmEstimatedBalanceChange[]> {
+    return Promise.all(
+      rawChanges.map(async (change) => {
+        let amount = change.rawAmount;
+        let symbol: string | undefined;
+        if (change.assetType === 'native') {
+          amount = calcTokenAmount(change.rawAmount, 18).toString(10);
+          symbol = nativeSymbol;
+        } else if (change.assetType === 'ERC-20') {
+          const info = await this.getErc20DisplayInfo(change.contractAddress);
+          amount = calcTokenAmount(change.rawAmount, info.decimals).toString(10);
+          symbol = info.symbol;
+        } else {
+          symbol = await this.safeTokenSymbol(change.contractAddress);
+        }
+        return {
+          address: userAddress,
+          direction: change.direction,
+          assetType: change.assetType,
+          amount,
+          symbol,
+          tokenId: change.tokenId,
+        };
+      })
+    );
+  }
+
+  private async getErc20DisplayInfo(
+    address: string
+  ): Promise<{ decimals: number; symbol?: string }> {
+    const contract = new ethers.Contract(address, abiERC20, this.provider);
+    const [decimals, symbol] = await Promise.all([
+      safelyExecute(() => contract.decimals()),
+      safelyExecute(() => contract.symbol()),
+    ]);
+    return {
+      decimals: decimals != null ? Number(decimals) : 18,
+      symbol: symbol as string | undefined,
+    };
+  }
+
+  private async safeTokenSymbol(address: string): Promise<string | undefined> {
+    const contract = new ethers.Contract(address, abiERC721, this.provider);
+    return safelyExecute(() => contract.symbol()) as Promise<
+      string | undefined
+    >;
   }
 
   getContractNameAndDecodeData({

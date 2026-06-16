@@ -12,6 +12,7 @@ import {
   detectContractSecurityToThirdPartySite,
   getHexDataLength,
 } from '@/app/core/utils/evm';
+import { SimulationResult } from '@/app/core/utils/evm-simulation';
 
 type TabType = 'details' | 'data';
 
@@ -47,6 +48,7 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   neoXFeeInfo: NeoXFeeInfoProp;
   fromWalletName: string;
   toWalletName: string;
+  balanceSimulation: SimulationResult = { status: 'loading', changes: [] };
   constructor(
     private evmDappService: EvmDappService,
     private rateState: RateState
@@ -57,6 +59,12 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
     this.tokenData = this.evmDappService.parseStandardTokenTransactionData(
       this.txParams.data
     );
+
+    this.evmDappService
+      .simulateBalanceChanges(this.txParams)
+      .subscribe((res) => {
+        this.balanceSimulation = res;
+      });
 
     this.fromWalletName = this.evmDappService.getWalletName(this.txParams.from);
     this.evmDappService
