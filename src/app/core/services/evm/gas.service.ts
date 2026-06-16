@@ -77,42 +77,40 @@ export class EvmGasService {
   }
 
   async getGasInfo(gasLimit: bigint): Promise<NeoXFeeInfoProp> {
-    let block = await this.provider.send('eth_getBlockByNumber', [
+    const block = await this.provider.send('eth_getBlockByNumber', [
       'latest',
       false,
     ]);
-    let gasPrice = await this.provider.send('eth_gasPrice', []);
-    let priorityFee = await this.provider.send('eth_maxPriorityFeePerGas', []);
 
-    gasPrice = new BigNumber(gasPrice);
-    priorityFee = new BigNumber(priorityFee);
-
-    let maxFeePerGas: null | BigNumber = null;
-    let maxPriorityFeePerGas: null | BigNumber = null;
+    // EIP-1559 chains (NeoX) expose baseFeePerGas; only the priority fee is
+    // needed on top of it. Fetch just that one extra value instead of also
+    // pulling eth_gasPrice, which is only used on the legacy path below.
     if (block.baseFeePerGas !== undefined) {
-      maxPriorityFeePerGas =
-        priorityFee != null ? priorityFee : new BigNumber('1000000000');
-      maxFeePerGas = new BigNumber(block.baseFeePerGas).plus(
+      const priorityFee = await this.provider.send(
+        'eth_maxPriorityFeePerGas',
+        []
+      );
+      const maxPriorityFeePerGas =
+        priorityFee != null
+          ? new BigNumber(priorityFee)
+          : new BigNumber('1000000000');
+      const maxFeePerGas = new BigNumber(block.baseFeePerGas).plus(
         maxPriorityFeePerGas
       );
-      const estimateGas = new BigNumber(maxFeePerGas).times(
-        gasLimit.toString()
-      );
+      const estimateGas = maxFeePerGas.times(gasLimit.toString());
       return {
-        maxFeePerGas: maxFeePerGas
-          ? maxFeePerGas.shiftedBy(-18).toFixed()
-          : undefined,
-        maxPriorityFeePerGas: maxPriorityFeePerGas
-          ? maxPriorityFeePerGas.shiftedBy(-18).toFixed()
-          : undefined,
+        maxFeePerGas: maxFeePerGas.shiftedBy(-18).toFixed(),
+        maxPriorityFeePerGas: maxPriorityFeePerGas.shiftedBy(-18).toFixed(),
         gasLimit: gasLimit.toString(),
         estimateGas: estimateGas.shiftedBy(-18).toFixed(),
       };
     }
 
-    const estimateGas = new BigNumber(gasPrice).times(gasLimit.toString());
+    // Legacy chains: gasPrice is the only fee value that matters.
+    const gasPrice = new BigNumber(await this.provider.send('eth_gasPrice', []));
+    const estimateGas = gasPrice.times(gasLimit.toString());
     return {
-      gasPrice: gasPrice ? gasPrice.shiftedBy(-18).toFixed() : undefined,
+      gasPrice: gasPrice.shiftedBy(-18).toFixed(),
       gasLimit: gasLimit.toString(),
       estimateGas: estimateGas.shiftedBy(-18).toFixed(),
     };
