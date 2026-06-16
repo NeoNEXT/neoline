@@ -1,4 +1,4 @@
-<section class="balance-changes" *ngIf="visible">
+<section class="balance-changes">
   <div class="header">
     <p class="title">{{ "estimatedBalanceChanges" | translate | async }}</p>
     <span class="no-changes-tag" *ngIf="noChanges">
@@ -6,35 +6,44 @@
     </span>
   </div>
 
-  <ng-container *ngIf="reverted">
-    <p class="failed">
-      <img src="assets/images/common/warning.svg" alt="" />
-      {{ "estimatedBalanceChangesFailed" | translate | async }}
-    </p>
-    <p class="revert-reason" *ngIf="result.revertReason">
-      {{ result.revertReason }}
-    </p>
-  </ng-container>
-
-  <p class="description" *ngIf="unavailable">
-    {{ "estimatedBalanceChangesUnavailable" | translate | async }}
+  <p class="description loading" *ngIf="loading">
+    <span class="spinner"></span>
+    {{ "estimatedBalanceChangesLoading" | translate | async }}
   </p>
 
-  <ng-container *ngIf="!reverted && !unavailable">
-    <p class="description">
-      {{ "estimatedBalanceChangesTip" | translate | async }}
+  <ng-container *ngIf="!loading">
+    <ng-container *ngIf="reverted">
+      <p class="failed">
+        <img src="assets/images/common/warning.svg" alt="" />
+        {{ "estimatedBalanceChangesFailed" | translate | async }}
+      </p>
+      <p class="revert-reason" *ngIf="result.revertReason">
+        {{ result.revertReason }}
+      </p>
+    </ng-container>
+
+    <p class="description" *ngIf="unavailable">
+      {{ "estimatedBalanceChangesUnavailable" | translate | async }}
     </p>
-    <div class="change" *ngFor="let change of changes">
-      <span
-        class="amount"
-        [class.incoming]="change.direction === 'in'"
-        [class.outgoing]="change.direction === 'out'"
-      >
-        {{ change.direction === "in" ? "+" : "-" }}{{ change.amount }}
-        {{ change.symbol || change.assetType }}
-        <ng-container *ngIf="change.tokenId">#{{ change.tokenId }}</ng-container>
-      </span>
-      <span class="address">{{ change.address | longStr : 6 }}</span>
-    </div>
+
+    <ng-container *ngIf="!reverted && !unavailable">
+      <p class="description">
+        {{ "estimatedBalanceChangesTip" | translate | async }}
+      </p>
+      <div class="change" *ngFor="let change of changes">
+        <span
+          class="amount"
+          [class.incoming]="change.direction === 'in'"
+          [class.outgoing]="change.direction === 'out'"
+        >
+          {{ change.direction === "in" ? "+" : "-" }}{{ change.amount }}
+          {{ change.symbol || (change.contractAddress | longStr : 6) }}
+          <ng-container *ngIf="change.tokenId">#{{ change.tokenId }}</ng-container>
+        </span>
+        <span class="fiat" *ngIf="change.fiat">
+          ≈ {{ change.fiat }} {{ rateCurrency }}
+        </span>
+      </div>
+    </ng-container>
   </ng-container>
 </section>

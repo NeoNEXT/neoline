@@ -59,9 +59,6 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
     this.evmDappService
       .simulateBalanceChanges(this.txParams)
       .subscribe((res) => {
-        console.log('res');
-        console.log(res);
-
         this.balanceSimulation = res;
       });
     this.evmDappService

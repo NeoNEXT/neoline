@@ -7,12 +7,19 @@ export type EvmBalanceChangeAssetType =
   | 'ERC-1155';
 
 export interface EvmEstimatedBalanceChange {
-  address: string;
+  /** Token contract address, or `'native'` for the chain's base asset. */
+  contractAddress: string;
   direction: 'in' | 'out';
   assetType: EvmBalanceChangeAssetType;
   amount: string;
   symbol?: string;
   tokenId?: string;
+  /**
+   * Fiat value of `amount` in the user's selected currency (already formatted,
+   * e.g. "340.00"). Undefined when the asset has no known price — long-tail
+   * tokens and NFTs simply omit the fiat figure rather than failing.
+   */
+  fiat?: string;
 }
 
 /**

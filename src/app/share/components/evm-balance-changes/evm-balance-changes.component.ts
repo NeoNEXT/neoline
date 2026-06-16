@@ -8,14 +8,17 @@ import { EvmEstimatedBalanceChange, SimulationResult } from '@/app/core/utils/ev
 })
 export class EvmBalanceChangesComponent {
   @Input() result: SimulationResult = { status: 'loading', changes: [] };
+  /** Fiat currency code (e.g. "USD") shown next to fiat values. */
+  @Input() rateCurrency = '';
 
   get changes(): EvmEstimatedBalanceChange[] {
     return this.result?.changes ?? [];
   }
 
-  // Render once we have any resolved outcome; stay hidden only while loading.
-  get visible(): boolean {
-    return this.result?.status !== 'loading';
+  // Always render the panel — show a loading placeholder while the simulation
+  // is in flight so the user knows a prediction is coming before they sign.
+  get loading(): boolean {
+    return this.result?.status === 'loading';
   }
 
   get reverted(): boolean {

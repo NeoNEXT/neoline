@@ -10,6 +10,7 @@ import {
   AddAddressBookProp,
   ETHERSCAN_API_KEY,
   EvmTransactionParams,
+  ETH_SOURCE_ASSET_HASH,
 } from '@/app/popup/_lib';
 import { AppState } from '@/app/reduers';
 import { Injectable } from '@angular/core';
@@ -30,6 +31,7 @@ import type BN from 'bn.js';
 import { HttpClient } from '@angular/common/http';
 import { catchError, from, map, Observable, of, switchMap } from 'rxjs';
 import { ChromeService } from '../chrome.service';
+import { RateState } from '../../states/rate.state';
 import {
   buildSimulationParams,
   EvmEstimatedBalanceChange,
@@ -81,7 +83,8 @@ export class EvmDappService {
   constructor(
     private store: Store<AppState>,
     private http: HttpClient,
-    private chrome: ChromeService
+    private chrome: ChromeService,
+    private rateState: RateState
   ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
@@ -162,7 +165,7 @@ export class EvmDappService {
           return of({ status: 'success', changes: [] });
         }
         return from(
-          this.formatSimulatedChanges(rawChanges, txParams.from, nativeSymbol)
+          this.formatSimulatedChanges(rawChanges, nativeSymbol)
         ).pipe(map((changes) => ({ status: 'success', changes })));
       }),
       catchError(() => of<SimulationResult>({ status: 'unavailable', changes: [] }))
@@ -171,33 +174,56 @@ export class EvmDappService {
 
   private async formatSimulatedChanges(
     rawChanges: RawSimulatedBalanceChange[],
-    userAddress: string,
     nativeSymbol: string
   ): Promise<EvmEstimatedBalanceChange[]> {
     return Promise.all(
       rawChanges.map(async (change) => {
         let amount = change.rawAmount;
         let symbol: string | undefined;
+        let fiat: string | undefined;
         if (change.assetType === 'native') {
           amount = calcTokenAmount(change.rawAmount, 18).toString(10);
           symbol = nativeSymbol;
+          fiat = await this.safeFiat(ETH_SOURCE_ASSET_HASH, amount);
         } else if (change.assetType === 'ERC-20') {
           const info = await this.getErc20DisplayInfo(change.contractAddress);
           amount = calcTokenAmount(change.rawAmount, info.decimals).toString(10);
           symbol = info.symbol;
+          fiat = await this.safeFiat(change.contractAddress, amount);
         } else {
+          // NFTs (ERC-721/1155) have no fungible price; leave fiat undefined.
           symbol = await this.safeTokenSymbol(change.contractAddress);
         }
         return {
-          address: userAddress,
+          contractAddress: change.contractAddress,
           direction: change.direction,
           assetType: change.assetType,
           amount,
           symbol,
           tokenId: change.tokenId,
+          fiat,
         };
       })
     );
+  }
+
+  /**
+   * Look up the fiat value of `amount` of an asset, returning undefined when
+   * the token isn't in the rate table (long-tail tokens) or the lookup fails —
+   * a missing price must never break the simulation panel.
+   */
+  private async safeFiat(
+    assetId: string,
+    amount: string
+  ): Promise<string | undefined> {
+    return safelyExecute(() =>
+      this.rateState.getAssetAmountRate({
+        chainType: 'NeoX',
+        assetId,
+        chainId: this.neoXNetwork.chainId,
+        amount,
+      })
+    ) as Promise<string | undefined>;
   }
 
   private async getErc20DisplayInfo(

@@ -1651,5 +1651,8 @@
   },
   "estimatedBalanceChangesUnavailable": {
     "message": "Simulation is not available for this transaction"
+  },
+  "estimatedBalanceChangesLoading": {
+    "message": "Estimating changes…"
   }
 }

@@ -1651,5 +1651,8 @@
   },
   "estimatedBalanceChangesUnavailable": {
     "message": "この取引のシミュレーションには対応していません"
+  },
+  "estimatedBalanceChangesLoading": {
+    "message": "変化を予測しています…"
   }
 }

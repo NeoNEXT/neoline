@@ -1651,5 +1651,8 @@
   },
   "estimatedBalanceChangesUnavailable": {
     "message": "暂不支持模拟此交易"
+  },
+  "estimatedBalanceChangesLoading": {
+    "message": "正在预估变化…"
   }
 }

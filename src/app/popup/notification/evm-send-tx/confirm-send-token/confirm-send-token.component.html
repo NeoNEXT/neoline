@@ -51,6 +51,7 @@
     <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
     <evm-balance-changes
       [result]="balanceSimulation"
+      [rateCurrency]="rate.rateCurrency"
     ></evm-balance-changes>
 
     <div class="request-info">
