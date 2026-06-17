@@ -9,7 +9,10 @@ import * as Sentry from '@sentry/angular';
 export class TranslatePipe implements PipeTransform {
   constructor(private settingState: SettingState) {}
 
-  public transform(value: string, params: { [key: string]: string }) {
+  public transform(
+    value: string,
+    params?: { [key: string]: string | number | boolean | null | undefined }
+  ) {
     return this.settingState.langSub.pipe(
       map((res) => {
         let source: string = this.settingState.langJson[res]?.[value]?.message;
@@ -24,7 +27,7 @@ export class TranslatePipe implements PipeTransform {
         if (params) {
           Object.keys(params).forEach((key) => {
             const pattern = new RegExp(`\{\{${key}\}\}`, 'g');
-            source = source.replace(pattern, params[key] || '');
+            source = source.replace(pattern, String(params[key] || ''));
           });
         }
         return source;
