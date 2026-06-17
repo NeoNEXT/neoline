@@ -51,6 +51,7 @@ import { HardwareSignComponent } from './components/hardware-sign/hardware-sign.
 import { ChainLogoComponent } from './components/chain-logo/chain-logo.component';
 import { JsonViewerComponent } from './components/json-viewer/json-viewer.component';
 import { EvmBalanceChangesComponent } from './components/evm-balance-changes/evm-balance-changes.component';
+import { EvmAuthorizationDetailsComponent } from './components/evm-authorization-details/evm-authorization-details.component';
 const COMPONENTS = [
   AssetTxPageComponent,
   NftTxPageComponent,
@@ -70,6 +71,7 @@ const COMPONENTS = [
   ChainLogoComponent,
   JsonViewerComponent,
   EvmBalanceChangesComponent,
+  EvmAuthorizationDetailsComponent,
 ];
 //#endregion
 

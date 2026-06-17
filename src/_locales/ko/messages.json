@@ -1412,6 +1412,39 @@
   "approveNormalTip": {
     "message": "이는 제3자가 현재 잔액에서 {{amount}} {{symbol}}을 사용할 수 있게 합니다."
   },
+  "nftWithdrawalRequest": {
+    "message": "출금 요청"
+  },
+  "revokePermission": {
+    "message": "권한 제거"
+  },
+  "authorizationErc20ApproveDescription": {
+    "message": "다른 사람이 계정에서 이 금액을 사용할 수 있도록 권한을 부여합니다."
+  },
+  "authorizationNftApproveDescription": {
+    "message": "다른 사람이 계정에서 NFT를 출금할 수 있도록 권한을 부여합니다."
+  },
+  "authorizationNftApprovalForAllDescription": {
+    "message": "다른 사람이 계정에서 NFT를 출금할 수 있도록 권한을 부여합니다."
+  },
+  "authorizationNftRevokeApprovalForAllDescription": {
+    "message": "다른 사람이 계정에서 NFT를 출금할 수 있는 권한을 제거합니다."
+  },
+  "withdraw": {
+    "message": "출금"
+  },
+  "all": {
+    "message": "모두"
+  },
+  "NFT": {
+    "message": "NFT"
+  },
+  "permissionFor": {
+    "message": "권한 대상"
+  },
+  "permissionFrom": {
+    "message": "권한 출처"
+  },
   "cancelOrSpeedUpTX": {
     "message": "트랜잭션을 취소하거나 속도를 높이는 방법."
   },

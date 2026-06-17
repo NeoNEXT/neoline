@@ -17,6 +17,10 @@ import {
 import { remove0xPrefix } from '@cityofzion/neon-core-neo3/lib/u';
 import * as lodash from 'lodash';
 import { ethErrors } from 'eth-rpc-errors';
+import {
+  EvmAuthorizationDetails,
+  getTypedDataAuthorizations,
+} from '@/app/core/utils/evm-authorization';
 
 @Component({
   templateUrl: './evm-signature.component.html',
@@ -32,6 +36,7 @@ export class PopupNoticeEvmSignComponent implements OnInit {
   signMethod = ETH_EOA_SIGN_METHODS.PersonalSign;
   typedData: TypedMessage<MessageTypes>;
   strTypeData: string;
+  authorizations: EvmAuthorizationDetails[] = [];
 
   showHardwareSign = false;
   encryptWallet: EvmWalletJSON;
@@ -85,6 +90,10 @@ export class PopupNoticeEvmSignComponent implements OnInit {
                   this.typedData = JSON.parse(this.typedData);
                 }
                 this.strTypeData = JSON.stringify(this.typedData);
+                this.authorizations = getTypedDataAuthorizations(
+                  this.typedData,
+                  this.signAddress
+                );
                 break;
             }
           });

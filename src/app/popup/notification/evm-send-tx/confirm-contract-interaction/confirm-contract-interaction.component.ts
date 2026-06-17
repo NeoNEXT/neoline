@@ -14,6 +14,10 @@ import {
   getHexDataLength,
 } from '@/app/core/utils/evm';
 import { SimulationResult } from '@/app/core/utils/evm-simulation';
+import {
+  EvmAuthorizationDetails,
+  getTransactionAuthorizations,
+} from '@/app/core/utils/evm-authorization';
 
 type TabType = 'details' | 'data';
 
@@ -51,6 +55,7 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   contractName: string;
   contractIsRisk = false;
   balanceSimulation: SimulationResult = { status: 'loading', changes: [] };
+  authorizations: EvmAuthorizationDetails[] = [];
 
   constructor(private evmDappService: EvmDappService) {}
 
@@ -61,6 +66,13 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
       .subscribe((res) => {
         this.balanceSimulation = res;
       });
+    const tokenData = this.evmDappService.parseStandardTokenTransactionData(
+      this.txParams.data,
+    );
+    this.authorizations = getTransactionAuthorizations(
+      this.txParams,
+      tokenData,
+    );
     this.evmDappService
       .detectContractSecurity(this.txParams.to)
       .subscribe((res) => {

@@ -32,6 +32,10 @@
     ></evm-balance-changes>
 
     <div class="request-info">
+      <evm-authorization-details [authorizations]="authorizations"></evm-authorization-details>
+    </div>
+
+    <div class="request-info">
       <div class="request-info-item">
         <span class="label">{{ "Network" | translate | async }}</span>
         <span>{{ neoXNetwork.name }}</span>

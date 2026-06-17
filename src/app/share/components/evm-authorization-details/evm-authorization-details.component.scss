@@ -1,0 +1,24 @@
+:host {
+  display: contents;
+}
+
+.request-info-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  line-height: 1.2;
+  word-break: break-all;
+}
+
+.label {
+  display: flex;
+  min-width: 80px;
+  align-items: center;
+  gap: 4px;
+  color: var(--sub-title-color);
+}
+
+.spender {
+  color: var(--title-color);
+}

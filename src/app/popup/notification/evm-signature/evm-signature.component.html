@@ -39,6 +39,11 @@
     >
       {{ challenge }}
     </p>
+    <div class="authorization-request-info" *ngIf="authorizations[0]?.spender">
+      <evm-authorization-details
+        [authorizations]="authorizations"
+      ></evm-authorization-details>
+    </div>
     <div
       class="json-box serialize json-viewer"
       *ngIf="signMethod === ETH_EOA_SIGN_METHODS.SignTypedDataV4"

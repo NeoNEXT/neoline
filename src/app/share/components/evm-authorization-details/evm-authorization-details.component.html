@@ -1,0 +1,11 @@
+<div class="request-info-item" *ngIf="spender">
+  <div class="label">
+    {{ labelKey | translate | async }}
+    <tooltip placement="topLeft" [tip]="'spenderTip' | translate | async">
+      <img src="assets/images/common/tooltip.svg" alt="" />
+    </tooltip>
+  </div>
+  <copy [value]="spender">
+    <span class="spender">{{ spender | longStr : 6 }}</span>
+  </copy>
+</div>

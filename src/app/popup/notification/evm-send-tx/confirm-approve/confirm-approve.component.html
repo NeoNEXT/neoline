@@ -1,7 +1,7 @@
 <div class="container">
   <div class="header transfer">
     <div class="invoke-type">
-      · {{ "SpendingCapRequest" | translate | async }}
+      · {{ authorizationTitleKey | translate | async }}
     </div>
     <div class="address-group contract-interaction">
       <copy [value]="txParams?.from">
@@ -27,31 +27,35 @@
     </span>
   </div>
   <div class="content details" *ngIf="tabType === 'details'">
-    <div class="request-info">
-      <div class="request-info-item">
-        <div class="label">
-          {{ "SpendingCap" | translate | async }}
-          <tooltip
-            placement="topLeft"
-            [tip]="
-              'approveNormalTip'
-                | translate
-                  : { amount: approveAmount, symbol: assetDetails?.symbol }
-                | async
-            "
-          >
-            <img src="assets/images/common/tooltip.svg" alt="" />
-          </tooltip>
-        </div>
-        <div class="edit-amount">
+    <div class="authorization-preview" *ngIf="showAuthorizationPreview">
+      <div class="title-group">
+        <p class="title">{{ "estimatedBalanceChanges" | translate | async }}</p>
+        <tooltip
+          placement="topLeft"
+          [tip]="'estimatedBalanceChangesTip' | translate | async"
+        >
+          <img src="assets/images/common/tooltip.svg" alt="" />
+        </tooltip>
+      </div>
+      <p class="description">
+        {{
+          authorizationDescriptionKey
+            | translate
+              : { amount: approveAmount, symbol: assetDetails?.symbol }
+            | async
+        }}
+      </p>
+      <div class="authorization-row">
+        <span class="label">{{ authorizationChangeLabelKey | translate | async }}</span>
+        <div class="authorization-value" *ngIf="canEditApproveAmount">
           <img
             (click)="openEditApproveCapDialog()"
             class="edit"
             src="assets/images/common/edit.svg"
           />
-          <span *ngIf="approveAmount.length <= 10">{{ approveAmount }}</span>
+          <span *ngIf="approveAmount?.length <= 10">{{ approveAmount }}</span>
           <tooltip
-            *ngIf="approveAmount.length > 10"
+            *ngIf="approveAmount?.length > 10"
             placement="top"
             [tip]="approveAmount"
           >
@@ -68,24 +72,38 @@
             {{ assetDetails?.symbol }}
           </div>
         </div>
+        <copy
+          *ngIf="!canEditApproveAmount"
+          [value]="authorization?.tokenAddress || txParams.to"
+        >
+          <span class="authorization-value">
+            <ng-container *ngIf="isNftApprove">#{{ authorization?.tokenId }}</ng-container>
+            <ng-container *ngIf="isSetApprovalForAll && !isRevokeApprovalForAll">
+              {{ "all" | translate | async }}
+            </ng-container>
+            {{ assetDisplayName | longStr : 10 }}
+          </span>
+        </copy>
       </div>
-      <div class="request-info-item" *ngIf="tokenData?.args?._spender">
-        <div class="label">
-          {{ "Spender" | translate | async }}
-          <tooltip placement="topLeft" [tip]="'spenderTip' | translate | async">
-            <img src="assets/images/common/tooltip.svg" alt="" />
-          </tooltip>
-        </div>
-        <copy [value]="tokenData.args._spender">
-          <span class="to-address">
-            {{ tokenData.args._spender | longStr : 6 }}
-            <img theme src="assets/images/common/copy.svg" />
+      <div class="authorization-row" *ngIf="isRevokeApprovalForAll">
+        <span class="label">{{ "permissionFrom" | translate | async }}</span>
+        <copy [value]="authorization?.spender">
+          <span class="authorization-value">
+            {{ authorization?.spender | longStr : 10 }}
           </span>
         </copy>
       </div>
     </div>
 
     <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
+
+    <div class="request-info">
+      <evm-authorization-details
+      *ngIf="showSpenderInfo"
+      [authorizations]="authorizations"
+      [labelKey]="spenderInfoLabelKey"
+      ></evm-authorization-details>
+    </div>
 
     <div class="request-info">
       <div class="request-info-item">
@@ -133,7 +151,7 @@
             <img src="assets/images/common/tooltip.svg" alt="" />
           </tooltip>
         </div>
-        <span>{{ tokenData?.name }}</span>
+        <span>{{ methodDisplayName }}</span>
       </div>
     </div>
 

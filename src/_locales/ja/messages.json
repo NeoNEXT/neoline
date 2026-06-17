@@ -1412,6 +1412,39 @@
   "approveNormalTip": {
     "message": "この操作により、第三者が現在の残高から{{amount}} {{symbol}}を支出できるようになります。"
   },
+  "nftWithdrawalRequest": {
+    "message": "引き出しリクエスト"
+  },
+  "revokePermission": {
+    "message": "許可を取り消す"
+  },
+  "authorizationErc20ApproveDescription": {
+    "message": "この金額をあなたのアカウントから使用する権限を第三者に付与します。"
+  },
+  "authorizationNftApproveDescription": {
+    "message": "あなたのアカウントから NFT を引き出す権限を第三者に付与します。"
+  },
+  "authorizationNftApprovalForAllDescription": {
+    "message": "あなたのアカウントから NFT を引き出す権限を第三者に付与します。"
+  },
+  "authorizationNftRevokeApprovalForAllDescription": {
+    "message": "あなたのアカウントから NFT を引き出す第三者の権限を削除します。"
+  },
+  "withdraw": {
+    "message": "引き出し"
+  },
+  "all": {
+    "message": "すべて"
+  },
+  "NFT": {
+    "message": "NFT"
+  },
+  "permissionFor": {
+    "message": "許可対象"
+  },
+  "permissionFrom": {
+    "message": "許可元"
+  },
   "cancelOrSpeedUpTX": {
     "message": "取引をキャンセルまたは加速。"
   },

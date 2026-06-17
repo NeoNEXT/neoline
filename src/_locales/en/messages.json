@@ -1412,6 +1412,39 @@
   "approveNormalTip": {
     "message": "This allows the third party to spend {{amount}} {{symbol}} from your current balance."
   },
+  "nftWithdrawalRequest": {
+    "message": "Withdrawal request"
+  },
+  "revokePermission": {
+    "message": "Revoke permission"
+  },
+  "authorizationErc20ApproveDescription": {
+    "message": "You are granting someone permission to spend this amount from your account."
+  },
+  "authorizationNftApproveDescription": {
+    "message": "You are granting someone permission to withdraw an NFT from your account."
+  },
+  "authorizationNftApprovalForAllDescription": {
+    "message": "You are granting someone permission to withdraw NFTs from your account."
+  },
+  "authorizationNftRevokeApprovalForAllDescription": {
+    "message": "You are revoking someone's permission to withdraw NFTs from your account."
+  },
+  "withdraw": {
+    "message": "Withdraw"
+  },
+  "all": {
+    "message": "All"
+  },
+  "NFT": {
+    "message": "NFT"
+  },
+  "permissionFor": {
+    "message": "Permission for"
+  },
+  "permissionFrom": {
+    "message": "Permission from"
+  },
   "cancelOrSpeedUpTX": {
     "message": "cancel or speed up a transaction."
   },

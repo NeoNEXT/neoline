@@ -6,10 +6,20 @@
   }
   .content {
     height: 300px;
+    overflow-y: auto;
     .hex-label {
       margin-top: 0;
       display: flex;
       gap: 8px;
+    }
+    .authorization-request-info {
+      padding-bottom: 12px;
+      margin-bottom: 12px;
+      border-bottom: 1px solid var(--line-color);
+
+      &:empty {
+        display: none;
+      }
     }
     .json-box {
       color: var(--title-color);

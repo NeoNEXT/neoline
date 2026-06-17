@@ -1412,6 +1412,39 @@
   "approveNormalTip": {
     "message": "此操作允许第三方从您的当前余额中支出 {{amount}} {{symbol}}。"
   },
+  "nftWithdrawalRequest": {
+    "message": "提取请求"
+  },
+  "revokePermission": {
+    "message": "去除许可"
+  },
+  "authorizationErc20ApproveDescription": {
+    "message": "您正在授予其他人从您的账户中花费该金额的权限。"
+  },
+  "authorizationNftApproveDescription": {
+    "message": "您正在授予其他人从您的账户中提取 NFT 的许可。"
+  },
+  "authorizationNftApprovalForAllDescription": {
+    "message": "您正在授予其他人从您的账户中提取 NFT 的权限。"
+  },
+  "authorizationNftRevokeApprovalForAllDescription": {
+    "message": "您正在删除其他人从您的账户中提取 NFT 的权限。"
+  },
+  "withdraw": {
+    "message": "提取"
+  },
+  "all": {
+    "message": "所有"
+  },
+  "NFT": {
+    "message": "NFT"
+  },
+  "permissionFor": {
+    "message": "权限用于"
+  },
+  "permissionFrom": {
+    "message": "许可来自"
+  },
   "cancelOrSpeedUpTX": {
     "message": "取消或加速交易。"
   },
@@ -1578,7 +1611,7 @@
     "message": "消费者"
   },
   "spenderTip": {
-    "message": "这是能够代表您花费您的代币的地址。."
+    "message": "这是能够代表您花费您的代币的地址。"
   },
   "scanQRCode": {
     "message": "扫描二维码"

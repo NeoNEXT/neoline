@@ -5,6 +5,7 @@ import {
   AddressNonceInfo,
   EvmTransactionParams,
   RpcNetwork,
+  TokenStandard,
 } from '@/app/popup/_lib';
 import { NeoXFeeInfoProp } from '@/app/popup/transfer/create/interface';
 import { ethers } from 'ethers';
@@ -15,6 +16,10 @@ import {
   detectContractSecurityToThirdPartySite,
   getHexDataLength,
 } from '@/app/core/utils/evm';
+import {
+  EvmAuthorizationDetails,
+  getTransactionAuthorizations,
+} from '@/app/core/utils/evm-authorization';
 
 type TabType = 'details' | 'data';
 
@@ -52,6 +57,8 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   newTxParams: EvmTransactionParams;
   approveAssetBalance: string;
   neoXFeeInfo: NeoXFeeInfoProp;
+  authorizations: EvmAuthorizationDetails[] = [];
+  canEditApproveAmount = false;
   constructor(
     private evmDappService: EvmDappService,
     private evmTxService: EvmTxService,
@@ -64,6 +71,10 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
     this.tokenData = this.evmDappService.parseStandardTokenTransactionData(
       this.txParams.data
     );
+    this.authorizations = getTransactionAuthorizations(
+      this.txParams,
+      this.tokenData
+    );
     this.evmDappService
       .getAssetDetails(
         this.txParams.to,
@@ -74,17 +85,122 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
       .then((res) => {
         this.assetDetails = res;
         this.returnAssetDetail.emit(this.assetDetails);
+        this.approveAmount = this.assetDetails.tokenAmount || '';
+        this.canEditApproveAmount =
+          this.tokenData?.name?.toLowerCase() === 'approve' &&
+          this.assetDetails.standard === TokenStandard.ERC20;
+        this.authorizations = getTransactionAuthorizations(
+          this.txParams,
+          this.tokenData,
+          this.assetDetails
+        );
 
-        this.approveAmount = this.assetDetails.tokenAmount;
-        this.evmAssetService
-          .getNeoXAddressAssetBalance(this.txParams.from, this.txParams.to)
-          .then((res) => {
-            this.approveAssetBalance = ethers.formatUnits(
-              res,
-              this.assetDetails.decimals
-            );
-          });
+        if (this.canEditApproveAmount) {
+          this.evmAssetService
+            .getNeoXAddressAssetBalance(this.txParams.from, this.txParams.to)
+            .then((res) => {
+              this.approveAssetBalance = ethers.formatUnits(
+                res,
+                this.assetDetails.decimals
+              );
+            });
+        }
       });
+  }
+
+  get authorization(): EvmAuthorizationDetails | undefined {
+    return this.authorizations[0];
+  }
+
+  get isNftAuthorization(): boolean {
+    return (
+      this.authorization?.scope === 'token' ||
+      this.authorization?.scope === 'allNfts'
+    );
+  }
+
+  get isNftApprove(): boolean {
+    return this.authorization?.kind === 'approve' && this.isNftAuthorization;
+  }
+
+  get isSetApprovalForAll(): boolean {
+    return this.authorization?.kind === 'setApprovalForAll';
+  }
+
+  get isRevokeApprovalForAll(): boolean {
+    return this.isSetApprovalForAll && this.authorization?.approved === false;
+  }
+
+  get showAuthorizationPreview(): boolean {
+    if (!this.authorization) {
+      return false;
+    }
+    if (this.authorization.kind === 'approve') {
+      return this.canEditApproveAmount || this.isNftApprove;
+    }
+    return true;
+  }
+
+  get authorizationTitleKey(): string {
+    if (this.isRevokeApprovalForAll) {
+      return 'revokePermission';
+    }
+    if (this.isNftAuthorization) {
+      return 'nftWithdrawalRequest';
+    }
+    return 'SpendingCapRequest';
+  }
+
+  get authorizationDescriptionKey(): string {
+    if (this.isRevokeApprovalForAll) {
+      return 'authorizationNftRevokeApprovalForAllDescription';
+    }
+    if (this.isSetApprovalForAll) {
+      return 'authorizationNftApprovalForAllDescription';
+    }
+    if (this.isNftApprove) {
+      return 'authorizationNftApproveDescription';
+    }
+    return 'authorizationErc20ApproveDescription';
+  }
+
+  get authorizationChangeLabelKey(): string {
+    if (this.canEditApproveAmount) {
+      return 'SpendingCap';
+    }
+    if (this.isRevokeApprovalForAll) {
+      return 'NFT';
+    }
+    return 'withdraw';
+  }
+
+  get showSpenderInfo(): boolean {
+    return Boolean(this.authorization?.spender) && !this.isRevokeApprovalForAll;
+  }
+
+  get spenderInfoLabelKey(): string {
+    return this.isSetApprovalForAll ? 'permissionFor' : 'Spender';
+  }
+
+  get assetDisplayName(): string {
+    return (
+      this.assetDetails?.name ||
+      this.assetDetails?.symbol ||
+      this.txParams?.to ||
+      ''
+    );
+  }
+
+  get methodDisplayName(): string {
+    const method = this.tokenData?.name || '';
+    const normalizedMethod = method.toLowerCase();
+    if (normalizedMethod === 'approve') {
+      return 'Approve';
+    }
+    if (normalizedMethod === 'setapprovalforall') {
+      return 'Set Approval For All';
+    }
+    return method;
   }
 
   openEditApproveCapDialog() {
@@ -112,6 +228,11 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
           this.newTxParams = Object.assign({}, this.txParams, {
             data: newData,
           });
+          this.authorizations = getTransactionAuthorizations(
+            this.newTxParams,
+            this.tokenData,
+            { ...this.assetDetails, tokenAmount: this.approveAmount }
+          );
           this.updateApproveAmountEvent.emit(this.newTxParams);
         }
       });
