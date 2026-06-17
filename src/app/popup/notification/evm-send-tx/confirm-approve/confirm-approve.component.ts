@@ -86,14 +86,15 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
         this.assetDetails = res;
         this.returnAssetDetail.emit(this.assetDetails);
         this.approveAmount = this.assetDetails.tokenAmount || '';
-        this.canEditApproveAmount =
-          this.tokenData?.name?.toLowerCase() === 'approve' &&
-          this.assetDetails.standard === TokenStandard.ERC20;
         this.authorizations = getTransactionAuthorizations(
           this.txParams,
           this.tokenData,
           this.assetDetails
         );
+        this.canEditApproveAmount =
+          this.tokenData?.name?.toLowerCase() === 'approve' &&
+          this.assetDetails.standard === TokenStandard.ERC20 &&
+          this.authorization?.approved !== false;
 
         if (this.canEditApproveAmount) {
           this.evmAssetService
@@ -123,6 +124,10 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
     return this.authorization?.kind === 'approve' && this.isNftAuthorization;
   }
 
+  get isApproveAndCall(): boolean {
+    return this.authorization?.kind === 'approveAndCall';
+  }
+
   get isSetApprovalForAll(): boolean {
     return this.authorization?.kind === 'setApprovalForAll';
   }
@@ -131,18 +136,30 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
     return this.isSetApprovalForAll && this.authorization?.approved === false;
   }
 
+  get isRevokeApproval(): boolean {
+    return (
+      this.authorization?.approved === false &&
+      (this.authorization.kind === 'approve' ||
+        this.authorization.kind === 'approveAndCall' ||
+        this.authorization.kind === 'setApprovalForAll')
+    );
+  }
+
   get showAuthorizationPreview(): boolean {
     if (!this.authorization) {
       return false;
     }
     if (this.authorization.kind === 'approve') {
-      return this.canEditApproveAmount || this.isNftApprove;
+      return this.canEditApproveAmount || this.isNftApprove || this.isRevokeApproval;
+    }
+    if (this.authorization.kind === 'approveAndCall') {
+      return true;
     }
     return true;
   }
 
   get authorizationTitleKey(): string {
-    if (this.isRevokeApprovalForAll) {
+    if (this.isRevokeApproval) {
       return 'revokePermission';
     }
     if (this.isNftAuthorization) {
@@ -155,6 +172,18 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
     if (this.isRevokeApprovalForAll) {
       return 'authorizationNftRevokeApprovalForAllDescription';
     }
+    if (this.isRevokeApproval) {
+      if (this.isNftAuthorization) {
+        return 'authorizationNftRevokeApprovalDescription';
+      }
+      return 'authorizationErc20RevokeDescription';
+    }
+    if (this.authorization?.unlimited) {
+      return 'authorizationErc20UnlimitedDescription';
+    }
+    if (this.isApproveAndCall) {
+      return 'authorizationApproveAndCallDescription';
+    }
     if (this.isSetApprovalForAll) {
       return 'authorizationNftApprovalForAllDescription';
     }
@@ -165,17 +194,23 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   }
 
   get authorizationChangeLabelKey(): string {
-    if (this.canEditApproveAmount) {
+    if (this.isRevokeApproval && !this.isNftAuthorization) {
       return 'SpendingCap';
     }
-    if (this.isRevokeApprovalForAll) {
+    if (this.canEditApproveAmount || this.isApproveAndCall) {
+      return 'SpendingCap';
+    }
+    if (this.isRevokeApproval) {
       return 'NFT';
     }
     return 'withdraw';
   }
 
   get showSpenderInfo(): boolean {
-    return Boolean(this.authorization?.spender) && !this.isRevokeApprovalForAll;
+    return (
+      Boolean(this.authorization?.spender) &&
+      !this.isRevokeApproval
+    );
   }
 
   get spenderInfoLabelKey(): string {
@@ -191,6 +226,16 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
     );
   }
 
+  get authorizationAmountDisplay(): string {
+    if (this.authorization?.unlimited) {
+      return 'unlimited';
+    }
+    if (this.isRevokeApproval && !this.isNftAuthorization) {
+      return '0';
+    }
+    return this.approveAmount || this.authorization?.amount || '';
+  }
+
   get methodDisplayName(): string {
     const method = this.tokenData?.name || '';
     const normalizedMethod = method.toLowerCase();
@@ -200,7 +245,14 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
     if (normalizedMethod === 'setapprovalforall') {
       return 'Set Approval For All';
     }
+    if (normalizedMethod === 'approveandcall') {
+      return 'Approve And Call';
+    }
     return method;
+  }
+
+  get currentTxParams(): EvmTransactionParams {
+    return this.newTxParams ?? this.txParams;
   }
 
   openEditApproveCapDialog() {
@@ -228,6 +280,10 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
           this.newTxParams = Object.assign({}, this.txParams, {
             data: newData,
           });
+          this.tokenData = this.evmDappService.parseStandardTokenTransactionData(
+            newData
+          );
+          this.hexDataLength = getHexDataLength(newData);
           this.authorizations = getTransactionAuthorizations(
             this.newTxParams,
             this.tokenData,

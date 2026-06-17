@@ -1421,8 +1421,20 @@
   "authorizationErc20ApproveDescription": {
     "message": "この金額をあなたのアカウントから使用する権限を第三者に付与します。"
   },
+  "authorizationErc20RevokeDescription": {
+    "message": "あなたのアカウントからトークンを使用する第三者の権限を取り消します。"
+  },
+  "authorizationErc20UnlimitedDescription": {
+    "message": "支出上限を取り消すまで、第三者があなたのトークン残高を使用できる権限を付与します。"
+  },
+  "authorizationApproveAndCallDescription": {
+    "message": "この金額を使用する権限を付与し、spender コントラクトの呼び出しを許可します。"
+  },
   "authorizationNftApproveDescription": {
     "message": "あなたのアカウントから NFT を引き出す権限を第三者に付与します。"
+  },
+  "authorizationNftRevokeApprovalDescription": {
+    "message": "あなたのアカウントから NFT を引き出す権限を取り消します。"
   },
   "authorizationNftApprovalForAllDescription": {
     "message": "あなたのアカウントから NFT を引き出す権限を第三者に付与します。"
@@ -1435,6 +1447,9 @@
   },
   "all": {
     "message": "すべて"
+  },
+  "unlimited": {
+    "message": "無制限"
   },
   "NFT": {
     "message": "NFT"

@@ -161,6 +161,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         return 'contractInteraction';
       case EvmTransactionType.swapApproval:
       case EvmTransactionType.tokenMethodApprove:
+      case EvmTransactionType.tokenMethodApproveAndCall:
       case EvmTransactionType.tokenMethodSetApprovalForAll:
         return 'approve';
     }

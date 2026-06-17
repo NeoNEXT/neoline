@@ -53,13 +53,24 @@
             class="edit"
             src="assets/images/common/edit.svg"
           />
-          <span *ngIf="approveAmount?.length <= 10">{{ approveAmount }}</span>
-          <tooltip
-            *ngIf="approveAmount?.length > 10"
-            placement="top"
-            [tip]="approveAmount"
+          <span *ngIf="authorization?.unlimited">
+            {{ "unlimited" | translate | async }}
+          </span>
+          <span
+            *ngIf="
+              !authorization?.unlimited && authorizationAmountDisplay?.length <= 10
+            "
           >
-            <span>{{ approveAmount.slice(0, 10) }}...</span>
+            {{ authorizationAmountDisplay }}
+          </span>
+          <tooltip
+            *ngIf="
+              !authorization?.unlimited && authorizationAmountDisplay?.length > 10
+            "
+            placement="top"
+            [tip]="authorizationAmountDisplay"
+          >
+            <span>{{ authorizationAmountDisplay.slice(0, 10) }}...</span>
           </tooltip>
           <div class="asset-logo">
             <token-logo
@@ -72,8 +83,29 @@
             {{ assetDetails?.symbol }}
           </div>
         </div>
+        <div
+          class="authorization-value"
+          *ngIf="!canEditApproveAmount && !isNftAuthorization"
+        >
+          <span *ngIf="authorization?.unlimited">
+            {{ "unlimited" | translate | async }}
+          </span>
+          <span *ngIf="!authorization?.unlimited">
+            {{ authorizationAmountDisplay }}
+          </span>
+          <div class="asset-logo">
+            <token-logo
+              customClass="list edit-amount"
+              [assetId]="txParams.to"
+              [chainType]="'NeoX'"
+              [symbol]="assetDetails?.symbol"
+              [neoXChainId]="neoXNetwork.chainId"
+            ></token-logo>
+            {{ assetDetails?.symbol }}
+          </div>
+        </div>
         <copy
-          *ngIf="!canEditApproveAmount"
+          *ngIf="!canEditApproveAmount && isNftAuthorization"
           [value]="authorization?.tokenAddress || txParams.to"
         >
           <span class="authorization-value">
@@ -99,9 +131,9 @@
 
     <div class="request-info">
       <evm-authorization-details
-      *ngIf="showSpenderInfo"
-      [authorizations]="authorizations"
-      [labelKey]="spenderInfoLabelKey"
+        *ngIf="showSpenderInfo"
+        [authorizations]="authorizations"
+        [labelKey]="spenderInfoLabelKey"
       ></evm-authorization-details>
     </div>
 
@@ -157,7 +189,7 @@
 
     <div class="fee-group">
       <evm-fee
-        [txParams]="newTxParams ?? txParams"
+        [txParams]="currentTxParams"
         [symbol]="neoXNetwork.symbol"
         [siteNeoXFeeInfo]="siteNeoXFeeInfo"
         [place]="'dapp'"
@@ -191,11 +223,11 @@
     </p>
     <div class="hex-label">
       HEX DATA: <span class="value">{{ hexDataLength }} BYTES</span>
-      <copy [value]="txParams.data">
+      <copy [value]="currentTxParams.data">
         <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
       </copy>
     </div>
-    <p class="json-box serialize">{{ txParams.data }}</p>
+    <p class="json-box serialize">{{ currentTxParams.data }}</p>
   </div>
   <div class="btn-group">
     <button class="cancel" (click)="exit()">

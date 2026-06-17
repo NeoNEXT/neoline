@@ -2,6 +2,8 @@ import { EvmTransactionParams, TokenStandard } from '@/app/popup/_lib';
 import { ethers } from 'ethers';
 
 const PERMIT2_ADDRESS = '0x000000000022d473030f116ddee9f6b43ac78ba3';
+const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
+const MAX_UINT256 = (2n ** 256n - 1n).toString();
 const permitInterface = new ethers.Interface([
   'function permit(address owner,address spender,uint256 value,uint256 deadline,uint8 v,bytes32 r,bytes32 s)',
   'function permit(address holder,address spender,uint256 nonce,uint256 expiry,bool allowed,uint8 v,bytes32 r,bytes32 s)',
@@ -13,6 +15,7 @@ const permit2Interface = new ethers.Interface([
 
 export type EvmAuthorizationKind =
   | 'approve'
+  | 'approveAndCall'
   | 'setApprovalForAll'
   | 'permit'
   | 'permit2';
@@ -23,9 +26,12 @@ export interface EvmAuthorizationDetails {
   spender?: string;
   tokenAddress?: string;
   amount?: string;
+  amountRaw?: string;
   tokenId?: string;
   deadline?: string;
   approved?: boolean;
+  unlimited?: boolean;
+  callsSpender?: boolean;
   scope?: 'token' | 'allNfts';
 }
 
@@ -42,20 +48,33 @@ export function getTransactionAuthorizations(
 ): EvmAuthorizationDetails[] {
   const method = String(tokenData?.name || '').toLowerCase();
   const args = tokenData?.args || [];
-  if (method === 'approve') {
+  if (method === 'approve' || method === 'approveandcall') {
     const isNft = assetDetails?.standard === TokenStandard.ERC721;
+    const spender = getArg(args, '_spender', '_approved', 0);
+    const amountRaw = isNft
+      ? undefined
+      : getArg(args, '_value', 'value', 1);
+    const tokenId = isNft
+      ? assetDetails?.tokenId || getArg(args, '_tokenId', 'tokenId', 1)
+      : undefined;
     return [
       {
-        kind: 'approve',
+        kind: method === 'approveandcall' ? 'approveAndCall' : 'approve',
         owner: txParams.from,
-        spender: getArg(args, '_spender', '_approved', 0),
+        spender,
         tokenAddress: txParams.to,
         amount: isNft
           ? undefined
-          : assetDetails?.tokenAmount || getArg(args, '_value', 'value', 1),
-        tokenId: isNft
-          ? assetDetails?.tokenId || getArg(args, '_tokenId', 'tokenId', 1)
-          : undefined,
+          : assetDetails?.tokenAmount || amountRaw,
+        amountRaw,
+        tokenId,
+        approved: isNft
+          ? !isZeroAddress(spender)
+          : amountRaw === undefined
+            ? undefined
+            : !isZeroAmount(amountRaw),
+        unlimited: !isNft && isMaxUint256(amountRaw),
+        callsSpender: method === 'approveandcall',
         scope: isNft ? 'token' : undefined,
       },
     ];
@@ -207,6 +226,31 @@ function getBooleanArg(
 
 function stringify(value: any): string | undefined {
   return value === undefined || value === null ? undefined : value.toString();
+}
+
+function isZeroAddress(value?: string): boolean {
+  return value?.toLowerCase() === ZERO_ADDRESS;
+}
+
+function isZeroAmount(value?: string): boolean {
+  const normalized = normalizeNumericString(value);
+  return normalized === '0';
+}
+
+function isMaxUint256(value?: string): boolean {
+  const normalized = normalizeNumericString(value);
+  return normalized === MAX_UINT256;
+}
+
+function normalizeNumericString(value?: string): string | undefined {
+  if (value === undefined) {
+    return undefined;
+  }
+  try {
+    return BigInt(value).toString();
+  } catch {
+    return undefined;
+  }
 }
 
 function toArray(value: any): any[] {

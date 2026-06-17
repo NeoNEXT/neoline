@@ -1421,8 +1421,20 @@
   "authorizationErc20ApproveDescription": {
     "message": "다른 사람이 계정에서 이 금액을 사용할 수 있도록 권한을 부여합니다."
   },
+  "authorizationErc20RevokeDescription": {
+    "message": "다른 사람이 계정에서 토큰을 사용할 수 있는 권한을 철회합니다."
+  },
+  "authorizationErc20UnlimitedDescription": {
+    "message": "지출 한도를 철회할 때까지 다른 사람이 토큰 잔액을 사용할 수 있도록 권한을 부여합니다."
+  },
+  "authorizationApproveAndCallDescription": {
+    "message": "다른 사람이 이 금액을 사용할 수 있도록 권한을 부여하고 spender 계약 호출을 허용합니다."
+  },
   "authorizationNftApproveDescription": {
     "message": "다른 사람이 계정에서 NFT를 출금할 수 있도록 권한을 부여합니다."
+  },
+  "authorizationNftRevokeApprovalDescription": {
+    "message": "계정에서 NFT를 출금할 수 있는 권한을 철회합니다."
   },
   "authorizationNftApprovalForAllDescription": {
     "message": "다른 사람이 계정에서 NFT를 출금할 수 있도록 권한을 부여합니다."
@@ -1435,6 +1447,9 @@
   },
   "all": {
     "message": "모두"
+  },
+  "unlimited": {
+    "message": "무제한"
   },
   "NFT": {
     "message": "NFT"

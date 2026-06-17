@@ -9,6 +9,8 @@ describe('EVM authorization recognition', () => {
   const owner = '0x1111111111111111111111111111111111111111';
   const token = '0x2222222222222222222222222222222222222222';
   const spender = '0x3333333333333333333333333333333333333333';
+  const zeroAddress = '0x0000000000000000000000000000000000000000';
+  const maxUint256 = (2n ** 256n - 1n).toString();
 
   it('recognizes ERC-20 approve', () => {
     const authorizations = getTransactionAuthorizations(
@@ -28,6 +30,64 @@ describe('EVM authorization recognition', () => {
     ]);
   });
 
+  it('recognizes ERC-20 approve revoke', () => {
+    const authorizations = getTransactionAuthorizations(
+      { from: owner, to: token },
+      { name: 'approve', args: { _spender: spender, _value: '0' } },
+      { standard: TokenStandard.ERC20, tokenAmount: '0' },
+    );
+
+    expect(authorizations).toEqual([
+      jasmine.objectContaining({
+        kind: 'approve',
+        spender,
+        amount: '0',
+        amountRaw: '0',
+        approved: false,
+      }),
+    ]);
+  });
+
+  it('recognizes unlimited ERC-20 approve', () => {
+    const authorizations = getTransactionAuthorizations(
+      { from: owner, to: token },
+      { name: 'approve', args: { _spender: spender, _value: maxUint256 } },
+      { standard: TokenStandard.ERC20, tokenAmount: maxUint256 },
+    );
+
+    expect(authorizations).toEqual([
+      jasmine.objectContaining({
+        kind: 'approve',
+        spender,
+        amountRaw: maxUint256,
+        approved: true,
+        unlimited: true,
+      }),
+    ]);
+  });
+
+  it('recognizes ERC-20 approveAndCall', () => {
+    const authorizations = getTransactionAuthorizations(
+      { from: owner, to: token },
+      {
+        name: 'approveAndCall',
+        args: { _spender: spender, _value: '1000000', _extraData: '0x1234' },
+      },
+      { standard: TokenStandard.ERC20, tokenAmount: '1' },
+    );
+
+    expect(authorizations).toEqual([
+      jasmine.objectContaining({
+        kind: 'approveAndCall',
+        spender,
+        amount: '1',
+        amountRaw: '1000000',
+        approved: true,
+        callsSpender: true,
+      }),
+    ]);
+  });
+
   it('recognizes ERC-721 approve', () => {
     const authorizations = getTransactionAuthorizations(
       { from: owner, to: token },
@@ -42,6 +102,24 @@ describe('EVM authorization recognition', () => {
         spender,
         tokenAddress: token,
         tokenId: '42',
+        scope: 'token',
+      }),
+    ]);
+  });
+
+  it('recognizes ERC-721 approve revoke', () => {
+    const authorizations = getTransactionAuthorizations(
+      { from: owner, to: token },
+      { name: 'approve', args: { _approved: zeroAddress, _tokenId: '42' } },
+      { standard: TokenStandard.ERC721 },
+    );
+
+    expect(authorizations).toEqual([
+      jasmine.objectContaining({
+        kind: 'approve',
+        spender: zeroAddress,
+        tokenId: '42',
+        approved: false,
         scope: 'token',
       }),
     ]);

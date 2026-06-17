@@ -1421,8 +1421,20 @@
   "authorizationErc20ApproveDescription": {
     "message": "You are granting someone permission to spend this amount from your account."
   },
+  "authorizationErc20RevokeDescription": {
+    "message": "You are revoking someone's permission to spend tokens from your account."
+  },
+  "authorizationErc20UnlimitedDescription": {
+    "message": "You are granting someone permission to spend your token balance until you revoke the spending cap."
+  },
+  "authorizationApproveAndCallDescription": {
+    "message": "You are granting someone permission to spend this amount and allowing the spender contract to be called."
+  },
   "authorizationNftApproveDescription": {
     "message": "You are granting someone permission to withdraw an NFT from your account."
+  },
+  "authorizationNftRevokeApprovalDescription": {
+    "message": "You are revoking permission to withdraw an NFT from your account."
   },
   "authorizationNftApprovalForAllDescription": {
     "message": "You are granting someone permission to withdraw NFTs from your account."
@@ -1435,6 +1447,9 @@
   },
   "all": {
     "message": "All"
+  },
+  "unlimited": {
+    "message": "Unlimited"
   },
   "NFT": {
     "message": "NFT"

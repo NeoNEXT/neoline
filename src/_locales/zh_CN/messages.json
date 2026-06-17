@@ -1421,8 +1421,20 @@
   "authorizationErc20ApproveDescription": {
     "message": "您正在授予其他人从您的账户中花费该金额的权限。"
   },
+  "authorizationErc20RevokeDescription": {
+    "message": "您正在撤销其他人从您的账户中花费代币的权限。"
+  },
+  "authorizationErc20UnlimitedDescription": {
+    "message": "您正在授予其他人花费您的代币余额的权限，直到您撤销支出上限。"
+  },
+  "authorizationApproveAndCallDescription": {
+    "message": "您正在授予其他人花费该金额的权限，并允许调用消费者合约。"
+  },
   "authorizationNftApproveDescription": {
     "message": "您正在授予其他人从您的账户中提取 NFT 的许可。"
+  },
+  "authorizationNftRevokeApprovalDescription": {
+    "message": "您正在撤销从您的账户中提取 NFT 的许可。"
   },
   "authorizationNftApprovalForAllDescription": {
     "message": "您正在授予其他人从您的账户中提取 NFT 的权限。"
@@ -1435,6 +1447,9 @@
   },
   "all": {
     "message": "所有"
+  },
+  "unlimited": {
+    "message": "无限"
   },
   "NFT": {
     "message": "NFT"

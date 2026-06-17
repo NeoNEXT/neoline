@@ -72,6 +72,11 @@ export enum EvmTransactionType {
    */
   tokenMethodApprove = "approve",
   /**
+   * A token transaction requesting an allowance and then calling the spender
+   * contract.
+   */
+  tokenMethodApproveAndCall = "approveandcall",
+  /**
    * A token transaction transferring tokens from an account that the sender
    * has an allowance of. The method is prefixed with safe because when calling
    * this method the contract checks to ensure that the receiver is an address

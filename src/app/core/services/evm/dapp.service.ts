@@ -463,6 +463,7 @@ export class EvmDappService {
 
     const tokenMethodName = [
       EvmTransactionType.tokenMethodApprove,
+      EvmTransactionType.tokenMethodApproveAndCall,
       EvmTransactionType.tokenMethodSetApprovalForAll,
       EvmTransactionType.tokenMethodTransfer,
       EvmTransactionType.tokenMethodTransferFrom,
