@@ -3,6 +3,28 @@ import BigNumber from 'bignumber.js';
 import { reverseHex } from './utils';
 
 declare var chrome: any;
+
+/**
+ * 内容脚本会在扩展被重新加载/更新/禁用后继续存活于已打开的页面（成为“孤儿”），
+ * 此时任何 chrome.* 调用都会抛出 "Extension context invalidated."。
+ * 调用 chrome.storage 前先用此函数判断 context 是否仍有效。
+ *
+ * The content script keeps running in already-open pages after the extension
+ * is reloaded/updated/disabled, where any chrome.* call throws
+ * "Extension context invalidated.". Guard chrome.storage calls with this.
+ */
+function isExtensionContextValid(): boolean {
+  try {
+    return (
+      typeof chrome !== 'undefined' &&
+      !!chrome.runtime &&
+      typeof chrome.runtime.id === 'string'
+    );
+  } catch {
+    return false;
+  }
+}
+
 export function httpGet(url, callback, headers?) {
   fetch(url, { headers })
     .then((response) => response.json())
@@ -38,9 +60,15 @@ export function httpPost(url, data, callback, headers?) {
 }
 
 export function getStorage(key, callback) {
-  chrome.storage.sync.get([key], (result) => {
-    callback(result[key]);
-  });
+  if (!isExtensionContextValid()) return;
+  try {
+    chrome.storage.sync.get([key], (result) => {
+      if (chrome.runtime.lastError) return;
+      callback(result[key]);
+    });
+  } catch {
+    // context invalidated between the guard and the call; ignore.
+  }
 }
 
 export function setStorage(value) {
@@ -58,10 +86,22 @@ export function clearStorage() {
 
 export function getLocalStorage(key, callback): Promise<any> {
   return new Promise((resolve) => {
-    chrome.storage.local.get([key], (result) => {
-      callback(result[key]);
-      resolve(result[key]);
-    });
+    if (!isExtensionContextValid()) {
+      resolve(undefined);
+      return;
+    }
+    try {
+      chrome.storage.local.get([key], (result) => {
+        if (chrome.runtime.lastError) {
+          resolve(undefined);
+          return;
+        }
+        callback(result[key]);
+        resolve(result[key]);
+      });
+    } catch {
+      resolve(undefined);
+    }
   });
 }
 
