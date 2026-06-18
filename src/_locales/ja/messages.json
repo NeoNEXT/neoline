@@ -1370,6 +1370,18 @@
   "SpendingCap": {
     "message": "支出上限"
   },
+  "EstimatedChanges": {
+    "message": "推定変更"
+  },
+  "permitRequestDescription": {
+    "message": "このサイトはあなたのトークンを使用する許可を求めています。"
+  },
+  "UseAccount": {
+    "message": "使用するアカウント"
+  },
+  "InteractingWithContent": {
+    "message": "以下とやり取りしています"
+  },
   "ViewDetails": {
     "message": "詳細を表示"
   },

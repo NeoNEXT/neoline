@@ -1370,6 +1370,18 @@
   "SpendingCap": {
     "message": "支出上限"
   },
+  "EstimatedChanges": {
+    "message": "预计变化"
+  },
+  "permitRequestDescription": {
+    "message": "该网站想获得花费您的代币的许可。"
+  },
+  "UseAccount": {
+    "message": "使用账户"
+  },
+  "InteractingWithContent": {
+    "message": "正在与下述内容交互"
+  },
   "ViewDetails": {
     "message": "查看详情"
   },

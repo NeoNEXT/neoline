@@ -9,7 +9,26 @@
   (backWithSignedTx)="handleHardwareSignedTx($event)"
 ></app-hardware-sign>
 
-<div class="container">
+<div class="loading-box" *ngIf="viewState === 'loading'">
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+  </div>
+</div>
+
+<app-evm-permit-request
+  *ngIf="viewState === 'permit'"
+  [request]="permitRequest"
+  [typedData]="typedData"
+  [strTypedData]="strTypeData"
+  [signAddress]="signAddress"
+  [locationOrigin]="locationOrigin"
+  [encryptWallet]="encryptWallet"
+  [network]="neoXNetwork"
+  (cancelEvent)="cancel()"
+  (confirmEvent)="signature()"
+></app-evm-permit-request>
+
+<div class="container" *ngIf="viewState === 'message'">
   <div class="header">
     <div class="invoke-type">· {{ "SIGNMESSAGE" }}</div>
     <p class="title">{{ "thSignTitle" | translate | async }}</p>

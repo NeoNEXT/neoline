@@ -1370,6 +1370,18 @@
   "SpendingCap": {
     "message": "Spending cap"
   },
+  "EstimatedChanges": {
+    "message": "Estimated changes"
+  },
+  "permitRequestDescription": {
+    "message": "This site wants permission to spend your tokens."
+  },
+  "UseAccount": {
+    "message": "Use account"
+  },
+  "InteractingWithContent": {
+    "message": "Interacting with"
+  },
   "ViewDetails": {
     "message": "View details"
   },

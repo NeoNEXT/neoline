@@ -1,0 +1,18 @@
+@import "../../evm-send-tx/send-common.scss";
+@import "../../evm-send-tx/confirm-approve/confirm-approve.component.scss";
+
+:host {
+  display: block;
+  min-height: calc(100vh - 74px);
+  background: var(--body-background-color);
+}
+
+.container .content {
+  .authorization-preview .value-rate {
+    margin-left: auto;
+  }
+
+  &.data .json-box {
+    color: var(--title-color);
+  }
+}

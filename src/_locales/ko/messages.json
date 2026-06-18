@@ -1370,6 +1370,18 @@
   "SpendingCap": {
     "message": "지출 한도"
   },
+  "EstimatedChanges": {
+    "message": "예상 변경 사항"
+  },
+  "permitRequestDescription": {
+    "message": "이 사이트가 내 토큰을 사용할 권한을 요청합니다."
+  },
+  "UseAccount": {
+    "message": "사용할 계정"
+  },
+  "InteractingWithContent": {
+    "message": "다음과 상호작용 중"
+  },
   "ViewDetails": {
     "message": "상세 보기"
   },

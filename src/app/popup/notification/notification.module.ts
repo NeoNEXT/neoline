@@ -26,6 +26,7 @@ import { PopupWalletSwitchAccountComponent } from './wallet-switch-accout/wallet
 import { PopupEvmAddChainComponent } from './evm-add-chain/add-chain.component';
 import { PopupEvmAddAssetComponent } from './evm-add-asset/add-asset.component';
 import { PopupNoticeEvmSignComponent } from './evm-signature/evm-signature.component';
+import { PopupNoticeEvmPermitRequestComponent } from './evm-signature/permit-request/evm-permit-request.component';
 import {
   PopupNoticeEvmSendTxComponent,
   PopupNoticeEvmConfirmSendEtherComponent,
@@ -57,6 +58,7 @@ import {
     PopupEvmAddChainComponent,
     PopupEvmAddAssetComponent,
     PopupNoticeEvmSignComponent,
+    PopupNoticeEvmPermitRequestComponent,
     PopupNoticeEvmSendTxComponent,
     PopupNoticeEvmConfirmSendEtherComponent,
     PopupNoticeEvmConfirmSendTokenComponent,

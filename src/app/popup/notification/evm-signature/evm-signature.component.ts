@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnDestroy, OnInit } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
 import { ChromeService, EvmWalletService, GlobalService } from '@/app/core';
-import { STORAGE_NAME } from '../../_lib';
+import { RpcNetwork, STORAGE_NAME } from '../../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable } from 'rxjs';
@@ -21,28 +21,44 @@ import {
   EvmAuthorizationDetails,
   getTypedDataAuthorizations,
 } from '@/app/core/utils/evm-authorization';
+import {
+  EvmPermitRequest,
+  getEvmPermitRequest,
+} from './permit-request/evm-permit-request';
 
 @Component({
   templateUrl: './evm-signature.component.html',
   styleUrls: ['./evm-signature.component.scss'],
 })
-export class PopupNoticeEvmSignComponent implements OnInit {
+export class PopupNoticeEvmSignComponent implements OnInit, OnDestroy {
   ETH_EOA_SIGN_METHODS = ETH_EOA_SIGN_METHODS;
   private messageID: number;
   private invokeArgsArray;
   challenge: string;
   signAddress: string;
+  locationOrigin = '';
 
   signMethod = ETH_EOA_SIGN_METHODS.PersonalSign;
   typedData: TypedMessage<MessageTypes>;
   strTypeData: string;
   authorizations: EvmAuthorizationDetails[] = [];
+  permitRequest: EvmPermitRequest;
+  requestReady = false;
 
   showHardwareSign = false;
   encryptWallet: EvmWalletJSON;
 
   private accountSub: Unsubscribable;
   private neoXWalletArr: EvmWalletJSON[];
+  neoXNetwork: RpcNetwork;
+
+  get viewState(): 'loading' | 'message' | 'permit' {
+    if (!this.requestReady) {
+      return 'loading';
+    }
+    return this.permitRequest ? 'permit' : 'message';
+  }
+
   constructor(
     private aRouter: ActivatedRoute,
     private chrome: ChromeService,
@@ -53,6 +69,7 @@ export class PopupNoticeEvmSignComponent implements OnInit {
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       this.neoXWalletArr = state.neoXWalletArr;
+      this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
     });
   }
 
@@ -61,11 +78,16 @@ export class PopupNoticeEvmSignComponent implements OnInit {
       ({
         messageID,
         method,
+        origin,
       }: {
         method: ETH_EOA_SIGN_METHODS;
         messageID: number;
+        origin: string;
       }) => {
+        this.requestReady = false;
+        this.permitRequest = undefined;
         this.messageID = messageID;
+        this.locationOrigin = origin;
         if (method && method === ETH_EOA_SIGN_METHODS.SignTypedDataV4) {
           this.signMethod = method;
         }
@@ -75,6 +97,7 @@ export class PopupNoticeEvmSignComponent implements OnInit {
             this.invokeArgsArray = invokeArgsArray;
             const params = invokeArgsArray[messageID];
             if (!params || params.length <= 0) {
+              this.requestReady = true;
               return;
             }
             switch (this.signMethod) {
@@ -90,18 +113,25 @@ export class PopupNoticeEvmSignComponent implements OnInit {
                   this.typedData = JSON.parse(this.typedData);
                 }
                 this.strTypeData = JSON.stringify(this.typedData);
+                this.setDisplayWallet();
                 this.authorizations = getTypedDataAuthorizations(
                   this.typedData,
                   this.signAddress
                 );
+                this.permitRequest = getEvmPermitRequest(this.typedData);
                 break;
             }
+            this.requestReady = true;
           });
       }
     );
     window.onbeforeunload = () => {
       this.cancel();
     };
+  }
+
+  ngOnDestroy(): void {
+    this.accountSub?.unsubscribe();
   }
 
   public cancel() {
@@ -204,5 +234,14 @@ export class PopupNoticeEvmSignComponent implements OnInit {
     }
     const regex = /\u202E/giu;
     return value.replace(regex, '\\u202E');
+  }
+
+  private setDisplayWallet(): void {
+    if (!this.signAddress) {
+      return;
+    }
+    this.encryptWallet = this.neoXWalletArr.find(
+      (item) => item.accounts[0].address === ethers.getAddress(this.signAddress)
+    );
   }
 }

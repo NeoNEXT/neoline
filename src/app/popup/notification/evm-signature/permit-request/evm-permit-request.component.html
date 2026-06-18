@@ -1,0 +1,150 @@
+<div class="loading-box" *ngIf="loading">
+  <div class="content">
+    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
+  </div>
+</div>
+
+<div class="container" *ngIf="!loading && summary">
+  <div class="header transfer">
+    <div class="invoke-type">
+      · {{ "SpendingCapRequest" | translate | async }}
+    </div>
+    <div class="address-group contract-interaction">
+      <copy [value]="signAddress">
+        <div class="item">
+          <img class="avatar" [avatar]="signAddress" />
+          <div class="name-group">
+            <p class="name">{{ summary.accountName }}</p>
+            <p>{{ signAddress | longStr : 10 }}</p>
+          </div>
+        </div>
+      </copy>
+    </div>
+  </div>
+
+  <div class="tabs-container">
+    <span
+      [class]="{ selected: tabType === 'details' }"
+      (click)="tabType = 'details'"
+    >
+      {{ "details" | translate | async }}
+    </span>
+    <span [class]="{ selected: tabType === 'data' }" (click)="tabType = 'data'">
+      {{ "data" | translate | async }}
+    </span>
+  </div>
+
+  <div class="content details" *ngIf="tabType === 'details'">
+    <div class="authorization-preview">
+      <div class="title-group">
+        <p class="title">
+          {{ "estimatedBalanceChanges" | translate | async }}
+        </p>
+        <tooltip
+          placement="topLeft"
+          [tip]="'estimatedBalanceChangesTip' | translate | async"
+        >
+          <img src="assets/images/common/tooltip.svg" alt="" />
+        </tooltip>
+      </div>
+      <p class="description">
+        {{
+          "approveNormalTip"
+            | translate
+              : { amount: summary.amount, symbol: summary.tokenSymbol }
+            | async
+        }}
+      </p>
+      <div class="authorization-row">
+        <span class="label">{{ "SpendingCap" | translate | async }}</span>
+        <div class="authorization-value">
+          <span>{{ summary.amount }}</span>
+          <div class="asset-logo">
+            <token-logo
+              customClass="list edit-amount"
+              [assetId]="request.tokenAddress"
+              [chainType]="'NeoX'"
+              [symbol]="summary.tokenSymbol"
+              [neoXChainId]="network?.chainId"
+            ></token-logo>
+            {{ summary.tokenSymbol }}
+          </div>
+        </div>
+      </div>
+      <p class="value-rate" *ngIf="summary.fiatAmount">
+        {{ summary.fiatAmount }}
+      </p>
+    </div>
+
+    <div class="request-info">
+      <div class="request-info-item">
+        <span class="label">{{ "Spender" | translate | async }}</span>
+        <copy [value]="request.spender">
+          {{ request.spender | longStr : 6 }}
+        </copy>
+      </div>
+    </div>
+
+    <div class="request-info">
+      <div class="request-info-item">
+        <span class="label">{{ "Network" | translate | async }}</span>
+        <span>{{ network?.name }}</span>
+      </div>
+      <div class="request-info-item">
+        <div class="label">
+          {{ "RequestFrom" | translate | async }}
+          <tooltip
+            placement="topLeft"
+            [tip]="'requestFromTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
+        <span>{{ displayOrigin || locationOrigin }}</span>
+      </div>
+      <div class="request-info-item">
+        <div class="label">
+          {{ "InteractingWith" | translate | async }}
+          <tooltip
+            placement="topLeft"
+            [tip]="'interactionWithTip' | translate | async"
+          >
+            <img src="assets/images/common/tooltip.svg" alt="" />
+          </tooltip>
+        </div>
+        <copy [value]="request.interactingAddress">
+          {{ summary.interactingName }}
+        </copy>
+      </div>
+      <div class="request-info-item">
+        <span class="label">{{ "Method" | translate | async }}</span>
+        <span>{{ typedData?.primaryType }}</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="content data" *ngIf="tabType === 'data'">
+    <p class="title">
+      PRIMARY TYPE:
+      <span class="value">{{ typedData?.primaryType }}</span>
+    </p>
+    <div class="hex-label">
+      {{ "message" | translate | async }}
+      <copy [value]="strTypedData">
+        <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
+      </copy>
+    </div>
+    <div class="json-box serialize json-viewer">
+      <app-json-viewer [data]="typedData?.message"></app-json-viewer>
+    </div>
+  </div>
+
+  <div class="btn-group">
+    <button class="cancel" (click)="cancelEvent.emit()">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button class="confirm" (click)="confirmEvent.emit()">
+      {{ "yes" | translate | async }}
+    </button>
+  </div>
+</div>
