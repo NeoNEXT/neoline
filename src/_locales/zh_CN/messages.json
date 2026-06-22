@@ -1376,6 +1376,21 @@
   "permitRequestDescription": {
     "message": "该网站想获得花费您的代币的许可。"
   },
+  "permitPrimaryType": {
+    "message": "主要类型"
+  },
+  "permitExpired": {
+    "message": "已过期"
+  },
+  "permitNoExpiry": {
+    "message": "永不过期"
+  },
+  "permitDateUnparseable": {
+    "message": "无法解析日期"
+  },
+  "permitExpiredWarning": {
+    "message": "一个或多个 Permit 截止时间已过期。"
+  },
   "UseAccount": {
     "message": "使用账户"
   },

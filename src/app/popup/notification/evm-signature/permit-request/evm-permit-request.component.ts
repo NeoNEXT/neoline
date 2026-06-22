@@ -9,19 +9,28 @@ import {
 import { EvmAssetService, RateState, SettingState } from '@/app/core';
 import { RpcNetwork } from '@/app/popup/_lib';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
+import { Asset } from '@/models/models';
 import {
   MessageTypes,
   TypedMessage,
 } from '@metamask/eth-sig-util';
-import { ethers } from 'ethers';
 import BigNumber from 'bignumber.js';
 import { Unsubscribable } from 'rxjs';
-import { EvmPermitRequest } from './evm-permit-request';
+import {
+  buildPermitMessageTree,
+  formatPermitAmount,
+  PermitMessageNode,
+} from './evm-permit-message';
+import { EvmPermitEntry, EvmPermitRequest } from './evm-permit-request';
 
-interface PermitSummary {
-  amount: string;
+interface PermitEntrySummary extends EvmPermitEntry {
+  amount?: string;
   tokenSymbol: string;
   fiatAmount?: string;
+}
+
+interface PermitSummary {
+  entries: PermitEntrySummary[];
   interactingName: string;
   accountName?: string;
 }
@@ -46,13 +55,14 @@ export class PopupNoticeEvmPermitRequestComponent
   @Output() cancelEvent = new EventEmitter<void>();
   @Output() confirmEvent = new EventEmitter<void>();
 
-  loading = true;
   tabType: TabType = 'details';
-  displayOrigin = '';
   rateCurrency = 'USD';
   summary: PermitSummary;
+  messageNodes: PermitMessageNode[] = [];
+  hasExpiredDeadline = false;
 
   private rateSub: Unsubscribable;
+  private assetRequests = new Map<string, Promise<Asset | null>>();
 
   constructor(
     private evmAssetService: EvmAssetService,
@@ -65,47 +75,136 @@ export class PopupNoticeEvmPermitRequestComponent
   }
 
   ngOnInit(): void {
-    this.displayOrigin = this.formatOrigin(this.locationOrigin);
-    this.buildSummary().finally(() => {
-      this.loading = false;
-    });
+    this.summary = {
+      entries: this.request.entries.map((entry) => ({
+        ...entry,
+        amount: entry.rawAmount,
+        tokenSymbol: this.formatAddress(entry.tokenAddress),
+      })),
+      interactingName:
+        this.request.type === 'permit2'
+          ? 'Permit2'
+          : this.formatAddress(this.request.interactingAddress),
+      accountName: this.encryptWallet?.name,
+    };
+    this.messageNodes = buildPermitMessageTree(this.typedData, this.request);
+    this.hasExpiredDeadline = this.hasNodeStatus(
+      this.messageNodes,
+      'expired'
+    );
+
+    this.enrichTokenMetadata();
   }
 
   ngOnDestroy(): void {
     this.rateSub?.unsubscribe();
   }
 
-  private async buildSummary(): Promise<void> {
-    const domain: any = this.typedData.domain;
-    let tokenSymbol = domain.name || this.formatAddress(this.request.tokenAddress);
-    let amount = this.request.rawAmount;
-    let fiatAmount: string;
+  get isBooleanPermit(): boolean {
+    return this.request.variant === 'dai';
+  }
 
-    try {
-      const asset = await this.evmAssetService.searchNeoXAsset(
-        this.request.tokenAddress
-      );
-      if (asset?.symbol) {
-        tokenSymbol = asset.symbol;
-      }
-      if (asset?.decimals !== undefined) {
-        amount = this.trimAmount(
-          ethers.formatUnits(this.request.rawAmount, asset.decimals)
-        );
-        fiatAmount = await this.getFiatAmount(this.request.tokenAddress, amount);
-      }
-    } catch {
-      // Raw typed-data values remain available if token metadata is unavailable.
+  get descriptionKey(): string {
+    if (this.isBooleanPermit) {
+      return this.request.allowed
+        ? 'authorizationErc20UnlimitedDescription'
+        : 'authorizationErc20RevokeDescription';
     }
+    return this.summary.entries.length === 1
+      ? 'approveNormalTip'
+      : 'authorizationErc20ApproveDescription';
+  }
 
-    this.summary = {
-      amount,
-      tokenSymbol,
-      fiatAmount,
-      interactingName:
-        this.request.type === 'permit2' ? 'Permit2' : tokenSymbol,
-      accountName: this.encryptWallet?.name,
-    };
+  get authorizationTitleKey(): string {
+    return this.isBooleanPermit && this.request.allowed === false
+      ? 'revokePermission'
+      : 'SpendingCapRequest';
+  }
+
+  fieldLabel(label: string): string {
+    return label ? `${label.charAt(0).toUpperCase()}${label.slice(1)}` : '';
+  }
+
+  private enrichTokenMetadata(): void {
+    const tokenAddresses = Array.from(
+      new Set(this.request.entries.map((entry) => entry.tokenAddress.toLowerCase()))
+    );
+
+    tokenAddresses.forEach((tokenAddress) => {
+      this.getAsset(tokenAddress).then((asset) => {
+        if (!asset) {
+          return;
+        }
+        this.applyAssetToSummary(tokenAddress, asset);
+        this.applyAssetToNodes(this.messageNodes, tokenAddress, asset);
+      });
+    });
+  }
+
+  private getAsset(tokenAddress: string): Promise<Asset | null> {
+    const key = tokenAddress.toLowerCase();
+    if (!this.assetRequests.has(key)) {
+      this.assetRequests.set(
+        key,
+        this.evmAssetService.searchNeoXAsset(tokenAddress).catch(() => null)
+      );
+    }
+    return this.assetRequests.get(key);
+  }
+
+  private applyAssetToSummary(tokenAddress: string, asset: Asset): void {
+    this.summary.entries
+      .filter((entry) => entry.tokenAddress.toLowerCase() === tokenAddress)
+      .forEach((entry) => {
+        entry.tokenSymbol = asset.symbol || entry.tokenSymbol;
+        if (entry.rawAmount !== undefined && asset.decimals !== undefined) {
+          entry.amount = this.trimAmount(
+            formatPermitAmount(entry.rawAmount, asset.decimals)
+          );
+          this.getFiatAmount(entry.tokenAddress, entry.amount).then(
+            (fiatAmount) => (entry.fiatAmount = fiatAmount)
+          );
+        }
+      });
+
+    if (this.request.type === 'permit' && asset.symbol) {
+      this.summary.interactingName = asset.symbol;
+    }
+  }
+
+  private applyAssetToNodes(
+    nodes: PermitMessageNode[],
+    tokenAddress: string,
+    asset: Asset
+  ): void {
+    nodes.forEach((node) => {
+      if (node.tokenAddress?.toLowerCase() === tokenAddress) {
+        node.tokenSymbol = asset.symbol;
+        if (
+          node.kind === 'amount' &&
+          node.rawValue !== undefined &&
+          asset.decimals !== undefined
+        ) {
+          node.displayValue = this.trimAmount(
+            formatPermitAmount(String(node.rawValue), asset.decimals)
+          );
+        }
+      }
+      if (node.children) {
+        this.applyAssetToNodes(node.children, tokenAddress, asset);
+      }
+    });
+  }
+
+  private hasNodeStatus(
+    nodes: PermitMessageNode[],
+    status: 'expired'
+  ): boolean {
+    return nodes.some(
+      (node) =>
+        node.timestamp?.status === status ||
+        (node.children && this.hasNodeStatus(node.children, status))
+    );
   }
 
   private async getFiatAmount(

@@ -1376,6 +1376,21 @@
   "permitRequestDescription": {
     "message": "이 사이트가 내 토큰을 사용할 권한을 요청합니다."
   },
+  "permitPrimaryType": {
+    "message": "기본 유형"
+  },
+  "permitExpired": {
+    "message": "만료됨"
+  },
+  "permitNoExpiry": {
+    "message": "만료되지 않음"
+  },
+  "permitDateUnparseable": {
+    "message": "날짜를 해석할 수 없음"
+  },
+  "permitExpiredWarning": {
+    "message": "하나 이상의 Permit 기한이 만료되었습니다."
+  },
   "UseAccount": {
     "message": "사용할 계정"
   },

@@ -1,13 +1,7 @@
-<div class="loading-box" *ngIf="loading">
-  <div class="content">
-    <mat-spinner diameter="72" strokeWidth="10"></mat-spinner>
-  </div>
-</div>
-
-<div class="container" *ngIf="!loading && summary">
+<div class="container" *ngIf="summary">
   <div class="header transfer">
     <div class="invoke-type">
-      · {{ "SpendingCapRequest" | translate | async }}
+      · {{ authorizationTitleKey | translate | async }}
     </div>
     <div class="address-group contract-interaction">
       <copy [value]="signAddress">
@@ -35,6 +29,10 @@
   </div>
 
   <div class="content details" *ngIf="tabType === 'details'">
+    <div class="permit-warning" *ngIf="hasExpiredDeadline">
+      {{ "permitExpiredWarning" | translate | async }}
+    </div>
+
     <div class="authorization-preview">
       <div class="title-group">
         <p class="title">
@@ -47,33 +45,61 @@
           <img src="assets/images/common/tooltip.svg" alt="" />
         </tooltip>
       </div>
-      <p class="description">
+
+      <p
+        class="description"
+        *ngIf="!isBooleanPermit && summary.entries.length === 1"
+      >
         {{
-          "approveNormalTip"
+          descriptionKey
             | translate
-              : { amount: summary.amount, symbol: summary.tokenSymbol }
+              : {
+                  amount: summary.entries[0].amount,
+                  symbol: summary.entries[0].tokenSymbol
+                }
             | async
         }}
       </p>
-      <div class="authorization-row">
-        <span class="label">{{ "SpendingCap" | translate | async }}</span>
-        <div class="authorization-value">
-          <span>{{ summary.amount }}</span>
-          <div class="asset-logo">
-            <token-logo
-              customClass="list edit-amount"
-              [assetId]="request.tokenAddress"
-              [chainType]="'NeoX'"
-              [symbol]="summary.tokenSymbol"
-              [neoXChainId]="network?.chainId"
-            ></token-logo>
-            {{ summary.tokenSymbol }}
-          </div>
-        </div>
-      </div>
-      <p class="value-rate" *ngIf="summary.fiatAmount">
-        {{ summary.fiatAmount }}
+      <p
+        class="description"
+        *ngIf="isBooleanPermit || summary.entries.length > 1"
+      >
+        {{ descriptionKey | translate | async }}
       </p>
+
+      <div class="authorization-row" *ngIf="isBooleanPermit">
+        <span class="label">Allowed</span>
+        <span class="authorization-value">{{ request.allowed }}</span>
+      </div>
+
+      <ng-container *ngIf="!isBooleanPermit">
+        <div
+          class="authorization-row"
+          *ngFor="let entry of summary.entries"
+        >
+          <span class="label">{{ "SpendingCap" | translate | async }}</span>
+          <div class="authorization-value">
+            <span>{{ entry.amount }}</span>
+            <copy [value]="entry.tokenAddress">
+              <div class="asset-logo permit-asset">
+                <token-logo
+                  customClass="list edit-amount"
+                  [assetId]="entry.tokenAddress"
+                  [chainType]="'NeoX'"
+                  [symbol]="entry.tokenSymbol"
+                  [neoXChainId]="network?.chainId"
+                ></token-logo>
+                <span>
+                  {{ entry.tokenSymbol }}
+                </span>
+              </div>
+            </copy>
+          </div>
+          <p class="value-rate" *ngIf="entry.fiatAmount">
+            {{ entry.fiatAmount }}
+          </p>
+        </div>
+      </ng-container>
     </div>
 
     <div class="request-info">
@@ -100,7 +126,7 @@
             <img src="assets/images/common/tooltip.svg" alt="" />
           </tooltip>
         </div>
-        <span>{{ displayOrigin || locationOrigin }}</span>
+        <span>{{ locationOrigin }}</span>
       </div>
       <div class="request-info-item">
         <div class="label">
@@ -124,20 +150,101 @@
   </div>
 
   <div class="content data" *ngIf="tabType === 'data'">
-    <p class="title">
-      PRIMARY TYPE:
-      <span class="value">{{ typedData?.primaryType }}</span>
-    </p>
-    <div class="hex-label">
+    <div class="primary-type-row">
+      <span>{{ "permitPrimaryType" | translate | async }}:</span>
+      <strong>{{ typedData?.primaryType }}</strong>
+    </div>
+    <div class="hex-label message-heading">
       {{ "message" | translate | async }}
       <copy [value]="strTypedData">
         <img class="copy" theme src="assets/images/common/copy.svg" alt="" />
       </copy>
     </div>
-    <div class="json-box serialize json-viewer">
-      <app-json-viewer [data]="typedData?.message"></app-json-viewer>
+
+    <div class="semantic-message">
+      <ng-container
+        *ngTemplateOutlet="messageTree; context: { nodes: messageNodes }"
+      ></ng-container>
     </div>
   </div>
+
+  <ng-template #messageTree let-nodes="nodes">
+    <div class="message-tree">
+      <ng-container *ngFor="let node of nodes">
+        <div
+          class="message-field"
+          [ngClass]="{ group: node.kind === 'object' || node.kind === 'array' }"
+        >
+          <span class="field-label">{{ fieldLabel(node.label) }}:</span>
+
+          <ng-container [ngSwitch]="node.kind">
+            <copy *ngSwitchCase="'address'" [value]="node.rawValue">
+              <span class="field-value address-value">
+                {{ node.rawValue | longStr : 6 }}
+              </span>
+            </copy>
+
+            <copy *ngSwitchCase="'token'" [value]="node.rawValue">
+              <span class="field-value token-value">
+                <token-logo
+                  customClass="list edit-amount"
+                  [assetId]="node.tokenAddress"
+                  [chainType]="'NeoX'"
+                  [symbol]="node.tokenSymbol"
+                  [neoXChainId]="network?.chainId"
+                ></token-logo>
+                <span>{{ node.tokenSymbol || (node.rawValue | longStr : 6) }}</span>
+                <small *ngIf="node.tokenSymbol">
+                  {{ node.rawValue | longStr : 6 }}
+                </small>
+              </span>
+            </copy>
+
+            <copy *ngSwitchCase="'amount'" [value]="node.rawValue">
+              <span class="field-value amount-value">
+                {{ node.displayValue }}
+              </span>
+            </copy>
+
+            <copy *ngSwitchCase="'date'" [value]="$any(node.rawValue)">
+              <span class="field-value date-value">
+                <ng-container [ngSwitch]="node.timestamp?.status">
+                  <ng-container *ngSwitchCase="'no-expiry'">
+                    {{ "permitNoExpiry" | translate | async }}
+                  </ng-container>
+                  <ng-container *ngSwitchCase="'unparseable'">
+                    {{ node.timestamp?.value }}
+                    <small>
+                      {{ "permitDateUnparseable" | translate | async }}
+                    </small>
+                  </ng-container>
+                  <ng-container *ngSwitchDefault>
+                    {{ node.timestamp?.value }}
+                    <small *ngIf="node.timestamp?.status === 'expired'">
+                      {{ "permitExpired" | translate | async }}
+                    </small>
+                  </ng-container>
+                </ng-container>
+              </span>
+            </copy>
+
+            <span *ngSwitchCase="'boolean'" class="field-value">
+              {{ node.displayValue }}
+            </span>
+            <span *ngSwitchCase="'primitive'" class="field-value">
+              {{ node.displayValue }}
+            </span>
+          </ng-container>
+        </div>
+
+        <ng-container *ngIf="node.children">
+          <ng-container
+            *ngTemplateOutlet="messageTree; context: { nodes: node.children }"
+          ></ng-container>
+        </ng-container>
+      </ng-container>
+    </div>
+  </ng-template>
 
   <div class="btn-group">
     <button class="cancel" (click)="cancelEvent.emit()">

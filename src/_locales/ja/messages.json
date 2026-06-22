@@ -1376,6 +1376,21 @@
   "permitRequestDescription": {
     "message": "このサイトはあなたのトークンを使用する許可を求めています。"
   },
+  "permitPrimaryType": {
+    "message": "主要タイプ"
+  },
+  "permitExpired": {
+    "message": "期限切れ"
+  },
+  "permitNoExpiry": {
+    "message": "無期限"
+  },
+  "permitDateUnparseable": {
+    "message": "日付を解析できません"
+  },
+  "permitExpiredWarning": {
+    "message": "1つ以上の Permit の期限が切れています。"
+  },
   "UseAccount": {
     "message": "使用するアカウント"
   },

@@ -1376,6 +1376,21 @@
   "permitRequestDescription": {
     "message": "This site wants permission to spend your tokens."
   },
+  "permitPrimaryType": {
+    "message": "Primary type"
+  },
+  "permitExpired": {
+    "message": "Expired"
+  },
+  "permitNoExpiry": {
+    "message": "Never expires"
+  },
+  "permitDateUnparseable": {
+    "message": "Unparseable date"
+  },
+  "permitExpiredWarning": {
+    "message": "One or more Permit deadlines have expired."
+  },
   "UseAccount": {
     "message": "Use account"
   },

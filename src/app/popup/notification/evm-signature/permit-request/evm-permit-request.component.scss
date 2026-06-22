@@ -8,11 +8,143 @@
 }
 
 .container .content {
-  .authorization-preview .value-rate {
-    margin-left: auto;
+  .permit-warning {
+    padding: 10px 12px;
+    border-radius: 4px;
+    color: var(--error-color);
+    background: rgba(255, 87, 87, 0.12);
+    line-height: 18px;
   }
 
-  &.data .json-box {
+  .authorization-preview {
+    .authorization-row {
+      flex-wrap: wrap;
+    }
+
+    .value-rate {
+      flex-basis: 100%;
+      margin-left: auto;
+      text-align: right;
+    }
+
+    .permit-asset {
+      cursor: pointer;
+
+      span {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+      }
+
+    }
+  }
+
+  &.data {
+    .primary-type-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      color: var(--sub-title-color);
+      font-size: 14px;
+      line-height: 20px;
+
+      strong {
+        color: var(--title-color);
+        font-family: NeverMind-DemiBold;
+      }
+    }
+
+    .message-heading {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 24px;
+
+      img {
+        width: 14px;
+        height: 14px;
+      }
+    }
+  }
+}
+
+.semantic-message {
+  margin-top: 12px;
+  padding: 16px;
+  border-radius: 8px;
+  background: var(--line-color);
+}
+
+.message-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+
+  .message-tree {
+    margin-top: 12px;
+    padding-left: 14px;
+  }
+
+  .message-field {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    min-width: 0;
+    line-height: 20px;
+
+    &.group {
+      justify-content: flex-start;
+    }
+  }
+
+  .field-label {
+    flex-shrink: 0;
+    color: var(--sub-title-color);
+    font-family: NeverMind-DemiBold;
+  }
+
+  copy {
+    min-width: 0;
+  }
+
+  .field-value {
+    display: inline-flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 6px;
+    max-width: 210px;
     color: var(--title-color);
+    text-align: right;
+    word-break: break-word;
+    cursor: pointer;
+
+    small {
+      color: var(--sub-title-color);
+      font-size: 11px;
+      line-height: 15px;
+    }
+  }
+
+  .token-value {
+    flex-wrap: wrap;
+
+    token-logo {
+      flex-shrink: 0;
+    }
+
+    small {
+      flex-basis: 100%;
+    }
+  }
+
+  .date-value {
+    flex-direction: column;
+    align-items: flex-end;
+
+    small {
+      color: var(--error-color);
+    }
   }
 }

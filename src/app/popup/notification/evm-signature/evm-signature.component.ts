@@ -109,16 +109,22 @@ export class PopupNoticeEvmSignComponent implements OnInit, OnDestroy {
               case ETH_EOA_SIGN_METHODS.SignTypedDataV4:
                 this.signAddress = params[0];
                 this.typedData = params[1];
+                this.strTypeData =
+                  typeof this.typedData === 'string'
+                    ? this.typedData
+                    : JSON.stringify(this.typedData);
                 if (typeof this.typedData === 'string') {
                   this.typedData = JSON.parse(this.typedData);
                 }
-                this.strTypeData = JSON.stringify(this.typedData);
                 this.setDisplayWallet();
                 this.authorizations = getTypedDataAuthorizations(
                   this.typedData,
                   this.signAddress
                 );
-                this.permitRequest = getEvmPermitRequest(this.typedData);
+                this.permitRequest = getEvmPermitRequest(
+                  this.typedData,
+                  this.neoXNetwork?.chainId
+                );
                 break;
             }
             this.requestReady = true;
