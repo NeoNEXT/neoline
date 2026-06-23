@@ -7,6 +7,8 @@ import type BN from 'bn.js';
 import { EvmDappService } from './dapp.service';
 import { NftAsset, NftToken } from '@/models/models';
 import { EvmTxService } from './tx.service';
+import { EvmGasService } from './gas.service';
+import { EvmGasEstimateResult } from '@/app/popup/transfer/create/interface';
 @Injectable()
 export class EvmNFTService {
   private neoXNetwork: RpcNetwork;
@@ -15,7 +17,8 @@ export class EvmNFTService {
   constructor(
     private store: Store<AppState>,
     private evmDappService: EvmDappService,
-    private evmTxService: EvmTxService
+    private evmTxService: EvmTxService,
+    private evmGasService: EvmGasService
   ) {
     const account$ = this.store.select('account');
     account$.subscribe((state) => {
@@ -75,7 +78,7 @@ export class EvmNFTService {
     );
   }
 
-  async estimateGasOfTransfer({
+  estimateGasOfTransfer({
     asset,
     token,
     fromAddress,
@@ -85,8 +88,9 @@ export class EvmNFTService {
     token: NftToken;
     fromAddress: string;
     toAddress: string;
-  }): Promise<bigint> {
-    return this.provider.estimateGas({
+  }): Promise<EvmGasEstimateResult> {
+    // Delegate to EvmGasService so the simulation-failure fallback lives in one place.
+    return this.evmGasService.estimateGas({
       from: fromAddress,
       to: asset.assethash,
       data: this.getTransferData({ asset, token, fromAddress, toAddress }),

@@ -255,13 +255,19 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
       bridgeFee: this.bridgeInfo.bridgeFee,
       currentBridgeNetwork: this.currentBridgeNetwork,
     });
-    let networkGasLimit;
+    let estimate;
     try {
-      networkGasLimit = await this.evmGasService.estimateGas(txParams);
+      estimate = await this.evmGasService.estimateGas(txParams);
     } catch {
-      networkGasLimit = BigInt(42750000);
+      // RPC failure: can't fetch the block to estimate. Surface a network error.
+      this.globalService.snackBarTip('EstimateFeeNetworkError');
+      return;
     }
-    this.neoXFeeInfo = await this.evmGasService.getGasInfo(networkGasLimit);
+    this.neoXFeeInfo = await this.evmGasService.getGasInfo(
+      estimate.gasLimit,
+      estimate.block
+    );
+    this.neoXFeeInfo.estimateGasError = estimate.simulationFailed;
   }
 
   private calculateNeoN3Fee() {
@@ -489,13 +495,20 @@ export class PopupBridgeComponent implements OnInit, OnDestroy {
         currentBridgeNetwork: this.currentBridgeNetwork,
       });
       this.neoXTxParams = txParams;
-      let networkGasLimit;
+      let estimate;
       try {
-        networkGasLimit = await this.evmGasService.estimateGas(txParams);
+        estimate = await this.evmGasService.estimateGas(txParams);
       } catch {
-        networkGasLimit = BigInt(42750000);
+        // RPC failure: can't fetch the block to estimate. Surface a network error.
+        this.globalService.snackBarTip('EstimateFeeNetworkError');
+        this.loading = false;
+        return;
       }
-      this.neoXFeeInfo = await this.evmGasService.getGasInfo(networkGasLimit);
+      this.neoXFeeInfo = await this.evmGasService.getGasInfo(
+        estimate.gasLimit,
+        estimate.block
+      );
+      this.neoXFeeInfo.estimateGasError = estimate.simulationFailed;
       if (this.bridgeAsset.asset_id === ETH_SOURCE_ASSET_HASH) {
         const tAmount = new BigNumber(this.bridgeAsset.balance)
           .minus(this.bridgeAmount)

@@ -1247,6 +1247,9 @@
   "EstimatedFeeError": {
     "message": "We were not able to estimate gas. There might be an error in the contract and this transaction may fail."
   },
+  "EstimateFeeNetworkError": {
+    "message": "Network error: unable to fetch the gas fee right now. Please try again later."
+  },
   "Sending": {
     "message": "Sending"
   },

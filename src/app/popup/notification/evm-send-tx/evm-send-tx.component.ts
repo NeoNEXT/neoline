@@ -413,18 +413,20 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
     if (gas) {
       newGasLimit = new BigNumber(gas, 16).toFixed();
     } else {
-      let networkGasLimit: bigint;
+      let estimate;
       try {
-        networkGasLimit = await this.evmGasService.estimateGas(
+        estimate = await this.evmGasService.estimateGas(
           this.getTxType() === 'approve' && this.approveNewTxParams
             ? this.approveNewTxParams
             : this.txParams
         );
-      } catch (error) {
-        this.estimateGasError = true;
-        networkGasLimit = BigInt(42750000);
+      } catch {
+        // RPC failure: no block, so no site-suggested fee can be built. The
+        // embedded <evm-fee> surfaces the network error; skip the site fee here.
+        return;
       }
-      newGasLimit = networkGasLimit.toString();
+      this.estimateGasError = estimate.simulationFailed;
+      newGasLimit = estimate.gasLimit.toString();
     }
     if (gasPrice) {
       const newGasPrice = new BigNumber(gasPrice, 16).shiftedBy(-18).toFixed();

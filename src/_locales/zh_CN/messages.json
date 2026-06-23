@@ -1247,6 +1247,9 @@
   "EstimatedFeeError": {
     "message": "我们无法估算燃料。合约中可能存在错误，这笔交易可能会失败。"
   },
+  "EstimateFeeNetworkError": {
+    "message": "网络异常，暂时无法获取手续费，请稍后重试。"
+  },
   "Sending": {
     "message": "正在发送"
   },

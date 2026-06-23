@@ -51,6 +51,13 @@
   }
 }
 
+.fee-network-error {
+  font-family: NeverMind-Regular;
+  font-size: 12px;
+  line-height: 16px;
+  color: var(--red-color, #e74c3c);
+}
+
 @keyframes showFeeAnimation {
   0% {
     opacity: 1;

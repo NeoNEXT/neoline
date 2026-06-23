@@ -12,7 +12,10 @@ import {
   SimpleChanges,
 } from '@angular/core';
 import { MatDialog, MatDialogRef } from '@angular/material/dialog';
-import { NeoXFeeInfoProp } from '../../../popup/transfer/create/interface';
+import {
+  EvmGasEstimateResult,
+  NeoXFeeInfoProp,
+} from '../../../popup/transfer/create/interface';
 import { timer } from 'rxjs';
 
 @Component({
@@ -35,6 +38,7 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
   @Output() returnFee = new EventEmitter<NeoXFeeInfoProp>();
 
   sourceNeoXFeeInfo: NeoXFeeInfoProp;
+  networkError = false;
 
   getEstimateFeeInterval;
   showEstimateFeeAnimate = false;
@@ -110,34 +114,31 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
       (this.place === 'dapp' && this.txParams)
     ) {
       this.getEstimateFeeInterval = timer(0, 10000).subscribe(async () => {
-        let networkGasLimit: bigint;
-        let estimateGasError = false;
         try {
+          let estimate: EvmGasEstimateResult;
           if (this.place === 'dapp') {
-            networkGasLimit = await this.evmGasService.estimateGas(
-              this.txParams
-            );
+            estimate = await this.evmGasService.estimateGas(this.txParams);
           } else if (this.transferNFT) {
-            networkGasLimit = await this.evmNFTService.estimateGasOfTransfer({
+            estimate = await this.evmNFTService.estimateGasOfTransfer({
               asset: this.nftAsset,
               token: this.transferNFT,
               fromAddress: this.fromAddress,
               toAddress: this.transferToAddress,
             });
           } else {
-            networkGasLimit = await this.evmGasService.estimateGasOfTransfer({
+            estimate = await this.evmGasService.estimateGasOfTransfer({
               asset: this.transferAsset,
               fromAddress: this.fromAddress,
               toAddress: this.transferToAddress,
               transferAmount: this.transferAmount || '1',
             });
           }
-        } catch {
-          networkGasLimit = BigInt(42750000);
-          estimateGasError = true;
-        }
-        this.evmGasService.getGasInfo(networkGasLimit).then((res) => {
-          res.estimateGasError = estimateGasError;
+          const res = await this.evmGasService.getGasInfo(
+            estimate.gasLimit,
+            estimate.block
+          );
+          res.estimateGasError = estimate.simulationFailed;
+          this.networkError = false;
           this.sourceNeoXFeeInfo = res;
           if (
             !this.customNeoXFeeInfo?.custom &&
@@ -153,7 +154,12 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
             this.editEvmFeeDialogRef.componentInstance.data.sourceNeoXFeeInfo =
               res;
           }
-        });
+        } catch {
+          // RPC failure: the block itself couldn't be fetched, so there is no basis
+          // for an estimate. Surface a network error instead of a fabricated value.
+          this.networkError = true;
+          this.sourceNeoXFeeInfo = undefined;
+        }
       });
     }
   }

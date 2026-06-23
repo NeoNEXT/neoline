@@ -12,12 +12,15 @@
         {{ symbol }}
       </p>
     </div>
-    <div *ngIf="!customNeoXFeeInfo?.custom">
+    <div *ngIf="!customNeoXFeeInfo?.custom && !networkError">
       <p class="fee" [ngClass]="{ animate: showEstimateFeeAnimate }">
         {{ sourceNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
         {{ symbol }}
       </p>
     </div>
+    <p class="fee-network-error" *ngIf="networkError">
+      {{ "EstimateFeeNetworkError" | translate | async }}
+    </p>
     <img theme src="assets/images/common/arrow.svg" alt="" />
   </div>
 </div>
@@ -41,12 +44,15 @@
       {{ symbol }}
     </p>
     <p
-      *ngIf="!customNeoXFeeInfo?.custom"
+      *ngIf="!customNeoXFeeInfo?.custom && !networkError"
       class="fee"
       [ngClass]="{ animate: showEstimateFeeAnimate }"
     >
       {{ sourceNeoXFeeInfo?.estimateGas | numberFixed : 8 }}
       {{ symbol }}
+    </p>
+    <p *ngIf="!customNeoXFeeInfo?.custom && networkError" class="fee-network-error">
+      {{ "EstimateFeeNetworkError" | translate | async }}
     </p>
   </ng-container>
 </div>

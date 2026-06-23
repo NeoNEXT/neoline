@@ -22,6 +22,15 @@ export interface TransferData {
   neoXFeeInfo?: NeoXFeeInfoProp;
 }
 
+export interface EvmGasEstimateResult {
+  /** Gas limit to use: the live estimate, or the fallback when the simulation reverts. */
+  gasLimit: bigint;
+  /** True when eth_estimateGas reverted and gasLimit is the block-gas-limit fallback. */
+  simulationFailed: boolean;
+  /** Latest block fetched for this estimate, reused by getGasInfo to save a second RPC. */
+  block: any;
+}
+
 export interface NeoXFeeInfoProp {
   maxFeePerGas?: string;
   maxPriorityFeePerGas?: string;

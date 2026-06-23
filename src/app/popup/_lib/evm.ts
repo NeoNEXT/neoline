@@ -5,6 +5,14 @@ import { RpcNetwork } from './type';
 export const ETH_SOURCE_ASSET_HASH =
   '0x0000000000000000000000000000000000000000';
 
+/**
+ * Percentage of the live block gas limit used as the gas limit when an EVM
+ * simulation fails with an execution revert. Always applied to the block gas
+ * limit read live from the latest block — never to a hardcoded value.
+ * See docs/adr/0001-evm-gas-estimation-failure-fallback.md
+ */
+export const SIMULATION_FAILED_GAS_LIMIT_PERCENT = 45;
+
 export interface EvmWalletJSON {
   crypto?: any;
   id?: string;

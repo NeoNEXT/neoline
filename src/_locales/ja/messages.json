@@ -1247,6 +1247,9 @@
   "EstimatedFeeError": {
     "message": "ガスを推定できませんでした。契約にエラーがある可能性があり、この取引は失敗する可能性があります。"
   },
+  "EstimateFeeNetworkError": {
+    "message": "ネットワークエラー：現在ガス料金を取得できません。後でもう一度お試しください。"
+  },
   "Sending": {
     "message": "送信中"
   },
