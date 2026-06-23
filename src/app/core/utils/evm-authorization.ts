@@ -1,7 +1,7 @@
 import { EvmTransactionParams, TokenStandard } from '@/app/popup/_lib';
 import { ethers } from 'ethers';
 
-const PERMIT2_ADDRESS = '0x000000000022d473030f116ddee9f6b43ac78ba3';
+export const PERMIT2_ADDRESS = '0x000000000022d473030f116ddee9f6b43ac78ba3';
 const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const MAX_UINT256 = (2n ** 256n - 1n).toString();
 const permitInterface = new ethers.Interface([

@@ -3,9 +3,9 @@ import {
   TypedMessage,
 } from '@metamask/eth-sig-util';
 import { ethers } from 'ethers';
+import { PERMIT2_ADDRESS } from '@/app/core/utils/evm-authorization';
 
-export const PERMIT2_ADDRESS =
-  '0x000000000022d473030f116ddee9f6b43ac78ba3';
+export { PERMIT2_ADDRESS };
 
 export type EvmPermitVariant =
   | 'eip2612'

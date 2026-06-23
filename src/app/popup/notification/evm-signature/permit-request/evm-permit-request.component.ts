@@ -235,17 +235,6 @@ export class PopupNoticeEvmPermitRequestComponent
     }
   }
 
-  private formatOrigin(origin: string): string {
-    if (!origin) {
-      return '';
-    }
-    try {
-      return new URL(origin).host;
-    } catch {
-      return origin.replace(/^https?:\/\//, '').replace(/\/$/, '');
-    }
-  }
-
   private formatAddress(address: string): string {
     return address ? `${address.slice(0, 6)}...${address.slice(-4)}` : '';
   }

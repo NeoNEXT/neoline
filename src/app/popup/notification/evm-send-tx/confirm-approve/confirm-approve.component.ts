@@ -158,9 +158,6 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
     if (this.authorization.kind === 'approve') {
       return this.canEditApproveAmount || this.isNftApprove || this.isRevokeApproval;
     }
-    if (this.authorization.kind === 'approveAndCall') {
-      return true;
-    }
     return true;
   }
 

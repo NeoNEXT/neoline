@@ -27,7 +27,10 @@ export class TranslatePipe implements PipeTransform {
         if (params) {
           Object.keys(params).forEach((key) => {
             const pattern = new RegExp(`\{\{${key}\}\}`, 'g');
-            source = source.replace(pattern, String(params[key] || ''));
+            source = source.replace(
+              pattern,
+              params[key] == null ? '' : String(params[key])
+            );
           });
         }
         return source;
