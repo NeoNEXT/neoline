@@ -1,5 +1,10 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { EvmAssetService, EvmDappService, EvmTxService } from '@/app/core';
+import {
+  EvmAssetService,
+  EvmDappService,
+  EvmTxService,
+  GoPlusService,
+} from '@/app/core';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import {
   AddressNonceInfo,
@@ -63,7 +68,8 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
     private evmDappService: EvmDappService,
     private evmTxService: EvmTxService,
     private evmAssetService: EvmAssetService,
-    private dialog: MatDialog
+    private dialog: MatDialog,
+    private goPlusService: GoPlusService
   ) {}
 
   ngOnInit(): void {
@@ -309,6 +315,10 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
 
   changeNonce($event) {
     this.customNonce = $event;
+  }
+
+  get goPlusSupported(): boolean {
+    return this.goPlusService.isSupportedChain(this.neoXNetwork?.chainId);
   }
 
   detectContractSecurity() {

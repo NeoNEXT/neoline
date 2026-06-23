@@ -56,6 +56,7 @@ export enum STORAGE_NAME {
   lang = 'lang',
   noticeLatestId = 'noticeLatestId',
   evmCustomNonce = 'evmCustomNonce',
+  goPlusSupportedChains = 'goPlusSupportedChains', // cached GoPlus supported_chains
 
   transaction = 'transaction',
   bridgeTransaction = 'bridgeTransaction',
@@ -100,6 +101,11 @@ export const STORAGE_VALUE_MESSAGE = {
     type: STORAGE_VALUE_TYPE.number,
     isLocal: true,
     default: 0,
+  },
+  goPlusSupportedChains: {
+    type: STORAGE_VALUE_TYPE.object,
+    isLocal: true,
+    default: null,
   },
   rateCurrency: {
     type: STORAGE_VALUE_TYPE.string,

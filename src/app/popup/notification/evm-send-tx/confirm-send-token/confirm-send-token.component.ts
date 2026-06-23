@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { EvmDappService, RateState } from '@/app/core';
+import { EvmDappService, GoPlusService, RateState } from '@/app/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import {
   AddressNonceInfo,
@@ -51,7 +51,8 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
   balanceSimulation: SimulationResult = { status: 'loading', changes: [] };
   constructor(
     private evmDappService: EvmDappService,
-    private rateState: RateState
+    private rateState: RateState,
+    private goPlusService: GoPlusService
   ) {}
 
   ngOnInit(): void {
@@ -111,6 +112,10 @@ export class PopupNoticeEvmConfirmSendTokenComponent implements OnInit {
 
   changeNonce($event) {
     this.customNonce = $event;
+  }
+
+  get goPlusSupported(): boolean {
+    return this.goPlusService.isSupportedChain(this.neoXNetwork?.chainId);
   }
 
   detectContractSecurity() {

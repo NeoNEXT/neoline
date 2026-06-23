@@ -1,5 +1,5 @@
 import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
-import { EvmDappService } from '@/app/core';
+import { EvmDappService, GoPlusService } from '@/app/core';
 import { ETH_SOURCE_ASSET_HASH } from '@/app/popup/_lib/evm';
 import {
   AddressNonceInfo,
@@ -57,7 +57,10 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
   balanceSimulation: SimulationResult = { status: 'loading', changes: [] };
   authorizations: EvmAuthorizationDetails[] = [];
 
-  constructor(private evmDappService: EvmDappService) {}
+  constructor(
+    private evmDappService: EvmDappService,
+    private goPlusService: GoPlusService
+  ) {}
 
   ngOnInit(): void {
     this.hexDataLength = getHexDataLength(this.txParams.data);
@@ -138,6 +141,10 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
 
   confirm() {
     this.confirmEvent.emit(this.customNonce);
+  }
+
+  get goPlusSupported(): boolean {
+    return this.goPlusService.isSupportedChain(this.neoXNetwork?.chainId);
   }
 
   detectContractSecurity() {

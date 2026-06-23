@@ -74,6 +74,7 @@
             {{ contractName ? contractName : (txParams?.to | longStr : 6) }}
           </copy>
           <tooltip
+            *ngIf="goPlusSupported"
             placement="topRight"
             [tip]="'detectContractSecurity' | translate | async"
           >
