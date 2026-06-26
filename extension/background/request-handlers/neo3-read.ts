@@ -14,12 +14,6 @@ import { createNeoDapiError } from '../../../cross-runtime/neo-dapi-error';
 import { windowCallback } from '../tool';
 import { RequestHandlerModule } from './context';
 
-// Preserved verbatim from the original switch: the malformed-boolean branches in
-// invokeRead / invokeReadMulti call `chrome.windowCallback`, which does not
-// exist on the chrome global. Kept as-is so this extraction changes no behavior;
-// see the note in the PR/summary for the follow-up fix.
-declare var chrome: any;
-
 const transaction: RequestHandlerModule = {
   targets: [requestTargetN3.Transaction],
   handle: ({ request, sendResponse, currN3Network }) => {
@@ -307,7 +301,7 @@ const invokeRead: RequestHandlerModule = {
               value: false,
             };
           } else {
-            chrome.windowCallback({
+            windowCallback({
               error: ERRORS.MALFORMED_INPUT,
               return: requestTargetN3.InvokeRead,
               ID: request.ID,
@@ -384,7 +378,7 @@ const invokeReadMulti: RequestHandlerModule = {
                   value: false,
                 };
               } else {
-                chrome.windowCallback({
+                windowCallback({
                   error: ERRORS.MALFORMED_INPUT,
                   return: requestTargetN3.InvokeReadMulti,
                   ID: request.ID,
