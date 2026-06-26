@@ -19,7 +19,12 @@ import { Observable, from, throwError } from 'rxjs';
 import { Neo3Service } from '@/app/core/services/neo/neo3.service';
 import { NeoAssetService } from '@/app/core/services/neo/asset.service';
 import BigNumber from 'bignumber.js';
-import { createNeoDapiError, GAS3_CONTRACT, RpcNetwork } from '../_lib';
+import {
+  createNeoDapiError,
+  GAS3_CONTRACT,
+  NEO3_NETWORK_FEE_DUMMY_PRIVATE_KEY,
+  RpcNetwork,
+} from '../_lib';
 import { ERRORS } from '@/models/dapi';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -222,8 +227,7 @@ export class Neo3InvokeService {
       script: txn.script,
     });
     txClone = new tx.Transaction(txClone);
-    const wif = 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
-    txClone.sign(wif, this.n3Network.magicNumber);
+    txClone.sign(NEO3_NETWORK_FEE_DUMMY_PRIVATE_KEY, this.n3Network.magicNumber);
     if (txn.signers.length > 1) {
       const addressSign = txClone.witnesses[0];
       const addressIndex = txn.signers.findIndex((item) =>

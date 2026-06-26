@@ -4,6 +4,11 @@ export const GAS =
   '0x602c79718b16e442de58778e148d0b1084e3b2dffd5de6b7b16cee7969282de7';
 export const NEO3 = '0xef4073a0f2b305a38ec4050e4d3d28bc40ea63f5';
 export const GAS3 = '0xd2a4cff31913016155e38e474a2c06d08be276cf';
+// Intentionally a throwaway, obviously-fake key (private key value = 1).
+// Used only to build structurally valid Neo3 witnesses for RPC fee estimation.
+// Do not use it for user-authorized transaction signing.
+export const NEO3_NETWORK_FEE_DUMMY_PRIVATE_KEY =
+  '0000000000000000000000000000000000000000000000000000000000000001';
 
 export type HardwareDevice = 'Ledger' | 'OneKey' | 'QRCode';
 

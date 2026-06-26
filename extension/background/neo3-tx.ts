@@ -16,6 +16,7 @@ import {
 import BigNumber from 'bignumber.js';
 import { ERRORS } from '../common/data_module_neo2';
 import { createNeoDapiError } from '../../cross-runtime/neo-dapi-error';
+import { NEO3_NETWORK_FEE_DUMMY_PRIVATE_KEY } from '../../cross-runtime/constants';
 
 interface InvokeArg extends sc.ContractCall {
   abortOnFail?: boolean;
@@ -31,10 +32,6 @@ interface CreateNeo3TxInput {
   attributes?: TransactionAttributeJson[];
   validUntilBlock?: number;
 }
-
-// 这里只是为了给 RPC 估算手续费提供结构合法的 witness，因此固定的临时私钥就够了。
-// This is only used to provide a structurally valid witness for RPC fee estimation, so a fixed temporary private key is sufficient.
-const DUMMY_NETWORK_FEE_WIF = 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
 
 function toInvokeScript(invokeArgs: InvokeArg[]) {
   const hasAbortOnFail = invokeArgs.some((item) => item.abortOnFail);
@@ -108,7 +105,7 @@ function buildNetworkFeeWitness(contractScript?: string) {
   const verificationScript = decodeContractScript(contractScript);
 
   if (!verificationScript) {
-    const dummyAccount = new wallet3.Account(DUMMY_NETWORK_FEE_WIF);
+    const dummyAccount = new wallet3.Account(NEO3_NETWORK_FEE_DUMMY_PRIVATE_KEY);
     return tx.Witness.fromSignature('00'.repeat(64), dummyAccount.publicKey);
   }
 

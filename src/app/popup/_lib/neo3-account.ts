@@ -3,6 +3,7 @@ import { N3MainnetNetwork, N3T4NetworkChainId, N3TestnetNetwork } from './type';
 export {
   NEO3 as NEO3_CONTRACT,
   GAS3 as GAS3_CONTRACT,
+  NEO3_NETWORK_FEE_DUMMY_PRIVATE_KEY,
 } from '../../../../cross-runtime/constants';
 
 export { Account3, Wallet3 } from '../../../../cross-runtime/neo3-shared';

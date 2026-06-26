@@ -6,7 +6,12 @@ import { NeoAssetService } from '@/app/core/services/neo/asset.service';
 import { NotificationService } from '@/app/core/services/notification.service';
 import { bignumber } from 'mathjs';
 import BigNumber from 'bignumber.js';
-import { createNeoDapiError, GAS3_CONTRACT, RpcNetwork } from '../_lib';
+import {
+  createNeoDapiError,
+  GAS3_CONTRACT,
+  NEO3_NETWORK_FEE_DUMMY_PRIVATE_KEY,
+  RpcNetwork,
+} from '../_lib';
 import { ERRORS } from '@/models/dapi';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -293,8 +298,7 @@ export class Neo3TransferService {
   async calculateNetworkFee(txn) {
     let txClone = txn.export();
     txClone = new tx.Transaction(txClone);
-    const wif = 'KyEUreM7QVQvzUMeGSBTKVtQahKumHyWG6Dj331Vqg5ZWJ8EoaC1';
-    txClone.sign(wif, this.n3Network.magicNumber);
+    txClone.sign(NEO3_NETWORK_FEE_DUMMY_PRIVATE_KEY, this.n3Network.magicNumber);
     const fee = await this.rpcClient.calculateNetworkFee(txClone);
     return fee;
   }
