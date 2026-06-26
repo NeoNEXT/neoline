@@ -15,13 +15,10 @@ import {
   ADD_NEO3_NETWORK,
   UPDATE_NEO2_NETWORK_INDEX,
   UPDATE_NEO3_NETWORK_INDEX,
-  STORAGE_NAME,
   INIT_ACCOUNT,
   UPDATE_NEO3_NETWORKS,
   RESET_ACCOUNT,
   UPDATE_NEO2_NETWORKS,
-  STORAGE_VALUE_MESSAGE,
-  STORAGE_VALUE_TYPE,
   UPDATE_NEO2_WALLET_NAME,
   UPDATE_NEO3_WALLET_NAME,
   UPDATE_NEO3_WALLETS_ADDRESS,
@@ -37,7 +34,6 @@ import {
 } from '@/app/popup/_lib';
 import { EvmWalletJSON, DEFAULT_NEOX_RPC_NETWORK } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
-declare var chrome: any;
 
 export interface AccountState {
   currentWallet: Wallet2 | Wallet3 | EvmWalletJSON;
@@ -71,6 +67,9 @@ const initialState: AccountState = {
   neoXNetworkIndex: 0,
 };
 
+// This reducer is pure: it only computes the next state. Persisting the changed
+// slices to extension/local storage is handled by the persistAccountState
+// meta-reducer (see ../persist-account.ts).
 export default function account(
   state = initialState,
   action: any
@@ -131,29 +130,17 @@ export default function account(
     case UPDATE_NEO2_WALLET_NAME:
       return {
         ...state,
-        neo2WalletArr: updateWalletName(
-          action.data,
-          state.neo2WalletArr,
-          'Neo2'
-        ),
+        neo2WalletArr: updateWalletName(action.data, state.neo2WalletArr),
       };
     case UPDATE_NEO3_WALLET_NAME:
       return {
         ...state,
-        neo3WalletArr: updateWalletName(
-          action.data,
-          state.neo3WalletArr,
-          'Neo3'
-        ),
+        neo3WalletArr: updateWalletName(action.data, state.neo3WalletArr),
       };
     case UPDATE_NEOX_WALLET_NAME:
       return {
         ...state,
-        neoXWalletArr: updateWalletName(
-          action.data,
-          state.neoXWalletArr,
-          'NeoX'
-        ),
+        neoXWalletArr: updateWalletName(action.data, state.neoXWalletArr),
       };
     case UPDATE_NEO2_WALLET_BACKUP_STATUS:
       return {
@@ -210,32 +197,32 @@ export default function account(
     case UPDATE_NEO2_NETWORKS:
       return {
         ...state,
-        n2Networks: updateNetworks(action.data, 'Neo2'),
+        n2Networks: action.data,
       };
     case UPDATE_NEO3_NETWORKS:
       return {
         ...state,
-        n3Networks: updateNetworks(action.data, 'Neo3'),
+        n3Networks: action.data,
       };
     case UPDATE_NEOX_NETWORKS:
       return {
         ...state,
-        neoXNetworks: updateNetworks(action.data, 'NeoX'),
+        neoXNetworks: action.data,
       };
     case UPDATE_NEO2_NETWORK_INDEX:
       return {
         ...state,
-        n2NetworkIndex: updateNetworkIndex(action.data, 'Neo2'),
+        n2NetworkIndex: action.data,
       };
     case UPDATE_NEO3_NETWORK_INDEX:
       return {
         ...state,
-        n3NetworkIndex: updateNetworkIndex(action.data, 'Neo3'),
+        n3NetworkIndex: action.data,
       };
     case UPDATE_NEOX_NETWORK_INDEX:
       return {
         ...state,
-        neoXNetworkIndex: updateNetworkIndex(action.data, 'NeoX'),
+        neoXNetworkIndex: action.data,
       };
     default:
       return state;
@@ -248,15 +235,9 @@ function updateWallet(data: Wallet2 | Wallet3) {
   const address = data?.accounts[0]?.address;
   if (ethers.isAddress(address)) {
     chainType = 'NeoX';
-    updateLocalStorage(STORAGE_NAME.wallet, data);
   } else {
     chainType = wallet3.isAddress(address || '', 53) ? 'Neo3' : 'Neo2';
-    updateLocalStorage(
-      STORAGE_NAME.wallet,
-      (data as Wallet2 | Wallet3).export()
-    );
   }
-  updateLocalStorage(STORAGE_NAME.chainType, chainType);
   return { currentWallet: data, currentChainType: chainType };
 }
 
@@ -269,9 +250,6 @@ function addNeo2Wallet(
   const targetWIFArr = [...sourceWIF];
   targetWalletArr.push(...data.wallet);
   targetWIFArr.push(...data.wif);
-
-  updateLocalStorage(STORAGE_NAME.walletArr, getWalletJsons(targetWalletArr));
-  updateLocalStorage(STORAGE_NAME.WIFArr, targetWIFArr);
   return { neo2WalletArr: targetWalletArr, neo2WIFArr: targetWIFArr };
 }
 
@@ -284,18 +262,12 @@ function addNeo3Wallet(
   const targetWIFArr = [...sourceWIF];
   targetWalletArr.push(...data.wallet);
   targetWIFArr.push(...data.wif);
-  updateLocalStorage(
-    STORAGE_NAME['walletArr-Neo3'],
-    getWalletJsons(targetWalletArr)
-  );
-  updateLocalStorage(STORAGE_NAME['WIFArr-Neo3'], targetWIFArr);
   return { neo3WalletArr: targetWalletArr, neo3WIFArr: targetWIFArr };
 }
 
 function addNeoXWallet(data: any, sourceWalletArr: EvmWalletJSON[]) {
   const targetWalletArr = [...sourceWalletArr];
   targetWalletArr.push(data.wallet);
-  updateLocalStorage(STORAGE_NAME['walletArr-NeoX'], targetWalletArr);
   return { neoXWalletArr: targetWalletArr };
 }
 
@@ -313,8 +285,6 @@ function removeNeo2Wallet(
     targetWalletArr.splice(index, 1);
     targetWIFArr.splice(index, 1);
   }
-  updateLocalStorage(STORAGE_NAME.walletArr, getWalletJsons(targetWalletArr));
-  updateLocalStorage(STORAGE_NAME.WIFArr, targetWIFArr);
   return { neo2WalletArr: targetWalletArr, neo2WIFArr: targetWIFArr };
 }
 
@@ -332,11 +302,6 @@ function removeNeo3Wallet(
     targetWalletArr.splice(index, 1);
     targetWIFArr.splice(index, 1);
   }
-  updateLocalStorage(
-    STORAGE_NAME['walletArr-Neo3'],
-    getWalletJsons(targetWalletArr)
-  );
-  updateLocalStorage(STORAGE_NAME['WIFArr-Neo3'], targetWIFArr);
   return { neo3WalletArr: targetWalletArr, neo3WIFArr: targetWIFArr };
 }
 
@@ -351,32 +316,17 @@ function removeNeoXWallet(
   if (index >= 0) {
     targetWalletArr.splice(index, 1);
   }
-  updateLocalStorage(STORAGE_NAME['walletArr-NeoX'], targetWalletArr);
   return { neoXWalletArr: targetWalletArr };
 }
 
 function updateWalletName(
   data: any,
-  sourceWalletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>,
-  chainType: ChainType
+  sourceWalletArr: Array<Wallet2 | Wallet3 | EvmWalletJSON>
 ): any {
   const targetWalletArr = [...sourceWalletArr];
   targetWalletArr.find(
     (item) => item.accounts[0].address === data.address
   ).name = data.name;
-  if (chainType === 'Neo2') {
-    updateLocalStorage(
-      STORAGE_NAME.walletArr,
-      getWalletJsons(targetWalletArr as Wallet2[])
-    );
-  } else if (chainType === 'Neo3') {
-    updateLocalStorage(
-      STORAGE_NAME['walletArr-Neo3'],
-      getWalletJsons(targetWalletArr as Wallet3[])
-    );
-  } else {
-    updateLocalStorage(STORAGE_NAME['walletArr-NeoX'], targetWalletArr);
-  }
   return targetWalletArr;
 }
 
@@ -404,19 +354,6 @@ function updateWalletBackupStatus(
       }
     });
   }
-  if (chainType === 'Neo2') {
-    updateLocalStorage(
-      STORAGE_NAME.walletArr,
-      getWalletJsons(targetWalletArr as Wallet2[])
-    );
-  } else if (chainType === 'Neo3') {
-    updateLocalStorage(
-      STORAGE_NAME['walletArr-Neo3'],
-      getWalletJsons(targetWalletArr as Wallet3[])
-    );
-  } else {
-    updateLocalStorage(STORAGE_NAME['walletArr-NeoX'], targetWalletArr);
-  }
   return targetWalletArr;
 }
 
@@ -427,14 +364,6 @@ function updateAllWallets({
   neo2WIFArr,
   neo3WIFArr,
 }) {
-  updateLocalStorage(STORAGE_NAME.wallet, currentWallet.export());
-  updateLocalStorage(STORAGE_NAME.walletArr, getWalletJsons(neo2WalletArr));
-  updateLocalStorage(
-    STORAGE_NAME['walletArr-Neo3'],
-    getWalletJsons(neo3WalletArr)
-  );
-  updateLocalStorage(STORAGE_NAME.WIFArr, neo2WIFArr);
-  updateLocalStorage(STORAGE_NAME['WIFArr-Neo3'], neo3WIFArr);
   return {
     currentWallet,
     neo2WalletArr,
@@ -453,19 +382,10 @@ function sortWallets({
 }) {
   switch (chainType) {
     case 'Neo2':
-      updateLocalStorage(
-        STORAGE_NAME.walletArr,
-        getWalletJsons(walletArr as Wallet2[])
-      );
       return { neo2WalletArr: walletArr as Wallet2[] };
     case 'Neo3':
-      updateLocalStorage(
-        STORAGE_NAME['walletArr-Neo3'],
-        getWalletJsons(walletArr as Wallet3[])
-      );
       return { neo3WalletArr: walletArr as Wallet3[] };
     case 'NeoX':
-      updateLocalStorage(STORAGE_NAME['walletArr-NeoX'], walletArr);
       return { neoXWalletArr: walletArr as EvmWalletJSON[] };
   }
 }
@@ -473,85 +393,10 @@ function sortWallets({
 
 //#region network
 function addN3Network(network: RpcNetwork, source: RpcNetwork[]) {
-  const target = [...source, network];
-  updateLocalStorage(STORAGE_NAME.n3Networks, target);
-  return target;
+  return [...source, network];
 }
 
 function addNeoXNetwork(network: RpcNetwork, source: RpcNetwork[]) {
-  const target = [...source, network];
-  updateLocalStorage(STORAGE_NAME.neoXNetworks, target);
-  return target;
-}
-
-function updateNetworks(data: RpcNetwork[], chainType: ChainType) {
-  if (chainType === 'Neo2') {
-    updateLocalStorage(STORAGE_NAME.n2Networks, data);
-  } else if (chainType === 'Neo3') {
-    updateLocalStorage(STORAGE_NAME.n3Networks, data);
-  } else {
-    updateLocalStorage(STORAGE_NAME.neoXNetworks, data);
-  }
-  return data;
-}
-
-function updateNetworkIndex(index: number, chainType: ChainType) {
-  if (chainType === 'Neo2') {
-    updateLocalStorage(STORAGE_NAME.n2SelectedNetworkIndex, index);
-  } else if (chainType === 'Neo3') {
-    updateLocalStorage(STORAGE_NAME.n3SelectedNetworkIndex, index);
-  } else {
-    updateLocalStorage(STORAGE_NAME.neoXSelectedNetworkIndex, index);
-  }
-  return index;
+  return [...source, network];
 }
 //#endregion
-
-function getWalletJsons(walletArr: Array<Wallet2 | Wallet3>) {
-  const target = [];
-  walletArr.forEach((item) => target.push(item.export()));
-  return target;
-}
-
-function updateLocalStorage(storageName: STORAGE_NAME, value: any) {
-  let storageValue = value;
-  if (
-    typeof chrome !== 'undefined' &&
-    chrome.runtime &&
-    typeof chrome.runtime.id === 'string'
-  ) {
-    const saveData = {};
-    saveData[storageName] = storageValue;
-    if (STORAGE_VALUE_MESSAGE[storageName].isLocal) {
-      chrome.runtime.sendMessage(
-        {
-          type: 'localStorage',
-          method: 'set',
-          data: saveData,
-        },
-        () => {}
-      );
-    } else {
-      chrome.runtime.sendMessage(
-        {
-          type: 'syncStorage',
-          method: 'set',
-          data: saveData,
-        },
-        () => {}
-      );
-    }
-  } else {
-    switch (STORAGE_VALUE_MESSAGE[storageName].type) {
-      case STORAGE_VALUE_TYPE.object:
-      case STORAGE_VALUE_TYPE.array:
-        storageValue = JSON.stringify(value);
-        break;
-      case STORAGE_VALUE_TYPE.number:
-      case STORAGE_VALUE_TYPE.boolean:
-        storageValue = String(value);
-        break;
-    }
-    localStorage.setItem(storageName, storageValue);
-  }
-}

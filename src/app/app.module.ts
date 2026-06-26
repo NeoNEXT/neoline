@@ -6,6 +6,7 @@ import { AppComponent } from './app.component';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { StoreModule } from '@ngrx/store';
 import rootReducer from './reduers';
+import { accountMetaReducers } from './reduers/persist-account';
 import { ShareModule } from './share';
 import { PopupModule } from './popup';
 import { N404Module } from './404';
@@ -56,6 +57,7 @@ const APPINIT_PROVIDES = [
     PopupNotificationModule,
     N404Module,
     StoreModule.forRoot(rootReducer, {
+      metaReducers: accountMetaReducers,
       runtimeChecks: {
         strictActionImmutability: false,
         strictStateImmutability: false,
