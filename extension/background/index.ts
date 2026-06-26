@@ -93,6 +93,7 @@ import {
   canCurrentWalletSignTransaction,
 } from './tool';
 import { walletHandlerMap, ethereumRPCHandler } from './handlers';
+import { neoRequestHandlerMap } from './request-handlers';
 import { ethErrors } from 'eth-rpc-errors';
 import { remove0xPrefix } from '@cityofzion/neon-core-neo3/lib/u';
 import { createNeo3Tx, handleInvokeArgs } from './neo3-tx';
@@ -161,6 +162,21 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   const { currN3Network, n3Networks } = await getCurrentNeo3Network();
   const chainType = await getChainType();
 
+  // Extracted handlers take precedence; unmigrated targets fall through to the
+  // switch below (see ./request-handlers).
+  const neoRequestHandler = neoRequestHandlerMap.get(request.target);
+  if (neoRequestHandler) {
+    return neoRequestHandler({
+      request,
+      sender,
+      sendResponse,
+      currN2Network,
+      currN3Network,
+      n3Networks,
+      chainType,
+    });
+  }
+
   switch (request.target) {
     case requestTargetEVM.request: {
       const { method, params, hostInfo } = request.parameter;
@@ -217,12 +233,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       return;
     }
     //#region neo legacy
-    case requestTarget.PickAddress: {
-      createWindow(
-        `pick-address?hostname=${request.parameter.hostname}&chainType=Neo2&messageID=${request.ID}`
-      );
-      return true;
-    }
     case requestTarget.SwitchRequestChain: {
       if (request.connectChain !== chainType) {
         createWindow(
@@ -1030,12 +1040,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     //#endregion
 
     //#region neo3 dapi method
-    case requestTargetN3.PickAddress: {
-      createWindow(
-        `pick-address?hostname=${request.parameter.hostname}&chainType=Neo3&messageID=${request.ID}`
-      );
-      return true;
-    }
     case requestTargetN3.Balance: {
       const parameter = request.parameter as N3BalanceArgs;
       let params;
@@ -1898,88 +1902,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       }
       sendResponse('');
       return true;
-    }
-    case requestTargetN3.AddressToScriptHash: {
-      const scriptHash = getScriptHashFromAddress(request.parameter.address);
-      windowCallback({
-        data: { scriptHash },
-        return: requestTargetN3.AddressToScriptHash,
-        ID: request.ID,
-      });
-      return;
-    }
-    case requestTargetN3.ScriptHashToAddress: {
-      const scriptHash = request.parameter.scriptHash;
-      const str = scriptHash.startsWith('0x')
-        ? scriptHash.substring(2, 44)
-        : scriptHash;
-      const address = wallet3.getAddressFromScriptHash(str);
-      windowCallback({
-        data: { address },
-        return: requestTargetN3.ScriptHashToAddress,
-        ID: request.ID,
-      });
-      return;
-    }
-    case requestTarget.WalletSwitchNetwork:
-    case requestTargetN3.WalletSwitchNetwork: {
-      const parameter = request.parameter;
-      const currentChainId =
-        chainType === 'Neo2'
-          ? currN2Network.chainId
-          : chainType === 'Neo3'
-          ? currN3Network.chainId
-          : -1;
-      if (currentChainId === parameter.chainId) {
-        windowCallback({
-          return: request.target,
-          data: null,
-          ID: request.ID,
-        });
-        sendResponse('');
-        return;
-      }
-      const tempNetwork = n3Networks.find(
-        (e) => e.chainId === parameter.chainId
-      );
-      if (parameter.chainId === 0 && !tempNetwork) {
-        // 0 is N3 private network
-        windowCallback({
-          return: request.target,
-          error: ERRORS.MALFORMED_INPUT,
-          ID: request.ID,
-        });
-        sendResponse('');
-        return;
-      }
-      let queryString = '';
-      for (const key in parameter) {
-        if (parameter.hasOwnProperty(key)) {
-          const value = parameter[key];
-          queryString += `${key}=${value}&`;
-        }
-      }
-      createWindow(
-        `wallet-switch-network?${queryString}messageID=${request.ID}`
-      );
-      sendResponse('');
-      return;
-    }
-    case requestTarget.WalletSwitchAccount:
-    case requestTargetN3.WalletSwitchAccount: {
-      const parameter = request.parameter;
-      let queryString = '';
-      for (const key in parameter) {
-        if (parameter.hasOwnProperty(key)) {
-          const value = parameter[key];
-          queryString += `${key}=${value}&`;
-        }
-      }
-      createWindow(
-        `wallet-switch-account?${queryString}messageID=${request.ID}`
-      );
-      sendResponse('');
-      return;
     }
     //#endregion
   }
