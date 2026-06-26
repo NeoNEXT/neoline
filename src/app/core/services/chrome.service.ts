@@ -8,13 +8,15 @@ import {
   STORAGE_VALUE_MESSAGE,
   RpcNetwork,
   DEFAULT_NETWORKS,
-  SECRET_PASSPHRASE,
   EvmWalletJSON,
   ChainType,
   ConnectedWebsitesType,
 } from '@/app/popup/_lib';
 import { ExtensionService } from './extension.service';
-import CryptoJS from 'crypto-js';
+import {
+  encryptSessionSecret,
+  decryptSessionSecret,
+} from '../../../../cross-runtime/session-secret';
 import { ethers } from 'ethers';
 import { firstValueFrom } from 'rxjs';
 import { NEOX_EVENT } from '@/models/evm';
@@ -257,7 +259,12 @@ export class ChromeService {
   //#endregion
 
   //#region should login
+  // Serialises async password writes so getPassword() never reads a value
+  // before the encrypt-and-store kicked off by setPassword() has landed.
+  private pendingPasswordWrite: Promise<void> = Promise.resolve();
+
   public async getPassword(): Promise<string> {
+    await this.pendingPasswordWrite.catch(() => {});
     let storagePwd;
     if (!this.check) {
       storagePwd = sessionStorage.getItem('password');
@@ -265,17 +272,23 @@ export class ChromeService {
       storagePwd = await this.crx.getSessionStorage('password', (res) => res);
     }
     if (storagePwd) {
-      var bytes = CryptoJS.AES.decrypt(storagePwd, SECRET_PASSPHRASE);
-      var originalText = bytes.toString(CryptoJS.enc.Utf8);
-      return originalText;
+      return decryptSessionSecret(storagePwd);
     }
     return storagePwd;
   }
 
-  public setPassword(pwd: string) {
-    const storagePwd = pwd
-      ? CryptoJS.AES.encrypt(pwd, SECRET_PASSPHRASE).toString()
-      : pwd;
+  // Fire-and-forget for callers (returns void), but the write is async because
+  // encryption uses WebCrypto. Writes are chained so they apply in order, and
+  // getPassword() awaits the tail.
+  public setPassword(pwd: string): void {
+    this.pendingPasswordWrite = this.pendingPasswordWrite
+      .catch(() => {})
+      .then(() => this.writePassword(pwd));
+    this.pendingPasswordWrite.catch(() => {});
+  }
+
+  private async writePassword(pwd: string): Promise<void> {
+    const storagePwd = pwd ? await encryptSessionSecret(pwd) : pwd;
     if (!this.check) {
       sessionStorage.setItem('password', storagePwd);
     } else {

@@ -36,10 +36,10 @@ import {
   GAS,
   NEO3,
   GAS3,
-  SECRET_PASSPHRASE,
   STORAGE_NAME,
   ConnectedWebsitesType,
 } from '../common/constants';
+import { decryptSessionSecret } from '../../cross-runtime/session-secret';
 import {
   requestTarget,
   GetBalanceArgs,
@@ -80,7 +80,6 @@ import { u as u3, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import BigNumber from 'bignumber.js';
 import { createNeoDapiError } from '../../cross-runtime/neo-dapi-error';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
-import CryptoJS from 'crypto-js';
 import { requestTargetEVM } from '../common/data_module_evm';
 import {
   createWindow,
@@ -335,8 +334,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
               ];
             if (!wif) {
               const storagePwd = await getSessionStorage('password', () => {});
-              const bytes = CryptoJS.AES.decrypt(storagePwd, SECRET_PASSPHRASE);
-              const pwd = bytes.toString(CryptoJS.enc.Utf8);
+              const pwd = await decryptSessionSecret(storagePwd);
               wif = (await (currWallet.accounts[0] as any).decrypt(pwd)).WIF;
             }
             const privateKey = getPrivateKeyFromWIF(wif);

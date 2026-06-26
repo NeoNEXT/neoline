@@ -188,8 +188,6 @@ export const DEFAULT_RPC_URLS = {
   },
 };
 
-export const SECRET_PASSPHRASE = 'secret key neoline';
-
 export enum STORAGE_NAME {
   InvokeArgsArray = 'InvokeArgsArray',
   hasLoginAddress = 'hasLoginAddress',

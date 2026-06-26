@@ -19,7 +19,6 @@ export {
   ALL_CHAINID,
   STORAGE_NAME,
   ConnectedWebsitesType,
-  SECRET_PASSPHRASE,
 } from '../../cross-runtime/constants';
 
 export enum WitnessScope {

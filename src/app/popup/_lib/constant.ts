@@ -20,8 +20,6 @@ export const WalletInitConstant = {
   emailPattern,
 };
 
-export const SECRET_PASSPHRASE = 'secret key neoline';
-
 export enum STORAGE_NAME {
   n2Networks = 'n2Networks',
   n3Networks = 'n3Networks',
