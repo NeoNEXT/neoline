@@ -3,6 +3,8 @@ import pickAddress from './pick-address';
 import walletSwitch from './wallet-switch';
 import neo2Read from './neo2-read';
 import neo3Read from './neo3-read';
+import connectSession from './connect-session';
+import balance from './balance';
 import { RequestHandler, RequestHandlerModule } from './context';
 
 /**
@@ -16,6 +18,8 @@ const modules: RequestHandlerModule[] = [
   ...walletSwitch,
   ...neo2Read,
   ...neo3Read,
+  ...connectSession,
+  ...balance,
 ];
 
 export const neoRequestHandlerMap = modules.reduce((map, mod) => {

@@ -19,8 +19,6 @@ import {
   httpPostPromise,
   setLocalStorage,
   getLocalStorage,
-  getAssetSymbol,
-  getAssetDecimal,
   getSessionStorage,
   handleNeo3StackNumberValue,
   removeLocalStorage,
@@ -39,12 +37,9 @@ import {
   STORAGE_NAME,
   ConnectedWebsitesType,
 } from '../common/constants';
-import { decryptSessionSecret } from '../../cross-runtime/session-secret';
 import {
   requestTarget,
-  GetBalanceArgs,
   ERRORS,
-  AccountPublicKey,
   VerifyMessageArgs,
   SendArgs,
 } from '../common/data_module_neo2';
@@ -54,12 +49,8 @@ import {
   N3InvokeMultipleArgs,
   N3VerifyMessageArgs,
   requestTargetN3,
-  N3BalanceArgs,
-  Wallet3,
 } from '../common/data_module_neo3';
 import {
-  getPrivateKeyFromWIF,
-  getPublicKeyFromPrivateKey,
   getScriptHashFromAddress,
   verify,
   reverseHex,
@@ -67,8 +58,6 @@ import {
 } from '../common/utils';
 import { u as u3, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import BigNumber from 'bignumber.js';
-import { createNeoDapiError } from '../../cross-runtime/neo-dapi-error';
-import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { requestTargetEVM } from '../common/data_module_evm';
 import {
   createWindow,
@@ -222,304 +211,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       return;
     }
     //#region neo legacy
-    case requestTarget.SwitchRequestChain: {
-      if (request.connectChain !== chainType) {
-        createWindow(
-          `wallet-switch-network?chainType=${request.connectChain}&messageID=${request.ID}&icon=${request.icon}&hostname=${request.hostname}`
-        );
-      } else {
-        windowCallback({
-          return: requestTarget.SwitchRequestChain,
-          data: null,
-          ID: request.ID,
-        });
-      }
-      return true;
-    }
-    case requestTarget.Connect: {
-      getStorage(
-        STORAGE_NAME.connectedWebsites,
-        async (res: ConnectedWebsitesType) => {
-          if (request.allowEdit === true) {
-            const connectedNeoXIndex = Object.values(
-              res?.[request.hostname]?.connectedAddress || {}
-            ).findIndex((item) => item.chain === request.connectChain);
-            if (connectedNeoXIndex >= 0) {
-              windowCallback({
-                return: requestTarget.Connect,
-                data: true,
-                ID: request.ID,
-              });
-            } else {
-              createWindow(
-                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&allowEdit=${request.allowEdit}&connectChainType=${request.connectChain}&messageID=${request.ID}`
-              );
-            }
-          } else {
-            const currWallet = await getLocalStorage(
-              STORAGE_NAME.wallet,
-              () => {}
-            );
-            const currAddress = currWallet?.accounts?.[0].address;
-            const existHost =
-              res?.[request.hostname]?.connectedAddress?.[currAddress];
-            if (existHost) {
-              windowCallback({
-                return: requestTarget.Connect,
-                data: true,
-                ID: request.ID,
-              });
-              // notification(
-              //   `${chrome.i18n.getMessage('from')}: ${request.hostname}`,
-              //   chrome.i18n.getMessage('connectedTip')
-              // );
-            } else {
-              createWindow(
-                `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&allowEdit=${request.allowEdit}&messageID=${request.ID}`
-              );
-            }
-          }
-          sendResponse('');
-        }
-      );
-      return true;
-    }
-    case requestTarget.Login: {
-      getSessionStorage('password', (pwd) => {
-        if (pwd) {
-          windowCallback({
-            return: requestTarget.Login,
-            data: true,
-            ID: request.ID,
-          });
-        } else {
-          createWindow(
-            `/index.html#popup/login?notification=true&messageID=${request.ID}`,
-            false
-          );
-        }
-        sendResponse('');
-      });
-      return true;
-    }
-    case requestTarget.AccountPublicKey: {
-      try {
-        const walletArrStorage =
-          chainType === 'Neo2'
-            ? STORAGE_NAME.walletArr
-            : STORAGE_NAME['walletArr-Neo3'];
-        const wifArrStorage =
-          chainType === 'Neo2'
-            ? STORAGE_NAME.WIFArr
-            : STORAGE_NAME['WIFArr-Neo3'];
-        const walletArr = await getLocalStorage(walletArrStorage, () => {});
-        let currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
-        currWallet =
-          chainType === 'Neo2'
-            ? new Wallet2(currWallet)
-            : new Wallet3(currWallet);
-        const WIFArr = await getLocalStorage(wifArrStorage, () => {});
-        const data: AccountPublicKey = { address: '', publicKey: '' };
-        if (currWallet !== undefined && currWallet.accounts[0] !== undefined) {
-          if (currWallet.accounts[0]?.extra?.ledgerSLIP44) {
-            data.publicKey = currWallet.accounts[0].extra.publicKey;
-          } else {
-            let wif =
-              WIFArr[
-                walletArr.findIndex(
-                  (item) =>
-                    item.accounts[0].address === currWallet.accounts[0].address
-                )
-              ];
-            if (!wif) {
-              const storagePwd = await getSessionStorage('password', () => {});
-              const pwd = await decryptSessionSecret(storagePwd);
-              wif = (await (currWallet.accounts[0] as any).decrypt(pwd)).WIF;
-            }
-            const privateKey = getPrivateKeyFromWIF(wif);
-            data.publicKey = getPublicKeyFromPrivateKey(privateKey);
-          }
-          data.address = currWallet.accounts[0].address;
-        }
-        windowCallback({
-          return: requestTarget.AccountPublicKey,
-          data,
-          ID: request.ID,
-        });
-      } catch (error) {
-        windowCallback({
-          data: [],
-          ID: request.ID,
-          return: requestTarget.AccountPublicKey,
-          error: { ...ERRORS.UNKNOWN, description: error?.message || error },
-        });
-      }
-      return;
-    }
-
-    case requestTarget.Balance: {
-      const parameter = request.parameter as GetBalanceArgs;
-      let params = [];
-      if (parameter.params instanceof Array) {
-        params = parameter.params;
-      } else {
-        params.push(parameter.params);
-      }
-      const nativeBalanceReqs = [];
-      const nep5BalanceReqs = [];
-      const utxoReqs = [];
-      for (const item of params) {
-        (item.assets || []).forEach((asset: string, index) => {
-          if (asset.toLowerCase() === 'neo') {
-            item.assets[index] = NEO;
-          }
-          if (asset.toLowerCase() === 'gas') {
-            item.assets[index] = GAS;
-          }
-        });
-        const nativeData = {
-          jsonrpc: '2.0',
-          method: 'getaccountstate',
-          params: [item.address],
-          id: 1,
-        };
-        const nep5Data = { ...nativeData, method: 'getnep5balances' };
-        const nativeReq = httpPostPromise(currN2Network.rpcUrl, nativeData);
-        const nepReq = httpPostPromise(currN2Network.rpcUrl, nep5Data);
-        nativeBalanceReqs.push(nativeReq);
-        nep5BalanceReqs.push(nepReq);
-        if (item.fetchUTXO) {
-          const utxoData = { ...nativeData, method: 'getunspents' };
-          const utxoReq = httpPostPromise(currN2Network.rpcUrl, utxoData);
-          utxoReqs.push(utxoReq);
-        }
-      }
-      Promise.all(nativeBalanceReqs.concat(nep5BalanceReqs).concat(utxoReqs))
-        .then(async (res) => {
-          try {
-            const returnData = {};
-            let i = 0;
-            let j = nativeBalanceReqs.length;
-            let k = j * 2;
-            for (const item of params) {
-              returnData[item.address] = [];
-              for (const assetId of item?.assets || []) {
-                const res_1 = (res[i]?.balances || []).find((asset_1) =>
-                  assetId.includes(asset_1.asset)
-                );
-                const res_2 = (res[j]?.balance || []).find((asset_2) =>
-                  assetId.includes(asset_2.asset_hash)
-                );
-                const assetRes = { assetID: assetId, amount: '0', symbol: '' };
-                let symbol = '';
-                if (assetId === NEO) {
-                  symbol = 'NEO';
-                } else if (assetId === GAS) {
-                  symbol = 'GAS';
-                } else {
-                  symbol = await getAssetSymbol(assetId, currN2Network.rpcUrl);
-                }
-                if (res_1) {
-                  assetRes.amount = res_1.value;
-                }
-                if (res_2) {
-                  const decimal = await getAssetDecimal(
-                    assetId,
-                    currN2Network.rpcUrl
-                  );
-                  assetRes.amount = new BigNumber(res_2.amount)
-                    .shiftedBy(-decimal)
-                    .toFixed();
-                }
-                assetRes.symbol = symbol;
-                returnData[item.address].push(assetRes);
-              }
-              if (!item.assets || item.assets.length === 0) {
-                for (const res_1 of res[i].balances || []) {
-                  let symbol = '';
-                  if (res_1.asset === NEO) {
-                    symbol = 'NEO';
-                  }
-                  if (res_1.asset === GAS) {
-                    symbol = 'GAS';
-                  }
-                  const assetRes = {
-                    assetID: res_1.asset,
-                    amount: res_1.value,
-                    symbol,
-                  };
-                  returnData[item.address].push(assetRes);
-                }
-                for (const res_2 of res[j]?.balance || []) {
-                  const symbol = await getAssetSymbol(
-                    res_2.asset_hash,
-                    currN2Network.rpcUrl
-                  );
-                  const decimal = await getAssetDecimal(
-                    res_2.asset_hash,
-                    currN2Network.rpcUrl
-                  );
-                  const amount = new BigNumber(res_2.amount)
-                    .shiftedBy(-decimal)
-                    .toFixed();
-                  const assetRes = {
-                    assetID: res_2.asset_hash,
-                    amount,
-                    symbol,
-                  };
-                  returnData[item.address].push(assetRes);
-                }
-              }
-              if (res[k]?.address && res[k].address === item.address) {
-                res[k].balance.forEach((utxoAsset) => {
-                  const assetIndex = returnData[item.address].findIndex(
-                    (assetItem) =>
-                      assetItem.assetID.includes(utxoAsset.asset_hash)
-                  );
-                  if (assetIndex >= 0) {
-                    returnData[item.address][assetIndex].unspent =
-                      utxoAsset.unspent.map((uxtoItem) => {
-                        uxtoItem.asset_id = utxoAsset.asset_hash;
-                        return uxtoItem;
-                      });
-                  }
-                });
-                k++;
-              }
-              i++;
-              j++;
-            }
-            windowCallback({
-              return: requestTarget.Balance,
-              data: returnData,
-              ID: request.ID,
-              error: null,
-            });
-            sendResponse('');
-          } catch (error) {
-            windowCallback({
-              return: requestTarget.Balance,
-              data: null,
-              ID: request.ID,
-              error: {
-                ...ERRORS.RPC_ERROR,
-                description: error?.error || error,
-              },
-            });
-            sendResponse('');
-          }
-        })
-        .catch((error) => {
-          windowCallback({
-            return: requestTarget.Balance,
-            data: null,
-            ID: request.ID,
-            error: { ...ERRORS.RPC_ERROR, description: error?.error || error },
-          });
-          sendResponse('');
-        });
-      return;
-    }
     case requestTarget.VerifyMessage: {
       const parameter = request.parameter as VerifyMessageArgs;
       const parameterHexString = Buffer.from(parameter.message).toString('hex');
@@ -717,109 +408,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     //#endregion
 
     //#region neo3 dapi method
-    case requestTargetN3.Balance: {
-      const parameter = request.parameter as N3BalanceArgs;
-      let params;
-      if (parameter.params) {
-        params = parameter.params;
-      } else {
-        const currWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
-        if (!wallet3.isAddress(currWallet?.accounts?.[0]?.address, 53)) {
-          return;
-        }
-        params = [{ address: currWallet.accounts[0].address, contracts: [] }];
-      }
-      const balanceReqs = [];
-      for (const item of params) {
-        (item.contracts || []).forEach((asset: string, index) => {
-          if (asset.toLowerCase() === 'neo') {
-            item.contracts[index] = NEO3;
-          }
-          if (asset.toLowerCase() === 'gas') {
-            item.contracts[index] = GAS3;
-          }
-        });
-        const reqData = {
-          jsonrpc: '2.0',
-          method: 'getnep17balances',
-          params: [item.address],
-          id: 1,
-        };
-        const tempReq = httpPostPromise(currN3Network.rpcUrl, reqData);
-        balanceReqs.push(tempReq);
-      }
-      Promise.all(balanceReqs)
-        .then(async (res) => {
-          try {
-            const returnData = {};
-            let i = 0;
-            for (const item of params) {
-              returnData[item.address] = [];
-              for (const assetId of item?.contracts || []) {
-                const res_1 = (res[i]?.balance || []).find((asset_1) =>
-                  assetId.includes(asset_1.assethash)
-                );
-                const assetRes = { contract: assetId, amount: '0', symbol: '' };
-                if (res_1) {
-                  assetRes.symbol = res_1.symbol;
-                  assetRes.amount = new BigNumber(res_1.amount)
-                    .shiftedBy(-res_1.decimals)
-                    .toFixed();
-                } else {
-                  const symbol = await getAssetSymbol(
-                    assetId,
-                    currN3Network.rpcUrl
-                  );
-                  assetRes.symbol = symbol;
-                }
-                returnData[item.address].push(assetRes);
-              }
-              if (!item.contracts || item.contracts.length === 0) {
-                for (const res_1 of res[i]?.balance || []) {
-                  const amount = new BigNumber(res_1.amount)
-                    .shiftedBy(-res_1.decimals)
-                    .toFixed();
-                  const assetRes = {
-                    contract: res_1.assethash,
-                    amount,
-                    symbol: res_1.symbol,
-                  };
-                  returnData[item.address].push(assetRes);
-                }
-              }
-              i++;
-            }
-            windowCallback({
-              return: requestTargetN3.Balance,
-              ID: request.ID,
-              data: returnData,
-              error: null,
-            });
-            sendResponse('');
-          } catch (error) {
-            windowCallback({
-              return: requestTargetN3.Balance,
-              data: null,
-              ID: request.ID,
-              error: {
-                ...ERRORS.RPC_ERROR,
-                description: error?.error || error,
-              },
-            });
-            sendResponse('');
-          }
-        })
-        .catch((error) => {
-          windowCallback({
-            return: requestTargetN3.Balance,
-            data: null,
-            ID: request.ID,
-            error: { ...ERRORS.RPC_ERROR, description: error?.error || error },
-          });
-          sendResponse('');
-        });
-      return;
-    }
     case requestTargetN3.VerifyMessage: {
       const parameter = request.parameter as N3VerifyMessageArgs;
       const parameterHexString = Buffer.from(parameter.message).toString('hex');
@@ -933,17 +521,6 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
       const newData = { ...localData, [request.ID]: params };
       setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
       createWindow(`neo3-signature-v3?messageID=${request.ID}`);
-
-      sendResponse('');
-      return;
-    }
-    case requestTargetN3.Authenticate: {
-      const params = request.parameter;
-      const localData =
-        (await getLocalStorage(STORAGE_NAME.InvokeArgsArray, () => {})) || {};
-      const newData = { ...localData, [request.ID]: params };
-      setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
-      createWindow(`neo3-authenticate?messageID=${request.ID}`);
 
       sendResponse('');
       return;

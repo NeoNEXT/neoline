@@ -13,6 +13,7 @@ const addressToScriptHash: RequestHandlerModule = {
       return: requestTargetN3.AddressToScriptHash,
       ID: request.ID,
     });
+    return;
   },
 };
 
@@ -29,6 +30,7 @@ const scriptHashToAddress: RequestHandlerModule = {
       return: requestTargetN3.ScriptHashToAddress,
       ID: request.ID,
     });
+    return;
   },
 };
 
