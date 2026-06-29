@@ -84,8 +84,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   const { currN3Network, n3Networks } = await getCurrentNeo3Network();
   const chainType = await getChainType();
 
-  // Extracted handlers take precedence; unmigrated targets fall through to the
-  // switch below (see ./request-handlers).
+  // Extracted handlers take precedence (see ./request-handlers)
   const neoRequestHandler = neoRequestHandlerMap.get(request.target);
   if (neoRequestHandler) {
     return neoRequestHandler({
@@ -99,61 +98,51 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     });
   }
 
-  switch (request.target) {
-    case requestTargetEVM.request: {
-      const { method, params, hostInfo } = request.parameter;
-      const handler = walletHandlerMap.get(method);
-      if (handler) {
-        const { implementation } = handler;
-        implementation(params, request.ID, hostInfo)
-          .then((finish) => {
-            if (finish) {
-              windowCallback({
-                data: null,
-                ID: request.ID,
-                return: requestTargetEVM.request,
-              });
-            }
-            sendResponse('');
-          })
-          .catch((error) => {
+  // EVM dApi bridge: dispatch to a method handler when one exists, otherwise
+  // proxy the JSON-RPC call. Both paths share the same failure handling.
+  if (request.target === requestTargetEVM.request) {
+    const { method, params, hostInfo } = request.parameter;
+    const onError = (error) => {
+      windowCallback({
+        data: null,
+        ID: request.ID,
+        return: requestTargetEVM.request,
+        error:
+          typeof error.serialize === 'function'
+            ? error.serialize()
+            : ethErrors.rpc.internal().serialize(),
+      });
+      sendResponse('');
+    };
+    const handler = walletHandlerMap.get(method);
+    if (handler) {
+      handler
+        .implementation(params, request.ID, hostInfo)
+        .then((finish) => {
+          if (finish) {
             windowCallback({
               data: null,
               ID: request.ID,
               return: requestTargetEVM.request,
-              error:
-                typeof error.serialize === 'function'
-                  ? error.serialize()
-                  : ethErrors.rpc.internal().serialize(),
             });
-            sendResponse('');
+          }
+          sendResponse('');
+        })
+        .catch(onError);
+    } else {
+      ethereumRPCHandler(request.parameter, request.ID, sender, hostInfo)
+        .then((data) => {
+          windowCallback({
+            data,
+            error: null,
+            ID: request.ID,
+            return: requestTargetEVM.request,
           });
-      } else {
-        ethereumRPCHandler(request.parameter, request.ID, sender, hostInfo)
-          .then((data) => {
-            windowCallback({
-              data,
-              error: null,
-              ID: request.ID,
-              return: requestTargetEVM.request,
-            });
-            sendResponse('');
-          })
-          .catch((error) => {
-            windowCallback({
-              data: null,
-              ID: request.ID,
-              return: requestTargetEVM.request,
-              error:
-                typeof error.serialize === 'function'
-                  ? error.serialize()
-                  : ethErrors.rpc.internal().serialize(),
-            });
-            sendResponse('');
-          });
-      }
-      return;
+          sendResponse('');
+        })
+        .catch(onError);
     }
+    return;
   }
   return true;
 });
