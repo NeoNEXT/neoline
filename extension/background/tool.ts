@@ -1,5 +1,6 @@
 import {
   ChainType,
+  ConnectedWebsitesType,
   DEFAULT_N2_RPC_NETWORK,
   DEFAULT_N3_RPC_NETWORK,
   DEFAULT_NEOX_RPC_NETWORK,
@@ -27,6 +28,23 @@ import { tx as tx3, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
  * Call window.NeoLineBackground to use.
  */
 declare var chrome;
+
+export async function canSignWithOnePasswordMode(
+  signerAddress: string,
+  hostname: string,
+  chain: 'Neo3' | 'Neo2' | 'NeoX',
+): Promise<boolean> {
+  if (!signerAddress || !hostname) return false;
+  const onePassword = await getLocalStorage('onePassword', () => {});
+  if (!onePassword) return false;
+  const allWebsites = await new Promise<ConnectedWebsitesType>((resolve) => {
+    getStorage(STORAGE_NAME.connectedWebsites, (res: ConnectedWebsitesType) => {
+      resolve(res);
+    });
+  });
+  const connected = allWebsites?.[hostname]?.connectedAddress?.[signerAddress];
+  return !!connected && connected.chain === chain;
+}
 
 export async function getChainType() {
   let chainType: ChainType = await getLocalStorage(

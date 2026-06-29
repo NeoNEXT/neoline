@@ -5,6 +5,8 @@ import neo2Read from './neo2-read';
 import neo3Read from './neo3-read';
 import connectSession from './connect-session';
 import balance from './balance';
+import neo2Sign from './neo2-sign';
+import neo3Sign from './neo3-sign';
 import { RequestHandler, RequestHandlerModule } from './context';
 
 /**
@@ -20,6 +22,8 @@ const modules: RequestHandlerModule[] = [
   ...neo3Read,
   ...connectSession,
   ...balance,
+  ...neo2Sign,
+  ...neo3Sign,
 ];
 
 export const neoRequestHandlerMap = modules.reduce((map, mod) => {
