@@ -6,6 +6,29 @@ import {
   INIT_ACCOUNT,
   RESET_ACCOUNT,
   UPDATE_NEO3_WALLETS_ADDRESS,
+  UPDATE_WALLET,
+  ADD_NEO2_WALLETS,
+  ADD_NEO3_WALLETS,
+  ADD_NEOX_WALLET,
+  REMOVE_NEO2_WALLET,
+  REMOVE_NEO3_WALLET,
+  REMOVE_NEOX_WALLET,
+  UPDATE_NEO2_WALLET_NAME,
+  UPDATE_NEO3_WALLET_NAME,
+  UPDATE_NEOX_WALLET_NAME,
+  UPDATE_NEO2_WALLET_BACKUP_STATUS,
+  UPDATE_NEO3_WALLET_BACKUP_STATUS,
+  UPDATE_NEOX_WALLET_BACKUP_STATUS,
+  UPDATE_ALL_WALLETS,
+  SORT_WALLETS,
+  ADD_NEO3_NETWORK,
+  ADD_NEOX_NETWORK,
+  UPDATE_NEO2_NETWORKS,
+  UPDATE_NEO3_NETWORKS,
+  UPDATE_NEOX_NETWORKS,
+  UPDATE_NEO2_NETWORK_INDEX,
+  UPDATE_NEO3_NETWORK_INDEX,
+  UPDATE_NEOX_NETWORK_INDEX,
 } from '@/app/popup/_lib';
 import { AppState } from './index';
 import { AccountState } from './components/account';
@@ -69,8 +92,7 @@ const identity = (value: any): any => value;
 
 /**
  * Single source of truth for what the account slice persists: each persisted
- * field maps to its storage key and the transform applied before writing. The
- * meta-reducer writes a key only when its backing field actually changed.
+ * field maps to its storage key and the transform applied before writing.
  */
 const PERSISTED_FIELDS: Array<{
   field: keyof AccountState;
@@ -126,6 +148,65 @@ const NON_PERSISTED_ACTIONS = new Set<string>([
 ]);
 
 /**
+ * Which account fields each action is responsible for persisting — the same
+ * keys the pre-meta-reducer code wrote inside each reducer case. These are
+ * written UNCONDITIONALLY when the action fires, independent of reference
+ * equality.
+ *
+ * Why this exists: detecting "what changed" by reference (`prev[f] !== next[f]`)
+ * silently fails when a caller mutates a store array/object in place and then
+ * dispatches the same reference — `prev` and `next` point at the same (already
+ * mutated) object, so neither reference nor deep comparison can tell they
+ * "changed". A force list restores the old, robust "the action targets these
+ * keys, so write them" contract without reintroducing side effects into the
+ * (pure) reducers. Any action NOT listed here still persists via the
+ * reference-change fallback in the meta-reducer below.
+ */
+const ACTION_PERSISTED_FIELDS: Record<string, Array<keyof AccountState>> = {
+  [UPDATE_WALLET]: ['currentWallet', 'currentChainType'],
+
+  [ADD_NEO2_WALLETS]: ['neo2WalletArr', 'neo2WIFArr'],
+  [ADD_NEO3_WALLETS]: ['neo3WalletArr', 'neo3WIFArr'],
+  [ADD_NEOX_WALLET]: ['neoXWalletArr'],
+
+  [REMOVE_NEO2_WALLET]: ['neo2WalletArr', 'neo2WIFArr'],
+  [REMOVE_NEO3_WALLET]: ['neo3WalletArr', 'neo3WIFArr'],
+  [REMOVE_NEOX_WALLET]: ['neoXWalletArr'],
+
+  [UPDATE_NEO2_WALLET_NAME]: ['neo2WalletArr'],
+  [UPDATE_NEO3_WALLET_NAME]: ['neo3WalletArr'],
+  [UPDATE_NEOX_WALLET_NAME]: ['neoXWalletArr'],
+
+  [UPDATE_NEO2_WALLET_BACKUP_STATUS]: ['neo2WalletArr'],
+  [UPDATE_NEO3_WALLET_BACKUP_STATUS]: ['neo3WalletArr'],
+  [UPDATE_NEOX_WALLET_BACKUP_STATUS]: ['neoXWalletArr'],
+
+  [UPDATE_ALL_WALLETS]: [
+    'currentWallet',
+    'neo2WalletArr',
+    'neo3WalletArr',
+    'neo2WIFArr',
+    'neo3WIFArr',
+  ],
+
+  // SORT_WALLETS touches exactly one chain's array (chosen by action.data at
+  // runtime); a static map can't know which, so list all three — the unchanged
+  // two are simply re-written with their current value.
+  [SORT_WALLETS]: ['neo2WalletArr', 'neo3WalletArr', 'neoXWalletArr'],
+
+  [ADD_NEO3_NETWORK]: ['n3Networks'],
+  [ADD_NEOX_NETWORK]: ['neoXNetworks'],
+
+  [UPDATE_NEO2_NETWORKS]: ['n2Networks'],
+  [UPDATE_NEO3_NETWORKS]: ['n3Networks'],
+  [UPDATE_NEOX_NETWORKS]: ['neoXNetworks'],
+
+  [UPDATE_NEO2_NETWORK_INDEX]: ['n2NetworkIndex'],
+  [UPDATE_NEO3_NETWORK_INDEX]: ['n3NetworkIndex'],
+  [UPDATE_NEOX_NETWORK_INDEX]: ['neoXNetworkIndex'],
+};
+
+/**
  * Meta-reducer that persists changed account fields to extension/local storage
  * after each action. Isolating persistence here keeps the reducers themselves
  * pure, which NgRx requires (a reducer must be a side-effect-free function of
@@ -144,8 +225,13 @@ export function persistAccountState(
       nextAccount !== prevAccount &&
       !NON_PERSISTED_ACTIONS.has(action.type)
     ) {
+      const forcedFields = ACTION_PERSISTED_FIELDS[action.type] ?? [];
       for (const { field, key, serialize } of PERSISTED_FIELDS) {
-        if (prevAccount[field] !== nextAccount[field]) {
+        // Force-write the fields this action is responsible for (robust against
+        // in-place mutation), and fall back to reference-change detection for
+        // any field/action not covered by the map.
+        const changed = prevAccount[field] !== nextAccount[field];
+        if (forcedFields.includes(field) || changed) {
           writeStorage(key, serialize(nextAccount[field]));
         }
       }

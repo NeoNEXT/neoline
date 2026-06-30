@@ -60,43 +60,62 @@ export async function getChainType() {
 }
 
 export async function getCurrentNeo2Network() {
-  const n2Networks: RpcNetwork[] =
-    (await getLocalStorage(STORAGE_NAME.n2Networks, () => {})) ||
-    DEFAULT_N2_RPC_NETWORK;
+  const storedN2Networks: RpcNetwork[] = await getLocalStorage(
+    STORAGE_NAME.n2Networks,
+    () => {}
+  );
+  const n2Networks = storedN2Networks?.length
+    ? storedN2Networks
+    : DEFAULT_N2_RPC_NETWORK;
 
   const n2SelectedNetworkIndex: number =
     (await getLocalStorage(STORAGE_NAME.n2SelectedNetworkIndex, () => {})) || 0;
 
-  const currN2Network = n2Networks[n2SelectedNetworkIndex];
+  // Fall back to the first network if the stored index is out of range.
+  const currN2Network = n2Networks[n2SelectedNetworkIndex] ?? n2Networks[0];
   return { currN2Network, n2Networks };
 }
 
 export async function getCurrentNeo3Network() {
-  const n3Networks: RpcNetwork[] =
-    (await getLocalStorage(STORAGE_NAME.n3Networks, () => {})) ||
-    DEFAULT_N3_RPC_NETWORK;
+  const storedN3Networks: RpcNetwork[] = await getLocalStorage(
+    STORAGE_NAME.n3Networks,
+    () => {}
+  );
+  const n3Networks = storedN3Networks?.length
+    ? storedN3Networks
+    : DEFAULT_N3_RPC_NETWORK;
 
   const n3SelectedNetworkIndex: number =
     (await getLocalStorage(STORAGE_NAME.n3SelectedNetworkIndex, () => {})) || 0;
 
-  const currN3Network = n3Networks[n3SelectedNetworkIndex];
+  // Fall back to the first network if the stored index is out of range.
+  const currN3Network = n3Networks[n3SelectedNetworkIndex] ?? n3Networks[0];
   return { currN3Network, n3Networks };
 }
 
 export async function getCurrentNeoXNetwork() {
-  const neoXNetworks: RpcNetwork[] =
-    (await getLocalStorage(STORAGE_NAME.neoXNetworks, () => {})) ||
-    DEFAULT_NEOX_RPC_NETWORK;
+  const storedNeoXNetworks: RpcNetwork[] = await getLocalStorage(
+    STORAGE_NAME.neoXNetworks,
+    () => {}
+  );
+  const neoXNetworks = storedNeoXNetworks?.length
+    ? storedNeoXNetworks
+    : DEFAULT_NEOX_RPC_NETWORK;
 
   const neoXSelectedNetworkIndex: number =
     (await getLocalStorage(STORAGE_NAME.neoXSelectedNetworkIndex, () => {})) ||
     0;
 
-  const currNeoXNetwork = neoXNetworks[neoXSelectedNetworkIndex];
+  // Fall back to the first network if the stored index is out of range.
+  const currNeoXNetwork =
+    neoXNetworks[neoXSelectedNetworkIndex] ?? neoXNetworks[0];
   return { currNeoXNetwork, neoXNetworks };
 }
 
 export async function listenBlock(currNetwork: RpcNetwork) {
+  if (!currNetwork) {
+    return;
+  }
   const networkId = currNetwork.id;
   const rpcUrl = currNetwork.rpcUrl;
   let oldHeight =
@@ -160,6 +179,9 @@ export async function listenBlock(currNetwork: RpcNetwork) {
 }
 
 export async function waitTxs(currNetwork: RpcNetwork, chainType: ChainType) {
+  if (!currNetwork) {
+    return;
+  }
   const networkId = currNetwork.id;
   const txArr =
     (await getLocalStorage(`TxArr_${chainType}-${networkId}`, () => {})) || [];

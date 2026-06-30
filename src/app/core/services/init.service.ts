@@ -26,6 +26,16 @@ import { migrateLegacyNeoXHDWallets, parseWallet } from '../utils/app';
 export class InitService {
   constructor(private chrome: ChromeService, private store: Store<AppState>) {}
 
+  // A persisted network index can point past its networks array (e.g. it was
+  // left at a custom network's slot after that network was removed). Clamp it
+  // back into range so `networks[index]` never resolves to `undefined`.
+  private clampNetworkIndex(networks: any[], index: number): number {
+    if (!Array.isArray(networks) || networks.length === 0) {
+      return 0;
+    }
+    return index >= 0 && index < networks.length ? index : 0;
+  }
+
   public initData() {
     const getWallet = this.chrome.getStorage(STORAGE_NAME.wallet);
     const getNeo2WIFArr = this.chrome.getStorage(STORAGE_NAME.WIFArr);
@@ -133,6 +143,38 @@ export class InitService {
           : wallet3.isAddress(address, 53)
           ? 'Neo3'
           : 'Neo2';
+        // Clamp any out-of-range stored index, and persist the correction so a
+        // stale selection doesn't keep re-loading (and crashing) every launch.
+        const n2NetworkIndex = this.clampNetworkIndex(
+          n2NetworksRes,
+          n2NetworkIndexRes
+        );
+        const n3NetworkIndex = this.clampNetworkIndex(
+          n3NetworksRes,
+          n3NetworkIndexRes
+        );
+        const neoXNetworkIndex = this.clampNetworkIndex(
+          neoXNetworksRes,
+          neoXNetworkIndexRes
+        );
+        if (n2NetworkIndex !== n2NetworkIndexRes) {
+          this.chrome.setStorage(
+            STORAGE_NAME.n2SelectedNetworkIndex,
+            n2NetworkIndex
+          );
+        }
+        if (n3NetworkIndex !== n3NetworkIndexRes) {
+          this.chrome.setStorage(
+            STORAGE_NAME.n3SelectedNetworkIndex,
+            n3NetworkIndex
+          );
+        }
+        if (neoXNetworkIndex !== neoXNetworkIndexRes) {
+          this.chrome.setStorage(
+            STORAGE_NAME.neoXSelectedNetworkIndex,
+            neoXNetworkIndex
+          );
+        }
         this.store.dispatch({
           type: INIT_ACCOUNT,
           data: {
@@ -146,9 +188,9 @@ export class InitService {
             n2Networks: n2NetworksRes || [],
             n3Networks: n3NetworksRes || [],
             neoXNetworks: neoXNetworksRes || [],
-            n2NetworkIndex: n2NetworkIndexRes,
-            n3NetworkIndex: n3NetworkIndexRes,
-            neoXNetworkIndex: neoXNetworkIndexRes,
+            n2NetworkIndex,
+            n3NetworkIndex,
+            neoXNetworkIndex,
           },
         });
         //#region update default network

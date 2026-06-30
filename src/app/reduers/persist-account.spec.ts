@@ -4,6 +4,8 @@ import {
   INIT_ACCOUNT,
   RESET_ACCOUNT,
   UPDATE_NEO2_NETWORK_INDEX,
+  UPDATE_NEO3_NETWORKS,
+  UPDATE_WALLET,
 } from '@/app/popup/_lib';
 import { persistAccountState } from './persist-account';
 import account from './components/account';
@@ -69,12 +71,15 @@ describe('persistAccountState meta-reducer', () => {
   });
 
   it('does not persist for INIT_ACCOUNT (state is hydrated FROM storage)', () => {
+    // Index must be valid for the default n3Networks (length 2): INIT_ACCOUNT
+    // clamps an out-of-range index, so an out-of-range value here would be
+    // rewritten and obscure what this test checks (that INIT does not persist).
     state = reducer(state, {
       type: INIT_ACCOUNT,
-      data: { n3NetworkIndex: 5 },
+      data: { n3NetworkIndex: 1 },
     } as any);
 
-    expect(state.account.n3NetworkIndex).toBe(5);
+    expect(state.account.n3NetworkIndex).toBe(1);
     expect(setItem).not.toHaveBeenCalled();
   });
 
@@ -90,5 +95,42 @@ describe('persistAccountState meta-reducer', () => {
 
     expect(state.account).toBe(before.account);
     expect(setItem).not.toHaveBeenCalled();
+  });
+
+  // The regression this hardening fixes: a caller holds the store array, mutates
+  // it in place, and dispatches the SAME reference. prev and next share the
+  // (already mutated) array, so neither reference nor deep comparison can detect
+  // a change — only the action→fields force-write persists it.
+  it('persists networks dispatched as the same (in-place mutated) reference', () => {
+    const sameRef = state.account.n3Networks;
+    (sameRef as any).push({ name: 'custom', chainId: 999 });
+    state = reducer(state, {
+      type: UPDATE_NEO3_NETWORKS,
+      data: sameRef,
+    } as any);
+
+    // Confirm the bug condition (same reference) actually held...
+    expect(state.account.n3Networks).toBe(sameRef);
+    // ...and it was persisted anyway.
+    expect(setItem).toHaveBeenCalledWith('n3Networks', jasmine.any(String));
+  });
+
+  it('persists the wallet key on UPDATE_WALLET for the same (mutated) wallet ref', () => {
+    const fakeWallet: any = {
+      accounts: [{ address: 'addr', extra: { hasBackup: false } }],
+      export() {
+        return { accounts: this.accounts };
+      },
+    };
+    // First dispatch sets currentWallet (reference genuinely changes here).
+    state = reducer(state, { type: UPDATE_WALLET, data: fakeWallet } as any);
+    setItem.calls.reset();
+
+    // Simulate the backup flow: mutate the SAME wallet object, dispatch it again.
+    fakeWallet.accounts[0].extra.hasBackup = true;
+    state = reducer(state, { type: UPDATE_WALLET, data: fakeWallet } as any);
+
+    expect(state.account.currentWallet).toBe(fakeWallet);
+    expect(setItem).toHaveBeenCalledWith('wallet', jasmine.any(String));
   });
 });

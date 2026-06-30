@@ -67,6 +67,19 @@ const initialState: AccountState = {
   neoXNetworkIndex: 0,
 };
 
+// A persisted network index can fall out of sync with its networks array (a
+// custom network was removed, the index was never written, a default-network
+// migration reordered the list, ...). Indexing past the array yields
+// `undefined`, which crashes every component that reads the current network
+// (header, home/showBridge, transfer, ...). Clamp to a valid slot so the
+// derived network is always defined.
+function clampNetworkIndex(networks: RpcNetwork[], index: number): number {
+  if (!Array.isArray(networks) || networks.length === 0) {
+    return 0;
+  }
+  return index >= 0 && index < networks.length ? index : 0;
+}
+
 // This reducer is pure: it only computes the next state. Persisting the changed
 // slices to extension/local storage is handled by the persistAccountState
 // meta-reducer (see ../persist-account.ts).
@@ -75,11 +88,18 @@ export default function account(
   action: any
 ): AccountState {
   switch (action.type) {
-    case INIT_ACCOUNT:
+    case INIT_ACCOUNT: {
+      const next = { ...state, ...action.data };
       return {
-        ...state,
-        ...action.data,
+        ...next,
+        n2NetworkIndex: clampNetworkIndex(next.n2Networks, next.n2NetworkIndex),
+        n3NetworkIndex: clampNetworkIndex(next.n3Networks, next.n3NetworkIndex),
+        neoXNetworkIndex: clampNetworkIndex(
+          next.neoXNetworks,
+          next.neoXNetworkIndex
+        ),
       };
+    }
     case RESET_ACCOUNT: {
       return {
         ...state,
