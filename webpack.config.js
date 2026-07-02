@@ -55,6 +55,9 @@ module.exports = (config, options) => {
         __dirname,
         path.join(__dirname, "node_modules"),
         path.join(__dirname, "src"),
+        // 相对 "node_modules" 恢复 webpack 默认的逐级/嵌套解析，
+        // 否则仅嵌套安装的传递依赖(如 @onekeyfe/hd-transport 下的 protobufjs)无法被解析
+        "node_modules",
       ],
       alias: {
         "@": path.resolve(__dirname, `${appSrc}`),
