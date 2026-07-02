@@ -872,7 +872,15 @@ export class EvmDappService {
     tokenId: string
   ): Promise<string> {
     const contract = new ethers.Contract(address, abiERC1155, this.provider);
-    return contract.uri(tokenId);
+    const uri: string = await contract.uri(tokenId);
+    // Per the ERC1155 metadata spec, clients must replace the `{id}` template in
+    // the returned URI with the lowercase hex token id, zero-padded to 64 chars
+    // (no 0x prefix). Otherwise the URI is fetched literally (e.g. `{id}.json`).
+    if (uri?.includes('{id}')) {
+      const hexId = BigInt(tokenId).toString(16).padStart(64, '0');
+      return uri.replace(/\{id\}/gu, hexId);
+    }
+    return uri;
   }
   //#endregion
 }

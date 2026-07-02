@@ -9,6 +9,7 @@ import {
   NeoXMainnetNetwork,
   NeoXTestnetNetwork,
   RpcNetwork,
+  TokenStandard,
 } from '../../_lib';
 import { UntypedFormBuilder, UntypedFormGroup, Validators } from '@angular/forms';
 
@@ -58,12 +59,17 @@ export class PopupAddNftComponent implements OnDestroy {
 
   confirm() {
     this.loading = true;
-    const tokenAddress = this.addNFTForm.value.address;
-    const tokenId = this.addNFTForm.value.tokenId;
+    const tokenAddress = this.addNFTForm.value.address?.trim();
+    const tokenId = this.addNFTForm.value.tokenId?.trim();
     this.evmNFTService
       .watchNft(tokenAddress, tokenId, this.address)
       .then((res) => {
-        if (res.name === undefined || res.symbol === undefined) {
+        // ERC1155 name()/symbol() are optional per spec, so missing metadata is
+        // acceptable and gets a placeholder below. For other standards, absent
+        // metadata usually means the RPC node returned nothing usable.
+        const missingMetadata =
+          res.name === undefined || res.symbol === undefined;
+        if (res.standard !== TokenStandard.ERC1155 && missingMetadata) {
           if (
             this.neoXNetwork.chainId !== NeoXMainnetNetwork.chainId &&
             this.neoXNetwork.chainId !== NeoXTestnetNetwork.chainId
@@ -76,6 +82,8 @@ export class PopupAddNftComponent implements OnDestroy {
           this.loading = false;
           return;
         }
+        const displayName = res.name ?? res.symbol ?? 'NFT';
+        const displaySymbol = res.symbol ?? res.name ?? 'NFT';
         this.addError = '';
         const nftIndex = this.watch.findIndex(
           (item) => item.assethash === tokenAddress
@@ -87,18 +95,18 @@ export class PopupAddNftComponent implements OnDestroy {
           );
         }
         const addNFT: NftAsset = {
-          name: res.name,
+          name: displayName,
           assethash: tokenAddress,
-          symbol: res.symbol,
+          symbol: displaySymbol,
           watching: true,
           standard: res.standard,
         };
         const addTokenItem: NftToken = {
           tokenid: tokenId,
-          symbol: res.symbol,
+          symbol: displaySymbol,
           amount: '1',
           image_url: res.image,
-          name: res.name,
+          name: displayName,
         };
         if (nftIndex >= 0) {
           this.watch[nftIndex] = {

@@ -3,7 +3,6 @@ import { AppState } from '@/app/reduers';
 import { Injectable } from '@angular/core';
 import { Store } from '@ngrx/store';
 import { ethers } from 'ethers';
-import type BN from 'bn.js';
 import { EvmDappService } from './dapp.service';
 import { NftAsset, NftToken } from '@/models/models';
 import { EvmTxService } from './tx.service';
@@ -126,12 +125,12 @@ export class EvmNFTService {
         abiERC1155,
         this.provider
       );
-      const data = contract.interface.encodeFunctionData('TransferSingle', [
-        asset.assethash,
+      const data = contract.interface.encodeFunctionData('safeTransferFrom', [
         fromAddress,
         toAddress,
         token.tokenid,
         '1',
+        '0x',
       ]);
       return data;
     }
@@ -211,7 +210,7 @@ export class EvmNFTService {
           nftAddress,
           tokenId
         );
-        return !balance.isZero();
+        return balance > 0n;
       }
       // eslint-disable-next-line no-empty
     } catch {
@@ -252,7 +251,7 @@ export class EvmNFTService {
     userAddress: string,
     nftAddress: string,
     nftId: string
-  ): Promise<BN> {
+  ): Promise<bigint> {
     const contract = new ethers.Contract(nftAddress, abiERC1155, this.provider);
     return contract.balanceOf(userAddress, nftId);
   }
