@@ -110,20 +110,25 @@ function getAccounts(e) {
   getStorage(
     STORAGE_NAME.connectedWebsites,
     (allWebsites: ConnectedWebsitesType) => {
+      allWebsites = allWebsites || {};
+      const connectedAddress =
+        allWebsites[location.hostname]?.connectedAddress || {};
       Object.keys(
-        allWebsites[location.hostname]?.connectedAddress || {}
+        connectedAddress
       ).forEach((address) => {
-        const item = allWebsites[location.hostname].connectedAddress[address];
+        const item = connectedAddress[address];
         if (item.chain === 'NeoX') {
           data.push(address);
         }
       });
       getLocalStorage('wallet', (wallet) => {
-        const currentAddress = wallet.accounts[0].address;
-        const index = data.findIndex((item) => item === currentAddress);
-        if (index >= 0) {
-          data.splice(index, 1);
-          data.unshift(currentAddress);
+        const currentAddress = wallet?.accounts?.[0]?.address;
+        if (currentAddress) {
+          const index = data.findIndex((item) => item === currentAddress);
+          if (index >= 0) {
+            data.splice(index, 1);
+            data.unshift(currentAddress);
+          }
         }
         window.postMessage(
           {

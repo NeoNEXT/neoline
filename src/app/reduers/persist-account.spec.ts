@@ -102,6 +102,15 @@ describe('persistAccountState meta-reducer', () => {
   // (already mutated) array, so neither reference nor deep comparison can detect
   // a change — only the action→fields force-write persists it.
   it('persists networks dispatched as the same (in-place mutated) reference', () => {
+    // The initial state's n3Networks IS the shared DEFAULT_N3_RPC_NETWORK
+    // constant; pushing into it directly would leak into every other spec
+    // file. Swap in a fresh copy first, then mutate that copy in place.
+    state = reducer(state, {
+      type: UPDATE_NEO3_NETWORKS,
+      data: [...state.account.n3Networks],
+    } as any);
+    setItem.calls.reset();
+
     const sameRef = state.account.n3Networks;
     (sameRef as any).push({ name: 'custom', chainId: 999 });
     state = reducer(state, {
