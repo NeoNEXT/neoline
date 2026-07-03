@@ -255,15 +255,23 @@ export class EvmDappService {
     chainId: number;
     inputData: string;
     contract: string;
-  }): Observable<{ contractName: string; decodeData: any[] }> {
+  }): Observable<{ contractName: string; decodeData: any[] | undefined }> {
     return this.http
       .get(
         `https://api.etherscan.io/v2/api?chainid=${chainId}&module=contract&action=getsourcecode&address=${contract}&apikey=${ETHERSCAN_API_KEY}`
       )
       .pipe(
         map((sourceCodeRes: any) => {
-          if (sourceCodeRes.status === '1' && sourceCodeRes?.result[0]) {
-            const abi = sourceCodeRes.result[0].ABI;
+          const emptyResult = { contractName: '', decodeData: undefined };
+          const abi = sourceCodeRes?.result?.[0]?.ABI;
+          if (
+            sourceCodeRes?.status !== '1' ||
+            !abi ||
+            abi === 'Contract source code not verified'
+          ) {
+            return emptyResult;
+          }
+          try {
             const contractName = sourceCodeRes.result[0].ContractName;
             const iface = new ethers.Interface(abi);
             const data = iface.parseTransaction({ data: inputData });
@@ -273,8 +281,11 @@ export class EvmDappService {
               decodeData.push({ name, type, value: decodeArg[index] });
             });
             return { contractName, decodeData };
+          } catch {
+            return emptyResult;
           }
-        })
+        }),
+        catchError(() => of({ contractName: '', decodeData: undefined }))
       );
   }
 

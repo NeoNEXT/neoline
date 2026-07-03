@@ -16,10 +16,6 @@
       padding-bottom: 12px;
       margin-bottom: 12px;
       border-bottom: 1px solid var(--line-color);
-
-      &:empty {
-        display: none;
-      }
     }
     .json-box {
       color: var(--title-color);

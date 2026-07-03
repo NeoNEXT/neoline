@@ -88,8 +88,8 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
         contract: this.txParams.to,
       })
       .subscribe((res) => {
-        this.decodeData = res.decodeData;
-        this.contractName = res.contractName;
+        this.decodeData = res?.decodeData;
+        this.contractName = res?.contractName;
       });
     this.evmDappService
       .getContractMethodData(this.txParams.data)

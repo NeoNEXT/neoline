@@ -210,10 +210,7 @@ export class PopupNoticeEvmConfirmApproveComponent implements OnInit {
   }
 
   get showSpenderInfo(): boolean {
-    return (
-      Boolean(this.authorization?.spender) &&
-      !this.isRevokeApproval
-    );
+    return Boolean(this.authorization?.spender) && !this.isRevokeApproval;
   }
 
   get spenderInfoLabelKey(): string {

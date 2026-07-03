@@ -129,9 +129,8 @@
 
     <evm-estimate-error *ngIf="estimateGasError"></evm-estimate-error>
 
-    <div class="request-info">
+    <div class="request-info" *ngIf="showSpenderInfo">
       <evm-authorization-details
-        *ngIf="showSpenderInfo"
         [authorizations]="authorizations"
         [labelKey]="spenderInfoLabelKey"
       ></evm-authorization-details>

@@ -31,7 +31,7 @@
       [rateCurrency]="rate.rateCurrency"
     ></evm-balance-changes>
 
-    <div class="request-info">
+    <div class="request-info" *ngIf="authorizations[0]?.spender">
       <evm-authorization-details [authorizations]="authorizations"></evm-authorization-details>
     </div>
 
