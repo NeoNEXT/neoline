@@ -716,9 +716,6 @@
   "signers": {
     "message": "Signers"
   },
-  "callFlags": {
-    "message": "CallFlags"
-  },
   "Fee": {
     "message": "Fee"
   },

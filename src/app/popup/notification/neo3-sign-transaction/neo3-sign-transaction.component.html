@@ -60,10 +60,6 @@
         </div>
         <span>{{ call.method }}</span>
       </div>
-      <div class="request-info-item">
-        <div class="label">{{ "callFlags" | translate | async }}</div>
-        <span>{{ call.callFlagsLabel }}</span>
-      </div>
       <div class="request-info-item" *ngIf="call.argsObj?.length">
         <div class="label">
           {{ "InvocationArguments" | translate | async }}

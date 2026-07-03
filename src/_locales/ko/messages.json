@@ -716,9 +716,6 @@
   "signers": {
     "message": "서명자"
   },
-  "callFlags": {
-    "message": "CallFlags"
-  },
   "Fee": {
     "message": "수수료"
   },
