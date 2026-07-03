@@ -1,6 +1,8 @@
 <div class="container">
   <div class="header transfer">
-    <div class="invoke-type">· TRANSACTION REQUEST</div>
+    <div class="invoke-type">
+      · {{ txParams?.to ? "TRANSACTION REQUEST" : "DEPLOY CONTRACT" }}
+    </div>
     <div class="address-group contract-interaction">
       <copy [value]="txParams?.from">
         <div class="item">
@@ -64,7 +66,7 @@
         </div>
         <div class="to-address">
           <tooltip
-            *ngIf="contractHasRisk"
+            *ngIf="contractIsRisk"
             placement="top"
             [tip]="'contractHasRisk' | translate | async"
           >

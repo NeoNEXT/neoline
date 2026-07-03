@@ -76,26 +76,31 @@ export class PopupNoticeEvmConfirmContractInteractionComponent
       this.txParams,
       tokenData,
     );
-    this.evmDappService
-      .detectContractSecurity(this.txParams.to)
-      .subscribe((res) => {
-        this.contractIsRisk = res;
-      });
-    this.evmDappService
-      .getContractNameAndDecodeData({
-        chainId: this.neoXNetwork.chainId,
-        inputData: this.txParams.data,
-        contract: this.txParams.to,
-      })
-      .subscribe((res) => {
-        this.decodeData = res?.decodeData;
-        this.contractName = res?.contractName;
-      });
-    this.evmDappService
-      .getContractMethodData(this.txParams.data)
-      .subscribe((res) => {
-        this.contractMethodData = res;
-      });
+    // A contract deployment has no `to` address: there is no contract to
+    // security-check or resolve a name for, and `data` is init bytecode, not
+    // calldata, so a 4byte method lookup would return garbage.
+    if (this.txParams.to) {
+      this.evmDappService
+        .detectContractSecurity(this.txParams.to)
+        .subscribe((res) => {
+          this.contractIsRisk = res;
+        });
+      this.evmDappService
+        .getContractNameAndDecodeData({
+          chainId: this.neoXNetwork.chainId,
+          inputData: this.txParams.data,
+          contract: this.txParams.to,
+        })
+        .subscribe((res) => {
+          this.decodeData = res?.decodeData;
+          this.contractName = res?.contractName;
+        });
+      this.evmDappService
+        .getContractMethodData(this.txParams.data)
+        .subscribe((res) => {
+          this.contractMethodData = res;
+        });
+    }
     this.fromWalletName = this.evmDappService.getWalletName(this.txParams.from);
   }
 

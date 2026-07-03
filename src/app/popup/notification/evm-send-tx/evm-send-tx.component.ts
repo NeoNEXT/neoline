@@ -158,12 +158,21 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
       case EvmTransactionType.tokenMethodSafeTransferFrom:
         return 'sendToken';
       case EvmTransactionType.contractInteraction:
+      // A deployment is shown and recorded as a plain contract interaction;
+      // the view hides the to-address specific rows when `to` is absent.
+      case EvmTransactionType.deployContract:
         return 'contractInteraction';
       case EvmTransactionType.swapApproval:
       case EvmTransactionType.tokenMethodApprove:
       case EvmTransactionType.tokenMethodApproveAndCall:
       case EvmTransactionType.tokenMethodSetApprovalForAll:
         return 'approve';
+      default:
+        // A recognized-but-unmapped method still gets the generic interaction
+        // view (it only needs from/data/value) instead of a blank page; stay
+        // undefined only while methodName is still resolving, so no view
+        // flashes before initData completes.
+        return this.methodName ? 'contractInteraction' : undefined;
     }
   }
 
@@ -260,8 +269,12 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         res[networkName][address] = {};
       }
       const type = this.getTxType();
+      // A contract deployment has no `to`; record it under the native asset so
+      // the storage key stays valid and the tx shows up in the GAS history.
       const assetId =
-        type === 'sendEther' ? ETH_SOURCE_ASSET_HASH : this.txParams.to;
+        type === 'sendEther' || !this.txParams.to
+          ? ETH_SOURCE_ASSET_HASH
+          : this.txParams.to;
 
       if (res[networkName][address][assetId] === undefined) {
         res[networkName][address][assetId] = [];
@@ -285,7 +298,7 @@ export class PopupNoticeEvmSendTxComponent implements OnInit, OnDestroy {
         txid: txId,
         block_time: Math.floor(new Date().getTime() / 1000),
         from: [this.txParams.from],
-        to: [this.txParams.to],
+        to: this.txParams.to ? [this.txParams.to] : [],
         type,
         asset_id: assetId,
         value,
