@@ -242,7 +242,10 @@ export function windowCallback(data) {
     if (tabs.length > 0) {
       tabs.forEach((item) => {
         chrome.tabs.sendMessage(item.id, data, () => {
-          // tabCurr = null;
+          // Tabs without our content script (chrome:// pages, the Web Store, a
+          // closed dApp tab, ...) have no receiver. Reading lastError here marks
+          // it handled so Chrome stops logging "Could not establish connection".
+          void chrome.runtime.lastError;
         });
       });
     }

@@ -25,7 +25,7 @@
       <div class="account">
         <img class="avatar" [avatar]="signAddress" />
         <div class="name-group">
-          <p class="name">{{ currentWallet.name }}</p>
+          <p class="name">{{ currentWallet?.name }}</p>
           <p>{{ signAddress | longStr : 10 }}</p>
         </div>
       </div>
