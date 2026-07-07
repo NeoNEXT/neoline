@@ -60,14 +60,24 @@ export function httpPost(url, data, callback, headers?) {
 }
 
 export function getStorage(key, callback) {
-  if (!isExtensionContextValid()) return;
+  // 失败时也必须回调（以 undefined，与 key 不存在时一致），
+  // 否则用 Promise 包装回调的调用方会永久挂起。
+  // Failure paths must still invoke the callback (with undefined, same as a
+  // missing key), or promise-wrapped callers hang forever.
+  if (!isExtensionContextValid()) {
+    callback(undefined);
+    return;
+  }
   try {
     chrome.storage.sync.get([key], (result) => {
-      if (chrome.runtime.lastError) return;
+      if (chrome.runtime.lastError) {
+        callback(undefined);
+        return;
+      }
       callback(result[key]);
     });
   } catch {
-    // context invalidated between the guard and the call; ignore.
+    callback(undefined);
   }
 }
 
@@ -87,12 +97,14 @@ export function clearStorage() {
 export function getLocalStorage(key, callback): Promise<any> {
   return new Promise((resolve) => {
     if (!isExtensionContextValid()) {
+      callback(undefined);
       resolve(undefined);
       return;
     }
     try {
       chrome.storage.local.get([key], (result) => {
         if (chrome.runtime.lastError) {
+          callback(undefined);
           resolve(undefined);
           return;
         }
@@ -100,6 +112,7 @@ export function getLocalStorage(key, callback): Promise<any> {
         resolve(result[key]);
       });
     } catch {
+      callback(undefined);
       resolve(undefined);
     }
   });
