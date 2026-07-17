@@ -1,5 +1,10 @@
 import { Component, OnInit, Input, OnDestroy } from '@angular/core';
-import { NeoTxService, ChromeService, EvmTxService } from '@/app/core';
+import {
+  NeoTxService,
+  ChromeService,
+  EvmTxService,
+  GlobalService,
+} from '@/app/core';
 import { Transaction, TransactionStatus } from '@/models/models';
 import { forkJoin, Unsubscribable, interval } from 'rxjs';
 import { MatDialog } from '@angular/material/dialog';
@@ -45,7 +50,8 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
     private neoTxService: NeoTxService,
     private dialog: MatDialog,
     private store: Store<AppState>,
-    private evmTxService: EvmTxService
+    private evmTxService: EvmTxService,
+    private global: GlobalService
   ) {}
   ngOnInit(): void {
     const account$ = this.store.select('account');
@@ -289,5 +295,15 @@ export class AssetTxPageComponent implements OnInit, OnDestroy {
           this.getEvmAllTxs();
         }
       });
+  }
+
+  viewMoreOnExplorer() {
+    this.global.toExplorer({
+      chain: this.chainType,
+      network: this.network,
+      networkIndex: this.networkIndex,
+      type: 'account',
+      value: this.address,
+    });
   }
 }

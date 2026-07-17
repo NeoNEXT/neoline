@@ -4,6 +4,7 @@ import {
   ChromeService,
   NeoTxService,
   EvmTxService,
+  GlobalService,
 } from '@/app/core';
 import {
   NftTransaction,
@@ -55,7 +56,8 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
     private chrome: ChromeService,
     private neoTxService: NeoTxService,
     private store: Store<AppState>,
-    private evmTxService: EvmTxService
+    private evmTxService: EvmTxService,
+    private global: GlobalService
   ) {}
 
   ngOnInit(): void {
@@ -258,5 +260,15 @@ export class NftTxPageComponent implements OnInit, OnDestroy {
           this.getEvmAllTxs();
         }
       });
+  }
+
+  viewMoreOnExplorer() {
+    this.global.toExplorer({
+      chain: this.chainType,
+      network: this.network,
+      networkIndex: this.networkIndex,
+      type: 'account',
+      value: this.address,
+    });
   }
 }

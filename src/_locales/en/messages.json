@@ -801,7 +801,10 @@
     "message": "Block explorer URL(Optional)"
   },
   "oneMonthTxs": {
-    "message": "Only show transactions from the most recent month"
+    "message": "Only showing transactions from the most recent month"
+  },
+  "viewMoreOnExplorer": {
+    "message": "View more on explorer"
   },
   "LedgerNotSupportComputer": {
     "message": "Ledger not supported on this computer."
@@ -1141,6 +1144,9 @@
   },
   "Connected": {
     "message": "Connected"
+  },
+  "dappConnections": {
+    "message": "Dapp connections"
   },
   "switchToThisAccount": {
     "message": "Switch to this account"

@@ -803,6 +803,9 @@
   "oneMonthTxs": {
     "message": "只显示最近一个月的交易"
   },
+  "viewMoreOnExplorer": {
+    "message": "去浏览器查看更多"
+  },
   "LedgerNotSupportComputer": {
     "message": "此计算机不支持 Ledger 钱包。"
   },
@@ -1141,6 +1144,9 @@
   },
   "Connected": {
     "message": "已连接"
+  },
+  "dappConnections": {
+    "message": "去中心化应用连接"
   },
   "switchToThisAccount": {
     "message": "切换到该账户"

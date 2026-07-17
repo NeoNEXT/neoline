@@ -803,6 +803,9 @@
   "oneMonthTxs": {
     "message": "最近1か月の取引のみ表示"
   },
+  "viewMoreOnExplorer": {
+    "message": "エクスプローラーでもっと見る"
+  },
   "LedgerNotSupportComputer": {
     "message": "このコンピュータはLedgerをサポートしていません。"
   },
@@ -1141,6 +1144,9 @@
   },
   "Connected": {
     "message": "接続済み"
+  },
+  "dappConnections": {
+    "message": "DApp接続"
   },
   "switchToThisAccount": {
     "message": "このアカウントに切り替え"

@@ -133,7 +133,22 @@
     <hr />
   </div>
   <div class="loading" *ngIf="loading">{{ "loading" | translate | async }}</div>
-  <p *ngIf="!loading" class="no-data">
-    {{ "oneMonthTxs" | translate | async }}
-  </p>
+  <div *ngIf="!loading" class="tx-footer">
+    <p class="no-data">{{ "oneMonthTxs" | translate | async }}</p>
+    <button class="view-more" (click)="viewMoreOnExplorer()">
+      {{ "viewMoreOnExplorer" | translate | async }}
+      <svg
+        width="10"
+        height="10"
+        viewBox="0 0 11 11"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.6"
+        stroke-linecap="round"
+      >
+        <path d="M2 9L9 2" />
+        <path d="M5 2H9V6" />
+      </svg>
+    </button>
+  </div>
 </div>

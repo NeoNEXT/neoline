@@ -803,6 +803,9 @@
   "oneMonthTxs": {
     "message": "최근 한 달의 트랜잭션만 표시"
   },
+  "viewMoreOnExplorer": {
+    "message": "탐색기에서 더 보기"
+  },
   "LedgerNotSupportComputer": {
     "message": "이 컴퓨터에서는 Ledger가 지원되지 않습니다."
   },
@@ -1141,6 +1144,9 @@
   },
   "Connected": {
     "message": "연결됨"
+  },
+  "dappConnections": {
+    "message": "DApp 연결"
   },
   "switchToThisAccount": {
     "message": "이 계정으로 전환"

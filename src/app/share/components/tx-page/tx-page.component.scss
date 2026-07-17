@@ -91,12 +91,41 @@
     }
   }
 
-  .no-data,
+  .tx-footer,
   .loading {
-    margin-top: 20px;
+    margin-top: 24px;
     text-align: center;
     font-size: 12px;
-    color: var(--tip-color);
     margin-bottom: 40px;
+  }
+
+  .no-data {
+    color: var(--tip-color);
+    line-height: 18px;
+  }
+
+  .view-more {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: auto;
+    height: auto;
+    margin-top: 10px;
+    padding: 5px 12px;
+    border: 1px solid rgba(6, 204, 171, 0.3);
+    border-radius: 14px;
+    background: transparent;
+    color: var(--theme-color);
+    font-family: NeverMind-Medium;
+    font-size: 12px;
+    line-height: normal;
+    cursor: pointer;
+    &:hover {
+      background: rgba(6, 204, 171, 0.1);
+      border-color: rgba(6, 204, 171, 0.6);
+    }
+    svg {
+      flex-shrink: 0;
+    }
   }
 }
