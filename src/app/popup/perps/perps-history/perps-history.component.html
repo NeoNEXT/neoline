@@ -1,0 +1,35 @@
+<div class="perps-history">
+  <div class="history-header">
+    <svg class="back" width="9" height="16" viewBox="0 0 9 16" fill="none" (click)="back()">
+      <path
+        d="M8 1L1 8L8 15"
+        stroke="var(--title-color)"
+        stroke-width="1.8"
+        stroke-linecap="round"
+      />
+    </svg>
+    <div class="title">{{ "perpsHistoryTitle" | translate | async }}</div>
+  </div>
+
+  <div class="loading" *ngIf="loading">
+    <loading-dot></loading-dot>
+  </div>
+
+  <div class="fill-row" *ngFor="let fill of fills">
+    <div class="fill-icon" [class.sell]="!isBuy(fill)">
+      {{ isBuy(fill) ? "↗" : "↘" }}
+    </div>
+    <div class="fill-info">
+      <div class="dir">{{ fill.dir }} {{ fill.coin }}</div>
+      <div class="time">{{ fillTime(fill) }}</div>
+    </div>
+    <div class="fill-amount">
+      <div class="size">{{ fill.sz }} {{ fill.coin }}</div>
+      <div class="price">${{ formatPrice(+fill.px) }}</div>
+    </div>
+  </div>
+
+  <p class="empty" *ngIf="!loading && fills.length === 0">
+    {{ "perpsNoTransactions" | translate | async }}
+  </p>
+</div>

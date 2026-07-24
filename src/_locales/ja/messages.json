@@ -1753,5 +1753,209 @@
   },
   "estimatedBalanceChangesReceive": {
     "message": "受信"
+  },
+  "perps": {
+    "message": "無期限先物"
+  },
+  "perpsAccountValue": {
+    "message": "無期限先物口座残高"
+  },
+  "perpsMarginRatio": {
+    "message": "証拠金率"
+  },
+  "perpsAvailableMargin": {
+    "message": "利用可能証拠金"
+  },
+  "perpsUsedMargin": {
+    "message": "使用中"
+  },
+  "perpsSpotSeparate": {
+    "message": "現物（振替が必要）"
+  },
+  "perpsDeposit": {
+    "message": "入金"
+  },
+  "perpsWithdraw": {
+    "message": "出金"
+  },
+  "perpsHistory": {
+    "message": "履歴"
+  },
+  "perpsHistoryTitle": {
+    "message": "無期限先物の履歴"
+  },
+  "perpsPositions": {
+    "message": "ポジション"
+  },
+  "perpsCloseAll": {
+    "message": "すべて決済"
+  },
+  "perpsLong": {
+    "message": "ロング"
+  },
+  "perpsShort": {
+    "message": "ショート"
+  },
+  "perpsEntry": {
+    "message": "エントリー"
+  },
+  "perpsLiq": {
+    "message": "清算"
+  },
+  "perpsAddPosition": {
+    "message": "追加"
+  },
+  "perpsClose": {
+    "message": "決済"
+  },
+  "perpsFundPrompt": {
+    "message": "無期限先物口座に入金すると取引を開始できます。"
+  },
+  "perpsFilterAll": {
+    "message": "すべて"
+  },
+  "perpsFilterNeo": {
+    "message": "Neo エコシステム"
+  },
+  "perpsFilterMajor": {
+    "message": "主要銘柄"
+  },
+  "perpsFilterGainers": {
+    "message": "値上がり"
+  },
+  "perpsSearchMarket": {
+    "message": "銘柄を検索"
+  },
+  "perpsNoMarkets": {
+    "message": "該当する銘柄がありません"
+  },
+  "perpsDayVolume": {
+    "message": "24h出来高"
+  },
+  "perpsOpenInterest": {
+    "message": "建玉"
+  },
+  "perpsFundingRate": {
+    "message": "資金調達率"
+  },
+  "perpsMyPosition": {
+    "message": "保有ポジション"
+  },
+  "perpsRecentActivity": {
+    "message": "最近のアクティビティ"
+  },
+  "perpsNoTransactions": {
+    "message": "取引はありません"
+  },
+  "perpsNoChartData": {
+    "message": "チャートデータなし"
+  },
+  "perpsRiskTip": {
+    "message": "無期限先物取引には大きなリスクがあり、警告なしに投資額全体を瞬時に失う可能性があります。取引の責任はすべてお客様が負います。"
+  },
+  "perpsLeverageRiskTip": {
+    "message": "無期限先物はレバレッジ商品であり、損失が当初証拠金を超える可能性があります。失っても問題のない資金のみでお取引ください。"
+  },
+  "perpsMarketOrder": {
+    "message": "成行"
+  },
+  "perpsLimitOrder": {
+    "message": "指値"
+  },
+  "perpsLimitPrice": {
+    "message": "指値価格"
+  },
+  "perpsAvailable": {
+    "message": "利用可能"
+  },
+  "perpsAmount": {
+    "message": "金額"
+  },
+  "perpsMax": {
+    "message": "すべて"
+  },
+  "perpsLeverage": {
+    "message": "レバレッジ"
+  },
+  "perpsMaxLeverage": {
+    "message": "最大"
+  },
+  "perpsLiqPrice": {
+    "message": "清算価格"
+  },
+  "perpsMarginFee": {
+    "message": "証拠金 / 手数料"
+  },
+  "perpsSize": {
+    "message": "数量"
+  },
+  "perpsInsufficientMargin": {
+    "message": "利用可能な証拠金が不足しています"
+  },
+  "perpsConfirmClose": {
+    "message": "決済"
+  },
+  "perpsFundingTitle": {
+    "message": "無期限先物の資金"
+  },
+  "perpsWalletBalance": {
+    "message": "ウォレット残高"
+  },
+  "perpsAvailableBalance": {
+    "message": "利用可能残高"
+  },
+  "perpsBalance": {
+    "message": "残高"
+  },
+  "perpsArrivalTime": {
+    "message": "着金時間"
+  },
+  "perpsNetworkFee": {
+    "message": "ネットワーク手数料"
+  },
+  "perpsMinDeposit": {
+    "message": "最低入金額"
+  },
+  "perpsProviderFee": {
+    "message": "プロバイダー手数料"
+  },
+  "perpsYouReceive": {
+    "message": "受取額"
+  },
+  "perpsBelowMinimum": {
+    "message": "最低額を下回っています"
+  },
+  "perpsExceedsBalance": {
+    "message": "残高を超えています"
+  },
+  "perpsMaxFunding": {
+    "message": "最大"
+  },
+  "perpsStats": {
+    "message": "統計データ"
+  },
+  "perpsDayVolumeFull": {
+    "message": "24時間出来高"
+  },
+  "perpsOpenInterestFull": {
+    "message": "未決済建玉"
+  },
+  "perpsFundingRateFull": {
+    "message": "資金調達率"
+  },
+  "perpsOraclePrice": {
+    "message": "オラクル価格"
+  },
+  "perpsLearnBasics": {
+    "message": "無期限先物の基礎を学ぶ"
+  },
+  "perpsOpenInterestTip": {
+    "message": "この銘柄の未決済ポジションの想定元本合計。"
+  },
+  "perpsFundingRateTip": {
+    "message": "ロングとショートが1時間ごとに交換するレートで、プラスの場合はロングがショートに支払います。カウントダウンは次回決済までの時間です。"
+  },
+  "perpsOracleTip": {
+    "message": "資金調達率と証拠金の計算に使用される外部スポット価格です。"
   }
 }

@@ -122,6 +122,13 @@
           [class]="{ selected: selectedIndex === 2 }"
           (click)="selectedIndex = 2"
         >
+          {{ "perps" | translate | async }}
+        </span>
+        <span
+          *ngIf="chainType === 'NeoX'"
+          [class]="{ selected: selectedIndex === 3 }"
+          (click)="selectedIndex = 3"
+        >
           {{ "Activity" | translate | async }}
         </span>
       </div>
@@ -156,7 +163,14 @@
         [symbol]="balance?.symbol"
       ></app-asset-tx-page>
     </div>
-    <div *ngIf="selectedIndex === 2">
+    <div *ngIf="selectedIndex === 2 && chainType === 'NeoX'">
+      <app-perps></app-perps>
+      <p class="get-help" (click)="getSupport()">
+        {{ "GetSupport" | translate | async }}{{ " " }}
+        <img src="assets/images/common/support-arrow.svg" alt="" />
+      </p>
+    </div>
+    <div *ngIf="selectedIndex === 3">
       <app-asset-tx-page></app-asset-tx-page>
       <p class="get-help" (click)="getSupport('txs')">
         {{ "GetSupport" | translate | async }}{{ " " }}

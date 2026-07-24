@@ -1,0 +1,9 @@
+<div class="perps-chart">
+  <div #chartContainer class="chart-container"></div>
+  <div class="chart-overlay" *ngIf="loading">
+    <loading-dot></loading-dot>
+  </div>
+  <p class="chart-overlay" *ngIf="isEmpty">
+    {{ "perpsNoChartData" | translate | async }}
+  </p>
+</div>

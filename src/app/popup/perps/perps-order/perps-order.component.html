@@ -1,0 +1,152 @@
+<div class="perps-order">
+  <div class="order-header">
+    <svg class="back" width="9" height="16" viewBox="0 0 9 16" fill="none" (click)="back()">
+      <path
+        d="M8 1L1 8L8 15"
+        stroke="var(--title-color)"
+        stroke-width="1.8"
+        stroke-linecap="round"
+      />
+    </svg>
+    <img *ngIf="coinLogo(coin)" [src]="coinLogo(coin)" alt="" />
+    <span
+      class="letter-logo"
+      *ngIf="!coinLogo(coin)"
+      [style.background]="coinColor(coin)"
+      >{{ coin.charAt(0) }}</span
+    >
+    <div class="pair">{{ coin }}-USDC</div>
+    <span class="price">${{ market ? formatPrice(market.markPx) : "--" }}</span>
+    <span
+      class="change"
+      *ngIf="market"
+      [class.negative]="market.changePercent < 0"
+    >
+      {{ formatSignedPercent(market.changePercent) }}
+    </span>
+  </div>
+
+  <!-- 做多 / 做空 -->
+  <div class="side-toggle" [class.disabled]="closeMode">
+    <div
+      class="option"
+      [class.active-long]="isLong"
+      (click)="setSide('long')"
+    >
+      {{ "perpsLong" | translate | async }}
+    </div>
+    <div
+      class="option"
+      [class.active-short]="!isLong"
+      (click)="setSide('short')"
+    >
+      {{ "perpsShort" | translate | async }}
+    </div>
+  </div>
+
+  <div class="order-type">
+    <span
+      class="chip"
+      [class.active]="orderType === 'market'"
+      (click)="setOrderType('market')"
+    >
+      {{ "perpsMarketOrder" | translate | async }}
+    </span>
+    <span
+      class="chip plain"
+      [class.active]="orderType === 'limit'"
+      (click)="setOrderType('limit')"
+    >
+      {{ "perpsLimitOrder" | translate | async }}
+    </span>
+    <span class="available">
+      {{ "perpsAvailable" | translate | async }}
+      <b>{{ available | number: "1.2-2" }} USDC</b>
+    </span>
+  </div>
+
+  <!-- 限价 -->
+  <div class="input-box" *ngIf="orderType === 'limit'">
+    <span class="label">{{ "perpsLimitPrice" | translate | async }}</span>
+    <span class="input-value">
+      <input type="number" [(ngModel)]="limitPrice" />
+      <span class="unit">USDC</span>
+    </span>
+  </div>
+
+  <!-- 金额 -->
+  <div class="input-box">
+    <span class="label">{{ "perpsAmount" | translate | async }}</span>
+    <span class="input-value">
+      <input
+        type="number"
+        [(ngModel)]="amount"
+        (ngModelChange)="onAmountChange()"
+        placeholder="0"
+      />
+      <span class="unit">USDC</span>
+    </span>
+  </div>
+
+  <div class="percent-row">
+    <span
+      *ngFor="let percent of [25, 50, 75, 100]"
+      [class.active]="activePercent === percent"
+      (click)="setPercent(percent)"
+    >
+      {{ percent === 100 ? ("perpsMax" | translate | async) : percent + "%" }}
+    </span>
+  </div>
+
+  <!-- 杠杆档位 -->
+  <ng-container *ngIf="!closeMode">
+    <div class="leverage-head">
+      <span class="label">{{ "perpsLeverage" | translate | async }}</span>
+      <span class="max" *ngIf="market"
+        >{{ "perpsMaxLeverage" | translate | async }}
+        {{ market.maxLeverage }}x</span
+      >
+    </div>
+    <div class="leverage-row">
+      <span
+        *ngFor="let tier of leverageTiers"
+        [class.active]="leverage === tier"
+        (click)="setLeverage(tier)"
+        >{{ tier }}x</span
+      >
+    </div>
+  </ng-container>
+
+  <!-- 预估 -->
+  <div class="summary" *ngIf="preview">
+    <div class="row">
+      <span class="label">{{ "perpsLiqPrice" | translate | async }}</span>
+      <span class="value">${{ formatPrice(preview.liquidationPx) }}</span>
+    </div>
+    <div class="row">
+      <span class="label">{{ "perpsMarginFee" | translate | async }}</span>
+      <span class="value"
+        >{{ formatUsd(preview.margin) }} / {{ formatUsd(preview.fee) }}</span
+      >
+    </div>
+    <div class="row">
+      <span class="label">{{ "perpsSize" | translate | async }}</span>
+      <span class="value">{{ preview.size }} {{ coin }}</span>
+    </div>
+  </div>
+
+  <p class="error-tip" *ngIf="insufficient">
+    {{ "perpsInsufficientMargin" | translate | async }}
+  </p>
+
+  <div class="submit-wrap">
+    <button
+      [class.short]="!isLong"
+      [disabled]="!canSubmit"
+      (click)="submit()"
+    >
+      {{ ctaLabel | translate | async }} {{ coin }}
+      <ng-container *ngIf="!closeMode"> · {{ leverage }}x</ng-container>
+    </button>
+  </div>
+</div>

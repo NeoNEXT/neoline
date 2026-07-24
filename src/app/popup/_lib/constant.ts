@@ -41,6 +41,7 @@ export enum STORAGE_NAME {
   connectedWebsites = 'connectedWebsitesV2', // dAPi connect status
   authAddress = 'authAddress',
   InvokeArgsArray = 'InvokeArgsArray', // dAPi N3 invoke args
+  perpsFavorites = 'perpsFavorites', // starred perps markets
   isBackupLater = 'isBackupLater', // show backup tip if create wallet
   hasLoginAddress = 'hasLoginAddress', // has login address
   shouldFindNode = 'shouldFindNode',
@@ -166,6 +167,10 @@ export const STORAGE_VALUE_MESSAGE = {
   },
   InvokeArgsArray: {
     type: STORAGE_VALUE_TYPE.object,
+    isLocal: true,
+  },
+  perpsFavorites: {
+    type: STORAGE_VALUE_TYPE.array,
     isLocal: true,
   },
   isBackupLater: {

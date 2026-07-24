@@ -6,4 +6,5 @@ export const environment = {
   production: true,
   name: 'default',
   mainApiBase: 'https://api.neoline.io',
+  perpsNetwork: 'mainnet' as 'mainnet' | 'testnet',
 };

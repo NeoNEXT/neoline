@@ -1753,5 +1753,209 @@
   },
   "estimatedBalanceChangesReceive": {
     "message": "您接收"
+  },
+  "perps": {
+    "message": "永续合约"
+  },
+  "perpsAccountValue": {
+    "message": "合约账户净值"
+  },
+  "perpsMarginRatio": {
+    "message": "保证金率"
+  },
+  "perpsAvailableMargin": {
+    "message": "可用保证金"
+  },
+  "perpsUsedMargin": {
+    "message": "已用"
+  },
+  "perpsSpotSeparate": {
+    "message": "现货（需划转）"
+  },
+  "perpsDeposit": {
+    "message": "存入"
+  },
+  "perpsWithdraw": {
+    "message": "提取"
+  },
+  "perpsHistory": {
+    "message": "历史"
+  },
+  "perpsHistoryTitle": {
+    "message": "合约交易历史"
+  },
+  "perpsPositions": {
+    "message": "持仓"
+  },
+  "perpsCloseAll": {
+    "message": "全部平仓"
+  },
+  "perpsLong": {
+    "message": "做多"
+  },
+  "perpsShort": {
+    "message": "做空"
+  },
+  "perpsEntry": {
+    "message": "开仓"
+  },
+  "perpsLiq": {
+    "message": "强平"
+  },
+  "perpsAddPosition": {
+    "message": "加仓"
+  },
+  "perpsClose": {
+    "message": "平仓"
+  },
+  "perpsFundPrompt": {
+    "message": "向永续合约账户存入资金即可开始交易。"
+  },
+  "perpsFilterAll": {
+    "message": "全部"
+  },
+  "perpsFilterNeo": {
+    "message": "Neo 生态"
+  },
+  "perpsFilterMajor": {
+    "message": "主流币"
+  },
+  "perpsFilterGainers": {
+    "message": "涨幅榜"
+  },
+  "perpsSearchMarket": {
+    "message": "搜索市场"
+  },
+  "perpsNoMarkets": {
+    "message": "没有找到市场"
+  },
+  "perpsDayVolume": {
+    "message": "24h量"
+  },
+  "perpsOpenInterest": {
+    "message": "持仓量"
+  },
+  "perpsFundingRate": {
+    "message": "费率"
+  },
+  "perpsMyPosition": {
+    "message": "我的持仓"
+  },
+  "perpsRecentActivity": {
+    "message": "最近活动"
+  },
+  "perpsNoTransactions": {
+    "message": "暂无交易"
+  },
+  "perpsNoChartData": {
+    "message": "暂无图表数据"
+  },
+  "perpsRiskTip": {
+    "message": "永续合约交易存在很大风险，您可能会在毫无预警的情况下瞬间损失全部投资。交易风险完全由您自行承担。"
+  },
+  "perpsLeverageRiskTip": {
+    "message": "永续合约为杠杆产品，亏损可能超过初始保证金。请仅使用您可承受损失的资金进行交易。"
+  },
+  "perpsMarketOrder": {
+    "message": "市场型"
+  },
+  "perpsLimitOrder": {
+    "message": "限价"
+  },
+  "perpsLimitPrice": {
+    "message": "限价"
+  },
+  "perpsAvailable": {
+    "message": "可用"
+  },
+  "perpsAmount": {
+    "message": "金额"
+  },
+  "perpsMax": {
+    "message": "全部"
+  },
+  "perpsLeverage": {
+    "message": "杠杆"
+  },
+  "perpsMaxLeverage": {
+    "message": "最高"
+  },
+  "perpsLiqPrice": {
+    "message": "强平价格"
+  },
+  "perpsMarginFee": {
+    "message": "保证金 / 费用"
+  },
+  "perpsSize": {
+    "message": "数量"
+  },
+  "perpsInsufficientMargin": {
+    "message": "可用保证金不足"
+  },
+  "perpsConfirmClose": {
+    "message": "平仓"
+  },
+  "perpsFundingTitle": {
+    "message": "合约账户资金"
+  },
+  "perpsWalletBalance": {
+    "message": "钱包余额"
+  },
+  "perpsAvailableBalance": {
+    "message": "可用余额"
+  },
+  "perpsBalance": {
+    "message": "余额"
+  },
+  "perpsArrivalTime": {
+    "message": "到账时间"
+  },
+  "perpsNetworkFee": {
+    "message": "网络费用"
+  },
+  "perpsMinDeposit": {
+    "message": "最低存入"
+  },
+  "perpsProviderFee": {
+    "message": "服务商费用"
+  },
+  "perpsYouReceive": {
+    "message": "您收到"
+  },
+  "perpsBelowMinimum": {
+    "message": "低于最低限额"
+  },
+  "perpsExceedsBalance": {
+    "message": "超出可用余额"
+  },
+  "perpsMaxFunding": {
+    "message": "最大"
+  },
+  "perpsStats": {
+    "message": "统计数据"
+  },
+  "perpsDayVolumeFull": {
+    "message": "24小时交易量"
+  },
+  "perpsOpenInterestFull": {
+    "message": "未平仓合约量"
+  },
+  "perpsFundingRateFull": {
+    "message": "资金费率"
+  },
+  "perpsOraclePrice": {
+    "message": "预言机价格"
+  },
+  "perpsLearnBasics": {
+    "message": "了解永续合约的基础知识"
+  },
+  "perpsOpenInterestTip": {
+    "message": "该市场所有未平仓头寸的名义价值总和。"
+  },
+  "perpsFundingRateTip": {
+    "message": "多空双方每小时互付的费率，为正时多头支付空头。倒计时为距下次结算的时间。"
+  },
+  "perpsOracleTip": {
+    "message": "用于资金费与保证金计算的外部现货价格。"
   }
 }

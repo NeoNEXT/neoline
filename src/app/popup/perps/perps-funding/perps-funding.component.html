@@ -1,0 +1,133 @@
+<div class="perps-funding">
+  <div class="funding-header">
+    <svg class="back" width="9" height="16" viewBox="0 0 9 16" fill="none" (click)="back()">
+      <path
+        d="M8 1L1 8L8 15"
+        stroke="var(--title-color)"
+        stroke-width="1.8"
+        stroke-linecap="round"
+      />
+    </svg>
+    <div class="title">{{ "perpsFundingTitle" | translate | async }}</div>
+  </div>
+
+  <div class="funding-tabs">
+    <div class="tab" [class.active]="isDeposit" (click)="setTab('deposit')">
+      {{ "perpsDeposit" | translate | async }}
+    </div>
+    <div class="tab" [class.active]="!isDeposit" (click)="setTab('withdraw')">
+      {{ "perpsWithdraw" | translate | async }}
+    </div>
+  </div>
+
+  <div class="amount-area">
+    <div class="amount-input">
+      <span class="prefix">$</span>
+      <input
+        type="number"
+        [(ngModel)]="amount"
+        (ngModelChange)="onAmountChange()"
+        placeholder="0"
+      />
+    </div>
+    <div class="balance-tip">
+      <ng-container *ngIf="isDeposit">
+        {{ "perpsWalletBalance" | translate | async }}
+        {{ walletBalance | number: "1.2-2" }} {{ token.symbol }}
+      </ng-container>
+      <ng-container *ngIf="!isDeposit">
+        {{ "perpsAvailableBalance" | translate | async }}
+        {{ formatUsd(account?.availableBalance || 0) }}
+      </ng-container>
+    </div>
+
+    <div class="preset-row" *ngIf="isDeposit">
+      <span
+        *ngFor="let preset of depositPresets"
+        [class.active]="activePreset === preset"
+        (click)="setPreset(preset)"
+        >${{ preset }}</span
+      >
+      <span [class.active]="activePreset === -1" (click)="setMax()">
+        {{ "perpsMaxFunding" | translate | async }}
+      </span>
+    </div>
+
+    <div class="preset-row" *ngIf="!isDeposit">
+      <span
+        *ngFor="let percent of withdrawPercents"
+        [class.active]="activePreset === percent"
+        (click)="setPercent(percent)"
+        >{{ percent }}%</span
+      >
+      <span [class.active]="activePreset === -1" (click)="setMax()">
+        {{ "perpsMaxFunding" | translate | async }}
+      </span>
+    </div>
+  </div>
+
+  <div class="spacer"></div>
+
+  <!-- 资产来源 / 收款 -->
+  <div class="asset-row">
+    <img src="assets/images/token/usdc.webp" alt="" />
+    <div class="asset-info">
+      <div class="symbol">{{ token.symbol }}</div>
+      <div class="meta">
+        {{ token.chainName }}
+        <ng-container *ngIf="isDeposit">
+          · {{ "perpsBalance" | translate | async }}
+          {{ walletBalance | number: "1.2-2" }}
+        </ng-container>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-rows">
+    <ng-container *ngIf="isDeposit">
+      <div class="row">
+        <span class="label">{{ "perpsArrivalTime" | translate | async }}</span>
+        <span class="value">~1 min</span>
+      </div>
+      <div class="row">
+        <span class="label">{{ "perpsNetworkFee" | translate | async }}</span>
+        <span class="value">~$0.02</span>
+      </div>
+      <div class="row">
+        <span class="label">{{ "perpsMinDeposit" | translate | async }}</span>
+        <span class="value">{{ minDeposit }} {{ token.symbol }}</span>
+      </div>
+    </ng-container>
+    <ng-container *ngIf="!isDeposit">
+      <div class="row">
+        <span class="label">{{ "perpsProviderFee" | translate | async }}</span>
+        <span class="value">{{ formatUsd(withdrawFee) }}</span>
+      </div>
+      <div class="row">
+        <span class="label">{{ "perpsArrivalTime" | translate | async }}</span>
+        <span class="value">~5 min</span>
+      </div>
+      <div class="row">
+        <span class="label">{{ "perpsYouReceive" | translate | async }}</span>
+        <span class="value">{{ formatUsd(receiveAmount) }}</span>
+      </div>
+    </ng-container>
+  </div>
+
+  <p class="error-tip" *ngIf="belowMinimum">
+    {{ "perpsBelowMinimum" | translate | async }}
+    {{ isDeposit ? minDeposit : minWithdraw }} {{ token.symbol }}
+  </p>
+  <p class="error-tip" *ngIf="exceedsBalance">
+    {{ "perpsExceedsBalance" | translate | async }}
+  </p>
+
+  <p class="risk-tip">{{ "perpsLeverageRiskTip" | translate | async }}</p>
+
+  <div class="submit-wrap">
+    <button [disabled]="!canSubmit" (click)="submit()">
+      {{ (isDeposit ? "perpsDeposit" : "perpsWithdraw") | translate | async }}
+      <ng-container *ngIf="amount"> {{ formatUsd(amount) }}</ng-container>
+    </button>
+  </div>
+</div>

@@ -1,0 +1,90 @@
+.perps-history {
+  min-height: 100vh;
+  background: var(--body-background-color);
+  padding-bottom: 24px;
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  padding: 18px 16px 8px;
+
+  .back {
+    cursor: pointer;
+    flex-shrink: 0;
+  }
+
+  .title {
+    flex: 1;
+    text-align: center;
+    margin-right: 9px;
+    font-family: NeverMind-Medium;
+    font-size: 16px;
+    color: var(--important-title-color);
+  }
+}
+
+.loading {
+  display: flex;
+  justify-content: center;
+  padding: 32px 0;
+}
+
+.fill-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 24px;
+  border-bottom: 1px solid var(--line-color);
+
+  .fill-icon {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    background: rgba(6, 204, 171, 0.1);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--theme-color);
+    font-size: 15px;
+    flex-shrink: 0;
+    &.sell {
+      background: rgba(250, 85, 85, 0.1);
+      color: var(--error-color);
+    }
+  }
+
+  .fill-info {
+    flex: 1;
+    .dir {
+      font-family: NeverMind-Medium;
+      font-size: 14px;
+      color: var(--title-color);
+    }
+    .time {
+      font-size: 12px;
+      color: var(--sub-title-color);
+      margin-top: 4px;
+    }
+  }
+
+  .fill-amount {
+    text-align: right;
+    .size {
+      font-size: 14px;
+      color: var(--title-color);
+    }
+    .price {
+      font-size: 12px;
+      color: var(--sub-title-color);
+      margin-top: 4px;
+    }
+  }
+}
+
+.empty {
+  padding: 48px 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--tip-color);
+}

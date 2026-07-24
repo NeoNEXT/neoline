@@ -1753,5 +1753,209 @@
   },
   "estimatedBalanceChangesReceive": {
     "message": "받기"
+  },
+  "perps": {
+    "message": "무기한 선물"
+  },
+  "perpsAccountValue": {
+    "message": "무기한 계좌 잔액"
+  },
+  "perpsMarginRatio": {
+    "message": "증거금 비율"
+  },
+  "perpsAvailableMargin": {
+    "message": "사용 가능 증거금"
+  },
+  "perpsUsedMargin": {
+    "message": "사용됨"
+  },
+  "perpsSpotSeparate": {
+    "message": "현물 (이체 필요)"
+  },
+  "perpsDeposit": {
+    "message": "입금"
+  },
+  "perpsWithdraw": {
+    "message": "출금"
+  },
+  "perpsHistory": {
+    "message": "내역"
+  },
+  "perpsHistoryTitle": {
+    "message": "무기한 선물 내역"
+  },
+  "perpsPositions": {
+    "message": "포지션"
+  },
+  "perpsCloseAll": {
+    "message": "전체 청산"
+  },
+  "perpsLong": {
+    "message": "롱"
+  },
+  "perpsShort": {
+    "message": "숏"
+  },
+  "perpsEntry": {
+    "message": "진입가"
+  },
+  "perpsLiq": {
+    "message": "청산"
+  },
+  "perpsAddPosition": {
+    "message": "추가"
+  },
+  "perpsClose": {
+    "message": "청산"
+  },
+  "perpsFundPrompt": {
+    "message": "무기한 선물 계좌에 입금하면 거래를 시작할 수 있습니다."
+  },
+  "perpsFilterAll": {
+    "message": "전체"
+  },
+  "perpsFilterNeo": {
+    "message": "Neo 생태계"
+  },
+  "perpsFilterMajor": {
+    "message": "주요 코인"
+  },
+  "perpsFilterGainers": {
+    "message": "상승률"
+  },
+  "perpsSearchMarket": {
+    "message": "마켓 검색"
+  },
+  "perpsNoMarkets": {
+    "message": "마켓을 찾을 수 없습니다"
+  },
+  "perpsDayVolume": {
+    "message": "24시간 거래량"
+  },
+  "perpsOpenInterest": {
+    "message": "미결제약정"
+  },
+  "perpsFundingRate": {
+    "message": "펀딩"
+  },
+  "perpsMyPosition": {
+    "message": "내 포지션"
+  },
+  "perpsRecentActivity": {
+    "message": "최근 활동"
+  },
+  "perpsNoTransactions": {
+    "message": "거래 없음"
+  },
+  "perpsNoChartData": {
+    "message": "차트 데이터 없음"
+  },
+  "perpsRiskTip": {
+    "message": "무기한 선물 거래는 큰 위험을 수반하며, 경고 없이 순식간에 투자금 전액을 잃을 수 있습니다. 거래 책임은 전적으로 본인에게 있습니다."
+  },
+  "perpsLeverageRiskTip": {
+    "message": "무기한 선물은 레버리지 상품으로 손실이 초기 증거금을 초과할 수 있습니다. 잃어도 괜찮은 자금으로만 거래하세요."
+  },
+  "perpsMarketOrder": {
+    "message": "시장가"
+  },
+  "perpsLimitOrder": {
+    "message": "지정가"
+  },
+  "perpsLimitPrice": {
+    "message": "지정가"
+  },
+  "perpsAvailable": {
+    "message": "사용 가능"
+  },
+  "perpsAmount": {
+    "message": "금액"
+  },
+  "perpsMax": {
+    "message": "전체"
+  },
+  "perpsLeverage": {
+    "message": "레버리지"
+  },
+  "perpsMaxLeverage": {
+    "message": "최대"
+  },
+  "perpsLiqPrice": {
+    "message": "청산가"
+  },
+  "perpsMarginFee": {
+    "message": "증거금 / 수수료"
+  },
+  "perpsSize": {
+    "message": "수량"
+  },
+  "perpsInsufficientMargin": {
+    "message": "사용 가능한 증거금이 부족합니다"
+  },
+  "perpsConfirmClose": {
+    "message": "청산"
+  },
+  "perpsFundingTitle": {
+    "message": "무기한 선물 자금"
+  },
+  "perpsWalletBalance": {
+    "message": "지갑 잔액"
+  },
+  "perpsAvailableBalance": {
+    "message": "사용 가능 잔액"
+  },
+  "perpsBalance": {
+    "message": "잔액"
+  },
+  "perpsArrivalTime": {
+    "message": "도착 시간"
+  },
+  "perpsNetworkFee": {
+    "message": "네트워크 수수료"
+  },
+  "perpsMinDeposit": {
+    "message": "최소 입금액"
+  },
+  "perpsProviderFee": {
+    "message": "제공자 수수료"
+  },
+  "perpsYouReceive": {
+    "message": "받는 금액"
+  },
+  "perpsBelowMinimum": {
+    "message": "최소 금액보다 적습니다"
+  },
+  "perpsExceedsBalance": {
+    "message": "잔액을 초과합니다"
+  },
+  "perpsMaxFunding": {
+    "message": "최대"
+  },
+  "perpsStats": {
+    "message": "통계"
+  },
+  "perpsDayVolumeFull": {
+    "message": "24시간 거래량"
+  },
+  "perpsOpenInterestFull": {
+    "message": "미결제약정"
+  },
+  "perpsFundingRateFull": {
+    "message": "펀딩 비율"
+  },
+  "perpsOraclePrice": {
+    "message": "오라클 가격"
+  },
+  "perpsLearnBasics": {
+    "message": "무기한 선물 기초 알아보기"
+  },
+  "perpsOpenInterestTip": {
+    "message": "이 마켓의 모든 미결제 포지션 명목 가치 합계입니다."
+  },
+  "perpsFundingRateTip": {
+    "message": "롱과 숏이 매시간 주고받는 비율로, 양수면 롱이 숏에게 지급합니다. 카운트다운은 다음 정산까지의 시간입니다."
+  },
+  "perpsOracleTip": {
+    "message": "펀딩 및 증거금 계산에 사용되는 외부 현물 가격입니다."
   }
 }

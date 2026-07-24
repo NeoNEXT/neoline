@@ -1,0 +1,338 @@
+:host {
+  /* Account card surfaces are one step darker than the page, in both themes. */
+  --perps-card-bg: #f4f4f4;
+  --perps-card-border: #e9f0f0;
+}
+:host-context([data-theme-style="dark-theme"]) {
+  --perps-card-bg: rgba(255, 255, 255, 0.05);
+  --perps-card-border: #303135;
+}
+
+.perps-tab {
+  padding-bottom: 8px;
+}
+
+.account-card {
+  margin: 16px 22px 0;
+  background: var(--perps-card-bg);
+  border: 2px solid var(--perps-card-border);
+  border-radius: 8px;
+  padding: 16px;
+
+  .card-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    .label {
+      font-size: 13px;
+      color: var(--sub-title-color);
+    }
+    .ratio {
+      color: var(--theme-color);
+    }
+  }
+
+  .card-value {
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    margin-top: 8px;
+    .value {
+      font-family: NeverMind-DemiBold;
+      font-size: 26px;
+      color: var(--important-title-color);
+    }
+  }
+
+  .card-margin {
+    font-size: 12px;
+    color: var(--sub-title-color);
+    margin-top: 6px;
+  }
+
+  .card-spot {
+    font-size: 12px;
+    color: var(--sub-title-color);
+    margin-top: 4px;
+  }
+
+  .card-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: 14px;
+    button {
+      flex: 1;
+      height: 36px;
+      border-radius: 20px;
+      font-family: NeverMind-Medium;
+      font-size: 13px;
+      cursor: pointer;
+      &.primary {
+        border: none;
+        background: var(--theme-color);
+        color: var(--btn-title-color);
+      }
+      &.ghost {
+        border: 1px solid var(--theme-color);
+        background: transparent;
+        color: var(--theme-color);
+      }
+      &.plain {
+        border: 1px solid var(--border-color);
+        background: var(--body-background-color);
+        color: var(--title-color);
+      }
+    }
+  }
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px 10px;
+  .title {
+    font-family: NeverMind-Medium;
+    font-size: 14px;
+    color: var(--title-color);
+  }
+  .action {
+    font-size: 12px;
+    color: var(--theme-color);
+    cursor: pointer;
+  }
+}
+
+.positions {
+  display: flex;
+  gap: 12px;
+  padding: 0 22px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+
+  .position-card {
+    min-width: 228px;
+    border: 1px solid var(--border-color);
+    border-radius: 10px;
+    padding: 14px;
+    cursor: pointer;
+  }
+
+  .position-head {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    img,
+    .letter-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+    }
+    .coin {
+      font-family: NeverMind-Medium;
+      font-size: 14px;
+      color: var(--title-color);
+    }
+    .side-chip {
+      font-size: 11px;
+      color: var(--theme-color);
+      background: rgba(6, 204, 171, 0.1);
+      padding: 2px 6px;
+      border-radius: 4px;
+      &.short {
+        color: var(--error-color);
+        background: rgba(250, 85, 85, 0.1);
+      }
+    }
+  }
+
+  .position-pnl {
+    font-family: NeverMind-DemiBold;
+    font-size: 20px;
+    color: var(--theme-color);
+    margin-top: 12px;
+    &.negative {
+      color: var(--error-color);
+    }
+    .percent {
+      font-size: 13px;
+    }
+  }
+
+  .position-meta {
+    font-size: 12px;
+    color: var(--sub-title-color);
+    margin-top: 6px;
+    line-height: 1.5;
+  }
+
+  .position-actions {
+    display: flex;
+    gap: 8px;
+    margin-top: 12px;
+    button {
+      flex: 1;
+      height: 30px;
+      border-radius: 16px;
+      font-family: NeverMind-Medium;
+      font-size: 12px;
+      cursor: pointer;
+      &.plain {
+        border: 1px solid var(--border-color);
+        background: var(--body-background-color);
+        color: var(--title-color);
+      }
+      &.danger {
+        border: 1px solid var(--error-color);
+        background: transparent;
+        color: var(--error-color);
+      }
+    }
+  }
+}
+
+.fund-prompt {
+  padding: 24px;
+  text-align: center;
+  p {
+    font-size: 13px;
+    color: var(--sub-title-color);
+    line-height: 1.6;
+  }
+}
+
+.market-filter {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 22px 22px 12px;
+
+  .chip {
+    font-size: 13px;
+    color: var(--sub-title-color);
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 5px 13px;
+    cursor: pointer;
+    white-space: nowrap;
+
+    &.neo {
+      color: var(--theme-color);
+      border-color: var(--theme-color);
+    }
+
+    &.active {
+      color: var(--btn-title-color);
+      background: var(--title-color);
+      border-color: var(--title-color);
+    }
+  }
+
+  .search-input {
+    flex: 1;
+    height: 30px;
+    border: 1px solid var(--border-color);
+    border-radius: 16px;
+    padding: 0 14px;
+    background: transparent;
+    color: var(--title-color);
+    font-family: NeverMind-Regular;
+    font-size: 13px;
+    outline: none;
+  }
+
+  .search-icon {
+    width: 15px;
+    margin-left: auto;
+    opacity: 0.6;
+    cursor: pointer;
+  }
+}
+
+.market-loading {
+  display: flex;
+  justify-content: center;
+  padding: 24px 0;
+}
+
+.market-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 24px;
+  border-bottom: 1px solid var(--line-color);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--hover-color);
+  }
+
+  > img,
+  > .letter-logo {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+  }
+
+  .market-name {
+    width: 92px;
+    .coin {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-family: NeverMind-Medium;
+      font-size: 14px;
+      color: var(--title-color);
+    }
+    .leverage {
+      font-size: 10px;
+      color: var(--sub-title-color);
+    }
+    .volume {
+      font-size: 11px;
+      color: var(--sub-title-color);
+      margin-top: 5px;
+    }
+  }
+
+  .sparkline {
+    flex-shrink: 0;
+  }
+
+  .market-price {
+    text-align: right;
+    flex: 1;
+    .price {
+      font-size: 14px;
+      color: var(--title-color);
+    }
+    .change {
+      font-size: 12px;
+      color: var(--theme-color);
+      margin-top: 5px;
+      &.negative {
+        color: var(--error-color);
+      }
+    }
+  }
+}
+
+.market-empty {
+  padding: 24px;
+  text-align: center;
+  font-size: 13px;
+  color: var(--tip-color);
+}
+
+.letter-logo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-family: NeverMind-DemiBold;
+  font-size: 15px;
+  flex-shrink: 0;
+}

@@ -13,11 +13,13 @@ import { ShareModule } from '@app/share';
 import { PopupAddAssetModule } from './add/add-asset/add-asset.module';
 import { PopupAddNftModule } from './add/add-nft/add-nft.module';
 import { PopupAddEvmNftModule } from './add/add-evm-nft/add-nft.module';
+import { PerpsModule } from './perps/perps.module';
 
 const POPUP_MODULES = [
   PopupAddAssetModule,
   PopupAddNftModule,
   PopupAddEvmNftModule,
+  PerpsModule,
 ];
 //#endregion
 

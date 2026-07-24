@@ -39,6 +39,7 @@ import { HttpService } from './services/http.service';
 import { ExtensionService } from './services/extension.service';
 import { InitService } from './services/init.service';
 import { BridgeService } from './services/bridge.service';
+import { HyperliquidService } from './services/perps/hyperliquid.service';
 
 // states
 import { NeoAssetInfoState } from './states/neo-asset-info.state';
@@ -76,6 +77,7 @@ import { RateState } from './states/rate.state';
     Neo3Service,
     NeoHdWalletToolService,
     BridgeService,
+    HyperliquidService,
     NeoAssetInfoState,
     SelectChainState,
     InitService,

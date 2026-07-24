@@ -1753,5 +1753,209 @@
   },
   "estimatedBalanceChangesReceive": {
     "message": "You receive"
+  },
+  "perps": {
+    "message": "Perps"
+  },
+  "perpsAccountValue": {
+    "message": "Perps balance"
+  },
+  "perpsMarginRatio": {
+    "message": "Margin ratio"
+  },
+  "perpsAvailableMargin": {
+    "message": "Available"
+  },
+  "perpsUsedMargin": {
+    "message": "used"
+  },
+  "perpsSpotSeparate": {
+    "message": "Spot (transfer to trade)"
+  },
+  "perpsDeposit": {
+    "message": "Deposit"
+  },
+  "perpsWithdraw": {
+    "message": "Withdraw"
+  },
+  "perpsHistory": {
+    "message": "History"
+  },
+  "perpsHistoryTitle": {
+    "message": "Perps history"
+  },
+  "perpsPositions": {
+    "message": "Positions"
+  },
+  "perpsCloseAll": {
+    "message": "Close all"
+  },
+  "perpsLong": {
+    "message": "Long"
+  },
+  "perpsShort": {
+    "message": "Short"
+  },
+  "perpsEntry": {
+    "message": "Entry"
+  },
+  "perpsLiq": {
+    "message": "Liq."
+  },
+  "perpsAddPosition": {
+    "message": "Add"
+  },
+  "perpsClose": {
+    "message": "Close"
+  },
+  "perpsFundPrompt": {
+    "message": "Fund your perps account to start trading."
+  },
+  "perpsFilterAll": {
+    "message": "All"
+  },
+  "perpsFilterNeo": {
+    "message": "Neo"
+  },
+  "perpsFilterMajor": {
+    "message": "Major"
+  },
+  "perpsFilterGainers": {
+    "message": "Gainers"
+  },
+  "perpsSearchMarket": {
+    "message": "Search markets"
+  },
+  "perpsNoMarkets": {
+    "message": "No markets found"
+  },
+  "perpsDayVolume": {
+    "message": "24h vol"
+  },
+  "perpsOpenInterest": {
+    "message": "OI"
+  },
+  "perpsFundingRate": {
+    "message": "Funding"
+  },
+  "perpsMyPosition": {
+    "message": "My position"
+  },
+  "perpsRecentActivity": {
+    "message": "Recent activity"
+  },
+  "perpsNoTransactions": {
+    "message": "No transactions"
+  },
+  "perpsNoChartData": {
+    "message": "No chart data"
+  },
+  "perpsRiskTip": {
+    "message": "Perpetual futures trading carries substantial risk. You could lose your entire investment in an instant without warning. You are solely responsible for your trades."
+  },
+  "perpsLeverageRiskTip": {
+    "message": "Perps are leveraged products; losses can exceed your initial margin. Only trade with funds you can afford to lose."
+  },
+  "perpsMarketOrder": {
+    "message": "Market"
+  },
+  "perpsLimitOrder": {
+    "message": "Limit"
+  },
+  "perpsLimitPrice": {
+    "message": "Limit price"
+  },
+  "perpsAvailable": {
+    "message": "Available"
+  },
+  "perpsAmount": {
+    "message": "Amount"
+  },
+  "perpsMax": {
+    "message": "Max"
+  },
+  "perpsLeverage": {
+    "message": "Leverage"
+  },
+  "perpsMaxLeverage": {
+    "message": "Max"
+  },
+  "perpsLiqPrice": {
+    "message": "Liquidation price"
+  },
+  "perpsMarginFee": {
+    "message": "Margin / fee"
+  },
+  "perpsSize": {
+    "message": "Size"
+  },
+  "perpsInsufficientMargin": {
+    "message": "Not enough available margin"
+  },
+  "perpsConfirmClose": {
+    "message": "Close"
+  },
+  "perpsFundingTitle": {
+    "message": "Perps funds"
+  },
+  "perpsWalletBalance": {
+    "message": "Wallet balance"
+  },
+  "perpsAvailableBalance": {
+    "message": "Available balance"
+  },
+  "perpsBalance": {
+    "message": "balance"
+  },
+  "perpsArrivalTime": {
+    "message": "Arrival time"
+  },
+  "perpsNetworkFee": {
+    "message": "Network fee"
+  },
+  "perpsMinDeposit": {
+    "message": "Minimum deposit"
+  },
+  "perpsProviderFee": {
+    "message": "Provider fee"
+  },
+  "perpsYouReceive": {
+    "message": "You receive"
+  },
+  "perpsBelowMinimum": {
+    "message": "Amount is below the minimum of"
+  },
+  "perpsExceedsBalance": {
+    "message": "Amount exceeds your balance"
+  },
+  "perpsMaxFunding": {
+    "message": "Max"
+  },
+  "perpsStats": {
+    "message": "Stats"
+  },
+  "perpsDayVolumeFull": {
+    "message": "24h volume"
+  },
+  "perpsOpenInterestFull": {
+    "message": "Open interest"
+  },
+  "perpsFundingRateFull": {
+    "message": "Funding rate"
+  },
+  "perpsOraclePrice": {
+    "message": "Oracle price"
+  },
+  "perpsLearnBasics": {
+    "message": "Learn the basics of perpetual futures"
+  },
+  "perpsOpenInterestTip": {
+    "message": "Total notional value of all open positions in this market."
+  },
+  "perpsFundingRateTip": {
+    "message": "Hourly rate exchanged between longs and shorts; positive means longs pay shorts. The countdown shows the next settlement."
+  },
+  "perpsOracleTip": {
+    "message": "External spot price used for funding and margin calculations."
   }
 }
