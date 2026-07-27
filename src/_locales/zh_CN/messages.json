@@ -1895,6 +1895,15 @@
   "perpsConfirmClose": {
     "message": "平仓"
   },
+  "perpsCloseLong": {
+    "message": "平多"
+  },
+  "perpsCloseShort": {
+    "message": "平空"
+  },
+  "perpsReleasedMarginFee": {
+    "message": "预计释放保证金 / 费用"
+  },
   "perpsFundingTitle": {
     "message": "合约账户资金"
   },

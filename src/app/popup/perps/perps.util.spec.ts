@@ -2,6 +2,7 @@ import {
   availableToTradeForSide,
   formatFillTime,
   maxOrderNotionalForSide,
+  previewClosePosition,
 } from './perps.util';
 
 describe('perps utilities', () => {
@@ -47,5 +48,56 @@ describe('perps utilities', () => {
       989.78 * 1.5,
       8
     );
+  });
+
+  it('uses the exact position size when closing all despite rounded USD input', () => {
+    const preview = previewClosePosition({
+      position: {
+        coin: 'ETH',
+        szi: -0.01,
+        entryPx: 1921.5,
+        positionValue: 18.895,
+        unrealizedPnl: 0.34,
+        returnOnEquity: 0.035,
+        liquidationPx: 99829,
+        leverage: 2,
+        leverageType: 'cross',
+        marginUsed: 9.44,
+        isLong: false,
+      },
+      notional: 18.89,
+      szDecimals: 4,
+      feeRate: 0.00045,
+      fullClose: true,
+    });
+
+    expect(preview.size).toBe(0.01);
+    expect(preview.releasedMargin).toBe(9.44);
+    expect(preview.fee).toBeCloseTo(18.895 * 0.00045, 10);
+  });
+
+  it('scales size and released margin for a partial close', () => {
+    const preview = previewClosePosition({
+      position: {
+        coin: 'ETH',
+        szi: -0.01,
+        entryPx: 1921.5,
+        positionValue: 18.88,
+        unrealizedPnl: 0.34,
+        returnOnEquity: 0.035,
+        liquidationPx: 99829,
+        leverage: 2,
+        leverageType: 'cross',
+        marginUsed: 9.44,
+        isLong: false,
+      },
+      notional: 9.44,
+      szDecimals: 4,
+      feeRate: 0.00045,
+      fullClose: false,
+    });
+
+    expect(preview.size).toBe(0.005);
+    expect(preview.releasedMargin).toBe(4.72);
   });
 });

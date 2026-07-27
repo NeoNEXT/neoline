@@ -1895,6 +1895,15 @@
   "perpsConfirmClose": {
     "message": "決済"
   },
+  "perpsCloseLong": {
+    "message": "ロングを決済"
+  },
+  "perpsCloseShort": {
+    "message": "ショートを決済"
+  },
+  "perpsReleasedMarginFee": {
+    "message": "解放予定証拠金 / 手数料"
+  },
   "perpsFundingTitle": {
     "message": "無期限先物の資金"
   },

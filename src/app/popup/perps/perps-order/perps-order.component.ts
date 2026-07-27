@@ -27,8 +27,8 @@ import {
   formatPrice,
   formatSignedPercent,
   formatUsd,
-  leverageTiers,
   maxOrderNotionalForSide,
+  previewClosePosition,
   previewOrder,
   roundSize,
 } from '../perps.util';
@@ -120,13 +120,13 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         if (
           this.activeAssetData &&
           !this.leverageSelected &&
-          this.leverageTiers.includes(this.activeAssetData.leverage.value)
+          this.activeAssetData.leverage.value >= 1 &&
+          this.activeAssetData.leverage.value <= this.market.maxLeverage
         ) {
           this.leverage = this.activeAssetData.leverage.value;
         } else {
           // Default until the user's exchange-side leverage arrives.
-          const tiers = this.leverageTiers;
-          this.leverage = tiers[Math.min(1, tiers.length - 1)];
+          this.leverage = Math.min(2, this.market.maxLeverage);
         }
       }
     });
@@ -151,7 +151,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
           !this.closeMode &&
           !this.leverageSelected &&
           this.market &&
-          this.leverageTiers.includes(data.leverage.value)
+          data.leverage.value >= 1 &&
+          data.leverage.value <= this.market.maxLeverage
         ) {
           this.leverage = data.leverage.value;
         }
@@ -170,12 +171,17 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         this.side = this.position.isLong ? 'short' : 'long';
         this.leverage = this.position.leverage;
         this.amount = Number(this.position.positionValue.toFixed(2));
+        this.activePercent = 100;
       }
     });
   }
 
   get isLong(): boolean {
     return this.side === 'long';
+  }
+
+  get positionSize(): number {
+    return Math.abs(this.position?.szi || 0);
   }
 
   /** Hyperliquid's direction-aware order notional, with account balance fallback. */
@@ -202,13 +208,41 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     );
   }
 
-  get leverageTiers(): number[] {
-    return leverageTiers(this.market?.maxLeverage || 1);
+  get amountSliderPercent(): number {
+    if (this.activePercent !== null) {
+      return this.activePercent;
+    }
+    const base = this.percentBase;
+    if (!base || !this.amount) {
+      return 0;
+    }
+    return Math.max(0, Math.min(100, (this.amount / base) * 100));
+  }
+
+  get leverageSliderPercent(): number {
+    const max = this.market?.maxLeverage || 1;
+    return max === 1 ? 100 : ((this.leverage - 1) / (max - 1)) * 100;
   }
 
   get preview(): PerpsOrderPreview {
     if (!this.market || !this.amount) {
       return null;
+    }
+    if (this.closeMode && this.position) {
+      const closePreview = previewClosePosition({
+        position: this.position,
+        notional: this.amount,
+        szDecimals: this.market.szDecimals,
+        feeRate: TAKER_FEE_RATE,
+        fullClose: this.fullClose,
+      });
+      return {
+        notional: this.position.positionValue * this.closeFraction,
+        margin: closePreview.releasedMargin,
+        fee: closePreview.fee,
+        size: closePreview.size,
+        liquidationPx: 0,
+      };
     }
     const preview = previewOrder({
       market: this.market,
@@ -234,11 +268,32 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         this.market.szDecimals
       );
     }
-    const fraction = Math.min(1, this.amount / this.position.positionValue);
-    return roundSize(
-      Math.abs(this.position.szi) * fraction,
-      this.market.szDecimals
+    return previewClosePosition({
+      position: this.position,
+      notional: this.amount,
+      szDecimals: this.market.szDecimals,
+      feeRate: TAKER_FEE_RATE,
+      fullClose: this.fullClose,
+    }).size;
+  }
+
+  /**
+   * The form displays two-decimal USD, so that rounded maximum must still mean
+   * 100%; requiring it to equal the higher-precision API value leaves dust.
+   */
+  private get fullClose(): boolean {
+    if (!this.closeMode || !this.position) {
+      return false;
+    }
+    return (
+      this.activePercent === 100 ||
+      this.amount >= Number(this.position.positionValue.toFixed(2))
     );
+  }
+
+  private get closeFraction(): number {
+    const positionSize = Math.abs(this.position?.szi || 0);
+    return positionSize > 0 ? this.orderSize / positionSize : 0;
   }
 
   /** Collateral the order needs; in close mode the position releases margin instead. */
@@ -282,34 +337,47 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   setLeverage(leverage: number) {
-    this.leverage = leverage;
+    const max = this.market?.maxLeverage || 1;
+    this.leverage = Math.max(
+      1,
+      Math.min(max, Math.round(Number(leverage) || 1))
+    );
     this.leverageSelected = true;
-    // Percent chips size off buying power, which just changed with leverage.
+    // The amount slider sizes off buying power, which just changed with leverage.
     if (this.activePercent !== null && !this.closeMode) {
       this.setPercent(this.activePercent);
     }
   }
 
   /**
-   * Percent chips size the order off buying power (collateral × leverage) when
+   * The amount slider sizes the order off buying power (collateral × leverage) when
    * opening, and off the position value when closing.
    */
   setPercent(percent: number) {
-    this.activePercent = percent;
-    const base = this.closeMode
-      ? this.position?.positionValue || 0
-      : this.activeAssetData
-      ? this.maxOrderNotional
-      : this.available / (1 / this.leverage + TAKER_FEE_RATE);
-    this.amount = Number(((base * percent) / 100).toFixed(2));
+    this.activePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+    this.amount = Number(
+      ((this.percentBase * this.activePercent) / 100).toFixed(2)
+    );
   }
 
   onAmountChange() {
     this.activePercent = null;
   }
 
+  private get percentBase(): number {
+    if (this.closeMode) {
+      return this.position?.positionValue || 0;
+    }
+    return this.activeAssetData
+      ? this.maxOrderNotional
+      : this.available / (1 / this.leverage + TAKER_FEE_RATE);
+  }
+
   get ctaLabel(): string {
-    return this.closeMode ? 'perpsConfirmClose' : this.isLong ? 'perpsLong' : 'perpsShort';
+    if (this.closeMode) {
+      return this.position?.isLong ? 'perpsCloseLong' : 'perpsCloseShort';
+    }
+    return this.isLong ? 'perpsLong' : 'perpsShort';
   }
 
   async submit() {

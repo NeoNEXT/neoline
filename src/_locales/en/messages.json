@@ -1895,6 +1895,15 @@
   "perpsConfirmClose": {
     "message": "Close"
   },
+  "perpsCloseLong": {
+    "message": "Close long"
+  },
+  "perpsCloseShort": {
+    "message": "Close short"
+  },
+  "perpsReleasedMarginFee": {
+    "message": "Estimated margin release / fee"
+  },
   "perpsFundingTitle": {
     "message": "Perps funds"
   },

@@ -3,6 +3,7 @@ import {
   PerpsMarket,
   PerpsOrderPreview,
   PerpsOrderSide,
+  PerpsPosition,
 } from '@popup/_lib/perps';
 
 /** Coins that ship with a bundled logo; everything else falls back to a letter chip. */
@@ -170,6 +171,40 @@ export function maxOrderNotionalForSide(
   const sideIndex = side === 'long' ? 0 : 1;
   const positionCap = data.maxTradeSzs[sideIndex] * data.markPx;
   return positionCap > 0 ? Math.min(available, positionCap) : available;
+}
+
+/**
+ * Preview a reduce-only close from the actual signed position size.
+ *
+ * A full close must preserve the exchange-reported `szi` exactly. Converting a
+ * two-decimal USD display value back through the live mark can round down by one
+ * lot and leave an unintended dust position.
+ */
+export function previewClosePosition(params: {
+  position: PerpsPosition;
+  notional: number;
+  szDecimals: number;
+  feeRate: number;
+  fullClose: boolean;
+}): { size: number; releasedMargin: number; fee: number } {
+  const { position, notional, szDecimals, feeRate, fullClose } = params;
+  const positionSize = Math.abs(position?.szi || 0);
+  const positionValue = Math.abs(position?.positionValue || 0);
+  if (!positionSize || !positionValue) {
+    return { size: 0, releasedMargin: 0, fee: 0 };
+  }
+  const requestedFraction = fullClose
+    ? 1
+    : Math.max(0, Math.min(1, notional / positionValue));
+  const size = fullClose
+    ? positionSize
+    : roundSize(positionSize * requestedFraction, szDecimals);
+  const actualFraction = Math.min(1, size / positionSize);
+  return {
+    size,
+    releasedMargin: Math.abs(position.marginUsed || 0) * actualFraction,
+    fee: positionValue * actualFraction * feeRate,
+  };
 }
 
 /**

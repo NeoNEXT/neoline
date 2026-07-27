@@ -27,7 +27,7 @@
   </div>
 
   <!-- 做多 / 做空 -->
-  <div class="side-toggle" [class.disabled]="closeMode">
+  <div class="side-toggle" *ngIf="!closeMode">
     <div
       class="option"
       [class.active-long]="isLong"
@@ -42,6 +42,16 @@
     >
       {{ "perpsShort" | translate | async }}
     </div>
+  </div>
+
+  <div class="close-position" *ngIf="closeMode && position">
+    <span>{{ "perpsMyPosition" | translate | async }}</span>
+    <b [class.short]="!position.isLong">
+      {{
+        (position.isLong ? "perpsLong" : "perpsShort") | translate | async
+      }}
+      · {{ positionSize | number: "1.0-8" }} {{ coin }}
+    </b>
   </div>
 
   <div class="order-type">
@@ -59,7 +69,7 @@
     >
       {{ "perpsLimitOrder" | translate | async }}
     </span>
-    <span class="available">
+    <span class="available" *ngIf="!closeMode">
       {{ "perpsAvailable" | translate | async }}
       <b>{{ available | number: "1.2-2" }} USDC</b>
     </span>
@@ -88,17 +98,34 @@
     </span>
   </div>
 
-  <div class="percent-row">
-    <span
-      *ngFor="let percent of [25, 50, 75, 100]"
-      [class.active]="activePercent === percent"
-      (click)="setPercent(percent)"
+  <div class="range-control amount-range">
+    <div
+      class="range-track"
+      [style.--slider-progress]="amountSliderPercent + '%'"
     >
-      {{ percent === 100 ? ("perpsMax" | translate | async) : percent + "%" }}
-    </span>
+      <input
+        type="range"
+        min="0"
+        max="100"
+        step="1"
+        [value]="amountSliderPercent"
+        (input)="setPercent(+$any($event.target).value)"
+        [attr.aria-label]="'perpsAmount' | translate | async"
+      />
+      <span class="range-dots" aria-hidden="true">
+        <i
+          *ngFor="let tick of [0, 25, 50, 75, 100]"
+          [class.active]="amountSliderPercent >= tick"
+        ></i>
+      </span>
+    </div>
+    <output>
+      <span>{{ amountSliderPercent | number: "1.0-0" }}</span>
+      <span>%</span>
+    </output>
   </div>
 
-  <!-- 杠杆档位 -->
+  <!-- 杠杆滑块 -->
   <ng-container *ngIf="!closeMode">
     <div class="leverage-head">
       <span class="label">{{ "perpsLeverage" | translate | async }}</span>
@@ -107,24 +134,35 @@
         {{ market.maxLeverage }}x</span
       >
     </div>
-    <div class="leverage-row">
-      <span
-        *ngFor="let tier of leverageTiers"
-        [class.active]="leverage === tier"
-        (click)="setLeverage(tier)"
-        >{{ tier }}x</span
-      >
+    <div class="range-control leverage-range">
+      <input
+        type="range"
+        min="1"
+        [max]="market?.maxLeverage || 1"
+        step="1"
+        [value]="leverage"
+        [style.--slider-progress]="leverageSliderPercent + '%'"
+        (input)="setLeverage(+$any($event.target).value)"
+        [attr.aria-label]="'perpsLeverage' | translate | async"
+      />
+      <output>{{ leverage }}x</output>
     </div>
   </ng-container>
 
   <!-- 预估 -->
   <div class="summary" *ngIf="preview">
-    <div class="row">
+    <div class="row" *ngIf="!closeMode">
       <span class="label">{{ "perpsLiqPrice" | translate | async }}</span>
       <span class="value">${{ formatPrice(preview.liquidationPx) }}</span>
     </div>
     <div class="row">
-      <span class="label">{{ "perpsMarginFee" | translate | async }}</span>
+      <span class="label">
+        {{
+          (closeMode ? "perpsReleasedMarginFee" : "perpsMarginFee")
+            | translate
+            | async
+        }}
+      </span>
       <span class="value"
         >{{ formatUsd(preview.margin) }} / {{ formatUsd(preview.fee) }}</span
       >

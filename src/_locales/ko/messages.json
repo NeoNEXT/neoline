@@ -1895,6 +1895,15 @@
   "perpsConfirmClose": {
     "message": "청산"
   },
+  "perpsCloseLong": {
+    "message": "롱 포지션 청산"
+  },
+  "perpsCloseShort": {
+    "message": "숏 포지션 청산"
+  },
+  "perpsReleasedMarginFee": {
+    "message": "예상 해제 증거금 / 수수료"
+  },
   "perpsFundingTitle": {
     "message": "무기한 선물 자금"
   },
