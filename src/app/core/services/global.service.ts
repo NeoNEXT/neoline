@@ -144,7 +144,7 @@ export class GlobalService {
     type: 'account' | 'token' | 'NFT' | 'tx';
     value: string;
   }) {
-    const explorer = network?.explorer.endsWith('/')
+    const explorer = network?.explorer?.endsWith('/')
       ? network.explorer.slice(0, -1)
       : network.explorer;
     if (explorer) {

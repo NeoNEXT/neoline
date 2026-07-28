@@ -29,6 +29,32 @@ import { tx as tx3, wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
  */
 declare var chrome;
 
+/**
+ * The origin / hostname that a dApp message carries (in `hostInfo` for EVM, or
+ * `hostname` for Neo) is supplied by the page and is therefore attacker-
+ * controlled: any page can forge it to impersonate another site in the
+ * confirmation windows. `sender` comes from `chrome.runtime.onMessage` and is
+ * populated by the browser, so it is the only trustworthy source of the
+ * caller's origin. Use these helpers to derive what we display.
+ */
+type MessageSender = { origin?: string; url?: string };
+
+export function getTrustedOrigin(sender: MessageSender): string {
+  try {
+    return new URL(sender?.origin || sender?.url || '').origin;
+  } catch (e) {
+    return '';
+  }
+}
+
+export function getTrustedHostname(sender: MessageSender): string {
+  try {
+    return new URL(sender?.origin || sender?.url || '').hostname;
+  } catch (e) {
+    return '';
+  }
+}
+
 export async function canSignWithOnePasswordMode(
   signerAddress: string,
   hostname: string,

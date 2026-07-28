@@ -28,6 +28,7 @@ import {
   windowCallback,
   canSignWithOnePasswordMode,
   canCurrentWalletSignTransaction,
+  getTrustedHostname,
 } from '../tool';
 import { RequestHandlerModule } from './context';
 
@@ -110,7 +111,7 @@ const signMessage: RequestHandlerModule = {
 
 const signMessageV3: RequestHandlerModule = {
   targets: [requestTargetN3.SignMessageV3],
-  handle: async ({ request, sendResponse }) => {
+  handle: async ({ request, sender, sendResponse }) => {
     const params = request.parameter;
 
     const currentWallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
@@ -125,7 +126,7 @@ const signMessageV3: RequestHandlerModule = {
       ) {
         const allowOnePassSign = await canSignWithOnePasswordMode(
           address,
-          request.hostname,
+          getTrustedHostname(sender),
           'Neo3',
         );
         if (!allowOnePassSign) {
@@ -332,7 +333,7 @@ const invokeMultiple: RequestHandlerModule = {
 
 const send: RequestHandlerModule = {
   targets: [requestTargetN3.Send],
-  handle: async ({ request, sendResponse, currN3Network }) => {
+  handle: async ({ request, sender, sendResponse, currN3Network }) => {
     const parameter = request.parameter as N3SendArgs;
     const wallet = await getLocalStorage(STORAGE_NAME.wallet, () => {});
     if (
@@ -341,7 +342,7 @@ const send: RequestHandlerModule = {
     ) {
       const allowOnePassSign = await canSignWithOnePasswordMode(
         parameter.fromAddress,
-        request.hostname,
+        getTrustedHostname(sender),
         'Neo3',
       );
       if (!allowOnePassSign) {

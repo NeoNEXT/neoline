@@ -1,6 +1,6 @@
 import { requestTarget, ERRORS } from '../../common/data_module_neo2';
 import { requestTargetN3 } from '../../common/data_module_neo3';
-import { createWindow, windowCallback } from '../tool';
+import { createWindow, getTrustedHostname, windowCallback } from '../tool';
 import { RequestHandlerModule } from './context';
 
 const walletSwitchNetwork: RequestHandlerModule = {
@@ -10,6 +10,7 @@ const walletSwitchNetwork: RequestHandlerModule = {
   ],
   handle: ({
     request,
+    sender,
     sendResponse,
     chainType,
     currN2Network,
@@ -17,6 +18,8 @@ const walletSwitchNetwork: RequestHandlerModule = {
     n3Networks,
   }) => {
     const parameter = request.parameter;
+    // hostname shown to the user comes from the trusted sender, not the page.
+    parameter.hostname = getTrustedHostname(sender);
     const currentChainId =
       chainType === 'Neo2'
         ? currN2Network.chainId
@@ -61,8 +64,10 @@ const walletSwitchAccount: RequestHandlerModule = {
     requestTarget.WalletSwitchAccount,
     requestTargetN3.WalletSwitchAccount,
   ],
-  handle: ({ request, sendResponse }) => {
+  handle: ({ request, sender, sendResponse }) => {
     const parameter = request.parameter;
+    // hostname shown to the user comes from the trusted sender, not the page.
+    parameter.hostname = getTrustedHostname(sender);
     let queryString = '';
     for (const key in parameter) {
       if (parameter.hasOwnProperty(key)) {

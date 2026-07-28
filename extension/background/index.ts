@@ -33,6 +33,8 @@ import {
   waitTxs,
   resetData,
   windowCallback,
+  getTrustedOrigin,
+  getTrustedHostname,
 } from './tool';
 import { walletHandlerMap, ethereumRPCHandler } from './handlers';
 import { neoRequestHandlerMap } from './request-handlers';
@@ -102,6 +104,15 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
   // proxy the JSON-RPC call. Both paths share the same failure handling.
   if (request.target === requestTargetEVM.request) {
     const { method, params, hostInfo } = request.parameter;
+    // The origin/hostname shown in the confirmation window must come from the
+    // trusted `sender`, never from the page-supplied hostInfo (which any page
+    // can forge to impersonate another site). Icon still comes from the page
+    // for now and is handled separately.
+    const displayHostInfo = {
+      ...(hostInfo || {}),
+      origin: getTrustedOrigin(sender),
+      hostname: getTrustedHostname(sender),
+    };
     const onError = (error) => {
       windowCallback({
         data: null,
@@ -117,7 +128,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
     const handler = walletHandlerMap.get(method);
     if (handler) {
       handler
-        .implementation(params, request.ID, hostInfo)
+        .implementation(params, request.ID, displayHostInfo)
         .then((finish) => {
           if (finish) {
             windowCallback({
@@ -130,7 +141,7 @@ chrome.runtime.onMessage.addListener(async (request, sender, sendResponse) => {
         })
         .catch(onError);
     } else {
-      ethereumRPCHandler(request.parameter, request.ID, sender, hostInfo)
+      ethereumRPCHandler(request.parameter, request.ID, sender, displayHostInfo)
         .then((data) => {
           windowCallback({
             data,

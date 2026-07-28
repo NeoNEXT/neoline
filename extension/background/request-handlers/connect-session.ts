@@ -17,15 +17,17 @@ import {
   getPublicKeyFromPrivateKey,
 } from '../../common/utils';
 import { decryptSessionSecret } from '../../../cross-runtime/session-secret';
-import { createWindow, windowCallback } from '../tool';
+import { createWindow, getTrustedHostname, windowCallback } from '../tool';
 import { RequestHandlerModule } from './context';
 
 const switchRequestChain: RequestHandlerModule = {
   targets: [requestTarget.SwitchRequestChain],
-  handle: ({ request, chainType }) => {
+  handle: ({ request, sender, chainType }) => {
     if (request.connectChain !== chainType) {
+      // hostname shown to the user comes from the trusted sender, not the page.
+      const hostname = getTrustedHostname(sender);
       createWindow(
-        `wallet-switch-network?chainType=${request.connectChain}&messageID=${request.ID}&icon=${request.icon}&hostname=${request.hostname}`
+        `wallet-switch-network?chainType=${request.connectChain}&messageID=${request.ID}&icon=${request.icon}&hostname=${hostname}`
       );
     } else {
       windowCallback({
@@ -40,13 +42,17 @@ const switchRequestChain: RequestHandlerModule = {
 
 const connect: RequestHandlerModule = {
   targets: [requestTarget.Connect],
-  handle: ({ request, sendResponse }) => {
+  handle: ({ request, sender, sendResponse }) => {
+    // hostname used both for the connected-site lookup and shown in the
+    // authorization window comes from the trusted sender, not from the
+    // page-supplied request.hostname (which any page can forge).
+    const trustedHostname = getTrustedHostname(sender);
     getStorage(
       STORAGE_NAME.connectedWebsites,
       async (res: ConnectedWebsitesType) => {
         if (request.allowEdit === true) {
           const connectedNeoXIndex = Object.values(
-            res?.[request.hostname]?.connectedAddress || {}
+            res?.[trustedHostname]?.connectedAddress || {}
           ).findIndex((item) => item.chain === request.connectChain);
           if (connectedNeoXIndex >= 0) {
             windowCallback({
@@ -56,7 +62,7 @@ const connect: RequestHandlerModule = {
             });
           } else {
             createWindow(
-              `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&allowEdit=${request.allowEdit}&connectChainType=${request.connectChain}&messageID=${request.ID}`
+              `authorization?icon=${request.icon}&hostname=${trustedHostname}&title=${request.title}&allowEdit=${request.allowEdit}&connectChainType=${request.connectChain}&messageID=${request.ID}`
             );
           }
         } else {
@@ -66,7 +72,7 @@ const connect: RequestHandlerModule = {
           );
           const currAddress = currWallet?.accounts?.[0].address;
           const existHost =
-            res?.[request.hostname]?.connectedAddress?.[currAddress];
+            res?.[trustedHostname]?.connectedAddress?.[currAddress];
           if (existHost) {
             windowCallback({
               return: requestTarget.Connect,
@@ -79,7 +85,7 @@ const connect: RequestHandlerModule = {
             // );
           } else {
             createWindow(
-              `authorization?icon=${request.icon}&hostname=${request.hostname}&title=${request.title}&allowEdit=${request.allowEdit}&messageID=${request.ID}`
+              `authorization?icon=${request.icon}&hostname=${trustedHostname}&title=${request.title}&allowEdit=${request.allowEdit}&messageID=${request.ID}`
             );
           }
         }
