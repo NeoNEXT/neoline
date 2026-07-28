@@ -64,6 +64,8 @@ export const PERPS_DEPOSIT_CONFIG: {
 /** Bridge2 only credits native Circle USDC on Arbitrum; below this the deposit is lost. */
 export const PERPS_MIN_DEPOSIT = 5;
 export const PERPS_MIN_WITHDRAW = 2;
+/** Hyperliquid rejects ordinary and partial-close orders below this notional. */
+export const PERPS_MIN_ORDER_NOTIONAL = 10;
 /** Flat fee Hyperliquid charges on withdrawals, in USDC. */
 export const PERPS_WITHDRAW_FEE = 1;
 
@@ -111,6 +113,8 @@ export interface PerpsMarket {
   coin: string;
   szDecimals: number;
   maxLeverage: number;
+  /** The exchange rejects cross-margin leverage updates for this market. */
+  onlyIsolated: boolean;
   markPx: number;
   oraclePx: number;
   prevDayPx: number;
@@ -229,6 +233,21 @@ export interface PerpsFill {
   fee: string;
 }
 
+export interface PerpsOpenOrder {
+  coin: string;
+  oid: number;
+  side: 'B' | 'A';
+  limitPx: string;
+  sz: string;
+  origSz: string;
+  timestamp: number;
+  orderType: string;
+  reduceOnly: boolean;
+  isTrigger?: boolean;
+  triggerPx?: string;
+  isPositionTpsl?: boolean;
+}
+
 export type PerpsOrderSide = 'long' | 'short';
 export type PerpsOrderType = 'market' | 'limit';
 
@@ -248,6 +267,8 @@ export interface PerpsOrderRequest {
   leverage: number;
   orderType: PerpsOrderType;
   reduceOnly: boolean;
+  /** False for isolated-only markets and existing isolated positions. */
+  isCross: boolean;
 }
 
 export interface PerpsExchangeResponse {

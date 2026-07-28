@@ -1966,5 +1966,56 @@
   },
   "perpsOracleTip": {
     "message": "External spot price used for funding and margin calculations."
+  },
+  "perpsReviewOrder": {
+    "message": "Review order"
+  },
+  "perpsReviewTip": {
+    "message": "Review the direction, size, leverage, entry price, estimated liquidation price and fee before confirming."
+  },
+  "perpsPortfolioUnsupported": {
+    "message": "Portfolio margin accounts are not supported yet. Trading is disabled to avoid showing incomplete collateral data."
+  },
+  "perpsOpenOrders": {
+    "message": "Open orders"
+  },
+  "perpsFills": {
+    "message": "Fills"
+  },
+  "perpsCancelOrder": {
+    "message": "Cancel"
+  },
+  "perpsConfirmCancel": {
+    "message": "Confirm"
+  },
+  "perpsNoOpenOrders": {
+    "message": "No open orders"
+  },
+  "perpsLoadFailed": {
+    "message": "Unable to load Hyperliquid data. Check your connection and try again."
+  },
+  "perpsOrderCanceled": {
+    "message": "Order canceled."
+  },
+  "perpsTransferToPerps": {
+    "message": "Move to Perps"
+  },
+  "perpsSpotBalance": {
+    "message": "Spot balance"
+  },
+  "perpsHyperliquidSpot": {
+    "message": "Hyperliquid Spot"
+  },
+  "perpsFrom": {
+    "message": "From"
+  },
+  "perpsTo": {
+    "message": "To"
+  },
+  "perpsAccount": {
+    "message": "Perps account"
+  },
+  "perpsTransferSubmitted": {
+    "message": "Spot USDC was moved to the Perps account."
   }
 }

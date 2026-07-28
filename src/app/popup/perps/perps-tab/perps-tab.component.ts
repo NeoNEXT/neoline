@@ -35,6 +35,7 @@ import {
 export class PerpsTabComponent implements OnInit, OnDestroy {
   address: string;
   loading = true;
+  accountLoadError = false;
 
   account: PerpsAccount;
   markets: PerpsMarket[] = [];
@@ -114,27 +115,35 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     }
     const requestId = ++this.accountRequestId;
     const address = this.address;
+    this.accountLoadError = false;
     this.hyperliquid
       .getAccount(address)
-      .subscribe((account) => {
-        if (requestId === this.accountRequestId && address === this.address) {
-          let latest = account;
-          if (this.pendingClearinghouseState) {
-            latest = this.hyperliquid.updateAccountFromClearinghouseState(
-              latest,
-              this.pendingClearinghouseState
-            );
+      .subscribe({
+        next: (account) => {
+          if (requestId === this.accountRequestId && address === this.address) {
+            let latest = account;
+            if (this.pendingClearinghouseState) {
+              latest = this.hyperliquid.updateAccountFromClearinghouseState(
+                latest,
+                this.pendingClearinghouseState
+              );
+            }
+            if (this.pendingSpotState) {
+              latest = this.hyperliquid.updateAccountFromSpotState(
+                latest,
+                this.pendingSpotState
+              );
+            }
+            this.pendingClearinghouseState = undefined;
+            this.pendingSpotState = undefined;
+            this.account = latest;
           }
-          if (this.pendingSpotState) {
-            latest = this.hyperliquid.updateAccountFromSpotState(
-              latest,
-              this.pendingSpotState
-            );
+        },
+        error: () => {
+          if (requestId === this.accountRequestId && address === this.address) {
+            this.accountLoadError = true;
           }
-          this.pendingClearinghouseState = undefined;
-          this.pendingSpotState = undefined;
-          this.account = latest;
-        }
+        },
       });
   }
 
@@ -216,11 +225,17 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
 
   /** Collateral equity for the active account mode. */
   get accountEquity(): number {
+    if (this.unsupportedAccountMode) {
+      return 0;
+    }
     return this.account?.totalBalance || 0;
   }
 
   /** Buying power, with free spot USDC folded only for Unified/portfolio mode. */
   get availableMargin(): number {
+    if (this.unsupportedAccountMode) {
+      return 0;
+    }
     return this.account?.availableBalance || 0;
   }
 
@@ -245,7 +260,14 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
   }
 
   get hasPositions(): boolean {
+    if (this.unsupportedAccountMode) {
+      return false;
+    }
     return (this.account?.positions?.length || 0) > 0;
+  }
+
+  get unsupportedAccountMode(): boolean {
+    return this.account?.abstractionMode === 'portfolioMargin';
   }
 
   /** Sparkline path for a market row; derived from the 24h move, not history. */
@@ -260,7 +282,7 @@ export class PerpsTabComponent implements OnInit, OnDestroy {
     this.router.navigateByUrl(`/popup/perps/market/${coin}`);
   }
 
-  toFunding(tab: 'deposit' | 'withdraw') {
+  toFunding(tab: 'deposit' | 'withdraw' | 'transfer') {
     this.router.navigateByUrl(`/popup/perps/funding?tab=${tab}`);
   }
 

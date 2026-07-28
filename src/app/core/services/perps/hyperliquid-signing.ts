@@ -36,6 +36,15 @@ const WITHDRAW_TYPES = {
   ],
 };
 
+const USD_CLASS_TRANSFER_TYPES = {
+  'HyperliquidTransaction:UsdClassTransfer': [
+    { name: 'hyperliquidChain', type: 'string' },
+    { name: 'amount', type: 'string' },
+    { name: 'toPerp', type: 'bool' },
+    { name: 'nonce', type: 'uint64' },
+  ],
+};
+
 function nonceBytes(nonce: number): Uint8Array {
   const bytes = new Uint8Array(8);
   let value = nonce;
@@ -127,6 +136,29 @@ export async function signHyperliquidWithdraw(
   const signature = await new ethers.Wallet(privateKey).signTypedData(
     USER_DOMAIN,
     WITHDRAW_TYPES,
+    action
+  );
+  return { action, signature: splitSignature(signature) };
+}
+
+export async function signHyperliquidUsdClassTransfer(
+  privateKey: string,
+  amount: string,
+  toPerp: boolean,
+  nonce: number,
+  isMainnet: boolean
+): Promise<{ action: any; signature: PerpsSignature }> {
+  const action = {
+    type: 'usdClassTransfer',
+    signatureChainId: ethers.toQuantity(USER_SIGNATURE_CHAIN_ID),
+    hyperliquidChain: isMainnet ? 'Mainnet' : 'Testnet',
+    amount,
+    toPerp,
+    nonce,
+  };
+  const signature = await new ethers.Wallet(privateKey).signTypedData(
+    USER_DOMAIN,
+    USD_CLASS_TRANSFER_TYPES,
     action
   );
   return { action, signature: splitSignature(signature) };

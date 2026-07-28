@@ -11,11 +11,58 @@
     <div class="title">{{ "perpsHistoryTitle" | translate | async }}</div>
   </div>
 
+  <div class="history-tabs">
+    <button [class.active]="tab === 'orders'" (click)="setTab('orders')">
+      {{ "perpsOpenOrders" | translate | async }}
+      <span *ngIf="openOrders.length">({{ openOrders.length }})</span>
+    </button>
+    <button [class.active]="tab === 'fills'" (click)="setTab('fills')">
+      {{ "perpsFills" | translate | async }}
+    </button>
+  </div>
+
   <div class="loading" *ngIf="loading">
     <loading-dot></loading-dot>
   </div>
 
-  <div class="fill-row" *ngFor="let fill of fills">
+  <ng-container *ngIf="!loading && tab === 'orders'">
+    <div class="fill-row" *ngFor="let order of openOrders">
+      <div class="fill-icon" [class.sell]="!orderIsBuy(order)">
+        {{ orderIsBuy(order) ? "↗" : "↘" }}
+      </div>
+      <div class="fill-info">
+        <div class="dir">
+          {{ orderIsBuy(order) ? ("perpsLong" | translate | async) : ("perpsShort" | translate | async) }}
+          {{ order.coin }}
+        </div>
+        <div class="time">{{ fillTime(order.timestamp) }}</div>
+      </div>
+      <div class="fill-amount">
+        <div class="size">{{ order.sz }} {{ order.coin }}</div>
+        <div class="price">${{ formatPrice(+order.limitPx) }}</div>
+      </div>
+      <button
+        class="cancel"
+        [disabled]="cancelingOrderId === order.oid"
+        (click)="requestCancel(order)"
+      >
+        {{
+          (pendingCancelOrderId === order.oid
+            ? "perpsConfirmCancel"
+            : "perpsCancelOrder"
+          ) | translate | async
+        }}
+      </button>
+    </div>
+    <p class="empty" *ngIf="openOrders.length === 0">
+      {{ "perpsNoOpenOrders" | translate | async }}
+    </p>
+  </ng-container>
+
+  <div
+    class="fill-row"
+    *ngFor="let fill of tab === 'fills' && !loading ? fills : []"
+  >
     <div class="fill-icon" [class.sell]="!isBuy(fill)">
       {{ isBuy(fill) ? "↗" : "↘" }}
     </div>
@@ -29,7 +76,10 @@
     </div>
   </div>
 
-  <p class="empty" *ngIf="!loading && fills.length === 0">
+  <p class="empty" *ngIf="!loading && tab === 'fills' && fills.length === 0">
     {{ "perpsNoTransactions" | translate | async }}
+  </p>
+  <p class="empty error" *ngIf="loadError">
+    {{ "perpsLoadFailed" | translate | async }}
   </p>
 </div>

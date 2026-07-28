@@ -1966,5 +1966,56 @@
   },
   "perpsOracleTip": {
     "message": "펀딩 및 증거금 계산에 사용되는 외부 현물 가격입니다."
+  },
+  "perpsReviewOrder": {
+    "message": "주문 검토"
+  },
+  "perpsReviewTip": {
+    "message": "확정 전 방향, 수량, 레버리지, 진입 가격, 예상 청산 가격 및 수수료를 확인하세요."
+  },
+  "perpsPortfolioUnsupported": {
+    "message": "포트폴리오 마진 계정은 아직 지원되지 않습니다. 불완전한 담보 정보 표시를 방지하기 위해 거래가 비활성화되었습니다."
+  },
+  "perpsOpenOrders": {
+    "message": "미체결 주문"
+  },
+  "perpsFills": {
+    "message": "체결 내역"
+  },
+  "perpsCancelOrder": {
+    "message": "취소"
+  },
+  "perpsConfirmCancel": {
+    "message": "취소 확인"
+  },
+  "perpsNoOpenOrders": {
+    "message": "미체결 주문이 없습니다"
+  },
+  "perpsLoadFailed": {
+    "message": "Hyperliquid 데이터를 불러올 수 없습니다. 연결을 확인하고 다시 시도하세요."
+  },
+  "perpsOrderCanceled": {
+    "message": "주문이 취소되었습니다."
+  },
+  "perpsTransferToPerps": {
+    "message": "무기한 선물로 이동"
+  },
+  "perpsSpotBalance": {
+    "message": "현물 잔액"
+  },
+  "perpsHyperliquidSpot": {
+    "message": "Hyperliquid 현물 계정"
+  },
+  "perpsFrom": {
+    "message": "보내는 곳"
+  },
+  "perpsTo": {
+    "message": "받는 곳"
+  },
+  "perpsAccount": {
+    "message": "무기한 선물 계정"
+  },
+  "perpsTransferSubmitted": {
+    "message": "현물 USDC가 무기한 선물 계정으로 이동되었습니다."
   }
 }

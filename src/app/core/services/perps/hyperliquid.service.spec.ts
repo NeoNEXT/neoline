@@ -46,6 +46,7 @@ describe('HyperliquidService account balances', () => {
           leverage: 5,
           orderType: 'market',
           reduceOnly: false,
+          isCross: true,
         }
       )
       .subscribe();
@@ -86,6 +87,7 @@ describe('HyperliquidService account balances', () => {
           leverage: 5,
           orderType: 'limit',
           reduceOnly: true,
+          isCross: true,
         }
       )
       .subscribe();
@@ -100,6 +102,130 @@ describe('HyperliquidService account balances', () => {
       r: true,
       t: { limit: { tif: 'Gtc' } },
     });
+  }));
+
+  it('uses isolated leverage for an isolated-only market', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'default' } }) as any
+    );
+
+    service
+      .placeOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        {
+          assetId: 7,
+          isBuy: true,
+          price: 1,
+          size: 10,
+          szDecimals: 0,
+          maxLeverage: 3,
+          leverage: 2,
+          orderType: 'market',
+          reduceOnly: false,
+          isCross: false,
+        }
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    expect(http.post.calls.first().args[1].action).toEqual({
+      type: 'updateLeverage',
+      asset: 7,
+      isCross: false,
+      leverage: 2,
+    });
+  }));
+
+  it('preserves isolated-only metadata in the market model', (done) => {
+    http.post.and.returnValue(
+      of([
+        {
+          universe: [
+            {
+              name: 'CASHCAT',
+              szDecimals: 0,
+              maxLeverage: 3,
+              onlyIsolated: true,
+            },
+          ],
+        },
+        [
+          {
+            markPx: '1',
+            oraclePx: '1',
+            prevDayPx: '1',
+            dayNtlVlm: '100',
+            openInterest: '10',
+            funding: '0',
+          },
+        ],
+      ]) as any
+    );
+
+    service.getMarkets().subscribe((markets) => {
+      expect(markets[0].onlyIsolated).toBeTrue();
+      done();
+    });
+  });
+
+  it('loads frontend open orders and cancels by asset and order id', fakeAsync(() => {
+    http.post.and.callFake(((_url: string, body: any) => {
+      if (body.type === 'frontendOpenOrders') {
+        return of([
+          {
+            coin: 'ETH',
+            oid: 42,
+            side: 'B',
+            limitPx: '1800',
+            sz: '0.1',
+            origSz: '0.2',
+            timestamp: 1,
+            orderType: 'Limit',
+            reduceOnly: false,
+          },
+        ]);
+      }
+      return of({ status: 'ok', response: { type: 'default' } });
+    }) as any);
+
+    let orders;
+    service.getOpenOrders('0xABC').subscribe((value) => (orders = value));
+    expect(orders[0].oid).toBe(42);
+
+    service
+      .cancelOrder(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        3,
+        42
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    expect(http.post.calls.mostRecent().args[1].action).toEqual({
+      type: 'cancel',
+      cancels: [{ a: 3, o: 42 }],
+    });
+  }));
+
+  it('signs a spot to perps USDC class transfer', fakeAsync(() => {
+    http.post.and.returnValue(
+      of({ status: 'ok', response: { type: 'default' } }) as any
+    );
+
+    service
+      .transferUsdClass(
+        '0x59c6995e998f97a5a0044966f0945389dc9e86dae88c7a8412f4603b6b78690d',
+        12.5,
+        true
+      )
+      .subscribe();
+    flushMicrotasks();
+
+    const action = http.post.calls.mostRecent().args[1].action;
+    expect(action.type).toBe('usdClassTransfer');
+    expect(action.amount).toBe('12.5');
+    expect(action.toPerp).toBeTrue();
+    expect(action.nonce).toBe(http.post.calls.mostRecent().args[1].nonce);
   }));
 
   function mockAccountRequests(mode: string, hold: string) {
@@ -529,6 +655,26 @@ describe('HyperliquidService account balances', () => {
     expect(modeAttempts).toBe(2);
     expect(account.unified).toBeTrue();
   }));
+
+  it('does not turn a clearinghouse failure into a zero-balance account', (done) => {
+    http.post.and.callFake(((_url: string, body: any) => {
+      if (body.type === 'clearinghouseState') {
+        return throwError(() => new Error('account unavailable'));
+      }
+      if (body.type === 'spotClearinghouseState') {
+        return of({ balances: [] });
+      }
+      return of('default');
+    }) as any);
+
+    service.getAccount('0xABC').subscribe({
+      next: () => fail('expected the account request to fail'),
+      error: (error) => {
+        expect(error.message).toBe('account unavailable');
+        done();
+      },
+    });
+  });
 
   it('keeps a shared websocket channel until its last observer leaves', () => {
     spyOn<any>(service, 'send');

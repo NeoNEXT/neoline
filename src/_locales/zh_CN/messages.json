@@ -1966,5 +1966,56 @@
   },
   "perpsOracleTip": {
     "message": "用于资金费与保证金计算的外部现货价格。"
+  },
+  "perpsReviewOrder": {
+    "message": "检查订单"
+  },
+  "perpsReviewTip": {
+    "message": "确认前请检查方向、数量、杠杆、入场价、预计强平价和费用。"
+  },
+  "perpsPortfolioUnsupported": {
+    "message": "暂不支持组合保证金账户。为避免展示不完整的抵押品数据，已禁用交易。"
+  },
+  "perpsOpenOrders": {
+    "message": "当前委托"
+  },
+  "perpsFills": {
+    "message": "成交记录"
+  },
+  "perpsCancelOrder": {
+    "message": "撤单"
+  },
+  "perpsConfirmCancel": {
+    "message": "确认撤单"
+  },
+  "perpsNoOpenOrders": {
+    "message": "暂无当前委托"
+  },
+  "perpsLoadFailed": {
+    "message": "无法加载 Hyperliquid 数据，请检查网络后重试。"
+  },
+  "perpsOrderCanceled": {
+    "message": "订单已撤销。"
+  },
+  "perpsTransferToPerps": {
+    "message": "转入合约"
+  },
+  "perpsSpotBalance": {
+    "message": "现货余额"
+  },
+  "perpsHyperliquidSpot": {
+    "message": "Hyperliquid 现货账户"
+  },
+  "perpsFrom": {
+    "message": "转出"
+  },
+  "perpsTo": {
+    "message": "转入"
+  },
+  "perpsAccount": {
+    "message": "合约账户"
+  },
+  "perpsTransferSubmitted": {
+    "message": "现货 USDC 已转入合约账户。"
   }
 }

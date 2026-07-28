@@ -3,6 +3,7 @@ import {
   formatFillTime,
   maxOrderNotionalForSide,
   previewClosePosition,
+  previewOrder,
 } from './perps.util';
 
 describe('perps utilities', () => {
@@ -99,5 +100,33 @@ describe('perps utilities', () => {
 
     expect(preview.size).toBe(0.005);
     expect(preview.releasedMargin).toBe(4.72);
+  });
+
+  it('uses the limit execution price for size and liquidation preview', () => {
+    const preview = previewOrder({
+      market: {
+        assetId: 0,
+        coin: 'ETH',
+        szDecimals: 4,
+        maxLeverage: 25,
+        onlyIsolated: false,
+        markPx: 100,
+        oraclePx: 100,
+        prevDayPx: 95,
+        changePercent: 0,
+        dayVolume: 0,
+        openInterest: 0,
+        funding: 0,
+      },
+      executionPrice: 80,
+      notional: 800,
+      leverage: 2,
+      isLong: true,
+      feeRate: 0.00045,
+    });
+
+    expect(preview.size).toBe(10);
+    expect(preview.margin).toBe(400);
+    expect(preview.liquidationPx).toBeLessThan(80);
   });
 });

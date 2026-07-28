@@ -79,7 +79,11 @@
   <div class="input-box" *ngIf="orderType === 'limit'">
     <span class="label">{{ "perpsLimitPrice" | translate | async }}</span>
     <span class="input-value">
-      <input type="number" [(ngModel)]="limitPrice" />
+      <input
+        type="number"
+        [(ngModel)]="limitPrice"
+        (ngModelChange)="onLimitPriceChange()"
+      />
       <span class="unit">USDC</span>
     </span>
   </div>
@@ -176,12 +180,26 @@
   <p class="error-tip" *ngIf="insufficient">
     {{ "perpsInsufficientMargin" | translate | async }}
   </p>
+  <p class="error-tip" *ngIf="belowMinimum">
+    {{ "perpsBelowMinimum" | translate | async }}
+    {{ minOrderNotional }} USDC
+  </p>
+  <p class="error-tip" *ngIf="unsupportedAccountMode">
+    {{ "perpsPortfolioUnsupported" | translate | async }}
+  </p>
+  <p class="error-tip" *ngIf="accountLoadError">
+    {{ "perpsLoadFailed" | translate | async }}
+  </p>
+
+  <p class="review-tip" *ngIf="reviewing">
+    {{ "perpsReviewTip" | translate | async }}
+  </p>
 
   <div class="submit-wrap">
     <button
       [class.short]="!isLong"
       [disabled]="!canSubmit"
-      (click)="submit()"
+      (click)="reviewing ? submit() : review()"
     >
       {{ ctaLabel | translate | async }} {{ coin }}
       <ng-container *ngIf="!closeMode"> · {{ leverage }}x</ng-container>

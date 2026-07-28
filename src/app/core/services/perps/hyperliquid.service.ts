@@ -31,6 +31,7 @@ import {
   PerpsDepositConfig,
   PerpsFill,
   PerpsMarket,
+  PerpsOpenOrder,
   PerpsOrderRequest,
   PerpsExchangeResponse,
   PerpsPosition,
@@ -40,6 +41,7 @@ import {
 import { environment } from '@/environments/environment';
 import {
   signHyperliquidL1Action,
+  signHyperliquidUsdClassTransfer,
   signHyperliquidWithdraw,
 } from './hyperliquid-signing';
 
@@ -90,6 +92,8 @@ export class HyperliquidService {
   private marketLiveSub: Subscription;
   private marketObservers = 0;
   private pendingAssetContexts: any;
+  private marketSnapshotRetryTimer: any;
+  private marketSnapshotAttempts = 0;
   private accountCache = new Map<
     string,
     { expiresAt: number; request: Observable<PerpsAccount> }
@@ -174,8 +178,10 @@ export class HyperliquidService {
   }
 
   /**
-   * Set cross leverage and place one order. Market orders use an IOC limit 5%
-   * through the mark, matching the official SDK's default slippage.
+   * Set the requested leverage / margin mode (`isCross`) and place one order.
+   * Callers currently open isolated so the per-order liquidation preview is
+   * binding. Market orders use an IOC limit 5% through the mark, matching the
+   * official SDK's default slippage.
    */
   placeOrder(
     privateKey: string,
@@ -215,7 +221,7 @@ export class HyperliquidService {
     return this.signedL1Action(privateKey, {
       type: 'updateLeverage',
       asset: request.assetId,
-      isCross: true,
+      isCross: request.isCross,
       leverage,
     }).pipe(switchMap(() => this.signedL1Action(privateKey, action)));
   }
@@ -232,6 +238,29 @@ export class HyperliquidService {
         privateKey,
         destination,
         amountWire,
+        nonce,
+        !this.isTestnet
+      )
+    ).pipe(
+      switchMap(({ action, signature }) =>
+        this.postExchange(action, signature, nonce)
+      ),
+      tap(() => this.clearAccountCache())
+    );
+  }
+
+  /** Move USDC between Hyperliquid Spot and Perps for standard accounts. */
+  transferUsdClass(
+    privateKey: string,
+    amount: number,
+    toPerp: boolean
+  ): Observable<PerpsExchangeResponse> {
+    const nonce = this.nextNonce();
+    return from(
+      signHyperliquidUsdClassTransfer(
+        privateKey,
+        this.floatToWire(amount),
+        toPerp,
         nonce,
         !this.isTestnet
       )
@@ -320,6 +349,7 @@ export class HyperliquidService {
             coin: item.name,
             szDecimals: item.szDecimals,
             maxLeverage: item.maxLeverage,
+            onlyIsolated: !!item.onlyIsolated,
             ...this.marketContextFields(ctx),
           });
         });
@@ -333,6 +363,7 @@ export class HyperliquidService {
       }),
       tap((markets) => {
         this.pendingAssetContexts = undefined;
+        this.marketSnapshotAttempts = 0;
         this.marketState$.next(markets);
       }),
       catchError((error) => {
@@ -374,6 +405,7 @@ export class HyperliquidService {
         if (this.marketObservers === 0) {
           this.marketLiveSub?.unsubscribe();
           this.marketLiveSub = undefined;
+          clearTimeout(this.marketSnapshotRetryTimer);
         }
       };
     });
@@ -399,7 +431,21 @@ export class HyperliquidService {
 
   private loadMarketSnapshot() {
     this.getMarkets().subscribe({
-      error: () => this.marketState$.next([]),
+      error: () => {
+        if (this.marketObservers === 0) {
+          return;
+        }
+        clearTimeout(this.marketSnapshotRetryTimer);
+        const delay = Math.min(
+          1000 * Math.pow(2, this.marketSnapshotAttempts),
+          30000
+        );
+        this.marketSnapshotAttempts += 1;
+        this.marketSnapshotRetryTimer = setTimeout(
+          () => this.loadMarketSnapshot(),
+          delay
+        );
+      },
     });
   }
 
@@ -492,14 +538,17 @@ export class HyperliquidService {
       return cached.request;
     }
     const request = forkJoin([
-      this.post<any>({ type: 'clearinghouseState', user }).pipe(
-        catchError(() => of(null))
-      ),
+      this.post<any>({ type: 'clearinghouseState', user }),
       this.getSpotState(user),
       this.getAccountMode(user),
     ]).pipe(
       map(([perps, spot, mode]) => this.parseAccount(perps, spot, mode)),
-      catchError(() => of(this.emptyAccount())),
+      catchError((error) => {
+        if (this.accountCache.get(user)?.request === request) {
+          this.accountCache.delete(user);
+        }
+        throw error;
+      }),
       shareReplay({ bufferSize: 1, refCount: false })
     );
     this.accountCache.set(user, {
@@ -857,6 +906,25 @@ export class HyperliquidService {
       map((res) => (Array.isArray(res) ? res : [])),
       catchError(() => of([]))
     );
+  }
+
+  /** Active orders that can still fill and therefore must remain manageable. */
+  getOpenOrders(address: string): Observable<PerpsOpenOrder[]> {
+    return this.post<PerpsOpenOrder[]>({
+      type: 'frontendOpenOrders',
+      user: address.toLowerCase(),
+    }).pipe(map((res) => (Array.isArray(res) ? res : [])));
+  }
+
+  cancelOrder(
+    privateKey: string,
+    assetId: number,
+    orderId: number
+  ): Observable<PerpsExchangeResponse> {
+    return this.signedL1Action(privateKey, {
+      type: 'cancel',
+      cancels: [{ a: assetId, o: orderId }],
+    });
   }
 
   intervalMs(interval: PerpsCandleInterval): number {

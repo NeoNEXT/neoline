@@ -22,7 +22,7 @@ import {
 } from '@popup/_lib/perps';
 import { formatUsd } from '../perps.util';
 
-type FundingTab = 'deposit' | 'withdraw';
+type FundingTab = 'deposit' | 'withdraw' | 'transfer';
 
 /**
  * Combined deposit / withdraw screen for the perps account.
@@ -43,6 +43,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
   /** Balance of the source token in the wallet, for the deposit side. */
   walletBalance = 0;
   submitting = false;
+  accountLoadError = false;
 
   readonly minDeposit = PERPS_MIN_DEPOSIT;
   readonly minWithdraw = PERPS_MIN_WITHDRAW;
@@ -71,6 +72,8 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     const tab = this.route.snapshot.queryParams.tab;
     if (tab === 'withdraw') {
       this.tab = 'withdraw';
+    } else if (tab === 'transfer') {
+      this.tab = 'transfer';
     }
     this.accountSub = this.store.select('account').subscribe((state) => {
       const address = state.currentWallet?.accounts[0]?.address;
@@ -82,10 +85,18 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
         this.address = address;
         this.loadedConfig = this.token;
         const config = this.token;
-        this.hyperliquid.getAccount(address).subscribe((account) => {
-          if (config === this.token && address === this.address) {
-            this.account = account;
-          }
+        this.accountLoadError = false;
+        this.hyperliquid.getAccount(address).subscribe({
+          next: (account) => {
+            if (config === this.token && address === this.address) {
+              this.account = account;
+            }
+          },
+          error: () => {
+            if (config === this.token && address === this.address) {
+              this.accountLoadError = true;
+            }
+          },
         });
         this.loadWalletBalance(address);
       }
@@ -125,20 +136,44 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     return this.tab === 'deposit';
   }
 
+  get isWithdraw(): boolean {
+    return this.tab === 'withdraw';
+  }
+
+  get isTransfer(): boolean {
+    return this.tab === 'transfer';
+  }
+
+  get showTransfer(): boolean {
+    return !!this.account && !this.account.unified && this.account.spotUsdc > 0;
+  }
+
+  get unsupportedAccountMode(): boolean {
+    return (
+      !this.isDeposit && this.account?.abstractionMode === 'portfolioMargin'
+    );
+  }
+
   /** Ceiling for the current direction: wallet balance in, free collateral out. */
   get maxAmount(): number {
     return this.isDeposit
       ? this.walletBalance
+      : this.isTransfer
+      ? this.account?.spotUsdc || 0
       : this.account?.availableBalance || 0;
   }
 
   get receiveAmount(): number {
-    const net = (this.amount || 0) - this.withdrawFee;
+    const net =
+      (this.amount || 0) - (this.isWithdraw ? this.withdrawFee : 0);
     return net > 0 ? net : 0;
   }
 
   get belowMinimum(): boolean {
     if (!this.amount) {
+      return false;
+    }
+    if (this.isTransfer) {
       return false;
     }
     return this.amount < (this.isDeposit ? this.minDeposit : this.minWithdraw);
@@ -154,6 +189,8 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       !this.submitting &&
       !this.belowMinimum &&
       !this.exceedsBalance &&
+      !this.unsupportedAccountMode &&
+      (this.isDeposit || !this.accountLoadError) &&
       (!this.isDeposit || this.walletBalance > 0)
     );
   }
@@ -190,7 +227,8 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     if (!this.canSubmit) {
       return;
     }
-    if (this.wallet?.accounts[0]?.extra?.ledgerSLIP44) {
+    const walletExtra = this.wallet?.accounts[0]?.extra;
+    if (walletExtra?.ledgerSLIP44 || walletExtra?.qrBasedXFP) {
       this.global.snackBarTip('perpsSigningUnavailable');
       return;
     }
@@ -203,6 +241,8 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
       );
       const request: Observable<unknown> = this.isDeposit
         ? this.hyperliquid.deposit(privateKey, this.amount)
+        : this.isTransfer
+        ? this.hyperliquid.transferUsdClass(privateKey, this.amount, true)
         : this.hyperliquid.withdraw(privateKey, this.address, this.amount);
       request.subscribe({
         next: () => {
@@ -210,12 +250,15 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
           this.global.snackBarTip(
             this.isDeposit
               ? 'perpsDepositSubmitted'
+              : this.isTransfer
+              ? 'perpsTransferSubmitted'
               : 'perpsWithdrawSubmitted'
           );
           this.amount = null;
           this.activePreset = null;
-          this.hyperliquid.getAccount(this.address).subscribe((account) => {
-            this.account = account;
+          this.hyperliquid.getAccount(this.address).subscribe({
+            next: (account) => (this.account = account),
+            error: () => (this.accountLoadError = true),
           });
           if (this.isDeposit) {
             this.loadWalletBalance(this.address);

@@ -19,6 +19,7 @@ import {
   PerpsOrderSide,
   PerpsOrderType,
   PerpsPosition,
+  PERPS_MIN_ORDER_NOTIONAL,
 } from '@popup/_lib/perps';
 import {
   coinColor,
@@ -58,6 +59,9 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   activePercent: number = null;
 
   submitting = false;
+  reviewing = false;
+  accountLoadError = false;
+  readonly minOrderNotional = PERPS_MIN_ORDER_NOTIONAL;
 
   //#region template helpers
   coinLogo = coinLogo;
@@ -163,16 +167,22 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   private loadAccount() {
-    this.hyperliquid.getAccount(this.address).subscribe((account) => {
-      this.account = account;
-      this.position = account.positions.find((p) => p.coin === this.coin);
-      if (this.closeMode && this.position) {
-        // Closing means taking the opposite side of what is held.
-        this.side = this.position.isLong ? 'short' : 'long';
-        this.leverage = this.position.leverage;
-        this.amount = Number(this.position.positionValue.toFixed(2));
-        this.activePercent = 100;
-      }
+    this.accountLoadError = false;
+    this.hyperliquid.getAccount(this.address).subscribe({
+      next: (account) => {
+        this.account = account;
+        this.position = account.positions.find((p) => p.coin === this.coin);
+        if (this.closeMode && this.position) {
+          // Closing means taking the opposite side of what is held.
+          this.side = this.position.isLong ? 'short' : 'long';
+          this.leverage = this.position.leverage;
+          this.amount = Number(this.position.positionValue.toFixed(2));
+          this.activePercent = 100;
+        }
+      },
+      error: () => {
+        this.accountLoadError = true;
+      },
     });
   }
 
@@ -204,7 +214,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return maxOrderNotionalForSide(
       this.activeAssetData,
       this.side,
-      this.leverage
+      this.leverage,
+      this.orderPrice
     );
   }
 
@@ -222,6 +233,17 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   get leverageSliderPercent(): number {
     const max = this.market?.maxLeverage || 1;
     return max === 1 ? 100 : ((this.leverage - 1) / (max - 1)) * 100;
+  }
+
+  /** Price used for size, margin and liquidation calculations. */
+  get orderPrice(): number {
+    return this.orderType === 'limit'
+      ? Number(this.limitPrice) || 0
+      : this.market?.markPx || 0;
+  }
+
+  get unsupportedAccountMode(): boolean {
+    return this.account?.abstractionMode === 'portfolioMargin';
   }
 
   get preview(): PerpsOrderPreview {
@@ -246,6 +268,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     }
     const preview = previewOrder({
       market: this.market,
+      executionPrice: this.orderPrice,
       notional: this.amount,
       leverage: this.leverage,
       isLong: this.isLong,
@@ -259,12 +282,12 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
 
   /** Exact position fraction in close mode; mark-price conversion can drift. */
   private get orderSize(): number {
-    if (!this.market || !this.amount) {
+    if (!this.market || !this.amount || !this.orderPrice) {
       return 0;
     }
     if (!this.closeMode || !this.position?.positionValue) {
       return roundSize(
-        this.amount / this.market.markPx,
+        this.amount / this.orderPrice,
         this.market.szDecimals
       );
     }
@@ -311,12 +334,23 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return this.requiredMargin + (this.preview?.fee || 0) > this.available;
   }
 
+  get belowMinimum(): boolean {
+    return (
+      this.amount > 0 &&
+      this.amount < this.minOrderNotional &&
+      (!this.closeMode || !this.fullClose)
+    );
+  }
+
   get canSubmit(): boolean {
     return (
       !this.submitting &&
       !!this.market &&
       this.amount > 0 &&
       !this.insufficient &&
+      !this.belowMinimum &&
+      !this.accountLoadError &&
+      !this.unsupportedAccountMode &&
       (this.orderType === 'market' || this.limitPrice > 0) &&
       !!this.preview?.size
     );
@@ -327,6 +361,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       return;
     }
     this.side = side;
+    this.reviewing = false;
     if (this.activePercent !== null) {
       this.setPercent(this.activePercent);
     }
@@ -334,6 +369,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
 
   setOrderType(type: PerpsOrderType) {
     this.orderType = type;
+    this.reviewing = false;
   }
 
   setLeverage(leverage: number) {
@@ -343,6 +379,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       Math.min(max, Math.round(Number(leverage) || 1))
     );
     this.leverageSelected = true;
+    this.reviewing = false;
     // The amount slider sizes off buying power, which just changed with leverage.
     if (this.activePercent !== null && !this.closeMode) {
       this.setPercent(this.activePercent);
@@ -355,6 +392,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
    */
   setPercent(percent: number) {
     this.activePercent = Math.max(0, Math.min(100, Number(percent) || 0));
+    this.reviewing = false;
     this.amount = Number(
       ((this.percentBase * this.activePercent) / 100).toFixed(2)
     );
@@ -362,6 +400,11 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
 
   onAmountChange() {
     this.activePercent = null;
+    this.reviewing = false;
+  }
+
+  onLimitPriceChange() {
+    this.reviewing = false;
   }
 
   private get percentBase(): number {
@@ -374,17 +417,27 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   }
 
   get ctaLabel(): string {
+    if (!this.reviewing) {
+      return 'perpsReviewOrder';
+    }
     if (this.closeMode) {
       return this.position?.isLong ? 'perpsCloseLong' : 'perpsCloseShort';
     }
     return this.isLong ? 'perpsLong' : 'perpsShort';
   }
 
+  review() {
+    if (this.canSubmit) {
+      this.reviewing = true;
+    }
+  }
+
   async submit() {
-    if (!this.canSubmit) {
+    if (!this.canSubmit || !this.reviewing) {
       return;
     }
-    if (this.wallet?.accounts[0]?.extra?.ledgerSLIP44) {
+    const walletExtra = this.wallet?.accounts[0]?.extra;
+    if (walletExtra?.ledgerSLIP44 || walletExtra?.qrBasedXFP) {
       this.global.snackBarTip('perpsSigningUnavailable');
       return;
     }
@@ -399,14 +452,18 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         .placeOrder(privateKey, {
           assetId: this.market.assetId,
           isBuy: this.isLong,
-          price:
-            this.orderType === 'market' ? this.market.markPx : this.limitPrice,
+          price: this.orderPrice,
           size: this.preview.size,
           szDecimals: this.market.szDecimals,
           maxLeverage: this.market.maxLeverage,
           leverage: this.leverage,
           orderType: this.orderType,
           reduceOnly: this.closeMode,
+          // Always open isolated so the liquidation price shown in the preview
+          // (see previewOrder) is the value the exchange actually binds. Cross
+          // margin would make liquidation a whole-account figure that our
+          // per-order preview cannot match.
+          isCross: false,
         })
         .subscribe({
           next: () => {

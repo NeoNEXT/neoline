@@ -162,14 +162,15 @@ export function availableToTradeForSide(
 export function maxOrderNotionalForSide(
   data: PerpsActiveAssetData,
   side: PerpsOrderSide,
-  leverage = data?.leverage?.value
+  leverage = data?.leverage?.value,
+  executionPrice = data?.markPx
 ): number {
   const available = availableToTradeForSide(data, side, leverage);
   if (!data) {
     return available;
   }
   const sideIndex = side === 'long' ? 0 : 1;
-  const positionCap = data.maxTradeSzs[sideIndex] * data.markPx;
+  const positionCap = data.maxTradeSzs[sideIndex] * executionPrice;
   return positionCap > 0 ? Math.min(available, positionCap) : available;
 }
 
@@ -210,21 +211,31 @@ export function previewClosePosition(params: {
 /**
  * Local estimate of what a market order would cost and where it would liquidate.
  *
- * Liquidation assumes a fresh position backed only by its own margin, with the
- * maintenance margin fraction fixed at 1/(2 × market max leverage) per
- * Hyperliquid's rule. It is an estimate for display; the exchange computes the
- * binding value at fill time from the whole account.
+ * Liquidation assumes an isolated position backed only by its own margin, with
+ * the maintenance margin fraction fixed at 1/(2 × market max leverage) per
+ * Hyperliquid's rule. Orders are placed isolated (see perps-order.component),
+ * so this matches the exchange's binding value; it still ignores fees and
+ * funding, so treat it as a close estimate rather than the exact figure.
  */
 export function previewOrder(params: {
   market: PerpsMarket;
+  /** Expected entry price; limit orders must not use the current mark price. */
+  executionPrice?: number;
   notional: number;
   leverage: number;
   isLong: boolean;
   /** Taker fee rate as a fraction, e.g. 0.00045 for 4.5bps. */
   feeRate: number;
 }): PerpsOrderPreview {
-  const { market, notional, leverage, isLong, feeRate } = params;
-  const price = market.markPx;
+  const {
+    market,
+    executionPrice,
+    notional,
+    leverage,
+    isLong,
+    feeRate,
+  } = params;
+  const price = executionPrice || market.markPx;
   const lev = Math.max(1, leverage);
   const margin = notional / lev;
   const size = price ? roundSize(notional / price, market.szDecimals) : 0;

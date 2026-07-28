@@ -1966,5 +1966,56 @@
   },
   "perpsOracleTip": {
     "message": "資金調達率と証拠金の計算に使用される外部スポット価格です。"
+  },
+  "perpsReviewOrder": {
+    "message": "注文を確認"
+  },
+  "perpsReviewTip": {
+    "message": "確定前に方向、数量、レバレッジ、約定価格、推定清算価格、手数料を確認してください。"
+  },
+  "perpsPortfolioUnsupported": {
+    "message": "ポートフォリオマージン口座は現在未対応です。不完全な担保情報を避けるため取引を無効にしています。"
+  },
+  "perpsOpenOrders": {
+    "message": "未約定注文"
+  },
+  "perpsFills": {
+    "message": "約定履歴"
+  },
+  "perpsCancelOrder": {
+    "message": "取消"
+  },
+  "perpsConfirmCancel": {
+    "message": "取消を確定"
+  },
+  "perpsNoOpenOrders": {
+    "message": "未約定注文はありません"
+  },
+  "perpsLoadFailed": {
+    "message": "Hyperliquid のデータを読み込めません。接続を確認して再試行してください。"
+  },
+  "perpsOrderCanceled": {
+    "message": "注文を取り消しました。"
+  },
+  "perpsTransferToPerps": {
+    "message": "無期限先物へ移動"
+  },
+  "perpsSpotBalance": {
+    "message": "現物残高"
+  },
+  "perpsHyperliquidSpot": {
+    "message": "Hyperliquid 現物口座"
+  },
+  "perpsFrom": {
+    "message": "移動元"
+  },
+  "perpsTo": {
+    "message": "移動先"
+  },
+  "perpsAccount": {
+    "message": "無期限先物口座"
+  },
+  "perpsTransferSubmitted": {
+    "message": "現物 USDC を無期限先物口座へ移動しました。"
   }
 }

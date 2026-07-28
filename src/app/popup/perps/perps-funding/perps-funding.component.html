@@ -15,8 +15,16 @@
     <div class="tab" [class.active]="isDeposit" (click)="setTab('deposit')">
       {{ "perpsDeposit" | translate | async }}
     </div>
-    <div class="tab" [class.active]="!isDeposit" (click)="setTab('withdraw')">
+    <div class="tab" [class.active]="isWithdraw" (click)="setTab('withdraw')">
       {{ "perpsWithdraw" | translate | async }}
+    </div>
+    <div
+      class="tab"
+      *ngIf="showTransfer || isTransfer"
+      [class.active]="isTransfer"
+      (click)="setTab('transfer')"
+    >
+      {{ "perpsTransferToPerps" | translate | async }}
     </div>
   </div>
 
@@ -35,9 +43,13 @@
         {{ "perpsWalletBalance" | translate | async }}
         {{ walletBalance | number: "1.2-2" }} {{ token.symbol }}
       </ng-container>
-      <ng-container *ngIf="!isDeposit">
+      <ng-container *ngIf="isWithdraw">
         {{ "perpsAvailableBalance" | translate | async }}
         {{ formatUsd(account?.availableBalance || 0) }}
+      </ng-container>
+      <ng-container *ngIf="isTransfer">
+        {{ "perpsSpotBalance" | translate | async }}
+        {{ formatUsd(account?.spotUsdc || 0) }}
       </ng-container>
     </div>
 
@@ -74,7 +86,10 @@
     <div class="asset-info">
       <div class="symbol">{{ token.symbol }}</div>
       <div class="meta">
-        {{ token.chainName }}
+        <ng-container *ngIf="!isTransfer">{{ token.chainName }}</ng-container>
+        <ng-container *ngIf="isTransfer">
+          {{ "perpsHyperliquidSpot" | translate | async }}
+        </ng-container>
         <ng-container *ngIf="isDeposit">
           · {{ "perpsBalance" | translate | async }}
           {{ walletBalance | number: "1.2-2" }}
@@ -98,7 +113,7 @@
         <span class="value">{{ minDeposit }} {{ token.symbol }}</span>
       </div>
     </ng-container>
-    <ng-container *ngIf="!isDeposit">
+    <ng-container *ngIf="isWithdraw">
       <div class="row">
         <span class="label">{{ "perpsProviderFee" | translate | async }}</span>
         <span class="value">{{ formatUsd(withdrawFee) }}</span>
@@ -112,6 +127,20 @@
         <span class="value">{{ formatUsd(receiveAmount) }}</span>
       </div>
     </ng-container>
+    <ng-container *ngIf="isTransfer">
+      <div class="row">
+        <span class="label">{{ "perpsFrom" | translate | async }}</span>
+        <span class="value">{{ "perpsHyperliquidSpot" | translate | async }}</span>
+      </div>
+      <div class="row">
+        <span class="label">{{ "perpsTo" | translate | async }}</span>
+        <span class="value">{{ "perpsAccount" | translate | async }}</span>
+      </div>
+      <div class="row">
+        <span class="label">{{ "perpsProviderFee" | translate | async }}</span>
+        <span class="value">{{ formatUsd(0) }}</span>
+      </div>
+    </ng-container>
   </div>
 
   <p class="error-tip" *ngIf="belowMinimum">
@@ -121,12 +150,25 @@
   <p class="error-tip" *ngIf="exceedsBalance">
     {{ "perpsExceedsBalance" | translate | async }}
   </p>
+  <p class="error-tip" *ngIf="accountLoadError && !isDeposit">
+    {{ "perpsLoadFailed" | translate | async }}
+  </p>
+  <p class="error-tip" *ngIf="unsupportedAccountMode">
+    {{ "perpsPortfolioMarginUnsupported" | translate | async }}
+  </p>
 
   <p class="risk-tip">{{ "perpsLeverageRiskTip" | translate | async }}</p>
 
   <div class="submit-wrap">
     <button [disabled]="!canSubmit" (click)="submit()">
-      {{ (isDeposit ? "perpsDeposit" : "perpsWithdraw") | translate | async }}
+      {{
+        (isDeposit
+          ? "perpsDeposit"
+          : isTransfer
+          ? "perpsTransferToPerps"
+          : "perpsWithdraw"
+        ) | translate | async
+      }}
       <ng-container *ngIf="amount"> {{ formatUsd(amount) }}</ng-container>
     </button>
   </div>

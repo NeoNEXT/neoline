@@ -19,6 +19,13 @@
   border-radius: 8px;
   padding: 16px;
 
+  .account-warning {
+    margin: 0 0 10px;
+    color: var(--error-color);
+    font-size: 12px;
+    line-height: 1.5;
+  }
+
   .card-top {
     display: flex;
     align-items: center;
@@ -54,6 +61,16 @@
     font-size: 12px;
     color: var(--sub-title-color);
     margin-top: 4px;
+
+    button {
+      margin-left: 6px;
+      padding: 0;
+      border: none;
+      background: transparent;
+      color: var(--theme-color);
+      font-size: 12px;
+      cursor: pointer;
+    }
   }
 
   .card-actions {
