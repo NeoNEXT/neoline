@@ -114,8 +114,12 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
       (this.place === 'dapp' && this.txParams)
     ) {
       this.getEstimateFeeInterval = timer(0, 10000).subscribe(async () => {
+        let estimate: EvmGasEstimateResult;
+        let res: NeoXFeeInfoProp;
+        // Only the RPC calls belong in the try: a failure here means a network
+        // error. Post-processing (emit, dialog updates) runs afterwards so its
+        // exceptions aren't misreported as an estimate/network failure.
         try {
-          let estimate: EvmGasEstimateResult;
           if (this.place === 'dapp') {
             estimate = await this.evmGasService.estimateGas(this.txParams);
           } else if (this.transferNFT) {
@@ -133,32 +137,32 @@ export class EvmFeeComponent implements OnDestroy, OnChanges, OnInit {
               transferAmount: this.transferAmount || '1',
             });
           }
-          const res = await this.evmGasService.getGasInfo(
+          res = await this.evmGasService.getGasInfo(
             estimate.gasLimit,
             estimate.block
           );
-          res.estimateGasError = estimate.simulationFailed;
-          this.networkError = false;
-          this.sourceNeoXFeeInfo = res;
-          if (
-            !this.customNeoXFeeInfo?.custom &&
-            (!this.isUseSiteFee || (this.isUseSiteFee && !this.siteNeoXFeeInfo))
-          ) {
-            this.returnFee.emit(Object.assign({}, res));
-            this.showEstimateFeeAnimate = true;
-            timer(1500).subscribe(() => {
-              this.showEstimateFeeAnimate = false;
-            });
-          }
-          if (this.editEvmFeeDialogRef?.componentInstance) {
-            this.editEvmFeeDialogRef.componentInstance.data.sourceNeoXFeeInfo =
-              res;
-          }
         } catch {
           // RPC failure: the block itself couldn't be fetched, so there is no basis
           // for an estimate. Surface a network error instead of a fabricated value.
           this.networkError = true;
           this.sourceNeoXFeeInfo = undefined;
+          return;
+        }
+        res.estimateGasError = estimate.simulationFailed;
+        this.networkError = false;
+        this.sourceNeoXFeeInfo = res;
+        if (
+          !this.customNeoXFeeInfo?.custom &&
+          (!this.isUseSiteFee || (this.isUseSiteFee && !this.siteNeoXFeeInfo))
+        ) {
+          this.returnFee.emit(Object.assign({}, res));
+          this.showEstimateFeeAnimate = true;
+          timer(1500).subscribe(() => {
+            this.showEstimateFeeAnimate = false;
+          });
+        }
+        if (this.editEvmFeeDialogRef?.componentInstance) {
+          this.editEvmFeeDialogRef.componentInstance.data.sourceNeoXFeeInfo = res;
         }
       });
     }

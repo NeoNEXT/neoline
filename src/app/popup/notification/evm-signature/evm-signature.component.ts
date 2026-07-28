@@ -100,32 +100,39 @@ export class PopupNoticeEvmSignComponent implements OnInit, OnDestroy {
               this.requestReady = true;
               return;
             }
-            switch (this.signMethod) {
-              case ETH_EOA_SIGN_METHODS.PersonalSign:
-                const text = this.sanitizeString(this.hexToText(params[0]));
-                this.challenge = text;
-                this.signAddress = params[1];
-                break;
-              case ETH_EOA_SIGN_METHODS.SignTypedDataV4:
-                this.signAddress = params[0];
-                this.typedData = params[1];
-                this.strTypeData =
-                  typeof this.typedData === 'string'
-                    ? this.typedData
-                    : JSON.stringify(this.typedData);
-                if (typeof this.typedData === 'string') {
-                  this.typedData = JSON.parse(this.typedData);
-                }
-                this.setDisplayWallet();
-                this.authorizations = getTypedDataAuthorizations(
-                  this.typedData,
-                  this.signAddress
-                );
-                this.permitRequest = getEvmPermitRequest(
-                  this.typedData,
-                  this.neoXNetwork?.chainId
-                );
-                break;
+            try {
+              switch (this.signMethod) {
+                case ETH_EOA_SIGN_METHODS.PersonalSign:
+                  const text = this.sanitizeString(this.hexToText(params[0]));
+                  this.challenge = text;
+                  this.signAddress = params[1];
+                  break;
+                case ETH_EOA_SIGN_METHODS.SignTypedDataV4:
+                  this.signAddress = params[0];
+                  this.typedData = params[1];
+                  this.strTypeData =
+                    typeof this.typedData === 'string'
+                      ? this.typedData
+                      : JSON.stringify(this.typedData);
+                  if (typeof this.typedData === 'string') {
+                    this.typedData = JSON.parse(this.typedData);
+                  }
+                  this.setDisplayWallet();
+                  this.authorizations = getTypedDataAuthorizations(
+                    this.typedData,
+                    this.signAddress
+                  );
+                  this.permitRequest = getEvmPermitRequest(
+                    this.typedData,
+                    this.neoXNetwork?.chainId
+                  );
+                  break;
+              }
+            } catch (error) {
+              // Malformed request data (unparseable typed data, bad address, ...)
+              // must not leave the view stuck on the loading spinner — fall back
+              // to rendering whatever was parsed as a plain message.
+              console.log(error);
             }
             this.requestReady = true;
           });
@@ -243,11 +250,16 @@ export class PopupNoticeEvmSignComponent implements OnInit, OnDestroy {
   }
 
   private setDisplayWallet(): void {
-    if (!this.signAddress) {
+    // A malformed signer address must not throw here: ethers.getAddress rejects
+    // invalid input, and this runs before requestReady is set, so an exception
+    // would leave the view stuck on the loading spinner.
+    if (!this.signAddress || !ethers.isAddress(this.signAddress)) {
+      this.encryptWallet = undefined;
       return;
     }
-    this.encryptWallet = this.neoXWalletArr.find(
-      (item) => item.accounts[0].address === ethers.getAddress(this.signAddress)
+    const normalized = ethers.getAddress(this.signAddress);
+    this.encryptWallet = this.neoXWalletArr?.find(
+      (item) => item.accounts[0].address === normalized
     );
   }
 }

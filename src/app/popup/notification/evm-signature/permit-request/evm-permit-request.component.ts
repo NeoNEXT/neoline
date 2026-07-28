@@ -19,6 +19,7 @@ import { Unsubscribable } from 'rxjs';
 import {
   buildPermitMessageTree,
   formatPermitAmount,
+  isUnlimitedPermitAmount,
   PermitMessageNode,
 } from './evm-permit-message';
 import { EvmPermitEntry, EvmPermitRequest } from './evm-permit-request';
@@ -27,6 +28,8 @@ interface PermitEntrySummary extends EvmPermitEntry {
   amount?: string;
   tokenSymbol: string;
   fiatAmount?: string;
+  /** True when rawAmount is the uint max — an unlimited allowance. */
+  unlimited?: boolean;
 }
 
 interface PermitSummary {
@@ -80,6 +83,7 @@ export class PopupNoticeEvmPermitRequestComponent
         ...entry,
         amount: entry.rawAmount,
         tokenSymbol: this.formatAddress(entry.tokenAddress),
+        unlimited: this.isUnlimitedEntry(entry.rawAmount),
       })),
       interactingName:
         this.request.type === 'permit2'
@@ -110,9 +114,21 @@ export class PopupNoticeEvmPermitRequestComponent
         ? 'authorizationErc20UnlimitedDescription'
         : 'authorizationErc20RevokeDescription';
     }
-    return this.summary.entries.length === 1
-      ? 'approveNormalTip'
-      : 'authorizationErc20ApproveDescription';
+    if (this.summary.entries.length === 1) {
+      return this.summary.entries[0].unlimited
+        ? 'authorizationErc20UnlimitedDescription'
+        : 'approveNormalTip';
+    }
+    return 'authorizationErc20ApproveDescription';
+  }
+
+  // Permit2 amounts are uint160, EIP-2612 `value` is uint256; DAI permits carry
+  // no amount. Compare against the matching uint max to flag unlimited approvals.
+  private isUnlimitedEntry(rawAmount?: string): boolean {
+    return isUnlimitedPermitAmount(
+      rawAmount,
+      this.request.type === 'permit2' ? 160 : 256
+    );
   }
 
   get authorizationTitleKey(): string {
@@ -157,7 +173,13 @@ export class PopupNoticeEvmPermitRequestComponent
       .filter((entry) => entry.tokenAddress.toLowerCase() === tokenAddress)
       .forEach((entry) => {
         entry.tokenSymbol = asset.symbol || entry.tokenSymbol;
-        if (entry.rawAmount !== undefined && asset.decimals !== undefined) {
+        // Unlimited allowances render as "Unlimited"; formatting the uint max or
+        // pricing it would produce a meaningless 30+ digit number / fiat value.
+        if (
+          !entry.unlimited &&
+          entry.rawAmount !== undefined &&
+          asset.decimals !== undefined
+        ) {
           entry.amount = this.trimAmount(
             formatPermitAmount(entry.rawAmount, asset.decimals)
           );
@@ -182,6 +204,7 @@ export class PopupNoticeEvmPermitRequestComponent
         node.tokenSymbol = asset.symbol;
         if (
           node.kind === 'amount' &&
+          !node.unlimited &&
           node.rawValue !== undefined &&
           asset.decimals !== undefined
         ) {

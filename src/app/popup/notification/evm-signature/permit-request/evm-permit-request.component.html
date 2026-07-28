@@ -79,7 +79,10 @@
         >
           <span class="label">{{ "SpendingCap" | translate | async }}</span>
           <div class="authorization-value">
-            <span>{{ entry.amount }}</span>
+            <span *ngIf="entry.unlimited">
+              {{ "unlimited" | translate | async }}
+            </span>
+            <span *ngIf="!entry.unlimited">{{ entry.amount }}</span>
             <copy [value]="entry.tokenAddress">
               <div class="asset-logo permit-asset">
                 <token-logo
@@ -202,7 +205,12 @@
 
             <copy *ngSwitchCase="'amount'" [value]="node.rawValue">
               <span class="field-value amount-value">
-                {{ node.displayValue }}
+                <ng-container *ngIf="node.unlimited">
+                  {{ "unlimited" | translate | async }}
+                </ng-container>
+                <ng-container *ngIf="!node.unlimited">
+                  {{ node.displayValue }}
+                </ng-container>
               </span>
             </copy>
 

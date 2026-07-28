@@ -124,9 +124,11 @@ export function parseRevertReason(error: any): string | undefined {
   const message = typeof error.message === 'string' ? error.message : '';
   const stripped = message
     .replace(/^execution reverted:?\s*/i, '')
-    // Geth sometimes appends the raw return data (e.g. "...: 0x08c379a0…");
-    // drop it so we show just the decoded reason, like MetaMask.
-    .replace(/:?\s*0x[0-9a-fA-F]+\s*$/, '')
+    // Geth sometimes appends the raw ABI-encoded return data (e.g.
+    // "...: 0x08c379a0…"); drop it so we show just the decoded reason, like
+    // MetaMask. Require ≥8 hex digits so a short hex value that is genuinely
+    // part of the reason (e.g. "bad nonce 0x1a2b") is kept, not truncated.
+    .replace(/:?\s*0x[0-9a-fA-F]{8,}\s*$/, '')
     .trim();
   if (stripped) {
     return stripped;

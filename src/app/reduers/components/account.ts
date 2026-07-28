@@ -4,6 +4,7 @@ import { wallet as wallet3 } from '@cityofzion/neon-core-neo3/lib';
 import {
   ChainType,
   RpcNetwork,
+  clampNetworkIndex,
   DEFAULT_N2_RPC_NETWORK,
   DEFAULT_N3_RPC_NETWORK,
   UPDATE_WALLET,
@@ -66,19 +67,6 @@ const initialState: AccountState = {
   n3NetworkIndex: 0,
   neoXNetworkIndex: 0,
 };
-
-// A persisted network index can fall out of sync with its networks array (a
-// custom network was removed, the index was never written, a default-network
-// migration reordered the list, ...). Indexing past the array yields
-// `undefined`, which crashes every component that reads the current network
-// (header, home/showBridge, transfer, ...). Clamp to a valid slot so the
-// derived network is always defined.
-function clampNetworkIndex(networks: RpcNetwork[], index: number): number {
-  if (!Array.isArray(networks) || networks.length === 0) {
-    return 0;
-  }
-  return index >= 0 && index < networks.length ? index : 0;
-}
 
 // This reducer is pure: it only computes the next state. Persisting the changed
 // slices to extension/local storage is handled by the persistAccountState

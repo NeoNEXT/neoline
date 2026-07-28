@@ -34,6 +34,8 @@ export interface PermitMessageNode {
   displayValue?: string;
   tokenAddress?: string;
   tokenSymbol?: string;
+  /** True when an `amount` node equals its uint type's max (unlimited allowance). */
+  unlimited?: boolean;
   timestamp?: PermitTimestampDisplay;
   children?: PermitMessageNode[];
 }
@@ -78,6 +80,34 @@ export function formatPermitAmount(
   } catch {
     return rawValue;
   }
+}
+
+/**
+ * True when a permit amount equals the maximum value of its uint type — an
+ * effectively unlimited allowance (uint160 max for Permit2, uint256 max for
+ * EIP-2612). Callers surface this as "Unlimited" rather than a 30–78 digit
+ * number, matching the calldata-approve flow.
+ */
+export function isUnlimitedPermitAmount(
+  rawValue: unknown,
+  bits: number
+): boolean {
+  if (rawValue === undefined || rawValue === null) {
+    return false;
+  }
+  try {
+    return (
+      BigInt(rawValue as string | number | bigint) ===
+      (1n << BigInt(bits)) - 1n
+    );
+  } catch {
+    return false;
+  }
+}
+
+function uintBitsFromType(type: string): number {
+  const bitMatch = /^uint(\d+)$/.exec(type);
+  return bitMatch ? Number(bitMatch[1]) : 256;
 }
 
 export function formatPermitTimestamp(
@@ -193,6 +223,7 @@ function buildNode(
       rawValue: value,
       displayValue: String(value),
       tokenAddress,
+      unlimited: isUnlimitedPermitAmount(value, uintBitsFromType(type)),
     };
   }
 

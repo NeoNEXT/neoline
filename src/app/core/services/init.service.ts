@@ -18,6 +18,7 @@ import {
   DEFAULT_N3_RPC_NETWORK,
   DEFAULT_RPC_URLS,
   RpcNetwork,
+  clampNetworkIndex,
   UPDATE_NEOX_NETWORKS,
 } from '@popup/_lib';
 import { AppState } from '@/app/reduers';
@@ -45,16 +46,6 @@ export class InitService {
     private store: Store<AppState>,
     private http: HttpClient
   ) {}
-
-  // A persisted network index can point past its networks array (e.g. it was
-  // left at a custom network's slot after that network was removed). Clamp it
-  // back into range so `networks[index]` never resolves to `undefined`.
-  private clampNetworkIndex(networks: any[], index: number): number {
-    if (!Array.isArray(networks) || networks.length === 0) {
-      return 0;
-    }
-    return index >= 0 && index < networks.length ? index : 0;
-  }
 
   public initData() {
     const getWallet = this.chrome.getStorage(STORAGE_NAME.wallet);
@@ -165,15 +156,15 @@ export class InitService {
           : 'Neo2';
         // Clamp any out-of-range stored index, and persist the correction so a
         // stale selection doesn't keep re-loading (and crashing) every launch.
-        const n2NetworkIndex = this.clampNetworkIndex(
+        const n2NetworkIndex = clampNetworkIndex(
           n2NetworksRes,
           n2NetworkIndexRes
         );
-        const n3NetworkIndex = this.clampNetworkIndex(
+        const n3NetworkIndex = clampNetworkIndex(
           n3NetworksRes,
           n3NetworkIndexRes
         );
-        const neoXNetworkIndex = this.clampNetworkIndex(
+        const neoXNetworkIndex = clampNetworkIndex(
           neoXNetworksRes,
           neoXNetworkIndexRes
         );
