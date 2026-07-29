@@ -10,6 +10,7 @@ import {
   getStorage,
   getLocalStorage,
   getSessionStorage,
+  setSessionStorage,
   setLocalStorage,
 } from '../../common';
 import {
@@ -99,7 +100,8 @@ const connect: RequestHandlerModule = {
 const login: RequestHandlerModule = {
   targets: [requestTarget.Login],
   handle: ({ request, sendResponse }) => {
-    getSessionStorage('password', (pwd) => {
+    getSessionStorage('password', async (storagePwd) => {
+      const pwd = await decryptSessionSecret(storagePwd);
       if (pwd) {
         windowCallback({
           return: requestTarget.Login,
@@ -107,6 +109,12 @@ const login: RequestHandlerModule = {
           ID: request.ID,
         });
       } else {
+        if (storagePwd) {
+          await setSessionStorage({
+            password: '',
+            [STORAGE_NAME.hasLoginAddress]: {},
+          }).catch(() => {});
+        }
         createWindow(
           `/index.html#popup/login?notification=true&messageID=${request.ID}`,
           false

@@ -211,8 +211,13 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           });
           return true;
         case 'set':
-          setSessionStorage(request.data);
-          sendResponse('');
+          setSessionStorage(request.data)
+            .then(() => sendResponse(''))
+            .catch((error) =>
+              sendResponse({
+                error: error?.message || String(error),
+              })
+            );
           return true;
         case 'clear':
           clearSessionStorage();

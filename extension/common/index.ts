@@ -140,9 +140,23 @@ export function getSessionStorage(key, callback): Promise<any> {
   });
 }
 
-export function setSessionStorage(value) {
-  chrome.storage.session.set(value, () => {
-    // console.log('Set session storage', value);
+export function setSessionStorage(value): Promise<void> {
+  return new Promise((resolve, reject) => {
+    if (!isExtensionContextValid()) {
+      reject(new Error('Extension context invalidated.'));
+      return;
+    }
+    try {
+      chrome.storage.session.set(value, () => {
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+          return;
+        }
+        resolve();
+      });
+    } catch (error) {
+      reject(error);
+    }
   });
 }
 

@@ -3,6 +3,7 @@ import {
   ADD_NEO3_WALLETS,
   INIT_ACCOUNT,
   RESET_ACCOUNT,
+  SORT_WALLETS,
   UPDATE_NEO2_NETWORK_INDEX,
   UPDATE_NEO3_NETWORKS,
   UPDATE_WALLET,
@@ -141,5 +142,26 @@ describe('persistAccountState meta-reducer', () => {
 
     expect(state.account.currentWallet).toBe(fakeWallet);
     expect(setItem).toHaveBeenCalledWith('wallet', jasmine.any(String));
+  });
+
+  it('persists only the selected chain when sorting a same-reference array', () => {
+    const neo2Wallets = state.account.neo2WalletArr;
+    neo2Wallets.push({ export: () => ({ address: 'neo2' }) } as any);
+
+    state = reducer(state, {
+      type: SORT_WALLETS,
+      data: { chainType: 'Neo2', walletArr: neo2Wallets },
+    } as any);
+
+    expect(setItem).toHaveBeenCalledTimes(1);
+    expect(setItem).toHaveBeenCalledWith('walletArr', jasmine.any(String));
+    expect(setItem).not.toHaveBeenCalledWith(
+      'walletArr-Neo3',
+      jasmine.anything()
+    );
+    expect(setItem).not.toHaveBeenCalledWith(
+      'walletArr-NeoX',
+      jasmine.anything()
+    );
   });
 });

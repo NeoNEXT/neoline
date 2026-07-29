@@ -189,11 +189,6 @@ const ACTION_PERSISTED_FIELDS: Record<string, Array<keyof AccountState>> = {
     'neo3WIFArr',
   ],
 
-  // SORT_WALLETS touches exactly one chain's array (chosen by action.data at
-  // runtime); a static map can't know which, so list all three — the unchanged
-  // two are simply re-written with their current value.
-  [SORT_WALLETS]: ['neo2WalletArr', 'neo3WalletArr', 'neoXWalletArr'],
-
   [ADD_NEO3_NETWORK]: ['n3Networks'],
   [ADD_NEOX_NETWORK]: ['neoXNetworks'],
 
@@ -205,6 +200,22 @@ const ACTION_PERSISTED_FIELDS: Record<string, Array<keyof AccountState>> = {
   [UPDATE_NEO3_NETWORK_INDEX]: ['n3NetworkIndex'],
   [UPDATE_NEOX_NETWORK_INDEX]: ['neoXNetworkIndex'],
 };
+
+function getForcedFields(action: any): Array<keyof AccountState> {
+  if (action.type !== SORT_WALLETS) {
+    return ACTION_PERSISTED_FIELDS[action.type] ?? [];
+  }
+  switch (action.data?.chainType) {
+    case 'Neo2':
+      return ['neo2WalletArr'];
+    case 'Neo3':
+      return ['neo3WalletArr'];
+    case 'NeoX':
+      return ['neoXWalletArr'];
+    default:
+      return [];
+  }
+}
 
 /**
  * Meta-reducer that persists changed account fields to extension/local storage
@@ -225,7 +236,7 @@ export function persistAccountState(
       nextAccount !== prevAccount &&
       !NON_PERSISTED_ACTIONS.has(action.type)
     ) {
-      const forcedFields = ACTION_PERSISTED_FIELDS[action.type] ?? [];
+      const forcedFields = getForcedFields(action);
       for (const { field, key, serialize } of PERSISTED_FIELDS) {
         // Force-write the fields this action is responsible for (robust against
         // in-place mutation), and fall back to reference-change detection for

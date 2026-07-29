@@ -156,8 +156,15 @@ export class PopupLoginComponent
       });
   }
 
-  private handleLoginSuccess() {
-    this.chrome.setPassword(this.loginForm.value.password);
+  private async handleLoginSuccess() {
+    try {
+      await this.chrome.setPassword(this.loginForm.value.password);
+    } catch (error) {
+      this.loading = false;
+      this.global.log('cache password failed', error);
+      this.global.snackBarTip('failed');
+      return;
+    }
     if (this.aRouter.snapshot.queryParams.notification !== undefined) {
       this.chrome.windowCallback(
         {

@@ -148,15 +148,27 @@ export class ExtensionService {
     });
   }
 
-  setSessionStorage(value) {
-    chrome.runtime.sendMessage(
-      {
-        type: 'sessionStorage',
-        method: 'set',
-        data: value,
-      },
-      () => {}
-    );
+  setSessionStorage(value): Promise<void> {
+    return new Promise((resolve, reject) => {
+      chrome.runtime.sendMessage(
+        {
+          type: 'sessionStorage',
+          method: 'set',
+          data: value,
+        },
+        (result) => {
+          if (chrome.runtime.lastError) {
+            reject(new Error(chrome.runtime.lastError.message));
+            return;
+          }
+          if (result?.error) {
+            reject(new Error(result.error));
+            return;
+          }
+          resolve();
+        }
+      );
+    });
   }
 
   clearSessionStorage() {

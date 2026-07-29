@@ -277,14 +277,18 @@ export class ChromeService {
     return storagePwd;
   }
 
-  // Fire-and-forget for callers (returns void), but the write is async because
-  // encryption uses WebCrypto. Writes are chained so they apply in order, and
-  // getPassword() awaits the tail.
-  public setPassword(pwd: string): void {
-    this.pendingPasswordWrite = this.pendingPasswordWrite
+  // Encryption and extension storage are both asynchronous. Return the queued
+  // write so callers that close their window can wait until it is durable.
+  public setPassword(pwd: string): Promise<void> {
+    const write = this.pendingPasswordWrite
       .catch(() => {})
       .then(() => this.writePassword(pwd));
-    this.pendingPasswordWrite.catch(() => {});
+    this.pendingPasswordWrite = write;
+    // Some existing callers intentionally fire-and-forget. Mark the rejection
+    // handled for those callers while still returning the rejecting promise to
+    // callers that await it.
+    write.catch(() => {});
+    return write;
   }
 
   private async writePassword(pwd: string): Promise<void> {
@@ -292,13 +296,15 @@ export class ChromeService {
     if (!this.check) {
       sessionStorage.setItem('password', storagePwd);
     } else {
-      this.crx.setSessionStorage({ password: storagePwd });
+      await this.crx.setSessionStorage({ password: storagePwd });
     }
     if (!pwd) {
       if (!this.check) {
         sessionStorage.removeItem('hasLoginAddress');
       } else {
-        this.crx.setSessionStorage({ [STORAGE_NAME.hasLoginAddress]: {} });
+        await this.crx.setSessionStorage({
+          [STORAGE_NAME.hasLoginAddress]: {},
+        });
       }
     }
   }
