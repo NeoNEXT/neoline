@@ -55,7 +55,9 @@ export async function ethereumRPCHandler(
       const newData = { ...localData, [messageID]: txParams };
       setLocalStorage({ [STORAGE_NAME.InvokeArgsArray]: newData });
       createWindow(
-        `evm-send-transaction?messageID=${messageID}&origin=${hostInfo.origin}&icon=${hostInfo.icon}`
+        `evm-send-transaction?messageID=${messageID}&origin=${hostInfo.origin}&icon=${encodeURIComponent(
+          hostInfo.icon,
+        )}`
       );
     } catch (error) {
       return Promise.reject(error);

@@ -85,9 +85,9 @@ async function switchEthereumChainHandler(params, messageID, hostInfo) {
       `wallet-switch-network?chainType=NeoX&chainId=${parseInt(
         _chainId,
         16
-      )}&messageID=${messageID}&icon=${hostInfo.icon}&hostname=${
-        hostInfo.hostname
-      }`
+      )}&messageID=${messageID}&icon=${encodeURIComponent(
+        hostInfo.icon,
+      )}&hostname=${hostInfo.hostname}`
     );
     return;
   }

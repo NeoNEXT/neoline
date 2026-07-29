@@ -227,6 +227,8 @@ async function handleWatchAsset({
   }
 
   createWindow(
-    `evm-add-asset?${queryString}messageID=${messageID}&icon=${hostInfo.icon}&hostname=${hostInfo.hostname}`
+    `evm-add-asset?${queryString}messageID=${messageID}&icon=${encodeURIComponent(
+      hostInfo.icon,
+    )}&hostname=${hostInfo.hostname}`
   );
 }

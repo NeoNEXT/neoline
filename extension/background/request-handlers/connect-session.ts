@@ -27,7 +27,7 @@ const switchRequestChain: RequestHandlerModule = {
       // hostname shown to the user comes from the trusted sender, not the page.
       const hostname = getTrustedHostname(sender);
       createWindow(
-        `wallet-switch-network?chainType=${request.connectChain}&messageID=${request.ID}&icon=${request.icon}&hostname=${hostname}`
+        `wallet-switch-network?chainType=${request.connectChain}&messageID=${request.ID}&icon=${encodeURIComponent(request.icon)}&hostname=${hostname}`
       );
     } else {
       windowCallback({
@@ -62,7 +62,7 @@ const connect: RequestHandlerModule = {
             });
           } else {
             createWindow(
-              `authorization?icon=${request.icon}&hostname=${trustedHostname}&title=${request.title}&allowEdit=${request.allowEdit}&connectChainType=${request.connectChain}&messageID=${request.ID}`
+              `authorization?icon=${encodeURIComponent(request.icon)}&hostname=${trustedHostname}&title=${request.title}&allowEdit=${request.allowEdit}&connectChainType=${request.connectChain}&messageID=${request.ID}`
             );
           }
         } else {
@@ -85,7 +85,7 @@ const connect: RequestHandlerModule = {
             // );
           } else {
             createWindow(
-              `authorization?icon=${request.icon}&hostname=${trustedHostname}&title=${request.title}&allowEdit=${request.allowEdit}&messageID=${request.ID}`
+              `authorization?icon=${encodeURIComponent(request.icon)}&hostname=${trustedHostname}&title=${request.title}&allowEdit=${request.allowEdit}&messageID=${request.ID}`
             );
           }
         }

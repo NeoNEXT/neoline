@@ -112,26 +112,65 @@ export function getProvider(): Promise<Provider> {
   });
 }
 
-export function getIcon() {
-  const faviconEl: HTMLLinkElement = document.querySelector(
-    'link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]',
-  );
-  if (faviconEl) {
-    return faviconEl?.href;
+/**
+ * Resolves once per page and is memoized: the favicon rarely changes, and
+ * hostInfo is rebuilt on every request, so validating it each time would add
+ * image-load latency to every JSON-RPC call.
+ */
+let iconPromise: Promise<string> | undefined;
+
+export function getIcon(): Promise<string> {
+  if (!iconPromise) {
+    iconPromise = resolveIcon();
   }
-  return `${location.origin}/favicon.ico`;
+  return iconPromise;
 }
 
-function connect(
+async function resolveIcon(): Promise<string> {
+  const candidates = Array.from(
+    document.querySelectorAll(
+      'link[rel="icon"], link[rel="shortcut icon"], link[rel="apple-touch-icon"]',
+    ),
+  ).map((el) => (el as HTMLLinkElement).href);
+  candidates.push(`${location.origin}/favicon.ico`);
+  for (const href of candidates) {
+    if (href && (await imgExists(href))) {
+      return href;
+    }
+  }
+  return '';
+}
+
+/**
+ * Returns true only if the URL actually loads as an image. This drops broken
+ * links and non-image URLs (e.g. `javascript:` favicons never fire `onload`).
+ * A short timeout keeps a slow/hanging favicon from blocking the dApp request.
+ */
+function imgExists(url: string): Promise<boolean> {
+  return new Promise((resolve) => {
+    const img = new Image();
+    const finish = (ok: boolean) => {
+      clearTimeout(timer);
+      resolve(ok);
+    };
+    const timer = setTimeout(() => finish(false), 1500);
+    img.onload = () => finish(true);
+    img.onerror = () => finish(false);
+    img.src = url;
+  });
+}
+
+async function connect(
   connectChain: ChainType,
   allowEdit: boolean,
 ): Promise<boolean | any> {
   const ID = getMessageID();
+  const icon = await getIcon();
   return new Promise((resolveMain, rejectMain) => {
     window.postMessage(
       {
         target: requestTarget.Connect,
-        icon: getIcon(),
+        icon,
         hostname: location.hostname,
         title: document.title,
         connectChain,
@@ -190,13 +229,16 @@ export function login(): Promise<boolean | any> {
   });
 }
 
-function switchToRequestChain(connectChain: ChainType): Promise<boolean | any> {
+async function switchToRequestChain(
+  connectChain: ChainType,
+): Promise<boolean | any> {
   const ID = getMessageID();
+  const icon = await getIcon();
   return new Promise((resolveMain, rejectMain) => {
     window.postMessage(
       {
         target: requestTarget.SwitchRequestChain,
-        icon: getIcon(),
+        icon,
         hostname: location.hostname,
         title: document.title,
         connectChain,

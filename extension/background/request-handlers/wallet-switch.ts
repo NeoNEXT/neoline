@@ -50,7 +50,7 @@ const walletSwitchNetwork: RequestHandlerModule = {
     for (const key in parameter) {
       if (parameter.hasOwnProperty(key)) {
         const value = parameter[key];
-        queryString += `${key}=${value}&`;
+        queryString += `${key}=${encodeURIComponent(value)}&`;
       }
     }
     createWindow(`wallet-switch-network?${queryString}messageID=${request.ID}`);
@@ -72,7 +72,7 @@ const walletSwitchAccount: RequestHandlerModule = {
     for (const key in parameter) {
       if (parameter.hasOwnProperty(key)) {
         const value = parameter[key];
-        queryString += `${key}=${value}&`;
+        queryString += `${key}=${encodeURIComponent(value)}&`;
       }
     }
     createWindow(`wallet-switch-account?${queryString}messageID=${request.ID}`);

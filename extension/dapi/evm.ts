@@ -66,7 +66,7 @@ class NEOLineEVMController extends EventEmitter {
 
     (args as any).hostInfo = {
       hostname: location.hostname,
-      icon: getIcon(),
+      icon: await getIcon(),
       origin: location.origin,
     };
 

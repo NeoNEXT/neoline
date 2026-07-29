@@ -444,7 +444,7 @@ export class Init {
       });
     }
     parameter.hostname = location.hostname;
-    parameter.icon = getIcon();
+    parameter.icon = await getIcon();
     parameter.chainType = 'Neo3';
     return sendMessage(requestTargetN3.WalletSwitchNetwork, parameter);
   }
@@ -452,7 +452,7 @@ export class Init {
   public async switchWalletAccount(): Promise<any> {
     const parameter: WalletSwitchAccountArg = {
       hostname: location.hostname,
-      icon: getIcon(),
+      icon: await getIcon(),
       chainType: 'Neo3',
     };
     return sendMessage(requestTargetN3.WalletSwitchAccount, parameter);

@@ -153,9 +153,9 @@ async function addEthereumChainHandler(
       `wallet-switch-network?chainType=NeoX&chainId=${parseInt(
         _chainId,
         16
-      )}&messageID=${messageID}&icon=${hostInfo.icon}&hostname=${
-        hostInfo.hostname
-      }`
+      )}&messageID=${messageID}&icon=${encodeURIComponent(
+        hostInfo.icon,
+      )}&hostname=${hostInfo.hostname}`
     );
     return;
   }
@@ -237,7 +237,9 @@ async function addEthereumChainHandler(
     queryString += `${key}=${value}&`;
   }
   createWindow(
-    `evm-add-chain?${queryString}messageID=${messageID}&icon=${hostInfo.icon}&hostname=${hostInfo.hostname}`
+    `evm-add-chain?${queryString}messageID=${messageID}&icon=${encodeURIComponent(
+      hostInfo.icon,
+    )}&hostname=${hostInfo.hostname}`
   );
 
   return;
