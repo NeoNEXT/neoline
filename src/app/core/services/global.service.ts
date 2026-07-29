@@ -13,7 +13,6 @@ import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
-import { PopupAddNetworkDialogComponent } from '@/app/popup/_dialogs';
 
 @Injectable()
 export class GlobalService {
@@ -184,15 +183,19 @@ export class GlobalService {
       }
     }
     if (!explorer && chain !== 'Neo2') {
-      this.dialog.open(PopupAddNetworkDialogComponent, {
-        panelClass: 'custom-dialog-panel',
-        backdropClass: 'custom-dialog-backdrop',
-        data: {
-          addChainType: chain,
-          index: networkIndex,
-          editNetwork: network,
-          addExplorer: true,
-        },
+      return import(
+        '@/app/popup/_dialogs/add-network/add-network.dialog'
+      ).then(({ PopupAddNetworkDialogComponent }) => {
+        this.dialog.open(PopupAddNetworkDialogComponent, {
+          panelClass: 'custom-dialog-panel',
+          backdropClass: 'custom-dialog-backdrop',
+          data: {
+            addChainType: chain,
+            index: networkIndex,
+            editNetwork: network,
+            addExplorer: true,
+          },
+        });
       });
     }
   }

@@ -282,6 +282,7 @@ const invokeRead: RequestHandlerModule = {
       signers,
     ];
     const args = request.parameter[2];
+    let malformedInput = false;
     args.forEach((item, index) => {
       if (item.type === 'Address') {
         args[index] = {
@@ -301,16 +302,20 @@ const invokeRead: RequestHandlerModule = {
               value: false,
             };
           } else {
-            windowCallback({
-              error: ERRORS.MALFORMED_INPUT,
-              return: requestTargetN3.InvokeRead,
-              ID: request.ID,
-            });
-            // window.close();
+            malformedInput = true;
           }
         }
       }
     });
+    if (malformedInput) {
+      windowCallback({
+        error: ERRORS.MALFORMED_INPUT,
+        return: requestTargetN3.InvokeRead,
+        ID: request.ID,
+      });
+      sendResponse('');
+      return;
+    }
     request.parameter[2] = args;
     const returnRes = {
       data: {},
@@ -356,6 +361,7 @@ const invokeReadMulti: RequestHandlerModule = {
           allowedgroups: item.allowedGroups || undefined,
         };
       });
+      let malformedInput = false;
       requestData.invokeReadArgs.forEach((invokeReadItem: any, index) => {
         invokeReadItem.args.forEach((item, itemIndex) => {
           if (item === null || typeof item !== 'object') {
@@ -378,12 +384,7 @@ const invokeReadMulti: RequestHandlerModule = {
                   value: false,
                 };
               } else {
-                windowCallback({
-                  error: ERRORS.MALFORMED_INPUT,
-                  return: requestTargetN3.InvokeReadMulti,
-                  ID: request.ID,
-                });
-                // window.close();
+                malformedInput = true;
               }
             }
           }
@@ -395,6 +396,15 @@ const invokeReadMulti: RequestHandlerModule = {
           signers,
         ];
       });
+      if (malformedInput) {
+        windowCallback({
+          error: ERRORS.MALFORMED_INPUT,
+          return: requestTargetN3.InvokeReadMulti,
+          ID: request.ID,
+        });
+        sendResponse('');
+        return;
+      }
       const returnRes = {
         data: [],
         ID: request.ID,

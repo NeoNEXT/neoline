@@ -1,8 +1,9 @@
 import { GlobalService } from './global.service';
-import { NetworkType, RpcNetwork } from '@/app/popup/_lib';
+import { NetworkType } from '@/app/popup/_lib/chain';
+import type { RpcNetwork } from '@cross-runtime/constants';
 
 describe('GlobalService', () => {
-  it('opens the add-network dialog when an explorer is missing', () => {
+  it('opens the add-network dialog when an explorer is missing', async () => {
     const dialog = jasmine.createSpyObj('MatDialog', ['open']);
     const service = new GlobalService(
       null,
@@ -20,15 +21,13 @@ describe('GlobalService', () => {
       id: 123,
     };
 
-    expect(() =>
-      service.toExplorer({
-        chain: 'Neo3',
-        network,
-        networkIndex: 0,
-        type: 'account',
-        value: 'NExample',
-      }),
-    ).not.toThrow();
+    await service.toExplorer({
+      chain: 'Neo3',
+      network,
+      networkIndex: 0,
+      type: 'account',
+      value: 'NExample',
+    });
     expect(dialog.open).toHaveBeenCalled();
   });
 });

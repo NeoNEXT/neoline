@@ -16,12 +16,10 @@ import {
   UPDATE_NEOX_NETWORK_INDEX,
   UPDATE_WALLET,
 } from '../../_lib';
-import {
-  HomeState,
-  ChromeService,
-  GlobalService,
-  SelectChainState,
-} from '@/app/core';
+import { ChromeService } from '@/app/core/services/chrome.service';
+import { GlobalService } from '@/app/core/services/global.service';
+import { HomeState } from '@/app/core/states/home.state';
+import { SelectChainState } from '@/app/core/states/select-chain.state';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 import { Unsubscribable, timer } from 'rxjs';
