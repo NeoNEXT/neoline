@@ -1,6 +1,6 @@
 <nav title="accountDetails"></nav>
 
-<div class="container">
+<div *ngIf="operateWallet" class="container">
   <img
     class="qrcode"
     (click)="qrcode()"
@@ -55,6 +55,10 @@
   </button>
 </div>
 
-<button *ngIf="showRemoveBtn" class="pop-ups remove" (click)="removeAccount()">
+<button
+  *ngIf="operateWallet && showRemoveBtn"
+  class="pop-ups remove"
+  (click)="removeAccount()"
+>
   {{ "removeAccount" | translate | async }}
 </button>

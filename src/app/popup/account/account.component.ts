@@ -12,7 +12,7 @@ import { wallet } from '@cityofzion/neon-core';
 import { wallet as wallet3 } from '@cityofzion/neon-core-neo3';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
-import { Unsubscribable } from 'rxjs';
+import { combineLatest, Unsubscribable } from 'rxjs';
 import {
   ChainType,
   UPDATE_WALLET,
@@ -22,7 +22,7 @@ import {
 } from '../_lib';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { Wallet3 } from '@popup/_lib';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, Params, Router } from '@angular/router';
 import { EvmWalletJSON } from '../_lib/evm';
 
 @Component({
@@ -60,7 +60,10 @@ export class PopupAccountComponent implements OnDestroy {
     private neoWalletService: NeoWalletService
   ) {
     const account$ = this.store.select('account');
-    this.accountSub = account$.subscribe((state) => {
+    this.accountSub = combineLatest([
+      account$,
+      this.aRouter.queryParams,
+    ]).subscribe(([state, params]) => {
       this.currentWallet = state.currentWallet;
       this.currentChainType = state.currentChainType;
       this.neo2WIFArr = state.neo2WIFArr;
@@ -68,7 +71,7 @@ export class PopupAccountComponent implements OnDestroy {
       this.neo2WalletArr = state.neo2WalletArr;
       this.neo3WalletArr = state.neo3WalletArr;
       this.neoXWalletArr = state.neoXWalletArr;
-      this.initData();
+      this.initData(params);
     });
   }
 
@@ -76,59 +79,64 @@ export class PopupAccountComponent implements OnDestroy {
     this.accountSub?.unsubscribe();
   }
 
-  async initData() {
-    this.aRouter.queryParams.subscribe(async (params) => {
-      const address = params.address;
-      if (address && params.chainType) {
-        this.operateChainType = params.chainType;
-        switch (this.operateChainType) {
-          case 'Neo2':
-            this.operateWallet = this.neo2WalletArr.find(
-              (item) => item.accounts[0].address === address
-            );
-            break;
-          case 'Neo3':
-            this.operateWallet = this.neo3WalletArr.find(
-              (item) => item.accounts[0].address === address
-            );
-            break;
-          case 'NeoX':
-            this.operateWallet = this.neoXWalletArr.find(
-              (item) => item.accounts[0].address === address
-            );
-            break;
-        }
-      } else {
-        this.operateWallet = this.currentWallet;
-        this.operateChainType = this.currentChainType;
+  private async initData(params: Params) {
+    const address = params.address;
+    let operateWallet: Wallet2 | Wallet3 | EvmWalletJSON;
+    let operateChainType: ChainType;
+    if (address && params.chainType) {
+      operateChainType = params.chainType;
+      switch (operateChainType) {
+        case 'Neo2':
+          operateWallet = this.neo2WalletArr.find(
+            (item) => item.accounts[0].address === address
+          );
+          break;
+        case 'Neo3':
+          operateWallet = this.neo3WalletArr.find(
+            (item) => item.accounts[0].address === address
+          );
+          break;
+        case 'NeoX':
+          operateWallet = this.neoXWalletArr.find(
+            (item) => item.accounts[0].address === address
+          );
+          break;
       }
-      this.inputName = this.operateWallet.name;
-      this.isLedger = !!this.operateWallet.accounts[0]?.extra?.ledgerSLIP44;
-      // show remove button
-      if (this.isLedger) {
+    } else {
+      operateWallet = this.currentWallet;
+      operateChainType = this.currentChainType;
+    }
+    if (!operateWallet) {
+      return;
+    }
+    this.operateWallet = operateWallet;
+    this.operateChainType = operateChainType;
+    this.inputName = this.operateWallet.name;
+    this.isLedger = !!this.operateWallet.accounts[0]?.extra?.ledgerSLIP44;
+    // show remove button
+    if (this.isLedger) {
+      this.showRemoveBtn = true;
+    } else {
+      const neo2Wallet = this.neo2WalletArr.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
+      const neo3Wallet = this.neo3WalletArr.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
+      const neoXWallet = this.neoXWalletArr.filter(
+        (item) => !item.accounts[0]?.extra?.ledgerSLIP44
+      );
+      if (neo2Wallet.length + neo3Wallet.length + neoXWallet.length > 1) {
         this.showRemoveBtn = true;
       } else {
-        const neo2Wallet = this.neo2WalletArr.filter(
-          (item) => !item.accounts[0]?.extra?.ledgerSLIP44
-        );
-        const neo3Wallet = this.neo3WalletArr.filter(
-          (item) => !item.accounts[0]?.extra?.ledgerSLIP44
-        );
-        const neoXWallet = this.neoXWalletArr.filter(
-          (item) => !item.accounts[0]?.extra?.ledgerSLIP44
-        );
-        if (neo2Wallet.length + neo3Wallet.length + neoXWallet.length > 1) {
-          this.showRemoveBtn = true;
-        } else {
-          this.showRemoveBtn = false;
-        }
+        this.showRemoveBtn = false;
       }
-      // show mnemonic button
-      this.showMnemonicBtn = this.operateWallet.accounts[0]?.extra?.isHDWallet
-        ? true
-        : false;
-      await this.getPublicKey();
-    });
+    }
+    // show mnemonic button
+    this.showMnemonicBtn = this.operateWallet.accounts[0]?.extra?.isHDWallet
+      ? true
+      : false;
+    await this.getPublicKey();
   }
 
   public wif(showMnemonic = false) {
