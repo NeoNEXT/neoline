@@ -26,7 +26,7 @@ declare var chrome: any;
   styleUrls: ['home.component.scss'],
 })
 export class PopupHomeComponent implements OnInit {
-  selectedIndex = 0; // asset tab or transaction tab
+  selectedTabType: 'asset' | 'NFT' | 'activity' | 'perpetual' = 'asset'; // asset tab or transaction tab
   rateCurrency: string;
   hideValue = false;
   totalValue = 0;
@@ -59,7 +59,7 @@ export class PopupHomeComponent implements OnInit {
       this.allWallet = (state.neo3WalletArr as any)
         .concat(state.neo2WalletArr)
         .concat(state.neoXWalletArr);
-      this.selectedIndex = 0;
+      this.selectedTabType = 'asset';
     });
   }
 
@@ -99,9 +99,9 @@ export class PopupHomeComponent implements OnInit {
   }
 
   toAdd() {
-    if (this.chainType === 'Neo3' && this.selectedIndex === 1) {
+    if (this.chainType === 'Neo3' && this.selectedTabType === 'NFT') {
       this.router.navigateByUrl('/popup/add-nft');
-    } else if (this.chainType === 'NeoX' && this.selectedIndex === 1) {
+    } else if (this.chainType === 'NeoX' && this.selectedTabType === 'NFT') {
       this.router.navigateByUrl('/popup/add-evm-nft');
     } else {
       this.router.navigateByUrl('/popup/add-asset');

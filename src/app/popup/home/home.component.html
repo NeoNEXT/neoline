@@ -100,14 +100,21 @@
     <div class="tabs-container">
       <div class="content">
         <span
-          [class]="{ selected: selectedIndex === 0 }"
-          (click)="selectedIndex = 0"
+          [class]="{ selected: selectedTabType === 'asset' }"
+          (click)="selectedTabType = 'asset'"
         >
           {{ "assets" | translate | async }}
         </span>
         <span
-          [class]="{ selected: selectedIndex === 1 }"
-          (click)="selectedIndex = 1"
+          *ngIf="chainType === 'NeoX'"
+          [class]="{ selected: selectedTabType === 'perpetual' }"
+          (click)="selectedTabType = 'perpetual'"
+        >
+          {{ "perps" | translate | async }}
+        </span>
+        <span
+          [class]="{ selected: selectedTabType === 'NFT' }"
+          (click)="selectedTabType = 'NFT'"
         >
           {{
             chainType === "Neo3"
@@ -119,15 +126,8 @@
         </span>
         <span
           *ngIf="chainType === 'NeoX'"
-          [class]="{ selected: selectedIndex === 2 }"
-          (click)="selectedIndex = 2"
-        >
-          {{ "perps" | translate | async }}
-        </span>
-        <span
-          *ngIf="chainType === 'NeoX'"
-          [class]="{ selected: selectedIndex === 3 }"
-          (click)="selectedIndex = 3"
+          [class]="{ selected: selectedTabType === 'activity' }"
+          (click)="selectedTabType = 'activity'"
         >
           {{ "Activity" | translate | async }}
         </span>
@@ -141,14 +141,21 @@
         alt=""
       />
     </div>
-    <div *ngIf="selectedIndex === 0">
+    <div *ngIf="selectedTabType === 'asset'">
       <app-assets (backAsset)="getTotalValue($event)"></app-assets>
       <p class="get-help" (click)="getSupport()">
         {{ "GetSupport" | translate | async }}{{ " " }}
         <img src="assets/images/common/support-arrow.svg" alt="" />
       </p>
     </div>
-    <div *ngIf="selectedIndex === 1">
+    <div *ngIf="selectedTabType === 'perpetual' && chainType === 'NeoX'">
+      <app-perps></app-perps>
+      <p class="get-help" (click)="getSupport()">
+        {{ "GetSupport" | translate | async }}{{ " " }}
+        <img src="assets/images/common/support-arrow.svg" alt="" />
+      </p>
+    </div>
+    <div *ngIf="selectedTabType === 'NFT'">
       <ng-container *ngIf="chainType !== 'Neo2'">
         <app-nfts *ngIf="chainType === 'Neo3'"></app-nfts>
         <app-evm-nfts *ngIf="chainType === 'NeoX'"></app-evm-nfts>
@@ -163,14 +170,7 @@
         [symbol]="balance?.symbol"
       ></app-asset-tx-page>
     </div>
-    <div *ngIf="selectedIndex === 2 && chainType === 'NeoX'">
-      <app-perps></app-perps>
-      <p class="get-help" (click)="getSupport()">
-        {{ "GetSupport" | translate | async }}{{ " " }}
-        <img src="assets/images/common/support-arrow.svg" alt="" />
-      </p>
-    </div>
-    <div *ngIf="selectedIndex === 3">
+    <div *ngIf="selectedTabType === 'activity'">
       <app-asset-tx-page></app-asset-tx-page>
       <p class="get-help" (click)="getSupport('txs')">
         {{ "GetSupport" | translate | async }}{{ " " }}
