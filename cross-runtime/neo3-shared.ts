@@ -1,5 +1,9 @@
 import { ContractParamLike } from '@cityofzion/neon-core-neo3/lib/sc';
-import { Account, Wallet } from '@cityofzion/neon-core-neo3/lib/wallet';
+import {
+  Account,
+  AccountJSON,
+  Wallet,
+} from '@cityofzion/neon-core-neo3/lib/wallet';
 import { HardwareDevice } from './constants';
 
 export enum requestTargetN3 {
@@ -71,6 +75,16 @@ export class Account3 extends Account {
     ledgerAddressIndex?: number;
     device?: HardwareDevice;
   };
+  constructor(
+    str: string | Partial<AccountJSON> = '',
+    config = { addressVersion: 0 }
+  ) {
+    super(str, config);
+    this.extra =
+      typeof str === 'object' && str.extra && typeof str.extra === 'object'
+        ? { ...str.extra }
+        : {};
+  }
   export() {
     return {
       ...super.export(),
@@ -83,9 +97,25 @@ export class Wallet3 extends Wallet {
   extra: {
     [key: string]: any;
   };
+  addAccount(acct: Account | AccountJSON): number {
+    const accountWithExtra = acct as (Account | AccountJSON) & {
+      extra?: unknown;
+    };
+    const extra =
+      accountWithExtra.extra && typeof accountWithExtra.extra === 'object'
+        ? { ...accountWithExtra.extra }
+        : {};
+    const index = super.addAccount(acct);
+    this.accounts[index].extra = extra;
+    return index;
+  }
   export() {
     return {
       ...super.export(),
+      accounts: this.accounts.map((account) => ({
+        ...account.export(),
+        extra: account.extra,
+      })),
       extra: this.extra,
     };
   }
