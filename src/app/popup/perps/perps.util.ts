@@ -1,6 +1,7 @@
 import {
   PerpsActiveAssetData,
   PerpsMarket,
+  PerpsOrderBook,
   PerpsOrderPreview,
   PerpsOrderSide,
   PerpsPosition,
@@ -122,6 +123,45 @@ export function formatFillTime(time: number): string {
 export function roundSize(size: number, szDecimals: number): number {
   const factor = Math.pow(10, szDecimals);
   return Math.floor((Number(size) || 0) * factor) / factor;
+}
+
+/**
+ * Estimate price impact by consuming the live book in execution order.
+ * Returns null when the visible book cannot fill the whole order.
+ */
+export function estimateMarketSlippagePercent(
+  book: PerpsOrderBook,
+  size: number,
+  isBuy: boolean
+): number | null {
+  if (!book || !Number.isFinite(size) || size <= 0) {
+    return null;
+  }
+  const bestBid = book.bids[0]?.price;
+  const bestAsk = book.asks[0]?.price;
+  if (!bestBid || !bestAsk) {
+    return null;
+  }
+  const midPrice = (bestBid + bestAsk) / 2;
+  const levels = isBuy ? book.asks : book.bids;
+  let remaining = size;
+  let notional = 0;
+  for (const level of levels) {
+    const filled = Math.min(remaining, level.size);
+    notional += filled * level.price;
+    remaining -= filled;
+    if (remaining <= 1e-12) {
+      break;
+    }
+  }
+  if (remaining > 1e-12) {
+    return null;
+  }
+  const averagePrice = notional / size;
+  const directionAdjustedImpact = isBuy
+    ? averagePrice - midPrice
+    : midPrice - averagePrice;
+  return Math.max(0, (directionAdjustedImpact / midPrice) * 100);
 }
 
 /**

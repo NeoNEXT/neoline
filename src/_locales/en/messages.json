@@ -1853,9 +1853,6 @@
   "perpsRiskTip": {
     "message": "Perpetual futures trading carries substantial risk. You could lose your entire investment in an instant without warning. You are solely responsible for your trades."
   },
-  "perpsLeverageRiskTip": {
-    "message": "Perps are leveraged products; losses can exceed your initial margin. Only trade with funds you can afford to lose."
-  },
   "perpsMarketOrder": {
     "message": "Market"
   },
@@ -1883,11 +1880,44 @@
   "perpsLiqPrice": {
     "message": "Liquidation price"
   },
-  "perpsMarginFee": {
-    "message": "Margin / fee"
+  "perpsLiqPriceTip": {
+    "message": "If the price reaches this level, your position will be liquidated and the entire margin may be lost. Higher leverage makes this more likely."
   },
-  "perpsSize": {
-    "message": "Size"
+  "perpsMargin": {
+    "message": "Margin"
+  },
+  "perpsMarginTip": {
+    "message": "Margin is the capital committed to open this position. It acts as collateral and is the maximum amount you may lose on this trade."
+  },
+  "perpsReleasedMargin": {
+    "message": "Estimated margin release"
+  },
+  "perpsReleasedMarginTip": {
+    "message": "The estimated collateral returned after this position is reduced or closed."
+  },
+  "perpsFee": {
+    "message": "Fee"
+  },
+  "perpsFeeTip": {
+    "message": "NeoLine fee　0.000%<br />Hyperliquid fee　0.045%"
+  },
+  "perpsSlippage": {
+    "message": "Slippage"
+  },
+  "perpsEstimatedShort": {
+    "message": "Est."
+  },
+  "perpsMaximumShort": {
+    "message": "Max"
+  },
+  "perpsEditSlippage": {
+    "message": "Edit slippage"
+  },
+  "perpsSlippageRange": {
+    "message": "Enter a value from {{min}}% to {{max}}%."
+  },
+  "perpsSlippageTip": {
+    "message": "Estimated slippage is calculated from the current order book and order size. Max is the allowed price deviation; a lower value may cause the order to fail."
   },
   "perpsInsufficientMargin": {
     "message": "Not enough available margin"
@@ -1900,9 +1930,6 @@
   },
   "perpsCloseShort": {
     "message": "Close short"
-  },
-  "perpsReleasedMarginFee": {
-    "message": "Estimated margin release / fee"
   },
   "perpsFundingTitle": {
     "message": "Perps funds"
@@ -1922,8 +1949,11 @@
   "perpsNetworkFee": {
     "message": "Network fee"
   },
-  "perpsMinDeposit": {
-    "message": "Minimum deposit"
+  "perpsBelowMinDeposit": {
+    "message": "Amount is below the minimum of {{amount}} {{symbol}}. Required by the Hyperliquid bridge — smaller deposits are not credited and cannot be recovered."
+  },
+  "perpsBelowMinWithdraw": {
+    "message": "Amount is below the minimum of {{amount}} {{symbol}}. Hyperliquid takes a flat {{fee}} {{symbol}} fee out of every withdrawal, so a smaller amount would leave you with nothing."
   },
   "perpsProviderFee": {
     "message": "Provider fee"
@@ -1971,7 +2001,7 @@
     "message": "Review order"
   },
   "perpsReviewTip": {
-    "message": "Review the direction, size, leverage, entry price, estimated liquidation price and fee before confirming."
+    "message": "Review the direction, amount, leverage, entry price, estimated liquidation price, margin, fee and slippage before confirming."
   },
   "perpsPortfolioUnsupported": {
     "message": "Portfolio margin accounts are not supported yet. Trading is disabled to avoid showing incomplete collateral data."

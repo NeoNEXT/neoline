@@ -1853,9 +1853,6 @@
   "perpsRiskTip": {
     "message": "無期限先物取引には大きなリスクがあり、警告なしに投資額全体を瞬時に失う可能性があります。取引の責任はすべてお客様が負います。"
   },
-  "perpsLeverageRiskTip": {
-    "message": "無期限先物はレバレッジ商品であり、損失が当初証拠金を超える可能性があります。失っても問題のない資金のみでお取引ください。"
-  },
   "perpsMarketOrder": {
     "message": "成行"
   },
@@ -1883,11 +1880,44 @@
   "perpsLiqPrice": {
     "message": "清算価格"
   },
-  "perpsMarginFee": {
-    "message": "証拠金 / 手数料"
+  "perpsLiqPriceTip": {
+    "message": "価格がこの水準に達すると、ポジションが強制決済され、証拠金をすべて失う可能性があります。レバレッジが高いほど、その可能性は高まります。"
   },
-  "perpsSize": {
-    "message": "数量"
+  "perpsMargin": {
+    "message": "証拠金"
+  },
+  "perpsMarginTip": {
+    "message": "証拠金は、このポジションを建てるために投入する資金です。担保として機能し、この取引で失う可能性のある最大額です。"
+  },
+  "perpsReleasedMargin": {
+    "message": "解放予定証拠金"
+  },
+  "perpsReleasedMarginTip": {
+    "message": "ポジションの縮小または決済後に返却される推定担保額です。"
+  },
+  "perpsFee": {
+    "message": "手数料"
+  },
+  "perpsFeeTip": {
+    "message": "NeoLine手数料　0.000%<br />Hyperliquid手数料　0.045%"
+  },
+  "perpsSlippage": {
+    "message": "スリッページ"
+  },
+  "perpsEstimatedShort": {
+    "message": "予想"
+  },
+  "perpsMaximumShort": {
+    "message": "最大"
+  },
+  "perpsEditSlippage": {
+    "message": "スリッページを編集"
+  },
+  "perpsSlippageRange": {
+    "message": "{{min}}%から{{max}}%までの値を入力してください。"
+  },
+  "perpsSlippageTip": {
+    "message": "予想スリッページは現在の板情報と注文数量から算出されます。最大値は成行注文で許容する価格差で、低すぎると約定しない場合があります。"
   },
   "perpsInsufficientMargin": {
     "message": "利用可能な証拠金が不足しています"
@@ -1900,9 +1930,6 @@
   },
   "perpsCloseShort": {
     "message": "ショートを決済"
-  },
-  "perpsReleasedMarginFee": {
-    "message": "解放予定証拠金 / 手数料"
   },
   "perpsFundingTitle": {
     "message": "無期限先物の資金"
@@ -1922,8 +1949,11 @@
   "perpsNetworkFee": {
     "message": "ネットワーク手数料"
   },
-  "perpsMinDeposit": {
-    "message": "最低入金額"
+  "perpsBelowMinDeposit": {
+    "message": "最低額 {{amount}} {{symbol}} を下回っています。この下限は Hyperliquid ブリッジの要件です。これを下回る入金は反映されず、返金もできません。"
+  },
+  "perpsBelowMinWithdraw": {
+    "message": "最低額 {{amount}} {{symbol}} を下回っています。Hyperliquid は出金ごとに {{fee}} {{symbol}} の手数料を差し引くため、これを下回ると受取額がなくなります。"
   },
   "perpsProviderFee": {
     "message": "プロバイダー手数料"
@@ -1971,7 +2001,7 @@
     "message": "注文を確認"
   },
   "perpsReviewTip": {
-    "message": "確定前に方向、数量、レバレッジ、約定価格、推定清算価格、手数料を確認してください。"
+    "message": "確定前に方向、金額、レバレッジ、約定価格、推定清算価格、証拠金、手数料、スリッページを確認してください。"
   },
   "perpsPortfolioUnsupported": {
     "message": "ポートフォリオマージン口座は現在未対応です。不完全な担保情報を避けるため取引を無効にしています。"

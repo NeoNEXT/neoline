@@ -1,5 +1,6 @@
 import {
   availableToTradeForSide,
+  estimateMarketSlippagePercent,
   formatFillTime,
   maxOrderNotionalForSide,
   previewClosePosition,
@@ -7,6 +8,38 @@ import {
 } from './perps.util';
 
 describe('perps utilities', () => {
+  it('estimates market slippage from the weighted book fill', () => {
+    const book = {
+      coin: 'ETH',
+      time: 1,
+      bids: [
+        { price: 99, size: 4 },
+        { price: 98, size: 10 },
+      ],
+      asks: [
+        { price: 101, size: 2 },
+        { price: 102, size: 10 },
+      ],
+    };
+
+    expect(estimateMarketSlippagePercent(book, 4, true)).toBeCloseTo(1.5, 8);
+    expect(estimateMarketSlippagePercent(book, 6, false)).toBeCloseTo(
+      1.3333333333,
+      8
+    );
+  });
+
+  it('does not estimate slippage beyond the visible book depth', () => {
+    const book = {
+      coin: 'ETH',
+      time: 1,
+      bids: [{ price: 99, size: 1 }],
+      asks: [{ price: 101, size: 1 }],
+    };
+
+    expect(estimateMarketSlippagePercent(book, 2, true)).toBeNull();
+  });
+
   it('formats fill time as M/D HH:mm using local time', () => {
     const time = new Date(2026, 0, 2, 3, 4).getTime();
 

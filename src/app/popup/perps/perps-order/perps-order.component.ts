@@ -1,4 +1,5 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
+import { MatDialog } from '@angular/material/dialog';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Store } from '@ngrx/store';
 import { Unsubscribable } from 'rxjs';
@@ -11,10 +12,12 @@ import {
   HyperliquidService,
 } from '@/app/core';
 import { EvmWalletJSON } from '@popup/_lib/evm';
+import { PopupPerpsSlippageDialogComponent } from '@popup/_dialogs';
 import {
   PerpsAccount,
   PerpsActiveAssetData,
   PerpsMarket,
+  PerpsOrderBook,
   PerpsOrderPreview,
   PerpsOrderSide,
   PerpsOrderType,
@@ -25,6 +28,7 @@ import {
   coinColor,
   coinLogo,
   availableToTradeForSide,
+  estimateMarketSlippagePercent,
   formatPrice,
   formatSignedPercent,
   formatUsd,
@@ -36,6 +40,8 @@ import {
 
 /** Hyperliquid's base taker fee before any builder fee is added. */
 const TAKER_FEE_RATE = 0.00045;
+const MIN_SLIPPAGE_PERCENT = 0.1;
+const MAX_SLIPPAGE_PERCENT = 10;
 
 @Component({
   templateUrl: 'perps-order.component.html',
@@ -47,6 +53,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   account: PerpsAccount;
   position: PerpsPosition;
   activeAssetData: PerpsActiveAssetData;
+  orderBook: PerpsOrderBook;
 
   /** Close mode reduces an existing position instead of opening a new one. */
   closeMode = false;
@@ -56,6 +63,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   limitPrice: number;
   amount: number = null;
   leverage = 1;
+  slippagePercent = 5;
   activePercent: number = null;
 
   submitting = false;
@@ -76,7 +84,10 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
   private accountSub: Unsubscribable;
   private marketsSub: Unsubscribable;
   private activeAssetDataSub: Unsubscribable;
+  private orderBookSub: Unsubscribable;
+  private userFeeSub: Unsubscribable;
   private leverageSelected = false;
+  private takerFeeRate = TAKER_FEE_RATE;
 
   constructor(
     private route: ActivatedRoute,
@@ -85,7 +96,8 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     private global: GlobalService,
     private hyperliquid: HyperliquidService,
     private chrome: ChromeService,
-    private evmWallet: EvmWalletService
+    private evmWallet: EvmWalletService,
+    private dialog: MatDialog
   ) {}
 
   ngOnInit() {
@@ -103,15 +115,19 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         this.address = address;
         this.loadActiveAssetData();
         this.loadAccount();
+        this.loadUserTakerFeeRate();
       }
     });
     this.loadMarket();
+    this.loadOrderBook();
   }
 
   ngOnDestroy() {
     this.accountSub?.unsubscribe();
     this.marketsSub?.unsubscribe();
     this.activeAssetDataSub?.unsubscribe();
+    this.orderBookSub?.unsubscribe();
+    this.userFeeSub?.unsubscribe();
   }
 
   private loadMarket() {
@@ -166,6 +182,14 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       });
   }
 
+  private loadOrderBook() {
+    this.orderBookSub = this.hyperliquid
+      .watchOrderBook(this.coin)
+      .subscribe((book) => {
+        this.orderBook = book;
+      });
+  }
+
   private loadAccount() {
     this.accountLoadError = false;
     this.hyperliquid.getAccount(this.address).subscribe({
@@ -184,6 +208,23 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         this.accountLoadError = true;
       },
     });
+  }
+
+  private loadUserTakerFeeRate() {
+    this.userFeeSub?.unsubscribe();
+    this.takerFeeRate = TAKER_FEE_RATE;
+    this.userFeeSub = this.hyperliquid
+      .getUserTakerFeeRate(this.address)
+      .subscribe({
+        next: (feeRate) => {
+          this.takerFeeRate = feeRate;
+          if (this.activePercent !== null && !this.closeMode) {
+            this.setPercent(this.activePercent);
+          }
+        },
+        // The base rate remains a conservative fallback when userFees fails.
+        error: () => {},
+      });
   }
 
   get isLong(): boolean {
@@ -235,6 +276,20 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     return max === 1 ? 100 : ((this.leverage - 1) / (max - 1)) * 100;
   }
 
+  get estimatedSlippagePercent(): number | null {
+    return estimateMarketSlippagePercent(
+      this.orderBook,
+      this.orderSize,
+      this.isLong
+    );
+  }
+
+  get formattedEstimatedSlippage(): string {
+    return this.estimatedSlippagePercent === null
+      ? '--'
+      : `${this.estimatedSlippagePercent.toFixed(2)}%`;
+  }
+
   /** Price used for size, margin and liquidation calculations. */
   get orderPrice(): number {
     return this.orderType === 'limit'
@@ -255,7 +310,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
         position: this.position,
         notional: this.amount,
         szDecimals: this.market.szDecimals,
-        feeRate: TAKER_FEE_RATE,
+        feeRate: this.takerFeeRate,
         fullClose: this.fullClose,
       });
       return {
@@ -272,7 +327,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       notional: this.amount,
       leverage: this.leverage,
       isLong: this.isLong,
-      feeRate: TAKER_FEE_RATE,
+      feeRate: this.takerFeeRate,
     });
     return {
       ...preview,
@@ -295,7 +350,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
       position: this.position,
       notional: this.amount,
       szDecimals: this.market.szDecimals,
-      feeRate: TAKER_FEE_RATE,
+      feeRate: this.takerFeeRate,
       fullClose: this.fullClose,
     }).size;
   }
@@ -386,6 +441,11 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     }
   }
 
+  onLeverageInputChange(input: HTMLInputElement) {
+    this.setLeverage(Number(input.value));
+    input.value = String(this.leverage);
+  }
+
   /**
    * The amount slider sizes the order off buying power (collateral × leverage) when
    * opening, and off the position value when closing.
@@ -398,6 +458,11 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     );
   }
 
+  onPercentInputChange(input: HTMLInputElement) {
+    this.setPercent(Number(input.value));
+    input.value = String(Math.round(this.amountSliderPercent));
+  }
+
   onAmountChange() {
     this.activePercent = null;
     this.reviewing = false;
@@ -407,13 +472,39 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
     this.reviewing = false;
   }
 
+  openSlippageDialog() {
+    this.dialog
+      .open(PopupPerpsSlippageDialogComponent, {
+        panelClass: 'custom-dialog-panel',
+        backdropClass: 'custom-dialog-backdrop',
+        data: {
+          value: this.slippagePercent,
+          min: MIN_SLIPPAGE_PERCENT,
+          max: MAX_SLIPPAGE_PERCENT,
+        },
+      })
+      .afterClosed()
+      .subscribe((value: number) => {
+        if (typeof value !== 'number') {
+          return;
+        }
+        this.slippagePercent = Number(
+          Math.max(
+            MIN_SLIPPAGE_PERCENT,
+            Math.min(MAX_SLIPPAGE_PERCENT, value)
+          ).toFixed(1)
+        );
+        this.reviewing = false;
+      });
+  }
+
   private get percentBase(): number {
     if (this.closeMode) {
       return this.position?.positionValue || 0;
     }
     return this.activeAssetData
       ? this.maxOrderNotional
-      : this.available / (1 / this.leverage + TAKER_FEE_RATE);
+      : this.available / (1 / this.leverage + this.takerFeeRate);
   }
 
   get ctaLabel(): string {
@@ -458,6 +549,7 @@ export class PerpsOrderComponent implements OnInit, OnDestroy {
           maxLeverage: this.market.maxLeverage,
           leverage: this.leverage,
           orderType: this.orderType,
+          slippagePercent: this.slippagePercent,
           reduceOnly: this.closeMode,
           // Always open isolated so the liquidation price shown in the preview
           // (see previewOrder) is the value the exchange actually binds. Cross

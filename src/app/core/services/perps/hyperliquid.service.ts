@@ -32,6 +32,7 @@ import {
   PerpsFill,
   PerpsMarket,
   PerpsOpenOrder,
+  PerpsOrderBook,
   PerpsOrderRequest,
   PerpsExchangeResponse,
   PerpsPosition,
@@ -46,6 +47,11 @@ import {
 } from './hyperliquid-signing';
 
 export type PerpsNetwork = 'mainnet' | 'testnet';
+
+interface HyperliquidUserFees {
+  userCrossRate: string;
+  activeReferralDiscount?: string;
+}
 
 export function resolvePerpsTestnet(
   configuredNetwork: PerpsNetwork,
@@ -84,6 +90,7 @@ export class HyperliquidService {
   private readonly accountCacheMs = 3000;
   private readonly accountModeCacheMs = 30 * 60 * 1000;
   private readonly marketCacheMs = 15000;
+  private readonly userFeeCacheMs = 5 * 60 * 1000;
   private marketCache: {
     expiresAt: number;
     request: Observable<PerpsMarket[]>;
@@ -102,6 +109,10 @@ export class HyperliquidService {
   private accountModeCache = new Map<
     string,
     { expiresAt: number; request: Observable<PerpsAccountMode> }
+  >();
+  private userTakerFeeCache = new Map<
+    string,
+    { expiresAt: number; request: Observable<number> }
   >();
   private lastNonce = 0;
 
@@ -124,6 +135,50 @@ export class HyperliquidService {
     return this.http.post<T>(this.api.info, body, {
       headers: { 'Content-Type': 'application/json' },
     });
+  }
+
+  /**
+   * User-specific perps taker rate, including the active referral discount.
+   * Staking and volume tier adjustments are already reflected in userCrossRate.
+   */
+  getUserTakerFeeRate(address: string): Observable<number> {
+    const user = address.toLowerCase();
+    const cached = this.userTakerFeeCache.get(user);
+    if (cached && cached.expiresAt > Date.now()) {
+      return cached.request;
+    }
+
+    const request = this.post<HyperliquidUserFees>({
+      type: 'userFees',
+      user,
+    }).pipe(
+      map((fees) => {
+        const userCrossRate = Number(fees?.userCrossRate);
+        const referralDiscount = Number(
+          fees?.activeReferralDiscount || 0
+        );
+        if (
+          !Number.isFinite(userCrossRate) ||
+          userCrossRate < 0 ||
+          !Number.isFinite(referralDiscount) ||
+          referralDiscount < 0 ||
+          referralDiscount > 1
+        ) {
+          throw new Error('Invalid Hyperliquid user fee response');
+        }
+        return userCrossRate * (1 - referralDiscount);
+      }),
+      catchError((error) => {
+        this.userTakerFeeCache.delete(user);
+        throw error;
+      }),
+      shareReplay(1)
+    );
+    this.userTakerFeeCache.set(user, {
+      expiresAt: Date.now() + this.userFeeCacheMs,
+      request,
+    });
+    return request;
   }
 
   private postExchange(
@@ -180,8 +235,8 @@ export class HyperliquidService {
   /**
    * Set the requested leverage / margin mode (`isCross`) and place one order.
    * Callers currently open isolated so the per-order liquidation preview is
-   * binding. Market orders use an IOC limit 5% through the mark, matching the
-   * official SDK's default slippage.
+   * binding. Market orders use an IOC limit through the mark according to the
+   * caller's configured slippage tolerance.
    */
   placeOrder(
     privateKey: string,
@@ -191,9 +246,13 @@ export class HyperliquidService {
       1,
       Math.min(request.maxLeverage, Math.floor(request.leverage))
     );
+    const slippage = Math.max(
+      0.001,
+      Math.min(0.05, request.slippagePercent / 100)
+    );
     const price =
       request.orderType === 'market'
-        ? request.price * (request.isBuy ? 1.05 : 0.95)
+        ? request.price * (request.isBuy ? 1 + slippage : 1 - slippage)
         : request.price;
     const action = {
       type: 'order',
@@ -427,6 +486,41 @@ export class HyperliquidService {
         };
       }
     );
+  }
+
+  getOrderBook(coin: string): Observable<PerpsOrderBook> {
+    return this.post<any>({ type: 'l2Book', coin }).pipe(
+      map((book) => this.parseOrderBook(book))
+    );
+  }
+
+  /** Seed from REST, then follow Hyperliquid's live level-2 book snapshots. */
+  watchOrderBook(coin: string): Observable<PerpsOrderBook> {
+    return concat(
+      this.getOrderBook(coin).pipe(catchError(() => of(null))),
+      this.subscribe({ type: 'l2Book', coin }).pipe(
+        map((book) => this.parseOrderBook(book))
+      )
+    ).pipe(filter((book) => !!book));
+  }
+
+  private parseOrderBook(book: any): PerpsOrderBook {
+    if (!book || !Array.isArray(book.levels)) {
+      return null;
+    }
+    const parseLevels = (levels: any[]) =>
+      (Array.isArray(levels) ? levels : [])
+        .map((level) => ({
+          price: this.toFiniteNumber(level?.px),
+          size: this.toFiniteNumber(level?.sz),
+        }))
+        .filter((level) => level.price > 0 && level.size > 0);
+    return {
+      coin: book.coin,
+      time: this.toFiniteNumber(book.time),
+      bids: parseLevels(book.levels[0]),
+      asks: parseLevels(book.levels[1]),
+    };
   }
 
   private loadMarketSnapshot() {
@@ -1056,6 +1150,10 @@ export class HyperliquidService {
     }
     if (msg.channel === 'activeAssetCtx') {
       this.emit(`activeAssetCtx:${msg.data?.coin}`, msg.data);
+      return;
+    }
+    if (msg.channel === 'l2Book' && typeof msg.data?.coin === 'string') {
+      this.emit(`l2Book:${msg.data.coin}`, msg.data);
       return;
     }
     if (

@@ -63,6 +63,11 @@ export const PERPS_DEPOSIT_CONFIG: {
 
 /** Bridge2 only credits native Circle USDC on Arbitrum; below this the deposit is lost. */
 export const PERPS_MIN_DEPOSIT = 5;
+/**
+ * Not published in the Bridge2 docs the way the deposit floor is; it follows
+ * from `PERPS_WITHDRAW_FEE` — the flat fee is taken out of the amount, so a
+ * smaller withdrawal would leave the user with nothing.
+ */
 export const PERPS_MIN_WITHDRAW = 2;
 /** Hyperliquid rejects ordinary and partial-close orders below this notional. */
 export const PERPS_MIN_ORDER_NOTIONAL = 10;
@@ -124,6 +129,20 @@ export interface PerpsMarket {
   openInterest: number;
   /** Hourly funding rate as a fraction, e.g. 0.0000125 */
   funding: number;
+}
+
+export interface PerpsOrderBookLevel {
+  price: number;
+  size: number;
+}
+
+export interface PerpsOrderBook {
+  coin: string;
+  time: number;
+  /** Price-descending bids. */
+  bids: PerpsOrderBookLevel[];
+  /** Price-ascending asks. */
+  asks: PerpsOrderBookLevel[];
 }
 
 export interface PerpsCandle {
@@ -266,6 +285,8 @@ export interface PerpsOrderRequest {
   maxLeverage: number;
   leverage: number;
   orderType: PerpsOrderType;
+  /** Maximum market-order price deviation as a percentage, e.g. 1 for 1%. */
+  slippagePercent: number;
   reduceOnly: boolean;
   /** False for isolated-only markets and existing isolated positions. */
   isCross: boolean;

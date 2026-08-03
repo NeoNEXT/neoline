@@ -1853,9 +1853,6 @@
   "perpsRiskTip": {
     "message": "永续合约交易存在很大风险，您可能会在毫无预警的情况下瞬间损失全部投资。交易风险完全由您自行承担。"
   },
-  "perpsLeverageRiskTip": {
-    "message": "永续合约为杠杆产品，亏损可能超过初始保证金。请仅使用您可承受损失的资金进行交易。"
-  },
   "perpsMarketOrder": {
     "message": "市场型"
   },
@@ -1883,11 +1880,44 @@
   "perpsLiqPrice": {
     "message": "强平价格"
   },
-  "perpsMarginFee": {
-    "message": "保证金 / 费用"
+  "perpsLiqPriceTip": {
+    "message": "若价格达到该点位，您的仓位将被强制平仓并导致保证金全部损失。杠杆越高，这种情况发生的可能性越大。"
   },
-  "perpsSize": {
-    "message": "数量"
+  "perpsMargin": {
+    "message": "保证金"
+  },
+  "perpsMarginTip": {
+    "message": "保证金是您为开仓交易而投入的资金。它作为抵押品，且是您在该交易中可能损失的最大金额。"
+  },
+  "perpsReleasedMargin": {
+    "message": "预计释放保证金"
+  },
+  "perpsReleasedMarginTip": {
+    "message": "减仓或平仓后预计返还的抵押资金。"
+  },
+  "perpsFee": {
+    "message": "费用"
+  },
+  "perpsFeeTip": {
+    "message": "NeoLine 费用　0.000%<br />Hyperliquid 费用　0.045%"
+  },
+  "perpsSlippage": {
+    "message": "滑点"
+  },
+  "perpsEstimatedShort": {
+    "message": "预估"
+  },
+  "perpsMaximumShort": {
+    "message": "最大"
+  },
+  "perpsEditSlippage": {
+    "message": "编辑滑点"
+  },
+  "perpsSlippageRange": {
+    "message": "请输入 {{min}}% 至 {{max}}% 之间的数值。"
+  },
+  "perpsSlippageTip": {
+    "message": "预估滑点根据当前盘口和订单数量计算；最大滑点是市价单允许的成交价格偏差，设置过低可能导致订单无法成交。"
   },
   "perpsInsufficientMargin": {
     "message": "可用保证金不足"
@@ -1900,9 +1930,6 @@
   },
   "perpsCloseShort": {
     "message": "平空"
-  },
-  "perpsReleasedMarginFee": {
-    "message": "预计释放保证金 / 费用"
   },
   "perpsFundingTitle": {
     "message": "合约账户资金"
@@ -1922,8 +1949,11 @@
   "perpsNetworkFee": {
     "message": "网络费用"
   },
-  "perpsMinDeposit": {
-    "message": "最低存入"
+  "perpsBelowMinDeposit": {
+    "message": "低于最低限额 {{amount}} {{symbol}}。该限额由 Hyperliquid 跨链桥要求，低于此金额的存入不会入账且无法找回。"
+  },
+  "perpsBelowMinWithdraw": {
+    "message": "低于最低限额 {{amount}} {{symbol}}。Hyperliquid 每笔提取都会扣除 {{fee}} {{symbol}} 手续费，低于此金额将无法到账。"
   },
   "perpsProviderFee": {
     "message": "服务商费用"
@@ -1971,7 +2001,7 @@
     "message": "检查订单"
   },
   "perpsReviewTip": {
-    "message": "确认前请检查方向、数量、杠杆、入场价、预计强平价和费用。"
+    "message": "确认前请检查方向、金额、杠杆、入场价、预计强平价、保证金、费用和滑点。"
   },
   "perpsPortfolioUnsupported": {
     "message": "暂不支持组合保证金账户。为避免展示不完整的抵押品数据，已禁用交易。"

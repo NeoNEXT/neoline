@@ -11,7 +11,7 @@ export const environment = {
   name: 'default',
   mainApiBase: 'https://api.neoline.io',
   // Local Perps endpoint; independent from the selected NeoX network.
-  perpsNetwork: 'testnet' as 'mainnet' | 'testnet',
+  perpsNetwork: 'mainnet' as 'mainnet' | 'testnet',
 };
 
 /*

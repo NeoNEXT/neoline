@@ -1,0 +1,59 @@
+.content {
+  padding: 20px 24px 24px;
+
+  > label {
+    display: block;
+    margin-bottom: 8px;
+    color: var(--sub-title-color);
+    font-size: 13px;
+  }
+}
+
+.input-box {
+  display: flex;
+  align-items: center;
+  height: 44px;
+  padding: 0 16px;
+  border-radius: 4px;
+  background: var(--box-color);
+
+  input {
+    min-width: 0;
+    flex: 1;
+    border: none;
+    outline: none;
+    background: transparent;
+    color: var(--title-color);
+    font-family: NeverMind-Medium;
+    font-size: 16px;
+    -moz-appearance: textfield;
+
+    &::-webkit-outer-spin-button,
+    &::-webkit-inner-spin-button {
+      margin: 0;
+      -webkit-appearance: none;
+    }
+  }
+
+  span {
+    color: var(--sub-title-color);
+    font-size: 14px;
+  }
+}
+
+.range-tip {
+  margin-top: 8px;
+  color: var(--tip-color);
+  font-size: 12px;
+  line-height: 18px;
+}
+
+.choose-group {
+  display: flex;
+  gap: 24px;
+  margin-top: 28px;
+
+  button {
+    flex: 1;
+  }
+}

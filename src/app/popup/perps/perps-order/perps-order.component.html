@@ -123,10 +123,21 @@
         ></i>
       </span>
     </div>
-    <output>
-      <span>{{ amountSliderPercent | number: "1.0-0" }}</span>
+    <label class="range-value">
+      <input
+        type="number"
+        inputmode="numeric"
+        min="0"
+        max="100"
+        step="1"
+        [value]="amountSliderPercent | number: '1.0-0'"
+        (focus)="$any($event.target).select()"
+        (change)="onPercentInputChange($any($event.target))"
+        (keydown.enter)="$any($event.target).blur()"
+        [attr.aria-label]="'perpsAmount' | translate | async"
+      />
       <span>%</span>
-    </output>
+    </label>
   </div>
 
   <!-- 杠杆滑块 -->
@@ -149,31 +160,95 @@
         (input)="setLeverage(+$any($event.target).value)"
         [attr.aria-label]="'perpsLeverage' | translate | async"
       />
-      <output>{{ leverage }}x</output>
+      <label class="range-value">
+        <input
+          type="number"
+          inputmode="numeric"
+          min="1"
+          [max]="market?.maxLeverage || 1"
+          step="1"
+          [value]="leverage"
+          (focus)="$any($event.target).select()"
+          (change)="onLeverageInputChange($any($event.target))"
+          (keydown.enter)="$any($event.target).blur()"
+          [attr.aria-label]="'perpsLeverage' | translate | async"
+        />
+        <span>x</span>
+      </label>
     </div>
   </ng-container>
 
   <!-- 预估 -->
   <div class="summary" *ngIf="preview">
     <div class="row" *ngIf="!closeMode">
-      <span class="label">{{ "perpsLiqPrice" | translate | async }}</span>
+      <span class="label">
+        {{ "perpsLiqPrice" | translate | async }}
+        <tooltip
+          placement="topLeft"
+          [tip]="'perpsLiqPriceTip' | translate | async"
+        >
+          <img src="assets/images/common/tooltip.svg" alt="" />
+        </tooltip>
+      </span>
       <span class="value">${{ formatPrice(preview.liquidationPx) }}</span>
     </div>
     <div class="row">
       <span class="label">
         {{
-          (closeMode ? "perpsReleasedMarginFee" : "perpsMarginFee")
+          (closeMode ? "perpsReleasedMargin" : "perpsMargin")
             | translate
             | async
         }}
+        <tooltip
+          placement="topLeft"
+          [tip]="
+            (closeMode ? 'perpsReleasedMarginTip' : 'perpsMarginTip')
+              | translate
+              | async
+          "
+        >
+          <img src="assets/images/common/tooltip.svg" alt="" />
+        </tooltip>
       </span>
-      <span class="value"
-        >{{ formatUsd(preview.margin) }} / {{ formatUsd(preview.fee) }}</span
-      >
+      <span class="value">{{ formatUsd(preview.margin) }}</span>
     </div>
     <div class="row">
-      <span class="label">{{ "perpsSize" | translate | async }}</span>
-      <span class="value">{{ preview.size }} {{ coin }}</span>
+      <span class="label">
+        {{ "perpsFee" | translate | async }}
+        <tooltip
+          placement="topLeft"
+          [tip]="'perpsFeeTip' | translate | async"
+        >
+          <img src="assets/images/common/tooltip.svg" alt="" />
+        </tooltip>
+      </span>
+      <span class="value">{{ formatUsd(preview.fee) }}</span>
+    </div>
+    <div class="row" *ngIf="orderType === 'market'">
+      <span class="label">
+        {{ "perpsSlippage" | translate | async }}
+        <tooltip
+          placement="topLeft"
+          [tip]="'perpsSlippageTip' | translate | async"
+        >
+          <img src="assets/images/common/tooltip.svg" alt="" />
+        </tooltip>
+      </span>
+      <span class="slippage-value">
+        {{ "perpsEstimatedShort" | translate | async }}:
+        {{ formattedEstimatedSlippage }}
+        <i>/</i>
+        {{ "perpsMaximumShort" | translate | async }}:
+        {{ slippagePercent }}%
+        <button
+          type="button"
+          class="edit-slippage"
+          (click)="openSlippageDialog()"
+          [attr.aria-label]="'perpsEditSlippage' | translate | async"
+        >
+          <img src="assets/images/common/edit.svg" alt="" />
+        </button>
+      </span>
     </div>
   </div>
 

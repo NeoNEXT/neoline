@@ -118,6 +118,7 @@ import {
   PopupEditApproveCapDialogComponent,
   PopupQRBasedSignDialogComponent,
   PopupSelectAccountsDialogComponent,
+  PopupPerpsSlippageDialogComponent,
 } from '@popup/_dialogs';
 
 const POPUP_DIALOGS = [
@@ -150,6 +151,7 @@ const POPUP_DIALOGS = [
   PopupEditApproveCapDialogComponent,
   PopupQRBasedSignDialogComponent,
   PopupSelectAccountsDialogComponent,
+  PopupPerpsSlippageDialogComponent,
 ];
 
 //#endregion

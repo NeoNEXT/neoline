@@ -1,0 +1,51 @@
+<div class="pop-ups-title">
+  {{ "perpsEditSlippage" | translate | async }}
+  <img
+    class="close"
+    [mat-dialog-close]="false"
+    theme
+    src="assets/images/common/close.svg"
+    alt=""
+  />
+</div>
+
+<div class="content">
+  <label for="perps-slippage-input">
+    {{ "perpsSlippage" | translate | async }}
+  </label>
+  <div class="input-box">
+    <input
+      id="perps-slippage-input"
+      type="number"
+      inputmode="decimal"
+      [min]="data.min"
+      [max]="data.max"
+      step="0.1"
+      [(ngModel)]="value"
+      (keydown.enter)="confirm()"
+      autofocus
+    />
+    <span>%</span>
+  </div>
+  <p class="range-tip">
+    {{
+      "perpsSlippageRange"
+        | translate : { min: data.min, max: data.max }
+        | async
+    }}
+  </p>
+
+  <div class="choose-group">
+    <button class="cancel pop-ups" [mat-dialog-close]="false">
+      {{ "cancel" | translate | async }}
+    </button>
+    <button
+      class="confirm pop-ups"
+      [class.disabled]="!valid"
+      [disabled]="!valid"
+      (click)="confirm()"
+    >
+      {{ "yes" | translate | async }}
+    </button>
+  </div>
+</div>

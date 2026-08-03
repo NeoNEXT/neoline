@@ -28,6 +28,51 @@ describe('HyperliquidService account balances', () => {
     service = new HyperliquidService(http);
   });
 
+  it('loads the user taker fee and caches it by address', () => {
+    http.post.and.returnValue(
+      of({
+        userCrossRate: '0.0004',
+        activeReferralDiscount: '0.04',
+      }) as any
+    );
+    const rates: number[] = [];
+
+    service
+      .getUserTakerFeeRate('0xABC')
+      .subscribe((rate) => rates.push(rate));
+    service
+      .getUserTakerFeeRate('0xabc')
+      .subscribe((rate) => rates.push(rate));
+
+    expect(rates).toEqual([0.000384, 0.000384]);
+    expect(http.post).toHaveBeenCalledTimes(1);
+    expect(http.post).toHaveBeenCalledWith(
+      jasmine.any(String),
+      { type: 'userFees', user: '0xabc' },
+      jasmine.any(Object)
+    );
+  });
+
+  it('does not cache an invalid user fee response', () => {
+    http.post.and.returnValues(
+      of({ userCrossRate: 'invalid' }) as any,
+      of({ userCrossRate: '0.00045' }) as any
+    );
+    const errors = jasmine.createSpy('errors');
+    let recoveredRate: number;
+
+    service.getUserTakerFeeRate('0xabc').subscribe({
+      error: errors,
+    });
+    service
+      .getUserTakerFeeRate('0xabc')
+      .subscribe((rate) => (recoveredRate = rate));
+
+    expect(errors).toHaveBeenCalled();
+    expect(recoveredRate).toBe(0.00045);
+    expect(http.post).toHaveBeenCalledTimes(2);
+  });
+
   it('updates leverage before placing an opening market order', fakeAsync(() => {
     http.post.and.returnValue(
       of({ status: 'ok', response: { type: 'default' } }) as any
@@ -45,6 +90,7 @@ describe('HyperliquidService account balances', () => {
           maxLeverage: 20,
           leverage: 5,
           orderType: 'market',
+          slippagePercent: 1.5,
           reduceOnly: false,
           isCross: true,
         }
@@ -62,7 +108,7 @@ describe('HyperliquidService account balances', () => {
     expect(actions[1].orders[0]).toEqual({
       a: 3,
       b: true,
-      p: '105',
+      p: '101.5',
       s: '1.25',
       r: false,
       t: { limit: { tif: 'Ioc' } },
@@ -86,6 +132,7 @@ describe('HyperliquidService account balances', () => {
           maxLeverage: 20,
           leverage: 5,
           orderType: 'limit',
+          slippagePercent: 1,
           reduceOnly: true,
           isCross: true,
         }
@@ -121,6 +168,7 @@ describe('HyperliquidService account balances', () => {
           maxLeverage: 3,
           leverage: 2,
           orderType: 'market',
+          slippagePercent: 5,
           reduceOnly: false,
           isCross: false,
         }
@@ -365,6 +413,40 @@ describe('HyperliquidService account balances', () => {
 
     expect(first).toHaveBeenCalled();
     expect(second).not.toHaveBeenCalled();
+  });
+
+  it('loads and routes level-2 books by coin', (done) => {
+    http.post.and.returnValue(
+      of({
+        coin: 'ETH',
+        time: 123,
+        levels: [
+          [{ px: '99', sz: '2', n: 1 }],
+          [{ px: '101', sz: '3', n: 1 }],
+        ],
+      }) as any
+    );
+
+    service.getOrderBook('ETH').subscribe((book) => {
+      expect(book.bids).toEqual([{ price: 99, size: 2 }]);
+      expect(book.asks).toEqual([{ price: 101, size: 3 }]);
+
+      spyOn<any>(service, 'send');
+      const eth = jasmine.createSpy('eth');
+      const btc = jasmine.createSpy('btc');
+      service.subscribe({ type: 'l2Book', coin: 'ETH' }).subscribe(eth);
+      service.subscribe({ type: 'l2Book', coin: 'BTC' }).subscribe(btc);
+      (service as any).handleMessage({
+        data: JSON.stringify({
+          channel: 'l2Book',
+          data: { coin: 'ETH', time: 124, levels: [[], []] },
+        }),
+      });
+
+      expect(eth).toHaveBeenCalled();
+      expect(btc).not.toHaveBeenCalled();
+      done();
+    });
   });
 
   it('loads and normalizes directional active asset availability', (done) => {

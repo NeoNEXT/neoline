@@ -1853,9 +1853,6 @@
   "perpsRiskTip": {
     "message": "무기한 선물 거래는 큰 위험을 수반하며, 경고 없이 순식간에 투자금 전액을 잃을 수 있습니다. 거래 책임은 전적으로 본인에게 있습니다."
   },
-  "perpsLeverageRiskTip": {
-    "message": "무기한 선물은 레버리지 상품으로 손실이 초기 증거금을 초과할 수 있습니다. 잃어도 괜찮은 자금으로만 거래하세요."
-  },
   "perpsMarketOrder": {
     "message": "시장가"
   },
@@ -1883,11 +1880,44 @@
   "perpsLiqPrice": {
     "message": "청산가"
   },
-  "perpsMarginFee": {
-    "message": "증거금 / 수수료"
+  "perpsLiqPriceTip": {
+    "message": "가격이 이 수준에 도달하면 포지션이 강제 청산되어 증거금 전액을 잃을 수 있습니다. 레버리지가 높을수록 가능성이 커집니다."
   },
-  "perpsSize": {
-    "message": "수량"
+  "perpsMargin": {
+    "message": "증거금"
+  },
+  "perpsMarginTip": {
+    "message": "증거금은 포지션을 개설하기 위해 투입하는 자금입니다. 담보 역할을 하며 이 거래에서 잃을 수 있는 최대 금액입니다."
+  },
+  "perpsReleasedMargin": {
+    "message": "예상 반환 증거금"
+  },
+  "perpsReleasedMarginTip": {
+    "message": "포지션을 축소하거나 청산한 뒤 반환될 것으로 예상되는 담보금입니다."
+  },
+  "perpsFee": {
+    "message": "수수료"
+  },
+  "perpsFeeTip": {
+    "message": "NeoLine 수수료　0.000%<br />Hyperliquid 수수료　0.045%"
+  },
+  "perpsSlippage": {
+    "message": "슬리피지"
+  },
+  "perpsEstimatedShort": {
+    "message": "예상"
+  },
+  "perpsMaximumShort": {
+    "message": "최대"
+  },
+  "perpsEditSlippage": {
+    "message": "슬리피지 편집"
+  },
+  "perpsSlippageRange": {
+    "message": "{{min}}%에서 {{max}}% 사이의 값을 입력하세요."
+  },
+  "perpsSlippageTip": {
+    "message": "예상 슬리피지는 현재 호가창과 주문 수량으로 계산됩니다. 최대값은 시장가 주문에 허용되는 가격 차이이며, 너무 낮으면 주문이 체결되지 않을 수 있습니다."
   },
   "perpsInsufficientMargin": {
     "message": "사용 가능한 증거금이 부족합니다"
@@ -1900,9 +1930,6 @@
   },
   "perpsCloseShort": {
     "message": "숏 포지션 청산"
-  },
-  "perpsReleasedMarginFee": {
-    "message": "예상 해제 증거금 / 수수료"
   },
   "perpsFundingTitle": {
     "message": "무기한 선물 자금"
@@ -1922,8 +1949,11 @@
   "perpsNetworkFee": {
     "message": "네트워크 수수료"
   },
-  "perpsMinDeposit": {
-    "message": "최소 입금액"
+  "perpsBelowMinDeposit": {
+    "message": "최소 금액 {{amount}} {{symbol}}보다 적습니다. 이 한도는 Hyperliquid 브리지의 요구 사항입니다. 이보다 적은 금액은 입금되지 않으며 복구할 수 없습니다."
+  },
+  "perpsBelowMinWithdraw": {
+    "message": "최소 금액 {{amount}} {{symbol}}보다 적습니다. Hyperliquid는 출금할 때마다 {{fee}} {{symbol}} 수수료를 차감하므로 이보다 적으면 받을 금액이 없습니다."
   },
   "perpsProviderFee": {
     "message": "제공자 수수료"
@@ -1971,7 +2001,7 @@
     "message": "주문 검토"
   },
   "perpsReviewTip": {
-    "message": "확정 전 방향, 수량, 레버리지, 진입 가격, 예상 청산 가격 및 수수료를 확인하세요."
+    "message": "확정 전 방향, 금액, 레버리지, 진입 가격, 예상 청산가, 증거금, 수수료 및 슬리피지를 확인하세요."
   },
   "perpsPortfolioUnsupported": {
     "message": "포트폴리오 마진 계정은 아직 지원되지 않습니다. 불완전한 담보 정보 표시를 방지하기 위해 거래가 비활성화되었습니다."

@@ -169,6 +169,10 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     return net > 0 ? net : 0;
   }
 
+  get minimumAmount(): number {
+    return this.isDeposit ? this.minDeposit : this.minWithdraw;
+  }
+
   get belowMinimum(): boolean {
     if (!this.amount) {
       return false;
@@ -176,7 +180,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
     if (this.isTransfer) {
       return false;
     }
-    return this.amount < (this.isDeposit ? this.minDeposit : this.minWithdraw);
+    return this.amount < this.minimumAmount;
   }
 
   get exceedsBalance(): boolean {
