@@ -146,6 +146,13 @@
     .letter-logo {
       width: 28px;
       height: 28px;
+    }
+    // Bundled marks (NEO/GAS) are bare glyphs, not round badges: contain them
+    // instead of cropping to a circle, which cut off their edges.
+    img {
+      object-fit: contain;
+    }
+    .letter-logo {
       border-radius: 50%;
     }
     .coin {
@@ -291,6 +298,11 @@
   > .letter-logo {
     width: 36px;
     height: 36px;
+  }
+  > img {
+    object-fit: contain;
+  }
+  > .letter-logo {
     border-radius: 50%;
   }
 

@@ -1779,10 +1779,10 @@
     "message": "출금"
   },
   "perpsHistory": {
-    "message": "내역"
+    "message": "활동"
   },
   "perpsHistoryTitle": {
-    "message": "무기한 선물 내역"
+    "message": "무기한 선물 활동"
   },
   "perpsPositions": {
     "message": "포지션"
@@ -2011,6 +2011,36 @@
   },
   "perpsFills": {
     "message": "체결 내역"
+  },
+  "perpsOrderHistory": {
+    "message": "주문 내역"
+  },
+  "perpsTransfers": {
+    "message": "입출금"
+  },
+  "perpsNoOrderHistory": {
+    "message": "주문 내역이 없습니다"
+  },
+  "perpsNoTransfers": {
+    "message": "입출금 내역이 없습니다"
+  },
+  "perpsLedgerTransfer": {
+    "message": "이체"
+  },
+  "perpsStatusFilled": {
+    "message": "체결됨"
+  },
+  "perpsStatusOpen": {
+    "message": "미체결"
+  },
+  "perpsStatusCanceled": {
+    "message": "취소됨"
+  },
+  "perpsStatusRejected": {
+    "message": "거부됨"
+  },
+  "perpsStatusTriggered": {
+    "message": "트리거됨"
   },
   "perpsCancelOrder": {
     "message": "취소"

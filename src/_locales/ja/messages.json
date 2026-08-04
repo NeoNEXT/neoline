@@ -1779,10 +1779,10 @@
     "message": "出金"
   },
   "perpsHistory": {
-    "message": "履歴"
+    "message": "アクティビティ"
   },
   "perpsHistoryTitle": {
-    "message": "無期限先物の履歴"
+    "message": "無期限先物のアクティビティ"
   },
   "perpsPositions": {
     "message": "ポジション"
@@ -2011,6 +2011,36 @@
   },
   "perpsFills": {
     "message": "約定履歴"
+  },
+  "perpsOrderHistory": {
+    "message": "注文履歴"
+  },
+  "perpsTransfers": {
+    "message": "入出金"
+  },
+  "perpsNoOrderHistory": {
+    "message": "注文履歴はありません"
+  },
+  "perpsNoTransfers": {
+    "message": "入出金の記録はありません"
+  },
+  "perpsLedgerTransfer": {
+    "message": "振替"
+  },
+  "perpsStatusFilled": {
+    "message": "約定済み"
+  },
+  "perpsStatusOpen": {
+    "message": "未約定"
+  },
+  "perpsStatusCanceled": {
+    "message": "取消済み"
+  },
+  "perpsStatusRejected": {
+    "message": "拒否"
+  },
+  "perpsStatusTriggered": {
+    "message": "トリガー済み"
   },
   "perpsCancelOrder": {
     "message": "取消"

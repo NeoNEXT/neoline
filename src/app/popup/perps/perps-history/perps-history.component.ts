@@ -1,6 +1,6 @@
 import { Component, OnDestroy, OnInit } from '@angular/core';
 import { Store } from '@ngrx/store';
-import { forkJoin, Unsubscribable } from 'rxjs';
+import { forkJoin, Observable, Unsubscribable } from 'rxjs';
 
 import { AppState } from '@/app/reduers';
 import {
@@ -12,6 +12,8 @@ import {
 import { EvmWalletJSON } from '@popup/_lib/evm';
 import {
   PerpsFill,
+  PerpsHistoricalOrder,
+  PerpsLedgerUpdate,
   PerpsMarket,
   PerpsOpenOrder,
 } from '@popup/_lib/perps';
@@ -21,6 +23,35 @@ import {
   formatSignedUsd,
 } from '../perps.util';
 
+type PerpsActivityTab = 'orders' | 'fills' | 'orderHistory' | 'transfers';
+
+/**
+ * Order states that get a friendly label. Hyperliquid ships a long tail of
+ * `xxxCanceled` / `xxxRejected` variants, handled by suffix in orderStatusKey.
+ */
+const ORDER_STATUS_LABELS = {
+  filled: 'perpsStatusFilled',
+  open: 'perpsStatusOpen',
+  canceled: 'perpsStatusCanceled',
+  scheduledCancel: 'perpsStatusCanceled',
+  rejected: 'perpsStatusRejected',
+  triggered: 'perpsStatusTriggered',
+};
+
+/** Ledger rows reuse the deposit/withdraw wording from the balance card. */
+const LEDGER_TYPE_LABELS = {
+  deposit: 'perpsDeposit',
+  withdraw: 'perpsWithdraw',
+  accountClassTransfer: 'perpsLedgerTransfer',
+  internalTransfer: 'perpsLedgerTransfer',
+  spotTransfer: 'perpsLedgerTransfer',
+  subAccountTransfer: 'perpsLedgerTransfer',
+  send: 'perpsLedgerTransfer',
+};
+
+/** The popup only ever scrolls so far; older rows stay on the web UI. */
+const MAX_ARCHIVE_ROWS = 200;
+
 @Component({
   templateUrl: 'perps-history.component.html',
   styleUrls: ['perps-history.component.scss'],
@@ -28,8 +59,12 @@ import {
 export class PerpsHistoryComponent implements OnInit, OnDestroy {
   fills: PerpsFill[] = [];
   openOrders: PerpsOpenOrder[] = [];
-  tab: 'orders' | 'fills' = 'orders';
+  historicalOrders: PerpsHistoricalOrder[] = [];
+  transfers: PerpsLedgerUpdate[] = [];
+  tab: PerpsActivityTab = 'orders';
   loading = true;
+  /** Per-tab spinner for the two lazily fetched tabs. */
+  tabLoading = false;
   loadError = false;
   pendingCancelOrderId: number;
   cancelingOrderId: number;
@@ -41,6 +76,10 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   private wallet: EvmWalletJSON;
   private markets: PerpsMarket[] = [];
   private accountSub: Unsubscribable;
+  /** Tabs already fetched for the current address. */
+  private loadedTabs = new Set<PerpsActivityTab>();
+  /** Tabs with a request in flight, so switching back and forth sends one. */
+  private pendingTabs = new Set<PerpsActivityTab>();
 
   constructor(
     private store: Store<AppState>,
@@ -68,6 +107,10 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
   private load() {
     this.loading = true;
     this.loadError = false;
+    this.loadedTabs.clear();
+    this.pendingTabs.clear();
+    this.historicalOrders = [];
+    this.transfers = [];
     forkJoin([
       this.hyperliquid.getOpenOrders(this.address),
       this.hyperliquid.getUserFills(this.address),
@@ -77,7 +120,10 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
         this.openOrders = openOrders;
         this.fills = fills;
         this.markets = markets;
+        this.loadedTabs.add('orders');
+        this.loadedTabs.add('fills');
         this.loading = false;
+        this.loadTab(this.tab);
       },
       () => {
         this.loading = false;
@@ -86,9 +132,51 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     );
   }
 
-  setTab(tab: 'orders' | 'fills') {
+  /** The two archive tabs are only worth a request once the user opens them. */
+  private loadTab(tab: PerpsActivityTab) {
+    if (
+      this.loading ||
+      this.loadedTabs.has(tab) ||
+      this.pendingTabs.has(tab) ||
+      !this.address
+    ) {
+      return;
+    }
+    this.pendingTabs.add(tab);
+    const request: Observable<any[]> =
+      tab === 'orderHistory'
+        ? this.hyperliquid.getHistoricalOrders(this.address)
+        : this.hyperliquid.getLedgerUpdates(this.address);
+    this.tabLoading = true;
+    request.subscribe((res: any[]) => {
+      if (tab === 'orderHistory') {
+        // One row per status change, exactly as Hyperliquid's own order
+        // history renders it: an order that rested and then filled shows up
+        // twice. Sorting is stable, so rows sharing a timestamp keep the
+        // API's newest-state-first order.
+        this.historicalOrders = (res as PerpsHistoricalOrder[])
+          .slice()
+          .sort((a, b) => b.statusTimestamp - a.statusTimestamp)
+          .slice(0, MAX_ARCHIVE_ROWS);
+      } else {
+        this.transfers = (res as PerpsLedgerUpdate[])
+          .slice()
+          .sort((a, b) => b.time - a.time)
+          .slice(0, MAX_ARCHIVE_ROWS);
+      }
+      this.pendingTabs.delete(tab);
+      this.loadedTabs.add(tab);
+      if (this.tab === tab) {
+        this.tabLoading = false;
+      }
+    });
+  }
+
+  setTab(tab: PerpsActivityTab) {
     this.tab = tab;
     this.pendingCancelOrderId = undefined;
+    this.tabLoading = !this.loading && !this.loadedTabs.has(tab);
+    this.loadTab(tab);
   }
 
   requestCancel(order: PerpsOpenOrder) {
@@ -131,6 +219,8 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
             this.openOrders = this.openOrders.filter(
               (item) => item.oid !== order.oid
             );
+            // The canceled order now belongs in the archive tab.
+            this.loadedTabs.delete('orderHistory');
             this.global.snackBarTip('perpsOrderCanceled');
           },
           error: (error) => {
@@ -156,7 +246,55 @@ export class PerpsHistoryComponent implements OnInit, OnDestroy {
     return formatFillTime(fill.time);
   }
 
-  back() {
-    history.go(-1);
+  time(timestamp: number): string {
+    return formatFillTime(timestamp);
+  }
+
+  /** i18n key for an order state, or '' when it needs the raw value. */
+  orderStatusKey(status: string): string {
+    if (ORDER_STATUS_LABELS[status]) {
+      return ORDER_STATUS_LABELS[status];
+    }
+    if (status?.endsWith('Canceled')) {
+      return 'perpsStatusCanceled';
+    }
+    if (status?.endsWith('Rejected')) {
+      return 'perpsStatusRejected';
+    }
+    return '';
+  }
+
+  /** i18n key for a ledger row, or '' for exotic types (vault, staking, ...). */
+  ledgerTypeKey(update: PerpsLedgerUpdate): string {
+    return LEDGER_TYPE_LABELS[update.delta?.type] || '';
+  }
+
+  ledgerIsOut(update: PerpsLedgerUpdate): boolean {
+    const delta = update.delta || ({} as any);
+    if (delta.type === 'withdraw') {
+      return true;
+    }
+    // A class transfer moves collateral out of the perps account when it lands
+    // on the spot side.
+    if (delta.type === 'accountClassTransfer') {
+      return delta.toPerp === false;
+    }
+    // Peer-to-peer rows carry both sides: we are the sender unless the funds
+    // landed on this address.
+    if (delta.destination) {
+      return delta.destination.toLowerCase() !== this.address?.toLowerCase();
+    }
+    return false;
+  }
+
+  /** Ledger amounts are USDC for bridge/class rows and token-denominated otherwise. */
+  ledgerAmount(update: PerpsLedgerUpdate): string {
+    const delta = update.delta || ({} as any);
+    const value = delta.usdc ?? delta.amount;
+    if (value === undefined) {
+      return '';
+    }
+    const token = delta.usdc !== undefined ? 'USDC' : delta.token || '';
+    return `${this.ledgerIsOut(update) ? '-' : '+'}${value} ${token}`.trim();
   }
 }

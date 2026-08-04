@@ -1779,10 +1779,10 @@
     "message": "提取"
   },
   "perpsHistory": {
-    "message": "历史"
+    "message": "活动"
   },
   "perpsHistoryTitle": {
-    "message": "合约交易历史"
+    "message": "合约活动"
   },
   "perpsPositions": {
     "message": "持仓"
@@ -2010,7 +2010,37 @@
     "message": "当前委托"
   },
   "perpsFills": {
-    "message": "成交记录"
+    "message": "历史成交"
+  },
+  "perpsOrderHistory": {
+    "message": "历史委托"
+  },
+  "perpsTransfers": {
+    "message": "存款和提款"
+  },
+  "perpsNoOrderHistory": {
+    "message": "暂无历史委托"
+  },
+  "perpsNoTransfers": {
+    "message": "暂无存款和提款记录"
+  },
+  "perpsLedgerTransfer": {
+    "message": "划转"
+  },
+  "perpsStatusFilled": {
+    "message": "已成交"
+  },
+  "perpsStatusOpen": {
+    "message": "未成交"
+  },
+  "perpsStatusCanceled": {
+    "message": "已撤销"
+  },
+  "perpsStatusRejected": {
+    "message": "已拒绝"
+  },
+  "perpsStatusTriggered": {
+    "message": "已触发"
   },
   "perpsCancelOrder": {
     "message": "撤单"

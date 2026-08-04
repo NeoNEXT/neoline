@@ -4,26 +4,6 @@
   padding-bottom: 24px;
 }
 
-.history-header {
-  display: flex;
-  align-items: center;
-  padding: 18px 16px 8px;
-
-  .back {
-    cursor: pointer;
-    flex-shrink: 0;
-  }
-
-  .title {
-    flex: 1;
-    text-align: center;
-    margin-right: 9px;
-    font-family: NeverMind-Medium;
-    font-size: 16px;
-    color: var(--important-title-color);
-  }
-}
-
 .loading {
   display: flex;
   justify-content: center;
@@ -32,22 +12,49 @@
 
 .history-tabs {
   display: flex;
-  gap: 8px;
-  padding: 12px 24px 4px;
+  gap: 24px;
+  padding: 0 24px;
+  border-bottom: 1px solid var(--line-color);
+  // Four labels never fit the 375px popup, so the bar scrolls sideways.
+  overflow-x: auto;
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
 
   button {
-    flex: 1;
-    height: 34px;
-    border: 1px solid var(--border-color);
-    border-radius: 18px;
+    flex: 0 0 auto;
+    position: relative;
+    height: 44px;
+    padding: 0;
+    white-space: nowrap;
+    border: 0;
     background: transparent;
+    font-family: NeverMind-Regular;
+    font-size: 14px;
     color: var(--sub-title-color);
     cursor: pointer;
 
-    &.active {
-      border-color: var(--theme-color);
-      color: var(--theme-color);
-      background: rgba(6, 204, 171, 0.08);
+    &::after {
+      content: "";
+      display: none;
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      width: 14px;
+      height: 3px;
+      margin-left: -8px;
+      border-radius: 2px;
+      background-color: var(--title-color);
+    }
+
+    &.active,
+    &:hover {
+      color: var(--title-color);
+
+      &::after {
+        display: block;
+      }
     }
   }
 }
@@ -78,10 +85,23 @@
 
   .fill-info {
     flex: 1;
+    min-width: 0;
     .dir {
+      // Unmapped ledger types fall back to the raw Hyperliquid name, which can
+      // be long enough to push the amount column onto a second line.
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
       font-family: NeverMind-Medium;
       font-size: 14px;
       color: var(--title-color);
+
+      .status {
+        margin-left: 6px;
+        font-family: NeverMind-Regular;
+        font-size: 11px;
+        color: var(--sub-title-color);
+      }
     }
     .time {
       font-size: 12px;
@@ -92,9 +112,15 @@
 
   .fill-amount {
     text-align: right;
+    flex-shrink: 0;
+    white-space: nowrap;
     .size {
       font-size: 14px;
       color: var(--title-color);
+
+      &.negative {
+        color: var(--error-color);
+      }
     }
     .price {
       font-size: 12px;

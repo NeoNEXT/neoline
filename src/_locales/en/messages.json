@@ -1779,10 +1779,10 @@
     "message": "Withdraw"
   },
   "perpsHistory": {
-    "message": "History"
+    "message": "Activity"
   },
   "perpsHistoryTitle": {
-    "message": "Perps history"
+    "message": "Perps activity"
   },
   "perpsPositions": {
     "message": "Positions"
@@ -2010,7 +2010,37 @@
     "message": "Open orders"
   },
   "perpsFills": {
-    "message": "Fills"
+    "message": "Trade history"
+  },
+  "perpsOrderHistory": {
+    "message": "Order history"
+  },
+  "perpsTransfers": {
+    "message": "Deposits and Withdrawals"
+  },
+  "perpsNoOrderHistory": {
+    "message": "No order history"
+  },
+  "perpsNoTransfers": {
+    "message": "No deposits or withdrawals"
+  },
+  "perpsLedgerTransfer": {
+    "message": "Transfer"
+  },
+  "perpsStatusFilled": {
+    "message": "Filled"
+  },
+  "perpsStatusOpen": {
+    "message": "Open"
+  },
+  "perpsStatusCanceled": {
+    "message": "Canceled"
+  },
+  "perpsStatusRejected": {
+    "message": "Rejected"
+  },
+  "perpsStatusTriggered": {
+    "message": "Triggered"
   },
   "perpsCancelOrder": {
     "message": "Cancel"

@@ -30,6 +30,8 @@ import {
   PerpsCandleInterval,
   PerpsDepositConfig,
   PerpsFill,
+  PerpsHistoricalOrder,
+  PerpsLedgerUpdate,
   PerpsMarket,
   PerpsOpenOrder,
   PerpsOrderBook,
@@ -1008,6 +1010,32 @@ export class HyperliquidService {
       type: 'frontendOpenOrders',
       user: address.toLowerCase(),
     }).pipe(map((res) => (Array.isArray(res) ? res : [])));
+  }
+
+  /** Orders that already left the book. Hyperliquid caps this at 2000 rows. */
+  getHistoricalOrders(address: string): Observable<PerpsHistoricalOrder[]> {
+    return this.post<PerpsHistoricalOrder[]>({
+      type: 'historicalOrders',
+      user: address.toLowerCase(),
+    }).pipe(
+      map((res) => (Array.isArray(res) ? res : [])),
+      catchError(() => of([]))
+    );
+  }
+
+  /**
+   * Bridge deposits/withdrawals plus transfers. Funding payments live on a
+   * separate endpoint and are intentionally excluded here.
+   */
+  getLedgerUpdates(address: string): Observable<PerpsLedgerUpdate[]> {
+    return this.post<PerpsLedgerUpdate[]>({
+      type: 'userNonFundingLedgerUpdates',
+      user: address.toLowerCase(),
+      startTime: 0,
+    }).pipe(
+      map((res) => (Array.isArray(res) ? res : [])),
+      catchError(() => of([]))
+    );
   }
 
   cancelOrder(

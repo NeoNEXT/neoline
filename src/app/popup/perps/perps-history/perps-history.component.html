@@ -1,15 +1,5 @@
 <div class="perps-history">
-  <div class="history-header">
-    <svg class="back" width="9" height="16" viewBox="0 0 9 16" fill="none" (click)="back()">
-      <path
-        d="M8 1L1 8L8 15"
-        stroke="var(--title-color)"
-        stroke-width="1.8"
-        stroke-linecap="round"
-      />
-    </svg>
-    <div class="title">{{ "perpsHistoryTitle" | translate | async }}</div>
-  </div>
+  <nav title="perpsHistoryTitle"></nav>
 
   <div class="history-tabs">
     <button [class.active]="tab === 'orders'" (click)="setTab('orders')">
@@ -19,66 +9,133 @@
     <button [class.active]="tab === 'fills'" (click)="setTab('fills')">
       {{ "perpsFills" | translate | async }}
     </button>
+    <button
+      [class.active]="tab === 'orderHistory'"
+      (click)="setTab('orderHistory')"
+    >
+      {{ "perpsOrderHistory" | translate | async }}
+    </button>
+    <button [class.active]="tab === 'transfers'" (click)="setTab('transfers')">
+      {{ "perpsTransfers" | translate | async }}
+    </button>
   </div>
 
-  <div class="loading" *ngIf="loading">
+  <div class="loading" *ngIf="loading || tabLoading">
     <loading-dot></loading-dot>
   </div>
 
-  <ng-container *ngIf="!loading && tab === 'orders'">
-    <div class="fill-row" *ngFor="let order of openOrders">
-      <div class="fill-icon" [class.sell]="!orderIsBuy(order)">
-        {{ orderIsBuy(order) ? "↗" : "↘" }}
-      </div>
-      <div class="fill-info">
-        <div class="dir">
-          {{ orderIsBuy(order) ? ("perpsLong" | translate | async) : ("perpsShort" | translate | async) }}
-          {{ order.coin }}
+  <ng-container *ngIf="!loading && !tabLoading">
+    <!-- 当前委托 -->
+    <ng-container *ngIf="tab === 'orders'">
+      <div class="fill-row" *ngFor="let order of openOrders">
+        <div class="fill-icon" [class.sell]="!orderIsBuy(order)">
+          {{ orderIsBuy(order) ? "↗" : "↘" }}
         </div>
-        <div class="time">{{ fillTime(order.timestamp) }}</div>
+        <div class="fill-info">
+          <div class="dir">
+            {{ orderIsBuy(order) ? ("perpsLong" | translate | async) : ("perpsShort" | translate | async) }}
+            {{ order.coin }}
+          </div>
+          <div class="time">{{ time(order.timestamp) }}</div>
+        </div>
+        <div class="fill-amount">
+          <div class="size">{{ order.sz }} {{ order.coin }}</div>
+          <div class="price">${{ formatPrice(+order.limitPx) }}</div>
+        </div>
+        <button
+          class="cancel"
+          [disabled]="cancelingOrderId === order.oid"
+          (click)="requestCancel(order)"
+        >
+          {{
+            (pendingCancelOrderId === order.oid
+              ? "perpsConfirmCancel"
+              : "perpsCancelOrder"
+            ) | translate | async
+          }}
+        </button>
       </div>
-      <div class="fill-amount">
-        <div class="size">{{ order.sz }} {{ order.coin }}</div>
-        <div class="price">${{ formatPrice(+order.limitPx) }}</div>
+      <p class="empty" *ngIf="openOrders.length === 0">
+        {{ "perpsNoOpenOrders" | translate | async }}
+      </p>
+    </ng-container>
+
+    <!-- 历史成交 -->
+    <ng-container *ngIf="tab === 'fills'">
+      <div class="fill-row" *ngFor="let fill of fills">
+        <div class="fill-icon" [class.sell]="!isBuy(fill)">
+          {{ isBuy(fill) ? "↗" : "↘" }}
+        </div>
+        <div class="fill-info">
+          <div class="dir">{{ fill.dir }} {{ fill.coin }}</div>
+          <div class="time">{{ fillTime(fill) }}</div>
+        </div>
+        <div class="fill-amount">
+          <div class="size">{{ fill.sz }} {{ fill.coin }}</div>
+          <div class="price">${{ formatPrice(+fill.px) }}</div>
+        </div>
       </div>
-      <button
-        class="cancel"
-        [disabled]="cancelingOrderId === order.oid"
-        (click)="requestCancel(order)"
-      >
-        {{
-          (pendingCancelOrderId === order.oid
-            ? "perpsConfirmCancel"
-            : "perpsCancelOrder"
-          ) | translate | async
-        }}
-      </button>
-    </div>
-    <p class="empty" *ngIf="openOrders.length === 0">
-      {{ "perpsNoOpenOrders" | translate | async }}
-    </p>
+      <p class="empty" *ngIf="fills.length === 0">
+        {{ "perpsNoTransactions" | translate | async }}
+      </p>
+    </ng-container>
+
+    <!-- 历史委托 -->
+    <ng-container *ngIf="tab === 'orderHistory'">
+      <div class="fill-row" *ngFor="let item of historicalOrders">
+        <div class="fill-icon" [class.sell]="!orderIsBuy(item.order)">
+          {{ orderIsBuy(item.order) ? "↗" : "↘" }}
+        </div>
+        <div class="fill-info">
+          <div class="dir">
+            {{ orderIsBuy(item.order) ? ("perpsLong" | translate | async) : ("perpsShort" | translate | async) }}
+            {{ item.order.coin }}
+            <span class="status">{{
+              orderStatusKey(item.status)
+                ? ((orderStatusKey(item.status) | translate | async))
+                : item.status
+            }}</span>
+          </div>
+          <div class="time">{{ time(item.statusTimestamp) }}</div>
+        </div>
+        <div class="fill-amount">
+          <div class="size">{{ item.order.origSz }} {{ item.order.coin }}</div>
+          <div class="price">${{ formatPrice(+item.order.limitPx) }}</div>
+        </div>
+      </div>
+      <p class="empty" *ngIf="historicalOrders.length === 0">
+        {{ "perpsNoOrderHistory" | translate | async }}
+      </p>
+    </ng-container>
+
+    <!-- 存款和提款 -->
+    <ng-container *ngIf="tab === 'transfers'">
+      <div class="fill-row" *ngFor="let item of transfers">
+        <div class="fill-icon" [class.sell]="ledgerIsOut(item)">
+          {{ ledgerIsOut(item) ? "↑" : "↓" }}
+        </div>
+        <div class="fill-info">
+          <div class="dir">
+            {{
+              ledgerTypeKey(item)
+                ? ((ledgerTypeKey(item) | translate | async))
+                : item.delta.type
+            }}
+          </div>
+          <div class="time">{{ time(item.time) }}</div>
+        </div>
+        <div class="fill-amount">
+          <div class="size" [class.negative]="ledgerIsOut(item)">
+            {{ ledgerAmount(item) }}
+          </div>
+        </div>
+      </div>
+      <p class="empty" *ngIf="transfers.length === 0">
+        {{ "perpsNoTransfers" | translate | async }}
+      </p>
+    </ng-container>
   </ng-container>
 
-  <div
-    class="fill-row"
-    *ngFor="let fill of tab === 'fills' && !loading ? fills : []"
-  >
-    <div class="fill-icon" [class.sell]="!isBuy(fill)">
-      {{ isBuy(fill) ? "↗" : "↘" }}
-    </div>
-    <div class="fill-info">
-      <div class="dir">{{ fill.dir }} {{ fill.coin }}</div>
-      <div class="time">{{ fillTime(fill) }}</div>
-    </div>
-    <div class="fill-amount">
-      <div class="size">{{ fill.sz }} {{ fill.coin }}</div>
-      <div class="price">${{ formatPrice(+fill.px) }}</div>
-    </div>
-  </div>
-
-  <p class="empty" *ngIf="!loading && tab === 'fills' && fills.length === 0">
-    {{ "perpsNoTransactions" | translate | async }}
-  </p>
   <p class="empty error" *ngIf="loadError">
     {{ "perpsLoadFailed" | translate | async }}
   </p>

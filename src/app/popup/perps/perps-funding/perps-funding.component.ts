@@ -256,7 +256,7 @@ export class PerpsFundingComponent implements OnInit, OnDestroy {
               ? 'perpsDepositSubmitted'
               : this.isTransfer
               ? 'perpsTransferSubmitted'
-              : 'perpsWithdrawSubmitted'
+              : 'perpsWithdrawSuccess'
           );
           this.amount = null;
           this.activePreset = null;

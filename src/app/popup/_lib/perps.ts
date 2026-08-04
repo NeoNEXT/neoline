@@ -267,6 +267,35 @@ export interface PerpsOpenOrder {
   isPositionTpsl?: boolean;
 }
 
+/** An order that left the book, with the terminal state it reached. */
+export interface PerpsHistoricalOrder {
+  order: PerpsOpenOrder;
+  /** filled | canceled | rejected | triggered | marginCanceled | open ... */
+  status: string;
+  statusTimestamp: number;
+}
+
+/**
+ * One row of the account ledger excluding funding payments: bridge deposits and
+ * withdrawals, spot/perp class transfers, and account-to-account sends.
+ */
+export interface PerpsLedgerUpdate {
+  time: number;
+  hash: string;
+  delta: {
+    /** deposit | withdraw | accountClassTransfer | internalTransfer | spotTransfer ... */
+    type: string;
+    usdc?: string;
+    amount?: string;
+    token?: string;
+    fee?: string;
+    /** accountClassTransfer only: spot -> perp when true. */
+    toPerp?: boolean;
+    destination?: string;
+    user?: string;
+  };
+}
+
 export type PerpsOrderSide = 'long' | 'short';
 export type PerpsOrderType = 'market' | 'limit';
 

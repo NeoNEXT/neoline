@@ -19,6 +19,11 @@
   > .letter-logo {
     width: 30px;
     height: 30px;
+  }
+  > img {
+    object-fit: contain;
+  }
+  > .letter-logo {
     border-radius: 50%;
   }
 

@@ -40,7 +40,7 @@ interface NotificationContent {
   perpsTradingComingSoon: string;
   perpsOrderSubmitted: string;
   perpsDepositSubmitted: string;
-  perpsWithdrawSubmitted: string;
+  perpsWithdrawSuccess: string;
   perpsSigningUnavailable: string;
 }
 
@@ -89,7 +89,7 @@ export class NotificationService {
     perpsTradingComingSoon: 'Perps trading is not enabled in this build yet.',
     perpsOrderSubmitted: 'Perps order submitted.',
     perpsDepositSubmitted: 'Deposit submitted.',
-    perpsWithdrawSubmitted: 'Withdrawal submitted.',
+    perpsWithdrawSuccess: 'Withdrawal successful.',
     perpsSigningUnavailable:
       'This wallet does not support Hyperliquid typed-data signing yet.',
   };
@@ -132,7 +132,7 @@ export class NotificationService {
     perpsTradingComingSoon: '当前版本尚未开放永续合约下单。',
     perpsOrderSubmitted: '永续合约订单已提交。',
     perpsDepositSubmitted: '入金交易已提交。',
-    perpsWithdrawSubmitted: '提现申请已提交。',
+    perpsWithdrawSuccess: '提现成功。',
     perpsSigningUnavailable: '该钱包暂不支持 Hyperliquid 类型化数据签名。',
   };
   private JA: NotificationContent = {
@@ -178,7 +178,7 @@ export class NotificationService {
     perpsTradingComingSoon: 'このビルドではまだ無期限先物の取引を利用できません。',
     perpsOrderSubmitted: '無期限先物注文を送信しました。',
     perpsDepositSubmitted: '入金を送信しました。',
-    perpsWithdrawSubmitted: '出金を送信しました。',
+    perpsWithdrawSuccess: '出金に成功しました。',
     perpsSigningUnavailable:
       'このウォレットはHyperliquidの型付きデータ署名にまだ対応していません。',
   };
@@ -224,7 +224,7 @@ export class NotificationService {
     perpsTradingComingSoon: '이 빌드에서는 아직 무기한 선물 거래를 사용할 수 없습니다.',
     perpsOrderSubmitted: '무기한 선물 주문을 제출했습니다.',
     perpsDepositSubmitted: '입금을 제출했습니다.',
-    perpsWithdrawSubmitted: '출금을 제출했습니다.',
+    perpsWithdrawSuccess: '출금에 성공했습니다.',
     perpsSigningUnavailable:
       '이 지갑은 아직 Hyperliquid 형식화 데이터 서명을 지원하지 않습니다.',
   };
