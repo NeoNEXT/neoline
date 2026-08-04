@@ -98,6 +98,29 @@ export class NeoWalletService {
         return w;
       });
     } else if (this.selectChainState.selectedChainType === 'Neo3') {
+      let maxIndexHDWallet: Wallet3;
+      let maxIndex = -1;
+      (this.neo3WalletArr || []).forEach((item) => {
+        const extra = item.accounts[0]?.extra;
+        if (
+          extra?.isHDWallet &&
+          extra.isHdCreateWallet === true &&
+          extra.hdWalletId &&
+          extra.encryptedJson &&
+          typeof extra.hdWalletIndex === 'number' &&
+          extra.hdWalletIndex > maxIndex
+        ) {
+          maxIndexHDWallet = item;
+          maxIndex = extra.hdWalletIndex;
+        }
+      });
+      if (maxIndexHDWallet) {
+        return this.neoHdWalletToolService.deriveNextWallet(
+          maxIndexHDWallet,
+          key,
+          name
+        );
+      }
       return this.neoHdWalletToolService.createWallet(
         key,
         name || 'account 1',

@@ -22,6 +22,7 @@ export class NeoHdWalletToolService {
       encryptedJson,
       hdWalletId,
       hdWalletIndex: 0,
+      isHdCreateWallet: true,
       hasBackup: false,
     });
   }
@@ -48,17 +49,22 @@ export class NeoHdWalletToolService {
     });
   }
 
-  async deriveNextWallet(wallet: Wallet3, password: string): Promise<Wallet3> {
+  async deriveNextWallet(
+    wallet: Wallet3,
+    password: string,
+    accountName?: string,
+  ): Promise<Wallet3> {
     const meta = this.getHdMeta(wallet);
     const mnemonic = await this.getMnemonicFromWallet(wallet, password);
     const hdWalletIndex = meta.hdWalletIndex + 1;
     return this.deriveWalletFromMnemonic({
       mnemonic,
       password,
-      accountName: `account ${hdWalletIndex + 1}`,
+      accountName: accountName || `account ${hdWalletIndex + 1}`,
       encryptedJson: meta.encryptedJson,
       hdWalletId: meta.hdWalletId,
       hdWalletIndex,
+      isHdCreateWallet: meta.isHdCreateWallet,
       hasBackup: meta.hasBackup,
     });
   }
@@ -83,6 +89,7 @@ export class NeoHdWalletToolService {
     encryptedJson,
     hdWalletId,
     hdWalletIndex,
+    isHdCreateWallet,
     hasBackup,
   }: {
     mnemonic: ethers.Mnemonic;
@@ -91,6 +98,7 @@ export class NeoHdWalletToolService {
     encryptedJson: string;
     hdWalletId: string;
     hdWalletIndex: number;
+    isHdCreateWallet?: boolean;
     hasBackup?: boolean;
   }) {
     const account = new Account3(await this.getPrivateKey(mnemonic, hdWalletIndex));
@@ -99,6 +107,7 @@ export class NeoHdWalletToolService {
       isHDWallet: true,
       hdWalletId,
       hdWalletIndex,
+      ...(isHdCreateWallet ? { isHdCreateWallet: true } : {}),
       encryptedJson,
       publicKey: account.publicKey,
       hasBackup,
@@ -133,6 +142,7 @@ export class NeoHdWalletToolService {
     return {
       hdWalletId: extra.hdWalletId as string,
       hdWalletIndex: extra.hdWalletIndex as number,
+      isHdCreateWallet: extra.isHdCreateWallet,
       encryptedJson: extra.encryptedJson as string,
       hasBackup: extra.hasBackup as boolean | undefined,
     };

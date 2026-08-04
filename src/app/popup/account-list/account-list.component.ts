@@ -24,6 +24,7 @@ import {
   STORAGE_NAME,
   RpcNetwork,
   ChainTypeGroups,
+  CreatableChainTypeGroups,
 } from '@popup/_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -294,7 +295,10 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
           this.dialog
             .open(PopupSelectDialogComponent, {
               data: {
-                optionGroup: ChainTypeGroups,
+                optionGroup:
+                  type === 'create'
+                    ? CreatableChainTypeGroups
+                    : ChainTypeGroups,
                 type: 'chain',
               },
               panelClass: 'custom-dialog-panel',
@@ -320,8 +324,10 @@ export class PopupAccountListComponent implements OnInit, OnDestroy {
       });
   }
 
-  toCreate(type) {
-    if (type === 'import') {
+  toCreate(type: 'create' | 'import') {
+    if (type === 'create') {
+      this.router.navigateByUrl('/popup/wallet/create');
+    } else if (type === 'import') {
       this.router.navigateByUrl('/popup/wallet/import');
     }
   }

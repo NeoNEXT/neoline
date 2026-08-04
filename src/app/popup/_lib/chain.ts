@@ -25,6 +25,12 @@ export const ChainTypeGroups: ChainSelectItem[] = [
   },
 ];
 
+export const supportsWalletCreation = (chainType: ChainType) =>
+  chainType !== 'Neo2';
+
+export const CreatableChainTypeGroups: ChainSelectItem[] =
+  ChainTypeGroups.filter(({ type }) => supportsWalletCreation(type));
+
 export const AddNetworkChainTypeGroups: ChainSelectItem[] = [
   ChainTypeGroups[0],
   ChainTypeGroups[1],

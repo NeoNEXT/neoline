@@ -22,6 +22,7 @@ export class EvmWalletService {
       const extra = item.accounts[0]?.extra;
       if (
         extra?.isHDWallet &&
+        extra?.isHdCreateWallet === true &&
         extra.hdWalletId &&
         extra.encryptedJson &&
         extra.hdWalletIndex > newIndex
@@ -40,6 +41,7 @@ export class EvmWalletService {
       name: name || 'account 1',
       hdWalletId: getNextHDWalletId(this.neoXWalletArr),
       hdWalletIndex: 0,
+      isHdCreateWallet: true,
       encryptedJson: undefined,
       hasBackup: false,
     });
@@ -83,6 +85,7 @@ export class EvmWalletService {
       name: name || `account ${hdWalletIndex + 1}`,
       hdWalletId: extra.hdWalletId,
       hdWalletIndex,
+      isHdCreateWallet: extra.isHdCreateWallet,
       encryptedJson: extra.encryptedJson,
       hasBackup: extra.hasBackup,
     });
@@ -151,6 +154,7 @@ export class EvmWalletService {
     name,
     hdWalletId,
     hdWalletIndex,
+    isHdCreateWallet,
     encryptedJson,
     hasBackup,
   }: {
@@ -159,6 +163,7 @@ export class EvmWalletService {
     name: string;
     hdWalletId: string;
     hdWalletIndex: number;
+    isHdCreateWallet?: boolean;
     encryptedJson?: string;
     hasBackup?: boolean;
   }) {
@@ -179,6 +184,7 @@ export class EvmWalletService {
             isHDWallet: true,
             hdWalletId,
             hdWalletIndex,
+            ...(isHdCreateWallet ? { isHdCreateWallet: true } : {}),
             encryptedJson: carrierJson,
             hasBackup,
           },

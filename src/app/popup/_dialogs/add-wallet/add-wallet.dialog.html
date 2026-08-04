@@ -2,6 +2,13 @@
   {{ "AddAccountOrHardwareWallet" | translate | async }}
 </div>
 <ul class="wallet">
+  <li (click)="to('create')">
+    <div>
+      <p class="title">{{ "createWallet" | translate | async }}</p>
+      <p class="tip">{{ "createNewWallet" | translate | async }}</p>
+    </div>
+    <img theme src="assets/images/avatar-menu/wallet-create.svg" alt="" />
+  </li>
   <li (click)="to('import')">
     <div>
       <p class="title">{{ "importWallet" | translate | async }}</p>

@@ -9,6 +9,7 @@ import {
   UPDATE_WALLET,
   STORAGE_NAME,
   ADD_NEOX_WALLET,
+  supportsWalletCreation,
 } from '../_lib';
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
@@ -24,7 +25,6 @@ type TabType = 'create' | 'import';
 })
 export class PopupWalletComponent implements OnInit {
   tabType: TabType = 'import';
-  private fromNewGuide = false;
   hideCreateTab = false;
   private dapiData = {
     type: null,
@@ -49,11 +49,6 @@ export class PopupWalletComponent implements OnInit {
     private selectChainState: SelectChainState,
     private store: Store<AppState>
   ) {
-    const currentNavigationState = this.router.getCurrentNavigation()?.extras
-      ?.state as { fromNewGuide?: boolean };
-    this.fromNewGuide =
-      currentNavigationState?.fromNewGuide === true ||
-      history.state?.fromNewGuide === true;
     const account$ = this.store.select('account');
     this.accountSub = account$.subscribe((state) => {
       switch (this.selectChainState.selectedChainType) {
@@ -101,12 +96,17 @@ export class PopupWalletComponent implements OnInit {
   private syncTabState() {
     const isImportPage = this.router.url.startsWith('/popup/wallet/import');
     const isCreatePage = this.router.url.startsWith('/popup/wallet/create');
-    if (isCreatePage && !this.fromNewGuide) {
+    const canCreate = supportsWalletCreation(
+      this.selectChainState.selectedChainType
+    );
+    if (isCreatePage && !canCreate) {
+      this.hideCreateTab = true;
+      this.tabType = 'import';
       this.router.navigateByUrl('/popup/wallet/import');
       return;
     }
-    this.hideCreateTab = isImportPage && !this.fromNewGuide;
-    this.tabType = isImportPage ? 'import' : 'create';
+    this.hideCreateTab = !canCreate;
+    this.tabType = isImportPage || !canCreate ? 'import' : 'create';
   }
 
   private getChainName() {

@@ -7,9 +7,10 @@ describe('EvmWalletService', () => {
     'test test test test test test test test test test test junk';
   const password = '12345678';
   let service: EvmWalletService;
+  let accountState$: BehaviorSubject<any>;
 
   beforeEach(() => {
-    const accountState$ = new BehaviorSubject<any>({
+    accountState$ = new BehaviorSubject<any>({
       neoXWalletArr: [],
     });
     const store = jasmine.createSpyObj('Store', ['select']);
@@ -33,6 +34,7 @@ describe('EvmWalletService', () => {
     expect(extra.hdWalletIndex).toBe(0);
     expect(extra.encryptedJson).toBeTruthy();
     expect(extra.publicKey).toBeTruthy();
+    expect('isHdCreateWallet' in extra).toBeFalse();
     // 导入是恢复流程，应标记为已备份（回归防护）
     expect(extra.hasBackup).toBeTrue();
   });
@@ -61,6 +63,74 @@ describe('EvmWalletService', () => {
     expect(nextWallet.accounts[0].extra.hdWalletIndex).toBe(1);
     expect(nextWallet.accounts[0].extra.encryptedJson).toBe(
       wallet.accounts[0].extra.encryptedJson
+    );
+    expect('isHdCreateWallet' in nextWallet.accounts[0].extra).toBeFalse();
+  });
+
+  it('creates a separate group from imports, then derives the created group', async () => {
+    const importedWallet = await service.importWalletFromPhrase(
+      phrase,
+      password
+    );
+    accountState$.next({ neoXWalletArr: [importedWallet] });
+
+    const createdWallet = await service.createWallet(
+      password,
+      'Created account'
+    );
+
+    expect(createdWallet.accounts[0].extra.hdWalletId).toBe('Wallet 2');
+    expect(createdWallet.accounts[0].extra.hdWalletIndex).toBe(0);
+    expect(createdWallet.accounts[0].extra.isHdCreateWallet).toBeTrue();
+    expect(createdWallet.accounts[0].extra.encryptedJson).not.toBe(
+      importedWallet.accounts[0].extra.encryptedJson
+    );
+
+    accountState$.next({
+      neoXWalletArr: [importedWallet, createdWallet],
+    });
+    const nextCreatedWallet = await service.createWallet(
+      password,
+      'Created account 2'
+    );
+
+    expect(nextCreatedWallet.accounts[0].extra.hdWalletId).toBe('Wallet 2');
+    expect(nextCreatedWallet.accounts[0].extra.hdWalletIndex).toBe(1);
+    expect(nextCreatedWallet.accounts[0].extra.isHdCreateWallet).toBeTrue();
+    expect(nextCreatedWallet.accounts[0].extra.encryptedJson).toBe(
+      createdWallet.accounts[0].extra.encryptedJson
+    );
+  });
+
+  it('ignores an unmarked legacy HD wallet and then derives the marked group', async () => {
+    const legacyCreatedWallet = await service.createWallet(
+      password,
+      'Legacy created account'
+    );
+    delete legacyCreatedWallet.accounts[0].extra.isHdCreateWallet;
+    accountState$.next({ neoXWalletArr: [legacyCreatedWallet] });
+
+    const markedWallet = await service.createWallet(
+      password,
+      'Marked account'
+    );
+
+    expect(markedWallet.accounts[0].extra.hdWalletId).toBe('Wallet 2');
+    expect(markedWallet.accounts[0].extra.hdWalletIndex).toBe(0);
+    expect(markedWallet.accounts[0].extra.isHdCreateWallet).toBeTrue();
+    expect(markedWallet.accounts[0].extra.encryptedJson).not.toBe(
+      legacyCreatedWallet.accounts[0].extra.encryptedJson
+    );
+
+    accountState$.next({
+      neoXWalletArr: [legacyCreatedWallet, markedWallet],
+    });
+    const nextWallet = await service.createWallet(password, 'Next account');
+
+    expect(nextWallet.accounts[0].extra.hdWalletId).toBe('Wallet 2');
+    expect(nextWallet.accounts[0].extra.hdWalletIndex).toBe(1);
+    expect(nextWallet.accounts[0].extra.encryptedJson).toBe(
+      markedWallet.accounts[0].extra.encryptedJson
     );
   });
 });

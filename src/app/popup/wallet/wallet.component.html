@@ -15,7 +15,7 @@
       >{{ "import" | translate | async }}</span
     >
   </div>
-  <div class="content">
+  <div class="content" [class.without-tab]="hideCreateTab">
     <wallet-create
       *ngIf="getPassword && !hideCreateTab"
       [hidden]="tabType === 'import'"

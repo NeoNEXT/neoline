@@ -21,6 +21,7 @@ describe('NeoHdWalletToolService', () => {
     expect(extra.hdWalletIndex).toBe(0);
     expect(extra.encryptedJson).toBeTruthy();
     expect(extra.publicKey).toBe(wallet.accounts[0].publicKey);
+    expect('isHdCreateWallet' in extra).toBeFalse();
     // 导入是恢复流程，应标记为已备份（回归防护）
     expect(extra.hasBackup).toBeTrue();
   });
@@ -38,6 +39,7 @@ describe('NeoHdWalletToolService', () => {
     expect(extra.hdWalletId).toBe('Wallet 2');
     expect(extra.hdWalletIndex).toBe(0);
     expect(extra.encryptedJson).toBeTruthy();
+    expect(extra.isHdCreateWallet).toBeTrue();
     expect(extra.hasBackup).toBeFalse();
   });
 
@@ -59,6 +61,7 @@ describe('NeoHdWalletToolService', () => {
     expect(nextWallet.accounts[0].extra.encryptedJson).toBe(
       firstWallet.accounts[0].extra.encryptedJson
     );
+    expect('isHdCreateWallet' in nextWallet.accounts[0].extra).toBeFalse();
   });
 
   it('preserves group backup status when deriving the next N3 account', async () => {

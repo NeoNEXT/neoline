@@ -2,7 +2,11 @@ import { Component } from '@angular/core';
 import { MatDialog } from '@angular/material/dialog';
 import { PopupSelectDialogComponent } from '@popup/_dialogs';
 import { Router } from '@angular/router';
-import { ChainTypeGroups, STORAGE_NAME } from '@popup/_lib';
+import {
+  ChainTypeGroups,
+  CreatableChainTypeGroups,
+  STORAGE_NAME,
+} from '@popup/_lib';
 import { ChromeService, GlobalService } from '@/app/core';
 
 @Component({
@@ -21,7 +25,8 @@ export class PopupNewWalletGuideComponent {
     this.dialog
       .open(PopupSelectDialogComponent, {
         data: {
-          optionGroup: ChainTypeGroups,
+          optionGroup:
+            type === 'create' ? CreatableChainTypeGroups : ChainTypeGroups,
           type: 'chain',
         },
         panelClass: 'custom-dialog-panel',
@@ -46,13 +51,9 @@ export class PopupNewWalletGuideComponent {
 
   private toCreate(type: 'create' | 'import') {
     if (type === 'create') {
-      this.router.navigateByUrl('/popup/wallet/create', {
-        state: { fromNewGuide: true },
-      });
+      this.router.navigateByUrl('/popup/wallet/create');
     } else {
-      this.router.navigateByUrl('/popup/wallet/import', {
-        state: { fromNewGuide: true },
-      });
+      this.router.navigateByUrl('/popup/wallet/import');
     }
   }
 }

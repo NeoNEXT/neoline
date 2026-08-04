@@ -66,6 +66,7 @@ export class Account3 extends Account {
     isHDWallet?: boolean;
     hdWalletId?: string;
     hdWalletIndex?: number;
+    isHdCreateWallet?: boolean;
     /** encrypted mnemonic carrier for HD wallets */
     encryptedJson?: string;
 
