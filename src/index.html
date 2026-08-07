@@ -8,6 +8,43 @@
     <title>NeoLine</title>
     <base href="#/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      .startup-shell {
+        align-items: center;
+        background: #363940;
+        color: #06ccab;
+        display: flex;
+        flex-direction: column;
+        font: 500 20px/1.2 Arial, sans-serif;
+        inset: 0;
+        justify-content: center;
+        min-height: 600px;
+        position: fixed;
+        z-index: 1000;
+      }
+      .startup-shell__spinner {
+        animation: startup-spin 0.8s linear infinite;
+        border: 3px solid rgba(6, 204, 171, 0.2);
+        border-radius: 50%;
+        border-top-color: #06ccab;
+        height: 28px;
+        margin-top: 28px;
+        width: 28px;
+      }
+      .startup-shell__logo {
+        background-color: #06ccab;
+        height: 40px;
+        mask: url('/assets/dark-images/logo-word.svg') center / contain no-repeat;
+        width: 164px;
+        -webkit-mask: url('/assets/dark-images/logo-word.svg') center / contain
+          no-repeat;
+      }
+      @keyframes startup-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
     <link rel="icon" type="image/x-icon" href="/assets/favicon.ico" />
     <link
       href="https://fonts.googleapis.com/css?family=Roboto:300,400,500"
@@ -20,6 +57,15 @@
   </head>
 
   <body style="min-width: 375px; min-height: 600px">
+    <div
+      id="startup-shell"
+      class="startup-shell"
+      role="status"
+      aria-label="Loading NeoLine"
+    >
+      <div class="startup-shell__logo" aria-hidden="true"></div>
+      <div class="startup-shell__spinner" aria-hidden="true"></div>
+    </div>
     <neo-line></neo-line>
     <script src="/assets/scripts/qrcode.min.js"></script>
   </body>

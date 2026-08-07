@@ -1,7 +1,13 @@
 import { Component } from '@angular/core';
 import { STORAGE_NAME } from './popup/_lib';
 import { ChromeService, InitService, SettingState } from './core';
-import { NavigationEnd, Router, RouterEvent } from '@angular/router';
+import {
+  NavigationCancel,
+  NavigationEnd,
+  NavigationError,
+  Router,
+  RouterEvent,
+} from '@angular/router';
 
 declare var chrome: any;
 
@@ -25,10 +31,24 @@ export class AppComponent {
     this.chromeService.getStorage(STORAGE_NAME.theme).subscribe((res) => {
       this.settingState.changeTheme(res);
     });
-    this.initService.initData();
+    this.initService.initData().catch(() => {
+      // guard 会在导航时按 store 现状降级处理，这里只避免未捕获的 rejection。
+      // Guards degrade gracefully on their own; just avoid an unhandled
+      // rejection here.
+    });
     this.router.events.subscribe((res: RouterEvent) => {
       if (res instanceof NavigationEnd) {
         this.currentUrl = res.url;
+      }
+      // 取消/出错的导航同样要摘掉启动遮罩，否则用户会一直看到转圈。
+      // A cancelled or failed navigation must drop the shell too, otherwise
+      // the user is left staring at the spinner.
+      if (
+        res instanceof NavigationEnd ||
+        res instanceof NavigationCancel ||
+        res instanceof NavigationError
+      ) {
+        this.removeStartupShell();
       }
     });
     // firefox style
@@ -51,5 +71,15 @@ export class AppComponent {
       return true;
     }
     return false;
+  }
+
+  private removeStartupShell(): void {
+    const startupShell = document.getElementById('startup-shell');
+    if (!startupShell) {
+      return;
+    }
+    window.requestAnimationFrame(() => {
+      window.requestAnimationFrame(() => startupShell.remove());
+    });
   }
 }
