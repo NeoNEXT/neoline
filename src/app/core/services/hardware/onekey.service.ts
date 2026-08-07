@@ -7,13 +7,6 @@ import {
   Wallet3,
 } from '@/app/popup/_lib';
 import { Injectable } from '@angular/core';
-import HardwareSDK from '@onekeyfe/hd-web-sdk';
-import {
-  UI_EVENT,
-  UI_RESPONSE,
-  CoreMessage,
-  UI_REQUEST,
-} from '@onekeyfe/hd-core';
 import { ethers } from 'ethers';
 import { Transaction as Transaction2 } from '@cityofzion/neon-core/lib/tx';
 import { Transaction as Transaction3 } from '@cityofzion/neon-core-neo3/lib/tx';
@@ -40,6 +33,7 @@ interface OneKeyDeviceInfo {
 export class OneKeyService {
   private deviceInfo: OneKeyDeviceInfo;
   private accounts = { Neo3: {}, NeoX: {} };
+  private hardwareSdkPromise: Promise<any>;
 
   private neoXNetwork: RpcNetwork;
 
@@ -48,37 +42,10 @@ export class OneKeyService {
     account$.subscribe((state) => {
       this.neoXNetwork = state.neoXNetworks[state.neoXNetworkIndex];
     });
-    HardwareSDK.HardwareWebSdk.init({
-      debug: !environment.production,
-      fetchConfig: false,
-      connectSrc: 'https://jssdk.onekey.so/1.0.31/',
-    });
-    HardwareSDK.HardwareWebSdk.on(UI_EVENT, (message: CoreMessage) => {
-      // Handle the PIN code input event
-      if (message.type === UI_REQUEST.REQUEST_PIN) {
-        // Enter the PIN code on the device
-        HardwareSDK.HardwareWebSdk.uiResponse({
-          type: UI_RESPONSE.RECEIVE_PIN,
-          payload: '@@ONEKEY_INPUT_PIN_IN_DEVICE',
-        });
-      }
-
-      // Handle the passphrase event
-      if (message.type === UI_REQUEST.REQUEST_PASSPHRASE) {
-        // Enter the passphrase on the device
-        HardwareSDK.HardwareWebSdk.uiResponse({
-          type: UI_RESPONSE.RECEIVE_PASSPHRASE,
-          payload: {
-            value: '',
-            passphraseOnDevice: true,
-            save: true,
-          },
-        });
-      }
-    });
   }
 
   async getDeviceStatus() {
+    const HardwareSDK = await this.getHardwareSdk();
     const deviceResponse = await HardwareSDK.HardwareWebSdk.searchDevices();
     if (deviceResponse.success) {
       this.deviceInfo = deviceResponse.payload[0];
@@ -87,6 +54,7 @@ export class OneKeyService {
   }
 
   async getPassphraseState() {
+    const HardwareSDK = await this.getHardwareSdk();
     const state = await HardwareSDK.HardwareWebSdk.getPassphraseState(
       this.deviceInfo.connectId
     );
@@ -94,6 +62,7 @@ export class OneKeyService {
   }
 
   async fetchAccounts(page: number, chainType: ChainType) {
+    const HardwareSDK = await this.getHardwareSdk();
     if (this.accounts[chainType][page]) {
       return this.accounts[chainType][page];
     }
@@ -162,6 +131,7 @@ export class OneKeyService {
     magicNumber: number;
     signOnly: boolean;
   }) {
+    const HardwareSDK = await this.getHardwareSdk();
     if (chainType === 'NeoX') {
       (unsignedTx as ethers.Transaction).chainId = this.neoXNetwork.chainId;
       const res = await HardwareSDK.HardwareWebSdk.evmSignTransaction(
@@ -238,6 +208,7 @@ export class OneKeyService {
   }
 
   async signEvmPersonalMessage(message: string, wallet: EvmWalletJSON) {
+    const HardwareSDK = await this.getHardwareSdk();
     const res = await HardwareSDK.HardwareWebSdk.evmSignMessage(
       this.deviceInfo.connectId,
       this.deviceInfo.deviceId,
@@ -257,6 +228,7 @@ export class OneKeyService {
     typedData: TypedMessage<MessageTypes>,
     wallet: EvmWalletJSON
   ) {
+    const HardwareSDK = await this.getHardwareSdk();
     const { domainHash, messageHash } = transformTypedDataPlugin(typedData);
     const res = await HardwareSDK.HardwareWebSdk.evmSignTypedData(
       this.deviceInfo.connectId,
@@ -281,5 +253,41 @@ export class OneKeyService {
     let snackError = 'TransactionDeniedByUser';
     Sentry.captureMessage(`handleOneKeyError: ${error ?? snackError}`);
     this.global.snackBarTip(error ?? snackError);
+  }
+
+  private getHardwareSdk(): Promise<any> {
+    if (!this.hardwareSdkPromise) {
+      this.hardwareSdkPromise = Promise.all([
+        import('@onekeyfe/hd-web-sdk'),
+        import('@onekeyfe/hd-core'),
+      ]).then(([sdkModule, core]) => {
+        const HardwareSDK = sdkModule.default;
+        HardwareSDK.HardwareWebSdk.init({
+          debug: !environment.production,
+          fetchConfig: false,
+          connectSrc: 'https://jssdk.onekey.so/1.0.31/',
+        });
+        HardwareSDK.HardwareWebSdk.on(core.UI_EVENT, (message) => {
+          if (message.type === core.UI_REQUEST.REQUEST_PIN) {
+            HardwareSDK.HardwareWebSdk.uiResponse({
+              type: core.UI_RESPONSE.RECEIVE_PIN,
+              payload: '@@ONEKEY_INPUT_PIN_IN_DEVICE',
+            });
+          }
+          if (message.type === core.UI_REQUEST.REQUEST_PASSPHRASE) {
+            HardwareSDK.HardwareWebSdk.uiResponse({
+              type: core.UI_RESPONSE.RECEIVE_PASSPHRASE,
+              payload: {
+                value: '',
+                passphraseOnDevice: true,
+                save: true,
+              },
+            });
+          }
+        });
+        return HardwareSDK;
+      });
+    }
+    return this.hardwareSdkPromise;
   }
 }

@@ -1,5 +1,4 @@
 import { Injectable } from '@angular/core';
-import TransportWebHID from '@ledgerhq/hw-transport-webhid';
 import {
   ChainType,
   LEDGER_PAGE_SIZE,
@@ -22,7 +21,6 @@ import { map } from 'rxjs/operators';
 import BigNumber from 'bignumber.js';
 import { AppState } from '@/app/reduers';
 import { Store } from '@ngrx/store';
-import Eth, { ledgerService } from '@ledgerhq/hw-app-eth';
 import { EvmWalletJSON } from '@/app/popup/_lib/evm';
 import { ethers } from 'ethers';
 import { TypedMessage, MessageTypes } from '@metamask/eth-sig-util';
@@ -272,6 +270,7 @@ export class LedgerService {
   }
 
   private async getNeoXSignature(txData, wallet: EvmWalletJSON) {
+    const { ledgerService } = await import('@ledgerhq/hw-app-eth');
     txData.chainId = this.neoXNetwork.chainId;
     let unsignedTx = ethers.Transaction.from(txData).unsignedSerialized;
     unsignedTx = unsignedTx.startsWith('0x')
@@ -446,6 +445,9 @@ export class LedgerService {
     if (this.deviceInstance) {
       return this.deviceInstance;
     }
+    const { default: TransportWebHID } = await import(
+      '@ledgerhq/hw-transport-webhid'
+    );
     this.deviceInstance = await TransportWebHID.create();
     this.deviceInstance.on('disconnect', () => {
       this.closeDevice();
@@ -461,7 +463,8 @@ export class LedgerService {
       this.sendQueue.push(() => {
         if (chainType === 'NeoX') {
           return this.getDevice()
-            .then((device) => {
+            .then(async (device) => {
+              const { default: Eth } = await import('@ledgerhq/hw-app-eth');
               this.ethTransport = new Eth(device);
               return this.ethTransport.getAppConfiguration();
             })

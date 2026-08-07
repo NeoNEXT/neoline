@@ -8,7 +8,9 @@ import {
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { Wallet as Wallet2 } from '@cityofzion/neon-core/lib/wallet';
 import { ChainType, EvmWalletJSON, SORT_WALLETS, Wallet3, WalletListItem } from '@popup/_lib';
-import Sortable from 'sortablejs';
+// Loaded on demand in ngAfterViewInit — this dialog is reachable from the
+// eager `_dialogs` barrel, and a static import would put sortablejs in the
+// initial bundle for a drag-to-reorder screen most sessions never open.
 import { Store } from '@ngrx/store';
 import { AppState } from '@/app/reduers';
 
@@ -60,7 +62,8 @@ export class PopupSortAccountDialogComponent implements AfterViewInit {
       }
     });
   }
-  ngAfterViewInit(): void {
+  async ngAfterViewInit(): Promise<void> {
+    const { default: Sortable } = await import('sortablejs');
     Sortable.create(this.sortablePrivateKeyListRef.nativeElement, {
       animation: 150,
       onEnd: (evt) => {

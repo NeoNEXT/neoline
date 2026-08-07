@@ -1,5 +1,8 @@
 import { Component, Inject, OnDestroy, OnInit } from '@angular/core';
-import { Html5Qrcode } from 'html5-qrcode';
+// Type-only: html5-qrcode is ~1.2MB and this dialog reaches the initial bundle
+// through the eager `_dialogs` barrel. The runtime value is pulled in by the
+// dynamic import() in getSignature(), i.e. only once the user starts scanning.
+import type { Html5Qrcode as Html5QrcodeType } from 'html5-qrcode';
 import { QRBasedService } from '@/app/core';
 import { MatDialogRef, MAT_DIALOG_DATA } from '@angular/material/dialog';
 import { EvmWalletJSON } from '../../_lib';
@@ -14,7 +17,7 @@ declare var QRCode: any;
   styleUrls: ['qr-based-sign.dialog.scss'],
 })
 export class PopupQRBasedSignDialogComponent implements OnInit, OnDestroy {
-  scanner: Html5Qrcode;
+  scanner: Html5QrcodeType;
   isScanning = false;
   isValidQRCode = true;
   loadingScanner = true;
@@ -77,9 +80,11 @@ export class PopupQRBasedSignDialogComponent implements OnInit, OnDestroy {
     }
   }
 
-  private getSignature() {
+  private async getSignature() {
     this.isScanning = true;
-    Html5Qrcode.getCameras().then((devices) => {
+    try {
+      const { Html5Qrcode } = await import('html5-qrcode');
+      const devices = await Html5Qrcode.getCameras();
       if (devices && devices.length) {
         var cameraId = devices[0].id;
         this.scanner = new Html5Qrcode('reader');
@@ -118,12 +123,12 @@ export class PopupQRBasedSignDialogComponent implements OnInit, OnDestroy {
           () => {}
         );
       }
-    }).catch((error) => {
+    } catch (error) {
       this.cameraError = true;
       if (error.code === 0) {
         // NotAllowedError
         this.cameraPermission = false;
       }
-    });
+    }
   }
 }
